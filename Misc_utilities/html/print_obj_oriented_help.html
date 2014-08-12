@@ -1,0 +1,487 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>METHODS for canlab object-oriented tools</title><meta name="generator" content="MATLAB 7.11"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-10-19"><meta name="DC.source" content="print_obj_oriented_help.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>METHODS for canlab object-oriented tools</h1><!--introduction--><p>The list below prints the first 200 characters of help for each method. You can get additional information by typing &gt;&gt;help objecttype.methodname in the Matlab command window.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#3">Method</a></li></ul></div><pre class="codeinput">z = <span class="string">'_________________________________________'</span>;
+
+<span class="comment">%objname = 'fmri_data'; % for example</span>
+
+fprintf(<span class="string">'%%%% %s\n'</span>, objname);
+
+m = methods(objname);
+</pre><pre class="codeoutput">%% fmri_data
+</pre><pre class="codeinput"><span class="keyword">for</span> i = 1:length(m)
+</pre><h2>Method<a name="3"></a></h2><p>New method begins here</p><pre class="codeinput">    <span class="comment">% *Method name*</span>
+    mname = [objname <span class="string">'.'</span> m{i}];
+    h = help(mname);
+    <span class="comment">%h = help(m{i});</span>
+
+    len = min(200, length(h));
+
+    fprintf(<span class="string">'\n%s\n%s\n%s\n'</span>, z, mname, z);
+
+    disp(h(1:len));
+
+    fprintf(<span class="string">'\n'</span>)
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+_________________________________________
+fmri_data.apply_mask
+_________________________________________
+  Apply a mask image (image filename or fmri_mask_image object) to an image_vector object
+  stored in dat
+ 
+  This can be used to:
+  - Mask an image_vector or fmri_data object with a mask
+  - Obtain "
+
+
+_________________________________________
+fmri_data.check_image_filenames
+_________________________________________
+  Check whether images listed in obj.fullpath actually exist
+ 
+  obj = check_image_filenames(obj)
+ 
+  Behavior:
+  If there are no file names, do nothing.
+  If file names are entered and full path is n
+
+
+_________________________________________
+fmri_data.compare_space
+_________________________________________
+  function isdiff = compare_space(obj, obj2)
+ 
+  Compare spaces of two image_vector objects
+ 
+  Returns 0 if same, 1 if different spaces, 2 if no volInfo info for one or
+  more objects. 3 if same spac
+
+
+_________________________________________
+fmri_data.create
+_________________________________________
+
+
+_________________________________________
+fmri_data.extract_roi_averages
+_________________________________________
+  cl = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
+ 
+  This fmri_data method a extracts and averages data stored in an fmri_data object 
+  from a set of ROIs defined in a mask.
+ 
+
+
+_________________________________________
+fmri_data.fastmontage
+_________________________________________
+  fastmontage(dat, [myview], ['spacing', slicespacing], ['vertical'])
+ 
+  fastmontage(dat);  Creates 3 separate montage views - ax, cor, sagg
+                     In special figure window
+ 
+  fastmont
+
+
+_________________________________________
+fmri_data.flip
+_________________________________________
+  Flips an image_vector object left to right
+ 
+  Optional: input 'mirror' to make a symmetrical image, averaging the left
+  and right hemispheres
+ 
+  dat = flip(dat, ['mirror'])
+ 
+  tor. may 2012
+
+Hel
+
+
+_________________________________________
+fmri_data.fmri_data
+_________________________________________
+  [obj, cl_with_averages] = fmri_data(image_names, mask_image, varargin)
+ 
+  Reads a set of image files and a mask image, and returns
+  an fmri_data object with data for all in-mask voxels.
+
+
+
+_________________________________________
+fmri_data.histogram
+_________________________________________
+  ---------------------------------------------------------------
+  Histogram
+  ---------------------------------------------------------------
+
+Help for fmri_data/histogram is inherited from supercla
+
+
+_________________________________________
+fmri_data.history
+_________________________________________
+  Display history for image_vector object
+
+Help for fmri_data/history is inherited from superclass IMAGE_VECTOR
+
+
+
+_________________________________________
+fmri_data.ica
+_________________________________________
+  Spatial ICA of an fmri_data object
+  icadat = ica(fmridat_obj, [number of ICs to save])
+  icadat is also an fmri_data object, with .dat field voxels x components
+ 
+  Notes:
+  icasig = W * mixedsig
+ 
+
+
+_________________________________________
+fmri_data.mean
+_________________________________________
+  function m = mean(obj, [optional args])
+ 
+  Create an image_vector object with mean values for each voxel (cols)
+  across images (rows) of an fmri_data object.
+ 
+  m is an image_vector object whose 
+
+
+_________________________________________
+fmri_data.montage
+_________________________________________
+  fig_handle = montage(image_obj)
+ 
+
+Help for fmri_data/montage is inherited from superclass IMAGE_VECTOR
+
+
+
+_________________________________________
+fmri_data.orthviews
+_________________________________________
+  Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object
+ 
+  Usage:
+  orthviews(image_obj, ['posneg'])
+  Optional 'posneg' input generates orthviews using solid colors.
+
+
+_________________________________________
+fmri_data.plot
+_________________________________________
+  plot(fmridat, [plotmethod])
+ 
+  Plot methods:
+  ----------------------------------------
+  Plot data matrix
+  plot(fmri_data_object)
+ 
+  Plot means by condition
+  plot(fmri_data_object, 'means_for_u
+
+
+_________________________________________
+fmri_data.plot_current_orthviews_coord
+_________________________________________
+  Retrieves and plots the image data series at the current crosshairs in spm_orthviews
+ 
+  voxel_data_series = plot_current_orthviews_coord(dat)
+
+Help for fmri_data/plot_current_orthviews_coord is inh
+
+
+_________________________________________
+fmri_data.predict
+_________________________________________
+  Predict outcome (Y) from brain data and test cross-validated error rate for an fmri_data object
+ 
+  [cverr, stats, optional_outputs] = predict(obj, varargin)
+ 
+  Features:
+  ------------------------
+
+
+_________________________________________
+fmri_data.preprocess
+_________________________________________
+  obj = preprocess(obj, meth, varargin)
+ 
+  Preprocesses data in an fmri_data object
+  Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
+  images, and ope
+
+
+_________________________________________
+fmri_data.read_from_file
+_________________________________________
+  Reads data from image filenames into obj.dat
+ 
+  obj = read_from_file(obj)
+  
+  Try obj = check_image_filenames(obj) first.
+  This is automatically called if you create a new image_vector object wit
+
+
+_________________________________________
+fmri_data.reconstruct_image
+_________________________________________
+  Reconstruct a 3-D or 4-D image from image_vector object obj
+  [voldata, vectorized_voldata] = reconstruct_image(obj)
+ 
+  voldata is and X x Y x Z x Images matrix
+  vectorized_voldata is the same, wi
+
+
+_________________________________________
+fmri_data.regress
+_________________________________________
+  [out, statimg] = regress(dat, [p-val threshold], [thresh_type], ['nodisplay'])
+ 
+  regression method for fmri_data object
+  regress dat.Y on dat.dat at each voxel, and return voxel-wise statistic
+  
+
+
+_________________________________________
+fmri_data.remove_empty
+_________________________________________
+  dat = remove_empty(dat, [logical vector of custom voxels to remove], [logical vector of imgs to remove])
+ 
+  remove vox: logical vector of custom voxels to remove, VOX x 1
+  remove im: logical vecto
+
+
+_________________________________________
+fmri_data.reparse_contiguous
+_________________________________________
+  obj = reparse_contiguous(obj, ['nonempty'])
+ 
+  Re-construct list of contiguous voxels in an image based on in-image
+  voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
+  Results a
+
+
+_________________________________________
+fmri_data.replace_empty
+_________________________________________
+  Replace empty/missing values in an image data object
+  obj = replace_empty(obj, [optional keywords])
+ 
+  Replace missing values in obj.dat stored in obj.removed_voxels and
+  obj.removed_images with 
+
+
+_________________________________________
+fmri_data.resample_space
+_________________________________________
+  Resample the images in an fmri_data object (obj) to the space of another
+  image (sampleto; e.g., a mask image). Works for all image_vector objects.
+ 
+  obj = resample_space(obj, sampleto, [sampling
+
+
+_________________________________________
+fmri_data.rescale
+_________________________________________
+  fmridat = rescale(fmridat, meth)
+ 
+  Rescales data in an fmri_data object
+  Data is observations x images, so operating on the columns operates on
+  images, and operating on the rows operates on vox
+
+
+_________________________________________
+fmri_data.sagg_slice_movie
+_________________________________________
+  sagg_slice_movie(dat, [full_path_of_movie_output_file])
+ 
+  Movie of successive differences (sagittal slice)
+  Enter an image_vector or fmri_data object (usually with time series)
+ 
+
+Help for fmri_d
+
+
+_________________________________________
+fmri_data.saveplots
+_________________________________________
+  Output dir
+
+
+
+_________________________________________
+fmri_data.signtest
+_________________________________________
+  [out, statimg] = signtest(dat, [p-val threshold], [thresh_type])
+ 
+  sign test for each voxel of an fmri_data object
+  returns voxel-wise statistic images.
+ 
+  Inputs:
+  dat should be an fmri_data o
+
+
+_________________________________________
+fmri_data.slices
+_________________________________________
+  Create a montage of single-slice results for every image in an
+  image_vector object
+ 
+ 
+  o = slices(obj, 'orientation', [orientation], 'slice', [slice_mm], 'nimages', [nimgs])
+ 
+  obj is an image_
+
+
+_________________________________________
+fmri_data.ttest
+_________________________________________
+  T-test on fmri_data class object
+  statsimg = ttest(fmridat, pvalthreshold, thresh_type)
+ 
+  ttest(fmridat, p-value threshold, thresh_type)
+ 
+  p-value threshold: p-value, e.g., .05 or .001 or [.001
+
+
+_________________________________________
+fmri_data.union
+_________________________________________
+  Union of two image_vector objects
+ 
+  dat = union(dat1, dat2, outputname)
+     % outputname = character array name for union image
+                    INCLUDE .img at the end.
+ 
+  NOTE: must now be 
+
+
+_________________________________________
+fmri_data.windsorize
+_________________________________________
+  obj = windsorize(obj, [madlimit])
+ 
+  Windsorize an fMRI data object to madlimit Median Absolute Deviations.
+  Default = 5 MADs.
+  Works across rows and columns.
+  Registers this step in history.
+
+
+
+_________________________________________
+fmri_data.write
+_________________________________________
+  Write an image_vector object to an Analyze image.
+  Option to write thresholded image, for statistic_image objects.
+ 
+  obj.dat should contain data, with one COLUMN for each 3-D frame in the
+  4-D i
+
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.11<br></p></div><!--
+##### SOURCE BEGIN #####
+%% METHODS for canlab object-oriented tools
+% The list below prints the first 200 characters of help for each method.
+% You can get additional information by typing >>help objecttype.methodname
+% in the Matlab command window.
+%%
+z = '_________________________________________';
+
+%objname = 'fmri_data'; % for example
+
+fprintf('%%%% %s\n', objname); 
+
+m = methods(objname);
+%%
+
+for i = 1:length(m)
+    %%% Method
+    % New method begins here
+    
+    % *Method name*
+    mname = [objname '.' m{i}];
+    h = help(mname);
+    %h = help(m{i});
+    
+    len = min(200, length(h));
+    
+    fprintf('\n%s\n%s\n%s\n', z, mname, z);
+    
+    disp(h(1:len));
+    
+    fprintf('\n')
+    
+end
+
+
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,199 @@
+DSGN STRUCTURE
+This is the structure variable used by canlab_glm_subject_levels to define an analysis.
+(note: optional fields/fields with defaults may be left undefined)
+
+ ________________________________________________________________________________
+| DSGN.metadata									 |
+|   a fieldname for the user to use as desired (typically for annotation).	 |
+|   EX: DSGN.metadata.notes = 'this design uses a modified HRF from model 4';	 |
+|________________________________________________________________________________|
+ ________________________________________________________________________________
+| DSGN.modeldir									 |
+|   a path (absolute preferred) to the directory holding the subject		 |
+|     level analyses								 |
+|   EX: DSGN.modeldir = '/data/projects/wagerlab/current/labdata/ilcp/Imaging/analyses/first_level/model1';
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.subjects									 |
+|   cell array of subject directories (absolute paths)				 |
+|   EX: DSGN.subjects = filenames('../ilcp[0-9]*','absolute');			 |
+|   EX: DSGN.subjects = importdata('good_subs.txt');				 |
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.funcnames								 |
+|   cell array of strings that specify location of 4D functional data		 |
+|     files within subject directories (may include wildcards)			 |
+|   EX: DSGN.funcnames{1} = 'Functional/Preprocessed/r1/task.nii';		 |
+|   EX: DSGN.funcnames{1} = 'Functional/Preprocessed/*/run*.nii';		 |
+|   (note: the resulting ordering of functional files determines the		 |
+|          session order--must coincide with DSGN.conditions)			 |
++-- OPTIONAL FIELDS -------------------------------------------------------------+
+| - DSGN.allowmissingfunc  (DEFAULT: false)					 |
+|     if true, allow functional files to be missing				 |
+| - DSGN.concatenation  (DEFAULT: none)	   					 |
+|     cell array of arrays of runs to concatenate				 |
+|     (sparse: unconcatenated runs need not be specified)			 |
+|     EX: DSGN.concatenation = {[1 2] [6:10]}  					 |
+|         this will concatenate runs 1 and 2, 6-10, and leave 3-5 separated	 |
+|     concatenation procedure includes:						 |
+|       - concatenation of functional data (DSGN.funcnames)			 |
+|         (NOTE: if DSGN.allowmissingfunc is set, each DSGN.funcnames cell	 |
+|                must match no more than one file)     		     		 |
+|       - concatenate conditions (DSGN.conditions)				 |
+|         (NOTE: it is assumed that concatenated runs each have the same 	 |
+|                conditions in same order)	     	       	   		 |
+|       - merge regressors in block diagonal fashion (DSGN.multireg)		 |
+|       - add intercept regressors for all but one run in each concatenation	 |
+|           (one left out because SPM still includes intercept for session)	 |
+|       - add linear trend regressors for each run in concatenation		 |
+| - DSGN.customrunintercepts							 |
+|     Note: This will only have an effect if using DSGN.convolution		 |
+|     cell array of vectors specifying custom intercepts			 |
+|     one cell per intercept, numbers in vectors specify runs to include in 	 |
+|       intercept regressor. (refer to pre-concatenation run numbers)  	 	 |
+|     keep in mind that SPM will assign an intercept regressor to each "session" |
+|       (where a session is a run or, when using DSGN.concatenation, a 		 |
+|       concatenation of runs). It's important to avoid rank deficiency!	 |
+|     when using this option, no intercepts will be added by DSGN.concatenation  |
+|     EX: If you have 8 runs, you're concatenating them all, but you want session|
+|        intercepts for the first 4 and last 4 runs + leftover run intercepts:   |
+|        DSGN.concatenation = [1:8];	       	      	       	   		 |
+|        DSGN.customrunintercepts = {2 3 4 1:4 6 7 8}; 				 |
+|        This will create 8 intercepts: one each for runs 2 3 4 6 7 and 8, one 	 |
+|          for runs 1-4, and one (added by SPM) for runs 1-8  	    	   	 |
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.tr        repetition time (or "TR") of functional data (in seconds))	 |
+| DSGN.hpf       high pass filter (in seconds)		     	 		 |
+| DSGN.fmri_t    microtime resolution (DEFAULT: 16)				 |
+|   should be left at default unless TR is quite long				 |
+| DSGN.fmri_t0   microtime onset     	   	 				 |
+|   must correspond to reference slice used in slice time correction		 |
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.conditions								 |
+|   cell array (one cell per session) of cell arrays (one cell per		 |
+|     condition) of MAT-file names (acceptable wildcards: [] {} ? *)		 |
+|   each MAT-file contains one or more conditions specified SPM-style (see below)|
+|   if only one session is specified, it will be applied to all sessions	 |
+|   location of MAT-files: see DSGN.modelingfilesdir (see below)		 |
+|   EX: DSGN.conditions{2} = {'heat' 'rate'};	    	 			 |
+|      if the 2nd functional file is .../r2/swraPAINTASK.nii, then this		 |
+|        will add the conditions defined in:		     	  		 |
+|        .../r2/DSGN.modelingfilesdir/heat.mat					 |
+|        .../r2/DSGN.modelingfilesdir/rate.mat					 |
+|   NOTE: all timing is in seconds (not TRs) 		  	    		 |
+|   	      	     	   	   						 |
+|   Example SPM-style condition:	      	 	   			 |
+|     name{1}     = 'heat';							 |
+|     onset{1}    = [16.97 54.84 98.57 138.25 179.95];			 	 |
+|     duration{1} = [10.75 11.25 11.00  11.75  11.50];			 	 |
+|     (See spm fmri -> help -> spm.stats.fmri_spec -> pages 5-10)		 |
++-- OPTIONAL FIELDS -------------------------------------------------------------+
+| - DSGN.pmods  (DEFAULT: no pmods)						 |
+|     cell array (one cell per session) of cell arrays (one cell per condition)	 |
+|       of cell arrays (one cell per modulator) of MAT-file names    		 |
+|     each MAT-file contains cell arrays of SPM pmod fields: name, param, poly.  |
+|       example mat contents:	 	   	      	      	    	   	 |
+|         name{1}  = 'rating';							 |
+|         param{1} = [50 13 32 69 54 71 10 6];					 |
+|         poly{1}  = 1;	      	       	  					 |
+|     (note: these cell arrays of pmod fields will be converted into arrays of	 |
+|            pmod structs for SPM (e.g., name{2} -> pmod(2).name))   	   	 |
+|     location of MAT-files: DSGN.modelingfilesdir (see below)			 |
+|     EX: DSGN.pmods{2}{4} = {'temp' 'rating'};					 |
+|       if the 2nd functional file is .../r2/swraPAINTASK.nii, the 4th condition |
+|         will get the pmods defined in:			      	      	 |
+|         .../r2/DSGN.modelingfilesdir/temp.mat					 |
+|         .../r2/DSGN.modelingfilesdir/rating.mat				 |
+| - DSGN.convolution (DEFAULT: hrf.derivs = [0 0])				 |
+|     structure specifying the convolution to use for conditions		 |
+|     different fields required depending on convolution type			 |
+|     AVAILABLE TYPES (declared as string DSGN.convolution.type)     		 |
+|       'hrf' (Hemodynamic Response Function)					 |
+|	  convolution.time (1/0 switches for time derivatives)			 |
+|	  convolution.dispersion (1/0 switches for dispersion derivatives)	 |
+|         EX: DSGN.convolution.hrf.derivs = [1 0]; % HRF w/ time deriv		 |
+|	'fir' (Finite Impulse Response function)				 |
+|         convolution.windowlength (post-stimulus window length (in seconds))	 |
+|	  convolution.order (number of basis functions)  	     		 |
+|	  convolution.keepduration (optional flag. DEFAULT: FALSE)		 |
+|	    if FALSE, set all durations for all conditions to 0			 |
+|         EX: DSGN.convolution.type = 'fir';					 |
+|	      DSGN.convolution.windowlength = 46;				 |
+|             DSGN.convolution.order = 23;	  				 |
+| - DSGN.ar1 (DEFAULT: false)	       						 |
+|     if true, use autoregressive AR(1) to model serial correlations		 |
+|       (see SPM manual)	  	   	 				 |
+| - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
+|     if true, turn off time modulation of conditions				 |
+|     (see the 'notimemod' option to canlab_spm_contrast_job)			 |
+| - DSGN.singletrials  	   	     						 |
+|     a cell array (1 cell per session) of cell arrays (1 cell per condition) of |
+|       (corresponding to DSGN.conditions) of true/false values indicating    	 |
+|	whether to convert specified condition to set of single trial conditions |
+|	(e.g., from 1 condition with n onsets to n conditions with 1 onset each) |
+| - DSGN.singletrialsall  (DEFAULT: false)					 |
+|     set DSGN.singletrials to true for all conditions				 |
+| - DSGN.modelingfilesdir  (DEFAULT: 'spm_modeling')				 |
+|     directory containing modeling files describing functional data		 |
+|       (see DSGN.conditions, DSGN.pmods, DSGN.multireg)	       		 |
+|     this directory lives in same directory as the described functional file 	 |
+|     EX: DSGN.modelingfilesdir = 'modeling_files2' 	     		     	 |
+|         if the functional file for the 1st session is .../r1/swraPAINTASK.nii  |
+|           the files defining conditions, pmods, and regressors for the 1st 	 |
+|           session will be found in .../r1/modeling_files2	     	 	 |
+| - DSGN.allowemptycond  (DEFAULT: false)					 |
+|     if true, allow empty conditions						 |
+|     this is useful, for example, when you want to model errors for some	 |
+|       subjects but not all subjects have errors   	 	    		 |
+|     WARNING: skipped conditions should NOT be included in contrasts!		 |
+|              (at least not without re-weighting between subjects)		 |
+| - DSGN.allowmissingcondfiles (DEFAULT: false)					 |
+|     if true, throw warning instead of error when no file(s) are found 	 |
+|       corresponding to a MAT-file name/wildcard     	      	      		 |
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.multireg  (DEFAULT: no multiple regressors file)				 |
+|   give the name of an SPM-style "multiple regressors" MAT-file containing	 |
+|     a single TRs x regressors matrix names "R"				 |
+|   ('.mat' will be appended to the file name)					 |
+|   location of MAT-file: DSGN.modelingfilesdir (see above)			 |
+|   EX: DSGN.multireg = 'noise_model1';	       	    				 |
+|________________________________________________________________________________|
+
+ ________________________________________________________________________________
+| DSGN.contrasts  (DEFAULT: no contrasts)					 |
+|   cell array (one cell per contrast) of contrast definitions			 |
+|   see canlab_spm_contrast_job for syntax	  				 |
+|   EX: DSGN.contrasts{1} = {{'heat_H'}};					 |
+|       DSGN.contrasts{2} = {{'heat_H'} {'heat_L'}};				 |
++-- OPTIONAL FIELDS -------------------------------------------------------------+
+| - DSGN.contrastnames  (DEFAULT: automatic names from canlab_spm_contrast_job)  |
+|     cell array (one cell per contrast) containing strings to name contrasts	 |
+|     (sparse: unspecified contrasts may be left blank or undefined)		 |
+|     (see canlab_spm_contrast_job 'names' option)     	 			 |
+|   EX: DSGN.contrasts{2} = 'heat_H-L';						 |
+|   DSGN.contrastweights  (DEFAULT: [1] or [1 -1] as needed)			 |
+|     cell array (one cell per contrast) containing matrices with custom weights |
+|     (sparse: unspecified contrasts may be left blank or undefined)		 |
+|     (see canlab_spm_contrast_job 'weights' option)				 |
+|     EX: DSGN.contrasts{3} = {{'heat_H'} {'heat_MH'} {'heat_ML'} {'heat_L'}};	 |
+|         DSGN.contrastweights{3} = [3 1 -1 -3];				 |
+| - DSGN.regmatching  (DEFAULT: 'anywhere') 					 |
+|     can be set to 'exact' or 'regexp'						 |
+|     (see canlab_spm_contrast_job)						 |
+| - DSGN.defaultsuffix  (DEFAULT: no default suffix)				 |
+|     define a default string that each contrast ends with (e.g., '\*bf\(1\)')   |
+|     only used when DSGN.regmatching == regexp					 |
+|     EX: DSGN.defaultsuffix = '\*bf\(1\)';					 |
+|     (see canlab_spm_contrast_job)						 |
+| - DSGN.noscale  (DEFAULT: false)						 |
+|     if true, use the 'noscale' option to canlab_spm_contrast_job		 |
+|     see canlab_spm_contrast_job						 |
+|________________________________________________________________________________|

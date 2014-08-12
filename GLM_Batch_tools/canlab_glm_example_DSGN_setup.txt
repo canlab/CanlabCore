@@ -1,0 +1,75 @@
+%% AN EXAMPLE OF SETTING UP THE DSGN STRUCT FOR canlab_glm_subject_levels
+% WARNING: none of these values are to be taken as recommendations!
+% (to make executable, this would be saved as an M-file)
+
+% All of the options below that are set to false here need not be included 
+% (they default to false) but have been included in this example simply 
+% as a reminder that they exist.
+
+DSGN.metadata.notes = 'this is just an example DSGN setup in case you want to see how Luka set up his DSGN struct';
+
+%% INPUT
+DSGN.modeldir = '/dreamio3/wagerlab/labdata/current/ilcp/Imaging/analyses/first_level/pr_model2';
+DSGN.subjects = importdata('/dreamio3/wagerlab/labdata/current/ilcp/Imaging/analyses/good_subjects.lst');
+DSGN.funcnames = {'Functional/Preprocessed/s*/swraPAINTASK*.nii'};
+DSGN.allowmissingfunc = false;
+DSGN.concatenation = {[1:4]};
+
+% alternatives:
+% DSGN.subjects = filenames('/dreamio3/wagerlab/labdata/current/ilcp/Imaging/ilcp*_S*_OC*');
+% load EXPT; DSGN.subjects = EXPT.subjects;
+
+
+%% PARAMETERS
+DSGN.tr = 1.98;
+DSGN.hpf = 128;
+DSGN.fmri_t0 = 8;
+
+
+%% MODELING (task conditions, noise regressors, etc)
+DSGN.modelingfilesdir = 'modeling_files_v2';
+
+% (the use of c is merely to facilitate editing: allows easy deletion/addition, 
+% creation of accompanying sparse arrays, etc)
+c=0;
+c=c+1; DSGN.conditions{1}{c} = 'heatantic';
+c=c+1; DSGN.conditions{1}{c} = 'heat_H';
+DSGN.pmods{1}{c} = {'pain_rating_H'};
+c=c+1; DSGN.conditions{1}{c} = 'heat_MH';
+DSGN.pmods{1}{c} = {'pain_rating_MH'};
+c=c+1; DSGN.conditions{1}{c} = 'heat_ML';
+DSGN.pmods{1}{c} = {'pain_rating_ML'};
+c=c+1; DSGN.conditions{1}{c} = 'heat_L';
+DSGN.pmods{1}{c} = {'pain_rating_L'};
+
+DSGN.allowemptycond = false;
+DSGN.notimemod = false;
+
+DSGN.multireg = 'noise_model_1';
+
+%% SINGLE TRIAL
+DSGN.singletrials{1}={1 1 0 0};
+%% this specifies which conditions will be modeled as single trials, in the order that you listed your conditions
+
+%% CONTRASTS
+DSGN.noscale = false;
+DSGN.regmatching = 'regexp';
+DSGN.defaultsuffix = ' \*bf\(1\)$';
+
+c=0;
+c=c+1; DSGN.contrasts{c} = {{'heatantic'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_H'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_MH'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_ML'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_L'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_H'} {'heat_L'}};
+c=c+1; DSGN.contrasts{c} = {{'heat_H'} {'heat_MH'} {'heat_ML'} {'heat_L'}};
+DSGN.contrastweights{c} = [3 1 -1 -3];
+DSGN.contrastnames{c} = 'heat_linear;
+c=c+1; DSGN.contrasts{c} = {{'heat.* xpain_rating^1*bf(1)$'}};
+
+
+
+
+%% SAVE
+save pr_model2 DSGN

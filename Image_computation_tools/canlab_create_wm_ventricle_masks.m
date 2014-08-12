@@ -1,0 +1,93 @@
+function canlab_create_wm_ventricle_masks(wm_mask, gm_mask, varargin)
+
+% function canlab_create_wm_ventricle_masks(wm_mask, gm_mask)
+% This function saves white matter and ventricle masks.
+% output: "white_matter.img" and "ventricles.img" in the same folder of
+%         the input structural files
+%
+% input
+% wm_mask: white matter structural image file  
+%   eg) wm_mask = filenames('Structural/SPGR/wc2*.nii', 'char', 'absolute');
+% gm_mask: gray matter structural image file 
+%   eg) gm_mask = filenames('Structural/SPGR/wc1*.nii', 'char', 'absolute');
+% optional:  if 1st varargin is a number, how liberal or conserative to be in estimating ventricles.  0
+% is most conservative and will yield no ventricles, 1 is very liberal.  If
+% not passed in, default of .4 used.
+
+% 5/4/2012 by Tor Wager and Wani Woo
+% 7/16/2014 creation of ventricle mask updated by Yoni Ashar
+
+canonvent_mask = which('canonical_ventricles.img');
+bstem = which('spm2_brainstem.img');
+canonical_wm = which('white.nii');
+
+if isempty(canonvent_mask) || isempty(bstem) || isempty(canonical_wm)
+    error('If you want to use this function, you need ''canonical_ventricles.img'', ''spm2_brainstem.img'', and ''white.nii'' in your path.');
+end
+
+if ~exist(wm_mask, 'file') || ~exist(gm_mask, 'file')
+    error('Mask files passed in as parameters do not exist.')
+end
+
+vent_thr = .4;
+if nargin>0 && isnumeric(varargin{1})
+    vent_thr = varargin{1};
+end
+
+%% WHITE MATTER
+
+wm = statistic_image('image_names', wm_mask);
+wm = threshold(wm, [.99 1.1], 'raw-between');
+%orthviews(wm)
+
+% mask with canonical
+canonwm = statistic_image('image_names', canonical_wm);
+canonwm = threshold(canonwm, [.5 1.1], 'raw-between');
+
+wm = apply_mask(wm, canonwm);
+%%
+
+bstem = statistic_image('image_names', bstem);
+bstem = resample_space(bstem, wm, 'nearest');
+
+wm = replace_empty(wm);
+bstem = replace_empty(bstem); 
+% remove brainstem voxels
+wm = remove_empty(wm, logical(bstem.dat));
+
+% write
+d = fileparts(wm.fullpath);
+wm.fullpath = fullfile(d, 'white_matter.img');
+write(wm)
+
+
+%% VENTRICLE
+
+
+% find voxels in canonical brain and in canonical ventricles,
+% but not in WM or gray matter
+
+gm = statistic_image('image_names', gm_mask);
+gm = threshold(gm, [vent_thr 1.1], 'raw-between'); 
+
+wm = statistic_image('image_names', wm_mask);
+wm = threshold(wm, [vent_thr 1.1], 'raw-between'); 
+
+% before reconstructing, "manually" enforce the threshold
+gm.dat = gm.dat .* gm.sig;
+wm.dat = wm.dat .* wm.sig;
+
+wm_r = reconstruct_image(wm);
+gm_r = reconstruct_image(gm);
+
+in_neither = ~(gm_r | wm_r);
+vent = rebuild_volinfo_from_dat(image_vector('image_names', wm_mask), in_neither(:)); % wm_mask just provides image space
+
+% now only take part of image in the canonical ventricles area
+vent = apply_mask(vent, statistic_image('image_names', canonvent_mask));
+
+% write
+vent.fullpath = fullfile(fileparts(wm.fullpath), 'ventricles.img');
+write(vent, 'mni')
+
+return

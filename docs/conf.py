@@ -37,7 +37,7 @@ extensions = [
 autodoc_member_order='groupwise'
 
 # tell Sphinx matlab extension where to find matlab code.  Yoni Jan 2015
-matlab_src_dir = 'CanlabCore/'
+matlab_src_dir = ''
 primary_domain = 'mat'
 
 # Add any paths that contain templates here, relative to this directory.

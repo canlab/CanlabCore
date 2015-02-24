@@ -8,7 +8,7 @@ function obj = create(obj, varargin)
 
 % if 'noverbose' is entered, suppress output
 verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin))));
-
+   
 N = fieldnames(obj);
 
 for i = 1:length(varargin)

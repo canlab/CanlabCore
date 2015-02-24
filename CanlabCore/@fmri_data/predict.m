@@ -369,6 +369,7 @@ algorithm_name = 'cv_pcr';      % name of m-file defining training/test function
 useparallel = 'always';         % Use parallel processing, if available
 bootweights = 0;                % bootstrap voxel weights
 verbose = 1;
+doMultiClass = 0;               % option to run multiclass SVM
 
 if length(unique(obj.Y)) == 2
     error_type = 'mcr';
@@ -431,7 +432,10 @@ for i = 1:length(varargin)
                 bootfun_inputs{end+1} = 'savebootweights';
                 bootweights = 1;
                 varargin{i} = [];
-                
+           
+            case 'MultiClass'
+                doMultiClass = 1;
+            
             case 'rolling'
                 tsxval_rolling = 1;
                 inval = varargin{i + 1};
@@ -469,6 +473,8 @@ opt.UseParallel = useparallel;
 % stratified partition, or custom holdout set
 % ---------------------------------------------------------------------
 
+% NOTE: COULD REPLACE ALL THIS WITH cvpart = stratified_holdout_set(Y, varargin)
+
 if numel(nfolds) > 1 % a vector; assume integers for holdout sets
     % Custom holdout set
     fold_indicator = nfolds;
@@ -502,7 +508,7 @@ else
     [trIdx, teIdx] = deal(cell(1, nfolds));
     
     % Classification: Stratified holdout set
-    if length(unique(obj.Y)) < length(obj.Y) / 2
+    if doMultiClass
         
         %cvpart = cvpartition(obj.Y,'k',nfolds); %changed by LC 2/26/13 to account for multiclass svm
         cvpart = cvpartition(length(obj.Y),'k',nfolds);

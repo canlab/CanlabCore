@@ -2,7 +2,7 @@ function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
 
 % run the actual searchlight analysis on each brain chunck 
 % searchlight_dream.m will generate codes to run this funtion.
-
+%
 % Usage:
 % -------------------------------------------------------------------------
 % out = searchlight_disti(dat, mask, dist_i, [additional_inputs])
@@ -24,7 +24,11 @@ function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% For example and usage, please see
+% Example:
+% mask1 = which('weights_NSF_grouppred_cvpcr.img');
+% mask2 = '/Users/clinpsywoo/Documents/Workspace/Wagerlab_Single_Trial_Pain_Datasets/wani_results/v4_wonps/ttest_v6_studyscaling_take2/nonnoc_v6_109subjmap_mean.nii';
+% 
+% [r, dat] = searchlight_correlation(mask1, mask2, 'r', 5);
 % searchlight_dream.m
 %
 % see also
@@ -52,7 +56,7 @@ for i = 1:length(additional_inputs)
             case 'algorithm_name'
                 algorithm_name = additional_inputs{i+1};
                 additional_inputs{i} = []; additional_inputs{i+1} = [];
-            case 'r'
+            case 'r' % radius
                 r = additional_inputs{i+1};
                 additional_inputs{i} = []; additional_inputs{i+1} = [];
             case 'cv_assign'
@@ -227,7 +231,7 @@ if size(dat.Y,2) == 1
         
     elseif numel(unique(dat.Y(dat.Y~=0))) > 2 
         out_method{1} = 'correlation';
-        test_Y1{1} = dat.Y; 
+        test_Y{1} = dat.Y; 
     end
     
 % if data.Y has more than one column
@@ -251,7 +255,7 @@ dat.Y = dat.Y(:,1);
 
 end
 
-function test_results = get_test_results(stats, test_Y, out_method)
+function test_results = get_test_results(stats, test_Y, out_method,algorithm_name)
 
 for i = 1:numel(out_method)
     

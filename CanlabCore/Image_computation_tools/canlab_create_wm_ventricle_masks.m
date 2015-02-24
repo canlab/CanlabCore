@@ -10,12 +10,17 @@ function canlab_create_wm_ventricle_masks(wm_mask, gm_mask, varargin)
 %   eg) wm_mask = filenames('Structural/SPGR/wc2*.nii', 'char', 'absolute');
 % gm_mask: gray matter structural image file 
 %   eg) gm_mask = filenames('Structural/SPGR/wc1*.nii', 'char', 'absolute');
-% optional:  if 1st varargin is a number, how liberal or conserative to be in estimating ventricles.  0
-% is most conservative and will yield no ventricles, 1 is very liberal.  If
-% not passed in, default of .4 used.
+% optional:  
+%   you can specify how liberal or conservative to be in estimating white
+%   matter and ventricles. 1 is most conservative and will yield no
+%   ventricles, and 0 is very liberal. The default of wm_thr is .9, the
+%   default of vent_thr is .9. 
+%   e.g)  'wm_thr', .99
+%         'vent_thr', .95
 
 % 5/4/2012 by Tor Wager and Wani Woo
 % 7/16/2014 creation of ventricle mask updated by Yoni Ashar
+% 12/11/2014 fixed some bugs by Wani Woo
 
 canonvent_mask = which('canonical_ventricles.img');
 bstem = which('spm2_brainstem.img');
@@ -29,9 +34,14 @@ if ~exist(wm_mask, 'file') || ~exist(gm_mask, 'file')
     error('Mask files passed in as parameters do not exist.')
 end
 
-vent_thr = .4;
-if nargin>0 && isnumeric(varargin{1})
-    vent_thr = varargin{1};
+vent_thr = .1; % 1 - 0.8
+wm_thr = .9;
+if any(strcmp(varargin, 'wm_thr'))
+    wm_thr = varargin{find(strcmp(varargin, 'wm_thr'))+1};
+end
+
+if any(strcmp(varargin, 'vent_thr'))
+    vent_thr = 1 - varargin{find(strcmp(varargin, 'vent_thr'))+1};
 end
 
 %% WHITE MATTER
@@ -42,7 +52,8 @@ wm = threshold(wm, [.99 1.1], 'raw-between');
 
 % mask with canonical
 canonwm = statistic_image('image_names', canonical_wm);
-canonwm = threshold(canonwm, [.5 1.1], 'raw-between');
+canonwm = threshold(canonwm, [wm_thr 1.1], 'raw-between');
+canonwm.dat(~canonwm.sig) = 0;
 
 wm = apply_mask(wm, canonwm);
 %%
@@ -58,7 +69,8 @@ wm = remove_empty(wm, logical(bstem.dat));
 % write
 d = fileparts(wm.fullpath);
 wm.fullpath = fullfile(d, 'white_matter.img');
-write(wm)
+wm.dat(~wm.sig) = 0;
+write(wm);
 
 
 %% VENTRICLE
@@ -88,6 +100,6 @@ vent = apply_mask(vent, statistic_image('image_names', canonvent_mask));
 
 % write
 vent.fullpath = fullfile(fileparts(wm.fullpath), 'ventricles.img');
-write(vent, 'mni')
+write(vent)
 
 return

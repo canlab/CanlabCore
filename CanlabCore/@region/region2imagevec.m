@@ -27,6 +27,13 @@ ivecobj.dat = cat(2, cl.all_data)';
 if isempty(ivecobj.dat) || all(ivecobj.dat == 0), ivecobj.dat = cat(1, cl.val); end
 if isempty(ivecobj.dat) || all(ivecobj.dat == 0), ivecobj.dat = cat(2, cl.Z)'; end
 
+% Wani added the following 5 lines to get a correct data alignment
+xyz = cat(2,cl.XYZ)';
+[dummy, idx1] = sort(xyz(:,1));
+[dummy, idx2] = sort(xyz(idx1,2));
+[dummy, idx3] = sort(xyz(idx1(idx2),3));
+ivecobj.dat = ivecobj.dat(idx1(idx2(idx3)),:);
+
 % tor changed april 28 2011 to be all voxels
 ivecobj.removed_voxels = mask(:) == 0 | isnan(mask(:)); %false(n, 1);
 

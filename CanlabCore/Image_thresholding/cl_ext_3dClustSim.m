@@ -74,7 +74,7 @@ if ~manual_fwhm
 end
 
 fwhm = fwhm';
-fwhm_vox = fwhm/voxelsize_mm;
+fwhm_vox = fwhm./voxelsize_mm;
 % 06/27/13 Wani: 3dFWHMx gives fwhm in mm, not vox.  
 
 % if sum(size(voxelsize_mm) == size(fwhm)) > 0

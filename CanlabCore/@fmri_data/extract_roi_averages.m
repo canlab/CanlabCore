@@ -63,8 +63,44 @@ function [cl, varargout] = extract_roi_averages(obj, mask_image, varargin)
 % Modified June 11, 2013 by Tor
 %   - use resample_space instead of resample_to_image_space
 
+% Modified Dec 1, 2014 by Wani
+%   - moved up the part of parsing optional inputs because resample_space 
+%     causes a problem for the unique_mask_values option
+%   - For resample_space, the 'nearest' option should be used when the 
+%     "unique_mask_values" option is used. 
+
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
 varargout = {};
+
+% ---------------------------------
+% define region object based on choices
+% also define optional inputs
+% ---------------------------------
+
+average_over = 'unique_mask_values'; %'contiguous_regions'  or 'unique_mask_values';
+
+for varg = 1:length(varargin)
+    if ischar(varargin{varg})
+        switch varargin{varg}
+            
+            % reserved keywords
+            case 'contiguous_regions', average_over = 'contiguous_regions';
+            case 'unique_mask_values', average_over = 'unique_mask_values';
+                
+            case {'pattern_expression', 'donorm'}
+                % do nothing -- ignore and use later
+                
+            case {'nonorm'}
+                pattern_norm = 0; 
+                
+            otherwise
+                disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
+                fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
+                error('Exiting');
+        end
+    end
+end
+
 
 %space_defining_image = deblank(obj.fullpath(1, :));
 space_defining_image = obj.mask;
@@ -108,7 +144,14 @@ else
         % resample it to the image space
         % * this step cannot be done recursively...could be worked on.
         fprintf('Resampling mask. ');
-        mask = resample_space(mask, space_defining_image);
+        if any(strcmp(average_over, 'unique_mask_values'))
+            
+            % added by Wani 12/01/2014: "linear" interpolation causes a
+            % problem for the unique_mask_values option. 
+            mask = resample_space(mask, space_defining_image, 'nearest'); 
+        else
+            mask = resample_space(mask, space_defining_image);
+        end
         
         %mask = resample_to_image_space(mask, space_defining_image); % do
         %not use - requires re-loading from disk and removes any manual
@@ -167,35 +210,6 @@ else
 end
 
 fprintf('\n');
-
-% ---------------------------------
-% define region object based on choices
-% also define optional inputs
-% ---------------------------------
-
-average_over = 'unique_mask_values'; %'contiguous_regions'  or 'unique_mask_values';
-
-for varg = 1:length(varargin)
-    if ischar(varargin{varg})
-        switch varargin{varg}
-            
-            % reserved keywords
-            case 'contiguous_regions', average_over = 'contiguous_regions';
-            case 'unique_mask_values', average_over = 'unique_mask_values';
-                
-            case {'pattern_expression', 'donorm'}
-                % do nothing -- ignore and use later
-                
-            case {'nonorm'}
-                pattern_norm = 0; 
-                
-            otherwise
-                disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
-                fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
-                error('Exiting');
-        end
-    end
-end
 
 cl = region(mask, average_over);
 cl(1).source_images = obj.fullpath;
@@ -308,7 +322,7 @@ for i = 1:nregions
             if size(regiondat, 2) == 1
                 regionmean = double(regiondat);
             else
-                regionmean = double(nanmean(regiondat')');
+                regionmean = double(nanmean(regiondat,2));
             end
         end % pattern or average...
         

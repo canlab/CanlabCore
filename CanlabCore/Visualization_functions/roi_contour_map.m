@@ -82,6 +82,8 @@ doxyz = 0;
 docoord = 0;
 donotfill = 0;
 dowhole = 0;
+outline_color_pos = 'r';
+outline_color_neg = 'b';
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -91,6 +93,9 @@ for i = 1:length(varargin)
                 docolor = 1; colors = varargin{i+1};
             case {'sig'}
                 dosig = 1; 
+            case {'sigcolor'}
+                outline_color_pos = varargin{i+1};
+                outline_color_neg = varargin{i+2};
             case {'colorbar'}
                 docolorbar = 1; 
             case {'use_same_range'}
@@ -221,7 +226,7 @@ if docolor, colormap(colors); end
 for jj = 1:rnum
     
     if dosig
-        xyz = [coord{jj}.dat(1,:)', coord{jj}.dat(2,:)', coord{jj}.Z', coord{jj}.sig'];
+        xyz = [coord{jj}.dat(1,:)', coord{jj}.dat(2,:)', coord{jj}.Z', sign(coord{jj}.Z') .* coord{jj}.sig'];
     else
         xyz = [coord{jj}.dat(1,:)', coord{jj}.dat(2,:)', coord{jj}.Z'];
     end
@@ -272,8 +277,10 @@ for jj = 1:rnum
     end
     
     if dosig
-        x_out{jj} = [newX(vsig{jj}==1)-.5 newX(vsig{jj}==1)-.5 newX(vsig{jj}==1)+.5 newX(vsig{jj}==1)+.5 newX(vsig{jj}==1)-.5];
-        y_out{jj} = [newY(vsig{jj}==1)-.5 newY(vsig{jj}==1)+.5 newY(vsig{jj}==1)+.5 newY(vsig{jj}==1)-.5 newY(vsig{jj}==1)-.5];
+        x_out_pos{jj} = [newX(vsig{jj}==1)-.5 newX(vsig{jj}==1)-.5 newX(vsig{jj}==1)+.5 newX(vsig{jj}==1)+.5 newX(vsig{jj}==1)-.5];
+        y_out_pos{jj} = [newY(vsig{jj}==1)-.5 newY(vsig{jj}==1)+.5 newY(vsig{jj}==1)+.5 newY(vsig{jj}==1)-.5 newY(vsig{jj}==1)-.5];
+        x_out_neg{jj} = [newX(vsig{jj}==-1)-.5 newX(vsig{jj}==-1)-.5 newX(vsig{jj}==-1)+.5 newX(vsig{jj}==-1)+.5 newX(vsig{jj}==-1)-.5];
+        y_out_neg{jj} = [newY(vsig{jj}==-1)-.5 newY(vsig{jj}==-1)+.5 newY(vsig{jj}==-1)+.5 newY(vsig{jj}==-1)-.5 newY(vsig{jj}==-1)-.5];
     end
     
     lim_max(jj) = max(max(vZ{jj}));
@@ -329,8 +336,14 @@ for jj = 1:rnum
             if ~donotfill
                 %for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
                 %for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
-                for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', 'k', 'linewidth', 1, 'linestyle', '-'); end
-                for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', 'k', 'linewidth', 1, 'linestyle', '-'); end
+                
+                % black lines
+                for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', [.2 .2 .2], 'linewidth', 1, 'linestyle', '-'); end
+                for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', [.2 .2 .2], 'linewidth', 1, 'linestyle', '-'); end
+
+                % white lines
+%                 for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
+%                 for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
             else
                 for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', repmat(.2, 1, 3), 'linewidth', 1.5, 'linestyle', '-'); end
                 for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', repmat(.2, 1, 3), 'linewidth', 1.5, 'linestyle', '-'); end
@@ -342,7 +355,11 @@ for jj = 1:rnum
             for i = 1:size(xx{jj},1), fill(xx{jj}(i,:), yy{jj}(i,:), 'w'); end % this is wrong.
         else
             if ~donotfill
+                % fill black
                 for i = 1:size(xx{jj},1), fill(xx{jj}(i,:), yy{jj}(i,:), 'k'); end
+                
+                % fill white
+%                 for i = 1:size(xx{jj},1), fill(xx{jj}(i,:), yy{jj}(i,:), 'w', 'edgecolor', 'w'); end
             else
                 for i = 1:size(xx{jj},1), fill(xx{jj}(i,:), yy{jj}(i,:), 'w', 'edgecolor', 'w'); end
                 xy_outline_idx{jj} = outline(xx_outline{jj}, yy_outline{jj});
@@ -351,8 +368,11 @@ for jj = 1:rnum
         end
         
         if dosig
-            xy_idx{jj} = outline(x_out{jj}, y_out{jj});
-            draw_outline(x_out{jj},y_out{jj},xy_idx{jj},'r',5)
+            xy_idx_pos{jj} = outline(x_out_pos{jj}, y_out_pos{jj});
+            draw_outline(x_out_pos{jj},y_out_pos{jj},xy_idx_pos{jj},outline_color_pos,7)
+            
+            xy_idx_neg{jj} = outline(x_out_neg{jj}, y_out_neg{jj});
+            draw_outline(x_out_neg{jj},y_out_neg{jj},xy_idx_neg{jj},outline_color_neg,7)
 %             for i = 1:size(x_out{jj},1)
 %                 for i2 = 1:4
 %                     if xy_idx{jj}(i,i2) 

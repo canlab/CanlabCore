@@ -41,7 +41,7 @@ function obj = addblobs(obj, cl, varargin)
 % turn clusters into mask and volume info
 [dummy, mask] = clusters2mask2011(cl);
 
-if sum(mask(:)) == 0, warning('No voxels in cl! Empty/zero cl.Z field? Bad cl?'); end
+if sum(mask(:)) == 0, warning('No voxels in cl! Empty/zero cl.Z field? Bad cl? No results?'); return, end
 
 XYZ = cat(2, cl(:).XYZ);
 

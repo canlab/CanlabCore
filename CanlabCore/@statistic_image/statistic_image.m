@@ -1,5 +1,46 @@
-classdef statistic_image < image_vector
-% Class definition for a statistic_image object.
+% First line: One-line summary description of function
+%
+% Usage:
+% -------------------------------------------------------------------------
+% function obj = statistic_image(varargin)
+%
+% For objects: Type methods(object_name) for a list of special commands
+%              Type help object_name.method_name for help on specific
+%              methods.
+%
+% Author and copyright information:
+% -------------------------------------------------------------------------
+%     Copyright (C) <year>  <name of author>
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Inputs:
+% -------------------------------------------------------------------------
+% xxx           xxx
+%
+% Outputs:
+% -------------------------------------------------------------------------
+% xxx           xxx
+%
+% Examples:
+% -------------------------------------------------------------------------
+%
+% give examples here
+%
+% See also:
+% * list other functions related to this one, and alternatives*
+%
 % Here is a short example of some things you can do with this object:
 % 
 % As with any object class in this toolbox, you can create an object by
@@ -53,6 +94,8 @@ classdef statistic_image < image_vector
 % robust_p_000X.img as the p values.  X is assumed = 1, but can be
 % overloaded by passing in a dat_descrip field. i.e.
 % deltadon=statistic_image('dat_descrip', 4, 'type', 'robreg')
+
+classdef statistic_image < image_vector
 
 
     properties
@@ -141,12 +184,17 @@ classdef statistic_image < image_vector
                 end % string input
             end % process inputs
             
-            % if loading in a robust regression image, overload image_names
-            obj.image_names = sprintf('rob_beta_%04d.img',obj.dat_descrip);  
-            
             % load data, if we don't have data yet
             % But we do have valid image names.
             % ----------------------------------------
+            
+            % if loading in a robust regression image, overload image_names
+            %    Yoni originally added this part (2014-07-24), and Wani
+            %    added if-statement to fix a bug related to this part (2014-08-26). 
+            if strcmp(obj.type, 'robreg')
+                if isempty(obj.dat_descrip), obj.dat_descrip=1; end %by default, assume user wants rob img 1 if none entered
+                obj.image_names = sprintf('rob_beta_%04d.img',obj.dat_descrip); 
+            end
             
             obj = check_image_filenames(obj);
             
@@ -184,9 +232,11 @@ classdef statistic_image < image_vector
                     obj.type = 'robust regression:  .dat is beta values, .p is robust p values';
                     
                     pimg = image_vector('image_names', sprintf('rob_p_%04d.img',obj.dat_descrip));
+                    bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
                     obj.p = pimg.dat;
                     obj.p_type = 'robust';
-                    obj.dat_descrip = ['robust regression for covariate number ' num2str(obj.dat_descrip)];
+                    obj.dat = bimg.dat;%pimg.dat;
+                    obj.dat_descrip = ['robust regression for covariate number ' num2str(obj.dat_descrip)];            
                     
                 case 'generic'
                     % do nothing

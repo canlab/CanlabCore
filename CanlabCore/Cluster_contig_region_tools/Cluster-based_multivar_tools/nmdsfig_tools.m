@@ -633,6 +633,8 @@ function c = get_correlations(c, varargin)
         % no between covariates, just use correlations
          if strcmp(corrtype, 'r')
              [r,p]=corrcoef(c.dat); r(r>.9999) = 1;
+         elseif strcmp(lower(corrtype), 'spearman')
+             [r,p] = corr(c.dat, 'type', 'Spearman');
          else
               [r,t,p] = correlation(corrtype, c.dat);
          end

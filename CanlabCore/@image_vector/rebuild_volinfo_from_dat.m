@@ -12,6 +12,7 @@ function dat = rebuild_volinfo_from_dat(dat, newdat)
 %  dat:  dat.dat contains the non-zero values of newdat, and dat.volInfo is
 %  correctly defining the image space
 
+
 if length(newdat) ~= dat.volInfo.nvox
     error('newdat MUST be size of ENTIRE image (dat.volInfo.nvox).  Image_vector.reconstruct_image may be helpful');
 end
@@ -32,3 +33,7 @@ dat = reparse_contiguous(dat);
 
 % rebuild sig field if needed
 if isprop(dat, 'sig'), dat.sig = true(size(dat.dat)); end
+
+dat.removed_voxels = false(dat.volInfo.n_inmask, 1);
+
+end

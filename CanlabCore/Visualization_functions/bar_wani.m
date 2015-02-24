@@ -80,6 +80,7 @@ function handle = bar_wani(y, e, bar_width, varargin)
 % Copyright (C) 2014  Wani Woo
 
 % Programmers' notes:
+%  'yline'
 
 
 dosave = 0;
@@ -96,6 +97,7 @@ ast_adj_y_neg = .5;
 ast_adj_x = 0; 
 text_adj_y = 0;
 bar_edgewidth = 1.8;
+doyline = 0;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -117,6 +119,8 @@ for i = 1:length(varargin)
                 doytick = 1; ytick = varargin{i+1};
             case {'btwlines'}
                 dobtwlines = 1; btwlnstyle = varargin{i+1};
+            case {'yline'}
+                doyline = 1; yln_y = varargin{i+1};
             case {'text'}
                 dotext = 1; text_bar = varargin{i+1};
             case {'scatter'}
@@ -151,7 +155,11 @@ else
     ymin = ylim(1);
     ymax = ylim(2);
 end
-  
+
+if doyline
+    line([0.55 .45+size(y,1)], [yln_y yln_y], 'linewidth', 1, 'linestyle', '--', 'color', [.4 .4 .4]);  
+end
+
 barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
 set(gcf, 'Color', 'w')
 set(gca, 'ylim', [ymin ymax], 'XLim', [0.55 .45+size(y,1)], 'fontsize', 20, 'linewidth', 1.8); % **ADJUST**: adjust basic setting for axis

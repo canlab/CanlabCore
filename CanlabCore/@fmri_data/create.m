@@ -1,9 +1,10 @@
 function obj = create(obj, varargin)
-    % Create Create an object from an empty obj structure, assigning fieldname/value pairs as optional arguments. Used in fmri_data.m class constructor.
-    %
-    % :param obj: create(obj, varargin).
-    % :returns: the created object.
-
+% Create an object from an empty obj structure, assigning fieldname/value
+% pairs as optional arguments.
+%
+% obj = create(obj, varargin)
+%
+% Used in fmri_data.m class constructor.
 
 % if 'noverbose' is entered, suppress output
 verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin))));

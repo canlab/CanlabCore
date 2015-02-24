@@ -36,6 +36,7 @@
 % because "exist" can't read comma-appended vols
 %
 % case 'load_and_continue', load_and_continue = 1; doraw_data = 1;
+% case '4D', dim4 = 1; %use this for 4D data
 %
 % Example: Do 1st subject last, save results afterwards
 % cl = extract_raw_data(EXPT, cl, 'subjects', [2:7 9:length(EXPT.FILES.im_files) 1]);
@@ -62,6 +63,7 @@ function [clusters, varargout] = extract_raw_data(EXPT, clusters, varargin)
     multiple_volumes = 0; %can check if files exist, because none are comma-appended vols
     imgs = [];
     load_and_continue = 0; % pick up where we left off
+    dim4 = 0; %assume not 4D images
 
     % --------------------------------------------------------
     % Set up inputs
@@ -86,6 +88,8 @@ function [clusters, varargout] = extract_raw_data(EXPT, clusters, varargin)
                 case 'multiple_volumes', multiple_volumes = 1;
 
                 case 'load_and_continue', load_and_continue = 1; doraw_data = 1;
+                    
+                case '4D', dim4 = 1;
 
                 otherwise, warning(['Unknown input string option:' varargin{i}]);
             end
@@ -238,7 +242,11 @@ function [clusters, varargout] = extract_raw_data(EXPT, clusters, varargin)
         wh = all(extract_imgs{i} == ' ', 2);
         extract_imgs{i}(logical(wh), :) = [];
         
-        nimgs(i) = size(extract_imgs{i}, 1);
+        if ~dim4
+            nimgs(i) = size(extract_imgs{i}, 1);
+        else
+            nimgs(i) = size(expand_4d_filenames(extract_imgs{i}), 1);
+        end
         
     end
     maximgs = max(nimgs);

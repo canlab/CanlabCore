@@ -12,6 +12,9 @@ function cl = orthviews(image_obj, varargin)
 %
 % Output is clusters structure (see also region.m)
 %
+% Pass in 'largest_region' to center the orthviews on the largest region in the  image
+%
+%
 % e.g., 
 % T-test, Construct a stats_image object, threshold and display:
 % statsimg = ttest(fmridat, .001, 'unc');
@@ -35,13 +38,14 @@ function cl = orthviews(image_obj, varargin)
 
 input_handle = [];
 cl = [];
+doreg=0;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
-                
+            case 'largest_region', doreg = 1;    
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -114,7 +118,15 @@ end
 
 spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
     
-spm_orthviews('Reposition', [0 0 0]); drawnow
+% set crosshairs
+if doreg
+    [~,wh] = max(cat(1,cl{1}.numVox));
+    spm_orthviews('Reposition', cl{1}(wh).mm_center);
+else
+    spm_orthviews('Reposition', [0 0 0]); 
+end
+drawnow
+
 
 end % function
 

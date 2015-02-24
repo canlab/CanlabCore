@@ -1,4 +1,4 @@
-classdef comp_model < design_matrix
+classdef comp_model < handle & design_matrix
     
     % comp_model: data class for creating a computational model
     %
@@ -247,16 +247,16 @@ classdef comp_model < design_matrix
             
             if nargin > 1 %use supplied file name
                 if ischar(varargin{1})
-                    dlmwrite(fullfile(varargin{1},[obj.model '_Params.csv']), obj.params, 'delimiter',',') %Params
-                    dlmwrite(fullfile(varargin{1},[obj.model '_Trial.csv']), obj.trial, 'delimiter',',') %TrialData
+                    dlmwrite(fullfile(varargin{1},[obj.model '_Params.csv']), obj.params, 'delimiter',',','precision',10) %Params
+                    dlmwrite(fullfile(varargin{1},[obj.model '_Trial.csv']), obj.trial, 'delimiter',',','precision',10) %TrialData
                 end
                 
             elseif ~isempty(obj.fname) %use obj.fname
-                dlmwrite(fullfile(obj.fname,[obj.model '_Params.csv']), obj.params, 'delimiter',',') %Params
-                dlmwrite(fullfile(obj.fname,[obj.model '_Trial.csv']), obj.trial, 'delimiter',',') %TrialData
+                dlmwrite(fullfile(obj.fname,[obj.model '_Params.csv']), obj.params, 'delimiter',',','precision',10) %Params
+                dlmwrite(fullfile(obj.fname,[obj.model '_Trial.csv']), obj.trial, 'delimiter',',','precision',10) %TrialData
             else
-                dlmwrite([obj.model '_Params.csv'], obj.params, 'delimiter',',') %Params
-                dlmwrite([obj.model '_Trial.csv'], obj.trial, 'delimiter',',') %TrialData
+                dlmwrite([obj.model '_Params.csv'], obj.params, 'delimiter',',','precision',10) %Params
+                dlmwrite([obj.model '_Trial.csv'], obj.trial, 'delimiter',',','precision',10) %TrialData
             end
         end
         
@@ -358,10 +358,10 @@ classdef comp_model < design_matrix
                     end
                     
                     if ~persist
-                        eval(['[xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(@' obj.model ', ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);'])
+                        [xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(str2func(obj.model), ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);
                     else
                         try
-                            eval(['[xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(@' obj.model ', ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);'])
+                            [xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(str2func(obj.model), ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);
                         catch
                             display('Fmincon Could Not Converge.  Skipping Iteration')
                             xpar(iter,1:length(obj.param_min)) = nan(1,length(obj.param_min));
@@ -378,11 +378,12 @@ classdef comp_model < design_matrix
                 %output parameters
                 params(s,1) = Subjects(s);
                 params(s,2:length(xParMin) + 1) = xParMin;
-                params(s,length(xParMin) + 2) = fvalMin;
                 if obj.esttype == 'LLE'
+                    params(s,length(xParMin) + 2) = -fvalMin;
                     params(s,length(xParMin) + 3) = penalizedmodelfit(-fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'AIC');
                     params(s,length(xParMin) + 4) = penalizedmodelfit(-fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'BIC');
                 elseif obj.esttype =='SSE'
+                    params(s,length(xParMin) + 2) = fvalMin;
                     params(s,length(xParMin) + 3) = penalizedmodelfit(fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'AIC');
                     params(s,length(xParMin) + 4) = penalizedmodelfit(fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'BIC');
                 end
@@ -466,7 +467,7 @@ classdef comp_model < design_matrix
             % model_fit()
             % -------------------------------------------------------------------------
             
-            params = obj.params(:,2:length(obj.param_min + 1));
+            params = obj.params(:,2:length(obj.param_min)+ 1);
             
         end
         
@@ -482,7 +483,7 @@ classdef comp_model < design_matrix
             
             sprintf(['Summary of Model: ' obj.model ...
                 '\n-----------------------------------------' ...
-                '\nAverage Parameters:\t' num2str(nanmean(obj.params(:,2:length(obj.param_min)))) ...
+                '\nAverage Parameters:\t' num2str(nanmean(obj.params(:,2:length(obj.param_min) + 1))) ...
                 '\nAverage AIC:\t\t' num2str(nanmean(obj.params(:,end - 1))) ...
                 '\nAverage BIC:\t\t' num2str(nanmean(obj.params(:,end))) ...
                 '\nAverage ' obj.esttype ':\t\t' num2str(nanmean(obj.params(:,end-3))) ...
@@ -599,6 +600,179 @@ classdef comp_model < design_matrix
             end
             
         end %end plot function
+        
+        function obj = fit_model_xval(obj, varargin)
+            
+            % model_output = fit_model_xval(obj, varargin)
+            %
+            % -------------------------------------------------------------------------
+            % This function will fit a model (model) using fmincon to a dataset (data)
+            % multiple times with random start values (nStart) with the parameters being
+            % constrained to a lower bound (param_min) and upper bound (param_max).
+            % Estimates a separate parameter to each subject (indicated in 1st column
+            % of dataset).  Requires some helper functions from my github repository
+            % (https://github.com/ljchang/toolbox/tree/master/Matlab).  Clone this
+            % repository and add paths to Matlab.  Requires that the model be a
+            % named function and that it can parse the input data.
+            %
+            % -------------------------------------------------------------------------
+            % OPTIONAL INPUTS:
+            % -------------------------------------------------------------------------
+            % kfolds                Followed by number of folds runs
+            %                       cross-validated parameter estimation on
+            %                       k folds.  If k=1, then estimates for
+            %                       the entire sample.  If k=number of
+            %                       subjects then run leave-one-subject out
+            %                       (default = LOSO)
+            %
+            % show_subject          Displays Subject ID for every iteration.  Helpful for
+            %                       debugging.  Off by default.
+            %
+            % persistent_fmincon    Continues running fmincon despite error.  Good for
+            %                       salvaging data if a model is having difficulty converging
+            %
+            %
+            % -------------------------------------------------------------------------
+            % OUTPUTS:
+            % -------------------------------------------------------------------------
+            % obj                   com_model class instance containing all of the trial-trial data and
+            %                       Parameter estimates
+            %
+            % -------------------------------------------------------------------------
+            % EXAMPLES:
+            % -------------------------------------------------------------------------
+            % lin_model = fit_model(lin_model)
+            % lin_model = fit_model(lin_model, 'persistent_fmincon', 'show_subject')
+            %
+            % -------------------------------------------------------------------------
+            % Author and copyright information:
+            % -------------------------------------------------------------------------
+            %     Copyright (C) 2014  Luke Chang
+            %
+            %     This program is free software: you can redistribute it and/or modify
+            %     it under the terms of the GNU General Public License as published by
+            %     the Free Software Foundation, either version 3 of the License, or
+            %     (at your option) any later version.
+            %
+            %     This program is distributed in the hope that it will be useful,
+            %     but WITHOUT ANY WARRANTY; without even the implied warranty of
+            %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+            %     GNU General Public License for more details.
+            %
+            %     You should have received a copy of the GNU General Public License
+            %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+            % -------------------------------------------------------------------------
+            
+            %--------------------------------------------------------------------------
+            % Setup
+            %--------------------------------------------------------------------------
+            
+            global trialout
+            
+            % Defaults
+            showSubject = 0;
+            persist = 0;
+            nfolds = unique(obj.dat(:,1)); %use leave one subject out by default
+            
+            % Parse Inputs
+            for varg = 1:length(varargin)
+                if ischar(varargin{varg})
+                    if strcmpi(varargin(varg),'show_subject')
+                        showSubject = 1;
+                        varargin(varg) = [];
+                    elseif strcmpi(varargin,'persistent_fmincon')
+                        persist = 1;
+                        varargin(varg) = [];
+                    elseif strcmpi(varargin,'kfolds')
+                        nfolds = varargin{varg + 1};
+                        varargin(varg) = []; varargin(varg + 1) = [];
+                    end
+                end
+            end
+            
+            %--------------------------------------------------------------------------
+            % create cross-validation partitions
+            %--------------------------------------------------------------------------
+            
+            Subjects = unique(obj.dat(:,1));
+            
+            Ind = cvpartition(length(Subjects),'KFold',nfolds);
+            
+            %--------------------------------------------------------------------------
+            % Estimate and test model using k-fold cross-validation
+            %--------------------------------------------------------------------------
+            
+            for fold = 1:nfolds
+                trdata = obj.dat(ismember(obj.dat(:,1),Subjects(Ind.training(s))),:);
+                tedata = obj.dat(ismember(obj.dat(:,1),Subjects(Ind.test(s))),:);
+                
+                
+                allout = [];
+                
+                
+                %Find Best fitting parameter if running multiple starting parameters
+                [xParMin, fvalMin] = FindParamMin(xpar, fval);
+                
+                %output parameters
+                params(s,1) = Subjects(s);
+                params(s,2:length(xParMin) + 1) = xParMin;
+                params(s,length(xParMin) + 2) = fvalMin;
+                if obj.esttype == 'LLE'
+                    params(s,length(xParMin) + 3) = penalizedmodelfit(-fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'AIC');
+                    params(s,length(xParMin) + 4) = penalizedmodelfit(-fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'BIC');
+                elseif obj.esttype =='SSE'
+                    params(s,length(xParMin) + 3) = penalizedmodelfit(fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'AIC');
+                    params(s,length(xParMin) + 4) = penalizedmodelfit(fvalMin, size(sdat,1), length(xParMin), 'type', obj.esttype, 'metric', 'BIC');
+                end
+                
+                %aggregate trials
+                allout = [allout; trialout];
+            end
+            
+            %--------------------------------------------------------------------------
+            % Collate Output
+            %--------------------------------------------------------------------------
+            
+            obj.params = params;
+            obj.trial = allout;
+            
+            %--------------------------------------------------------------------------
+            % Subfunctions
+            %--------------------------------------------------------------------------
+            
+            function f = nested_crossvalidation(xpar, trdata, tedata)
+                for s = 1:length(Subjects)
+                    %                 if showSubject; display(['Subject ', num2str(Subjects(s))]); end %Show Subject ID for every iteration if requested
+                    
+                    sdat = obj.dat(obj.dat(:,1)==Subjects(s),:); %Select subject's data
+                    
+                    xpar = zeros(obj.nStart,length(obj.param_min)); fval = zeros(obj.nStart,1); exitflag = zeros(obj.nStart,1); out = {obj.nStart,1};  %Initialize values to workspace
+                    
+                    for iter = 1:obj.nStart  %Loop through multiple iterations of nStart
+                        
+                        %generate random initial starting values for free parameters
+                        for ii = 1:length(obj.param_min)
+                            ipar(ii) = random('Uniform',obj.param_min(ii),obj.param_max(ii),1,1);
+                        end
+                        
+                        if ~persist
+                            [xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(str2func(obj.model), ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);
+                        else
+                            try
+                                [xpar(iter,1:length(obj.param_min)) fval(iter) exitflag(iter) out{iter}]=fmincon(str2func(obj.model), ipar, [], [], [], [], obj.param_min, obj.param_max, [], [], sdat);
+                            catch
+                                display('Fmincon Could Not Converge.  Skipping Iteration')
+                                xpar(iter,1:length(obj.param_min)) = nan(1,length(obj.param_min));
+                                fval(iter) = nan;
+                                exitflag(iter) = nan;
+                                out{iter} = nan;
+                            end
+                        end
+                    end
+                end
+            end
+            
+        end %Function end
         
     end %methods
 end %class

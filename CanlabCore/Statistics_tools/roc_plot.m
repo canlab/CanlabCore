@@ -11,7 +11,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % 'include' :         followed by logical vector of cases to include
 % 'threshold' :       followed by a priori threshold cutoff for determining misclassification
 % 'threshold_type' :  followed by thresh type: choices below:
-%                     'Optimal balanced error rate' 
+%                     'Optimal balanced error rate'
 %                     'Optimal overall accuracy' [default]
 %                     'Minimum SDT bias'
 %                     [Enter threshold OR threshold_type]
@@ -25,8 +25,9 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % 'boot' [default]:   Bootstrap 95% confidence intervals for sens, spec, PPV at threshold
 % 'noboot':           Skip bootstrap
 % 'balanced':         Balanced accuracy for single interval classification
-% 'dependent':        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].  
-%                     This will perform multilevel version of binomial test for single interval classifation. 
+% 'dependent':        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
+%                     This will perform multilevel version of binomial test for single interval classifation.
+% 'noplot':           Skip generating plots
 %
 % Outputs:
 % ---------------------------------------------------------------------
@@ -53,7 +54,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % ROC = roc_plot(pexp, logical(outcome), 'writerscoreplus');
 % ROC = roc_plot(pexp, logical(outcome), 'color', 'r', 'plotmethod', 'observed', 'plothistograms');
 % ROC = roc_plot(pexp, logical(outcome), 'color', 'm', 'plotmethod', 'observed', 'plothistograms', 'Optimal overall accuracy');
-%
+
 % Notes:
 % Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
 % effect size estimates based on Gaussian equal variance model
@@ -78,6 +79,9 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % trials.  Requires at least more than 20 subjects to ensure distribution
 % is reasonably approximated by normal distribution.  Uses one sample-test
 % across subjects.
+%
+% Edited 1/13/2015: Luke Chang - added option to suppress plots for running
+% on cluster.
 
 include = true(size(binary_outcome));
 threshold_type = 'Optimal overall accuracy';
@@ -92,7 +96,7 @@ writerscoreplus = 0;
 doboot = 1;
 dobalanced = 0;
 doDependent = 0;
-
+doplot = 1;
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -133,14 +137,17 @@ for i = 1:length(varargin)
                 
             case 'balanced'
                 dobalanced = 1;
-            
+                
+            case 'noplot'
+                doplot = 0;
+                
             case 'dependent'
                 doDependent = 1;
                 subject_id = varargin{i + 1};
                 if(~ismatrix(subject_id) || ~isnumeric(subject_id) || length(input_values)~=length(subject_id))
                     error('Make sure ''dependent'' flag is followed by valid subject_id vector')
                 end
-
+                
                 disp('ROC for single interval classification of paired observations.')
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -235,7 +242,7 @@ ROC.AUC_descrip = 'Numerically integrated, nonparametric area under curve';
 % vectors of true/false positives and accuracy
 if istwochoice
     falseneg = (input_values <= class_thr & binary_outcome); % Wani added this line to fix an error when two values are same (in the two-choice test)
-else 
+else
     falseneg = (input_values < class_thr & binary_outcome);
 end
 falsepos = (input_values >= class_thr & ~binary_outcome);
@@ -292,15 +299,15 @@ ROC.accuracy = accuracy;
 if ~doDependent
     RES = binotest(double(~misclass), .5);
 else %Run hierarchical version of binomial test
-   
+    
     %Create new subject matrix
     subID = unique(subject_id);
     for i = 1:length(subID)
         sdat(i,:) = ~misclass(subject_id == subID(i));
     end
     [RES1, RES2, RES3, RES4] = binotest_dependent(sdat,.5);
-   RES = RES4; 
-
+    RES = RES4;
+    
 end
 ROC.N = RES.n;
 ROC.accuracy_p = RES.p_val;
@@ -332,16 +339,16 @@ switch plotmethod
 end
 
 
-
-han = plot(plotfpr, plottpr, plotsymbol, 'Color', color, 'LineWidth', linewid);
-
-set(gca, 'FontSize', 32, 'XLim', [-.02 1.02], 'XTick', 0:.2:1, 'YTick', 0:.2:1);
-xlabel('(1 - Specificity)');
-ylabel('Sensitivity')
-
-
-inline_plothistograms();
-
+if doplot
+    han = plot(plotfpr, plottpr, plotsymbol, 'Color', color, 'LineWidth', linewid);
+    
+    set(gca, 'FontSize', 32, 'XLim', [-.02 1.02], 'XTick', 0:.2:1, 'YTick', 0:.2:1);
+    xlabel('(1 - Specificity)');
+    ylabel('Sensitivity')
+    
+    
+    inline_plothistograms();
+end
 
 % effect size
 % -------------------------------------------------------------------------
@@ -372,7 +379,9 @@ if istwochoice
         tprn = 1 - normcdf(x, d, 1);
         fprn = 1 - normcdf(x, -d, 1);
         hold on;
-        han = [han plot(fprn, tprn, '-', 'Color', color, 'LineWidth', linewid)];
+        if doplot
+            han = [han plot(fprn, tprn, '-', 'Color', color, 'LineWidth', linewid)];
+        end
     end
     
     aucn = calc_auc(fprn, tprn);
@@ -419,7 +428,9 @@ else
         tprn = 1 - normcdf(x, zpres, 1);
         fprn = 1 - normcdf(x, zabs, 1);
         hold on;
-        han = [han plot(fprn, tprn, '-', 'Color', color, 'LineWidth', linewid)];
+        if doplot
+            han = [han plot(fprn, tprn, '-', 'Color', color, 'LineWidth', linewid)];
+        end
     end
     
     aucn = calc_auc(fprn, tprn);
@@ -442,7 +453,9 @@ else
     
 end
 
-ROC.line_handle = han;
+if doplot
+    ROC.line_handle = han;
+end
 
 % Boostrap, if asked for
 % -------------------------------------------------------------------------
@@ -460,12 +473,12 @@ end
 
 
 % fprintf('\nROC_PLOT Output: %s, %s\n', ROC.Gaussian_model.type, threshold_type);
-% 
+%
 % fprintf('  Nonparametric AUC:\t%3.2f\tParametric d_a:\t%3.2f\n', ROC.AUC, ROC.Gaussian_model.d_a);
-% 
+%
 % fprintf('  Threshold:\t%3.2f\tSens:\t%3.0f%%\tSpec:\t%3.0f%%\tPPV:\t%3.0f%%\n', ...
 %     ROC.class_threshold, 100*ROC.sensitivity, 100*ROC.specificity, 100*ROC.PPV);
-% 
+%
 % fprintf('  Accuracy:\t%3.0f%% +- %3.1f%% (SE), P = %3.6f\n', ...
 %     100*ROC.accuracy, 100*ROC.accuracy_se, ROC.accuracy_p);
 

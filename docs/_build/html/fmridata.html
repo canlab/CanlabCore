@@ -1,0 +1,1137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>fmri_data &mdash; CanlabCore 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CanlabCore 1.0 documentation" href="index.html" />
+    <link rel="prev" title="CanlabCore documentation home" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mat-modindex.html" title="MATLAB Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CanlabCore documentation home"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CanlabCore 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="module-CanlabCore.&#64;fmri_data">
+<span id="fmri-data"></span><h1>fmri_data<a class="headerlink" href="#module-CanlabCore.@fmri_data" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data">
+<em class="property">class </em><tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">fmri_data</tt><big>(</big><em>image_names</em>, <em>maskinput</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>fmri_data: Data class for storing data matrices and information</p>
+<p>&#8216;fmri_data&#8217; is a data class containing information about generic fmri
+datasets stored in a structure-like object.  Using this has the
+advantages that the fields and methods are standardized and controlled.
+It also keeps track of the history of what was done to the dataset.</p>
+<p>You can create an empty object by using:
+fmri_dat = fmri_data
+(fmri_dat is the object)</p>
+<p>You can create an object and extract data from a mask (defining many of
+the fields in the object) like this:</p>
+<p>dat = fmri_data(imgs, maskimagename);</p>
+<p>e.g.,
+dat = fmri_data(imgs, which(&#8216;brainmask.nii&#8217;));</p>
+<p>Note: There are two options for defining the space (i.e., coordinates/voxels)
+that the data is mapped to.
+By default, the mask is resliced to the same space as the first image in the
+input image name set (not coregistered; just resliced to the same voxel sizes.
+The images are assumed to be in register.)
+YOU CAN ALSO map the image data to the space of the mask, by entering
+&#8216;sample2mask&#8217; as in input argument.</p>
+<p>The fmri_data object will store image data (.X) also outcome data (.Y)
+Try typing the name of an object (class instance) you create to see its
+properties, and a link to its methods (things you can run specifically
+with this object type).</p>
+<p>You can extract image data, and save averages within regions of
+interest, by doing something like this:
+[fmri_dat, cl] = read_image_files(image_names(3, :));</p>
+<p>cl is the ROI data in a region object 
+region is a class.  It&#8217;s data structure is like the older &#8220;clusters&#8221;
+structure format, with average data values stored in cl.dat
+regions can be defined by EITHER contiguous voxels or based on unique integer
+values in images.</p>
+<p>You need a mask image to define which voxels are extracted and possibly the
+space of the image data.
+If you do not yet have a mask image, but have data extracted separately,
+you can add mask information (from a mask in the same space) like this:</p>
+<p>dat = create(dat, &#8216;mask&#8217;, fmri_mask_image(maskimg));</p>
+<p>Methods include create, extract_roi_averages</p>
+<p>Create lets you add fields/data to a structure (see help
+fmri_data.create)</p>
+<p>extract_roi_averages lets you specify a new mask, and extract and average
+data from ROIs defined by the new mask (provided they were in the
+original mask from which you extracted data!)</p>
+<p>Examples:
+obj = fmri_data(image_names, maskinput)
+obj = fmri_data(image_names, [], &#8216;noverbose&#8217;)</p>
+<dl class="method">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.fmri_data">
+<tt class="descname">fmri_data</tt><big>(</big><em>image_names</em>, <em>maskinput</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.fmri_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>[obj, cl_with_averages] = fmri_data(image_names, mask_image, varargin)</p>
+<p>Reads a set of image files and a mask image, and returns
+an fmri_data object with data for all in-mask voxels.
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+Create empty fmri_data object, and return if no additional
+arguments
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.X">
+<tt class="descname">X</tt><em class="property"> = None</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.X" title="Permalink to this definition">¶</a></dt>
+<dd><p>legacy; temporary, so we can load old objects</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.Y">
+<tt class="descname">Y</tt><em class="property"> = u'[]'</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.Y" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.Y_descrip">
+<tt class="descname">Y_descrip</tt><em class="property"> = u&quot;'Behavioral or outcome data matrix.'&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.Y_descrip" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.Y_names">
+<tt class="descname">Y_names</tt><em class="property"> = None</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.Y_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.additional_info">
+<tt class="descname">additional_info</tt><em class="property"> = u&quot;struct('')&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.additional_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.covariate_names">
+<tt class="descname">covariate_names</tt><em class="property"> = u&quot;{''}&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.covariate_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.covariates">
+<tt class="descname">covariates</tt><em class="property"> = None</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.covariates" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.covariates_descrip">
+<tt class="descname">covariates_descrip</tt><em class="property"> = u&quot;'Nuisance covariates associated with data'&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.covariates_descrip" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.history_descrip">
+<tt class="descname">history_descrip</tt><em class="property"> = u&quot;'Cell array: names of methods applied to this data, in order'&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.history_descrip" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.images_per_session">
+<tt class="descname">images_per_session</tt><em class="property"> = None</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.images_per_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.mask">
+<tt class="descname">mask</tt><em class="property"> = u'fmri_mask_image'</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.mask_descrip">
+<tt class="descname">mask_descrip</tt><em class="property"> = u&quot;'mask is an fmri_mask_image object that defines the mask.'&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.mask_descrip" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="CanlabCore.&#64;fmri_data.fmri_data.source_notes">
+<tt class="descname">source_notes</tt><em class="property"> = u&quot;'Source notes...'&quot;</em><a class="headerlink" href="#CanlabCore.@fmri_data.fmri_data.source_notes" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.create">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">create</tt><big>(</big><em>obj</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create Create an object from an empty obj structure, assigning fieldname/value pairs as optional arguments. Used in fmri_data.m class constructor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; create(obj, varargin).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the created object.</td>
+</tr>
+</tbody>
+</table>
+<p>if &#8216;noverbose&#8217; is entered, suppress output</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.extract_roi_averages">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">extract_roi_averages</tt><big>(</big><em>obj</em>, <em>mask_image</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.extract_roi_averages" title="Permalink to this definition">¶</a></dt>
+<dd><p>[cl, varargout] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])</p>
+<p>This fmri_data method a extracts and averages data stored in an fmri_data object 
+from a set of ROIs defined in a mask.</p>
+<p>If no mask_image is entered, it uses the mask defined with the fmri_data object as a default.</p>
+<dl class="docutils">
+<dt>If mask_image is a new image file name, this method:</dt>
+<dd><ol class="first last arabic simple">
+<li>Defines an fmri_mask_image object using create_fmri_mask</li>
+<li>Maps to the space in fmri_data object using resample_to_image_space</li>
+</ol>
+</dd>
+</dl>
+<p>Regions to average over can be either regions of contiguous voxels
+bounded by voxels with values of 0 or NaN, which are considered non-data
+values, or regions defined by unique integer codes in the mask image
+(i.e., for atlas images with unique codes for each defined region.)</p>
+<p>Mask/Atlas image does NOT have to be in the same space as the images to
+extract from.  It will be remapped/resliced.
+NOTE: Mask is <em>reloaded</em> from original data if space is remapped, and you
+cannot use manual thresholding of the mask. This is a feature of the
+map_to_image_space method and scn_map_image</p>
+<p>extracted data is returned in single data format.</p>
+<p>Inputs:
+1 - char array of strings containing 4D image file names (data extracted from these)
+2 - mask_image to extract from.</p>
+<p>Optional inputs:
+how to average:</p>
+<blockquote>
+<div>Default = &#8216;unique_mask_values&#8217; to average over unique integer codes in the mask image
+bounded by voxels of 0 or NaN (non-data values)
+(i.e., for atlas images with unique codes for each defined region)
+Alt. option = &#8216;contiguous_regions&#8217; to average over contiguous voxels</div></blockquote>
+<dl class="docutils">
+<dt>&#8216;pattern_expression&#8217;:</dt>
+<dd><p class="first">Use values in mask images to get weighted average within each
+region, rather than simple average.  See also apply_mask with
+&#8216;pattern_expression&#8217; option.</p>
+<p class="last">Optional outputs (varargout): 
+[cl, cl_roimean, cl_roipattern] = ...
+roimean: pattern expression is average over ROI (unit vector)
+roipattern: pattern expression is dot product of activity and mean-centered pattern weights</p>
+</dd>
+<dt>&#8216;nonorm&#8217;</dt>
+<dd>Turn off L1 norm in pattern expression.</dd>
+</dl>
+<p>Example:
+imgs_to_extract_from = filenames(&#8216;w*.nii&#8217;,&#8217;char&#8217;);
+mask_image = which(&#8216;anat_lbpa_thal.img&#8217;);
+[cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);</p>
+<p>region_obj = extract_roi_averages(data_obj, mask_char_name, &#8216;pattern_expression&#8217;, &#8216;contiguous_regions&#8217;);</p>
+<p>Notes:
+cl(i).dat gives you the pattern expression values for cluster i.</p>
+<p>Related functions:
+For an non-object-oriented alternative, see extract_image_data.m
+Modified June 11, 2013 by Tor</p>
+<blockquote>
+<div><ul class="simple">
+<li>use resample_space instead of resample_to_image_space</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.hrf_fit">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">hrf_fit</tt><big>(</big><em>obj</em>, <em>TR</em>, <em>Runc</em>, <em>T</em>, <em>method</em>, <em>mode</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.hrf_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>HRF estimation on fmri_data class object</p>
+<p>HRF estimation function for a single voxel;</p>
+<p>Implemented methods include: IL-model (Deterministic/Stochastic), FIR
+(Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal &amp; dispersion)</p>
+<p>INPUTS:</p>
+<p>obj   - fMRI object 
+TR    - time resolution
+Runs  - expermental design
+T     - length of estimated HRF ij seconds
+type  - Model type: &#8216;FIR&#8217;, &#8216;IL&#8217;, or &#8216;CHRF&#8217;
+mode  - Mode</p>
+<p>MODEL TYPES:</p>
+<ol class="upperalpha simple">
+<li>Fit HRF using IL-function</li>
+</ol>
+<p>Choose mode (deterministic/stochastic)</p>
+<p>0 - deterministic aproach 
+1 - simulated annealing approach</p>
+<p>Please note that when using simulated annealing approach you
+may need to perform some tuning before use.</p>
+<ol class="upperalpha simple" start="2">
+<li>Fit HRF using FIR-model</li>
+</ol>
+<p>Choose mode (FIR/sFIR)</p>
+<p>0 - FIR 
+1 - smooth FIR</p>
+<ol class="upperalpha simple" start="3">
+<li>Fit HRF using FIR-model</li>
+</ol>
+<p>Choose mode (FIR/sFIR)</p>
+<p>0 - FIR 
+1 - smooth FIR</p>
+<p>Created by Martin Lindquist on 04/11/14</p>
+<blockquote>
+<div><p>% params for sim and fitting
+% &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-  
+TR = 2;   % repetition time (sec)
+n = 200;  % time points measured (for simulation) must be multiple of 10
+T = 30;   % duration of HRF to estimate (seconds)
+nconds = 2; % num conditions
+nevents = 8; % events per condition</p>
+<p>% Create fake data
+% &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-
+h = spm_hrf(TR);
+y = zeros(n, 1);</p>
+<p>% onsets - indicator
+Condition = {};
+for i = 1:nconds</p>
+<blockquote>
+<div><p>Condition{i} = zeros(n,1);
+wh = randperm(n);
+Condition{i}(wh(1:nevents)) = 1;</p>
+<p>ytmp{i} =  conv(Condition{i}, h);
+ytmp{i} = ytmp{i}(1:n);</p>
+</div></blockquote>
+<p>end</p>
+<p>y = sum(cat(2, ytmp{:}), 2);</p>
+<p>dat = fmri_data(&#8216;VMPFC_mask_neurosynth.img&#8217;);  % AVAILABLE ON WIKI IN MASK GALLERY
+dat = threshold(dat, [5 Inf], &#8216;raw-between&#8217;);</p>
+<p>v = size(dat.dat, 1); % voxels in mask
+dat.dat = repmat(y&#8217;,v, 1) + .1 * randn(v, n);</p>
+<p>% Fit data - estimate HRFs across the brain mask
+% &#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-
+[params_obj hrf_obj] = hrf_fit(dat,TR, Condition, T,&#8217;FIR&#8217;, 1);</p>
+<p>hrf = fmri_data(&#8216;HRF_timecourse_cond0001.img&#8217;);
+hrf = remove_empty(hrf);
+create_figure(&#8216;hrfs&#8217;, 1, 2); 
+plot(hrf.dat&#8217;);
+title(&#8216;Condition 1&#8217;)
+hrf = fmri_data(&#8216;HRF_timecourse_cond0002.img&#8217;);
+hrf = remove_empty(hrf);
+subplot(1, 2, 2);
+plot(hrf.dat&#8217;);
+title(&#8216;Condition 2&#8217;)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.plot">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">plot</tt><big>(</big><em>fmridat</em><span class="optional">[</span>, <em>plotmethod</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot data matrix
+plot(fmri_data_object)</p>
+<p>Plot means by condition
+plot(fmri_data_object, &#8216;means_for_unique_Y&#8217;)</p>
+<p>5 plots and an SPM orthviews presentation of the data.  In the below and elsewhere, &#8220;image&#8221; connotes a 3D brain volume
+captured every TR.</p>
+<blockquote>
+<div><p>subplot 1:  the fMRI data itself.  Color is intensity of signal
+subplot 2:  presented as a histogram of values for every voxel collected.
+The low values are typically out-of-brain voxels, as there is no signal
+there
+subplot 3:  each point is an image.  The point&#8217;s X value is the mean
+intensity of every voxel in that image, and the Y value is the stdev of
+intensities for all voxels in that image
+subplot 4:  covariance between images
+subplot 5:  each point is an image (case = image).  X value is image
+number in the run, Y is image mean intensity, and the size of the
+circular marker represents stdev for that image</p>
+<p>Orthviews: mean and STD for a given voxel averaged over time.  Note that the values for mean and STD here are higher than in
+the plots above.  That is because mean and STD are calculated here by
+voxel, but in the plots above they are calculated by image.  Images also include out-of-brain areas.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.predict">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">predict</tt><big>(</big><em>obj</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict outcome (Y) from brain data and test cross-validated error rate for an fmri_data object</p>
+<p>[cverr, stats, optional_outputs] = predict(obj, varargin)</p>
+<ul class="simple">
+<li>flexible specification of algorithm by function name</li>
+<li>k-fold cross-validation, default = 5-fold, can enter custom fold membership</li>
+<li>folds are stratified on outcome</li>
+<li>choice of multiple error metrics (class loss, mse, etc.)</li>
+<li>by default, chooses error metric based on outcome type (classes vs. continuous-valued)</li>
+<li>returns all outputs for each fold returned by the algorithm in optout cell array variable</li>
+<li>bootstrapping of weights built in [optional keyword]</li>
+<li>select variable number of components (for pcr-based techniques)</li>
+</ul>
+<p>obj = fmri_data or image_vector object, with fields .dat (data used to predict) and .Y (outcome)</p>
+<p>Optional inputs with their default values:
+:&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8211;
+&#8216;nfolds&#8217; = 5;                       % number of folds
+&#8216;nfolds&#8217; = [vector of integers]     % can also input vector of integers for holdout set IDs
+&#8216;error_type&#8217; = &#8216;mcr&#8217;;               % mcr, mse: misclassification rate or mean sq. error
+&#8216;algorithm_name&#8217; = &#8216;cv_regress&#8217;;    % name of m-file defining training/test function
+&#8216;useparallel&#8217; = 1                   % Use parallel processing, if available; follow by 1 for yes, 0 for no
+&#8216;bootweights&#8217; = 0;                  % bootstrap voxel weights; enter
+&#8216;bootweights&#8217;                       % do bootstrapping of weight maps (based on all observations)
+&#8216;savebootweights&#8217;                   % save bootstraped weights (useful for combining across multiple iterations of predict())
+&#8216;bootsamples&#8217; = 100;                % number of bootstrap samples to use
+&#8216;numcomponents&#8217; = xxx               % save first xxx components (for pca-based methods)
+&#8216;nopcr&#8217;                             % for cv_lassopcr and cv_lassopcrmatlab: do not do pcr, use original variables
+&#8216;lasso_num&#8217; = xxx                   % followed by number of components/vars to retain after shrinkage
+&#8216;hvblock&#8217; = [h,v]                   % use hvblock cross-validation with a block size of &#8216;h&#8217; (0 reduces to v-fold xval) and</p>
+<blockquote>
+<div>number of test observations &#8216;v&#8217; (0 reduces to h-block xval)</div></blockquote>
+<dl class="docutils">
+<dt>&#8216;rolling&#8217; = [h,v,g]                 % use rolling cross-validation with a block size of &#8216;h&#8217; (0 reduces to v-fold xval) and</dt>
+<dd>number of test observations &#8216;v&#8217; (0
+reduces to h-block xval), and a training size of g * 2 surrounding hv</dd>
+</dl>
+<p>&#8216;verbose&#8217; = 1                        % Set to 0 to suppress output to command window</p>
+<p>You can input the name (as a string array) of any algorithm with the
+appropriate inputs and outputs. i.e., this can either be one of the
+built-in choices below, or the name of another m-file.
+The format for algorithm functions is :
+[yfit, other_outputs] = predfun(xtrain, ytrain, xtest, optional_inputs)
+Each algorithm can take/interpret its own optional inputs.
+For bootstrapping of weights, algorithms MUST RETURN 3 OUTPUTS
+(programming &#8216;feature&#8217;)</p>
+<p>To choose an algorithm, enter &#8216;algorithm_name&#8217; followed by a text string
+with a built-in algorithm name, or a function handle for a custom algorithm
+Built-in algorithm choices include:
+cv_multregress    : [default] multiple regression
+cv_univregress    : Average predictions from separate univariate regression of outcome on each feature
+cv_svr            : Support vector regression with Spider package; requires spider
+cv_pcr            : Cross-validated principal components regression
+cv_lassopcr       : Cross-val LASSO-PCR; can enter &#8216;lasso_num&#8217; followed by components to retain by shrinkage</p>
+<blockquote>
+<div>NOTE: can enter &#8216;EstimateParams&#8217; to use shrankage
+lasso method based on the estimated optimal lambda
+that minimizes the mean squared error (MSE) of nested
+cross-validation models. Output of nested cv model is
+saved in stats.other_output_cv{:,3}. Output includes
+&#8216;Lambda&#8217; parameter and min MSE value.</div></blockquote>
+<dl class="docutils">
+<dt>cv_lassopcrmatlab <span class="classifier-delimiter">:</span> <span class="classifier">Cross-val LASSO-PCR; can enter &#8216;lasso_num&#8217; followed by components to retain by shrinkage</span></dt>
+<dd>NOTE: this uses the matlab implementation of LASSO,
+but can also run ridge or elastic net. Reduces to PCR
+when no lasso_num is entered by default.  Use MSE for
+predicting continuous data and MCR for classifying
+binary data.
+NOTE: You can input any optional inputs that lassoglm
+takes.
+Enter &#8216;Alpha&#8217;, (0,1] as optional inputs to
+run ridge (Alpha approaches 0, but excluding 0), lasso (Alpha = 1), or elastic
+net (Alpha between 0 and 1)
+NOTE: Requires Matlab R2012a and higher.
+NOTE: Optional input: &#8216;EstimateParams&#8217; - this will
+use grid search and nested cross validation to
+estimate Lambda and Alpha.  Output is saved in
+stats.other_output_cv{:,3}.  Output includes &#8216;Alpha&#8217;
+parameter which is the elastic net mixture value
+between l1 and l2 regularization, &#8216;Lambda&#8217; parameter,
+which is amount of LASSO regularization/shrinkage, and
+&#8216;errorMatrix&#8217;, which is the amount of error for each
+parameter combination.  Use
+imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
+to view matrix.  Min of this matrix is the best
+fitting parameters.</dd>
+<dt>cv_svm <span class="classifier-delimiter">:</span> <span class="classifier">Cross-val support vector machine using Spider package</span></dt>
+<dd>NOTE: This is sensitive to scale of outputs! Use -1 , 1
+NOTE: Optional inputs: Slack var parameter: &#8216;C=1&#8217; [default], &#8216;C=0&#8217; etc.
+Distance from hyperplane saved in
+stats.other_output_cv{:,2}.  Recommend using the reordered
+cross-validated distance from hyperplane saved in stats.other_output{3}
+stats.dist_from_hyperplane_xval =  cross-validated distance from hyperplane
+stats.weight_obj = voxel (variable) weight object
+e.g., orthviews(stats.weight_obj)
+Intercept for calculating dist from hy is in stats.other_output_cv{:,3}
+e.g., dist_hy = stats.weight_obj.dat&#8217; * obj.dat, where obj is a new set of test images
+NOTE: To run nonlinear SVM using radial basis
+function.  Add &#8216;rbf&#8217; followed by size of sigma (e.g., 2).
+NOTE: To estimate some of the parameters using
+nested cross validation add &#8216;EstimateParams&#8217; as optional input.
+NOTE: To run multiclass SVM (i.e., one vs rest) add
+&#8216;MultiClass&#8217; as optional input.  Important - Obj.Y must be a matrix (data x
+class) with a column of 1 and -1 indicating each
+class.  For example, if using 3 classes, then obj.Y
+must have 3 columns.
+NOTE: To run a balanced SVM where the number of cases for each class are unequal (i.e., one vs rest) add
+&#8216;Balanced&#8217; as optional input, followed by a numerical value indicating the ridge amount (e.g., 0.01).</dd>
+<dt>cv_multilevel_glm <span class="classifier-delimiter">:</span> <span class="classifier">Runs glmfit_multilevel. Must pass in &#8216;&#8217;subjIDs&#8217;&#8217; followed by an array specifying which subject each trial belongs to</span></dt>
+<dd>Subjects&#8217; trials must all be &#8220;adjacent&#8221;, i.e., don&#8217;t
+put some of subject 1&#8217;s trials at the beginning and
+other trials at the end &#8211; subjIDs does not handle
+this case correctly. Also, 2ND LEVEL PREDICTORS NOT
+CURRENTLY SUPPORTED.  code can be expanded to support this.
+mean-centering X and/or Y will NOT impact the
+predictor betas.  Note that it WILL impact the intercept
+esimate as well as how much variance is explained
+(pred_outcome_r).  Stratified CV partition not
+supported either, pass in custom holdout set.</dd>
+</dl>
+<p>Y              : Copy of outcome data to be predicted
+algorithm_name : Name of algorithm; see options above
+function_call  : String of the command evaluated to call the prediction function
+function_handle: Handle for the command evaluated to call the prediction function
+yfit           : Predicted outcome data (cross-validated)
+err            : Residuals/misclassification vector (cross-validated)
+error_type     : Name of error metric used for cverr
+cverr          : Cross-validated error
+nfolds         : Number of folds in stratified cross-validation, or</p>
+<blockquote>
+<div>vector of integers for membership in custom holdout set of each fold
+-if k = 1, will estimate weights for full data object
+and not crossvalidate (useful for bootstrapping)</div></blockquote>
+<p>cvpartition    : Cross-val partition object or structure with fold info
+teIdx          : Cell array of logical vectors with test samples in each fold
+trIdx          : Cell array of logical vectors with training samples in each fold
+other_output   : Other outputs returned by the algorithm; number and nature depend on algo choice; e.g., beta weights, svr weights, etc.</p>
+<blockquote>
+<div>For many algorithms, other_output{1} is a vector of
+weights on variables (e.g., voxels)</div></blockquote>
+<p>other_output_descrip : String description of other outputs
+other_output_cv      : Other outputs for each cross-validation fold
+other_output_cv_descrip: &#8216;Other output from algorithm - for each CV fold&#8217;
+mse            : For regression only; mean squared error
+rmse           : For regression only; root mean squared error
+meanabserr     : For regression only; mean absolute error
+pred_outcome_r : For regression only; prediction-outcome correlation
+WTS            : bootstrapped weights on voxels
+weight_obj     : for some algorithms, an fmri_data object with the predictive weights (from full sample)</p>
+<p>obj = fmri_data;
+obj.dat = randn(30, 50); % 30 voxels, 50 images (observations)
+obj.Y = obj.dat&#8217; * rand(30, 1) + randn(50, 1); % toy Y, linear combo of X plus noise
+[cverr, stats, regression_outputs] = predict(obj);</p>
+<p>Simulated example with 100 observations, 1000 voxels, with bootstrapping
+dat = fmri_data;
+dat.Y = rand(100, 1);
+dat.dat = repmat(dat.Y&#8217;, 1000, 1) + 10*rand(1000, 100);
+[err,stats] = predict(dat, &#8216;bootweights&#8217;, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;);</p>
+<p>[cverr, stats, regression_outputs] = predict(obj, &#8216;nfolds&#8217;, 3, &#8216;error_type&#8217;, &#8216;meanabserr&#8217;);
+[cverr, stats, regression_outputs] = predict(obj, &#8216;algorithm_name&#8217;, &#8216;cv_univregress&#8217;, &#8216;error_type&#8217;, &#8216;meanabserr&#8217;);
+[cverr, stats, optout] = predict(obj, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;lasso_num&#8217;, 5, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;, &#8216;bootweights&#8217;);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_svm&#8217;, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_svm&#8217;, &#8216;rbf&#8217;, 2, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;); %SVM w/ radial basis function
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_svm&#8217;, &#8216;rbf&#8217;, 2, &#8216;EstimateParams&#8217;, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;); %SVM w/ radial basis function w/ parameters estimated using nested cross-valdiation
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_svm&#8217;, &#8216;nfolds&#8217;, 5, &#8216;MultiClass&#8217;, &#8216;error_type&#8217;, &#8216;mse&#8217;);</p>
+<p>Elastic net with first 10 components:
+[cverr, stats, optout] = predict(dat_masked, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcrmatlab&#8217;, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;, &#8216;numcomponents&#8217;, 10, &#8216;Alpha&#8217;, .5); stats.pred_outcome_r</p>
+<p>Ridge with first 10 components:
+[cverr, stats, optout] = predict(dat_masked, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcrmatlab&#8217;, &#8216;nfolds&#8217;, 5, &#8216;error_type&#8217;, &#8216;mse&#8217;, &#8216;numcomponents&#8217;, 10, &#8216;Alpha&#8217;, 0.00001); stats.pred_outcome_r</p>
+<p>Lasso with all components, but shrink to retain 2 components only:
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcrmatlab&#8217;, &#8216;nfolds&#8217;, whfolds, &#8216;nopcr&#8217;, &#8216;lasso_num&#8217;, 2, &#8216;Alpha&#8217;, 1);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;nfolds&#8217;, whfolds, &#8216;lasso_num&#8217;, 2);</p>
+<p>Lasso with the shrinkage methods based on the estimated optimal lambda that minimizes MSE of nested cross-validation models.
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;nfolds&#8217;, whfolds, &#8216;estimateparam&#8217;);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;nfolds&#8217;, 5, &#8216;estimateparam&#8217;);</p>
+<p>Lasso without doing PCR:
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcrmatlab&#8217;, &#8216;nfolds&#8217;, whfolds, &#8216;nopcr&#8217;, &#8216;lasso_num&#8217;, 2, &#8216;Alpha&#8217;, 1);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;nfolds&#8217;, whfolds, &#8216;lasso_num&#8217;, 2, &#8216;nopcr&#8217;);
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;nfolds&#8217;, 5, &#8216;estimateparam&#8217;, &#8216;nopcr&#8217;);</p>
+<p>Lasso pcr using hvblock cross-validation on time-series, h = 3, v = 5;
+[cverr, stats, optout] = predict(dat, &#8216;algorithm_name&#8217;, &#8216;cv_lassopcr&#8217;, &#8216;hvblock&#8217;,[3,5]);</p>
+<p>Output display:
+orthviews(stats.weight_obj)
+line_plot_multisubject(stats.yfit, stats.Y, &#8216;subjid&#8217;, id_numbers);</p>
+<p>predict_test_suite method for fmri_data, which runs predict with multiple
+options and summarizes output.</p>
+<p>xval_regression_multisubject, xval_lasso_brain</p>
+<p>Original version: Copyright Tor Wager, Dec 2010
+Programmers&#8217; notes:
+Dec 2011: Changed to input double format to algorithms; some have
+problems with single format</p>
+<p>March 2012: Changed default method to cv_pcr, and updated input option
+parsing to avoid silly mistakes in specifying algorithm.
+Changed line 377 to if rank(X) &lt; size(sc, 1). Tested: pinv and normal inv
+give same results up to machine precision.</p>
+<p>10/16/12: Luke Chang: Changed input to bootstrp to double because of problems with
+single format (see Tor&#8217;s edits on 11/10/12)</p>
+<p>11/2/2012: tor wager: cv_svm output added to return distance from hyperplane in stats.other_output_cv{:,2}</p>
+<p>11/7/12: Luke Chang: added cv_lassopcrmatlab to use new matlab lasso.
+This uses coordinate descent methods compared to Least Angle Regression
+in the Rocha Lasso algorithm.  This function can be used for prediction of continuous data or classification
+of binary data.  For binary classification compare cverr to, Phi, or MSE in stats output. Still
+working on a good way to quantify accuracy using the predicted
+probabilities from logistic regression.  Also working on methods to
+select optimal lambda for regularization.  Make sure you change the Rocha
+lasso function name to &#8216;lasso_rocha&#8217; to retain old functionality and prevent conflicts.</p>
+<p>11/7/12: Luke Chang: added functionality to display xval iteration number
+and elapsed time</p>
+<p>11/8/12: Luke Chang: fixed calculation of mse. Previous version calculated sum of squared error</p>
+<dl class="docutils">
+<dt>11/10/12: Tor Wager:</dt>
+<dd><ul class="first last simple">
+<li>forced double format at input processing stage</li>
+<li>added optional inputs to lassoglm in cv_lassopcrmatlab</li>
+<li>added functionality to use variable number of components</li>
+<li>forced remove_empty on object to avoid potential problems with empty variables</li>
+<li>added/improved documentation, cleaned up code structure for cv_lassopcrmatlab</li>
+</ul>
+</dd>
+<dt>11/28/12: Luke Chang:</dt>
+<dd>-fixed bug with optional inputs in cv_lassopcrmatlab - lassoglm
+didn&#8217;t like empty cells in varargin
+-fixed bug with replace_empty(obj) that was returning brain
+weights that were a different size from the input***
+-cleaned code structure for cv_lassopcrmatlab
+-added functionality to estimate lambda and alpha for
+lasspcrmatlab using grid search and nested cross validation</dd>
+<dt>1/14/13: Tor Wager: SVM algorithm use updates</dt>
+<dd><ul class="first simple">
+<li>fixed bug getting distance from hyperplane with svm</li>
+<li>fixed bug with input of slack var params (&#8216;C=x&#8217;) in svm</li>
+<li>return cross-validated distance from hyperplane in special</li>
+</ul>
+<p class="last">output
+- added stats.weight_obj; ...and intercept values in stats.other_output_cv{:,3}</p>
+</dd>
+<dt>2/21/13: Luke Chang:</dt>
+<dd><ul class="first simple">
+<li>fixed bug with cv_lassopcr - now restimates betas selected</li>
+</ul>
+<p class="last">with lasso using OLS (see hastie, friedman, tibrishani pg 92)
+- added new functionality to SVM, rbf kernel
+- added new functionality to SVM can estimate slack parameter
+(or sigma if using rbf) using nested xVal.  For some reason
+this isn&#8217;t working super well yet, could have something to do
+with loss function.  Someone should look into this.</p>
+</dd>
+<dt>2/26/13: Luke Chang:</dt>
+<dd><ul class="first simple">
+<li>added new functionality to cv_svm - can now perform</li>
+</ul>
+<p class="last">classification of multiple classes using one vs rest</p>
+</dd>
+<dt>3/5/13: Tor Wager:</dt>
+<dd><ul class="first simple">
+<li>lassopcr : fixed bug in lasso_num to return correct num components</li>
+<li>added nopcr option to cv_lassopcr and cv_lassopcrmatlab</li>
+<li>cv_lassopcrmatlab: fixed bug: lasso_num not selecting correctly</li>
+</ul>
+<p class="last">was not re-fitting OLS solution after selecting components with lasso</p>
+</dd>
+<dt>3/6/13:  Tor Wager</dt>
+<dd><ul class="first last simple">
+<li>fixed minor bug introduced in last version with lassopcr/full rank</li>
+<li>added stats.weight_obj, an fmri_data object with the predictive weights (from full sample)</li>
+</ul>
+</dd>
+<dt>3/8/13: Tor Wager</dt>
+<dd><ul class="first simple">
+<li>working on bootstrapping, not a full solution yet</li>
+<li>rocha lasso seems to be ok, but others not (cv_pcr, matlab</li>
+</ul>
+<p class="last">lasso) returning stable weights
+- added code to use only non-redundant components in pcr, to
+avoid warnings/instability during bootstrapping.</p>
+</dd>
+<dt>3/23/13: Wani Woo</dt>
+<dd><ul class="first last simple">
+<li>implemented &#8216;EstimateParams&#8217; option in rocha lasso. With this
+option, you can use the subset of coefficients that are non-zero
+predictors based on the optimal lambda estimation. The optimal
+lambda will be chosen based on the minimization of mean square
+error (MSE) of netsed cross-validation.</li>
+<li>For this, cv_lassopcr now calls &#8220;lasso_cv.m&#8221; instead of &#8220;lasso_rocha.m&#8221;
+, but lasso_cv calls lasso_rocha. lasso_cv gives the results of nested
+cross-validation, which is using to select the optimal lambda,
+in addition to all the outputs that lasso_rocha gives. For this
+reason, I think it is beneficial to use lasso_cv instead of
+lasso_rocha.</li>
+<li>In order to make this possible, I added a variable,
+cv_assignment, into funhan. However, only cv_lassopcr is
+actually using the variable.</li>
+</ul>
+</dd>
+<dt>6/10/13: Luke Chang</dt>
+<dd>-Added balanced_ridge option to SVM.
+-fixed some bugs with the cv_svm multiclass support</dd>
+<dt>6/25/13: Luke Chang</dt>
+<dd>-Added try/catch on lassopcr.  Will output nans if there is a
+problem running PCA.  Should help with problems with svd
+convergence when bootsrapping.
+-turned off parallel by default for bootstrapping.  memory is
+duplicated for each worker so will crash if not enough memory.
+Also bootstrp seems to preallocate.</dd>
+<dt>6/29/13: Luke Chang</dt>
+<dd>-added option to save bootstrap weights &#8216;savebootweights&#8217;.
+This is useful if you want to aggregate bootstrap samples from
+multiple iterations of predict() run at different times or
+on different computers</dd>
+<dt>7/2/13: Luke Chang</dt>
+<dd>-added ability to not cross-validate by setting nfolds, k=1
+-made a bunch of changes to bootstrapping to reduce memory
+demands and fixed bugs to output weights.
+-added nancorr to ignore nans when calculating correlation
+-added rng &#8216;shuffle&#8217; to ensure that bootstrapping will use
+different inital seed.  VERY IMPORTANT for aggregating across
+multiple boostrap sessions!</dd>
+<dt>11/28/13: Luke Chang</dt>
+<dd>-added ability to use hv block cross-validation, which is good
+for timeseries data with stationary autocorrelation.
+Use &#8216;hvblock,[h,v]</dd>
+<dt>12/16/13: Luke Chang</dt>
+<dd>-added ability to use rolling block cross-validation with the 
+ability to deal with autocorrelation, which is good
+for timeseries data with stationary autocorrelation.
+Use &#8216;rolling,[h,v,g]</dd>
+<dt>4/3/14: Luke Chang</dt>
+<dd>-fixed bug with SVM, cross-validated distance from hyper plane
+(hopefully, the distance from hyper plane is still correct)
+-fixed bug with SVM &#8216;nfolds&#8217;,1</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.predict_test_suite">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">predict_test_suite</tt><big>(</big><em>dat</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.predict_test_suite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a set of cross-validated prediction algorithms on an fmri_data object
+and plot the outcome.</p>
+<p>[allcverr, allyhat] = predict_test_suite(dat, [optional inputs])</p>
+<p>Functionality:
+- Requires matlab 2012a or later for full functionality
+- Handles categorical or continuous outcomes automatically</p>
+<dl class="docutils">
+<dt>dat       an fMRI data object. </dt>
+<dd>dat.Y must be assigned, and must have continuous or binary outcomes assigned.</dd>
+</dl>
+<p>Optional:
+&#8216;quick&#8217;   Skip extended output
+&#8216;nfolds&#8217;, Followed by number of folds or custom holdout vector (default = 5-fold balanced)</p>
+<p>&lt;documentation in development&gt;</p>
+<p>predict_test_suite(dat, &#8216;nfolds&#8217;, subjid);</p>
+<p>Tor Wager, copyright 2012. Initial version: Nov 2012
+Programmers&#8217; notes:
+Here are possible extensions to the functionality:
+1) Test different data scaling methods in preprocess(dat) and/or
+rescale(dat)</p>
+<ol class="arabic simple" start="2">
+<li>Feature selection: Test effects of thresholding weight maps
+(and others)</li>
+<li>Test &#8220;best case&#8221; feature selection effects - circular analysis</li>
+</ol>
+<p>Lasso trace plots?  Optimal alpha/lambda in elastic net?</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.regress">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">regress</tt><big>(</big><em>dat</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.regress" title="Permalink to this definition">¶</a></dt>
+<dd><p>[out, statimg] = regress(dat, [p-val threshold], [thresh_type], [&#8216;nodisplay&#8217;])</p>
+<blockquote>
+<div><p>regression method for fmri_data object
+regress dat.Y on dat.dat at each voxel, and return voxel-wise statistic
+images.</p>
+<p>Each column of Y is a predictor in a multiple regression,
+and the intercept is the last column.
+Thus, the output images correspond to the columns of Y, with the last
+column being the intercept.
+The reason the &#8220;Y&#8221; field is used as the &#8220;X&#8221; design matrix is that Y in
+the fmri_data object is reserved for outcome data/behavior.
+In the standard brain-mapping approach, Y is the predictor and each
+voxel&#8217;s data is the outcome in a series of regressions.</p>
+<p>This function can also create a map of brain regions that predict the Y
+vector using the &#8216;brainony&#8217; option.  This is essentially a univariate
+version of the &#8216;predict&#8217; command.  There is also a robust option for this
+(&#8216;brainony&#8217;, &#8216;robust&#8217;)</p>
+<p>Inputs:
+dat should be an fmri_data object with Y field defined.
+optional inputs in [  ] above are:
+p-value threshold
+string indicating threshold type (see help statistic_image.threshold for options)</p>
+<p>Optional Inputs:
+&#8216;nointercept&#8217;     estimates model without intercept
+&#8216;nodisplay&#8217;       does not display resulting model
+&#8216;brainony&#8217;        univariate approach to predict obj.Y from brain data</p>
+<p>Outputs:
+out is a structure of information about the regression
+statimg is a statistic_image object that can be thresholded and
+plotted/imaged.  statimg.dat contains T-values, .p contains p-values for
+each regressor.</p>
+<p>Examples:
+% Run regression with liberal threshold
+[out, statimg] = regress(data_comb, .05, &#8216;unc&#8217;);</p>
+<p>% Re-threshold at different values
+statimg = threshold(statimg, .05, &#8216;fdr&#8217;);
+statimg = threshold(statimg, .001, &#8216;unc&#8217;);</p>
+<p>% Re-display results of thresholding
+orthviews(statimg);</p>
+<p>%Run a regression predicting behavior from brain at liberal threshold
+[out, statimg]  = regress(data_comb, .05, &#8216;unc&#8217;, &#8216;brainony&#8217;)</p>
+<p>%Run a robust regression predicting behavior from brain at liberal
+threshold.  WARNING! Very slow!
+[out, statimg]  = regress(data_comb, .05, &#8216;unc&#8217;, &#8216;brainony&#8217;,&#8217;robust&#8217;)</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>Notes:</dt>
+<dd>c Tor Wager, Dec 2010
+Edited by Luke Chang, 9/27/2012 to add optional input to reverse X &amp; Y (i.e., create a map of voxels that predict the behavioral variable)
+Edited by Luke Chang, 9/28/2012 to add optional input to run robust regression for brainony
+Edited by Luke Chang, 10/24/2012 to save residuals (i.e., out.r), which is helpful for denoising an image
+Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
+default options for thresholding</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.rescale">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">rescale</tt><big>(</big><em>fmridat</em>, <em>meth</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.rescale" title="Permalink to this definition">¶</a></dt>
+<dd><p>fmridat = rescale(fmridat, meth)</p>
+<p>Rescales data in an fmri_data object
+Data is observations x images, so operating on the columns operates on
+images, and operating on the rows operates on voxels (or variables more
+generally) across images.</p>
+<p>Methods:
+&#8216;centervoxels&#8217;
+&#8216;zscorevoxels&#8217;
+&#8216;centerimages&#8217;
+&#8216;zscoreimages&#8217;
+&#8216;rankvoxels&#8217;</p>
+<p>&#8216;windsorizevoxels&#8217;
+&#8216;percentchange&#8217;
+&#8216;tanh&#8217;</p>
+<p>Appropriate for multi-session (time series) only:
+&#8216;session_global_percent_change&#8217;
+&#8216;session_global_z&#8217;
+&#8216;session_multiplicative&#8217;</p>
+<p>see also fmri_data.preprocess</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.saveplots">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">saveplots</tt><big>(</big><em>fmri_dat</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.saveplots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output dir</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.signtest">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">signtest</tt><big>(</big><em>dat</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.signtest" title="Permalink to this definition">¶</a></dt>
+<dd><p>[out, statimg] = signtest(dat, [p-val threshold], [thresh_type])</p>
+<p>sign test for each voxel of an fmri_data object
+returns voxel-wise statistic images.</p>
+<p>Inputs:
+dat should be an fmri_data object with .dat field containing voxels x observations matrix
+optional inputs in [  ] above are:
+p-value threshold 
+string indicating threshold type (see help statistic_image.threshold for options)</p>
+<p>Outputs:
+out is a structure of information about the sign test
+statimg is a statistic_image object that can be thresholded and
+plotted/imaged.  statimg.dat contains signed direction values, .p contains p-values</p>
+<p>c Tor Wager, 2011
+See also: fmri_data.regress</p>
+<p>Examples:</p>
+<p>default options for thresholding</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.ttest">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">ttest</tt><big>(</big><em>fmridat</em>, <em>pvalthreshold</em>, <em>thresh_type</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.ttest" title="Permalink to this definition">¶</a></dt>
+<dd><p>T-test on fmri_data class object
+statsimg = ttest(fmridat, pvalthreshold, thresh_type)</p>
+<p>ttest(fmridat, p-value threshold, thresh_type)</p>
+<p>p-value threshold: p-value, e.g., .05 or .001 or [.001 .01 .05]
+thresh_type: &#8216;uncorrected&#8217;, &#8216;fwe&#8217;, or &#8216;fdr&#8217;</p>
+<p>e.g., 
+T-test, Construct a stats_image object, threshold and display:
+statsimg = ttest(fmridat, .001, &#8216;unc&#8217;);
+orthviews(statsimg);</p>
+<p>Re-threshold and display:
+statsimg = threshold(statsimg, .000001, &#8216;unc&#8217;);
+orthviews(statsimg);</p>
+<p>statsimg = threshold(statsimg, .01, &#8216;fdr&#8217;);
+orthviews(statsimg);</p>
+<p>NOTE: for two-sample T-test, use fmri_data.regress</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_data.windsorize">
+<tt class="descclassname">CanlabCore.&#64;fmri_data.</tt><tt class="descname">windsorize</tt><big>(</big><em>obj</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_data.windsorize" title="Permalink to this definition">¶</a></dt>
+<dd><p>obj = windsorize(obj, [madlimit])</p>
+<p>Windsorize an fMRI data object to madlimit Median Absolute Deviations.
+Default = 5 MADs.
+Works across rows and columns.
+Registers this step in history.
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;
+Calculate and display descriptives
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-CanlabCore.&#64;fmri_model">
+<span id="fmri-model"></span><h1>fmri_model<a class="headerlink" href="#module-CanlabCore.@fmri_model" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.build">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">build</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>obj = build(fmri_model_obj)</p>
+<p>Build the design matrix (xx) for an fmri_model object</p>
+<p>We assume that the same conditions are modeled for each session
+We assume that you have one basis set per condition (this is different
+from SPM, which only allows a single basis set across all conditions)
+Define sessions and number of conditions</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.build_single_trial">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">build_single_trial</tt><big>(</big><em>obj</em>, <em>inputhrf</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.build_single_trial" title="Permalink to this definition">¶</a></dt>
+<dd><p>obj = build_single_trial(fmri_model_obj, inputhrf)</p>
+<p>Build a single-trial design matrix (xx) for an fmri_model object</p>
+<p>We assume that the same conditions are modeled for each session
+We assume that you have one basis set per condition (this is different
+from SPM, which only allows a single basis set across all conditions)</p>
+<p>This is used in single_trial_estimates, which assumes that you have
+estimated an initial model and saved image data.</p>
+<p>The idea behind this is somewhat different from other canlab single-trial
+analyses, in that it takes in a single, custom HRF for each condition,
+rather than using a basis set.  In single_trial_estimates, custom HRFs
+are created for each voxel by using the condition- and voxel-specific hrf
+estimates stored during model fitting.
+The sequence would be:
+1 - robustfit(my_model), to fit average model and get HRF est for each
+voxel
+2 - single_trial_estimates(my_model), to use this function to build
+single-trial design matrices and fit them.</p>
+<p>inputhrf should be a cell array of length nconds (number of conditions).
+Check assumptions and basis set
+We assume that the same conditions are modeled for each session</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.get_condition_assignments">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">get_condition_assignments</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.get_condition_assignments" title="Permalink to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li>Indicator matrix coding for which columns in X belong to the same</li>
+</ul>
+<p>modeled condition, and are part of the same HRF fit
+- There is one set of columns for each condition modeled, and one set of
+columns for each parametric modulator of each condition
+- Because parametric modulators may not exist for all conditions, we need
+to build this dynamically for modulators.</p>
+<p>Design matrix build (which calls method get_session_X) builds columns in
+this order:
+All within Session:
+Regressors of interest, basis functions within conditions
+Parametric modulators, basis functions within conditions
+Covariates of no interest
+Then:
+Baselines (session/run intercepts)</p>
+<p>This method is called automatically in the build method.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.get_session_X">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">get_session_X</tt><big>(</big><em>obj</em>, <em>s</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.get_session_X" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Xs, delta, C, B, names] = get_session_X(obj, session number)</p>
+<p>Get design matrix (predictors) for one session of fmri_model object, using
+basis functions defined in the object and onsets for one session (s).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.plot">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">plot</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.replace_basis_set">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">replace_basis_set</tt><big>(</big><em>obj</em>, <em>condition_num</em>, <em>xBF_hires</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.replace_basis_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>obj = replace_basis_set(obj, condition_num, xBF_hires)</p>
+<p>Replace a basis set in an fmri_model object with another one of your
+choosing.</p>
+<p>This allows one to use a custom basis set, and also to use different
+basis sets for different trial types.</p>
+<p>Each condition across all sessions must be modeled with the same basis
+set. That is, there can be only one basis set per condition, e.g., one
+for anticipation (used in each session) and one for pain.</p>
+<p>e.g., generate a custom spline basis set and use that for Condition 1,
+and the standard one for Condition 2:</p>
+<p>[xBF_hires, xBF] = fmri_spline_basis(2, &#8216;length&#8217;, 12, &#8216;nbasis&#8217;, 3, &#8216;order&#8217;, 3, &#8216;plot&#8217;);
+save this to get info that is not typically in basis set until after
+model is built.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.robustfit">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">robustfit</tt><big>(</big><em>fmri_model_obj</em>, <em>fmri_data_obj</em><span class="optional">[</span>, <em>optional args</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.robustfit" title="Permalink to this definition">¶</a></dt>
+<dd><p>robust fit for a model object to data object</p>
+<p>Features:
+spatial smoothing of weights at 12 mm FWHM
+ridge regression <strong>*not yet*</strong></p>
+<p>Preproc scaling:
+1) Remove covariates using ridge reg; ridge trace for full model
+2) scale to % signal change across time (cols) OR rank time points (for
+w/i ss predictions??) AND/OR rank or center rows (images; for &#8216;shape&#8217;
+analysis</p>
+<p>Example: %sig across time, rank across rows: relative % sig change
+Different models of noise lead to different ideas about optimal preproc
+If large diffs in nuisance scaling in BOLD across individuals, ranking cols may
+be good idea. but then individual diffs in overall activity will be removed...</p>
+<p>&#8216;tune&#8217;, tuning const for robust reg
+&#8216;iter&#8217;, &#8216;maxiterations&#8217;, robust reg /WLS iterations. 1 = OLS only!
+&#8216;smooth&#8217;, &#8216;spatial_smooth_fwhm&#8217;, 0 or smoothing kernel for weights</p>
+<p>&#8216;nosmooth&#8217;, spatial_smooth_fwhm = 0;
+&#8216;stats&#8217;, &#8216;calculate_stats&#8217;, calculate_stats = 1; IN DEVELOPMENT
+&#8216;noresiduals&#8217;, write_residuals = 0;
+&#8216;noplots&#8217;, save_plots = 0;
+Defaults/constants
+&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.saveplots">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">saveplots</tt><big>(</big><em>fmri_model</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.saveplots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output dir</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_model.single_trial_estimates">
+<tt class="descclassname">CanlabCore.&#64;fmri_model.</tt><tt class="descname">single_trial_estimates</tt><big>(</big><em>obj</em>, <em>fmri_data_obj</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_model.single_trial_estimates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write single trial estimates associated with an estimated fmri_model object.
+must have estimated the model (robustfit(obj); see fmri_model.robustfit)
+and saved hrf*.img images for each condition.</p>
+<p>Also input an fmri_data object with time series data.</p>
+<p>This function writes images, one 4-D image for each condition, with the
+number of frames equalling the number of trials (onsets) for that
+condition.</p>
+<p>It does this by constructing a separate design matrix for each voxel,
+which is based on the HRF estimates for that voxel for each condition.
+Fits for all conditions are added to the same model, so that their
+colinearity influences the single-trial parameter estimates.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-CanlabCore.&#64;fmri_mask_image">
+<span id="fmri-mask-image"></span><h1>fmri_mask_image<a class="headerlink" href="#module-CanlabCore.@fmri_mask_image" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CanlabCore.&#64;fmri_mask_image.resample_to_image_space">
+<tt class="descclassname">CanlabCore.&#64;fmri_mask_image.</tt><tt class="descname">resample_to_image_space</tt><big>(</big><em>obj</em>, <em>sampleto</em>, <em>varargin</em><big>)</big><a class="headerlink" href="#CanlabCore.@fmri_mask_image.resample_to_image_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>obj = resample_to_image_space(obj, sampleto &lt;img name or image_vector object&gt;)</p>
+<p>Resamples data in an fmri_mask_image object (obj) to the space of another
+image (e.g., a functional image, for data extraction)
+The volInfo field will be the same as the sampleto volume info.
+The mask will have zeros in obj.dat for out-of-mask voxels.
+THIS FUNCTION USES SCN_MAP_IMAGE AND REQUIRES THAT THE ORIGINAL IMAGE BE
+AVAILABLE ON DISK.  Multiple resamplings will break the function because
+the new space will be different from the original one on disk.  Use the
+more general resample_space.</p>
+<p>% NOTE: Mask is <em>reloaded</em> from original data if space is remapped, and you
+cannot use manual thresholding of the mask. This is a feature of the
+map_to_image_space method and scn_map_image</p>
+<p>obj must be an fmri_mask_image object
+sampleto can be either:
+1) An image name to sample to
+2) Another fmri_mask_image object (but image must exist on path!)</p>
+<p>SEE ALSO: resample_space, for a method that does not require images to
+exist on disk on the path.</p>
+<p>Optional inputs:
+&#8216;mask&#8217; : Apply sampleto as mask so that only voxels in the sampleto mask
+are retained in obj.dat.</p>
+<p>THIS FUNCTION WORKS, BUT IS DEPRECATED BECAUSE RESAMPLE_SPACE IS MORE
+GENERAL.  resample_space does not require the resampling of the original
+image from disk, which this does.  resample_space is slower, though.
+Programmers&#8217; notes
+Tor: July 2011: Edited because old version will apply mask when resampling
+space. Edited default behavior to NOT mask with voxels only in sampleto
+space.  This could cause bugs in other functions that need to be worked
+out.  The optional argument &#8216;mask&#8217; should produce the old default
+behavior.</p>
+<p>Oct 30, 2011: obj.dat field after sampling did not conform to standard,
+because only in-mask voxels in volInfo were not selected.  This was
+fixed.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">fmri_data</a></li>
+<li><a class="reference internal" href="#module-CanlabCore.&#64;fmri_model">fmri_model</a></li>
+<li><a class="reference internal" href="#module-CanlabCore.&#64;fmri_mask_image">fmri_mask_image</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">CanlabCore documentation home</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/fmridata.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mat-modindex.html" title="MATLAB Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CanlabCore documentation home"
+             >previous</a> |</li>
+        <li><a href="index.html">CanlabCore 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Tor Wager.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

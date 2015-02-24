@@ -1,80 +1,80 @@
-% fmri_data: Data class for storing data matrices and information
-%
-% 'fmri_data' is a data class containing information about generic fmri
-% datasets stored in a structure-like object.  Using this has the
-% advantages that the fields and methods are standardized and controlled.
-% It also keeps track of the history of what was done to the dataset.
-%
-% Creating class instances
-% -----------------------------------------------------------------------
-% You can create an empty object by using:
-% fmri_dat = fmri_data
-% (fmri_dat is the object)
-%
-% You can create an object and extract data from a mask (defining many of
-% the fields in the object) like this:
-% 
-% dat = fmri_data(imgs, maskimagename);
-% 
-% e.g.,
-% dat = fmri_data(imgs, which('brainmask.nii'));
-%
-% Defining the space of the extracted data
-% -----------------------------------------------------------------------
-% Note: There are two options for defining the space (i.e., coordinates/voxels)
-% that the data is mapped to.
-% By default, the mask is resliced to the same space as the first image in the
-% input image name set (not coregistered; just resliced to the same voxel sizes.
-% The images are assumed to be in register.)
-% YOU CAN ALSO map the image data to the space of the mask, by entering
-% 'sample2mask' as in input argument.
-%
-% Creating class instances
-% -----------------------------------------------------------------------
-% The fmri_data object will store image data (.X) also outcome data (.Y)
-% Try typing the name of an object (class instance) you create to see its
-% properties, and a link to its methods (things you can run specifically
-% with this object type).
-%
-% Extracting ROI data easily
-% -----------------------------------------------------------------------
-% You can extract image data, and save averages within regions of
-% interest, by doing something like this:
-% [fmri_dat, cl] = read_image_files(image_names(3, :));
-%
-% cl is the ROI data in a region object 
-% region is a class.  It's data structure is like the older "clusters"
-% structure format, with average data values stored in cl.dat
-% regions can be defined by EITHER contiguous voxels or based on unique integer
-% values in images.
-%
-% More about working with masks
-% -----------------------------------------------------------------------
-% You need a mask image to define which voxels are extracted and possibly the
-% space of the image data.
-% If you do not yet have a mask image, but have data extracted separately,
-% you can add mask information (from a mask in the same space) like this:
-%
-% dat = create(dat, 'mask', fmri_mask_image(maskimg));
-%
-% More methods
-% -----------------------------------------------------------------------
-%
-% Methods include create, extract_roi_averages
-%
-% Create lets you add fields/data to a structure (see help
-% fmri_data.create)
-%
-% extract_roi_averages lets you specify a new mask, and extract and average
-% data from ROIs defined by the new mask (provided they were in the
-% original mask from which you extracted data!)
-%
-% Examples:
-% obj = fmri_data(image_names, maskinput)
-% obj = fmri_data(image_names, [], 'noverbose')
-
-
 classdef fmri_data < image_vector
+    % fmri_data: Data class for storing data matrices and information
+    %
+    % 'fmri_data' is a data class containing information about generic fmri
+    % datasets stored in a structure-like object.  Using this has the
+    % advantages that the fields and methods are standardized and controlled.
+    % It also keeps track of the history of what was done to the dataset.
+    %
+    % Creating class instances
+    % -----------------------------------------------------------------------
+    % You can create an empty object by using:
+    % fmri_dat = fmri_data
+    % (fmri_dat is the object)
+    %
+    % You can create an object and extract data from a mask (defining many of
+    % the fields in the object) like this:
+    % 
+    % dat = fmri_data(imgs, maskimagename);
+    % 
+    % e.g.,
+    % dat = fmri_data(imgs, which('brainmask.nii'));
+    %
+    % Defining the space of the extracted data
+    % -----------------------------------------------------------------------
+    % Note: There are two options for defining the space (i.e., coordinates/voxels)
+    % that the data is mapped to.
+    % By default, the mask is resliced to the same space as the first image in the
+    % input image name set (not coregistered; just resliced to the same voxel sizes.
+    % The images are assumed to be in register.)
+    % YOU CAN ALSO map the image data to the space of the mask, by entering
+    % 'sample2mask' as in input argument.
+    %
+    % Creating class instances
+    % -----------------------------------------------------------------------
+    % The fmri_data object will store image data (.X) also outcome data (.Y)
+    % Try typing the name of an object (class instance) you create to see its
+    % properties, and a link to its methods (things you can run specifically
+    % with this object type).
+    %
+    % Extracting ROI data easily
+    % -----------------------------------------------------------------------
+    % You can extract image data, and save averages within regions of
+    % interest, by doing something like this:
+    % [fmri_dat, cl] = read_image_files(image_names(3, :));
+    %
+    % cl is the ROI data in a region object 
+    % region is a class.  It's data structure is like the older "clusters"
+    % structure format, with average data values stored in cl.dat
+    % regions can be defined by EITHER contiguous voxels or based on unique integer
+    % values in images.
+    %
+    % More about working with masks
+    % -----------------------------------------------------------------------
+    % You need a mask image to define which voxels are extracted and possibly the
+    % space of the image data.
+    % If you do not yet have a mask image, but have data extracted separately,
+    % you can add mask information (from a mask in the same space) like this:
+    %
+    % dat = create(dat, 'mask', fmri_mask_image(maskimg));
+    %
+    % More methods
+    % -----------------------------------------------------------------------
+    %
+    % Methods include create, extract_roi_averages
+    %
+    % Create lets you add fields/data to a structure (see help
+    % fmri_data.create)
+    %
+    % extract_roi_averages lets you specify a new mask, and extract and average
+    % data from ROIs defined by the new mask (provided they were in the
+    % original mask from which you extracted data!)
+    %
+    % Examples:
+    % obj = fmri_data(image_names, maskinput)
+    % obj = fmri_data(image_names, [], 'noverbose')
+
+
     
     properties
         % also inherits the properties of image_vector.
@@ -291,7 +291,7 @@ classdef fmri_data < image_vector
             
             obj = check_image_filenames(obj, verbosestr);
             
-        end % constructor function
+        end
         
     end % methods
     

@@ -3,19 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to CanlabCore's documentation!
-======================================
+CanlabCore documentation home
+=============================
+
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+	:maxdepth: 1
 
-   testdoc
+	fmridata
 
-.. module:: CanlabCore
-
-.. class:: @fmri_data
 
 
 Indices and tables

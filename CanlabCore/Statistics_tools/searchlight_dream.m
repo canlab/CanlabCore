@@ -49,7 +49,7 @@ function searchlight_dream(dat, dist_n, mask, varargin)
 %               of each fold
 % 
 % Optional inputs: 
-% -------------------------------------------------------------------------
+% -----------------------------------------------------------------ll--------
 % 'dat2'        cross-classification; should be followed by dat2 and dat2.Y
 %               dat2.Y(:,1) - for training/testing, dat2(:,[2:n]) - for testing
 % 'r'           searchlight sphere radius (in voxel) (default: r = 3 voxels)

@@ -470,17 +470,17 @@ classdef comp_model < handle & design_matrix
             params = obj.params(:,2:length(obj.param_min)+ 1);
             
         end
-        
-        function summary = summary(obj)
+                    
+        function summary = summary(obj,varargin)
             % summary = summary(obj)
             %
             % -------------------------------------------------------------------------
             % This function returns the average parameter estimates across
             % subjects.  Assumes that parameters start on the second
             % column. Also returns average AIC, average BIC, average final
-            % minimized value, and number of subjects
+            % minimized value, and number of subjects.
             % -------------------------------------------------------------------------
-            
+                           
             sprintf(['Summary of Model: ' obj.model ...
                 '\n-----------------------------------------' ...
                 '\nAverage Parameters:\t' num2str(nanmean(obj.params(:,2:length(obj.param_min) + 1))) ...

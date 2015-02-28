@@ -38,7 +38,8 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %                                       number of test observations 'v' (0
 %                                       reduces to h-block xval), and a training size of g * 2 surrounding hv
 % 'verbose' = 1                       % Set to 0 to suppress output to command window
-% 'platt_scaling'                     % calculate cross-validated platt scaling if using SVM 
+% 'platt_scaling'                     % calculate cross-validated platt scaling if using SVM.  
+%                                       Softmax parameters [A,B] are in other_output{3}
 %
 % Algorithm choices
 % ---------------------------------------------------------------------
@@ -1617,11 +1618,9 @@ end
 
 %Check if using Platt Scaling
 if doPlatt
-    svmobj = platt(svm);
-    %[rr,a]=train(platt(svm),gen(toy))
-     %rr.X  contains now the probability of being class 2 predictions 
-   %[sign(rr.X-0.5),rr.Y] 
+    platt_svmobj = platt(svmobj);
 end
+
 % Training
 fprintf('Training...')
 t1 = tic;
@@ -1662,6 +1661,14 @@ svmpar.C = slackstr;
 if dorbf
     svmpar.sigma = sig;
     svmpar.kernel = 'rbf';
+end
+
+if doPlatt
+    [platt_res, platt_svmobj] = train(platt_svmobj, dataobj, loss);
+    platt_res2 = test(platt_svmobj, data('test data', xtest, []));
+    yfit = platt_res2.X;
+    svmpar.A = platt_svmobj.A;
+    svmpar.B = platt_svmobj.B;
 end
 
 end % function

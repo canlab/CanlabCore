@@ -1,0 +1,36 @@
+
+This is a template object, copying this directory and editing it should
+make it easy to create new objects. It implements a simple SVM for
+pattern recognition. 
+
+The files are the following:
+
+template.m % constructor -- needs to include all hyperparameter and model 
+           %                parameter declarations
+
+training.m % these two files are the core of any object -- they train
+
+testing.m  % the algorithm given data and test the learnt model
+
+get_name.m % used for printing the name, you only need to edit this file
+           % if you want to output special hyperparameters of your object
+           % when the name is printed out
+
+subsref.m % used for getting parameters, you do not need to edit this file
+
+subsasgn.m% used for setting parameters, you do not need to edit this file
+
+
+
+PROGRAMMING GUIDELINES:
+
+1) If you use a kernel, try to call train and test members of kernel, see
+e.g the svm object. This will help to make complex kernel objects, e.g 
+feed_fwd networks of kernels.
+
+2) always use get, get_x, set_x of data objects, and try not to create 
+new data objects, otherwise you may lose e.g indexing information if you
+do not copy it -- see e.g svm object.
+
+
+

@@ -1617,7 +1617,7 @@ end
 
 %Check if using Platt Scaling
 if doPlatt
-    svmobj = platt(svm);
+    svmobj = platt(svm
     %[rr,a]=train(platt(svm),gen(toy))
      %rr.X  contains now the probability of being class 2 predictions 
    %[sign(rr.X-0.5),rr.Y] 

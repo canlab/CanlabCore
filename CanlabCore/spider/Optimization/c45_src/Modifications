@@ -1,0 +1,152 @@
+Modifications since book was published:
+
+--------------------------------------------------------------------------------
+(1)	17 August 1992:  fixed bug in prunerule.c
+
+	In routine Satisfies about line 434:
+	moved statement
+		    t->Outcome = -1;
+	to before the for loop
+--------------------------------------------------------------------------------
+(2)	2nd Feb 1993: fixed errors reported by Dick Jackson
+
+	c4.5rules.c line 34: changed ';' to ','
+ 	getnames.c: moved CopyString() declaration to head
+--------------------------------------------------------------------------------
+(3)	19th June 1993: fixed error reported by Guillermo Irisarri
+
+	ANSI C doesn't like "exit()" with no args in average.c, xval-prep.c
+--------------------------------------------------------------------------------
+(4)	5th July 1993: fixed bug in c4.5rules reported by Ray Mooney
+
+	SaveRules() was invoked before EvaluateRulesets(), but the latter
+	can delete globally unhelpful rules.  SaveRules() was moved to
+	after evaluation of rules on training data
+	    (Note: this change affects only the use of consultr with the
+	     saved rules; experimental results are unaltered.)
+--------------------------------------------------------------------------------
+(5)	13th July 1993: changed rules.c to improve printing with -s option
+
+	When tests on discrete attributes use value groups, the standard
+	form of test is
+	    "<attribute> in {<value>, <value>, ...}".
+	If there is only one value, this should appear as
+	    "<attribute> = <value>".
+	This has already been changed in trees; a similar change has now
+	been made to function PrintCondition() in rules.c
+--------------------------------------------------------------------------------
+(6)	28th July 1993: killed very large confusion matrices
+
+	confmat.c line 19: added copout if number of classes > 20
+--------------------------------------------------------------------------------
+(7)	9th September 1993: fixed problems notified by Mike Jankulak.
+
+	* Added checks for reasonable parameter values in c4.5, c4.5rules.
+	  Check in GetNames() for discrete N: N must be at least 2.
+
+	* consult, consultr don't work with attributes of type discrete N !
+	  Added routines in trees.c to save and restore values of attributes
+	  of this type when saving / reading trees.
+	  Modified rules.c to invoke these routines when saving / reading
+	  rulesets.
+
+	  NOTE: old .tree, .unpruned and .rules files must be regenerated
+	        if they are to be used by the modified programs.
+--------------------------------------------------------------------------------
+(8)	3rd November 1993; problem notified by Jason Catlett
+
+	c4.5rules prints an incorrect confusion matrix for the training
+	set when rules are dropped.  Altered testrules.c.
+--------------------------------------------------------------------------------
+(9)	21st December 1993; tidying up only
+
+	Changed definition of Log() in defns.i so that argument of log()
+	is guaranteed float.
+--------------------------------------------------------------------------------
+(10)    5th February 1994; problem notified by George John
+
+	Calculation of Gain in build.c can be negative rather than zero
+	due to FP rounding.  Changed tests "Gain[Att] >= 0" to
+	"Gain[Att] > -Epsilon".
+--------------------------------------------------------------------------------
+(11)	25th May 1994; problem notified by Ronny Kohavi
+
+	Similar problem in info.c with -g option.  Changed test
+        "ThisGain > 0" to "ThisGain > -Epsilon".
+--------------------------------------------------------------------------------
+(12)	30th May 1994; tidying up
+
+	Removed explicit Outcomes field from rules.  This simplifies
+	the code somewhat with little decrease in efficiency.
+--------------------------------------------------------------------------------
+(13)	18th July 1994; problem notified by Ronny Kohavi
+
+	Average gain evaluated incorrectly when all attributes have
+	many discrete values.  In build.c, introduced MultiVal to check
+	for this contingency.
+--------------------------------------------------------------------------------
+(14)	18th-20th July 1994; modifications to siftrules.c
+
+	(a) Changed coding of exceptions:
+	    * added cost of encoding total number of errors to cost of
+	      identifying false positives and false negatives.
+	    * applied penalty to non-representative theories as described
+	      in my ML'94 paper.
+	(b) Introduced a new form of local greedy search for finding
+	    good subsets when there are more than 10 rules.  This is
+	    faster than simulated annealing and replaces it as the default:
+	    simulated annealing is still available via a new option -a.
+--------------------------------------------------------------------------------
+
+***********************  Release 6  July 1994  *********************************
+
+--------------------------------------------------------------------------------
+(15)	11th August 1994; bug reported by KaiMing Ting and Zijian Zheng
+
+	In subset.c, DiscrKnownBaseInfo() can be called when KnownItems = 0.
+	Trapped such calls.
+--------------------------------------------------------------------------------
+(16)	21st January 1995; bug reported by Tom Fawcett
+
+	Very large trees can cause the short int in TreeSize to overflow.
+	Changed to int.
+--------------------------------------------------------------------------------
+(17)	6th April 1995; bug reported by Ronny Kohavi
+
+	Exit status not being set properly.  Modified the following:
+	    c4.5.c, c4.5rules.c, consult.c, consultr.c.
+--------------------------------------------------------------------------------
+(18)	19th April 1995; bug reported by Kim Horn
+
+	For very small values of CF less than 0.1%, confidence levels
+	are computed erratically.  Modified stats.c.
+--------------------------------------------------------------------------------
+(19)    June 1995: modifications to siftrules.c (again!)
+
+        Scheme described above in 14(a) amended in line with my ML'95
+	paper, available by anonymous ftp from ftp.cs.su.oz.au, directory
+	pub/ml, file q.ml95.ps.Z.
+--------------------------------------------------------------------------------
+
+***********************  Release 7  June 1995  *********************************
+
+--------------------------------------------------------------------------------
+(20)	6th July 1995; bug reported by Andrew Taylor
+
+	Tree printing can have problems when attribute names are very long.
+	Modified trees.c.
+--------------------------------------------------------------------------------
+(21)	18th October 1995: modifications to contin.c
+
+	Altered the calculation of gain for continuous attributes (described
+	in "Improved Use of Continuous Attributes in C4.5").
+--------------------------------------------------------------------------------
+
+***********************  Release 8  October 1995  ******************************
+
+--------------------------------------------------------------------------------
+(22)	26th Feb 1996; minor glitches reported by Ron Kohavi of SGI
+
+	Fn declared extern in rules.c
+	-lm removed from consult, consultr, xval-prep
+--------------------------------------------------------------------------------

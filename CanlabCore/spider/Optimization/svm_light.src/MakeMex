@@ -1,0 +1,1 @@
+ mex  svm_mex.c svm_learn_main.c  svm_learn.c svm_common.c  svm_hideo.c ; mv svm_mex.mexa64 ../svmlight.mexa64

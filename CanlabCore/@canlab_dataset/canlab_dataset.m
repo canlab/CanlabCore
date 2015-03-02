@@ -38,7 +38,7 @@ classdef canlab_dataset
         
         Description = struct('Experiment_Name', [], 'Missing_Values', [], 'Subj_Level', [], 'Event_Level', []);
         
-        Subj_Level = struct('id', cell(1), 'names', cell(1), 'type', cell(1), 'units', cell(1), 'descrip', cell(1), 'data', [], 'textdata', cell(1));
+        Subj_Level = struct('id', cell(1), 'names', cell(1), 'type', cell(1), 'units', cell(1), 'descrip', cell(1), 'data', cell(1), 'textdata', cell(1));
         
         Event_Level = struct('names', cell(1), 'type', cell(1), 'units', cell(1), 'descrip', cell(1), 'data', cell(1), 'textdata', cell(1));
         
@@ -70,12 +70,12 @@ classdef canlab_dataset
             obj.Description.Subj_Level{6, 1} = 'descrip: cell array providing detailed description of each variable in .names';
             
             obj.Description.Subj_Level{7, 1} = 'data: cell array, one cell per subject, with rectangular data matrix.';
-            obj.Description.Subj_Level{8, 1} = '      Each row is one event, each column a variable, with names in .names';
-            obj.Description.Subj_Level{9, 1} = '      Numeric .type data only, text .type data is assigned as NaN';
+            obj.Description.Subj_Level{8, 1} = '      Each row is one subject, each column a variable, with names in .names';
+            obj.Description.Subj_Level{9, 1} = '      Numeric data only, text data is assigned as NaN';
             
             obj.Description.Subj_Level{10, 1} = 'textdata: cell array, one cell per subject, with cell matrix.';
-            obj.Description.Subj_Level{11, 1} = '      Each row is one event, each column a variable, with names in .names';
-            obj.Description.Subj_Level{12, 1} = '      Text .type data only, numeric .type data is assigned as ''''';
+            obj.Description.Subj_Level{11, 1} = '      Each row is one subject, each column a variable, with names in .names';
+            obj.Description.Subj_Level{12, 1} = '      Text data only, numeric data is assigned as ''''';
             
             %Event Level Descriptions
             obj.Description.Event_Level{1, 1} = 'names: cell array containing names for each variable in .data and .textdata.';

@@ -4,7 +4,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %
 % Usage:
 % -------------------------------------------------------------------------
-% canlab_force_directed_graph(activationdata, ['cl', cl])
+% canlab_force_directed_graph(activationdata OR connection matrix, ['cl', cl])
 %
 %
 % Author and copyright information:
@@ -26,22 +26,29 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %
 % Inputs:
 % -------------------------------------------------------------------------
-% 'cl'          followed by clusters or region structure with brain clusters
-% 
+% activationdata    observations x variables matrix of data to be
+%                   inter-correlated
+%                   OR
+%                   signed, thresholded connection matrix to be used (e.g.,
+%                   thresholded t-values from multi-subject group analysis
+%
 % Optional inputs: Enter keyword followed by variable with values
-% 'threshtype' 
-% 'connectmetric' 
-% 'sizescale' 
+% 'cl'              followed by clusters or region structure with brain clusters
+% 'threshtype'      followed by threshold type; 'bonf' is option now
+% 'connectmetric'
+% 'sizescale'       Followed by values to use in sizing of nodes on graph
 % 'setcolors'       Cell array of colors for each group, [1 x g]
 % 'rset'            Cell of vectors, with indices (integers) of member
 %                   elements in each group, [1 x g] cell
-% 'names' 
+%                   rset can ALSO be a vector of integers, i.e., output
+%                   from clusterdata
+% 'names'
 % 'namesfield'
 %
 % Outputs:
 % -------------------------------------------------------------------------
 % stats         structure with descriptive statistics, including
-%               betweenness-centrality, degree of each node 
+%               betweenness-centrality, degree of each node
 %
 % Examples:
 % -------------------------------------------------------------------------
@@ -92,7 +99,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             % reserved keywords
             case 'degree', ptsizetype = 'degree';
-            %case 'design'
+                %case 'design'
                 
                 % functional commands
             case 'cl', cl = varargin{i + 1}; varargin{i + 1} = [];
@@ -133,25 +140,41 @@ if ~isempty(namesfield)
     names = {cl.(namesfield)}';
 end
 
+if ~iscell(rset) % then integer vector
+    for i = 1:max(rset)
+        rset2{i} = find(rset == i);
+    end
+    rset = rset2;
+end
+
+
 % -------------------------------------------------------------------------
 % CALCULATIONS
 % -------------------------------------------------------------------------
-
-[r, rp] = corr(double(activationdata));
-sz = size(r, 1);
-
-switch threshtype
-    case 'bonf'
-        thr = .05 ./ (sz * (sz - 1) / 2);  % bonferroni...
-end
-
-% Partial correlations
-[b, p] = calc_partial_r(activationdata);
-
-% Threshold
-sig = sparse(double(p < thr & b > 0));
-signeg = sparse(-double(p < thr & b < 0));
-sig = sig + signeg;
+if issymmetric(activationdata)
+    fprintf('Thresholded association matrix detected.\n')
+    [b, C, r, sig] = deal(activationdata);
+    thr = NaN;
+    
+else
+    fprintf('activationdata appears to be raw data. Running inter-correlations. See also xcorr_multisubject.\n')
+    
+    [r, rp] = corr(double(activationdata));
+    sz = size(r, 1);
+    
+    switch threshtype
+        case 'bonf'
+            thr = .05 ./ (sz * (sz - 1) / 2);  % bonferroni...
+    end
+    
+    % Partial correlations
+    [b, p] = calc_partial_r(activationdata);
+    
+    % Threshold
+    sig = sparse(double(p < thr & b > 0));
+    signeg = sparse(-double(p < thr & b < 0));
+    sig = sig + signeg;
+    
 
 % Threshold based on significant partial regression effects
 % C is connectivity matrix for graph
@@ -167,6 +190,9 @@ switch connectmetric
         C(~sig) = 0;
         
     otherwise error('Unknown connectmetric');
+end
+
+ % end if issymmetric
 end
 
 % Enforce format for graph
@@ -193,6 +219,8 @@ stats.path_length_distance = D;
 stats.degree = deg;
 stats.mean_path_by_rset = S;
 
+fprintf('Node size reflects %s\n', ptsizetype);
+
 switch ptsizetype
     case 'bc'
         ptsizemetric = bc;
@@ -202,7 +230,7 @@ switch ptsizetype
         ptsizemetric = ones(size(bc));
     otherwise error('Unknown ptsizetype');
 end
-        
+
 % -------------------------------------------------------------------------
 % Force-directed graph
 % -------------------------------------------------------------------------
@@ -211,7 +239,7 @@ end
 Xc = fruchterman_reingold_force_directed_layout(C);
 
 if ~isempty(cl)
-create_figure('graph', 1, 2);
+    create_figure('graph', 1, 2);
 else
     create_figure('graph');
 end
@@ -229,7 +257,7 @@ set(lh, 'Color', [0 .5 1], 'LineStyle', ':')
 
 switch sizescale
     case 'linear'
-%         ivals = 4 + 15 * intensity.(cnames{i}) ./max(intensity.(cnames{i}));  % LC none of these variables exist in the workspace
+        %         ivals = 4 + 15 * intensity.(cnames{i}) ./max(intensity.(cnames{i}));  % LC none of these variables exist in the workspace
         ivals =4 + 15 * ptsizemetric ./ max(ptsizemetric);
         
     case 'sigmoid'
@@ -491,28 +519,28 @@ for i = 1:size(xyz, 1)
     
     if ~isempty(names)
         offset = .04 * range(get(gca, 'XLim'));
-            text(xyz(i, 1)+offset, xyz(i, 2)+offset, xyz(i, 3)+offset, mynames{i}, 'Color', 'k', 'FontSize', 14);
+        text(xyz(i, 1)+offset, xyz(i, 2)+offset, xyz(i, 3)+offset, mynames{i}, 'Color', 'k', 'FontSize', 14);
     end
 end
 spherehan = {spherehan};
 
 % for i = 2:length(rset)
-%     
+%
 %     xyz = regioncenters(rset{i}, :);
 %     sz = ivals(rset{i});
 %     if ~isempty(names)
 %     mynames = names(rset{i});
 %     end
-% 
+%
 %     spherehan{i} = cluster_image_sphere(xyz, 'color', setcolors{i}, 'radius', sz);
-%     
+%
 %     if ~isempty(names)
 %         offset = .02 * range(get(gca, 'XLim'));
 %         for j = 1:size(xyz, 1)
 %             text(xyz(j, 1)+offset, xyz(j, 2)+offset, xyz(j, 3)+offset, mynames{j}, 'Color', 'k', 'FontSize', 14);
 %         end
 %     end
-%     
+%
 % end
 
 

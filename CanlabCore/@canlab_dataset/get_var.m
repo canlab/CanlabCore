@@ -1,6 +1,8 @@
 function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 %
 % get Subject-level or Event-level variable from dataset D and return in rect matrix and cell array.
+% Multiple variables can be requested, but all data requested must be either numeric or
+% text, and not a combination of the two.
 %
 % Usage:
 % ----------------------------------------------------------------------------------
@@ -10,8 +12,8 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 % ----------------------------------------------------------------------------------
 % D             a canlab_dataset object
 % varname       the name of a variable to get from dataset
-%               - Looks for var name at either level, returns Event level if exists at both levels
-%               - can be a cell array of multiple var names 
+%               - Looks for var name at either level, returns error if exists at both levels
+%               - can be a cell array of multiple var names
 %                  in this case, dat is a n x m matrix, where n=subjs
 %                  and m=variables requested
 % [Optional inputs:]
@@ -24,17 +26,19 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 %  will get DeltaDon whenever trained==1.  Currently only implemented for
 %  event-level data.  Could be expanded to include multiple conditions.
 %
+%
+%
 % Outputs:
 % ----------------------------------------------------------------------------------
-% dat: rect matrix of subjects x events
+% dat: rect matrix of subjects X events (X variables)
 %       - good for plotting individuals, means/std. errors across subjects
+%       - is actually a cell matrix if textual data is requested.
 %
 % datcell: 1 x subjects cell array, each cell containing event data for one subject
 %       - good for input into some stats functions, e.g., glmfit_multilevel
 %       and igls.m
 %
-% wh_level: either 'Subject' or 'Event', depending on which level the
-% variable exists at.
+% wh_level: 1 = 'Subject'; 2 = 'Event';
 %
 % descrip:  the description for this variable
 %
@@ -44,15 +48,17 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 dat = [];
 datcell = {};
 
+
 if iscell(varname)
-    wh_level = get_varlevel(D, varname{1});
+    [wh_level,textflag] = get_varlevel(D, varname{1});
 else
-    wh_level = get_varlevel(D, varname);
+    [wh_level,textflag] = get_varlevel(D, varname);
 end
 
 %varargin:  wh_keep
 wh_keep = true(size(D.Subj_Level.id));
 do_conditional = 0;
+
 
 for i=1:length(varargin)
     if islogical(varargin{i})
@@ -68,35 +74,41 @@ for i=1:length(varargin)
                     case 1
                         conditionalCol = strmatch(varargin{i+1}{1}, D.Subj_Level.names, 'exact');
                     case 2
-                        
                         conditionalCol = strmatch(varargin{i+1}{1}, D.Event_Level.names, 'exact');
                 end
                 
                 if isempty(conditionalCol), error('Conditional variable does not exist'); end
                 conditionalVal = varargin{i+1}{2};
+            otherwise
+                warning('Unknown varargin: %s\n',varargin{i})
         end
     end
 end
 
 
 switch wh_level
-    case 1
-        
-        % Subject-level
-        if iscell(varname)
+    case 1 % Subject-level
+        if iscell(varname) %Multiple vars to collect
             for i=1:length(varname)
                 wh = strmatch(varname{i}, D.Subj_Level.names, 'exact');
-                dat(:,i) = D.Subj_Level.data(:, wh);
-                
+                if textflag
+                    dat(:,i) = D.Subj_Level.textdata(:, wh);
+                else
+                    dat(:,i) = D.Subj_Level.data(:, wh);
+                end
                 if wh > length(D.Subj_Level.descrip)
-                    descrip{i} = varname; %'No description.';
+                    descrip{i} = varname{i}; %'No description.';
                 else
                     descrip{i} = D.Subj_Level.descrip(wh);
                 end
             end
-        else
+        else %Single variable to collect
             wh = strmatch(varname, D.Subj_Level.names, 'exact');
-            dat = D.Subj_Level.data(:, wh);
+            if textflag
+                dat(:,i) = D.Subj_Level.textdata(:, wh);
+            else
+                dat(:,i) = D.Subj_Level.data(:, wh);
+            end
             if wh > length(D.Subj_Level.descrip)
                 descrip = varname; %'No description.';
             else
@@ -105,13 +117,16 @@ switch wh_level
         end
         
         if do_conditional
-            whrows = D.Subj_Level.data(:, conditionalCol) == conditionalVal;
+            if ~ischar(conditionalVal)
+                whrows = D.Subj_Level.data(:, conditionalCol) == conditionalVal;
+            else
+                whrows = strcmp(D.Subj_Level.textdata(:, conditionalCol),conditionalVal); %if this doesn't work, need to fix below as well
+            end
             dat = dat(whrows, :);
             wh_keep = wh_keep(whrows);
-        end
+        end %conditional if-statement
         
-    case 2
-        
+    case 2 %Event-Level
         if iscell(varname)
             wh=[];
             for k=1:length(varname)
@@ -119,24 +134,35 @@ switch wh_level
             end
         else
             wh = find(strcmp(varname, D.Event_Level.names));
-        end
+        end %variable selection
         
-        % Event-level
         if do_conditional
-            d=conditionalData(D.Event_Level.data, conditionalCol, conditionalVal, wh);
-            
-            
+            d=conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
         else
             my_col = @(x) x(:, wh);
-            d = cellfun(my_col, D.Event_Level.data, 'UniformOutput', 0);
-            
+            if ~textflag
+                d = cellfun(my_col, D.Event_Level.data, 'UniformOutput', 0);
+            else
+                d = cellfun(my_col, D.Event_Level.textdata, 'UniformOutput', 0);
+            end
+        end %conditional if-statement
+        
+        datcell = d; % Events X Vars within subject cells
+        
+        if ~iscell(varname)
+            dat = cat(2, d{:});  
+            dat = dat';  % Subj x Events
+        else %Subj X Events X Vars
+            if textflag
+                dat = cell(numel(d),length(d{1}(:,1)),numel(varname));
+            else
+                dat = nan(numel(d),length(d{1}(:,1)),numel(varname));
+            end
+            for subidx = 1:numel(d)
+                dat(subidx,:,:) = d{subidx};
+            end
         end
         
-        datcell = d;
-        
-        dat = cat(2, d{:});  % d is Events x Subjects
-        
-        dat = dat';  % Subj x Events
         
         if wh > length(D.Event_Level.descrip)
             descrip = 'No description.';
@@ -155,7 +181,7 @@ if length(wh_keep) ~= size(dat, 1) && length(wh_keep) ~= size(datcell, 2)
     error('wh_keep is the wrong length. Check input.');
 end
 
-dat = dat(wh_keep,:);
+dat = dat(wh_keep,:,:);
 if ~isempty(datcell), datcell = datcell(wh_keep); end
 
 
@@ -164,12 +190,10 @@ end % function
 
 
 
-function varlevel = get_varlevel(D, varname)
+function [varlevel, textflag] = get_varlevel(D, varname)
 
-[varlevel, varlevel2] = deal(0);
-
+[varlevel, varlevel2] = deal(0); %#ok
 varlevel = any(strcmp(D.Subj_Level.names, varname));
-
 varlevel2 = 2*any(strcmp(D.Event_Level.names, varname));
 
 if any(varlevel & varlevel2)
@@ -182,12 +206,58 @@ if any(~varlevel)
     error(['Variable ' varname ' does not exist in this dataset. Check var input names.'])
 end
 
+switch varlevel
+    case 1
+        wh = strcmp(D.Subj_Level.names, varname);
+        type = D.Subj_Level.type{wh};
+    case 2
+        wh = strcmp(D.Event_Level.names, varname);
+        type = D.Event_Level.type{wh};
 end
 
-function arr2 = conditionalData(arr, conditionalCol, conditionalVal, outCol)
+switch type
+    case 'numeric'
+        textflag = 0;
+    case 'text'
+        textflag = 1;
+    otherwise
+        textflag = 0;
+        warning('Missing variable type for variable %s. Type assumed to be numeric.',varname);
+end
+
+end %get_varlevel function
+
+function arr2 = conditionalData(D, conditionalCol, conditionalVal, outCol, textflag)
+
+if textflag
+    arr = D.Event_Level.textdata;
+else
+    arr = D.Event_Level.data;
+end
+
 arr2 = cell(size(arr));
-for i=1:length(arr)
-    arr2{i} = arr{i}(arr{i}(:,conditionalCol)==conditionalVal, outCol);
+%First, check for data or textdata type
+if ~iscell(arr{1}) %numeric data
+    if ~ischar(conditionalVal) %numeric conditional
+        for i=1:length(arr) %iterate over subjects
+            arr2{i} = arr{i}(arr{i}(:,conditionalCol)==conditionalVal, outCol);
+        end
+    else %text conditional
+        for i=1:length(arr) %iterate over subjects
+            arr2{i} = arr{i}(strcmp(D.Event_Level.textdata{i}(:,conditionalCol),conditionalVal), outCol);
+        end
+    end
+else %text data
+    if ~ischar(conditionalVal) %numeric conditional
+        for i=1:length(arr) %iterate over subjects
+            arr2{i} = arr{i}(D.Event_Level.data{i}(:,conditionalCol)==conditionalVal, outCol);
+        end
+    else %text conditional
+        for i=1:length(arr) %iterate over subjects
+            arr2{i} = arr{i}(strcmp(arr{i}(:,conditionalCol),conditionalVal), outCol);
+        end
+    end
 end
-end
+
+end %conditionalData function
 

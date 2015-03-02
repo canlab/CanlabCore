@@ -63,10 +63,14 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 % OUT = canlab_connectivity_predict(dat, subject_grouping, 'outcome', y, 'nograph');
 %
 % See also:
-% parcel_cl, parcel_cl_nmds_plots, canlab_force_directed_graph
+% parcel_cl, parcel_cl_nmds_plots, canlab_force_directed_graph,
+% canlab_connectivity_preproc
 
 % Programmers' notes:
 % Created 2/5/15 by tor wager
+%
+% TO-DOS:  Thresholds and sig matrix should probably be individualized
+%          - plotting methods if you input Clusters/regions
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
@@ -124,6 +128,7 @@ C = mat2cell(dat, t, size(dat, 2));
 % stats on pairwise associations
 OUT = xcorr_multisubject(C, varargin{:});
 
+plot_individual_subjects(OUT)
 
 % Image the correlation matrix
 %-----------------------------------
@@ -143,6 +148,7 @@ xlabel('Variable No.');
 
 subplot(1, 3, 2)
 tthr = OUT.stats.t .* double(OUT.stats.fdrsig ~= 0);
+tthr(isinf(tthr)) = 0; %max(tthr(~isinf(tthr)));
 ylim = tthr(:);
 ylim = prctile(abs(ylim), 95);
 imagesc(tthr, [-ylim ylim]);
@@ -167,6 +173,9 @@ if docluster
     ylim = prctile(abs(ylim), 95);
     set(gca, 'Clim', [-ylim ylim]);
     
+    OUT.parcelindx = parcelindx;
+    OUT.parcelcolors = scn_standard_colors(length(unique(parcelindx)'));
+
 end
 
 % get data for prediction
@@ -225,6 +234,7 @@ if ~isempty(y)
         xlabel('Predicted'); ylabel('Observed');
         
         pdat.dat = OUT.shortestpath';
+        pdat.dat(isinf(pdat.dat)) = max(pdat.dat(~isinf(pdat.dat(:)))) + 1;
         [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
         OUT.PREDICT.shortestpath = stats;
         subplot(2, 2, 3);
@@ -440,6 +450,36 @@ end % function
 
 
 
+% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
+
+
+function plot_individual_subjects(OUT)
+
+m = OUT.pairwise_assoc{1};
+m2 = m(:, :, 1);
+
+nc = max(1, floor(size(m2, 2) ./ 5));
+nc = zeros(size(m2, 2), nc);
+
+for i = 2:size(m, 3)
+m2 = [m2 nc m(:, :, i)];
+end
+
+mm = abs(m(:));
+clim = prctile(mm(mm ~= 1 & mm ~= 0), 98);
+
+create_figure('individual subjects'); 
+imagesc(m2, [-clim clim]); 
+colorbar; set(gca, 'YDir', 'Reverse');
+axis tight
+axis off
+
+%cm = colormap_tor([0 0 1], [1 1 0], [1 1 1]);
+cm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
+colormap(cm)
+
+end
 
 
 %     disp('Clustering variables based on full time-series data');

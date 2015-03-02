@@ -56,6 +56,9 @@ function [cl, varargout] = extract_roi_averages(obj, mask_image, varargin)
 % 
 % Notes:
 % cl(i).dat gives you the pattern expression values for cluster i.
+% 
+% This function LOSES removed image data - you must re-remove if you have
+% removed images!
 %
 % Related functions:
 % For an non-object-oriented alternative, see extract_image_data.m

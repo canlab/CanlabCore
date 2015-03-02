@@ -4,6 +4,7 @@ function obj = addblobs(obj, cl, varargin)
 % Add blobs to montage and other surface plot(s)
 %
 % See render_blobs for options
+% See addthreshblobs for a multiple thresholds version
 %
 % Examples:
 %

@@ -40,7 +40,7 @@ for i=1:length(varargin)
                 wh_keep = varargin{i+1};
             case 'nofig'
                 dofig=0;
-            case 'dorobust'
+            case {'robust', 'dorobust'}
                 dorobust=1;
         end
     end
@@ -103,7 +103,8 @@ for i=1:length(dat1_level)
             grid off
         else
             scatter(x,y,65,  'MarkerFaceColor', colors{i}, 'MarkerEdgeColor', colors{i});%, 'within')
-            h=refline(polyfit(x,y,1))
+            inds = isnan(x) | isnan(y);
+            h=refline(polyfit(x(~inds),y(~inds),1))
             set(h, 'Color', colors{i}, 'LineWidth', 2)
         end
         

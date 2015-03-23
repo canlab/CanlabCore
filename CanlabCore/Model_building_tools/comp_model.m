@@ -492,7 +492,7 @@ classdef comp_model < handle & design_matrix
             
         end
         
-        function f1 = plot(obj, columns, varargin)
+        function f1 = plot(obj, trial, columns, varargin)
             % f1 = plot(obj)
             %
             % -------------------------------------------------------------------------
@@ -501,6 +501,7 @@ classdef comp_model < handle & design_matrix
             % -------------------------------------------------------------------------
             % INPUTS:
             % -------------------------------------------------------------------------
+            % trial                 Column of obj.trial for X axis
             % columns               Columns of obj.trial to plot
             %
             % -------------------------------------------------------------------------
@@ -524,8 +525,8 @@ classdef comp_model < handle & design_matrix
             % -------------------------------------------------------------------------
             % EXAMPLES:
             % -------------------------------------------------------------------------
-            % plot(lin_model, [3,4])
-            % plot(lin_model, [3,4], 'title', 'Linear Model', 'xlabel','session', 'ylabel', 'Average BDI', 'legend', {'Predicted','Observed'})
+            % plot(lin_model, 6, [3,4])
+            % plot(lin_model, 6, [3,4], 'title', 'Linear Model', 'xlabel','session', 'ylabel', 'Average BDI', 'legend', {'Predicted','Observed'})
             %
             % -------------------------------------------------------------------------
             % Author and copyright information:
@@ -547,17 +548,17 @@ classdef comp_model < handle & design_matrix
             % -------------------------------------------------------------------------
             
             sub = unique(obj.trial(:,1));
-            trial = unique(obj.trial(:,2));
+            trials = unique(obj.trial(:,trial));
             
-            if nargin < 2
+            if nargin < 3
                 error('Please add a vector indicating which columns of trial to plot')
             end
             
             counter = 1;
             for c = columns
-                for t = 1:length(trial)
-                    datmn(t,counter) = nanmean(obj.trial(obj.trial(:,2)==trial(t),c));
-                    datse(t,counter) = nanstd(obj.trial(obj.trial(:,2)==trial(t),c)) / sqrt(length(sub));
+                for t = 1:length(trials)
+                    datmn(t,counter) = nanmean(obj.trial(obj.trial(:,trial)==trials(t),c));
+                    datse(t,counter) = nanstd(obj.trial(obj.trial(:,trial)==trials(t),c)) / sqrt(length(sub));
                 end
                 counter = counter + 1;
             end

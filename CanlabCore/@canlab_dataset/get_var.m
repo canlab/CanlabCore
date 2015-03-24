@@ -209,10 +209,18 @@ end
 switch varlevel
     case 1
         wh = strcmp(D.Subj_Level.names, varname);
-        type = D.Subj_Level.type{wh};
+        if max(find(wh)) < numel(D.Subj_Level.type)
+            type = D.Subj_Level.type{wh};
+        else
+            type = 'unk';
+        end
     case 2
         wh = strcmp(D.Event_Level.names, varname);
-        type = D.Event_Level.type{wh};
+        if max(find(wh)) < numel(D.Event_Level.type)
+            type = D.Event_Level.type{wh};
+        else
+            type = 'unk';
+        end
 end
 
 switch type

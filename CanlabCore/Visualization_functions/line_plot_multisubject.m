@@ -151,7 +151,7 @@ if group_avg_ref_line
     Xs = cat(2,X{:});
     minX = prctile(Xs(1,:),5);
     maxX = prctile(Xs(end,:),95);
-    plot([minX maxX], [b(i,1)+b(i,2)*minX b(i,1)+b(i,2)*maxX], 'Color', 'k', 'LineWidth', 6);
+    plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);
 end
 
 end % function

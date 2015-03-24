@@ -105,18 +105,17 @@ dd2 = dat2;
 
 fprintf('\n Calculating corrleation for voxel                 ');
 for i = 1:n %(1):vox_to_run(10)
-    clc
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%07d/%07d', i, n);
     eval(['searchlight_indx = searchlight_sphere_prep(dat' num2str(idx) ...
         '.volInfo.xyzlist(~dat' num2str(idx) '.removed_voxels,:), i, r);']);
-    dd1.dat = dat1.dat(searchlight_indx,:);
+    dd1.dat = dd1.dat(searchlight_indx,:);
     [yfit, wt] = alg_svr(dd1);
     
-    dd2.dat = dat2.dat(searchlight_indx,:);
-    for j = 1:size(dd2.dat, 2)
-        r_corr(i,j) = corr(dd2.dat(:,j),wt.dat);
-    end
-%     r_corr(i,:) = apply_mask(dd2,wt,'pattern_expression','ignore_missing','correlation');
+    dd2.dat = dd2.dat(searchlight_indx,:);
+            for ii = 1:size(dd2.dat, 2)
+
+    corr(dat.dat,weights)
+    r_corr(i,:) = apply_mask(dd2,wt,'pattern_expression','ignore_missing','correlation');
     sl_size(i) = sum(searchlight_indx);
 end
 

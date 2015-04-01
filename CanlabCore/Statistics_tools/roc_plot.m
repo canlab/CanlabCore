@@ -28,6 +28,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % 'dependent':        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
 %                     This will perform multilevel version of binomial test for single interval classifation.
 % 'noplot':           Skip generating plots
+% 'nooutput':         Suppress text output
 %
 % Outputs:
 % ---------------------------------------------------------------------
@@ -82,6 +83,9 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %
 % Edited 1/13/2015: Luke Chang - added option to suppress plots for running
 % on cluster.
+%
+% Edited 3/25/2015: Luke Chang - added option to suppress text output for
+% speeding up computations on cluster
 
 include = true(size(binary_outcome));
 threshold_type = 'Optimal overall accuracy';
@@ -97,6 +101,7 @@ doboot = 1;
 dobalanced = 0;
 doDependent = 0;
 doplot = 1;
+doOutput = 1;
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -124,9 +129,6 @@ for i = 1:length(varargin)
                 
             case {'twochoice', 'forcedchoice', 'pairedobservations'}
                 istwochoice = 1;
-                disp('ROC for two-choice classification of paired observations.')
-                disp('Assumes pos and null outcome observations have the same subject order.')
-                disp('Using a priori threshold of 0 for pairwise differences.')
                 
             case 'reportstats90', reportstats90 = 1;
                 
@@ -140,6 +142,9 @@ for i = 1:length(varargin)
                 
             case 'noplot'
                 doplot = 0;
+                
+            case 'nooutput'
+                doOutput = 0;
                 
             case 'dependent'
                 doDependent = 1;
@@ -170,6 +175,12 @@ if istwochoice
     % This allows us to do forced-choice classification for pairs based on
     % which is higher. The higher one will always be above the mean.
     % The threshold used here should be zero.
+    
+    if doOutput
+        disp('ROC for two-choice classification of paired observations.')
+        disp('Assumes pos and null outcome observations have the same subject order.')
+        disp('Using a priori threshold of 0 for pairwise differences.')
+    end
     
     meanscores = (input_values(binary_outcome) + input_values(~binary_outcome)) ./ 2;
     
@@ -482,22 +493,23 @@ end
 % fprintf('  Accuracy:\t%3.0f%% +- %3.1f%% (SE), P = %3.6f\n', ...
 %     100*ROC.accuracy, 100*ROC.accuracy_se, ROC.accuracy_p);
 
-% Single line format
-fprintf('\nROC_PLOT Output: %s, %s\n', ROC.Gaussian_model.type, threshold_type);
-
-if doboot
-    fprintf('Threshold:\t%3.2f\tSens:\t%3.0f%% CI(%.0f%%-%.0f%%)\tSpec:\t%3.0f%% CI(%.0f%%-%.0f%%)\tPPV:\t%3.0f%% CI(%.0f%%-%.0f%%)\t', ...
-        ROC.class_threshold, 100*ROC.sensitivity, 100*ROC.sensitivity_ci, 100*ROC.specificity, 100*ROC.specificity_ci, 100*ROC.PPV, 100*ROC.PPV_ci);
-else
-    fprintf('Threshold:\t%3.2f\tSens:\t%3.0f%%\tSpec:\t%3.0f%%\tPPV:\t%3.0f%%\t', ...
-        ROC.class_threshold, 100*ROC.sensitivity, 100*ROC.specificity, 100*ROC.PPV);
+if doOutput
+    % Single line format
+    fprintf('\nROC_PLOT Output: %s, %s\n', ROC.Gaussian_model.type, threshold_type);
+    
+    if doboot
+        fprintf('Threshold:\t%3.2f\tSens:\t%3.0f%% CI(%.0f%%-%.0f%%)\tSpec:\t%3.0f%% CI(%.0f%%-%.0f%%)\tPPV:\t%3.0f%% CI(%.0f%%-%.0f%%)\t', ...
+            ROC.class_threshold, 100*ROC.sensitivity, 100*ROC.sensitivity_ci, 100*ROC.specificity, 100*ROC.specificity_ci, 100*ROC.PPV, 100*ROC.PPV_ci);
+    else
+        fprintf('Threshold:\t%3.2f\tSens:\t%3.0f%%\tSpec:\t%3.0f%%\tPPV:\t%3.0f%%\t', ...
+            ROC.class_threshold, 100*ROC.sensitivity, 100*ROC.specificity, 100*ROC.PPV);
+    end
+    
+    fprintf('Nonparametric AUC:\t%3.2f\tParametric d_a:\t%3.2f\t', ROC.AUC, ROC.Gaussian_model.d_a);
+    
+    fprintf('  Accuracy:\t%3.0f%% +- %3.1f%% (SE), P = %3.6f\n', ...
+        100*ROC.accuracy, 100*ROC.accuracy_se, ROC.accuracy_p);
 end
-
-fprintf('Nonparametric AUC:\t%3.2f\tParametric d_a:\t%3.2f\t', ROC.AUC, ROC.Gaussian_model.d_a);
-
-fprintf('  Accuracy:\t%3.0f%% +- %3.1f%% (SE), P = %3.6f\n', ...
-    100*ROC.accuracy, 100*ROC.accuracy_se, ROC.accuracy_p);
-
 
 % Report stats (max sens) at 90% specificity
 if reportstats90

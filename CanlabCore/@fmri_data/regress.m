@@ -194,6 +194,9 @@ if do_intercept && do_x_on_brain
         sprintf('Intercept detected in column %1.0f of dat.x',wh_int)
         X = dat.X;
     end
+    
+else
+    X = dat.X;
 end
 
 % ---------------------------------------------------------------------

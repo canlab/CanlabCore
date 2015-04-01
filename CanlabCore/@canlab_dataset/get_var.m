@@ -103,6 +103,7 @@ switch wh_level
                 end
             end
         else %Single variable to collect
+            i=1; %only 1 variable
             wh = strmatch(varname, D.Subj_Level.names, 'exact');
             if textflag
                 dat(:,i) = D.Subj_Level.textdata(:, wh);

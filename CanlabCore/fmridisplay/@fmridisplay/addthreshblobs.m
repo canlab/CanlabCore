@@ -17,18 +17,21 @@ function obj = addthreshblobs(obj, statimg, varargin)
 %                             surving at the most stringent threshold. Defaults to 1.
 %
 %
+%
 % Examples:
-% obj = addthreshblobs(obj, statimg, {'fdr', 0.001, 0.01}); - Add blobs from
-% statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.]. Prune
-% clusters.
+% obj = addthreshblobs(obj, statimg); 
+% Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.].
+% Prune clusters.
 %
-% obj = addthreshblobs(obj, statimg, {'fdr', 0.001, 0.01},'pruneclusters',0); - Add blobs from
-% statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.]. Do not
-% prune clusters
+% obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001, 0.01}); 
+% Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.]. 
+% Prune clusters.
 %
-% obj = addthreshblobs(obj, statimg, {'fdr', 0.001, 0.01}); - Add blobs from
-% statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.].
+% obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001},'pruneclusters',0);
+% Add blobs from statimg at 2 significance levels [FDR, 0.001 unc.]. 
+% Do not prune clusters
 %
+
 %
 % 24-Feb-2015 14:17:20 
 % stephan geuter

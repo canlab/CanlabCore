@@ -86,11 +86,7 @@ for c=clust  %loop through clusters
     % disp(['mean quality for cluster  ',num2str(c),' ......',num2str(mcq)]);    
     
     for p=1:nperm
-        pX = NaN(size(X));
-        for col = 1:size(X,2)  % shuffle values within each column
-            pX(:,col) = X(randperm(size(X,1)),col);
-        end 
-        % pX=reshape(shuffles(X(:)),[size(X)]);  % permute the group space values (shuffled across dimensions)
+        pX=reshape(shuffles(X(:)),[size(X)]);  % permute the group space values (shuffled across dimensions)
         [pcq pmcq(p)]=getmeanquality(pX,c,linkagetype);   %permuted values
         % pcq is quality  (discarded)
         % mean quality for each solution (pmcq) is entered into a

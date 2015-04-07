@@ -95,7 +95,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 % cv_svm            : Cross-val support vector machine using Spider package
 %                     NOTE: This is sensitive to scale of outputs! Use -1 , 1
-%                     NOTE: Optional inputs: Slack var parameter: 'C=1' [default], 'C=0' etc.
+%                     NOTE: Optional inputs: Slack var parameter: 'C', 1 [default], 'C', 3 etc.
 %                     Distance from hyperplane saved in
 %                     stats.other_output_cv{:,2}.  Recommend using the reordered
 %                     cross-validated distance from hyperplane saved in stats.other_output{3}
@@ -360,6 +360,10 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 % 2/28/15: Luke Chang
 %           -added platt scalling option for SVM
+%
+% 4/7/15: Wani Woo: SVM algorithm use updates
+%           - fixed bug with input of slack var params ('C=x') in svm
+%
 % ---------------------------------------------------------------------
 
 % Defaults
@@ -1412,8 +1416,8 @@ dataobj = data('spider data', xtrain, ytrain);
 
 % slack parameter
 slackstr = 'C=1';
-wh = find(strcmpi('C=', varargin));
-if ~isempty(wh), slackstr = varargin{wh(1)}; end
+wh = find(strcmp('C', varargin));
+if ~isempty(wh), slackstr = ['C=' num2str(varargin{wh(1)+1})]; end
 
 svrobj = svr({slackstr, 'optimizer="andre"'});
 
@@ -1511,9 +1515,9 @@ doPlatt = 0; %platt-scaling
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-            case 'C=' %slack parameter
-                slackstr = varargin{i};
-                varargin{i} = [];
+            case 'C' %slack parameter
+                slackstr = ['C=' num2str(varargin{i+1})];
+                varargin{i} = []; varargin{i+1} = [];
                 % slack parameter
                 % wh = find(strcmpi('C=', varargin));
                 % if ~isempty(wh), slackstr = varargin{wh(1)}; end

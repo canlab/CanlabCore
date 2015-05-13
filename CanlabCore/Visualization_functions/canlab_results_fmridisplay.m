@@ -29,6 +29,8 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 % 'montagetype' : 'full' for full montages of axial and sagg slices. 
 %                 'compact' [default] for single-figure parasagittal and
 %                 axials slices.
+%                 'compact2': like 'compact', but fewer axial slices.
+%
 % * Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 % See help fmridisplay
 % e.g., 'color', [1 0 0]
@@ -133,6 +135,9 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'compact');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'compact2');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = false(1, length(varargin));
 for i = 1:length(varargin)
     wh(i) = isa(varargin{i}, 'fmridisplay');
@@ -168,7 +173,13 @@ if ~exist('o2', 'var')
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
             axh = axes('Position', [0.05 0.4 .1 .5]);
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
-            
+        
+        case 'compact2'
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8);
+            enlarge_axes(gcf, 1.2 / 1.4);            
+            axh = axes('Position', [-0.03 0.03 .2 1]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
+
         otherwise error('illegal montage type. choose full or compact.')
     end
     
@@ -193,6 +204,12 @@ else
                 axh = axes('Position', [0.05 0.4 .1 .5]);
                 o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
                 
+            case 'compact2'
+                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8);
+                enlarge_axes(gcf, 1.2 / 1.4);            
+                axh = axes('Position', [-0.03 0.03 .2 1]);
+                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
+
             otherwise error('illegal montage type. choose full or compact.')
         end
         

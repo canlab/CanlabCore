@@ -229,7 +229,12 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         
         % get optimal number of axes
         num_axes = size(cen, 1);
-        rc = ceil(sqrt(num_axes));
+        rc = ceil(sqrt(num_axes)); % produces empty rows for num_axes=6, catch below. SG
+        if mod(num_axes,rc)==0 && num_axes<rc^2  
+            rr = ceil(num_axes/rc);
+        else
+            rr = rc;
+        end
         
         if ~donewaxes
             % Break and return here if we are using existing axes.
@@ -250,7 +255,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
             if doonerow
                 newax(i) = subplot(1, num_axes, i);
             else
-                newax(i) = subplot(rc, rc, i);
+                newax(i) = subplot(rr, rc, i);
             end
             
             axis off;

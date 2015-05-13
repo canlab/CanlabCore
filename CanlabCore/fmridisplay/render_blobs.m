@@ -411,7 +411,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 
                 % h = surf(mymontage.axis_handles(j), mynewy, mynewx, Z, 'FaceColor', 'interp', 'edgecolor', 'none');%, 'FaceAlpha', 'interp');
                 % Wani: -ones(size(Z)) is helpful for boundaries for some reasons. - doesn't work with MATLAB 2014b. 
-                h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
                 % wani: The following options doesn't work with MATLAB 2014b ('FaceAlpha', 'interp')
                 %case 'coronal'
                 

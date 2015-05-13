@@ -59,6 +59,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 % o2 = removeblobs(o2);
 % o2 = addblobs(o2, r, 'color', [1 0 0]);
 %
+% %% ========== Create empty fmridisplay object on which to add blobs:
+% o2 = canlab_results_fmridisplay
+%
 % %% ========== If you want to start over with a new fmridisplay object,
 % % make sure to clear o2, because it uses lots of memory
 %
@@ -87,6 +90,10 @@ if ~which('fmridisplay.m')
     return
 end
 
+if nargin == 0
+    o2 = canlab_results_fmridisplay(region(), 'noblobs', 'nooutline');
+    return
+end
 
 if ischar(input_activation)
     cl = mask2clusters(input_activation);

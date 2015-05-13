@@ -149,21 +149,24 @@ switch wh_level
         end %conditional if-statement
         
         datcell = d; % Events X Vars within subject cells
-        
-        if ~iscell(varname)
-            dat = cat(2, d{:});  
-            dat = dat';  % Subj x Events
-        else %Subj X Events X Vars
-            if textflag
-                dat = cell(numel(d),length(d{1}(:,1)),numel(varname));
-            else
-                dat = nan(numel(d),length(d{1}(:,1)),numel(varname));
+          
+        if var(cellfun(@numel,d)) == 0 % same number of items in every cell, can concat
+            if ~iscell(varname)
+                dat = cat(2, d{:});  
+                dat = dat';  % Subj x Events
+            else %Subj X Events X Vars
+                if textflag
+                    dat = cell(numel(d),length(d{1}(:,1)),numel(varname));
+                else
+                    dat = nan(numel(d),length(d{1}(:,1)),numel(varname));
+                end
+                for subidx = 1:numel(d)
+                    dat(subidx,:,:) = d{subidx};
+                end
             end
-            for subidx = 1:numel(d)
-                dat(subidx,:,:) = d{subidx};
-            end
+        else % can't concat
+            dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
         end
-        
         
         if wh > length(D.Event_Level.descrip)
             descrip = 'No description.';
@@ -182,7 +185,7 @@ if length(wh_keep) ~= size(dat, 1) && length(wh_keep) ~= size(datcell, 2)
     error('wh_keep is the wrong length. Check input.');
 end
 
-dat = dat(wh_keep,:,:);
+if ~ischar(dat), dat = dat(wh_keep,:,:); end % dat may be a char b/c assign an error msg value to it above
 if ~isempty(datcell), datcell = datcell(wh_keep); end
 
 

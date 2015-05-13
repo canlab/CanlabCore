@@ -67,7 +67,7 @@ switch meth
         pname = 'surf_spm2_left.mat';  % moderate res, no cerebellum
 
         p = add_surface(pname);
-        set(p,'FaceColor',[.8 .65 .5]);
+        set(p,'FaceColor',[.5 .5 .5]);
 
         view(90,0); axis off; axis image; lightRestoreSingle(gca); material dull;
 
@@ -75,7 +75,7 @@ switch meth
         pname = 'surf_spm2_brain_left.mat'; % high res, with cblm.  caret segmentation
 
         p = add_surface(pname);
-        set(p,'FaceColor',[.8 .65 .5]);
+        set(p,'FaceColor',[.5 .5 .5]);
 
         view(90,0); axis off; axis image; lightRestoreSingle(gca); material dull;
 
@@ -85,7 +85,7 @@ switch meth
 
         p = add_surface(pname);
 
-        set(p,'FaceColor',[.8 .65 .5]);
+        set(p,'FaceColor',[.5 .5 .5]);
         view(270,0); axis off; axis image; lightRestoreSingle(gca); material dull;
 
     case 'hires right'
@@ -93,7 +93,7 @@ switch meth
 
         p = add_surface(pname);
 
-        set(p,'FaceColor',[.8 .65 .5]);
+        set(p,'FaceColor',[.5 .5 .5]);
         view(270,0); axis off; axis image; lightRestoreSingle(gca); material dull;
 
     case 'transparent_surface'
@@ -178,20 +178,34 @@ switch meth
         set(p,'FaceColor',[.5 .6 .6]);
 
     case {'globus pallidus', 'gp'}
-        P = which('Tal_Glo.img');
-        [p,outP,FV, cl, myLight] = mask2surface(P,0,[.5 .6 .5]);
-        if findstr(P,'Tal_Glo.img'), str(49:58) = '[.5 .6 .5]'; , end
-
+%         P = which('Tal_Glo.img');
+%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[.5 .6 .5]);
+%         if findstr(P,'Tal_Glo.img'), str(49:58) = '[.5 .6 .5]'; , end
+        
+        load(which('Keuken_2014_7T_regions.mat'), 'GPe', 'GPi')
+        p = imageCluster('cluster', GPe, 'color',[.5 .6 .5],'alpha', .5);
+        p = [p imageCluster('cluster', GPi, 'color',[.5 .75 .5],'alpha', .5)];
+        
     case {'putamen', 'put'}
         %P = which('Tal_Put.img');
         %[p,outP,FV, cl, myLight] = mask2surface(P,0,[.9 .4 0]);
         %if findstr(P,'Tal_Put.img'), str(49:58) = '[.5 .5 .6]'; , end
         %P = which('carmack_more_clusters.mat'); load(P)]
-        fbase = 'LBPA40_spm5_label_clusters.mat';
-        fname = which(fbase); if isempty(fname), error(['Looking for ' fbase]); end
-        load(fname)
-        put = cat(2, cl{51:52});
-        p = imageCluster('cluster',put,'color',[.5 .5 .6],'alpha',.5);
+        
+%         fbase = 'LBPA40_spm5_label_clusters.mat';
+%         fname = which(fbase); if isempty(fname), error(['Looking for ' fbase]); end
+%         load(fname)
+%         put = cat(2, cl{51:52});
+%         p = imageCluster('cluster',put,'color',[.5 .5 .6],'alpha',.5);
+%         
+        pname = 'spm_surf_putamen_luke.mat';
+         p = add_surface(pname);
+        set(p,'FaceColor',[.5 .9 .6]);
+        
+    case {'BG', 'bg', 'basal ganglia'}
+        p = addbrain('gp');
+        p = [p  addbrain('put')];
+        p = [p  addbrain('caudate')];
 
     case {'nucleus accumbens','nacc','nac'}
         %             P = which('NucAccumb_clusters.mat');
@@ -235,6 +249,7 @@ switch meth
         myp = addbrain('nacc');p = [p myp];
         myp = addbrain('caudate');p = [p myp];
         myp = addbrain('left');p = [p myp];
+        myp = addbrain('gp'); p = [p myp];
         set(p,'FaceAlpha',1);
 
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
@@ -268,22 +283,31 @@ switch meth
         load nts_cl
         p = imageCluster('cluster',nts,'color',[0 0 1],'alpha',1);
     
-    case {'lc'}
+    case {'lc'} %******
         P = which('ROI_LC.img');
         [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 .5 0]);
 
     case {'sn', 'substantia nigra'}
-        P = which('ROI_SN.img');
-        [p,outP,FV, cl, myLight] = mask2surface(P,0,[0 0 .5]);
+%         P = which('ROI_SN.img');
+%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[0 0 .5]);
 
-    case {'stn', 'subthalamic nucleus'}
-        P = which('ROI_STN.img');
-        [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 .5]);
+        load(which('Keuken_2014_7T_regions.mat'), 'SN')
+        p = imageCluster('cluster', SN, 'color',[0 0 .5],'alpha', .5);
+        
+    case {'stn', 'subthalamic nucleus'} % ****
+%         P = which('ROI_STN.img');
+%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 .5]);
 
+        load(which('Keuken_2014_7T_regions.mat'), 'STN')
+        p = imageCluster('cluster', STN, 'color',[1 0 .5],'alpha', .5);
+        
     case {'rn', 'red nucleus'}
-        P = which('ROI_red_nucleus.img');
-        [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 0]);
+%         P = which('ROI_red_nucleus.img');
+%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 0]);
 
+        load(which('Keuken_2014_7T_regions.mat'), 'RN')
+        p = imageCluster('cluster', RN, 'color',[1 0 0],'alpha', .5);
+        
     case {'olive', 'inferior olive'}
         P = which('ROI_inf_olive.img');
         [p,outP,FV, cl, myLight] = mask2surface(P,0,[.5 1 .5]);

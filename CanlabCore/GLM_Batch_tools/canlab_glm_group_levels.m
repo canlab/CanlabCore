@@ -277,7 +277,7 @@ if exist('covfile','var')
         tempsubsfile = fullfile(d,[f '_tempsubs.txt']);
         system(['cut -d, -f1 < ' covfile ' | tail -n +2 > ' tempsubsfile]);        
         sublevs = importdata(tempsubsfile); delete(tempsubsfile);
-        if isnumeric(sublevs), sublevs = cellstr(num2str(sublevs)); end            
+        if isnumeric(sublevs), sublevs = textscan(num2str(sublevs'), '%s'); sublevs=sublevs{1}; end            
         for i=1:numel(sublevs)
             sublevs{i} = fullfile(modeldir,sublevs{i});
         end                

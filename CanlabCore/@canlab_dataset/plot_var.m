@@ -48,6 +48,10 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %
 % 'nofig'     : don't make a new figure
 %
+%  other      : other varargin are passed directly to barplot_columns.  So
+%  for example, '95CI' will make 95% confidence interals, instead of SE
+%  bars.
+%
 % Outputs:
 % ----------------------------------------------------------------------------------
 % Copyright Tor Wager, 2013

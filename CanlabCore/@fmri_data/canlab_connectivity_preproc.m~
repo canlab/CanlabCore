@@ -299,9 +299,11 @@ if do_extract_roi
                 
                 if length(maskdat.removed_voxels) == maskdat.volInfo.nvox
                     disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');
-                    maskdat.removed_voxels = maskdat.removed_voxels(maskdat.volInfo.wh_inmask);
+                    maskdat.removed_voxels = maskdat.removed_voxels(mask_dat.volInfo.wh_inmask);
                 end
             end
+            
+            r{i} = reigon(mask_dat{i});
         end
     end
     

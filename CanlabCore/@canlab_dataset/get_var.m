@@ -228,7 +228,7 @@ switch varlevel
 end
 
 switch type
-    case 'numeric'
+    case {'numeric', 'Continuous'}
         textflag = 0;
     case 'text'
         textflag = 1;

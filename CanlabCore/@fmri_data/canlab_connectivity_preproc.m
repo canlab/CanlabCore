@@ -128,6 +128,10 @@ function [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin
 %            subject_dir, 'bpf', [.008 .25], TR, 'extract_roi', roi_masks,
 %            'pattern_expression');
 
+% PROGRAMMER'S NOTE
+% 05/19/15 fixed a bug related to conn_filter
+
+
 additional_R = [];
 remove_vent_wm = false;
 do_filter = false;
@@ -249,10 +253,10 @@ if do_preproc
     
     if do_filter
         fprintf('::: temporal filtering ... \n');
-        dat.dat = conn_filter(TR, filter, dat.dat, 'full');
-        
+        dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
+            + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); % conn_filter does mean-center by default. 
+                                                           % So need mean back in
         dat.history{end+1} = 'Done temporal filtering';
-        
     end
     
     t = toc;

@@ -338,8 +338,8 @@ if do_extract_roi
                     
                     roi_val{i}.dat = cat(2, roi_obj(:).dat);
                     
-                    % extract_roi_averages does not preserve missing cases: remove
-                    roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+                    % % extract_roi_averages does not preserve missing cases: remove
+                    %roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
                     
                     roi_val{i}.mask_name = mask{i};
                     roi_val{i}.methods = 'averaged_over using unique_mask_values';
@@ -354,8 +354,8 @@ if do_extract_roi
                     
                     roi_val{i}.dat = cat(2, roi_obj(:).dat);
                     
-                    % extract_roi_averages does not preserve missing cases: remove
-                    roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+                    % % extract_roi_averages does not preserve missing cases: remove
+                    %roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
                     
                     roi_val{i}.mask_name = mask{i};
                     roi_val{i}.methods = 'averaged_over using contiguous_regions';
@@ -374,8 +374,8 @@ if do_extract_roi
                 
                 roi_val{i}.dat = cat(2, roi_obj(:).dat);
                 
-                % extract_roi_averages does not preserve missing cases: remove
-                roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+                % % extract_roi_averages does not preserve missing cases: remove
+                %roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
                 
                 roi_val{i}.mask_name = mask{i};
                 roi_val{i}.methods = 'pattern expression using contiguous_regions';

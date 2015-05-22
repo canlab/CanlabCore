@@ -291,15 +291,15 @@ if do_extract_roi
     if nargout > 2
         % copy over apply_mask
         for i = 1:numel(mask)
-            maskdat = fmri_data(mask{i});
-            isdiff = compare_space(dat, maskdat);
+            maskdat{i} = fmri_data(mask{i});
+            isdiff = compare_space(dat, maskdat{i});
             
             if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
-                maskdat = resample_space(maskdat, dat, 'nearest');
+                maskdat{i} = resample_space(maskdat{i}, dat, 'nearest');
                 
-                if length(maskdat.removed_voxels) == maskdat.volInfo.nvox
+                if length(maskdat{i}.removed_voxels) == maskdat{i}.volInfo.nvox
                     disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');
-                    maskdat.removed_voxels = maskdat.removed_voxels(maskdat.volInfo.wh_inmask);
+                    maskdat{i}.removed_voxels = maskdat{i}.removed_voxels(maskdat{i}.volInfo.wh_inmask);
                 end
             end
         end

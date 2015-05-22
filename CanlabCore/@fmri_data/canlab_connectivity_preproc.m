@@ -295,7 +295,7 @@ if do_extract_roi
             isdiff = compare_space(dat, maskdat);
             
             if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
-                maskdat = resample_space(maskdat, dat);
+                maskdat = resample_space(maskdat, dat, 'nearest');
                 
                 if length(maskdat.removed_voxels) == maskdat.volInfo.nvox
                     disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');

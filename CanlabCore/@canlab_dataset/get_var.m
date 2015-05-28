@@ -85,12 +85,20 @@ for i=1:length(varargin)
     end
 end
 
+% initialize dat
+if textflag
+    dat = {};
+else
+    dat = [];
+end
 
 switch wh_level
+    
     case 1 % Subject-level
         if iscell(varname) %Multiple vars to collect
             for i=1:length(varname)
                 wh = strmatch(varname{i}, D.Subj_Level.names, 'exact');
+                
                 if textflag
                     dat(:,i) = D.Subj_Level.textdata(:, wh);
                 else
@@ -102,7 +110,9 @@ switch wh_level
                     descrip{i} = D.Subj_Level.descrip(wh);
                 end
             end
+            
         else %Single variable to collect
+            
             i=1; %only 1 variable
             wh = strmatch(varname, D.Subj_Level.names, 'exact');
             if textflag
@@ -212,22 +222,24 @@ end
 
 switch varlevel
     case 1
+        
         wh = strcmp(D.Subj_Level.names, varname);
-        if max(find(wh)) < numel(D.Subj_Level.type)
+        if max(find(wh)) <= numel(D.Subj_Level.type)
             type = D.Subj_Level.type{wh};
         else
             type = 'unk';
         end
     case 2
+        
         wh = strcmp(D.Event_Level.names, varname);
-        if max(find(wh)) < numel(D.Event_Level.type)
+        if max(find(wh)) <= numel(D.Event_Level.type)
             type = D.Event_Level.type{wh};
         else
             type = 'unk';
         end
 end
 
-switch type
+switch lower(type)
     case {'numeric', 'Continuous'}
         textflag = 0;
     case 'text'

@@ -16,7 +16,6 @@
 % varargin options: 'fmri'  -  Adds standard fmri variable names to the
 %                               dataset under Event_Level
 %
-%
 % Dataset methods include:
 %
 % write_text    -> writes a flat text file (data across all subjects)
@@ -28,6 +27,19 @@
 % - type methods(canlab_dataset) for a list of all methods
 %
 % Copyright Tor Wager, 2013
+%
+% Conventions for creating objects:
+% --------------------------------------------------------------------------------------
+% Follow these so your dataset object will work with functions!!
+% If you have n subjects and k variables, 
+% 1. obj.Subj_Level.id is an n-length cell vector of strings with subject IDs
+% 2. obj.Subj_Level.type is a k-length cell vector with 'text' or 'numeric' for each variable
+% 3. obj.Subj_Level.data is n x k numeric data, with columns of NaNs if the
+%     variable is a text variable
+% 4. obj.Subj_Level.textdata is an n x k cell array of text data, with columns of empty cells if the
+%     variable is a numeric variable
+% 5. If you have fMRI onsets and durations, etc., use the 'fmri' option to
+%    create standardized variable names.
 
 classdef canlab_dataset
     

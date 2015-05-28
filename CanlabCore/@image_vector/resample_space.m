@@ -57,11 +57,38 @@ end
 % in case of NaN values
 obj_out.dat(isnan(obj_out.dat)) = 0;
 
+if isa(obj_out, 'statistic_image')
+   % Rebuild fields specific to statistic_images
+   
+   obj_out = replace_empty(obj_out);
+   k = size(obj_out.dat, 2);
+   
+   for i = 1:k
+       % this may break if nvox (total in image) is different for 2
+       % images...
+       p = ones(obj.volInfo.nvox, k);
+       p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
+       
+       ste = Inf .* ones(obj.volInfo.nvox, k);
+       ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
+       
+       sig = zeros(obj.volInfo.nvox, k);
+       sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
+   
+   end
+   
+   obj_out.p = p(Vto.wh_inmask, :);
+   obj_out.ste = ste(Vto.wh_inmask, :);
+   obj_out.sig = sig(Vto.wh_inmask, :);
+   
+end
+
 
 if size(obj_out.dat, 1) == sum(obj_out.volInfo.image_indx)
     % this should always/almost always be true - assign missing/removed vox
     obj_out.removed_voxels = ~obj_out.volInfo.image_indx;
     obj_out.removed_voxels = obj_out.removed_voxels(obj_out.volInfo.wh_inmask);
+    
 else
     obj_out.removed_voxels = false;
 end
@@ -73,10 +100,11 @@ else
     obj_out.volInfo(1).cluster = ones(obj_out.volInfo(1).n_inmask, 1);
 end
 
-if isa(obj_out, 'statistic_image') && ~isempty(obj_out.sig)
-    disp('resample_space: removing threshold information from statistic_image')
-    obj_out.sig = [];
-end
+% No longer need to remove - tor 5/27/15
+% if isa(obj_out, 'statistic_image') && ~isempty(obj_out.sig)
+%     disp('resample_space: removing threshold information from statistic_image')
+%     obj_out.sig = [];
+% end
 
 obj = obj_out;
 
@@ -90,11 +118,11 @@ if isa(obj, 'fmri_data')
     obj.mask = resample_space(obj.mask, sampleto);
 end
 
-if isa(obj, 'statistic_image')
-    % statistic_image has this field, but other image_vector objects do not.
-    obj.sig = ones(size(obj.dat));
-    disp('.sig field reset. Re-threshold if necessary.');
-end
+% if isa(obj, 'statistic_image')
+%     % statistic_image has this field, but other image_vector objects do not.
+%     obj.sig = ones(size(obj.dat));
+%     disp('.sig field reset. Re-threshold if necessary.');
+% end
 
 obj.history{end+1} = sprintf('Resampled data to space of %s', sampleto.volInfo.fname);
 

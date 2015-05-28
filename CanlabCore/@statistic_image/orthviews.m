@@ -35,6 +35,8 @@ function cl = orthviews(image_obj, varargin)
 %
 % statsimg = threshold(statsimg, .000001, 'unc');
 % orthviews(statsimg, 'handle', 2);
+%
+% See also: statistic_image.multi_threshold
 
 input_handle = [];
 cl = [];
@@ -45,7 +47,8 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
-            case 'largest_region', doreg = 1;    
+            case 'largest_region', doreg = 1;  
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -106,7 +109,7 @@ for i = handle_indices
         end
         
         cluster_orthviews(cl{i}, 'add', 'handle', i);
-        
+                
     elseif size(image_obj.image_names, 1) >= image_indx
         fprintf('Image %3.0f empty: %s\n', i, image_obj.image_names(image_indx, :));
     else 

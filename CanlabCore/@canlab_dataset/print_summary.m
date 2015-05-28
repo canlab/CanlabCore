@@ -22,10 +22,21 @@ function print_summary(D, varargin)
 
     
     for i=1:length(subj_varnames)
+        
         vname = subj_varnames{i};
         [var,~,~,descrip] = get_var(D, vname);
+        
+        if iscell(var)
+            % istext
+            fprintf('%s (%s): Text. Unique values: %d\t\n', ...
+            vname, descrip, length(unique(var)));
+        
+        else
+            % isnumeric
         fprintf('%s (%s): min:%3.2f\t max:%3.2f\t mean:%3.2f\t sd:%3.2f NaNs:%d\n', ...
             vname, descrip, min(var), max(var), nanmean(var), nanstd(var), sum(isnan(var)));
+        end
+        
     end
     
     

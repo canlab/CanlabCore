@@ -136,10 +136,22 @@ else
         case {'image_vector', 'fmri_data'}
             mask = replace_empty(mask_image);
             
+        case 'statistic_image'
+            mask = replace_empty(mask_image);
+            mask.dat = mask.dat(:, 1) .* double(mask.sig(:, 1) > 0);
+            mask.sig = mask.sig(:, 1);
+            mask.removed_images = mask.removed_images(1);
+            %mask = reparse_contiguous(mask);
+            [~, vectorized_voldata] = reconstruct_image(mask);
+            mask = rebuild_volinfo_from_dat(mask, vectorized_voldata);
+            mask = reparse_contiguous(mask);
+            
         otherwise
             error('fmri_data.extract_roi_averages: unknown mask input type.')
             
     end
+    
+    if size(mask.dat, 2) > 1, fprintf('Mask contains multiple images: Using first one.\n'); end
     
     isdiff = compare_space(mask, space_defining_image);
     
@@ -225,6 +237,7 @@ end
 % Now get averages by cluster
 % ---------------------------------
 
+mask = replace_empty(mask); % next line will only work if replaced; tor, 5/27/15
 maskData = mask.dat(logical(mask.volInfo.wh_inmask), :);
 
 if any(strcmp(varargin, 'pattern_expression'))  % for pexp only

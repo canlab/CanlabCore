@@ -111,7 +111,7 @@ for i = 1:length(thr)
     else
         pt = thr(i);
     end
-    if isempty(pt), pt = -Inf;,end
+    if isempty(pt), pt = -Inf; end
     
     switch direction    % applies only for t-values!!
         case 'pos',
@@ -171,13 +171,13 @@ end
 % size threshold
 for i = 1:length(cl)
     if ~isempty(cl{i}), wh = find(cat(1,cl{i}.numVox) < sizes(i));,else, wh = [];,end
-    if ~isempty(wh), cl{i}(wh) = [];,end
+    if ~isempty(wh), cl{i}(wh) = []; end
 end
 
 if doboth
     for i = 1:length(cl2)
         if ~isempty(cl2{i}), wh = find(cat(1,cl2{i}.numVox) < sizes(i));,else, wh = [];,end
-        if ~isempty(wh), cl2{i}(wh) = [];,end
+        if ~isempty(wh), cl2{i}(wh) = []; end
     end
 end
 

@@ -25,10 +25,16 @@ colnames = ''; % default added by Luka, 5/2013
 
 if length(varargin) > 0 && ~isempty(varargin{1})
     colnames = varargin{1};
+    
+    if ~isempty(colnames) && iscolumn(colnames), colnames = colnames'; end
+
 end
 
 if length(varargin) > 1 && ~isempty(varargin{2})
+
     rownames = varargin{2};
+    if ~isempty(rownames) && iscolumn(rownames), rownames = rownames'; end
+
     colnames = [{' '} colnames];
 end 
 

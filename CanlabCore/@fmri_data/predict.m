@@ -1418,7 +1418,7 @@ end % function
 % ----------------------------- algorithms -------------------------------
 
 
-function [yfit, w, dummy] = cv_svr(xtrain, ytrain, xtest, cv_assignment, varargin)
+function [yfit, w, dummy, intercept] = cv_svr(xtrain, ytrain, xtest, cv_assignment, varargin)
 
 dataobj = data('spider data', xtrain, ytrain);
 
@@ -1450,6 +1450,8 @@ fprintf('\n');
 
 w = w';
 dummy = 0;
+intercept = svrobj.b0;
+
 
 end % function
 

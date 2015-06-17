@@ -1,0 +1,86 @@
+This README was written by George Tourtellot Feb 2004.
+
+
+In order to know the power and efficiency of designs created, I have made several modifications to the Matlab code provided with the GA paper by Wager and Nichols.
+
+The 1 modified file for creating the design info structure is: modelDiagnostics2.m
+The 3 modified files for evaluating design goodness are: testMvsOther.m, runsim.m, designsim.m. 
+All modified lines are indicated with a comment containing the string 'gst'.
+
+
+(reference for gst) notes about structure of code:
+The example scripts set parameters in a structure, and then send this structure to function optimizeGA.  'optimizeGA' has code that calculates efficiency, etc. but the output stored in the variable M is actually generated in function 'modelDiagnostics2', which is called at then end of 'optimizeGA'.
+
+For evaluating goodness of design:
+'testMvsOther' sets up parameters and calls function 'runsim'.
+'runsim' checks whether the SIM.type is 'ga' or 'rnd'. If the type is 'ga', the stimulus vector (stimlist) already exists; if the type is 'rnd', niterations-many random stimlists need to be created (where niterations is a variable set in 'testMvsOther').  The goodness of the stimlist(s) are then evaluated.  For estimation  efficiency, I (gst) added code in 'runsim'.  For calculating power, 'designsim' is called.
+'designsim' creates fake data by adding noise to the sum of columns of the design matrix (described in Corrections section below), then calls 'my_glm' to calculate the designs's detection power of the fake data.  This seems circular, but due to HRF summing (related to rest and nonlinear summation controls), some designs will have higher detection power than others.  Also, depending on the design, some contrasts vectors will have higher detection power than others.
+'my_glm' performs regression of the fake data on the model.  Then t-tests are calculated, and a counter is incremented if the t-value is above a threshold.  The power value finally returned is the percentage of t-values greater than this threshold.  Note that setting noise_var to a large value in 'testMvsOther' will make t-values smaller, and hence yield a lower power value; also, the t-threshold (set in 'testMvsOther') value will also, of course, affect the power value.
+
+
+
+(reference for gst) notes about theory of results calculated:
+In 'rna2model', resample to .1 s spacing--because this is the resolution of the HRF function created with 'spm_hrf' (in 'runsim' or 'testMvsOther').
+The estimation efficiency calculation (see calcEfficiency) is (Dflag not set):
+                  vcvm = contrasts*xtxitx*svi*xtxitx'*contrasts'; 
+                  eff_vector = diag(vcvm);
+                  eff = length(eff_vector)./(contrastweights * eff_vector);
+                  eff_vector = 1 ./ eff_vector;
+(where svi=1, and xtxitx=pinv(design matrix), and contrasts is the contrast matrix).  Note that eff_vector (which is returned as .results.eff and .refults.hrf_eff) is the xi-value discussed in the GA paper in the 'Measures of design efficiency' section.  The variable eff above is returned as .results.eff_fitness and .results.hrf_eff_fitness.   Whether efficiency of contrasts or efficiency of hrf timepoints for given contrasts is calculated depends on the design matrix used (ie. for hrf estimation, delayed versions each stimvector are added for each time point estimated). 
+
+
+In the output structure, .results.eff and .results.eff_fitness will have length equal to the number of contrast vectors specified in the GA script.  .results.eff(1) would correspond to the first contrast vector, and .results.eff(2) would correspond to the second contrast vector specified, etc.
+
+
+
+(reference for gst) notes about M structure produced from 'optimizeGA.m':
+length(M.hrf_eff) equals the number of generations used by the GA.
+The random stimlists created are stored in .results.listMatrix, where each column is a different stimlist.
+
+
+
+(reference for gst) notes about structure produced from 'testMvsOther.m':
+In the output structure, .results.hrf_eff has length equal to HRF_estlen + 1 (see Features discussion below).  The nth value of the array is the estimation efficiency of the nth  HRF timepoint, etc.  The final value is efficiency calculated for the constant vector in the design matrix (this can be ignored).
+.results.t has length equal to niterations (set in 'testMvsOther'), and contains the t-value calculated in 'my_glm'.
+
+
+
+Corrections made:
+In 'modelDiagnostics2', around line 200, variable satval was hardcoded to 2, so that efficiency was calculated assuming a threshold 2x unit HRF level regardless of what was specified by the user (eg. in 'ga_example_script_basic').  This line was corrected to reflect the user-specified thresholding value.  I recognize that the paper says that in the simulations a 2x squashing function was used in simulations.
+
+In testing design goodness using 'testMvsOther', in 'designsim' around line 106, fake data is created by adding noise to the design matrix.  The fake data should be a single vector of values.  To obtain this, the noise vector should be added to the sum of the design vectors--or all but one of the design vectors (which are the result of box car functions convolved with a modeled HRF).  To specificy that one of the design matrix columns should be treated as the null event, see the Features section below.
+
+In 'testMvsOther' there is a loop around line 114 that assigns commandline arguments to SIM.  This wasn't assigning to SIM(n) for each n, but is now modified to do this.
+
+
+
+Features added:
+When evaluating the goodness of the design with 'testMvsOther', a parameter 'HRF_estlen' can be passed (eg.  myans=testMvsOther(M, [], 'ISI', 2, 'TR', 2, 'HRF_estlen', 12); ).  This parameter specifies the number of timepoints for which you wish to calculate HRF efficiency.  Changing this value greatly affects 'hrf_eff_fitness' result.
+
+Suppose that you specify stimuli with different frequencies in your script (eg. ga_example_script_test), then it matters which one, if any, is the null stimulus when you create fake data used for calculating detection power.  You can now specify that a vector column should be treated as 0's by using a pair of arguments: 'NULL_flag' and a number.  If the number is 0, then no columns are treated as 0.
+example:
+myans=testMvsOther(M, [], 'ISI', 2, 'TR', 2, 'HRF_estlen', 12, 'NULL_flag', 1);
+(here the first column will be treated as 0's when creating the fake data used to calculate power).
+
+
+
+General operation:
+modifiy a ga_example_script.
+run this script.
+use 'testMvsOther' to compare the goodness of M.stimlist to random designs (and potentially other designs you have).
+Perform this comparison by looking at .results.hrf_eff and .results.power for all designs of interest.
+
+eg.
+myans=testMvsOther(M, [], 'ISI', 2, 'TR', 2, 'HRF_estlen', 20);
+myans(1).results.hrf_eff   %gives hrf_eff for GA design
+myans(2).results.hrf_eff   %gives hrf_eff for random design
+
+myans(1).results.hrf_eff   %gives power for GA design
+myans(2).results.hrf_eff   %gives power for random design
+
+(to notice the affect of setting HRF_estlen, look at .hrf_eff_fitness)
+
+
+Additional Comparisons of Interest:
+I was looking at how the GA and random designs compared to m-sequence designs.  I was using SIM(3) for the msequence design, loading the stimulus file from within 'testMvsOther' (these lines are commented out).
+

@@ -1,0 +1,224 @@
+<html>
+
+  <head>
+    <title>
+      SOBOL - The Sobol Quasirandom Sequence
+    </title>
+  </head>
+
+  <body bgcolor="#EEEEEE" link="#CC0000" alink="#FF3300" vlink="#000055">
+
+    <h1>
+      SOBOL - The Sobol Quasirandom Sequence
+    </h1>
+
+    <hr>
+
+    <p>
+      <b>SOBOL</b> is a MATLAB implementation of the Sobol
+      quasirandom sequence.  
+    </p>
+
+    <p>
+      A quasirandom or low discrepancy sequence, such as the Faure,
+      Halton, Hammersley, Niederreiter or Sobol sequences, is 
+      "less random" than a pseudorandom number sequence, but
+      more useful for such tasks as approximation of integrals in
+      higher dimensions, and in global optimization.
+      This is because low discrepancy sequences tend to sample
+      space "more uniformly" than random numbers.  Algorithms
+      that use such sequences may have superior convergence.
+    </p>
+
+    <p>
+      <b>SOBOL</b> is an adapation of the INSOBL and GOSOBL routines
+      in ACM TOMS Algorithm 647.  The original code can only
+      compute the "next" element of the sequence.  The revised code
+      allows the user to specify the index of the desired element.
+    </p>
+
+    <p>
+      The original, true, correct version of ACM TOMS Algorithm 647   
+      is available in the TOMS subdirectory of 
+      <a href = "http://www.netlib.org/">the NETLIB web site</a>.
+      The version displayed here has been converted to FORTRAN 90,
+      and other internal changes have been made to suit me.
+    </p>
+
+    <p>
+      <dl>
+        <dt>
+          Reference 1:
+        </dt>
+        <dd>
+          Antonov and Saleev,<br>
+          USSR Computational Mathematics and Mathematical Physics,<br>
+          Volume 19, 1980, pages 252 - 256.
+        </dd>
+        <dt>
+          Reference 2:
+        </dt>
+        <dd>
+          Paul Bratley and Bennett Fox,<br>
+          Algorithm 659:
+          Implementing Sobol's Quasirandom Sequence Generator,<br>
+          ACM Transactions on Mathematical Software,<br>
+          Volume 14, Number 1, pages 88-100, 1988.
+        </dd>
+        <dt>
+          Reference 3:
+        </dt>
+        <dd>
+          Paul Bratley, Bennett Fox, L E Schrage,<br>
+          A Guide to Simulation,<br>
+          Springer Verlag, pages 201-202, 1983.
+        </dd>
+        <dt>
+          Reference 4:
+        </dt>
+        <dd>
+          Paul Bratley, Bennett Fox, Harald Niederreiter,<br>
+          Implementation and Tests of Low Discrepancy Sequences,<br>
+          ACM Transactions on Modeling and Computer Simulation,<br>
+          Volume 2, Number 3, pages 195-213, 1992.
+        </dd>
+        <dt>
+          Reference 5:
+        </dt>
+        <dd>
+          Bennett Fox,<br>
+          Algorithm 647:
+          Implementation and Relative Efficiency of Quasirandom 
+          Sequence Generators,<br>
+          ACM Transactions on Mathematical Software,<br>
+          Volume 12, Number 4, pages 362-376, 1986.
+        </dd>
+        <dt>
+          Reference 6:
+        </dt>
+        <dd>
+          Harald Niederreiter,<br>
+          Random Number Generation and quasi-Monte Carlo Methods,<br>
+          SIAM, 1992.
+        </dd>
+        <dt>
+          Reference 7:
+        </dt>
+        <dd>
+          Press, Flannery, Teukolsky, Vetterling,<br>
+          Numerical Recipes: The Art of Scientific Computing,<br>
+          Cambridge University Press.
+        </dd>
+        <dt>
+          Reference 8:
+        </dt>
+        <dd>
+          I Sobol,<br>
+          USSR Computational Mathematics and Mathematical Physics,<br>
+          Volume 16, pages 236-242, 1977.
+        </dd>
+        <dt>
+          Reference 9:
+        </dt>
+        <dd>
+          I Sobol and Levitan, <br>
+          The Production of Points Uniformly Distributed in a Multidimensional 
+          Cube (in Russian),<br>
+          Preprint IPM Akad. Nauk SSSR, <br>
+          Number 40, Moscow 1976.
+        </dd>
+      </dl>
+    </p>
+
+    <p>
+      <b>SOBOL</b> is also available in
+      <a href = "../../cpp_src/sobol/sobol.html">a C++ version</a> and
+      <a href = "../../f_src/sobol/sobol.html">a FORTRAN90 version.</a>
+    </p>
+
+    <p>
+      Source code files you may copy include.
+      <ul>
+        <li>
+          <a href = "bit_hi1_base_2.m">bit_hi1_base_2.m</a>, 
+          returns the position of the high 1 bit base 2 in an integer.
+        </li>
+        <li>
+          <a href = "bit_lo0_base_2.m">bit_lo0_base_2.m</a>, 
+          returns the position of the low 0 bit base 2 in an integer.
+        </li>
+        <li>
+          <a href = "exor.m">exor.m</a>, 
+          computes the bitwise exclusive OR of two integers.
+        </li>
+        <li>
+          <a href = "../uniform/get_seed.m">get_seed.m</a>, 
+          returns a seed for random number generation.
+        </li>
+        <li>
+          <a href = "../uniform/i_random.m">i_random.m</a>, 
+          returns a random integer in a given range.
+        </li>
+        <li>
+          <a href = "../uniform/r_random.m">r_random.m</a>, 
+          returns a random real number in a given range.
+        </li>
+        <li>
+          <a href = "sobol.m">sobol.m</a>, generates a new quasirandom 
+          Sobol vector with each call;
+        </li>
+        <li>
+          <a href = "../timestamp/timestamp.m">timestamp.m</a>, 
+          prints the current YMDHMS date as a time stamp;
+        </li>
+        <li>
+          <a href = "../uniform/uniform.m">uniform.m</a>, 
+          returns a random real number in [0,1].
+        </li>
+      </ul>
+    </p>
+
+    <p>
+      Test files you may copy include:
+      <ul>
+        <li>
+          <a href = "sobol_test.m">sobol_test.m</a>, 
+          runs all the tests;
+        </li>
+        <li>
+          <a href = "sobol_test01.m">sobol_test01.m</a>, 
+          tests <b>exor</b>;
+        </li>
+        <li>
+          <a href = "sobol_test02.m">sobol_test02.m</a>, 
+          tests <b>bit_hi1_base_2</b>;
+        </li>
+        <li>
+          <a href = "sobol_test03.m">sobol_test03.m</a>, 
+          tests <b>bit_lo0_base_2</b>;
+        </li>
+        <li>
+          <a href = "sobol_test04.m">sobol_test04.m</a>, 
+          tests <b>sobol</b>;
+        </li>
+        <li>
+          <a href = "sobol_test05.m">sobol_test05.m</a>, 
+          tests <b>sobol</b>, showing how the value of the
+          seed can be manipulated;
+        </li>
+        <li>
+          <a href = "sobol_test.out">sobol_test.out</a>, 
+          output from a run of the tests;
+        </li>
+      </ul>
+    </p>
+
+    <hr>
+
+    <i>
+      Last revised on 29 March 2003.
+    </i>
+
+  </body>
+
+</html>

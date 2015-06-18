@@ -33,7 +33,8 @@ function vardecomp = glmfit_multilevel_varexplained(X, Y, b, varargin)
 %
 % Optional inputs:
 % 'noplots', 'notable' : suppress output
-%
+% 'colors', followed by n x 3 vector of rgb colors
+% other inputs to wani_pie OK too.
 %
 % Outputs:
 % -------------------------------------------------------------------------

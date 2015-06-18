@@ -13,7 +13,7 @@ function varargout = scn_stats_helper_functions(meth, varargin)
 %
 % 'loess_xy'    : loess plots of multilevel X and Y data
 %                 X is cell array with X data for each subject, Y is cell array, same format
-% 'xycatplot'
+% 'xycatplot'    LOESS (or no loess) plots of N subjects, categorical X vs Y
 % 'loess_partial'
 % 'xyplot'        % multilevel line plot of x vs y within subjects, grouping trials by
 %                optional G variable. X can be categorical or continuous.

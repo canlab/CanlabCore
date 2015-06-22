@@ -387,6 +387,7 @@ for jj = 1:rnum
         set(hh, 'fontSize', 25, 'lineWidth', 3);
     end
     
+    info{jj}.vZ = vZ{jj};
 end
 
 end

@@ -56,13 +56,13 @@ for i = 1:length(varargin)
         end
 end
    
-col1 = textread(fname, '%s%*[^\n]', 'delimiter', mydelimiter, 'headerlines', nheaderrows);
+col1 = textread(fname, '%s%*[^\n]', 'delimiter', mydelimiter, 'headerlines', nheaderrows, 'bufsize', 100000);
 
 nrows = length(col1);
 
 
 %numc = 148;
-[d] = textread(fname,'%s','headerlines', nheaderrows, 'delimiter', mydelimiter);
+[d] = textread(fname,'%s','headerlines', nheaderrows, 'delimiter', mydelimiter, 'bufsize', 100000);
 
 for i = 1:length(d), if isempty(d{i}), d{i} = 'NaN'; end, end
 
@@ -144,7 +144,7 @@ for i = 1:numc
     %mycol = dmat(:, i);
     
     % read in the nth column, skipping header rows and column names
-    mycol = textread(fname, fmtstring, 'delimiter', mydelimiter, 'headerlines', nheaderrows + 1);
+    mycol = textread(fname, fmtstring, 'delimiter', mydelimiter, 'headerlines', nheaderrows + 1, 'bufsize', 100000);
     
     fmtstring = ['%*s' fmtstring];  % add this so we skip this col next time
     

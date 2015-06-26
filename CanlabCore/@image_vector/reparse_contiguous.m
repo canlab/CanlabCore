@@ -18,8 +18,10 @@ function obj = reparse_contiguous(obj, varargin)
 %                also fixed bug - was not using 'nonempty' input in some
 %                cases
 
+% .cluster and .xyzlist should both always be length v in-mask voxels
+% if 'nonempty' is entered, then .dat should be length v in-mask voxels too
+
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
-obj.volInfo(1).cluster = zeros(size(wh));
 
 % restrict to voxels with actual data if desired
 if any(strcmp(varargin, 'nonempty'))
@@ -29,13 +31,16 @@ if any(strcmp(varargin, 'nonempty'))
     
 end
 
+obj.volInfo(1).cluster = zeros(size(wh));
+
 
 % .cluster can be either the size of a reduced, in-mask dataset after removing empties
 % or the size of the full in-mask dataset that defined the image
 % (volInfo.nvox).  We have to switch behavior according to which it is.
 
 if size(obj.volInfo(1).cluster, 1) == size(obj.volInfo(1).xyzlist, 1)
-
+    % if we have in-mask voxel list only in .cluster, .xyzlist
+    
     if length(wh) ~= length(obj.volInfo(1).cluster)
         error('Bug: length(wh) does not match number of elements in volInfo.cluster.');
     end
@@ -44,13 +49,24 @@ if size(obj.volInfo(1).cluster, 1) == size(obj.volInfo(1).xyzlist, 1)
     obj.volInfo(1).cluster = zeros(size(wh));
     obj.volInfo(1).cluster(wh) = newcl;
     
-else % full in-mask -- assign to correct voxels
+elseif size(obj.volInfo(1).xyzlist, 1) ~= length(wh)
+    
+    disp('obj.volInfo.xyzlist voxels:')
+    size(obj.volInfo(1).xyzlist, 1)
+    
+    disp('Voxels in image list to re-parse:')
+    length(wh)
+    
+    error('You have created an invalid image object somewhere along the line.');
+    
+else   % full in-mask -- assign to correct voxels
     
     obj.volInfo(1).cluster(wh) = spm_clusters(obj.volInfo(1).xyzlist(wh, :)')';
     
 end
 
-end
+end % function
+
 
 
 

@@ -32,7 +32,13 @@ end
 %r = region(overlapmask); % r is input
 
 % if is region, reconstruct...
+% ivec is region object voxels reconstructed into image_vector
 [ivec, orig_indx] = region2imagevec(r);
+
+% region2imagevec creates illegal list of removed_voxels (doesn't match
+% .volInfo.wh_inmask).  Fix...
+ivec.removed_voxels = ivec.removed_voxels(ivec.volInfo.wh_inmask);
+
 
 label_mask = fmri_data(atlasname);
 
@@ -45,11 +51,14 @@ fprintf('%3.0f unique atlas labels in mask (label = 0 will be excluded).\n', len
 
 % Define regions based on unique voxels values in mask_image, and extract
 % data stored in data_comb object, resampled to space of mask_image.
-% Space is defined by mask_image:
+% Space is defined by mask_image:\
+
+% for each of the original regions...
 for i = 1:length(r)
     %ivec = region2imagevec(r(i));
     %ivec = remove_empty(ivec);
     
+    % orig_indx is the original cluster ID
     whvox = orig_indx == i;
     nvox = sum(whvox);
     
@@ -63,7 +72,19 @@ for i = 1:length(r)
             % no labels - exclude
             rr{i} = [];
         else
+            
+            % mylabel is fmri_data object
+            % ivec is image_vector with .dat containing new anatomical
+            % labels
             rr{i} = region(mylabel, ivec, 'unique_mask_values');
+            
+            for jj = 1:length(rr{i})
+                if size(rr{i}(jj).XYZ, 1) ~= size(rr{i}(jj).val, 1)
+                    % illegal
+                    warning('Illegal length for data values...do not match voxels.')
+                end
+            end
+            
         end
         
     end

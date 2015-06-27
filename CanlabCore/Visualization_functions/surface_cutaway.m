@@ -37,10 +37,25 @@ function surface_handles = surface_cutaway(varargin)
 %                       - n x 3 vector of rgb colors
 %                       - see colormap_tor or matlab's colormap
 % 'neg_colormap'        followed by colormap for negative-going values
+% 'color_upperboundpercentile'
+%                       followed by 1-100 percentile threshold; see Color values below
+% 'color_lowerboundpercentile'
+%                       followed by 1-100 percentile threshold; see Color values below
+%
 %
 % Outputs:
 % -------------------------------------------------------------------------
 % surface_handles       vector of surface handles for all surface objects
+%
+% Color values:
+% -------------------------------------------------------------------------
+% Creates color scale using color-mapped colors, thresholded based on
+% percentile of the distribution of scores in .Z field.
+% - To change the upper bound for which percentile of Z-scores is mapped to
+% the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
+% - To change the lower bound value mapped to the lowest color value, 
+% enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
+%
 %
 % Examples:
 % -------------------------------------------------------------------------
@@ -60,6 +75,10 @@ function surface_handles = surface_cutaway(varargin)
 % p = surface_cutaway('cl', r, 'surface_handles', p, 'pos_colormap', poscm);
 % p = surface_cutaway('cl', r, 'ycut_mm', -30, 'pos_colormap', poscm);
 %
+% use mediation_brain_surface_figs and re-make colors
+% all_surf_handles = mediation_brain_surface_figs([]);
+% surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
+
 % Programmers' notes:
 % List dates and changes here, and author of changes
 
@@ -83,10 +102,10 @@ negcm = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 %   created in the workspace
 
 allowable_args = {'cl', 'ycut_mm', 'pos_colormap', 'neg_colormap', ...
-    'surface_handles', 'existingfig'};
+    'surface_handles', 'existingfig' 'color_upperboundpercentile', 'color_lowerboundpercentile'};
 
 default_values = {[], [], poscm, negcm, ...
-    [], 0};
+    [], 0, 80, []};
 
 % define actions for each input
 % -----------------------------------
@@ -95,7 +114,7 @@ default_values = {[], [], poscm, negcm, ...
 % - allowable actions for inputs in the code below are: 'assign_next_input' or 'flag_on'
 
 actions = {'assign_next_input', 'assign_next_input', 'assign_next_input', 'assign_next_input', ...
-    'assign_next_input', 'flag_on'};
+    'assign_next_input', 'flag_on', 'assign_next_input', 'assign_next_input'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -167,9 +186,27 @@ if isempty(cl), return, end
 % Set scale for colormap based on .Z field
 % These are not necessarily Z-scores, but they are assumed to be intensity values for the voxels
 
+% Color values:
+% Creates color scale using color-mapped colors, thresholded based on
+% percentile of the distribution of scores in .Z field.
+% - To change the upper bound for which percentile of Z-scores is mapped to
+% the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
+% - To change the lower bound value mapped to the lowest color value, 
+% enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
+  
 clZ = cat(2,cl.Z);
-refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
-refZ = [0 prctile(clZ(clZ > 0), 80) prctile(clZ(clZ < 0), 20) 0];
+
+color_lowerboundvaluepos = 0;
+color_lowerboundvalueneg = 0;
+
+if ~isempty(color_lowerboundpercentile)
+    color_lowerboundvaluepos = prctile(clZ(clZ > 0), color_lowerboundpercentile);
+    color_lowerboundvalueneg = prctile(clZ(clZ < 0), 100-color_lowerboundpercentile);
+end
+
+% refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
+% refZ = [0 prctile(clZ(clZ > 0), 80) prctile(clZ(clZ < 0), 20) 0];
+refZ = [color_lowerboundvaluepos prctile(clZ(clZ > 0), color_upperboundpercentile) prctile(clZ(clZ < 0), 100-color_upperboundpercentile) color_lowerboundvalueneg];
 
 % Add blobs to all surfaces
 % - Map color scale to custom colormaps using 'heatmap' and refZ,

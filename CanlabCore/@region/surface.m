@@ -49,6 +49,13 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 % poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
 % [all_surf_handles, pcl, ncl] = surface(r, 'cutaway', 'ycut_mm', -30, 'pos_colormap', poscm, 'existingfig');
 %
+% [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'pos_colormap', poscm, 'neg_colormap', negcm);
+% [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'existingfig', 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]));
+%
+% use mediation_brain_surface_figs and re-make colors
+% all_surf_handles = mediation_brain_surface_figs([]);
+% surface(r, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
+%
 % See also:
 % surface_cutaway, cluster_surf, mediation_brain_surface_figs
 

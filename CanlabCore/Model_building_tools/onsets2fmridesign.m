@@ -172,8 +172,14 @@ if length(varargin) > 1 && ~isempty(varargin{2})
     if ischar(varargin{2})
         % basis set: Any of the named basis sets from SPM  spm_get_bf
         
+        % These need 'order' parameter:
+        %         case {  'Fourier set','Fourier set (Hanning)',...
+        %         'Gamma functions','Finite Impulse Response'}
+        % Order, for FIR, is number of regressors to cover length period
+        % order 6, length 30 -> 6 x 5 sec periods
+        
         % bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
-        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res));
+        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 6));
         hrf = bf.bf;
         
     else

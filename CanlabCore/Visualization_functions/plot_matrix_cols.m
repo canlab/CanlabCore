@@ -23,12 +23,13 @@ X = X ./ rng(ones(t, 1), :);
 
 % plot
 hold on;
-set(gca, 'YLim', [0 k+1]);
+
 
 for i = 1:k
 
     switch meth
         case {'horiz', 'horizontal', 'h'}
+            set(gca, 'YLim', [0 k+1]);
             plot(1:t, i, 'Color', [.5 .5 .5]);
             % negative b/c y dir is reversed
             han(i) = plot(1:t, -X(:, i) + i, 'k');
@@ -36,7 +37,7 @@ for i = 1:k
             
 
         case {'vert', 'vertical', 'v'}
-
+            set(gca, 'XLim', [0 k+1]);
             plot(i, 1:t, 'Color', [.5 .5 .5]);
             
             han(i) = plot(X(:, i) + i, 1:t, 'k');

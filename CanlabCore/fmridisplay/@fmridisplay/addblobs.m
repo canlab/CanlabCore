@@ -1,13 +1,55 @@
 function obj = addblobs(obj, cl, varargin)
 % obj = addblobs(obj, cl, varargin)
 %
-% Add blobs to montage and other surface plot(s)
+% This is a method for fmridisplay objects that adds blobs to one or more montages and other surface plot(s). 
 %
-% See render_blobs for options
-% See addthreshblobs for a multiple thresholds version
+% See addthreshblobs and multi_threshold methods for a multiple thresholds version
+% render_blobs does most of the hard work.
+%
+% Inputs:
+% -------------------------------------------------------------------------
+% obj           an fmridisplay object
+% cl            a region object.  If you're using an fmri_data object pass in region(fmri_data_obj)
+% 
+% Optional inputs:
+%
+% There are many optional inputs that control display features of blobs.
+% These are determined by render_blobs
+% COLOR
+% 'color',      followed by color vector, e.g., [0 1 1]
+% 'maxcolor'    followed by color vector for max color range, e.g., [0 1 1]
+% 'mincolor'    followed by color vector for min color range, e.g., [0 0 1]
+% 'onecolor'    force solid-color blobs
+% 'splitcolor'  Positive and negative values are mapped to different
+%               colormaps. Default is +=hot, -=cool colors.  Followed
+%               optionally by cell array with 
+%               vectors of 4 colors defining max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
+%
+% OUTLINING
+% 'outline' 
+% 'linewidth',  followed by width value, e.g., 1
+%
+% COLOR RANGE
+% 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
+%               color and transparency setting under some circumstances.
+% 
+% TRANSPARENCY
+% {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
+% 'trans'               Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
+% 'scaledtransparency'  Transparency is a function of voxel value, lower values are more transparent
+% 'transvalue'          Followed by width value, e.g., 1. also 'constanttrans'
+%
+% OTHER OPTIONS
+%
+% 'smooth'      Smooth blobs
+% 'contour'
+%
+% CONTROL OF WHICH MONTAGE
+% 'wh_montages',    followed by vector of montage numbers as they appear in
+%                   the list of registered montages in the fmridisplay object
 %
 % Examples:
-%
+% ----------------------------------------------------------------------------
 % obj = addblobs(obj, cl, 'color', [0 1 1]);
 % obj = addblobs(obj, cl, 'color', [0 0 1], 'outline');
 % obj = addblobs(obj, cl, 'color', [0 1 0], 'outline', 'linewidth', 1, 'smooth');
@@ -32,7 +74,7 @@ function obj = addblobs(obj, cl, varargin)
 %
 % It is possible to transparency-map values in a statistic image so you
 % can show 'unthresholded' statistic values.  e.g.:
-% o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'trans');
+% o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'trans', 'scaledtransparency');
 %
 % Copyright Tor Wager, 2011
 

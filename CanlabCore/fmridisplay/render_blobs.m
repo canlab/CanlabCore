@@ -1,51 +1,84 @@
 function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
+
+% This is a helper function for fmridisplay objects, called by the addblobs method
+%
+% Usage:
+% -------------------------------------------------------------------------
 % [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
+% See fmridisplay.m and addblobs.m method in fmridisplay for more details and options.
 %
-% Renders blobs on brain slces with addblobs.m
+% Author and copyright information:
+% -------------------------------------------------------------------------
+%     Copyright (C) 2015 Tor Wager
 %
-% See addblobs.m method in fmridisplay for technical details.
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
 %
-% currentmap : see addblobs method
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Inputs:
+% -------------------------------------------------------------------------
+% currentmap : see addblobs method. Montage within fmridisplay object.
 % mymontage : ditto
-% SPACE: space of map to sample to (object display SPACE)
+% SPACE: space of map to sample to (object display SPACE in fmridisplay object)
+% 
+% Optional inputs:
+% There are many optional inputs that control display features of blobs.
+% COLOR
+% 'color',      followed by color vector, e.g., [0 1 1]
+% 'maxcolor'    followed by color vector for max color range, e.g., [0 1 1]
+% 'mincolor'    followed by color vector for min color range, e.g., [0 0 1]
+% 'onecolor'    force solid-color blobs
+% 'splitcolor'  Positive and negative values are mapped to different
+%               colormaps. Default is +=hot, -=cool colors.  Followed
+%               optionally by cell array with 
+%               vectors of 4 colors defining max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
-% Options:
-% 'smooth', dosmooth = 1;
+% OUTLINING
+% 'outline' 
+% 'linewidth',  followed by width value, e.g., 1
 %
-% {'maxcolor', 'color'}, color = varargin{i + 1}; % color for single-color solid or value-mapped
-% 'mincolor', mincolor = varargin{i + 1}; % minimum color for value-mapped colors
+% COLOR RANGE
+% 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
+%               color and transparency setting under some circumstances.
+% 
+% TRANSPARENCY
+% {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
+% 'trans'               Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
+% 'scaledtransparency'  Transparency is a function of voxel value, lower values are more transparent
+% 'transvalue'          Followed by width value, e.g., 1. also 'constanttrans'
 %
-% 'onecolor', docolormap = 0; % solid-color blobs
-% 'splitcolor'
-% docolormap = 1; dosplitcolor = 1;
-% splitcolors = varargin{i + 1};
-% if ~iscell(splitcolors) || length(splitcolors) ~= 4
-%     error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
-% end
-% color = splitcolors{4}; % max pos
-% mincolor = splitcolors{3}; % min pos
-% minnegcolor = splitcolors{1}; % min neg
-% maxnegcolor = splitcolors{2}; % max neg
+% OTHER OPTIONS
 %
-% % do not use other entries for colors
-% %                 varargin{strcmp(varargin, 'color')} = deal(0);
-% %                 varargin{strcmp(varargin, 'maxcolor')} = deal(0);
-% %                 varargin{strcmp(varargin, 'mincolor')} = deal(0);
+% 'smooth'      Smooth blobs
+% 'contour'
+% Orientation: 'sagittal', 'coronal', 'axial'
 %
-% 'cmaprange', cmaprange = varargin{i + 1}; % enter specific values mapped to min and max colors
-% {'trans', 'transparent','constanttrans', [val], 'transvalue', [val]}, dotrans = 1; % transparent blobs
-%   (default: map transparency to cmaprange, unless you
-%   enter contanttrans followed by a transparency value
+% Outputs:
+% -------------------------------------------------------------------------
+% [blobhan, cmaprange, mincolor, maxcolor] 
+% All used in addblobs.m
 %
-% % contour options
-% 'contour', docontour = 1;
-% 'outline', docontour = 1; outline = 1;
-% 'linewidth', mylinewidth = varargin{i + 1};
+% Examples:
+% -------------------------------------------------------------------------
 %
-% % orientation options
-% 'sagittal', myview = 'sagittal'; %disp('Warning! NOT implemented correctly yet!!!'), %pause(5)
-% 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
-% 'axial', myview = 'axial';
+% Use addblobs; do not run this function directly unless you are
+% programming with it.
+%
+% See also:
+% fmridisplay/addblobs, fmridisplay, fmridisplay/multi_threshold
+
+% Programmers' notes:
+% Matlab's graphics behavior changed in 2014, causing some problems.
+% This version was tested by Tor on R2015a.
 
 
 myview = mymontage.orientation;
@@ -104,12 +137,17 @@ for i = 1:length(varargin)
                 %                 varargin{strcmp(varargin, 'mincolor')} = deal(0);
                 
             case 'cmaprange', cmaprange = double(varargin{i + 1}); % enter specific values mapped to min and max colors
-            case {'trans', 'transparent'}, dotrans = 1; % transparent blobs
+            case {'trans', 'transparent'}
+                dotrans = 1; % transparent blobs
+                transvalue = 0.75; % Default behavior, superseded by later arguments
                 
             case {'constanttrans', 'transvalue'}
                 dotrans = 1; transvalue = double(varargin{i + 1}); 
                 %  (default: map transparency to cmaprange, unless you
                 %  enter contanttrans followed by a transparency value
+                
+            case 'scaledtransparency' % Transparency is a function of voxel value, lower values are more transparent
+                transvalue = [];  % Empty invokes the scaled mapping later
                 
                 % contour options
             case 'contour', docontour = 1;
@@ -411,7 +449,25 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 
                 % h = surf(mymontage.axis_handles(j), mynewy, mynewx, Z, 'FaceColor', 'interp', 'edgecolor', 'none');%, 'FaceAlpha', 'interp');
                 % Wani: -ones(size(Z)) is helpful for boundaries for some reasons. - doesn't work with MATLAB 2014b. 
-                h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                %h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                
+                % This works by manually creating a "layer", creating a
+                % surface image with the blobs at a Z-value of 1.  The
+                % underlay anatomical has a Z-value of 0, so the blobs
+                % appear on top. The surface has ones wherever there are
+                % blobs to render and zeros elsewhere.
+                %
+                % Then, 'AlphaDataMapping' is set so that non-zero values are 1
+                % (opaque, or transparency-scaled) and zero values are 0
+                % (transparent)
+                % Finally, 'CData' is set so the color data reflects what is
+                % in slicecdat. slicecdat is built manually by taking
+                % Z-scores (or whatever the input values are) and scaling
+                % them as desired, and creating colors based on a colormap
+                % of your choosing (or default one).
+                
+                h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                
                 % wani: The following options doesn't work with MATLAB 2014b ('FaceAlpha', 'interp')
                 %case 'coronal'
                 
@@ -429,10 +485,13 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         
                     else
                         % map transparency with colormap
-                        set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', Zscaled, 'FaceAlpha', 'interp')
+                        % Note: changed by Tor, 2015. Zscaled values > 1
+                        % were messing up transparency scale for underlay.
+                        % Max should be 1.
+                        set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', Zscaled ./ max(abs(Zscaled(:))), 'FaceAlpha', 'interp');
                     end
                     
-                else
+                else % Default: No transparency for blobs, transparent outside of blobs
                     set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', double(abs(Z) > 0), 'FaceAlpha', 'interp')
                     
                 end

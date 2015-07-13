@@ -33,6 +33,10 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 % 'sizethresh'  followed by vector of cluster sizes, one per thresh
 %               - this 'prunes' by default, so sizes after first can be 1
 %               voxel
+%
+%               Default thresholds: thresh = [.001 .005 .05], 
+%               10 voxels at .001, "pruned"
+%
 % 'nodisplay'   suppress fmridisplay
 %               
 % 

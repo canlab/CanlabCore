@@ -67,6 +67,15 @@
 % o2 = addpoints(o2, DB.xyz, 'text', DB.textcodes, 'condf', DB.condf, 'color', {'b' 'g'});
 % o2 = removepoints(o2);
 %
+% Add to only 2nd montage in registered vector of montages in obj.montage 
+%   obj = addblobs(obj, cl, 'which_montages', 2); 
+%
+% Make a montage with centers of each significant cluster and add blobs to that:
+% r = region(b2);
+% xyz = cat(1, r.mm_center)
+% o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
+% o2 = addblobs(o2, region(b2));
+%
 % Methods
 % -----------------------------------------------------------------------
 % See methods(fmridisplay)

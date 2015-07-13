@@ -151,8 +151,17 @@ for i = 1:length(varargin)
             
         else P = varargin{i};
         end
+    
+    elseif any(ishandle(varargin{i})) && any(strcmp(get(varargin{i}, 'Type'), 'figure'))
+         % Note: some weird things are happening as fig handles are class
+        % double, and not recognized as figs, but are figure handles.
+        % hopefully this will work with strcmp()
+        % do nothing, but fig handles may be passed in inadvertently?
+        % sometimes passing in integers is interpreted as fig handles...
+        disp('You passed in a figure handle.')
         
-    elseif all(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
+    elseif  all(ishandle(varargin{i})) && all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  %% all(~isa(varargin{i}, 'matlab.ui.Figure'))
+        % OLD: Pre-2014:  all(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
         disp('Found surface patch handles - plotting on existing surfaces.');
         P = varargin{i}; % handle(s) for existing surface
         
@@ -160,7 +169,11 @@ for i = 1:length(varargin)
         wh = find(strcmp(varargin,'left') | strcmp(varargin,'right') | strcmp(varargin,'hires left') | strcmp(varargin,'hires right'));
         for jj = 1:length(wh), varargin{wh(jj)} = []; end
         
-    elseif any(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
+    elseif any(ishandle(varargin{i})) && ~all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  
+        % OLD:  Pre-2014: any(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
+        % Note: some weird things are happening as fig handles are class
+        % double, and not recognized as figs, but are figure handles.
+        % hopefully this will work with strcmp()
         disp('Found existing surface patch handles, but some are invalid.  Check handles.');
         error('Exiting')
         
@@ -211,7 +224,7 @@ else
     aovlc = '[1 1 1]';
 end
 
-disp([' Surface stored in: ' P])
+%disp([' Surface stored in: ' P])
 
 fprintf(' Building XYZ coord list\n');
 

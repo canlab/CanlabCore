@@ -1,1 +1,0 @@
-mex libsvm_classifier_spider.cpp svm.cpp -I..\compiletools ..\compiletools\mexarg.cpp

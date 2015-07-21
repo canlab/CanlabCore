@@ -467,9 +467,14 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % them as desired, and creating colors based on a colormap
                 % of your choosing (or default one).
                 
-                h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
-                
-
+                % ask for MATLAB version to plot contours in old versions
+                % 7/21/15 stephan
+                vstr = version;
+                if str2double(vstr(1:3))<8.4  % pre R2014b
+                    h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                else
+                    h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                end
                 % wani: The following options doesn't work with MATLAB 2014b ('FaceAlpha', 'interp')
                 %case 'coronal'
                 

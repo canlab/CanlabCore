@@ -449,10 +449,8 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 
                 % h = surf(mymontage.axis_handles(j), mynewy, mynewx, Z, 'FaceColor', 'interp', 'edgecolor', 'none');%, 'FaceAlpha', 'interp');
                 % Wani: -ones(size(Z)) is helpful for boundaries for some reasons. - doesn't work with MATLAB 2014b. 
-
-                %h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
                 
-                % This works by manually creating a "layer", creating a
+                % Tor: This works by manually creating a "layer", creating a
                 % surface image with the blobs at a Z-value of 1.  The
                 % underlay anatomical has a Z-value of 0, so the blobs
                 % appear on top. The surface has ones wherever there are
@@ -467,18 +465,15 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % them as desired, and creating colors based on a colormap
                 % of your choosing (or default one).
                 
-                % ask for MATLAB version to plot contours in old versions
-                % 7/21/15 stephan
-                vstr = version;
+                vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
                 if str2double(vstr(1:3))<8.4  % pre R2014b
-                    h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
+                    h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none', 'FaceAlpha', 'interp');
                 else
                     h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
                 end
                 % wani: The following options doesn't work with MATLAB 2014b ('FaceAlpha', 'interp')
-                %case 'coronal'
-                
-                %end
+                % case 'coronal'
+                % end
                 
                 if dotrans
                     

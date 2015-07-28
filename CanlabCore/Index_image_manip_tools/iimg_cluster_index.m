@@ -4,6 +4,9 @@ function [clindx,nvox] = iimg_cluster_index(dat,xyz,k)
 % dat is index vector of image values
 %
 % Returns: cluster index and cluster sizes for non-zero, non-nan voxels
+%
+% Updates: Tor Wager, July 2015, removed 50K voxel clustering limitation
+% based on now-fixed SPM bug
 
 %% initialize
 nimgs = size(dat,2);
@@ -28,7 +31,7 @@ end
 
 %%
 
-return
+end % function
 
 
 
@@ -49,18 +52,23 @@ xyz = xyz(:,wh_good_data);  % in-image coordinates
 clusters = get_cluster_index(xyz);
 clindx(wh_good_data) = clusters;
 
+end % function
+
 
 %% use spm clusters
 function clusters = get_cluster_index(xyz)
 nvox = size(xyz,2);
 if nvox == 0, clusters = []; return, end
-if nvox < 50000
-    clusters = spm_clusters(xyz)';
-else
-    disp('Too many voxels for spm_cluster. Blobs will not be correctly broken up into contiguous clusters.')
-    clusters = ones(nvox,1);
-end
-return
+clusters = spm_clusters(xyz)';
+
+% if nvox < 50000
+%     clusters = spm_clusters(xyz)';
+% else
+%     disp('Too many voxels for spm_cluster. Blobs will not be correctly broken up into contiguous clusters.')
+%     clusters = ones(nvox,1);
+% end
+
+end % function
 
 
 %% Count voxels in each contiguous cluster and threshold, if additional
@@ -89,4 +97,4 @@ if nargin > 2
     dat(wh_omit) = 0;
 end
 
-return
+end % function

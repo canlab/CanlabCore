@@ -8,17 +8,17 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 % Author and copyright information:
 % -------------------------------------------------------------------------
 %     Copyright (C) 2013  Tor Wager
-% 
+%
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
 %     the Free Software Foundation, either version 3 of the License, or
 %     (at your option) any later version.
-% 
+%
 %     This program is distributed in the hope that it will be useful,
 %     but WITHOUT ANY WARRANTY; without even the implied warranty of
 %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %     GNU General Public License for more details.
-% 
+%
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
@@ -34,12 +34,13 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %               - this 'prunes' by default, so sizes after first can be 1
 %               voxel
 %
-%               Default thresholds: thresh = [.001 .005 .05], 
+%               Default thresholds: thresh = [.001 .005 .05],
 %               10 voxels at .001, "pruned"
 %
 % 'nodisplay'   suppress fmridisplay
-%               
-% 
+% 'o2'           followed by an existing fmridisplay object
+%               - will remove blobs and re-use montages
+%
 %
 % Outputs:
 % -------------------------------------------------------------------------
@@ -48,15 +49,21 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %               - cell array of images in object with matrix of values
 %               for each threshold
 % pcl           - positive valued clusters cell, one cell per threshold
-%               - pass inot mediation_brain_surface_figs.m
+%               - FIRST image in object only
+%               - pass into mediation_brain_surface_figs.m
 % ncl           - positive valued clusters cell, one cell per threshold
-%               - pass inot mediation_brain_surface_figs.m
+%               - FIRST image in object only
+%               - pass into mediation_brain_surface_figs.m
 %
 % Examples:
 % -------------------------------------------------------------------------
 %
 % [o2, sig, poscl, negcl] = multi_threshold(hr_intercept, 'nodisplay');
 % mediation_brain_surface_figs(poscl, negcl);
+%
+% Create empty montage set and (re)use it:
+% o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
+% o2 = multi_threshold(out.t, 'o2', o2);
 %
 % See also:
 % mediation_brain_surface_figs, iimg_multi_threshold,
@@ -67,7 +74,7 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 
 
 
-o2 = [];
+%o2 = [];
 
 poscolors = {[1 1 0] [1 .5 0] [.7 0 0]};
 negcolors = {[0 0 1] [0 .5 1] [.4 0 .7]};
@@ -84,10 +91,10 @@ sizethresh = [10 1 1];
 %   created in the workspace
 
 allowable_args = {'poscolors', 'negcolors', 'thresh', 'sizethresh', ...
-    'nodisplay', 'existingfig'};
+    'nodisplay', 'existingfig', 'o2'};
 
 default_values = {poscolors, negcolors, thresh, sizethresh, ...
-    0, 0};
+    0, 0, []};
 
 % define actions for each input
 % -----------------------------------
@@ -96,7 +103,7 @@ default_values = {poscolors, negcolors, thresh, sizethresh, ...
 % - allowable actions for inputs in the code below are: 'assign_next_input' or 'flag_on'
 
 actions = {'assign_next_input', 'assign_next_input', 'assign_next_input', 'assign_next_input', ...
-    'flag_on', 'flag_on'};
+    'flag_on', 'flag_on', 'assign_next_input'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -143,8 +150,10 @@ sig = {};
 nimgs = size(dat.dat, 2); % <- number of 3-D images in dataset
 
 % get significant vectors sig, where sig is cell, one cell per image
+% -------------------------------------------------------------------------
+
 for i = 1:length(thresh)
-    dat = threshold(dat, thresh(i), 'unc', 'k', sizethresh(i));
+    dat = threshold(dat, thresh(i), 'unc', 'k', sizethresh(i), 'noverbose');
     dat = replace_empty(dat);
     for j = 1:nimgs
         sig{j}(:, i) = dat.sig(:, j);
@@ -160,6 +169,7 @@ end
 
 
 % regions
+% -------------------------------------------------------------------------
 
 %r = cell(1, nimgs);
 r = cell(1, length(thresh));
@@ -167,7 +177,7 @@ r = cell(1, length(thresh));
 for i = 1:length(thresh)
     for j = 1 %:nimgs  % only does first in region anyway
         dat.sig(:, j) = sig{j}(:, i);
-        r{i} = region(dat);
+        r{i} = region(dat, 'noverbose');
     end
     [pcl{i}, ncl{i}] = posneg_separate(reparse_continguous(r{i}));
 end
@@ -177,23 +187,53 @@ if nodisplay
 end
 
 
-% fmri display
-o2 = fmridisplay;
-xyz = [-20 -10 -6 -2 0 2 6 10 20]';
-xyz(:, 2:3) = 0;
+% set up fmridisplay
+% -------------------------------------------------------------------------
+
+if isempty(o2)
+    % create new o2 if we don't have one yet.
+    
+    useexisting = false;
+    o2 = fmridisplay;
+    xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+    xyz(:, 2:3) = 0;
+    
+elseif isa(o2, 'fmridisplay')
+    
+    useexisting = true;
+    
+else
+    error('o2 was passed in but is not an fmridisplay object.');
+    
+end
+
+% plot each image
+% -------------------------------------------------------------------------
 
 indx = 1;
 
 for j = 1:nimgs
+    
+    fprintf('\nMontage %d of %d\n_____________________________________\n', j, nimgs);
     
     datplot = dat;
     datplot.dat = dat.dat(:, j);
     datplot.p = dat.p(:, j);
     datplot.ste = dat.ste(:, j);
     
-    o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
-    axh = axes('Position', [0.05 0.4 .1 .5]);
-    o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
+    if useexisting
+        % Re-plot each result on all existing montage(s)
+        o2 = removeblobs(o2);
+        
+    else
+        % Create a new montage set (sagg/ax) and plot this image on it only
+        
+        o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
+        axh = axes('Position', [0.05 0.4 .1 .5]);
+        o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+        
+    end
+    
     
     for i = length(thresh):-1:1
         
@@ -201,12 +241,22 @@ for j = 1:nimgs
         
         mycolors = [negcolors(i) negcolors(i) poscolors(i) poscolors(i)];
         
-        o2 = addblobs(o2, region(datplot), 'splitcolor', mycolors, 'wh_montages', indx);
-        o2 = addblobs(o2, region(datplot), 'splitcolor', mycolors, 'wh_montages', indx+1);
+        if useexisting
+            
+            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors);
+            
+        else
+            
+            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx);
+            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx+1);
+            
+        end
         
-    end
+    end % thresholds
     
     indx = indx + 2;
+    
+    drawnow, snapnow % for publish, etc.
     
 end
 

@@ -11,7 +11,7 @@ function obj = montage(obj, varargin)
 %     {'noslice', 'nodraw'}, drawslice = 0;
 %     'color', color = varargin{i+1}; varargin{i+1} = [];
 %     'marker', marker = varargin{i+1}; varargin{i + 1} = [];
-%     {'wh_slice'}, wh_slice = varargin{i+1}; 
+%     {'wh_slice'}, wh_slice = varargin{i+1};
 %     {'close', 'closeenough', 'close_enough'}, close_enough =    varargin{i+1};
 %     {'sagg','saggital','sagittal'}, orientation = 'sagittal';
 %     {'MarkerSize', 'markersize'}, markersize = varargin{i+1};
@@ -19,7 +19,7 @@ function obj = montage(obj, varargin)
 %     'solid', disptype = 'solid';
 %     'overlay', ovl = varargin{i + 1}; NOTE! DO NOT ENTER THIS HERE; ENTER
 %     WHEN YOU INITIALIZE FMRIDISPLAY OBJECT
-%     {'text', 'textcodes'}, textcodes = varargin{i + 1}; 
+%     {'text', 'textcodes'}, textcodes = varargin{i + 1};
 %     {'condf' 'colorcond'}, condf = varargin{i + 1};
 %
 % In addition:
@@ -35,12 +35,12 @@ function obj = montage(obj, varargin)
 % axh = axes('Position', [0.05 0.4 .1 .5]);
 % o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
 %
-% Returns: 
+% Returns:
 % obj, an fmridisplay object
-% obj = 
-% 
+% obj =
+%
 %   fmridisplay
-% 
+%
 %   Properties:
 %             overlay: [1x105 char]
 %               SPACE: [1x1 struct]
@@ -60,7 +60,7 @@ function obj = montage(obj, varargin)
 % slices.  Transposed coordinates for voxel2mm.  (Tor)
 
 
-% 
+%
 % initialize, if nothing passed in; but you would have to call overloaded
 % method, fmridisplay.montage, to invoke this.
 if nargin == 0 || isempty(obj) || ~isa(obj, 'fmridisplay')
@@ -72,7 +72,7 @@ if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
     
 end
 
-donewaxes = 1;  % default - new figure/axes
+donewaxes = true;  % default - new figure/axes
 lightenstr = 'lighten';
 myview = 'axial';
 disptype = 'solid';  % or contour
@@ -84,6 +84,7 @@ texthandles = [];
 slice_range = 'auto';
 custom_coords = 0;
 color = 'k';
+doverbose = true;
 
 % ------------------------------------------------------
 % parse inputs
@@ -108,7 +109,7 @@ for i = 1:length(varargin)
             case {'sag', 'sagg','saggital','sagittal'}, myview = 'sagittal';
                 
             case {'cor', 'coronal'}, myview = 'coronal';
-                    
+                
             case {'condf' 'colorcond'}, condf = varargin{i + 1};
                 
             case 'overlay', ovl = varargin{i + 1};
@@ -118,8 +119,11 @@ for i = 1:length(varargin)
                 custom_slice_mm = varargin{i + 1};
                 
             case 'existing_axes'
-                donewaxes = 0; 
+                donewaxes = 0;
                 newax = varargin{i + 1};
+                
+            case 'noverbose'
+                doverbose = false;
                 
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -130,16 +134,16 @@ end
 % -----------------------------------------------
 % Volume-level: Set up underlay
 
-fprintf('Load underlay. ')
+if doverbose, fprintf('Load underlay. '), end
 dat = spm_read_vols(obj.SPACE.V);
 
-fprintf('Define axes. ')
+if doverbose, fprintf('Define axes. '), end
 setup_axes();
 
 % fprintf('Lighten edges. ')
 % dat = lighten_underlay_edges(dat, 10);
 
-fprintf('Ready. \n')
+if doverbose, fprintf('Ready. \n'), end
 
 
 % Do the work for each slice
@@ -156,7 +160,7 @@ for i = 1:length(slice_vox_coords)
     Z = display_slice(dat, wh_slice, obj.SPACE, myview, lightenstr);
     
     hold on
-        
+    
     axis off
 end
 
@@ -230,7 +234,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         % get optimal number of axes
         num_axes = size(cen, 1);
         rc = ceil(sqrt(num_axes)); % produces empty rows for num_axes=6, catch below. SG
-        if mod(num_axes,rc)==0 && num_axes<rc^2  
+        if mod(num_axes,rc)==0 && num_axes<rc^2
             rr = ceil(num_axes/rc);
         else
             rr = rc;
@@ -247,7 +251,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         
         if doonerow
             ss = get(0, 'ScreenSize');
-            set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.9) round(ss(4)/7) ])
+            set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/6) ])
         end
         
         for i = 1:num_axes

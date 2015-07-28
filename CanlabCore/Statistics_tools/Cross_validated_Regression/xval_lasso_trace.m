@@ -138,7 +138,7 @@ title('Variance explained');
 bic = n.*log(v) + f.*log(n);
 [mm, i] = min(bic);
 
-
+print_matrix([(0:k-1)' r out.lambda [nan; bic]], {'Vars in model' 'pred-Y r' 'lasso shrinkage lambda', 'bic'});
 
 % Do one more time for output
 STATS = xval_regression_multisubject('lasso', {Y}, {data}, 'holdout_method', whfolds, 'noverbose',  'lassopath', out.lambda(i+1));

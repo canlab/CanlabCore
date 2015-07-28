@@ -1,36 +1,93 @@
 function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_type, varargin)
 %
+% Threshold statistic_image object based on statistical threshold values.
+%
+% Usage:
+% -------------------------------------------------------------------------
 % stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, ['k', extent_thresh])
 %
+% - This is a method for an statistic_image object
+% - Thresholding is reversible
+%
+% For objects: Type methods(object_name) for a list of special commands
+%              Type help object_name.method_name for help on specific
+%              methods.
+%
+% Author and copyright information:
+% -------------------------------------------------------------------------
+%     Copyright (C) 2015 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
 % Inputs:
+% -------------------------------------------------------------------------
+% stats_image_obj   statistic_image object
+% input_threshold   [pvalthreshold or other thresh]
+%                   A numeric value corresponding to the threshold desired.
+%                   Either a p-value or a range of raw values, depending on the threshold
+%                   type.
 %
-% input_threshold: [pvalthreshold or other thresh]
-% A numeric value corresponding to the threshold desired.
-% Either a p-value or a range of raw values, depending on the threshold
-% type.
+% thresh_type       Threshold type
+%                   can be one of:
+%                   'fdr' : FDR-correct based on p-values already stored in image .p field
+%                   'fwe' : FWE-correct; not implemented
+%                   'bfr' : Bonferroni correction (FWE).
+%                   'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
 %
-% thresh_type: Threshold type
-% can be one of:
-% 'fdr' : FDR-correct based on p-values already stored in image .p field
-% 'fwe' : FWE-correct; not implemented
-% 'bfr' : Bonferroni correction (FWE).
-% 'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
+%                   'raw-between' : threshold raw image values; save those > input_threshold(1) and < input_threshold(2)
+%                   'raw-outside' : threshold raw image values; save those < input_threshold(1) or > input_threshold(2)
 %
-% 'raw-between' : threshold raw image values; save those > input_threshold(1) and < input_threshold(2)
-% 'raw-outside' : threshold raw image values; save those < input_threshold(1) or > input_threshold(2)
+% Optional arguments:
+% 'k'               Followed by cluster extent in voxels: extent-based thresholding of any of the above
+% 'noverbose'       Suppress verbose output
+% 'mask'            Followed by name of mask or fmri_mask_image object
+%                   - this will affect corrected significance levels
 %
-% 'k', followed by cluster extent in voxels: extent-based thresholding of
-% any of the above
+% Outputs:
+% -------------------------------------------------------------------------
+% stats_image_obj   thresholded statistic_image object
 %
-% Tor Wager, Dec 2010
-% 
-% 7/19/2013: added 'mask' and 'bfr'(bonferroni) option by Wani Woo. 
-%   With the 'mask' option, you can define a space for the multiple comparison 
-%   correction. 
+% Examples:
+% -------------------------------------------------------------------------
+%
+% % -> Retain sig pos or neg results at p < .001 uncorrected, cluster extent >= 100 voxels
+% obj = threshold(obj, .001, 'unc', 'k', 100)
+%
+% % -> Retain sig pos or neg results at q < .05 FDR, cluster extent >= 10 voxels
+% obj = threshold(obj, .05, 'fdr', 'k', 10)
+%
+% -> Retain voxels with absolute statistic/data value > 3
+% obj = threshold(obj, [-3 3], 'raw-outside')
+%
 % e.g. dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', which('scalped_avg152T1_graymatter_smoothed.img'));
 %      dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', maskobj);
+%
+% See also:
+% -------------------------------------------------------------------------
+% image_vector.threshold, statistic_image.multi_threshold
+
+% Programmers' notes:
+% Created by Tor Wager, Dec 2010
+% Tor: Updated documentation, July 2015
+%
+% 7/19/2013: added 'mask' and 'bfr'(bonferroni) option by Wani Woo.
+%   With the 'mask' option, you can define a space for the multiple comparison
+%   correction.
 
 k = 1;
+doverbose = 1;
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -41,7 +98,7 @@ for i = 1:length(varargin)
                     error('You must add a volInfo structure to the statistic image object to do extent-based thresholding');
                 end
                 
-            case 'mask' % 7/19/2013: added by Wani Woo. 
+            case 'mask' % 7/19/2013: added by Wani Woo.
                 
                 maskinput = varargin{i + 1}; varargin{i + 1} = 0;
                 switch class(maskinput)
@@ -62,7 +119,7 @@ for i = 1:length(varargin)
                         maskdat = logical(mask_mapdat(stats_image_obj.volInfo.wh_inmask));
                     else
                         error('VolInfo of mask and data are same, but data lengths are different.');
-                    end 
+                    end
                 else
                     if sum(sum(maskobj.volInfo.mat ~= stats_image_obj.volInfo.mat))
                         error('VolInfo of mask and data are diffferent, but data lengths are same.');
@@ -78,6 +135,9 @@ for i = 1:length(varargin)
                     stats_image_obj.sig = stats_image_obj.sig(maskdat);
                 end
                 stats_image_obj.removed_voxels = ~maskdat;
+                
+            case 'noverbose'
+                doverbose = 0;
                 
             otherwise
                 error('Illegal argument keyword.');
@@ -111,8 +171,8 @@ for i = 1:n
             
         case 'fwe'
             error('not implemented yet.')
-        
-        case {'bfr', 'bonferroni'} % 7/19/2013: added by Wani Woo. 
+            
+        case {'bfr', 'bonferroni'} % 7/19/2013: added by Wani Woo.
             thresh(i) = input_threshold/size(stats_image_obj.p,1);
             stats_image_obj.threshold(i) = thresh(i);
             
@@ -144,13 +204,17 @@ for i = 1:n
                 stats_image_obj.sig(:, i) = logical(iimg_cluster_extent(double(stats_image_obj.sig(:, i)), stats_image_obj.volInfo, k));
             end
             
-            fprintf('\nImage %3.0f\nPositive effect: %3.0f voxels, min p-value: %3.8f\n', i, ...
-                sum(stats_image_obj.dat(:, i) > 0 & stats_image_obj.sig(:, i)), ...
-                min(stats_image_obj.p(stats_image_obj.dat(:, i) > 0, i)));
-            
-            fprintf('Negative effect: %3.0f voxels, min p-value: %3.8f\n', ...
-                sum(stats_image_obj.dat(:, i) < 0 & stats_image_obj.sig(:, i)), ...
-                min(stats_image_obj.p(stats_image_obj.dat(:, i) < 0, i)));
+            if doverbose
+                
+                fprintf('\nImage %3.0f\nPositive effect: %3.0f voxels, min p-value: %3.8f\n', i, ...
+                    sum(stats_image_obj.dat(:, i) > 0 & stats_image_obj.sig(:, i)), ...
+                    min(stats_image_obj.p(stats_image_obj.dat(:, i) > 0, i)));
+                
+                fprintf('Negative effect: %3.0f voxels, min p-value: %3.8f\n', ...
+                    sum(stats_image_obj.dat(:, i) < 0 & stats_image_obj.sig(:, i)), ...
+                    min(stats_image_obj.p(stats_image_obj.dat(:, i) < 0, i)));
+                
+            end
             
         case 'raw-between'
             stats_image_obj.sig(:, i) = stats_image_obj.dat(:, i) > thresh(1) & stats_image_obj.dat(:, i) < thresh(2);
@@ -161,7 +225,9 @@ for i = 1:n
                 stats_image_obj.sig(:, i) = logical(iimg_cluster_extent(double(stats_image_obj.sig(:, i)), stats_image_obj.volInfo, k));
             end
             
-            fprintf('Keeping vals between %3.3f and %3.3f: %3.0f voxels in .sig\n', thresh(1), thresh(2), sum(stats_image_obj.sig(:, i)));
+            if doverbose
+                fprintf('Keeping vals between %3.3f and %3.3f: %3.0f voxels in .sig\n', thresh(1), thresh(2), sum(stats_image_obj.sig(:, i)));
+            end
             
         case 'raw-outside'
             stats_image_obj.sig(:, i) = stats_image_obj.dat(:, i) < thresh(1) | stats_image_obj.dat(:, i) > thresh(2);
@@ -172,7 +238,9 @@ for i = 1:n
                 stats_image_obj.sig(:, i) = logical(iimg_cluster_extent(double(stats_image_obj.sig(:, i)), stats_image_obj.volInfo, k));
             end
             
-            fprintf('Keeping vals outside of %3.3f to %3.3f: %3.0f voxels in .sig\n', thresh(1), thresh(2), sum(stats_image_obj.sig(:, i)));
+            if doverbose
+                fprintf('Keeping vals outside of %3.3f to %3.3f: %3.0f voxels in .sig\n', thresh(1), thresh(2), sum(stats_image_obj.sig(:, i)));
+            end
             
         otherwise
             error('Unknown threshold type. Enter fdr, fwe, or uncorrected')
@@ -189,7 +257,9 @@ for i = 1:n
 end  % image loop
 
 if isempty(stats_image_obj.volInfo)
-    disp('Warning! volInfo not defined for stats image object.  regions cannot be formed correctly from this image.')
+    if doverbose
+        disp('Warning! volInfo not defined for stats image object.  regions cannot be formed correctly from this image.')
+    end
 else
     
     
@@ -198,16 +268,6 @@ else
     
     stats_image_obj = reparse_contiguous(stats_image_obj);
     
-    % i = 1;
-%     wh = logical(stats_image_obj.sig(:, i));
-%     n = sum(wh);
-%     
-%     if n < 50000
-%         stats_image_obj.volInfo(1).cluster = zeros(size(stats_image_obj.volInfo(1).cluster));
-%         stats_image_obj.volInfo(1).cluster(wh) = spm_clusters(stats_image_obj.volInfo(1).xyzlist(wh, :)')';
-%     else
-%         stats_image_obj.volInfo(1).cluster(wh) = ones(n, 1);
-%     end
 end
 
 end % function

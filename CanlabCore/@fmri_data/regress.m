@@ -6,7 +6,7 @@ function out = regress(dat, varargin)
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
 % and the intercept is the last column. Intercept will automatically be
-% added if not detected unless 'nointercept' is specified.  
+% added if not detected unless 'nointercept' is specified.
 %
 % This function can also create a map of brain regions that predict the dat.Y
 % vector using the 'brainony' option.  This is essentially a univariate
@@ -28,10 +28,11 @@ function out = regress(dat, varargin)
 % ---------------------------------------------------------------------
 % [threshold, 'unc']:   p-value threshold string indicating threshold type
 %                       (see help statistic_image.threshold for options)
-% nointercept:          Do not add intercept to model
-% nodisplay:            Do not plot thresholded results using orthviews
-% brainony:             univariate approach to predict obj.Y from brain data
-% residual:             Output residual as fmri_data() object
+% 'nointercept'         Do not add intercept to model
+% 'nodisplay'           Do not plot thresholded results using orthviews
+% 'brainony'            univariate approach to predict obj.Y from brain data
+% 'residual'            Output residual as fmri_data() object
+% 'noverbose'           Suppress verbose outputs
 %
 % ---------------------------------------------------------------------
 % Outputs:
@@ -101,6 +102,7 @@ function out = regress(dat, varargin)
 % Edited by Luke Chang, 10/24/2012 to save residuals (i.e., out.r), which is helpful for denoising an image
 % Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
 % Code completely refactored by Luke Chang 2/24/25
+% Verbose option updated by Tor, 7/2015
 
 % ---------------------------------------------------------------------
 % Defaults
@@ -111,6 +113,7 @@ do_x_on_brain = 1; %else do brain on Y
 do_robust = 0;
 do_intercept = 1;
 do_resid = 0;
+doverbose = true;
 
 % ---------------------------------------------------------------------
 % Parse Inputs
@@ -146,6 +149,10 @@ for varg = 1:length(varargin)
             do_resid = 1;
             varargin{varg} = {};
         end
+        if strcmpi('noverbose',varargin{varg})
+            doverbose = false;
+            varargin{varg} = {};
+        end
     end
 end
 
@@ -167,7 +174,7 @@ if do_x_on_brain
         error('dat.dat must have same number of columns as dat.X has rows.')
     end
     if isa(dat.X,'design_matrix')
-       dat.X = dat.X.dat; 
+        dat.X = dat.X.dat;
     end
 else % Check if dat.Y exists and is in correct format if running brainony
     if isempty(dat.Y)
@@ -188,10 +195,10 @@ if do_intercept && do_x_on_brain
     wh_int = intercept(dat.X,'which');
     
     if isempty(wh_int)
-        sprintf('No intercept detected, adding intercept to last column of design matrix')
+        if doverbose, sprintf('No intercept detected, adding intercept to last column of design matrix'), end
         X = intercept(dat.X,'add');
     else
-        sprintf('Intercept detected in column %1.0f of dat.x',wh_int)
+        if doverbose, sprintf('Intercept detected in column %1.0f of dat.x',wh_int), end
         X = dat.X;
     end
     
@@ -206,13 +213,18 @@ end
 tic
 warning off
 
-if do_x_on_brain %default is to regress dat.X on dat.dat (x on brain)
+if do_x_on_brain 
+% default is to regress dat.X on dat.dat (x on brain)
+% ---------------------------------------------------------------------
+  
     % display info about regression
-    fprintf('regression > Y: %3.0f voxels. X: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(X, 2));
-    fprintf('\nPredicting Brain Activity from dat.X');
+    if doverbose
+        fprintf('regression > Y: %3.0f voxels. X: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(X, 2));
+        fprintf('\nPredicting Brain Activity from dat.X');
+    end
     
     if do_robust %need to loop through voxels - Slow!
-        fprintf('\nRunning in Robust Mode');
+        if doverbose, fprintf('\nRunning in Robust Mode'); end
         
         for i = 1:size(dat.dat,1)
             
@@ -229,7 +241,7 @@ if do_x_on_brain %default is to regress dat.X on dat.dat (x on brain)
         r = dat.dat' - X*b; %residual
         
     else %OLS - vectorized - Fast!
-        fprintf('\nRunning in OLS Mode');
+        if doverbose, fprintf('\nRunning in OLS Mode'); end
         
         % Estimate Betas in vector
         [n, k] = size(X);
@@ -244,14 +256,20 @@ if do_x_on_brain %default is to regress dat.X on dat.dat (x on brain)
         [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
         
     end
-else % Regress brain on Y - loops through voxels, slow!
     
-    % display info about regression
-    fprintf('regression > X: %3.0f voxels. Y: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(dat.Y, 2));
-    fprintf('\nPredicting dat.Y from Brain Activity');
+else
+% Regress brain on Y - loops through voxels, slow!
+% ---------------------------------------------------------------------
+    
+    if doverbose
+        % display info about regression
+        fprintf('regression > X: %3.0f voxels. Y: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(dat.Y, 2));
+        fprintf('\nPredicting dat.Y from Brain Activity');
+    end
     
     if do_robust %need to loop through voxels - Slow!
-        fprintf('\nRunning in Robust Mode');
+        if doverbose, fprintf('\nRunning in Robust Mode'); end
+        
         for i = 1:size(dat.dat,1)
             
             % Create X from brain Data
@@ -273,7 +291,8 @@ else % Regress brain on Y - loops through voxels, slow!
         end
         
     else %OLS
-        fprintf('\nRunning in OLS Mode');
+        
+        if doverbose, fprintf('\nRunning in OLS Mode'); end
         
         for i = 1:size(dat.dat,1)
             
@@ -296,8 +315,9 @@ else % Regress brain on Y - loops through voxels, slow!
         [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
     end
 end
+
 stop = toc;
-fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60));
+if doverbose, fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60)); end
 
 % ---------------------------------------------------------------------
 % Create Output
@@ -329,7 +349,7 @@ out.t.dat_descrip = sprintf('t-values from regression, intercept is last');
 out.t.volInfo = dat.volInfo;
 out.t.removed_voxels = dat.removed_voxels;
 out.t.removed_images = false;  % this image does not have the same dims as the original dataset
-out.t = threshold(out.t, inputargs{:}); %Threshold image
+out.t = threshold(out.t, inputargs{:}, 'noverbose'); %Threshold image
 
 % DF as fmri_data
 out.df = dat;
@@ -355,6 +375,9 @@ if k < 10 && do_display
     
     orthviews(out.t);
     
+elseif do_display
+        disp('Warning: No display because >= 10 images.');
+
 end
 
 warning on

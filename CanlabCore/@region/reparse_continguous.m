@@ -6,7 +6,7 @@ function clout = reparse_continguous(cl)
 
 ivec = region2imagevec(cl);
 
-clout = region(ivec, 'contiguous_regions');
+clout = region(ivec, 'contiguous_regions', 'noverbose');
 
 % ----------------------------------------------
 % Add other fields

@@ -26,10 +26,13 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 % 'noremove' : do not remove current blobs when adding new ones
 % 'outlinecolor : followed by new outline color
 % 'splitcolor' : followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
-% 'montagetype' : 'full' for full montages of axial and sagg slices. 
+%
+% 'montagetype' : 'full' for full montages of axial and sagg slices.
 %                 'compact' [default] for single-figure parasagittal and
 %                 axials slices.
 %                 'compact2': like 'compact', but fewer axial slices.
+%
+% 'noverbose' : suppress verbose output, good for scripts/publish to html, etc.
 %
 % * Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 % See help fmridisplay
@@ -61,6 +64,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 % %% ========== Create empty fmridisplay object on which to add blobs:
 % o2 = canlab_results_fmridisplay
+% o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
 %
 % %% ========== If you want to start over with a new fmridisplay object,
 % % make sure to clear o2, because it uses lots of memory
@@ -104,6 +108,9 @@ elseif isstruct(input_activation) || isa(input_activation, 'region')
 elseif isa(input_activation, 'image_vector')
     cl = region(input_activation);
     
+elseif isempty(input_activation)
+    % do nothing for now
+    
 else
     error('I don''t recognize the format of input_activation.  It should be a thresholded mask, clusters, or region object');
 end
@@ -117,6 +124,7 @@ doremove = true;
 outlinecolor = [0 0 0];
 splitcolor = {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]};
 montagetype = 'compact';
+doverbose = true;
 
 wh = strcmp(varargin, 'noblobs');
 if any(wh), doblobs = false; varargin(wh) = []; end
@@ -145,6 +153,9 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'compact2');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'noverbose');
+if any(wh), doverbose = false; varargin(wh) = []; end
+
 wh = false(1, length(varargin));
 for i = 1:length(varargin)
     wh(i) = isa(varargin{i}, 'fmridisplay');
@@ -155,6 +166,13 @@ varargin(wh) = [];
 xyz = [-20 -10 -6 -2 0 2 6 10 20]';
 xyz(:, 2:3) = 0;
 
+if isempty(input_activation)
+    % we will skip the blobs, but process other optional input args
+    doblobs = false;
+    dooutline = false;
+end
+
+
 
 if ~exist('o2', 'var')
     
@@ -164,8 +182,12 @@ if ~exist('o2', 'var')
     % then you can add montages, add and remove blobs, add and remove points (for
     % meta-analysis), etc.
     
-    disp('Setting up fmridisplay objects');
-    disp('This takes a lot of memory, and can hang if you have too little.');
+    if doverbose
+        
+        disp('Setting up fmridisplay objects');
+        disp('This takes a lot of memory, and can hang if you have too little.');
+        
+    end
     
     o2 = fmridisplay;
     
@@ -173,20 +195,32 @@ if ~exist('o2', 'var')
     
     switch montagetype
         case 'full'
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow');
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             
         case 'compact'
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             axh = axes('Position', [0.05 0.4 .1 .5]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
-        
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            
         case 'compact2'
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8);
-            enlarge_axes(gcf, 1.2 / 1.4);            
-            axh = axes('Position', [-0.03 0.03 .2 1]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
-
+            o2 = montage(o2, 'axial', 'slice_range', [-20 50], 'onerow', 'spacing', 8, 'noverbose');
+            enlarge_axes(gcf, 1);
+            axh = axes('Position', [-0.03 0.15 .2 1]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            
+            % shift all axes down and right
+            allaxh = findobj(gcf, 'Type', 'axes');
+            for i = 1:length(allaxh)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(2) = pos1(2) - 0.10;
+                pos1(1) = pos1(1) + 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+            
+            ss = get(0, 'ScreenSize');
+            set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
+            
         otherwise error('illegal montage type. choose full or compact.')
     end
     
@@ -194,7 +228,7 @@ if ~exist('o2', 'var')
     
     
 else
-    disp('Using existing fmridisplay object');
+    if doverbose, disp('Using existing fmridisplay object'); end
     
     % Other inputs will be passed into addblobs
     existingmons = length(o2.montage);
@@ -203,20 +237,33 @@ else
         % use same o2, but add montages
         switch montagetype
             case 'full'
-                o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow');
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
+                o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 
             case 'compact'
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
+                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
-                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
+                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
                 
             case 'compact2'
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8);
-                enlarge_axes(gcf, 1.2 / 1.4);            
-                axh = axes('Position', [-0.03 0.03 .2 1]);
-                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
-
+                o2 = montage(o2, 'axial', 'slice_range', [-20 50], 'onerow', 'spacing', 8, 'noverbose');
+                enlarge_axes(gcf, 1);
+                axh = axes('Position', [-0.03 0.15 .2 1]);
+                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                
+                % shift all axes down and right
+                allaxh = findobj(gcf, 'Type', 'axes');
+                for i = 1:length(allaxh)
+                    pos1 = get(allaxh(i), 'Position');
+                    pos1(2) = pos1(2) - 0.10;
+                    pos1(1) = pos1(1) + 0.03;
+                    set(allaxh(i), 'Position', pos1);
+                end
+                
+                ss = get(0, 'ScreenSize');
+                set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
+                
+                
             otherwise error('illegal montage type. choose full or compact.')
         end
         
@@ -227,7 +274,7 @@ else
             o2 = removeblobs(o2);
         end
         wh_montages = 1:existingmons;
-  
+        
     end
     
 end

@@ -16,6 +16,7 @@
 %         Can also be char array of image filename
 %   obj2: Optional: fmri_data/statistic_image object to extract data from
 %   keywords: Optional: 'unique_mask_values' or 'contiguous_regions'
+%   'noverbose' : suppress verbose output
 %
 % cl = region;  % generates an empty structure
 %               % You can add fields yourself if you want to, but best to
@@ -199,6 +200,7 @@ classdef region
             % ---------------------------------
             
             average_over = 'contiguous_regions'; %'contiguous_regions'  or 'unique_mask_values';
+            doverbose = true;
             
             for varg = 1:length(varargin)
                 if ischar(varargin{varg})
@@ -208,6 +210,9 @@ classdef region
                         case 'contiguous_regions', average_over = 'contiguous_regions';
                         case 'unique_mask_values', average_over = 'unique_mask_values';
                             
+                        case 'noverbose'
+                            doverbose = false;
+                           
                         otherwise
                             disp('region class constructor: Illegal string value for average_over.');
                             fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
@@ -283,26 +288,34 @@ classdef region
                     maskData = round(maskData);
                     u = unique(maskData)'; u(u == 0) = [];
                     nregions = length(u);
-                    fprintf('Grouping voxels with unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
                     
+                    if doverbose
+                    fprintf('Grouping voxels with unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
+                    end
                     
                 case 'contiguous_regions'
                     
                     isinmask = maskData ~= 0 & ~isnan(maskData);
                     
                     % re-make cluster ID for in-mask voxels
-                    if sum(isinmask) < 50000
-                        mask.volInfo.cluster(isinmask) = spm_clusters(mask.volInfo.xyzlist(isinmask, :)')';
-                    else
-                        % don't, and print warning
-                        mask.volInfo.cluster(isinmask) = ones(sum(isinmask), 1);
-                        disp('Warning: spm_cluster will not parse clusters for masks with > 50000 voxels.');
-                    end
+                    mask.volInfo.cluster(isinmask) = spm_clusters(mask.volInfo.xyzlist(isinmask, :)')';
+                
+                    % Old, no longer needed with newer SPM
+                    %                     if sum(isinmask) < 50000
+                    %                         mask.volInfo.cluster(isinmask) = spm_clusters(mask.volInfo.xyzlist(isinmask, :)')';
+                    %                     else
+                    %                         % don't, and print warning
+                    %                         mask.volInfo.cluster(isinmask) = ones(sum(isinmask), 1);
+                    %                         disp('Warning: spm_cluster will not parse clusters for masks with > 50000 voxels.');
+                    %                     end
                     
                     u = unique(mask.volInfo.cluster(isinmask)); u(u == 0) = [];
                     maskData(isinmask) = mask.volInfo.cluster(isinmask);
                     nregions = length(u);
+                    
+                    if doverbose
                     fprintf('Grouping contiguous voxels: %3.0f regions\n', nregions);
+                    end
                     
                 otherwise
                     error('This should never happen.');

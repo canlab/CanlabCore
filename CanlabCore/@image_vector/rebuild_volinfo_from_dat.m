@@ -1,4 +1,6 @@
 function dat = rebuild_volinfo_from_dat(dat, newdat)
+% dat = rebuild_volinfo_from_dat(dat, newdat)
+%
 % Will rebuild volInfo (the image space, or sometimes "mask") from a vectorized image. 
 % In other words, will rebuild dat.volInfo from newdat.
 %

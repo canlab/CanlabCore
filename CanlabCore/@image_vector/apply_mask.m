@@ -27,6 +27,11 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % 'ignore_missing': use with pattern expression only. Ignore weights on voxels
 % with zero values in test image. If this is not entered, the function will
 % check for these values and give a warning.
+% 
+% 'invert': Invert the mask so that out-of-mask voxels are now in (using
+% the mask as an 'exclude mask' rather than an include-mask. If pattern
+% expression is requested, the behavior is different, and it inverts the
+% sign of in-mask pattern weights.
 %
 % [dat, mask] = apply_mask(dat, mask)
 % [dat, mask] = apply_mask(dat, mask image name)
@@ -43,6 +48,7 @@ dopatternexpression = 0;
 donorm = 0;
 doignoremissing = 0;
 docorr = 0; %run correlation instead of dot-product for pattern expression
+doinvert = 0;
 
 if any(strcmp(varargin, 'pattern_expression'))
     dopatternexpression = 1;
@@ -57,7 +63,9 @@ if any(strcmp(varargin, 'pattern_expression'))
     
 end
 
-
+if any(strcmp(varargin, 'invert'))
+    doinvert = 1;
+end
 
 if any(strcmp(varargin, 'norm_mask')) % only good for pattern expression
     donorm = 1;
@@ -98,6 +106,24 @@ mask.dat(isnan(mask.dat)) = 0;
 
 % Replace if necessary
 mask = replace_empty(mask);
+
+if doinvert
+    
+    if dopatternexpression
+        mask.dat = -mask.dat;
+        disp('Reversing sign of mask values.');
+        
+    else
+        disp('Inverting mask: Out-of-mask areas are now in.');
+        maskdat = reconstruct_image(mask);
+        maskdat = double(~maskdat);
+        mask = rebuild_volinfo_from_dat(mask, maskdat(:));
+        mask = resample_space(mask, dat);
+        %mask.dat = double(~mask.dat);
+        %rebuild_volinfo_from_dat
+    end
+    
+end
 
 % save which are in mask, but do not replace with logical, because mask may
 % have weights we want to preserve

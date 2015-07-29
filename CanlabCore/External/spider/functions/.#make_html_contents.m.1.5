@@ -1,0 +1,82 @@
+function []=make_html_contents
+'going..'
+
+ ss=spider_path;
+ fin = fopen([ss '/Contents.m'],'r')
+ F = fread(fin);
+ s = char(F');
+ fclose(fin);
+ 
+% fid = fopen(['c:\spider/doc/web/objects.html'],'w')
+ fid = fopen(['objects.html'],'w')
+ fprintf(fid,'<HTML>\n');
+ fprintf(fid,'<HEAD>\n');
+ fprintf(fid,'<HEAD>\n');
+ a='<BODY BGCOLOR="white">\n'; fprintf(fid,a);
+a='<BODY TEXT="blue">\n'; fprintf(fid,a);
+a='<BODY LINK="red">\n'; fprintf(fid,a);
+a='<BODY VLINK="red">\n'; fprintf(fid,a);
+a='<BODY ALINK="blue">\n'; fprintf(fid,a);
+a='<BLOCKQUOTE> \n'; fprintf(fid,a);
+a=' \n'; fprintf(fid,a);
+a='<title> SPIDER </title>\n'; fprintf(fid,a);
+a=' \n'; fprintf(fid,a);
+a='<font color="Black">\n'; fprintf(fid,a);
+a='<font size=+5 face="Impact"> The Spider Objects\n'; fprintf(fid,a);
+a='</font></font> \n'; fprintf(fid,a);
+a='<font size=-2 face="Verdana">\n'; fprintf(fid,a);
+a='</br>\n'; fprintf(fid,a);
+a=' \n'; fprintf(fid,a);
+a='<div align=left>\n'; fprintf(fid,a);
+a='</div>\n'; fprintf(fid,a);
+a='<p>\n'; fprintf(fid,a);
+a='</font>\n'; fprintf(fid,a);
+a=' \n'; fprintf(fid,a);
+a='<font color="blue" size="+0">\n'; fprintf(fid,a);
+a='  \n'; fprintf(fid,a);
+a='<pre>\n'; fprintf(fid,a);
+
+f=[find(s=='%')]; s(f)=' '; % purge comments
+f=[find(double(s)==10)]; % find line feeds
+for i=2:length(f)-1
+   process(s(f(i):f(i+1)-1),fid);
+end    
+a='</pre>\n'; fprintf(fid,a);
+fclose(fid);
+        
+
+function a=process(s,fid)
+%------------------------
+a=[s(1:length(s)) ]; doit=1;
+
+
+%%------ search for title ----------
+if findstr('objects',a) & not(s(4)==' ')
+    a=['<TABLE BORDER=0 CELLSPACING=0 WIDTH="550" align=center> <TR> <TD WIDTH="100" BGCOLOR="#000022"><I><B> </B></I></TD> <TD WIDTH="490" BGCOLOR="#000022"><B> <FONT COLOR="white" size="+1">  ' char(s) '  </FONT></B> </TD></TR> </TABLE>'];
+    fprintf(fid,'\n');
+    fprintf(fid,'%s',a);
+    doit=0;
+end
+%%----------------------------------
+    
+if doit  %% -----add font colors
+    f=min(find(a=='-'));
+    if not(isempty(f))
+        a=s(2:f-1); a2=s(f+1:length(s));
+        f1=min(find(not(a==' ')));
+        f2=max(find(not(a==' ')));
+        %f1=min(find((a>='a' & a<='z')));
+        %f2=max(find((a>='a' & a<='z')));
+        a_bef=a(1:f1-1); a_aft=a(f2+1:length(a));
+        a=a(f1:f2)
+
+        make_html_help(a);
+        a=[a_bef '<a href="help_' a '.html">' a ' </a>' a_aft '-'];
+        s=['<font color="red" size="+0"><b>' a '</font><font color="green" face="Verdana" size="0" >' a2 '</font>'];
+        fprintf(fid,'%s',s);
+    end 
+end    
+
+a=1; return;
+
+

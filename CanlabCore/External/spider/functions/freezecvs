@@ -1,0 +1,35 @@
+
+# run this from the spider root to make a freeze
+
+rm README.txt
+#rm -rf basic/@preimage
+rm -rf reg/@rsvm
+rm -rf mod_sel/@sann
+rm -rf pat/@svmtrack
+rm -rf basic/DONE
+rm -rf basic/TODO
+rm -rf mclass/@poo
+rm -rf feat_sel/@nfe
+#rm -rf demos/preimage
+rm -rf trans/@lab_prop 
+rm -rf */CVS
+rm -rf */*/CVS
+rm -rf */*/*/CVS 
+rm -rf */*/*/*/CVS
+rm -rf */*/*/*/*/CVS
+rm -rf */*/*/*/*/*/CVS 
+rm -rf CVS
+rm doc/website/*.zip
+rm doc/website/*.jpg
+rm doc/website/*.mp3
+rm -rf Optimization/svm_light.src
+rm -rf Optimization/libsvm
+rm -rf Optimization/leon_src
+rm -rf Optimization/SVMTorch
+rm demos/data/uncorrupted.zip
+#cd Optimization; 
+#unzip Optimization.zip
+#cd ..
+#cp Optimization/libsvm/svmlibtrain.dll Optimization/
+rm -rf Optimization/Optimization.zip
+echo "Run matlab and run USE_SPIDER. Type HELP SPIDER for help." > README.txt

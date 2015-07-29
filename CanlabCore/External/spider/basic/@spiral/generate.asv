@@ -1,0 +1,38 @@
+function d =  generate(a)
+
+
+x1=zeros(a.m,1);
+y1=zeros(a.m,1);
+
+x2=zeros(a.m,1);
+y2=zeros(a.m,1);
+
+maxim=2*pi*a.n;
+step=maxim;
+t=step:step:a.m*step;
+
+x1= t.*cos(t) ;
+y1= t.*sin(t);
+x2= (1+t).*cos(t) ;
+y2= (1+t).*sin(t) ;
+
+label=ones(a.m,1);
+k=1;
+for i=length(x1)+1:1:2*a.m
+    j=1+floor(length(x1)*rand);
+    x1=[x1,x1(j)+step*rand];
+    y1=[y1,y1(j)+step*rand];
+    x2=[x2,x2(j)+step*rand];
+    y2=[y2,y2(j)+step*rand];
+    if(j>a.m)
+    label(k)=
+    k=k+1;
+end
+
+%plot(x1,y1,'+'); hold;
+%plot(x2,y2,'r+');
+
+%d=data(['spiral_data' ' n=' num2str(a.n)],x,y); 
+%d=data([get_name(d) ' -> ' get_name(a) ' '] ,Yest,Yt);
+d=data([get_name(a) ' '] ,[x1' y1';x2' y2'],[ ones(a.m,1);-1*ones(a.m,1);]);
+ 

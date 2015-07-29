@@ -1,0 +1,20 @@
+function K = symbol_string(kern,dat1,dat2,ind1,ind2,kerParam)
+% --- conversion to sequences------------------
+D= []; Xf = get_x(dat1); Xs = get_x(dat2); X1 = {}; X2 = {};
+for i = 1:size(Xf,1), tmp = Xf(i,:);  X1{i} = tmp(tmp > 0); end
+for i = 1:size(Xs,1),  tmp = Xs(i,:);  X2{i} = tmp(tmp > 0);end
+
+n = kernParam{1};
+lambda = kerParam{2};
+
+
+
+%----------------------------------------------------------
+function ret = k_prime(s,t,lambda,n)
+    if n == 0
+        ret = 1; return;
+    elseif min(length(s),length(t)) < n
+            
+    end
+
+    

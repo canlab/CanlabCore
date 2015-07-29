@@ -35,6 +35,7 @@ n=size(Y,2);
 X1 = cell(1,n);
 X2 = mean(Y)'; % matrix of 2nd level preds
 
+%{
 if isstruct(varargin{1}) % the "alternative format" described above
     xstruct = varargin{1};
     fields = varargin{2};
@@ -48,6 +49,7 @@ if isstruct(varargin{1}) % the "alternative format" described above
     end
 
 else
+%}
     for i = 1:n % each subject
         clear myX
         for j = 1:length(varargin)
@@ -55,7 +57,7 @@ else
             X1{i} = myX;
         end
     end
-end
+%end
 
 
 stats = glmfit_multilevel(Y, X1, scale(X2, 1), 'weighted', 'noplots', ...

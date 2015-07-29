@@ -204,7 +204,7 @@ if ~exist('o2', 'var')
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             
         case 'compact2'
-            o2 = montage(o2, 'axial', 'slice_range', [-20 50], 'onerow', 'spacing', 8, 'noverbose');
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
             enlarge_axes(gcf, 1);
             axh = axes('Position', [-0.03 0.15 .2 1]);
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
@@ -219,7 +219,8 @@ if ~exist('o2', 'var')
             end
             
             ss = get(0, 'ScreenSize');
-            set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
+            %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
+            %images, makes it too big an overlapping
             
         otherwise error('illegal montage type. choose full or compact.')
     end

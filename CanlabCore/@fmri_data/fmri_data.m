@@ -256,7 +256,7 @@ classdef fmri_data < image_vector
                 % Now extract the actual data from the mask   
                 switch spm('Ver')
                     
-                    case {'SPM8', 'SPM5'}
+                    case {'SPM12','SPM8', 'SPM5'}
                         imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
                         
                     case {'SPM2', 'SPM99'}

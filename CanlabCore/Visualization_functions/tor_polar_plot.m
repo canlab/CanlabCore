@@ -1,8 +1,8 @@
-function tor_polar_plot(vals, colors, names, varargin)
+function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 % Make polar line plot(s)
 %
 % Usage:
-% tor_polar_plot(vals, colors, names, ['nofigure'])
+% hh = tor_polar_plot(vals, colors, names, ['nofigure'])
 %
 % vals = cell array, one cell per plot
 % in each cell, matrix of observations x variables
@@ -11,15 +11,32 @@ function tor_polar_plot(vals, colors, names, varargin)
 % names is cell array, one cell per plot
 % contains cell array of names for each condition
 %
+% Optional:
+% 'nofigure'    suppress figure
+% 'nonneg'      make all values non-negative by subtracting min value from all values in series (plot)
+% 'nofill'      Do not fill in polygons
+%
+% Outputs:
+% hh            Handles to line objects
+%
 % e.g.,
 % tor_polar_plot({w+1}, {'r' 'b'}, setnames(1))
+%
+% Note: Dark grey inner line is zero point if nonneg option is used.
+% Otherwise, zero is the origin.
+
 
 dofigure = 1;
+dofill = 1;
+dononneg = 0;
 
 p = length(vals); % plots
 
 nr = 1; nc = p;  % rows/cols in subplots
 if p > 4, nr = 2; nc = ceil(p./2); end
+
+hh = {};
+hhfill = {};
 
 if any(strcmp(varargin, 'nofigure'))
     % suppress figure
@@ -28,50 +45,95 @@ else
     create_figure('tor_polar', nr, nc)
 end
 
+if any(strcmp(varargin, 'nonneg'))
+    dononneg = 1;
+end
+
+if any(strcmp(varargin, 'nofill'))
+    dofill = 0;
+end
+
 for s = 1:p
     
-    if dofigure, subplot(nr, nc, s);, end
+    if dofigure, subplot(nr, nc, s); end
     
     set(gca, 'FontSize', 18)
     
-    k = size(vals{s}, 2);  % variables to plot (each gets a line)
+    [k, numvars] = size(vals{s});  % obs points and variables to plot (each gets a line)
     
     % make non-negative
     % this changes the interpretation of the origin of the plot
-    if any(vals{s}(:) < 0)
-        vals{s} = vals{s} - min(vals{s}(:));
+    if dononneg
+        if any(vals{s}(:) < 0)
+            origmin(s) = abs(min(vals{s}(:)));  % this is the new zero point
+            vals{s} = vals{s} - min(vals{s}(:));
+        end
     end
     
-    for i = 1:k
+    % Polar plots of values
+    % ------------------------------------------------------------
+    
+    for i = 1:numvars
         if i == 1, hold on, end % must turn off to get polar text automatically. we now do our own.
         
         v = vals{s}(:, i)';
+        ang = linspace(0, 2*pi, k + 1);
         
-        ang = linspace(0, 2*pi, length(v) + 1);
-        hh = polar(ang, [v v(1)]);
+        hh{s}(i) = polar(ang, [v v(1)]);
         
-        set(hh, 'LineWidth', 2, 'Color', colors{i})
+        set(hh{s}(i), 'LineWidth', 2, 'Color', colors{i})
         hold on
+        
+        if dofill
+            [Xf, Yf] = pol2cart(ang, [v v(1)]);
+            hhfill{s}(i) = fill(Xf,Yf, colors{i});
+            set(hhfill{s}(i), 'FaceAlpha', .1, 'EdgeColor', colors{i});
+        end
         
     end
     
     % lines and text
+    % ------------------------------------------------------------
     
     % Circles
-    maxval = max(max(vals{s}));
+    maxval = max(max(vals{s})) + .1 * (max(max(vals{s})));
     h = circle([0 0], maxval);
-    set(h, 'Color', 'k');
+    set(h, 'Color', [.3 .3 .3], 'LineWidth', 2);
     
-    h = circle([0 0], maxval ./ 2);
-    set(h, 'Color', 'k', 'LineStyle', ':');
+    if dononneg
+        minval = origmin(s);
+    else
+        minval = 0;
+    end
     
-    % spokes
-    [X, Y] = pol2cart(ang, maxval);
-    z = zeros(size(X));
-    lineh = line([z; X], [z; Y]);
-    set(lineh, 'Color', 'k', 'LineStyle', ':');
+    circlevals = linspace(minval, maxval, 4); % 4 is no. or circles
     
-    % names
+    for i = 1:length(circlevals)
+        h = circle([0 0], circlevals(i));
+        if i == 1
+            set(h, 'Color', [.3 .3 .3], 'LineWidth', 2);
+        else
+            
+            set(h, 'Color', [.5 .5 .5], 'LineStyle', ':');
+        end
+    end
+    
+    % Spokes, and set angles
+    % ------------------------------------------------------------
+    
+    for i = 1:k
+
+        ang = linspace(0, 2*pi, k + 1);
+        
+        [X, Y] = pol2cart(ang, maxval);
+        z = zeros(size(X));
+        lineh = line([z; X], [z; Y]);
+        set(lineh, 'Color', 'k', 'LineStyle', ':');
+        
+    end
+    
+    % Axis label names
+    % ------------------------------------------------------------
     
     xlim = get(gca, 'XLim');
     ylim = get(gca, 'YLim');
@@ -88,6 +150,17 @@ for s = 1:p
             texth(j) = text(x, y, names{s}{j}, 'FontSize', 14);
         end
     end
+    
+    
+    % Value labels (text) for polar guide lines
+    % ------------------------------------------------------------
+    
+    len = length(circlevals);
+    [Xc, Yc] = pol2cart(linspace(0, -.7, len), circlevals);
+    for i = 1:len
+        text(Xc(i), Yc(i), sprintf('%3.2f', circlevals(i) - minval), 'FontSize', 14, 'Color', [.4 .4 .4]);
+    end
+    
     
     axis equal
     axis off

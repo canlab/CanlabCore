@@ -134,7 +134,7 @@ if isempty(mycol), mycol = 'ko'; end
             disp('Error in or missing r2z.m: No stats toolbox?')
         end
         
-        text(min(X(:,1)),max(y),sprintf('r = %3.2f',r),'FontSize',16)
+        text(min(X(:,1)),max(y),sprintf('r = %3.2f',r),'FontSize',20)
     
         try
             str = sprintf('Sig. of B0: u=%3.2f, t=%3.2f, p=%3.4f\n C: u=%3.2f, t=%3.2f, p=%3.4f   R: r=%3.2f, Z=%3.2f, p=%3.4f', ...
@@ -184,7 +184,7 @@ if isempty(mycol), mycol = 'ko'; end
     
     function h = makefigure(xvec,yvec,mycol,mylabels,doquad,b,varargin)
 
-    hold on; grid on; set(gca,'FontSize',18)
+    hold on; grid off; set(gca,'FontSize',18)
         
     if length(varargin) > 0
         % ROBUST

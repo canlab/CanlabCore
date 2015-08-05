@@ -14,7 +14,7 @@ function r = extract_data(r, data_obj)
 %
 % Author and copyright information:
 % -------------------------------------------------------------------------
-%     Copyright (C) <year>  <name of author>
+%     Copyright (C) 2010 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ function r = extract_data(r, data_obj)
 % * list other functions related to this one, and alternatives*
 
 % Programmers' notes:
-% List dates and changes here, and author of changes
+% 8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region
 
 xyzlist = data_obj.volInfo.xyzlist;
 
@@ -68,7 +68,7 @@ for i = 1:length(r)
     dat(:, whregionxyz) = data_obj.dat(wh_vox, :)';
     
     r(i).all_data = dat;
-    r(i).dat = nanmean(dat')';
+    r(i).dat = nanmean(dat, 2);
     r(i).source_images = data_obj.fullpath;
 end
 

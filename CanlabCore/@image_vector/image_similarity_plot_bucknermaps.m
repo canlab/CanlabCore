@@ -4,7 +4,7 @@ function stats = image_similarity_plot_bucknermaps(obj, varargin)
 %
 % Usage:
 % -------------------------------------------------------------------------
-% stats = image_similarity_plot_buckermaps(corrdat, 'average');
+% stats = image_similarity_plot_bucknermaps(obj, 'average');
 %
 % This is a method for an image_vector object
 %
@@ -51,6 +51,9 @@ function stats = image_similarity_plot_bucknermaps(obj, varargin)
 % corrdat is an fmri_data object with 18 images from searchlight
 % correlation in it.  Then:
 % stats = image_similarity_plot_bucknermaps(corrdat, 'average');
+%
+% t_diff is a thresholded statistic_image object
+% stats = image_similarity_plot_bucknermaps(t_diff);
 %
 % See also:
 % tor_polar_plot
@@ -164,6 +167,7 @@ elseif doaverage
     %[h, p, ci, stat] = ttest(r');
     [h, p, ci, stat] = ttest(fisherz(r'));
     stats.descrip = 'T-test on Fisher''s r to Z transformed point-biserial correlations';
+    stats.networknames = networknames;
     stats.p = p';
     stats.sig = h';
     stats.t = stat.tstat';

@@ -36,7 +36,7 @@ if ~islogical(binary_outcome), disp('Warning!! binary_outcome must be logical.')
 binary_outcome = logical(binary_outcome);
 
 if nargin < 3 || isempty(xvals)
-    xvals = prctile(xvals, [0:10:100]);
+    xvals = prctile(input_vals, [0:10:100]);
 end
 
 [tpr, fpr] = deal(zeros(size(xvals)));

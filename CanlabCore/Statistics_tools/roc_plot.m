@@ -55,6 +55,10 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 % ROC = roc_plot(pexp, logical(outcome), 'writerscoreplus');
 % ROC = roc_plot(pexp, logical(outcome), 'color', 'r', 'plotmethod', 'observed', 'plothistograms');
 % ROC = roc_plot(pexp, logical(outcome), 'color', 'm', 'plotmethod', 'observed', 'plothistograms', 'Optimal overall accuracy');
+%
+% For a whole image with p-values, this may be helpful.
+% Pre-specifies p-values you want to evaluate at.
+% rocout = roc_plot(1-t.p, truevals, 'plotmethod', 'observed', 'valuestoevaluate', 1 - [.5:-.1:.1 .05 .01 .005 .001 .0001 .00001 .000001 .0000001 .00000001]);
 
 % Notes:
 % Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
@@ -86,6 +90,9 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %
 % Edited 3/25/2015: Luke Chang - added option to suppress text output for
 % speeding up computations on cluster
+%
+% Edited 8/2015: Tor Wager - reduced length of thr to speed computation
+% with large numbers of values (e.g., images with 50K+voxels)
 
 include = true(size(binary_outcome));
 threshold_type = 'Optimal overall accuracy';
@@ -102,6 +109,8 @@ dobalanced = 0;
 doDependent = 0;
 doplot = 1;
 doOutput = 1;
+valuestoevaluate = 'auto';
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -123,6 +132,9 @@ for i = 1:length(varargin)
                 
             case 'plotmethod'
                 plotmethod = varargin{i + 1}; varargin{i + 1} = [];
+                
+            case 'valuestoevaluate'
+                valuestoevaluate = varargin{i + 1}; varargin{i + 1} = [];
                 
             case 'nonormfit'
                 donormfit = 0;
@@ -195,8 +207,16 @@ end
 
 % Get ROC values and main results
 % -------------------------------------------------------------------------
+if ischar(valuestoevaluate) && strcmp(valuestoevaluate, 'auto') % default
+    
+len = length(binary_outcome);
+newlen = min(50*len, 500); % max 500 values to evaluate.
 
-thr = linspace(min(input_values), max(input_values), 50*length(binary_outcome)); %min(input_values):.01:max(input_values);
+thr = linspace(min(input_values), max(input_values), newlen); %min(input_values):.01:max(input_values);
+
+else
+    thr = valuestoevaluate;
+end
 
 % AUC will be replaced with theoretical value in 2AFC case!
 [dummy, tpr, fpr, auc, c_bias] = roc_calc(input_values, binary_outcome, thr);

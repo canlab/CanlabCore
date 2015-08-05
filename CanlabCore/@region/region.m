@@ -77,6 +77,10 @@
 %
 %
 
+% Programmers' Notes:
+% 8/3/2015 : Tor Wager: Fixed bug when applying region to thresholded
+% statistic_image object.  Did not consider thresholding.
+
 classdef region
     
     properties
@@ -242,6 +246,10 @@ classdef region
             % Note: .dat can sometimes have 2+ cols, so use only first one
             mask = replace_empty(mask);
             
+            if size(mask.dat, 2) > 1
+                disp('Warning: Mask has multiple images, will use first only.');
+            end
+            
             if size(mask.dat, 1) == mask.volInfo.n_inmask
                 maskData = mask.dat(:, 1);
                 
@@ -250,6 +258,18 @@ classdef region
                 maskData = mask.dat(mask.volInfo.wh_inmask(:, 1));
             else
                 error('Illegal size for mask.dat, because it does not match its volInfo structure.')
+            end
+           
+            % If statistic_image, we need to consider thresholding
+            % so apply .sig field
+            if isa(mask, 'statistic_image')
+                
+                if size(mask.dat, 1) == mask.volInfo.nvox
+                    error('statistic_image objects should not have data vector (.dat) the length of full image space.')
+                end
+                    
+                maskData = maskData .* mask.sig(:, 1);
+                
             end
             
             % If extracting data, we'll recreate the regions in

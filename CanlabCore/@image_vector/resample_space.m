@@ -66,20 +66,28 @@ if isa(obj_out, 'statistic_image')
    for i = 1:k
        % this may break if nvox (total in image) is different for 2
        % images...
-       p = ones(obj.volInfo.nvox, k);
-       p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
        
-       ste = Inf .* ones(obj.volInfo.nvox, k);
-       ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
+       % Wani: in some cases, obj could have empty p, ste, and sig
+       if ~isempty(obj.p)
+           p = ones(obj.volInfo.nvox, k);
+           p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
+       end
        
-       sig = zeros(obj.volInfo.nvox, k);
-       sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
-   
+       if ~isempty(obj.ste)
+           ste = Inf .* ones(obj.volInfo.nvox, k);
+           ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
+       end
+       
+       if ~isempty(obj.sig)
+           sig = zeros(obj.volInfo.nvox, k);
+           sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
+       end
+       
    end
    
-   obj_out.p = p(Vto.wh_inmask, :);
-   obj_out.ste = ste(Vto.wh_inmask, :);
-   obj_out.sig = sig(Vto.wh_inmask, :);
+   if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
+   if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
+   if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
    
 end
 

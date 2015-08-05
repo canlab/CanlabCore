@@ -57,11 +57,8 @@ end
 if any(strcmp(varargin, 'mni'))
     evalc('mni = fmri_data(which(''brainmask.nii''));'); % evalc() used to silence output of fmri_data
     if isa(obj, 'statistic_image') % if obj is statistic_image, convert it to fmri_data first. 
-        obj_temp = fmri_data;
-        obj_temp.volInfo = obj.volInfo;
-        obj_temp.dat = obj.dat;
-        obj_temp.removed_voxels = obj.removed_voxels;
-        obj = obj_temp;
+        obj = fmri_data(obj);
+        obj.mask = fmri_mask_image(obj);
     end
     obj = resample_space(obj,mni);
 end

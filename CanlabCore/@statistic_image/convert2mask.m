@@ -1,14 +1,25 @@
-function varargout = convert2mask(stats_image_obj)
+function mask = convert2mask(stats_image_obj)
 % Converts each image in a statistic_image object into a mask object, based
 % on significant voxels in the .sig field.
 %
-% [mask1, mask2, etc...] = convert2mask(stats_image_obj)
+% mask1 = convert2mask(stats_image_obj)
 %
 % Examples
 % cl = region(convert2mask(timg), group)
 
-% enforce logical
-stats_image_obj.sig = logical(stats_image_obj.sig);
+% Copy into a mask image
+mask = fmri_mask_image(stats_image_obj);
+
+% set dat to sig, and copy over other key fields
+mask.dat = double(stats_image_obj.sig);
+mask.removed_images = stats_image_obj.removed_images;
+mask.removed_voxels = stats_image_obj.removed_voxels;
+
+end
+
+
+%{  
+PREVIOUS CODE, NOT WORKING -- YONI REPLACED W/ ABOVE ON 8/5/2015
 
 for i = 1:size(stats_image_obj.dat, 2)
     % for each image
@@ -49,3 +60,4 @@ for i = 1:size(stats_image_obj.dat, 2)
 end
 
 end % function
+%}

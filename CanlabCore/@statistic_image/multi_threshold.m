@@ -218,8 +218,8 @@ for j = 1:nimgs
     
     datplot = dat;
     datplot.dat = dat.dat(:, j);
-    datplot.p = dat.p(:, j);
-    datplot.ste = dat.ste(:, j);
+    datplot.p = dat.p(:, j);    
+    if ~isempty(dat.ste), datplot.ste = dat.ste(:, j); end
     
     if useexisting
         % Re-plot each result on all existing montage(s)

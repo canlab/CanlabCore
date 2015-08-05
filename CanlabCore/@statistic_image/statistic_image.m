@@ -193,7 +193,7 @@ classdef statistic_image < image_vector
             %    added if-statement to fix a bug related to this part (2014-08-26). 
             if strcmp(obj.type, 'robreg')
                 if isempty(obj.dat_descrip), obj.dat_descrip=1; end %by default, assume user wants rob img 1 if none entered
-                obj.image_names = sprintf('rob_beta_%04d.img',obj.dat_descrip); 
+                obj.image_names = sprintf('rob_tmap_%04d.img',obj.dat_descrip); 
             end
             
             obj = check_image_filenames(obj);
@@ -233,9 +233,12 @@ classdef statistic_image < image_vector
                     
                     pimg = image_vector('image_names', sprintf('rob_p_%04d.img',obj.dat_descrip));
                     bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
+                    timg = image_vector('image_names', sprintf('rob_tmap_%04d.img',obj.dat_descrip));
+                    
+                    
                     obj.p = pimg.dat;
                     obj.p_type = 'robust';
-                    obj.dat = bimg.dat;%pimg.dat;
+                    obj.dat = timg.dat;%bimg.dat;
                     obj.dat_descrip = ['robust regression for covariate number ' num2str(obj.dat_descrip)];            
                     
                 case 'generic'

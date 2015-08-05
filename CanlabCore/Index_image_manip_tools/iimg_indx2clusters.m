@@ -48,7 +48,7 @@ function [cl, dat] = iimg_indx2clusters(dat, volInfo, u, k)
         if length(u) == 2
             z(z < u(1) | z > u(2)) = 0; 
         else
-            z(z < u) = 0; 
+            z(abs(z) < u) = 0; %8/5/15 Scott Schafer - Fixed sign issue that elimated negative activations
         end
     end
     

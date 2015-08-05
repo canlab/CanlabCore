@@ -56,6 +56,9 @@ end
 % mni option -- added Luk[ea]
 if any(strcmp(varargin, 'mni'))
     evalc('mni = fmri_data(which(''brainmask.nii''));'); % evalc() used to silence output of fmri_data
+    if ~isa(obj, 'statistic_image')
+        obj = fmri_data(obj);
+    end
     obj = resample_space(obj,mni);
 end
 

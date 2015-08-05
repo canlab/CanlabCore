@@ -36,7 +36,10 @@ xorig = x;
 no_intercept = ~any(all(diff(fullX) < eps));
 if no_intercept, fullX(:,end+1) = 1; end
 
-wh_intercept = find(all(diff(fullX) < eps));
+wh_intercept = find(all(abs(diff(fullX)) < eps)); %8/5/15 added abs() - Scott Schafer
+%abs() is necessary to prevent mis-identifying between group contrasts as
+%an intercept (because going from 1 -> -1 makes diff = -2, which is "less
+%than" zero.
 
 % center predictors (except intercept)
 % not needed; and this changes the interpretation of the betas in case x is
@@ -49,7 +52,7 @@ redX(:,i) = [];     % reduced model without param(s) of interest
 
 if ~(wh_intercept == i)
     % we are removing the intercept, so we want to add it in later
-    wh_intercept_red = find(all(diff(redX) < eps));
+    wh_intercept_red = find(all(abs(diff(redX)) < eps)); %8/5/15 added abs() - Scott Schafer
 end
 
 

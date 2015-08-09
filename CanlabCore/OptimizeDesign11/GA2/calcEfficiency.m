@@ -18,7 +18,11 @@ function [eff,eff_vector] = calcEfficiency(contrastweights,contrasts,xtxitx,svi,
 %                   see ga2.m for a simple way to compute d-opt.
 %
 % by Tor Wager
+
+% Programmers' notes:
 % Documentation update: 9/18/09
+% Code cleanup, one minor change to estimate when no contrasts are entered
+% (use n - 1) because we assume an intercept.
 % 
 % Note: efficiency depends on scaling of contrastweights, contrasts, and
 % hrf.  Comparing different models (e.g., with different basis sets) may be very tricky.
@@ -40,8 +44,13 @@ if isempty(svi), svi = eye(size(xtxitx,2)); end
 Dflag = 0;
 if length(varargin) > 0, Dflag = varargin{1}; end
 
-if ~isempty(contrasts)											% compute the variance of the contrasts
+if ~isempty(contrasts)											
+    % compute the variance of the contrasts
+    % ---------------------------------------------------------------------
+    
     try
+        % Variances of each contrast: 
+        % ---------------------------------------------------------------------
         eff_vector = diag(contrasts*xtxitx*svi*xtxitx'*contrasts');
      
     catch
@@ -66,11 +75,20 @@ if ~isempty(contrasts)											% compute the variance of the contrasts
         if Dflag
             eff = 1 ./ inv(det(xtxitx)) .^ (1./size(xtxitx,2));   % HERE xtxitx SHOULD BE THE FISCHER INFO MTX X'X
         else
-            eff = length(eff_vector)./(contrastweights * eff_vector);
+                % compute weighted average over contrasts depending on
+                % contrastweights. Take reciprocal of variance, so instead of wavg/n
+                % use n/wavg.  If contrastweights are all ones, will
+                % average.
+                % ---------------------------------------------------------------------
+
+            eff = length(eff_vector) ./ (contrastweights * eff_vector);
         end
-        eff_vector = 1 ./ eff_vector;
-        % it's 1/ because we want to minimize the variance, but we maximize
+      
+        % Take reiprocal of individual variances
+        % because we want to minimize the variance, but we maximize
         % fitnessMatrix value.
+        eff_vector = 1 ./ eff_vector;
+
 
     catch
         disp('Error calculating efficiency: contrast weights and number of contrasts do not match!!!')
@@ -88,25 +106,41 @@ if ~isempty(contrasts)											% compute the variance of the contrasts
     end
 
 else
-    if isempty(contrastweights),
+    % contrasts are not entered.  Assume we want the average efficiency of
+    % each individual model parameter.
+    % 
+    % ---------------------------------------------------------------------
+    
+    if isempty(contrastweights)
         contrastweights = ones(1,size(xtxitx,1)-1); % one for each beta, without intercept
     end
 
     try
+        % Variances of each regression parameter: 
+        % ---------------------------------------------------------------------
         eff_vector = diag(xtxitx*svi*xtxitx');
-        eff_vector = 1 ./ eff_vector;
         
         if Dflag
             eff = 1 ./ inv(det(xtxitx)) .^ (1./size(xtxitx,2));   % HERE xtxitx SHOULD BE THE FISCHER INFO MTX X'X
         else
-            % variance of chosen regressors.
-            eff = length(eff_vector)./([contrastweights 0] * eff_vector); 
-            % eff_vector(eff_vector == 0) = .0001;
+            % compute the average variance of the chosen regressors
+            % Take reciprocal so higher values = more efficient
+            % Use n - 1 because we are assuming an intercept, and have one
+            % irrelevant parameter.
+            % ---------------------------------------------------------------------
+            eff = (length(eff_vector) - 1) ./ ([contrastweights 0] * eff_vector);
+
         end
         
+        % Take reiprocal of individual variances
+        % because we want to minimize the variance, but we maximize
+        % fitnessMatrix value.
+        eff_vector = 1 ./ eff_vector;
+
     catch
         disp(['no contrasts version: wrong sizes!!!'])
-        contrastweights = [contrastweights 0]
+        %contrastweights = [contrastweights 0]
+        whos contrastweights
         whos xtxitx
         whos svi
         diag(xtxitx*svi*xtxitx')
@@ -115,4 +149,4 @@ else
 
 end
 
-return
+end % function

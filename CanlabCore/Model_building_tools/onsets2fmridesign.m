@@ -1,34 +1,40 @@
 % [X, delta, delta_hires, hrf] = onsets2fmridesign(onsets, TR, [len], [custom hrf or basis set name],[other optional args, i.e., norm])
-% Tor Wager, 2 / 24 / 04
-% Modified/updated 2/08 by Tor to add capacity for durations
-% Modified 10/1/11 by Tor to fix custom HRF sampling
-% Modified 3/14/12 by Tor to check variable duration and add noampscale option
-%
+% 
 % Builds design matrix X and delta function, given cell array of onset times in s
 % One cell per condition per session, e.g., ons{1} = [24 27 29 44]';
 %
 % Summary:
 % - handles multiple conditions
 % - handles custom HRFs and multiple basis functions
+% - handles input event durations
 % - handles two kinds of parametric modulators
 % - handles variable-duration onsets
+% - handles nonlinear saturation (see hrf_saturation.m)
+% - Can build single-trial model
 % - not yet: variable-duration parametric
 %       modulators
-%
+% - See the code comments for a discussion of absolute scaling of
+% regressors and efficiency.
 %
 % Inputs:
 %   onsets:
 %   - 1st column is onsets for events,
 %   - 2nd column is optional durations for each event
 %   - Enter single condition or cell vector with cells for each condition (each event type).
+%
 %   TR: RT in seconds
-%   len: optional length in s for model, or [] to skip if using additional. 
+%
+%  Optional inputs: First two are fixed, then keywords:
+%   
+%  1. len: optional length in s for model, or [] to skip if using additional. 
 %        "len" is usually the number of images multiplied by TR.
 %
-%   args
+%  2. HRF name string or actual values
 %   hrf name: 1) a string used by spm_get_bf.m
 %             2) a custom HRF, sampled in seconds
 %             3) or [] to skip
+%
+%  3 and more: Keywords
 %   'norm' : mean-center, orthogonalize, and L2-norm basis set
 %   'parametric_singleregressor' : Parametrically modulate onsets by
 %               modulator values, using single regressor with modulated amplitude
@@ -39,7 +45,8 @@
 %               to model the average response, and one for the
 %               mean-centered modulator values
 %               of modulator values in each cell
-%   'noampscale' Do not scale HRF to max amplitude = 1; SPM default is not to scale.
+%   'noampscale' Do not scale HRF to max amplitude = 1; default with SPM
+%                basis sets is to scale.  Custom HRF entries are not scaled.
 %   'noundershoot' Do not model undershoot - ONLY when using the canonical HRF
 %   'customneural' Followed by a vector of custom neural values (instead of
 %                   standard event/epochs), sampled in sec.
@@ -66,12 +73,36 @@
 % X = onsets2fmridesign(ons, 2, size(dat.dat, 2) .* 2, [], [], 'noampscale');
 %
 % X2 = onsets2fmridesign(onsp, 2, length(dat.removed_images) .* 2, [], [], 'customneural', report_predictor);
+% plotDesign(ons,[], TR, 'yoffset', 1);
 %
+% see Also:  tor_make_deconv_mtx3, [or 2], plotDesign
+
 % Programmers' notes:
+% % Tor Wager, 2 / 24 / 04
+% Modified/updated 2/08 by Tor to add capacity for durations
+% Modified 10/1/11 by Tor to fix custom HRF sampling
+% Modified 3/14/12 by Tor to check variable duration and add noampscale option
 % 3/16/12: Tor modified custom HRF to divide by sum, as SPM basis functions
 % are scaled by default.
 % 9/3/12: Wani modified len and getPredictors.m to fix a bug when you're
 % using TR with some decimal points (e.g., TR = 1.3)
+% Modified 8/2015 by Tor to clean up documentation and change scaling of
+% regressors overall in better range
+
+
+% A note on absolute scaling and efficiency:
+% Scaling of the response influences efficiency.  It does not affect model fits or power when the scaling is equated (constant across events in a design), but it does affect efficiency simulations.
+% 
+% Event duration: assumes that the max neural sampling rate is about 1 Hz,
+%             which produces responses that do not exceed about 5x the
+%             unit, single-event response.  This is a reasonable
+%             assumption, and affects only the absolute scaling across
+%             ISIs/block lengths. 
+% 
+% An event duration of about 1 sec produces a response of unit amplitude.
+% The sampling resolution is 0.1 sec, so that is the lowest you can go - and it will produce lower response amplitude/less efficient designs, as less neural activity is being delivered.
+% If event durations are not entered, then events will have unit amplitude by default.
+
 
 function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 % ----------------------------------------------
@@ -88,6 +119,7 @@ hrfparams = [6 16 1 1 6 0 32];
 customneural = []; % custom neural response; neither impulse nor epoch
 dosingletrial = 0;
 docheckorientation = 1;
+dononlinsaturation = 0;
 
 for i = 3:length(varargin)
     if ischar(varargin{i})
@@ -108,32 +140,48 @@ for i = 3:length(varargin)
                 
             case 'singletrial', dosingletrial = 1; docheckorientation = 0;
                 
+            case 'nonlinsaturation', dononlinsaturation = 1;
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
 
+% Check that ons is a cell array, orientation, and check numbers of events
+% -------------------------------------------------------------------------
+[ons, n_conditions, n_events, ons_includes_durations] = check_onsets(ons, docheckorientation);
+%
+% [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(ons, docheckorientation)
+% n_conditions = number of event types, length(ons)
+% n_events = vector of number of events in each condition
 
-if ~iscell(ons), ons = {ons}; end
+% ----------------------------------------------
+% Set up single trial: optional
+% ----------------------------------------------
 
 if dosingletrial
     % single trial: break events into separate regressors/onset vectors
     for i = 1:length(ons)
-        sonsets{i} = cell(1, length(ons{i})); % event-specific onsets - init
+        
+        sonsets{i} = cell(1, n_events(i)); % event-specific onsets - init
         
         for j = 1:length(sonsets{i})
+            
             sonsets{i}{j} = ons{i}(j, 1);
             if size(ons{i}, 2) > 1   % if durations...
                 sonsets{i}{j} = [sonsets{i}{j} ons{i}(j, 2)]; % append duration
             end
+            
         end
         
     end % original onset conditions
+    
     ons = cat(2, sonsets{:}); % flatten to simply model trials within event type.
-end
+
+end  % end single trial
 
 
-% Optional: pre-specified length, or []
+% Optional: pre-specified length for run, or []
 % - - - - - - - - - - - - - - - - - - - -
 
 if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
@@ -142,13 +190,14 @@ if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
     len = varargin{1}; % this line is modified by Wani from the next line
     % len = ceil(varargin{1});
     for i = 1:length(ons)
-        if docheckorientation
-            % make column vectors if needed
-            if length(ons{i}) > size(ons{i}, 1)
-                disp('Warning! onsets2fmridesign thinks you''ve entered row vectors for onsets and is transposing.  Enter col vectors!');
-                ons{i} = ons{i}';
-            end
-        end
+        
+%         if docheckorientation
+%             % make column vectors if needed
+%             if length(ons{i}) > size(ons{i}, 1)
+%                 disp('Warning! onsets2fmridesign thinks you''ve entered row vectors for onsets and is transposing.  Enter col vectors!');
+%                 ons{i} = ons{i}';
+%             end
+%         end
         
         % make sure nothing goes past end of session
         past_end = round(ons{i}(:,1)) > len;
@@ -158,10 +207,14 @@ if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
         ons{i}(past_end,:) = [];
     end
     len = ceil(len .* res);
+    
 else
+    % No length entered; length is allowed to grow to accomodate onsets
+    
     len = round(max(cat(1, ons{:})) * res);
     len = ceil(ceil(len/(res*TR)) * res * TR); % modified by Wani to make this work for TR = 1.3
     len = len(1);
+    
 end
 
 cf = zeros(len, 1);
@@ -179,9 +232,17 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         % order 6, length 30 -> 6 x 5 sec periods
         
         % bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
+        
         bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 6));
         hrf = bf.bf;
         
+        if doampscale
+            hrf = hrf ./ max(hrf);
+        end
+    
+        % Eliminate varargin, so it won't interfere with getPredictors
+        % later
+        varargin{2} = '';
     else
         % custom HRF; do not norm by max
         % assume sampled in sec, and sample at high res first
@@ -239,44 +300,85 @@ end
 % see also getDesign5.m
 % ----------------------------------------------
 
-for i = 1:length(ons)
-    
-    if any(round(ons{i}(:,1)) < 0)
-        error('Illegal onsets (negative values) -- check onsets!');
-    end
-    
+for i = 1:n_conditions
+
     cf2(:,i) = cf;                      % add empty column for this condition
     
     if isempty(customneural)
         % Event-related response (or epoch)
+        
         cf2(round(ons{i}(:,1)*res) + 1, i) = 1;   % specify indicators; first TR is time 0, element 1
         
     else
+        
         % Custom neural response
-        for j = 1:size(ons{i}, 1)
+        for j = 1:n_events(i)
             
             first_sample = round(ons{i}(j, 1)*res) + 1;
             end_in_samples = min(len, first_sample + nsamp - 1);
             
             prevneural = cf2(first_sample:end_in_samples, i);
             cf2(first_sample:end_in_samples, i) = prevneural + customneural(1:length(prevneural)); % add to condition function
+        
         end
     end
-    
-    we_have_durations = size(ons{i}, 2) > 1;
-    
-    if we_have_durations && ~isempty(customneural)
+        
+    if ons_includes_durations && ~isempty(customneural)
         error('You cannot specify epoch durations and a custom neural function.');
     end
     
-    if we_have_durations
+    if ons_includes_durations
         % Build epochs
-        for j = 1:size(ons{i}, 1)
+        % ----------------------------------------------------------------
+        
+        for j = 1:n_events(i)
+            
             dur_in_s = ons{i}(j, 2);
-            first_sample = round(ons{i}(j, 1)*res) + 1;
+            
+            first_sample = round(ons{i}(j, 1) * res) + 1;
             end_in_samples = min(len, round(first_sample + dur_in_s * res));
             
-            cf2(first_sample:end_in_samples, i) = 1; % add to condition function
+            n_samples = dur_in_s .* res;
+            
+            % unmodulated: implicit assumption is that epoch is a series of
+            % events of res (e.g., TR / 16. 
+            % this gives very unrealistic relative amplitudes for brief vs.
+            % long epochs. Within a trial type where this is constant, it
+            % doesn't matter because scaling doesn't matter, but for
+            % comparing across different event types with
+            % onsets/epochs/blocks of different durations, and for
+            % event-related designs with very rapid event densities (< 1
+            % sec) then getting the relative scaling right is essential.
+            % This influences simulations of efficiency, particularly at
+            % very low ISIs (rapid events). One must implicitly assume an
+            % event density for a block...what is the neural "frequency" of
+            % events...1 per 1 msec? 1 per 1 sec?  
+            %cf2(first_sample:end_in_samples, i) = 1; % add to condition function
+            
+            % modulated: equal area ('neural' function sums to 1)
+            % ----------------------------------------------------
+            % This is also very unrealistic, as it spreads one neural
+            % "event" out over many seconds for long blocks.
+            % The effective event density may vary from expt to expt
+            % Nonlinear effects influencing the relative response amplitude
+            % in Wager et al. 2005 are one reasonable starting point.
+            % For designs with varying epoch durations, the effective event
+            % density could be fit empirically so that the same linear
+            % model captures both brief and long events.  This also applies
+            % to parametric modulators, in which the change in relative
+            % amplitude and shape with increasing neural frequency or
+            % duration may often have nonlinear effects.
+            %cf2(first_sample:end_in_samples, i) = 1 ./ n_samples; % add to condition function
+
+            % modulated custom density: 
+            % This assumes that the max neural sampling rate is about 1 Hz,
+            % which produces responses that do not exceed about 5x the
+            % unit, single-event response.  This is a reasonable
+            % assumption, and affects only the absolute scaling across
+            % ISIs/block lengths. 
+            % ----------------------------------------------------
+            cf2(first_sample:end_in_samples, i) = 1 ./ res; % add to condition function
+
         end
         
     end
@@ -287,11 +389,19 @@ end
 delta_hires = cf2;
 
 % convolve. this now does parametric modulators as well.
-X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, varargin{:}); % added len_original by Wani
+% ------------------------------------------------------------------------
+X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
+
+if dononlinsaturation
+    X = hrf_saturation(X);
+end
+
 X(:,end+1) = 1;
 
 
 % for HRF shape estimation
+% ------------------------------------------------------------------------
+
 len2 = ceil(max(vertcat(ons{:})) ./ TR);
 cf = zeros(len2(1), 1);
 cf2 = [];
@@ -309,8 +419,71 @@ delta = cf2;
 
 if ~isempty(varargin)
     for i = 1:length(ons)
+        
         delta{i} = pad(delta{i}, ceil(len./res./TR - length(delta{i})));
+        
     end
 end
-end
 
+end % Main function
+
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+% Sub-functions
+
+% ------------------------------------------------------------------------
+% ------------------------------------------------------------------------
+
+
+function [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(ons, docheckorientation)
+%
+% [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(ons, docheckorientation)
+% n_conditions = number of event types, length(ons)
+% n_events = vector of number of events in each condition
+
+    % Enforce cell array
+    
+    if ~iscell(ons), ons = {ons}; end
+
+
+    % sizes of onsets in each cell: First col is # events, 2nd is durations
+    % if they exist.
+    sz = cellfun(@size, ons, 'UniformOutput', false)';
+    sz = cat(1, sz{:});
+    
+    % Check for empty cells / no events
+    if size(sz, 1) < length(ons) | any(sz(:, 1) == 0)
+        error('Some onsets are empty. Check inputs.');
+    end
+    
+    % Check orientation
+    % --------------------------------------------------
+    if docheckorientation && all(sz(:, 1) == 1)
+        
+        we have likely entered row vectors. transpose all.
+        for i = 1:length(ons), ons{i} = ons{i}'; end
+        
+        sz = cellfun(@size, ons, 'UniformOutput', false)';
+        sz = cat(1, sz{:});
+    
+    end
+
+    n_conditions = size(sz, 1);
+    n_events = sz(:, 1);
+    
+    % Check for illegal onsets
+    % --------------------------------------------------
+    for i = 1:n_conditions
+        
+    if any(round(ons{i}(:, 1)) < 0)
+        error('Illegal onsets (negative values) -- check onsets!');
+    end
+    
+    end
+    
+    ons_includes_durations = all(sz(:, 2) > 1);
+
+    
+end

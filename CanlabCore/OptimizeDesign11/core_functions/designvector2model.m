@@ -21,11 +21,11 @@ if ~isempty(varargin)    % do hox
     numSecs = numsamps * TR;
     
     hox = varargin{1};
-    if hox(1) > 0, ISI = hox(1);,end
-    if length(hox) > 1, if hox(2) > 0, TR = hox(2);,end, end
+    if hox(1) > 0, ISI = hox(1); end
+    if length(hox) > 1, if hox(2) > 0, TR = hox(2); end, end
     
     numStim = numsamps * TR / ISI;
-    while numSecs > size(stimList,1)*ISI, stimList = [stimList; stimList];, end
+    while numSecs > size(stimList,1)*ISI, stimList = [stimList; stimList];  end
     stimList = stimList(1:ceil(numStim));
     
     % does not work yet with variable TR.
@@ -39,10 +39,11 @@ hires_model = model;
 
 model = resample(model,1,TR*10);
 
-if ~isempty(nonlinthreshold),model = modelSaturation(model,nonlinthreshold);,end		% saturation (nonlinear responses)
-        
-if size(model,1) > numsamps, model = model(1:numsamps,:);,end
-if size(delta,1) > numsamps*TR*10, delta = delta(1:numsamps*TR*10,:);,end  
+if ~isempty(nonlinthreshold),model = modelSaturation(model,nonlinthreshold); end		% saturation (nonlinear responses)
+    
+if size(model,1) < numsamps, model = [model; model(end, :)]; end
+if size(model,1) > numsamps, model = model(1:numsamps,:); end
+if size(delta,1) > numsamps*TR*10, delta = delta(1:numsamps*TR*10,:); end  
 
 if ~isempty(S)
 		model = S * model;                                                  			% temporal smoothing and HP/LP filter

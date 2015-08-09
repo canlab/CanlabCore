@@ -18,6 +18,12 @@ function [model,delta] = getPredictors(stimList, HRF, varargin)
 %  'dsrate': takes every nth element of the design matrix
 %  'dslen': the target number (length) you want to downsample to
 %
+% other optional inputs:
+%  'force_delta' : getPredictors tries to determine if the input stimList
+%  is a condition function with integers or a delta function with
+%  indicators, but this can fail in some cases.  Use this to force it to
+%  treat as a delta function.
+%
 % example: TR = 2, 16 samples per second in hi-res delta dhr
 %   X = getPredictors(dhr, hrf, 'dsrate', res*TR); 
 %   X = getPredictors(dhr, hrf, 'dslen', len/(res*TR)); 
@@ -97,7 +103,7 @@ if use_downsample_rate, wh = find(strcmp(varargin, 'dsrate')); rate_downsample =
 if use_downsample_length, wh = find(strcmp(varargin, 'dslen')); length_downsample = varargin{wh(1) +1}; end
 
 
-if isdeltamtx(stimList)  % delta matrix
+if isdeltamtx(stimList, varargin{:})  % delta matrix
     % -------------------------------------------------------------------------------------------------
     %    * If delta function
     % -------------------------------------------------------------------------------------------------
@@ -190,9 +196,15 @@ end
 
 
 
-function isdelta = isdeltamtx(stimList)
+function isdelta = isdeltamtx(stimList, varargin)
 
 isdelta = 0;
+
+if ~isempty(varargin) && any(strcmp(varargin, 'force_delta'))
+    isdelta = 1;
+    return
+end
+
 
 if islogical(stimList) || all( sum(stimList == 0 | stimList == 1) == size(stimList, 1) )  % all zeros or ones
     isdelta = 1;

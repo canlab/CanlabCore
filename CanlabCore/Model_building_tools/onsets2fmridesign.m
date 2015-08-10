@@ -217,6 +217,7 @@ else
     
 end
 
+% len was in sec, now in sec*res
 cf = zeros(len, 1);
 
 % Optional: basis set name, or []
@@ -388,7 +389,7 @@ end
 
 delta_hires = cf2;
 
-% convolve. this now does parametric modulators as well.
+% convolve and downsample. this now does parametric modulators as well.
 % ------------------------------------------------------------------------
 X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
 

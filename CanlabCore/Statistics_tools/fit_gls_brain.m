@@ -1,7 +1,9 @@
-%
 % function fit_gls_brain(imgs, X, arorder, conditionnames, maskimg, ['contrasts', contrast_mtx, 'contrastnames', contrastnames], ['weights', weights])
 %
-% Run single trial model to get trial amplitude, width, AUC, etc.
+% Run Generalized Least Squares model with AR-model autoregression (optional)
+% at each voxel in a set of images.
+% 
+% single trial model to get trial amplitude, width, AUC, etc.
 % Take one of those (e.g., AUC) and get a list of trial images
 % Pass that into this function.
 %

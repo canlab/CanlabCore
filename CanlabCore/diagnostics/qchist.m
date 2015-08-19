@@ -67,12 +67,24 @@ for j = 1:num_figs
         im_range = 1+30*(j-1):num_images;
     end
     for i = im_range
+        
         subplot(5,6, i-30*(j-1));
         hold on;
         d = double(dat.dat(:, i));
         d(d == 0 | isnan(d)) = [];
         hist(d, Nbins);
+        
+        axis tight
+        
+        try
+            hh = findobj(gca, 'Type', 'Patch');
+            set(hh, 'EdgeColor', 'none')
+        catch
+            % maybe old graphics?
+        end
+
         set(gca, 'XLim', XLim);
+        
         hh = plot_vertical_line(0);
         set(hh, 'Color', 'r', 'LineWidth', 2);
         

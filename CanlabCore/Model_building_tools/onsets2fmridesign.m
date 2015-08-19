@@ -237,7 +237,7 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 6));
         hrf = bf.bf;
         
-        if doampscale
+        if doampscale && ~strcmp(varargin{2}, 'Finite Impulse Response')
             hrf = hrf ./ max(hrf);
         end
     
@@ -463,7 +463,7 @@ function [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(on
     % --------------------------------------------------
     if docheckorientation && all(sz(:, 1) == 1)
         
-        we have likely entered row vectors. transpose all.
+        % we have likely entered row vectors. transpose all.
         for i = 1:length(ons), ons{i} = ons{i}'; end
         
         sz = cellfun(@size, ons, 'UniformOutput', false)';

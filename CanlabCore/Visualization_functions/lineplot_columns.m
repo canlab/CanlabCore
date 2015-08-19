@@ -1,7 +1,7 @@
 function out = lineplot_columns(dat_matrix, varargin)
 % out = lineplot_columns(dat_matrix, varargin)
 %
-%
+% Default values (see below for how to change)
 % w = 3;                          % width
 % color = 'k';                    % color
 % wh = true(size(dat_matrix));    % which observations
@@ -20,6 +20,12 @@ function out = lineplot_columns(dat_matrix, varargin)
 % It can also be a cell array with column vectors in each cell, for unequal
 % numbers of observations, but then the rows will not be the same
 % observations across variables.
+%
+% Optional inputs, followed by values:
+% {'w', 'color', 'x', 'marker', 'linestyle', 'markersize', 'markerfacecolor', 'wh'}
+% 
+% Keywords:
+% {'within', 'dowithinste'}, 'shade', 'atleast'
 %
 % Examples:
 % out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'r', 'markerfacecolor', [1 .5 0], 'wh', ispain);

@@ -343,6 +343,6 @@ function [sz, ons_includes_durations] = check_onsets(ons)
 sz = cellfun(@size, ons, 'UniformOutput', false)';
 sz = cat(1, sz{:});
 
-ons_includes_durations = size(sz, 2) > 1;
+ons_includes_durations = any(sz(:, 2) > 1);
 
 end

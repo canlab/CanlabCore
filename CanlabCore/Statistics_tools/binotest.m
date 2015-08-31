@@ -23,6 +23,8 @@ prop = hits ./ n;
 
 binop = 2 * min(binocdf(hits, n, p), (1 - binocdf(hits - 1, n, p)));
 
+if binop > 1, binop = 1.0; end % see https://github.com/canlab/CanlabCore/issues/9
+
 binose = sqrt(prop .* (1-prop) ./ n); % based on estimated proportions
 
 RES = struct('n', n, 'hits', hits, 'prop', prop, 'p_val', binop, 'SE', binose);

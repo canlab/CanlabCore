@@ -316,7 +316,10 @@ switch meth
         P = which('ROI_raphe_magnus.img');
         [p,outP,FV, cl, myLight] = mask2surface(P,0,[.3 0 1]);
 
-
+    case {'vmpfc', 'vmPFC'}
+        
+        P = which('VMPFC_display_mask.img');
+         [p,outP,FV, cl, myLight] = mask2surface(P, 0, [.7 .3 0]);
 
 
     otherwise

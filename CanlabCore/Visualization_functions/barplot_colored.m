@@ -67,27 +67,29 @@ x = 1:length(means); % can replace x values
 myfontsize = 18;
 mytitle = '';
 
-for k=1:2:length(varargin)
+for k=1:length(varargin)
     if strcmp(varargin{k},'colormap')
+        
         eval(['colormapfun=@' varargin{k+1} ';'])
-    elseif strcmp(varargin{k},'title')
+        
+    elseif ischar(varargin{k}) && strcmp(varargin{k},'title')
         mytitle=varargin{k+1};
-    elseif strcmp(lower(varargin{k}),'fontsize')
+    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'fontsize')
         myfontsize=varargin{k+1};
-    elseif strcmp(lower(varargin{k}),'xticklabel') || strcmp(lower(varargin{k}),'xticklabels')
+    elseif ischar(varargin{k}) && (strcmp(lower(varargin{k}),'xticklabel') || strcmp(lower(varargin{k}),'xticklabels'))
         XTickLabel=varargin{k+1};
-    elseif strcmp(lower(varargin{k}),'ylabel')
+    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'ylabel')
         Ylabel=varargin{k+1};
-    elseif strcmp(lower(varargin{k}),'xlabel')
+    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'xlabel')
         Xlabel=varargin{k+1};
-   elseif strcmp(lower(varargin{k}),'title')
-        mytitle=varargin{k+1};
-    elseif strcmp(varargin{k},'x')
+
+    elseif ischar(varargin{k}) && strcmp(varargin{k},'x')
         x=varargin{k+1};
-     elseif strcmp(varargin{k},'colors')
+     elseif ischar(varargin{k}) && strcmp(varargin{k},'colors')
+         
         colors=varargin{k+1};
         
-    elseif strcmp(varargin{k},'within')
+    elseif ischar(varargin{k}) && strcmp(varargin{k},'within')
         if iscell(data), error('Within error bars not implemented for cell input data'); end
         
         stderr = barplot_get_within_ste(data);

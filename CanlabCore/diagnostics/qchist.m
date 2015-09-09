@@ -1,4 +1,4 @@
-function h = qchist(images,Nbins,sparse,XLim)
+function h = qchist(images,Nbins,sparse,XLim,titles)
 
 %function: h = qchist(dat,Nbins,sparse,XLim)
 %date: 2/1/2011
@@ -11,10 +11,6 @@ function h = qchist(images,Nbins,sparse,XLim)
 %       This function may generate multiple figuresa with 30 histograms
 %       each
 %
-%       titles for subplots are subejct names, assuming images come from a
-%       directory structure that looks like the following:
-%       /.../subjname/contrastimage.nii
-%
 %       required inputs:
 %       images:       List of image file names OR fmri_data object.
 %
@@ -22,6 +18,10 @@ function h = qchist(images,Nbins,sparse,XLim)
 %       'Nbins':      Number of bins in each histogram (default = 100)
 %       'sparse':     flag for generating ONLY histograms (default = 0)
 %       'XLim':       Xlim (default = [-1 1])
+%       'titles':     a cell array of subplot titles.  If omitted, titles
+%                       are inferred from assuming images come from a
+%                       directory structure that looks like the following:
+%                       /.../subjname/contrastimage.nii
 %
 %
 %
@@ -94,8 +94,13 @@ for j = 1:num_figs
         hh = plot_vertical_line(m+sd);
         set(hh, 'Color', 'r', 'LineStyle', '--');
         
-        dd = fileparts(dat.fullpath(i, :));
-        [junk, subjname] = fileparts(dd);
+        % figure out subjname, or use passed-in subj names
+        if ~exist('titles')
+            dd = fileparts(dat.fullpath(i, :));
+            [junk, subjname] = fileparts(dd);
+        else
+            subjname = titles{i};
+        end
         title(subjname, 'FontSize', 18)
     end
     

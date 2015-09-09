@@ -368,8 +368,11 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %           training data for three algorithms, cv_pcr, cv_lassopcr,
 %           cv_lassopcrmatlab. This reduces running time substantially.
 %
-% ---------------------------------------------------------------------
+% 9/4/2015: Tor: Created more functional statistic_image output in
+% weight_obj when bootstrapping.  Now p-values, etc. are included so you
+% can threshold.
 
+% ---------------------------------------------------------------------
 % Defaults
 % ---------------------------------------------------------------------
 
@@ -632,10 +635,13 @@ end
 % else
 
 if nfolds ~= 1 %skip if using nfolds 1, added 7/2/13 by LC
+    
     cv_optout = cell(cvpart.NumTestSets, noptout);
+    
     for i = 1:cvpart.NumTestSets
         
         % 3/23/13 Wani Woo added the following three lines to get a proper cv_assignment variable for cross-validation.
+        
         teIdx_cv = teIdx(1:end ~= i);
         cv_assignment = sum((cat(2, teIdx_cv{:}).*repmat((1:size(cat(2, teIdx_cv{:}), 2)), size(cat(2, teIdx_cv{:}), 1), 1))')';
         cv_assignment(cv_assignment == 0) = [];
@@ -646,6 +652,7 @@ if nfolds ~= 1 %skip if using nfolds 1, added 7/2/13 by LC
             if ~exist('subjIDsFull', 'var') %first time through, save the full array
                 subjIDsFull = predfun_inputs{subjIDs_index};
             end
+            
             %overwrite subjIDs with appropriate subset of subjIDs
             predfun_inputs{subjIDs_index} = subjIDsFull(trIdx{i});
             eval(['funhan = ' funstr ';']) % "reload" predfun_inputs
@@ -667,11 +674,12 @@ if nfolds ~= 1 %skip if using nfolds 1, added 7/2/13 by LC
         fprintf(1,'\nTotal Elapsed Time = %3.0f hours %3.0f min %2.0f sec\n',hour, minute, second);
     end
 else %added 7/213/ by lc for adding no cv option
+    
     yfit = yfit_all;
     %     cvpart = [];
     cv_optout = [];
 end
-% end
+
 
 % ---------------------------------------------------------------------
 % Get error
@@ -789,6 +797,16 @@ end
 if bootweights
     stats.WTS = boot_weights(funhan, obj, cv_assignment, bootfun_inputs{:});
     fprintf('Returning weights and Z, p values in stats.WTS\n')
+    
+    % Replace weight_obj with better statistic_image version:
+    
+    stats.weight_obj = statistic_image('dat', stats.weight_obj.dat, ...
+    'volInfo', stats.weight_obj.volInfo, ...
+    'p', stats.WTS.wP', ...
+    'ste', stats.WTS.wste', ...
+    'dat_descrip', stats.function_call, ...
+    'removed_voxels', stats.weight_obj.removed_voxels);
+
 end
 
 

@@ -152,15 +152,25 @@ for i = 1:length(varargin)
         else P = varargin{i};
         end
     
-    elseif any(ishandle(varargin{i})) && any(strcmp(get(varargin{i}, 'Type'), 'figure'))
+    elseif any(ishandle(varargin{i})) && ~all(ishandle(varargin{i}))
          % Note: some weird things are happening as fig handles are class
         % double, and not recognized as figs, but are figure handles.
         % hopefully this will work with strcmp()
         % do nothing, but fig handles may be passed in inadvertently?
         % sometimes passing in integers is interpreted as fig handles...
+        % For example, passing in 0 as a double is interpreted as a root
+        % graphics object. Not a good design feature of new graphics in
+        % Matlab...
+        
+        % Do nothing here. Could be all numeric input.
+        
+    elseif any(ishandle(varargin{i})) && any(strcmp(get(varargin{i}, 'Type'), 'figure'))
+        % all are handles, one is a figure
+        
         disp('You passed in a figure handle.')
         
     elseif  all(ishandle(varargin{i})) && all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  %% all(~isa(varargin{i}, 'matlab.ui.Figure'))
+        % all are handles, and patches
         % OLD: Pre-2014:  all(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
         disp('Found surface patch handles - plotting on existing surfaces.');
         P = varargin{i}; % handle(s) for existing surface

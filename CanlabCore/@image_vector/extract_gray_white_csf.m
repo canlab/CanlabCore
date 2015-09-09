@@ -39,7 +39,11 @@ for i = 1:length(masks)
     % get components
     if nargout > 1
         
-        [~, components{i}] = pca(masked_obj.dat', 'Economy', true, 'NumComponents', numcomps);
+        % NaNs will mess this up - remove voxel-wise
+        [wasnan, dataforpca] = nanremove(masked_obj.dat);
+        if any(wasnan), fprintf('Removing %3.0f voxels with one or more NaNs\n', sum(wasnan)); end
+        
+        [~, components{i}] = pca(dataforpca', 'Economy', true, 'NumComponents', numcomps);
         
     end
     

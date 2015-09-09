@@ -67,12 +67,12 @@ if isempty(mycol), mycol = 'ko'; end
         ploth = makefigure(X(:,1),y,mycol,mylabels,doquad,b);
         
         
-    elseif dorobust & strcmp(robopt,'IRLS')
+    elseif dorobust && strcmp(robopt,'IRLS')
         
         % to get b and stats in original scale
         [b,stats]=robustfit(X,y,'bisquare',[],'off');
         rZ = stats.t(1); rp = stats.p(1);
-        if rp < .05, sig=1; else,sig=0; end
+        if rp < .05, sig=1; else sig=0; end
         
         % correlation (r) is NOT the beta of standardized variables, as
         % with OLS, because the standardized beta doesn't account for the
@@ -190,7 +190,7 @@ if isempty(mycol), mycol = 'ko'; end
         % ROBUST
         w = varargin{1};
         for i = 1:length(xvec)
-            h = plot(xvec(i),yvec(i),mycol,'LineWidth',.5,'MarkerSize',8, ...
+            h = plot(xvec(i),yvec(i),[mycol 'o'],'LineWidth',.5,'MarkerSize',8, ...
                 'MarkerFaceColor',mycol(1));
             set(h,'MarkerFaceColor',[repmat(1-w(i),1,3)] )
             set(h, 'Color', [.2 .2 .2], 'LineWidth',1)

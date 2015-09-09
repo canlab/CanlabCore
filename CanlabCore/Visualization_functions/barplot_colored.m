@@ -1,6 +1,8 @@
 function [h, axh]=barplot_colored(data,varargin)
-
-% haven't had time to document this yet
+% Make a barplot of data with error bars, with colors specified by colormap
+% or color string.
+%
+% [h, axh]=barplot_colored(data, [optional arguments])
 % this is a good function though
 % within-subject error bars now added; use 'within'
 %
@@ -24,8 +26,7 @@ function [h, axh]=barplot_colored(data,varargin)
 %
 %       < bar locations >
 % 'x' : followed by x values for bars (locations)
-
-%       
+%
 % NOTE: For this function, keywords must be even-numbered argument entries,
 % e.g., arg 2, 4, 6.  Odd argument entries are values.
 % For example: This works, and you need the extra empty arg after 'within'
@@ -52,11 +53,13 @@ function [h, axh]=barplot_colored(data,varargin)
 %
 % Set X Tick Label:
 % [h1, s1] = barplot_colored(dat, 'XTicklabels', {'A' 'B' 'C' 'D'});
+%
+% See also: barplot_columns, lineplot_columns
 
 if iscell(data)
     for k=1:length(data)
-        means(k)=mean(data{k});
-        stderr(k)=std(data{k})/sqrt(length(data{k}));
+        means(k)=nanmean(data{k});
+        stderr(k)=nanstd(data{k})/sqrt(sum(~isnan(data{k})));
     end
 else
     means=mean(data);

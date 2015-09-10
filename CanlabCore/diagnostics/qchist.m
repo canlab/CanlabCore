@@ -39,7 +39,12 @@ if nargin < 3
     sparse = 0;
 end
 
-dat = fmri_data(images);
+if ~isa(images, 'image_vector')
+    dat = fmri_data(images);
+else
+    dat = images;
+end
+
 dat = remove_empty(dat);
 sd = nanstd(dat.dat(:));
 m = nanmean(dat.dat(:));
@@ -111,14 +116,6 @@ ss = get(0, 'ScreenSize');
 %Other plots...
 if sparse == 0
     plot(dat);
-    % screen sizes
-    f = findobj('Tag', 'fmri data matrix');
-    set(f, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)./2) round(ss(4)/2.5) ])
-end
-
-for j = 1:num_figs
-    f = findobj('Tag', ['hist' num2str(j)]);
-    set(f, 'Position', [round(ss(3)/2)+round(ss(3)/10) round(ss(4)*(1 - .1*j)) round(ss(3)./3) round(ss(4)/2) ])
 end
 
 end % function

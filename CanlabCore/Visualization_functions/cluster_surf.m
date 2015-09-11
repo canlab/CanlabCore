@@ -57,7 +57,7 @@ function [p,str] = cluster_surf(varargin)
 %       - matlab can create some: e.g., colormap summer, jet, etc.
 %       others can be created with colormap_tor.m
 %
-% see also img2surf.m
+% see also 
 %
 % color [0 1 1] (cyan) is reserved for the overlap color btwn cluster sets.
 %
@@ -91,6 +91,16 @@ function [p,str] = cluster_surf(varargin)
 %
 % Single-color transparent map (green):
 % cluster_surf(cl, 2, {[0 1 0]}, 'colorscale', p3(2), 'normalize');
+%
+% See also: addbrain, img2surf.m, surface() methods for objects, cluster_cutaways
+
+
+% Programmers' Notes
+% Created by Tor, a long time ago
+% updated Sept 2015 to keep up with matlab graphics and handle some weird
+% stuff with processing inputs.  
+% - Figures are now scalars and we need to check for those first.
+% - Also changed default surface and colormap
 
 % -------------------------------------------------------------------------
 % * set up input arguments and defaults
@@ -103,10 +113,14 @@ cl = [];
 
 %P = which('surf_single_subj_T1_gray.mat');
 P = which('surf_spm2_brain.mat');
+P = which('surf_spm2_brain_1mm.mat');
 
 % default color maps
-poscm = colormap_tor([.7 0 0], [1 1 0]);
-negcm = colormap_tor([0 0 1], [0 .5 .5]);
+% poscm = colormap_tor([.7 0 0], [1 1 0]);
+% negcm = colormap_tor([0 0 1], [0 .5 .5]);
+% These match fmridisplay:
+poscm = colormap_tor([1 .5 0], [1 1 0]);
+negcm = colormap_tor([0 0 1], [0 1 1]);
 
 actcolors = [];  % used with heatmap
 donormalize = 0; % used with colorscale
@@ -116,6 +130,7 @@ for i = 1:length(varargin)
     
     if isempty(varargin{i})
         % ignore it
+        
     elseif isstruct(varargin{i}) || isa(varargin{i}, 'region')
         cl{clind} = varargin{i}; clind = clind+1;
         
@@ -152,6 +167,11 @@ for i = 1:length(varargin)
         else P = varargin{i};
         end
     
+    elseif isnumeric(varargin{i}) && isscalar(varargin{i})
+        % it's a number, mm deep to render (any face within mmdeep mm of a significant voxel will
+        % be colored)
+        mmdeep = varargin{i};
+        
     elseif any(ishandle(varargin{i})) && ~all(ishandle(varargin{i}))
          % Note: some weird things are happening as fig handles are class
         % double, and not recognized as figs, but are figure handles.
@@ -190,8 +210,8 @@ for i = 1:length(varargin)
     elseif length(varargin{i}) > 1,   % it's a vector
         refZ = varargin{i};
         
-    else    % it's a number, mmdeep
-        mmdeep = varargin{i};
+    else    % no idea
+        warning('cluster_surf: Unknown input');  
         
     end
     

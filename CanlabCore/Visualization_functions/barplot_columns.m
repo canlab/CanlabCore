@@ -51,6 +51,8 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 % barplot_columns(exp_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'r','width', .4);
 % barplot_columns(control_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'b','width', .4, 'x', (1:9)+.5);
 % set(gca, 'XLim', [0 10], 'XTick', 1:9)
+%
+% barplot_columns(nps_by_study, 'NPS by study', [], 'doind', 'colors', mycolors, 'nofig');
 
 
 % ----------------------------------------------------
@@ -63,18 +65,27 @@ mycolor = [.8 .8 .8];
 barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
+nanwarningflag = 1;
 
-%handle input of different lens -- passed in as cell array
+%handle input of different lengths -- passed in as cell array
 if iscell(dat)
-    maxlen=0;
-    for i=1:length(dat)
-        if length(dat{i}) > maxlen, maxlen = length(dat{i}); end
+    maxlen = 0;
+    for i = 1:length(dat)
+        if length(dat{i}) > maxlen
+        maxlen = length(dat{i}); 
+        
+        end
     end
     
     dat2 = repmat(NaN, maxlen, length(dat));
     for i=1:length(dat)
-        dat2(1:length(dat{i}),i) = dat{i};
+        mylen = length(dat{i});
+        
+        dat2(1:mylen,i) = dat{i};
+        
+        if mylen < maxlen, nanwarningflag = 0; end % turn off warning in this case
     end
+    
     dat = dat2;
 end
 
@@ -92,7 +103,10 @@ if length(varargin) > 2
         if strcmp(varargin{i}, '95CI'), do95CI = 1; end
         if strcmp(varargin{i},'line'), dolineplot = 1;  end
         if strcmp(varargin{i}, 'x'), xvals = varargin{i + 1}; end
-        if strcmp(varargin{i}, 'color'), mycolor = varargin{i + 1}; end
+        if strcmp(varargin{i}, 'color') || strcmp(varargin{i}, 'colors')
+            mycolor = varargin{i + 1}; 
+            varargin{i + 1} = [];
+        end
         if strcmp(varargin{i}, 'width'), barwidth = varargin{i + 1}; end
         
     end
@@ -111,18 +125,15 @@ end
 %if ~isempty(covs), covs(wh,:) = []; end
 
 % replace nans with mean
-for i = 1:size(dat,2),
-    if any(isnan(dat(:,i)))
-        warning('Some NaNs!')
-        %dat(find(isnan(dat(:,i))),i) = nanmean(dat(:,i));
+for i = 1:size(dat, 2)
+    if nanwarningflag && any(isnan(dat(:, i)))
+        warning(sprintf('Some NaNs in Column %3.0f!', i))
     end
 end
 
 % find NaN columns
 wh = find(all(isnan(dat),1));
-dat(:,wh) = 0;
-
-%dat1 = dat;     % save original data for ind subj plot
+dat(:, wh) = 0;
 
 % get final design matrix, intercept is last column
 [nn,ny] = size(dat);
@@ -160,14 +171,12 @@ wh_reg = 1; % regressor of interest
 
 for i = 1:ny
 
-    fprintf(1,'\nColumn %3.0f:\n',i);
+    fprintf(1,'\nColumn %3.0f:\t',i);
     
     % remove nans from this column
     tmpy = dat(:,i);
     tmpx = X;
-% %     wh = find(any(isnan(X),2) | any(isnan(tmpy),2));
-% %     tmpx(wh,:) = []; tmpy(wh) = [];
-    
+   
     [wasnan, tmpx, tmpy] = nanremove(tmpx, tmpy);
     
     n(i) = size(tmpy,1);
@@ -196,7 +205,7 @@ for i = 1:ny
         
     end
     
-    fprintf(1,'\n');
+    %fprintf(1,'\n');
 end
 
 dat = y;  % adjusted data, for plot

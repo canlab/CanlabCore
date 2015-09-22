@@ -7,41 +7,66 @@ function p = addbrain(varargin)
 %
 % NOTE: this version uses structures in SPM2 space (Colin atlas)
 % Available keywords:
+%
+%  CORTICAL SURFACES
+% -----------------------------------------------------------------
 % 'transparent_surface' : the default.  2 mm res SPM2 brain surface
 % 'hires'       : a high-resolution surface (from Caret segmentation)
 % 'hires left'  : hi-resolution left medial with cerebellum (Caret seg)
 % 'hires right' : same, right hem
 % 'left'        :  2 mm resolution left hem, no cerebellum
 % 'right'
-% 'brainstem'
+% 'vmpfc'
+%
+% CUTAWAY SURFACES
+% -----------------------------------------------------------------
 % 'brainbottom'
+%
+% COMPOSITES
+% -----------------------------------------------------------------
+% 'limbic' : A collection of subcortical nuclei
+% 'foursurfaces' : Lateral and medial views, with brainstem
+%
+% SUBCORTICAL SURFACES
+% -----------------------------------------------------------------
+% 'brainstem'
 % 'amygdala'
 % 'thalamus'
 % 'hippocampus'
-% midbrain'
-%     'caudate'
-%     'globus pallidus'
-%     'putamen'
-%     'nucleus accumbens'
-%     'hypothalamus'
-%     'cerebellum'
-% case {'md','mediodorsal'}
-%     case {'cm','centromedian'}
-%     case 'pbn'
-%     case 'rvm'
-%     case 'nts'
-%     case {'lc'}
-%     case {'sn', 'substantia nigra'}
-%     case {'stn', 'subthalamic nucleus'}
-%     case {'rn', 'red nucleus'}
-%     case {'olive', 'inferior olive'}
-%     case {'nrm', 'raphe magnus'}
+%  midbrain'
+% 'caudate'
+% 'globus pallidus'
+% 'putamen'
+% 'nucleus accumbens'
+% 'hypothalamus'
+% 'cerebellum'
+% {'md','mediodorsal'}
+% {'cm','centromedian'}
+% 'pbn'
+% 'rvm'
+% 'nts'
+% 'lc'
+% {'sn', 'substantia nigra'}
+% {'stn', 'subthalamic nucleus'}
+% {'rn', 'red nucleus'}
+% {'olive', 'inferior olive'}
+% {'nrm', 'raphe magnus'}
 %
+% SPECIAL COMMANDS
+% -----------------------------------------------------------------
+% 
 % han = addbrain('colorchange',my_rgb_color,han);
-% Works on patch object in input handle han
-% or, if han is empty, on all patch objects in the current figure.
-% Only works for changing from gray background right now.  (Future update to handle any
-% background.)
+% Change gray background to some other color, excluding blobs already rendered
+% - han: Input handles with patch object
+% - my_rgb_color: [x x x] color triplet
+% - Only works for changing from gray background right now. 
+%
+% han = addbrain('eraseblobs',han);
+% Set all rendered blob colors back to gray; useful for re-rendering on existing surfaces.
+% - han: Input handles with patch object
+% - Only works for changing to gray background right now. 
+%
+% See also: cluster_surf, img2surf.m, surface() methods for objects, cluster_cutaways
 
 p = [];
 meth = 'transparent_surface';
@@ -62,6 +87,15 @@ switch meth
         if isempty(myp), myp = findobj(gcf,'Type','Patch'); end
         background_colorchange(myp,color);
         docolor = 0;
+        
+    case {'eraseblobs', 'set_all_to_gray'}
+        myp = varargin{2};
+        for i = 1:length(myp)
+            %set(hh, 'FaceColor', [.5 .5 .5]);
+            len = size(myp(i).FaceVertexCData, 1);
+            set(myp(i), 'FaceVertexCData', repmat([.5 .5 .5], len, 1));
+        end
+        p = myp;
 
     case 'left'
         pname = 'surf_spm2_left.mat';  % moderate res, no cerebellum
@@ -103,12 +137,23 @@ switch meth
 
         p = add_surface(pname);
 
+        set(p, 'FaceAlpha', .7)
+        lighting gouraud
+        lightRestoreSingle
+        axis vis3d image tight
+        
     case 'hires'
 
         pname = 'surf_spm2_brain_1mm.mat';  % hi res, caret segmentation
 
         p = add_surface(pname);
 
+        set(p, 'FaceAlpha', .7)
+        lighting gouraud
+        lightRestoreSingle;
+        axis vis3d image tight
+        
+        
     case 'brainstem'
 
         pname = 'surf_spm2_brainstem.mat';
@@ -321,7 +366,9 @@ switch meth
         P = which('VMPFC_display_mask.img');
          [p,outP,FV, cl, myLight] = mask2surface(P, 0, [.7 .3 0]);
 
-
+    case 'foursurfaces'
+        P = run_foursurfaces;
+        
     otherwise
         error('Unknown method.');
 end
@@ -345,19 +392,20 @@ end
 % suppress lighting if 2nd arg, otherwise, do it.
 
 if length(varargin) > 2
-    lighting gouraud;
-    axis image; %myLight = camlight(0,0);set(myLight,'Tag','myLight');
-    lightRestoreSingle(gca); camlight right
+    lightRestoreSingle(gca); 
+    camlight right;
     %set(gcf, 'WindowButtonUpFcn', 'lightFollowView');lightFollowView
 end
 
-
+lighting gouraud
+axis vis3d image tight
+material dull
 drawnow
-axis vis3d
+
 %view(135,30)
 
 
-return
+end % main function
 
 
 
@@ -373,7 +421,7 @@ p = patch('Faces',faces,'Vertices',vertices,'FaceColor',[.5 .5 .5], ...
     'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',1,'SpecularExponent',200);
 
 set(p,'FaceAlpha',.3)
-return
+end
 
 
 function background_colorchange(myp,mycolor)
@@ -391,4 +439,71 @@ for i = 1:length(myp)
 
 end
 
-return
+end
+
+
+% Four surface subfunction
+% ---------------------------------------------------------------------
+function all_surf_handles = run_foursurfaces
+
+all_surf_handles = [];
+f1 = gcf;
+
+nrows = 2;
+ncols = 2;
+
+% Right lateral
+% ------------------------------------------------------------------------
+figure(f1);
+subplot(nrows, ncols , 1);
+surfh = addbrain('hires right');
+set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+view(90, 0)
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+surfh2 = addbrain('brainstem');
+surfh2 = [surfh2 addbrain('thalamus')];
+set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
+surfh = [surfh surfh2];
+
+all_surf_handles = [all_surf_handles surfh];
+
+% Right medial
+% ------------------------------------------------------------------------
+
+figure(f1);
+axh = subplot(nrows, ncols , 4);
+copyobj(surfh, axh);
+view(270, 0);
+
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+% Left lateral
+% ------------------------------------------------------------------------
+
+figure(f1);
+subplot(nrows, ncols , 2);
+surfh = addbrain('hires left');
+set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+view(270, 0)
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+surfh2 = addbrain('brainstem');
+surfh2 = [surfh2 addbrain('thalamus')];
+set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
+surfh = [surfh surfh2];
+
+all_surf_handles = [all_surf_handles surfh];
+
+% Left medial
+% ------------------------------------------------------------------------
+
+figure(f1);
+axh = subplot(nrows, ncols , 3);
+copyobj(surfh, axh);
+view(90, 0);
+
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+end
+

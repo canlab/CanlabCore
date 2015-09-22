@@ -218,7 +218,5 @@ view(90, 0);
 
 lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
 
-lighting gouraud
-
 end
 

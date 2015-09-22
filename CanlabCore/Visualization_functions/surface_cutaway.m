@@ -153,7 +153,9 @@ end
 % END DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
 
-
+if ~isempty(surface_handles)
+    existingfig = true;
+end
 
 % Build brain surface
 % -------------------------------------------------------------------------

@@ -56,13 +56,13 @@ for i = 1:length(varargin)
         end
 end
    
-col1 = textread(fname, '%s%*[^\n]', 'delimiter', mydelimiter, 'headerlines', nheaderrows, 'bufsize', 100000);
+col1 = textread(fname, '%s%*[^\n]', 'delimiter', mydelimiter, 'headerlines', nheaderrows, 'bufsize', 10000000);
 
 nrows = length(col1);
 
 
 %numc = 148;
-[d] = textread(fname,'%s','headerlines', nheaderrows, 'delimiter', mydelimiter, 'bufsize', 100000);
+[d] = textread(fname,'%s','headerlines', nheaderrows, 'delimiter', mydelimiter, 'bufsize', 10000000);
 
 for i = 1:length(d), if isempty(d{i}), d{i} = 'NaN'; end, end
 

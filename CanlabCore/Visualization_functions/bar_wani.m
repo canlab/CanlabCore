@@ -1,6 +1,7 @@
 function handle = bar_wani(y, e, bar_width, varargin)
 
-% Draw a bar plot with error bars with some additional useful features. 
+% Draw a bar plot with error bars with some additional useful features 
+% (work with up to the 2014a matlab).  
 %
 % Usage:
 % -------------------------------------------------------------------------
@@ -62,18 +63,18 @@ function handle = bar_wani(y, e, bar_width, varargin)
 %     0.7941    0.3235   0];
 %
 % % draw
-% h = bar_wani(y, e, .8, 'colors', col, 'errbar_width', [0 0], 'ast', p, 'ylim', [-2.5 2.5], 'ytick', -2:2, 'ast_adj_x', 0, 'ast_adj_y_neg', .15);
+% bar_wani(y, e, .8, 'colors', col, 'errbar_width', [0 0], 'ast', p, 'ylim', [-2.5 2.5], 'ytick', -2:2, 'ast_adj_x', 0, 'ast_adj_y_neg', .15);
 % set(gca, 'ytickLabel', num2str(get(gca, 'ytick')'));
-% set(h, 'position', [1   531   399   169]);
+% set(gcf, 'position', [1   531   399   169]);
 % 
 % savename = 'example_barwani.pdf';
 % 
 % try
-%     pagesetup(h);
-%     saveas(h, savename);
+%     pagesetup(gcf);
+%     saveas(gcf, savename);
 % catch
-%     pagesetup(h);
-%     saveas(h, savename);   
+%     pagesetup(gcf);
+%     saveas(gcf, savename);   
 % end
 %
 % -------------------------------------------------------------------------
@@ -161,6 +162,7 @@ if doyline
 end
 
 barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
+barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
 set(gcf, 'Color', 'w')
 set(gca, 'ylim', [ymin ymax], 'XLim', [0.55 .45+size(y,1)], 'fontsize', 20, 'linewidth', 1.8); % **ADJUST**: adjust basic setting for axis
 
@@ -200,8 +202,12 @@ for i = 1:barnum
         errwidth = [-.03 .03];
     end
     
-    hh = get(h(i), 'children');
-    xdata = get(hh(2), 'xData');
+    if ~verLessThan('matlab', '8.4') % HG2
+        error('this function won''t work properly versions later 2014b');
+    else
+        hh = get(h(i), 'children');
+        xdata = get(hh(2), 'xData');
+    end
     
     for j = 1:(length(xdata)/9)
         xdata(9*(j-1)+4:9*(j-1)+5) = xdata(9*(j-1)+1:9*(j-1)+2)+errwidth ;
@@ -215,7 +221,7 @@ for i = 1:barnum
         end
         
         if doscatter
-            hold on; scatter(double(xdata(9*(j-1)+1)).*ones(size(sc_data{j,i})), sc_data{j,i}, 4, 'b', 'filled');
+            hold on; scatter(double((xdata(9*(j-1)+1))+.02).*ones(size(sc_data{j,i})), sc_data{j,i}, 30, 'k', 'filled');
             if ymin > min(sc_data{j,i}), ymin = min(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
             if ymax < max(sc_data{j,i}), ymax = max(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
         end
@@ -264,14 +270,16 @@ function ast = p_asterisk(p)
 % change p values into asterisk
 % 
 
-p = double(p < .05) + double(p < .01) + double(p < .001);
+p = double(p < .1) + double(p < .05) + double(p < .01) + double(p < .001);
 
 ast = cell(size(p));
 
 for i = 1:size(p,1)
     for j = 1:size(p,2)
-        if p(i,j) > 0
-            ast{i,j} = repmat('*', 1, p(i,j));
+        if p(i,j) > 1
+            ast{i,j} = repmat('*', 1, p(i,j)-1);
+        elseif p(i,j) == 1
+            ast{i,j} = '';
         else
             ast{i,j} = '';
         end
@@ -430,16 +438,27 @@ else
 	end
 	
 	% Plot erros
-	for i = 1:numbars
-		x =get(get(handles.bars(i),'children'), 'xdata');
-		x = mean(x([1 3],:));
-		handles.errors(i) = errorbar(x, barvalues(:,i), errors(:,i), 'k', 'linestyle', 'none', 'linewidth', 2);
-		ymax = max([ymax; barvalues(:,i)+errors(:,i)]);
+    % 	for i = 1:numbars
+    % 		x =get(get(handles.bars(i),'children'), 'xdata');
+    % 		x = mean(x([1 3],:));
+    % 		handles.errors(i) = errorbar(x, barvalues(:,i), errors(:,i), 'k', 'linestyle', 'none', 'linewidth', 2);
+    % 		ymax = max([ymax; barvalues(:,i)+errors(:,i)]);
+    %         ymin = min([ymax; barvalues(:,i)+errors(:,i)]); % wani added
+    % 	end
+    for i = 1:numbars
+        if ~verLessThan('matlab', '8.4') % HG2
+            x =  handles.bars(i).XData + handles.bars(i).XOffset;
+        else
+            x =get(get(handles.bars(i),'children'), 'xdata');
+            x = mean(x([1 3],:));
+        end
+        handles.errors(i) = errorbar(x, barvalues(:,i), errors(:,i), 'k', 'linestyle', 'none', 'linewidth', 2);
+        ymax = max([ymax; barvalues(:,i)+errors(:,i)]);
         ymin = min([ymax; barvalues(:,i)+errors(:,i)]); % wani added
-	end
+    end
 	
-	if error_sides == 1
-		set(gca,'children', flipud(get(gca,'children')));
+    if error_sides == 1
+        set(gca,'children', flipud(get(gca,'children')));
     end
     
     ylim([ymin*1.1 ymax*1.1]); % wani changed

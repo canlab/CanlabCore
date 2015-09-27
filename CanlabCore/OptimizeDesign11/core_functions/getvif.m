@@ -41,7 +41,7 @@ if nargin < 2, no_add_intercept = 0; end
 
 ind = strcmp('wh', varargin);
 
-if ~isempty(ind) && ind ~= 0
+if ~isempty(ind) && sum(ind) ~= 0
     
     wh=varargin{ind+1};
     if size(wh, 1) > size(wh, 2), wh=wh';end %transpose if needed

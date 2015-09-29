@@ -42,8 +42,8 @@ df = size(fmridat.dat, 2) - 1;
 statsimg = statistic_image('type', 't', 'dat', t, 'ste', err, 'N', N, 'volInfo', fmridat.mask.volInfo, 'dfe', df);
 
 % get rid of NaNs for empty vals
-stats.p(isnan(t)) = 1;
-stats.t(isnan(t)) = 0;
+statsimg.p(isnan(t)) = 1;
+statsimg.t(isnan(t)) = 0;
 
 statsimg.removed_voxels = fmridat.removed_voxels;
 

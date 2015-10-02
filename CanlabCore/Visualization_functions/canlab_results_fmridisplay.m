@@ -196,7 +196,44 @@ if ~exist('o2', 'var')
     switch montagetype
         case 'full'
             o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
+            %o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'new_row', [-44 50 8]);
+
+            % shift all axes down and left
+            allaxh = findobj(gcf, 'Type', 'axes');
+            for i = 1:length(allaxh)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(2) = pos1(2) - 0.18;
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+            
+            % Right lateral
+            axh = axes('Position', [0.15 0.28 .15 1]);
+            rl = addbrain('hires right');
+            set(rl, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+            view(90, 0);
+            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+            
+            % Right medial
+            axh = axes('Position', [0.35 0.29 .15 1]);
+            copyobj(rl, axh);
+            view(270, 0);
+            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+            
+            % Left lateral
+            axh = axes('Position', [0.55 0.3 .15 1]);
+            ll = addbrain('hires left');
+            set(ll, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+            view(270, 0);
+            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+            
+            % Left medial
+            axh = axes('Position', [0.75 0.3 .15 1]);
+            copyobj(ll, axh);
+            view(90, 0);
+            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+            
             
         case 'compact'
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
@@ -204,25 +241,33 @@ if ~exist('o2', 'var')
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             
         case 'compact2'
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
-            enlarge_axes(gcf, 1);
-            axh = axes('Position', [-0.03 0.15 .2 1]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-            
-            % shift all axes down and right
-            allaxh = findobj(gcf, 'Type', 'axes');
+            %subplot(2, 1, 1);
+            o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
+            %o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'new_row', [-44 50 8]);
+
+             % shift all axes down and right
+            allaxh = o2.montage{1}.axis_handles;
             for i = 1:length(allaxh)
                 pos1 = get(allaxh(i), 'Position');
-                pos1(2) = pos1(2) - 0.10;
+                 pos1(2) = pos1(2) - 0.08;
                 pos1(1) = pos1(1) + 0.03;
                 set(allaxh(i), 'Position', pos1);
             end
+            
+            enlarge_axes(gcf, 1);
+            axh = axes('Position', [0.0 0.08 .15 1]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                        
+            %axh1 = axes('Position', [-0.03 -0.1 .2 1]);
+            %subplot(2, 1, 2);
+            %o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose');
+            
             
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
             %images, makes it too big an overlapping
             
-        otherwise error('illegal montage type. choose full or compact.')
+        otherwise error('illegal montage type. choose full or compact.');
     end
     
     wh_montages = [1 2];

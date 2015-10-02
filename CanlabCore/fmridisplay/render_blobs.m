@@ -29,7 +29,7 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 % currentmap : see addblobs method. Montage within fmridisplay object.
 % mymontage : ditto
 % SPACE: space of map to sample to (object display SPACE in fmridisplay object)
-% 
+%
 % Optional inputs:
 % There are many optional inputs that control display features of blobs.
 % COLOR
@@ -39,17 +39,17 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 % 'onecolor'    force solid-color blobs
 % 'splitcolor'  Positive and negative values are mapped to different
 %               colormaps. Default is +=hot, -=cool colors.  Followed
-%               optionally by cell array with 
+%               optionally by cell array with
 %               vectors of 4 colors defining max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
 % OUTLINING
-% 'outline' 
+% 'outline'
 % 'linewidth',  followed by width value, e.g., 1
 %
 % COLOR RANGE
 % 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
 %               color and transparency setting under some circumstances.
-% 
+%
 % TRANSPARENCY
 % {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
 % 'trans'               Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
@@ -64,7 +64,7 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 % Outputs:
 % -------------------------------------------------------------------------
-% [blobhan, cmaprange, mincolor, maxcolor] 
+% [blobhan, cmaprange, mincolor, maxcolor]
 % All used in addblobs.m
 %
 % Examples:
@@ -79,7 +79,8 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 % Programmers' notes:
 % Matlab's graphics behavior changed in 2014, causing some problems.
 % This version was tested by Tor on R2015a.
-
+% 10/1/2015: Tor fixed functionality for outlines and constant-mask value
+% displays in new Matlab graphics
 
 myview = mymontage.orientation;
 
@@ -142,7 +143,7 @@ for i = 1:length(varargin)
                 transvalue = 0.75; % Default behavior, superseded by later arguments
                 
             case {'constanttrans', 'transvalue'}
-                dotrans = 1; transvalue = double(varargin{i + 1}); 
+                dotrans = 1; transvalue = double(varargin{i + 1});
                 %  (default: map transparency to cmaprange, unless you
                 %  enter contanttrans followed by a transparency value
                 
@@ -193,21 +194,21 @@ for j = 1:n
             
             [dummy, wh_slice(j)] = min(abs(currentmap.SPACE.zcoords - my_slice_coord));
             
-            % Wani: The previous line gets the closest slice from the montages 
-            % you're displaying by calculating the distance between them. 
-            % However, if the distance measure is larger than a half of the 
-            % voxel size (i.e., vox_size/2), it means there is no proper montage 
+            % Wani: The previous line gets the closest slice from the montages
+            % you're displaying by calculating the distance between them.
+            % However, if the distance measure is larger than a half of the
+            % voxel size (i.e., vox_size/2), it means there is no proper montage
             % that can display the data. So I needed to add the following
             % line for each view. Actually, I tried to use V.mat(:,3) for
             % the axial view (because the voxel sizes for x,y,z could be
             % different), but for some reasons, it doesn't work well. So
-            % I'm using V.mat(:,1) for all views (and take absolute values). 
+            % I'm using V.mat(:,1) for all views (and take absolute values).
             % I thought this could be a possible bug in the future, so I made this comment. 9/9/12
             
             % if dummy > max(abs(currentmap.V.mat(:,1)))/2, wh_slice(j) = 0; end % Wani added this line 8/11/12, then see the next line.
             if (dummy - (range(currentmap.SPACE.zcoords)/(length(currentmap.SPACE.zcoords)-1))/2) > .01, wh_slice(j) = 0; end % wani modified this line to fix a weird bug 3/5/13
             numvox = cat(1, squeeze(sum(sum(abs(currentmap.mapdata) > 0))));
-                        
+            
         case 'sagittal'
             my_slice_coord = mymontage.slice_mm_coords(j);
             
@@ -234,10 +235,10 @@ end
 % k = []; % added and modified by Wani 8/11/12 (from here)
 % for i = 1:length(wh_slice)-1
 %     if wh_slice(i) == wh_slice(i+1)
-%         k(end+1) = i+1; 
+%         k(end+1) = i+1;
 %     end
 % end
-% wh_slice(k) = 0; 
+% wh_slice(k) = 0;
 
 k = unique(wh_slice); k(k==0) = [];
 voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
@@ -328,7 +329,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     mynewy = squeeze(SPACE.Ymm(:, wh_slice(j), :));
                     mynewx = squeeze(SPACE.Zmm(:, wh_slice(j), :));
                     Z = interp2(myx, myy, slicedat, mynewx, mynewy); % Wani modified this line. 08/11/12
-                   
+                    
             end
             
             if dosmooth
@@ -344,26 +345,50 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 
                 [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
                 
-                ch = get(h, 'Children');
-                
-                whiteh = findobj(ch, 'FaceColor', [1 1 1]);
-                %set(whiteh, 'FaceAlpha', 0);
-                set(whiteh, 'FaceColor', [.8 .8 .8]);
-                
-                % white for bg (center-fills), 'flat' for colored
-                colorh = findobj(ch, 'FaceColor', 'flat');
-                set(colorh, 'FaceColor', color); %, 'FaceAlpha', .8);
+                if str2double(vstr(1:3))<8.4  % pre R2014b
+                    ch = get(h, 'Children');
+                    
+                    whiteh = findobj(ch, 'FaceColor', [1 1 1]);
+                    %set(whiteh, 'FaceAlpha', 0);
+                    set(whiteh, 'FaceColor', [.8 .8 .8]);
+                    
+                    % white for bg (center-fills), 'flat' for colored
+                    colorh = findobj(ch, 'FaceColor', 'flat');
+                    set(colorh, 'FaceColor', color); %, 'FaceAlpha', .8);
+                else
+                    
+                    % new matlab graphics:
+                    set(h, 'FaceColor', color);
+                    
+                end
                 
                 if dotrans
                     if ~isempty(transvalue)
-                        set(colorh, 'FaceAlpha', transvalue);
+                        if str2double(vstr(1:3))<8.4  % pre R2014b
+                            set(colorh, 'FaceAlpha', transvalue);
+                            set(h, 'FaceAlpha', transvalue);
+                        else
+                            disp('WARNING: CONTOUR PLOTS DO NOT SEEM TO HAVE ADJUSTABLE TRANSPARENCY IN R2014B+ MATLAB');
+                        end
+                        
                     else
-                    set(colorh, 'FaceAlpha', .7); % backward compatible...
+                        if str2double(vstr(1:3))<8.4  % pre R2014b
+                            %set(colorh, 'FaceAlpha', .7); % backward compatible...
+                            set(colorh, 'FaceAlpha', .7);
+                        end
+                        
                     end
                 end
                 
                 if outline
-                    set(colorh, 'FaceAlpha', 0, 'LineWidth', mylinewidth, 'EdgeColor', color);
+                    if str2double(vstr(1:3))<8.4  % pre R2014b
+                        %set(colorh, 'FaceAlpha', 0, 'LineWidth', mylinewidth, 'EdgeColor', color);
+                    else
+                        %set(h, 'FaceAlpha', 0, 'LineWidth', mylinewidth, 'EdgeColor', color);
+                        set(h, 'LineWidth', mylinewidth, 'EdgeColor', color);
+                        set(h, 'Fill', 'off')
+                    end
+                    
                 end
                 
             else
@@ -380,6 +405,11 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
                     Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
                     Zscaled = (Zscaled - min(cmaprange)) ./ (max(cmaprange) - min(cmaprange));
+                    
+                    % If map is constant, scaling will not work; just use original Z
+                    if ~abs(cmaprange(1) - cmaprange(2))
+                        Zscaled = Z;  
+                    end
                     
                     w = repmat(Zscaled, [1 1 3]);
                     
@@ -416,7 +446,16 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     Zscaled(Zscaled > 0) = (Zscaled(Zscaled > 0) - cmaprange(3)) ./ (cmaprange(4) - cmaprange(3));
                     Zscaled(Zscaled < 0) = (Zscaled(Zscaled < 0) - cmaprange(2)) ./ abs(cmaprange(1) - cmaprange(2));
                     
+                    % If map is constant, scaling will not work; just use original Z
+                    maprange = abs(cmaprange(1) - cmaprange(2));
+                    if ~isnan(maprange) && ~maprange
+                        Zscaled(Zscaled > 0) = cmaprange(1);  
+                    end
                     
+                    maprange = abs(cmaprange(4) - cmaprange(3));
+                    if ~isnan(maprange) && ~maprange
+                        Zscaled(Zscaled > 0) = cmaprange(4);  
+                    end
                     
                     % pos only
                     w = repmat(Zscaled, [1 1 3]);
@@ -448,7 +487,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 end
                 
                 % h = surf(mymontage.axis_handles(j), mynewy, mynewx, Z, 'FaceColor', 'interp', 'edgecolor', 'none');%, 'FaceAlpha', 'interp');
-                % Wani: -ones(size(Z)) is helpful for boundaries for some reasons. - doesn't work with MATLAB 2014b. 
+                % Wani: -ones(size(Z)) is helpful for boundaries for some reasons. - doesn't work with MATLAB 2014b.
                 
                 % Tor: This works by manually creating a "layer", creating a
                 % surface image with the blobs at a Z-value of 1.  The

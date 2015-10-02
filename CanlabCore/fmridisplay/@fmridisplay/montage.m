@@ -86,6 +86,10 @@ custom_coords = 0;
 color = 'k';
 doverbose = true;
 
+new_row_flag = 0;
+%new_flag = 1;
+%new_array = [-44 50 8];
+
 % ------------------------------------------------------
 % parse inputs
 % ------------------------------------------------------
@@ -124,6 +128,10 @@ for i = 1:length(varargin)
                 
             case 'noverbose'
                 doverbose = false;
+
+            case 'new_row'
+                new_row_flag = 1;
+                new_array = [-44 50 8];
                 
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -154,6 +162,19 @@ figure(slices_fig_h)
 for i = 1:length(slice_vox_coords)
     
     axes(newax(i));
+    if new_row_flag == 1
+        if i > init_cen
+            ax = gca;
+            pos1 = get(ax, 'Position');
+            pos1(1) = pos1(1) + 0.03;
+            set(ax, 'Position', pos1);
+        else
+            ax = gca;
+            pos1 = get(ax, 'Position');
+            pos1(2) = pos1(2) - 0.2;
+            set(ax, 'Position', pos1);
+        end
+    end
     
     wh_slice = slice_vox_coords(i);
     
@@ -185,7 +206,17 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
                     slice_range = [-45 70];
                 end
                 
-                cen = [slice_range(1):spacing:slice_range(2)]';
+                %gedit
+                cen = [slice_range(1):spacing:slice_range(2)]';                
+                temp_num_axes = size(cen, 1);
+                if new_row_flag == 1
+                    init_cen = length(cen);
+                    slice_range_2 = new_array(:, 1:2);
+                    spacing_2 = new_array(3); 
+
+                    cen = [cen; [slice_range_2(1):spacing_2:slice_range_2(2)]'];
+                end
+
                 if custom_coords
                     cen = custom_slice_mm(:, 3);
                 end
@@ -251,13 +282,16 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         
         if doonerow
             ss = get(0, 'ScreenSize');
-            set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/6) ])
+            set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/2) ])
         end
         
-        for i = 1:num_axes
-            
+        for i = 1:num_axes            
             if doonerow
-                newax(i) = subplot(1, num_axes, i);
+                if new_row_flag == 1
+                    newax(i) = subplot(2, temp_num_axes, i);
+                else
+                    newax(i) = subplot(1, num_axes, i);
+                end                
             else
                 newax(i) = subplot(rr, rc, i);
             end

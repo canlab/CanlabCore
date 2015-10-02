@@ -196,9 +196,15 @@ if ~exist('o2', 'var')
     switch montagetype
         case 'full'
             o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            
+            % coronal
+            
+            % axial
+            
             %o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'new_row', [-44 50 8]);
 
+            % subfunction: shifting
             % shift all axes down and left
             allaxh = findobj(gcf, 'Type', 'axes');
             for i = 1:length(allaxh)
@@ -208,12 +214,17 @@ if ~exist('o2', 'var')
                 set(allaxh(i), 'Position', pos1);
             end
             
+            % ADD SURFACE METHOD: DOES the stuff below given keyword for
+            % what type of surface...registers handles in o2...
+            
             % Right lateral
             axh = axes('Position', [0.15 0.28 .15 1]);
             rl = addbrain('hires right');
             set(rl, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
             view(90, 0);
             lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+            % do this for all:
+            o2.surface{1} = struct('axis_handle', axh, 'object_handle', rl, 'orientation', 'right lateral');
             
             % Right medial
             axh = axes('Position', [0.35 0.29 .15 1]);

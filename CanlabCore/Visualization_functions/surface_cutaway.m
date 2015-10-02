@@ -221,6 +221,11 @@ cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_
 
 %cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles(~specialp), refZ, 'colorscale');
 
+% create render_blobs_surface after
+% [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
+% just take the input options, and create color map based on blobs.  and
+% code separating positive and negative activation in some cases.  then
+% just use one call to cluster_surf
 
 end % main function
 

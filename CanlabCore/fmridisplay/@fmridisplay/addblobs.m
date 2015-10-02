@@ -171,7 +171,15 @@ end
 
 % Could add surfaces, etc. here
 % -------------------------------------------------------------------------
+wh_surfaces = []; % optional arg to input which surface; default is all
 
+% concatenate object surface handles, use object handles to add blobs to each
+
+% Call this with appropriate inputs depending on color spec
+% Pass in a series of object handles for surfaces
+% cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
+% see render_blobs.m for parsing of color options and creation of color map
+% limits.
 
 end  % main function
 

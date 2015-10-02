@@ -43,7 +43,7 @@ statsimg = statistic_image('type', 't', 'dat', t, 'ste', err, 'N', N, 'volInfo',
 
 % get rid of NaNs for empty vals
 statsimg.p(isnan(t)) = 1;
-statsimg.t(isnan(t)) = 0;
+statsimg.dat(isnan(t)) = 0;
 
 statsimg.removed_voxels = fmridat.removed_voxels;
 

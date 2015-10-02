@@ -450,7 +450,7 @@ for i = 1:length(varargin)
            
             case 'MultiClass'
                 doMultiClass = 1;
-            
+                predfun_inputs{end + 1} = varargin{i}; %PK - pass as input to cv_svm
             case 'rolling'
                 tsxval_rolling = 1;
                 inval = varargin{i + 1};

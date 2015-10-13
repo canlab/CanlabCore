@@ -13,6 +13,7 @@ function out = lineplot_columns(dat_matrix, varargin)
 % dowithinste = 0;                % enter 'within' to get within-ss ste
 % atleast = 1;                    % 'atleast' followed by n for at least n valid obs to plot 
 % doshading = 0;                  % shaded vs. error-bar plots
+% CIs95 = 0;                      % 95% CI's.  Does not work with within subj error
 %
 % Inputs:
 % dat_matrix is usually a rectangular matrix with rows = observations,
@@ -25,7 +26,7 @@ function out = lineplot_columns(dat_matrix, varargin)
 % {'w', 'color', 'x', 'marker', 'linestyle', 'markersize', 'markerfacecolor', 'wh'}
 % 
 % Keywords:
-% {'within', 'dowithinste'}, 'shade', 'atleast'
+% {'within', 'dowithinste'}, 'shade', 'atleast', 'CIs' <- for 95% CI's
 %
 % Examples:
 % out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'r', 'markerfacecolor', [1 .5 0], 'wh', ispain);
@@ -46,6 +47,7 @@ markerfacecolor = [.5 .5 .5];   % face color
 dowithinste = 0;                % enter 'within' to get within-ss ste
 atleast = 1;
 doshading = 0;                  % shaded vs. error-bar plots
+CIs95 = 0;                      % 95% CI's.  Does not work with within subj error
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -65,6 +67,9 @@ for i = 1:length(varargin)
                 
             case 'shade'
                 doshading = 1;
+                
+            case 'CIs'
+                CIs95 = 1;
                 
             otherwise
                 error('Unknown input.');
@@ -104,6 +109,9 @@ if dowithinste
     
 else
     out.ste = ste(dat_matrix);
+    
+    ts = tinv(.975, size(dat_matrix, 1));
+    out.CI95 = ts * out.ste;
 end
 
 out.m = nanmean(dat_matrix);
@@ -111,9 +119,18 @@ out.m = nanmean(dat_matrix);
 hold on;
 
 if doshading
-    out.err_han = fill_around_line(out.m, out.ste, color, x);
+    if CIs95
+        out.err_han = fill_around_line(out.m, out.CI95, color, x);
+    else
+        out.err_han = fill_around_line(out.m, out.ste, color, x);
+    end
 else
-    out.err_han = errorbar(x, out.m, out.ste, 'Color', color, 'LineWidth', w);
+    if CIs95
+        out.err_han = errorbar(x, out.m, out.CI95, 'Color', color, 'LineWidth', w);
+    else    
+        out.err_han = errorbar(x, out.m, out.ste, 'Color', color, 'LineWidth', w);
+    end
+    
     set(out.err_han, 'LineStyle', 'none')
 end
 

@@ -195,57 +195,27 @@ if ~exist('o2', 'var')
     
     switch montagetype
         case 'full'
+            % saggital
             o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-            
-            % coronal
-            
-            % axial
-            
-            %o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'new_row', [-44 50 8]);
+            shift_axes(-0.02, -0.04);
 
-            % subfunction: shifting
-            % shift all axes down and left
-            allaxh = findobj(gcf, 'Type', 'axes');
-            for i = 1:length(allaxh)
-                pos1 = get(allaxh(i), 'Position');
-                pos1(2) = pos1(2) - 0.18;
-                pos1(1) = pos1(1) - 0.03;
-                set(allaxh(i), 'Position', pos1);
-            end
-            
-            % ADD SURFACE METHOD: DOES the stuff below given keyword for
-            % what type of surface...registers handles in o2...
-            
-            % Right lateral
-            axh = axes('Position', [0.15 0.28 .15 1]);
-            rl = addbrain('hires right');
-            set(rl, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
-            view(90, 0);
-            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-            % do this for all:
-            o2.surface{1} = struct('axis_handle', axh, 'object_handle', rl, 'orientation', 'right lateral');
-            
-            % Right medial
-            axh = axes('Position', [0.35 0.29 .15 1]);
-            copyobj(rl, axh);
-            view(270, 0);
-            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-            
-            % Left lateral
-            axh = axes('Position', [0.55 0.3 .15 1]);
-            ll = addbrain('hires left');
-            set(ll, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
-            view(270, 0);
-            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-            
-            % Left medial
-            axh = axes('Position', [0.75 0.3 .15 1]);
-            copyobj(ll, axh);
-            view(90, 0);
-            lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-            
-            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            % surface
+            o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');            
+            o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
+
         case 'compact'
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             axh = axes('Position', [0.05 0.4 .1 .5]);
@@ -254,13 +224,12 @@ if ~exist('o2', 'var')
         case 'compact2'
             %subplot(2, 1, 1);
             o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
-            %o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'new_row', [-44 50 8]);
 
              % shift all axes down and right
             allaxh = o2.montage{1}.axis_handles;
             for i = 1:length(allaxh)
                 pos1 = get(allaxh(i), 'Position');
-                 pos1(2) = pos1(2) - 0.08;
+                pos1(2) = pos1(2) - 0.08;
                 pos1(1) = pos1(1) + 0.03;
                 set(allaxh(i), 'Position', pos1);
             end
@@ -268,12 +237,7 @@ if ~exist('o2', 'var')
             enlarge_axes(gcf, 1);
             axh = axes('Position', [0.0 0.08 .15 1]);
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-                        
-            %axh1 = axes('Position', [-0.03 -0.1 .2 1]);
-            %subplot(2, 1, 2);
-            %o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose');
-            
-            
+
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
             %images, makes it too big an overlapping
@@ -282,21 +246,40 @@ if ~exist('o2', 'var')
     end
     
     wh_montages = [1 2];
-    
-    
+    wh_surfaces = [1 2 3 4];
+
 else
     if doverbose, disp('Using existing fmridisplay object'); end
     
     % Other inputs will be passed into addblobs
     existingmons = length(o2.montage);
+    existingsurs = length(o2.surface);
     
     if doaddmontages
         % use same o2, but add montages
         switch montagetype
             case 'full'
-                o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
-                
+            % saggital
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
+            % surface
+            o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');            
+            o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
+
             case 'compact'
                 o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
@@ -307,16 +290,10 @@ else
                 enlarge_axes(gcf, 1);
                 axh = axes('Position', [-0.03 0.15 .2 1]);
                 o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-                
+
                 % shift all axes down and right
-                allaxh = findobj(gcf, 'Type', 'axes');
-                for i = 1:length(allaxh)
-                    pos1 = get(allaxh(i), 'Position');
-                    pos1(2) = pos1(2) - 0.10;
-                    pos1(1) = pos1(1) + 0.03;
-                    set(allaxh(i), 'Position', pos1);
-                end
-                
+                shift_axes(+0.03, -0.10);
+
                 %ss = get(0, 'ScreenSize');
                 %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
                 
@@ -325,13 +302,15 @@ else
         end
         
         wh_montages = existingmons + [1 2];
-        
+        wh_surfaces = existingsurs + [1 2 3 4];
+
     else
         if doremove
             o2 = removeblobs(o2);
         end
         wh_montages = 1:existingmons;
-        
+        wh_surfaces = 1:existingsurs;
+
     end
     
 end
@@ -347,11 +326,35 @@ end
 
 if doblobs
     o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, varargin{:});
+    o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_surfaces', wh_surfaces, varargin{:});
 end
 
 if dooutline
     o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages);
+    o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_surfaces', wh_surfaces);
 end
+
+
+% ------------------------------------------------------
+% INLINE FUNCTIONS
+% ------------------------------------------------------
+
+    function shift_axes(x_offset, y_offset)
+
+        % usage:   function shift_axes(-0.03, -0.18);
+        % purpose: To shift axes according of the habdles.
+        %
+        % input:   Function parameters are (x, y) offset relative to current position
+
+        % shift all axes according to offset values
+        allaxh = findobj(gcf, 'Type', 'axes');
+        for i = 1:length(allaxh)
+            pos1 = get(allaxh(i), 'Position');
+            pos1(2) = pos1(2) + y_offset;
+            pos1(1) = pos1(1) + x_offset;
+            set(allaxh(i), 'Position', pos1);
+        end
+    end % shift_axes
 
 
 end  % function

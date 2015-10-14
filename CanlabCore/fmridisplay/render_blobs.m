@@ -104,6 +104,8 @@ dosplitcolor = 0;
 mapd = currentmap.mapdata(:); mapd = mapd(mapd ~= 0 & ~isnan(mapd));
 cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
 
+vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+
 % adjust defaults
 if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
     cmaprange = double([prctile(mapd(mapd < 0), 25) prctile(mapd(mapd < 0), 75) prctile(mapd(mapd > 0), 25) prctile(mapd(mapd > 0), 75) ]);
@@ -503,8 +505,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % Z-scores (or whatever the input values are) and scaling
                 % them as desired, and creating colors based on a colormap
                 % of your choosing (or default one).
-                
-                vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+
                 if str2double(vstr(1:3))<8.4  % pre R2014b
                     h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none', 'FaceAlpha', 'interp');
                 else

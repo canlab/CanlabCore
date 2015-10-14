@@ -106,6 +106,15 @@ if any(whm)
     wh_montage = varargin{whm(1) + 1};
 end
 
+% select which surfaces; default = all
+wh_surface = 1:length(obj.surface);
+
+whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(varargin, 'which_surfaces') | strcmp(varargin, 'which surfaces');
+if any(whs)
+    whs = find(whs);
+    wh_surface = varargin{whs(1) + 1};
+end
+
 % Resampling whole map seems to be too slow: do this in render slice...
 % fprintf('Resampling map data to underlay space.');
 %
@@ -180,6 +189,23 @@ wh_surfaces = []; % optional arg to input which surface; default is all
 % cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
 % see render_blobs.m for parsing of color options and creation of color map
 % limits.
+
+% Surfaces
+% -------------------------------------------------------------------------
+
+for i = wh_surface
+    
+    if length(obj.surface) < i
+        error('Requested surface does not exist! Check input surface indices.');
+    end
+    
+    
+    % Set color maps for + / - values
+    pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
+    neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
+    cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+
+end
 
 end  % main function
 

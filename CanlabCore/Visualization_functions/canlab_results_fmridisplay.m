@@ -209,10 +209,17 @@ if ~exist('o2', 'var')
 
             axh = axes('Position', [-0.02 0.01 .17 .17]);
             o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
 
             % surface
             o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
-            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');            
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');          
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
 

@@ -241,6 +241,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
 
         if ~donewaxes
             % Break and return here if we are using existing axes.
+            axis off;
             allaxh = findobj(gcf, 'Type', 'axes');
             if length(allaxh) > 1
                 init_pos = get(newax, 'Position');

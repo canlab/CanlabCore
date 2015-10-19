@@ -223,6 +223,8 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
 
+            wh_surfaces = [1 2 3 4];
+
         case 'compact'
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             axh = axes('Position', [0.05 0.4 .1 .5]);
@@ -253,7 +255,6 @@ if ~exist('o2', 'var')
     end
     
     wh_montages = [1 2];
-    wh_surfaces = [1 2 3 4];
 
 else
     if doverbose, disp('Using existing fmridisplay object'); end
@@ -287,6 +288,8 @@ else
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
 
+            wh_surfaces = existingsurs + [1 2 3 4];
+
             case 'compact'
                 o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
@@ -309,7 +312,6 @@ else
         end
         
         wh_montages = existingmons + [1 2];
-        wh_surfaces = existingsurs + [1 2 3 4];
 
     else
         if doremove
@@ -333,12 +335,16 @@ end
 
 if doblobs
     o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, varargin{:});
-    o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_surfaces', wh_surfaces, varargin{:});
+    if exist('wh_surfaces', 'var') %if length(wh_surfaces) > 0
+        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_surfaces', wh_surfaces, varargin{:});
+    end
 end
 
 if dooutline
     o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages);
-    o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_surfaces', wh_surfaces);
+    if exist('wh_surfaces', 'var')
+        o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_surfaces', wh_surfaces);
+    end
 end
 
 

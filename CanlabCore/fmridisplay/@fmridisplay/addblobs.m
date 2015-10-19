@@ -196,9 +196,13 @@ wh_surfaces = []; % optional arg to input which surface; default is all
 for i = wh_surface
     
     if length(obj.surface) < i
-        error('Requested surface does not exist! Check input surface indices.');
+        warning('Requested surface does not exist! Check input surface indices.');
+        continue
     end
     
+    % ***Note for Nikhil and all: This option should actually respond to your
+    % inputs when it defines how to call cluster_surf.  This is a to-do for
+    % some point...***
     
     % Set color maps for + / - values
     pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow

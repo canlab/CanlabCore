@@ -10,6 +10,7 @@ function c = horzcat(varargin)
 % Programmer Notes
 % Created 3/14/14 by Luke Chang
 
+error('This method is deprecated.  Use image_math instead.');
 
 dat = [];
 for i = 1:nargin

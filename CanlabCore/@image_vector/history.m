@@ -6,7 +6,7 @@ disp(u)
 disp('History for image data object')
 disp(u)
 
-fprintf('Data description:\n%s\n', dat.dat_descrip);
+if ischar(dat.dat_descrip), fprintf('Data description:\n%s\n', dat.dat_descrip); end
 
 disp(char(dat.history))
 

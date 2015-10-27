@@ -39,6 +39,10 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
 % [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
 %
+% See also:
+% extract_roi_averages, to get individual region averages / local pattern expression
+% apply_nps, which does whole-pattern and local regional expression
+
 % Notes:
 % Last modified: 10/30/11 to add support for masks that are weight maps
 % 12/15/13:  Luke Chang - added correlation option for pattern-expression, 

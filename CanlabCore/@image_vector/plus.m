@@ -10,6 +10,7 @@ function c = plus(obj1,obj2)
 % Programmer Notes
 % Created 3/14/14 by Luke Chang
 
+error('This method is deprecated.  Use image_math instead.');
 
 %Check if image_vector object
 if ~isa(obj1,'image_vector') || ~isa(obj2,'image_vector')

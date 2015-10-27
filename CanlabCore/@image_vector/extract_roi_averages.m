@@ -95,6 +95,8 @@ for varg = 1:length(varargin)
             case 'contiguous_regions', average_over = 'contiguous_regions';
             case 'unique_mask_values', average_over = 'unique_mask_values';
                 
+            case 'pattern_expression', error('pattern expression only defined for fmri_data.extract_roi_averages.');
+                
             otherwise
                 disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
                 fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');

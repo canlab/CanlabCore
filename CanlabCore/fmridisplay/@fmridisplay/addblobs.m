@@ -99,9 +99,11 @@ obj.activation_maps{end + 1} = struct('mapdata', mask, 'V', V, 'SPACE', SPACE, '
 
 % select which montages; default = all
 wh_montage = 1:length(obj.montage);
+addsurfaceblobs = 0;
 
 whm = strcmp(varargin, 'wh_montages') | strcmp(varargin, 'wh_montage') | strcmp(varargin, 'which_montages') | strcmp(varargin, 'which montages');
 if any(whm)
+    addsurfaceblobs = 1;
     whm = find(whm);
     wh_montage = varargin{whm(1) + 1};
 end
@@ -113,6 +115,30 @@ whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(
 if any(whs)
     whs = find(whs);
     wh_surface = varargin{whs(1) + 1};
+end
+
+% default values
+dosplitcolor = 0;
+pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
+neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'splitcolor'
+                dosplitcolor = 1;
+                splitcolors = varargin{i + 1};
+                if ~iscell(splitcolors) || length(splitcolors) ~= 4
+                    error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
+                end
+                maxposcolor = splitcolors{4}; % max pos
+                minposcolor = splitcolors{3}; % min pos
+                maxnegcolor = splitcolors{2}; % max neg
+                minnegcolor = splitcolors{1}; % min neg
+
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
 end
 
 % Resampling whole map seems to be too slow: do this in render slice...
@@ -178,37 +204,25 @@ for i = wh_montage
 end
 
 
-% Could add surfaces, etc. here
-% -------------------------------------------------------------------------
-wh_surfaces = []; % optional arg to input which surface; default is all
-
-% concatenate object surface handles, use object handles to add blobs to each
-
-% Call this with appropriate inputs depending on color spec
-% Pass in a series of object handles for surfaces
-% cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
-% see render_blobs.m for parsing of color options and creation of color map
-% limits.
-
 % Surfaces
 % -------------------------------------------------------------------------
 
-for i = wh_surface
-    
-    if length(obj.surface) < i
-        warning('Requested surface does not exist! Check input surface indices.');
-        continue
-    end
-    
-    % ***Note for Nikhil and all: This option should actually respond to your
-    % inputs when it defines how to call cluster_surf.  This is a to-do for
-    % some point...***
-    
-    % Set color maps for + / - values
-    pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
-    neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
-    cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+if addsurfaceblobs
+    for i = wh_surface
+        
+        if length(obj.surface) < i
+            warning('Requested surface does not exist! Check input surface indices.');
+            continue
+        end
 
+        % Set color maps for + / - values
+        if dosplitcolor
+            pos_colormap = colormap_tor(maxposcolor, minposcolor);
+            neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
+        end
+        cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+
+    end
 end
 
 end  % main function

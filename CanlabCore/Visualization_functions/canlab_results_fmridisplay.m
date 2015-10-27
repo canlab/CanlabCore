@@ -281,6 +281,13 @@ else
 
             axh = axes('Position', [-0.02 0.01 .17 .17]);
             o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
 
             % surface
             o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
@@ -334,17 +341,15 @@ end
 % o2 = removeblobs(o2);
 
 if doblobs
-    o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, varargin{:});
-    if exist('wh_surfaces', 'var') %if length(wh_surfaces) > 0
-        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_surfaces', wh_surfaces, varargin{:});
+    if exist('wh_surfaces', 'var')
+        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, 'wh_surfaces', wh_surfaces, varargin{:});
+    else
+        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, varargin{:});
     end
 end
 
 if dooutline
     o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages);
-    if exist('wh_surfaces', 'var')
-        o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_surfaces', wh_surfaces);
-    end
 end
 
 

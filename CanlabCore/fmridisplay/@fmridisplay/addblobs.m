@@ -99,20 +99,20 @@ obj.activation_maps{end + 1} = struct('mapdata', mask, 'V', V, 'SPACE', SPACE, '
 
 % select which montages; default = all
 wh_montage = 1:length(obj.montage);
-addsurfaceblobs = 0;
 
 whm = strcmp(varargin, 'wh_montages') | strcmp(varargin, 'wh_montage') | strcmp(varargin, 'which_montages') | strcmp(varargin, 'which montages');
 if any(whm)
-    addsurfaceblobs = 1;
     whm = find(whm);
     wh_montage = varargin{whm(1) + 1};
 end
 
 % select which surfaces; default = all
 wh_surface = 1:length(obj.surface);
+addsurfaceblobs = 0;
 
 whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(varargin, 'which_surfaces') | strcmp(varargin, 'which surfaces');
 if any(whs)
+    addsurfaceblobs = 1;
     whs = find(whs);
     wh_surface = varargin{whs(1) + 1};
 end

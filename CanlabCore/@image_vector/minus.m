@@ -4,10 +4,10 @@ function c = minus(obj1,obj2)
 % Implements the minus (-) operator on image_vector objects across voxels.
 % Requires that each object has an equal number of columns and voxels
 %
-% Examples:
-% c = dat1 - dat2;
+% *Examples:*
+%   - c = dat1 - dat2;
 %
-% Programmer Notes
+% *Programmer Notes*
 % Created 3/14/14 by Luke Chang
 
 error('This method is deprecated.  Use image_math instead.');

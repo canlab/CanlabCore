@@ -7,12 +7,22 @@ fmri_data
 .. automodule:: @fmri_data
    :members:
 
+fmri_mask_image
+===============
+.. automodule:: @fmri_mask_image
+   :members:
+
 fmri_model
 ==========
 .. automodule:: @fmri_model
    :members:
 
-fmri_mask_image
+image_vector
 ===============
-.. automodule:: @fmri_mask_image
+.. automodule:: @image_vector
+   :members:
+
+region
+===============
+.. automodule:: @region
    :members:

@@ -1,7 +1,7 @@
 function clout = reparse_continguous(cl)
 % Re-define regions in region object based on contiguous blobs
 %
-% clout = reparse_continguous(cl)
+%   - clout = reparse_continguous(cl)
 % NEEDS SOME ADDITIONAL WORK/CHECKING
 
 ivec = region2imagevec(cl);

@@ -1,13 +1,14 @@
 function icadat = ica(fmridat_obj, varargin)
 % Spatial ICA of an fmri_data object
-% icadat = ica(fmridat_obj, [number of ICs to save])
-% icadat is also an fmri_data object, with .dat field voxels x components
+%   - icadat = ica(fmridat_obj, [number of ICs to save])
+%   - icadat is also an fmri_data object, with .dat field voxels x components
 %
-% Notes:
-% icasig = W * mixedsig
-% icasig = icadat.dat' = W * fmridat_obj.dat'
+% *Notes:*
+%   - icasig = W * mixedsig
+%   - icasig = icadat.dat' = W * fmridat_obj.dat'
 %
 % A is scaled version of fmridat_obj.dat' * icadat.dat
+% 
 % A and W are stored in additional_info field of icadat
 
 nic = 30;

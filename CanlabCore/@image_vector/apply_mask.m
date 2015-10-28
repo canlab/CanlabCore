@@ -3,16 +3,17 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % stored in dat.
 %
 % This can be used to:
-% - Mask an image_vector or fmri_data object with a mask
-% - Obtain "pattern expression" for a weight map (entered as the
-%   mask, here) in a series of images stored in dat.
+%  - Mask an image_vector or fmri_data object with a mask
+%  - Obtain "pattern expression" for a weight map (entered as the
+%    mask, here) in a series of images stored in dat.
 %
 % The mask or weight map does not have to be in the same space as the dat;
 % it will be resampled to the space of the data in dat.
 %
 % To extract pattern expression values for each ROI within a mask use extract_roi_averages() 
 %
-% Optional inputs:
+% *Optional inputs:*
+% 
 % 'pattern_expression' : calculate and return the cross-product of each
 % image in dat and the values in the mask.  This is useful if comparing
 % expression values that are comprised of different datasets or differing
@@ -32,19 +33,22 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % the mask as an 'exclude mask' rather than an include-mask. If pattern
 % expression is requested, the behavior is different, and it inverts the
 % sign of in-mask pattern weights.
+% 
+%  - [dat, mask] = apply_mask(dat, mask)
+%  - [dat, mask] = apply_mask(dat, mask image name)
+%  - [dat, mask] = apply_mask(dat, mask image vector object)
+%  - [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
+%  - [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
 %
-% [dat, mask] = apply_mask(dat, mask)
-% [dat, mask] = apply_mask(dat, mask image name)
-% [dat, mask] = apply_mask(dat, mask image vector object)
-% [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
-% [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
+% *See also:*
 %
-% See also:
 % extract_roi_averages, to get individual region averages / local pattern expression
 % apply_nps, which does whole-pattern and local regional expression
-
-% Notes:
+%
+% *Notes:*
+%
 % Last modified: 10/30/11 to add support for masks that are weight maps
+% 
 % 12/15/13:  Luke Chang - added correlation option for pattern-expression, 
 
 % set options

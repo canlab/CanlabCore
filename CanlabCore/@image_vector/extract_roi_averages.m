@@ -5,6 +5,7 @@ function cl = extract_roi_averages(obj, mask, varargin)
 % from a set of ROIs defined in a mask.
 % It is *slightly* different from the fmri_data method, as fmri_data has
 % more fields.
+%
 % This version requires the mask_image to be in the same space as the obj.
 %
 % Regions to average over can be either regions of contiguous voxels
@@ -15,27 +16,28 @@ function cl = extract_roi_averages(obj, mask, varargin)
 % Mask/Atlas image does NOT have to be in the same space as the images to
 % extract from.  It will be remapped/resliced.
 %
-% extracted data is returned in single data format.
+% Extracted data is returned in single data format.
 %
 % Inputs:
-% 1 - char array of strings containing 4D image file names (data extracted from these)
-% 2 - mask_image to extract from.
+%   1. char array of strings containing 4D image file names (data extracted from these)
+%   2. mask_image to extract from.
 %
-% Optional inputs:
-% 'average_over':
-%       Default = 'contiguous_regions' to average over contiguous voxels
-%       bounded by voxels of 0 or NaN (non-data values)
-%       Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
-%       (i.e., for atlas images with unique codes for each defined
-%       region)
+% *Optional inputs:*
 %
-% Example:
-% imgs_to_extract_from = filenames('w*.nii','char');
-% mask_image = which('anat_lbpa_thal.img');
-% [cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);
+% **average_over:**
+%   - Default = 'contiguous_regions' to average over contiguous voxels
+%     bounded by voxels of 0 or NaN (non-data values)
+%   - Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
+%     (i.e., for atlas images with unique codes for each defined region)
 %
+% *Example:*
 %
-% Related functions:
+%  - imgs_to_extract_from = filenames('w*.nii','char');
+%  - mask_image = which('anat_lbpa_thal.img');
+%  - [cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);
+%
+% *Related functions:*
+%
 % For an non-object-oriented alternative, see extract_image_data.m
 
 fprintf('image_vector.extract_roi_averages: ');

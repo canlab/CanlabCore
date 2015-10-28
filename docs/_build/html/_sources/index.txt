@@ -15,7 +15,6 @@ Contents:
 	moduleslist
 
 
-
 Indices and tables
 ==================
 

@@ -4,7 +4,7 @@ function sagg_slice_movie(dat, varargin)
 % Movie of successive differences (sagittal slice)
 % Enter an image_vector or fmri_data object (usually with time series)
 %
-% Optional inputs:
+% *Optional inputs:*
 %
 %       movie_output_file: a char array detailing the full path to save the
 %           movie file
@@ -14,23 +14,23 @@ function sagg_slice_movie(dat, varargin)
 %           (default = 1)
 %
 %
-% Example: sagg_slice_movie(fmri_dat, ...
+% *Example:*
+%   - sagg_slice_movie(fmri_dat, ...
 %               '/Volumes/engram/labdata/fmri_data/Study1/Subj1/qc_images', 5)
 %           
-%           This would save an movie based on the images in fmri_dat to the
-%           above directory, with an interval of 5 images between each
-%           frame (so, the movie would show image 1, 6, 11, 16, etc)
+%   This would save an movie based on the images in fmri_dat to the
+%   above directory, with an interval of 5 images between each
+%   frame (so, the movie would show image 1, 6, 11, 16, etc)
 %
 % Edited 8/7/14 by Scott
-%     - added skip interval
-%     - updated help
-
-
-%     8/7/14 Programmer Note: if more varargin options are desired in the
-%     future, the function call will likely need to be re-written. The
-%     current form exists for backwards compatibility - obviously changing
-%     the function call will mean that other functions that use this
-%     (preproc) will need to be modified
+%   - added skip interval
+%   - updated help
+%
+%   8/7/14 Programmer Note: if more varargin options are desired in the
+%   future, the function call will likely need to be re-written. The
+%   current form exists for backwards compatibility - obviously changing
+%   the function call will mean that other functions that use this
+%   (preproc) will need to be modified
 
 % ------------------------------------------------------
 writetofile = 0;

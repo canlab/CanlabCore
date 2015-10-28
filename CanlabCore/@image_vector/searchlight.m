@@ -2,22 +2,22 @@ function [results_obj, stats, indx] = searchlight(dat, varargin)
 % Run searchlight multivariate prediction/classification on an image_vector
 % or fmri_data object OR two objects, for cross-prediction.
 %
-% Usage:
-% -------------------------------------------------------------------------
+% *Usage:*
+%
 % [list outputs here] = function_name(list inputs here, [optional inputs])
 % [results_obj, indx] = searchlight(dat, [optional inputs])
 %
-% Features:
-% - Runs searchlight with standard, pre-defined algorithms
-% - Custom-entry definition of holdout sets
-% - Can re-use searchlight spheres after initial definition
-% - Custom-entry definition of any spheres/regions of interest
-% - Uses Matlab's parallel processing toolbox (parfor)
+% *Features:*
+%  - Runs searchlight with standard, pre-defined algorithms
+%  - Custom-entry definition of holdout sets
+%  - Can re-use searchlight spheres after initial definition
+%  - Custom-entry definition of any spheres/regions of interest
+%  - Uses Matlab's parallel processing toolbox (parfor)
 %
 % Type help image_vector.searchlight to display this help information
 %
 % Author and copyright information:
-% -------------------------------------------------------------------------
+%
 %     Copyright (C) 2014  Tor Wager and...
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -33,52 +33,49 @@ function [results_obj, stats, indx] = searchlight(dat, varargin)
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat           image_vector or fmri_data object with data
-% dat.Y         required: true outcomes for each observation (image) in dat
+% *Inputs:*
 %
-% Optional: Keyword followed by input variable:
-% 'r'         searchlight radius, voxels
-% 'dat2'      second dataset, for cross-prediction
-% 'indx'      sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
-%             This takes a long time to calculate, but can be saved and
-%             re-used for a given mask
+%   - dat           image_vector or fmri_data object with data
+%   - dat.Y         required: true outcomes for each observation (image) in dat
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% results_obj   fmri_data object with results maps
-% stats         selected statistics for each sphere in searchlight
-% indx          sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
+% *Optional:* Keyword followed by input variable:
+%   - 'r'         searchlight radius, voxels
+%   - 'dat2'      second dataset, for cross-prediction
+%   - 'indx'      sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
+%                 This takes a long time to calculate, but can be saved and
+%                 re-used for a given mask
+%
+% *Outputs:*
+%
+%   - results_obj   fmri_data object with results maps
+%   - stats         selected statistics for each sphere in searchlight
+%   - indx          sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
 %               * this can be re-used for all data with the same
 %               mask/structure. *
 %
-% Examples:
-% -------------------------------------------------------------------------
-% % Define a sensible gray-matter mask:
-% % -------------------------------------
-% dat = fmri_data(which('scalped_avg152T1_graymatter.img'));
-% dat = threshold(dat, [.8 Inf], 'raw-between');
-% dat = trim_mask(dat);
+% *Examples:*
 %
-% % Create fake data and holdout indicator index vector
-% % -------------------------------------
-% dat.dat = randn(dat.volInfo.n_inmask, 30);
-% dat.Y = dat.dat(111111, :)' + .3 * randn(30, 1);
-% holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end
+% Define a sensible gray-matter mask:
+%   - dat = fmri_data(which('scalped_avg152T1_graymatter.img'));
+%   - dat = threshold(dat, [.8 Inf], 'raw-between');
+%   - dat = trim_mask(dat);
 %
-% % Run, and run again with existing indx
-% % -------------------------------------
-% pool = parpool(12);  % initialize parallel processing (12 cores)
-% [results_obj, indx] = searchlight(dat, 'holdout_set', holdout_set);
-% results_obj = searchlight(dat, 'holdout_set', holdout_set, 'indx', indx);
+% Create fake data and holdout indicator index vector
+%   - dat.dat = randn(dat.volInfo.n_inmask, 30);
+%   - dat.Y = dat.dat(111111, :)' + .3 * randn(30, 1);
+%   - holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end
 %
-% See also:
+% Run, and run again with existing indx
+%   - pool = parpool(12);  % initialize parallel processing (12 cores)
+%   - [results_obj, indx] = searchlight(dat, 'holdout_set', holdout_set);
+%   - results_obj = searchlight(dat, 'holdout_set', holdout_set, 'indx', indx);
+%
+% *See also:*
 % region.m, fmri_data.predict.m
-
-% Programmers' notes:
+%
+% *Programmers' notes:*
 % List dates and changes here, and author of changes
-
+%
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------

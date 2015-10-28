@@ -2,12 +2,12 @@ function obj = resample_space(obj, sampleto, varargin)
 % Resample the images in an fmri_data object (obj) to the space of another
 % image (sampleto; e.g., a mask image). Works for all image_vector objects.
 %
-% obj = resample_space(obj, sampleto, [sampling method])
+%   - obj = resample_space(obj, sampleto, [sampling method])
 %
 % Sampleto may be one of these:
-% 1) a volInfo structure (the image does not have to exist on the path)
-% 2) an image_vector, fmri_data, fmri_mask_image object
-% 3) a string with the name of an image
+%   1. a volInfo structure (the image does not have to exist on the path)
+%   2. an image_vector, fmri_data, fmri_mask_image object
+%   3. a string with the name of an image
 %
 % Can enter resampling method as optional input. Takes any input to
 % interp3:
@@ -17,11 +17,13 @@ function obj = resample_space(obj, sampleto, varargin)
 %       'cubic'   - cubic interpolation as long as the data is uniformly
 %                   spaced, otherwise the same as 'spline'
 %
-% Examples:
+% *Examples:*
+%
 % label_mask = fmri_data(which('atlas_labels_combined.img'));
 % label_mask = resample_space(label_mask, ivec, 'nearest') % resamples and masks label image
 
-% programmers' notes:
+% *Programmers' notes:*
+%
 % 1/27/2012 Tor edited to handle .mask field in fmri_data and .sig field in
 % statistic_image.  Was causing errors otherwise...
 %           Also changed automatic behavior to reparse contig voxels with

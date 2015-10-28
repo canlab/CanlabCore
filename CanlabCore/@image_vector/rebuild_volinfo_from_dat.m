@@ -6,13 +6,13 @@ function dat = rebuild_volinfo_from_dat(dat, newdat)
 %
 % Also resets all voxels to be significant, if a statistic image
 %
-% INPUT
-%  dat:  an image_vector
-%  newdat: a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)
+% *Input*
+%   - dat: an image_vector
+%   - newdat: a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)
 %
-% OUTPUT
-%  dat:  dat.dat contains the non-zero values of newdat, and dat.volInfo is
-%  correctly defining the image space
+% *Output*
+%   - dat: dat.dat contains the non-zero values of newdat, and dat.volInfo is
+%          correctly defining the image space
 
 
 if length(newdat) ~= dat.volInfo.nvox

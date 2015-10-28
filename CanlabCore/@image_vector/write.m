@@ -6,23 +6,24 @@ function write(obj, varargin)
 % obj.dat should contain data, with one COLUMN for each 3-D frame in the
 % 4-D image to be written.
 %
-% Usage:
-% write(obj)  -> writes to the image(s) specified in obj.fullpath
-% write(obj, 'thresh') -> for statistic_image objects, writes thresholded
-% write(obj, 'fname', '~/Documents/test.nii')  -> writes the image(s) to specific path
+% *Usage:*
 %
-% For example: 
+%   - write(obj)  -> writes to the image(s) specified in obj.fullpath
+%   - write(obj, 'thresh') -> for statistic_image objects, writes thresholded
+%   - write(obj, 'fname', '~/Documents/test.nii')  -> writes the image(s) to specific path
+%
+% *For example:* 
 % If m is an image_vector object,
 %
-% m.X(m.X < .12) = 0; % apply an arbitrary but reasonable custom threshold
-% orthviews(m);
+%   - m.X(m.X < .12) = 0; % apply an arbitrary but reasonable custom threshold
+%   - orthviews(m);
 % write the thresholded image to disk:
-% anatmeanname = 'mean_gray_matter_mask.img';
-% m.filename = anatmeanname;
-% m.fullpath = fullfile(maskdir, anatmeanname);
-% write(m)
+%   - anatmeanname = 'mean_gray_matter_mask.img';
+%   - m.filename = anatmeanname;
+%   - m.fullpath = fullfile(maskdir, anatmeanname);
+%   - write(m)
 %
-% Option:
+% *Option:*
 %   'mni'       resample image to standard MNI FOV (91x109x91)
 %               uses mri_data.resample_space
 %   'keepdt'    output image will be keep original data type (default = float32)
@@ -31,8 +32,9 @@ function write(obj, varargin)
 
 %
 % 2013/3/5: Luk[ea] added 'mni' option
-% 2013/3/25: 
-%           Luke[ea] added optional input to retain original datatype
+%
+% 2013/3/25: Luke[ea] added optional input to retain original datatype
+%
 % 2014/3/14: Luke added 'fname' option to specify filename
 
 if any(strcmp(varargin, 'fname')) % fname option -- added by Luke

@@ -7,15 +7,15 @@ function m = mean(obj, varargin)
 % m is an image_vector object whose data contains the mean values.
 %
 % Options are:
-% 'write', followed by file name
-% 'path', followed by location for file (default = current directory)
-% 'orthviews' -> show orthviews for this image, same as orthviews(m)
-% 'histogram' -> show histogram for this image, same as histogram(m)
-% 'plot' -> do both
+%   - 'write', followed by file name
+%   - 'path', followed by location for file (default = current directory)
+%   - 'orthviews' -> show orthviews for this image, same as orthviews(m)
+%   - 'histogram' -> show histogram for this image, same as histogram(m)
+%   - 'plot' -> do both
 %
-% Examples:
+% *Examples:*
 % If sdat is an fmri_data object with multiple images,
-% m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
+%   - m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
 %
 
 fname = [];

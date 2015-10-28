@@ -4,8 +4,8 @@ function cl = merge(cl, wh_merge)
 % Combines fields from all clusters in the named series with the first one
 % in the series.
 %
-% wh_merge = [3 4];
-% cl = merge(cl, wh_merge)
+%   - wh_merge = [3 4];
+%   - cl = merge(cl, wh_merge)
 %
 % Tor Wager, April 2011
 

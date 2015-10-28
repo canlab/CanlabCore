@@ -1,10 +1,11 @@
 function dat = flip(dat, varargin)
 % Flips an image_vector object left to right
 %
-% Optional: input 'mirror' to make a symmetrical image, averaging the left
-% and right hemispheres
+% *Optional:*
 %
-% dat = flip(dat, ['mirror'])
+% input 'mirror' to make a symmetrical image, averaging the left
+% and right hemispheres
+%   - dat = flip(dat, ['mirror'])
 %
 % tor. may 2012
 

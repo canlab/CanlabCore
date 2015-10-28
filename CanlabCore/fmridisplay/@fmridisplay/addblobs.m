@@ -28,6 +28,7 @@ function obj = addblobs(obj, cl, varargin)
 % OUTLINING
 % 'outline' 
 % 'linewidth',  followed by width value, e.g., 1
+% Note: add 'no_surface' to stop updating the existing surface blobs
 %
 % COLOR RANGE
 % 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
@@ -43,10 +44,15 @@ function obj = addblobs(obj, cl, varargin)
 %
 % 'smooth'      Smooth blobs
 % 'contour'
+% 'no_surface'  Do not add blobs to surface handles, if they exist
 %
 % CONTROL OF WHICH MONTAGE
 % 'wh_montages',    followed by vector of montage numbers as they appear in
 %                   the list of registered montages in the fmridisplay object
+%
+% CONTROL OF WHICH SURFACE
+% 'wh_surfaces',    followed by vector of surface numbers as they appear in
+%                   the list of registered surfaces in the fmridisplay object
 %
 % Examples:
 % ----------------------------------------------------------------------------
@@ -108,11 +114,10 @@ end
 
 % select which surfaces; default = all
 wh_surface = 1:length(obj.surface);
-addsurfaceblobs = 0;
+addsurfaceblobs = 1;
 
 whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(varargin, 'which_surfaces') | strcmp(varargin, 'which surfaces');
 if any(whs)
-    addsurfaceblobs = 1;
     whs = find(whs);
     wh_surface = varargin{whs(1) + 1};
 end
@@ -135,6 +140,9 @@ for i = 1:length(varargin)
                 minposcolor = splitcolors{3}; % min pos
                 maxnegcolor = splitcolors{2}; % max neg
                 minnegcolor = splitcolors{1}; % min neg
+
+            case 'no_surface'
+                addsurfaceblobs = 0;
 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

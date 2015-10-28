@@ -349,7 +349,7 @@ if doblobs
 end
 
 if dooutline
-    o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages);
+    o2 = addblobs(o2, cl, 'color', outlinecolor, 'outline', 'wh_montages', wh_montages, 'no_surface');
 end
 
 

@@ -25,7 +25,7 @@ end
 % Now extract the actual data from the mask
 switch spm('Ver')
     
-    case {'SPM8', 'SPM5'}
+    case {'SPM8', 'SPM5','SPM12'}
         obj.dat = iimg_get_data(obj.volInfo, obj.fullpath, 'single', 'noexpand')';
         
     case {'SPM2', 'SPM99'}

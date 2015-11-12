@@ -28,6 +28,7 @@ function obj = addblobs(obj, cl, varargin)
 % OUTLINING
 % 'outline' 
 % 'linewidth',  followed by width value, e.g., 1
+% Note: add 'no_surface' to stop updating the existing surface blobs
 %
 % COLOR RANGE
 % 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
@@ -43,10 +44,15 @@ function obj = addblobs(obj, cl, varargin)
 %
 % 'smooth'      Smooth blobs
 % 'contour'
+% 'no_surface'  Do not add blobs to surface handles, if they exist
 %
 % CONTROL OF WHICH MONTAGE
 % 'wh_montages',    followed by vector of montage numbers as they appear in
 %                   the list of registered montages in the fmridisplay object
+%
+% CONTROL OF WHICH SURFACE
+% 'wh_surfaces',    followed by vector of surface numbers as they appear in
+%                   the list of registered surfaces in the fmridisplay object
 %
 % Examples:
 % ----------------------------------------------------------------------------
@@ -104,6 +110,43 @@ whm = strcmp(varargin, 'wh_montages') | strcmp(varargin, 'wh_montage') | strcmp(
 if any(whm)
     whm = find(whm);
     wh_montage = varargin{whm(1) + 1};
+end
+
+% select which surfaces; default = all
+wh_surface = 1:length(obj.surface);
+addsurfaceblobs = 1;
+
+whs = strcmp(varargin, 'wh_surfaces') | strcmp(varargin, 'wh_surface') | strcmp(varargin, 'which_surfaces') | strcmp(varargin, 'which surfaces');
+if any(whs)
+    whs = find(whs);
+    wh_surface = varargin{whs(1) + 1};
+end
+
+% default values
+dosplitcolor = 0;
+pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
+neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'splitcolor'
+                dosplitcolor = 1;
+                splitcolors = varargin{i + 1};
+                if ~iscell(splitcolors) || length(splitcolors) ~= 4
+                    error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
+                end
+                maxposcolor = splitcolors{4}; % max pos
+                minposcolor = splitcolors{3}; % min pos
+                maxnegcolor = splitcolors{2}; % max neg
+                minnegcolor = splitcolors{1}; % min neg
+
+            case 'no_surface'
+                addsurfaceblobs = 0;
+
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
 end
 
 % Resampling whole map seems to be too slow: do this in render slice...
@@ -169,17 +212,26 @@ for i = wh_montage
 end
 
 
-% Could add surfaces, etc. here
+% Surfaces
 % -------------------------------------------------------------------------
-wh_surfaces = []; % optional arg to input which surface; default is all
 
-% concatenate object surface handles, use object handles to add blobs to each
+if addsurfaceblobs
+    for i = wh_surface
+        
+        if length(obj.surface) < i
+            warning('Requested surface does not exist! Check input surface indices.');
+            continue
+        end
 
-% Call this with appropriate inputs depending on color spec
-% Pass in a series of object handles for surfaces
-% cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
-% see render_blobs.m for parsing of color options and creation of color map
-% limits.
+        % Set color maps for + / - values
+        if dosplitcolor
+            pos_colormap = colormap_tor(maxposcolor, minposcolor);
+            neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
+        end
+        cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+
+    end
+end
 
 end  % main function
 

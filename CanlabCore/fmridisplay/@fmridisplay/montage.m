@@ -86,10 +86,6 @@ custom_coords = 0;
 color = 'k';
 doverbose = true;
 
-new_row_flag = 0;
-%new_flag = 1;
-%new_array = [-44 50 8];
-
 % ------------------------------------------------------
 % parse inputs
 % ------------------------------------------------------
@@ -128,10 +124,6 @@ for i = 1:length(varargin)
                 
             case 'noverbose'
                 doverbose = false;
-
-            case 'new_row'
-                new_row_flag = 1;
-                new_array = [-44 50 8];
                 
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -160,21 +152,8 @@ if doverbose, fprintf('Ready. \n'), end
 figure(slices_fig_h)
 
 for i = 1:length(slice_vox_coords)
-    
+
     axes(newax(i));
-    if new_row_flag == 1
-        if i > init_cen
-            ax = gca;
-            pos1 = get(ax, 'Position');
-            pos1(1) = pos1(1) + 0.03;
-            set(ax, 'Position', pos1);
-        else
-            ax = gca;
-            pos1 = get(ax, 'Position');
-            pos1(2) = pos1(2) - 0.2;
-            set(ax, 'Position', pos1);
-        end
-    end
     
     wh_slice = slice_vox_coords(i);
     
@@ -205,18 +184,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
                 if strcmp(slice_range, 'auto')
                     slice_range = [-45 70];
                 end
-                
-                %gedit
-                cen = [slice_range(1):spacing:slice_range(2)]';                
-                temp_num_axes = size(cen, 1);
-                if new_row_flag == 1
-                    init_cen = length(cen);
-                    slice_range_2 = new_array(:, 1:2);
-                    spacing_2 = new_array(3); 
-
-                    cen = [cen; [slice_range_2(1):spacing_2:slice_range_2(2)]'];
-                end
-
+                cen = [slice_range(1):spacing:slice_range(2)]';
                 if custom_coords
                     cen = custom_slice_mm(:, 3);
                 end
@@ -270,9 +238,22 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         else
             rr = rc;
         end
-        
+
         if ~donewaxes
             % Break and return here if we are using existing axes.
+            axis off;
+            allaxh = findobj(gcf, 'Type', 'axes');
+            if length(allaxh) > 1
+                init_pos = get(newax, 'Position');
+                if num_axes > 1
+                    for i = 1:num_axes
+                        x_pos = init_pos(1) + (i * (0.85 / num_axes));
+                        newax(i) = axes('Position', [x_pos,init_pos(2),init_pos(3),init_pos(4)]);
+                        axis(newax(i), 'image');
+                    end                    
+                end
+            end
+
             slices_fig_h = get(newax(1), 'Parent');
             return
         end
@@ -282,16 +263,12 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
         
         if doonerow
             ss = get(0, 'ScreenSize');
-            set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/2) ])
+            set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/1.5) ])
         end
         
-        for i = 1:num_axes            
+        for i = 1:num_axes
             if doonerow
-                if new_row_flag == 1
-                    newax(i) = subplot(2, temp_num_axes, i);
-                else
-                    newax(i) = subplot(1, num_axes, i);
-                end                
+                newax(i) = subplot(1, num_axes, i);
             else
                 newax(i) = subplot(rr, rc, i);
             end
@@ -304,4 +281,3 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
     end % setup axes
 
 end % main function
-

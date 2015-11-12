@@ -1,9 +1,8 @@
 function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 % Surface method for region object - renders blobs on multiple types of 3-D surface
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
+% *Usage:*
+%   - [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
 %
 % Author and copyright information:
 % -------------------------------------------------------------------------
@@ -22,41 +21,37 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% r           A region object
-% 'cutaway'  String command for rendering cutaways instead of the default
+% *Inputs:*
+%   - r                A region object
+%   - 'cutaway'        String command for rendering cutaways instead of the default
 %             - default is call to mediation_brain_surface_figs
 %             - cutaways calls surface_cutaway
 %             - all optional arguments are passed to surface_cutaway
-% 'rightsurface'    String command for rendering a right frontal cortical
-%                   view complementary to 'cutaways'
-%
-% 'foursurfaces' Compact plots of four surfaces
+%   - 'rightsurface'   String command for rendering a right frontal cortical
+%                      view complementary to 'cutaways'
+%   - 'foursurfaces'   Compact plots of four surfaces
 %
 % Other optional inputs to surface_cutaway
 % e.g., 'pos_colormap'
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% all_surf_handles       surface patch handles
-% pcl                    region object with positive-only clusters
-% ncl                    region object with negative-only clusters
+% *Outputs:*
+%   - all_surf_handles       surface patch handles
+%   - pcl                    region object with positive-only clusters
+%   - ncl                    region object with negative-only clusters
 %
-% Examples:
-% -------------------------------------------------------------------------
+% *Examples:*
 % Use surface(r), with optional arguments taken by surface_cutaway:
-% poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
-% [all_surf_handles, pcl, ncl] = surface(r, 'cutaway', 'ycut_mm', -30, 'pos_colormap', poscm, 'existingfig');
-%
-% [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'pos_colormap', poscm, 'neg_colormap', negcm);
-% [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'existingfig', 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]));
+%   - poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
+%   - [all_surf_handles, pcl, ncl] = surface(r, 'cutaway', 'ycut_mm', -30, 'pos_colormap', poscm, 'existingfig');
+%   - [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'pos_colormap', poscm, 'neg_colormap', negcm);
+%   - [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'existingfig', 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]));
 %
 % use mediation_brain_surface_figs and re-make colors
-% all_surf_handles = mediation_brain_surface_figs([]);
-% surface(r, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
+%   - all_surf_handles = mediation_brain_surface_figs([]);
+%   - surface(r, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
 %
-% See also:
+% *See also:*
+%
 % surface_cutaway, cluster_surf, mediation_brain_surface_figs
 
 % -------------------------------------------------------------------------

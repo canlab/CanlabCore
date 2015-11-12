@@ -4,15 +4,30 @@
 
 fmri_data
 =========
-.. automodule:: CanlabCore.@fmri_data
-   :members:
-
-fmri_model
-==========
-.. automodule:: CanlabCore.@fmri_model
+.. automodule:: @fmri_data
    :members:
 
 fmri_mask_image
 ===============
-.. automodule:: CanlabCore.@fmri_mask_image
+.. automodule:: @fmri_mask_image
+   :members:
+
+fmri_model
+==========
+.. automodule:: @fmri_model
+   :members:
+
+fmri_timeseries
+===============
+.. automodule:: @fmri_timeseries
+   :members:
+
+image_vector
+===============
+.. automodule:: @image_vector
+   :members:
+
+region
+===============
+.. automodule:: @region
    :members:

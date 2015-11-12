@@ -1,17 +1,18 @@
 function obj = replace_empty(obj, varargin)
 % Replace empty/missing values in an image data object
-% obj = replace_empty(obj, [optional keywords])
+%   - obj = replace_empty(obj, [optional keywords])
 %
 % Replace missing values in obj.dat stored in obj.removed_voxels and
 % obj.removed_images with zeros.  This returns obj.dat in a format that can
 % be reconstructed into a 3-D or 4-D image matrix for brain visualization.
 %
-% Optional keywords:
+% *Optional keywords:*
+%
 % 'voxels' or 'images': replace only missing voxels/images
 %
 % Tor Wager, 12/1/10
 %
-% See also: remove_empty, zeroinsert, nanremove, naninsert
+% *See also:* remove_empty, zeroinsert, nanremove, naninsert
 
 dovoxels = 1;
 doimages = 1;

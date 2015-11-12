@@ -9,75 +9,73 @@
 % checking, etc.
 %
 % Defining a region and initializing:
-% ============================================
-% Usage:
-% r = region(obj1, [obj2], [keywords] )
-%   obj1: [fmri_data/statistic_image object to define regions]
-%         Can also be char array of image filename
-%   obj2: Optional: fmri_data/statistic_image object to extract data from
-%   keywords: Optional: 'unique_mask_values' or 'contiguous_regions'
-%   'noverbose' : suppress verbose output
 %
-% cl = region;  % generates an empty structure
-%               % You can add fields yourself if you want to, but best to
-%               define based on existing file name or image_vector object
+% *Usage:*
+%   - r = region(obj1, [obj2], [keywords] )
+%     - obj1: [fmri_data/statistic_image object to define regions]
+%             Can also be char array of image filename
+%     - obj2: Optional: fmri_data/statistic_image object to extract data from
+%     - keywords: Optional: 'unique_mask_values' or 'contiguous_regions'
+%     - 'noverbose' : suppress verbose output
+%
+%   - cl = region;  % generates an empty structure
+%                   % You can add fields yourself if you want to, but best to
+%                   define based on existing file name or image_vector object
 %
 % Define regions based on continuous voxel values (in this example image,
 % there is only one set of contiguous voxels, so 1 region...)
 %
-% mask_image = which('brainmask.nii');
-% cl = region(mask_image);
+%   - mask_image = which('brainmask.nii');
+%   - cl = region(mask_image);
 %
-% INPUTS
-% --------------------------------------------
+% *Inputs:*
+%
 % There are two ways to define which voxels are grouped into a 'region',
 % which becomes an element of the region variable cl.
+%
 % enter 'contiguous_regions' -> group by contiguous blobs
+%
 % or    'unique_mask_values' -> group by unique values in mask .dat field
 %
-% Note: 'contiguous_regions' uses contiguity/clustering information stored
+% *Note:* 'contiguous_regions' uses contiguity/clustering information stored
 % in mask.volInfo.cluster, which may not have veridical contiguity info if
 % you have manipulated it or incorporated anatomical information in working with
 % the mask object, or if you have borrowed the volInfo structure from
 % another source in creating it.
 %
-% Examples
-% --------------------------------------------
-% Define regions based on continuous values in an anatomical mask:
+% *Examples:*
 %
-% mask_image = which('atlas_labels_combined.img');
-% cl = region(mask_image, 'unique_mask_values');
+% Define regions based on continuous values in an anatomical mask:
+%   - mask_image = which('atlas_labels_combined.img');
+%   - cl = region(mask_image, 'unique_mask_values');
 %
 % Resample mask_image to space of data_comb fmri_data object, and extract
 % averages.  Space is defined by data_comb.
-% cl = extract_roi_averages(data_comb, mask_image, 'unique_mask_values');
+%   - cl = extract_roi_averages(data_comb, mask_image, 'unique_mask_values');
 %
 % Define regions based on unique voxels values in mask_image, and extract
 % data stored in data_comb object, resampled to space of mask_image.
 % Space is defined by mask_image:
-% cl = region(mask_image, data_comb, 'unique_mask_values');
+%   - cl = region(mask_image, data_comb, 'unique_mask_values');
 %
 % Reslice mask to space of functional images and define regions based on
 % mask values in the functional space (good for extracting data, etc.)
+%   - mask_image = which('anat_lbpa_thal.img');
+%   - mask = fmri_mask_image(mask_image);
+%   - mask = resample_to_image_space(mask, image_names(1, :));
+%   - cl = region(mask);
 %
-% mask_image = which('anat_lbpa_thal.img');
-% mask = fmri_mask_image(mask_image);
-% mask = resample_to_image_space(mask, image_names(1, :));
-% cl = region(mask);
+% *Methods*
 %
-%
-%
-% Methods
-% ============================================
 % Try typing methods(cl)
 %
 % methods for 'regions' include:
+%
 % Visualization methods:
 %     montage, orthviews, surf, etc.
 %
+% *Programmers' Notes:*
 %
-
-% Programmers' Notes:
 % 8/3/2015 : Tor Wager: Fixed bug when applying region to thresholded
 % statistic_image object.  Did not consider thresholding.
 

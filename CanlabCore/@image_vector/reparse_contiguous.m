@@ -3,7 +3,9 @@ function obj = reparse_contiguous(obj, varargin)
 %
 % Re-construct list of contiguous voxels in an image based on in-image
 % voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
+%
 % Results are saved in obj.volInfo.cluster.
+%
 % xyzlist can be generated from iimg_read_img, and is done automatically by
 % object-oriented fMRI image classes (fmri_image, image_vector,
 % statistic_image)
@@ -13,7 +15,8 @@ function obj = reparse_contiguous(obj, varargin)
 %
 % copyright tor wager, 2011
 
-% Programmers' notes:
+% *Programmers' notes:*
+%
 % Edited 1/27/13 by tor to use all columns when calculating 'nonempty'
 %                also fixed bug - was not using 'nonempty' input in some
 %                cases

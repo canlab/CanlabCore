@@ -1,5 +1,5 @@
-function [cl, varargout] = extract_roi_averages(obj, mask_image, varargin)
-% [cl, varargout] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
+function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, varargin)
+% [cl, clroimean, clpattern] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
 %
 % This fmri_data method a extracts and averages data stored in an fmri_data object 
 % from a set of ROIs defined in a mask.
@@ -50,7 +50,7 @@ function [cl, varargout] = extract_roi_averages(obj, mask_image, varargin)
 % Example:
 % imgs_to_extract_from = filenames('w*.nii','char');
 % mask_image = which('anat_lbpa_thal.img');
-% [cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);
+% [cl, clroimean, clpattern] = extract_image_data(imgs_to_extract_from, mask_image);
 %
 % region_obj = extract_roi_averages(data_obj, mask_char_name, 'pattern_expression', 'contiguous_regions');
 % 
@@ -72,8 +72,10 @@ function [cl, varargout] = extract_roi_averages(obj, mask_image, varargin)
 %   - For resample_space, the 'nearest' option should be used when the 
 %     "unique_mask_values" option is used. 
 
+% Modified Oct 2015 by Tor]
+%   - Clarified options, empty cl error check, changed varargout behavior
+
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
-varargout = {};
 
 % ---------------------------------
 % define region object based on choices
@@ -229,7 +231,15 @@ fprintf('\n');
 cl = region(mask, average_over);
 cl(1).source_images = obj.fullpath;
 
-if length(varargout) > 0
+if length(cl) == 1 && isempty(cl(1).XYZ)
+    % No regions!
+    warning('No regions found in mask.');
+    warning('The most common reason is that the average_over flag is set incorrectly.');
+    fprintf('Your choice is: %s\n')
+    return
+end
+
+if nargout > 1
     [clroimean, clpattern] = deal(cl);
 end
 
@@ -316,7 +326,7 @@ for i = 1:nregions
             regionmean = regiondat * w;
             cl(i).val = w;
             
-            if length(varargout) > 0
+            if nargout > 1
                 % optional outputs:
                 % separate pexp for mean across region (unit vector) and
                 % mean-centered pattern
@@ -354,10 +364,10 @@ end
 
 fprintf('Done.\n');
 
-if length(varargout) > 0
-    varargout{1} = clroimean;
-    varargout{2} = clpattern;
-end
+% if nargout > 1
+%     varargout{1} = clroimean;
+%     varargout{2} = clpattern;
+% end
 
 
 end % function

@@ -1,7 +1,7 @@
 function obj = trim_mask(obj)
 % Exclude empty voxels from mask information in obj.volInfo structure, and re-make obj.volInfo
 %
-% obj = trim_mask(obj)
+%   - obj = trim_mask(obj)
 %
 % Tor Wager, 2013
 

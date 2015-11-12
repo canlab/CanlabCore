@@ -8,7 +8,7 @@ function [ivecobj, orig_cluster_indx]  = region2imagevec(cl)
 % if this is empty, uses cl.val field, then cl.Z as a backup.
 % Mask information is available in ivecobj.volInfo.
 %
-% ivecobj = region2imagevec(cl)
+%   - ivecobj = region2imagevec(cl)
 % NEEDS SOME ADDITIONAL WORK/CHECKING
 
 ivecobj = image_vector;

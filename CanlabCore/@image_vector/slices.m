@@ -2,41 +2,40 @@ function o = slices(obj, varargin)
 % Create a montage of single-slice results for every image in an
 % image_vector object
 %
-%
-% o = slices(obj, 'orientation', [orientation], 'slice', [slice_mm], 'nimages', [nimgs])
+%   - o = slices(obj, 'orientation', [orientation], 'slice', [slice_mm], 'nimages', [nimgs])
 %
 % obj is an image_vector, fmri_data, or statistic_image object with
 % multiple images (only the first 64 will display), which are stored as
 % columns in its .dat field.
 %
-% Optional inputs:
-% 'orientation' can be followed by 'saggital', 'axial', or 'coronal'
-% 'slice_mm' is followed by the mm coord of the slice to display; default = 0
-% 'nimgs' can be followed by the number of images to display, 1:nimgs
-% 'names' is followed by a cell array of names for the images.
-% 'color' is followed by color vector or string specification. default is
-% color-mapped with split colors (hot/cool) for pos and neg effects.
-% 'outline' is followed by a color vector for outline around blobs.
+% *Optional inputs:*
+%   - 'orientation' can be followed by 'saggital', 'axial', or 'coronal'
+%   - 'slice_mm' is followed by the mm coord of the slice to display; default = 0
+%   - 'nimgs' can be followed by the number of images to display, 1:nimgs
+%   - 'names' is followed by a cell array of names for the images.
+%   - 'color' is followed by color vector or string specification. default is
+%   - color-mapped with split colors (hot/cool) for pos and neg effects.
+%   - 'outline' is followed by a color vector for outline around blobs.
 %
 % The output, o, is an fmridisplay object.
 %
 % This function uses fmridisplay objects, and may be memory-intensive for
 % older computers.
 %
-% Common Errors:
-% --------------------------------------------------------------
+% *Common Errors:*
+%
 % This function uses the volInfo.cluster field. If you create a mask in an
 % ad hoc way, this field may not be updated.  use this to fix:
 % mask = reparse_contiguous(mask);
 %
-% Examples:
-% --------------------------------------------------------------
-% slices(dat);
-% slices(dat, 'orientation', 'axial');
-% slices(dat, 'slice', -5);                 % display sagg at x = -5
-% o = slices(dat, 'names', terms); % use 'terms' var as names
+% *Examples:*
 %
-% o2 = slices(all_chi2_images, 'orientation', 'saggital', 'slice', 0);
+%   - slices(dat);
+%   - slices(dat, 'orientation', 'axial');
+%   - slices(dat, 'slice', -5);                 % display sagg at x = -5
+%   - o = slices(dat, 'names', terms); % use 'terms' var as names
+%
+%   - o2 = slices(all_chi2_images, 'orientation', 'saggital', 'slice', 0);
 %
 % Copyright 2011, Tor Wager
 

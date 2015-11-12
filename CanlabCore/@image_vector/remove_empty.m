@@ -2,15 +2,17 @@ function dat = remove_empty(dat, varargin)
 % dat = remove_empty(dat, [logical vector of custom voxels to remove], [logical vector of imgs to remove])
 %
 % remove vox: logical vector of custom voxels to remove, VOX x 1
+%
 % remove im: logical vector of custom images to remove, 1 x IMAGES
 %
 % indices of removed data will be stored in removed_voxels and
 % removed_images fields, to preserve ability to later reconstruct into 3D images
+%
 % Indicator vectors stored in:
 % removed_images
 % removed_voxels
 %
-% see also: replace_empty
+% *See also:* replace_empty
 
 % force logical
 dat.removed_images = logical(dat.removed_images);

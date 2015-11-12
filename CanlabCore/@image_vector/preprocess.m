@@ -2,11 +2,12 @@ function obj = preprocess(obj, meth, varargin)
 % obj = preprocess(obj, meth, varargin)
 %
 % Preprocesses data in an fmri_data object
+%
 % Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
 % images, and operating on the rows operates on voxels (or variables more
 % generally) across images.
 %
-% meth: Options
+% *meth: Options*
 %
 % 'resid': Residualize voxels with respect to covariates
 %          Uses obj.covariates, obj.dat.
@@ -42,12 +43,12 @@ function obj = preprocess(obj, meth, varargin)
 %
 % 'interp_images': Interpolate all voxels in a series of images specified
 % by logical vector whout.
-%   obj = preprocess(obj, 'interp_images', whout);
+%   - obj = preprocess(obj, 'interp_images', whout);
 %
-% Examples: two complementary ways to get and plot outliers:
-% dat = preprocess(dat, 'outliers', 'plot');
-% subplot(5, 1, 5); % go to new panel...
-% dat = preprocess(dat, 'outliers_rmssd', 'plot');
+% *Examples:* two complementary ways to get and plot outliers:
+%   - dat = preprocess(dat, 'outliers', 'plot');
+%   - subplot(5, 1, 5); % go to new panel...
+%   - dat = preprocess(dat, 'outliers_rmssd', 'plot');
 
 switch meth
     

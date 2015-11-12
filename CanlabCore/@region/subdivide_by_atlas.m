@@ -1,18 +1,18 @@
 function r = subdivide_by_atlas(r, varargin)
 % r = subdivide_by_atlas(r, [atlas name])
 %
-% Inputs:
-%   r = a region object, defined using region(mask)
-%   atlas name: Optional mask image with integer codes defining in-mask
-%   regions.  Default is 'atlas_labels_combined.img'
+% *Inputs:*
+%   - r = a region object, defined using region(mask)
+%   - atlas name: Optional mask image with integer codes defining in-mask
+%                 regions.  Default is 'atlas_labels_combined.img'
 %
-% Output: A region object with separate clusters for each contiguous blob,
+% *Output:* A region object with separate clusters for each contiguous blob,
 % subdivided by regions labeled in atlas.
 %
-% Example:
-% r = subdivide_by_atlas(r);
-% r(cat(1, r.numVox) < 20) = []; % get rid of small regions
-% cluster_orthviews(r, 'unique');
+% *Example:*
+%   - r = subdivide_by_atlas(r);
+%   - r(cat(1, r.numVox) < 20) = []; % get rid of small regions
+%   - cluster_orthviews(r, 'unique');
 
 if nargin < 2 || isempty(varargin{1})
 atlasname = which('atlas_labels_combined.img');

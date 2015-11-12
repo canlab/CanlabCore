@@ -3,17 +3,19 @@ function obj = check_image_filenames(obj, varargin)
 %
 % obj = check_image_filenames(obj, ['noverbose'])
 %
-% Behavior:
+% *Behavior:*
+%
 % If there are no file names, do nothing.
 % If file names are entered and full path is not, attempt to find full
 % path.
 % If full path info is entered, check to see if files exist.
 % Return output in obj.files_exist, and print a warning if only some exist.
 %
-% image names should be stored in .fullpath
+% Image names should be stored in .fullpath
 % abbreviated image names may be stored in image_names.
 %
-% Notes:
+% *Notes:*
+% 
 % fullpath should have full path to each volume in a string matrixm, with
 % trailing ,volume# for 4-D images as per SPM style expanded list.
 % image_names should have image name only for each volume

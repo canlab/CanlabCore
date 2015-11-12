@@ -83,6 +83,18 @@ switch meth
         mov = movie_rotation(targetaz,targetel,mov,movlength,startt,endt,handles);
 
 
+    case 'color'
+        %mov = movie_colorchange(startcolor,endcolor,handles,mov,movlength)
+        
+        startcolor = varargin{1};
+        endcolor = varargin{2};
+        if length(varargin) > 2, handles = varargin{3}; end
+        if length(varargin) > 3, mov = varargin{4}; end
+        if length(varargin) > 4, movlength = varargin{5}; end
+        
+        mov = movie_colorchange(startcolor,endcolor,handles,mov,movlength);
+
+        
     case 'transparent'
         startt = varargin{1};
         endt = varargin{2};
@@ -196,7 +208,29 @@ for i = 1:nframes
 end
 return
 
+% ------------------------------------------------------------
+% color
+% ------------------------------------------------------------
 
+function mov = movie_colorchange(startcolor,endcolor,handles,mov,movlength)
+
+if nargin < 4, movlength = 3; end  % in s
+
+
+[mov,nframes,axh,az,el] = setup_movie(mov,movlength);
+
+myweights = linspace(1,0,nframes);
+
+for i = 1:nframes
+
+    mov = add_a_frame(mov,axh);
+    set(handles,'FaceColor',myweights(i) * startcolor + (1-myweights(i)) * endcolor);
+
+end
+
+mov = add_a_frame(mov,axh);
+
+return
 
 % ------------------------------------------------------------
 % transparency

@@ -58,8 +58,11 @@ function [volInfo, dat] = iimg_read_img(inputimgs, extended_output_flag, reading
 % * Set up arguments
 % --------------------------------------
 if ~exist('inputimgs', 'var') || isempty(inputimgs)
-    inputimgs = spm_get(Inf);
+    
+    error('Input image not found. Check file and path names.');
+    
 end
+
 if ~exist('extended_output_flag', 'var') || isempty(extended_output_flag)
     extended_output_flag = 0;
 end

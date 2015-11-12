@@ -24,8 +24,9 @@ function p = addbrain(varargin)
 %
 % COMPOSITES
 % -----------------------------------------------------------------
-% 'limbic' : A collection of subcortical nuclei
+% 'limbic' : A collection of subcortical nuclei with left surface
 % 'foursurfaces' : Lateral and medial views, with brainstem
+% 'BG' : Basal ganglia
 %
 % SUBCORTICAL SURFACES
 % -----------------------------------------------------------------
@@ -229,7 +230,9 @@ switch meth
         
         load(which('Keuken_2014_7T_regions.mat'), 'GPe', 'GPi')
         p = imageCluster('cluster', GPe, 'color',[.5 .6 .5],'alpha', .5);
+        set(p(end), 'Tag', 'GPe');
         p = [p imageCluster('cluster', GPi, 'color',[.5 .75 .5],'alpha', .5)];
+        set(p(end), 'Tag', 'GPi');
         
     case {'putamen', 'put'}
         %P = which('Tal_Put.img');
@@ -245,13 +248,17 @@ switch meth
 %         
         pname = 'spm_surf_putamen_luke.mat';
          p = add_surface(pname);
-        set(p,'FaceColor',[.5 .9 .6]);
-        
+        set(p,'FaceColor',[.3 .7 .5]);
+                   
     case {'BG', 'bg', 'basal ganglia'}
         p = addbrain('gp');
+        %set(p(end), 'Tag', 'gp');
         p = [p  addbrain('put')];
+        set(p(end), 'Tag', 'putamen');
         p = [p  addbrain('caudate')];
-
+        set(p(end), 'Tag', 'caudate');
+         
+         
     case {'nucleus accumbens','nacc','nac'}
         %             P = which('NucAccumb_clusters.mat');
         %             load(P)
@@ -292,9 +299,12 @@ switch meth
         myp = addbrain('hippocampus');p = [p myp];
         myp = addbrain('thalamus');p = [p myp];
         myp = addbrain('nacc');p = [p myp];
-        myp = addbrain('caudate');p = [p myp];
-        myp = addbrain('left');p = [p myp];
-        myp = addbrain('gp'); p = [p myp];
+        myp = addbrain('hires left');p = [p myp];
+         myp = addbrain('BG');p = [p myp];
+%          myp = addbrain('caudate');p = [p myp];
+%         myp = addbrain('gp'); p = [p myp];
+%          myp = addbrain('putamen'); p = [p myp];
+         myp = addbrain('brainstem'); p = [p myp];
         set(p,'FaceAlpha',1);
 
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
@@ -376,8 +386,9 @@ end
 
 switch meth
     
-    case 'limbic'
+    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia'}
         % do nothing; multi-region
+        
     otherwise
         if all(ishandle(p))
             set(p, 'Tag', meth);

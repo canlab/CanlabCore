@@ -48,6 +48,7 @@
 %            %If b is an array of 1xm or mx1, b(i) will be applied to
 %            column (i).
 % 'x'       followed by x position for center(s) of plots
+% 'nopoints'   don't display dots
 %
 % Output:
 % h: figure handle
@@ -107,6 +108,7 @@ b=[]; %bandwidth
 plotlegend=1;
 plotmean=1;
 plotmedian=1;
+dopoints = true;
 x = [];
 %_____________________
 
@@ -127,6 +129,9 @@ if isempty(find(strcmp(varargin,'edgecolor')))==0
 end
 if isempty(find(strcmp(varargin,'facealpha')))==0
     alp = varargin{find(strcmp(varargin,'facealpha'))+1};
+end
+if isempty(find(strcmp(varargin,'nopoints')))==0
+    dopoints = false;
 end
 if isempty(find(strcmp(varargin,'mc')))==0
     if isempty(varargin{find(strcmp(varargin,'mc'))+1})==0
@@ -340,7 +345,37 @@ if isempty(xL)==0
 end
 %-------------------------------------------------------------------------
 
-plot_violin_points(x, Y, U, F, lc, fc)
+% WANI ADDED nopoints OPTION (11/12/15)
+if dopoints
+    plot_violin_points(x, Y, U, F, lc, fc)
+end
+
+% SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
+i=1;
+for i = i:size(Y,2)
+    % Plot mean and median values
+    
+    if setX == 0
+        if plotmean
+            p(1)=plot([interp1(U(:,i),F(:,i)+i,MX(:,i)), interp1(flipud(U(:,i)),flipud(i-F(:,i)),MX(:,i)) ],[MX(:,i) MX(:,i)], 'Color',mc(i,:),'LineWidth',2);
+        end
+        
+        if plotmedian
+            p(2)=plot([interp1(U(:,i),F(:,i)+i,MED(:,i)), interp1(flipud(U(:,i)),flipud(i-F(:,i)),MED(:,i)) ],[MED(:,i) MED(:,i)], 'Color',medc(i,:),'LineWidth',2);
+        end
+        
+    elseif setX
+        
+        if plotmean
+            p(1)=plot([interp1(U(:,i),F(:,i)+i,MX(:,i))+x(i)-i, interp1(flipud(U(:,i)),flipud(i-F(:,i)),MX(:,i))+x(i)-i],[MX(:,i) MX(:,i)],'Color', mc(i,:), 'LineWidth',2);
+        end
+        
+        if plotmedian
+            p(2)=plot([interp1(U(:,i),F(:,i)+i,MED(:,i))+x(i)-i, interp1(flipud(U(:,i)),flipud(i-F(:,i)),MED(:,i))+x(i)-i],[MED(:,i) MED(:,i)],'Color', medc(i,:), 'LineWidth',2);
+        end
+    end
+    
+end % For each column
 
 end %of function
 

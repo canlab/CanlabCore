@@ -40,6 +40,7 @@
 % xlabel:    xlabel. Set either [] or in the form {'txt1','txt2','txt3',...}
 % facecolor=[1 0.5 0]%FaceColor: Specify abbrev. or m x 3 matrix (e.g. [1 0 0])
 % edgecolor='k'      %LineColor: Specify abbrev. (e.g. 'k' for black); set either [],'' or 'none' if the mean should not be plotted
+% linewidth=2        Linewidth for boundary of violin plot
 % facealpha=0.5     %Alpha value (transparency)
 % mc='k'      %Color of the bars indicating the mean; set either [],'' or 'none' if the mean should not be plotted
 % medc='r'    %Color of the bars indicating the median; set either [],'' or 'none' if the mean should not be plotted
@@ -101,6 +102,7 @@ function[h, L, MX, MED, bw, F, U] = violinplot(Y,varargin)
 xL=[];
 fc=[1 0.5 0];
 lc='k';
+lw = 1;
 alp=0.5;
 mc='k';
 medc='r';
@@ -126,6 +128,9 @@ if isempty(find(strcmp(varargin,'facecolor')))==0
 end
 if isempty(find(strcmp(varargin,'edgecolor')))==0
     lc = varargin{find(strcmp(varargin,'edgecolor'))+1};
+end
+if isempty(find(strcmp(varargin,'linewidth')))==0
+    lw = varargin{find(strcmp(varargin,'linewidth'))+1};
 end
 if isempty(find(strcmp(varargin,'facealpha')))==0
     alp = varargin{find(strcmp(varargin,'facealpha'))+1};
@@ -263,16 +268,16 @@ for i = i:size(Y,2)
     if isempty(lc)
         
         if setX == 0
-            h(i)=fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor','none');
+            h(i)=fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor','none', 'LineWidth', lw);
         else
-            h(i)=fill([F(:,i)+x(i);flipud(x(i)-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor','none');
+            h(i)=fill([F(:,i)+x(i);flipud(x(i)-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor','none', 'LineWidth', lw);
         end
     else
         
         if setX == 0
-            h(i)=fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor', lc(i,:));
+            h(i)=fill([F(:,i)+i;flipud(i-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor', lc(i,:), 'LineWidth', lw);
         else
-            h(i)=fill([F(:,i)+x(i);flipud(x(i)-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor', lc(i,:));
+            h(i)=fill([F(:,i)+x(i);flipud(x(i)-F(:,i))],[U(:,i);flipud(U(:,i))],fc(i,:),'FaceAlpha',alp,'EdgeColor', lc(i,:), 'LineWidth', lw);
         end
     end
     

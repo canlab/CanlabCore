@@ -1,7 +1,4 @@
 function obj = build_single_trial(obj, inputhrf)
-%
-% obj = build_single_trial(fmri_model_obj, inputhrf)
-%
 % Build a single-trial design matrix (xx) for an fmri_model object
 %
 % We assume that the same conditions are modeled for each session
@@ -16,18 +13,26 @@ function obj = build_single_trial(obj, inputhrf)
 % rather than using a basis set.  In single_trial_estimates, custom HRFs
 % are created for each voxel by using the condition- and voxel-specific hrf
 % estimates stored during model fitting.
-% The sequence would be:
-% 1 - robustfit(my_model), to fit average model and get HRF est for each
-% voxel
-% 2 - single_trial_estimates(my_model), to use this function to build
-% single-trial design matrices and fit them.
 %
-% inputhrf should be a cell array of length nconds (number of conditions).
+% The sequence would be:
+%   1. robustfit(my_model), to fit average model and get HRF est for each
+%      voxel
+%   2. single_trial_estimates(my_model), to use this function to build
+%      single-trial design matrices and fit them.
+%
+% :Usage:
+% ::
+%
+%     obj = build_single_trial(fmri_model_obj, inputhrf)
+%
+% :Inputs:
+%
+%   **inputhrf:**
+%        should be a cell array of length nconds (number of conditions).
 
 
-% Check assumptions and basis set
+obj = check_model(obj); % Check assumptions and basis set
 % We assume that the same conditions are modeled for each session
-obj = check_model(obj);
 
 % ----------------------------------------------
 % Define sessions and number of conditions

@@ -1,14 +1,16 @@
 function [Xs, delta, C, B, names] = get_session_X(obj, s)
-% [Xs, delta, C, B, names] = get_session_X(obj, session number)
-%
-%
 % Get design matrix (predictors) for one session of fmri_model object, using
 % basis functions defined in the object and onsets for one session (s).
 %
+% :Usage:
+% ::
+%
+%     [Xs, delta, C, B, names] = get_session_X(obj, session number)
+%
 
-% ----------------------------------------------
-% Define sessions and number of conditions
-% ----------------------------------------------
+% ..
+%    Define sessions and number of conditions
+% ..
 
 nsess = length(obj.Sess);
 

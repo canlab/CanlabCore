@@ -1,7 +1,4 @@
 function obj = replace_basis_set(obj, condition_num, xBF_hires)
-%
-% obj = replace_basis_set(obj, condition_num, xBF_hires)
-%
 % Replace a basis set in an fmri_model object with another one of your
 % choosing.
 %
@@ -11,14 +8,22 @@ function obj = replace_basis_set(obj, condition_num, xBF_hires)
 % Each condition across all sessions must be modeled with the same basis
 % set. That is, there can be only one basis set per condition, e.g., one
 % for anticipation (used in each session) and one for pain.
-% 
-% e.g., generate a custom spline basis set and use that for Condition 1,
-% and the standard one for Condition 2:
 %
-% [xBF_hires, xBF] = fmri_spline_basis(2, 'length', 12, 'nbasis', 3, 'order', 3, 'plot');
-
-% save this to get info that is not typically in basis set until after
-% model is built.
+% :Usage:
+% ::
+%
+%     obj = replace_basis_set(obj, condition_num, xBF_hires)
+%
+% :Examples:
+% ::
+%
+%    % generate a custom spline basis set and use that for Condition 1,
+%    % and the standard one for Condition 2:
+%
+%    [xBF_hires, xBF] = fmri_spline_basis(2, 'length', 12, 'nbasis', 3, 'order', 3, 'plot');
+%
+%    %save this to get info that is not typically in basis set until after
+%    %model is built.
 
 oldBF = obj.xBF(1); 
 

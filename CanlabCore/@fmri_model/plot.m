@@ -1,11 +1,14 @@
 function plot(obj)
+% Plot an fmri_model object
 %
-% plot(obj)
-% plot an fmri_model object
+% :Usage:
+% ::
+%
+%     plot(obj)
 
-% ----------------------------------------------
-% Setup
-% ----------------------------------------------
+% ..
+%    Setup
+% ..
 
 TR = obj.xY.RT;
 

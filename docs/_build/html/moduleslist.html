@@ -724,6 +724,67 @@ f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;Switc
 </dd></dl>
 
 <dl class="function">
+<dt id="&#64;canlab_dataset.scatterplot">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">scatterplot</code><span class="sig-paren">(</span><em>D</em>, <em>v1</em>, <em>v2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.scatterplot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Scatterplot of two variables in dataset</dt>
+<dd><ul class="first last simple">
+<li>can be either event-level or subject-level</li>
+<li>event-level data is plotted as multi-line plot, one line per subject</li>
+<li>both variables must be valid names (case-sensitive)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fig_han</span> <span class="o">=</span> <span class="n">scatterplot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname1</span><span class="p">,</span> <span class="n">varname2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><blockquote class="first">
+<div><dl class="docutils">
+<dt><strong>nofig:</strong></dt>
+<dd><p class="first last">suppress creation of new figure</p>
+</dd>
+<dt><strong>subjtype:</strong></dt>
+<dd><p class="first last">group by the following variable name</p>
+</dd>
+<dt><strong>wh_keep:</strong></dt>
+<dd><p class="first last">followed by logical</p>
+</dd>
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">followed by colors.</p>
+</dd>
+<dt><strong>dorobust:</strong></dt>
+<dd><p class="first last">do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>the function plot_correlation_samefig is updated, at some point in the future.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>scatterplot(D, &#39;Anxiety&#39;, &#39;Frustration&#39;);
+fig_han = scatterplot(D, D.Subj_Level.names{1}, D.Subj_Level.names{2});
+scatterplot(D, D.Event_Level.names{1}, D.Event_Level.names{2});
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="&#64;canlab_dataset.spm2canlab_dataset">
 <code class="descclassname">&#64;canlab_dataset.</code><code class="descname">spm2canlab_dataset</code><span class="sig-paren">(</span><em>obj</em>, <em>subject</em>, <em>spm</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.spm2canlab_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract Event_Level data from subjects&#8217; SPM.mat files to add data to
@@ -2171,19 +2232,27 @@ exist on disk on the path.</p>
 <dl class="function">
 <dt id="&#64;fmri_model.build">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">build</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>obj = build(fmri_model_obj)</p>
-<p>Build the design matrix (xx) for an fmri_model object</p>
-<p>We assume that the same conditions are modeled for each session
+<dd><p>Build the design matrix (xx) for an fmri_model object</p>
+<p>We assume that the same conditions are modeled for each session.
 We assume that you have one basis set per condition (this is different
-from SPM, which only allows a single basis set across all conditions)
-Define sessions and number of conditions</p>
+from SPM, which only allows a single basis set across all conditions)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fmri_model_obj</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;fmri_model.build_single_trial">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">build_single_trial</code><span class="sig-paren">(</span><em>obj</em>, <em>inputhrf</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.build_single_trial" title="Permalink to this definition">¶</a></dt>
-<dd><p>obj = build_single_trial(fmri_model_obj, inputhrf)</p>
-<p>Build a single-trial design matrix (xx) for an fmri_model object</p>
+<dd><p>Build a single-trial design matrix (xx) for an fmri_model object</p>
 <p>We assume that the same conditions are modeled for each session
 We assume that you have one basis set per condition (this is different
 from SPM, which only allows a single basis set across all conditions)</p>
@@ -2193,35 +2262,65 @@ estimated an initial model and saved image data.</p>
 analyses, in that it takes in a single, custom HRF for each condition,
 rather than using a basis set.  In single_trial_estimates, custom HRFs
 are created for each voxel by using the condition- and voxel-specific hrf
-estimates stored during model fitting.
-The sequence would be:
-1 - robustfit(my_model), to fit average model and get HRF est for each
-voxel
-2 - single_trial_estimates(my_model), to use this function to build
-single-trial design matrices and fit them.</p>
-<p>inputhrf should be a cell array of length nconds (number of conditions).
-Check assumptions and basis set
-We assume that the same conditions are modeled for each session</p>
+estimates stored during model fitting.</p>
+<dl class="docutils">
+<dt>The sequence would be:</dt>
+<dd><ol class="first last arabic simple">
+<li>robustfit(my_model), to fit average model and get HRF est for each
+voxel</li>
+<li>single_trial_estimates(my_model), to use this function to build
+single-trial design matrices and fit them.</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">build_single_trial</span><span class="p">(</span><span class="n">fmri_model_obj</span><span class="p">,</span> <span class="n">inputhrf</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>inputhrf:</strong></dt>
+<dd><p class="first last">should be a cell array of length nconds (number of conditions).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;fmri_model.get_condition_assignments">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">get_condition_assignments</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.get_condition_assignments" title="Permalink to this definition">¶</a></dt>
-<dd><ul class="simple">
-<li>Indicator matrix coding for which columns in X belong to the same</li>
+<dd><dl class="docutils">
+<dt>Condition assignments</dt>
+<dd><ul class="first last simple">
+<li>Indicator matrix coding for which columns in X belong to the same
+modeled condition, and are part of the same HRF fit</li>
+<li>There is one set of columns for each condition modeled, and one set of
+columns for each parametric modulator of each condition</li>
+<li>Because parametric modulators may not exist for all conditions, we need
+to build this dynamically for modulators.</li>
 </ul>
-<p>modeled condition, and are part of the same HRF fit
-- There is one set of columns for each condition modeled, and one set of
-columns for each parametric modulator of each condition
-- Because parametric modulators may not exist for all conditions, we need
-to build this dynamically for modulators.</p>
+</dd>
+</dl>
 <p>Design matrix build (which calls method get_session_X) builds columns in
-this order:
-All within Session:
+this order:</p>
+<p>All within Session:
 Regressors of interest, basis functions within conditions
 Parametric modulators, basis functions within conditions
-Covariates of no interest
-Then:
+Covariates of no interest</p>
+<p>Then:
 Baselines (session/run intercepts)</p>
 <p>This method is called automatically in the build method.</p>
 </dd></dl>
@@ -2229,65 +2328,149 @@ Baselines (session/run intercepts)</p>
 <dl class="function">
 <dt id="&#64;fmri_model.get_session_X">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">get_session_X</code><span class="sig-paren">(</span><em>obj</em>, <em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.get_session_X" title="Permalink to this definition">¶</a></dt>
-<dd><p>[Xs, delta, C, B, names] = get_session_X(obj, session number)</p>
-<p>Get design matrix (predictors) for one session of fmri_model object, using
+<dd><p>Get design matrix (predictors) for one session of fmri_model object, using
 basis functions defined in the object and onsets for one session (s).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[Xs, delta, C, B, names] = get_session_X(obj, session number)
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;fmri_model.plot">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.plot" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Plot an fmri_model object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">plot</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="function">
 <dt id="&#64;fmri_model.replace_basis_set">
 <code class="descclassname">&#64;fmri_model.</code><code class="descname">replace_basis_set</code><span class="sig-paren">(</span><em>obj</em>, <em>condition_num</em>, <em>xBF_hires</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.replace_basis_set" title="Permalink to this definition">¶</a></dt>
-<dd><p>obj = replace_basis_set(obj, condition_num, xBF_hires)</p>
-<p>Replace a basis set in an fmri_model object with another one of your
+<dd><p>Replace a basis set in an fmri_model object with another one of your
 choosing.</p>
 <p>This allows one to use a custom basis set, and also to use different
 basis sets for different trial types.</p>
 <p>Each condition across all sessions must be modeled with the same basis
 set. That is, there can be only one basis set per condition, e.g., one
 for anticipation (used in each session) and one for pain.</p>
-<p>e.g., generate a custom spline basis set and use that for Condition 1,
-and the standard one for Condition 2:</p>
-<p>[xBF_hires, xBF] = fmri_spline_basis(2, &#8216;length&#8217;, 12, &#8216;nbasis&#8217;, 3, &#8216;order&#8217;, 3, &#8216;plot&#8217;);
-save this to get info that is not typically in basis set until after
-model is built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">replace_basis_set</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">condition_num</span><span class="p">,</span> <span class="n">xBF_hires</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% generate a custom spline basis set and use that for Condition 1,
+% and the standard one for Condition 2:
+
+[xBF_hires, xBF] = fmri_spline_basis(2, &#39;length&#39;, 12, &#39;nbasis&#39;, 3, &#39;order&#39;, 3, &#39;plot&#39;);
+
+%save this to get info that is not typically in basis set until after
+%model is built.
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;fmri_model.robustfit">
-<code class="descclassname">&#64;fmri_model.</code><code class="descname">robustfit</code><span class="sig-paren">(</span><em>fmri_model_obj</em>, <em>fmri_data_obj</em><span class="optional">[</span>, <em>optional args</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.robustfit" title="Permalink to this definition">¶</a></dt>
-<dd><p>robust fit for a model object to data object</p>
-<p>Features:
-spatial smoothing of weights at 12 mm FWHM
+<code class="descclassname">&#64;fmri_model.</code><code class="descname">robustfit</code><span class="sig-paren">(</span><em>fmri_model_obj</em>, <em>fmri_data_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.robustfit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Robust fit for a model object to data object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>robustfit(fmri_model_obj, fmri_data_obj, [optional args])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Features:</th><td class="field-body"><p class="first">spatial smoothing of weights at 12 mm FWHM
 ridge regression <strong>*not yet*</strong></p>
-<p>Preproc scaling:
-1) Remove covariates using ridge reg; ridge trace for full model
-2) scale to % signal change across time (cols) OR rank time points (for
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Preproc scaling:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ol class="first arabic simple">
+<li>Remove covariates using ridge reg; ridge trace for full model</li>
+<li>scale to % signal change across time (cols) OR rank time points (for
 w/i ss predictions??) AND/OR rank or center rows (images; for &#8216;shape&#8217;
-analysis</p>
-<p>Example: %sig across time, rank across rows: relative % sig change
-Different models of noise lead to different ideas about optimal preproc
+analysis</li>
+</ol>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><p class="first">%sig across time, rank across rows: relative % sig change</p>
+<p>Different models of noise lead to different ideas about optimal preproc
 If large diffs in nuisance scaling in BOLD across individuals, ranking cols may
 be good idea. but then individual diffs in overall activity will be removed...</p>
-<p>&#8216;tune&#8217;, tuning const for robust reg
-&#8216;iter&#8217;, &#8216;maxiterations&#8217;, robust reg /WLS iterations. 1 = OLS only!
-&#8216;smooth&#8217;, &#8216;spatial_smooth_fwhm&#8217;, 0 or smoothing kernel for weights</p>
-<p>&#8216;nosmooth&#8217;, spatial_smooth_fwhm = 0;
-&#8216;stats&#8217;, &#8216;calculate_stats&#8217;, calculate_stats = 1; IN DEVELOPMENT
-&#8216;noresiduals&#8217;, write_residuals = 0;
-&#8216;noplots&#8217;, save_plots = 0;
-Defaults/constants
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tune:</strong></dt>
+<dd><p class="first last">tuning const for robust reg</p>
+</dd>
+<dt><strong>iter:</strong></dt>
+<dd><p class="first last">&#8216;maxiterations&#8217;, robust reg /WLS iterations. 1 = OLS only!</p>
+</dd>
+<dt><strong>smooth:</strong></dt>
+<dd><p class="first last">&#8216;spatial_smooth_fwhm&#8217;, 0 or smoothing kernel for weights</p>
+</dd>
+<dt><strong>nosmooth:</strong></dt>
+<dd><p class="first last">spatial_smooth_fwhm = 0;</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">&#8216;calculate_stats&#8217;, calculate_stats = 1; IN DEVELOPMENT</p>
+</dd>
+<dt><strong>noresiduals:</strong></dt>
+<dd><p class="first last">write_residuals = 0;</p>
+</dd>
+<dt><strong>noplots:</strong></dt>
+<dd><p class="first last">save_plots = 0;</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="&#64;fmri_model.saveplots">
-<code class="descclassname">&#64;fmri_model.</code><code class="descname">saveplots</code><span class="sig-paren">(</span><em>fmri_model</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.saveplots" title="Permalink to this definition">¶</a></dt>
-<dd><p>Output dir</p>
+<dt id="&#64;fmri_model.rotate_to_pca">
+<code class="descclassname">&#64;fmri_model.</code><code class="descname">rotate_to_pca</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmri_model.rotate_to_pca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate design matrix columns within all conditions to principal component projection.</p>
 </dd></dl>
 
 <dl class="function">

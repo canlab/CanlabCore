@@ -1,4 +1,4 @@
-
+function fig_han = scatterplot(D, v1, v2, varargin)
 % Scatterplot of two variables in dataset
 %   - can be either event-level or subject-level
 %   - event-level data is plotted as multi-line plot, one line per subject
@@ -36,7 +36,6 @@
 %    Copyright Tor Wager, 2013
 % ..
 
-function fig_han = scatterplot(D, v1, v2, varargin)
 fig_han = [];
 dofig = 1;
 grouping_var_name=[];

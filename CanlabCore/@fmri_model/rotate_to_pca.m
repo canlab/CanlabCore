@@ -1,5 +1,6 @@
-% Rotate design matrix columns within all conditions to principal component projection.
 function [obj, x_eig, c_eig] = rotate_to_pca(obj)
+% Rotate design matrix columns within all conditions to principal component projection.
+
 
 eigval_cutoff = .1; % 100*eps;  % or 1
 

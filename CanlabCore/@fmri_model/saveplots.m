@@ -1,7 +1,6 @@
 function saveplots(fmri_model, varargin)
 
-% Output dir
-if isempty(varargin)
+if isempty(varargin) % Output dir
     savedir = pwd;
 else
 savedir = varargin{1};

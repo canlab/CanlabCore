@@ -1,16 +1,18 @@
 function obj = build(obj)
-%
-% obj = build(fmri_model_obj)
-%
 % Build the design matrix (xx) for an fmri_model object
 %
-% We assume that the same conditions are modeled for each session
+% We assume that the same conditions are modeled for each session.
 % We assume that you have one basis set per condition (this is different
 % from SPM, which only allows a single basis set across all conditions)
+%
+% :Usage:
+% ::
+%
+%     obj = build(fmri_model_obj)
+%
 
 
-% Define sessions and number of conditions
-nsess = length(obj.Sess);
+nsess = length(obj.Sess); % Define sessions and number of conditions
 
 % add predictors for each session
 [X, C, B, names] = deal(cell(1, nsess));

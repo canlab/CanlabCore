@@ -1,20 +1,20 @@
 function cmatrix = get_condition_assignments(obj)
-%
 % Condition assignments
-% ---------------------------------------------------------------------
-% - Indicator matrix coding for which columns in X belong to the same
-% modeled condition, and are part of the same HRF fit
-% - There is one set of columns for each condition modeled, and one set of
-% columns for each parametric modulator of each condition
-% - Because parametric modulators may not exist for all conditions, we need
-% to build this dynamically for modulators.
+%   - Indicator matrix coding for which columns in X belong to the same
+%     modeled condition, and are part of the same HRF fit
+%   - There is one set of columns for each condition modeled, and one set of
+%     columns for each parametric modulator of each condition
+%   - Because parametric modulators may not exist for all conditions, we need
+%     to build this dynamically for modulators.
 %
 % Design matrix build (which calls method get_session_X) builds columns in
 % this order:
+%
 % All within Session:
 % Regressors of interest, basis functions within conditions
 % Parametric modulators, basis functions within conditions
 % Covariates of no interest
+%
 % Then:
 % Baselines (session/run intercepts)
 %

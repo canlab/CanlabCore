@@ -1,36 +1,54 @@
 function robustfit(fmri_model_obj, fmri_data_obj, varargin)
-% robustfit(fmri_model_obj, fmri_data_obj, [optional args])
+% Robust fit for a model object to data object
 %
-% robust fit for a model object to data object
+% :Usage:
+% ::
 %
-% Features:
-% spatial smoothing of weights at 12 mm FWHM
-% ridge regression ***not yet***
+%     robustfit(fmri_model_obj, fmri_data_obj, [optional args])
 %
-% Preproc scaling:
-% 1) Remove covariates using ridge reg; ridge trace for full model
-% 2) scale to % signal change across time (cols) OR rank time points (for
-% w/i ss predictions??) AND/OR rank or center rows (images; for 'shape'
-% analysis
+% :Features:
+%    spatial smoothing of weights at 12 mm FWHM
+%    ridge regression ***not yet***
 %
-% Example: %sig across time, rank across rows: relative % sig change
-% Different models of noise lead to different ideas about optimal preproc
-% If large diffs in nuisance scaling in BOLD across individuals, ranking cols may
-% be good idea. but then individual diffs in overall activity will be removed...
+% :Preproc scaling:
+%   1. Remove covariates using ridge reg; ridge trace for full model
+%   2. scale to % signal change across time (cols) OR rank time points (for
+%      w/i ss predictions??) AND/OR rank or center rows (images; for 'shape'
+%      analysis
 %
-% Options:
-% -------------------------------------------------------------------
-% 'tune', tuning const for robust reg
-% 'iter', 'maxiterations', robust reg /WLS iterations. 1 = OLS only!
-% 'smooth', 'spatial_smooth_fwhm', 0 or smoothing kernel for weights
+% :Example:
+%    %sig across time, rank across rows: relative % sig change
 %
-% 'nosmooth', spatial_smooth_fwhm = 0;
-% 'stats', 'calculate_stats', calculate_stats = 1; IN DEVELOPMENT
-% 'noresiduals', write_residuals = 0;
-% 'noplots', save_plots = 0;
+%    Different models of noise lead to different ideas about optimal preproc
+%    If large diffs in nuisance scaling in BOLD across individuals, ranking cols may
+%    be good idea. but then individual diffs in overall activity will be removed...
+%
+% :Options:
+%
+%   **tune:**
+%        tuning const for robust reg
+%
+%   **iter:**
+%        'maxiterations', robust reg /WLS iterations. 1 = OLS only!
+%
+%   **smooth:**
+%        'spatial_smooth_fwhm', 0 or smoothing kernel for weights
+%
+%   **nosmooth:**
+%        spatial_smooth_fwhm = 0;
+%
+%   **stats:**
+%        'calculate_stats', calculate_stats = 1; IN DEVELOPMENT
+%
+%   **noresiduals:**
+%        write_residuals = 0;
+%
+%   **noplots:**
+%        save_plots = 0;
 
-% Defaults/constants
-% ---------------------------------------------------------------------
+% ..
+%    Defaults/constants
+% ..
 
 tune = 4.6850;  % from Matlab's implementation
 bisquare_fcn = @(r) (abs(r)<1) .* (1 - r.^2).^2;

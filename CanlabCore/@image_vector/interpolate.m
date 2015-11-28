@@ -1,9 +1,14 @@
 function dat = interpolate(dat, varargin)
 % Interpolate over missing values in image_vector object
 %
-%   - dat = interpolate(dat, varargin)
+% :Usage:
+% ::
 %
-% *Input:* image_vector object (dat; e.g., an fmri_data object)
+%    dat = interpolate(dat, varargin)
+%
+% :Input: 
+%    image_vector object (dat; e.g., an fmri_data object)
+%
 % Use when there are some missing values in the mask image
 % Performs 3-D linear interpolation to fill in all values in the original
 % mask.
@@ -16,12 +21,12 @@ function dat = interpolate(dat, varargin)
 % It will not return values for all voxels in the 91 x 109 x 91 space,
 % however.
 %
-% *Note:* This function does not upsample the data now, but could be extended
+% :Note:
+% This function does not upsample the data now, but could be extended
 % to do so fairly easily.
 % 
 
-% values > 1 would upsample the data
-upsamplevalue = 1;
+upsamplevalue = 1; % values > 1 would upsample the data
 
 SPACE = define_sampling_space(dat.volInfo, upsamplevalue);  
 

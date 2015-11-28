@@ -1,14 +1,19 @@
 function dat = flip(dat, varargin)
 % Flips an image_vector object left to right
 %
-% *Optional:*
+% :Optional Inputs:
 %
-% input 'mirror' to make a symmetrical image, averaging the left
-% and right hemispheres
-%   - dat = flip(dat, ['mirror'])
+%   Input 'mirror' to make a symmetrical image, averaging the left
+%   and right hemispheres
 %
-% tor. may 2012
-
+% :Examples:
+% ::
+%
+%    dat = flip(dat, ['mirror'])
+%
+% ..
+%    Tor. may 2012
+% ..
 
 vdat = reconstruct_image(dat);
 orig_dat = vdat(:);

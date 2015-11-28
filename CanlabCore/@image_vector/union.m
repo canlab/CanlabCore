@@ -1,15 +1,19 @@
 function [dat, dati] = union(dat1, dat2, outputname)
 % Union and intersection masks for two image_vector objects
 %
-%   - [dat_union, dat_intersection] = union(dat1, dat2, outputname)
+% :Usage:
+% ::
 %
-%   - dat = union(dat1, dat2, outputname)
+%    [dat_union, dat_intersection] = union(dat1, dat2, outputname)
+%
+%     dat = union(dat1, dat2, outputname)
 %     outputname = character array name for union image
 %                   INCLUDE .img at the end.
 %
-% NOTE: must now be in same space!
-%
-% tor
+% ..
+%    NOTE: must now be in same space!
+%    tor
+% ..
 
 isdiff = compare_space(dat1, dat2);
 if isdiff == 1 || isdiff == 2

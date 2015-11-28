@@ -990,7 +990,7 @@ expression value (dot-product).</li>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>additional_nuisance</strong></dt>
 <dd><p class="first last">When you have additional nuisance variables that you want
@@ -2509,66 +2509,123 @@ mask, here) in a series of images stored in dat.</li>
 <p>The mask or weight map does not have to be in the same space as the dat;
 it will be resampled to the space of the data in dat.</p>
 <p>To extract pattern expression values for each ROI within a mask use extract_roi_averages()</p>
-<p><em>Optional inputs:</em></p>
-<p>&#8216;pattern_expression&#8217; : calculate and return the cross-product of each
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>pattern_expression:</strong></dt>
+<dd><p class="first last">calculate and return the cross-product of each
 image in dat and the values in the mask.  This is useful if comparing
 expression values that are comprised of different datasets or differing
 number of voxels.</p>
-<p>&#8216;correlation&#8217; : calculate the pearson correlation coefficient of each
+</dd>
+<dt><strong>correlation:</strong></dt>
+<dd><p class="first last">calculate the pearson correlation coefficient of each
 image in dat and the values in the mask.</p>
-<p>&#8216;norm_mask&#8217;: normalize the mask weights by L2 norm, for patt expression
+</dd>
+<dt><strong>norm_mask:</strong></dt>
+<dd><p class="first last">normalize the mask weights by L2 norm, for patt expression
 only.</p>
-<p>&#8216;ignore_missing&#8217;: use with pattern expression only. Ignore weights on voxels
+</dd>
+<dt><strong>ignore_missing:</strong></dt>
+<dd><p class="first last">use with pattern expression only. Ignore weights on voxels
 with zero values in test image. If this is not entered, the function will
 check for these values and give a warning.</p>
-<p>&#8216;invert&#8217;: Invert the mask so that out-of-mask voxels are now in (using
+</dd>
+<dt><strong>invert:</strong></dt>
+<dd><p class="first last">Invert the mask so that out-of-mask voxels are now in (using
 the mask as an &#8216;exclude mask&#8217; rather than an include-mask. If pattern
 expression is requested, the behavior is different, and it inverts the
 sign of in-mask pattern weights.</p>
-<blockquote>
-<div><ul class="simple">
-<li>[dat, mask] = apply_mask(dat, mask)</li>
-<li>[dat, mask] = apply_mask(dat, mask image name)</li>
-<li>[dat, mask] = apply_mask(dat, mask image vector object)</li>
-<li>[pattern_exp_values] = apply_mask(dat, weight map image, &#8216;pattern_expression&#8217;, &#8216;ignore_missing&#8217;)</li>
-<li>[pattern_exp_values] = apply_mask(dat, weight map image, &#8216;pattern_expression&#8217;, &#8216;ignore_missing&#8217;,&#8217;correlation&#8217;)</li>
-</ul>
-</div></blockquote>
-<p><em>See also:</em></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[dat, mask] = apply_mask(dat, mask)
+[dat, mask] = apply_mask(dat, mask image name)
+[dat, mask] = apply_mask(dat, mask image vector object)
+[pattern_exp_values] = apply_mask(dat, weight map image, &#39;pattern_expression&#39;, &#39;ignore_missing&#39;)
+[pattern_exp_values] = apply_mask(dat, weight map image, &#39;pattern_expression&#39;, &#39;ignore_missing&#39;,&#39;correlation&#39;)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <p>extract_roi_averages, to get individual region averages / local pattern expression
 apply_nps, which does whole-pattern and local regional expression</p>
-<p><em>Notes:</em></p>
-<p>Last modified: 10/30/11 to add support for masks that are weight maps</p>
-<p>12/15/13:  Luke Chang - added correlation option for pattern-expression, 
-set options</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.check_image_filenames">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">check_image_filenames</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.check_image_filenames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether images listed in obj.fullpath actually exist</p>
-<p>obj = check_image_filenames(obj, [&#8216;noverbose&#8217;])</p>
-<p><em>Behavior:</em></p>
-<p>If there are no file names, do nothing.
-If file names are entered and full path is not, attempt to find full
-path.
-If full path info is entered, check to see if files exist.
-Return output in obj.files_exist, and print a warning if only some exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">check_image_filenames</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;noverbose&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Behavior:</th><td class="field-body"><ul class="first last simple">
+<li>If there are no file names, do nothing.</li>
+<li>If file names are entered and full path is not, attempt to find full
+path.</li>
+<li>If full path info is entered, check to see if files exist.
+Return output in obj.files_exist, and print a warning if only some exist.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>Image names should be stored in .fullpath
 abbreviated image names may be stored in image_names.</p>
-<p><em>Notes:</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <p>fullpath should have full path to each volume in a string matrixm, with
-trailing ,volume# for 4-D images as per SPM style expanded list.
-image_names should have image name only for each volume</p>
-<p><a href="#id7"><span class="problematic" id="id8">**</span></a>* May still be debugging issues with 3-D vs. 4-D files
-if &#8216;noverbose&#8217; is entered, suppress output</p>
+trailing ,volume# for 4-D images as per SPM style expanded list.</p>
+<p>image_names should have image name only for each volume</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.compare_space">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">compare_space</code><span class="sig-paren">(</span><em>obj</em>, <em>obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.compare_space" title="Permalink to this definition">¶</a></dt>
-<dd><p>function isdiff = compare_space(obj, obj2)</p>
-<p>Compare spaces of two image_vector objects</p>
+<dd><p>Compare spaces of two image_vector objects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function isdiff = compare_space(obj, obj2)
+</pre></div>
+</div>
 <p>Returns 0 if same, 1 if different spaces, 2 if no volInfo info for one or
 more objects. 3 if same space, but different in-mask voxels in .dat or
 volInfo.image_indx</p>
@@ -2577,19 +2634,39 @@ volInfo.image_indx</p>
 <dl class="function">
 <dt id="&#64;image_vector.extract_gray_white_csf">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">extract_gray_white_csf</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.extract_gray_white_csf" title="Permalink to this definition">¶</a></dt>
-<dd><p>[values, components] = extract_gray_white_csf(obj)</p>
-<p>Extracts mean values (values) and top 5 component scores (components)
+<dd><p>Extracts mean values (values) and top 5 component scores (components)
 from each of gray, white, and CSF masks.
 Images must be in standard MNI space for this to apply.</p>
-<p>obj = an image_vector (e.g., fmri_data) object</p>
-<p>Tor Wager, July 21, 2015</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">values</span><span class="p">,</span> <span class="n">components</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_gray_white_csf</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">an image_vector (e.g., fmri_data) object</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.extract_roi_averages">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">extract_roi_averages</code><span class="sig-paren">(</span><em>obj</em>, <em>mask</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.extract_roi_averages" title="Permalink to this definition">¶</a></dt>
-<dd><p>cl = extract_roi_averages(image_vector obj, mask, [average_over])</p>
-<p>This image_vector method a extracts and averages data stored in an fmri_data object 
+<dd><p>This image_vector method a extracts and averages data stored in an fmri_data object 
 from a set of ROIs defined in a mask.
 It is <em>slightly</em> different from the fmri_data method, as fmri_data has
 more fields.</p>
@@ -2601,67 +2678,111 @@ values, or regions defined by unique integer codes in the mask image
 <p>Mask/Atlas image does NOT have to be in the same space as the images to
 extract from.  It will be remapped/resliced.</p>
 <p>Extracted data is returned in single data format.</p>
-<dl class="docutils">
-<dt>Inputs:</dt>
-<dd><ol class="first last arabic simple">
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = extract_roi_averages(image_vector obj, mask, [average_over])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><ul class="first simple">
 <li>char array of strings containing 4D image file names (data extracted from these)</li>
 <li>mask_image to extract from.</li>
-</ol>
-</dd>
-</dl>
-<p><em>Optional inputs:</em></p>
-<dl class="docutils">
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>average_over:</strong></dt>
 <dd><ul class="first last simple">
-<li>Default = &#8216;contiguous_regions&#8217; to average over contiguous voxels
+<li>Default: &#8216;contiguous_regions&#8217; to average over contiguous voxels
 bounded by voxels of 0 or NaN (non-data values)</li>
 <li>Alt. option = &#8216;unique_mask_values&#8217; to average over unique integer codes in the mask image
 (i.e., for atlas images with unique codes for each defined region)</li>
 </ul>
 </dd>
 </dl>
-<p><em>Example:</em></p>
-<blockquote>
-<div><ul class="simple">
-<li>imgs_to_extract_from = filenames(&#8216;w*.nii&#8217;,&#8217;char&#8217;);</li>
-<li>mask_image = which(&#8216;anat_lbpa_thal.img&#8217;);</li>
-<li>[cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);</li>
-</ul>
-</div></blockquote>
-<p><em>Related functions:</em></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">imgs_to_extract_from</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;w*.nii&#39;</span><span class="p">,</span><span class="s">&#39;char&#39;</span><span class="p">);</span>
+<span class="n">mask_image</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="s">&#39;anat_lbpa_thal.img&#39;</span><span class="p">);</span>
+<span class="p">[</span><span class="n">cl</span><span class="p">,</span> <span class="n">imgdat</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_image_data</span><span class="p">(</span><span class="n">imgs_to_extract_from</span><span class="p">,</span> <span class="n">mask_image</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <p>For an non-object-oriented alternative, see extract_image_data.m</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.fastmontage">
-<code class="descclassname">&#64;image_vector.</code><code class="descname">fastmontage</code><span class="sig-paren">(</span><em>dat</em><span class="optional">[</span>, <em>myview</em><span class="optional">]</span><span class="optional">[</span>, <em>'spacing'</em>, <em>slicespacing</em><span class="optional">]</span><span class="optional">[</span>, <em>'vertical'</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.fastmontage" title="Permalink to this definition">¶</a></dt>
-<dd><p>fastmontage(dat);</p>
-<p>Creates 3 separate montage views - ax, cor, sagg</p>
-<p>In special figure window</p>
-<blockquote>
-<div><ul class="simple">
-<li>fastmontage(dat, &#8216;coronal&#8217;);</li>
-<li>fastmontage(dat, &#8216;saggital&#8217;, &#8216;spacing&#8217;, 10);</li>
-<li>fastmontage(dat, &#8216;saggital&#8217;, &#8216;spacing&#8217;, 10, &#8216;vertical&#8217;);</li>
-<li>fastmontage(dat, &#8216;saggital&#8217;, &#8216;slices_per_row&#8217;, 12);</li>
-</ul>
-</div></blockquote>
-<p>Tor Wager, Aug 2012</p>
+<code class="descclassname">&#64;image_vector.</code><code class="descname">fastmontage</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.fastmontage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates 3 separate montage views - ax, cor, sagg in a special figure window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="n">myview</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="n">slicespacing</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;vertical&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;coronal&#39;</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;vertical&#39;</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;slices_per_row&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.flip">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">flip</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.flip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flips an image_vector object left to right</p>
-<p><em>Optional:</em></p>
-<p>input &#8216;mirror&#8217; to make a symmetrical image, averaging the left
-and right hemispheres</p>
-<blockquote>
-<div><ul class="simple">
-<li>dat = flip(dat, [&#8216;mirror&#8217;])</li>
-</ul>
-</div></blockquote>
-<p>tor. may 2012</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Input &#8216;mirror&#8217; to make a symmetrical image, averaging the left
+and right hemispheres</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">flip</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;mirror&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -2678,18 +2799,30 @@ and right hemispheres</p>
 <dl class="function">
 <dt id="&#64;image_vector.horzcat">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">horzcat</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.horzcat" title="Permalink to this definition">¶</a></dt>
-<dd><p>function s = horzcat(varargin)</p>
-<p>Implements the horzcat ([a b]) operator on image_vector objects across voxels.
+<dd><p>Implements the horzcat ([a b]) operator on image_vector objects across voxels.
 Requires that each object has an equal number of columns and voxels</p>
-<dl class="docutils">
-<dt><em>Examples:</em></dt>
-<dd><ul class="first last simple">
-<li>c = [dat1 dat2];</li>
-</ul>
-</dd>
-</dl>
-<p>Programmer Notes
-Created 3/14/14 by Luke Chang</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function s = horzcat(varargin)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>c = [dat1 dat2];
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -2702,13 +2835,19 @@ Created 3/14/14 by Luke Chang</p>
 <li>icadat is also an fmri_data object, with .dat field voxels x components</li>
 </ul>
 </dd>
-<dt><em>Notes:</em></dt>
-<dd><ul class="first last simple">
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><ul class="first last simple">
 <li>icasig = W * mixedsig</li>
 <li>icasig = icadat.dat&#8217; = W * fmridat_obj.dat&#8217;</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p>A is scaled version of fmridat_obj.dat&#8217; * icadat.dat</p>
 <p>A and W are stored in additional_info field of icadat</p>
 </dd></dl>
@@ -2717,78 +2856,81 @@ Created 3/14/14 by Luke Chang</p>
 <dt id="&#64;image_vector.image_math">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">image_math</code><span class="sig-paren">(</span><em>obj1</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.image_math" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform simple mathematical and boolean operations on image objects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj_out = image_math(obj1, [optional inputs, e.g., a 2nd object, keywords])
+</pre></div>
+</div>
 <dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>obj_out = image_math(obj1, [optional inputs, e.g., a 2nd object, keywords])</li>
-</ul>
-</dd>
 <dt>For objects: Type methods(object_name) for a list of special commands</dt>
 <dd>Type help object_name.method_name for help on specific
 methods.</dd>
-<dt><em>Inputs:</em></dt>
-<dd><ul class="first last simple">
-<li>obj1           An image_vector object</li>
-</ul>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj1:</strong></dt>
+<dd><p class="first last">An image_vector object</p>
 </dd>
-<dt><em>Optional inputs:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">obj2                   - An additional image_vector object</p>
-</li>
-<li><dl class="first docutils">
-<dt>{&#8216;add&#8217;, &#8216;plus&#8217;}        - Keyword to perform image-wise addition of images in obj1</dt>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>obj2:</strong></dt>
+<dd><p class="first last">An additional image_vector object</p>
+</dd>
+<dt><strong>{&#8216;add&#8217;, &#8216;plus&#8217;}:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Keyword to perform image-wise addition of images in obj1</dt>
 <dd><p class="first last">and obj2.  Assumes these are paired/matched objects.</p>
 </dd>
 </dl>
-</li>
-<li><dl class="first docutils">
-<dt>{&#8216;subtract&#8217;, &#8216;minus&#8217;}  - Keyword to perform image-wise subtraction of images</dt>
+</dd>
+<dt><strong>{&#8216;subtract&#8217;, &#8216;minus&#8217;}:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Keyword to perform image-wise subtraction of images</dt>
 <dd><p class="first last">in obj1 and obj2</p>
 </dd>
 </dl>
-</li>
-<li><dl class="first docutils">
-<dt>{&#8216;cat&#8217;, &#8216;concatenate&#8217;} - Concatenate obj1 and obj2 image-wise.  Requires same</dt>
+</dd>
+<dt><strong>{&#8216;cat&#8217;, &#8216;concatenate&#8217;}:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Concatenate obj1 and obj2 image-wise.  Requires same</dt>
 <dd><p class="first last">number of voxels in both image sets.  Returns effects
 codes of 1, -1 in obj_out.Y.</p>
 </dd>
 </dl>
-</li>
-<li><dl class="first docutils">
-<dt>{&#8216;power&#8217;}              - Keyword to raise data to power element-wise; obj.dat = obj.dat.^b;</dt>
+</dd>
+<dt><strong>{&#8216;power&#8217;}:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Keyword to raise data to power element-wise; obj.dat = obj.dat.^b;</dt>
 <dd><p class="first last">Followed by exponent to apply (b)</p>
 </dd>
 </dl>
-</li>
-</ul>
-</dd>
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last simple">
-<li>obj_out        The result - an image_vector object</li>
-</ul>
 </dd>
 </dl>
-<p><em>Examples:</em>
-give examples here</p>
-<p><em>See also:</em>
-<em>list other functions related to this one, and alternatives</em>
-<em>Programmers&#8217; notes:</em>
-List dates and changes here, and author of changes</p>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2015  Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<p>initalize optional variables to default values here.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>obj_out:</strong></dt>
+<dd><p class="first last">The result - an image_vector object</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>DEFAULTS AND INPUTS
+..</p>
 </dd></dl>
 
 <dl class="function">
@@ -2797,61 +2939,73 @@ along with this program.  If not, see &lt;<a class="reference external" href="ht
 <dd><p>Point-biserial correlations between images in fmri_data obj and set of
 &#8216;spatial basis function&#8217; images (e.g., &#8216;signatures&#8217; or pre-defined maps)</p>
 <p>Usage:</p>
-<blockquote>
-<div><ul class="simple">
-<li>stats = image_similarity_plot(obj, &#8216;average&#8217;);</li>
-</ul>
-</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">stats</span> <span class="o">=</span> <span class="n">image_similarity_plot</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;average&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
 <p>This is a method for an image_vector object</p>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2015 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<p>Inputs:</p>
-<p>obj           An image object with one or more images loaded</p>
-<p><em>Optional inputs:</em></p>
-<dl class="docutils">
-<dt>&#8216;average&#8217;     Calculate average over images in obj with standard errors</dt>
-<dd>Useful if obj contains one image per subject and you want
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">An image object with one or more images loaded</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>average:</strong></dt>
+<dd><p class="first last">Calculate average over images in obj with standard errors
+Useful if obj contains one image per subject and you want
 to test similarity with maps statistically.
-Default behavior is to plot each individual image.</dd>
+Default behavior is to plot each individual image.</p>
+</dd>
 </dl>
-<p><em>Outputs:</em></p>
-<dl class="docutils">
-<dt>stats         Structure including:</dt>
-<dd>.r, Correlations in [7 networks x images in obj] matrix
-.t, T-test (if &#8216;average&#8217; is specified)
-.line_handles Handles to polar plot lines so you can
-customize
-.fill_handles Handles to polar plot fills so you can
-customize</dd>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>stats:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Structure including:</dt>
+<dd><ul class="first last simple">
+<li>.r, Correlations in [7 networks x images in obj] matrix</li>
+<li>.t, T-test (if &#8216;average&#8217; is specified)</li>
+<li>.line_handles Handles to polar plot lines so you can
+customize</li>
+<li>.fill_handles Handles to polar plot fills so you can
+customize</li>
+</ul>
+</dd>
 </dl>
-<p><em>Examples:</em></p>
-<p>corrdat is an fmri_data object with 18 images from searchlight
-correlation in it.  Then:
-stats = image_similarity_plot_bucknermaps(corrdat, &#8216;average&#8217;);</p>
-<p>t_diff is a thresholded statistic_image object
-stats = image_similarity_plot_bucknermaps(t_diff);</p>
-<p><em>See also:</em></p>
-<p>tor_polar_plot
-<em>Programmers&#8217; notes:</em>
-List dates and changes here, and author of changes
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-
-DEFAULTS AND INPUTS
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;-
-Defaults
-&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&#8211;
-initalize optional variables to default values here.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% corrdat is an fmri_data object with 18 images from searchlight
+% correlation in it.  Then:
+stats = image_similarity_plot_bucknermaps(corrdat, &#39;average&#39;);
+
+% t_diff is a thresholded statistic_image object
+stats = image_similarity_plot_bucknermaps(t_diff);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>tor_polar_plot</p>
+<p>DEFAULTS AND INPUTS
+..</p>
 </dd></dl>
 
 <dl class="function">
@@ -2859,75 +3013,107 @@ initalize optional variables to default values here.</p>
 <code class="descclassname">&#64;image_vector.</code><code class="descname">image_similarity_plot_bucknermaps</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.image_similarity_plot_bucknermaps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Point-biserial correlations between images in fmri_data obj and Bucker
 Lab 7-network maps, with polar plot</p>
-<p><em>Usage:</em></p>
-<p>stats = image_similarity_plot_bucknermaps(obj, &#8216;average&#8217;);</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">stats</span> <span class="o">=</span> <span class="n">image_similarity_plot_bucknermaps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;average&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
 <p>This is a method for an image_vector object</p>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2015 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<p><em>Inputs:</em></p>
-<p>obj           An image object with one or more images loaded</p>
-<p><em>Optional inputs:</em></p>
-<dl class="docutils">
-<dt>&#8216;average&#8217;     Calculate average over images in obj with standard errors</dt>
-<dd>Useful if obj contains one image per subject and you want
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">An image object with one or more images loaded</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>average:</strong></dt>
+<dd><p class="first last">Calculate average over images in obj with standard errors
+Useful if obj contains one image per subject and you want
 to test similarity with maps statistically.
-Default behavior is to plot each individual image.</dd>
+Default behavior is to plot each individual image.</p>
+</dd>
 </dl>
-<p><em>Outputs:</em></p>
-<dl class="docutils">
-<dt>stats         Structure including:</dt>
-<dd>.r, Correlations in [7 networks x images in obj] matrix
-.t, T-test (if &#8216;average&#8217; is specified)
-.line_handles Handles to polar plot lines so you can
-customize
-.fill_handles Handles to polar plot fills so you can
-customize</dd>
-</dl>
-<p><em>Examples:</em></p>
-<p>corrdat is an fmri_data object with 18 images from searchlight
-correlation in it.  Then:</p>
-<blockquote>
-<div><ul class="simple">
-<li>stats = image_similarity_plot_bucknermaps(corrdat, &#8216;average&#8217;);</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>t_diff is a thresholded statistic_image object</dt>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>stats:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Structure including:</dt>
 <dd><ul class="first last simple">
-<li>stats = image_similarity_plot_bucknermaps(t_diff);</li>
+<li>.r, Correlations in [7 networks x images in obj] matrix</li>
+<li>.t, T-test (if &#8216;average&#8217; is specified)</li>
+<li>.line_handles Handles to polar plot lines so you can
+customize</li>
+<li>.fill_handles Handles to polar plot fills so you can
+customize</li>
 </ul>
 </dd>
 </dl>
-<p><em>See also:</em></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% corrdat is an fmri_data object with 18 images from searchlight
+% correlation in it.  Then:
+stats = image_similarity_plot_bucknermaps(corrdat, &#39;average&#39;);
+
+% t_diff is a thresholded statistic_image object
+stats = image_similarity_plot_bucknermaps(t_diff);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <p>tor_polar_plot</p>
-<p><em>Programmers&#8217; notes:</em>
-List dates and changes here, and author of changes</p>
-<p>initalize optional variables to default values here.</p>
+<p>DEFAULTS AND INPUTS
+..</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.interpolate">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">interpolate</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.interpolate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate over missing values in image_vector object</p>
-<blockquote>
-<div><ul class="simple">
-<li>dat = interpolate(dat, varargin)</li>
-</ul>
-</div></blockquote>
-<p><em>Input:</em> image_vector object (dat; e.g., an fmri_data object)
-Use when there are some missing values in the mask image
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body">image_vector object (dat; e.g., an fmri_data object)</td>
+</tr>
+</tbody>
+</table>
+<p>Use when there are some missing values in the mask image
 Performs 3-D linear interpolation to fill in all values in the original
 mask.</p>
 <p>e.g., For a standard brain image space that is 91 x 109 x 91, you may
@@ -2937,214 +3123,254 @@ This function will return a dat image with non-missing values for all
 300,000 voxels (the &#8220;in-mask&#8221; space). 
 It will not return values for all voxels in the 91 x 109 x 91 space,
 however.</p>
-<p><em>Note:</em> This function does not upsample the data now, but could be extended
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>This function does not upsample the data now, but could be extended
 to do so fairly easily.</p>
-<p>values &gt; 1 would upsample the data</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.mean">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">mean</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.mean" title="Permalink to this definition">¶</a></dt>
-<dd><p>function m = mean(obj, [optional args])</p>
-<p>Create an image_vector object with mean values for each voxel (cols)
+<dd><p>Create an image_vector object with mean values for each voxel (cols)
 across images (rows) of an fmri_data object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function m = mean(obj, [optional args])
+</pre></div>
+</div>
 <p>m is an image_vector object whose data contains the mean values.</p>
-<dl class="docutils">
-<dt>Options are:</dt>
-<dd><ul class="first last simple">
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
 <li>&#8216;write&#8217;, followed by file name</li>
 <li>&#8216;path&#8217;, followed by location for file (default = current directory)</li>
 <li>&#8216;orthviews&#8217; -&gt; show orthviews for this image, same as orthviews(m)</li>
 <li>&#8216;histogram&#8217; -&gt; show histogram for this image, same as histogram(m)</li>
 <li>&#8216;plot&#8217; -&gt; do both</li>
 </ul>
-</dd>
-</dl>
-<p><em>Examples:</em>
-If sdat is an fmri_data object with multiple images,</p>
-<blockquote>
-<div><ul class="simple">
-<li>m = mean(sdat, &#8216;plot&#8217;, &#8216;write&#8217;, anatmeanname, &#8216;path&#8217;, maskdir);</li>
-</ul>
-</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% If sdat is an fmri_data object with multiple images,
+m = mean(sdat, &#39;plot&#39;, &#39;write&#39;, anatmeanname, &#39;path&#39;, maskdir);
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.minus">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">minus</code><span class="sig-paren">(</span><em>obj1</em>, <em>obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.minus" title="Permalink to this definition">¶</a></dt>
-<dd><p>function s = minus(obj1, obj2)</p>
-<p>Implements the minus (-) operator on image_vector objects across voxels.
+<dd><p>Implements the minus (-) operator on image_vector objects across voxels.
 Requires that each object has an equal number of columns and voxels</p>
-<dl class="docutils">
-<dt><em>Examples:</em></dt>
-<dd><ul class="first last simple">
-<li>c = dat1 - dat2;</li>
-</ul>
-</dd>
-</dl>
-<p><em>Programmer Notes</em>
-Created 3/14/14 by Luke Chang</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.montage">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">montage</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.montage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a montage of an image_vector (or statistic_image or fmri_data) object</p>
-<dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>[fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])</li>
-</ul>
+<p><a href="#id7"><span class="problematic" id="id8">*</span></a>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>[fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>fmridisplay:</strong></dt>
+<dd><p class="first last">for fmridisplay object style montage [default]</p>
 </dd>
-<dt><em>Optional inputs:</em></dt>
-<dd><ul class="first last simple">
-<li>&#8216;fmridisplay&#8217; for fmridisplay object style montage [default]</li>
-<li>&#8216;scnmontage&#8217; for circa 2008-style SCN lab montage for each image vector</li>
-</ul>
-</dd>
-<dt><em>Examples:</em></dt>
-<dd><ul class="first last simple">
-<li>o2 = montage(mask);</li>
-</ul>
+<dt><strong>scnmontage:</strong></dt>
+<dd><p class="first last">for circa 2008-style SCN lab montage for each image vector</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">o2</span> <span class="o">=</span> <span class="n">montage</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.orthviews">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">orthviews</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.orthviews" title="Permalink to this definition">¶</a></dt>
 <dd><p>Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object</p>
-<dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>orthviews(image_obj, varargin)</li>
-</ul>
+<p><a href="#id9"><span class="problematic" id="id10">*</span></a>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">orthviews</span><span class="p">(</span><span class="n">image_obj</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>posneg:</strong></dt>
+<dd><p class="first last">input generates orthviews using solid colors.</p>
 </dd>
-<dt><em>Options:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">&#8216;posneg&#8217; input generates orthviews using solid colors.</p>
-</li>
-<li><dl class="first docutils">
-<dt>&#8216;largest_region&#8217; to center the orthviews on the largest region in the</dt>
-<dd><p class="first last">image</p>
-</dd>
-</dl>
-</li>
-</ul>
+<dt><strong>largest_region:</strong></dt>
+<dd><p class="first last">to center the orthviews on the largest region in the image</p>
 </dd>
 </dl>
-<p>Copyright Tor Wager, 2011</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.plot_current_orthviews_coord">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">plot_current_orthviews_coord</code><span class="sig-paren">(</span><em>dat</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.plot_current_orthviews_coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves and plots the image data series at the current crosshairs in spm_orthviews</p>
-<ul class="simple">
-<li>voxel_data_series = plot_current_orthviews_coord(dat)</li>
-</ul>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.plus">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">plus</code><span class="sig-paren">(</span><em>obj1</em>, <em>obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.plus" title="Permalink to this definition">¶</a></dt>
-<dd><p>function s = plus(obj1, obj2)</p>
-<p>Implements the plus (+) operator on image_vector objects across voxels.
+<dd><p>Implements the plus (+) operator on image_vector objects across voxels.
 Requires that each object has an equal number of columns and voxels</p>
-<dl class="docutils">
-<dt><em>Examples:</em></dt>
-<dd><ul class="first last simple">
-<li>c = dat1 + dat2;</li>
-</ul>
-</dd>
-</dl>
-<p><em>Programmer Notes</em>
-Created 3/14/14 by Luke Chang</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">c</span> <span class="o">=</span> <span class="n">dat1</span> <span class="o">+</span> <span class="n">dat2</span><span class="p">;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.power">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">power</code><span class="sig-paren">(</span><em>obj</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.power" title="Permalink to this definition">¶</a></dt>
-<dd><p>function s = power(obj1, obj2)</p>
-<p>Implements the power (^) operator on image_vector objects across voxels.</p>
-<dl class="docutils">
-<dt><em>Examples:</em></dt>
-<dd><ul class="first last simple">
-<li>c = dat1^2;</li>
-</ul>
-</dd>
-</dl>
-<p><em>Programmer Notes</em>
-Created 3/14/14 by Luke Chang</p>
+<dd><p>Implements the power (^) operator on image_vector objects across voxels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">c</span> <span class="o">=</span> <span class="n">dat1</span><span class="o">^</span><span class="mi">2</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Programmer Notes:
+Created 3/14/14 by Luke Chang
+..</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.preprocess">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">preprocess</code><span class="sig-paren">(</span><em>obj</em>, <em>meth</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.preprocess" title="Permalink to this definition">¶</a></dt>
-<dd><p>obj = preprocess(obj, meth, varargin)</p>
-<p>Preprocesses data in an fmri_data object</p>
+<dd><p>Preprocesses data in an fmri_data object</p>
 <p>Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
 images, and operating on the rows operates on voxels (or variables more
 generally) across images.</p>
-<p><em>meth: Options</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>meth:</strong> Options</p>
 <dl class="docutils">
-<dt>&#8216;resid&#8217;: Residualize voxels with respect to covariates</dt>
-<dd>Uses obj.covariates, obj.dat.
+<dt><strong>resid:</strong></dt>
+<dd><p class="first last">Residualize voxels with respect to covariates
+Uses obj.covariates, obj.dat.
 Adds intercept automatically. You can tell it to add the mean response per voxel back in:
-obj = preprocess(obj, &#8216;resid&#8217;, [add mean back in flag])</dd>
-</dl>
-<p>&#8216;hpfilter&#8217;: High-pass filter and remove run intercepts and first two
-images per run.</p>
-<blockquote>
-<div>Uses obj.dat, obj.images_per_session
-obj = preprocess(obj, &#8216;hpfilter&#8217;, HPlen in s, TR)</div></blockquote>
-<p>&#8216;windsorize&#8217;: Windsorize entire data matrix to 3 STD</p>
-<p>&#8216;windsorizevoxels&#8217;: Windsorize each time series in data matrix to 3 STD</p>
-<dl class="docutils">
-<dt>&#8216;session_outliers&#8217;: Identify session-wise (run-wise) outliers with significant</dt>
-<dd>based on mahalanobis distance with FDR-corrected P-values in chi-square test.
-Impute session grand mean outliers.</dd>
-</dl>
-<p>&#8216;outliers&#8217;: Identify outlier time points for each session based on
+obj = preprocess(obj, &#8216;resid&#8217;, [add mean back in flag])</p>
+</dd>
+<dt><strong>hpfilter:</strong></dt>
+<dd><p class="first last">High-pass filter and remove run intercepts and first two
+images per run. Uses obj.dat, obj.images_per_session
+obj = preprocess(obj, &#8216;hpfilter&#8217;, HPlen in s, TR)</p>
+</dd>
+<dt><strong>windsorize:</strong></dt>
+<dd><p class="first last">Windsorize entire data matrix to 3 STD</p>
+</dd>
+<dt><strong>windsorizevoxels:</strong></dt>
+<dd><p class="first last">Windsorize each time series in data matrix to 3 STD</p>
+</dd>
+<dt><strong>session_outliers:</strong></dt>
+<dd><p class="first last">Identify session-wise (run-wise) outliers with significant
+based on mahalanobis distance with FDR-corrected P-values in chi-square test.
+Impute session grand mean outliers.</p>
+</dd>
+<dt><strong>outliers:</strong></dt>
+<dd><p class="first last">Identify outlier time points for each session based on
 mahalanobis distance (see above) across global mean for slices and
 spatial STD for slices, as in scn_session_spike_id.
 Outliers at 3 SD based on timeseries added to obj.covariates.</p>
-<p>&#8216;outliers_rmssd&#8217;: Identify outlier time points for each session based on
+</dd>
+<dt><strong>outliers_rmssd:</strong></dt>
+<dd><p class="first last">Identify outlier time points for each session based on
 root-mean-square successive differences between images (across voxels.)
 this is the std (across voxels) of the successive diffs across images.
 Outliers at 3.5 SD based on timeseries added to obj.covariates.</p>
-<dl class="docutils">
-<dt>&#8216;smooth&#8217;:  Smoothed images with Gaussian filter</dt>
-<dd>obj = preprocess(obj, &#8216;smooth&#8217;, FWHM in mm)</dd>
+</dd>
+<dt><strong>smooth:</strong></dt>
+<dd><dl class="first docutils">
+<dt>Smoothed images with Gaussian filter</dt>
+<dd><ul class="first last simple">
+<li>obj = preprocess(obj, &#8216;smooth&#8217;, FWHM in mm)</li>
+</ul>
+</dd>
 </dl>
-<p>% NOTE: SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN</p>
-<p>&#8216;interp_images&#8217;: Interpolate all voxels in a series of images specified
+<p class="last"><em>NOTE</em> SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN</p>
+</dd>
+<dt><strong>interp_images:</strong></dt>
+<dd><p class="first">Interpolate all voxels in a series of images specified
 by logical vector whout.</p>
-<blockquote>
+<blockquote class="last">
 <div><ul class="simple">
 <li>obj = preprocess(obj, &#8216;interp_images&#8217;, whout);</li>
 </ul>
 </div></blockquote>
-<dl class="docutils">
-<dt><em>Examples:</em> two complementary ways to get and plot outliers:</dt>
-<dd><ul class="first last simple">
-<li>dat = preprocess(dat, &#8216;outliers&#8217;, &#8216;plot&#8217;);</li>
-<li>subplot(5, 1, 5); % go to new panel...</li>
-<li>dat = preprocess(dat, &#8216;outliers_rmssd&#8217;, &#8216;plot&#8217;);</li>
-</ul>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% two complementary ways to get and plot outliers:
+dat = preprocess(dat, &#39;outliers&#39;, &#39;plot&#39;);
+subplot(5, 1, 5); % go to new panel...
+dat = preprocess(dat, &#39;outliers_rmssd&#39;, &#39;plot&#39;);
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.read_from_file">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">read_from_file</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.read_from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads data from image filenames into obj.dat</p>
-<blockquote>
-<div><ul class="simple">
-<li>obj = read_from_file(obj)</li>
-</ul>
-</div></blockquote>
 <p>Try obj = check_image_filenames(obj) first.</p>
 <p>This is automatically called if you create a new image_vector object with
 names but do not directly enter data. e.g., the commands below will load data:</p>
@@ -3159,35 +3385,39 @@ names but do not directly enter data. e.g., the commands below will load data:</
 <dl class="function">
 <dt id="&#64;image_vector.rebuild_volinfo_from_dat">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">rebuild_volinfo_from_dat</code><span class="sig-paren">(</span><em>dat</em>, <em>newdat</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.rebuild_volinfo_from_dat" title="Permalink to this definition">¶</a></dt>
-<dd><p>dat = rebuild_volinfo_from_dat(dat, newdat)</p>
-<p>Will rebuild volInfo (the image space, or sometimes &#8220;mask&#8221;) from a vectorized image. 
+<dd><p>Will rebuild volInfo (the image space, or sometimes &#8220;mask&#8221;) from a vectorized image. 
 In other words, will rebuild dat.volInfo from newdat.</p>
 <p>Also resets all voxels to be significant, if a statistic image</p>
-<dl class="docutils">
-<dt><em>Input</em></dt>
-<dd><ul class="first last simple">
-<li>dat: an image_vector</li>
-<li>newdat: a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">an image_vector</p>
 </dd>
-<dt><em>Output</em></dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>dat: dat.dat contains the non-zero values of newdat, and dat.volInfo is</dt>
-<dd><p class="first last">correctly defining the image space</p>
+<dt><strong>newdat:</strong></dt>
+<dd><p class="first last">a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)</p>
 </dd>
 </dl>
-</li>
-</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">dat.dat contains the non-zero values of newdat, and dat.volInfo is
+correctly defining the image space</p>
 </dd>
 </dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.reconstruct_image">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">reconstruct_image</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.reconstruct_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reconstruct a 3-D or 4-D image from image_vector object obj
-[voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)</p>
+<dd><p>Reconstruct a 3-D or 4-D image from image_vector object obj</p>
 <p>voldata is and X x Y x Z x Images matrix
 vectorized_voldata is the same, with all voxels vectorized</p>
 <p>This output has one element for every voxel in THE ENTIRE IMAGE, and so
@@ -3195,15 +3425,20 @@ can be very memory-intensive.  But it&#8217;s useful for lining up voxels
 across images with different masks/in-mask voxels.</p>
 <p>This function returns output in memory;
 see image_vector.write for writing .img files to disk.</p>
-<dl class="docutils">
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">voldata : 3-D recon volume</p>
-</li>
-<li><p class="first">vectorized_voldata : volume in column vetor, iimg_xxx function format</p>
-</li>
-<li><dl class="first docutils">
-<dt>xyz_coord_struct <span class="classifier-delimiter">:</span> <span class="classifier">has fields with coordinate information in mm (world) space</span></dt>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>voldata:</strong></dt>
+<dd><p class="first last">3-D recon volume</p>
+</dd>
+<dt><strong>vectorized_voldata:</strong></dt>
+<dd><p class="first last">volume in column vetor, iimg_xxx function format</p>
+</dd>
+<dt><strong>xyz_coord_struct:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>has fields with coordinate information in mm (world) space</dt>
 <dd><ul class="first last simple">
 <li>x, y, z : vectors of coordinates in mm for each of the 3
 dimensions of the image</li>
@@ -3214,38 +3449,50 @@ visualization in world space (mm).</li>
 </ul>
 </dd>
 </dl>
-</li>
-</ul>
 </dd>
 </dl>
-<p>Copyright 2011 tor wager</p>
-<p><em>Programmers&#8217; notes:</em></p>
-<p>Aug 2012: This function does not flip the data based on the sign of x dimension.  
-The flipping is applied in image writing / display in
-iimg_reconstruct_vols, write method, spm_orthviews, etc.</p>
-<p>July 2013 : Tor : Added xyz_coord_struct output</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.remove_empty">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">remove_empty</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.remove_empty" title="Permalink to this definition">¶</a></dt>
-<dd><p>dat = remove_empty(dat, [logical vector of custom voxels to remove], [logical vector of imgs to remove])</p>
-<p>remove vox: logical vector of custom voxels to remove, VOX x 1</p>
+<dd><p>remove vox: logical vector of custom voxels to remove, VOX x 1</p>
 <p>remove im: logical vector of custom images to remove, 1 x IMAGES</p>
 <p>indices of removed data will be stored in removed_voxels and
 removed_images fields, to preserve ability to later reconstruct into 3D images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>dat = remove_empty(dat, [logical vector of custom voxels to remove], [logical vector of imgs to remove])
+</pre></div>
+</div>
 <p>Indicator vectors stored in:
 removed_images
 removed_voxels</p>
-<p><em>See also:</em> replace_empty
-force logical</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">replace_empty</td>
+</tr>
+</tbody>
+</table>
+<p>force logical</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.reparse_contiguous">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">reparse_contiguous</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.reparse_contiguous" title="Permalink to this definition">¶</a></dt>
-<dd><p>obj = reparse_contiguous(obj, [&#8216;nonempty&#8217;])</p>
-<p>Re-construct list of contiguous voxels in an image based on in-image
+<dd><p>Re-construct list of contiguous voxels in an image based on in-image
 voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.</p>
 <p>Results are saved in obj.volInfo.cluster.</p>
 <p>xyzlist can be generated from iimg_read_img, and is done automatically by
@@ -3253,13 +3500,17 @@ object-oriented fMRI image classes (fmri_image, image_vector,
 statistic_image)</p>
 <p>If &#8216;nonempty&#8217; is entered as an optional argument, will use only voxels
 that are non-zero, non-nan in all columns of obj.dat.</p>
-<p>copyright tor wager, 2011
-<em>Programmers&#8217; notes:</em></p>
-<dl class="docutils">
-<dt>Edited 1/27/13 by tor to use all columns when calculating &#8216;nonempty&#8217;</dt>
-<dd>also fixed bug - was not using &#8216;nonempty&#8217; input in some
-cases</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">reparse_contiguous</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;nonempty&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 <p>.cluster and .xyzlist should both always be length v in-mask voxels
 if &#8216;nonempty&#8217; is entered, then .dat should be length v in-mask voxels too</p>
 </dd></dl>
@@ -3267,20 +3518,43 @@ if &#8216;nonempty&#8217; is entered, then .dat should be length v in-mask voxel
 <dl class="function">
 <dt id="&#64;image_vector.replace_empty">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">replace_empty</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.replace_empty" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Replace empty/missing values in an image data object</dt>
-<dd><ul class="first last simple">
-<li>obj = replace_empty(obj, [optional keywords])</li>
-</ul>
-</dd>
-</dl>
+<dd><p>Replace empty/missing values in an image data object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj = replace_empty(obj, [optional keywords])
+</pre></div>
+</div>
 <p>Replace missing values in obj.dat stored in obj.removed_voxels and
 obj.removed_images with zeros.  This returns obj.dat in a format that can
 be reconstructed into a 3-D or 4-D image matrix for brain visualization.</p>
-<p><em>Optional keywords:</em></p>
-<p>&#8216;voxels&#8217; or &#8216;images&#8217;: replace only missing voxels/images</p>
-<p>Tor Wager, 12/1/10</p>
-<p><em>See also:</em> remove_empty, zeroinsert, nanremove, naninsert</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional keywords:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;voxels&#8217; or &#8216;images&#8217;:</strong></dt>
+<dd><p class="first last">replace only missing voxels/images</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">remove_empty, zeroinsert, nanremove, naninsert</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -3288,11 +3562,17 @@ be reconstructed into a 3-D or 4-D image matrix for brain visualization.</p>
 <code class="descclassname">&#64;image_vector.</code><code class="descname">resample_space</code><span class="sig-paren">(</span><em>obj</em>, <em>sampleto</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.resample_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample the images in an fmri_data object (obj) to the space of another
 image (sampleto; e.g., a mask image). Works for all image_vector objects.</p>
-<blockquote>
-<div><ul class="simple">
-<li>obj = resample_space(obj, sampleto, [sampling method])</li>
-</ul>
-</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj = resample_space(obj, sampleto, [sampling method])
+</pre></div>
+</div>
 <dl class="docutils">
 <dt>Sampleto may be one of these:</dt>
 <dd><ol class="first last arabic simple">
@@ -3312,15 +3592,18 @@ interp3:</p>
 <blockquote>
 <div>spaced, otherwise the same as &#8216;spline&#8217;</div></blockquote>
 </div></blockquote>
-<p><em>Examples:</em></p>
-<p>label_mask = fmri_data(which(&#8216;atlas_labels_combined.img&#8217;));
-label_mask = resample_space(label_mask, ivec, &#8216;nearest&#8217;) % resamples and masks label image
-<em>Programmers&#8217; notes:</em></p>
-<p>1/27/2012 Tor edited to handle .mask field in fmri_data and .sig field in
-statistic_image.  Was causing errors otherwise...</p>
-<blockquote>
-<div>Also changed automatic behavior to reparse contig voxels with
-&#8216;nonempty&#8217; in output obj</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>label_mask = fmri_data(which(&#39;atlas_labels_combined.img&#39;));
+label_mask = resample_space(label_mask, ivec, &#39;nearest&#39;) % resamples and masks label image
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3333,11 +3616,13 @@ to the different time series (target_time_interval). Works for all image_vector 
 <li>obj = resample_time(obj, source_time_interval, target_time_interval, varargin)</li>
 </ul>
 </div></blockquote>
-<dl class="docutils">
-<dt><em>Options:</em></dt>
-<dd><ol class="first last arabic">
-<li><dl class="first docutils">
-<dt>&#8216;meth&#8217; (Interpolation methods)</dt>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>meth (Interpolation methods):</strong></dt>
 <dd><dl class="first last docutils">
 <dt>You can enter resampling method as optional input. Takes any input to</dt>
 <dd><ul class="first last">
@@ -3357,75 +3642,79 @@ to the different time series (target_time_interval). Works for all image_vector 
 </dd>
 </dl>
 </dd>
-</dl>
-</li>
-<li><p class="first">&#8216;slice&#8217; (a fraction of the slice timing correction)
+<dt><strong>slice:</strong></dt>
+<dd><p class="first last">A fraction of the slice timing correction.
 The default is 0.5, meaning if your TR is 2s, the time point of your TR image
 will be considered as the middle point of the TR bins. You can use this option
 to use different time points. If you are upsampling your data (i.e.,
 your target TR is shorter than your source TR), you need to discard the
 first column of your data. This function will return the first time point data as NaN.</p>
-</li>
-</ol>
 </dd>
 </dl>
-<p><em>Examples:</em></p>
-<blockquote>
-<div><ul class="simple">
-<li>dat = fmri_data(&#8216;/Volumes/RAID1/labdata/current/BMRK3/Imaging/spatiotemp_biomarker/STmarker1.img&#8217;);</li>
-<li>dat = resample_time(dat, 2, 1.3)</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>with options:</dt>
-<dd><ul class="first last simple">
-<li>dat = resample_time(dat, 2, 1.3, &#8216;meth&#8217;, &#8216;linear&#8217;, &#8216;slice&#8217;, .3)</li>
-</ul>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>dat = fmri_data(&#39;/Volumes/RAID1/labdata/current/BMRK3/Imaging/spatiotemp_biomarker/STmarker1.img&#39;);
+dat = resample_time(dat, 2, 1.3) 
+
+% with options:
+dat = resample_time(dat, 2, 1.3, &#39;meth&#39;, &#39;linear&#39;, &#39;slice&#39;, .3)
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.sagg_slice_movie">
-<code class="descclassname">&#64;image_vector.</code><code class="descname">sagg_slice_movie</code><span class="sig-paren">(</span><em>dat</em><span class="optional">[</span>, <em>full_path_of_movie_output_file</em>, <em>image_skip_interval</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.sagg_slice_movie" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">&#64;image_vector.</code><code class="descname">sagg_slice_movie</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.sagg_slice_movie" title="Permalink to this definition">¶</a></dt>
 <dd><p>Movie of successive differences (sagittal slice)
 Enter an image_vector or fmri_data object (usually with time series)</p>
-<p><em>Optional inputs:</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sagg_slice_movie</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="n">full_path_of_movie_output_file</span><span class="p">,</span><span class="n">image_skip_interval</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><a href="#id11"><span class="problematic" id="id12">*</span></a>Optional Inputs:</p>
 <blockquote>
 <div><dl class="docutils">
-<dt>movie_output_file: a char array detailing the full path to save the</dt>
+<dt><strong>movie_output_file:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>a char array detailing the full path to save the</dt>
 <dd>movie file</dd>
-<dt>image_skip_interval: a integer value describing the interval </dt>
-<dd>between images in each subsequent frame of the movie 
-(default = 1)</dd>
+</dl>
+</dd>
+<dt><strong>image_skip_interval:</strong></dt>
+<dd><blockquote class="first">
+<div>An integer value describing the interval 
+between images in each subsequent frame of the movie</div></blockquote>
+<p class="last">(default = 1)</p>
+</dd>
 </dl>
 </div></blockquote>
-<dl class="docutils">
-<dt><em>Example:</em></dt>
-<dd><ul class="first">
-<li><dl class="first docutils">
-<dt>sagg_slice_movie(fmri_dat, ...</dt>
-<dd><p class="first last">&#8216;/Volumes/engram/labdata/fmri_data/Study1/Subj1/qc_images&#8217;, 5)</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p class="last">This would save an movie based on the images in fmri_dat to the
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre> sagg_slice_movie(fmri_dat, ...
+            &#39;/Volumes/engram/labdata/fmri_data/Study1/Subj1/qc_images&#39;, 5)
+
+This would save an movie based on the images in fmri_dat to the
 above directory, with an interval of 5 images between each
-frame (so, the movie would show image 1, 6, 11, 16, etc)</p>
-</dd>
-<dt>Edited 8/7/14 by Scott</dt>
-<dd><ul class="first simple">
-<li>added skip interval</li>
-<li>updated help</li>
-</ul>
-<p class="last">8/7/14 Programmer Note: if more varargin options are desired in the
-future, the function call will likely need to be re-written. The
-current form exists for backwards compatibility - obviously changing
-the function call will mean that other functions that use this
-(preproc) will need to be modified</p>
-</dd>
-</dl>
+frame (so, the movie would show image 1, 6, 11, 16, etc)
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3433,106 +3722,112 @@ the function call will mean that other functions that use this
 <code class="descclassname">&#64;image_vector.</code><code class="descname">searchlight</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.searchlight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run searchlight multivariate prediction/classification on an image_vector
 or fmri_data object OR two objects, for cross-prediction.</p>
-<p><em>Usage:</em></p>
-<p>[list outputs here] = function_name(list inputs here, [optional inputs])
-[results_obj, indx] = searchlight(dat, [optional inputs])</p>
-<dl class="docutils">
-<dt><em>Features:</em></dt>
-<dd><ul class="first last simple">
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[list outputs here] = function_name(list inputs here, [optional inputs])
+[results_obj, indx] = searchlight(dat, [optional inputs])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Features:</th><td class="field-body"><ul class="first last simple">
 <li>Runs searchlight with standard, pre-defined algorithms</li>
 <li>Custom-entry definition of holdout sets</li>
 <li>Can re-use searchlight spheres after initial definition</li>
 <li>Custom-entry definition of any spheres/regions of interest</li>
 <li>Uses Matlab&#8217;s parallel processing toolbox (parfor)</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p>Type help image_vector.searchlight to display this help information</p>
-<p>Author and copyright information:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">image_vector or fmri_data object with data</p>
+</dd>
+<dt><strong>dat.Y:</strong></dt>
+<dd><p class="first last">required: true outcomes for each observation (image) in dat</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:Optional Inputs:* Keyword followed by input variable:</p>
 <blockquote>
-<div><p>Copyright (C) 2014  Tor Wager and...</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<div><dl class="docutils">
+<dt><strong>r:</strong></dt>
+<dd>searchlight radius, voxels</dd>
+<dt><strong>dat2:</strong></dt>
+<dd>second dataset, for cross-prediction</dd>
+<dt><strong>indx:</strong></dt>
+<dd>sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
+This takes a long time to calculate, but can be saved and
+re-used for a given mask</dd>
+</dl>
 </div></blockquote>
-<p><em>Inputs:</em></p>
-<blockquote>
-<div><ul class="simple">
-<li>dat           image_vector or fmri_data object with data</li>
-<li>dat.Y         required: true outcomes for each observation (image) in dat</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt><em>Optional:</em> Keyword followed by input variable:</dt>
-<dd><ul class="first last">
-<li><p class="first">&#8216;r&#8217;         searchlight radius, voxels</p>
-</li>
-<li><p class="first">&#8216;dat2&#8217;      second dataset, for cross-prediction</p>
-</li>
-<li><dl class="first docutils">
-<dt>&#8216;indx&#8217;      sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight</dt>
-<dd><p class="first last">This takes a long time to calculate, but can be saved and
-re-used for a given mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>results_obj:</strong></dt>
+<dd><p class="first last">fmri_data object with results maps</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">selected statistics for each sphere in searchlight</p>
+</dd>
+<dt><strong>indx:</strong></dt>
+<dd><p class="first last">sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
+* this can be re-used for all data with the same mask/structure. *</p>
 </dd>
 </dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p><em>Outputs:</em></p>
-<blockquote>
-<div><ul>
-<li><p class="first">results_obj   fmri_data object with results maps</p>
-</li>
-<li><p class="first">stats         selected statistics for each sphere in searchlight</p>
-</li>
-<li><dl class="first docutils">
-<dt>indx          sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight</dt>
-<dd><ul class="first simple">
-<li>this can be re-used for all data with the same</li>
-</ul>
-<p class="last">mask/structure. *</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<p><em>Examples:</em></p>
-<dl class="docutils">
-<dt>Define a sensible gray-matter mask:</dt>
-<dd><ul class="first last simple">
-<li>dat = fmri_data(which(&#8216;scalped_avg152T1_graymatter.img&#8217;));</li>
-<li>dat = threshold(dat, [.8 Inf], &#8216;raw-between&#8217;);</li>
-<li>dat = trim_mask(dat);</li>
-</ul>
-</dd>
-<dt>Create fake data and holdout indicator index vector</dt>
-<dd><ul class="first last simple">
-<li>dat.dat = randn(dat.volInfo.n_inmask, 30);</li>
-<li>dat.Y = dat.dat(111111, :)&#8217; + .3 * randn(30, 1);</li>
-<li>holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end</li>
-</ul>
-</dd>
-<dt>Run, and run again with existing indx</dt>
-<dd><ul class="first last simple">
-<li>pool = parpool(12);  % initialize parallel processing (12 cores)</li>
-<li>[results_obj, indx] = searchlight(dat, &#8216;holdout_set&#8217;, holdout_set);</li>
-<li>results_obj = searchlight(dat, &#8216;holdout_set&#8217;, holdout_set, &#8216;indx&#8217;, indx);</li>
-</ul>
-</dd>
-</dl>
-<p><em>See also:</em>
-region.m, fmri_data.predict.m</p>
-<p><em>Programmers&#8217; notes:</em>
-List dates and changes here, and author of changes</p>
-<p>For defining regions</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Define a sensible gray-matter mask:
+dat = fmri_data(which(&#39;scalped_avg152T1_graymatter.img&#39;));
+dat = threshold(dat, [.8 Inf], &#39;raw-between&#39;);
+dat = trim_mask(dat);
+
+% Create fake data and holdout indicator index vector
+dat.dat = randn(dat.volInfo.n_inmask, 30);
+dat.Y = dat.dat(111111, :)&#39; + .3 * randn(30, 1);
+holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end
+
+% Run, and run again with existing indx
+pool = parpool(12);  % initialize parallel processing (12 cores)
+[results_obj, indx] = searchlight(dat, &#39;holdout_set&#39;, holdout_set);
+results_obj = searchlight(dat, &#39;holdout_set&#39;, holdout_set, &#39;indx&#39;, indx);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>region.m, fmri_data.predict.m</p>
+<p>DEFAULTS AND INPUTS
+..</p>
 </dd></dl>
 
 <dl class="function">
@@ -3540,45 +3835,77 @@ List dates and changes here, and author of changes</p>
 <code class="descclassname">&#64;image_vector.</code><code class="descname">slices</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.slices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a montage of single-slice results for every image in an
 image_vector object</p>
-<blockquote>
-<div><ul class="simple">
-<li>o = slices(obj, &#8216;orientation&#8217;, [orientation], &#8216;slice&#8217;, [slice_mm], &#8216;nimages&#8217;, [nimgs])</li>
-</ul>
-</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">o</span> <span class="o">=</span> <span class="n">slices</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;orientation&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">orientation</span><span class="p">],</span> <span class="s">&#39;slice&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">slice_mm</span><span class="p">],</span> <span class="s">&#39;nimages&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">nimgs</span><span class="p">])</span>
+</pre></div>
+</div>
 <p>obj is an image_vector, fmri_data, or statistic_image object with
 multiple images (only the first 64 will display), which are stored as
 columns in its .dat field.</p>
-<dl class="docutils">
-<dt><em>Optional inputs:</em></dt>
-<dd><ul class="first last simple">
-<li>&#8216;orientation&#8217; can be followed by &#8216;saggital&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</li>
-<li>&#8216;slice_mm&#8217; is followed by the mm coord of the slice to display; default = 0</li>
-<li>&#8216;nimgs&#8217; can be followed by the number of images to display, 1:nimgs</li>
-<li>&#8216;names&#8217; is followed by a cell array of names for the images.</li>
-<li>&#8216;color&#8217; is followed by color vector or string specification. default is</li>
-<li>color-mapped with split colors (hot/cool) for pos and neg effects.</li>
-<li>&#8216;outline&#8217; is followed by a color vector for outline around blobs.</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>orientation:</strong></dt>
+<dd><p class="first last">can be followed by &#8216;saggital&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</p>
+</dd>
+<dt><strong>slice_mm:</strong></dt>
+<dd><p class="first last">is followed by the mm coord of the slice to display; default = 0</p>
+</dd>
+<dt><strong>nimgs:</strong></dt>
+<dd><p class="first last">can be followed by the number of images to display, 1:nimgs</p>
+</dd>
+<dt><strong>names:</strong></dt>
+<dd><p class="first last">is followed by a cell array of names for the images.</p>
+</dd>
+<dt><strong>color:</strong></dt>
+<dd><p class="first last">is followed by color vector or string specification. default is
+color-mapped with split colors (hot/cool) for pos and neg effects.</p>
+</dd>
+<dt><strong>outline:</strong></dt>
+<dd><p class="first last">is followed by a color vector for outline around blobs.</p>
 </dd>
 </dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p>The output, o, is an fmridisplay object.</p>
 <p>This function uses fmridisplay objects, and may be memory-intensive for
 older computers.</p>
 <p><em>Common Errors:</em></p>
 <p>This function uses the volInfo.cluster field. If you create a mask in an
-ad hoc way, this field may not be updated.  use this to fix:
-mask = reparse_contiguous(mask);</p>
-<p><em>Examples:</em></p>
+ad hoc way, this field may not be updated.  use this to fix:</p>
 <blockquote>
 <div><ul class="simple">
-<li>slices(dat);</li>
-<li>slices(dat, &#8216;orientation&#8217;, &#8216;axial&#8217;);</li>
-<li>slices(dat, &#8216;slice&#8217;, -5);                 % display sagg at x = -5</li>
-<li>o = slices(dat, &#8216;names&#8217;, terms); % use &#8216;terms&#8217; var as names</li>
-<li>o2 = slices(all_chi2_images, &#8216;orientation&#8217;, &#8216;saggital&#8217;, &#8216;slice&#8217;, 0);</li>
+<li>mask = reparse_contiguous(mask);</li>
 </ul>
 </div></blockquote>
-<p>Copyright 2011, Tor Wager</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>slices(dat);
+slices(dat, &#39;orientation&#39;, &#39;axial&#39;);
+slices(dat, &#39;slice&#39;, -5);                 % display sagg at x = -5
+o = slices(dat, &#39;names&#39;, terms); % use &#39;terms&#39; var as names
+
+o2 = slices(all_chi2_images, &#39;orientation&#39;, &#39;saggital&#39;, &#39;slice&#39;, 0);
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3594,33 +3921,31 @@ mask = reparse_contiguous(mask);</p>
 </dl>
 <p>This function uses region.surface to create surface figures.
 See help region.surface for options.</p>
-<p><em>Examples:</em></p>
-<dl class="docutils">
-<dt>create an initial surface plot from an fmri_data object:</dt>
-<dd><ul class="first last simple">
-<li>han = surface(regionmasks{2});</li>
-</ul>
-</dd>
-<dt>Now add a second region in green:</dt>
-<dd><ul class="first last simple">
-<li>cluster_surf(region(regionmasks{2}), {[0 1 0]}, han, 5);</li>
-</ul>
-</dd>
-<dt>Use optional arguments taken by surface_cutaway:</dt>
-<dd><ul class="first last simple">
-<li>poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow</li>
-<li>[all_surf_handles, pcl, ncl] = surface(t, &#8216;cutaway&#8217;, &#8216;ycut_mm&#8217;, -30, &#8216;pos_colormap&#8217;, poscm, &#8216;existingfig&#8217;);</li>
-<li>[all_surf_handles2, pcl, ncl] = surface(t, &#8216;foursurfaces&#8217;, &#8216;pos_colormap&#8217;, poscm, &#8216;neg_colormap&#8217;, negcm);</li>
-<li>[all_surf_handles2, pcl, ncl] = surface(t, &#8216;foursurfaces&#8217;, &#8216;existingfig&#8217;, &#8216;color_upperboundpercentile&#8217;, 95, &#8216;color_lowerboundpercentile&#8217;, 5, &#8216;neg_colormap&#8217;, colormap_tor([0 0 1], [.3 0 .5]));</li>
-</ul>
-</dd>
-<dt>use mediation_brain_surface_figs and re-make colors</dt>
-<dd><ul class="first last simple">
-<li>all_surf_handles = mediation_brain_surface_figs([]);</li>
-<li>surface(t2, &#8216;cutaway&#8217;, &#8216;surface_handles&#8217;, all_surf_handles, &#8216;color_upperboundpercentile&#8217;, 95, &#8216;color_lowerboundpercentile&#8217;, 5, &#8216;neg_colormap&#8217;, colormap_tor([0 0 1], [.2 0 .5]));</li>
-</ul>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Create an initial surface plot from an fmri_data object:
+han = surface(regionmasks{2});  
+
+% Now add a second region in green:
+cluster_surf(region(regionmasks{2}), {[0 1 0]}, han, 5);
+
+% Use optional arguments taken by surface_cutaway:
+poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
+[all_surf_handles, pcl, ncl] = surface(t, &#39;cutaway&#39;, &#39;ycut_mm&#39;, -30, &#39;pos_colormap&#39;, poscm, &#39;existingfig&#39;);
+[all_surf_handles2, pcl, ncl] = surface(t, &#39;foursurfaces&#39;, &#39;pos_colormap&#39;, poscm, &#39;neg_colormap&#39;, negcm);
+[all_surf_handles2, pcl, ncl] = surface(t, &#39;foursurfaces&#39;, &#39;existingfig&#39;, &#39;color_upperboundpercentile&#39;, 95, &#39;color_lowerboundpercentile&#39;, 5, &#39;neg_colormap&#39;, colormap_tor([0 0 1], [.3 0 .5]));
+
+% Use mediation_brain_surface_figs and re-make colors
+all_surf_handles = mediation_brain_surface_figs([]);
+surface(t2, &#39;cutaway&#39;, &#39;surface_handles&#39;, all_surf_handles, &#39;color_upperboundpercentile&#39;, 95, &#39;color_lowerboundpercentile&#39;, 5, &#39;neg_colormap&#39;, colormap_tor([0 0 1], [.2 0 .5]));
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3629,13 +3954,17 @@ See help region.surface for options.</p>
 <dd><p>Threshold image_vector (or fmri_data or fmri_obj_image) object based on
 raw threshold values. For statistical thresholding, convert to a
 statistic_image object and see the threshold method for that object.</p>
-<dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>obj = threshold(obj, input_threshold, thresh_type, [optional arguments])</li>
-</ul>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj = threshold(obj, input_threshold, thresh_type, [optional arguments])
+</pre></div>
+</div>
 <p>This is a method for an image_vector object</p>
 <p>Thresholding is not reversible. For statistic_image objects it is.</p>
 <dl class="docutils">
@@ -3643,99 +3972,93 @@ statistic_image object and see the threshold method for that object.</p>
 <dd>Type help object_name.method_name for help on specific
 methods.</dd>
 </dl>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2015 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<p><em>Inputs:</em></p>
-<blockquote>
-<div><ul>
-<li><p class="first">obj               image_vector object</p>
-</li>
-<li><dl class="first docutils">
-<dt>input_threshold   Vector of 2 values defining data value bounds at which</dt>
-<dd><p class="first last">to threshold, e.g., [0 Inf] or [-3 3]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">image_vector object</p>
+</dd>
+<dt><strong>input_threshold:</strong></dt>
+<dd><p class="first last">Vector of 2 values defining data value bounds at which
+to threshold, e.g., [0 Inf] or [-3 3]</p>
+</dd>
+<dt><strong>thresh_type:</strong></dt>
+<dd><p class="first last">String: &#8216;raw-between&#8217; or &#8216;raw-outside&#8217;</p>
 </dd>
 </dl>
-</li>
-<li><p class="first">thresh_type       String: &#8216;raw-between&#8217; or &#8216;raw-outside&#8217;</p>
-</li>
-</ul>
-</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Argument or argument followed by value:</p>
 <dl class="docutils">
-<dt><em>Optional:</em> Argument or argument followed by value</dt>
-<dd><ul class="first last simple">
-<li>&#8216;k&#8217;               Followed by extent threshold cluster size, default = 1</li>
-<li>&#8216;trim_mask&#8217;       Reduce the mask in obj.voInfo based on thresholding</li>
-<li>&#8216;noverbose&#8217;       Suppress verbose output</li>
-</ul>
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">Followed by extent threshold cluster size, default = 1</p>
 </dd>
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last simple">
-<li>obj           thresholded image_vector object</li>
-</ul>
+<dt><strong>&#8216;trim_mask:</strong></dt>
+<dd><p class="first last">Reduce the mask in obj.voInfo based on thresholding</p>
+</dd>
+<dt><strong>&#8216;noverbose:</strong></dt>
+<dd><p class="first last">Suppress verbose output</p>
 </dd>
 </dl>
-<p><em>Examples:</em></p>
-<dl class="docutils">
-<dt>Retain positive values, cluster extent &gt; 100 voxels</dt>
-<dd><ul class="first last simple">
-<li>obj = threshold(obj, [0 Inf], &#8216;raw-between&#8217;, &#8216;k&#8217;, 100)</li>
-</ul>
-</dd>
-<dt>Retain voxels with absolute value &gt; 3</dt>
-<dd><ul class="first last simple">
-<li>obj = threshold(obj, [-3 3], &#8216;raw-outside&#8217;)</li>
-</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">thresholded image_vector object</p>
 </dd>
 </dl>
-<p><em>See also:</em>
-statistic_image.threshold, statistic_image.multi_threshold</p>
-<p><em>Programmers&#8217; notes:</em>
-Tor: Updated documentation, July 2015
-Inputs</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Retain positive values, cluster extent &gt; 100 voxels
+obj = threshold(obj, [0 Inf], &#39;raw-between&#39;, &#39;k&#39;, 100)
+
+% Retain voxels with absolute value &gt; 3
+obj = threshold(obj, [-3 3], &#39;raw-outside&#39;)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>statistic_image.threshold, statistic_image.multi_threshold</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.trim_mask">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">trim_mask</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.trim_mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exclude empty voxels from mask information in obj.volInfo structure, and re-make obj.volInfo</p>
-<blockquote>
-<div><ul class="simple">
-<li>obj = trim_mask(obj)</li>
-</ul>
-</div></blockquote>
-<p>Tor Wager, 2013</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;image_vector.union">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">union</code><span class="sig-paren">(</span><em>dat1</em>, <em>dat2</em>, <em>outputname</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.union" title="Permalink to this definition">¶</a></dt>
 <dd><p>Union and intersection masks for two image_vector objects</p>
-<blockquote>
-<div><ul>
-<li><p class="first">[dat_union, dat_intersection] = union(dat1, dat2, outputname)</p>
-</li>
-<li><p class="first">dat = union(dat1, dat2, outputname)
-outputname = character array name for union image</p>
-<blockquote>
-<div><p>INCLUDE .img at the end.</p>
-</div></blockquote>
-</li>
-</ul>
-</div></blockquote>
-<p>NOTE: must now be in same space!</p>
-<p>tor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[dat_union, dat_intersection] = union(dat1, dat2, outputname)
+
+ dat = union(dat1, dat2, outputname)
+ outputname = character array name for union image
+               INCLUDE .img at the end.
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3745,45 +4068,54 @@ outputname = character array name for union image</p>
 Option to write thresholded image, for statistic_image objects.</p>
 <p>obj.dat should contain data, with one COLUMN for each 3-D frame in the
 4-D image to be written.</p>
-<p><em>Usage:</em></p>
-<blockquote>
-<div><ul class="simple">
-<li>write(obj)  -&gt; writes to the image(s) specified in obj.fullpath</li>
-<li>write(obj, &#8216;thresh&#8217;) -&gt; for statistic_image objects, writes thresholded</li>
-<li>write(obj, &#8216;fname&#8217;, &#8216;~/Documents/test.nii&#8217;)  -&gt; writes the image(s) to specific path</li>
-</ul>
-</div></blockquote>
-<p><em>For example:</em> 
-If m is an image_vector object,</p>
-<blockquote>
-<div><ul class="simple">
-<li>m.X(m.X &lt; .12) = 0; % apply an arbitrary but reasonable custom threshold</li>
-<li>orthviews(m);</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>write the thresholded image to disk:</dt>
-<dd><ul class="first last simple">
-<li>anatmeanname = &#8216;mean_gray_matter_mask.img&#8217;;</li>
-<li>m.filename = anatmeanname;</li>
-<li>m.fullpath = fullfile(maskdir, anatmeanname);</li>
-<li>write(m)</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>write(obj)  -&gt; writes to the image(s) specified in obj.fullpath
+write(obj, &#39;thresh&#39;) -&gt; for statistic_image objects, writes thresholded
+write(obj, &#39;fname&#39;, &#39;~/Documents/test.nii&#39;)  -&gt; writes the image(s) to specific path
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>mni:</strong></dt>
+<dd><p class="first last">resample image to standard MNI FOV (91x109x91)
+uses mri_data.resample_space</p>
 </dd>
-<dt><em>Option:</em></dt>
-<dd><dl class="first docutils">
-<dt>&#8216;mni&#8217;       resample image to standard MNI FOV (91x109x91)</dt>
-<dd>uses mri_data.resample_space</dd>
-</dl>
-<p>&#8216;keepdt&#8217;    output image will be keep original data type (default = float32)
-&#8216;fname&#8217;     writes out image to specific file name.  &#8216;fname&#8217; must be</p>
-<blockquote class="last">
-<div>followed by image name with path</div></blockquote>
+<dt><strong>keepdt:</strong></dt>
+<dd><p class="first last">output image will be keep original data type (default = float32)</p>
+</dd>
+<dt><strong>fname:</strong></dt>
+<dd><p class="first last">writes out image to specific file name.  &#8216;fname&#8217; must be
+followed by image name with path</p>
 </dd>
 </dl>
-<p>2013/3/5: Luk[ea] added &#8216;mni&#8217; option</p>
-<p>2013/3/25: Luke[ea] added optional input to retain original datatype</p>
-<p>2014/3/14: Luke added &#8216;fname&#8217; option to specify filename</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% If m is an image_vector object m.X(m.X &lt; .12) = 0; % apply an 
+% arbitrary but reasonable custom threshold
+orthviews(m);
+
+% write the thresholded image to disk:
+anatmeanname = &#39;mean_gray_matter_mask.img&#39;;
+m.filename = anatmeanname;
+m.fullpath = fullfile(maskdir, anatmeanname);
+write(m)
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

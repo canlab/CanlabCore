@@ -1,41 +1,50 @@
 function write(obj, varargin)
-%
 % Write an image_vector object to an Analyze image.
 % Option to write thresholded image, for statistic_image objects.
 %
 % obj.dat should contain data, with one COLUMN for each 3-D frame in the
 % 4-D image to be written.
 %
-% *Usage:*
+% :Usage:
+% ::
 %
-%   - write(obj)  -> writes to the image(s) specified in obj.fullpath
-%   - write(obj, 'thresh') -> for statistic_image objects, writes thresholded
-%   - write(obj, 'fname', '~/Documents/test.nii')  -> writes the image(s) to specific path
+%    write(obj)  -> writes to the image(s) specified in obj.fullpath
+%    write(obj, 'thresh') -> for statistic_image objects, writes thresholded
+%    write(obj, 'fname', '~/Documents/test.nii')  -> writes the image(s) to specific path
 %
-% *For example:* 
-% If m is an image_vector object,
+% :Optional Inputs:
 %
-%   - m.X(m.X < .12) = 0; % apply an arbitrary but reasonable custom threshold
-%   - orthviews(m);
-% write the thresholded image to disk:
-%   - anatmeanname = 'mean_gray_matter_mask.img';
-%   - m.filename = anatmeanname;
-%   - m.fullpath = fullfile(maskdir, anatmeanname);
-%   - write(m)
+%   **mni:**
+%        resample image to standard MNI FOV (91x109x91)
+%        uses mri_data.resample_space
 %
-% *Option:*
-%   'mni'       resample image to standard MNI FOV (91x109x91)
-%               uses mri_data.resample_space
-%   'keepdt'    output image will be keep original data type (default = float32)
-%   'fname'     writes out image to specific file name.  'fname' must be
-%               followed by image name with path
-
+%   **keepdt:**
+%        output image will be keep original data type (default = float32)
 %
-% 2013/3/5: Luk[ea] added 'mni' option
+%   **fname:**
+%        writes out image to specific file name.  'fname' must be
+%        followed by image name with path
 %
-% 2013/3/25: Luke[ea] added optional input to retain original datatype
+% :Examples:
+% ::
 %
-% 2014/3/14: Luke added 'fname' option to specify filename
+%    % If m is an image_vector object m.X(m.X < .12) = 0; % apply an 
+%    % arbitrary but reasonable custom threshold
+%    orthviews(m);
+%
+%    % write the thresholded image to disk:
+%    anatmeanname = 'mean_gray_matter_mask.img';
+%    m.filename = anatmeanname;
+%    m.fullpath = fullfile(maskdir, anatmeanname);
+%    write(m)
+%
+% ..
+%    2013/3/5: Luk[ea] added 'mni' option
+%
+%    2013/3/25: Luke[ea] added optional input to retain original datatype
+%
+%    2014/3/14: Luke added 'fname' option to specify filename
+% ..
 
 if any(strcmp(varargin, 'fname')) % fname option -- added by Luke
     obj.fullpath = varargin{find(strcmp(varargin, 'fname')) + 1}; %check if this works.

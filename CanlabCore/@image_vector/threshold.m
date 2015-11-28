@@ -1,11 +1,12 @@
 function obj = threshold(obj, input_threshold, thresh_type, varargin)
-%
 % Threshold image_vector (or fmri_data or fmri_obj_image) object based on
 % raw threshold values. For statistical thresholding, convert to a
 % statistic_image object and see the threshold method for that object.
 %
-% *Usage:*
-%   - obj = threshold(obj, input_threshold, thresh_type, [optional arguments])
+% :Usage:
+% ::
+%
+%    obj = threshold(obj, input_threshold, thresh_type, [optional arguments])
 %
 % This is a method for an image_vector object
 %
@@ -15,7 +16,8 @@ function obj = threshold(obj, input_threshold, thresh_type, varargin)
 %              Type help object_name.method_name for help on specific
 %              methods.
 %
-% Author and copyright information:
+% ..
+%     Author and copyright information:
 %
 %     Copyright (C) 2015 Tor Wager
 %
@@ -31,39 +33,56 @@ function obj = threshold(obj, input_threshold, thresh_type, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% *Inputs:*
+% :Inputs:
 %
-%   - obj               image_vector object
-%   - input_threshold   Vector of 2 values defining data value bounds at which
-%                       to threshold, e.g., [0 Inf] or [-3 3]
-%   - thresh_type       String: 'raw-between' or 'raw-outside'
+%   **obj:**
+%        image_vector object
 %
-% *Optional:* Argument or argument followed by value
-%   - 'k'               Followed by extent threshold cluster size, default = 1
-%   - 'trim_mask'       Reduce the mask in obj.voInfo based on thresholding
-%   - 'noverbose'       Suppress verbose output
+%   **input_threshold:**
+%        Vector of 2 values defining data value bounds at which
+%        to threshold, e.g., [0 Inf] or [-3 3]
 %
-% *Outputs:*
-%   - obj           thresholded image_vector object
+%   **thresh_type:**
+%        String: 'raw-between' or 'raw-outside'
 %
-% *Examples:*
+% :Optional Inputs: Argument or argument followed by value:
 %
-% Retain positive values, cluster extent > 100 voxels
-%   - obj = threshold(obj, [0 Inf], 'raw-between', 'k', 100)
+%   **k:**
+%        Followed by extent threshold cluster size, default = 1
 %
-% Retain voxels with absolute value > 3
-%   - obj = threshold(obj, [-3 3], 'raw-outside')
+%   **'trim_mask:**
+%        Reduce the mask in obj.voInfo based on thresholding
 %
-% *See also:*
+%   **'noverbose:**
+%        Suppress verbose output
+%
+%
+% :Outputs:
+%
+%   **obj:**
+%        thresholded image_vector object
+%
+%
+% :Examples:
+% ::
+%
+%    % Retain positive values, cluster extent > 100 voxels
+%    obj = threshold(obj, [0 Inf], 'raw-between', 'k', 100)
+%
+%    % Retain voxels with absolute value > 3
+%    obj = threshold(obj, [-3 3], 'raw-outside')
+%
+% :See also:
 % statistic_image.threshold, statistic_image.multi_threshold
 %
-% *Programmers' notes:*
-% Tor: Updated documentation, July 2015
+% ..
+%    Programmers' notes:
+%    Tor: Updated documentation, July 2015
+% ..
 
-
-% Inputs
-k = 1;
+k = 1; % Inputs
 dotrim = 0;
 doverbose = 1;
 

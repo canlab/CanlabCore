@@ -3,7 +3,7 @@ function icadat = ica(fmridat_obj, varargin)
 %   - icadat = ica(fmridat_obj, [number of ICs to save])
 %   - icadat is also an fmri_data object, with .dat field voxels x components
 %
-% *Notes:*
+% :Notes:
 %   - icasig = W * mixedsig
 %   - icasig = icadat.dat' = W * fmridat_obj.dat'
 %

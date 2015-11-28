@@ -1,29 +1,33 @@
 function obj = check_image_filenames(obj, varargin)
 % Check whether images listed in obj.fullpath actually exist
 %
-% obj = check_image_filenames(obj, ['noverbose'])
+% :Usage:
+% ::
 %
-% *Behavior:*
+%     obj = check_image_filenames(obj, ['noverbose'])
 %
-% If there are no file names, do nothing.
-% If file names are entered and full path is not, attempt to find full
-% path.
-% If full path info is entered, check to see if files exist.
-% Return output in obj.files_exist, and print a warning if only some exist.
+% :Behavior:
+%    - If there are no file names, do nothing.
+%    - If file names are entered and full path is not, attempt to find full
+%      path.
+%    - If full path info is entered, check to see if files exist.
+%      Return output in obj.files_exist, and print a warning if only some exist.
 %
 % Image names should be stored in .fullpath
 % abbreviated image names may be stored in image_names.
 %
-% *Notes:*
+% :Note:
 % 
 % fullpath should have full path to each volume in a string matrixm, with
 % trailing ,volume# for 4-D images as per SPM style expanded list.
+%
 % image_names should have image name only for each volume
 %
-% *** May still be debugging issues with 3-D vs. 4-D files
+% ..
+%    May still be debugging issues with 3-D vs. 4-D files
+% ..
 
-% if 'noverbose' is entered, suppress output
-verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin))));
+verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin)))); % if 'noverbose' is entered, suppress output
 
 
 if isempty(obj.fullpath) && ~isempty(obj.image_names)

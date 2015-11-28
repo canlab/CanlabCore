@@ -1,6 +1,4 @@
 function cl = extract_roi_averages(obj, mask, varargin)
-% cl = extract_roi_averages(image_vector obj, mask, [average_over])
-%
 % This image_vector method a extracts and averages data stored in an fmri_data object 
 % from a set of ROIs defined in a mask.
 % It is *slightly* different from the fmri_data method, as fmri_data has
@@ -18,25 +16,32 @@ function cl = extract_roi_averages(obj, mask, varargin)
 %
 % Extracted data is returned in single data format.
 %
-% Inputs:
-%   1. char array of strings containing 4D image file names (data extracted from these)
-%   2. mask_image to extract from.
+% :Usage:
+% ::
 %
-% *Optional inputs:*
+%    cl = extract_roi_averages(image_vector obj, mask, [average_over])
 %
-% **average_over:**
-%   - Default = 'contiguous_regions' to average over contiguous voxels
-%     bounded by voxels of 0 or NaN (non-data values)
-%   - Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
-%     (i.e., for atlas images with unique codes for each defined region)
+% :Inputs:
 %
-% *Example:*
+%   - char array of strings containing 4D image file names (data extracted from these)
+%   - mask_image to extract from.
 %
-%  - imgs_to_extract_from = filenames('w*.nii','char');
-%  - mask_image = which('anat_lbpa_thal.img');
-%  - [cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);
+% :Optional inputs:
 %
-% *Related functions:*
+%   **average_over:**
+%      - Default: 'contiguous_regions' to average over contiguous voxels
+%        bounded by voxels of 0 or NaN (non-data values)
+%      - Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
+%        (i.e., for atlas images with unique codes for each defined region)
+%
+% :Examples:
+% ::
+%
+%    imgs_to_extract_from = filenames('w*.nii','char');
+%    mask_image = which('anat_lbpa_thal.img');
+%    [cl, imgdat] = extract_image_data(imgs_to_extract_from, mask_image);
+%
+% :See also:
 %
 % For an non-object-oriented alternative, see extract_image_data.m
 

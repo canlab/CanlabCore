@@ -1,7 +1,10 @@
 function isdiff = compare_space(obj, obj2)
-% function isdiff = compare_space(obj, obj2)
-%
 % Compare spaces of two image_vector objects
+%
+% :Usage:
+% ::
+%
+%     function isdiff = compare_space(obj, obj2)
 %
 % Returns 0 if same, 1 if different spaces, 2 if no volInfo info for one or
 % more objects. 3 if same space, but different in-mask voxels in .dat or

@@ -1,41 +1,45 @@
 function obj_out = image_math(obj1, varargin)
 % Perform simple mathematical and boolean operations on image objects
 %
-% *Usage:*
-%   - obj_out = image_math(obj1, [optional inputs, e.g., a 2nd object, keywords])
+% :Usage:
+% ::
+%
+%    obj_out = image_math(obj1, [optional inputs, e.g., a 2nd object, keywords])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
 %              methods.
 %
-% *Inputs:*
-%   - obj1           An image_vector object
+% :Inputs:
 %
-% *Optional inputs:*
-%   - obj2                   - An additional image_vector object
-%   - {'add', 'plus'}        - Keyword to perform image-wise addition of images in obj1
+%   **obj1:**
+%        An image_vector object
+%
+% :Optional Inputs:
+%
+%   **obj2:**
+%        An additional image_vector object
+%   **{'add', 'plus'}:**
+%        Keyword to perform image-wise addition of images in obj1
 %                              and obj2.  Assumes these are paired/matched objects.
-%   - {'subtract', 'minus'}  - Keyword to perform image-wise subtraction of images
+%   **{'subtract', 'minus'}:**
+%        Keyword to perform image-wise subtraction of images
 %                              in obj1 and obj2
-%   - {'cat', 'concatenate'} - Concatenate obj1 and obj2 image-wise.  Requires same
+%   **{'cat', 'concatenate'}:**
+%        Concatenate obj1 and obj2 image-wise.  Requires same
 %                              number of voxels in both image sets.  Returns effects
 %                              codes of 1, -1 in obj_out.Y.
-%   - {'power'}              - Keyword to raise data to power element-wise; obj.dat = obj.dat.^b;
+%   **{'power'}:**
+%        Keyword to raise data to power element-wise; obj.dat = obj.dat.^b;
 %                              Followed by exponent to apply (b)
 %
-% *Outputs:*
-%   - obj_out        The result - an image_vector object
+% :Outputs:
 %
-% *Examples:*
-% give examples here
+%   **obj_out:**
+%        The result - an image_vector object
 %
-% *See also:*
-% *list other functions related to this one, and alternatives*
-
-% *Programmers' notes:*
-% List dates and changes here, and author of changes
-%
-% Author and copyright information:
+% ..
+%     Author and copyright information:
 %
 %     Copyright (C) 2015  Tor Wager
 %
@@ -51,16 +55,14 @@ function obj_out = image_math(obj1, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 
-
-% -------------------------------------------------------------------------
+% ..
 % DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
 
-% Defaults
-% -----------------------------------
-% initalize optional variables to default values here.
-keyword = '';  % keyword. should enter one...
+keyword = '';  % initalize optional variables to default values here.
+% keyword. should enter one...
 obj2 = [];
 my_exponent = [];
 

@@ -12,47 +12,55 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %
 % To extract pattern expression values for each ROI within a mask use extract_roi_averages() 
 %
-% *Optional inputs:*
+% :Optional Inputs:
+%
+%   **pattern_expression:**
+%        calculate and return the cross-product of each
+%        image in dat and the values in the mask.  This is useful if comparing
+%        expression values that are comprised of different datasets or differing
+%        number of voxels.
+%
+%   **correlation:**
+%        calculate the pearson correlation coefficient of each
+%        image in dat and the values in the mask.
+%
+%   **norm_mask:**
+%        normalize the mask weights by L2 norm, for patt expression
+%        only.
+%
+%   **ignore_missing:**
+%        use with pattern expression only. Ignore weights on voxels
+%        with zero values in test image. If this is not entered, the function will
+%        check for these values and give a warning.
 % 
-% 'pattern_expression' : calculate and return the cross-product of each
-% image in dat and the values in the mask.  This is useful if comparing
-% expression values that are comprised of different datasets or differing
-% number of voxels.
-%
-% 'correlation' : calculate the pearson correlation coefficient of each
-% image in dat and the values in the mask.
-%
-% 'norm_mask': normalize the mask weights by L2 norm, for patt expression
-% only.
-%
-% 'ignore_missing': use with pattern expression only. Ignore weights on voxels
-% with zero values in test image. If this is not entered, the function will
-% check for these values and give a warning.
+%   **invert:**
+%        Invert the mask so that out-of-mask voxels are now in (using
+%        the mask as an 'exclude mask' rather than an include-mask. If pattern
+%        expression is requested, the behavior is different, and it inverts the
+%        sign of in-mask pattern weights.
 % 
-% 'invert': Invert the mask so that out-of-mask voxels are now in (using
-% the mask as an 'exclude mask' rather than an include-mask. If pattern
-% expression is requested, the behavior is different, and it inverts the
-% sign of in-mask pattern weights.
-% 
-%  - [dat, mask] = apply_mask(dat, mask)
-%  - [dat, mask] = apply_mask(dat, mask image name)
-%  - [dat, mask] = apply_mask(dat, mask image vector object)
-%  - [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
-%  - [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
+% :Examples:
+% ::
 %
-% *See also:*
+%     [dat, mask] = apply_mask(dat, mask)
+%     [dat, mask] = apply_mask(dat, mask image name)
+%     [dat, mask] = apply_mask(dat, mask image vector object)
+%     [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
+%     [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
+%
+%
+% :See also:
 %
 % extract_roi_averages, to get individual region averages / local pattern expression
 % apply_nps, which does whole-pattern and local regional expression
 %
-% *Notes:*
-%
-% Last modified: 10/30/11 to add support for masks that are weight maps
-% 
-% 12/15/13:  Luke Chang - added correlation option for pattern-expression, 
+% ..
+%    Notes:
+%    Last modified: 10/30/11 to add support for masks that are weight maps
+%    12/15/13:  Luke Chang - added correlation option for pattern-expression
+% .. 
 
-% set options
-dopatternexpression = 0;
+dopatternexpression = 0; % set options
 donorm = 0;
 doignoremissing = 0;
 docorr = 0; %run correlation instead of dot-product for pattern expression

@@ -1,7 +1,6 @@
 function voxel_data_series = plot_current_orthviews_coord(dat)
 % Retrieves and plots the image data series at the current crosshairs in spm_orthviews
 %
-%   - voxel_data_series = plot_current_orthviews_coord(dat)
 
 voxel_data_series = [];
 

@@ -1,18 +1,23 @@
 function fastmontage(dat, varargin)
-% fastmontage(dat, [myview], ['spacing', slicespacing], ['vertical'])
+% Creates 3 separate montage views - ax, cor, sagg in a special figure window
 %
-% fastmontage(dat);
+% :Usage:
+% ::
 %
-% Creates 3 separate montage views - ax, cor, sagg
+%    fastmontage(dat, [myview], ['spacing', slicespacing], ['vertical'])
 %
-% In special figure window
+% :Examples:
+% ::
 %
-%   - fastmontage(dat, 'coronal');
-%   - fastmontage(dat, 'saggital', 'spacing', 10);
-%   - fastmontage(dat, 'saggital', 'spacing', 10, 'vertical');
-%   - fastmontage(dat, 'saggital', 'slices_per_row', 12);
+%     fastmontage(dat);
+%     fastmontage(dat, 'coronal');
+%     fastmontage(dat, 'saggital', 'spacing', 10);
+%     fastmontage(dat, 'saggital', 'spacing', 10, 'vertical');
+%     fastmontage(dat, 'saggital', 'slices_per_row', 12);
 %
-% Tor Wager, Aug 2012
+% ..
+%    Tor Wager, Aug 2012
+% ..
 
 do3views = 1;     % composite with all 3 views (default) in special figure
 myview = 'axial'; % default for single view

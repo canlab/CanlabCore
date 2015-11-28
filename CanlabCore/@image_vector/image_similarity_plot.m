@@ -3,12 +3,14 @@ function stats = image_similarity_plot(obj, varargin)
 % 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
 %
 % Usage:
+% ::
 %
-%   - stats = image_similarity_plot(obj, 'average');
+%    stats = image_similarity_plot(obj, 'average');
 %
 % This is a method for an image_vector object
 %
-% Author and copyright information:
+% ..
+%     Author and copyright information:
 %
 %     Copyright (C) 2015 Tor Wager
 %
@@ -24,52 +26,56 @@ function stats = image_similarity_plot(obj, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
+% :Inputs:
 %
-% obj           An image object with one or more images loaded
+%   **obj:**
+%        An image object with one or more images loaded
 %
-% *Optional inputs:*
+% :Optional inputs:
 %
-% 'average'     Calculate average over images in obj with standard errors
-%               Useful if obj contains one image per subject and you want
-%               to test similarity with maps statistically.
-%               Default behavior is to plot each individual image.
+%   **average:**
+%        Calculate average over images in obj with standard errors
+%        Useful if obj contains one image per subject and you want
+%        to test similarity with maps statistically.
+%        Default behavior is to plot each individual image.
 %
-% *Outputs:*
+% :Outputs:
 %
-% stats         Structure including:
-%               .r, Correlations in [7 networks x images in obj] matrix
-%               .t, T-test (if 'average' is specified)
-%               .line_handles Handles to polar plot lines so you can
-%               customize
-%               .fill_handles Handles to polar plot fills so you can
-%               customize
+%   **stats:**
+%        Structure including:
+%           - .r, Correlations in [7 networks x images in obj] matrix
+%           - .t, T-test (if 'average' is specified)
+%           - .line_handles Handles to polar plot lines so you can
+%             customize
+%           - .fill_handles Handles to polar plot fills so you can
+%             customize
 %
-% *Examples:*
+% :Examples:
+% ::
 %
-% corrdat is an fmri_data object with 18 images from searchlight
-% correlation in it.  Then:
-% stats = image_similarity_plot_bucknermaps(corrdat, 'average');
+%    % corrdat is an fmri_data object with 18 images from searchlight
+%    % correlation in it.  Then:
+%    stats = image_similarity_plot_bucknermaps(corrdat, 'average');
 %
-% t_diff is a thresholded statistic_image object
-% stats = image_similarity_plot_bucknermaps(t_diff);
+%    % t_diff is a thresholded statistic_image object
+%    stats = image_similarity_plot_bucknermaps(t_diff);
 %
-% *See also:*
+% :See also:
 %
 % tor_polar_plot
+%
+% ..
+%    Programmers' notes:
+%    List dates and changes here, and author of changes
+% ..
 
-% *Programmers' notes:*
-% List dates and changes here, and author of changes
-
-% -------------------------------------------------------------------------
+% ..
 % DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
 
-% Defaults
-% -----------------------------------
-% initalize optional variables to default values here.
-doaverage = 0;
+doaverage = 0; % initalize optional variables to default values here.
 mapset = 'npsplus';  % 'bucknerlab'
 
 % optional inputs with default values

@@ -50,10 +50,11 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %
 %   **dat:**
 %        fmri_data object with data
+%
 %   **dat.covariate:**
 %        basic nuisance matrix
 %
-% :Optional inputs:
+% :Optional Inputs:
 %
 %   **additional_nuisance**
 %        When you have additional nuisance variables that you want

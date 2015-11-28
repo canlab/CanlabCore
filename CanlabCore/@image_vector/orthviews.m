@@ -1,17 +1,21 @@
 function cl = orthviews(image_obj, varargin)
 % Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object
 %
-% *Usage:*
-%   - orthviews(image_obj, varargin)
+% *Usage:
+% ::
 %
-% *Options:*
-%   - 'posneg' input generates orthviews using solid colors.
-%   - 'largest_region' to center the orthviews on the largest region in the
-%      image
+%    orthviews(image_obj, varargin)
 %
-% Copyright Tor Wager, 2011
+% :Optional Inputs:
+%   **posneg:**
+%        input generates orthviews using solid colors.
 %
-% ---------------------------------------------------------------
+%   **largest_region:**
+%        to center the orthviews on the largest region in the image
+%
+% ..
+%    Copyright Tor Wager, 2011
+% ..
 
 overlay = which('SPM8_colin27T1_seg.img');
 

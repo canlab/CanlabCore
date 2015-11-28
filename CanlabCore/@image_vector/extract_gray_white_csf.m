@@ -1,13 +1,21 @@
 function [values, components] = extract_gray_white_csf(obj)
-% [values, components] = extract_gray_white_csf(obj)
-%
 % Extracts mean values (values) and top 5 component scores (components)
 % from each of gray, white, and CSF masks.
 % Images must be in standard MNI space for this to apply.
 %
-% obj = an image_vector (e.g., fmri_data) object
+% :Usage:
+% ::
 %
-% Tor Wager, July 21, 2015
+%     [values, components] = extract_gray_white_csf(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        an image_vector (e.g., fmri_data) object
+%
+% ..
+%    Tor Wager, July 21, 2015
+% ..
 
 numcomps = 5;
 

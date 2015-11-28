@@ -1,18 +1,22 @@
 function dat = rebuild_volinfo_from_dat(dat, newdat)
-% dat = rebuild_volinfo_from_dat(dat, newdat)
-%
 % Will rebuild volInfo (the image space, or sometimes "mask") from a vectorized image. 
 % In other words, will rebuild dat.volInfo from newdat.
 %
 % Also resets all voxels to be significant, if a statistic image
 %
-% *Input*
-%   - dat: an image_vector
-%   - newdat: a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)
+% :Input:
 %
-% *Output*
-%   - dat: dat.dat contains the non-zero values of newdat, and dat.volInfo is
-%          correctly defining the image space
+%   **dat:**
+%        an image_vector
+%
+%   **newdat:**
+%        a vector that MUST be size of ENTIRE image (dat.volInfo.nvox)
+%
+% :Output:
+%
+%   **dat:**
+%        dat.dat contains the non-zero values of newdat, and dat.volInfo is
+%        correctly defining the image space
 
 
 if length(newdat) ~= dat.volInfo.nvox

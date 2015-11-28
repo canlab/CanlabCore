@@ -1,21 +1,26 @@
 function m = mean(obj, varargin)
-% function m = mean(obj, [optional args])
-%
 % Create an image_vector object with mean values for each voxel (cols)
 % across images (rows) of an fmri_data object.
 %
+% :Usage:
+% ::
+%
+%    function m = mean(obj, [optional args])
+%
 % m is an image_vector object whose data contains the mean values.
 %
-% Options are:
+% :Optional Inputs:
 %   - 'write', followed by file name
 %   - 'path', followed by location for file (default = current directory)
 %   - 'orthviews' -> show orthviews for this image, same as orthviews(m)
 %   - 'histogram' -> show histogram for this image, same as histogram(m)
 %   - 'plot' -> do both
 %
-% *Examples:*
-% If sdat is an fmri_data object with multiple images,
-%   - m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
+% :Examples:
+% ::
+%
+%    % If sdat is an fmri_data object with multiple images,
+%    m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
 %
 
 fname = [];

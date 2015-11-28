@@ -1,6 +1,4 @@
 function obj = reparse_contiguous(obj, varargin)
-% obj = reparse_contiguous(obj, ['nonempty'])
-%
 % Re-construct list of contiguous voxels in an image based on in-image
 % voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
 %
@@ -13,14 +11,21 @@ function obj = reparse_contiguous(obj, varargin)
 % If 'nonempty' is entered as an optional argument, will use only voxels
 % that are non-zero, non-nan in all columns of obj.dat.
 %
-% copyright tor wager, 2011
-
-% *Programmers' notes:*
+% :Usage:
+% ::
 %
-% Edited 1/27/13 by tor to use all columns when calculating 'nonempty'
+%    obj = reparse_contiguous(obj, ['nonempty'])
+%
+% ..
+%    Copyright tor wager, 2011
+%
+%    Programmers' notes:
+%
+%    Edited 1/27/13 by tor to use all columns when calculating 'nonempty'
 %                also fixed bug - was not using 'nonempty' input in some
 %                cases
-
+% ..
+%
 % .cluster and .xyzlist should both always be length v in-mask voxels
 % if 'nonempty' is entered, then .dat should be length v in-mask voxels too
 

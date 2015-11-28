@@ -1,6 +1,5 @@
 function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
 % Reconstruct a 3-D or 4-D image from image_vector object obj
-% [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
 %
 % voldata is and X x Y x Z x Images matrix
 % vectorized_voldata is the same, with all voxels vectorized
@@ -12,26 +11,32 @@ function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj
 % This function returns output in memory;
 % see image_vector.write for writing .img files to disk.
 %
-% *Outputs:*
-%   - voldata : 3-D recon volume
-%   - vectorized_voldata : volume in column vetor, iimg_xxx function format
-%   - xyz_coord_struct : has fields with coordinate information in mm (world) space
-%         - x, y, z : vectors of coordinates in mm for each of the 3
-%           dimensions of the image
-%         - X, Y, Z : output matrices from meshgrid with mm coordinates,
-%           for volume visualization.
-%           These can be passed to surf or isocaps functions for volume
-%           visualization in world space (mm).
+% :Outputs:
 %
-% Copyright 2011 tor wager
+%   **voldata:**
+%        3-D recon volume
+%   **vectorized_voldata:**
+%        volume in column vetor, iimg_xxx function format
+%   **xyz_coord_struct:**
+%        has fields with coordinate information in mm (world) space
+%          - x, y, z : vectors of coordinates in mm for each of the 3
+%            dimensions of the image
+%          - X, Y, Z : output matrices from meshgrid with mm coordinates,
+%            for volume visualization.
+%            These can be passed to surf or isocaps functions for volume
+%            visualization in world space (mm).
 %
-% *Programmers' notes:*
+% ..
+%    Copyright 2011 tor wager
 %
-% Aug 2012: This function does not flip the data based on the sign of x dimension.  
-% The flipping is applied in image writing / display in
-% iimg_reconstruct_vols, write method, spm_orthviews, etc.
+%    Programmers' notes:
 %
-% July 2013 : Tor : Added xyz_coord_struct output
+%    Aug 2012: This function does not flip the data based on the sign of x dimension.  
+%    The flipping is applied in image writing / display in
+%    iimg_reconstruct_vols, write method, spm_orthviews, etc.
+%
+%    July 2013 : Tor : Added xyz_coord_struct output
+% ..
 
 obj = replace_empty(obj);
 voldata = iimg_reconstruct_vols(obj.dat, obj.volInfo);

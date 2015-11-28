@@ -1,9 +1,9 @@
 function obj = trim_mask(obj)
 % Exclude empty voxels from mask information in obj.volInfo structure, and re-make obj.volInfo
 %
-%   - obj = trim_mask(obj)
-%
-% Tor Wager, 2013
+% ..
+%    Tor Wager, 2013
+% ..
 
 obj = replace_empty(obj);
 whomit = all(obj.dat == 0 | isnan(obj.dat), 2);

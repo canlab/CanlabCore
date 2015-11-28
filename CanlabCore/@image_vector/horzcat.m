@@ -1,14 +1,21 @@
 function c = horzcat(varargin)
-% function s = horzcat(varargin)
-%
 % Implements the horzcat ([a b]) operator on image_vector objects across voxels.
 % Requires that each object has an equal number of columns and voxels
 %
-% *Examples:*
-%   - c = [dat1 dat2];
+% :Usage:
+% ::
 %
-% Programmer Notes
-% Created 3/14/14 by Luke Chang
+%    function s = horzcat(varargin)
+%
+% :Examples:
+% ::
+%
+%    c = [dat1 dat2];
+%
+% ..
+%    Programmer Notes
+%    Created 3/14/14 by Luke Chang
+% ..
 
 error('This method is deprecated.  Use image_math instead.');
 

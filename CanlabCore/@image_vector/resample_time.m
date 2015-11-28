@@ -1,32 +1,36 @@
 function obj = resample_time(obj, source_TR, target_TR, varargin)
-
 % Resample the time-series images (source_time_interval) in an fmri_data object (obj) 
 % to the different time series (target_time_interval). Works for all image_vector objects.
 %
 %   - obj = resample_time(obj, source_time_interval, target_time_interval, varargin)
 %
-% *Options:*
-%   1. 'meth' (Interpolation methods)
-%       You can enter resampling method as optional input. Takes any input to
-%         - 'nearest' - nearest neighbor interpolation
-%         - 'linear'  - linear interpolation (default)
-%         - 'spline'  - spline interpolation
-%         - 'cubic'   - cubic interpolation as long as the data is uniformly
+% :Optional Inputs:
+%
+%   **meth (Interpolation methods):**
+%        You can enter resampling method as optional input. Takes any input to
+%          - 'nearest' - nearest neighbor interpolation
+%          - 'linear'  - linear interpolation (default)
+%          - 'spline'  - spline interpolation
+%          - 'cubic'   - cubic interpolation as long as the data is uniformly
 %                       spaced, otherwise the same as 'spline'
-%   2. 'slice' (a fraction of the slice timing correction)
+%   **slice:**
+%      A fraction of the slice timing correction.
 %      The default is 0.5, meaning if your TR is 2s, the time point of your TR image
 %      will be considered as the middle point of the TR bins. You can use this option
 %      to use different time points. If you are upsampling your data (i.e.,
 %      your target TR is shorter than your source TR), you need to discard the
 %      first column of your data. This function will return the first time point data as NaN. 
 %
-% *Examples:*
 %
-%   - dat = fmri_data('/Volumes/RAID1/labdata/current/BMRK3/Imaging/spatiotemp_biomarker/STmarker1.img');
-%   - dat = resample_time(dat, 2, 1.3) 
+% :Examples:
+% ::
 %
-% with options:
-%   - dat = resample_time(dat, 2, 1.3, 'meth', 'linear', 'slice', .3) 
+%    dat = fmri_data('/Volumes/RAID1/labdata/current/BMRK3/Imaging/spatiotemp_biomarker/STmarker1.img');
+%    dat = resample_time(dat, 2, 1.3) 
+%
+%    % with options:
+%    dat = resample_time(dat, 2, 1.3, 'meth', 'linear', 'slice', .3)
+%
 
 slice_frac = .5;
 intp_meth = [];

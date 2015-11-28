@@ -1,54 +1,66 @@
 function obj = preprocess(obj, meth, varargin)
-% obj = preprocess(obj, meth, varargin)
-%
 % Preprocesses data in an fmri_data object
 %
 % Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
 % images, and operating on the rows operates on voxels (or variables more
 % generally) across images.
 %
-% *meth: Options*
+% :Inputs:
 %
-% 'resid': Residualize voxels with respect to covariates
-%          Uses obj.covariates, obj.dat.
-%          Adds intercept automatically. You can tell it to add the mean response per voxel back in:
-%          obj = preprocess(obj, 'resid', [add mean back in flag])
+%   **meth:** Options
 %
-% 'hpfilter': High-pass filter and remove run intercepts and first two
-% images per run.
-%         Uses obj.dat, obj.images_per_session
-%         obj = preprocess(obj, 'hpfilter', HPlen in s, TR)
+%   **resid:**
+%        Residualize voxels with respect to covariates
+%        Uses obj.covariates, obj.dat.
+%        Adds intercept automatically. You can tell it to add the mean response per voxel back in:
+%        obj = preprocess(obj, 'resid', [add mean back in flag])
 %
-% 'windsorize': Windsorize entire data matrix to 3 STD
+%   **hpfilter:**
+%        High-pass filter and remove run intercepts and first two
+%        images per run. Uses obj.dat, obj.images_per_session
+%        obj = preprocess(obj, 'hpfilter', HPlen in s, TR)
 %
-% 'windsorizevoxels': Windsorize each time series in data matrix to 3 STD
+%   **windsorize:**
+%        Windsorize entire data matrix to 3 STD
 %
-% 'session_outliers': Identify session-wise (run-wise) outliers with significant
-%           based on mahalanobis distance with FDR-corrected P-values in chi-square test.
-%           Impute session grand mean outliers.
+%   **windsorizevoxels:**
+%        Windsorize each time series in data matrix to 3 STD
 %
-% 'outliers': Identify outlier time points for each session based on
-% mahalanobis distance (see above) across global mean for slices and
-% spatial STD for slices, as in scn_session_spike_id.
-% Outliers at 3 SD based on timeseries added to obj.covariates.
+%   **session_outliers:**
+%        Identify session-wise (run-wise) outliers with significant
+%        based on mahalanobis distance with FDR-corrected P-values in chi-square test.
+%        Impute session grand mean outliers.
 %
-% 'outliers_rmssd': Identify outlier time points for each session based on
-% root-mean-square successive differences between images (across voxels.)
-% this is the std (across voxels) of the successive diffs across images.
-% Outliers at 3.5 SD based on timeseries added to obj.covariates.
+%   **outliers:**
+%        Identify outlier time points for each session based on
+%        mahalanobis distance (see above) across global mean for slices and
+%        spatial STD for slices, as in scn_session_spike_id.
+%        Outliers at 3 SD based on timeseries added to obj.covariates.
 %
-% 'smooth':  Smoothed images with Gaussian filter
-%  obj = preprocess(obj, 'smooth', FWHM in mm)
-% % NOTE: SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN
+%   **outliers_rmssd:**
+%        Identify outlier time points for each session based on
+%        root-mean-square successive differences between images (across voxels.)
+%        this is the std (across voxels) of the successive diffs across images.
+%        Outliers at 3.5 SD based on timeseries added to obj.covariates.
 %
-% 'interp_images': Interpolate all voxels in a series of images specified
-% by logical vector whout.
-%   - obj = preprocess(obj, 'interp_images', whout);
+%   **smooth:**
+%         Smoothed images with Gaussian filter
+%           - obj = preprocess(obj, 'smooth', FWHM in mm)
+%         *NOTE* SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN
 %
-% *Examples:* two complementary ways to get and plot outliers:
-%   - dat = preprocess(dat, 'outliers', 'plot');
-%   - subplot(5, 1, 5); % go to new panel...
-%   - dat = preprocess(dat, 'outliers_rmssd', 'plot');
+%   **interp_images:**
+%        Interpolate all voxels in a series of images specified
+%        by logical vector whout.
+%          - obj = preprocess(obj, 'interp_images', whout);
+%
+% :Examples:
+% ::
+%
+%    % two complementary ways to get and plot outliers:
+%    dat = preprocess(dat, 'outliers', 'plot');
+%    subplot(5, 1, 5); % go to new panel...
+%    dat = preprocess(dat, 'outliers_rmssd', 'plot');
+%
 
 switch meth
     

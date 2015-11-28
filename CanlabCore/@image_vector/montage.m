@@ -1,15 +1,22 @@
 function fig_handle = montage(image_obj, varargin)
 % Create a montage of an image_vector (or statistic_image or fmri_data) object
 %
-% *Usage:*
-%   - [fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
+% *Usage:
+% ::
 %
-% *Optional inputs:*
-%   - 'fmridisplay' for fmridisplay object style montage [default]
-%   - 'scnmontage' for circa 2008-style SCN lab montage for each image vector
+%    [fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
 %
-% *Examples:*
-%   - o2 = montage(mask);
+% :Optional inputs:
+%   **fmridisplay:**
+%        for fmridisplay object style montage [default]
+%
+%   **scnmontage:**
+%        for circa 2008-style SCN lab montage for each image vector
+%
+% :Examples:
+% ::
+%
+%    o2 = montage(mask);
 
 meth = 'fmridisplay';
 

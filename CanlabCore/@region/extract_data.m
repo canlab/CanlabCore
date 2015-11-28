@@ -1,18 +1,21 @@
 function r = extract_data(r, data_obj)
-% Extract data from image_vector object (data_obj) for voxels specified by a region object (r)
-% Returns extracted data and averages
+% Extract data from image_vector object (data_obj) for voxels specified
+% by a region object (r). Returns extracted data and averages.
 %
-% *Features:*
 %
-% data_obj does not have to be in the same space, uses mm coordinates
+% :Usage:
+% ::
 %
-% *Usage:*
-%   - region_obj = extract_data(region_obj, data_obj)
+%    region_obj = extract_data(region_obj, data_obj)
 %
 % Type methods(region) for a list of special commands for region object
 % Type help object_name.method_name for help on specific methods.
 %
-% Author and copyright information:
+% :Features:
+%    data_obj does not have to be in the same space, uses mm coordinates
+%
+% ..
+%     Author and copyright information:
 %
 %     Copyright (C) 2010 Tor Wager
 %
@@ -28,24 +31,26 @@ function r = extract_data(r, data_obj)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% *Inputs:*
-%   - r           a region object
-%   - data_obj    an image_vector or fmri_data object to extract data from
-%                 does not have to be in the same space, uses mm coordinates
+% :Inputs:
 %
-% *Outputs:*
-%   - r           a region object, with data attached
+%   **r:**
+%         a region object
 %
-% *Examples:*
-% give examples here
+%   **data_obj:**
+%         an image_vector or fmri_data object to extract data from
+%         does not have to be in the same space, uses mm coordinates
 %
-% *See also:*
-% list other functions related to this one, and alternatives*
+% :Outputs:
 %
-% *Programmers' notes:*
+%   **r:**
+%         a region object, with data attached
 %
-% 8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region
+% ..
+%     Programmers' notes:
+%     8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region
+% ..
 
 xyzlist = data_obj.volInfo.xyzlist;
 

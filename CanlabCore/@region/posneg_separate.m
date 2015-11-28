@@ -3,16 +3,25 @@ function [pcl, ncl] = posneg_separate(cl, varargin)
 % peak values, based on max (peak) value in .val or .Z field (default =
 % val)
 %
-%   - [pcl, ncl] = posneg_separate(cl, ['Z'])
+% :Usage:
+% ::
+%
+%    [pcl, ncl] = posneg_separate(cl, ['Z'])
 %
 % Returns pcl and ncl, region structures with positive- and negative-valued
 % peaks, respectively, copied from the original cl input.
 %
-% *Optional input:* 'Z', to use .Z field
+% :Optional Input:
 %
-% *Note:* You may have to use reparse_continguous to get this to work right.
-%   - r = reparse_continguous(r);
-%   - [pcl, ncl] = posneg_separate(r);
+%   **Z:**
+%        To use .Z field
+%
+% :Note: You may have to use reparse_continguous to get this to work right.
+% ::
+%
+%    r = reparse_continguous(r);
+%    [pcl, ncl] = posneg_separate(r);
+%
 
 reparseflag = 0;  % need to reparse if mixed clusters
 myfield = 'val';

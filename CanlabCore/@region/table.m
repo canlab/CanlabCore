@@ -1,20 +1,33 @@
 function [poscl, negcl] = table(cl, varargin)
 % Print a table of all regions in a region object (cl)
-% 
-%   - [poscl, negcl] = table(cl, [optional inputs])
-% 
-% *Optional inputs:*
-%   - 'k'           : Print only regions with k or more contiguous voxels
-%   - 'nosep'       : do not separate cl with pos and neg effects based on peak in .val
-%   - 'names'       : name clusters before printing to table and output; saves in .shorttitle field
-%   - 'forcenames'  : force naming of cl by removing existing names in .shorttitle field
 %
-% *Outputs:* 
+% :Usage:
+% ::
 %
-% Returns region objects for cl with pos and neg effects, limited by size if entered
-% and named if entered as optional input
+%    [poscl, negcl] = table(cl, [optional inputs])
 %
-% Copyright 2011, tor wager
+% :Optional inputs:
+%
+%   **k:**
+%        Print only regions with k or more contiguous voxels
+%
+%   **nosep:**
+%        do not separate cl with pos and neg effects based on peak in .val
+%
+%   **names:**
+%        name clusters before printing to table and output; saves in .shorttitle field
+%
+%   **forcenames:**
+%        force naming of cl by removing existing names in .shorttitle field
+%
+% :Outputs:
+%
+%   Returns region objects for cl with pos and neg effects, limited by size if entered
+%   and named if entered as optional input
+%
+% ..
+%    Copyright 2011, tor wager
+% ..
 
 k = 0;
 dosep = 1;   

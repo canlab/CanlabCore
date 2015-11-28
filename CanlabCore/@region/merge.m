@@ -1,13 +1,17 @@
 function cl = merge(cl, wh_merge)
-%
 % Merge two or more regions together in a region object.
 % Combines fields from all clusters in the named series with the first one
 % in the series.
 %
-%   - wh_merge = [3 4];
-%   - cl = merge(cl, wh_merge)
+% :Usage:
+% ::
 %
-% Tor Wager, April 2011
+%    wh_merge = [3 4];
+%    cl = merge(cl, wh_merge)
+%
+% ..
+%    Tor Wager, April 2011
+% ..
 
 N = fieldnames(cl(wh_merge(1))); % add stuff to the first one in the list
 

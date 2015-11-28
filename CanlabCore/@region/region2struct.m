@@ -1,10 +1,8 @@
 function cl = region2struct(cl)
-% cl = region2struct(cl)
-%
 % Convert a region object to a simple structure, primarily for
 % compatibility with other, older CANlab tools.
 %
-% see also cluster2region, for the reverse transformation
+% :See also: cluster2region, for the reverse transformation
 
 warning off
 for i = 1:length(cl)

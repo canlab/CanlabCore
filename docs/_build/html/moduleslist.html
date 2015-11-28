@@ -1246,7 +1246,7 @@ Requires that each object has an equal number of columns and voxels</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -4124,71 +4124,81 @@ write(m)
 <dl class="function">
 <dt id="&#64;region.check_extracted_data">
 <code class="descclassname">&#64;region.</code><code class="descname">check_extracted_data</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.check_extracted_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>isok = check_extracted_data(cl)</p>
-<p>cl must be a valid region object (see region.m)
+<dd><dl class="docutils">
+<dt>Checks the data, just in case of space/programming issues, </dt>
+<dd>by re-extracting the region average data from 5 random regions 
+using spm_get_data.m, and compares it to the already-saved values</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><blockquote class="first">
+<div><dl class="docutils">
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">must be a valid region object (see region.m)
 and cl(1).source_images must still be on the path.</p>
-<p>Checks the data, just in case of space/programming issues, 
-by re-extracting the region average data from 5 random regions 
-using spm_get_data.m, and compares it to the already-saved values</p>
-<p>You should not need to run this regularly &#8211; but you should if you
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">You should not need to run this regularly &#8211; but you should if you
 suspect things have gone awry.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.extract_data">
 <code class="descclassname">&#64;region.</code><code class="descname">extract_data</code><span class="sig-paren">(</span><em>r</em>, <em>data_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.extract_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract data from image_vector object (data_obj) for voxels specified by a region object (r)
-Returns extracted data and averages</p>
-<p><em>Features:</em></p>
-<p>data_obj does not have to be in the same space, uses mm coordinates</p>
-<dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>region_obj = extract_data(region_obj, data_obj)</li>
-</ul>
-</dd>
-</dl>
+<dd><p>Extract data from image_vector object (data_obj) for voxels specified
+by a region object (r). Returns extracted data and averages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">region_obj</span> <span class="o">=</span> <span class="n">extract_data</span><span class="p">(</span><span class="n">region_obj</span><span class="p">,</span> <span class="n">data_obj</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Type methods(region) for a list of special commands for region object
 Type help object_name.method_name for help on specific methods.</p>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2010 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<dl class="docutils">
-<dt><em>Inputs:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">r           a region object</p>
-</li>
-<li><dl class="first docutils">
-<dt>data_obj    an image_vector or fmri_data object to extract data from</dt>
-<dd><p class="first last">does not have to be in the same space, uses mm coordinates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Features:</th><td class="field-body">data_obj does not have to be in the same space, uses mm coordinates</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">a region object</p>
+</dd>
+<dt><strong>data_obj:</strong></dt>
+<dd><p class="first last">an image_vector or fmri_data object to extract data from
+does not have to be in the same space, uses mm coordinates</p>
 </dd>
 </dl>
-</li>
-</ul>
-</dd>
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last simple">
-<li>r           a region object, with data attached</li>
-</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">a region object, with data attached</p>
 </dd>
 </dl>
-<p><em>Examples:</em>
-give examples here</p>
-<p><em>See also:</em>
-list other functions related to this one, and alternatives*</p>
-<p><em>Programmers&#8217; notes:</em></p>
-<p>8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -4197,13 +4207,18 @@ list other functions related to this one, and alternatives*</p>
 <dd><p>Merge two or more regions together in a region object.
 Combines fields from all clusters in the named series with the first one
 in the series.</p>
-<blockquote>
-<div><ul class="simple">
-<li>wh_merge = [3 4];</li>
-<li>cl = merge(cl, wh_merge)</li>
-</ul>
-</div></blockquote>
-<p>Tor Wager, April 2011</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>wh_merge = [3 4];
+cl = merge(cl, wh_merge)
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -4212,193 +4227,234 @@ in the series.</p>
 <dd><p>Separate a region object (cl) into clusters with positive and negative
 peak values, based on max (peak) value in .val or .Z field (default =
 val)</p>
-<blockquote>
-<div><ul class="simple">
-<li>[pcl, ncl] = posneg_separate(cl, [&#8216;Z&#8217;])</li>
-</ul>
-</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">pcl</span><span class="p">,</span> <span class="n">ncl</span><span class="p">]</span> <span class="o">=</span> <span class="n">posneg_separate</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;Z&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 <p>Returns pcl and ncl, region structures with positive- and negative-valued
 peaks, respectively, copied from the original cl input.</p>
-<p><em>Optional input:</em> &#8216;Z&#8217;, to use .Z field</p>
-<dl class="docutils">
-<dt><em>Note:</em> You may have to use reparse_continguous to get this to work right.</dt>
-<dd><ul class="first last simple">
-<li>r = reparse_continguous(r);</li>
-<li>[pcl, ncl] = posneg_separate(r);</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Z:</strong></dt>
+<dd><p class="first last">To use .Z field</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">You may have to use reparse_continguous to get this to work right.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">r</span> <span class="o">=</span> <span class="n">reparse_continguous</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
+<span class="p">[</span><span class="n">pcl</span><span class="p">,</span> <span class="n">ncl</span><span class="p">]</span> <span class="o">=</span> <span class="n">posneg_separate</span><span class="p">(</span><span class="n">r</span><span class="p">);</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.region2imagevec">
 <code class="descclassname">&#64;region.</code><code class="descname">region2imagevec</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.region2imagevec" title="Permalink to this definition">¶</a></dt>
-<dd><p>[ivecobj, orig_cluster_indx]  = region2imagevec(cl)</p>
-<p>Convert a region object to an image_vector object, replacing the voxels
+<dd><p>Convert a region object to an image_vector object, replacing the voxels
 and reconstructing as much info as possible.</p>
 <p>The .dat field of the new &#8220;ivecobj&#8221; is made from the cl.all_data field.
 if this is empty, uses cl.val field, then cl.Z as a backup.
 Mask information is available in ivecobj.volInfo.</p>
-<blockquote>
-<div><ul class="simple">
-<li>ivecobj = region2imagevec(cl)</li>
-</ul>
-</div></blockquote>
-<p>NEEDS SOME ADDITIONAL WORK/CHECKING</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ivecobj</span> <span class="o">=</span> <span class="n">region2imagevec</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.region2imagevec2tmp">
 <code class="descclassname">&#64;region.</code><code class="descname">region2imagevec2tmp</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.region2imagevec2tmp" title="Permalink to this definition">¶</a></dt>
-<dd><p>[ivecobj, orig_cluster_indx]  = region2imagevec2tmp(cl)</p>
-<p>Convert a region object to an image_vector object, replacing the voxels
+<dd><p>Convert a region object to an image_vector object, replacing the voxels
 and reconstructing as much info as possible.</p>
 <p>The .dat field of the new &#8220;ivecobj&#8221; is made from the cl.all_data field.
 if this is empty, uses cl.val field, then cl.Z as a backup.
 Mask information is available in ivecobj.volInfo.</p>
-<blockquote>
-<div><ul class="simple">
-<li>ivecobj = region2imagevec(cl)</li>
-</ul>
-</div></blockquote>
-<p>NEEDS SOME ADDITIONAL WORK/CHECKING</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ivecobj</span> <span class="o">=</span> <span class="n">region2imagevec</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.region2struct">
 <code class="descclassname">&#64;region.</code><code class="descname">region2struct</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.region2struct" title="Permalink to this definition">¶</a></dt>
-<dd><p>cl = region2struct(cl)</p>
-<p>Convert a region object to a simple structure, primarily for
+<dd><p>Convert a region object to a simple structure, primarily for
 compatibility with other, older CANlab tools.</p>
-<p>see also cluster2region, for the reverse transformation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">cluster2region, for the reverse transformation</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.reparse_continguous">
 <code class="descclassname">&#64;region.</code><code class="descname">reparse_continguous</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.reparse_continguous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Re-define regions in region object based on contiguous blobs</p>
-<blockquote>
-<div><ul class="simple">
-<li>clout = reparse_continguous(cl)</li>
-</ul>
-</div></blockquote>
-<p>NEEDS SOME ADDITIONAL WORK/CHECKING</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">clout</span> <span class="o">=</span> <span class="n">reparse_continguous</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.subdivide_by_atlas">
 <code class="descclassname">&#64;region.</code><code class="descname">subdivide_by_atlas</code><span class="sig-paren">(</span><em>r</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.subdivide_by_atlas" title="Permalink to this definition">¶</a></dt>
-<dd><p>r = subdivide_by_atlas(r, [atlas name])</p>
-<dl class="docutils">
-<dt><em>Inputs:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">r = a region object, defined using region(mask)</p>
-</li>
-<li><dl class="first docutils">
-<dt>atlas name: Optional mask image with integer codes defining in-mask</dt>
-<dd><p class="first last">regions.  Default is &#8216;atlas_labels_combined.img&#8217;</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>r = subdivide_by_atlas(r, [atlas name])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">a region object, defined using region(mask)</p>
+</dd>
+<dt><strong>atlas name:</strong></dt>
+<dd><p class="first last">Optional mask image with integer codes defining in-mask
+regions.  Default is &#8216;atlas_labels_combined.img&#8217;</p>
 </dd>
 </dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p><em>Output:</em> A region object with separate clusters for each contiguous blob,
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first">A region object with separate clusters for each contiguous blob,
 subdivided by regions labeled in atlas.</p>
-<dl class="docutils">
-<dt><em>Example:</em></dt>
-<dd><ul class="first last simple">
-<li>r = subdivide_by_atlas(r);</li>
-<li>r(cat(1, r.numVox) &lt; 20) = []; % get rid of small regions</li>
-<li>cluster_orthviews(r, &#8216;unique&#8217;);</li>
-</ul>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>r = subdivide_by_atlas(r);
+r(cat(1, r.numVox) &lt; 20) = []; % get rid of small regions
+cluster_orthviews(r, &#39;unique&#39;);
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.subdivide_by_local_max">
 <code class="descclassname">&#64;region.</code><code class="descname">subdivide_by_local_max</code><span class="sig-paren">(</span><em>r</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.subdivide_by_local_max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subdivide regions into sub-regions based on local peak Z-scores/maxima</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subregions</span> <span class="o">=</span> <span class="n">subdivide_by_local_max</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;mm_distance&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;noorthviews&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 <dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>subregions = subdivide_by_local_max(r, [&#8216;mm_distance&#8217;, value], [&#8216;noorthviews&#8217;])</li>
-</ul>
-</dd>
 <dt>For objects: Type methods(object_name) for a list of special commands</dt>
 <dd>Type help object_name.method_name for help on specific
 methods.</dd>
 </dl>
-<p>Author and copyright information:</p>
-<blockquote>
-<div><p>Copyright (C) 2015 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<dl class="docutils">
-<dt><em>Inputs:</em> All Optional</dt>
-<dd><ul class="first last simple">
-<li>&#8216;mm_distance&#8217;     Followed by mm distance minimum for dividing subclusters</li>
-<li>&#8216;noorthviews&#8217;     Suppress display of orthviews</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>mm_distance:</strong></dt>
+<dd><p class="first last">Followed by mm distance minimum for dividing subclusters</p>
 </dd>
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last simple">
-<li>subregions        subdivided region object</li>
-</ul>
+<dt><strong>noorthviews:</strong></dt>
+<dd><p class="first last">Suppress display of orthviews</p>
 </dd>
 </dl>
-<p><em>Examples:</em>
-give examples here</p>
-<p><em>See also:</em></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>subregions:</strong></dt>
+<dd><p class="first last">subdivided region object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 <p>region.subdivide_by_atlas, subclusters_from_local_max, cluster_local_maxima</p>
-<p>Programmers&#8217; notes:
-List dates and changes here, and author of changes</p>
-<p>BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
-ARGUMENTS. MANY FUNCTIONS NEED TO PARSE OPTIONAL ARGS, SO THIS MAY BE
-USEFUL.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.surface">
 <code class="descclassname">&#64;region.</code><code class="descname">surface</code><span class="sig-paren">(</span><em>r</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.surface" title="Permalink to this definition">¶</a></dt>
 <dd><p>Surface method for region object - renders blobs on multiple types of 3-D surface</p>
-<dl class="docutils">
-<dt><em>Usage:</em></dt>
-<dd><ul class="first last simple">
-<li>[all_surf_handles, pcl, ncl] = surface(r, [&#8216;cutaways&#8217;, any optional inputs to surface_cutaway])</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[all_surf_handles, pcl, ncl] = surface(r, [&#39;cutaways&#39;, any optional inputs to surface_cutaway])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">A region object</p>
 </dd>
-</dl>
-<blockquote>
-<div><p>Copyright (C) 2013 Tor Wager</p>
-<p>This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.</p>
-<p>This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License
-along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-</div></blockquote>
-<dl class="docutils">
-<dt><em>Inputs:</em></dt>
-<dd><ul class="first last">
-<li><p class="first">r                A region object</p>
-</li>
-<li><dl class="first docutils">
-<dt>&#8216;cutaway&#8217;        String command for rendering cutaways instead of the default</dt>
+<dt><strong>cutaway:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>String command for rendering cutaways instead of the default</dt>
 <dd><ul class="first last simple">
 <li>default is call to mediation_brain_surface_figs</li>
 <li>cutaways calls surface_cutaway</li>
@@ -4406,75 +4462,105 @@ along with this program.  If not, see &lt;<a class="reference external" href="ht
 </ul>
 </dd>
 </dl>
-</li>
-<li><dl class="first docutils">
-<dt>&#8216;rightsurface&#8217;   String command for rendering a right frontal cortical</dt>
+</dd>
+<dt><strong>rightsurface:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>String command for rendering a right frontal cortical</dt>
 <dd><p class="first last">view complementary to &#8216;cutaways&#8217;</p>
 </dd>
 </dl>
-</li>
-<li><p class="first">&#8216;foursurfaces&#8217;   Compact plots of four surfaces</p>
-</li>
-</ul>
+</dd>
+<dt><strong>foursurfaces:</strong></dt>
+<dd><p class="first last">Compact plots of four surfaces</p>
 </dd>
 </dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p>Other optional inputs to surface_cutaway
 e.g., &#8216;pos_colormap&#8217;</p>
-<dl class="docutils">
-<dt><em>Outputs:</em></dt>
-<dd><ul class="first last simple">
-<li>all_surf_handles       surface patch handles</li>
-<li>pcl                    region object with positive-only clusters</li>
-<li>ncl                    region object with negative-only clusters</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>all_surf_handles:</strong></dt>
+<dd><p class="first last">surface patch handles</p>
+</dd>
+<dt><strong>pcl:</strong></dt>
+<dd><p class="first last">region object with positive-only clusters</p>
+</dd>
+<dt><strong>ncl:</strong></dt>
+<dd><p class="first last">region object with negative-only clusters</p>
 </dd>
 </dl>
-<p><em>Examples:</em>
-Use surface(r), with optional arguments taken by surface_cutaway:</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Use surface(r), with optional arguments taken by surface_cutaway:
+poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
+[all_surf_handles, pcl, ncl] = surface(r, &#39;cutaway&#39;, &#39;ycut_mm&#39;, -30, &#39;pos_colormap&#39;, poscm, &#39;existingfig&#39;);
+[all_surf_handles2, pcl, ncl] = surface(r, &#39;foursurfaces&#39;, &#39;pos_colormap&#39;, poscm, &#39;neg_colormap&#39;, negcm);
+[all_surf_handles2, pcl, ncl] = surface(r, &#39;foursurfaces&#39;, &#39;existingfig&#39;, &#39;color_upperboundpercentile&#39;, 95, &#39;color_lowerboundpercentile&#39;, 5, &#39;neg_colormap&#39;, colormap_tor([0 0 1], [.4 0 .7]));
+
+% use mediation_brain_surface_figs and re-make colors
+all_surf_handles = mediation_brain_surface_figs([]);
+surface(r, &#39;cutaway&#39;, &#39;surface_handles&#39;, all_surf_handles, &#39;color_upperboundpercentile&#39;, 95, &#39;color_lowerboundpercentile&#39;, 5, &#39;neg_colormap&#39;, colormap_tor([0 0 1], [.2 0 .5]));
+</pre></div>
+</div>
+<p>:See also:*</p>
+<p>surface_cutaway, cluster_surf, mediation_brain_surface_figs
+..</p>
 <blockquote>
-<div><ul class="simple">
-<li>poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow</li>
-<li>[all_surf_handles, pcl, ncl] = surface(r, &#8216;cutaway&#8217;, &#8216;ycut_mm&#8217;, -30, &#8216;pos_colormap&#8217;, poscm, &#8216;existingfig&#8217;);</li>
-<li>[all_surf_handles2, pcl, ncl] = surface(r, &#8216;foursurfaces&#8217;, &#8216;pos_colormap&#8217;, poscm, &#8216;neg_colormap&#8217;, negcm);</li>
-<li>[all_surf_handles2, pcl, ncl] = surface(r, &#8216;foursurfaces&#8217;, &#8216;existingfig&#8217;, &#8216;color_upperboundpercentile&#8217;, 95, &#8216;color_lowerboundpercentile&#8217;, 5, &#8216;neg_colormap&#8217;, colormap_tor([0 0 1], [.4 0 .7]));</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>use mediation_brain_surface_figs and re-make colors</dt>
-<dd><ul class="first last simple">
-<li>all_surf_handles = mediation_brain_surface_figs([]);</li>
-<li>surface(r, &#8216;cutaway&#8217;, &#8216;surface_handles&#8217;, all_surf_handles, &#8216;color_upperboundpercentile&#8217;, 95, &#8216;color_lowerboundpercentile&#8217;, 5, &#8216;neg_colormap&#8217;, colormap_tor([0 0 1], [.2 0 .5]));</li>
-</ul>
-</dd>
-</dl>
-<p><em>See also:</em></p>
-<p>default options
-optional inputs</p>
+<div>DEFAULTS AND INPUTS</div></blockquote>
 </dd></dl>
 
 <dl class="function">
 <dt id="&#64;region.table">
 <code class="descclassname">&#64;region.</code><code class="descname">table</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@region.table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print a table of all regions in a region object (cl)</p>
-<blockquote>
-<div><ul class="simple">
-<li>[poscl, negcl] = table(cl, [optional inputs])</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt><em>Optional inputs:</em></dt>
-<dd><ul class="first last simple">
-<li>&#8216;k&#8217;           : Print only regions with k or more contiguous voxels</li>
-<li>&#8216;nosep&#8217;       : do not separate cl with pos and neg effects based on peak in .val</li>
-<li>&#8216;names&#8217;       : name clusters before printing to table and output; saves in .shorttitle field</li>
-<li>&#8216;forcenames&#8217;  : force naming of cl by removing existing names in .shorttitle field</li>
-</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[poscl, negcl] = table(cl, [optional inputs])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">Print only regions with k or more contiguous voxels</p>
+</dd>
+<dt><strong>nosep:</strong></dt>
+<dd><p class="first last">do not separate cl with pos and neg effects based on peak in .val</p>
+</dd>
+<dt><strong>names:</strong></dt>
+<dd><p class="first last">name clusters before printing to table and output; saves in .shorttitle field</p>
+</dd>
+<dt><strong>forcenames:</strong></dt>
+<dd><p class="first last">force naming of cl by removing existing names in .shorttitle field</p>
 </dd>
 </dl>
-<p><em>Outputs:</em></p>
-<p>Returns region objects for cl with pos and neg effects, limited by size if entered
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">Returns region objects for cl with pos and neg effects, limited by size if entered
 and named if entered as optional input</p>
-<p>Copyright 2011, tor wager</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

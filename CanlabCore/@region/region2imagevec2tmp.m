@@ -1,6 +1,4 @@
 function [ivecobj, orig_cluster_indx]  = region2imagevec2tmp(cl)
-% [ivecobj, orig_cluster_indx]  = region2imagevec2tmp(cl)
-%
 % Convert a region object to an image_vector object, replacing the voxels
 % and reconstructing as much info as possible.
 %
@@ -8,8 +6,14 @@ function [ivecobj, orig_cluster_indx]  = region2imagevec2tmp(cl)
 % if this is empty, uses cl.val field, then cl.Z as a backup.
 % Mask information is available in ivecobj.volInfo.
 %
-%   - ivecobj = region2imagevec(cl)
-% NEEDS SOME ADDITIONAL WORK/CHECKING
+% :Usage:
+% ::
+%
+%    ivecobj = region2imagevec(cl)
+%
+% ..
+%    NEEDS SOME ADDITIONAL WORK/CHECKING
+% ..
 
 ivecobj = image_vector;
 ivecobj.volInfo.mat = cl(1).M;

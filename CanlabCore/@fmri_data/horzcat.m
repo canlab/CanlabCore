@@ -7,7 +7,7 @@ function c = horzcat(varargin)
 %
 %    function s = horzcat(varargin)
 %
-% :Examples:
+% :Example:
 % ::
 %
 %    c = [dat1 dat2];

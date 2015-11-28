@@ -1,13 +1,13 @@
 function isok = check_extracted_data(cl)
-% isok = check_extracted_data(cl)
-%
-% cl must be a valid region object (see region.m)
-% and cl(1).source_images must still be on the path.
-%
-%
 % Checks the data, just in case of space/programming issues, 
 % by re-extracting the region average data from 5 random regions 
 % using spm_get_data.m, and compares it to the already-saved values
+%
+%:Inputs:
+%
+%   **cl:**
+%        must be a valid region object (see region.m)
+%        and cl(1).source_images must still be on the path.
 %
 % You should not need to run this regularly -- but you should if you
 % suspect things have gone awry.

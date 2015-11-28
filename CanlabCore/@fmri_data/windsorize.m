@@ -10,7 +10,7 @@ function obj = windsorize(obj, varargin)
 %     obj = windsorize(obj, [madlimit])
 
 % ..
-% Calculate and display descriptives
+%    Calculate and display descriptives
 % ..
 
 madlimit = 5;

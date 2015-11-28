@@ -1,24 +1,30 @@
 function [b, dev, stat] = glm_multilevel(D, Yvarname, Xvarnames, wh_keep)
+% Predict Y from X using GLM
 %
-% predict Y from X using GLM
+% :Usage:
+% ::
 %
-% Usage:
-% ----------------------------------------------------------------------------------
-% [b, dev, stat] = glm(D, 'DeltaDon_avg', prednames, wh_keep)
+%    [b, dev, stat] = glm(D, 'DeltaDon_avg', prednames, wh_keep)
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% D             a canlab_dataset object
-% Yvarname      the name of a variable to predict. must be event level
-% Xvarnames     the name(s) of predictor variables. if multiple, put in
-%               cell array. must be event level
-% wh_keep       a vector of 1/0 values to use as wh_keep
+% :Inputs:
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% 
+%   **D:**
+%        a canlab_dataset object
 %
-% % Copyright Tor Wager, 2013
+%   **Yvarname:**
+%        the name of a variable to predict. must be event level
+%
+%   **Xvarnames:**
+%        the name(s) of predictor variables. if multiple, put in
+%        cell array. must be event level
+%
+%   **wh_keep:**
+%        a vector of 1/0 values to use as wh_keep
+%
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 [Y, ~, levelY] = get_var(D, Yvarname, wh_keep);
 Y = Y';

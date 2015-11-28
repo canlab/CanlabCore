@@ -1,49 +1,58 @@
 function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
+% Get Subject-level or Event-level variable from dataset D and return in
+% rect matrix and cell array. Multiple variables can be requested, but 
+% all data requested must be either numeric or text, and not a combination of the two.
 %
-% get Subject-level or Event-level variable from dataset D and return in rect matrix and cell array.
-% Multiple variables can be requested, but all data requested must be either numeric or
-% text, and not a combination of the two.
+% :Usage:
+% ::
 %
-% Usage:
-% ----------------------------------------------------------------------------------
-% [dat, datcell, wh_level, descrip] = get_var(D, varname, [opt inputs])
+%    [dat, datcell, wh_level, descrip] = get_var(D, varname, [opt inputs])
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% D             a canlab_dataset object
-% varname       the name of a variable to get from dataset
-%               - Looks for var name at either level, returns error if exists at both levels
-%               - can be a cell array of multiple var names
-%                  in this case, dat is a n x m matrix, where n=subjs
-%                  and m=variables requested
-% [Optional inputs:]
+% :Inputs:
 %
-% a vector of 1/0 values to use as wh_keep
+%   **D:**
+%        a canlab_dataset object
 %
-% 'conditional': to be followed by a cell array; the first cell is the name
-% of the variable to be conditionally selected upon, the second cell
-% contains the condition which must be met.  Example: get_var(D, 'DeltaDon', 'conditional', {'trained' 1})
-%  will get DeltaDon whenever trained==1.  Currently only implemented for
-%  event-level data.  Could be expanded to include multiple conditions.
+%   **varname:**
+%        the name of a variable to get from dataset
+%           - Looks for var name at either level, returns error if exists at both levels
+%           - can be a cell array of multiple var names
+%             in this case, dat is a n x m matrix, where n=subjs and m=variables requested
+%
+% :Optional inputs:
+%
+%   a vector of 1/0 values to use as wh_keep
+%
+%   **conditional:**
+%        to be followed by a cell array; the first cell is the name
+%        of the variable to be conditionally selected upon, the second cell
+%        contains the condition which must be met.
+%        Example: get_var(D, 'DeltaDon', 'conditional', {'trained' 1})
+%        will get DeltaDon whenever trained==1.  Currently only implemented for
+%        event-level data.  Could be expanded to include multiple conditions.
 %
 %
+% :Outputs:
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% dat: rect matrix of subjects X events (X variables)
+%   **dat:**
+%        rect matrix of subjects X events (X variables)
 %       - good for plotting individuals, means/std. errors across subjects
 %       - is actually a cell matrix if textual data is requested.
 %
-% datcell: 1 x subjects cell array, each cell containing event data for one subject
+%   **datcell:**
+%        1 x subjects cell array, each cell containing event data for one subject
 %       - good for input into some stats functions, e.g., glmfit_multilevel
-%       and igls.m
+%         and igls.m
 %
-% wh_level: 1 = 'Subject'; 2 = 'Event';
+%   **wh_level:**
+%        1 = 'Subject'; 2 = 'Event';
 %
-% descrip:  the description for this variable
+%   **descrip:**
+%        the description for this variable
 %
-%
-% % Copyright Tor Wager, 2013
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 dat = [];
 datcell = {};

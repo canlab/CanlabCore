@@ -1,64 +1,72 @@
 function [meandat, stedat] = plot_var(D, varname, varargin)
 % Plot the mean and standard error of a variable across events.
 %
-% plot_var(D, varname)
+% :Usage:
+% ::
 %
-% D is a canlab_dataset object
-% varname is a valid variable name in the dataset.
+%    plot_var(D, varname)
 %
-% Examples:
-% plot_var(D, 'Frustration')
-% plot_var(D, 'RT')
-% plot_var(D, 'RT', 'eventmeans');
-% plot_var(D, 'RT', 'subjtype', 'Placebo');
-% plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo');
-% plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo', 'color', {'r' 'b'});
+%    [meandat, stedat] = plot_var(D, varname, [opt inputs])
 %
-% Plot the mean and standard error of a variable across events.
 %
-% Usage:
-% ----------------------------------------------------------------------------------
-% [meandat, stedat] = plot_var(D, varname, [opt inputs])
+% :Inputs:
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% D             a canlab_dataset object
-% varname       the name of a valid variable to get from dataset
+%   **D:**
+%        a canlab_dataset object
+%
+%   **varname:**
+%        the name of a valid variable to get from dataset
 %               - Looks for var name at either level, returns Event level if exists at both levels
 %
-% [Optional inputs:]
+% :Optional inputs:
 %
-% 'subjtype' : followed by name of grouping variable
-%               - must be categorical subject-level variable
-%               - if entered, plot lines or bars based on these categories
-%               - 'eventmeans' will plot bars; without, it will plot line
-%               plots across events with standard error shading
-%               - the grouping variable's description, if it exists, will
-%               be split along commas, and those values will be used as
-%               column lables
+%   **subjtype:**
+%        followed by name of grouping variable
+%           - must be categorical subject-level variable
+%           - if entered, plot lines or bars based on these categories
+%           - 'eventmeans' will plot bars; without, it will plot line
+%             plots across events with standard error shading
+%           - the grouping variable's description, if it exists, will
+%             be split along commas, and those values will be used as
+%             column lables
 %
-% 'eventmeans' : calculate and plot subject means across event-level variables
-%               - if entered, will plot bar plots of means by condition
+%   **eventmeans:**
+%        calculate and plot subject means across event-level variables
+%           - if entered, will plot bar plots of means by condition
 %
-% 'wh_keep'   : followed by 1/0 vector of subjects to keep.
-%                - must be same length as subjects
-%                - subjects with value 0 will be excluded
+%   **wh_keep:**
+%        followed by 1/0 vector of subjects to keep.
+%           - must be same length as subjects
+%           - subjects with value 0 will be excluded
 %
-% 'color'     : followed by one color for all bars, or cell array with names of colors cell for each line/bar
+%   **color:**
+%        followed by one color for all bars, or cell array with names of colors cell for each line/bar
 %
-% 'nofig'     : don't make a new figure
+%   **nofig:**
+%        don't make a new figure
 %
-%  other      : other varargin are passed directly to barplot_columns.  So
-%  for example, '95CI' will make 95% confidence interals, instead of SE
-%  bars.
+%   **other:**
+%        other varargin are passed directly to barplot_columns.  So
+%        for example, '95CI' will make 95% confidence interals, instead
+%        of SE bars.
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% Copyright Tor Wager, 2013
+%
+% Examples:
+% ::
+%
+%    plot_var(D, 'Frustration')
+%    plot_var(D, 'RT')
+%    plot_var(D, 'RT', 'eventmeans');
+%    plot_var(D, 'RT', 'subjtype', 'Placebo');
+%    plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo');
+%    plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo', 'color', {'r' 'b'});
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
-%% plot variable as a function of event number
 
-grouping_var_name = '';
+grouping_var_name = ''; % plot variable as a function of event number
 event_means = 0;
 wh_keep = true(size(D.Subj_Level.id)); %everyone
 % colors <- defined below

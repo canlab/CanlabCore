@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>fmri_data &mdash; CanlabCore 1.0 documentation</title>
+    <title>canlab_dataset &mdash; CanlabCore 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -51,6 +51,821 @@
   <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
+</div>
+<div class="section" id="canlab-dataset">
+<h1>canlab_dataset<a class="headerlink" href="#canlab-dataset" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-&#64;canlab_dataset"></span><dl class="function">
+<dt id="&#64;canlab_dataset.bars">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">bars</code><span class="sig-paren">(</span><em>obj</em>, <em>varnames</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.bars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bar plot for canlab_dataset object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat</span><span class="p">,</span> <span class="n">descrip</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">bars</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">varnames</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">canlab_dataset object</p>
+</dd>
+<dt><strong>varnames:</strong></dt>
+<dd><p class="first last">Cell string of variable names to plot</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Takes any optional inputs to barplot_colored.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">data matrix for each variable</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>create_figure(&#39;NPS values - All subjects&#39;);
+
+varnames = {&#39;15&#39; &#39;13&#39; &#39;11&#39; &#39; 9&#39; &#39;16&#39; &#39;14&#39; &#39;12&#39; &#39;10&#39;};
+xvals = [1 2 4 5 8 9 11 12];
+colors = {[1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0]};
+bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTickLabels&#39;, varnames, &#39;within&#39;, &#39;nofig&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.concatenate">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">concatenate</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.concatenate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates Subject-level and Event-level data across all subjects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[names ids dat] = concatenate(D)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">canlab_dataset</p>
+</dd>
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">currently accepts a wh_keep (logical array)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Names:</strong></dt>
+<dd><p class="first last">cell array of variable names</p>
+</dd>
+<dt><strong>Descrip:</strong></dt>
+<dd><p class="first last">cell array of variable descriptions</p>
+</dd>
+<dt><strong>ids:</strong></dt>
+<dd><p class="first last">subject IDs matching data rows in dat</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>subjects*events x variables matrix</dt>
+<dd><ul class="first last simple">
+<li>subject number, event number are included</li>
+<li>all subject-level and event-level data are included</li>
+<li>this format appropriate for, e.g., SAS/HLM</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[names, ids, flatdat] = concatenate(D);
+id_numbers = flatdat(:, 1);
+
+wh_subjs = true(size(D.Subj_Level.id));
+wh_subjs([13 18 19]) = false;
+[names, ids, dat] = concatenate(D, wh_subjs);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.get_var">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">get_var</code><span class="sig-paren">(</span><em>D</em>, <em>varname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.get_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Subject-level or Event-level variable from dataset D and return in
+rect matrix and cell array. Multiple variables can be requested, but 
+all data requested must be either numeric or text, and not a combination of the two.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[dat, datcell, wh_level, descrip] = get_var(D, varname, [opt inputs])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>varname:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>the name of a variable to get from dataset</dt>
+<dd><ul class="first last simple">
+<li>Looks for var name at either level, returns error if exists at both levels</li>
+<li>can be a cell array of multiple var names
+in this case, dat is a n x m matrix, where n=subjs and m=variables requested</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">a vector of 1/0 values to use as wh_keep</p>
+<dl class="docutils">
+<dt><strong>conditional:</strong></dt>
+<dd><p class="first last">to be followed by a cell array; the first cell is the name
+of the variable to be conditionally selected upon, the second cell
+contains the condition which must be met.
+Example: get_var(D, &#8216;DeltaDon&#8217;, &#8216;conditional&#8217;, {&#8216;trained&#8217; 1})
+will get DeltaDon whenever trained==1.  Currently only implemented for
+event-level data.  Could be expanded to include multiple conditions.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dat:</strong></dt>
+<dd><blockquote class="first">
+<div><p>rect matrix of subjects X events (X variables)</p>
+</div></blockquote>
+<ul class="last simple">
+<li>good for plotting individuals, means/std. errors across subjects</li>
+<li>is actually a cell matrix if textual data is requested.</li>
+</ul>
+</dd>
+<dt><strong>datcell:</strong></dt>
+<dd><blockquote class="first">
+<div><p>1 x subjects cell array, each cell containing event data for one subject</p>
+</div></blockquote>
+<ul class="last simple">
+<li>good for input into some stats functions, e.g., glmfit_multilevel
+and igls.m</li>
+</ul>
+</dd>
+<dt><strong>wh_level:</strong></dt>
+<dd><p class="first last">1 = &#8216;Subject&#8217;; 2 = &#8216;Event&#8217;;</p>
+</dd>
+<dt><strong>descrip:</strong></dt>
+<dd><p class="first last">the description for this variable</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.glm">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">glm</code><span class="sig-paren">(</span><em>D</em>, <em>Yvarname</em>, <em>Xvarnames</em>, <em>wh_keep</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.glm" title="Permalink to this definition">¶</a></dt>
+<dd><p>predict Y from X using GLM</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">out</span> <span class="o">=</span> <span class="n">glm</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Yvarname</span><span class="p">,</span> <span class="n">Xvarnames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>Yvarname:</strong></dt>
+<dd><p class="first last">the name of a variable to predict. must be subject level</p>
+</dd>
+<dt><strong>Xvarnames:</strong></dt>
+<dd><p class="first last">the name(s) of predictor variables. if multiple, put in
+cell array. must be subject_level</p>
+</dd>
+<dt><strong>wh_keep:</strong></dt>
+<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">same as for glmfit()</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">out</span> <span class="o">=</span> <span class="n">glm</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;DeltaDon_avg&#39;</span><span class="p">,</span> <span class="n">prednames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.glm_multilevel">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">glm_multilevel</code><span class="sig-paren">(</span><em>D</em>, <em>Yvarname</em>, <em>Xvarnames</em>, <em>wh_keep</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.glm_multilevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict Y from X using GLM</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">glm</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;DeltaDon_avg&#39;</span><span class="p">,</span> <span class="n">prednames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>Yvarname:</strong></dt>
+<dd><p class="first last">the name of a variable to predict. must be event level</p>
+</dd>
+<dt><strong>Xvarnames:</strong></dt>
+<dd><p class="first last">the name(s) of predictor variables. if multiple, put in
+cell array. must be event level</p>
+</dd>
+<dt><strong>wh_keep:</strong></dt>
+<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.histogram">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">histogram</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.histogram" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Histogram of one variable in dataset</dt>
+<dd><ul class="first last simple">
+<li>can be either event-level or subject-level</li>
+<li>event-level data is plotted as concatenated events across subject-level</li>
+<li>both variables must be valid names (case-sensitive)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">histogram</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Anxiety&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional Input:</th><td class="field-body"><a href="#id1"><span class="problematic" id="id2">**</span></a>nofig&#8217;: suppress creation of new figure</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.mediation">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">mediation</code><span class="sig-paren">(</span><em>D</em>, <em>xvarname</em>, <em>yvarname</em>, <em>mvarname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.mediation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run single or multilevel mediation analysis on a canlab_dataset object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">paths</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">mediation</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">xvarname</span><span class="p">,</span> <span class="n">yvarname</span><span class="p">,</span> <span class="n">mvarname</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">is a canlab_dataset object</p>
+</dd>
+<dt><strong>xvarname, mvarname, and yvarname:</strong></dt>
+<dd><p class="first last">are valid variable names in the dataset.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Takes any optional inputs to mediation.m
+e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216;M&#8217;, &#8216;L2M&#8217;, &#8216;covs&#8217;, others</p>
+<dl class="docutils">
+<dt><strong>wh_keep:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by 1/0 vector of subjects to keep.</dt>
+<dd><ul class="first last simple">
+<li>must be same length as subjects</li>
+<li>subjects with value 0 will be excluded</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>rankdata:</strong></dt>
+<dd><p class="first last">ranks all data before mediation; &#8220;Nonparametric&#8221;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>[paths, stats]:</strong></dt>
+<dd><p class="first last">mediation output variable</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">paths</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">mediation</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Group&#39;</span><span class="p">,</span> <span class="s">&#39;DeltaDon&#39;</span><span class="p">,</span> <span class="s">&#39;DeltaDist&#39;</span><span class="p">,</span> <span class="s">&#39;M2&#39;</span><span class="p">,</span> <span class="s">&#39;DeltaTend&#39;</span><span class="p">,</span> <span class="s">&#39;wh_keep&#39;</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.plot_var">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">plot_var</code><span class="sig-paren">(</span><em>D</em>, <em>varname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.plot_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the mean and standard error of a variable across events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>plot_var(D, varname)
+
+[meandat, stedat] = plot_var(D, varname, [opt inputs])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>varname:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>the name of a valid variable to get from dataset</dt>
+<dd><ul class="first last simple">
+<li>Looks for var name at either level, returns Event level if exists at both levels</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>subjtype:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by name of grouping variable</dt>
+<dd><ul class="first last simple">
+<li>must be categorical subject-level variable</li>
+<li>if entered, plot lines or bars based on these categories</li>
+<li>&#8216;eventmeans&#8217; will plot bars; without, it will plot line
+plots across events with standard error shading</li>
+<li>the grouping variable&#8217;s description, if it exists, will
+be split along commas, and those values will be used as
+column lables</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>eventmeans:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>calculate and plot subject means across event-level variables</dt>
+<dd><ul class="first last simple">
+<li>if entered, will plot bar plots of means by condition</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>wh_keep:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by 1/0 vector of subjects to keep.</dt>
+<dd><ul class="first last simple">
+<li>must be same length as subjects</li>
+<li>subjects with value 0 will be excluded</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>color:</strong></dt>
+<dd><p class="first last">followed by one color for all bars, or cell array with names of colors cell for each line/bar</p>
+</dd>
+<dt><strong>nofig:</strong></dt>
+<dd><p class="first last">don&#8217;t make a new figure</p>
+</dd>
+<dt><strong>other:</strong></dt>
+<dd><p class="first last">other varargin are passed directly to barplot_columns.  So
+for example, &#8216;95CI&#8217; will make 95% confidence interals, instead
+of SE bars.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Frustration&#39;</span><span class="p">)</span>
+<span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">)</span>
+<span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;eventmeans&#39;</span><span class="p">);</span>
+<span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;subjtype&#39;</span><span class="p">,</span> <span class="s">&#39;Placebo&#39;</span><span class="p">);</span>
+<span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;eventmeans&#39;</span><span class="p">,</span> <span class="s">&#39;subjtype&#39;</span><span class="p">,</span> <span class="s">&#39;Placebo&#39;</span><span class="p">);</span>
+<span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;eventmeans&#39;</span><span class="p">,</span> <span class="s">&#39;subjtype&#39;</span><span class="p">,</span> <span class="s">&#39;Placebo&#39;</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;r&#39;</span> <span class="s">&#39;b&#39;</span><span class="p">});</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.print_summary">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">print_summary</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.print_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints summaries for every variable, or specified variables
+:Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">print_summary</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span> 
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">dataset</p>
+</dd>
+<dt><strong>subj:</strong></dt>
+<dd><p class="first last">followed by a cell array of subject level var names, to only see those vars</p>
+</dd>
+<dt><strong>event:</strong></dt>
+<dd><p class="first last">followed by a cell array of event level var names, to only see those vars</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>if either varargin is unspecified, all variables will be printed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.read_from_excel">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">read_from_excel</code><span class="sig-paren">(</span><em>dat</em>, <em>ExperimentFileName</em>, <em>SubjectFileList</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.read_from_excel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read from datafile into canlab_dataset format - currently requires file
+extensions .xls or .xlsx, but in the future will use importdata to take
+.csv or .txt extensions as well.</p>
+<dl class="docutils">
+<dt>Datafiles require column headers</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Design file requires: id, names, units, descrip</dt>
+<dd><ul class="first last">
+<li><p class="first">other columns can be added</p>
+</li>
+<li><dl class="first docutils">
+<dt>ONLY between subject columns identified in the &#8216;names&#8217;</dt>
+<dd><p class="first last">column are added.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>See Sample_canlab_dataset_experiment_level.xlsx for an</dt>
+<dd><p class="first last">example design file</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Subject files require no specific column headers, but all column</dt>
+<dd><p class="first last">headers must be identical across all subjects.
+- Enter NaN for data field in file if no value for that column within a specific Event
+- ALL columns of subject files are written to canlab_dataset</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">read_from_excel</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">ExperimentFileName</span><span class="p">,</span> <span class="n">SubjectFileList</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>ExperimentFileName:</strong></dt>
+<dd><p class="first last">the absolute path of the experiment data file</p>
+</dd>
+<dt><strong>SubjectFileList:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>list of absolute paths for individual subject files</dt>
+<dd><ul class="first last simple">
+<li>plays well with filenames()</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>fmri:</strong></dt>
+<dd><p class="first last">Indicates construction of canlab_dataset object using &#8216;fmri&#8217;
+code. Suppresses overwrite warnings specific to &#8216;fmri&#8217; inputs.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">canlab_dataset object with uploaded values</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% To output a file into a raw fmri dataset
+
+DesignFile = fullfile(pwd,&#39;Sample_canlab_dataset_experiment_level.xlsx&#39;);
+SubjectFiles = filenames(fullfile(pwd,&#39;Sample_canlab_dataset_subject*.xlsx&#39;));
+dat = canlab_dataset(&#39;fmri&#39;);
+dat = read_from_excel(dat,DesignFile,SubjectFiles,&#39;fmri&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.scattermatrix">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">scattermatrix</code><span class="sig-paren">(</span><em>D</em>, <em>wh_level</em>, <em>wh_vars</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.scattermatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scatterplot matrix of pairwise event-level variables</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fig_han</span> <span class="o">=</span> <span class="n">scattermatrix</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">wh_level</span><span class="p">,</span> <span class="n">wh_vars</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>wh_level:</strong></dt>
+<dd><p class="first last">1 (Subject) or 2 (Event)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre>fig_han = scattermatrix(D);
+
+wh = [5:9];
+fig_han = scattermatrix(D, 2, wh);
+
+f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;SwitchNext&#39; &#39;Frustration&#39; &#39;Anxiety&#39; &#39;Control&#39;});
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.spm2canlab_dataset">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">spm2canlab_dataset</code><span class="sig-paren">(</span><em>obj</em>, <em>subject</em>, <em>spm</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.spm2canlab_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract Event_Level data from subjects&#8217; SPM.mat files to add data to
+canlab_dataset object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">D</span> <span class="o">=</span> <span class="n">spm2canlab_dataset</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">spm</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">Canlab_dataset object (see canlab_dataset)</p>
+</dd>
+<dt><strong>subjects:</strong></dt>
+<dd><p class="first last">Subject list (it could be one subject [in a string 
+format], or it could be multiple subjects in cell array)</p>
+</dd>
+<dt><strong>spm:</strong></dt>
+<dd><p class="first last">This could be loaded SPM (struct), or one path for one 
+subject&#8217;s SPM.mat file (string), or multiple loaded SPM or
+paths in cell array</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">Canlab_dataset object with new data</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>fter running this, please check D.Subj_Level.data and
+D.Event_level.data to see if there are NaNs. NaNs could be there when 
+information cannot be extracted from the given SPM.mat files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>subj = {&#39;dpsp002&#39;,&#39;dpsp003&#39;};
+spm = {&#39;dpsp002_SPM.mat&#39;, &#39;dpsp003_SPM.mat&#39;};
+
+D = canlab_dataset; % if D doesn&#39;t exist yet
+D = spm2canlab_dataset(D, subj, spm);
+</pre></div>
+</div>
+<p>See also canlab_dataset, spm_mat2batchinput</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.ttest2">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">ttest2</code><span class="sig-paren">(</span><em>D</em>, <em>varname</em>, <em>wh_keep1</em>, <em>wh_keep2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.ttest2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two sample ttest for two samples of one subject-level variable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ttest2</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">wh_keep1</span><span class="p">,</span> <span class="n">wh_keep2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>varname:</strong></dt>
+<dd><p class="first last">the name of a valid variable to get from dataset</p>
+</dd>
+<dt><strong>wh_keep1:</strong></dt>
+<dd><p class="first last">subjects forming first sample</p>
+</dd>
+<dt><strong>wh_keep2:</strong></dt>
+<dd><p class="first last">subjects forming second sample</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>varargin:     passed directly to MATLAB&#8217;s ttest2</dt>
+<dd><p class="first last">&#8216;noverbose&#8217; will suppress print out of results and bargraph</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">as from MATLAB&#8217;s ttest2,</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;canlab_dataset.write_text">
+<code class="descclassname">&#64;canlab_dataset.</code><code class="descname">write_text</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.write_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;Flatten&#8221; dataset and write text files with header and data
+For all Event-level and Subject-level data.  Files are created in the
+current working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">headername</span><span class="p">,</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">fid</span><span class="p">]</span> <span class="o">=</span> <span class="n">write_text</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">First <a href="#id5"><span class="problematic" id="id6">**</span></a>varargin* parameter is the delimiter. Comma-delimited by default.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="module-&#64;fmri_data">
 <span id="fmri-data"></span><h1>fmri_data<a class="headerlink" href="#module-@fmri_data" title="Permalink to this headline">¶</a></h1>
@@ -1281,8 +2096,6 @@ Registers this step in history.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">windsorize</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">[</span><span class="n">madlimit</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Calculate and display descriptives
-..</p>
 </dd></dl>
 
 </div>
@@ -1564,7 +2377,7 @@ abbreviated image names may be stored in image_names.</p>
 <p>fullpath should have full path to each volume in a string matrixm, with
 trailing ,volume# for 4-D images as per SPM style expanded list.
 image_names should have image name only for each volume</p>
-<p><a href="#id1"><span class="problematic" id="id2">**</span></a>* May still be debugging issues with 3-D vs. 4-D files
+<p><a href="#id7"><span class="problematic" id="id8">**</span></a>* May still be debugging issues with 3-D vs. 4-D files
 if &#8216;noverbose&#8217; is entered, suppress output</p>
 </dd></dl>
 
@@ -3159,7 +3972,8 @@ and named if entered as optional input</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">fmri_data</a></li>
+<li><a class="reference internal" href="#">canlab_dataset</a></li>
+<li><a class="reference internal" href="#module-&#64;fmri_data">fmri_data</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_mask_image">fmri_mask_image</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_model">fmri_model</a></li>
 <li><a class="reference internal" href="#module-&#64;image_vector">image_vector</a></li>

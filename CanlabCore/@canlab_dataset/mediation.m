@@ -1,37 +1,46 @@
 function [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
 % Run single or multilevel mediation analysis on a canlab_dataset object
 %
-% Usage:
-% ----------------------------------------------------------------------------------
-% [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
+% :Usage:
+% ::
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% D is a canlab_dataset object
-% xvarname, mvarname, and yvarname are valid variable names in the dataset.
+%    [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
 %
-% [Optional inputs:]
+% :Inputs:
 %
-% Takes any optional inputs to mediation.m
-% e.g., 'noverbose', 'dosave', 'names', 'M', 'L2M', 'covs', others.
-%                - see help mediation
+%   **D:**
+%        is a canlab_dataset object
 %
-% 'wh_keep'   : followed by 1/0 vector of subjects to keep.
-%                - must be same length as subjects
-%                - subjects with value 0 will be excluded
+%   **xvarname, mvarname, and yvarname:**
+%        are valid variable names in the dataset.
 %
-% 'rankdata'  : ranks all data before mediation; "Nonparametric"
+% :Optional Inputs:
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% [paths, stats]: mediation output variable
-%               - see help mediation for details
+%   Takes any optional inputs to mediation.m
+%   e.g., 'noverbose', 'dosave', 'names', 'M', 'L2M', 'covs', others
 %
-% Examples:
-% ----------------------------------------------------------------------------------
-% [paths, stats] = mediation(D, 'Group', 'DeltaDon', 'DeltaDist', 'M2', 'DeltaTend', 'wh_keep', wh_keep);
+%   **wh_keep:**
+%        followed by 1/0 vector of subjects to keep.
+%           - must be same length as subjects
+%           - subjects with value 0 will be excluded
 %
-% % Copyright Tor Wager, 2013
+%   **rankdata:**
+%        ranks all data before mediation; "Nonparametric"
+%
+%
+% :Outputs:
+%
+%   **[paths, stats]:**
+%        mediation output variable
+%
+% :Examples:
+% ::
+%
+%    [paths, stats] = mediation(D, 'Group', 'DeltaDon', 'DeltaDist', 'M2', 'DeltaTend', 'wh_keep', wh_keep);
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 covstr = 'nocovs';
 covvarnames = {};

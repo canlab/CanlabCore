@@ -1,20 +1,23 @@
-function fig_han = scatterplot(D, v1, varargin)
-%
-% fig_han = scatterplot(D, varname1, varargin)
-%
+function fig_han = histogram(D, varargin)
 % Histogram of one variable in dataset
-% - can be either event-level or subject-level
-% - event-level data is plotted as concatenated events across subject-level
-% - both variables must be valid names (case-sensitive)
+%   - can be either event-level or subject-level
+%   - event-level data is plotted as concatenated events across subject-level
+%   - both variables must be valid names (case-sensitive)
 %
-% Optional inputs:
-%  - 'nofig': suppress creation of new figure
+% :Usage:
+% ::
 %
-% Example:
+%    histogram(D, 'Anxiety');
 %
-% histogram(D, 'Anxiety');
 %
-% Copyright Tor Wager, 2013
+% :Optional Input:
+%
+%   **nofig': suppress creation of new figure
+%
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 fig_han = [];
 dofig = 1;

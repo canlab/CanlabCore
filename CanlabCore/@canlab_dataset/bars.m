@@ -1,17 +1,14 @@
 function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
-%
-%
-% Takes any optional inputs to barplot_colored.m
-%
 % Bar plot for canlab_dataset object
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
-% Takes any optional inputs to barplot_colored.m
+% :Usage:
+% ::
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%    [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2013 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -26,34 +23,36 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% obj           canlab_dataset object
-% varnames      Cell string of variable names to plot
+%
+% :Inputs:
+%
+%   **obj:**
+%        canlab_dataset object
+%
+%   **varnames:**
+%        Cell string of variable names to plot
 %
 % Takes any optional inputs to barplot_colored.m
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% dat           data matrix for each variable
 %
-% Examples:
-% -------------------------------------------------------------------------
+% :Outputs:
 %
-% create_figure('NPS values - All subjects');
+%   **dat:**
+%        data matrix for each variable
+%
+% :Examples:
+% ::
+%
+%     create_figure('NPS values - All subjects');
 % 
-% varnames = {'15' '13' '11' ' 9' '16' '14' '12' '10'};
-% xvals = [1 2 4 5 8 9 11 12];
-% colors = {[1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0]};
-% bars(LevoNPS, varnames, 'x', xvals, 'colors', colors, 'XTickLabels', varnames, 'within', 'nofig');
+%     varnames = {'15' '13' '11' ' 9' '16' '14' '12' '10'};
+%     xvals = [1 2 4 5 8 9 11 12];
+%     colors = {[1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0]};
+%     bars(LevoNPS, varnames, 'x', xvals, 'colors', colors, 'XTickLabels', varnames, 'within', 'nofig');
 %
-%
-% See also:
-% * list other functions related to this one, and alternatives*
 
-% Programmers' notes:
-% List dates and changes here, and author of changes
 
 n = length(varnames);
 colors = scn_standard_colors(n);

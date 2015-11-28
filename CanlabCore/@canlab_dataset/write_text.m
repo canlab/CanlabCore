@@ -1,17 +1,22 @@
 function [headername, dataname, fid] = write_text(D, varargin)
-% function [headername, dataname, fid] = write_text(D)
-%
 % "Flatten" dataset and write text files with header and data
 % For all Event-level and Subject-level data.  Files are created in the
 % current working directory.
 %
-% first varargin parameter is the delimiter.  Comma-delimited by default
+% :Usage:
+% ::
 %
-% % Copyright Tor Wager, 2013
+%    function [headername, dataname, fid] = write_text(D)
+%
+% :Inputs:
+%
+%   First **varargin* parameter is the delimiter. Comma-delimited by default.
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
-
-% flesh this out later as needed
-delim = ',';
+delim = ','; % flesh this out later as needed
 for i=1:length(varargin)
     delim = varargin{1};
 end

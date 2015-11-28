@@ -1,6 +1,13 @@
 .. toctree::
    :maxdepth: 4
 
+
+canlab_dataset
+=========
+.. automodule:: @canlab_dataset
+   :members:
+   :show-inheritance:
+
 fmri_data
 =========
 .. automodule:: @fmri_data

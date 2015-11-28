@@ -1,6 +1,5 @@
 function dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargin)
-%
-% read from datafile into canlab_dataset format - currently requires file
+% Read from datafile into canlab_dataset format - currently requires file
 % extensions .xls or .xlsx, but in the future will use importdata to take
 % .csv or .txt extensions as well.
 %
@@ -16,33 +15,46 @@ function dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargi
 %               - Enter NaN for data field in file if no value for that column within a specific Event
 %               - ALL columns of subject files are written to canlab_dataset
 % 
-% Usage:
-% ----------------------------------------------------------------------------------
-% dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargin)
+% :Usage:
+% ::
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% dat                   a canlab_dataset object
-% ExperimentFileName    the absolute path of the experiment data file
-% SubjectFileList       list of absolute paths for individual subject files
-%                           - plays well with filenames()
-% [Optional inputs:]
-% 'fmri'                Indicates construction of canlab_dataset object
-%                       using 'fmri' code. Suppresses overwrite warnings
-%                       specific to 'fmri' inputs.
+%    dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargin)
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% dat:                  canlab_dataset object with uploaded values
-%       
-% Examples:
-% ----------------------------------------------------------------------------------
-% To output a file into a raw fmri dataset:
+% :Inputs:
 %
-% DesignFile = fullfile(pwd,'Sample_canlab_dataset_experiment_level.xlsx');
-% SubjectFiles = filenames(fullfile(pwd,'Sample_canlab_dataset_subject*.xlsx'));
-% dat = canlab_dataset('fmri');
-% dat = read_from_excel(dat,DesignFile,SubjectFiles,'fmri');
+%   **dat:**
+%        a canlab_dataset object
+%
+%   **ExperimentFileName:**
+%        the absolute path of the experiment data file
+%
+%   **SubjectFileList:**
+%        list of absolute paths for individual subject files
+%             - plays well with filenames()
+%
+% :Optional inputs:
+%
+%   **fmri:**
+%        Indicates construction of canlab_dataset object using 'fmri'
+%        code. Suppresses overwrite warnings specific to 'fmri' inputs.
+%
+%
+% :Outputs:
+%
+%   **dat:**
+%        canlab_dataset object with uploaded values
+%
+%
+% :Examples:
+% ::
+%
+%    % To output a file into a raw fmri dataset
+%
+%    DesignFile = fullfile(pwd,'Sample_canlab_dataset_experiment_level.xlsx');
+%    SubjectFiles = filenames(fullfile(pwd,'Sample_canlab_dataset_subject*.xlsx'));
+%    dat = canlab_dataset('fmri');
+%    dat = read_from_excel(dat,DesignFile,SubjectFiles,'fmri');
+%
 
 fmri = 0;
 warnflag = 1;

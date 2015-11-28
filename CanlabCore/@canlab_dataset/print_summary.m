@@ -1,13 +1,23 @@
-% print_summary(D, varargin) 
-% prints summaries for every variable, or specified variables
+function print_summary(D, varargin)
+% Prints summaries for every variable, or specified variables
+% :Usage:
+% ::
 %
-% input:
-%    - D:  dataset
-%    'subj': followed by a cell array of subject level var names, to only see those vars
-%    'event': followed by a cell array of event level var names, to only see those vars
+%    print_summary(D, varargin) 
+%
+%
+% :Inputs:
+%
+%   **D:**
+%        dataset
+%
+%   **subj:**
+%        followed by a cell array of subject level var names, to only see those vars
+%
+%   **event:**
+%        followed by a cell array of event level var names, to only see those vars
 %
 % if either varargin is unspecified, all variables will be printed
-function print_summary(D, varargin)
 
     fprintf('\n\n --------- DATASET VARS -------- \n\n');
   

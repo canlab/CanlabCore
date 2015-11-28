@@ -1,19 +1,29 @@
 function fig_han = scattermatrix(D, wh_level, wh_vars)
 % Scatterplot matrix of pairwise event-level variables
 %
-% fig_han = scattermatrix(D, wh_level, wh_vars)
+% :Usage:
+% ::
 %
-% wh_level: 1 (Subject) or 2 (Event)
+%    fig_han = scattermatrix(D, wh_level, wh_vars)
+%
+% :Inputs:
+%
+%   **wh_level:**
+%        1 (Subject) or 2 (Event)
 %
 % Examples:
-% fig_han = scattermatrix(D);
+% ::
 %
-% wh = [5:9];
-% fig_han = scattermatrix(D, 2, wh);
+%    fig_han = scattermatrix(D);
 %
-% f = scattermatrix(D, 2, {'Choice' 'RT' 'Pain' 'SwitchNext' 'Frustration' 'Anxiety' 'Control'});
+%    wh = [5:9];
+%    fig_han = scattermatrix(D, 2, wh);
 %
-% Copyright Tor Wager, 2013
+%    f = scattermatrix(D, 2, {'Choice' 'RT' 'Pain' 'SwitchNext' 'Frustration' 'Anxiety' 'Control'});
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 switch wh_level
     case 1

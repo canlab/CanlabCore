@@ -1,47 +1,53 @@
 function obj = spm2canlab_dataset(obj, subject, spm)
-
 % Extract Event_Level data from subjects' SPM.mat files to add data to
 % canlab_dataset object. 
 %
-% Usage:
-% -------------------------------------------------------------------------
-% D = spm2canlab_dataset(D, subjects, spm)
+% :Usage:
+% ::
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% D              Canlab_dataset object (see canlab_dataset)
-% subjects       Subject list (it could be one subject [in a string 
-%                format], or it could be multiple subjects in cell array)
-% spm            This could be loaded SPM (struct), or one path for one 
-%                subject's SPM.mat file (string), or multiple loaded SPM or
-%                paths in cell array
+%    D = spm2canlab_dataset(D, subjects, spm)
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% D              Canlab_dataset object with new data
+% :Inputs:
 %
-% **After running this, please check D.Subj_Level.data and
-%   D.Event_level.data to see if there are NaNs. NaNs could be there when 
-%   information cannot be extracted from the given SPM.mat files. 
+%   **D:**
+%        Canlab_dataset object (see canlab_dataset)
+%
+%   **subjects:**
+%        Subject list (it could be one subject [in a string 
+%        format], or it could be multiple subjects in cell array)
+%
+%   **spm:**
+%        This could be loaded SPM (struct), or one path for one 
+%        subject's SPM.mat file (string), or multiple loaded SPM or
+%        paths in cell array
+%
+% :Outputs:
+%
+%   **D:**
+%        Canlab_dataset object with new data
+%
+% fter running this, please check D.Subj_Level.data and
+% D.Event_level.data to see if there are NaNs. NaNs could be there when 
+% information cannot be extracted from the given SPM.mat files. 
+%
+%
+% :Examples: 
+% ::
+%
+%    subj = {'dpsp002','dpsp003'};
+%    spm = {'dpsp002_SPM.mat', 'dpsp003_SPM.mat'};
+%
+%    D = canlab_dataset; % if D doesn't exist yet
+%    D = spm2canlab_dataset(D, subj, spm);
+%
 %
 % See also canlab_dataset, spm_mat2batchinput
 %
-% Examples: 
-% -------------------------------------------------------------------------
-% subj = {'dpsp002','dpsp003'};
-% spm = {'dpsp002_SPM.mat', 'dpsp003_SPM.mat'};
-% 
-% D = canlab_dataset; % if D doesn't exist yet
-% D = spm2canlab_dataset(D, subj, spm);
-%
-% -------------------------------------------------------------------------
-% Copyright (C) 2015  Wani Woo
+% ..
+%     Copyright (C) 2015  Wani Woo
+% ..
 
-% Programmers' notes:
-
-
-% Check 1: parsing subjects
-subj = parseSUBJ(subject);
+subj = parseSUBJ(subject); % Check 1: parsing subjects
 
 % Check 2: parsing SPM input
 SPM = parseSPM(spm);

@@ -2,27 +2,40 @@ function out = glm(D, Yvarname, Xvarnames, wh_keep)
 %
 % predict Y from X using GLM
 %
-% Usage:
-% ----------------------------------------------------------------------------------
-% out = glm(D, Yvarname, Xvarnames, wh_keep)
-% 
-% Examples:
-% ----------------------------------------------------------------------------------
-% out = glm(D, 'DeltaDon_avg', prednames, wh_keep)
+% :Usage:
+% ::
 %
-% Inputs:
-% ----------------------------------------------------------------------------------
-% D             a canlab_dataset object
-% Yvarname      the name of a variable to predict. must be subject level
-% Xvarnames     the name(s) of predictor variables. if multiple, put in
-%               cell array. must be subject_level
-% wh_keep       a vector of 1/0 values to use as wh_keep
+%    out = glm(D, Yvarname, Xvarnames, wh_keep)
 %
-% Outputs:
-% ----------------------------------------------------------------------------------
-% same as for glmfit()
 %
-% % Copyright Tor Wager, 2013
+% :Inputs:
+%
+%   **D:**
+%        a canlab_dataset object
+%
+%   **Yvarname:**
+%        the name of a variable to predict. must be subject level
+%
+%   **Xvarnames:**
+%        the name(s) of predictor variables. if multiple, put in
+%        cell array. must be subject_level
+%
+%   **wh_keep:**
+%        a vector of 1/0 values to use as wh_keep
+%
+%
+% :Outputs:
+%   same as for glmfit()
+%
+%
+% :Examples:
+% ::
+%
+%     out = glm(D, 'DeltaDon_avg', prednames, wh_keep)
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
 if nargin < 4 || isempty(wh_keep)
     wh_keep = true(size(D.Subj_Level.id)); %everyone

@@ -1,29 +1,42 @@
-function fig_han = scatterplot(D, v1, v2, varargin)
-%
-% fig_han = scatterplot(D, varname1, varname2, varargin)
-%
-% Scatterplot of two variables in dataset
-% - can be either event-level or subject-level
-% - event-level data is plotted as multi-line plot, one line per subject
-% - both variables must be valid names (case-sensitive)
-%
-% Optional inputs:
-%  - 'nofig': suppress creation of new figure
-%  - 'subjtype': group by the following variable name
-%  - 'wh_keep' : followed by logical
-%  - 'colors' : followed by colors. 
-%  - 'dorobust': do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until
-%  the function plot_correlation_samefig is updated, at some point in the future.
-%  
-%
-% Example:
-%
-% scatterplot(D, 'Anxiety', 'Frustration');
-% fig_han = scatterplot(D, D.Subj_Level.names{1}, D.Subj_Level.names{2});
-% scatterplot(D, D.Event_Level.names{1}, D.Event_Level.names{2});
-%
-% Copyright Tor Wager, 2013
 
+% Scatterplot of two variables in dataset
+%   - can be either event-level or subject-level
+%   - event-level data is plotted as multi-line plot, one line per subject
+%   - both variables must be valid names (case-sensitive)
+%
+% :Usage:
+% ::
+%
+%    fig_han = scatterplot(D, varname1, varname2, varargin)
+%
+%
+% :Optional Inputs:
+%
+%   **nofig:**
+%        suppress creation of new figure
+%   **subjtype:**
+%        group by the following variable name
+%   **wh_keep:**
+%        followed by logical
+%   **colors:**
+%        followed by colors. 
+%   **dorobust:**
+%        do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until
+%  the function plot_correlation_samefig is updated, at some point in the future.
+%
+%
+% :Example:
+% ::
+%
+%    scatterplot(D, 'Anxiety', 'Frustration');
+%    fig_han = scatterplot(D, D.Subj_Level.names{1}, D.Subj_Level.names{2});
+%    scatterplot(D, D.Event_Level.names{1}, D.Event_Level.names{2});
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
+
+function fig_han = scatterplot(D, v1, v2, varargin)
 fig_han = [];
 dofig = 1;
 grouping_var_name=[];

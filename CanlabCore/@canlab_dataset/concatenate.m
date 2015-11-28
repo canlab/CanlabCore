@@ -1,38 +1,53 @@
 function [names, ids, dat, descrips] = concatenate(D, varargin)
-%
 % Concatenates Subject-level and Event-level data across all subjects
 %
-% [names ids dat] = concatenate(D)
-% 
-%  INPUT:
-%     D:  canlab_dataset
-%     varargin:  currently accepts a wh_keep (logical array)
+% :Usage:
+% ::
 %
-%  OUTPUT:
-% Names: cell array of variable names
+%    [names ids dat] = concatenate(D)
 %
-% Descrip: cell array of variable descriptions
 %
-% ids:   subject IDs matching data rows in dat
+% :Inputs:
 %
-% dat:   subjects*events x variables matrix
+%   **D:**
+%        canlab_dataset
 %
+%   **varargin:**
+%        currently accepts a wh_keep (logical array)
+%
+%
+% :Outputs:
+%
+%   **Names:**
+%        cell array of variable names
+%
+%   **Descrip:**
+%        cell array of variable descriptions
+%
+%   **ids:**
+%        subject IDs matching data rows in dat
+%
+%   **dat:**
+%        subjects*events x variables matrix
 %           - subject number, event number are included
 %           - all subject-level and event-level data are included
 %           - this format appropriate for, e.g., SAS/HLM
 %
-% Examples:
-% [names, ids, flatdat] = concatenate(D);
-% id_numbers = flatdat(:, 1);
+% :Examples:
+% ::
 %
-% wh_subjs = true(size(D.Subj_Level.id));
-% wh_subjs([13 18 19]) = false;
-% [names, ids, dat] = concatenate(D, wh_subjs);
+%    [names, ids, flatdat] = concatenate(D);
+%    id_numbers = flatdat(:, 1);
 %
-% % Copyright Tor Wager, 2013
+%    wh_subjs = true(size(D.Subj_Level.id));
+%    wh_subjs([13 18 19]) = false;
+%    [names, ids, dat] = concatenate(D, wh_subjs);
+%
+% ..
+%    Copyright Tor Wager, 2013
+% ..
 
-% select subjects
-wh_ids = true(length(D.Subj_Level.id), 1);
+wh_ids = true(length(D.Subj_Level.id), 1); % select subjects
 if length(varargin) > 0, wh_ids = logical(varargin{1}); end
 whfind = find(wh_ids);
 

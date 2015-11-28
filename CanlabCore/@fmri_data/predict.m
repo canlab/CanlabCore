@@ -1,380 +1,468 @@
 function [cverr, stats, optout] = predict(obj, varargin)
 % Predict outcome (Y) from brain data and test cross-validated error rate for an fmri_data object
 %
-% [cverr, stats, optional_outputs] = predict(obj, varargin)
+% :Usage:
+% ::
 %
-% Features:
-% ---------------------------------------------------------------------
-% - flexible specification of algorithm by function name
-% - k-fold cross-validation, default = 5-fold, can enter custom fold membership
-% - folds are stratified on outcome
-% - choice of multiple error metrics (class loss, mse, etc.)
-% - by default, chooses error metric based on outcome type (classes vs. continuous-valued)
-% - returns all outputs for each fold returned by the algorithm in optout cell array variable
-% - bootstrapping of weights built in [optional keyword]
-% - select variable number of components (for pcr-based techniques)
+%     [cverr, stats, optional_outputs] = predict(obj, varargin)
 %
-% Inputs (obj is mandatory, rest are optional):
-% ---------------------------------------------------------------------
-% obj = fmri_data or image_vector object, with fields .dat (data used to predict) and .Y (outcome)
+% :Features:
+%   - flexible specification of algorithm by function name
+%   - k-fold cross-validation, default = 5-fold, can enter custom fold membership
+%   - folds are stratified on outcome
+%   - choice of multiple error metrics (class loss, mse, etc.)
+%   - by default, chooses error metric based on outcome type (classes vs. continuous-valued)
+%   - returns all outputs for each fold returned by the algorithm in optout cell array variable
+%   - bootstrapping of weights built in [optional keyword]
+%   - select variable number of components (for pcr-based techniques)
 %
-% Optional inputs with their default values:
-% :--------------------------------------------
-% 'nfolds' = 5;                       % number of folds
-% 'nfolds' = [vector of integers]     % can also input vector of integers for holdout set IDs
-% 'error_type' = 'mcr';               % mcr, mse: misclassification rate or mean sq. error
-% 'algorithm_name' = 'cv_regress';    % name of m-file defining training/test function
-% 'useparallel' = 1                   % Use parallel processing, if available; follow by 1 for yes, 0 for no
-% 'bootweights' = 0;                  % bootstrap voxel weights; enter
-% 'bootweights'                       % do bootstrapping of weight maps (based on all observations)
-% 'savebootweights'                   % save bootstraped weights (useful for combining across multiple iterations of predict())
-% 'bootsamples' = 100;                % number of bootstrap samples to use
-% 'numcomponents' = xxx               % save first xxx components (for pca-based methods)
-% 'nopcr'                             % for cv_lassopcr and cv_lassopcrmatlab: do not do pcr, use original variables
-% 'lasso_num' = xxx                   % followed by number of components/vars to retain after shrinkage
-% 'hvblock' = [h,v]                   % use hvblock cross-validation with a block size of 'h' (0 reduces to v-fold xval) and
-%                                       number of test observations 'v' (0 reduces to h-block xval)
-% 'rolling' = [h,v,g]                 % use rolling cross-validation with a block size of 'h' (0 reduces to v-fold xval) and
-%                                       number of test observations 'v' (0
-%                                       reduces to h-block xval), and a training size of g * 2 surrounding hv
-% 'verbose' = 1                       % Set to 0 to suppress output to command window
-% 'platt_scaling'                     % calculate cross-validated platt scaling if using SVM.  
-%                                       Softmax parameters [A,B] are in other_output{3}
+% :Inputs:
+% obj is mandatory, rest are optional
+%   **obj:**
+%        fmri_data or image_vector object, with fields .dat (data used to predict) and .Y (outcome)
 %
-% Algorithm choices
-% ---------------------------------------------------------------------
-% You can input the name (as a string array) of any algorithm with the
-% appropriate inputs and outputs. i.e., this can either be one of the
-% built-in choices below, or the name of another m-file.
-% The format for algorithm functions is :
-% [yfit, other_outputs] = predfun(xtrain, ytrain, xtest, optional_inputs)
-% Each algorithm can take/interpret its own optional inputs.
-% For bootstrapping of weights, algorithms MUST RETURN 3 OUTPUTS
-% (programming 'feature')
+% :Optional inputs: (with their default values)
 %
-% To choose an algorithm, enter 'algorithm_name' followed by a text string
-% with a built-in algorithm name, or a function handle for a custom algorithm
-% Built-in algorithm choices include:
-% cv_multregress    : [default] multiple regression
-% cv_univregress    : Average predictions from separate univariate regression of outcome on each feature
-% cv_svr            : Support vector regression with Spider package; requires spider
-% cv_pcr            : Cross-validated principal components regression
-% cv_lassopcr       : Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
-%                     NOTE: can enter 'EstimateParams' to use shrankage
-%                     lasso method based on the estimated optimal lambda
-%                     that minimizes the mean squared error (MSE) of nested
-%                     cross-validation models. Output of nested cv model is
-%                     saved in stats.other_output_cv{:,3}. Output includes
-%                     'Lambda' parameter and min MSE value.
+%   **nfolds** = 5
+%        number of folds
 %
-% cv_lassopcrmatlab : Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
-%                     NOTE: this uses the matlab implementation of LASSO,
-%                     but can also run ridge or elastic net. Reduces to PCR
-%                     when no lasso_num is entered by default.  Use MSE for
-%                     predicting continuous data and MCR for classifying
-%                     binary data.
-%                     NOTE: You can input any optional inputs that lassoglm
-%                     takes.
-%                     Enter 'Alpha', (0,1] as optional inputs to
-%                     run ridge (Alpha approaches 0, but excluding 0), lasso (Alpha = 1), or elastic
-%                     net (Alpha between 0 and 1)
-%                     NOTE: Requires Matlab R2012a and higher.
-%                     NOTE: Optional input: 'EstimateParams' - this will
-%                     use grid search and nested cross validation to
-%                     estimate Lambda and Alpha.  Output is saved in
-%                     stats.other_output_cv{:,3}.  Output includes 'Alpha'
-%                     parameter which is the elastic net mixture value
-%                     between l1 and l2 regularization, 'Lambda' parameter,
-%                     which is amount of LASSO regularization/shrinkage, and
-%                     'errorMatrix', which is the amount of error for each
-%                     parameter combination.  Use
-%                     imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
-%                     to view matrix.  Min of this matrix is the best
-%                     fitting parameters.
+%   **nfolds** = [vector of integers]
+%        can also input vector of integers for holdout set IDs
+%
+%   **error_type** = mcr
+%        mcr, mse: misclassification rate or mean sq. error
+%
+%   **algorithm_name** = 'cv_regress'
+%        name of m-file defining training/test function
+%
+%   **useparallel** = 1
+%        Use parallel processing, if available; follow by 1 for yes, 0 for no
+%
+%   **bootweights** = 0
+%        bootstrap voxel weights; enter bootweights do bootstrapping of weight maps (based on all observations)
+%
+%   **savebootweights**
+%        save bootstraped weights (useful for combining across multiple iterations of predict())
+%
+%   **bootsamples** = 100
+%        number of bootstrap samples to use
+%
+%   **numcomponents** = xxx:
+%        save first xxx components (for pca-based methods)
+%
+%   **nopcr**
+%        for cv_lassopcr and cv_lassopcrmatlab: do not do pcr, use original variables
+%
+%   **lasso_num** = xxx
+%        followed by number of components/vars to retain after shrinkage
+%
+%   **hvblock** = [h,v]
+%        use hvblock cross-validation with a block size of 'h' (0 reduces to v-fold xval) and
+%        number of test observations 'v' (0 reduces to h-block xval)
+%
+%   **rolling** = [h,v,g]
+%        use rolling cross-validation with a block size of 'h' (0 reduces to v-fold xval) and
+%        number of test observations 'v' (0 reduces to h-block xval), and a training size
+%        of g * 2 surrounding hv
+%
+%   **verbose** = 1
+%        Set to 0 to suppress output to command window
+%
+%   **platt_scaling**
+%        calculate cross-validated platt scaling if using SVM.
+%        Softmax parameters [A,B] are in other_output{3}
+%
+% :Algorithm choices:
+%   You can input the name (as a string array) of any algorithm with the
+%   appropriate inputs and outputs. i.e., this can either be one of the
+%   built-in choices below, or the name of another m-file.
+%   The format for algorithm functions is :
+%   [yfit, other_outputs] = predfun(xtrain, ytrain, xtest, optional_inputs)
+%   Each algorithm can take/interpret its own optional inputs.
+%   For bootstrapping of weights, algorithms MUST RETURN 3 OUTPUTS
+%   (programming 'feature')
+%
+%   To choose an algorithm, enter 'algorithm_name' followed by a text string
+%   with a built-in algorithm name, or a function handle for a custom algorithm
+%   Built-in algorithm choices include:
+%
+%   **cv_multregress:**
+%        [default] multiple regression
+%
+%   **cv_univregress:**
+%        Average predictions from separate univariate regression of outcome on each feature
+%
+%   **cv_svr:**
+%        Support vector regression with Spider package; requires spider
+%
+%   **cv_pcr:**
+%        Cross-validated principal components regression
+%
+%   **cv_lassopcr:**
+%        Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
+%        NOTE: can enter 'EstimateParams' to use shrankage
+%        lasso method based on the estimated optimal lambda
+%        that minimizes the mean squared error (MSE) of nested
+%        cross-validation models. Output of nested cv model is
+%        saved in stats.other_output_cv{:,3}. Output includes
+%        'Lambda' parameter and min MSE value.
+%
+%   **cv_lassopcrmatlab:**
+%        Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
+%        NOTE: this uses the matlab implementation of LASSO,
+%        but can also run ridge or elastic net. Reduces to PCR
+%        when no lasso_num is entered by default.  Use MSE for
+%        predicting continuous data and MCR for classifying
+%        binary data.
+%        NOTE: You can input any optional inputs that lassoglm
+%        takes.
+%        Enter 'Alpha', (0,1] as optional inputs to
+%        run ridge (Alpha approaches 0, but excluding 0), lasso (Alpha = 1), or elastic
+%        net (Alpha between 0 and 1)
+%        NOTE: Requires Matlab R2012a and higher.
+%        NOTE: Optional input: 'EstimateParams' - this will
+%        use grid search and nested cross validation to
+%        estimate Lambda and Alpha.  Output is saved in
+%        stats.other_output_cv{:,3}.  Output includes 'Alpha'
+%        parameter which is the elastic net mixture value
+%        between l1 and l2 regularization, 'Lambda' parameter,
+%        which is amount of LASSO regularization/shrinkage, and
+%        'errorMatrix', which is the amount of error for each
+%        parameter combination.  Use
+%        imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
+%        to view matrix.  Min of this matrix is the best
+%        fitting parameters.
 %
 %
-% cv_svm            : Cross-val support vector machine using Spider package
-%                     NOTE: This is sensitive to scale of outputs! Use -1 , 1
-%                     NOTE: Optional inputs: Slack var parameter: 'C', 1 [default], 'C', 3 etc.
-%                     Distance from hyperplane saved in
-%                     stats.other_output_cv{:,2}.  Recommend using the reordered
-%                     cross-validated distance from hyperplane saved in stats.other_output{3}
-%                     stats.dist_from_hyperplane_xval =  cross-validated distance from hyperplane
-%                     stats.weight_obj = voxel (variable) weight object
-%                     e.g., orthviews(stats.weight_obj)
-%                     Intercept for calculating dist from hy is in stats.other_output_cv{:,3}
-%                     e.g., dist_hy = stats.weight_obj.dat' * obj.dat, where obj is a new set of test images
-%                     NOTE: To run nonlinear SVM using radial basis
-%                     function.  Add 'rbf' followed by size of sigma (e.g., 2).
-%                     NOTE: To estimate some of the parameters using
-%                     nested cross validation add 'EstimateParams' as optional input.
-%                     NOTE: To run multiclass SVM (i.e., one vs rest) add
-%                     'MultiClass' as optional input.  Important - Obj.Y must be a matrix (data x
-%                     class) with a column of 1 and -1 indicating each
-%                     class.  For example, if using 3 classes, then obj.Y
-%                     must have 3 columns.
-%                     NOTE: To run a balanced SVM where the number of cases for each class are unequal (i.e., one vs rest) add
-%                     'Balanced' as optional input, followed by a numerical value indicating the ridge amount (e.g., 0.01).
+%   **cv_svm:**
+%        Cross-val support vector machine using Spider package
+%        NOTE: This is sensitive to scale of outputs! Use -1 , 1
+%        NOTE: Optional inputs: Slack var parameter: 'C', 1 [default], 'C', 3 etc.
+%        Distance from hyperplane saved in
+%        stats.other_output_cv{:,2}.  Recommend using the reordered
+%        cross-validated distance from hyperplane saved in stats.other_output{3}
+%        stats.dist_from_hyperplane_xval =  cross-validated distance from hyperplane
+%        stats.weight_obj = voxel (variable) weight object
+%        e.g., orthviews(stats.weight_obj)
+%        Intercept for calculating dist from hy is in stats.other_output_cv{:,3}
+%        e.g., dist_hy = stats.weight_obj.dat' * obj.dat, where obj is a new set of test images
+%        NOTE: To run nonlinear SVM using radial basis
+%        function.  Add 'rbf' followed by size of sigma (e.g., 2).
+%        NOTE: To estimate some of the parameters using
+%        nested cross validation add 'EstimateParams' as optional input.
+%        NOTE: To run multiclass SVM (i.e., one vs rest) add
+%        'MultiClass' as optional input.  Important - Obj.Y must be a matrix (data x
+%        class) with a column of 1 and -1 indicating each
+%        class.  For example, if using 3 classes, then obj.Y
+%        must have 3 columns.
+%        NOTE: To run a balanced SVM where the number of cases for each class are unequal (i.e., one vs rest) add
+%        'Balanced' as optional input, followed by a numerical value indicating the ridge amount (e.g., 0.01).
 %
-% cv_multilevel_glm : Runs glmfit_multilevel. Must pass in ''subjIDs'' followed by an array specifying which subject each trial belongs to
-%                     Subjects' trials must all be "adjacent", i.e., don't
-%                     put some of subject 1's trials at the beginning and
-%                     other trials at the end -- subjIDs does not handle
-%                     this case correctly. Also, 2ND LEVEL PREDICTORS NOT
-%                     CURRENTLY SUPPORTED.  code can be expanded to support this.
-%                     mean-centering X and/or Y will NOT impact the
-%                     predictor betas.  Note that it WILL impact the intercept
-%                     esimate as well as how much variance is explained
-%                     (pred_outcome_r).  Stratified CV partition not
-%                     supported either, pass in custom holdout set.
+%   **cv_multilevel_glm:**
+%        Runs glmfit_multilevel. Must pass in ''subjIDs'' followed by an array specifying which subject each trial belongs to
+%        Subjects' trials must all be "adjacent", i.e., don't
+%        put some of subject 1's trials at the beginning and
+%        other trials at the end -- subjIDs does not handle
+%        this case correctly. Also, 2ND LEVEL PREDICTORS NOT
+%        CURRENTLY SUPPORTED.  code can be expanded to support this.
+%        mean-centering X and/or Y will NOT impact the
+%        predictor betas.  Note that it WILL impact the intercept
+%        esimate as well as how much variance is explained
+%        (pred_outcome_r).  Stratified CV partition not
+%        supported either, pass in custom holdout set.
 %
 %
-% Outputs:
-% ---------------------------------------------------------------------
-% Y              : Copy of outcome data to be predicted
-% algorithm_name : Name of algorithm; see options above
-% function_call  : String of the command evaluated to call the prediction function
-% function_handle: Handle for the command evaluated to call the prediction function
-% yfit           : Predicted outcome data (cross-validated)
-% err            : Residuals/misclassification vector (cross-validated)
-% error_type     : Name of error metric used for cverr
-% cverr          : Cross-validated error
-% nfolds         : Number of folds in stratified cross-validation, or
-%                  vector of integers for membership in custom holdout set of each fold
-%                  -if k = 1, will estimate weights for full data object
-%                  and not crossvalidate (useful for bootstrapping)
-% cvpartition    : Cross-val partition object or structure with fold info
-% teIdx          : Cell array of logical vectors with test samples in each fold
-% trIdx          : Cell array of logical vectors with training samples in each fold
-% other_output   : Other outputs returned by the algorithm; number and nature depend on algo choice; e.g., beta weights, svr weights, etc.
-%                  For many algorithms, other_output{1} is a vector of
-%                  weights on variables (e.g., voxels)
-% other_output_descrip : String description of other outputs
-% other_output_cv      : Other outputs for each cross-validation fold
-% other_output_cv_descrip: 'Other output from algorithm - for each CV fold'
-% mse            : For regression only; mean squared error
-% rmse           : For regression only; root mean squared error
-% meanabserr     : For regression only; mean absolute error
-% pred_outcome_r : For regression only; prediction-outcome correlation
-% WTS            : bootstrapped weights on voxels
-% weight_obj     : for some algorithms, an fmri_data object with the predictive weights (from full sample)
+% :Outputs:
 %
-% Examples:
-% ---------------------------------------------------------------------
-% obj = fmri_data;
-% obj.dat = randn(30, 50); % 30 voxels, 50 images (observations)
-% obj.Y = obj.dat' * rand(30, 1) + randn(50, 1); % toy Y, linear combo of X plus noise
-% [cverr, stats, regression_outputs] = predict(obj);
+%   **Y:**
+%        Copy of outcome data to be predicted
 %
-% Simulated example with 100 observations, 1000 voxels, with bootstrapping
-% dat = fmri_data;
-% dat.Y = rand(100, 1);
-% dat.dat = repmat(dat.Y', 1000, 1) + 10*rand(1000, 100);
-% [err,stats] = predict(dat, 'bootweights', 'algorithm_name', 'cv_lassopcr');
+%   **algorithm_name:**
+%        Name of algorithm; see options above
 %
-% [cverr, stats, regression_outputs] = predict(obj, 'nfolds', 3, 'error_type', 'meanabserr');
-% [cverr, stats, regression_outputs] = predict(obj, 'algorithm_name', 'cv_univregress', 'error_type', 'meanabserr');
-% [cverr, stats, optout] = predict(obj, 'algorithm_name', 'cv_lassopcr', 'lasso_num', 5, 'nfolds', 5, 'error_type', 'mse', 'bootweights');
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'nfolds', 5, 'error_type', 'mse');
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'rbf', 2, 'nfolds', 5, 'error_type', 'mse'); %SVM w/ radial basis function
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'rbf', 2, 'EstimateParams', 'nfolds', 5, 'error_type', 'mse'); %SVM w/ radial basis function w/ parameters estimated using nested cross-valdiation
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'nfolds', 5, 'MultiClass', 'error_type', 'mse');
+%   **function_call:**
+%        String of the command evaluated to call the prediction function
 %
-% Elastic net with first 10 components:
-% [cverr, stats, optout] = predict(dat_masked, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', 5, 'error_type', 'mse', 'numcomponents', 10, 'Alpha', .5); stats.pred_outcome_r
+%   **function_handle:**
+%        Handle for the command evaluated to call the prediction function
 %
-% Ridge with first 10 components:
-% [cverr, stats, optout] = predict(dat_masked, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', 5, 'error_type', 'mse', 'numcomponents', 10, 'Alpha', 0.00001); stats.pred_outcome_r
+%   **yfit:**
+%        Predicted outcome data (cross-validated)
 %
-% Lasso with all components, but shrink to retain 2 components only:
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', whfolds, 'nopcr', 'lasso_num', 2, 'Alpha', 1);
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'lasso_num', 2);
+%   **err:**
+%        Residuals/misclassification vector (cross-validated)
 %
-% Lasso with the shrinkage methods based on the estimated optimal lambda that minimizes MSE of nested cross-validation models.
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'estimateparam');
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'estimateparam');
+%   **error_type:**
+%        Name of error metric used for cverr
 %
-% Lasso without doing PCR:
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', whfolds, 'nopcr', 'lasso_num', 2, 'Alpha', 1);
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'lasso_num', 2, 'nopcr');
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'estimateparam', 'nopcr');
+%   **cverr:**
+%        Cross-validated error
 %
-% Lasso pcr using hvblock cross-validation on time-series, h = 3, v = 5;
-% [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'hvblock',[3,5]);
+%   **nfolds:**
+%        Number of folds in stratified cross-validation, or
+%        vector of integers for membership in custom holdout set of each fold
+%            - if k = 1, will estimate weights for full data object
+%              and not crossvalidate (useful for bootstrapping)
 %
-% Output display:
-% orthviews(stats.weight_obj)
-% line_plot_multisubject(stats.yfit, stats.Y, 'subjid', id_numbers);
+%   **cvpartition:**
+%        Cross-val partition object or structure with fold info
 %
-% See also:
-% ---------------------------------------------------------------------
-% predict_test_suite method for fmri_data, which runs predict with multiple
-% options and summarizes output.
+%   **teIdx:**
+%        Cell array of logical vectors with test samples in each fold
 %
-% xval_regression_multisubject, xval_lasso_brain
+%   **trIdx:**
+%        Cell array of logical vectors with training samples in each fold
 %
-% Original version: Copyright Tor Wager, Dec 2010
+%   **other_output:**
+%        Other outputs returned by the algorithm; number and nature depend on algo choice; e.g., beta weights, svr weights, etc.
+%        For many algorithms, other_output{1} is a vector of
+%        weights on variables (e.g., voxels)
+%
+%   **other_output_descrip:**
+%        String description of other outputs
+%
+%   **other_output_cv:**
+%        Other outputs for each cross-validation fold
+%
+%   **other_output_cv_descrip:**
+%        Other output from algorithm - for each CV fold
+%
+%   **mse:**
+%        For regression only; mean squared error
+%
+%   **rmse:**
+%        For regression only; root mean squared error
+%
+%   **meanabserr:**
+%        For regression only; mean absolute error
+%
+%   **pred_outcome_r:**
+%        For regression only; prediction-outcome correlation
+%
+%   **WTS:**
+%        bootstrapped weights on voxels
+%
+%   **weight_obj:**
+%        for some algorithms, an fmri_data object with the predictive weights (from full sample)
+%
+%
+% :Examples:
+% ::
+%
+%    obj = fmri_data;
+%    obj.dat = randn(30, 50); %    30 voxels, 50 images (observations)
+%    obj.Y = obj.dat' * rand(30, 1) + randn(50, 1); %    toy Y, linear combo of X plus noise
+%    [cverr, stats, regression_outputs] = predict(obj);
+%
+%    Simulated example with 100 observations, 1000 voxels, with bootstrapping
+%    dat = fmri_data;
+%    dat.Y = rand(100, 1);
+%    dat.dat = repmat(dat.Y', 1000, 1) + 10*rand(1000, 100);
+%    [err,stats] = predict(dat, 'bootweights', 'algorithm_name', 'cv_lassopcr');
+%
+%    [cverr, stats, regression_outputs] = predict(obj, 'nfolds', 3, 'error_type', 'meanabserr');
+%    [cverr, stats, regression_outputs] = predict(obj, 'algorithm_name', 'cv_univregress', 'error_type', 'meanabserr');
+%    [cverr, stats, optout] = predict(obj, 'algorithm_name', 'cv_lassopcr', 'lasso_num', 5, 'nfolds', 5, 'error_type', 'mse', 'bootweights');
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'nfolds', 5, 'error_type', 'mse');
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'rbf', 2, 'nfolds', 5, 'error_type', 'mse'); %SVM w/ radial basis function
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'rbf', 2, 'EstimateParams', 'nfolds', 5, 'error_type', 'mse'); %SVM w/ radial basis function w/ parameters estimated using nested cross-valdiation
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_svm', 'nfolds', 5, 'MultiClass', 'error_type', 'mse');
+%
+%    Elastic net with first 10 components:
+%    [cverr, stats, optout] = predict(dat_masked, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', 5, 'error_type', 'mse', 'numcomponents', 10, 'Alpha', .5); stats.pred_outcome_r
+%
+%    Ridge with first 10 components:
+%    [cverr, stats, optout] = predict(dat_masked, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', 5, 'error_type', 'mse', 'numcomponents', 10, 'Alpha', 0.00001); stats.pred_outcome_r
+%
+%    Lasso with all components, but shrink to retain 2 components only:
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', whfolds, 'nopcr', 'lasso_num', 2, 'Alpha', 1);
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'lasso_num', 2);
+%
+%    Lasso with the shrinkage methods based on the estimated optimal lambda that minimizes MSE of nested cross-validation models.
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'estimateparam');
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'estimateparam');
+%
+%    Lasso without doing PCR:
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcrmatlab', 'nfolds', whfolds, 'nopcr', 'lasso_num', 2, 'Alpha', 1);
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', whfolds, 'lasso_num', 2, 'nopcr');
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'estimateparam', 'nopcr');
+%
+%    Lasso pcr using hvblock cross-validation on time-series, h = 3, v = 5;
+%    [cverr, stats, optout] = predict(dat, 'algorithm_name', 'cv_lassopcr', 'hvblock',[3,5]);
+%
+%    Output display:
+%    orthviews(stats.weight_obj)
+%    line_plot_multisubject(stats.yfit, stats.Y, 'subjid', id_numbers);
+%
+% :See also:
+%    predict_test_suite method for fmri_data, which runs predict with multiple
+%    options and summarizes output.
+%
+%    xval_regression_multisubject, xval_lasso_brain
+%
+% ..
+%    Original version: Copyright Tor Wager, Dec 2010
+%
+%    Programmers' notes:
+%    Dec 2011: Changed to input double format to algorithms; some have
+%    problems with single format
+%
+%    March 2012: Changed default method to cv_pcr, and updated input option
+%    parsing to avoid silly mistakes in specifying algorithm.
+%    Changed line 377 to if rank(X) < size(sc, 1). Tested: pinv and normal inv
+%    give same results up to machine precision.
+%
+%    10/16/12: Luke Chang: Changed input to bootstrp to double because of problems with
+%    single format (see Tor's edits on 11/10/12)
+%
+%    11/2/2012: tor wager: cv_svm output added to return distance from hyperplane in stats.other_output_cv{:,2}
+%
+%    11/7/12: Luke Chang: added cv_lassopcrmatlab to use new matlab lasso.
+%    This uses coordinate descent methods compared to Least Angle Regression
+%    in the Rocha Lasso algorithm.  This function can be used for prediction of continuous data or classification
+%    of binary data.  For binary classification compare cverr to, Phi, or MSE in stats output. Still
+%    working on a good way to quantify accuracy using the predicted
+%    probabilities from logistic regression.  Also working on methods to
+%    select optimal lambda for regularization.  Make sure you change the Rocha
+%    lasso function name to 'lasso_rocha' to retain old functionality and prevent conflicts.
+%
+%    11/7/12: Luke Chang: added functionality to display xval iteration number
+%    and elapsed time
+%
+%    11/8/12: Luke Chang: fixed calculation of mse. Previous version calculated sum of squared error
+%
+%    11/10/12: Tor Wager:
+%              - forced double format at input processing stage
+%              - added optional inputs to lassoglm in cv_lassopcrmatlab
+%              - added functionality to use variable number of components
+%              - forced remove_empty on object to avoid potential problems with empty variables
+%              - added/improved documentation, cleaned up code structure for cv_lassopcrmatlab
+%
+%    11/28/12: Luke Chang:
+%              -fixed bug with optional inputs in cv_lassopcrmatlab - lassoglm
+%              didn't like empty cells in varargin
+%              -fixed bug with replace_empty(obj) that was returning brain
+%              weights that were a different size from the input***
+%              -cleaned code structure for cv_lassopcrmatlab
+%              -added functionality to estimate lambda and alpha for
+%              lasspcrmatlab using grid search and nested cross validation
+%
+%    1/14/13: Tor Wager: SVM algorithm use updates
+%              - fixed bug getting distance from hyperplane with svm
+%              - fixed bug with input of slack var params ('C=x') in svm
+%              - return cross-validated distance from hyperplane in special
+%              output
+%              - added stats.weight_obj; ...and intercept values in stats.other_output_cv{:,3}
+%
+%    2/21/13: Luke Chang:
+%              - fixed bug with cv_lassopcr - now restimates betas selected
+%              with lasso using OLS (see hastie, friedman, tibrishani pg 92)
+%              - added new functionality to SVM, rbf kernel
+%              - added new functionality to SVM can estimate slack parameter
+%              (or sigma if using rbf) using nested xVal.  For some reason
+%              this isn't working super well yet, could have something to do
+%              with loss function.  Someone should look into this.
+%
+%    2/26/13: Luke Chang:
+%              - added new functionality to cv_svm - can now perform
+%              classification of multiple classes using one vs rest
+%
+%    3/5/13: Tor Wager:
+%              - lassopcr : fixed bug in lasso_num to return correct num components
+%              - added nopcr option to cv_lassopcr and cv_lassopcrmatlab
+%              - cv_lassopcrmatlab: fixed bug: lasso_num not selecting correctly
+%              was not re-fitting OLS solution after selecting components with lasso
+%
+%
+%    3/6/13:  Tor Wager
+%              - fixed minor bug introduced in last version with lassopcr/full rank
+%              - added stats.weight_obj, an fmri_data object with the predictive weights (from full sample)
+%
+%    3/8/13: Tor Wager
+%              - working on bootstrapping, not a full solution yet
+%              - rocha lasso seems to be ok, but others not (cv_pcr, matlab
+%              lasso) returning stable weights
+%              - added code to use only non-redundant components in pcr, to
+%              avoid warnings/instability during bootstrapping.
+%
+%    3/23/13: Wani Woo
+%              - implemented 'EstimateParams' option in rocha lasso. With this
+%                option, you can use the subset of coefficients that are non-zero
+%                predictors based on the optimal lambda estimation. The optimal
+%                lambda will be chosen based on the minimization of mean square
+%                error (MSE) of netsed cross-validation.
+%              - For this, cv_lassopcr now calls "lasso_cv.m" instead of "lasso_rocha.m"
+%                , but lasso_cv calls lasso_rocha. lasso_cv gives the results of nested
+%                cross-validation, which is using to select the optimal lambda,
+%                in addition to all the outputs that lasso_rocha gives. For this
+%                reason, I think it is beneficial to use lasso_cv instead of
+%                lasso_rocha.
+%              - In order to make this possible, I added a variable,
+%                cv_assignment, into funhan. However, only cv_lassopcr is
+%                actually using the variable.
+%
+%    6/10/13: Luke Chang
+%              -Added balanced_ridge option to SVM.
+%              -fixed some bugs with the cv_svm multiclass support
+%
+%    6/25/13: Luke Chang
+%              -Added try/catch on lassopcr.  Will output nans if there is a
+%              problem running PCA.  Should help with problems with svd
+%              convergence when bootsrapping.
+%              -turned off parallel by default for bootstrapping.  memory is
+%              duplicated for each worker so will crash if not enough memory.
+%              Also bootstrp seems to preallocate.
+%
+%    6/29/13: Luke Chang
+%              -added option to save bootstrap weights 'savebootweights'.
+%              This is useful if you want to aggregate bootstrap samples from
+%              multiple iterations of predict() run at different times or
+%              on different computers
+%
+%    7/2/13: Luke Chang
+%              -added ability to not cross-validate by setting nfolds, k=1
+%              -made a bunch of changes to bootstrapping to reduce memory
+%              demands and fixed bugs to output weights.
+%              -added nancorr to ignore nans when calculating correlation
+%              -added rng 'shuffle' to ensure that bootstrapping will use
+%              different inital seed.  VERY IMPORTANT for aggregating across
+%              multiple boostrap sessions!
+%
+%    11/28/13: Luke Chang
+%              -added ability to use hv block cross-validation, which is good
+%              for timeseries data with stationary autocorrelation.
+%              Use 'hvblock,[h,v]
+%
+%    12/16/13: Luke Chang
+%              -added ability to use rolling block cross-validation with the 
+%              ability to deal with autocorrelation, which is good
+%              for timeseries data with stationary autocorrelation.
+%              Use 'rolling,[h,v,g]
+%    4/3/14: Luke Chang
+%              -fixed bug with SVM, cross-validated distance from hyper plane
+%              (hopefully, the distance from hyper plane is still correct)
+%              -fixed bug with SVM 'nfolds',1
+%
+%    2/28/15: Luke Chang
+%              -added platt scalling option for SVM
+%
+%    4/7/15: Wani Woo: SVM algorithm use updates
+%              - fixed bug with input of slack var params ('C=x') in svm
+%
+%    5/7/15: Anjali and Wani: replaced princomp for PCA with SVD on transpose
+%              training data for three algorithms, cv_pcr, cv_lassopcr,
+%              cv_lassopcrmatlab. This reduces running time substantially.
+%
+%    9/4/2015: Tor: Created more functional statistic_image output in
+%    weight_obj when bootstrapping.  Now p-values, etc. are included so you
+%    can threshold.
+% ..
 
-
-
-
-% Programmers' notes:
-% Dec 2011: Changed to input double format to algorithms; some have
-% problems with single format
-%
-% March 2012: Changed default method to cv_pcr, and updated input option
-% parsing to avoid silly mistakes in specifying algorithm.
-% Changed line 377 to if rank(X) < size(sc, 1). Tested: pinv and normal inv
-% give same results up to machine precision.
-%
-% 10/16/12: Luke Chang: Changed input to bootstrp to double because of problems with
-% single format (see Tor's edits on 11/10/12)
-%
-% 11/2/2012: tor wager: cv_svm output added to return distance from hyperplane in stats.other_output_cv{:,2}
-%
-% 11/7/12: Luke Chang: added cv_lassopcrmatlab to use new matlab lasso.
-% This uses coordinate descent methods compared to Least Angle Regression
-% in the Rocha Lasso algorithm.  This function can be used for prediction of continuous data or classification
-% of binary data.  For binary classification compare cverr to, Phi, or MSE in stats output. Still
-% working on a good way to quantify accuracy using the predicted
-% probabilities from logistic regression.  Also working on methods to
-% select optimal lambda for regularization.  Make sure you change the Rocha
-% lasso function name to 'lasso_rocha' to retain old functionality and prevent conflicts.
-%
-% 11/7/12: Luke Chang: added functionality to display xval iteration number
-% and elapsed time
-%
-% 11/8/12: Luke Chang: fixed calculation of mse. Previous version calculated sum of squared error
-%
-% 11/10/12: Tor Wager:
-%           - forced double format at input processing stage
-%           - added optional inputs to lassoglm in cv_lassopcrmatlab
-%           - added functionality to use variable number of components
-%           - forced remove_empty on object to avoid potential problems with empty variables
-%           - added/improved documentation, cleaned up code structure for cv_lassopcrmatlab
-%
-% 11/28/12: Luke Chang:
-%           -fixed bug with optional inputs in cv_lassopcrmatlab - lassoglm
-%           didn't like empty cells in varargin
-%           -fixed bug with replace_empty(obj) that was returning brain
-%           weights that were a different size from the input***
-%           -cleaned code structure for cv_lassopcrmatlab
-%           -added functionality to estimate lambda and alpha for
-%           lasspcrmatlab using grid search and nested cross validation
-%
-% 1/14/13: Tor Wager: SVM algorithm use updates
-%           - fixed bug getting distance from hyperplane with svm
-%           - fixed bug with input of slack var params ('C=x') in svm
-%           - return cross-validated distance from hyperplane in special
-%           output
-%           - added stats.weight_obj; ...and intercept values in stats.other_output_cv{:,3}
-%
-% 2/21/13: Luke Chang:
-%           - fixed bug with cv_lassopcr - now restimates betas selected
-%           with lasso using OLS (see hastie, friedman, tibrishani pg 92)
-%           - added new functionality to SVM, rbf kernel
-%           - added new functionality to SVM can estimate slack parameter
-%           (or sigma if using rbf) using nested xVal.  For some reason
-%           this isn't working super well yet, could have something to do
-%           with loss function.  Someone should look into this.
-%
-% 2/26/13: Luke Chang:
-%           - added new functionality to cv_svm - can now perform
-%           classification of multiple classes using one vs rest
-%
-% 3/5/13: Tor Wager:
-%           - lassopcr : fixed bug in lasso_num to return correct num components
-%           - added nopcr option to cv_lassopcr and cv_lassopcrmatlab
-%           - cv_lassopcrmatlab: fixed bug: lasso_num not selecting correctly
-%           was not re-fitting OLS solution after selecting components with lasso
-%
-%
-% 3/6/13:  Tor Wager
-%           - fixed minor bug introduced in last version with lassopcr/full rank
-%           - added stats.weight_obj, an fmri_data object with the predictive weights (from full sample)
-%
-% 3/8/13: Tor Wager
-%           - working on bootstrapping, not a full solution yet
-%           - rocha lasso seems to be ok, but others not (cv_pcr, matlab
-%           lasso) returning stable weights
-%           - added code to use only non-redundant components in pcr, to
-%           avoid warnings/instability during bootstrapping.
-%
-% 3/23/13: Wani Woo
-%           - implemented 'EstimateParams' option in rocha lasso. With this
-%             option, you can use the subset of coefficients that are non-zero
-%             predictors based on the optimal lambda estimation. The optimal
-%             lambda will be chosen based on the minimization of mean square
-%             error (MSE) of netsed cross-validation.
-%           - For this, cv_lassopcr now calls "lasso_cv.m" instead of "lasso_rocha.m"
-%             , but lasso_cv calls lasso_rocha. lasso_cv gives the results of nested
-%             cross-validation, which is using to select the optimal lambda,
-%             in addition to all the outputs that lasso_rocha gives. For this
-%             reason, I think it is beneficial to use lasso_cv instead of
-%             lasso_rocha.
-%           - In order to make this possible, I added a variable,
-%             cv_assignment, into funhan. However, only cv_lassopcr is
-%             actually using the variable.
-%
-% 6/10/13: Luke Chang
-%           -Added balanced_ridge option to SVM.
-%           -fixed some bugs with the cv_svm multiclass support
-%
-% 6/25/13: Luke Chang
-%           -Added try/catch on lassopcr.  Will output nans if there is a
-%           problem running PCA.  Should help with problems with svd
-%           convergence when bootsrapping.
-%           -turned off parallel by default for bootstrapping.  memory is
-%           duplicated for each worker so will crash if not enough memory.
-%           Also bootstrp seems to preallocate.
-%
-% 6/29/13: Luke Chang
-%           -added option to save bootstrap weights 'savebootweights'.
-%           This is useful if you want to aggregate bootstrap samples from
-%           multiple iterations of predict() run at different times or
-%           on different computers
-%
-% 7/2/13: Luke Chang
-%           -added ability to not cross-validate by setting nfolds, k=1
-%           -made a bunch of changes to bootstrapping to reduce memory
-%           demands and fixed bugs to output weights.
-%           -added nancorr to ignore nans when calculating correlation
-%           -added rng 'shuffle' to ensure that bootstrapping will use
-%           different inital seed.  VERY IMPORTANT for aggregating across
-%           multiple boostrap sessions!
-%
-% 11/28/13: Luke Chang
-%           -added ability to use hv block cross-validation, which is good
-%           for timeseries data with stationary autocorrelation.
-%           Use 'hvblock,[h,v]
-%
-% 12/16/13: Luke Chang
-%           -added ability to use rolling block cross-validation with the 
-%           ability to deal with autocorrelation, which is good
-%           for timeseries data with stationary autocorrelation.
-%           Use 'rolling,[h,v,g]
-% 4/3/14: Luke Chang
-%           -fixed bug with SVM, cross-validated distance from hyper plane
-%           (hopefully, the distance from hyper plane is still correct)
-%           -fixed bug with SVM 'nfolds',1
-%
-% 2/28/15: Luke Chang
-%           -added platt scalling option for SVM
-%
-% 4/7/15: Wani Woo: SVM algorithm use updates
-%           - fixed bug with input of slack var params ('C=x') in svm
-%
-% 5/7/15: Anjali and Wani: replaced princomp for PCA with SVD on transpose
-%           training data for three algorithms, cv_pcr, cv_lassopcr,
-%           cv_lassopcrmatlab. This reduces running time substantially.
-%
-% 9/4/2015: Tor: Created more functional statistic_image output in
-% weight_obj when bootstrapping.  Now p-values, etc. are included so you
-% can threshold.
-
-% ---------------------------------------------------------------------
-% Defaults
-% ---------------------------------------------------------------------
+% ..
+%    ---------------------------------------------------------------------
+%    Defaults
+%    ---------------------------------------------------------------------
+% ..
 
 nfolds = 5;
 tsxval_hvblock = 0;

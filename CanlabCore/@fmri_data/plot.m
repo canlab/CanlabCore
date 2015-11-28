@@ -1,37 +1,50 @@
 function plot(fmridat, plotmethod)
-% plot(fmridat, [plotmethod])
-%
-% Plot methods:
-% ----------------------------------------
-% Plot data matrix
-% plot(fmri_data_object)
-%
 % Plot means by condition
 % plot(fmri_data_object, 'means_for_unique_Y')
 %
+% :Inputs:
+%     Plot methods:
+%        - plot data matrix
+%        - plot(fmri_data_object)
 %
+% :Usage:
+% ::
 %
-% Output:
-% ---------------------------------------
-% 5 plots and an SPM orthviews presentation of the data.  In the below and elsewhere, "image" connotes a 3D brain volume
-% captured every TR.
+%    plot(fmridat, [plotmethod])
 %
-%   subplot 1:  the fMRI data itself.  Color is intensity of signal
-%   subplot 2:  presented as a histogram of values for every voxel collected.
-%   The low values are typically out-of-brain voxels, as there is no signal
-%   there
-%   subplot 3:  each point is an image.  The point's X value is the mean
-%   intensity of every voxel in that image, and the Y value is the stdev of
-%   intensities for all voxels in that image
-%   subplot 4:  covariance between images
-%   subplot 5:  each point is an image (case = image).  X value is image
-%   number in the run, Y is image mean intensity, and the size of the
-%   circular marker represents stdev for that image
+% :Outputs:
 %
-%   Orthviews: mean and STD for a given voxel averaged over time.  Note that the values for mean and STD here are higher than in
-%   the plots above.  That is because mean and STD are calculated here by
-%   voxel, but in the plots above they are calculated by image.  Images also include out-of-brain areas.
-
+% 5 plots and an SPM orthviews presentation of the data.  In the below 
+% and elsewhere, "image" connotes a 3D brain volume captured every TR.
+%
+%   **subplot 1:**
+%         the fMRI data itself. Color is intensity of signal.
+%
+%   **subplot 2:**
+%         presented as a histogram of values for every voxel collected.
+%         The low values are typically out-of-brain voxels, as there is
+%         no signal there.
+%
+%   **subplot 3:**
+%         each point is an image.  The point's X value is the mean
+%         intensity of every voxel in that image, and the Y value is the
+%         stdev of intensities for all voxels in that image.
+%
+%   **subplot 4:**
+%         covariance between images
+%
+%   **subplot 5:**
+%         each point is an image (case = image).  X value is image
+%         number in the run, Y is image mean intensity, and the size of
+%         the circular marker represents stdev for that image
+%
+%   **Orthviews:**
+%         mean and STD for a given voxel averaged over time.  Note that
+%         the values for mean and STD here are higher than in the plots
+%         above. That is because mean and STD are calculated here by
+%         voxel, but in the plots above they are calculated by image.
+%         Images also include out-of-brain areas.
+%
 
 if nargin < 2
     plotmethod = 'data';

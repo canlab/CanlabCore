@@ -2,7 +2,10 @@ function obj = create(obj, varargin)
 % Create an object from an empty obj structure, assigning fieldname/value
 % pairs as optional arguments.
 %
-% obj = create(obj, varargin)
+% :Usage:
+% ::
+%
+%     [obj = create(obj, varargin)
 %
 % Used in fmri_data.m class constructor.
 

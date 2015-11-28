@@ -1,25 +1,34 @@
 function statsimg = ttest(fmridat, pvalthreshold, thresh_type)
 % T-test on fmri_data class object
-% statsimg = ttest(fmridat, pvalthreshold, thresh_type)
 %
-% ttest(fmridat, p-value threshold, thresh_type)
+% :Usage:
+% ::
 %
-% p-value threshold: p-value, e.g., .05 or .001 or [.001 .01 .05]
-% thresh_type: 'uncorrected', 'fwe', or 'fdr'
+%    statsimg = ttest(fmridat, pvalthreshold, thresh_type)
 %
-% e.g., 
-% T-test, Construct a stats_image object, threshold and display:
-% statsimg = ttest(fmridat, .001, 'unc');
-% orthviews(statsimg);
+% :Inputs:
 %
-% Re-threshold and display:
-% statsimg = threshold(statsimg, .000001, 'unc');
-% orthviews(statsimg);
-% 
-% statsimg = threshold(statsimg, .01, 'fdr');
-% orthviews(statsimg);
+%   **p-value threshold:**
+%        p-value, e.g., .05 or .001 or [.001 .01 .05]
 %
-% NOTE: for two-sample T-test, use fmri_data.regress
+%   **thresh_type:**
+%        'uncorrected', 'fwe', or 'fdr'
+%
+% :Examples:
+% ::
+%
+%     %T-test, Construct a stats_image object, threshold and display:
+%     statsimg = ttest(fmridat, .001, 'unc');
+%     orthviews(statsimg);
+%
+%     %Re-threshold and display:
+%     statsimg = threshold(statsimg, .000001, 'unc');
+%     orthviews(statsimg);
+%
+%     statsimg = threshold(statsimg, .01, 'fdr');
+%     orthviews(statsimg);
+%
+% :Note: for two-sample T-test, use fmri_data.regress
 
 fprintf('One-sample t-test\n')
 fprintf('Calculating t-statistics and p-values\n');

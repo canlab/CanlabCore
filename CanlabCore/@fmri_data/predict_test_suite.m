@@ -2,46 +2,50 @@ function [allcverr, allyhat] = predict_test_suite(dat, varargin)
 % Run a set of cross-validated prediction algorithms on an fmri_data object
 % and plot the outcome.
 %
-% Usage:
-% ----------------------------------------------------------------
-% [allcverr, allyhat] = predict_test_suite(dat, [optional inputs])
+% :Usage:
+% ::
+%
+%     [allcverr, allyhat] = predict_test_suite(dat, [optional inputs])
 % 
-% Functionality:
-% - Requires matlab 2012a or later for full functionality
-% - Handles categorical or continuous outcomes automatically
+% :Functionality:
+%   - Requires matlab 2012a or later for full functionality
+%   - Handles categorical or continuous outcomes automatically
+%
+% :Inputs:
+%
+%   **dat:**
+%        an fMRI data object. 
+%        dat.Y must be assigned, and must have continuous or binary outcomes assigned.
+%
+% :Optional:
+%
+% **quick:**
+%        Skip extended output
+%
+% **nfolds:**
+%        Followed by number of folds or custom holdout vector (default = 5-fold balanced)
+%
+% :Examples:
+% ::
+%
+%    predict_test_suite(dat, 'nfolds', subjid);
+%
+% ..
+%    Tor Wager, copyright 2012. Initial version: Nov 2012
+%
+%    Programmers' notes:
+%
+%    Here are possible extensions to the functionality:
+%    1) Test different data scaling methods in preprocess(dat) and/or
+%       rescale(dat)
 % 
+%    2) Feature selection: Test effects of thresholding weight maps
+%       (and others)
 %
-% Inputs:
-% ----------------------------------------------------------------
-% dat       an fMRI data object. 
-%           dat.Y must be assigned, and must have continuous or binary outcomes assigned.
+%    3) Test "best case" feature selection effects - circular analysis
 %
-% Optional:
-% 'quick'   Skip extended output
-% 'nfolds', Followed by number of folds or custom holdout vector (default = 5-fold balanced)
-%
-% Outputs:
-% ----------------------------------------------------------------
-% <documentation in development>
-%
-% Examples:
-% ----------------------------------------------------------------
-% predict_test_suite(dat, 'nfolds', subjid);
-%
-% Tor Wager, copyright 2012. Initial version: Nov 2012
-
-% Programmers' notes:
-
-% Here are possible extensions to the functionality:
-% 1) Test different data scaling methods in preprocess(dat) and/or
-% rescale(dat)
-% 
-% 2) Feature selection: Test effects of thresholding weight maps
-%    (and others)
-%
-% 3) Test "best case" feature selection effects - circular analysis
-%
-% Lasso trace plots?  Optimal alpha/lambda in elastic net?
+%    Lasso trace plots?  Optimal alpha/lambda in elastic net?
+% ..
 
 create_figure('predicted-actual corr', 2, 4);
 

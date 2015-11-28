@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. figure:: _build/html/_images/logo.jpg
+
 CanlabCore documentation home
 =============================
 
@@ -10,9 +12,9 @@ CanlabCore documentation home
 Contents:
 
 .. toctree::
-	:maxdepth: 1
+   :maxdepth: 4
 
-	moduleslist
+   moduleslist
 
 
 Indices and tables

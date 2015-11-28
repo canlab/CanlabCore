@@ -1,11 +1,11 @@
 .. toctree::
-	:maxdepth: 2
-
+   :maxdepth: 4
 
 fmri_data
 =========
 .. automodule:: @fmri_data
    :members:
+   :show-inheritance:
 
 fmri_mask_image
 ===============
@@ -15,11 +15,6 @@ fmri_mask_image
 fmri_model
 ==========
 .. automodule:: @fmri_model
-   :members:
-
-fmri_timeseries
-===============
-.. automodule:: @fmri_timeseries
    :members:
 
 image_vector

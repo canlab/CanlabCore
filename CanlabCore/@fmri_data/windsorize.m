@@ -1,17 +1,17 @@
 function obj = windsorize(obj, varargin)
-%
-% obj = windsorize(obj, [madlimit])
-%
 % Windsorize an fMRI data object to madlimit Median Absolute Deviations.
 % Default = 5 MADs.
 % Works across rows and columns.
 % Registers this step in history.
+%
+% :Usage:
+% ::
+%
+%     obj = windsorize(obj, [madlimit])
 
-
-
-% ---------------------------------------------------------------
+% ..
 % Calculate and display descriptives
-% ---------------------------------------------------------------
+% ..
 
 madlimit = 5;
 if ~isempty(varargin), madlimit = varargin{1}; end

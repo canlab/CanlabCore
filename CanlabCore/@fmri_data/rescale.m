@@ -1,28 +1,32 @@
 function fmridat = rescale(fmridat, meth, varargin)
-% fmridat = rescale(fmridat, meth)
-%
 % Rescales data in an fmri_data object
 % Data is observations x images, so operating on the columns operates on
 % images, and operating on the rows operates on voxels (or variables more
 % generally) across images.
 %
-% Methods:
-% 'centervoxels'
-% 'zscorevoxels'
-% 'centerimages'
-% 'zscoreimages'
-% 'rankvoxels'
+% :Usage:
+% ::
 %
-% 'windsorizevoxels'
-% 'percentchange'
-% 'tanh'
+%    fmridat = rescale(fmridat, meth)
+%
+% :Inputs:
+%
+%   **Methods:**
+%     - centervoxels
+%     - zscorevoxels
+%     - centerimages
+%     - zscoreimages
+%     - rankvoxels
+%     - windsorizevoxels
+%     - percentchange
+%     - tanh
 %
 % Appropriate for multi-session (time series) only:
-% 'session_global_percent_change'
-% 'session_global_z'
-% 'session_multiplicative'
+%     - session_global_percent_change
+%     - session_global_z
+%     - session_multiplicative
 %
-% see also fmri_data.preprocess
+% See also fmri_data.preprocess
 
 switch meth
     

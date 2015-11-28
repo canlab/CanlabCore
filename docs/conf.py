@@ -31,7 +31,6 @@ import os
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.matlab',
-    'sphinx.ext.autodoc',
 ]
 
 autodoc_member_order='groupwise'

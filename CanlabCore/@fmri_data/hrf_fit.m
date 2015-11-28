@@ -1,105 +1,102 @@
 function [params_obj hrf_obj] = hrf_fit(obj,TR,Runc,T,method,mode)
 % HRF estimation on fmri_data class object
 %
-%
 % HRF estimation function for a single voxel;
 %
 % Implemented methods include: IL-model (Deterministic/Stochastic), FIR
 % (Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal & dispersion)
 %
-% INPUTS:
-% 
-% obj   - fMRI object 
-% TR    - time resolution
-% Runs  - expermental design
-% T     - length of estimated HRF ij seconds
-% type  - Model type: 'FIR', 'IL', or 'CHRF'
-% mode  - Mode
+% :Inputs:
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MODEL TYPES:
+%   **obj**
+%        fMRI object 
 %
-% A. Fit HRF using IL-function
+%   **TR**
+%        time resolution
 %
-% Choose mode (deterministic/stochastic)
+%   **Runs**
+%        expermental design
 %
-% 0 - deterministic aproach 
-% 1 - simulated annealing approach
+%   **T**
+%        length of estimated HRF ij seconds
 %
-% Please note that when using simulated annealing approach you
-% may need to perform some tuning before use.
-%                
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-% B. Fit HRF using FIR-model
+%   **type**
+%        Model type: 'FIR', 'IL', or 'CHRF'
 %
-% Choose mode (FIR/sFIR)
+%   **mode**
+%        Mode
 %
-% 0 - FIR 
-% 1 - smooth FIR
+% :Model Types:
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A. **Fit HRF using IL-function**
+%        Choose mode (deterministic/stochastic)
+%           - 0 - deterministic aproach 
+%           - 1 - simulated annealing approach
 %
-% C. Fit HRF using FIR-model
+%        Please note that when using simulated annealing approach you
+%        may need to perform some tuning before use.
 %
-% Choose mode (FIR/sFIR)
+% B. **Fit HRF using FIR-model**
+%        Choose mode (FIR/sFIR)
+%           - 0 - FIR
+%           - 1 - smooth FIR
 %
-% 0 - FIR 
-% 1 - smooth FIR        
-%                
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% C. **Fit HRF using FIR-model**
+%        Choose mode (FIR/sFIR)
+%           - 0 - FIR 
+%           - 1 - smooth FIR        
 %
-% Created by Martin Lindquist on 04/11/14
+% :Examples:
+% SIMULATE DATA AND RUN
+% ::
 %
-%   EXAMPLE: SIMULATE DATA AND RUN
-%   ------------------------------------------------------------------------
-%   % params for sim and fitting
-%   % ----------------------------------------------  
-%   TR = 2;   % repetition time (sec)
-%   n = 200;  % time points measured (for simulation) must be multiple of 10
-%   T = 30;   % duration of HRF to estimate (seconds)
-%   nconds = 2; % num conditions
-%   nevents = 8; % events per condition
-%   
-%   % Create fake data
-%   % ----------------------------------------------
-%   h = spm_hrf(TR);
-%   y = zeros(n, 1);
-%   
-%   % onsets - indicator
-%   Condition = {};
-%   for i = 1:nconds
-%       Condition{i} = zeros(n,1);
-%       wh = randperm(n);
-%       Condition{i}(wh(1:nevents)) = 1;
-%       
-%       ytmp{i} =  conv(Condition{i}, h);
-%       ytmp{i} = ytmp{i}(1:n);
-%   end
-%   
-%   y = sum(cat(2, ytmp{:}), 2);
-%   
-%   dat = fmri_data('VMPFC_mask_neurosynth.img');  % AVAILABLE ON WIKI IN MASK GALLERY
-%   dat = threshold(dat, [5 Inf], 'raw-between');
-%   
-%   v = size(dat.dat, 1); % voxels in mask
-%   dat.dat = repmat(y',v, 1) + .1 * randn(v, n);
-%   
-%   % Fit data - estimate HRFs across the brain mask
-%   % ----------------------------------------------
-%   [params_obj hrf_obj] = hrf_fit(dat,TR, Condition, T,'FIR', 1);
-%   
-%   hrf = fmri_data('HRF_timecourse_cond0001.img');
-%   hrf = remove_empty(hrf);
-%   create_figure('hrfs', 1, 2); 
-%   plot(hrf.dat');
-%   title('Condition 1')
-%   hrf = fmri_data('HRF_timecourse_cond0002.img');
-%   hrf = remove_empty(hrf);
-%   subplot(1, 2, 2);
-%   plot(hrf.dat');
-%   title('Condition 2')
-
+%     %params for sim and fitting
+%     TR = 2;   % repetition time (sec)
+%     n = 200;  % time points measured (for simulation) must be multiple of 10
+%     T = 30;   % duration of HRF to estimate (seconds)
+%     nconds = 2; % num conditions
+%     nevents = 8; % events per condition
+%
+%     % Create fake data
+%     h = spm_hrf(TR);
+%     y = zeros(n, 1);
+%
+%     % onsets - indicator
+%     Condition = {};
+%     for i = 1:nconds
+%         Condition{i} = zeros(n,1);
+%         wh = randperm(n);
+%         Condition{i}(wh(1:nevents)) = 1;
+%
+%         ytmp{i} =  conv(Condition{i}, h);
+%         ytmp{i} = ytmp{i}(1:n);
+%     end
+%
+%     y = sum(cat(2, ytmp{:}), 2);
+%
+%     dat = fmri_data('VMPFC_mask_neurosynth.img');  % AVAILABLE ON WIKI IN MASK GALLERY
+%     dat = threshold(dat, [5 Inf], 'raw-between');
+%
+%     v = size(dat.dat, 1); % voxels in mask
+%     dat.dat = repmat(y',v, 1) + .1 * randn(v, n);
+%
+%     % Fit data - estimate HRFs across the brain mask
+%     [params_obj hrf_obj] = hrf_fit(dat,TR, Condition, T,'FIR', 1);
+%
+%     hrf = fmri_data('HRF_timecourse_cond0001.img');
+%     hrf = remove_empty(hrf);
+%     create_figure('hrfs', 1, 2); 
+%     plot(hrf.dat');
+%     title('Condition 1')
+%     hrf = fmri_data('HRF_timecourse_cond0002.img');
+%     hrf = remove_empty(hrf);
+%     subplot(1, 2, 2);
+%     plot(hrf.dat');
+%     title('Condition 2')
+%
+% ..
+%    Created by Martin Lindquist on 04/11/14
+% ..
 
 
 fprintf('HRF estimation\n')

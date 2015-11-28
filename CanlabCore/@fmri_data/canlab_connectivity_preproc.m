@@ -5,29 +5,31 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 % can extract values from given masks and return averaged activity or pattern
 % expression values.
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin)
+% :Usage:
+% ::
 %
-% Features:
-% - can regress out nuisance variables with any additional nuisance matrix
-% - can remove signal from ventricle and white matter
-%      (calls canlab_extract_ventricle_wm_timeseries.m and
-%       canlab_create_wm_ventricle_masks.m)
-% - can do temporal filtering, including high-pass, low-pass, or bandpass
-%      filtering (it uses conn_filter.m from conn toolbox; see subfunction below)
-% - can extract data from given ROIs, and return averaged value or pattern
-%   expression value (dot-product).
+%     [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin)
 %
-% Steps in order [with defaults]:
-% 1. Remove nuisance covariates (and linear trend if requested)
-% 2. Remove ventricle and white matter - needs structural images
-% 3. Windsorize based on distribution of full data matrix
-% 4. High/low/bandpass filter
-% 5. Extract region-by-region average ROI or pattern expression data
+% :Features:
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%   - can regress out nuisance variables with any additional nuisance matrix
+%   - can remove signal from ventricle and white matter (calls
+%     canlab_extract_ventricle_wm_timeseries.m and canlab_create_wm_ventricle_masks.m)
+%   - can do temporal filtering, including high-pass, low-pass, or bandpass
+%     filtering (it uses conn_filter.m from conn toolbox; see subfunction below)
+%   - can extract data from given ROIs, and return averaged value or pattern
+%     expression value (dot-product).
+%
+% *Steps in order [with defaults]:*
+%   1. Remove nuisance covariates (and linear trend if requested)
+%   2. Remove ventricle and white matter - needs structural images
+%   3. Windsorize based on distribution of full data matrix
+%   4. High/low/bandpass filter
+%   5. Extract region-by-region average ROI or pattern expression data
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -42,95 +44,102 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat            fmri_data object with data
-% dat.covariate  basic nuisance matrix
+% :Inputs:
 %
-% Optional inputs:
-% -------------------------------------------------------------------------
-% 'additional_nuisance'
-%               When you have additional nuisance variables that you want
-%               regress out from the data, you can use this option. This
-%               option should be followed by a nuisance matrix (or values).
-%               The matrix should have the same number of rows with the
-%               number of images.
+%   **dat:**
+%        fmri_data object with data
+%   **dat.covariate:**
+%        basic nuisance matrix
 %
-% 'vw'          When you want to regress out signals from ventricle and
-%               white matter, you can use this option. To use this option,
-%               You should provide the directory where the subjects' data
-%               are saved using the 'datdir' (for example, see below).
-%               Requires specific subdirectory structure (CANlab) - see code.
+% :Optional inputs:
 %
-%               You can also choose what to use to remove ventricle and
-%               white matter signal between raw data or top 5 PCA
-%               components (default). You can just put 'raw' if you want to
-%               use raw signal than PCA compoenents.
-%                 also see: canlab_extract_ventricle_wm_timeseries.m
-%                           canlab_create_wm_ventricle_masks.m)
-%               example: 'vw', 'datdir', subject_dir, 'raw'
+%   **additional_nuisance**
+%        When you have additional nuisance variables that you want
+%        regress out from the data, you can use this option. This
+%        option should be followed by a nuisance matrix (or values).
+%        The matrix should have the same number of rows with the
+%        number of images.
 %
-% 'windsorize'  Windsorizing entire data matrix to k x STD.
-%               example: 'windsorize', 5 (windsorize to 5 STD)
+%   **vw**
+%        When you want to regress out signals from ventricle and
+%        white matter, you can use this option. To use this option,
+%        You should provide the directory where the subjects' data
+%        are saved using the 'datdir' (for example, see below).
+%        Requires specific subdirectory structure (CANlab) - see code.
 %
-% 'linear_trend' This option will include the linear trend to nuisance
-%               variables.
+%        You can also choose what to use to remove ventricle and
+%        white matter signal between raw data or top 5 PCA
+%        components (default). You can just put 'raw' if you want to
+%        use raw signal than PCA compoenents.
+%        also see: canlab_extract_ventricle_wm_timeseries.m
+%        canlab_create_wm_ventricle_masks.m)
+%        - *Example:* 'vw', 'datdir', subject_dir, 'raw'
 %
-% 'hpf', 'lpf', or 'bpf'
-%               This option will do temporal filtering.
-%               'hpf': high pass filter. This option should be followed by
-%                      the lower bound of the frequency (e.g., .01 Hz [= 100 sec]).
-%               'lpf': low pass filter. This option should be followed by
-%                      the upper bound of the frequency (e.g., .25 Hz [= 4 sec]).
-%               'bpf': bandpass filter. This should be followed by lower
-%                      and upper bounds of the frequency (e.g., [.01 .25]).
-%               After the frequency value, you need to provide TR.
-%               example: 'hpf', .01, TR
-%                        'bpf', [.01 .25], TR
+%   **windsorize:**
+%        Windsorizing entire data matrix to k x STD.
+%        - *Example:* 'windsorize', 5 (windsorize to 5 STD)
 %
-% 'extract_roi' This option will extract data from ROIs specified. This
-%               option should be followed by one or more masks.
-%               For one mask (potentially multiple ROIs, enter a char array with the mask name.
-%               For multiple masks (1 or more), enter in a cell array of mask names.
-%               You can specify methods with 'roi_methods' option.
-%               'average_over' (default): calculate averaged value across
-%                      the ROIs.
-%               'pattern_expression': calculate dot-products between
-%                      pattern mask and data
-%               'unique_mask_values' (default): will divide a mask into
-%                      multiple regions that have different discrete values.
-%               'contiguous_regions': will divide a mask into multiple
-%                      contiguous regions.
-%               'whole': will do average_over or pattern_expression across
-%                      all the voxels within the mask.
-%               example: 'extract_roi', mask, 'contiguous_regions'
-%                        'extract_roi', mask, 'pattern_expression'
+%   **linear_trend:**
+%        This option will include the linear trend to nuisance variables.
 %
-% 'no_preproc'  If you want to skip the preprocessing part, and want to
-%               extract ROI values only, you can use this option.
+%   **hpf', 'lpf', or 'bpf:**
+%        This option will do temporal filtering.
+%        - 'hpf': high pass filter. This option should be followed by
+%                 the lower bound of the frequency (e.g., .01 Hz [= 100 sec]).
+%        - 'lpf': low pass filter. This option should be followed by
+%                 the upper bound of the frequency (e.g., .25 Hz [= 4 sec]).
+%        - 'bpf': bandpass filter. This should be followed by lower
+%                 and upper bounds of the frequency (e.g., [.01 .25]).
+%                 After the frequency value, you need to provide TR.
+%        - *Example:* 'hpf', .01, TR
+%                     'bpf', [.01 .25], TR
 %
-% Outputs:
-% -------------------------------------------------------------------------
+%   **extract_roi:**
+%        This option will extract data from ROIs specified. This
+%        option should be followed by one or more masks.
+%        For one mask (potentially multiple ROIs, enter a char array with the mask name.
+%        For multiple masks (1 or more), enter in a cell array of mask names.
+%        You can specify methods with 'roi_methods' option.
+%        - 'average_over' (default): calculate averaged value across the ROIs.
+%        - 'pattern_expression': calculate dot-products between
+%                                pattern mask and data
+%        - 'unique_mask_values' (default): will divide a mask into
+%                                          multiple regions that have different discrete values.
+%        - 'contiguous_regions': will divide a mask into multiple
+%                                contiguous regions.
+%        - 'whole': will do average_over or pattern_expression across
+%                   all the voxels within the mask.
+%        - *Example:* 'extract_roi', mask, 'contiguous_regions'
+%                     'extract_roi', mask, 'pattern_expression'
 %
-% preprocessed_dat: fmri_data object after removing nuisance variables and
-%                   filtering temporal confounds.
+%   **no_preproc:**
+%        If you want to skip the preprocessing part, and want to
+%        extract ROI values only, you can use this option.
 %
-% roi_val:          returns values extracted from ROIs in cell arrays
-%                   (if there are many different ROIs). Each cell will have
-%                   roi_val.dat, roi_val.mask_name, and roi_val.methods.
+% :Outputs:
+%
+%  **preprocessed_dat:**
+%        fmri_data object after removing nuisance variables and
+%        filtering temporal confounds.
+%
+%  **roi_val:**
+%        returns values extracted from ROIs in cell arrays (if there are many different ROIs).
+%        Each cell will have roi_val.dat, roi_val.mask_name, and roi_val.methods.
 %
 %
-% Example code:
-% ------------------------------------------------------------------------
-% roi_masks = which('weights_NSF_grouppred_cvpcr.img');
-% [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, 'vw', 'datdir',
-%            subject_dir, 'bpf', [.008 .25], TR, 'extract_roi', roi_masks,
-%            'pattern_expression');
-
-% PROGRAMMER'S NOTE
-% 05/19/15 fixed a bug related to conn_filter
-
+% :Examples:
+% ::
+%
+%     roi_masks = which('weights_NSF_grouppred_cvpcr.img');
+%     [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, 'vw', 'datdir',
+%            subject_dir, 'bpf', [.008 .25], TR, 'extract_roi', roi_masks, 'pattern_expression');
+%
+% ..
+%    PROGRAMMER'S NOTE
+%    05/19/15 fixed a bug related to conn_filter
+% ..
 
 additional_R = [];
 remove_vent_wm = false;

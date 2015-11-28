@@ -1,6 +1,4 @@
 function obj = resample_to_image_space(obj, sampleto, varargin)
-% obj = resample_to_image_space(obj, sampleto <img name or image_vector object>)
-%
 % Resamples data in an fmri_mask_image object (obj) to the space of another
 % image (e.g., a functional image, for data extraction)
 % The volInfo field will be the same as the sampleto volume info.
@@ -10,36 +8,48 @@ function obj = resample_to_image_space(obj, sampleto, varargin)
 % the new space will be different from the original one on disk.  Use the
 % more general resample_space.
 %
-% % NOTE: Mask is *reloaded* from original data if space is remapped, and you
+% NOTE: Mask is *reloaded* from original data if space is remapped, and you
 % cannot use manual thresholding of the mask. This is a feature of the
 % map_to_image_space method and scn_map_image
 %
-% obj must be an fmri_mask_image object
-% sampleto can be either:
-% 1) An image name to sample to
-% 2) Another fmri_mask_image object (but image must exist on path!)
-% 
-% SEE ALSO: resample_space, for a method that does not require images to
-% exist on disk on the path.
+% :Usage:
+% ::
 %
-% Optional inputs:
-% 'mask' : Apply sampleto as mask so that only voxels in the sampleto mask
-% are retained in obj.dat.
+%     obj = resample_to_image_space(obj, sampleto <img name or image_vector object>)
+%
+% :Inputs:
+%
+%   **obj:**
+%        must be an fmri_mask_image object
+%   **sampleto:**
+%        can be either:
+%           1. An image name to sample to
+%           2. Another fmri_mask_image object (but image must exist on path!)
+%
+% :Optional inputs:
+%   **mask:**
+%        Apply sampleto as mask so that only voxels in the sampleto mask
+%        are retained in obj.dat.
 %
 % THIS FUNCTION WORKS, BUT IS DEPRECATED BECAUSE RESAMPLE_SPACE IS MORE
 % GENERAL.  resample_space does not require the resampling of the original
 % image from disk, which this does.  resample_space is slower, though.
-
-% Programmers' notes
-% Tor: July 2011: Edited because old version will apply mask when resampling
-% space. Edited default behavior to NOT mask with voxels only in sampleto
-% space.  This could cause bugs in other functions that need to be worked
-% out.  The optional argument 'mask' should produce the old default
-% behavior.
+% 
+% See Also: resample_space, for a method that does not require images to
+% exist on disk on the path.
 %
-% Oct 30, 2011: obj.dat field after sampling did not conform to standard,
-% because only in-mask voxels in volInfo were not selected.  This was
-% fixed.
+% ..
+%    Programmers' notes
+%    Tor: July 2011: Edited because old version will apply mask when resampling
+%    space. Edited default behavior to NOT mask with voxels only in sampleto
+%    space.  This could cause bugs in other functions that need to be worked
+%    out.  The optional argument 'mask' should produce the old default
+%    behavior.
+%
+%    Oct 30, 2011: obj.dat field after sampling did not conform to standard,
+%    because only in-mask voxels in volInfo were not selected.  This was
+%    fixed.
+% ..
 
 switch class(sampleto)
     case 'char'

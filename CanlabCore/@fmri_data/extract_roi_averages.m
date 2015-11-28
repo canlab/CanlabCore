@@ -1,14 +1,12 @@
 function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, varargin)
-% [cl, clroimean, clpattern] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
-%
 % This fmri_data method a extracts and averages data stored in an fmri_data object 
 % from a set of ROIs defined in a mask.
 %
 % If no mask_image is entered, it uses the mask defined with the fmri_data object as a default.
 %
 % If mask_image is a new image file name, this method:
-%   1) Defines an fmri_mask_image object using create_fmri_mask
-%   2) Maps to the space in fmri_data object using resample_to_image_space
+%   1. Defines an fmri_mask_image object using create_fmri_mask
+%   2. Maps to the space in fmri_data object using resample_to_image_space
 %
 % Regions to average over can be either regions of contiguous voxels
 % bounded by voxels with values of 0 or NaN, which are considered non-data
@@ -21,20 +19,25 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 % cannot use manual thresholding of the mask. This is a feature of the
 % map_to_image_space method and scn_map_image
 %
-% extracted data is returned in single data format.
+% Extracted data is returned in single data format.
 %
-% Inputs:
-% 1 - char array of strings containing 4D image file names (data extracted from these)
-% 2 - mask_image to extract from.
+% :Usage:
+% ::
 %
-% Optional inputs:
-% how to average:
+%     [[cl, clroimean, clpattern] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
+%
+% :Inputs:
+%   1. char array of strings containing 4D image file names (data extracted from these)
+%   2. mask_image to extract from.
+%
+% :Optional inputs:
+%   **how to average**
 %       Default = 'unique_mask_values' to average over unique integer codes in the mask image
 %       bounded by voxels of 0 or NaN (non-data values)
 %       (i.e., for atlas images with unique codes for each defined region)
 %       Alt. option = 'contiguous_regions' to average over contiguous voxels
 %
-% 'pattern_expression':
+%   **pattern_expression**
 %       Use values in mask images to get weighted average within each
 %       region, rather than simple average.  See also apply_mask with
 %       'pattern_expression' option. 
@@ -44,36 +47,40 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %       roimean: pattern expression is average over ROI (unit vector)
 %       roipattern: pattern expression is dot product of activity and mean-centered pattern weights
 %
-% 'nonorm'
+%   **nonorm**
 %       Turn off L1 norm in pattern expression.
 %
-% Example:
-% imgs_to_extract_from = filenames('w*.nii','char');
-% mask_image = which('anat_lbpa_thal.img');
-% [cl, clroimean, clpattern] = extract_image_data(imgs_to_extract_from, mask_image);
+% :Examples:
+% ::
 %
-% region_obj = extract_roi_averages(data_obj, mask_char_name, 'pattern_expression', 'contiguous_regions');
-% 
-% Notes:
-% cl(i).dat gives you the pattern expression values for cluster i.
-% 
-% This function LOSES removed image data - you must re-remove if you have
-% removed images!
+%     imgs_to_extract_from = filenames('w*.nii','char');
+%     mask_image = which('anat_lbpa_thal.img');
+%     [cl, clroimean, clpattern] = extract_image_data(imgs_to_extract_from, mask_image);
 %
-% Related functions:
-% For an non-object-oriented alternative, see extract_image_data.m
-    
-% Modified June 11, 2013 by Tor
-%   - use resample_space instead of resample_to_image_space
-
-% Modified Dec 1, 2014 by Wani
-%   - moved up the part of parsing optional inputs because resample_space 
-%     causes a problem for the unique_mask_values option
-%   - For resample_space, the 'nearest' option should be used when the 
-%     "unique_mask_values" option is used. 
-
-% Modified Oct 2015 by Tor]
-%   - Clarified options, empty cl error check, changed varargout behavior
+%     region_obj = extract_roi_averages(data_obj, mask_char_name, 'pattern_expression', 'contiguous_regions');
+%
+% :Related functions:
+%    For an non-object-oriented alternative, see extract_image_data.m
+%
+% ..
+%     Notes:
+%     cl(i).dat gives you the pattern expression values for cluster i.
+% 
+%     This function LOSES removed image data - you must re-remove if you have
+%     removed images!
+%
+%     Modified June 11, 2013 by Tor
+%       - use resample_space instead of resample_to_image_space
+%
+%     Modified Dec 1, 2014 by Wani
+%       - moved up the part of parsing optional inputs because resample_space 
+%         causes a problem for the unique_mask_values option
+%       - For resample_space, the 'nearest' option should be used when the 
+%         "unique_mask_values" option is used. 
+%
+%     Modified Oct 2015 by Tor]
+%       - Clarified options, empty cl error check, changed varargout behavior
+% ..
 
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
 

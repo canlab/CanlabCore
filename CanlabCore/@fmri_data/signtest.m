@@ -1,30 +1,39 @@
 function [out, statimg] = signtest(dat, varargin)
-% [out, statimg] = signtest(dat, [p-val threshold], [thresh_type])
-%
-% sign test for each voxel of an fmri_data object
+% Sign test for each voxel of an fmri_data object
 % returns voxel-wise statistic images.
 %
-% Inputs:
-% dat should be an fmri_data object with .dat field containing voxels x observations matrix
-% optional inputs in [  ] above are:
-% p-value threshold 
-% string indicating threshold type (see help statistic_image.threshold for options)
+% :Usage:
+% ::
 %
-% Outputs:
-% out is a structure of information about the sign test
-% statimg is a statistic_image object that can be thresholded and
-% plotted/imaged.  statimg.dat contains signed direction values, .p contains p-values 
+%     [out, statimg] = signtest(dat, [p-val threshold], [thresh_type])
 %
+% :Inputs:
+%
+%   **dat:**
+%        Should be an fmri_data object with .dat field containing voxels x observations matrix
+%
+% :Optional inputs: in [  ] above are
+%   **p-value threshold:**
+%        string indicating threshold type (see help statistic_image.threshold for options)
+%
+% :Outputs:
+%   **out:**
+%        is a structure of information about the sign test
+%
+%   **statimg:**
+%        is a statistic_image object that can be thresholded and
+%        plotted/imaged.  statimg.dat contains signed direction values,
+%       .p contains p-values 
+%
+% ..
 % c Tor Wager, 2011
+% ..
+%
 % See also: fmri_data.regress
 %
-% Examples:
 
-%
-%
-
-% default options for thresholding
 inputargs = {.001, 'uncorrected'};
+% default options for thresholding
 
 if ~isempty(varargin)
     for i = 1:length(varargin)

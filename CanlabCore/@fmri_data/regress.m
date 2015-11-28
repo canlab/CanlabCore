@@ -1,7 +1,5 @@
 function out = regress(dat, varargin)
-% out = regress(dat, varargin)
-%
-% regression method for fmri_data object
+% Regression method for fmri_data object
 %
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
@@ -17,96 +15,123 @@ function out = regress(dat, varargin)
 % Warning: Running robust option is considerably slower than OLS.
 %
 % Creates thresholded plot by default
-% ---------------------------------------------------------------------
-% Inputs:
-% ---------------------------------------------------------------------
-% dat:                  should be an fmri_data object with X field defined.
-%                       dat.X can be a design_matrix() object.
 %
-% ---------------------------------------------------------------------
-% Optional Inputs:
-% ---------------------------------------------------------------------
-% [threshold, 'unc']:   p-value threshold string indicating threshold type
-%                       (see help statistic_image.threshold for options)
-% 'nointercept'         Do not add intercept to model
-% 'nodisplay'           Do not plot thresholded results using orthviews
-% 'brainony'            univariate approach to predict obj.Y from brain data
-% 'residual'            Output residual as fmri_data() object
-% 'noverbose'           Suppress verbose outputs
+% :Usage:
+% ::
 %
-% ---------------------------------------------------------------------
-% Outputs:
-% ---------------------------------------------------------------------
-% out:                  A structure containing stats_img and fmri_data
-%                       objects.
-% out.b:                stats_img object of beta values estimated from
-%                       regression
-% out.t:                stats_img object of t-values with input threshold
-% out.df:               fmri_data object of degrees of freedom
-% out.sigma:            fmri_data object of variance of residual
-% out.residual:         (optional) fmri_data object of residual data after
-%                       model has been regressed out.
+%    out = regress(dat, varargin)
 %
-% ---------------------------------------------------------------------
-% Examples:
-% ---------------------------------------------------------------------
-% % Run regression with liberal threshold
-% out = regress(dat, .05, 'unc');
+% :Inputs:
+%  **dat:**
+%        should be an fmri_data object with X field defined.
+%        dat.X can be a design_matrix() object.
 %
-% % Run regression with conservative threshold and save residual
-% out = regress(dat, .001, 'unc', 'residual);
+% :Optional Inputs:
+%  **[threshold, 'unc']:**
+%        p-value threshold string indicating threshold type
+%        (see help statistic_image.threshold for options)
 %
-% % Run robust regression with fdr threshold
-% out = regress(dat, .05, 'fdr','robust');
+%  **nointercept:**
+%        Do not add intercept to model
 %
-% %Run a regression predicting behavior from brain at liberal threshold
-% out  = regress(data_comb, .05, 'unc', 'brainony')
+%  **nodisplay:**
+%        Do not plot thresholded results using orthviews
 %
-% % Re-threshold at different values
-% out.t = threshold(out.t, .05, 'fdr');
-% out.t = threshold(out.t, .001, 'unc');
+%  **brainony:**
+%        univariate approach to predict obj.Y from brain data
 %
-% % Re-display results of thresholding
-% orthviews(out.t);
+%  **residual:**
+%        Output residual as fmri_data() object
 %
-% % Write out beta image to current directory
-% out.b.fullpath = fullfile(pwd,'beta.nii');
-% write(out)
+%  **noverbose:**
+%        Suppress verbose outputs
 %
-% ---------------------------------------------------------------------
-% Copyright (c) 2015 Tor Wager & Luke Chang
 %
-% Permission is hereby granted, free of charge, to any person obtaining a
-% copy of this software and associated documentation files (the "Software"),
-% to deal in the Software without restriction, including without limitation
-% the rights to use, copy, modify, merge, publish, distribute, sublicense,
-% and/or sell copies of the Software, and to permit persons to whom the
-% Software is furnished to do so, subject to the following conditions:
+% :Outputs:
 %
-% The above copyright notice and this permission notice shall be included
-% in all copies or substantial portions of the Software.
+%  **out:**
+%        A structure containing stats_img and fmri_data objects.
 %
-% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-% OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-% THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-% DEALINGS IN THE SOFTWARE.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  **out.b:**
+%        stats_img object of beta values estimated from regression
+%
+%  **out.t:**
+%        stats_img object of t-values with input threshold
+%
+%  **out.df:**
+%        fmri_data object of degrees of freedom
+%
+%  **out.sigma:**
+%        fmri_data object of variance of residual
+%
+%  **out.residual:**
+%        fmri_data object of residual data after model has been regressed out (optional). 
+%
+%
+% :Examples:
+% ::
+%
+%    % Run regression with liberal threshold
+%    out = regress(dat, .05, 'unc');
+%
+%    % Run regression with conservative threshold and save residual
+%    out = regress(dat, .001, 'unc', 'residual);
+%
+%    % Run robust regression with fdr threshold
+%    out = regress(dat, .05, 'fdr','robust');
+%
+%    % Run a regression predicting behavior from brain at liberal threshold
+%    out  = regress(data_comb, .05, 'unc', 'brainony')
+%
+%    % Re-threshold at different values
+%    out.t = threshold(out.t, .05, 'fdr');
+%    out.t = threshold(out.t, .001, 'unc');
+%
+%    % Re-display results of thresholding
+%    orthviews(out.t);
+%
+%    % Write out beta image to current directory
+%    out.b.fullpath = fullfile(pwd,'beta.nii');
+%    write(out)
+%
+% ..
+%    Copyright (c) 2015 Tor Wager & Luke Chang
+%
+%    Permission is hereby granted, free of charge, to any person obtaining a
+%    copy of this software and associated documentation files (the "Software"),
+%    to deal in the Software without restriction, including without limitation
+%    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%    and/or sell copies of the Software, and to permit persons to whom the
+%    Software is furnished to do so, subject to the following conditions:
+%
+%    The above copyright notice and this permission notice shall be included
+%    in all copies or substantial portions of the Software.
+%
+%    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%    DEALINGS IN THE SOFTWARE.
+% ..
+%
+% ..
+%    Notes:
+%    c Tor Wager, Dec 2010
+%    Edited by Luke Chang, 9/27/2012 to add optional input to reverse X & Y (i.e., create a map of voxels that predict the behavioral variable)
+%    Edited by Luke Chang, 9/28/2012 to add optional input to run robust regression for brainony
+%    Edited by Luke Chang, 10/24/2012 to save residuals (i.e., out.r), which is helpful for denoising an image
+%    Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
+%    Code completely refactored by Luke Chang 2/24/25
+%    Verbose option updated by Tor, 7/2015
+% ..
 
-%Notes:
-% c Tor Wager, Dec 2010
-% Edited by Luke Chang, 9/27/2012 to add optional input to reverse X & Y (i.e., create a map of voxels that predict the behavioral variable)
-% Edited by Luke Chang, 9/28/2012 to add optional input to run robust regression for brainony
-% Edited by Luke Chang, 10/24/2012 to save residuals (i.e., out.r), which is helpful for denoising an image
-% Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
-% Code completely refactored by Luke Chang 2/24/25
-% Verbose option updated by Tor, 7/2015
-
-% ---------------------------------------------------------------------
-% Defaults
-% ---------------------------------------------------------------------
+% ..
+%    ---------------------------------------------------------------------
+%    Defaults
+%    ---------------------------------------------------------------------
+% ..
 inputargs = {[.001], 'uncorrected'}; % default options for thresholding
 do_display = 1;
 do_x_on_brain = 1; %else do brain on Y

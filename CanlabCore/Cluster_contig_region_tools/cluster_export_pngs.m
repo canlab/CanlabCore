@@ -1,17 +1,25 @@
 function cl = cluster_export_pngs(cl,useexisting,overlay,xhairson)
-%cl = cluster_export_pngs(cl,[useexisting],[overlayimagename],[xhairson])
-%
-% save png images of SPM orthviews windows for each cluster in a set (cl
+% Save png images of SPM orthviews windows for each cluster in a set (cl
 % structure)
+%
+% :Usage:
+% ::
+%
+%    cl = cluster_export_pngs(cl,[useexisting],[overlayimagename],[xhairson])
 %
 % names from cl(x).shorttitle are used
 % useexisting is optional: 1 uses existing orthviews display (default), 0 creates a
 % new one with the clusters
 %
-% example: use existing:
-% cluster_export_pngs(cl,1,EXPT.overlay);
+% :Example:
+% ::
 %
-% tor wager, aug 3, 06
+%    % use existing
+%    cluster_export_pngs(cl, 1, EXPT.overlay);
+%
+% ..
+%    tor wager, aug 3, 06
+% ..
 
 if nargin < 2, useexisting = 1; end
 if nargin < 3, overlay = []; end

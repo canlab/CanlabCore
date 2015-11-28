@@ -1,43 +1,56 @@
 function [clusters,CLU,subclusters] = mask2clusters(P,varargin)
-%[clusters,CLU,subclusters] = mask2clusters(img mask file with voxels,[imgs to extract data from],[df])
+% Extracts clusters and con img data from mask
 %
-% tor wager
-% extracts clusters and con img data from mask
-% use with mask_intersection.m
+% Use with *mask_intersection.m*
 %
-% to get clusters but not extract data, enter only one argument.
-% to get clusters and choose extraction imgs with the GUI, enter an empty [] 2nd argument.
+% To get clusters but not extract data, enter only one argument.
+%
+% To get clusters and choose extraction imgs with the GUI, enter an empty [] 2nd argument.
+%
+% :Usage:
+% ::
+%
+%    [clusters,CLU,subclusters] = mask2clusters(img mask file with voxels,[imgs to extract data from],[df])
+%
 %
 % DOES *NOT* CONVERT BETWEEN DIFFERENT VOXEL SIZES AND POSITIONS BETWEEN IMNAMES AND SPM/VOL STRUCTS
 %
-% see also roi_probe
+% :See also: roi_probe
 %
-% modification 2/27/03
-% if no imgs are entered, Z-scores are values from mask
-% if df is entered, values in mask img are converted to Z-scores with spm_t2z.m
-% if extract img names are empty and df is entered, assume we're using values from mask as t-values
-%   and convert to Z-scores
-% 
+% If no imgs are entered, Z-scores are values from mask
+%
+% If df is entered, values in mask img are converted to Z-scores with spm_t2z.m
+%
+% If extract img names are empty and df is entered, assume we're using
+% values from mask as t-values and convert to Z-scores
+%
 % WARNING: for spm2 compatibility, ABSOLUTE VALUES of voxel sizes are
 % returned; e.g., ignores analyze flipping in SPM2.
 %
 % % Matlab 6.5/OSX bug gives seg fault or something if mask is too big.
 %
-% Examples:
+% :Example:
+% ::
 %
-% cl = mask2clusters('myimage.img',[img string mtx],[]); % no z-score
-% conversion, extracts data from [img string mtx]
+%    cl = mask2clusters('myimage.img',[img string mtx],[]); % no z-score
+%    conversion, extracts data from [img string mtx]
 %
-%cl = mask2clusters('rob_tmap_0002_filt_t_3-05_k10_neg.img')
+%    cl = mask2clusters('rob_tmap_0002_filt_t_3-05_k10_neg.img')
 %
-% This one works with already-loaded image data and a mat matrix:
-% V = spm_vol('rob_tmap_0002_filt_t_3-05_k10_neg.img'); dat = spm_read_vols(V);
-% cl = mask2clusters(dat,V.mat);
+%    % This one works with already-loaded image data and a mat matrix:
+%    V = spm_vol('rob_tmap_0002_filt_t_3-05_k10_neg.img'); dat = spm_read_vols(V);
+%    cl = mask2clusters(dat,V.mat);
 %
+%
+% ..
+%    tor wager
+%
+%    modification 2/27/03
+% ..
 
-% +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% set up inputs
-% +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% ..
+%    set up inputs
+% ..
 clusters = [];
 df = []; imP = [];  resl = 0; vmat = [];
 

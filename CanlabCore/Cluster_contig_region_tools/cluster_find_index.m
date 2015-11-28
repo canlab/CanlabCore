@@ -1,13 +1,15 @@
 function [wh_cluster, min_distance] = cluster_find_index(cl, varargin)
-%
-%function [wh_cluster, min_distance] = cluster_find_index(cl, [keep display flag, 1/0])
-%
 % Ever see an interesting blob when visualizing a clusters structure, but
 % don't know which index number in the clusters structure vector it
 % corresponds to?
 %
 % With this function, find the index number of the closest cluster to one you specify
 % graphically by clicking on.
+%
+% :Usage:
+% ::
+%
+%    function [wh_cluster, min_distance] = cluster_find_index(cl, [keep display flag, 1/0])
 %
 keepdisplay = 0;
 if length(varargin) > 0

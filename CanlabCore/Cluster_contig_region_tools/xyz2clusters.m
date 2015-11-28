@@ -1,25 +1,28 @@
 function clusters = xyz2clusters(xyz,P)
-% function cl = xyz2clusters(xyz,P)
+% Converts a 3-column x, y, z list of mm coordinates to a clusters
+% structure given P, the filename of an analyze .img file to provide
+% dimensions and voxel sizes.
 %
-% converts a 3-column x, y, z list of mm coordinates to a clusters
-% structure
-% given P, the filename of an analyze .img file to provide dimensions and
-% voxel sizes.
+% :Usage:
+% ::
+%
+%    function cl = xyz2clusters(xyz,P)
 %
 % Uses this info from the image:
-% VOL.M     % spm-style mat matrix
-% VOL.VOX   % voxel sizes
+%   - VOL.M     - spm-style mat matrix
+%   - VOL.VOX   - voxel sizes
 %
-% SPM.Z     % now 1s; could stores values in the original image in clusters.Z
+%   - SPM.Z     - now 1s; could stores values in the original image in clusters.Z
 %
-% the following is created internally:
-% SPM.XYZmm % mm coords, you input these
-% SPM.XYZ   % voxel coords
+% The following is created internally:
+%   - SPM.XYZmm - mm coords, you input these
+%   - SPM.XYZ   - voxel coords
 %
+
+V = spm_vol(P);
 
 %wh = strmatch('Thalamus',L3); whos wh
 
-V = spm_vol(P);
 
 VOL.M = V.mat;
 VOL.VOX = diag(V.mat(1:3,1:3));

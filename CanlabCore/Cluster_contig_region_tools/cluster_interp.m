@@ -1,14 +1,19 @@
 function cl = cluster_interp(cl,varargin)
-%function cl = cluster_interp(cl,maskimg,[keep sep clusters flag])
-%
 % Interpolates voxels and mm in a clusters structure (cl) to match the
 % image dimensions and voxel sizes of a target mask image.
 %
-% Example:
-% cl = cluster_interp(cl,maskimg,1);
+% :Usage:
+% ::
 %
-% default mask 2 x 2 x 2, SPM2 default:
-% cl = cluster_interp(cl,[],1);
+%    function cl = cluster_interp(cl,maskimg,[keep sep clusters flag])
+%
+% :Example:
+% ::
+%
+%    cl = cluster_interp(cl,maskimg,1);
+%
+%    %default mask 2 x 2 x 2, SPM2 default:
+%    cl = cluster_interp(cl,[],1);
 %
 
 %maskimg = which('scalped_avg152T1_graymatter_smoothed.img');

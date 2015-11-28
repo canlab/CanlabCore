@@ -1,25 +1,31 @@
 function cl = cluster_table_successive_threshold(cl,varargin)
-% cl = cluster_table_successive_threshold(cl,[sizethr])
-%
-% cluster table of a cell array of clusters cl{1} cl{2} etc.
+% Cluster table of a cell array of clusters cl{1} cl{2} etc.
 % Prints table of cl{1} and then any additional regions in cl{2:n} that are
 % not within 10 mm of a previously printed cluster
 %
-% also: merges clusters in set within 10 mm
+% Also: merges clusters in set within 10 mm
 % 
-% table titles are hard-coded to be consistent with meta-analysis toolbox right now
+% Table titles are hard-coded to be consistent with meta-analysis toolbox right now
 %
-% tor wager, oct/nov 06
+% :Usage:
+% ::
 %
-% Examples:
-% Print a series of tables with custom fields:
-% cl = cluster_table_successive_threshold(cl,5,'myfield1','myfield2')
+%    cl = cluster_table_successive_threshold(cl,[sizethr])
 %
-% use merge_nearby_clusters
-% and subclusters_from_local_max
+% :Example:
+% ::
+%
+%    % Print a series of tables with custom fields:
+%    cl = cluster_table_successive_threshold(cl,5,'myfield1','myfield2')
+%
+% Use *merge_nearby_clusters* and *subclusters_from_local_max*
 % or some other way to get clusters appropriately separated and distanced
 % before running.
 % see Meta_cluster_tools for code to run this for meta-analysis.
+%
+% ..
+%    tor wager, oct/nov 06
+% ..
 
 higher_thr = [];
 mind = 10;          % distance

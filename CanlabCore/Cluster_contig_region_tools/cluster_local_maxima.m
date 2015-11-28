@@ -1,7 +1,11 @@
-% [xyz, XYZmm, Z, class] = cluster_local_maxima(cl, [dthresh], [verbose])
-%
-% clusters are chosen so that they must be at least dthresh mm apart
+function [xyz, XYZmm, Z, class] = cluster_local_maxima(cl, dthresh, verbose)
+% Clusters are chosen so that they must be at least dthresh mm apart
 % default is 10 mm
+%
+% :Usage:
+% ::
+%
+%    [xyz, XYZmm, Z, class] = cluster_local_maxima(cl, [dthresh], [verbose])
 %
 % verbose output: 1/0, default is 0
 %
@@ -9,9 +13,10 @@
 %
 % class: vector of integers for which subcluster this cluster belongs to
 %
-% tor wager
+% ..
+%    tor wager
+% ..
 
-function [xyz, XYZmm, Z, class] = cluster_local_maxima(cl, dthresh, verbose)
     if nargin < 2 || isempty(dthresh), dthresh = 10; end
     if nargin < 3, verbose = 0; end
 

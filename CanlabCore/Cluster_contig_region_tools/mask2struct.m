@@ -1,24 +1,42 @@
 function V = mask2struct(maskname,varargin)
-% function V = mask2struct(maskname,crit_t,cl_size)
-% inputs:
-%	maskname: name of spmT, con, or filtered image
-%	without .img extension, in single quotes
-% optional inputs:
-%	crit_t, cl_size: 	critical t and cluster size at which to mask
-% 
-% output: structure compatible with SPM viewing
-% and with cluster definition algorithm tor_extract_rois
-% to extract clusters:
-% [clusters] = tor_extract_rois(maskname,V,V);
+% :Usage:
+% ::
 %
-% to display:
-% spm_image	(and choose anatomical)
-% spm_orthviews('AddBlobs',1,V.XYZ,V.Z,V.mat)
-% spm_orthviews('AddColouredBlobs',1,V.XYZ,V.Z,V.mat,[0 0 1])
+%    function V = mask2struct(maskname,crit_t,cl_size)
 %
-% to overlay on Talairach atlas
-% fixed_TSU(clusters)
+%
+% :Inputs:
+%
+%   **maskname:**
+%        name of spmT, con, or filtered image without .img extension,
+%        in single quotes
+%
+% :Optional Inputs:
+%
+%   **crit_t, cl_size::**
+%        critical t and cluster size at which to mask
 % 
+% :Outputs:
+%
+%    structure compatible with SPM viewing and with cluster definition
+%    algorithm tor_extract_rois
+%
+%
+% :Example:
+% ::
+%
+%    % to extract clusters:
+%    [clusters] = tor_extract_rois(maskname,V,V);
+%
+%    % to display:
+%    spm_image	(and choose anatomical)
+%    spm_orthviews('AddBlobs',1,V.XYZ,V.Z,V.mat)
+%    spm_orthviews('AddColouredBlobs',1,V.XYZ,V.Z,V.mat,[0 0 1])
+%
+%    % to overlay on Talairach atlas
+%    fixed_TSU(clusters)
+%
+
 crit_t = 0;
 cl_size = 0;
 numClusters = NaN;

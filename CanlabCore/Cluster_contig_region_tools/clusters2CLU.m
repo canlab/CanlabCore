@@ -1,10 +1,15 @@
 function CLU = clusters2CLU(clusters,varargin)
-    % function CLU = clusters2CLU(clusters,[opt] M)
-    %
-    % Inputting an M matrix will transform the coordinates
-    % by that M, to convert between voxel sizes, etc.
-    %
-    % by Tor Wager
+% Inputting an M matrix will transform the coordinates
+% by that M, to convert between voxel sizes, etc.
+%
+% :Usage:
+% ::
+%
+%    function CLU = clusters2CLU(clusters,[opt] M)
+%
+% ..
+%    by Tor Wager
+% ..
 
     CLU = [];
     if isempty(clusters), return, end

@@ -1,37 +1,45 @@
 function [m,V,cl] = clusters2mask(cl,V,varargin)
-    % [m,V,cl] = clusters2mask(cl,V,[opt: write Z-scores])
-    % tor wager
-    %
-    % This function has 2 modes!  If V is a structure:
-    %
-    % converts clusters structure to a mask image, given V structure with V.mat
-    % field.  V.mat is an SPM mat file. V.dim is dims of image
-    % uses cl.XYZmm
-    % m is mask img data, V is mask vol info
-    % Also replaces cl.XYZ (voxels)
-    %
-    % If V is a vector of mask dimensions:
-    %
-    % converts clusters to mask image using existing XYZ and dims of mask
-    %
-    % see also voxels2mask, for a faster function that uses XYZ voxel coords
-    %
-    % Example:
-    % Save an image file with just one cluster from a set (#7 in this ex.)
-    % cl = mask2clusters('roi_group1.img');
-    % V = spm_vol('roi_group1.img');  % we need .mat and .dim from this, or
-    % just dim
-    % [m,V,cl] = clusters2mask(cl(7),struct('mat',cl(1).M,'dim',V.dim));
-    % or
-    % [m,V,cl] = clusters2mask(cl(7),V);
-    %
-    % clusters2mask(cl,struct('mat',V.mat,'dim',V.dim),0,'spm2_hy.img');
-    %
-    % for SPM5:
-    % clusters2mask(cl,struct('mat',V.mat,'dim',V.dim, 'dt', V.dt),0,'spm2_hy.img');
-    % clusters2mask(cl,
-    % struct('mat',MC_Setup.volInfo.mat,'dim',MC_Setup.volInfo.dim, 'dt', MC_Setup.volInfo.dt),0,'acc_roi_mask.img');
-    
+% This function has 2 modes!  If V is a structure:
+%
+% :Usage:
+% ::
+%
+%    [m,V,cl] = clusters2mask(cl,V,[opt: write Z-scores])
+%
+% Converts clusters structure to a mask image, given V structure with V.mat
+% field.  V.mat is an SPM mat file. V.dim is dims of image uses cl.XYZmm
+% m is mask img data, V is mask vol info.
+%
+% Also replaces cl.XYZ (voxels)
+%
+% If V is a vector of mask dimensions:
+% converts clusters to mask image using existing XYZ and dims of mask
+%
+% :See also: voxels2mask, for a faster function that uses XYZ voxel coords
+%    
+% :Example:
+% ::
+%
+%    % Save an image file with just one cluster from a set (#7 in this ex.)
+%    cl = mask2clusters('roi_group1.img');
+%    V = spm_vol('roi_group1.img');  % we need .mat and .dim from this, or
+%
+%    % just dim
+%    [m,V,cl] = clusters2mask(cl(7),struct('mat',cl(1).M,'dim',V.dim));
+%    %or
+%    [m,V,cl] = clusters2mask(cl(7),V);
+%
+%    clusters2mask(cl,struct('mat',V.mat,'dim',V.dim),0,'spm2_hy.img');
+%
+%    %for SPM5:
+%    clusters2mask(cl,struct('mat',V.mat,'dim',V.dim, 'dt', V.dt),0,'spm2_hy.img');
+%    clusters2mask(cl,
+%    struct('mat',MC_Setup.volInfo.mat,'dim',MC_Setup.volInfo.dim, 'dt', MC_Setup.volInfo.dt),0,'acc_roi_mask.img');
+%
+% ..
+%    tor wager
+% ..
+
     global defaults
     
     fname = 'clustermask.img';

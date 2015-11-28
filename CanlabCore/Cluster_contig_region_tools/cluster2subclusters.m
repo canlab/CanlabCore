@@ -1,16 +1,16 @@
 function cl = cluster2subclusters(cl_in,class)
-% cl = cluster2subclusters(cl_in,class)
+% Take a single cluster cl_in and separate into subclusters based on
+% vector of integers class
 %
-% take a single cluster cl_in and separate into subclusters
-% based on vector of integers class
+% Class must code unique subclusters subcluster order is only preserved
+% if class contains all integers from 1 to nclasses:
 %
-% class must code unique subclusters
-% subcluster order is only preserved if class contains all integers from 1
-% to nclasses:
 % i.e., class 3 will only be in subcluster 3 if there are no missing class
 % numbers in class
 %
-% tor wager, july 06
+% ..
+%    tor wager, july 06
+% ..
 
 classes = unique(class);    % vector of class numbers
 

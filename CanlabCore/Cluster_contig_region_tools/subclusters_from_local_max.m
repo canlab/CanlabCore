@@ -1,7 +1,11 @@
-% subcl = subclusters_from_local_max(cl, dist_thresh)
-%   Breaks apart a cluster into smaller clusters
-
 function subcl = subclusters_from_local_max(cl, dist_thresh)
+% Breaks apart a cluster into smaller clusters
+%
+% :Usage:
+% ::
+%
+%    subcl = subclusters_from_local_max(cl, dist_thresh)
+
     if isempty(cl), return; end
     subcl = [];
 

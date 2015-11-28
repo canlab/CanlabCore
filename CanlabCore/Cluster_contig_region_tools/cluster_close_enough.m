@@ -1,10 +1,8 @@
 function [close_enough,outside_range,nearest_distance,closest_cluster] = cluster_close_enough(cl_match_to,cl_match,mind)
-%[close_enough,outside_range,nearest_distance,closest_cluster] = cluster_close_enough(cl_match_to,cl_match,mind)
-%
-% finds whether each cluster center in cl_match is within mind mm of a cluster
+% Finds whether each cluster center in cl_match is within mind mm of a cluster
 % center in cl_match_to.
 %
-% useful for selecting a list of clusters that are not close to another
+% Useful for selecting a list of clusters that are not close to another
 % list to, e.g., make a table of.  or this could be used to find clusters
 % in a set of correlated clusters that are close to centers in activated
 % clsuters.

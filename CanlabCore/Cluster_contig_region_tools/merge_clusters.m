@@ -1,7 +1,13 @@
-% subclusters = merge_clusters(clusters_to_match, subclusters_to_change)
-% MERGE_CLUSTERS - function for synchronizing the field list of cluster structures
-%   and merging them
 function outcl = merge_clusters(c2m, subcl)
+% Function for synchronizing the field list of cluster structures
+% and merging them
+%
+% :Usage:
+% ::
+%
+%    subclusters = merge_clusters(clusters_to_match, subclusters_to_change)
+%
+
     if isempty(c2m)
         disp('Merge clusters: Clusters to match is empty.');
         outcl = subcl;

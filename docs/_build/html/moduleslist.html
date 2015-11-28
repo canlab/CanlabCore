@@ -4965,6 +4965,611 @@ dat = threshold(dat, 0.001, &#39;unc&#39;, &#39;k&#39;, 35, &#39;mask&#39;, mask
 </dd></dl>
 
 </div>
+<div class="section" id="cluster-contig-region-tools">
+<h1>Cluster_contig_region_tools<a class="headerlink" href="#cluster-contig-region-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Cluster_contig_region_tools"></span><dl class="function">
+<dt id="Cluster_contig_region_tools.anat_subclusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">anat_subclusters</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.anat_subclusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clusters voxels within &#8216;clusters&#8217; structure based on anatomical locations
+in space.  Outputs subgroups of smaller clusters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>clout = anat_subclusters(cl,[resume at],[output cl to resume])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster2region">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster2region</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster2region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a CANlab/SCANlab &#8220;clusters&#8221; structure into a region object, the
+standard in 2011 toolbox functions and beyond.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster2subclusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster2subclusters</code><span class="sig-paren">(</span><em>cl_in</em>, <em>class</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster2subclusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a single cluster cl_in and separate into subclusters based on
+vector of integers class</p>
+<p>Class must code unique subclusters subcluster order is only preserved
+if class contains all integers from 1 to nclasses:</p>
+<p>i.e., class 3 will only be in subcluster 3 if there are no missing class
+numbers in class</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_close_enough">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_close_enough</code><span class="sig-paren">(</span><em>cl_match_to</em>, <em>cl_match</em>, <em>mind</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_close_enough" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether each cluster center in cl_match is within mind mm of a cluster
+center in cl_match_to.</p>
+<p>Useful for selecting a list of clusters that are not close to another
+list to, e.g., make a table of.  or this could be used to find clusters
+in a set of correlated clusters that are close to centers in activated
+clsuters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_export_pngs">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_export_pngs</code><span class="sig-paren">(</span><em>cl</em>, <em>useexisting</em>, <em>overlay</em>, <em>xhairson</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_export_pngs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save png images of SPM orthviews windows for each cluster in a set (cl
+structure)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">cluster_export_pngs</span><span class="p">(</span><span class="n">cl</span><span class="p">,[</span><span class="n">useexisting</span><span class="p">],[</span><span class="n">overlayimagename</span><span class="p">],[</span><span class="n">xhairson</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>names from cl(x).shorttitle are used
+useexisting is optional: 1 uses existing orthviews display (default), 0 creates a
+new one with the clusters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% use existing
+cluster_export_pngs(cl, 1, EXPT.overlay);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_find_index">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_find_index</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_find_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ever see an interesting blob when visualizing a clusters structure, but
+don&#8217;t know which index number in the clusters structure vector it
+corresponds to?</p>
+<p>With this function, find the index number of the closest cluster to one you specify
+graphically by clicking on.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [wh_cluster, min_distance] = cluster_find_index(cl, [keep display flag, 1/0])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_interp">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_interp</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_interp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Interpolates voxels and mm in a clusters structure (cl) to match the</dt>
+<dd><p class="first">image dimensions and voxel sizes of a target mask image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function cl = cluster_interp(cl,maskimg,[keep sep clusters flag])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="last highlight-python"><div class="highlight"><pre>cl = cluster_interp(cl,maskimg,1);
+
+%default mask 2 x 2 x 2, SPM2 default:
+cl = cluster_interp(cl,[],1);
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>maskimg = which(&#8216;scalped_avg152T1_graymatter_smoothed.img&#8217;);</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_intersection">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_intersection</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the intersection of the clusters passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>intersect_cl = cluster_intersection(cl1, cl2, cl3, ...)
+
+% simple intersection
+cl = cluster_intersection(robust0001_poscl(2), robust0002_poscl(4), robust0003_poscl(17));
+
+% intersection between sets of clusters
+% alternatively, see cluster_set_intersection.m
+cl = cluster_intersection(clusters2CLU(robust0001_poscl), clusters2CLU(robust0002_poscl));
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>Only works with single clusters. To compute the intersection between sets of clusters,
+use cluster_set_intersection()</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_local_maxima">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_local_maxima</code><span class="sig-paren">(</span><em>cl</em>, <em>dthresh</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_local_maxima" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clusters are chosen so that they must be at least dthresh mm apart
+default is 10 mm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[xyz, XYZmm, Z, class] = cluster_local_maxima(cl, [dthresh], [verbose])
+</pre></div>
+</div>
+<p>verbose output: 1/0, default is 0</p>
+<p>additional optional outputs (slower):</p>
+<p>class: vector of integers for which subcluster this cluster belongs to</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_set_intersection">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_set_intersection</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_set_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the intersection of the sets of clusters passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intersect_cl</span> <span class="o">=</span> <span class="n">cluster_set_intersection</span><span class="p">(</span><span class="n">cls1</span><span class="p">,</span> <span class="n">cls2</span><span class="p">,</span> <span class="n">cls3</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">cluster_intersection</span><span class="p">(</span><span class="n">robust0001_poscls</span><span class="p">,</span> <span class="n">robust0002_poscls</span><span class="p">,</span> <span class="n">robust0003_poscls</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>Designed for sets of clusters. To compute the intersection between individual clusters,
+use cluster_intersection(). cluster_set_intersection will work, but is not needed.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_table">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_table</code><span class="sig-paren">(</span><em>clusters</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print output of clusters in table</p>
+<p>Option to print text labels from Carmack atlas.</p>
+<p>Database loading is done from talairach_info.mat which should be in the 
+path.</p>
+<p>To speed up performance, load talairach_info.mat in the base workspace or
+calling function and include xyz, L3 and L5 as inputs to cluster_table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% create subclusters on the fly, prompt for labels
+cluster_table(cl);
+
+% no subclusters, no labels
+cluster_table(cl, 0, 0);
+
+% do subclusters, no labels
+cluster_table(cl, 1, 0);
+
+create subclusters on the fly, do labels
+cluster_table(cl, 1, 1);
+
+% 3 input variables following &#39;tal_info&#39; are interpreted as xyz, L3,
+% and L5 from talairach_info.mat.
+cluster_table(..., &#39;tal_info&#39;, xyz, L3, L5);
+
+% loads labels from taldata.mat (Talairach database) instead of
+% talairach_info.mat. Note that you should use the &#39;tal_info&#39; call
+% above if xyz, L3, and L5 have already been loaded to theworkspace
+% from taldata.mat. Also, if the talairach database is being used,
+% your cl.XYZmm values MUST correspond to the TALAIRACH, NOT MNI,
+% database, or the labels will be innaccurate.
+cluster_table(..., &#39;talairach&#39;);
+
+% print table to ASCII file, &#39;filename&#39;, instead of to the matlab
+% command window.
+cluster_table(..., &#39;writefile&#39;,&#39;filename&#39;);
+
+% any set of inputs from above, also print clusters.myfield in output
+cluster_table(..., &#39;myfield&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.cluster_table_successive_threshold">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">cluster_table_successive_threshold</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.cluster_table_successive_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cluster table of a cell array of clusters cl{1} cl{2} etc.
+Prints table of cl{1} and then any additional regions in cl{2:n} that are
+not within 10 mm of a previously printed cluster</p>
+<p>Also: merges clusters in set within 10 mm</p>
+<p>Table titles are hard-coded to be consistent with meta-analysis toolbox right now</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">cluster_table_successive_threshold</span><span class="p">(</span><span class="n">cl</span><span class="p">,[</span><span class="n">sizethr</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Print a series of tables with custom fields:
+cl = cluster_table_successive_threshold(cl,5,&#39;myfield1&#39;,&#39;myfield2&#39;)
+</pre></div>
+</div>
+<p>Use <em>merge_nearby_clusters</em> and <em>subclusters_from_local_max</em>
+or some other way to get clusters appropriately separated and distanced
+before running.
+see Meta_cluster_tools for code to run this for meta-analysis.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.clusters2CLU">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">clusters2CLU</code><span class="sig-paren">(</span><em>clusters</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.clusters2CLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inputting an M matrix will transform the coordinates
+by that M, to convert between voxel sizes, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function CLU = clusters2CLU(clusters,[opt] M)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.clusters2mask">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">clusters2mask</code><span class="sig-paren">(</span><em>cl</em>, <em>V</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.clusters2mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function has 2 modes!  If V is a structure:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[m,V,cl] = clusters2mask(cl,V,[opt: write Z-scores])
+</pre></div>
+</div>
+<p>Converts clusters structure to a mask image, given V structure with V.mat
+field.  V.mat is an SPM mat file. V.dim is dims of image uses cl.XYZmm
+m is mask img data, V is mask vol info.</p>
+<p>Also replaces cl.XYZ (voxels)</p>
+<p>If V is a vector of mask dimensions:
+converts clusters to mask image using existing XYZ and dims of mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">voxels2mask, for a faster function that uses XYZ voxel coords</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Save an image file with just one cluster from a set (#7 in this ex.)
+cl = mask2clusters(&#39;roi_group1.img&#39;);
+V = spm_vol(&#39;roi_group1.img&#39;);  % we need .mat and .dim from this, or
+
+% just dim
+[m,V,cl] = clusters2mask(cl(7),struct(&#39;mat&#39;,cl(1).M,&#39;dim&#39;,V.dim));
+%or
+[m,V,cl] = clusters2mask(cl(7),V);
+
+clusters2mask(cl,struct(&#39;mat&#39;,V.mat,&#39;dim&#39;,V.dim),0,&#39;spm2_hy.img&#39;);
+
+%for SPM5:
+clusters2mask(cl,struct(&#39;mat&#39;,V.mat,&#39;dim&#39;,V.dim, &#39;dt&#39;, V.dt),0,&#39;spm2_hy.img&#39;);
+clusters2mask(cl,
+struct(&#39;mat&#39;,MC_Setup.volInfo.mat,&#39;dim&#39;,MC_Setup.volInfo.dim, &#39;dt&#39;, MC_Setup.volInfo.dt),0,&#39;acc_roi_mask.img&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.image2clusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">image2clusters</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.image2clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Menu-driven function for getting clusters from an image file (e.g., a
+t-image)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = image2clusters([overlay image name])
+</pre></div>
+</div>
+<p>Can also return clusters active in two contrasts, sorted by increases in
+both, decreases in both, inc in first, dec in first
+useful for testing whether something is both activated and correlated!
+e.g., see active_plus_corr_scatterplot_plugin</p>
+<p>% :Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">pospos</span><span class="p">,</span><span class="n">negneg</span><span class="p">,</span><span class="n">posneg</span><span class="p">,</span><span class="n">negpos</span><span class="p">]</span> <span class="o">=</span> <span class="n">image2clusters</span><span class="p">(</span><span class="n">overlay</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.mask2clusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">mask2clusters</code><span class="sig-paren">(</span><em>P</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.mask2clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts clusters and con img data from mask</p>
+<p>Use with <em>mask_intersection.m</em></p>
+<p>To get clusters but not extract data, enter only one argument.</p>
+<p>To get clusters and choose extraction imgs with the GUI, enter an empty [] 2nd argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[clusters,CLU,subclusters] = mask2clusters(img mask file with voxels,[imgs to extract data from],[df])
+</pre></div>
+</div>
+<p>DOES <em>NOT</em> CONVERT BETWEEN DIFFERENT VOXEL SIZES AND POSITIONS BETWEEN IMNAMES AND SPM/VOL STRUCTS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">roi_probe</td>
+</tr>
+</tbody>
+</table>
+<p>If no imgs are entered, Z-scores are values from mask</p>
+<p>If df is entered, values in mask img are converted to Z-scores with spm_t2z.m</p>
+<p>If extract img names are empty and df is entered, assume we&#8217;re using
+values from mask as t-values and convert to Z-scores</p>
+<p>WARNING: for spm2 compatibility, ABSOLUTE VALUES of voxel sizes are
+returned; e.g., ignores analyze flipping in SPM2.</p>
+<p>% Matlab 6.5/OSX bug gives seg fault or something if mask is too big.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = mask2clusters(&#39;myimage.img&#39;,[img string mtx],[]); % no z-score
+conversion, extracts data from [img string mtx]
+
+cl = mask2clusters(&#39;rob_tmap_0002_filt_t_3-05_k10_neg.img&#39;)
+
+% This one works with already-loaded image data and a mat matrix:
+V = spm_vol(&#39;rob_tmap_0002_filt_t_3-05_k10_neg.img&#39;); dat = spm_read_vols(V);
+cl = mask2clusters(dat,V.mat);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.mask2struct">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">mask2struct</code><span class="sig-paren">(</span><em>maskname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.mask2struct" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function V = mask2struct(maskname,crit_t,cl_size)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>maskname:</strong></dt>
+<dd><p class="first last">name of spmT, con, or filtered image without .img extension,
+in single quotes</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>crit_t, cl_size::</strong></dt>
+<dd><p class="first last">critical t and cluster size at which to mask</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">structure compatible with SPM viewing and with cluster definition
+algorithm tor_extract_rois</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% to extract clusters:
+[clusters] = tor_extract_rois(maskname,V,V);
+
+% to display:
+spm_image   (and choose anatomical)
+spm_orthviews(&#39;AddBlobs&#39;,1,V.XYZ,V.Z,V.mat)
+spm_orthviews(&#39;AddColouredBlobs&#39;,1,V.XYZ,V.Z,V.mat,[0 0 1])
+
+% to overlay on Talairach atlas
+fixed_TSU(clusters)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.merge_clusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">merge_clusters</code><span class="sig-paren">(</span><em>c2m</em>, <em>subcl</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.merge_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for synchronizing the field list of cluster structures
+and merging them</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subclusters</span> <span class="o">=</span> <span class="n">merge_clusters</span><span class="p">(</span><span class="n">clusters_to_match</span><span class="p">,</span> <span class="n">subclusters_to_change</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.merge_nearby_clusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">merge_nearby_clusters</code><span class="sig-paren">(</span><em>cl</em>, <em>thr</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.merge_nearby_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge sets of clusters whose centers are all within thr mm of each other
+uses parcel_complete_sets.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">newcl</span> <span class="o">=</span> <span class="n">merge_nearby_clusters</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="n">thr</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% The command below runs the function recursively until all clusters are
+% greater than thr mm apart
+newcl = merge_nearby_clusters(cl, thr, &#39;recursive&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.subclusters_from_local_max">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">subclusters_from_local_max</code><span class="sig-paren">(</span><em>cl</em>, <em>dist_thresh</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.subclusters_from_local_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Breaks apart a cluster into smaller clusters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">subcl</span> <span class="o">=</span> <span class="n">subclusters_from_local_max</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="n">dist_thresh</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Cluster_contig_region_tools.xyz2clusters">
+<code class="descclassname">Cluster_contig_region_tools.</code><code class="descname">xyz2clusters</code><span class="sig-paren">(</span><em>xyz</em>, <em>P</em><span class="sig-paren">)</span><a class="headerlink" href="#Cluster_contig_region_tools.xyz2clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a 3-column x, y, z list of mm coordinates to a clusters
+structure given P, the filename of an analyze .img file to provide
+dimensions and voxel sizes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function cl = xyz2clusters(xyz,P)
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Uses this info from the image:</dt>
+<dd><ul class="first last simple">
+<li>VOL.M     - spm-style mat matrix</li>
+<li>VOL.VOX   - voxel sizes</li>
+<li>SPM.Z     - now 1s; could stores values in the original image in clusters.Z</li>
+</ul>
+</dd>
+<dt>The following is created internally:</dt>
+<dd><ul class="first last simple">
+<li>SPM.XYZmm - mm coords, you input these</li>
+<li>SPM.XYZ   - voxel coords</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -4981,6 +5586,7 @@ dat = threshold(dat, 0.001, &#39;unc&#39;, &#39;k&#39;, 35, &#39;mask&#39;, mask
 <li><a class="reference internal" href="#module-&#64;image_vector">image_vector</a></li>
 <li><a class="reference internal" href="#module-&#64;region">region</a></li>
 <li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>
+<li><a class="reference internal" href="#cluster-contig-region-tools">Cluster_contig_region_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

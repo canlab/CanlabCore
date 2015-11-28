@@ -1,10 +1,15 @@
 function clout = anat_subclusters(cl,varargin)
-%  clout = anat_subclusters(cl,[resume at],[output cl to resume])
-% 
 % Clusters voxels within 'clusters' structure based on anatomical locations
 % in space.  Outputs subgroups of smaller clusters.
 %
-% tor wager, 8/6/04
+% :Usage:
+% ::
+%
+%    clout = anat_subclusters(cl,[resume at],[output cl to resume])
+%
+% ..
+%    tor wager, 8/6/04
+% ..
 
 clout = []; startat = 1;
 

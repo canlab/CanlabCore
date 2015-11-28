@@ -1,16 +1,24 @@
-% newcl = merge_nearby_clusters(cl, thr)
-%
+function newcl = merge_nearby_clusters(cl, thr, varargin)
 % Merge sets of clusters whose centers are all within thr mm of each other
 % uses parcel_complete_sets.m
 %
-% The command below runs the function recursively until all clusters are >
-% thr mm apart
-% newcl = merge_nearby_clusters(cl, thr, 'recursive')
+% :Usage:
+% ::
 %
-% tor wager, nov 06
+%    newcl = merge_nearby_clusters(cl, thr)
+%
+% :Example:
+% ::
+%
+%    % The command below runs the function recursively until all clusters are
+%    % greater than thr mm apart
+%    newcl = merge_nearby_clusters(cl, thr, 'recursive')
+%
+% ..
+%    tor wager, nov 06
+% ..
 %
 
-function newcl = merge_nearby_clusters(cl, thr, varargin)
 
     if isempty(cl), newcl = []; return, end
 

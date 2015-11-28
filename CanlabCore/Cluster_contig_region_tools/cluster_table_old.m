@@ -1,5 +1,4 @@
-function clusters = cluster_table(clusters,varargin)
-% function cluster_table(clusters,[opt] subclusters)
+% function cluster_table_old(clusters,[opt] subclusters)
 % Print output of clusters in table
 % Tor Wager
 %
@@ -9,6 +8,7 @@ function clusters = cluster_table(clusters,varargin)
 % To speed up performance, declare global xyz, L3 and L5
 % in the base workspace and re-use them in repeated calls
 % to cluster_table.
+function clusters = cluster_table_old(clusters,varargin)
 
 global xyz L3 L5
 

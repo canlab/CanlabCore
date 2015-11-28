@@ -1,10 +1,10 @@
 function obj = cluster2region(cl)
-% obj = cluster2region(cl)
-%
 % Transform a CANlab/SCANlab "clusters" structure into a region object, the
 % standard in 2011 toolbox functions and beyond.
 %
-% Tor Wager, Feb 2011
+% ..
+%    Tor Wager, Feb 2011
+% ..
 
 
 N = fieldnames(cl);

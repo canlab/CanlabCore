@@ -1,18 +1,27 @@
 function varargout = image2clusters(varargin)
-% NOTE--documented usage does not appear to correspond to function
-% behavior--comment added by Jared 7/13/06
-% 
-% cl = image2clusters([overlay image name])
-%
 % Menu-driven function for getting clusters from an image file (e.g., a
 % t-image)
-% 
+%
+% :Usage:
+% ::
+%
+%    cl = image2clusters([overlay image name])
+%
 % Can also return clusters active in two contrasts, sorted by increases in
 % both, decreases in both, inc in first, dec in first
 % useful for testing whether something is both activated and correlated!
 % e.g., see active_plus_corr_scatterplot_plugin
 %
-% [pospos,negneg,posneg,negpos] = image2clusters(overlay)
+% % :Example:
+% ::
+%
+%    [pospos,negneg,posneg,negpos] = image2clusters(overlay)
+%
+% ..
+%    NOTE - documented usage does not appear to correspond to function
+%    behavior - comment added by Jared 7/13/06
+% ..
+
 
 overlay = which('scalped_single_subj_T1.img');
 if length(varargin) > 0 && ~isempty(varargin{1}), overlay = varargin{1};, end

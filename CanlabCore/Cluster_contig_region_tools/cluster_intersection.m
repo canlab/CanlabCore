@@ -1,21 +1,26 @@
-% intersect_cl = cluster_intersection(cl1, cl2, cl3, ...)
-%
+function cl = cluster_intersection(varargin)
 % Computes the intersection of the clusters passed in.
 % 
-% Sample usage:
-%   % simple intersection
-%   cl = cluster_intersection(robust0001_poscl(2), robust0002_poscl(4), robust0003_poscl(17));
-%   
-%   % intersection between sets of clusters
-%   % alternatively, see cluster_set_intersection.m
-%   cl = cluster_intersection(clusters2CLU(robust0001_poscl), clusters2CLU(robust0002_poscl));
+% :Usage:
+% ::
 %
-% NB: Only works with single clusters. To compute the intersection between sets of clusters,
+%     intersect_cl = cluster_intersection(cl1, cl2, cl3, ...)
+%
+%     % simple intersection
+%     cl = cluster_intersection(robust0001_poscl(2), robust0002_poscl(4), robust0003_poscl(17));
+%   
+%     % intersection between sets of clusters
+%     % alternatively, see cluster_set_intersection.m
+%     cl = cluster_intersection(clusters2CLU(robust0001_poscl), clusters2CLU(robust0002_poscl));
+%
+% Note:
+%   Only works with single clusters. To compute the intersection between sets of clusters,
 %   use cluster_set_intersection()
 %
-% Created by Matthew Davidson, 07/08/24
+% ..
+%    Created by Matthew Davidson, 07/08/24
+% ..
 
-function cl = cluster_intersection(varargin)
     clusters = [];
     parse_params();
     cl = blank_cluster(clusters);

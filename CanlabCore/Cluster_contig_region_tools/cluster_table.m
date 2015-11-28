@@ -1,55 +1,71 @@
 function clusters = cluster_table(clusters, varargin)
-% function cluster_table(clusters, [opt] subclusters)
 % Print output of clusters in table
-% Tor Wager
 %
-% Option to print text labels from Carmack atlas
+% Option to print text labels from Carmack atlas.
+%
 % Database loading is done from talairach_info.mat which should be in the 
 % path.
+%
 % To speed up performance, load talairach_info.mat in the base workspace or
 % calling function and include xyz, L3 and L5 as inputs to cluster_table.
 %
-% cluster_table(cl);      % create subclusters on the fly, prompt for labels
-% cluster_table(cl, 0, 0);  % no subclusters, no labels
-% cluster_table(cl, 1, 0);  % do subclusters, no labels
-% cluster_table(cl, 1, 1);  % create subclusters on the fly, do labels
-% cluster_table(..., 'tal_info', xyz, L3, L5); % 3 input variables following
-%                                'tal_info' are interpreted as xyz, L3, and
-%                                L5 from talairach_info.mat.
-% cluster_table(..., 'talairach'); % loads labels from taldata.mat
-%                                (Talairach database) instead of
-%                                talairach_info.mat. Note that you should
-%                                use the 'tal_info' call above if xyz, L3,
-%                                and L5 have already been loaded to the
-%                                workspace from taldata.mat. Also, if the
-%                                talairach database is being used, your
-%                                cl.XYZmm values MUST correspond to the
-%                                TALAIRACH, NOT MNI, database, or the
-%                                labels will be innaccurate.
-% cluster_table(..., 'writefile','filename'); % print table to ASCII file,
-%                                               'filename', instead of to
-%                                               the matlab command window.
-% cluster_table(..., 'myfield');  % any set of inputs from above, also print
-%                                   clusters.myfield in output
+% :Example:
+% ::
 %
+%    % create subclusters on the fly, prompt for labels
+%    cluster_table(cl);
 %
-% List of edits can be found in programmers' notes (edit this function)
-
-% Programmers' notes
-% Created by Tor Wager
-% Edited 10/17/06 by jared to obviate multiple calls to Carmack_get_label
-% should reduce the time it takes to get labels for clusters by 50%.
-% Also edited to allow loading of the Talairach, instead of Carmack,
-% database. 
-% Edited 9/07/06 by jared to fix incorrect behavior when using 'tal_info'
-% keyword. Added 'writefile' keyword to allow writing to file instead of
-% the command window.
-% Edited 7/13/06 by jared to obviate the use of global variables
-% Edited 7/8/06 by tor to handle Z values that are not row vectors
-%   previously returned incorrect max stats if Z is column vector
+%    % no subclusters, no labels
+%    cluster_table(cl, 0, 0);
 %
-% Edited 7/8/06 to add subclusters from spm_max functionality
-%   this is now the default
+%    % do subclusters, no labels
+%    cluster_table(cl, 1, 0);
+%
+%    create subclusters on the fly, do labels
+%    cluster_table(cl, 1, 1);
+%
+%    % 3 input variables following 'tal_info' are interpreted as xyz, L3,
+%    % and L5 from talairach_info.mat.
+%    cluster_table(..., 'tal_info', xyz, L3, L5);
+%
+%    % loads labels from taldata.mat (Talairach database) instead of
+%    % talairach_info.mat. Note that you should use the 'tal_info' call
+%    % above if xyz, L3, and L5 have already been loaded to theworkspace
+%    % from taldata.mat. Also, if the talairach database is being used,
+%    % your cl.XYZmm values MUST correspond to the TALAIRACH, NOT MNI,
+%    % database, or the labels will be innaccurate.
+%    cluster_table(..., 'talairach');
+%
+%    % print table to ASCII file, 'filename', instead of to the matlab
+%    % command window.
+%    cluster_table(..., 'writefile','filename');
+%
+%    % any set of inputs from above, also print clusters.myfield in output
+%    cluster_table(..., 'myfield');
+%
+% ..
+%    Tor Wager
+%
+%    List of edits can be found in programmers' notes (edit this function)
+%
+%    Programmers' notes
+%
+%    Edited 10/17/06 by jared to obviate multiple calls to Carmack_get_label
+%    should reduce the time it takes to get labels for clusters by 50%.
+%    Also edited to allow loading of the Talairach, instead of Carmack,
+%    database. 
+%
+%    Edited 9/07/06 by jared to fix incorrect behavior when using 'tal_info'
+%    keyword. Added 'writefile' keyword to allow writing to file instead of
+%    the command window.
+%
+%    Edited 7/13/06 by jared to obviate the use of global variables
+%
+%    Edited 7/8/06 by tor to handle Z values that are not row vectors
+%    previously returned incorrect max stats if Z is column vector
+%
+%    Edited 7/8/06 to add subclusters from spm_max functionality
+%    this is now the default
 
 verbose = 1;
 subc = 1;

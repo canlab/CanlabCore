@@ -1,5 +1,4 @@
 function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat, varargin)
-
 % This function prepares data for connectivity analysis by removing nuisance
 % variables and temporal filtering (high, low, or bandpass filter). This also
 % can extract values from given masks and return averaged activity or pattern

@@ -1,14 +1,20 @@
-% returns the conjunction of two statistic_images.  considers positive and
+function conj = conjunction(si1, si2, varargin)
+% Returns the conjunction of two statistic_images.  considers positive and
 % negative activations separately.
 %
-% input:  two thresholded statistic images.  Optional 3rd argument:  -1 to
+% :Inputs:
+%
+%   Two thresholded statistic images.  Optional 3rd argument:  -1 to
 % get only negative conjunction, or 1 to get only positive conjunction
 %
-% output:  a statistic_image with all voxels suprathreshold (in the same direction) in both input
+% :Output:
+%
+%   A statistic_image with all voxels suprathreshold (in the same direction) in both input
 % images.  Voxel values are set to 1 and -1, to indicate direction.
 %
-% Yoni Ashar, Sept. 2015
-function conj = conjunction(si1, si2, varargin)
+% ..
+%    Yoni Ashar, Sept. 2015
+% ..
 
 direction = 0; % default: both pos and neg
 if nargin > 2

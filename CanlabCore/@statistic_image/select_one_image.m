@@ -1,8 +1,12 @@
 function obj = select_one_image(obj, wh)
-% obj = select_one_image(obj, wh)
 %
-% obj: A statistic_image object
-% wh : An integer for which image in a series of images stored in obj you want
+% :Inputs:
+%
+%   **obj:**
+%        A statistic_image object
+%
+%   **wh:**
+%        An integer for which image in a series of images stored in obj you want
 
 myfields = {'p' 'ste' 'sig' 'dat'};
 

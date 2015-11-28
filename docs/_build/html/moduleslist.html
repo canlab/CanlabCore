@@ -4564,6 +4564,407 @@ and named if entered as optional input</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-&#64;statistic_image">
+<span id="statistic-image"></span><h1>statistic_image<a class="headerlink" href="#module-@statistic_image" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="&#64;statistic_image.conjunction">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">conjunction</code><span class="sig-paren">(</span><em>si1</em>, <em>si2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.conjunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the conjunction of two statistic_images.  considers positive and
+negative activations separately.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">Two thresholded statistic images.  Optional 3rd argument:  -1 to</td>
+</tr>
+</tbody>
+</table>
+<p>get only negative conjunction, or 1 to get only positive conjunction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body">A statistic_image with all voxels suprathreshold (in the same direction) in both input</td>
+</tr>
+</tbody>
+</table>
+<p>images.  Voxel values are set to 1 and -1, to indicate direction.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.convert2mask">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">convert2mask</code><span class="sig-paren">(</span><em>stats_image_obj</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.convert2mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts each image in a statistic_image object into a mask object, based
+on significant voxels in the .sig field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">region</span><span class="p">(</span><span class="n">convert2mask</span><span class="p">(</span><span class="n">timg</span><span class="p">),</span> <span class="n">group</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.multi_threshold">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">multi_threshold</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.multi_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiple threshold function for statistic_image object for visualization</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[o2, sig, pcl, ncl] = multi_threshold(dat, [optional inputs])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">a statistic_image object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>poscolors:</strong></dt>
+<dd><p class="first last">followed by cell array of colors for positive values, one per thresh</p>
+</dd>
+<dt><strong>negcolors:</strong></dt>
+<dd><p class="first last">followed by cell array of colors for negative values, one per thresh</p>
+</dd>
+<dt><strong>thresh:</strong></dt>
+<dd><p class="first last">followed vector of p-value thresholds, one per thresh</p>
+</dd>
+<dt><strong>sizethresh:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by vector of cluster sizes, one per thresh</dt>
+<dd><ul class="first last simple">
+<li>this &#8216;prunes&#8217; by default, so sizes after first can be 1
+voxel</li>
+<li>Default thresholds: thresh = [.001 .005 .05],
+10 voxels at .001, &#8220;pruned&#8221;</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>nodisplay:</strong></dt>
+<dd><p class="first last">suppress fmridisplay</p>
+</dd>
+<dt><strong>o2:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by an existing fmridisplay object</dt>
+<dd><ul class="first last simple">
+<li>will remove blobs and re-use montages</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>o2:</strong></dt>
+<dd><p class="first last">handle to fmridisplay object created by default</p>
+</dd>
+<dt><strong>sig:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>vector of significant voxels at each thresh, for each region</dt>
+<dd><ul class="first simple">
+<li>cell array of images in object with matrix of values</li>
+</ul>
+<p class="last">for each threshold</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>pcl:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>positive valued clusters cell, one cell per threshold</dt>
+<dd><ul class="first last simple">
+<li>FIRST image in object only</li>
+<li>pass into mediation_brain_surface_figs.m</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>ncl:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>positive valued clusters cell, one cell per threshold</dt>
+<dd><ul class="first last simple">
+<li>FIRST image in object only</li>
+<li>pass into mediation_brain_surface_figs.m</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[o2, sig, poscl, negcl] = multi_threshold(hr_intercept, &#39;nodisplay&#39;);
+mediation_brain_surface_figs(poscl, negcl);
+
+% Create empty montage set and (re)use it:
+o2 = canlab_results_fmridisplay([], &#39;compact2&#39;, &#39;noverbose&#39;);
+o2 = multi_threshold(out.t, &#39;o2&#39;, o2);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>mediation_brain_surface_figs, iimg_multi_threshold, mediation_brain_results</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.orthviews">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">orthviews</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.orthviews" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orthviews display (SPM) for CANlab object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = orthviews(image_object)
+
+% OR
+
+cl = orthviews(image_object, handle_number of existing orthviews)
+</pre></div>
+</div>
+<p>Output is clusters structure (see also region.m)</p>
+<p>Pass in &#8216;largest_region&#8217; to center the orthviews on the largest region in the  image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% T-test, Construct a stats_image object, threshold and display:
+statsimg = ttest(fmridat, .001, &#39;unc&#39;);
+
+% Re-threshold and display:
+statsimg = threshold(statsimg, .000001, &#39;unc&#39;);
+orthviews(statsimg);
+
+statsimg = threshold(statsimg, .01, &#39;fdr&#39;);
+orthviews(statsimg);
+
+% Create an orthviews and view at multiple thresholds in different panes:
+overlay = which(&#39;SPM8_colin27T1_seg.img&#39;);
+spm_check_registration(repmat(overlay, n, 1));
+statsimg = ttest(fmridat);
+statsimg = threshold(statsimg, .001, &#39;unc&#39;);
+orthviews(statsimg, &#39;handle&#39;, 1);
+
+statsimg = threshold(statsimg, .000001, &#39;unc&#39;);
+orthviews(statsimg, &#39;handle&#39;, 2);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">statistic_image.multi_threshold</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.reparse_contiguous">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">reparse_contiguous</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.reparse_contiguous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-construct list of contiguous voxels in an image based on in-image
+voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
+Results are saved in obj.volInfo.cluster.
+xyzlist can be generated from iimg_read_img, and is done automatically by
+object-oriented fMRI image classes (fmri_image, image_vector,
+statistic_image)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">reparse_contiguous</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;nonempty&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If &#8216;nonempty&#8217; is entered as an optional argument, will use only voxels
+that are non-zero, non-nan in the first column of obj.dat.</p>
+<p>The statistic_image object version of reparse_contiguous uses 
+the significance of the first image in the object (obj.sig(:, 1)) as a
+filter as well, so clustering will be based on the latest threshold applied.
+it is not usually necessary to enter &#8216;nonempty&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Given timg, a statistic_image object:
+test = reparse_contiguous(timg, &#39;nonempty&#39;);
+cl = region(test, &#39;contiguous_regions&#39;);
+cluster_orthviews(cl, &#39;unique&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.select_one_image">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">select_one_image</code><span class="sig-paren">(</span><em>obj</em>, <em>wh</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.select_one_image" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">A statistic_image object</p>
+</dd>
+<dt><strong>wh:</strong></dt>
+<dd><p class="first last">An integer for which image in a series of images stored in obj you want</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;statistic_image.threshold">
+<code class="descclassname">&#64;statistic_image.</code><code class="descname">threshold</code><span class="sig-paren">(</span><em>stats_image_obj</em>, <em>input_threshold</em>, <em>thresh_type</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Threshold statistic_image object based on statistical threshold values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, [&#39;k&#39;, extent_thresh])
+</pre></div>
+</div>
+<p>This is a method for an statistic_image object.
+Thresholding is reversible.</p>
+<dl class="docutils">
+<dt>For objects: Type methods(object_name) for a list of special commands</dt>
+<dd>Type help object_name.method_name for help on specific
+methods.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>stats_image_obj:</strong></dt>
+<dd><p class="first last">statistic_image object</p>
+</dd>
+<dt><strong>input_threshold:</strong></dt>
+<dd><p class="first last">[pvalthreshold or other thresh]
+A numeric value corresponding to the threshold desired.
+Either a p-value or a range of raw values, depending on the threshold
+type.</p>
+</dd>
+<dt><strong>thresh_type:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Threshold type which can be one of:</dt>
+<dd><ul class="first last simple">
+<li>&#8216;fdr&#8217; : FDR-correct based on p-values already stored in image .p field</li>
+<li>&#8216;fwe&#8217; : FWE-correct; not implemented</li>
+<li>&#8216;bfr&#8217; : Bonferroni correction (FWE).</li>
+<li>&#8216;unc&#8217; : Uncorrected p-value threshold: p-value, e.g., .05 or .001</li>
+<li>&#8216;raw-between&#8217; : threshold raw image values; save those &gt; input_threshold(1) and &lt; input_threshold(2)</li>
+<li>&#8216;raw-outside&#8217; : threshold raw image values; save those &lt; input_threshold(1) or &gt; input_threshold(2)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">Followed by cluster extent in voxels: extent-based thresholding of any of the above</p>
+</dd>
+<dt><strong>noverbose:</strong></dt>
+<dd><p class="first last">Suppress verbose output</p>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Followed by name of mask or fmri_mask_image object</dt>
+<dd><ul class="first last simple">
+<li>this will affect corrected significance levels</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>stats_image_obj:</strong></dt>
+<dd><p class="first last">thresholded statistic_image object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Retain sig pos or neg results at p &lt; .001 uncorrected, cluster extent &gt;= 100 voxels
+obj = threshold(obj, .001, &#39;unc&#39;, &#39;k&#39;, 100)
+
+% Retain sig pos or neg results at q &lt; .05 FDR, cluster extent &gt;= 10 voxels
+obj = threshold(obj, .05, &#39;fdr&#39;, &#39;k&#39;, 10)
+
+% Retain voxels with absolute statistic/data value &gt; 3
+obj = threshold(obj, [-3 3], &#39;raw-outside&#39;)
+
+dat = threshold(dat, 0.001, &#39;unc&#39;, &#39;k&#39;, 35, &#39;mask&#39;, which(&#39;scalped_avg152T1_graymatter_smoothed.img&#39;));
+dat = threshold(dat, 0.001, &#39;unc&#39;, &#39;k&#39;, 35, &#39;mask&#39;, maskobj);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>image_vector.threshold, statistic_image.multi_threshold</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -4579,6 +4980,7 @@ and named if entered as optional input</p>
 <li><a class="reference internal" href="#module-&#64;fmri_model">fmri_model</a></li>
 <li><a class="reference internal" href="#module-&#64;image_vector">image_vector</a></li>
 <li><a class="reference internal" href="#module-&#64;region">region</a></li>
+<li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>
 </ul>
 
   <h4>Previous topic</h4>

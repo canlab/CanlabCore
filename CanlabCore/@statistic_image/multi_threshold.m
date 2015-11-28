@@ -1,12 +1,14 @@
 function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 % Multiple threshold function for statistic_image object for visualization
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [o2, sig, pcl, ncl] = multi_threshold(dat, [optional inputs])
+% :Usage:
+% ::
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%    [o2, sig, pcl, ncl] = multi_threshold(dat, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2013  Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -21,63 +23,81 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat           a statistic_image object
+% :Inputs:
 %
-% Optional inputs:
-% 'poscolors'   followed by cell array of colors for positive values, one per thresh
-% 'negcolors'   followed by cell array of colors for negative values, one per thresh
-% 'thresh'      followed vector of p-value thresholds, one per thresh
-% 'sizethresh'  followed by vector of cluster sizes, one per thresh
-%               - this 'prunes' by default, so sizes after first can be 1
-%               voxel
+%   **dat:**
+%        a statistic_image object
 %
-%               Default thresholds: thresh = [.001 .005 .05],
-%               10 voxels at .001, "pruned"
+% :Optional Inputs:
 %
-% 'nodisplay'   suppress fmridisplay
-% 'o2'           followed by an existing fmridisplay object
-%               - will remove blobs and re-use montages
+%   **poscolors:**
+%        followed by cell array of colors for positive values, one per thresh
+%
+%   **negcolors:**
+%        followed by cell array of colors for negative values, one per thresh
+%
+%   **thresh:**
+%        followed vector of p-value thresholds, one per thresh
+%
+%   **sizethresh:**
+%        followed by vector of cluster sizes, one per thresh
+%           - this 'prunes' by default, so sizes after first can be 1
+%             voxel
+%           - Default thresholds: thresh = [.001 .005 .05],
+%             10 voxels at .001, "pruned"
+%
+%   **nodisplay:**
+%        suppress fmridisplay
+%
+%   **o2:**
+%        followed by an existing fmridisplay object
+%           - will remove blobs and re-use montages
 %
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% o2            handle to fmridisplay object created by default
-% sig           vector of significant voxels at each thresh, for each region
+% :Outputs:
+%
+%   **o2:**
+%        handle to fmridisplay object created by default
+%
+%   **sig:**
+%        vector of significant voxels at each thresh, for each region
 %               - cell array of images in object with matrix of values
 %               for each threshold
-% pcl           - positive valued clusters cell, one cell per threshold
-%               - FIRST image in object only
-%               - pass into mediation_brain_surface_figs.m
-% ncl           - positive valued clusters cell, one cell per threshold
-%               - FIRST image in object only
-%               - pass into mediation_brain_surface_figs.m
 %
-% Examples:
-% -------------------------------------------------------------------------
+%   **pcl:**
+%        positive valued clusters cell, one cell per threshold
+%           - FIRST image in object only
+%           - pass into mediation_brain_surface_figs.m
 %
-% [o2, sig, poscl, negcl] = multi_threshold(hr_intercept, 'nodisplay');
-% mediation_brain_surface_figs(poscl, negcl);
+%   **ncl:**
+%        positive valued clusters cell, one cell per threshold
+%           - FIRST image in object only
+%           - pass into mediation_brain_surface_figs.m
 %
-% Create empty montage set and (re)use it:
-% o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
-% o2 = multi_threshold(out.t, 'o2', o2);
+% :Examples:
+% ::
 %
-% See also:
-% mediation_brain_surface_figs, iimg_multi_threshold,
-% mediation_brain_results
-
-% Programmers' notes:
-% List dates and changes here, and author of changes
-
-
-
-%o2 = [];
+%    [o2, sig, poscl, negcl] = multi_threshold(hr_intercept, 'nodisplay');
+%    mediation_brain_surface_figs(poscl, negcl);
+%
+%    % Create empty montage set and (re)use it:
+%    o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
+%    o2 = multi_threshold(out.t, 'o2', o2);
+%
+% :See also:
+% mediation_brain_surface_figs, iimg_multi_threshold, mediation_brain_results
+%
+% ..
+%    Programmers' notes:
+%    List dates and changes here, and author of changes
+% ..
 
 poscolors = {[1 1 0] [1 .5 0] [.7 0 0]};
 negcolors = {[0 0 1] [0 .5 1] [.4 0 .7]};
+
+%o2 = [];
 
 thresh = [.001 .005 .05];
 sizethresh = [10 1 1];

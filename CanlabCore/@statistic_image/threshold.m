@@ -1,20 +1,21 @@
 function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_type, varargin)
-%
 % Threshold statistic_image object based on statistical threshold values.
 %
-% Usage:
-% -------------------------------------------------------------------------
-% stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, ['k', extent_thresh])
+% :Usage:
+% ::
 %
-% - This is a method for an statistic_image object
-% - Thresholding is reversible
+%    stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, ['k', extent_thresh])
+%
+% This is a method for an statistic_image object.
+% Thresholding is reversible.
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
 %              methods.
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2015 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -29,61 +30,73 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% stats_image_obj   statistic_image object
-% input_threshold   [pvalthreshold or other thresh]
-%                   A numeric value corresponding to the threshold desired.
-%                   Either a p-value or a range of raw values, depending on the threshold
-%                   type.
+% :Inputs:
 %
-% thresh_type       Threshold type
-%                   can be one of:
-%                   'fdr' : FDR-correct based on p-values already stored in image .p field
-%                   'fwe' : FWE-correct; not implemented
-%                   'bfr' : Bonferroni correction (FWE).
-%                   'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
+%   **stats_image_obj:**
+%        statistic_image object
 %
-%                   'raw-between' : threshold raw image values; save those > input_threshold(1) and < input_threshold(2)
-%                   'raw-outside' : threshold raw image values; save those < input_threshold(1) or > input_threshold(2)
+%   **input_threshold:**
+%        [pvalthreshold or other thresh]
+%        A numeric value corresponding to the threshold desired.
+%        Either a p-value or a range of raw values, depending on the threshold
+%        type.
 %
-% Optional arguments:
-% 'k'               Followed by cluster extent in voxels: extent-based thresholding of any of the above
-% 'noverbose'       Suppress verbose output
-% 'mask'            Followed by name of mask or fmri_mask_image object
-%                   - this will affect corrected significance levels
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% stats_image_obj   thresholded statistic_image object
+%   **thresh_type:**
+%        Threshold type which can be one of:
+%          - 'fdr' : FDR-correct based on p-values already stored in image .p field
+%          - 'fwe' : FWE-correct; not implemented
+%          - 'bfr' : Bonferroni correction (FWE).
+%          - 'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
+%          - 'raw-between' : threshold raw image values; save those > input_threshold(1) and < input_threshold(2)
+%          - 'raw-outside' : threshold raw image values; save those < input_threshold(1) or > input_threshold(2)
 %
-% Examples:
-% -------------------------------------------------------------------------
+% :Optional Inputs:
 %
-% % -> Retain sig pos or neg results at p < .001 uncorrected, cluster extent >= 100 voxels
-% obj = threshold(obj, .001, 'unc', 'k', 100)
+%   **k:**
+%        Followed by cluster extent in voxels: extent-based thresholding of any of the above
 %
-% % -> Retain sig pos or neg results at q < .05 FDR, cluster extent >= 10 voxels
-% obj = threshold(obj, .05, 'fdr', 'k', 10)
+%   **noverbose:**
+%        Suppress verbose output
 %
-% -> Retain voxels with absolute statistic/data value > 3
-% obj = threshold(obj, [-3 3], 'raw-outside')
+%   **mask:**
+%        Followed by name of mask or fmri_mask_image object
+%          - this will affect corrected significance levels
 %
-% e.g. dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', which('scalped_avg152T1_graymatter_smoothed.img'));
-%      dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', maskobj);
+% :Outputs:
 %
-% See also:
-% -------------------------------------------------------------------------
+%  **stats_image_obj:**
+%        thresholded statistic_image object
+%
+% :Example:
+% ::
+%
+%    % Retain sig pos or neg results at p < .001 uncorrected, cluster extent >= 100 voxels
+%    obj = threshold(obj, .001, 'unc', 'k', 100)
+%
+%    % Retain sig pos or neg results at q < .05 FDR, cluster extent >= 10 voxels
+%    obj = threshold(obj, .05, 'fdr', 'k', 10)
+%
+%    % Retain voxels with absolute statistic/data value > 3
+%    obj = threshold(obj, [-3 3], 'raw-outside')
+%
+%    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', which('scalped_avg152T1_graymatter_smoothed.img'));
+%    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', maskobj);
+%
+% :See also:
 % image_vector.threshold, statistic_image.multi_threshold
-
-% Programmers' notes:
-% Created by Tor Wager, Dec 2010
-% Tor: Updated documentation, July 2015
 %
-% 7/19/2013: added 'mask' and 'bfr'(bonferroni) option by Wani Woo.
-%   With the 'mask' option, you can define a space for the multiple comparison
-%   correction.
+% ..
+%    Programmers' notes:
+%    Created by Tor Wager, Dec 2010
+%    Tor: Updated documentation, July 2015
+%
+%    7/19/2013: added 'mask' and 'bfr'(bonferroni) option by Wani Woo.
+%    With the 'mask' option, you can define a space for the multiple comparison
+%    correction.
+% ..
 
 k = 1;
 doverbose = 1;

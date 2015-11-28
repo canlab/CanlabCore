@@ -1,42 +1,44 @@
 function cl = orthviews(image_obj, varargin)
-%
-% ---------------------------------------------------------------
 % Orthviews display (SPM) for CANlab object
-% ---------------------------------------------------------------
 %
-% cl = orthviews(image_object)
+% :Usage:
+% ::
 %
-% OR
+%    cl = orthviews(image_object)
 %
-% cl = orthviews(image_object, handle_number of existing orthviews)
+%    % OR
+%
+%    cl = orthviews(image_object, handle_number of existing orthviews)
 %
 % Output is clusters structure (see also region.m)
 %
 % Pass in 'largest_region' to center the orthviews on the largest region in the  image
 %
 %
-% e.g., 
-% T-test, Construct a stats_image object, threshold and display:
-% statsimg = ttest(fmridat, .001, 'unc');
+% :Example:
+% ::
 %
-% Re-threshold and display:
-% statsimg = threshold(statsimg, .000001, 'unc');
-% orthviews(statsimg);
-% 
-% statsimg = threshold(statsimg, .01, 'fdr');
-% orthviews(statsimg);
+%    % T-test, Construct a stats_image object, threshold and display:
+%    statsimg = ttest(fmridat, .001, 'unc');
 %
-% Create an orthviews and view at multiple thresholds in different panes:
-% overlay = which('SPM8_colin27T1_seg.img');
-% spm_check_registration(repmat(overlay, n, 1));
-% statsimg = ttest(fmridat);
-% statsimg = threshold(statsimg, .001, 'unc');
-% orthviews(statsimg, 'handle', 1);
+%    % Re-threshold and display:
+%    statsimg = threshold(statsimg, .000001, 'unc');
+%    orthviews(statsimg);
 %
-% statsimg = threshold(statsimg, .000001, 'unc');
-% orthviews(statsimg, 'handle', 2);
+%    statsimg = threshold(statsimg, .01, 'fdr');
+%    orthviews(statsimg);
 %
-% See also: statistic_image.multi_threshold
+%    % Create an orthviews and view at multiple thresholds in different panes:
+%    overlay = which('SPM8_colin27T1_seg.img');
+%    spm_check_registration(repmat(overlay, n, 1));
+%    statsimg = ttest(fmridat);
+%    statsimg = threshold(statsimg, .001, 'unc');
+%    orthviews(statsimg, 'handle', 1);
+%
+%    statsimg = threshold(statsimg, .000001, 'unc');
+%    orthviews(statsimg, 'handle', 2);
+%
+% :See also: statistic_image.multi_threshold
 
 input_handle = [];
 cl = [];

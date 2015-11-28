@@ -33,3 +33,8 @@ region
 ===============
 .. automodule:: @region
    :members:
+
+statistic_image
+===============
+.. automodule:: @statistic_image
+   :members:

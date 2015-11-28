@@ -1,12 +1,15 @@
 function obj = reparse_contiguous(obj, varargin)
-% obj = reparse_contiguous(obj, ['nonempty'])
-%
 % Re-construct list of contiguous voxels in an image based on in-image
 % voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
 % Results are saved in obj.volInfo.cluster.
 % xyzlist can be generated from iimg_read_img, and is done automatically by
 % object-oriented fMRI image classes (fmri_image, image_vector,
 % statistic_image)
+%
+% :Usage:
+% ::
+%
+%    obj = reparse_contiguous(obj, ['nonempty'])
 %
 % If 'nonempty' is entered as an optional argument, will use only voxels
 % that are non-zero, non-nan in the first column of obj.dat.
@@ -16,17 +19,20 @@ function obj = reparse_contiguous(obj, varargin)
 % filter as well, so clustering will be based on the latest threshold applied.
 % it is not usually necessary to enter 'nonempty'.
 %
-% Examples:
-% ----------------------------------------
-% Given timg, a statistic_image object:
-% test = reparse_contiguous(timg, 'nonempty');
-% cl = region(test, 'contiguous_regions');
-% cluster_orthviews(cl, 'unique')
+% :Example:
+% ::
 %
-% copyright tor wager, 2011
-
-% Programmers' notes:
-% 6/22/14: Tor changed behavior to use .sig field
+%    % Given timg, a statistic_image object:
+%    test = reparse_contiguous(timg, 'nonempty');
+%    cl = region(test, 'contiguous_regions');
+%    cluster_orthviews(cl, 'unique')
+%
+% ..
+%    Copyright tor wager, 2011
+%
+%    Programmers' notes:
+%    6/22/14: Tor changed behavior to use .sig field
+% ..
 
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 obj.volInfo(1).cluster = zeros(size(wh));

@@ -2,13 +2,13 @@ function mask = convert2mask(stats_image_obj)
 % Converts each image in a statistic_image object into a mask object, based
 % on significant voxels in the .sig field.
 %
-% mask1 = convert2mask(stats_image_obj)
 %
-% Examples
-% cl = region(convert2mask(timg), group)
+% :Example:
+% ::
+%
+%    cl = region(convert2mask(timg), group)
 
-% Copy into a mask image
-mask = fmri_mask_image(stats_image_obj);
+mask = fmri_mask_image(stats_image_obj); % Copy into a mask image
 
 % set dat to sig, and copy over other key fields
 mask.dat = double(stats_image_obj.sig);

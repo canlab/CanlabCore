@@ -129,6 +129,15 @@ for i = 1:length(varargin)
                 mask = vararagin{i + 1}; varargin{i + 1} = [];
                 
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
+            case 'compareGroups'
+                compareGroups = true;
+                group = varargin{i+1};
+                
+                
+            case 'groupNames'
+                
+                numGroups=length(unique(varargin{i+1}));
+                g=varargin{i+1};
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -140,7 +149,7 @@ switch mapset
     
     case 'bucknerlab'
         [mask, networknames] = load_bucknerlab_maps;
-        
+        networknames=networknames';
     case 'npsplus'
         [mask, networknames] = load_npsplus;
 

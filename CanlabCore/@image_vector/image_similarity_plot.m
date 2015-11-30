@@ -41,6 +41,22 @@ function stats = image_similarity_plot(obj, varargin)
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
 %
+%   **bucknerlab**  
+%        Use 7 network parcellation from Yeo et al. as basis for
+%        comparisons
+%
+%   **kragelemotion**   
+%        Use 7 emotion-predictive models from Kragel & LaBar 2015 for 
+%        basis of comparisons
+%
+% 	**compareGroups**   
+%        Perform multiple one-way ANOVAs with group as a factor (one for 
+%        each spatial basis); requires group as subsequent input
+%
+%   **group**
+%        Indicates group membership for each image
+%
+%
 % :Outputs:
 %
 %   **stats:**
@@ -51,6 +67,18 @@ function stats = image_similarity_plot(obj, varargin)
 %             customize
 %           - .fill_handles Handles to polar plot fills so you can
 %             customize
+%           - .table_spatial, ANOVA table with subject as row factor and 
+%             spatial basis as column factor (one way repeated measures
+%             ANOVA, requires 'average' to be specified)
+%           - .multcomp_spatial, multiple comparisons of means across
+%             different spatial bases, critical value determined 
+%             by Tukey-Kramer method (see multcompare)
+%           - .table_group, multiple one-way ANOVA tables (one for each 
+%             spatial basis) with group as column factor (requires
+%             'average' to be specified)
+%           - .multcomp_group, mutiple comparisons of means across
+%             groups, one output cell for each spatial basis, critical 
+%             value determined by Tukey-Kramer method (see multcompare)
 %
 % :Examples:
 % ::
@@ -69,6 +97,12 @@ function stats = image_similarity_plot(obj, varargin)
 % ..
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
+% List dates and changes here, and author of changes
+% 11/30/2015 (Phil Kragel) 
+%   -   added anova (rm) comparing means across spatial bases 
+%   -   added anova (1-way) comparing means across groups for each spatial
+%       basis (e.g., for each buckner network)
+
 % ..
 
 % ..
@@ -172,14 +206,39 @@ elseif doaverage
     set(hh{1}(2), 'LineWidth', 4);
     set(hhfill{1}([3]), 'FaceAlpha', 1, 'FaceColor', 'w');
     
+    z=fisherz(r');
     %[h, p, ci, stat] = ttest(r');
-    [h, p, ci, stat] = ttest(fisherz(r'));
+    [h, p, ci, stat] = ttest(z);
     stats.descrip = 'T-test on Fisher''s r to Z transformed point-biserial correlations';
     stats.networknames = networknames;
     stats.p = p';
     stats.sig = h';
     stats.t = stat.tstat';
     stats.df = stat.df';
+    
+    %perform repeated measures anova  (two way anova with subject as the
+    %row factor
+    [~, stats.table_spatial st]=anova2(z,1,'off');
+    [c,~] = multcompare(st,'Display','off');
+    stats.multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:6))];
+    
+    % perform one-way anova across groups
+    
+    if exist('compareGroups','var')
+        
+        if ~exist('numGroups','var')
+             numGroups=length(unique(group));
+             g=num2cell(1:numGroups); 
+        end
+        
+        
+        for i=1:size(z,2)
+       [p stats.table_group{i} st]=anova1(z(:,i),group,'off');
+       [c,~] = multcompare(st,'Display','off');
+       stats.multcomp_group{i}=[g(c(:,1))', g(c(:,2))', num2cell(c(:,3:6))];
+
+        end
+    end
     
     disp('Table of correlations');
     disp('--------------------------------------');

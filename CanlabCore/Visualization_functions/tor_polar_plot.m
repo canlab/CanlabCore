@@ -15,9 +15,11 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 % 'nofigure'    suppress figure
 % 'nonneg'      make all values non-negative by subtracting min value from all values in series (plot)
 % 'nofill'      Do not fill in polygons
+% 'nonumbers'   Suppress numbers (values on polar axis)
 %
 % Outputs:
 % hh            Handles to line objects
+% hhfill        Handles to fill object
 %
 % e.g.,
 % tor_polar_plot({w+1}, {'r' 'b'}, setnames(1))
@@ -29,6 +31,7 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 dofigure = 1;
 dofill = 1;
 dononneg = 0;
+donumbers = 1;
 
 p = length(vals); % plots
 
@@ -51,6 +54,10 @@ end
 
 if any(strcmp(varargin, 'nofill'))
     dofill = 0;
+end
+
+if any(strcmp(varargin, 'nonumbers'))
+    donumbers = 0;
 end
 
 for s = 1:p
@@ -122,7 +129,7 @@ for s = 1:p
     % ------------------------------------------------------------
     
     for i = 1:k
-
+        
         ang = linspace(0, 2*pi, k + 1);
         
         [X, Y] = pol2cart(ang, maxval);
@@ -142,25 +149,38 @@ for s = 1:p
         
         for j = 1:length(names{s})
             x = X(j);
-            if x < 0, x = x - range(xlim)*.02*length(names{s}{j}); end
+            %if x < 0, x = x - range(xlim)*.01*length(names{s}{j}); end
             
             y = Y(j);
-            y = y + sign(y) * range(ylim)* .04;
+            %y = y + sign(y) * range(ylim)* .04;
             
             texth(j) = text(x, y, names{s}{j}, 'FontSize', 14);
+            
+            myang = ang(j) * 360 / (2*pi);
+            if myang > 90 && myang < 270
+                myang = myang - 180;
+                
+                [newx, newy] = pol2cart(ang(j), maxval + .023*length(names{s}{j}));
+                set(texth(j), 'Position', [newx newy]);
+                
+            end
+            set(texth(j), 'Rotation', myang)
+            
         end
     end
     
     
     % Value labels (text) for polar guide lines
     % ------------------------------------------------------------
-    
-    len = length(circlevals);
-    [Xc, Yc] = pol2cart(linspace(0, -.7, len), circlevals);
-    for i = 1:len
-        text(Xc(i), Yc(i), sprintf('%3.2f', circlevals(i) - minval), 'FontSize', 14, 'Color', [.4 .4 .4]);
+    if donumbers
+        
+        len = length(circlevals);
+        [Xc, Yc] = pol2cart(linspace(0, -.7, len), circlevals);
+        for i = 1:len
+            text(Xc(i), Yc(i), sprintf('%3.2f', circlevals(i) - minval), 'FontSize', 14, 'Color', [.4 .4 .4]);
+        end
+        
     end
-    
     
     axis equal
     axis off

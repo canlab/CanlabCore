@@ -199,8 +199,8 @@ if isempty(mycol), mycol = 'ko'; end
         % set axis
         xlims = [min(xvec) max(xvec)];
         ylims = [min(yvec) max(yvec)];
-        xlims = xlims + xlims .* .2;
-        ylims = ylims + ylims .* .2;
+        xlims = xlims + abs(xlims) .* [-.2 .2];
+        ylims = ylims + abs(ylims) .* [-.2 .2];
         set(gca,'Xlim',xlims,'YLim',ylims);
         
         % plot regline by hand

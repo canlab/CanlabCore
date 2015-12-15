@@ -224,10 +224,26 @@ elseif doaverage
             
         end
         
+        
+    for i=1:size(z,2)
+        disp(['Between-group comparisons for ' networknames{i} ':']);
+        disp('--------------------------------------');
+        disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
+        disp(' ')
+        disp('Multiple comparisons of means:')
+        disp(' ');
+        print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
+        disp(' ');
+    end
+    
+        
+        
     else
         group=ones(size(r,2),1); %otherwise all data is from same group
         groupValues=unique(group);
         g=num2cell(groupValues); %creat cell array of group numbers
+   
+    
     end
     
     
@@ -272,17 +288,6 @@ elseif doaverage
         
     end %groups
     
-    
-    for i=1:size(z,2)
-        disp(['Between-group comparisons for ' networknames{i} ':']);
-        disp('--------------------------------------');
-        disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
-        disp(' ')
-        disp('Multiple comparisons of means:')
-        disp(' ');
-        print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
-        disp(' ');
-    end
     
     if ~noplot
         

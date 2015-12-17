@@ -1,4 +1,4 @@
-function [mask_thresh, cl, inmaskvox, dat, outputname] = fmri_mask_thresh_canlab(fmri_file, outputname, implicit_masking_method)
+function [mask_thresh, cl, inmaskvox, dat, outputname] = fmri_mask_thresh_canlab(fmri_file, outputname, implicit_masking_method, plotfigs)
 %
 % [mask_thresh, cl, inmaskvox, in_mask_logical_vector, maskfilename] = fmri_mask_thresh_canlab(fmri_file, outputname)
 %
@@ -22,6 +22,9 @@ function [mask_thresh, cl, inmaskvox, dat, outputname] = fmri_mask_thresh_canlab
 %    default if no value is entered 
 %    'dip': smooth the histogram and take the top 95% of values above the
 %    first positive gradient
+% 
+% plotfigs
+%     [1/0]: enable or suppress mask display and orthviews
 %
 % Output
 % ------------------------------------------------------
@@ -36,9 +39,15 @@ function [mask_thresh, cl, inmaskvox, dat, outputname] = fmri_mask_thresh_canlab
 % Tor Wager
 % See code for revision notes
 
-% last edited Oct 2011 - add support for fmri_data/image_vector objects
 
+% last edited Oct 2011 - add support for fmri_data/image_vector objects
+% added figure suppression, SG 12/14/15
+
+% defaults
+if nargin < 4, plotfigs = 1; end
+if nargin < 3, implicit_masking_method = 'mean'; end
 if nargin < 2, outputname = []; end
+
 
 if isa(fmri_file, 'image_vector')
     
@@ -83,16 +92,14 @@ end
 
 % display histogram, which is the voxels of the mean values for the first
 % 20 images
-create_figure('Implicit Mask')
+
 nbin=100;
-%dbin=10;
-
-%dat = spm_read_vols(V(1));
-
-%numslices=size(dat, 3);
-
 [freq, mask]=hist(datin, nbin);
-plot(mask, freq, 'k', 'LineWidth', 2); hold on;
+
+if plotfigs
+    create_figure('Implicit Mask')
+    plot(mask, freq, 'k', 'LineWidth', 2); hold on;
+end  
 
 % get threshold
 
@@ -127,13 +134,18 @@ while grad(i) < 0
     i = i+ 1;
 end
 dip_partition_point = mask(i);
-hh = plot_vertical_line(dip_partition_point); set(hh, 'LineStyle', '-');
+
+if plotfigs
+    hh = plot_vertical_line(dip_partition_point); set(hh, 'LineStyle', '-');
+end
 
 % Basic way of calculating a basic, generous implicit mask
 % take 95% of voxels whose value is above the mean value
 mean_pp = prctile(datin(datin > mean(datin)), 5);
-hh = plot_vertical_line(mean_pp);
-set(hh, 'LineStyle', '--');
+if plotfigs
+    hh = plot_vertical_line(mean_pp);
+    set(hh, 'LineStyle', '--');
+end
 
 if (exist('implicit_masking_method', 'var') && strcmp(implicit_masking_method, 'dip'))
     mask_thresh = dip_partition_point;
@@ -153,22 +165,22 @@ end
 inmaskvox = sum(datin > mask_thresh);
 
 
-
-xlabel('Mask value');
-ylabel('Frequency');
-
-t = title({'Implicit Mask, lines are in-brain threhold'; 'Dashed is just above mean value (actually used), Solid is "dip-based" (currently unused).'});
-axpos = get(gca,'pos');
-extent = get(t,'extent');
-set(gca,'pos',[axpos(1) axpos(2) axpos(3) .75])
-% Write mask and display
-
+if plotfigs
+    xlabel('Mask value');
+    ylabel('Frequency');
+    
+    t = title({'Implicit Mask, lines are in-brain threhold'; 'Dashed is just above mean value (actually used), Solid is "dip-based" (currently unused).'});
+    axpos = get(gca,'pos');
+    extent = get(t,'extent');
+    set(gca,'pos',[axpos(1) axpos(2) axpos(3) .75])
+end
+ % Write mask and display
 dat = datin > mask_thresh;
 
 cl = iimg_indx2clusters(dat, volInfo);
 
 
-if ~isa(fmri_file, 'image_vector')
+if ~isa(fmri_file, 'image_vector') && plotfigs
     
     disp('EPI should be underlay, green should be mask');
     %montage_clusters([V(1).fname ',1'], cl, {[0 1 0]});

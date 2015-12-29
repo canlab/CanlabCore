@@ -1,38 +1,47 @@
 function [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_image, varargin)
-    % [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_image, varargin)
-    %
-    % Generic function for extracting image data from a mask or atlas image,
-    % and returning the data and averages within regions specified by the user.
-    %
-    % Regions to average over can be either regions of contiguous voxels
-    % bounded by voxels with values of 0 or NaN, which are considered non-data
-    % values, or regions defined by unique integer codes in the mask image
-    % (i.e., for atlas images with unique codes for each defined region.)
-    %
-    % Mask/Atlas image does NOT have to be in the same space as the images to
-    % extract from.  It will be remapped/resliced.
-    %
-    % extracted data is returned in single data format.
-    %
-    % Inputs:
-    % 1 - char array of strings containing 4D image file names (data extracted from these)
-    % 2 - mask_image to extract from.
-    %
-    % Optional inputs:
-    % 'average_over':
-    %       Default = 'contiguous_regions' to average over contiguous voxels
-    %       bounded by voxels of 0 or NaN (non-data values)
-    %       Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
-    %       (i.e., for atlas images with unique codes for each defined
-    %       region)
-    %
-    % Example:
-    % imgs_to_extract_from = filenames('w*.nii','char');
-    % mask_image = which('anat_lbpa_thal.img');
-    % [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_image, 'unique_mask_values');
-    %
-    % Related functions:
-    % For an object-oriented alternative, see the fmri_data class and extract_roi_averages method
+% Generic function for extracting image data from a mask or atlas image,
+% and returning the data and averages within regions specified by the user.
+%
+% :Usage:
+% ::
+%
+%    [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_image, varargin)
+%
+% Regions to average over can be either regions of contiguous voxels
+% bounded by voxels with values of 0 or NaN, which are considered non-data
+% values, or regions defined by unique integer codes in the mask image
+% (i.e., for atlas images with unique codes for each defined region.)
+% 
+% Mask/Atlas image does NOT have to be in the same space as the images to
+% extract from.  It will be remapped/resliced.
+%
+% extracted data is returned in single data format.
+%
+% :Inputs:
+%
+%   **char array** of strings containing 4D image file names (data extracted from these)
+%
+%   **mask_image** to extract from
+% 
+% :Optional inputs:
+%
+%   **average_over:**
+%        Default = 'contiguous_regions' to average over contiguous voxels
+%        bounded by voxels of 0 or NaN (non-data values)
+%
+%        Alt. option = 'unique_mask_values' to average over unique integer codes in the mask image
+%        (i.e., for atlas images with unique codes for each defined
+%        region)
+% 
+% :Examples:
+% ::
+%
+%    imgs_to_extract_from = filenames('w*.nii','char');
+%    mask_image = which('anat_lbpa_thal.img');
+%    [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_image, 'unique_mask_values');
+% 
+% :Related functions:
+% For an object-oriented alternative, see the fmri_data class and extract_roi_averages method
 
     
     if nargin < 2 || isempty(mask_image)

@@ -1,35 +1,44 @@
 function [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, varargin)
-    % [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, varargin)
-    %
-    % Generic function for extracting image data from a mask or atlas image,
-    % and returning the data and averages within regions specified by the user.
-    %
-    % Regions to average over can be either regions of contiguous voxels
-    % bounded by voxels with values of 0 or NaN, which are considered non-data
-    % values, or regions defined by unique integer codes in the mask image
-    % (i.e., for atlas images with unique codes for each defined region.)
-    %
-    % Mask/Atlas image does NOT have to be in the same space as the images to
-    % extract from.  It will be remapped/resliced.
-    %
-    % extracted data is returned in single data format.
-    %
-    % Inputs:
-    % 1 - char array of strings containing 4D image file names (data extracted from these)
-    % 2 - mask_image to extract from.
-    %
-    % Optional inputs:
-    % 'average_over':
-    %       Default = 'unique_mask_values' to average over unique integer codes in the mask image
-    %       (i.e., for atlas images with unique codes for each defined region)
-    %       OPT = 'contiguous_regions' to average over contiguous voxels
-    %       bounded by voxels of 0 or NaN (non-data values)
-    %
-    %
-    % Example:
-    % imgs_to_extract_from = filenames('w*.nii','char');
-    % mask_image = which('anat_lbpa_thal.img');
-    % [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image);
+% Generic function for extracting image data from a mask or atlas image,
+% and returning the data and averages within regions specified by the user.
+%
+% :Usage:
+% ::
+%
+%    [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, varargin)
+%
+%  Regions to average over can be either regions of contiguous voxels
+%  bounded by voxels with values of 0 or NaN, which are considered non-data
+%  values, or regions defined by unique integer codes in the mask image
+%  (i.e., for atlas images with unique codes for each defined region.)
+% 
+%  Mask/Atlas image does NOT have to be in the same space as the images to
+%  extract from.  It will be remapped/resliced.
+%
+%  extracted data is returned in single data format.
+%
+% :Inputs:
+%
+%   **char array** of strings containing 4D image file names (data extracted from these)
+%
+%   **mask_image** to extract from
+%
+% :Optional Inputs:
+%
+%   **average_over:**
+%        Default = 'unique_mask_values' to average over unique integer codes in the mask image
+%        (i.e., for atlas images with unique codes for each defined region)
+%
+%        OPT = 'contiguous_regions' to average over contiguous voxels
+%        bounded by voxels of 0 or NaN (non-data values)
+%
+% 
+% :Examples:
+% ::
+%
+%    imgs_to_extract_from = filenames('w*.nii','char');
+%    mask_image = which('anat_lbpa_thal.img');
+%    [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image);
 
 
     if isempty(mask_image)

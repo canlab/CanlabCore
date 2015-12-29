@@ -1,83 +1,117 @@
 function MASKSTATS = canlab_maskstats(msks,imgs,varargin)
-% MASKSTATS = canlab_maskstats(maskfiles,imgfiles,[options])
-% 
-% DESCRIPTION
 % Produces comparison of pattern mask and images
 % e.g., look at NPS pattern expression in set of beta images
 %
-% INPUT
-%   maskfiles - string or cellstring of mask filenames or fmri_data object
-%   imgfiles  - string or cellstring of image filenames or fmri_data object
+% :Usage:
+% ::
 %
-% OPTIONS
-%   'ts'
-%      timeseries treatment: each string in imgfiles is assumed to be
-%      a 4D file. Data will be returned with one column per time series and
-%      one volume per row. If not all timeseries are same length, all will
-%      be NaN-padded to the length of the longest timeseries.
-%      Note: does not work with imgfiles input as fmri_data object
-%   'dir2cell'
-%      will sort stats into cells based on directory containing the imgfile
-%      they belong to such that each cell contains one directory's worth of
-%      stats which is a vector with a value for each imgfile.
-%      EX: Input: a list of single trial betas for a set of subjects
-%            b = filenames('sub*/*heat_trials*.img');
-%            ms = canlab_maskstats('nps',b,'dot_product','dir2cell');
-%          Output: includes the set of cells that are input to a mediation
-%          analysis.
-%   'keepzeros'
-%      don't remove zeros from imgfiles before taking measurements
-%   'keepzerosmask'
-%      don't remove zeros from maskfiles before taking measurements
-%   'single'
-%      leave data as single (DEFAULT: convert to double)
-%   'trinarize'
-%      trinarize maskfile (set values larger than 0 to 1 and values less than
-%      zero to -1)
-%   'noreshape'
-%      don't attempt to reshape results according to imgfiles array
-%   'nobin'
-%      don't binarize mask before extracting mean or std
+%    MASKSTATS = canlab_maskstats(maskfiles,imgfiles,[options])
+
+% :Inputs:
 %
-% Note: ts, dir2cell, and noreshape are mutually exclusive options
+%   **maskfiles:**
+%      string or cellstring of mask filenames or fmri_data object
+
+%   **imgfiles:**
+%      string or cellstring of image filenames or fmri_data object
 %
-% BUILT-IN MASKS
+% :Optional Inputs:
+%
+%   **ts:**
+%        timeseries treatment: each string in imgfiles is assumed to be
+%        a 4D file. Data will be returned with one column per time series and
+%        one volume per row. If not all timeseries are same length, all will
+%        be NaN-padded to the length of the longest timeseries.
+%
+%        Note: does not work with imgfiles input as fmri_data object
+%
+%   **dir2cell:**
+%        will sort stats into cells based on directory containing the imgfile
+%        they belong to such that each cell contains one directory's worth of
+%        stats which is a vector with a value for each imgfile.
+%        :Examples:
+%        ::
+%
+%             # Input: a list of single trial betas for a set of subjects
+%             b = filenames('sub*/*heat_trials*.img');
+%             ms = canlab_maskstats('nps',b,'dot_product','dir2cell');
+%
+%        Output: includes the set of cells that are input to a mediation
+%        analysis.
+%
+%   **keepzeros:**
+%        don't remove zeros from imgfiles before taking measurements
+%
+%   **keepzerosmask:**
+%        don't remove zeros from maskfiles before taking measurements
+%
+%   **single:**
+%        leave data as single (DEFAULT: convert to double)
+%
+%   **trinarize:**
+%        trinarize maskfile (set values larger than 0 to 1 and values less than
+%        zero to -1)
+%
+%   **noreshape:**
+%        don't attempt to reshape results according to imgfiles array
+%
+%   **nobin:**
+%        don't binarize mask before extracting mean or std
+%
+% :Note: ts, dir2cell, and noreshape are mutually exclusive options
+%
+% **Built-In Masks**
 % The following strings can be given as the maskfile argument to
 % call up built-in mask files:
-%   'nps'                weights_NSF_grouppred_cvpcr.img
-%   'nps_thresh'         weights_NSF_grouppred_cvpcr_FDR05.img
-%   'nps_thresh_smooth'  weights_NSF_grouppred_cvpcr_FDR05_smoothed_fwhm05.img
 %
-% MEASURE OPTIONS
-%   'all'
-%      add: mean, dot_product, centered_dot_product,
-%               cosine_similarity, and correlation
-%   'mean' (DEFAULT)
+%   **nps:**
+%        weights_NSF_grouppred_cvpcr.img
+%
+%   **nps_thresh:**
+%        weights_NSF_grouppred_cvpcr_FDR05.img
+%
+%   **nps_thresh_smooth:**
+%        weights_NSF_grouppred_cvpcr_FDR05_smoothed_fwhm05.img
+%
+% :Measure Options:
+%
+%   **all:**
+%        add: mean, dot_product, centered_dot_product,
+%             cosine_similarity, and correlation
+%
+%   **mean:** (DEFAULT)
 %      apply binarized mask to images and return means
 %      mean(img .* abs(bin(mask)))
-%   'std'
-%      apply binarized mask to images and return standard deviations
-%      std(img .* abs(bin(mask)))
-%   'dot_product'
-%      dot(mask, img)
-%   'cosine_similarity'
-%      dot(mask, img) / (norm(mask) * norm(img))
-%   'correlation'
-%      corr(mask, img)
-%   'centered_dot_product'
-%      dot(mask-mean(mask), img-mean(img))
 %
-
-% DETAILS
+%   **std:**
+%        apply binarized mask to images and return standard deviations
+%        std(img .* abs(bin(mask)))
+%
+%   **dot_product:**
+%        dot(mask, img)
+%
+%   **cosine_similarity:**
+%        dot(mask, img) / (norm(mask) * norm(img))
+%
+%   **correlation:**
+%        corr(mask, img)
+%
+%   **centered_dot_product:**
+%        dot(mask-mean(mask), img-mean(img))
+%
+%
+% :Details:
 %   - imgfiles are spatially resampled to maskfiles
 %   - voxels with zeros in maskfile are removed
 %   - in-mask voxels with zeros in imgfiles will generate warnings
+%
+% ..
+%    AUTHOR: Luka Ruzic 2013
+% ..
 
-% AUTHOR: Luka Ruzic 2013
 
-
-%% parse arguments
 OP = {}; % struct to contain desired "operations" (e.g., dot product, mean, etc)
+%% parse arguments
 ALLOPS = false; % adds all implemented operations
 DO_TRINARIZE = false; % signed binarize option
 DO_ZERO2NAN_DATA = true; % treat zeros as non-data in data input

@@ -1,57 +1,77 @@
 function [clusters, subcl] = extract_contrast_data(P, clusters, varargin)
-% function [clusters, subcl] = extract_contrast_data(P, clusters)
-% 
-% this function does not plot,  but separates subclusters using pca / cluster_princomp.m
+% This function does not plot,  but separates subclusters using pca / cluster_princomp.m
 % based on pattern across all conditions,  covariance (not correlation),  
 %
-% Inputs:
-% 1 - cell array of strings containing image file names (data extracted from these)
-% 2 - clusters
-% [opt] - to get sub-clustering based on pca and clustering of voxels
-%         add the string 'subclusters' as an input argument
+% :Usage:
+% ::
 %
-% [opt] - cell array of strings with condition names
+%    function [clusters, subcl] = extract_contrast_data(P, clusters)
+% 
+% :Inputs:
 %
-% [opt] - 'split' value is 1: to split into 2 plots (first half and last half of P)
-%                 value is 2: to plot individual subjects over bars
+%   **P:**
+%        cell array of strings containing image file names (data extracted from these)
 %
-% [opt] - 'center' center parmeter values in plot (subtract row means)
-%           this gives closer to correct "within subjects" error bars
-%           and may be used when the overall parameter values have no meaning
+%   **clusters:**
 %
-% [opt] - 'covs',  followed by between-subject covariates (e.g.,  behavioral regressors)
-%         plots remove these before plotting means and std. errors
+% :Optional Inputs:
 %
-% [opt] - 'max',  to make plots based on max z-values within region for each dataset P
-%                not compatible with 'split' and 'center' (ignores these commands)
-%               right now,  special for inhib - see also inhib2_cluster_barplot (good function)
+%   **subclusters:**
+%        to get sub-clustering based on pca and clustering of voxels
+%        add the string 'subclusters' as an input argument
 %
-% [opt] - 'indiv' to threshold based on individual t-statistics or contrast
-%                values
-%               FOLLOW with cell array of t-images or con images -- usually,  there will be one cell,  with images 
-%               for each subject in rows,  to define voxels for each ss.
-%               BUT Tnames can be the same length as
-%               contrast images,  one t-img per subject per contrast,  if
-%               desired.
+%   **cell array:** of strings with condition names
 %
-% Outputs:
-% clusters struture,  with CONTRAST substructure added
-% substructure contains data extracted and image file names
+%   **split:**
+%        value is 1: to split into 2 plots (first half and last half of P)
+%
+%        value is 2: to plot individual subjects over bars
+%
+%   **center:**
+%        center parmeter values in plot (subtract row means)
+%        this gives closer to correct "within subjects" error bars
+%        and may be used when the overall parameter values have no meaning
+%
+%   **covs:**
+%        followed by between-subject covariates (e.g.,  behavioral regressors)
+%        plots remove these before plotting means and std. errors
+%
+%   **max:**
+%        to make plots based on max z-values within region for each dataset P
+%        not compatible with 'split' and 'center' (ignores these commands)
+%        right now,  special for inhib - see also inhib2_cluster_barplot (good function)
+%
+%   **indiv:**
+%        to threshold based on individual t-statistics or contrast values
+%
+%        FOLLOW with cell array of t-images or con images -- usually,  there will be one cell,  with images 
+%        for each subject in rows,  to define voxels for each ss.
+%        BUT Tnames can be the same length as
+%        contrast images,  one t-img per subject per contrast,  if
+%        desired.
+%
+% :Outputs:
+%
+%   clusters struture,  with CONTRAST substructure added
+%   substructure contains data extracted and image file names
 %
 % This program uses XYZmm millimeter coordinates in clusters to find voxels
 % So clusters and data files may have different dimensions.
 %
-% Examples:
-% cl = extract_contrast_data(EXPT.SNPM.P, cl, 'indiv', EXPT.FILES.Timgs{1});
-% cluster_barplot(EXPT.SNPM.P(7:12), clusters(2:3), {'ObjE' 'AttE' 'InteractE' 'ObjI' 'AttI' 'InteractI'}, 'split')
-% [clusters, subclusters] = cluster_barplot(EXPT.SNPM.P(17:24), clusters, 'subclusters', 'split')
-% RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
-% 16]), RS2meta, 'indiv', T);
+% :Examples:
+% ::
+%
+%     cl = extract_contrast_data(EXPT.SNPM.P, cl, 'indiv', EXPT.FILES.Timgs{1});
+%     cluster_barplot(EXPT.SNPM.P(7:12), clusters(2:3), {'ObjE' 'AttE' 'InteractE' 'ObjI' 'AttI' 'InteractI'}, 'split')
+%     [clusters, subclusters] = cluster_barplot(EXPT.SNPM.P(17:24), clusters, 'subclusters', 'split')
+%     RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14 16]), RS2meta, 'indiv', T);
 %
 % also see mask2clusters.m,  a simpler version that just extracts clusters from a mask file.
 %
-% by Tor Wager,  5/15/03
-% modified 3/19/04 by Tor to add individual subject plots
+% ..
+%    by Tor Wager,  5/15/03
+%    modified 3/19/04 by Tor to add individual subject plots
+% ..
 
 diary off
 

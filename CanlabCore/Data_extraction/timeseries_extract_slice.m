@@ -1,11 +1,14 @@
-% function sl = timeseries_extract_slice(V,sliceno)
-%
+function sl = timeseries_extract_slice(V, sliceno, orientation)
 % For a given set of image names or memory mapped volumes (V)
 % extracts data from slice # sliceno and returns an X x Y x time
 % matrix of data.
+%
+% :Usage:
+% ::
+%
+%     function sl = timeseries_extract_slice(V,sliceno)
+%
 
-function sl = timeseries_extract_slice(V, sliceno, orientation)
-    
     global defaults
     
     % defaults

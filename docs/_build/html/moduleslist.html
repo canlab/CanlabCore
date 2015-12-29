@@ -2962,6 +2962,23 @@ Useful if obj contains one image per subject and you want
 to test similarity with maps statistically.
 Default behavior is to plot each individual image.</p>
 </dd>
+<dt><strong>bucknerlab</strong></dt>
+<dd><p class="first last">Use 7 network parcellation from Yeo et al. as basis for
+comparisons</p>
+</dd>
+<dt><strong>kragelemotion</strong></dt>
+<dd><p class="first">Use 7 emotion-predictive models from Kragel &amp; LaBar 2015 for
+basis of comparisons</p>
+<p class="last"><strong>compareGroups</strong>
+Perform multiple one-way ANOVAs with group as a factor (one for
+each spatial basis); requires group as subsequent input</p>
+</dd>
+<dt><strong>group</strong></dt>
+<dd><p class="first last">Indicates group membership for each image</p>
+</dd>
+<dt><strong>noplot</strong></dt>
+<dd><p class="first last">Omits plot (print stats only)</p>
+</dd>
 </dl>
 </td>
 </tr>
@@ -2976,9 +2993,25 @@ Default behavior is to plot each individual image.</p>
 customize</li>
 <li>.fill_handles Handles to polar plot fills so you can
 customize</li>
+<li>.table_spatial, ANOVA table with subject as row factor and
+spatial basis as column factor (one way repeated measures
+ANOVA, requires &#8216;average&#8217; to be specified)</li>
+<li>.multcomp_spatial, multiple comparisons of means across
+different spatial bases, critical value determined
+by Tukey-Kramer method (see multcompare)</li>
 </ul>
 </dd>
 </dl>
+</dd>
+<dt><strong>table_group</strong></dt>
+<dd><p class="first last">multiple one-way ANOVA tables (one for each
+spatial basis) with group as column factor (requires
+&#8216;average&#8217; to be specified)</p>
+</dd>
+<dt><strong>multcomp_group</strong></dt>
+<dd><p class="first last">mutiple comparisons of means across groups, one output
+cell for each spatial basis, critical value determined
+by Tukey-Kramer method (see multcompare)</p>
 </dd>
 </dl>
 </td>
@@ -3004,6 +3037,22 @@ stats = image_similarity_plot_bucknermaps(t_diff);
 </tbody>
 </table>
 <p>tor_polar_plot</p>
+<p>List dates and changes here, and author of changes
+11/30/2015 (Phil Kragel)</p>
+<blockquote>
+<div><ul class="simple">
+<li>added anova (rm) comparing means across spatial bases</li>
+<li>added anova (1-way) comparing means across groups for each spatial
+basis (e.g., for each buckner network)</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>12/15/2015 (Phil Kragel)</dt>
+<dd><ul class="first last simple">
+<li>added option to omit plotting</li>
+</ul>
+</dd>
+</dl>
 <p>DEFAULTS AND INPUTS
 ..</p>
 </dd></dl>
@@ -3996,10 +4045,10 @@ to threshold, e.g., [0 Inf] or [-3 3]</p>
 <dt><strong>k:</strong></dt>
 <dd><p class="first last">Followed by extent threshold cluster size, default = 1</p>
 </dd>
-<dt><strong>&#8216;trim_mask:</strong></dt>
+<dt><strong>trim_mask:</strong></dt>
 <dd><p class="first last">Reduce the mask in obj.voInfo based on thresholding</p>
 </dd>
-<dt><strong>&#8216;noverbose:</strong></dt>
+<dt><strong>noverbose:</strong></dt>
 <dd><p class="first last">Suppress verbose output</p>
 </dd>
 </dl>
@@ -5570,6 +5619,702 @@ dimensions and voxel sizes.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-Data_extraction">
+<span id="data-extraction"></span><h1>Data_extraction<a class="headerlink" href="#module-Data_extraction" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="Data_extraction.canlab_maskstats">
+<code class="descclassname">Data_extraction.</code><code class="descname">canlab_maskstats</code><span class="sig-paren">(</span><em>msks</em>, <em>imgs</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.canlab_maskstats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces comparison of pattern mask and images
+e.g., look at NPS pattern expression in set of beta images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">MASKSTATS</span> <span class="o">=</span> <span class="n">canlab_maskstats</span><span class="p">(</span><span class="n">maskfiles</span><span class="p">,</span><span class="n">imgfiles</span><span class="p">,[</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>maskfiles:</strong></dt>
+<dd><p class="first last">string or cellstring of mask filenames or fmri_data object</p>
+</dd>
+<dt><strong>imgfiles:</strong></dt>
+<dd><p class="first last">string or cellstring of image filenames or fmri_data object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>ts:</strong></dt>
+<dd><p class="first">timeseries treatment: each string in imgfiles is assumed to be
+a 4D file. Data will be returned with one column per time series and
+one volume per row. If not all timeseries are same length, all will
+be NaN-padded to the length of the longest timeseries.</p>
+<p class="last">Note: does not work with imgfiles input as fmri_data object</p>
+</dd>
+<dt><strong>dir2cell:</strong></dt>
+<dd><p class="first">will sort stats into cells based on directory containing the imgfile
+they belong to such that each cell contains one directory&#8217;s worth of
+stats which is a vector with a value for each imgfile.
+:Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Input: a list of single trial betas for a set of subjects</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;sub*/*heat_trials*.img&#39;</span><span class="p">);</span>
+<span class="n">ms</span> <span class="o">=</span> <span class="n">canlab_maskstats</span><span class="p">(</span><span class="s">&#39;nps&#39;</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="s">&#39;dot_product&#39;</span><span class="p">,</span><span class="s">&#39;dir2cell&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p class="last">Output: includes the set of cells that are input to a mediation
+analysis.</p>
+</dd>
+<dt><strong>keepzeros:</strong></dt>
+<dd><p class="first last">don&#8217;t remove zeros from imgfiles before taking measurements</p>
+</dd>
+<dt><strong>keepzerosmask:</strong></dt>
+<dd><p class="first last">don&#8217;t remove zeros from maskfiles before taking measurements</p>
+</dd>
+<dt><strong>single:</strong></dt>
+<dd><p class="first last">leave data as single (DEFAULT: convert to double)</p>
+</dd>
+<dt><strong>trinarize:</strong></dt>
+<dd><p class="first last">trinarize maskfile (set values larger than 0 to 1 and values less than
+zero to -1)</p>
+</dd>
+<dt><strong>noreshape:</strong></dt>
+<dd><p class="first last">don&#8217;t attempt to reshape results according to imgfiles array</p>
+</dd>
+<dt><strong>nobin:</strong></dt>
+<dd><p class="first last">don&#8217;t binarize mask before extracting mean or std</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">ts, dir2cell, and noreshape are mutually exclusive options</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Built-In Masks</strong>
+The following strings can be given as the maskfile argument to
+call up built-in mask files:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>nps:</strong></dt>
+<dd>weights_NSF_grouppred_cvpcr.img</dd>
+<dt><strong>nps_thresh:</strong></dt>
+<dd>weights_NSF_grouppred_cvpcr_FDR05.img</dd>
+<dt><strong>nps_thresh_smooth:</strong></dt>
+<dd>weights_NSF_grouppred_cvpcr_FDR05_smoothed_fwhm05.img</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Measure Options:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>all:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>add: mean, dot_product, centered_dot_product,</dt>
+<dd><p class="first last">cosine_similarity, and correlation</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mean:</strong> (DEFAULT)</dt>
+<dd><p class="first last">apply binarized mask to images and return means
+mean(img .* abs(bin(mask)))</p>
+</dd>
+<dt><strong>std:</strong></dt>
+<dd><p class="first last">apply binarized mask to images and return standard deviations
+std(img .* abs(bin(mask)))</p>
+</dd>
+<dt><strong>dot_product:</strong></dt>
+<dd><p class="first last">dot(mask, img)</p>
+</dd>
+<dt><strong>cosine_similarity:</strong></dt>
+<dd><p class="first last">dot(mask, img) / (norm(mask) * norm(img))</p>
+</dd>
+<dt><strong>correlation:</strong></dt>
+<dd><p class="first last">corr(mask, img)</p>
+</dd>
+<dt><strong>centered_dot_product:</strong></dt>
+<dd><p class="first last">dot(mask-mean(mask), img-mean(img))</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Details:</th><td class="field-body"><ul class="first last simple">
+<li>imgfiles are spatially resampled to maskfiles</li>
+<li>voxels with zeros in maskfile are removed</li>
+<li>in-mask voxels with zeros in imgfiles will generate warnings</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.cluster_tmask">
+<code class="descclassname">Data_extraction.</code><code class="descname">cluster_tmask</code><span class="sig-paren">(</span><em>cl</em>, <em>tm</em>, <em>si</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.cluster_tmask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given clusters and a string name of a t-image,  finds voxels that exceed a
+specified t-threshold</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl</span><span class="p">,</span> <span class="n">varargout</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_tmask</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="n">tm</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">clusters</p>
+</dd>
+<dt><strong>tm:</strong></dt>
+<dd><p class="first last">t-image</p>
+</dd>
+<dt><strong>si:</strong></dt>
+<dd><p class="first last">subject index integer</p>
+</dd>
+<dt><strong>[dat]:</strong></dt>
+<dd><p class="first last">cluster_barplot data structure</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>creates new XYZ in the space of t-image using cl.XYZmm coordinates in mm.
+Required fields of cl:  XYZmm</p>
+<dl class="docutils">
+<dt>Calculates and saves single-subject data avgd over voxels if:</dt>
+<dd><ol class="first last upperalpha">
+<li><dl class="first docutils">
+<dt>cl.all_data field is present</dt>
+<dd><p class="first last">THIS WORKS if all_data has individual subject contrast estimates
+in it,  with rows as subjects and columns as voxels
+indiv data saved in cl(region).timeseries(subject)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>cl.raw_data is present</dt>
+<dd><p class="first last">raw_data should be time x voxels x subjects,  a 3D matrix
+see output of extract_raw_data.
+indiv data saved in cl(region).indiv_timeseries(:, subject)</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body">Retains upper 50% of voxels; highest t-values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.extract_contrast_data">
+<code class="descclassname">Data_extraction.</code><code class="descname">extract_contrast_data</code><span class="sig-paren">(</span><em>P</em>, <em>clusters</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.extract_contrast_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function does not plot,  but separates subclusters using pca / cluster_princomp.m
+based on pattern across all conditions,  covariance (not correlation),</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">clusters</span><span class="p">,</span> <span class="n">subcl</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_contrast_data</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>P:</strong></dt>
+<dd><p class="first last">cell array of strings containing image file names (data extracted from these)</p>
+</dd>
+</dl>
+<p><strong>clusters:</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>subclusters:</strong></dt>
+<dd><p class="first last">to get sub-clustering based on pca and clustering of voxels
+add the string &#8216;subclusters&#8217; as an input argument</p>
+</dd>
+</dl>
+<p><strong>cell array:</strong> of strings with condition names</p>
+<dl class="docutils">
+<dt><strong>split:</strong></dt>
+<dd><p class="first">value is 1: to split into 2 plots (first half and last half of P)</p>
+<p class="last">value is 2: to plot individual subjects over bars</p>
+</dd>
+<dt><strong>center:</strong></dt>
+<dd><p class="first last">center parmeter values in plot (subtract row means)
+this gives closer to correct &#8220;within subjects&#8221; error bars
+and may be used when the overall parameter values have no meaning</p>
+</dd>
+<dt><strong>covs:</strong></dt>
+<dd><p class="first last">followed by between-subject covariates (e.g.,  behavioral regressors)
+plots remove these before plotting means and std. errors</p>
+</dd>
+<dt><strong>max:</strong></dt>
+<dd><p class="first last">to make plots based on max z-values within region for each dataset P
+not compatible with &#8216;split&#8217; and &#8216;center&#8217; (ignores these commands)
+right now,  special for inhib - see also inhib2_cluster_barplot (good function)</p>
+</dd>
+<dt><strong>indiv:</strong></dt>
+<dd><p class="first">to threshold based on individual t-statistics or contrast values</p>
+<p class="last">FOLLOW with cell array of t-images or con images &#8211; usually,  there will be one cell,  with images 
+for each subject in rows,  to define voxels for each ss.
+BUT Tnames can be the same length as
+contrast images,  one t-img per subject per contrast,  if
+desired.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">clusters struture,  with CONTRAST substructure added
+substructure contains data extracted and image file names</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This program uses XYZmm millimeter coordinates in clusters to find voxels
+So clusters and data files may have different dimensions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = extract_contrast_data(EXPT.SNPM.P, cl, &#39;indiv&#39;, EXPT.FILES.Timgs{1});
+cluster_barplot(EXPT.SNPM.P(7:12), clusters(2:3), {&#39;ObjE&#39; &#39;AttE&#39; &#39;InteractE&#39; &#39;ObjI&#39; &#39;AttI&#39; &#39;InteractI&#39;}, &#39;split&#39;)
+[clusters, subclusters] = cluster_barplot(EXPT.SNPM.P(17:24), clusters, &#39;subclusters&#39;, &#39;split&#39;)
+RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14 16]), RS2meta, &#39;indiv&#39;, T);
+</pre></div>
+</div>
+<p>also see mask2clusters.m,  a simpler version that just extracts clusters from a mask file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.extract_from_rois">
+<code class="descclassname">Data_extraction.</code><code class="descname">extract_from_rois</code><span class="sig-paren">(</span><em>imgs_to_extract_from</em>, <em>mask_image</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.extract_from_rois" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic function for extracting image data from a mask or atlas image,
+and returning the data and averages within regions specified by the user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>  [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, varargin)
+
+Regions to average over can be either regions of contiguous voxels
+bounded by voxels with values of 0 or NaN, which are considered non-data
+values, or regions defined by unique integer codes in the mask image
+(i.e., for atlas images with unique codes for each defined region.)
+
+Mask/Atlas image does NOT have to be in the same space as the images to
+extract from.  It will be remapped/resliced.
+
+extracted data is returned in single data format.
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>char array</strong> of strings containing 4D image file names (data extracted from these)</p>
+<p><strong>mask_image</strong> to extract from</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>average_over:</strong></dt>
+<dd><p class="first">Default = &#8216;unique_mask_values&#8217; to average over unique integer codes in the mask image
+(i.e., for atlas images with unique codes for each defined region)</p>
+<p class="last">OPT = &#8216;contiguous_regions&#8217; to average over contiguous voxels
+bounded by voxels of 0 or NaN (non-data values)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">imgs_to_extract_from</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;w*.nii&#39;</span><span class="p">,</span><span class="s">&#39;char&#39;</span><span class="p">);</span>
+<span class="n">mask_image</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="s">&#39;anat_lbpa_thal.img&#39;</span><span class="p">);</span>
+<span class="p">[</span><span class="n">cl</span><span class="p">,</span> <span class="n">imgdat</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_from_rois</span><span class="p">(</span><span class="n">imgs_to_extract_from</span><span class="p">,</span> <span class="n">mask_image</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.extract_image_data">
+<code class="descclassname">Data_extraction.</code><code class="descname">extract_image_data</code><span class="sig-paren">(</span><em>imgs_to_extract_from</em>, <em>mask_image</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.extract_image_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic function for extracting image data from a mask or atlas image,
+and returning the data and averages within regions specified by the user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">imgdat</span><span class="p">,</span> <span class="n">volInfo</span><span class="p">,</span> <span class="n">cl</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_image_data</span><span class="p">(</span><span class="n">imgs_to_extract_from</span><span class="p">,</span> <span class="n">mask_image</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Regions to average over can be either regions of contiguous voxels
+bounded by voxels with values of 0 or NaN, which are considered non-data
+values, or regions defined by unique integer codes in the mask image
+(i.e., for atlas images with unique codes for each defined region.)</p>
+<p>Mask/Atlas image does NOT have to be in the same space as the images to
+extract from.  It will be remapped/resliced.</p>
+<p>extracted data is returned in single data format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>char array</strong> of strings containing 4D image file names (data extracted from these)</p>
+<p><strong>mask_image</strong> to extract from</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>average_over:</strong></dt>
+<dd><p class="first">Default = &#8216;contiguous_regions&#8217; to average over contiguous voxels
+bounded by voxels of 0 or NaN (non-data values)</p>
+<p class="last">Alt. option = &#8216;unique_mask_values&#8217; to average over unique integer codes in the mask image
+(i.e., for atlas images with unique codes for each defined
+region)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">imgs_to_extract_from</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;w*.nii&#39;</span><span class="p">,</span><span class="s">&#39;char&#39;</span><span class="p">);</span>
+<span class="n">mask_image</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="s">&#39;anat_lbpa_thal.img&#39;</span><span class="p">);</span>
+<span class="p">[</span><span class="n">imgdat</span><span class="p">,</span> <span class="n">volInfo</span><span class="p">,</span> <span class="n">cl</span><span class="p">]</span> <span class="o">=</span> <span class="n">extract_image_data</span><span class="p">(</span><span class="n">imgs_to_extract_from</span><span class="p">,</span> <span class="n">mask_image</span><span class="p">,</span> <span class="s">&#39;unique_mask_values&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Related functions:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>For an object-oriented alternative, see the fmri_data class and extract_roi_averages method</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.extract_indiv_peak_data">
+<code class="descclassname">Data_extraction.</code><code class="descname">extract_indiv_peak_data</code><span class="sig-paren">(</span><em>cl</em>, <em>imgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.extract_indiv_peak_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purpose: to find individually significant regions within each subject
+and save average timecourses for each individual ROI for each subject</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">extract_indiv_peak_data</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">imgs</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">is a clusters structure with one element per region.  Each element
+(cluster) is a structure containing coordinates and data.</p>
+</dd>
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">is a string matrix with one row per subject, with names of images
+used to define thresholds.  These may be contrast or t-images from
+individual subjects</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The method of extraction is defined in cluster_tmask, which is currently
+to use 50% of voxels with the highest values in imgs(subject) for each
+subject, or 100% if 50% returns less than 5 voxels.  
+It&#8217;s easy in cluster_tmask to use absolute t-thresholds instead.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Required fields of cl:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>XYZmm:</strong></dt>
+<dd><p class="first last">3 x k list of k coordinates in mm space</p>
+</dd>
+<dt><strong>raw_data:</strong></dt>
+<dd><p class="first last">time x voxels x subjects matrix of data for this region</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Outputs appended to cl structure:
+indiv_timeseries, time x subjects averaged individual ROI timecourses</p>
+<dl class="docutils">
+<dt>:.INDIV:, a structure with the following information:</dt>
+<dd><ul class="first last simple">
+<li>tname, the name of the t-mask (or contrast mask) entered</li>
+<li>XYZ, voxel coords for significant voxels for each subject</li>
+<li>XYZmm, mm coords for sig voxels for each subject</li>
+<li>sigt, logical matrix subjects x voxels for sig voxels</li>
+<li>maxt, max map value for each subject</li>
+<li>center, average coordinate for sig voxels for each subject</li>
+<li>mm_center, the same in mm</li>
+</ul>
+</dd>
+</dl>
+<p>The spatial information may be used to correlate peak voxel location with
+behavior, for example.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.read_hdr">
+<code class="descclassname">Data_extraction.</code><code class="descname">read_hdr</code><span class="sig-paren">(</span><em>name</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.read_hdr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the analyze format header file from a file &#8216;name&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function hdr = read_hdr(name,[opt] datatype)
+</pre></div>
+</div>
+<p>The function returns a structure defined as</p>
+<dl class="docutils">
+<dt>hdr = struct(...</dt>
+<dd><p class="first">&#8216;sizeof_hdr&#8217;, fread(pFile, 1,&#8217;int32&#8217;),...</p>
+<p>&#8216;pad1&#8217;, setstr(fread(pFile, 28, &#8216;char&#8217;)),...</p>
+<p>&#8216;extents&#8217;, fread(pFile, 1,&#8217;int32&#8217;),...</p>
+<p>&#8216;pad2&#8217;, setstr(fread(pFile, 2, &#8216;char&#8217;)),...</p>
+<p>&#8216;regular&#8217;,setstr(fread(pFile, 1,&#8217;char&#8217;)), ...</p>
+<p>&#8216;pad3&#8217;, setstr(fread(pFile,1, &#8216;char&#8217;)),...</p>
+<p>&#8216;dims&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;xdim&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;ydim&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;zdim&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;tdim&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;pad4&#8217;, setstr(fread(pFile,20, &#8216;char&#8217;)),...</p>
+<p>&#8216;datatype&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;bits&#8217;, fread(pFile, 1,&#8217;int16&#8217;),...</p>
+<p>&#8216;pad5&#8217;, setstr(fread(pFile, 6, &#8216;char&#8217;)),...</p>
+<p>&#8216;xsize&#8217;, fread(pFile, 1,&#8217;float&#8217;),...</p>
+<p>&#8216;ysize&#8217;, fread(pFile, 1,&#8217;float&#8217;),...</p>
+<p>&#8216;zsize&#8217;, fread(pFile, 1,&#8217;float&#8217;),...</p>
+<p>&#8216;pad6&#8217;, setstr(fread(pFile, 48, &#8216;char&#8217;))...</p>
+<p>&#8216;glmax&#8217;, fread(pFile, 1,&#8217;int32&#8217;),...</p>
+<p>&#8216;glmin&#8217;, fread(pFile, 1,&#8217;int32&#8217;),... 
+&#8216;descrip&#8217;, setstr(fread(pFile, 80,&#8217;char&#8217;)),...</p>
+<p>&#8216;aux_file&#8217;        , setstr(fread(pFile,24,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;orient&#8217;          , fread(pFile,1,&#8217;char&#8217;),...</p>
+<p>&#8216;origin&#8217;          , fread(pFile,5,&#8217;int16&#8217;),...</p>
+<p>&#8216;generated&#8217;       , setstr(fread(pFile,10,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;scannum&#8217;         , setstr(fread(pFile,10,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;patient_id&#8217;      , setstr(fread(pFile,10,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;exp_date&#8217;        , setstr(fread(pFile,10,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;exp_time&#8217;        , setstr(fread(pFile,10,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;hist_un0&#8217;        , setstr(fread(pFile,3,&#8217;char&#8217;))&#8217;,...</p>
+<p>&#8216;views&#8217;           , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;vols_added&#8217;      , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;start_field&#8217;     , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;field_skip&#8217;      , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;omax&#8217;            , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;omin&#8217;            , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p>&#8216;smax&#8217;            , fread(pFile,1,&#8217;int32&#8217;),...</p>
+<p class="last">&#8216;smin&#8217;            , fread(pFile,1,&#8217;int32&#8217;) );</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.readim2">
+<code class="descclassname">Data_extraction.</code><code class="descname">readim2</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.readim2" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">array</span><span class="p">,</span><span class="n">hdr</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">whichslices</span><span class="p">,</span><span class="n">rows</span><span class="p">,</span><span class="n">cols</span><span class="p">,</span><span class="n">figh</span><span class="p">]</span> <span class="o">=</span> <span class="n">readim2</span><span class="p">(</span><span class="n">basename</span> <span class="ow">or</span> <span class="n">array</span> <span class="p">[</span><span class="n">opt</span><span class="p">],</span><span class="s">&#39;p&#39;</span> <span class="p">[</span><span class="n">opt</span><span class="p">],</span> <span class="s">&#39;sagg&#39;</span> <span class="ow">or</span> <span class="s">&#39;cor&#39;</span> <span class="p">[</span><span class="n">opt</span><span class="p">],</span><span class="n">flipy</span><span class="p">[</span><span class="n">opy</span><span class="p">],</span><span class="nb">range</span> <span class="p">[</span><span class="n">opt</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><ul class="first simple">
+<li>basename of file, without image extension ,OR</li>
+<li>3-D array in the workspace to plot, OR</li>
+<li>nothing, to browse for file</li>
+</ul>
+<dl class="docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">to plot montage of slices to the screen</p>
+</dd>
+<dt><strong>sagg:</strong></dt>
+<dd><p class="first last">to rotate to saggital view</p>
+</dd>
+<dt><strong>cor:</strong></dt>
+<dd><p class="first last">to rotate to coronal view</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">to save array as double instead of int16 - to save negative t values.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><ul class="first simple">
+<li>3d array of image</li>
+<li>hdr of image</li>
+<li>handles for axes of montage if plotting</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Special Features:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>range:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>specified in mm, must be LAST and FIFTH input argument. </dt>
+<dd><ul class="first last simple">
+<li>OR range can specify slices, e.g. 1:4:28</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>clim:</strong></dt>
+<dd><p class="first last">color limits for axis plot, must be 1st or 2nd argument.  form: [-1 1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.timeseries_extract_slice">
+<code class="descclassname">Data_extraction.</code><code class="descname">timeseries_extract_slice</code><span class="sig-paren">(</span><em>V</em>, <em>sliceno</em>, <em>orientation</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.timeseries_extract_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a given set of image names or memory mapped volumes (V)
+extracts data from slice # sliceno and returns an X x Y x time
+matrix of data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function sl = timeseries_extract_slice(V,sliceno)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_extraction.tor_extract_rois">
+<code class="descclassname">Data_extraction.</code><code class="descname">tor_extract_rois</code><span class="sig-paren">(</span><em>imnames</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_extraction.tor_extract_rois" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets timeseries data from all clusters in an SPM results output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [clusters, SPM, xX, xCon] = tor_extract_rois(imnames [can be empty],[opt] SPM, [opt] VOL, [opt] xX)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imnames:</strong></dt>
+<dd><p class="first last">a matrix of image names, in spm_list_files output format
+if empty, no timeseries data will be extracted.</p>
+</dd>
+<dt><strong>clusters:</strong></dt>
+<dd><p class="first last">if only 2 arguments, clusters structure is 2nd arg, and we
+extract data using existing clusters structure</p>
+</dd>
+</dl>
+<p>If 3 arguments, enter SPM and VOL to extract data from VOXEL
+coordinates in these structures
+- SPM:        SPM variable from loaded results
+- VOL:        VOL variable from loaded results</p>
+<p class="last">Optional 4th argument fits a design matrix and returns betas
+- xX:         xX design matrix to fit to timeseries
+OR 4th argument can be 0 (or any non-structure arg), suppressing verbose output.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>[Last 2 arguments are optional.  Use if results are already loaded into workspace]</p>
+<p>Automatic fitting of model to cluster timeseries average using analyze_cluster_rois
+with High-Pass filter length of your choice.
+This only works if you input only the file names or input all optional arguments, including xX</p>
+<p>NOTE (WARNING): WORKS ON XYZ VOXEL COORDINATES - TRANSFORMATION TO
+DIFFERENT SPACES ONLY IF ENTERING 2 ARGS, 1st one names, 2nd one clusters</p>
+<p>see transform_coordinates.m for transformation, or check_spm_mat, or cluster_interp.</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -5587,6 +6332,7 @@ dimensions and voxel sizes.</p>
 <li><a class="reference internal" href="#module-&#64;region">region</a></li>
 <li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>
 <li><a class="reference internal" href="#cluster-contig-region-tools">Cluster_contig_region_tools</a></li>
+<li><a class="reference internal" href="#module-Data_extraction">Data_extraction</a></li>
 </ul>
 
   <h4>Previous topic</h4>

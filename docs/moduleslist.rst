@@ -43,3 +43,8 @@ Cluster_contig_region_tools
 ===============
 .. automodule:: Cluster_contig_region_tools
    :members:
+
+Data_extraction
+===============
+.. automodule:: Data_extraction
+   :members:

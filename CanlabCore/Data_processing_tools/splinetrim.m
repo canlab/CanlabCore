@@ -1,26 +1,44 @@
 function [y2,ntrimmed,spikes, yy] = splinetrim(y,varargin)
-% function [y,ntrimmed,spikes, yfit] = splinetrim(y,[iqrmult],[knotrate],[X],['p'])
+% :Usage:
+% ::
+%
+%     function [y,ntrimmed,spikes, yfit] = splinetrim(y,[iqrmult],[knotrate],[X],['p'])
 %
 % Uses a robust measure of deviations in a timeseries gradient
 % to find high-velocity 'spikes', presumed to be artifacts
 %
 % Uses spline interpolation to replace spikes with reasonable values.
 %
-% y         a timeseries
+% :Input:
 %
-% optional inputs:
-% iqrmult   how many times the interquartile range above which velocities are
+%   **y:**
+%        a timeseries
+%
+% :Optional Inputs:
+%
+%   **iqrmult:**
+%        how many times the interquartile range above which velocities are
 %           outliers, default is 1.5
-% knotrate  sets knot points every k observations, default is 3
-% X         matrix of session means or other linear regressors to remove 
-% 'p'       plot the results
-% X and 'p' can be entered in any order, but after iqrmult and knotrate
 %
-% Example (good for eye tracking):
-% [y2,nt] = splinetrim(trialdat,3,5,'p'); nt
+%   **knotrate:**
+%        sets knot points every k observations, default is 3
 %
-%  3/29/05, Tor Wager
-
+%   **X:**
+%        matrix of session means or other linear regressors to remove 
+%
+%   **p:**
+%        plot the results
+% 
+%   X and 'p' can be entered in any order, but after iqrmult and knotrate
+%
+% :Examples:
+% ::
+%
+%    [y2,nt] = splinetrim(trialdat,3,5,'p'); nt
+%
+% ..
+%    3/29/05, Tor Wager
+% ..
 
 
 % -------------------------------------------------

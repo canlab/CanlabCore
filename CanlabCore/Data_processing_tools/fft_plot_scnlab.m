@@ -1,33 +1,42 @@
 function [myfft, freq, handle] = fft_plot_scnlab(dat, TR, varargin)
-% [myfft, freq, handle] = fft_plot_scnlab(dat, TR, varargin)
+% :Usage:
+% ::
 %
-% INPUTS:
-% dat is a data vector (column)
+%     [myfft, freq, handle] = fft_plot_scnlab(dat, TR, varargin)
+%
+% :Inputs:
+%
+%   **dat:**
+%        is a data vector (column)
 % 
-% TR is the sampling rate of the data you put in
-% in seconds / sample, or 1/Hz
+%   **TR:**
+%        is the sampling rate of the data you put in
+%        in seconds / sample, or 1/Hz
 %
-% Optional inputs:
-% 'samefig'
-% 'color, ['b'] or other color
-% 'bar'
-% 'linebar' : both line and bar
+% :Optional inputs:
+%   - 'samefig'
+%   - 'color, ['b'] or other color
+%   - 'bar'
+%   - 'linebar': both line and bar
 %
-% Example: plot effects of filtering on a difference
-% between two regressors
-% ---------------------------------------------------
-% spm_hplength = SPM.xX.K.HParam;
-% d = SPM.xX.X * SPM.xCon(mycon).c(:, 1);
-% create_figure('Contrast'); plot(d) % contrast we care about
-% px = pinv(SPM.xX.K.X0);           % pinv of the filtering matrix
-% y = d;
-% y = y - SPM.xX.K.X0 * px * y;     % residuals after filtering
+% :Examples:
+% ::
 %
-% [myfft, freq, handle] = fft_plot_scnlab(d, 2);
-% hold on;
-% [myfft2, freq2, handle] = fft_plot_scnlab(y, 2); set(handle,'Color','r')
-% plot_vertical_line(1/spm_hplength)
-% set(ans, 'Color', 'b', 'LineWidth', 3)
+%    % plot effects of filtering on a difference
+%    % between two regressors
+%    spm_hplength = SPM.xX.K.HParam;
+%    d = SPM.xX.X * SPM.xCon(mycon).c(:, 1);
+%    create_figure('Contrast'); plot(d) % contrast we care about
+%    px = pinv(SPM.xX.K.X0);           % pinv of the filtering matrix
+%    y = d;
+%    y = y - SPM.xX.K.X0 * px * y;     % residuals after filtering
+%
+%    [myfft, freq, handle] = fft_plot_scnlab(d, 2);
+%    hold on;
+%    [myfft2, freq2, handle] = fft_plot_scnlab(y, 2); set(handle,'Color','r')
+%    plot_vertical_line(1/spm_hplength)
+%    set(ans, 'Color', 'b', 'LineWidth', 3)
+%
 
 fftfig = 1;
 ptype = 'line';

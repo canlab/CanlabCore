@@ -1,17 +1,20 @@
 function names = scnlab_filter_fmri_data(imgs, mvmt, mask, tr, spersess, hp)
-    % names = scnlab_filter_fmri_data(imgs, mvmt, mask, tr, spersess, hp)
-    %
-    % Outlier and artifact removal for one subject
-    % Writes new output images for timeseries
-    %
-    % Example from NSF data:
-    % OUT = mean_image(imgs, 'mean_ravol.img',ones(size(imgs,1),1));
-    %spm_imcalc_ui('mean_ravol.img', 'graymatter.img', 'i1 > 0');
-    %spm_image('init', 'graymatter.img');
-    %
-    % names = scnlab_filter_fmri_data(imgs, mvmt, 'graymatter.img', 2, repmat(184, 1, 6), 80);
+% Outlier and artifact removal for one subject
+% Writes new output images for timeseries
+%
+% :Usage:
+% ::
+%
+%     names = scnlab_filter_fmri_data(imgs, mvmt, mask, tr, spersess, hp)
+%
+% :Examples:
+% ::
+%
+%    OUT = mean_image(imgs, 'mean_ravol.img',ones(size(imgs,1),1));
+%    spm_imcalc_ui('mean_ravol.img', 'graymatter.img', 'i1 > 0');
+%    spm_image('init', 'graymatter.img');
+%    names = scnlab_filter_fmri_data(imgs, mvmt, 'graymatter.img', 2, repmat(184, 1, 6), 80);
 
-    % -------------------------------------------------------
     tic
     imgs = check_valid_imagename(imgs);
 

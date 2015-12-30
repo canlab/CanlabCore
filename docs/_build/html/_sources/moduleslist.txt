@@ -48,3 +48,8 @@ Data_extraction
 ===============
 .. automodule:: Data_extraction
    :members:
+
+Data_processing_tools
+===============
+.. automodule:: Data_processing_tools
+   :members:

@@ -1,25 +1,23 @@
 function [group_avgs, group_stes, subject_avgs, subject_stes, braindata] = selective_average_group(V, onsets, xyz_mm_pos, varargin)
-    %
-    % DOCUMENTATION NOT COMPLETE!
-    % 
-    % uses selective_average.m
-    % used in selective_average_interactive_view_init.m
-    %
-    % Example:
-    % [group_avgs, group_stes, subject_avgs, subject_stes] = selective_average_group(V, onsets, vox, 'basepts', 1:2, 'plotstes', 0);
-    %
-    % Format onsets from onsets2 (NSF study format) into correct format for
-    % % this function
-    % N = length(imgs); n_conditions = size(eventdesign{1}, 2);
-    % onsets = cell(1, N);
-    % for i = 1:N
-    %     for j = 1:n_conditions
-    %         onsets{i}{j} = onsets2{i}(find(eventdesign{i}(:, j)));
-    %     end
-    % end
-
-    % Optional inputs
-    % -----------------------------------------------------
+% ..
+%    DOCUMENTATION NOT COMPLETE!
+% ..
+% uses selective_average.m
+% used in selective_average_interactive_view_init.m
+%
+% :Examples:
+% ::
+%
+%    [group_avgs, group_stes, subject_avgs, subject_stes] = selective_average_group(V, onsets, vox, 'basepts', 1:2, 'plotstes', 0);
+%
+%    % Format onsets from onsets2 (NSF study format) into correct format for this function
+%    N = length(imgs); n_conditions = size(eventdesign{1}, 2);
+%    onsets = cell(1, N);
+%    for i = 1:N
+%       for j = 1:n_conditions
+%           onsets{i}{j} = onsets2{i}(find(eventdesign{i}(:, j)));
+%       end
+%    end
 
     basepts = [];
     t = 20;

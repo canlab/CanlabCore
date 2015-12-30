@@ -6315,6 +6315,1089 @@ DIFFERENT SPACES ONLY IF ENTERING 2 ARGS, 1st one names, 2nd one clusters</p>
 </dd></dl>
 
 </div>
+<div class="section" id="data-processing-tools">
+<h1>Data_processing_tools<a class="headerlink" href="#data-processing-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Data_processing_tools"></span><dl class="function">
+<dt id="Data_processing_tools.center_of_mass">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">center_of_mass</code><span class="sig-paren">(</span><em>XYZ</em>, <em>Z</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.center_of_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns the center of mass of a cluster of voxels or mm coordinates
+defined as the nearest in-list coordinate to the average of the 
+coordinate values weighted by the Z-score</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span> <span class="o">=</span> <span class="n">center_of_mass</span><span class="p">(</span><span class="n">XYZ</span><span class="p">,</span><span class="n">Z</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>assigns a rank to each coordinate based on Z scores
+and includes</p>
+<p>enter a 3 x n list of XYZ coordinates
+returns 1 x 3 center of mass</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.detransition">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">detransition</code><span class="sig-paren">(</span><em>y</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.detransition" title="Permalink to this definition">¶</a></dt>
+<dd><p>For fMRI timeseries that contains large &#8216;jump&#8217; artifacts due to motion correction
+or other problems.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">detransition</span><span class="p">(</span><span class="n">y</span><span class="p">,[</span><span class="n">doplot</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Removes these large spikes.
+Updated version built into spikecorrect in trimts</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.downsample_scnlab">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">downsample_scnlab</code><span class="sig-paren">(</span><em>y</em>, <em>orig_samprate</em>, <em>new_samprate</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.downsample_scnlab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses linear interpolation to resample a vector from one sampling
+rate to another</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">yi</span><span class="p">,</span> <span class="n">xi</span><span class="p">]</span> <span class="o">=</span> <span class="n">downsample_scnlab</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">orig_samprate</span><span class="p">,</span> <span class="n">new_samprate</span><span class="p">,</span> <span class="p">[</span><span class="n">doplot</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>orig_samprate:</strong></dt>
+<dd><p class="first last">sampling rate in Hz</p>
+</dd>
+<dt><strong>new_samprate:</strong></dt>
+<dd><p class="first last">desired sampling rate in Hz</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Downsample a 100 Hz signal to a scanning TR of 2 sec
+% signal at 100 Hz, sample to low-freq TR of 0.5 hz (2 sec TR)
+% every 100 / TR = 100/.5 = 200 samples
+
+[yi, xi] = downsample_scnlab(y, 100, .5)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.fft_plot_scnlab">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">fft_plot_scnlab</code><span class="sig-paren">(</span><em>dat</em>, <em>TR</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.fft_plot_scnlab" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">myfft</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">handle</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft_plot_scnlab</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">TR</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">is a data vector (column)</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">is the sampling rate of the data you put in
+in seconds / sample, or 1/Hz</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
+<li>&#8216;samefig&#8217;</li>
+<li>&#8216;color, [&#8216;b&#8217;] or other color</li>
+<li>&#8216;bar&#8217;</li>
+<li>&#8216;linebar&#8217;: both line and bar</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% plot effects of filtering on a difference
+% between two regressors
+spm_hplength = SPM.xX.K.HParam;
+d = SPM.xX.X * SPM.xCon(mycon).c(:, 1);
+create_figure(&#39;Contrast&#39;); plot(d) % contrast we care about
+px = pinv(SPM.xX.K.X0);           % pinv of the filtering matrix
+y = d;
+y = y - SPM.xX.K.X0 * px * y;     % residuals after filtering
+
+[myfft, freq, handle] = fft_plot_scnlab(d, 2);
+hold on;
+[myfft2, freq2, handle] = fft_plot_scnlab(y, 2); set(handle,&#39;Color&#39;,&#39;r&#39;)
+plot_vertical_line(1/spm_hplength)
+set(ans, &#39;Color&#39;, &#39;b&#39;, &#39;LineWidth&#39;, 3)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.filterAdjust">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">filterAdjust</code><span class="sig-paren">(</span><em>O</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.filterAdjust" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">O</span><span class="p">,</span><span class="n">X</span><span class="p">,</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="n">filterAdjust</span><span class="p">(</span><span class="n">OPTIONS</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">O:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>O.y:</strong></dt>
+<dd><p class="first last">signal</p>
+</dd>
+<dt><strong>O.HP:</strong></dt>
+<dd><p class="first last">high pass freq. cutoff</p>
+</dd>
+<dt><strong>O.TR:</strong></dt>
+<dd><p class="first last">sampling rate in s</p>
+</dd>
+<dt><strong>O.doHP:</strong></dt>
+<dd><p class="first last">[0 or 1] - do HP filter (spm), default is 0</p>
+</dd>
+<dt><strong>O.doLP:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>[0, 1, 2] - do LP filter (spm), default is 0</dt>
+<dd><p class="first last">2 = Gaussian filter with TR*2 s length</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>O.firstimg:</strong></dt>
+<dd><p class="first last">sets values for first image in each run to mean of the
+remaining values.  Good for removing first-image artifacts present in
+some scanner sequences.  Default is 1.</p>
+</dd>
+<dt><strong>O.cyclecorrection:</strong></dt>
+<dd><p class="first last">checks for unimodal (normally distributed) data
+within each session, because some bimodal data that cycles between two
+mean scanner values has been observed in some data.  if a high proportion
+of outliers are found in non-normal data, subtracts mean of higher mode
+to adjust data. Sorry-not clear.  Check the code. Default is 0</p>
+</dd>
+<dt><strong>O.cyclecorrection2:</strong></dt>
+<dd><p class="first">removes large transitions from data, as in
+detransition.m.  Default is 0.  Artifacts may be acquisition or
+motion-correction/resampling related.</p>
+<p class="last">We do this after filtering, but if there&#8217;s trouble, we re-do the
+scanadjust and filtering, because &#8216;cycling&#8217; can affect these.</p>
+</dd>
+<dt><strong>O.scanadjust:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>[0 or 1] - adjust to scan means, default is 0</dt>
+<dd><ul class="first simple">
+<li>If O.X is entered, assumes this is the session mean matrix,</li>
+</ul>
+<p class="last">instead of recomputing.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>O.percent:</strong></dt>
+<dd><p class="first last">[0 or 1] - adjust to percent change from baseline, default is 0</p>
+</dd>
+<dt><strong>O.filtertype:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>filter style, default is &#8216;none&#8217;</dt>
+<dd><ul class="first last simple">
+<li>&#8216;spm&#8217;, use spm&#8217;s filtering</li>
+<li>if O.S is entered, uses this instead of recomputing</li>
+<li>&#8216;fourier&#8217;, Doug&#8217;s fourier filter</li>
+<li>&#8216;fouriernotch&#8217;, Omit frequencies between HP(1) and HP(2)</li>
+<li>&#8216;cheby&#8217;, chebyshev</li>
+<li>&#8216;Luis&#8217;, Luis&#8217; custom filter</li>
+<li>&#8216;none&#8217;, no filtering (or leave field out).</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>O.HP:</strong></dt>
+<dd><p class="first last">for SPM, the filter cutoff in s
+for fourier, the HP value or the [HP LP] values
+notches out everything slower than HP and faster than LP, in s
+(1/s = Hz).</p>
+</dd>
+<dt><strong>O.nruns:</strong></dt>
+<dd><p class="first last">number of runs (scanadjust), default is 1</p>
+</dd>
+<dt><strong>O.adjustmatrix:</strong></dt>
+<dd><p class="first last">custom adjustment matrix to regress out (e.g., movement params)</p>
+</dd>
+<dt><strong>O.plot [0 or 1]:</strong></dt>
+<dd><p class="first last">plots intermediate products, default is 0</p>
+</dd>
+<dt><strong>O.verbose [0 or 1]:</strong></dt>
+<dd><p class="first last">verbose output</p>
+</dd>
+<dt><strong>O.trimts [0 or std]:</strong></dt>
+<dd><p class="first last">trim overall timseries values to std, 0 for no trimming</p>
+</dd>
+<dt><strong>O.lindetrend:</strong></dt>
+<dd><p class="first">specify linear detrending of timeseries.
+occurs after adjustment and filtering and windsorizing</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>detrending option -&gt; what to enter in this field:</li>
+<li>no detrending  -&gt; empty, missing field, or 0</li>
+<li>detrending every n elements -&gt; single number (n)</li>
+<li>piecewise linear detrend -&gt; ROW vector of breakpoints
+(do not specify 1 as the start of the 1st segment.)</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.fir2htw2">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">fir2htw2</code><span class="sig-paren">(</span><em>b</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.fir2htw2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates height, time to peak, and width of FIR response</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[h,t,w,w_times,halfh, auc] = fir2htw2(b,[hconstraint],[doplot],[colors cell])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">beta/estimate series for hemodynamic response curve</p>
+</dd>
+<dt>hconstraint:**</dt>
+<dd><p class="first last">max time in samples that can be considered the peak
+(default = last sample)</p>
+</dd>
+<dt>doplot:**</dt>
+<dd><p class="first last">flag for plot, 1/0</p>
+</dd>
+<dt>colors:**</dt>
+<dd><p class="first last">cell vector of colors for plot</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>minh = min height</p>
+<p>This version uses turning points (zero gradient) to find the largest
+&#8220;hump&#8221; in the data and the time it occurs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>hrf = spm_hrf(.5); hrf = hrf ./ max(hrf); hrf = hrf + .1 * randn(length(hrf), 1);
+create_figure(&#39;hrf&#39;); plot(hrf);
+[h,t,w,w_times,halfh, auc] = fir2htw2(hrf, [], 1);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.get_snr">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">get_snr</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.get_snr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data is a matrix whos columns index voxels, and rows index subjects (or trials, etc.)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">snr</span> <span class="o">=</span> <span class="n">get_snr</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.htw_from_fit">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">htw_from_fit</code><span class="sig-paren">(</span><em>hrf</em>, <em>b</em>, <em>dt</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.htw_from_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates height, time to peak,  width, and area under the curve of a fitted response</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>h, t, w, auc, w_times, halfh] = htw_from_fit(hrf, b, dt, [optional arguments])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>a matrix of columns that form a linear basis set for an</dt>
+<dd><p class="first last">event type in an fMRI design, t time points x k basis
+functions</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">betas associated with the columns of hrf, k x 1</p>
+</dd>
+<dt><strong>dt:</strong></dt>
+<dd><p class="first last">the sampling resolution of hrf (in seconds)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>plot:</strong></dt>
+<dd><p class="first last">make plot</p>
+</dd>
+<dt><strong>verbose:</strong></dt>
+<dd><p class="first last">verbose output</p>
+</dd>
+<dt><strong>startval:</strong></dt>
+<dd><p class="first last">followed by the starting value in sec within which to calculate peak</p>
+</dd>
+<dt><strong>endval:</strong></dt>
+<dd><p class="first last">followed by the ending value in sec within which to calculate peak</p>
+</dd>
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">followed by a cell array, for example, {&#8216;r&#8217;} or {[1 0 0]}</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function is essentially the same as fir2htw2.m, but the main
+differences are:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>It imposes a time constraint on the peak amplitude automatically,
+which is constrained to be between 4 seconds and 12 seconds
+(endval, which was hconstraint) by default. YOU MAY WANT TO CHANGE hconstraint
+depending on whether you&#8217;re expecting delayed hemodynamic responses.
+This requires input of the sampling resolution (e.g., dt)</li>
+<li>This function will automatically create fitted responses, given a
+basis set and betas (parameters).  This is different from fir2htw2.m,
+which takes the fitted response as input.</li>
+<li>The method for getting width (w) has been changed to work better
+for multi-modal (multi-peak) responses.</li>
+</ol>
+</div></blockquote>
+<p>Otherwise, the algorithm is the same.
+See Lindquist and Wager, 2007, for simulations that use a version of
+this method to estimate HRFs using different kinds of models.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Notes on scaling:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>The scaling of the amplitude depends on the scaling of the hrf basis
+set, which (in SPM) depends on the time resolution.  You should at
+least use an hrf basis set with the same scaling for all subjects in
+a group analysis.  The amplitude of the fitted response is
+interpreted as the amplitude of the unit &#8220;impulse response,&#8221; assuming
+that the hrf you enter here is the same as the impulse response
+function you used to create the design matrix.  In SPM5, higher-res
+impulse response functions are normalized by their positive sum, and
+the higher the time resolution, the lower the amplitude of the unit
+HRF.  (The scaling of regressors in the SPM design matrix isn&#8217;t
+affected, because the hrf basis functions are convolved with a boxcar
+that also depends on the time resolution.  The bottom line is that if
+all your subjects have the same scaling, you should be fine.  And,
+secondly, the amplitudes that come out of this function reflect the
+scaling of the HRF you put in and are for an impulse response, NOT
+for an &#8220;event,&#8221; and so the scaling here would not be expected to
+match up with the amplitudes on a plot that you&#8217;d get from a
+selective average time-course plot, unless you adjust by multiplying
+by the number of elements in SPMs &#8220;hi-res&#8221; onset boxcar to adjust.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">For example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>With &#8220;zero-duration&#8221; events, an hrf input scaled to reflect &#8220;event response&#8221; amplitudes
+might look something like this: (<a href="#id13"><span class="problematic" id="id14">**</span></a><em>may not be exactly right because
+i think dt is in sec)
+figure; plot(conv(SPM.xBF.bf(:, 1), my_ons))
+my_ons = ones(1, TR ./ SPM.xBF.dt .</em> SPM.Sess.U(1).dur(1));</p>
+<p>If you have epochs and want &#8220;epoch response&#8221; amplitude, you have to consider that as well.
+If your durations are specified in TRs, and all durations are the
+same:
+TR = SPM.xY.RT;
+my_ons = ones(1, TR ./ SPM.xBF.dt .* SPM.Sess.U(1).dur(1));</p>
+<p>minh = min height</p>
+<p>This version uses turning points (zero gradient) to find the largest
+&#8220;hump&#8221; in the data and the time it occurs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Load and SPM mat file and use the basis set stored in that, and use
+% that as the hrf.  Generate some arbitrary combos to test different shapes:
+% cd(&#39;my spm directory&#39;)
+% load SPM
+[h, t, w, auc] = htw_from_fit(SPM.xBF.bf, [1 .4 .4]&#39;, SPM.xBF.dt, &#39;plot&#39;, &#39;verbose&#39;);
+
+for i = 1:20
+    [h, t, w, auc] = htw_from_fit(SPM.xBF.bf, randn(3, 1), SPM.xBF.dt, &#39;plot&#39;); pause(1.5);
+end
+
+% Generate an SPM basis set at a lower resolution, and try that:
+bf = spm_get_bf(struct(&#39;name&#39;, &#39;hrf (with time and dispersion derivatives)&#39;, &#39;length&#39;, 30, &#39;dt&#39;, 1));
+for i = 1:20
+   [h, t, w, auc] = htw_from_fit(bf.bf, randn(3, 1), bf.dt, &#39;plot&#39;); h, t, w, auc, pause(1.5)
+end
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.luisFilter">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">luisFilter</code><span class="sig-paren">(</span><em>data</em>, <em>TR</em>, <em>cutoff</em>, <em>verbose</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.luisFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a low pass FIR filter using the Parks Mclellan design algorithm
+The phase introduced by the filter is linear and is un-done by 
+filtering the data again, backwards
+if you want to see what it does to the data, use verbose=1
+if just want to filter the data, don&#8217;t use the argument at all.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function outdata = luisFilter(data,  TR, cutoff [, verbose])
+</pre></div>
+</div>
+<p>close all</p>
+<blockquote>
+<div>These are the important lines of the code   %%%%%%%%%%%%%</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.nuisance_cov_estimates">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">nuisance_cov_estimates</code><span class="sig-paren">(</span><em>X</em>, <em>images</em>, <em>SETUP</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.nuisance_cov_estimates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates F-map for model parameters of interest
+Writes to disk:
+&#8216;F_cols_of_interest.img&#8217; &#8216;p_cols_of_interest.img&#8217; (3-D images)
+&#8216;resid_full_model.img&#8217; (a 4-D image)</p>
+<p>Locates voxels whose activity is unrelated to the model</p>
+<p>Extracts principal components from these voxels for use as covariates
+in subsequent models</p>
+<p>Note: invalidates statistical inference in subsequent models based on
+these data, but may improve predictive accuracy and single-trial model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nuisance_cov_estimates</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">SETUP</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Defining the SETUP structure with inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>SETUP.(fields)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>.wh_of_interest:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>vector of which columns of X matrix are of interest</dt>
+<dd>% columns of interest in X matrix; tests var explained by these with F-test</dd>
+</dl>
+</dd>
+<dt><strong>.mask:</strong></dt>
+<dd>name of mask image</dd>
+<dt><strong>.TR:</strong></dt>
+<dd>repetition time of volume (image) acquisition</dd>
+<dt><strong>.HPlength:</strong></dt>
+<dd>high-pass filter length, in s</dd>
+<dt><strong>.scans_per_session:</strong></dt>
+<dd>vector of # volumes in each run, e.g., [128 128 128 128 128]</dd>
+<dt><strong>.dummyscans:</strong></dt>
+<dd>indices of images in each run that will be modeled
+with separate dummy variables</dd>
+<dt><strong>.startslice:</strong></dt>
+<dd>start at slice #...</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">SETUP Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>nopreproc:</strong></dt>
+<dd><p class="first last">to skip preprocessing (i.e., for trial-level inputs)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.resample_scnlab">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">resample_scnlab</code><span class="sig-paren">(</span><em>data</em>, <em>p</em>, <em>q</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.resample_scnlab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample : Uses matlab&#8217;s resample.m, but pads ends to avoid edge
+artifacts</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[y, x] = resample_scnlab(data, p, q)
+% OR
+[y, x] = resample_scnlab(data, p, q, origHz, targetHz)
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Y = RESAMPLE(X,P,Q) resamples the sequence in vector X at P/Q times</dt>
+<dd>the original sample rate using a polyphase implementation.  Y is P/Q 
+times the length of X (or the ceiling of this if P/Q is not an integer).  
+P and Q must be positive integers.</dd>
+</dl>
+<p>Other features:</p>
+<p>Returns x values for resampled data in original index scale</p>
+<p>IF two additional args are entered (origHz and targetHz), 
+p and q are determined automatically, based on your desired sampling rate
+(targetHz)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>create_figure(&#39;test&#39;); plot(y);
+[y2, x] = resample_scnlab(y, 1, 5);
+plot(x, y2, &#39;r&#39;);
+
+%Use target Hz...take 100 Hz vector and resample at 20 Hz
+create_figure(&#39;test&#39;);
+plot(y); [y2, x] = resample_scnlab(y, [], [], 100, 20);
+plot(x, y2, &#39;r&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.scale">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">scale</code><span class="sig-paren">(</span><em>x</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Centers and scales column vectors to mean 0 and st. deviation 1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>x = scale(x,[just center])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.scnlab_filter_fmri_data">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">scnlab_filter_fmri_data</code><span class="sig-paren">(</span><em>imgs</em>, <em>mvmt</em>, <em>mask</em>, <em>tr</em>, <em>spersess</em>, <em>hp</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.scnlab_filter_fmri_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outlier and artifact removal for one subject
+Writes new output images for timeseries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">names</span> <span class="o">=</span> <span class="n">scnlab_filter_fmri_data</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">mvmt</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="n">spersess</span><span class="p">,</span> <span class="n">hp</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">OUT</span> <span class="o">=</span> <span class="n">mean_image</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="s">&#39;mean_ravol.img&#39;</span><span class="p">,</span><span class="n">ones</span><span class="p">(</span><span class="n">size</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">));</span>
+<span class="n">spm_imcalc_ui</span><span class="p">(</span><span class="s">&#39;mean_ravol.img&#39;</span><span class="p">,</span> <span class="s">&#39;graymatter.img&#39;</span><span class="p">,</span> <span class="s">&#39;i1 &gt; 0&#39;</span><span class="p">);</span>
+<span class="n">spm_image</span><span class="p">(</span><span class="s">&#39;init&#39;</span><span class="p">,</span> <span class="s">&#39;graymatter.img&#39;</span><span class="p">);</span>
+<span class="n">names</span> <span class="o">=</span> <span class="n">scnlab_filter_fmri_data</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">mvmt</span><span class="p">,</span> <span class="s">&#39;graymatter.img&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">repmat</span><span class="p">(</span><span class="mi">184</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="mi">80</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.scnlab_outlier_id">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">scnlab_outlier_id</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.scnlab_outlier_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Methods (modes of operation)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Setup:</th><td class="field-body">Run this method first to generate an options structure OPT
+that can be passed in along with any data vector for speedy
+processing</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>OPT = scnlab_outlier_id(&#39;setup&#39;, &#39;tr&#39;, 2, &#39;spersess&#39;,
+                        [184 184 184 184 184 184], &#39;dummy&#39;, 1:3,
+                        &#39;hp&#39;, 100, &#39;mad&#39;, 4, &#39;niter&#39;, 3, &#39;mvmt&#39;, mvmt);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Data:</th><td class="field-body">Run this method second with an already-created OPT
+and a data vector from one time series</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">y2</span><span class="p">,</span> <span class="n">outliers</span><span class="p">,</span> <span class="n">num_outliers</span><span class="p">,</span> <span class="n">mvmt_rsquare</span><span class="p">]</span> <span class="o">=</span> <span class="n">scnlab_outlier_id</span><span class="p">(</span><span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span> <span class="n">OPT</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>all outputs:</p>
+<div class="highlight-python"><div class="highlight"><pre>[y2, out, nout, mvmtrsq, mvmt_baseline_rsquare, yperc, rawvarp, rawvarF, percvarp, percvarF, ...
+ybase] = scnlab_outlier_id(&#39;data&#39;, y, &#39;options&#39;, OPT);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[dat, volInfo] = iimg_get_data(&#39;graymask.img&#39;, imgs);
+y = dat(:,1);
+% SETUP:
+OPT = scnlab_outlier_id(&#39;setup&#39;, &#39;tr&#39;, 2, &#39;spersess&#39;, [184 184 184 184 184 184], &#39;dummy&#39;, 1:3, &#39;hp&#39;, 100, &#39;mad&#39;, 4, &#39;niter&#39;, 3, &#39;mvmt&#39;, mvmt);
+% RUN:
+[y2, outliers, num_outliers] = scnlab_outlier_id(&#39;data&#39;, y, &#39;options&#39;, OPT);
+
+% run on whole brain
+[dat, volInfo] = iimg_get_data(&#39;graymask.img&#39;, imgs);
+OPT = scnlab_outlier_id(&#39;setup&#39;, &#39;tr&#39;, 2, &#39;spersess&#39;, [184 184 184 184 184 184], &#39;dummy&#39;, 1:2, &#39;hp&#39;, 100, &#39;mad&#39;, 4, &#39;niter&#39;, 5, &#39;mvmt&#39;, mvmt);
+OPT.doplot = 0;
+OPT.verbose = 0;
+fhandle = @(y) scnlab_outlier_id(&#39;data&#39;, y, &#39;options&#39;, OPT);
+y2 = matrix_eval_function(dat, fhandle)&#39;;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.selective_average">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">selective_average</code><span class="sig-paren">(</span><em>y</em>, <em>onsets</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.selective_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purpose: Get a selective average of values of data vector y, given
+onsets specified in onsets.  Onsets can be fractional; in this case,
+linear interpolation is used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">averages</span><span class="p">,</span> <span class="n">stderrs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">selective_average</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">onsets</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>y:</strong></dt>
+<dd><p class="first last">is a data vector to get selective averages from.
+It should be a column vector.</p>
+</dd>
+<dt><strong>onsets:</strong></dt>
+<dd><p class="first last">should be a cell array, with one cell per condition
+each cell should contain a column vector of onset times in SAMPLES (same
+resolution as y; e.g., in TRs, if y is an fMRI time series.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">followed by number of time points following onset to use;
+default is 20</p>
+</dd>
+<dt><strong>plot:</strong></dt>
+<dd><p class="first last">plot results.</p>
+</dd>
+<dt><strong>baseline:</strong></dt>
+<dd><p class="first last">followed by vector of which time points are baseline
+values; will subtract from each</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data:</strong></dt>
+<dd><p class="first last">indices, averages, stderrs:  Cell vectors, one cell per condition</p>
+</dd>
+<dt><strong>data, indices:</strong></dt>
+<dd><p class="first last">time points (observations) x trials (onsets)</p>
+</dd>
+<dt><strong>indices:</strong></dt>
+<dd><p class="first last">Cell vector, one cell per condition; time points (observations) x trials (onsets)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>onsets = {[1 10 30 80]&#39;  [20 60 90]&#39;}; y = (1:120)&#39;;
+[averages, stderrs, data, indices] = selective_average(y, onsets, &#39;t&#39;, 20)
+
+V = spm_vol(EXPT.FILES.im_files{1});
+y = spm_get_data(V, [10 10 10 1]&#39;);
+[averages, stderrs, data, indices] = selective_average(y, onsets2(1), &#39;t&#39;, 20, &#39;plot&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.selective_average_group">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">selective_average_group</code><span class="sig-paren">(</span><em>V</em>, <em>onsets</em>, <em>xyz_mm_pos</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.selective_average_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>uses selective_average.m
+used in selective_average_interactive_view_init.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[group_avgs, group_stes, subject_avgs, subject_stes] = selective_average_group(V, onsets, vox, &#39;basepts&#39;, 1:2, &#39;plotstes&#39;, 0);
+
+% Format onsets from onsets2 (NSF study format) into correct format for this function
+N = length(imgs); n_conditions = size(eventdesign{1}, 2);
+onsets = cell(1, N);
+for i = 1:N
+   for j = 1:n_conditions
+       onsets{i}{j} = onsets2{i}(find(eventdesign{i}(:, j)));
+   end
+end
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.smooth_timeseries">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">smooth_timeseries</code><span class="sig-paren">(</span><em>x</em>, <em>perc</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.smooth_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make exponential smoothing function with perc proportion of data points
+(0 &lt; perc &lt; 1)
+OR specify length directly, as % of points to 0 weight</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">V</span><span class="p">]</span> <span class="o">=</span> <span class="n">smooth_timeseries</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">perc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>apply smoothing filter V to data (x), V * x
+(works just as well for a matrix of column vectors)
+You could also apply it to a model matrix X</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.splineDetrend">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">splineDetrend</code><span class="sig-paren">(</span><em>v</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.splineDetrend" title="Permalink to this definition">¶</a></dt>
+<dd><p>What it does:
+A spline detrend with knot points every 2 s (hard coded number)
+I made this up too - it&#8217;s not the FDA approved method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">fv</span><span class="p">,</span><span class="n">bp</span><span class="p">,</span><span class="n">yy</span><span class="p">,</span><span class="n">myfft</span><span class="p">]</span> <span class="o">=</span> <span class="n">splineDetrend</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="s">&#39;p&#39;</span> <span class="p">[</span><span class="n">opt</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>v:</strong></dt>
+<dd><p class="first last">a vector to be detrended</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">means plot</p>
+</dd>
+</dl>
+<p>any other opt argument sets the knots and is treated as an integer, with detrending every n
+elements.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fv:</strong></dt>
+<dd><p class="first last">the detrended vector, bp, the knot points, and myfft, the
+abs(fft) of the detrended vector.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>tmp = cl(1).raw_data(:,1,6); tmp2 = trimts(tmp,3,[],1); [fv,bp,yy]=splineDetrend(tmp2);
+[fv,bp] = splineDetrend(tmp2,&#39;p&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.splinetrim">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">splinetrim</code><span class="sig-paren">(</span><em>y</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.splinetrim" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="n">ntrimmed</span><span class="p">,</span><span class="n">spikes</span><span class="p">,</span> <span class="n">yfit</span><span class="p">]</span> <span class="o">=</span> <span class="n">splinetrim</span><span class="p">(</span><span class="n">y</span><span class="p">,[</span><span class="n">iqrmult</span><span class="p">],[</span><span class="n">knotrate</span><span class="p">],[</span><span class="n">X</span><span class="p">],[</span><span class="s">&#39;p&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Uses a robust measure of deviations in a timeseries gradient
+to find high-velocity &#8216;spikes&#8217;, presumed to be artifacts</p>
+<p>Uses spline interpolation to replace spikes with reasonable values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>y:</strong></dt>
+<dd><p class="first last">a timeseries</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>iqrmult:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>how many times the interquartile range above which velocities are</dt>
+<dd><p class="first last">outliers, default is 1.5</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>knotrate:</strong></dt>
+<dd><p class="first last">sets knot points every k observations, default is 3</p>
+</dd>
+<dt><strong>X:</strong></dt>
+<dd><p class="first last">matrix of session means or other linear regressors to remove</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">plot the results</p>
+</dd>
+</dl>
+<p>X and &#8216;p&#8217; can be entered in any order, but after iqrmult and knotrate</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">y2</span><span class="p">,</span><span class="n">nt</span><span class="p">]</span> <span class="o">=</span> <span class="n">splinetrim</span><span class="p">(</span><span class="n">trialdat</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="s">&#39;p&#39;</span><span class="p">);</span> <span class="n">nt</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>setup</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.trimts">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">trimts</code><span class="sig-paren">(</span><em>y</em>, <em>sd</em>, <em>X</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.trimts" title="Permalink to this definition">¶</a></dt>
+<dd><ol class="arabic">
+<li><p class="first">Adjusts for scan effects (unless X is empty)</p>
+</li>
+<li><dl class="first docutils">
+<dt>Windsorizes timeseries to sd standard deviations</dt>
+<dd><ul class="first last simple">
+<li>Recursive: 3 steps</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Adds scan effects back into timeseries</p>
+</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [y,ntrimmed,allw] = trimts(y,sd,X,[do spike correct],[trimming iterations],[MADs])
+</pre></div>
+</div>
+<p>Spike correct: Some attempt at automatic adjustment for abrupt level
+shifts in data; default is 0, enter 1 to do this
+&#8220;Spikes&#8221; are IDd as values more than 10 MADs (by default) from moving average with 20 image FWHM
+Replaces &#8220;spike&#8221; data values with moving average</p>
+<p>iterations: number of cycles through trimming; default is 3</p>
+<p>MADs: allows you to change the number of MADs above which values are IDd
+as &#8220;spikes&#8221;</p>
+<p>filter y using X matrix; yf is residuals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Data_processing_tools.use_spm_filter">
+<code class="descclassname">Data_processing_tools.</code><code class="descname">use_spm_filter</code><span class="sig-paren">(</span><em>TR</em>, <em>dims</em>, <em>LChoice</em>, <em>HChoice</em>, <em>HParam</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Data_processing_tools.use_spm_filter" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [S,KL,KH] = use_spm_filter(TR,dim of filter,LChoice,HChoice,HP filter in s,[LP Gauss len in s])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>K{s}.LChoice:</strong></dt>
+<dd><p class="first last">Low-pass  filtering {&#8216;hrf&#8217; &#8216;Gaussian&#8217; &#8216;none&#8217;}</p>
+</dd>
+<dt><strong>K{s}.LParam:</strong></dt>
+<dd><p class="first last">Gaussian parameter in seconds</p>
+</dd>
+<dt><strong>K{s}.HChoice:</strong></dt>
+<dd><p class="first last">High-pass filtering {&#8216;specify&#8217; &#8216;none&#8217;}</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -6333,6 +7416,7 @@ DIFFERENT SPACES ONLY IF ENTERING 2 ARGS, 1st one names, 2nd one clusters</p>
 <li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>
 <li><a class="reference internal" href="#cluster-contig-region-tools">Cluster_contig_region_tools</a></li>
 <li><a class="reference internal" href="#module-Data_extraction">Data_extraction</a></li>
+<li><a class="reference internal" href="#data-processing-tools">Data_processing_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

@@ -1,52 +1,54 @@
 function varargout = scnlab_outlier_id(varargin)
-    %
-    % Created June 2007
-    % Tor Wager
-    %
-    % Methods (modes of operation)
-    % ---------------------------------------------------------------------
-    %
-    %
-    %   SETUP
-    %      Run this method first to generate an options structure OPT
-    %       that can be passed in along with any data vector for speedy
-    %       processing
-    %
-    % * OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess', [184 184
-    % 184 184 184 184], 'dummy', 1:3, 'hp', 100, 'mad', 4, 'niter', 3, 'mvmt', mvmt);
-    %
-    % ---------------------------------------------------------------------
-    %
-    %
-    %
-    %   DATA
-    %      Run this method second with an already-created OPT
-    %       and a data vector from one time series
-    %
-    %  [y2, outliers, num_outliers, mvmt_rsquare] = scnlab_outlier_id('data', y, 'options', OPT);
-    %
-    %% all outputs:
-    % [y2, out, nout, mvmtrsq, mvmt_baseline_rsquare, yperc, rawvarp, rawvarF, percvarp, percvarF, ...
-    %   ybase] = scnlab_outlier_id('data', y, 'options', OPT);
-    %
-    % ---------------------------------------------------------------------
-    %
-    % Example:
-    % [dat, volInfo] = iimg_get_data('graymask.img', imgs);
-    % y = dat(:,1);
-    % % SETUP:
-    % OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess', [184 184 184 184 184 184], 'dummy', 1:3, 'hp', 100, 'mad', 4, 'niter', 3, 'mvmt', mvmt);
-    % % RUN:
-    % [y2, outliers, num_outliers] = scnlab_outlier_id('data', y, 'options', OPT);
-    %
-    % % EXAMPLE: run on whole brain
-    % [dat, volInfo] = iimg_get_data('graymask.img', imgs);
-    % OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess', [184 184 184 184 184 184], 'dummy', 1:2, 'hp', 100, 'mad', 4, 'niter', 5, 'mvmt', mvmt);
-    % OPT.doplot = 0;
-    % OPT.verbose = 0;
-    % fhandle = @(y) scnlab_outlier_id('data', y, 'options', OPT);
-    % y2 = matrix_eval_function(dat, fhandle)';
-    %
+% Methods (modes of operation)
+%
+% :Setup:
+%
+%      Run this method first to generate an options structure OPT
+%      that can be passed in along with any data vector for speedy
+%      processing
+%
+% :Usage:
+% ::
+%
+%     OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess',
+%                             [184 184 184 184 184 184], 'dummy', 1:3,
+%                             'hp', 100, 'mad', 4, 'niter', 3, 'mvmt', mvmt);
+%
+% :Data:
+%      Run this method second with an already-created OPT
+%      and a data vector from one time series
+% ::
+%
+%     [y2, outliers, num_outliers, mvmt_rsquare] = scnlab_outlier_id('data', y, 'options', OPT);
+%
+% all outputs:
+% ::
+%
+%     [y2, out, nout, mvmtrsq, mvmt_baseline_rsquare, yperc, rawvarp, rawvarF, percvarp, percvarF, ...
+%     ybase] = scnlab_outlier_id('data', y, 'options', OPT);
+%
+% :Example:
+% ::
+%
+%    [dat, volInfo] = iimg_get_data('graymask.img', imgs);
+%    y = dat(:,1);
+%    % SETUP:
+%    OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess', [184 184 184 184 184 184], 'dummy', 1:3, 'hp', 100, 'mad', 4, 'niter', 3, 'mvmt', mvmt);
+%    % RUN:
+%    [y2, outliers, num_outliers] = scnlab_outlier_id('data', y, 'options', OPT);
+%
+%    % run on whole brain
+%    [dat, volInfo] = iimg_get_data('graymask.img', imgs);
+%    OPT = scnlab_outlier_id('setup', 'tr', 2, 'spersess', [184 184 184 184 184 184], 'dummy', 1:2, 'hp', 100, 'mad', 4, 'niter', 5, 'mvmt', mvmt);
+%    OPT.doplot = 0;
+%    OPT.verbose = 0;
+%    fhandle = @(y) scnlab_outlier_id('data', y, 'options', OPT);
+%    y2 = matrix_eval_function(dat, fhandle)';
+%
+% ..
+%    Created June 2007
+%    Tor Wager
+% ..
 
 
     for i = 1:length(varargin)

@@ -1,9 +1,12 @@
 function [x,V,xc] = smooth_timeseries(x,perc)
-% [x,V] = smooth_timeseries(x,perc)
-% tor wager
-% make exponential smoothing function with perc proportion of data points
+% Make exponential smoothing function with perc proportion of data points
 % (0 < perc < 1)
 % OR specify length directly, as % of points to 0 weight
+%
+% :Usage:
+% ::
+%
+%     [x,V] = smooth_timeseries(x,perc)
 %
 % apply smoothing filter V to data (x), V * x
 % (works just as well for a matrix of column vectors)

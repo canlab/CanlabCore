@@ -1,60 +1,83 @@
-% [y, pI, S, I] = hpfilter(y, TR, HP, spersess, varargin)
+% :Usage:
+% ::
 %
+%     [y, pI, S, I] = hpfilter(y, TR, HP, spersess, varargin)
 %
-% Outputs:
-% y         filtered data, session intercepts removed
-% pI        intercept model X*pinv, such that y - pI * y removes intercept
-% I         intercept and dummy scan design matrix
-% S         smoothing model, such that S * y does HP filtering
+% :Inputs:
+%
+%   **y:**
+%        data to be filtered
+%
+%   **TR:**
+%        TR in seconds
+%
+%   **HP:**
+%        Highpass filter cutoff in seconds
+%
+%   **spersess:**
+%        scans per sessions; vector with length = # of sessions
+%
+% :Optional inputs: in fixed order -
+%
+%   **pI:**
+%        pseudoinverse of I matrix, for fast application to new y 
+%
+%   **dummy:**
+%        vector of fixed time points to model with dummy regressors in each run
+%        e.g., 1:2 models first two time points in each run with
+%        separate dummy regressor (appended to I)
+%
+%   **dooutliers:**
+%        flag (1/0).  If 1, imputes session mean to time points
+%        with data > 4 median absolute deviations from the session median (after
+%        filtering). Not part of scnlab standard preprocessing. Use with caution.
+%
+% :Outputs:
+%
+%   **y:**
+%        filtered data, session intercepts removed
+%
+%   **pI:**
+%        intercept model X*pinv, such that y - pI * y removes intercept
+%
+%   **I:**
+%        intercept and dummy scan design matrix
+%
+%   **S:**
+%        smoothing model, such that S * y does HP filtering
 %           if sess lengths are unequal, make as long as the longest
 %           session; may do funny things to shorter ones?
-% 
-% Inputs:
-% y         data to be filtered
-% TR        TR in seconds
-% HP        Highpass filter cutoff in seconds
-% spersess  scans per sessions; vector with length = # of sessions
 %
-% Optional inputs - in fixed order:
-% 1: pI     pseudoinverse of I matrix, for fast application to new y 
-% 2: dummy  vector of fixed time points to model with dummy regressors in each run
-%           e.g., 1:2 models first two time points in each run with
-%           separate dummy regressor (appended to I)
-% 3: dooutliers  flag (1/0).  If 1, imputes session mean to time points
-% with data > 4 median absolute deviations from the session median (after
-% filtering). Not part of scnlab standard preprocessing. Use with caution.
+% :Examples:
+% ::
 %
-% EXamples:
+%    % slowest, creates intercept and smoothing matrix
+%    [y, I, S] = hpfilter(data, 2, 120, [169 169 169 173 173]);
 %
-% [y, I, S] = hpfilter(data, 2, 120, [169 169 169 173 173]); % slowest, creates
-% intercept and smoothing matrix
+%    % for subsequent voxels with the same session info,
+%    y = hpfilter(data, [], S, [169 169 169 173 173], I);
 %
-% for subsequent voxels with the same session info,
-% y = hpfilter(data, [], S, [169 169 169 173 173], I);
+%    y = clusters(1).indiv_timeseries(:, 1);
+%    [y, I, S] = hpfilter(y, 2, 120, [169 169 169 173 173]);
+%    y = clusters(1).indiv_timeseries(:, 1);
+%    [y] = hpfilter(y, [], S, [169 169 169 173 173], I);
 %
-% y = clusters(1).indiv_timeseries(:, 1);
-%[y, I, S] = hpfilter(y, 2, 120, [169 169 169 173 173]);
-%y = clusters(1).indiv_timeseries(:, 1);
-%[y] = hpfilter(y, [], S, [169 169 169 173 173], I);
+%    % Regress out average activity in first 2 scans of each session (artifacts)
+%    y = hpfilter(raw, 2, 100, EXPT.FIR.nruns, [], 1:2);
 %
-% Regress out average activity in first 2 scans of each session (artifacts)
-% y = hpfilter(raw, 2, 100, EXPT.FIR.nruns, [], 1:2);
+%    % Another example set up first, then run on multi-voxel matrix:
+%    [y, pI, S, I] = hpfilter(data{1}(:,1), HPDESIGN.TR, HPDESIGN.HP, HPDESIGN.spersess, [], 1);
+%    tic, y = hpfilter(data{1}, [], S, HPDESIGN.spersess, pI); toc
 %
-% Another example set up first, then run on multi-voxel matrix:
-% [y, pI, S, I] = hpfilter(data{1}(:,1), HPDESIGN.TR, HPDESIGN.HP, HPDESIGN.spersess, [], 1);
-% tic, y = hpfilter(data{1}, [], S, HPDESIGN.spersess, pI); toc
+%    % But if you just have one matrix, no need to set up, so this is just as fast:
+%    tic , [y, pI, S, I] = hpfilter(data{1}, HPDESIGN.TR, HPDESIGN.HP,HPDESIGN.spersess, [], 1);, toc
 %
-% But if you just have one matrix, no need to set up, so this is just as
-% fast:
-% tic , [y, pI, S, I] = hpfilter(data{1}, HPDESIGN.TR, HPDESIGN.HP,HPDESIGN.spersess, [], 1);, toc
-%
-%
-% tor wager
-% Modified 5/12/06 to include dummy images for each session
-% Modified April 07 to add sep. dummy covs for each session and add outlier
-% option
-% Also: y can now be a matrix; hpfilter operates on columns (faster than
-% looping)
+% ..
+%    tor wager
+%    Modified 5/12/06 to include dummy images for each session
+%    Modified April 07 to add sep. dummy covs for each session and add outlier option
+%    Also: y can now be a matrix; hpfilter operates on columns (faster than looping)
+% ..
 
 function [y, pI, HP, incpt] = hpfilter(y, TR, HP, spersess, varargin)
     incpt = [];

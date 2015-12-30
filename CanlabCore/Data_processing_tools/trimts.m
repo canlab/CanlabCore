@@ -1,9 +1,15 @@
 function [y,ntrimmed,allw] = trimts(y,sd,X,varargin)
-% function [y,ntrimmed,allw] = trimts(y,sd,X,[do spike correct],[trimming iterations],[MADs])
 % 1.  Adjusts for scan effects (unless X is empty)
+%
 % 2.  Windsorizes timeseries to sd standard deviations
 %       - Recursive: 3 steps
+%
 % 3.  Adds scan effects back into timeseries
+%
+% :Usage:
+% ::
+%
+%     function [y,ntrimmed,allw] = trimts(y,sd,X,[do spike correct],[trimming iterations],[MADs])
 %
 % Spike correct: Some attempt at automatic adjustment for abrupt level
 % shifts in data; default is 0, enter 1 to do this
@@ -15,9 +21,10 @@ function [y,ntrimmed,allw] = trimts(y,sd,X,varargin)
 % MADs: allows you to change the number of MADs above which values are IDd
 % as "spikes"
 %
-% Modified 2/9/05, 02/2008
-% Tor Wager
-
+% ..
+%    Modified 2/9/05, 02/2008
+%    Tor Wager
+% ..
 % filter y using X matrix; yf is residuals
 
 ntrimmed = 0;

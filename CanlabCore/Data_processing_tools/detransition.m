@@ -1,10 +1,14 @@
 function y = detransition(y,varargin)
-% y = detransition(y,[doplot])
-%
-% for fMRI timeseries that contains large 'jump' artifacts due to motion correction
+% For fMRI timeseries that contains large 'jump' artifacts due to motion correction
 % or other problems.
-% removes these large spikes.
-% updated version built into spikecorrect in trimts
+%
+% :Usage:
+% ::
+%
+%     y = detransition(y,[doplot])
+%
+% Removes these large spikes.
+% Updated version built into spikecorrect in trimts
 
 doplot = 1;
 if length(varargin) > 0, doplot = varargin{1};,end

@@ -1,64 +1,70 @@
+% This object is used to represent physiological data.  The object uses the
+% design_matrix() class to for the data set and has additional fields for the
+% sampling frequency.
+%
+% :Usage:
+% ::
+%
+%     physio_data: data class for creating a physiological data object
+%
+% :Inputs:
+%
+%   **dat:**
+%        M x N numeric matrix containing Observations and Variables
+%
+%   **varname:**
+%        Cell array containing variable names.  Must
+%                             match number of column in data matrix
+%
+%   **samplefreq:**
+%        Sampling frequency
+%
+% -------------------------------------------------------------------------
+% Current Methods for physio_data (inherits from design_matrix class too)
+% -------------------------------------------------------------------------
+%
+% calc_rate                 : Calculate Rate of peaks
+% downsample                : downsample dataset
+% filter                    : Filter data
+% peakdetect                : Find peaks in data
+% physio_data               : class constructor
+% plot                      : Plot data
+% save                      : Save object as .mat file
+% smooth                    : Apply moving average to data
+%
+% :Example:
+% ::
+%
+%    pulse = physio_data(data(:,2),{'pulse'},settings.fs);
+%
+% Also see PhysioData_Tutorial.m in Examples
+%
+% ..
+%     -------------------------------------------------------------------------
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
+%     Copyright (C) 2014  Luke Chang
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%    -------------------------------------------------------------------------
+%
+%    NOTES:
+%    add ability to import .acq files
+%    add ability to quickly check all peaks?
+% ..
+
 classdef physio_data < design_matrix
-    
-    % physio_data: data class for creating a physiological data object
-    %
-    %--------------------------------------------------------------------------
-    % This object is used to represent physiological data.  The object uses the
-    % design_matrix() class to for the data set and has additional fields for the
-    % sampling frequency.
-    %
-    %--------------------------------------------------------------------------
-    % Inputs:
-    % ---------------------------------------------------------------------
-    % dat                       : M x N numeric matrix containing Observations and Variables
-    %
-    % varname                   : Cell array containing variable names.  Must
-    %                             match number of column in data matrix
-    %
-    % samplefreq                : Sampling frequency
-    %
-    %--------------------------------------------------------------------------
-    % Current Methods for physio_data (inherits from design_matrix class too)
-    %--------------------------------------------------------------------------
-    %
-    % calc_rate                 : Calculate Rate of peaks
-    % downsample                : downsample dataset
-    % filter                    : Filter data
-    % peakdetect                : Find peaks in data
-    % physio_data               : class constructor
-    % plot                      : Plot data
-    % save                      : Save object as .mat file
-    % smooth                    : Apply moving average to data
-    %
-    %--------------------------------------------------------------------------
-    % Examples:
-    % ---------------------------------------------------------------------
-    % pulse = physio_data(data(:,2),{'pulse'},settings.fs);
-    %
-    % Also see PhysioData_Tutorial.m in Examples
-    % -------------------------------------------------------------------------
-    % Author and copyright information:
-    % -------------------------------------------------------------------------
-    %     Copyright (C) 2014  Luke Chang
-    %
-    %     This program is free software: you can redistribute it and/or modify
-    %     it under the terms of the GNU General Public License as published by
-    %     the Free Software Foundation, either version 3 of the License, or
-    %     (at your option) any later version.
-    %
-    %     This program is distributed in the hope that it will be useful,
-    %     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    %     GNU General Public License for more details.
-    %
-    %     You should have received a copy of the GNU General Public License
-    %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    % -------------------------------------------------------------------------
-    
-    % NOTES:
-    % add ability to import .acq files
-    % add ability to quickly check all peaks?
-    
     properties
         % inherits properties from design_matrix
         samplefreq = [];

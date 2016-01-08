@@ -42,6 +42,7 @@ function handle = bar_wani(y, e, bar_width, varargin)
 % Outputs:
 % -------------------------------------------------------------------------
 % h              graphic handles for a bar plot
+% 
 %
 % Examples: you can see the output in 
 % http://wagerlab.colorado.edu/wiki/doku.php/help/core/figure_gallery
@@ -225,10 +226,13 @@ for i = 1:barnum
             if ymin > min(sc_data{j,i}), ymin = min(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
             if ymax < max(sc_data{j,i}), ymax = max(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
         end
-    
+        
+        xdata_all(i,j) = xdata(9*(j-1)+1);
+        
         if grnum == 1
             break
         end
+        
     end
     
     set(hh(2), 'xdata', xdata);
@@ -252,6 +256,9 @@ if dobtwlines
         line(btwx(i,:), btwy(i,:), 'linestyle', btwlnstyle, 'linewidth', btwlnwidth, 'color', btwcol)
     end
 end
+
+set(gca, 'tickdir', 'out', 'ticklength', [.01 .01]);
+set(gca, 'xtick', sort(xdata_all(:)));
 
 if dosave
     try

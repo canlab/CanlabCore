@@ -1226,7 +1226,12 @@ rand('twister',sum(100*clock))
 
 % start with weights all equal whether multilevel or not
 means = bootstrp(final_boot_samples, wmean, Y, W, X);
-
+if any(any(isnan(means),2)) 
+    s = sprintf('%d among %d bootsamples have been deleted because of NaNs.', sum(any(isnan(means),2)),size(means,1));
+    disp('WARNING:*******************************')
+    warning(s);
+    means(any(isnan(means),2),:) = [];
+end
 stats = getstats(means, stats, k, nvars);
 stats.analysisname = 'Bootstrapped statistics';
 

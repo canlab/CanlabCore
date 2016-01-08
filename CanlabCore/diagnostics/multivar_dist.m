@@ -1,26 +1,40 @@
-% [ds, S, p] = multivar_dist(X)
-%
-% multivariate normality checking
-% and diagnostic plots
-%
-% given matrix X with cases = rows, cols = variables
-%
-% Outputs:
-% ----------------------------------------------------
-% ds: is matrix of squared distances, case numbers, and
-%   expected chi2 values (in columns in this order)
-%   rows are cases
-%   *NOTE: Sorted in order of ascending distance!
-% S: estimated covariance matrix
-% mv_distance: squared distances in original order of rows
-% p: p-values in original order of rows
-%
-% by Tor Wager
-
 function [ds, S, p] = multivar_dist(X)
-    % -----------------------------------------------------
-    % * determine multivariate standard deviation matrix S
-    % -----------------------------------------------------
+% multivariate normality checking and diagnostic plots
+%
+% :Usage:
+% ::
+%
+%     [ds, S, p] = multivar_dist(X)
+%
+% :Input:
+%
+%     given matrix X with cases = rows, cols = variables
+%
+% :Outputs:
+%
+%   **ds:**
+%        is matrix of squared distances, case numbers, and
+%        expected chi2 values (in columns in this order)
+%        rows are cases
+%
+%        NOTE: Sorted in order of ascending distance!
+%
+%   **S:**
+%        estimated covariance matrix
+%
+%   **mv_distance:**
+%        squared distances in original order of rows
+%
+%   **p:**
+%        p-values in original order of rows
+%
+% ..
+%    by Tor Wager
+% ..
+
+    % ..
+    %    determine multivariate standard deviation matrix S
+    % ..
 
     % center
     Xs = X - repmat(mean(X), size(X, 1), 1);

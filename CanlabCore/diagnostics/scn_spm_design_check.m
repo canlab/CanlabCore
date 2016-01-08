@@ -1,29 +1,39 @@
 function scn_spm_design_check(spm_results_dir, varargin)
-%
-% scn_spm_design_check(spm_results_dir, varargin)
-%
 % Run in a single-subject (first-level) SPM directory to check 
 % design matrix variance inflation factors and high-pass filtering.
 % Prints out table of regressors and their above-threshold VIFs (see options).
 % Saves .png images of the key figures.
 %
-% Options:
-% 'events_only'
-%   Show plots and diagnostics for ONLY events, not nuisance covariates or
-%   other user-specified regressors.  Useful when you have many nuisance
-%   covs.
-% 'vif_thresh', t
-%   Only regressors with a VIF > t will be printed in VIF table.
-% 'sort_by_vif'
-%   Sort regressors in VIF table by VIF (DEFAULT: order regressors as in model).   
+% :Usage:
+% ::
+%
+%     scn_spm_design_check(spm_results_dir, varargin)
+%
+% :Optional Inputs:
+%
+%   **'events_only':**
+%        Show plots and diagnostics for ONLY events, not nuisance covariates or
+%        other user-specified regressors.  Useful when you have many nuisance
+%        covs.
+%
+%   **'vif_thresh', t':**
+%        Only regressors with a VIF > t will be printed in VIF table.
+%
+%   **'sort_by_vif'':**
+%        Sort regressors in VIF table by VIF (DEFAULT: order regressors as in model).   
 %
 % Calls: scn_spm_choose_hpfilter.m, scn_spm_get_events_of_interest.m
 %
-% Updated: Tor Wager, Aug 2010; Oct 2011: Add 'events_only'; July 2012:
-% fixed for parametric modulators. Luka Ruzic, Sept 2012: added VIF tables.
+% :Examples:
+% ::
 %
-% Examples:
-% scn_spm_design_check(pwd, 'events_only');
+%    scn_spm_design_check(pwd, 'events_only');
+%
+% ..
+%    Updated: Tor Wager, Aug 2010; Oct 2011: Add 'events_only'; July 2012:
+%    fixed for parametric modulators. Luka Ruzic, Sept 2012: added VIF tables.
+% ..
+
 
 if nargin < 1, spm_results_dir = pwd; end
 

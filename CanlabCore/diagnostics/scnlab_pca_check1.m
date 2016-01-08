@@ -1,46 +1,55 @@
 function scnlab_pca_check1(imgs, realign_files, X, spersess)
+% :Usage:
+% ::
 %
-% function scnlab_pca_check1(imgs, realign_files or params (t x 6) across all runs, X, spersess)
+%     function scnlab_pca_check1(imgs, realign_files or params (t x 6) across all runs, X, spersess)
 %
 %
-% imgs              list of all image names in order
-% realign_files     movement param file for each session, names in a cell
-%                   array
-%                   OR a t x 6 matrix of realignment parameters across all
-%                   sessions
-% X                 design matrix; no intercept is needed
+% :Inputs:
+%
+%   **imgs:**
+%        list of all image names in order
+%
+%   **realign_files:**
+%        movement param file for each session, names in a cell array, OR
+%
+%        a t x 6 matrix of realignment parameters across all sessions
+%
+%   **X:**
+%        design matrix; no intercept is needed
 
-% Example setup code for auditory oddball data
-% -------------------------------------------------------------------------
-% 
-% cd('/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/Mind_Res_Net_fMRI_Course_2008/data/auditory_oddball/2subjects-processed/s01/')
-% 
-% imgs = filenames('*/sw*img','absolute','char')
-% realign_files = filenames('*/rp*txt')
-% 
-% % LOAD TASK ONSETS and CREATE DESIGN MATRIX
-% 
-% onsets{1} = load('novel_stimuli_run1.asc');
-% onsets{2} = load('target_stimuli_run1.asc');
-% onsets{3} = load('standard_stimuli_run1.asc');
-% onsets{4} = load('novel_stimuli_run2.asc');
-% onsets{5} = load('target_stimuli_run2.asc');
-% onsets{6} = load('standard_stimuli_run2.asc');
-% 
-% regs_per_sess = 3;
-% nsess = 2;
-% for i = 1:length(onsets), onsets{i} = onsets{i}'; end
-% X = cell(1, nsess);
-% X{1} = onsets2delta(onsets(1:3), 1, 249);
-% X{1} = X{1}(:, 1:end-1);
-% X{2} = onsets2delta(onsets(4:6), 1, 249);
-% X{2} = X{2}(:, 1:end-1);
-% X = blkdiag(X{:});
+% :Examples:
+% ::
+%
+%    % setup code for auditory oddball data
+%    cd('/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/Mind_Res_Net_fMRI_Course_2008/data/auditory_oddball/2subjects-processed/s01/')
+%
+%    imgs = filenames('*/sw*img','absolute','char')
+%    realign_files = filenames('*/rp*txt')
+%
+%    % LOAD TASK ONSETS and CREATE DESIGN MATRIX
+%    onsets{1} = load('novel_stimuli_run1.asc');
+%    onsets{2} = load('target_stimuli_run1.asc');
+%    onsets{3} = load('standard_stimuli_run1.asc');
+%    onsets{4} = load('novel_stimuli_run2.asc');
+%    onsets{5} = load('target_stimuli_run2.asc');
+%    onsets{6} = load('standard_stimuli_run2.asc');
+%
+%    regs_per_sess = 3;
+%    nsess = 2;
+%    for i = 1:length(onsets), onsets{i} = onsets{i}'; end
+%    X = cell(1, nsess);
+%    X{1} = onsets2delta(onsets(1:3), 1, 249);
+%    X{1} = X{1}(:, 1:end-1);
+%    X{2} = onsets2delta(onsets(4:6), 1, 249);
+%    X{2} = X{2}(:, 1:end-1);
+%    X = blkdiag(X{:});
 
-
-% PCA ANALYSIS USING FMRISTAT
-% -------------------------------------------------------------------------
-% intercept, for later removal
+% ..
+%    PCA ANALYSIS USING FMRISTAT
+%
+%    intercept, for later removal
+% ..
 Xint = intercept_model(spersess, 1:10);
 
 scum = cumsum(spersess);

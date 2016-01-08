@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. figure:: _build/html/_images/logo.jpg
+.. figure:: logo.jpg
 
 CanlabCore documentation home
 =============================

@@ -1,39 +1,59 @@
 function [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs, varargin)
-%
-% [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs,'mask',[mask name],'MADs',[MADs],'doplot',[0/1])
-%
 % Gets global image values for a session, and uses trimts.m to find
 % outliers. The optional input MADs allows one to lower or raise the
 % threshold for identifying scans as spikes (default = 10).
+%
+% :Usage:
+% ::
+%
+%     [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs,'mask',[mask name],'MADs',[MADs],'doplot',[0/1])
 %
 % Multi-session mode returns much more output and more images, and
 % takes in a cell array with images (preferably 4-D) for each session
 % (run).
 % 
-% Inputs:
-% 'mask',[pathtomaskfile] - mask images using the mask in pathtomaskfile, default: implicit mask
-% 'MADs',[scalar]         - change Mahalanobis distance, default: 10
-% 'doplot',[0 / 1]        - plot result figures, default: true
+% :Inputs:
+%
+%   **'mask',[pathtomaskfile]:**
+%        mask images using the mask in pathtomaskfile, default: implicit mask
+%
+%   **'MADs',[scalar]:**
+%        change Mahalanobis distance, default: 10
+%
+%   **'doplot',[0 / 1]:**
+%        plot result figures, default: true
 %
 % Returns:
-%   g, global values
-%   spikes, identified spikes
-%   gtrim, trimmed/adjusted global values, can be used as covariate in GLM
 %
-%   nuisance_covs,
-%   a matrix of 1)gtrim and 2) dummy regressors that can be used to minimize
-%   spike influence in GLM
+%   **g:**
+%        global values
+%
+%   **spikes:**
+%        identified spikes
+%
+%   **gtrim:**
+%        trimmed/adjusted global values, can be used as covariate in GLM
+%
+%
+%   **nuisance_covs:**
+%        a matrix of 1)gtrim and 2) dummy regressors that can be used to minimize
+%        spike influence in GLM
 %
 % We may want to save norms on the number of outliers found.
 %
-% e.g.,
-% % Get image names
-% for i = 1:6, sess_images{i} = filenames(sprintf('run%02d/vol0*img', i), 'char', 'absolute'); end
-% % Run
-% [g, spikes, gtrim, nuisance_covs, snr] = scn_session_spike_id(sess_images);
-
-% Tor Wager
-% figure options, new input format Stephan
+% :Examples:
+% ::
+%
+%    % Get image names
+%    for i = 1:6, sess_images{i} = filenames(sprintf('run%02d/vol0*img', i), 'char', 'absolute'); end
+%
+%    % Run
+%    [g, spikes, gtrim, nuisance_covs, snr] = scn_session_spike_id(sess_images);
+%
+% ..
+%    Tor Wager
+%    figure options, new input format Stephan
+% ..
 
 basedir = pwd;
 yamlfilename = 'qc_results.yaml'; % for database integration

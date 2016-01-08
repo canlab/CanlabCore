@@ -1,8 +1,12 @@
 function wh_cols = scn_spm_get_events_of_interest(SPM, varargin)
-% wh_cols = scn_spm_get_events_of_interest(SPM, varargin)
-% Gets events of interest: All regressors, or events only if 'events_only'
-% is input as keyword
+% Gets events of interest.
 %
+% :Usage:
+% ::
+%
+%     wh_cols = scn_spm_get_events_of_interest(SPM, varargin)
+%
+% All regressors, or events only if 'events_only' is input as keyword
 % 'from_multireg':  followed by an integer, to include first n columns from
 % the multireg R matrix as "of interest".  only works with 'events_only'
 % flag, of course.

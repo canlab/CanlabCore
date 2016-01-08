@@ -1,13 +1,22 @@
 function M = spm_general_hist(hP,mP,textlab,varargin)
-% function M = spm_general_hist(hP,mP,textlab,[suppress plot - enter anything])
-% Tor Wager, 10/5/02
+% :Usage:
+% ::
+%
+%     function M = spm_general_hist(hP,mP,textlab,[suppress plot - enter anything])
+%
+% :Inputs:
+%
+%   **hP:**
+%        list of file names to compute histograms from
+%
+%   **mP:**
+%        list of file names to compute masks from
+%
+%   **textlab:**
+%        text string, e.g. 'ventricles' to label output tiffs
 % 
-% Input:
-%   hP		list of file names to compute histograms from
-%   mP		list of file names to compute masks from
-%   textlab	text string, e.g. 'ventricles' to label output tiffs
-% 
-% Output:
+% :Output:
+%
 %   histograms for all input images (usually contrast images from individual
 %   subjects) plotted against a normal curve.
 %
@@ -23,7 +32,10 @@ function M = spm_general_hist(hP,mP,textlab,varargin)
 % Histograms (blue) are overlaid on a Gaussian distribution (red)
 % with a mean of 0 and a standard deviation equal to that of the observed data.
 %
-% 
+% ..
+%    Tor Wager, 10/5/02
+% ..
+
 doplot = 1;
 if length(varargin) > 0, doplot = 0;, end
 

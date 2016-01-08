@@ -1,27 +1,34 @@
 function [z, xbins, ybins] = joint_hist(x,y,varargin)
 % Create 2-D joint histogram from vectors x and y
 %
-% [z, xbins, ybins] = joint_hist(x,y,[nbins],[noplot])
+% :Usage:
+% ::
 %
-% Inputs:
-% --------------------------------------------------------------------
-% x and y are vectors of paired observations on two variables
+%     [z, xbins, ybins] = joint_hist(x,y,[nbins],[noplot])
 %
-% Outputs:
-% --------------------------------------------------------------------
-% z is the matrix representing the joint histogram
-% cols of z are bins of x, rows are bins of y
-% in plot, X axis is y, Y axis is x
+% :Inputs:
+%
+%     x and y:**
+%        are vectors of paired observations on two variables
+%
+% :Outputs:
+%
+%   **z:**
+%        is the matrix representing the joint histogram
+%        cols of z are bins of x, rows are bins of y
+%        in plot, X axis is y, Y axis is x
 %
 % Optional: number of bins, suppress plotting
 % 
-% Examples:
-% -------------------------------------------------------------------
-% z = joint_hist(nnmfscores{i}{j}(:, 1),nnmfscores{i}{j}(:, 2), 50, 'noplot');
-% h = plot_joint_hist_contour(z, [0 0 1]);
+% :Examples:
+% ::
 %
+%    z = joint_hist(nnmfscores{i}{j}(:, 1),nnmfscores{i}{j}(:, 2), 50, 'noplot');
+%    h = plot_joint_hist_contour(z, [0 0 1]);
 %
-% Tor Wager
+% ..
+%    Tor Wager
+% ..
 
 nbins = 10;
 if length(varargin) > 0, nbins = varargin{1}; end

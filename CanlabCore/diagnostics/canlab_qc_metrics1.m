@@ -4,79 +4,120 @@ function [QC, dat] = canlab_qc_metrics1(epi_names, mask_name, varargin)
 % Standard CANlab usage is to enter a single 4-D ravol* for one run, and
 % the brain mask implicit_mask.img created in canlab_preproc.m
 %
-% Required inputs:
-% epi_names : Names of (usually one) 4-D EPI file, in cell or string, full path
-% mask_name : Name of brain mask image, string, full path
+% :Inputs:
+%
+%   **epi_names:**
+%        Names of (usually one) 4-D EPI file, in cell or string, full path
+%
+%   **mask_name:**
+%        Name of brain mask image, string, full path
 %              IF EMPTY: Uses implict masking (better) and calculates
 %              ghost/signal outside mask
 %
-% Optional inputs:
-% 'noplot' : skip plots
-% 'noverbose' : skip output printout to screen
-% 'printfile' : followed by name of file to print output to, full path
-% 'noheader' : suppress printing of header (var names) in output
+% :Optional Inputs:
 %
-% Missing values and basic info:
-% ------------------------------------------
-% num_images : number of images
-% missing_vox : Voxels in mask with NaN values or zero values at every time point
-% missing_images : Images with NaN values or zero values at every voxel
+%   **noplot:**
+%        skip plots
 %
-% missing_values : NaN or zero values in valid images / voxels. Zeros could
-% be interpreted as values of zero in analysis, causing artifacts in results
-% if these are actually invalid values.
+%   **noverbose:**
+%        skip output printout to screen
+%
+%   **printfile:**
+%        followed by name of file to print output to, full path
+%
+%   **noheader:**
+%        suppress printing of header (var names) in output
+%
+% :Missing values and basic info:
+%
+%   **num_images:**
+%        number of images
+%
+%   **missing_vox:**
+%        Voxels in mask with NaN values or zero values at every time point
+%
+%   **missing_images:**
+%        Images with NaN values or zero values at every voxel
+%
+%
+%   **missing_values:**
+%        NaN or zero values in valid images / voxels. Zeros could
+%        be interpreted as values of zero in analysis, causing artifacts in results
+%        if these are actually invalid values.
 %
 % Missing voxels will often be ignored in analyses in most software, but
-% missing images/values could cause problems
+% Missing images/values could cause problems
 %
-% Basic signal to noise:
-% ------------------------------------------
-% perc-mean-ghost = mean signal outside the mask / mean total signal
+% :Basic signal to noise:
 %
-% mean_snr = mean Cohen's d (signal/noise, SNR) across time (temporal SNR) within the mask.
+%
+%   **perc-mean-ghost:**
+%        mean signal outside the mask / mean total signal
+%
+%
+%   **mean_snr:**
+%        mean Cohen's d (signal/noise, SNR) across time (temporal SNR) within the mask.
 %    Mean divided by standard deviation across time at each voxel, averaged.  Higher is better.
 %
-% snr_inhomogeneity = standard deviation of SNR within the mask. Lower is better.
 %
-% snr_inhomogeneity95 = 95% confidence range for SNR within the mask. Lower is better.
+%   **snr_inhomogeneity:**
+%        standard deviation of SNR within the mask. Lower is better.
 %
-% rms_successive_diffs : Essentially a high-pass filtered version of SNR,
-% expressed as a fraction of the overall mean and averaged across voxels. Lower is better.
 %
-% rms_successive_diffs_inhomogeneity : standard deviation of the above across voxels. Lower is better.
+%   **snr_inhomogeneity95:**
+%        95% confidence range for SNR within the mask. Lower is better.
 %
-% Left-right asymmetry
-% ------------------------------------------
-% signal_rms_asymmetry : Voxel-wise left/right root mean square asymmetry in mean signal across time, expressed as
-% a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.
 %
-% signal_hemispheric_asymmetry : Root mean square difference between left and
-% right hemispheres, expressed as a fraction of the grand mean signal across time.  Reflects
-% gross inhomogeneity.  Lower is better.
+%   **rms_successive_diffs:**
+%        Essentially a high-pass filtered version of SNR,
+%        expressed as a fraction of the overall mean and averaged across voxels. Lower is better.
 %
-% snr_rms_asymmetry : Voxel-wise left/right root mean square asymmetry in SNR, expressed as
-% a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.
 %
-% snr_hemispheric_asymmetry : Root mean square difference between left and
-% right hemispheres, expressed as a fraction of the mean SNR.  Reflects
-% gross inhomogeneity.  Lower is better.
+%   **rms_successive_diffs_inhomogeneity:**
+%        standard deviation of the above across voxels. Lower is better.
 %
-% Examples:
-% --------------------------------------------
-% %SETUP:
-% mydir{1} = '/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw/Functional/Preprocessed/run_01';
-% wcard = 'rarun*img';
-% epi_names = filenames(fullfile(mydir{1}, wcard), 'absolute');
+% :Left-right asymmetry:
 %
-% maskdir = '/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw';
-% mask = 'implicit_mask.img';
-% mask_name = fullfile(maskdir, maskname);
 %
-% %RUN:
-% QC = canlab_qc_metrics1(epi_names, mask_name);
+%   **signal_rms_asymmetry:**
+%        Voxel-wise left/right root mean square asymmetry in mean signal across time, expressed as
+%        a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.
 %
-% QC = canlab_qc_metrics1(epi_names, mask_name, 'noplot', 'printfile', 'test_qc.txt');
-% QC = canlab_qc_metrics1(epi_names, mask_name, 'noplot', 'printfile', 'test_qc.txt', 'noheader');
+%
+%   **signal_hemispheric_asymmetry:**
+%        Root mean square difference between left and
+%        right hemispheres, expressed as a fraction of the grand mean signal across time.  Reflects
+%        gross inhomogeneity.  Lower is better.
+%
+%
+%   **snr_rms_asymmetry:**
+%        Voxel-wise left/right root mean square asymmetry in SNR, expressed as
+%        a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.
+%
+%
+%   **snr_hemispheric_asymmetry:**
+%        Root mean square difference between left and
+%        right hemispheres, expressed as a fraction of the mean SNR.  Reflects
+%        gross inhomogeneity.  Lower is better.
+%
+% :Examples:
+% ::
+%
+%    %SETUP
+%    mydir{1} = '/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw/Functional/Preprocessed/run_01';
+%    wcard = 'rarun*img';
+%    epi_names = filenames(fullfile(mydir{1}, wcard), 'absolute');
+%
+%    maskdir = '/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw';
+%    mask = 'implicit_mask.img';
+%    mask_name = fullfile(maskdir, maskname);
+%
+%    %RUN
+%    QC = canlab_qc_metrics1(epi_names, mask_name);
+%
+%    QC = canlab_qc_metrics1(epi_names, mask_name, 'noplot', 'printfile', 'test_qc.txt');
+%    QC = canlab_qc_metrics1(epi_names, mask_name, 'noplot', 'printfile', 'test_qc.txt', 'noheader');
+%
 
 doplot = 1;
 verbose = 1;

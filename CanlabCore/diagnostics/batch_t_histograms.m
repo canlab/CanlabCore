@@ -1,20 +1,24 @@
 function [none] = batch_t_histograms(varargin)
-% batch_t_histograms([options])
+% Creates page(s) of t stat histograms for each subject level contrast in
+% set of subject level analyses using image_intensity_histograms.
 %
-% DESCRIPTION
-%   Creates page(s) of t stat histograms for each subject level contrast in
-%     set of subject level analyses using image_intensity_histograms.
+% :Usage:
+% ::
 %
-% OPTIONS
-%   {analysis_dirs}
-%       run on all contrasts in directories of cell array {analysis_dirs}
+%     batch_t_histograms([options])
+%
+% :Optional Inputs:
+%
+%   **{analysis_dirs}:**
+%        run on all contrasts in directories of cell array {analysis_dirs}
+%
 %       (DEFAULT: use all directories in working directory containing spmT_*.img files)
-%   'o', 'output_directory'
-%       specify output directory to contain saved .png files
+%
+%   'o', 'output_directory':**
+%        specify output directory to contain saved .png files
 
-%% set up
+iext = '.img'; %% set up
 % image extension
-iext = '.img';
 
 
 %% parse arguments

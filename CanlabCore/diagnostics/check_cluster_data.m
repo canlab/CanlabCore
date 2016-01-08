@@ -1,9 +1,15 @@
 function check_cluster_data(cl)
-%check_cluster_data(cl)
-%
-% tor wager
-% needs Tom's orthviews
 % loads the first 5 images from the first voxel
+%
+% :Usage:
+% ::
+%
+%     check_cluster_data(cl)
+%
+% ..
+%    tor wager
+%    needs Tom's orthviews
+% ..
 
 
 %cl(1).imnames(1:5,:)

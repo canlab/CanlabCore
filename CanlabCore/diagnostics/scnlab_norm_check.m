@@ -1,30 +1,51 @@
-% NORM_CHECK = scnlab_norm_check(template, wanat_files, mean_func_files, subjs)
-%
+function NORM_CHECK = scnlab_norm_check(template, wanat_files, mean_func_files, subjects)
 % Compares the similarity of one or two sets of images (wanat_files,
 % mean_func_files) to a template image and to one another (via Malanobis
 % distance) to determine whether some images are potential outliers.
 % This is used to check the quality of spatial warping/normalization for a
 % group of subjects, though it could be used for other purposes as well.
 %
-% Inputs:
-% -----------------------------------------------------------------------
-% template: Char array with name of image of normalization template
-% wanat_files: Warped (to template) anatomical file names
-% mean_func_files: Names of mean functional images
-% These images should all be in the same space/in register.  
+% :Usage:
+% ::
 %
-% Subjs: Optional cell array of names for each subject, for display
-% purposes
+%     NORM_CHECK = scnlab_norm_check(template, wanat_files, mean_func_files, subjs)
 %
-% Outputs:
-% -----------------------------------------------------------------------
-% A structure with metrics (NORM_CHECK)
-% NORM_CHECK.global_t1 = global values of first image series (wanat_files)
-% NORM_CHECK.std_t1 = spatial standard deviation of first image series (wanat_files)
-% NORM_CHECK.names_t1 = Names for columns of NORM_CHECK.norm_vs_template
-% NORM_CHECK.subjects = Cell array of names for each subject
-% NORM_CHECK.norm_vs_template = Similarity data for subjects (rows) x metrics (cols)
+% :Inputs:
+%
+%   **template:**
+%        Char array with name of image of normalization template
+%
+%   **wanat_files:**
+%        Warped (to template) anatomical file names
+%
+%   **mean_func_files:**
+%        Names of mean functional images
+%        These images should all be in the same space/in register.  
+%
+%   **Subjs:**
+%        Optional cell array of names for each subject, for display
+%        purposes
+%
+% :Outputs:
+%
+%   A structure with metrics (NORM_CHECK)
+%
+%   **NORM_CHECK.global_t1:**
+%        global values of first image series (wanat_files)
+%
+%   **NORM_CHECK.std_t1:**
+%        spatial standard deviation of first image series (wanat_files)
+%
+%   **NORM_CHECK.names_t1:**
+%        Names for columns of NORM_CHECK.norm_vs_template
+%
+%   **NORM_CHECK.subjects:**
+%        Cell array of names for each subject
+%
+%   **NORM_CHECK.norm_vs_template:**
+%        Similarity data for subjects (rows) x metrics (cols)
 %           {'Dist. from group, actual chi2', 'Mutual info with template', 'Correlation with template'};
+%
 % NB: Leave mean_func_files empty (e.g., []) to only check structural images
 %
 % Computes metrics on the goodness of normalization based on multivariate distance,
@@ -36,9 +57,9 @@
 %
 % USES the subfunction compare_subjects, which may be useful as a
 % stand-alone function.
+%
 % USED in canlab_preproc_norm_check.m
 
-function NORM_CHECK = scnlab_norm_check(template, wanat_files, mean_func_files, subjects)
 parse_inputs();
 
 if(~exist('subjects', 'var') || isempty(subjects))

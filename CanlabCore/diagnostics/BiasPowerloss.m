@@ -1,26 +1,49 @@
 function [b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
-% function [b pl] = BiasPowerloss(z, X, V)
-%
 % Calculate the approximate bias and power loss due to mis-modeling
-% 
-% INPUT:
 %
-% tc   - fMRI time course
-% X    - design matrix
-% c    - contrast of interest
-% beta - (mismodeled) beta value
-% df   - degrees of freedom
-% z    - p-value calculated from ResidScan
-% pval - cut-off p-value
+% :Usage:
+% ::
 %
-% OUTPUT:
+%     function [b pl] = BiasPowerloss(z, X, V)
 %
-% b     - updated (correct) beta value
-% bias  - bias
-% pl    - power loss
+% :Inputs:
 %
-% By Martin Lindquist & Ji-Meng Loh, July 2007
+%   **tc:**
+%        fMRI time course
 %
+%   **X:**
+%        design matrix
+%
+%   **c:**
+%        contrast of interest
+%
+%   **beta:**
+%        (mismodeled) beta value
+%
+%   **df:**
+%        degrees of freedom
+%
+%   **z:**
+%        p-value calculated from ResidScan
+%
+%   **pval:**
+%        cut-off p-value
+%
+% :Outputs:
+%
+%
+%   **b:**
+%        updated (correct) beta value
+%
+%   **bias:**
+%        bias
+%
+%   **pl:**
+%        power loss
+%
+% ..
+%    By Martin Lindquist & Ji-Meng Loh, July 2007
+% ..
 
 
 % Update design matrix using correct model

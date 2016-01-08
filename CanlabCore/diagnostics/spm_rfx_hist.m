@@ -1,11 +1,15 @@
 function spm_rfx_hist(cwd)
-% function spm_rfx_hist(cwd)
-% Tor Wager, 10/5/02
-% 
-% Input:
+% :Usage:
+% ::
+%
+%     function spm_rfx_hist(cwd)
+%
+% :Input:
+%
 %   a directory name where an spm or SnPM random effects analysis lives
 %
-% Output:
+% :Outputs:
+%
 %   histograms for all input images (usually contrast images from individual
 %   subjects) plotted against a normal curve.
 %
@@ -20,6 +24,10 @@ function spm_rfx_hist(cwd)
 %
 % Histograms (blue) are overlaid on a Gaussian distribution (red)
 % with a mean of 0 and a standard deviation equal to that of the observed data.
+%
+% ..
+%    Tor Wager, 10/5/02
+% ..
 
 mypwd = pwd;
 eval(['cd ' cwd])

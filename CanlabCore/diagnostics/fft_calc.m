@@ -1,10 +1,13 @@
 function [myfft, freq] = fft_calc(dat, TR)
-%
-% [myfft, freq] = fft_calc(dat, TR)
-% 
 % Simple function to calculate the FFT power of a 
 % data vector (dat) as a function of frequency,
 % given a sample-to-sample repetition time (TR)
+%
+% :Usage:
+% ::
+%
+%     [myfft, freq] = fft_calc(dat, TR)
+%
 
 n = length(dat);
 

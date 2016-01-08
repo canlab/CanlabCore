@@ -1,22 +1,24 @@
 function [nuisance_ratio, rsquare_design, rsquare_nuis] = scn_component_rsquare(V, nuisanceX, designX)
-%
-%
 % Print a table of r-square values (variance explained) for each of V data
 % vectors by nuisance (mvmt, physio) and task-related predictors
 %
 % Designed to work with components
 %
-% Tor Wager, Feb 2008
+% :Examples:
+% ::
 %
-% Examples:
-% Typical operation:
-% scn_component_rsquare(compscore, movement_params(1:157, :), X(1:157, :));
+%     % Typical operation
+%     scn_component_rsquare(compscore, movement_params(1:157, :), X(1:157, :));
 %
-% No design:
-% scn_component_rsquare(compscore, movement_params(1:157, :));
+%     % No design
+%     scn_component_rsquare(compscore, movement_params(1:157, :));
 %
-% Neither design nor nuisance, uses linear drift
-% scn_component_rsquare(compscore, []);
+%     % Neither design nor nuisance, uses linear drift
+%     scn_component_rsquare(compscore, []);
+%
+% ..
+%    Tor Wager, Feb 2008
+% ..
 
 [t, m] = size(V);
 

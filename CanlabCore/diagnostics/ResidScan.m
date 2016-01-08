@@ -1,23 +1,35 @@
 function [z sres sres_ns] = ResidScan(res, FWHM)
-% function [z sres] = ResidScan(res, FWHM)
-%
 % Calculates P(M>=t) where M is the max value of the smoothed residuals.
 % In this implementation the residuals are smoothed using a Gaussian
 % kernel.
-% 
-% INPUT:
 %
-% res - residual time course
-% FWHM - Full Width Half Maximum (in time units)
+% :Usage:
+% ::
 %
-% OUTPUT:
+%     function [z sres] = ResidScan(res, FWHM)
 %
-% z - pvalues
-% sres - smoothed residuals
-% sres_ns - smoothed residuals (non standardized) 
+% :Inputs:
 %
-% By Martin Lindquist & Ji-Meng Loh, July 2007
+%   **res:**
+%        residual time course
 %
+%   **FWHM:**
+%        Full Width Half Maximum (in time units)
+%
+% :Outputs:
+%
+%   **z:**
+%        pvalues
+%
+%   **sres:**
+%        smoothed residuals
+%
+%   **sres_ns:**
+%        smoothed residuals (non standardized) 
+%
+% ..
+%    By Martin Lindquist & Ji-Meng Loh, July 2007
+% ..
 
 res_ns = res;
 res = res./std(res);

@@ -53,3 +53,8 @@ Data_processing_tools
 ===============
 .. automodule:: Data_processing_tools
    :members:
+
+diagnostics
+===============
+.. automodule:: diagnostics
+   :members:

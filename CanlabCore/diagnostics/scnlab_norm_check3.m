@@ -1,27 +1,42 @@
+function EXPT = scnlab_norm_check3(wt1,subjlabels,template,mask,varargin)
 % WARNING:  scnlab_norm_check3 is deprecated! All improvements are being placed in scnlab_norm_check.
 %
-% EXPT = scnlab_norm_check3(wt1,subjlabels,template,mask,[print out MI])
+% :Usage:
+% ::
 %
-% PARAMS
-%   wt1: char array of wT1.img files, one per line
-%   subjlabels: cell array of subject labels
-%   template: template img that everything has been normalized to (usually the avg152T1.img file)
-%   mask: image to mask with
-%   OPTIONAL
-%       print out mutual information table - flag for whether or not to print out the MI table; defaults to 0
+%     EXPT = scnlab_norm_check3(wt1,subjlabels,template,mask,[print out MI])
 %
-% E.g.:
-% cd(studyroot); % wherever your study root is
-% wt1s = filenames('hr*/structural/wT1.img', 'char', 'absolute'); % assuming that hr is your study code
-% subjlabels = filenames('hr*');
-% template = which('avg152T1.nii');
-% mask = filenames('scalped_avg152T1_graymatter.img', 'char', 'absolute'); % set to wherever your mask is...
+% :Inputs:
 %
-% EXPT = scnlab_norm_check3(wt1, subjlabels, template, mask);
+%   **wt1:**
+%        char array of wT1.img files, one per line
+%
+%   **subjlabels:**
+%        cell array of subject labels
+%
+%   **template:**
+%        template img that everything has been normalized to (usually the avg152T1.img file)
+%
+%   **mask:**
+%        image to mask with
+%
+% :Optional Input:
+%
+%   print out mutual information table - flag for whether or not to print out the MI table; defaults to 0
+%
+% :Examples:
+% ::
+%
+%    cd(studyroot); % wherever your study root is
+%    wt1s = filenames('hr*/structural/wT1.img', 'char', 'absolute'); % assuming that hr is your study code
+%    subjlabels = filenames('hr*');
+%    template = which('avg152T1.nii');
+%    mask = filenames('scalped_avg152T1_graymatter.img', 'char', 'absolute'); % set to wherever your mask is...
+%
+%    EXPT = scnlab_norm_check3(wt1, subjlabels, template, mask);
 %
 % THIS FUNCTION IS DEPRECATED; SCNLAB_NORM_CHECK IS PREFERRED
 
-function EXPT = scnlab_norm_check3(wt1,subjlabels,template,mask,varargin)
     warning('scnlab_norm_check3 is deprecated! All improvements are being placed in scnlab_norm_check.');
     return
         

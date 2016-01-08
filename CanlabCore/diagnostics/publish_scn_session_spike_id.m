@@ -1,27 +1,32 @@
 function publish_scn_session_spike_id(inputimgs, SUBJDATA)
-%
-% publish_scn_session_spike_id(inputimgs, SUBJDATA)
-%
 % This function is a wrapper function to call scn_session_spike_id in
 % 'multi-session' mode, using input data across the runs for a single
 % subject.  It runs the program, and generates both a yaml-format text file
 % for uploading into the CANlab database, and an html file with all the
 % results and images for that subject embedded.
 %
-% This has been tested with SPM8 and Matlab2010a only.
+% :Inputs:
 %
-% Tor Wager, Aug 2010
+%   **inputimgs:**
+%        is a cell array of images (4-D) for each run in a separate cell.
 %
-% inputimgs is a cell array of images (4-D) for each run in a separate
-% cell.
+%   **SUBJDATA:**
+%        Input fields of SUBJDATA define the experiment name, subject name,
+%        and directories for saving both QC images + yaml and HTML
 %
-% Input fields of SUBJDATA define the experiment name, subject name, and 
-% directories for saving both QC images + yaml and HTML
+% :Examples:
+% ::
 %
-% SUBJDATA.study = 'NSF';
-% SUBJDATA.subject = subjects{i};
-% SUBJDATA.html_save_dir = fullfile(output_basedir, 'html_output');
-% SUBJDATA.subject_dir = fullfile(output_basedir, 'SubjectData', 'denoised_canlab', SUBJDATA.subject);
+%    SUBJDATA.study = 'NSF';
+%    SUBJDATA.subject = subjects{i};
+%    SUBJDATA.html_save_dir = fullfile(output_basedir, 'html_output');
+%    SUBJDATA.subject_dir = fullfile(output_basedir, 'SubjectData', 'denoised_canlab', SUBJDATA.subject);
+%
+% ..
+%    This has been tested with SPM8 and Matlab2010a only.
+%
+%    Tor Wager, Aug 2010
+% ..
 
 
 %% Initialize yaml file for database integration

@@ -1,6 +1,8 @@
-% scnlab_pca_denoise_session(image_names, basename, nuisX, designX, [mask name])
+% ..
+%    scnlab_pca_denoise_session(image_names, basename, nuisX, designX, [mask name])
 %
-% Tor Wager, Feb 2008
+%    Tor Wager, Feb 2008
+% ..
 
 function scnlab_pca_denoise_session(image_names, basename, nuisX, designX, varargin)
     diary('qc_report.txt')

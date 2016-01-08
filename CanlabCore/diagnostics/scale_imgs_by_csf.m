@@ -1,17 +1,22 @@
 function Pout = scale_imgs_by_csf(hP)
-% Pout = scale_imgs_by_csf(hP)
-%
 % Takes a string matrix of image file names
 % finds the mean and std of the CSF space
 % specified in a mask (hard-coded)
 % and standardizes images by these values
+%
+% :Usage:
+% ::
+%
+%     Pout = scale_imgs_by_csf(hP)
 %
 % Writes SC* images (SCaled)
 %
 % assumes images are spatially normalized.
 % uses a canonical CSF mask!
 %
-% tor wager
+% ..
+%    tor wager
+% ..
 
 mP = which('canonical_ventricles.img');	
 [tmp,mP] = reslice_imgs(deblank(hP(1,:)),mP,0);

@@ -1,16 +1,24 @@
 function [subjM,Mtotalv] = displayme(mm,txtlab,tlab2)
-% used in img_hist2 - included as internal function there.
+% Used in img_hist2 - included as internal function there.
 % this function is for indepenent re-display after img_hist2 is finished.
 %
-% function [subjM,Mtotalv] = displayme(mm,txtlab,tlab2)
-% Tor Wager
+% :Usage:
+% ::
 %
-% TO run:
-%[O.subjM,O.Mtotalv] = displayme(O.m,txtlab,'MEANS');
-%[O.subjS,O.Stotalv] = displayme(O.s,txtlab,'STD');
-%[O.subjW,O.Wtotalv] = displayme(O.w,txtlab,'SKEWNESS');
-%[O.subjK,O.Ktotalv] = displayme(O.k,txtlab,'KURTOSIS');
-% 
+%     function [subjM,Mtotalv] = displayme(mm,txtlab,tlab2)
+%
+% :Example:
+% ::
+%
+%    % TO run:
+%    [O.subjM,O.Mtotalv] = displayme(O.m,txtlab,'MEANS');
+%    [O.subjS,O.Stotalv] = displayme(O.s,txtlab,'STD');
+%    [O.subjW,O.Wtotalv] = displayme(O.w,txtlab,'SKEWNESS');
+%    [O.subjK,O.Ktotalv] = displayme(O.k,txtlab,'KURTOSIS');
+%
+% ..
+%    Tor Wager
+% ..
 
 gm = mean(mean(mean(mm)));
 Mtotalv = sum((mm(:) - gm).^2);

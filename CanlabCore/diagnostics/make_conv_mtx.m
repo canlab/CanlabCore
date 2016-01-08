@@ -1,16 +1,27 @@
 function H = make_conv_mtx(sz,sampres)
-% function H = make_conv_mtx(sz,sampres)
-% 
-% Tor Wager
 % Constructs the matrix (H) for a linear convolution
 % With the canonical SPM hrf
 % such that Hx = conv(x,hrf)
-% 
-% sz:		size of output matrix (elements)
-% sampres:	spm_hrf sampling resolution (~ TR)
-% 		OR
-%		if a vector, a custom HRF
-%		sampled at the appropriate frequency.
+%
+% :Usage:
+% ::
+%
+%     function H = make_conv_mtx(sz,sampres)
+%
+% :Inputs:
+%
+%   **sz:**
+%        size of output matrix (elements)
+%
+%   **sampres:**
+%        spm_hrf sampling resolution (~ TR), OR
+%
+%        if a vector, a custom HRF
+%        sampled at the appropriate frequency.
+%
+% ..
+% Tor Wager
+% ..
 
 if length(sampres) == 1
 	ho = spm_hrf(sampres)';

@@ -1,43 +1,66 @@
 function [mask_thresh, cl, inmaskvox, dat, outputname] = fmri_mask_thresh_canlab(fmri_file, outputname, implicit_masking_method, plotfigs)
-%
-% [mask_thresh, cl, inmaskvox, in_mask_logical_vector, maskfilename] = fmri_mask_thresh_canlab(fmri_file, outputname)
-%
 % Implicit determination of which voxels are in-brain, based on the intensities of
 % functional images.  Assumes much (most) of the image has near-zero
 % background noise values, and the in-brain values are substantially
 % higher.
 %
-% Replacement for Worsley's fmri_mask_thresh, which was not behaving well.
-% Tor Wager, Aug 2010.
+% :Usage:
+% ::
 %
-% fmri_file is either a list of file names or an fmri_data object
-% File names:  a (preferably) 4-D file of imaging data, Analyze .img or .nii
-% fmri_data object: With multiple images loaded with *no* mask
+%     [mask_thresh, cl, inmaskvox, in_mask_logical_vector, maskfilename] = fmri_mask_thresh_canlab(fmri_file, outputname)
 %
-% outputname: is a mask file output name, e.g., 'mask.img', with .img
-% extension. Empty [] means do not write output image.
+% :Inputs:
 %
-% implicit_masking_method:
-%    'mean': take the top 95% of voxels above the mean value.  used by
+%   **fmri_file:**
+%        is either a list of file names or an fmri_data object
+%
+%   **File names:**
+%        a (preferably) 4-D file of imaging data, Analyze .img or .nii
+%
+%   **fmri_data object:**
+%        With multiple images loaded with *no* mask
+%
+%   **outputname:**
+%        is a mask file output name, e.g., 'mask.img', with .img
+%        extension. Empty [] means do not write output image.
+%
+% :Implicit_masking_method:
+%
+%   **mean:**
+%        take the top 95% of voxels above the mean value.  used by
 %    default if no value is entered 
-%    'dip': smooth the histogram and take the top 95% of values above the
+%
+%   **dip:**
+%        smooth the histogram and take the top 95% of values above the
 %    first positive gradient
 % 
-% plotfigs
+%
+%   **plotfigs
 %     [1/0]: enable or suppress mask display and orthviews
 %
-% Output
-% ------------------------------------------------------
-% mask_thresh:  signal-value above which voxels are considered in brain
-% c1: clusters, from iimg_indx2clusters
-% inmaskvox: number of inmask voxels
-% dat: binary matrix of voxels that are in (1) or out (0) of mask
+% :Outputs:
+%
+%   **mask_thresh:**
+%        signal-value above which voxels are considered in brain
+%
+%   **c1:**
+%        clusters, from iimg_indx2clusters
+%
+%   **inmaskvox:**
+%        number of inmask voxels
+%
+%   **dat:**
+%        binary matrix of voxels that are in (1) or out (0) of mask
 %
 %
 % Note: we want to be more inclusive than not at this stage.
 %
-% Tor Wager
-% See code for revision notes
+% ..
+%    Tor Wager
+%    See code for revision notes
+%
+%    Replacement for Worsley's fmri_mask_thresh, which was not behaving well
+% ..
 
 
 % last edited Oct 2011 - add support for fmri_data/image_vector objects

@@ -1,18 +1,24 @@
-% function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects([img files or clusters], [mask], ...
-% [plot flag], [title on figure], [standardize flag], [text labels], [ref image])
-% by Tor Wager
-%
-% Inputs:
-% 1) a list of image names to compare
-% OR
-% 2) a clusters structure, with data to compare
-%    in timeseries field
-%
+function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects(varargin)
 % This function compares the GLOBAL signal
 % after standardizing each image, in case 1
 % or the REGIONAL values in each cluster, in case 2
 % ...and does some diagnostics on the similarity
 % between images.
+%
+% :Usage:
+% ::
+%
+%     function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects([img files or clusters], [mask], ...
+%                                        [plot flag], [title on figure], [standardize flag], [text labels], [ref image])
+%
+% :Inputs:
+%
+%     a list of image names to compare
+%
+%     OR
+%
+%     a clusters structure, with data to compare
+%     in timeseries field
 %
 % If a mask is entered, only voxels in the mask (e.g., with value of 1) will be used.
 % You can use this option to specify brain-only or gray-matter only voxels
@@ -22,28 +28,53 @@
 % If a ref image is entered, each image will be correlated with the ref,
 % and values will be saved for the correlation (plot 2 will show these values)
 % Useful for comparing anatomical imgs with template, etc.
-% Output from correls with ref image are in variable "c"
 %
-% ds = multivariate distance (sim. to Mahalanobis) for each image
-%  ds is a matrix of squared distances, case numbers, and
-%  expected chi2 values (in columns in this order)
-%  rows are cases
-% g = global value for each image
-% d = global distance from mean image
-%   distance, or dissimilarity, is the average absolute deviation between images
-% d2 = matrix of distances among all images
-% c = correlation between real valued voxels and mean image
-% c2 = correlations among all images (treating voxels as cases)
-% mi = mutual information between images, with hist2.m
-% b = principal component scores on correlation matrix for eigenvalues > 1
-% eigv = eigenvectors
-% eigval = eigenvalues
+% :Outputs:  from correls with ref image are in variable "c"
 %
-% example:  Compare normalized anatomcals with standard brain
-% P = get_filename2(['sub*\Anatomy\nscalped_ft1.img']);
-% [ds, g, mystd, d, d2, c, c2, mi] = compare_subjects(P, which('brain_avg152T1.img'), 1, 'intext_countloc', 1, [], which('avg152T1.img'));
+%   **ds:**
+%        multivariate distance (sim. to Mahalanobis) for each image
+%        ds is a matrix of squared distances, case numbers, and
+%        expected chi2 values (in columns in this order) rows are cases
+%
+%   **g:**
+%        global value for each image
+%
+%   **d:**
+%        global distance from mean image
+%        distance, or dissimilarity, is the average absolute deviation between images
+%
+%   **d2:**
+%        matrix of distances among all images
+%
+%   **c:**
+%        correlation between real valued voxels and mean image
+%
+%   **c2:**
+%        correlations among all images (treating voxels as cases)
+%
+%   **mi:**
+%        mutual information between images, with hist2.m
+%
+%   **b:**
+%        principal component scores on correlation matrix for eigenvalues > 1
+%
+%   **eigv:**
+%        eigenvectors
+%
+%   **eigval:**
+%        eigenvalues
+%
+% :Examples:
+% ::
+%
+%    % Compare normalized anatomcals with standard brain
+%    P = get_filename2(['sub*\Anatomy\nscalped_ft1.img']);
+%    [ds, g, mystd, d, d2, c, c2, mi] = compare_subjects(P, which('brain_avg152T1.img'), 1, 'intext_countloc', 1, [], which('avg152T1.img'));
+%
+% ..
+%    by Tor Wager
+% ..
 
-function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects(varargin)
 
     doplot = 1; 
     dostd = 0;

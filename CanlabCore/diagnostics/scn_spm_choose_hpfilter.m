@@ -1,17 +1,21 @@
 function scn_spm_choose_hpfilter(spm_results_dir, varargin)
-%
-% scn_spm_choose_hpfilter(spm_results_dir, ['events_only'])
-%
 % Plots and choice of optimal high-pass filter from an SPM first-level
 % model directory (with statistics and contrasts estimated.)
 %
-% SPM5 compatible and SPM8.
+% :Usage:
+% ::
 %
-% Tor Wager
-% August 2010
+%     scn_spm_choose_hpfilter(spm_results_dir, ['events_only'])
+%
+% SPM5 compatible and SPM8.
 %
 % Called by: scn_spm_design_check.m
 % For all regressors or events only: see scn_spm_choose_hpfilter.m
+%
+% ..
+%    Tor Wager
+%    August 2010
+% ..
 
 if nargin < 1, spm_results_dir = pwd; end
 

@@ -1,14 +1,15 @@
 function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
-
 % This is a helper function for fmridisplay objects, called by the addblobs method
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
+% :Usage:
+% ::
+%
+%     [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
 % See fmridisplay.m and addblobs.m method in fmridisplay for more details and options.
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
 %     Copyright (C) 2015 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -23,64 +24,99 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% currentmap : see addblobs method. Montage within fmridisplay object.
-% mymontage : ditto
-% SPACE: space of map to sample to (object display SPACE in fmridisplay object)
+% :Inputs:
 %
-% Optional inputs:
-% There are many optional inputs that control display features of blobs.
-% COLOR
-% 'color',      followed by color vector, e.g., [0 1 1]
-% 'maxcolor'    followed by color vector for max color range, e.g., [0 1 1]
-% 'mincolor'    followed by color vector for min color range, e.g., [0 0 1]
-% 'onecolor'    force solid-color blobs
-% 'splitcolor'  Positive and negative values are mapped to different
-%               colormaps. Default is +=hot, -=cool colors.  Followed
-%               optionally by cell array with
-%               vectors of 4 colors defining max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
+%   **currentmap:**
+%        see addblobs method. Montage within fmridisplay object.
 %
-% OUTLINING
-% 'outline'
-% 'linewidth',  followed by width value, e.g., 1
 %
-% COLOR RANGE
-% 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
-%               color and transparency setting under some circumstances.
+%   **mymontage:**
+%        ditto
 %
-% TRANSPARENCY
-% {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
-% 'trans'               Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
-% 'scaledtransparency'  Transparency is a function of voxel value, lower values are more transparent
-% 'transvalue'          Followed by width value, e.g., 1. also 'constanttrans'
+%   **SPACE:**
+%        space of map to sample to (object display SPACE in fmridisplay object)
 %
-% OTHER OPTIONS
+% :Optional Inputs:
 %
-% 'smooth'      Smooth blobs
-% 'contour'
-% Orientation: 'sagittal', 'coronal', 'axial'
+%   There are many optional inputs that control display features of blobs.
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% [blobhan, cmaprange, mincolor, maxcolor]
+%   **COLOR:**
+%
+%      **'color':**
+%         followed by color vector, e.g., [0 1 1]
+%
+%      **maxcolor':**
+%         followed by color vector for max color range, e.g., [0 1 1]
+%
+%      **mincolor':**
+%         followed by color vector for min color range, e.g., [0 0 1]
+%
+%      **onecolor':**
+%         force solid-color blobs
+%
+%      **splitcolor':**
+%         Positive and negative values are mapped to different
+%         colormaps. Default is +=hot, -=cool colors.  Followed
+%         optionally by cell array with vectors of 4 colors defining
+%         max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
+%
+%   **OUTLINING:**
+%
+%      **'outline'**
+%
+%      **'linewidth':**
+%         followed by width value, e.g., 1
+%
+%   **COLOR RANGE:**
+%
+%      **'cmaprange':**
+%         followed by range of values, e.g., [0 40], [-3 3]. Used in
+%         color and transparency setting under some circumstances.
+%
+%   **TRANSPARENCY:**
+%
+%   {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
+%
+%      **'trans':**
+%         Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
+%
+%      **'scaledtransparency':**
+%         Transparency is a function of voxel value, lower values are more transparent
+%
+%      **'transvalue':**
+%         Followed by width value, e.g., 1. also 'constanttrans'
+%
+%   **OTHER OPTIONS:**
+%
+%      **'smooth':**
+%         Smooth blobs
+%
+%      **'contour':**
+%
+%   **Orientation:**
+%         'sagittal', 'coronal', 'axial'
+%
+% :Outputs:
+%
+%   [blobhan, cmaprange, mincolor, maxcolor]
+%
 % All used in addblobs.m
-%
-% Examples:
-% -------------------------------------------------------------------------
 %
 % Use addblobs; do not run this function directly unless you are
 % programming with it.
 %
 % See also:
 % fmridisplay/addblobs, fmridisplay, fmridisplay/multi_threshold
-
-% Programmers' notes:
-% Matlab's graphics behavior changed in 2014, causing some problems.
-% This version was tested by Tor on R2015a.
-% 10/1/2015: Tor fixed functionality for outlines and constant-mask value
-% displays in new Matlab graphics
+%
+% ..
+%    Programmers' notes:
+%    Matlab's graphics behavior changed in 2014, causing some problems.
+%    This version was tested by Tor on R2015a.
+%    10/1/2015: Tor fixed functionality for outlines and constant-mask
+%    value displays in new Matlab graphics
+% ..
 
 myview = mymontage.orientation;
 

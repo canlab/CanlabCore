@@ -9956,6 +9956,383 @@ At most, filename can have one number in it, or error is returned</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-fmridisplay">
+<span id="fmridisplay"></span><h1>fmridisplay<a class="headerlink" href="#module-fmridisplay" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="fmridisplay.clusters2mask2011">
+<code class="descclassname">fmridisplay.</code><code class="descname">clusters2mask2011</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.clusters2mask2011" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns 3-D mask of voxels included in a cl structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">mask2</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusters2mask2011</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Mask values are coded with the cluster index. That is, the non-zero entries
+in mask are integers that reflect the index of the unique contiguous cluster to
+which each voxel belongs.</p>
+<p>Any non-zero value indicates membership in a cluster
+Uses VOXEL values from cl, so define cl in the space you wish to have for
+mask first!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional:</th><td class="field-body"><p class="first">A 2nd argument will be treated as &#8216;dim&#8217;, dimensions in voxels of the
+new mask image.  If empty, uses max value in cluster to determine
+automatically, but then the mask may not match image dimensions desired
+for .img/.nii reading/writing purposes.</p>
+<p class="last">If a second output is requested, the second output (maskz) is a mask
+like the first, but the values in the mask reflect the numeric value
+stored in the cl.Z field (whether Z-scores or other values, depending on
+how cl is constructed.)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmridisplay.define_sampling_space">
+<code class="descclassname">fmridisplay.</code><code class="descname">define_sampling_space</code><span class="sig-paren">(</span><em>V</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.define_sampling_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the sampling space of an image, with an upsampled space to 0.5 mm
+resolution</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SPACE</span> <span class="o">=</span> <span class="n">define_sampling_space</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="p">[</span><span class="n">upsamplefactor</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">spm-style .mat structure, e.g., from spm_vol</p>
+</dd>
+<dt><strong>V.mat:</strong></dt>
+<dd><p class="first last">4 x 4 matrix of voxel sizes and mm coords for the bottom
+back left vox</p>
+</dd>
+<dt><strong>V.dim:</strong></dt>
+<dd><p class="first last">dimensions of image</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Xo, Yo:</strong></dt>
+<dd><p class="first last">Meshgrid for original voxel space</p>
+</dd>
+<dt><strong>X, Y:</strong></dt>
+<dd><p class="first last">Meshgrid for upsampled voxel space at 0.5 mm resolution</p>
+</dd>
+<dt><strong>Xmm, Ymm:</strong></dt>
+<dd><p class="first last">Meshgrid for upsampled space in mm</p>
+</dd>
+<dt><strong>xcoords, ycoords:</strong></dt>
+<dd><p class="first last">mm coordinates for rows and cols for slice locations</p>
+</dd>
+<dt><strong>new_voxSize:</strong></dt>
+<dd><p class="first last">new voxel size in mm for upsampled space</p>
+</dd>
+<dt><strong>usfactor:</strong></dt>
+<dd><p class="first last">Upsampling factor for new sampleing space</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>overlay = which(&#39;SPM8_colin27T1_seg.img&#39;);  % spm8 seg cleaned up
+V = spm_vol(overlay);
+SPACE = define_sampling_space(V)
+
+% Define mm sampling space in original voxel coord resolution
+SPACE = define_sampling_space(V, 1)
+
+original (o) and new (X, Y) grid space
+xcoords, ycoords: mm coords centered on origin
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmridisplay.display_slice">
+<code class="descclassname">fmridisplay.</code><code class="descname">display_slice</code><span class="sig-paren">(</span><em>dat</em>, <em>wh_slice</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.display_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample slice data in dat to SPACE and display</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Z</span> <span class="o">=</span> <span class="n">display_slice</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">wh_slice</span><span class="p">,</span> <span class="n">SPACE</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmridisplay.map_to_world_space">
+<code class="descclassname">fmridisplay.</code><code class="descname">map_to_world_space</code><span class="sig-paren">(</span><em>V</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.map_to_world_space" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SPACE</span> <span class="o">=</span> <span class="n">map_to_world_space</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">spm-style .mat structure, e.g., from spm_vol</p>
+</dd>
+<dt><strong>V.mat:</strong></dt>
+<dd><p class="first last">4 x 4 matrix of voxel sizes and mm coords for the bottom
+back left vox</p>
+</dd>
+<dt><strong>V.dim:</strong></dt>
+<dd><p class="first last">dimensions of image</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">SPACE structure, with fields:</p>
+<dl class="last docutils">
+<dt><strong>Xmm, Ymm, Zmm:</strong></dt>
+<dd><p class="first last">Meshgrid for voxel volume in mm space</p>
+</dd>
+<dt><strong>xcoords, ycoords, zcoords:</strong></dt>
+<dd><p class="first last">mm coordinates for rows, cols, slices</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmridisplay.render_blobs">
+<code class="descclassname">fmridisplay.</code><code class="descname">render_blobs</code><span class="sig-paren">(</span><em>currentmap</em>, <em>mymontage</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.render_blobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a helper function for fmridisplay objects, called by the addblobs method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">blobhan</span><span class="p">,</span> <span class="n">cmaprange</span><span class="p">,</span> <span class="n">mincolor</span><span class="p">,</span> <span class="n">maxcolor</span><span class="p">]</span> <span class="o">=</span> <span class="n">render_blobs</span><span class="p">(</span><span class="n">currentmap</span><span class="p">,</span> <span class="n">mymontage</span><span class="p">,</span> <span class="n">SPACE</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See fmridisplay.m and addblobs.m method in fmridisplay for more details and options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>currentmap:</strong></dt>
+<dd><p class="first last">see addblobs method. Montage within fmridisplay object.</p>
+</dd>
+<dt><strong>mymontage:</strong></dt>
+<dd><p class="first last">ditto</p>
+</dd>
+<dt><strong>SPACE:</strong></dt>
+<dd><p class="first last">space of map to sample to (object display SPACE in fmridisplay object)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">There are many optional inputs that control display features of blobs.</p>
+<p><strong>COLOR:</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;color&#8217;:</strong></dt>
+<dd><p class="first last">followed by color vector, e.g., [0 1 1]</p>
+</dd>
+<dt><strong>maxcolor&#8217;:</strong></dt>
+<dd><p class="first last">followed by color vector for max color range, e.g., [0 1 1]</p>
+</dd>
+<dt><strong>mincolor&#8217;:</strong></dt>
+<dd><p class="first last">followed by color vector for min color range, e.g., [0 0 1]</p>
+</dd>
+<dt><strong>onecolor&#8217;:</strong></dt>
+<dd><p class="first last">force solid-color blobs</p>
+</dd>
+<dt><strong>splitcolor&#8217;:</strong></dt>
+<dd><p class="first last">Positive and negative values are mapped to different
+colormaps. Default is +=hot, -=cool colors.  Followed
+optionally by cell array with vectors of 4 colors defining
+max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>OUTLINING:</strong></p>
+<blockquote>
+<div><p><strong>&#8216;outline&#8217;</strong></p>
+<dl class="docutils">
+<dt><strong>&#8216;linewidth&#8217;:</strong></dt>
+<dd><p class="first last">followed by width value, e.g., 1</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>COLOR RANGE:</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;cmaprange&#8217;:</strong></dt>
+<dd><p class="first last">followed by range of values, e.g., [0 40], [-3 3]. Used in
+color and transparency setting under some circumstances.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>TRANSPARENCY:</strong></p>
+<p>{&#8216;trans&#8217;, &#8216;transparent&#8217;,&#8217;scaledtransparency&#8217;, &#8216;constanttrans&#8217;, [val], &#8216;transvalue&#8217;, [val]}</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;trans&#8217;:</strong></dt>
+<dd><p class="first last">Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)</p>
+</dd>
+<dt><strong>&#8216;scaledtransparency&#8217;:</strong></dt>
+<dd><p class="first last">Transparency is a function of voxel value, lower values are more transparent</p>
+</dd>
+<dt><strong>&#8216;transvalue&#8217;:</strong></dt>
+<dd><p class="first last">Followed by width value, e.g., 1. also &#8216;constanttrans&#8217;</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>OTHER OPTIONS:</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;smooth&#8217;:</strong></dt>
+<dd><p class="first last">Smooth blobs</p>
+</dd>
+</dl>
+<p><strong>&#8216;contour&#8217;:</strong></p>
+</div></blockquote>
+<dl class="docutils">
+<dt><strong>Orientation:</strong></dt>
+<dd><p class="first last">&#8216;sagittal&#8217;, &#8216;coronal&#8217;, &#8216;axial&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">[blobhan, cmaprange, mincolor, maxcolor]</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>All used in addblobs.m</p>
+<p>Use addblobs; do not run this function directly unless you are
+programming with it.</p>
+<p>See also:
+fmridisplay/addblobs, fmridisplay, fmridisplay/multi_threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmridisplay.resample_space">
+<code class="descclassname">fmridisplay.</code><code class="descname">resample_space</code><span class="sig-paren">(</span><em>dat</em>, <em>V</em>, <em>targetsp</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.resample_space" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[resampled_dat, SPACEto] = resample_space(dat, V, [target V or target SPACE])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imdat:</strong></dt>
+<dd><p class="first last">3-D volume data</p>
+</dd>
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">spm-style .mat structure for dat, e.g., from spm_vol</p>
+</dd>
+<dt><strong>V.mat:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>4 x 4 matrix of voxel sizes and mm coords for the bottom</dt>
+<dd><p class="first last">back left vox</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>V.dim:</strong></dt>
+<dd><p class="first last">dimensions of image</p>
+</dd>
+</dl>
+<p><strong>targetsp:</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>target V:</strong></dt>
+<dd><p class="first last">spm-style .mat structure defining space to transform to</p>
+</dd>
+</dl>
+<p class="attribution">&mdash;OR &#8211;</p>
+</div></blockquote>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>target SPACE:</strong></dt>
+<dd><p class="first last">target SPACE, with Xmm, Ymm, Zmm; see map_to_world_space.m</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>resampled_dat:</strong></dt>
+<dd><p class="first last">data sampled in new space</p>
+</dd>
+</dl>
+<p><strong>SPACE structure, with fields:</strong></p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt><strong>Xmm, Ymm, Zmm:</strong></dt>
+<dd><p class="first last">Meshgrid for voxel volume in mm space</p>
+</dd>
+<dt><strong>xcoords, ycoords, zcoords:</strong></dt>
+<dd><p class="first last">mm coordinates for rows, cols, slices</p>
+</dd>
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">Vol info structure for image in new space</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -9977,6 +10354,7 @@ At most, filename can have one number in it, or error is returned</p>
 <li><a class="reference internal" href="#data-processing-tools">Data_processing_tools</a></li>
 <li><a class="reference internal" href="#module-diagnostics">diagnostics</a></li>
 <li><a class="reference internal" href="#module-Filename_tools">Filename_tools</a></li>
+<li><a class="reference internal" href="#module-fmridisplay">fmridisplay</a></li>
 </ul>
 
   <h4>Previous topic</h4>

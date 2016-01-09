@@ -1,32 +1,56 @@
 function SPACE = define_sampling_space(V, varargin)
-% SPACE = define_sampling_space(V, [upsamplefactor])
-% 
 % Define the sampling space of an image, with an upsampled space to 0.5 mm
 % resolution
 %
-% Inputs:
-% V: spm-style .mat structure, e.g., from spm_vol
-% V.mat         : 4 x 4 matrix of voxel sizes and mm coords for the bottom
-%                   back left vox
-% V.dim         : dimensions of image
-% Outputs:
-% Xo, Yo        : Meshgrid for original voxel space
-% X, Y          : Meshgrid for upsampled voxel space at 0.5 mm resolution
-% Xmm, Ymm      : Meshgrid for upsampled space in mm 
-% xcoords, ycoords : mm coordinates for rows and cols for slice locations
-% new_voxSize   : new voxel size in mm for upsampled space
-% usfactor      : Upsampling factor for new sampleing space
+% :Usage:
+% ::
 %
-% Examples:
-% overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-% V = spm_vol(overlay);
-% SPACE = define_sampling_space(V)
+%     SPACE = define_sampling_space(V, [upsamplefactor])
 %
-% Define mm sampling space in original voxel coord resolution
-% SPACE = define_sampling_space(V, 1)
+% :Inputs:
+%
+%   **V:**
+%        spm-style .mat structure, e.g., from spm_vol
+%
+%   **V.mat:**
+%        4 x 4 matrix of voxel sizes and mm coords for the bottom
+%        back left vox
+%
+%   **V.dim:**
+%        dimensions of image
+%
+% :Outputs:
+%
+%   **Xo, Yo:**
+%        Meshgrid for original voxel space
+%
+%   **X, Y:**
+%        Meshgrid for upsampled voxel space at 0.5 mm resolution
+%
+%   **Xmm, Ymm:**
+%        Meshgrid for upsampled space in mm 
+%
+%   **xcoords, ycoords:**
+%        mm coordinates for rows and cols for slice locations
+%
+%   **new_voxSize:**
+%        new voxel size in mm for upsampled space
+%
+%   **usfactor:**
+%        Upsampling factor for new sampleing space
+%
+% :Examples:
+% ::
+%
+%    overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
+%    V = spm_vol(overlay);
+%    SPACE = define_sampling_space(V)
+%
+%    % Define mm sampling space in original voxel coord resolution
+%    SPACE = define_sampling_space(V, 1)
 % 
-% original (o) and new (X, Y) grid space
-% xcoords, ycoords: mm coords centered on origin
+%    original (o) and new (X, Y) grid space
+%    xcoords, ycoords: mm coords centered on origin
 
 voxSize = abs(diag(V.mat(1:3, 1:3))); % in mm
 

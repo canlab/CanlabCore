@@ -1,19 +1,32 @@
 function SPACE = map_to_world_space(V)
-% SPACE = map_to_world_space(V)
+% :Usage:
+% ::
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% V: spm-style .mat structure, e.g., from spm_vol
-% V.mat         : 4 x 4 matrix of voxel sizes and mm coords for the bottom
-%                   back left vox
-% V.dim         : dimensions of image
+%     SPACE = map_to_world_space(V)
 %
-% Outputs: SPACE structure, with fields:
-% -------------------------------------------------------------------------
-% Xmm, Ymm, Zmm      : Meshgrid for voxel volume in mm space
-% xcoords, ycoords, zcoords : mm coordinates for rows, cols, slices
+% :Inputs:
 %
-% Tor Wager, Feb 2011
+%   **V:**
+%        spm-style .mat structure, e.g., from spm_vol
+%
+%   **V.mat:**
+%        4 x 4 matrix of voxel sizes and mm coords for the bottom
+%        back left vox
+%
+%   **V.dim:**
+%        dimensions of image
+%
+% :Outputs: SPACE structure, with fields:
+%
+%   **Xmm, Ymm, Zmm:**
+%        Meshgrid for voxel volume in mm space
+%
+%   **xcoords, ycoords, zcoords:**
+%        mm coordinates for rows, cols, slices
+%
+% ..
+%    Tor Wager, Feb 2011
+% ..
 
 bottomleft_mm = V.mat(1:3, 4);
 topright_mm = voxel2mm([V.dim(1:3)]', V.mat);

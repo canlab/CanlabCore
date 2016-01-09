@@ -63,3 +63,8 @@ Filename_tools
 ===============
 .. automodule:: Filename_tools
    :members:
+
+fmridisplay
+===============
+.. automodule:: fmridisplay
+   :members:

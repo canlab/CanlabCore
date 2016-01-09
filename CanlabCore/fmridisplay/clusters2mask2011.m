@@ -1,7 +1,11 @@
 function [mask, mask2] = clusters2mask2011(cl, varargin)
-% [mask, mask2] = clusters2mask2011(cl, [dim])
-%
 % Returns 3-D mask of voxels included in a cl structure.
+%
+% :Usage:
+% ::
+%
+%     [mask, mask2] = clusters2mask2011(cl, [dim])
+%
 % Mask values are coded with the cluster index. That is, the non-zero entries
 % in mask are integers that reflect the index of the unique contiguous cluster to
 % which each voxel belongs.
@@ -10,18 +14,21 @@ function [mask, mask2] = clusters2mask2011(cl, varargin)
 % Uses VOXEL values from cl, so define cl in the space you wish to have for
 % mask first!
 %
-% Optional: 
-% - A 2nd argument will be treated as 'dim', dimensions in voxels of the
-% new mask image.  If empty, uses max value in cluster to determine
-% automatically, but then the mask may not match image dimensions desired
-% for .img/.nii reading/writing purposes.
+% :Optional:
 %
-% - If a second output is requested, the second output (maskz) is a mask
-% like the first, but the values in the mask reflect the numeric value
-% stored in the cl.Z field (whether Z-scores or other values, depending on
-% how cl is constructed.)
+%   A 2nd argument will be treated as 'dim', dimensions in voxels of the
+%   new mask image.  If empty, uses max value in cluster to determine
+%   automatically, but then the mask may not match image dimensions desired
+%   for .img/.nii reading/writing purposes.
 %
-% Copyright 2011 Tor Wager
+%   If a second output is requested, the second output (maskz) is a mask
+%   like the first, but the values in the mask reflect the numeric value
+%   stored in the cl.Z field (whether Z-scores or other values, depending on
+%   how cl is constructed.)
+%
+% ..
+%    Copyright 2011 Tor Wager
+% ..
 
 
 mask = [];

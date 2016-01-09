@@ -1,7 +1,11 @@
 function Z = display_slice(dat, wh_slice, SPACE, varargin)
-% Z = display_slice(dat, wh_slice, SPACE, varargin)
-%
 % Resample slice data in dat to SPACE and display
+%
+% :Usage:
+% ::
+%
+%     Z = display_slice(dat, wh_slice, SPACE, varargin)
+%
 
 dolighten = 0;
 myview = 'axial';

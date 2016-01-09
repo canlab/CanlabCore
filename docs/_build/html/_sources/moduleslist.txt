@@ -68,3 +68,8 @@ fmridisplay
 ===============
 .. automodule:: fmridisplay
    :members:
+
+GLM_Batch_tools
+===============
+.. automodule:: GLM_Batch_tools
+   :members:

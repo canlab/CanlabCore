@@ -1,76 +1,118 @@
 function [MASKSTATS] = canlab_glm_maskstats(DIRS,MASK,varargin)
-% MASKSTATS = canlab_glm_maskstats(robfitdir, mask, [options])
-%
-% DESCRIPTION
 % Returns a MASKSTATS structure containing data from robfitdir's input subject level
 %    SPM analyses.
 %
+% :Usage:
+% ::
+%
+%     MASKSTATS = canlab_glm_maskstats(robfitdir, mask, [options])
+%
 % output structure:
 % MASKSTATS
-%   COV - subject x covariate matrix (EXPT.cov from robfit design)
-%   COVNAME - names of covariates in COV
-%   MASK - array of structs (1 per mask)
-%     MASKFILE - the filename of the mask used
-%     SUB - struct containing data from subject level images
-%       CON - struct contains data from contrast images
-%         NAME - cell array (1 cell per contrast) of contrast names
-%         IMGFILES - cell array (1 cell per contrast) of character arrays of 
-%                    contrast image filenames
-%         (MEASURE) - subject X contrast matrix of measures (see canlab_maskstats)
-%         COVxCON.(MEASURE) - arrays of covariate matrix X contrast means correlation
-%                             results (RHO and P, see help corr())
-%     GRP - struct containing data from group level images
-%       BETA - struct array (1 struct per group level regressor) of data
-%              from beta images
-%         NAME - name of group level regressor
-%         IMGFILES - cell array (1 cell per robust directory) of beta image files 
-%         (MEASURE) - row vector (1 value per robust directory) of measures
-%                     (see canlab_maskstats)
+%
+%   **COV:**
+%        subject x covariate matrix (EXPT.cov from robfit design)
+%
+%   **COVNAME:**
+%        names of covariates in COV
+%
+%   **MASK:**
+%        array of structs (1 per mask)
+%
+%   **MASKFILE:**
+%        the filename of the mask used
+%
+%   **SUB:**
+%        struct containing data from subject level images
+%
+%   **CON:**
+%        struct contains data from contrast images
+%
+%   **NAME:**
+%        cell array (1 cell per contrast) of contrast names
+%
+%   **IMGFILES:**
+%        cell array (1 cell per contrast) of character arrays of 
+%        contrast image filenames
+%
+%   **(MEASURE):**
+%        subject X contrast matrix of measures (see canlab_maskstats)
+%
+%   **COVxCON.(MEASURE):**
+%        arrays of covariate matrix X contrast means correlation
+%        results (RHO and P, see help corr())
+%
+%   **GRP:**
+%        struct containing data from group level images
+%
+%   **BETA:**
+%        struct array (1 struct per group level regressor) of data
+%        from beta images
+%
+%   **NAME:**
+%        name of group level regressor
+%
+%   **IMGFILES:**
+%        cell array (1 cell per robust directory) of beta image files 
+%
+%   **(MEASURE):**
+%        row vector (1 value per robust directory) of measures
+%        (see canlab_maskstats)
 %
 % The following plots are saved in each mask's directory in the plots directory:
 %   - contrast means by contrast (means are lines across subjects on x axis)
 %   - contrast means by subject (means are dots, lined up along the x axis by contrast)
 %   - group level betas (bar plot with group level regressors grouped by
-%                        subject level contrasts)
-% if there's more than one regressor in the group level model, for each regressor:
+%     subject level contrasts)
+%
+% If there's more than one regressor in the group level model, for each regressor:
 %   - scatter plot of subject level contrast means against group level regressor
 %
-% ARGUMENTS
-%   robfitdir
-%       a directory in which robfit was run
-%       contains robfit directories (e.g., robust0001)
-%       preferably contains EXPT.mat or EXPTm.mat
-%   mask
-%       a filename or cell array of filenames of masks to apply to data
-% OPTIONS
-%   MEASURE OPTIONS
-%       (see canlab_maskstats) (DEFAULT: mean (within mask's non-zero voxels))
-%   'cons', connums
-%       (vector of contrast numbers)
-%       only include data from contrasts as specified by numbers
-%   'cons', conname(s)
-%       (string or cell array of strings)
-%       only include data from contrasts as specified by name
-%   'plots'
-%       make plots
-%   'od', dir
-%       will save plots in dir (DEFAULT: robfitdir/stats_scatterplots)
 %
+% :Arguments:
+%
+%   **robfitdir:**
+%        a directory in which robfit was run
+%        contains robfit directories (e.g., robust0001)
+%        preferably contains EXPT.mat or EXPTm.mat
+%
+%   **mask:**
+%        a filename or cell array of filenames of masks to apply to data
+%
+% :Options:
+%
+%   **MEASURE OPTIONS:**
+%        (see canlab_maskstats) (DEFAULT: mean (within mask's non-zero voxels))
+%
+%   **'cons', connums:**
+%        (vector of contrast numbers)
+%        only include data from contrasts as specified by numbers
+%
+%   **'cons', conname(s):**
+%        (string or cell array of strings)
+%        only include data from contrasts as specified by name
+%
+%   **'plots':**
+%        make plots
+%
+%   **'od', dir:**
+%        will save plots in dir (DEFAULT: robfitdir/stats_scatterplots)
+%
+% ..
+%    Programmers' notes:
+%    to write:
+%    save data option
+%    save as csv option
+%    option to include subject-level beta data
+%    option to break input mask into regions?
+%    within subjects error bars
+%    grouped bar plots?
+%    save volInfo (for mask? betas? cons? from fmri_data or spm?)
+% ..
 
-% Programmers' notes:
-% to write:
-%   save data option
-%   save as csv option
-%   option to include subject-level beta data
-%   option to break input mask into regions?
-%   within subjects error bars
-%   grouped bar plots?
-%   save volInfo (for mask? betas? cons? from fmri_data or spm?)
 
-
-%% SETUP
+DO_PLOTS = false; % SETUP
 % set defaults
-DO_PLOTS = false;
 OP = {};
 ALLOPS = false;
 

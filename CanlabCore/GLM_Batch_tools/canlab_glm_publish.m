@@ -1,43 +1,68 @@
 function canlab_glm_publish(varargin)
-% canlab_glm_publish(directory_specifications [options])
+% :Usage:
+% ::
 %
-% DIRECTORY SPECIFICATION
-% 's', dirs
-%   Generates HTML reports of the output from scn_spm_design_check for
-%     directories in cell array dires (string allowable for single dir).
-%   If a directory is a subject level analysis, the HTML will be generated 
-%     for that subject in the analysis directory.
-%   EX: canlab_glm_publish('s',{'model1/1011' 'model1/1014'})
-%   If a directory contains subject level analyses, an HTML will be
-%     generated with output for each subject level analysis.
-%   EX: canlab_glm_publish('s','model1')
-%   ASSUMPTION: lower level analyses contain an SPM.mat file.
+%     canlab_glm_publish(directory_specifications [options])
 %
-% 'g', dirs
-%   For each "robfit directory" in cell array dirs, will run robust_results_batch 
-%     on all contrast directories (e.g., robust0001/) (string allowable for single dir).
-%   ("robfit directories" contain robfit contrast directories (like robust0001))
-%   EITHER directories contain EXPT.mat files (see help robfit)
-%   OR an EXPT struct is loaded in the workspace and a single directory is specified
-%   OR will do best to figure out info normally contained in EXPT.mat
-%   EX: canlab_glm_publish('g', {'group_n35' 'group_anxiety_n35' 'group_sadness_n35'})
+% :Directory Specification:
 %
-% NOTE: directory paths may be absolute or relative (to working directory)
+%   **'s', dirs:**
+%        Generates HTML reports of the output from scn_spm_design_check for
+%        directories in cell array dires (string allowable for single dir).
+%        If a directory is a subject level analysis, the HTML will be generated 
+%        for that subject in the analysis directory.
+%        Ex:
+%        ::
+%
+%        canlab_glm_publish('s',{'model1/1011' 'model1/1014'})
+%
+%        If a directory contains subject level analyses, an HTML will be
+%        generated with output for each subject level analysis.
+%        Ex:
+%        ::
+%
+%        canlab_glm_publish('s','model1')
+%
+%        ASSUMPTION: lower level analyses contain an SPM.mat file.
 %
 %
-% OPTIONS
-% 't', {[pthresh clustersize] ...}
-%   Use the paired voxelwise_pthresh and minimum_cluster_size thresholds 
-%     with which to produce robfit results maps.
-%   This option must follow immediately after a 'g' option (see above) and
-%     will only apply to the analyses specified in that option.
-%   ONLY applies to robfit directories (no bearing on lower level design checks)
-%   DEFAULT: {[.001 5] [.005 1] [.05 1]}
-%   EX: canlab_glm_publish('g', pwd, 't', {[.001 1] [.005 10] [.05 10] [.01 25]})
+%   **'g', dirs:**
+%        For each "robfit directory" in cell array dirs, will run robust_results_batch 
+%        on all contrast directories (e.g., robust0001/) (string allowable for single dir).
+%        ("robfit directories" contain robfit contrast directories (like robust0001))
+%        EITHER directories contain EXPT.mat files (see help robfit)
+%        OR an EXPT struct is loaded in the workspace and a single directory is specified
+%        OR will do best to figure out info normally contained in EXPT.mat
+%        Ex:
+%        ::
 %
-% 'email', address
-%   send notification email to address when done running
-%   EX: canlab_glm_publish('g', pwd, 'email', 'ruzic@colorado.edu')   
+%        canlab_glm_publish('g', {'group_n35' 'group_anxiety_n35' 'group_sadness_n35'})
+%
+% :Note: directory paths may be absolute or relative (to working directory)
+%
+%
+% :Options:
+%
+%   **'t', {[pthresh clustersize] ...}:**
+%        Use the paired voxelwise_pthresh and minimum_cluster_size thresholds 
+%        with which to produce robfit results maps.
+%        This option must follow immediately after a 'g' option (see above) and
+%        will only apply to the analyses specified in that option.
+%        ONLY applies to robfit directories (no bearing on lower level design checks)
+%
+%        DEFAULT: {[.001 5] [.005 1] [.05 1]}
+%        Ex:
+%        ::
+%
+%        canlab_glm_publish('g', pwd, 't', {[.001 1] [.005 10] [.05 10] [.01 25]})
+%
+%
+%   **'email', address:**
+%        send notification email to address when done running
+%        Ex:
+%        ::
+%
+%        canlab_glm_publish('g', pwd, 'email', 'ruzic@colorado.edu')
 %
 
 

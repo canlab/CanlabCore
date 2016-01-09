@@ -1,54 +1,69 @@
 function canlab_glm_subject_levels(dsgnarg, varargin)
-% canlab_glm_subject_levels(DSGN [options])
-%
-% DESCRIPTION
 % Performs lower level GLM analysis with SPM:
-% 1 specifies model
-% 2 estimates model
-% 3 generates contrast images for model
-% 4 creates directory with named links to spmT and con maps
-% 5 publishes analyses with scn_spm_design_check
+%   1. specifies model
+%   2. estimates model
+%   3. generates contrast images for model
+%   4. creates directory with named links to spmT and con maps
+%   5. publishes analyses with scn_spm_design_check
+%
+% :Usage:
+% ::
+%
+%     canlab_glm_subject_levels(DSGN [options])
 %
 % DSGN struct - defines the model and analysis parameters
-%   canlab_glm_subject_levels('README') to see description
 %
-% OPTIONS
-%   'README'
-%       prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels
-%   'dsgninfo'
-%       prints description of DSGN structure
-%   'subjects', subject_list
-%       ignore DSGN.subjects, use cell array subject_list
-%   'overwrite'
-%       turn on overwriting of existing analyses (DEFAULT: skip existing)
-%   'onlycons'
-%       only run contrast job (no model specification or estimation)
-%       note: will overwrite existing contrasts
-%       note: to not run contrasts, simply do not include a contrasts field in DSGN
-%   'addcons'
-%       only run contrasts that aren't already in SPM.mat
-%       option to canlab_spm_contrast_job
-%   'nodelete'
-%       do not delete existing contrasts (consider using addcons, above)
-%       option to canlab_spm_contrast_job
-%   'nolinks'
-%       will not make directory with named links to contrast images
-%   'noreview'
-%       will not run scn_spm_design_check
-%   'dream'
-%       if you're running on the dream cluster, this option will cause
-%       all subjects to be run in parallel (submitted with matlab DCS and
-%       the Sun Grid Engine)
-%       Note: currently only works with MATLAB R2009a
-%   'email', address
-%       send notification email to address when done running
+% canlab_glm_subject_levels('README') to see description
+%
+% :Options:
+%
+%   **'README':**
+%        prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels
+%
+%   **'dsgninfo':**
+%        prints description of DSGN structure
+%
+%   **'subjects', subject_list:**
+%        ignore DSGN.subjects, use cell array subject_list
+%
+%   **'overwrite':**
+%        turn on overwriting of existing analyses (DEFAULT: skip existing)
+%
+%   **'onlycons':**
+%        only run contrast job (no model specification or estimation)
+%        note: will overwrite existing contrasts
+%        note: to not run contrasts, simply do not include a contrasts field in DSGN
+%
+%   **'addcons':**
+%        only run contrasts that aren't already in SPM.mat
+%        option to canlab_spm_contrast_job
+%
+%   **'nodelete':**
+%        do not delete existing contrasts (consider using addcons, above)
+%        option to canlab_spm_contrast_job
+%
+%   **'nolinks':**
+%        will not make directory with named links to contrast images
+%
+%   **'noreview':**
+%        will not run scn_spm_design_check
+%
+%   **'dream':**
+%        if you're running on the dream cluster, this option will cause
+%        all subjects to be run in parallel (submitted with matlab DCS and
+%        the Sun Grid Engine)
+%        Note: currently only works with MATLAB R2009a
+%
+%   **'email', address:**
+%        send notification email to address when done running
 %
 % Model specification and estimation done by canlab_spm_fmri_model_job
-% Contrasts are specified by canlab_spm_contrast_job_luka
-%   see that function for more info.
 %
-
-% -------------------------------------------------------------------------
+% Contrasts are specified by canlab_spm_contrast_job_luka
+% see that function for more info.
+%
+% ..
+%     -------------------------------------------------------------------------
 %     Copyright (C) 2013  Luka Ruzic
 % 
 %     This program is free software: you can redistribute it and/or modify
@@ -64,12 +79,12 @@ function canlab_glm_subject_levels(dsgnarg, varargin)
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
+%     Programmers' notes:
+% ..
 
-% Programmers' notes:
-
-%% SET UP
 STARTTIME = datestr(now,31);
 STARTINGDIR = pwd;
+%% SET UP
 
 % set path
 if exist('canlab_preproc.m','file') ~= 2

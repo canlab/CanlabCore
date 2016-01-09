@@ -1,11 +1,15 @@
-function rename_lowercase
-% rename_lowercase
-%
-% tor wager, renames all files in dir with lower case versions
+function rename_lowercase()
+% renames all files in dir with lower case versions
 % if all characters are capitalized.
 %
-% batch example:
-%d = dir('0*'); for i=1:length(d),cd(d(i).name),rename_lowercase, cd .., end
+% :Example:
+% ::
+%
+%    d = dir('0*'); for i=1:length(d),cd(d(i).name),rename_lowercase, cd .., end
+%
+% ..
+%    tor wager
+% ..
 
 d = dir; for i = 3:length(d), 
     nm1 =(d(i).name);nm2=lower(nm1);

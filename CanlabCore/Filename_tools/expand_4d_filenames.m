@@ -1,7 +1,11 @@
-% [spm_imgs] = expand_4d_filenames(imgs, [nvols])
-%
+function [spm_imgs] = expand_4d_filenames(imgs, nvols)
 % Expand a list of image names to 4-D name format as used by SPM2/5
 % Also compatible with SPM8.
+%
+% :Usage:
+% ::
+%
+%     [spm_imgs] = expand_4d_filenames(imgs, [nvols])
 %
 % This function runs with either imgs, nvols, or both variables defined
 % If the images exist, spm_imgs is returned as a char matrix with each row
@@ -9,9 +13,11 @@
 % of the given image.  The space after [N] is padded with blanks to ensure
 % that all the image names fit properly.
 %
-% spm_imgs = expand_4d_filenames('run03.img', 10)
+% :Example:
+% ::
+%
+%    spm_imgs = expand_4d_filenames('run03.img', 10)
 
-function [spm_imgs] = expand_4d_filenames(imgs, nvols)
 
     spm_imgs = {};
     if(~exist('imgs', 'var') || isempty(imgs)), error('imgs variable is empty in expand_4d_filenames'); end

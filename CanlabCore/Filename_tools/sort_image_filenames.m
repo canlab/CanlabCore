@@ -1,5 +1,8 @@
 function [P, resort] = sort_image_filenames(P)
-% [P, indices] = sort_image_filenames(P)
+% :Usage:
+% ::
+%
+%     [P, indices] = sort_image_filenames(P)
 %
 % Not all image name listing functions return imgs in the correct numbered
 % order!
@@ -9,10 +12,12 @@ function [P, resort] = sort_image_filenames(P)
 % At most, filename can have one number in it, or error is returned
 %
 % P can be a string matrix of a cell of string matrices
-% Tor Wager, April 2005
+%
+% ..
+%    Tor Wager, April 2005
+% ..
 
-% if cell, call this function recursively
-if iscell(P)
+if iscell(P) % if cell, call this function recursively
     for i = 1:length(P)
         fprintf(1,'%3.0f',i);
         P{i} = sort_image_filenames(P{i});

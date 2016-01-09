@@ -1,24 +1,44 @@
-% new_files = remove_disdaq_vols(img_files, num_vols_per_run, num_disdaq_vols, ['overwrite', 0|1], ['FSLOUTPUTTYPE', fsl_output_type], ['strict', 0|1])
-% Inputs:
-% 	img_files - cellstr of files to remove disdaqs from - each cell represents a run
-%   num_vols_per_run - vector of volume counts per run, *not* including disdaq vols
-%   num_disdaq_vols - constant describing how many data points to remove from the beginning of each run
-%   'overwrite' - if set, will overwriting images in place - defaults to 0
-%   'FSLOUTPUTTYPE' - outputfile type - defaults to 'NIFTI'
-%   'strict' - if set, will error out unless data given to it is
-%      exactly proper length - defaults to 1 - turn off ONLY with good reason
+function new_files = remove_disdaq_vols(img_files, num_vols_per_run, num_disdaq_vols, varargin)
+% :Usage:
+% ::
 %
-% Outputs:
-%   new_files = input files, but with a 'd' prepended, unless 'overwriting' was specified
+%     new_files = remove_disdaq_vols(img_files, num_vols_per_run, num_disdaq_vols, ['overwrite', 0|1], ['FSLOUTPUTTYPE', fsl_output_type], ['strict', 0|1])
+%
+% :Inputs:
+%
+%   **img_files:**
+%        cellstr of files to remove disdaqs from - each cell represents a run
+%
+%   **num_vols_per_run:**
+%        vector of volume counts per run, *not* including disdaq vols
+%
+%   **num_disdaq_vols:**
+%        constant describing how many data points to remove from the beginning of each run
+%
+%   **'overwrite':**
+%        if set, will overwriting images in place - defaults to 0
+%
+%   **'FSLOUTPUTTYPE':**
+%        outputfile type - defaults to 'NIFTI'
+%
+%   **'strict':**
+%        if set, will error out unless data given to it is
+%        exactly proper length - defaults to 1 - turn off ONLY with good reason
+%
+% :Output:
+%
+%   **new_files:**
+%        input files, but with a 'd' prepended, unless 'overwriting' was specified
 %
 % NB: Not set up for 3d files yet!!!
 %
-% E.g.:
-% for an experiment
-% num_vols_per_run = [124 140 109];  % NOT including disdaqs
-% num_disdaq_vols = 4;
+% :Examples:
+% ::
+%
+%    % for an experiment
+%    num_vols_per_run = [124 140 109];  % NOT including disdaqs
+%    num_disdaq_vols = 4;
 
-function new_files = remove_disdaq_vols(img_files, num_vols_per_run, num_disdaq_vols, varargin)
     global FSLDIR;
     scn_setup();
     

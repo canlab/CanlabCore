@@ -1,9 +1,11 @@
 function output_names = copy_image_files(image_list, to_dir, varargin)
-%
-%function output_names = copy_image_files(image_list, to_dir, [method='copy' or 'move'], varargin)
-%
 % Copies a set of image files from one directory to another, creating the
 % directory if needed.
+%
+% :Usage:
+% ::
+%
+%     function output_names = copy_image_files(image_list, to_dir, [method='copy' or 'move'], varargin)
 %
 % MAC OSX only!!
 %
@@ -11,9 +13,12 @@ function output_names = copy_image_files(image_list, to_dir, varargin)
 % Works for non-image files (e.g., .txt) as well.
 %
 % Other variable args:
+%
 % Will take flags:
+%
 % 'append image number' -> will append a number to each file corresponding
 % to the order listed, e.g., 1 for the first, 2 for the 2nd, etc.
+%
 % 'append string' -> followed by string to append
 %
 % with both flags and 'run' for append string, a matrix of

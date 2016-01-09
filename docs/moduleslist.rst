@@ -58,3 +58,8 @@ diagnostics
 ===============
 .. automodule:: diagnostics
    :members:
+
+Filename_tools
+===============
+.. automodule:: Filename_tools
+   :members:

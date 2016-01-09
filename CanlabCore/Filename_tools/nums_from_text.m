@@ -1,9 +1,16 @@
 function [nums,whnums] = nums_from_text(mytext)
-% function [nums,whnums] = nums_from_text(mytext)
-% 
 % returns numeric values of numbers embedded in text strings
 % given text string input
-% tor wager
+%
+% :Usage:
+% ::
+%
+%     function [nums,whnums] = nums_from_text(mytext)
+%
+% ..
+%    tor wager
+% ..
+
 
 nums = NaN;
 ind = 1;

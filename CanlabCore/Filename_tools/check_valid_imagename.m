@@ -1,9 +1,16 @@
 function P = check_valid_imagename(P, varargin)
-% P = check_valid_imagename(P, [return error])
+% :Usage:
+% ::
 %
-% optional input: 0 to return empty output, 1 to break with an error message,
-% 2 to return list of bad/missing images,
-% or nothing to select missing filenames graphically
+%     P = check_valid_imagename(P, [return error])
+%
+% :Optional Input:
+%
+%   0 to return empty output, 1 to break with an error message,
+%
+%   2 to return list of bad/missing images, or
+%
+%   nothing to select missing filenames graphically
 
 if isempty(P)
     if varargin{1}

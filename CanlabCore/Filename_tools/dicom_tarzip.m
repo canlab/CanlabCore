@@ -1,31 +1,36 @@
 function dicom_tarzip(varargin)
-%
 % tars all .dcm files in subdirectories you specify, and deletes the
 % original .dcm files if successful.
 %
-% Note: Ash's checksum program would be very useful to add here.
+% :Inputs:
 %
-% Inputs:
-% none (default): all directories under the current one
-% directory wildcard, e.g., 'run*' to search only those subdirectories.
-% absolute path names should also be ok.
+%   none (default): all directories under the current one
+%   directory wildcard, e.g., 'run*' to search only those subdirectories.
+%   absolute path names should also be ok.
 %
-% examples:
+% :Examples:
+% ::
 %
-% dicom_tarzip
+%    dicom_tarzip
 %
-% dicom_tarzip('18*')
+%    dicom_tarzip('18*')
 %
 % Or, let's say you have runs within subjects, and dicom files within run dirs.
 % Subject dirs all start with NSF*.  run dirs all start with 18*
 % Starting from the directory above subjects, you could do this to zip ALL subjects:
-% subjdirs = dir('NSF*');
-% for s = 1:length(subjdirs)
-%    dicom_tarzip([subjdirs(s).name filesep '18*']);
-% end
+% ::
+% 
+%    subjdirs = dir('NSF*');
+%    for s = 1:length(subjdirs)
+%        dicom_tarzip([subjdirs(s).name filesep '18*']);
+%    end
 %
 % Needless to say, use this with extreme caution, as it deletes your original files.
 % And test it thoroughly with a backup dataset first!!
+%
+% ..
+%    Note: Ash's checksum program would be very useful to add here.
+% ..
 
 dirwildcard = '*';
 

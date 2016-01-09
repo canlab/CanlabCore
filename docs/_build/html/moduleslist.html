@@ -9479,6 +9479,483 @@ end
 </dd></dl>
 
 </div>
+<div class="section" id="module-Filename_tools">
+<span id="filename-tools"></span><h1>Filename_tools<a class="headerlink" href="#module-Filename_tools" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="Filename_tools.check_valid_imagename">
+<code class="descclassname">Filename_tools.</code><code class="descname">check_valid_imagename</code><span class="sig-paren">(</span><em>P</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.check_valid_imagename" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>P = check_valid_imagename(P, [return error])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional Input:</th><td class="field-body"><p class="first">0 to return empty output, 1 to break with an error message,</p>
+<p>2 to return list of bad/missing images, or</p>
+<p class="last">nothing to select missing filenames graphically</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.copy_image_files">
+<code class="descclassname">Filename_tools.</code><code class="descname">copy_image_files</code><span class="sig-paren">(</span><em>image_list</em>, <em>to_dir</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.copy_image_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies a set of image files from one directory to another, creating the
+directory if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function output_names = copy_image_files(image_list, to_dir, [method=&#39;copy&#39; or &#39;move&#39;], varargin)
+</pre></div>
+</div>
+<p>MAC OSX only!!</p>
+<p>For .img files, will look for a paired .hdr and copy it automatically.
+Works for non-image files (e.g., .txt) as well.</p>
+<p>Other variable args:</p>
+<p>Will take flags:</p>
+<p>&#8216;append image number&#8217; -&gt; will append a number to each file corresponding
+to the order listed, e.g., 1 for the first, 2 for the 2nd, etc.</p>
+<p>&#8216;append string&#8217; -&gt; followed by string to append</p>
+<p>with both flags and &#8216;run&#8217; for append string, a matrix of
+[run1/vols.img; run2/vols.img] would become [vols_run0001.img vols_run0002.img]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.delete_ana_imgs">
+<code class="descclassname">Filename_tools.</code><code class="descname">delete_ana_imgs</code><span class="sig-paren">(</span><em>imgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.delete_ana_imgs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Function to delete a list of .img files </dt>
+<dd><ul class="first last simple">
+<li>automatically removes associated .hdr files as well.</li>
+<li>accepts cellstr or char inputs</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">delete_ana_imgs</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.dicom_tarzip">
+<code class="descclassname">Filename_tools.</code><code class="descname">dicom_tarzip</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.dicom_tarzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>tars all .dcm files in subdirectories you specify, and deletes the
+original .dcm files if successful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">none (default): all directories under the current one
+directory wildcard, e.g., &#8216;run*&#8217; to search only those subdirectories.
+absolute path names should also be ok.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dicom_tarzip</span>
+
+<span class="n">dicom_tarzip</span><span class="p">(</span><span class="s">&#39;18*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or, let&#8217;s say you have runs within subjects, and dicom files within run dirs.
+Subject dirs all start with NSF*.  run dirs all start with 18*
+Starting from the directory above subjects, you could do this to zip ALL subjects:</p>
+<div class="highlight-python"><div class="highlight"><pre>subjdirs = dir(&#39;NSF*&#39;);
+for s = 1:length(subjdirs)
+    dicom_tarzip([subjdirs(s).name filesep &#39;18*&#39;]);
+end
+</pre></div>
+</div>
+<p>Needless to say, use this with extreme caution, as it deletes your original files.
+And test it thoroughly with a backup dataset first!!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.escapeForShell">
+<code class="descclassname">Filename_tools.</code><code class="descname">escapeForShell</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.escapeForShell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns converted string for use with the current OS&#8217;s shell. Hence,
+it&#8217;s operation will be different, depending on where it&#8217;s executed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">escapedString</span><span class="p">]</span> <span class="o">=</span> <span class="n">escapeForShell</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.expand_4d_filenames">
+<code class="descclassname">Filename_tools.</code><code class="descname">expand_4d_filenames</code><span class="sig-paren">(</span><em>imgs</em>, <em>nvols</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.expand_4d_filenames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand a list of image names to 4-D name format as used by SPM2/5
+Also compatible with SPM8.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">spm_imgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">expand_4d_filenames</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="p">[</span><span class="n">nvols</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This function runs with either imgs, nvols, or both variables defined
+If the images exist, spm_imgs is returned as a char matrix with each row
+in the following format: &#8216;path/filename.ext,[N]&#8217; where [N] is the number
+of the given image.  The space after [N] is padded with blanks to ensure
+that all the image names fit properly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">spm_imgs</span> <span class="o">=</span> <span class="n">expand_4d_filenames</span><span class="p">(</span><span class="s">&#39;run03.img&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.filename_get_new_root_dir">
+<code class="descclassname">Filename_tools.</code><code class="descname">filename_get_new_root_dir</code><span class="sig-paren">(</span><em>P</em>, <em>newroot</em>, <em>nlevels</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.filename_get_new_root_dir" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Pout</span> <span class="o">=</span> <span class="n">filename_get_new_root_dir</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">newroot</span><span class="p">,</span><span class="n">nlevels</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>P:</strong></dt>
+<dd><p class="first last">is files (string matrix)</p>
+</dd>
+<dt><strong>newroot:</strong></dt>
+<dd><p class="first last">Append a new root directory to filenames
+if newroot is empty, prompt</p>
+</dd>
+<dt><strong>nlevels:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Keeps nlevels dirs deep from old directory:</dt>
+<dd><ul class="first last simple">
+<li>keeps only filename</li>
+<li>keeps filename plus last subdir</li>
+<li>keeps filename plus last 2 subdirs, etc.</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>Pout = filename_get_new_root_dir(EXPT.SNPM.P{3},pwd,2)
+
+% Change root dir to pwd for all images in EXPT
+for i=1:length(EXPT.SNPM.P), EXPT.SNPM.P{i} = filename_get_new_root_dir(EXPT.SNPM.P{i},pwd,2); end
+</pre></div>
+</div>
+<p>Note: see regexprep.m for a simpler way!!! This function could be
+improved by using it.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.getfullpath">
+<code class="descclassname">Filename_tools.</code><code class="descname">getfullpath</code><span class="sig-paren">(</span><em>Pspm</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.getfullpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for file in curr dir, then in specified dir</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Pso</span> <span class="o">=</span> <span class="n">getfullpath</span><span class="p">(</span><span class="n">Pspm</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Pspm:</strong></dt>
+<dd><p class="first last">is file name with no path or relative path</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first last">Returns absolute path name (full path)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.nums_from_text">
+<code class="descclassname">Filename_tools.</code><code class="descname">nums_from_text</code><span class="sig-paren">(</span><em>mytext</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.nums_from_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns numeric values of numbers embedded in text strings
+given text string input</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">nums</span><span class="p">,</span><span class="n">whnums</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums_from_text</span><span class="p">(</span><span class="n">mytext</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.read_excel">
+<code class="descclassname">Filename_tools.</code><code class="descname">read_excel</code><span class="sig-paren">(</span><em>excelfilename</em>, <em>has_header_row</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.read_excel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads each sheet of an Excel input file into a data structure DAT</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>   DAT = read_excel(excelfilename, has_header_row [1 or 0])
+
+- reads multiple sheets
+- adds fields named with variable names for easy access
+- uses importdata &lt;matlab internal&gt; to do most of the work
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>excelfilename:</strong></dt>
+<dd><p class="first last">Char array with full path of input filename</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>DAT:</strong></dt>
+<dd><p class="first last">Structure with DAT.(sheetname).(varname) data fields
+DAT.(sheetname).varnames is cell array of var names</p>
+</dd>
+<dt><strong>behdat:</strong></dt>
+<dd><p class="first last">Data structure as read in by importdata</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">excelfilename</span> <span class="o">=</span> <span class="n">fullfile</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="s">&#39;SchulzNewcorn_regressor_demograph.xlsx&#39;</span><span class="p">);</span>
+<span class="n">has_header_row</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">[</span><span class="n">DAT</span><span class="p">,</span> <span class="n">behdat</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_excel</span><span class="p">(</span><span class="n">excelfilename</span><span class="p">,</span> <span class="n">has_header_row</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>importdata, read_database, read_database2, read_edat_output_2008, read_physio_data</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.remove_disdaq_vols">
+<code class="descclassname">Filename_tools.</code><code class="descname">remove_disdaq_vols</code><span class="sig-paren">(</span><em>img_files</em>, <em>num_vols_per_run</em>, <em>num_disdaq_vols</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.remove_disdaq_vols" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">new_files</span> <span class="o">=</span> <span class="n">remove_disdaq_vols</span><span class="p">(</span><span class="n">img_files</span><span class="p">,</span> <span class="n">num_vols_per_run</span><span class="p">,</span> <span class="n">num_disdaq_vols</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;overwrite&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="o">|</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;FSLOUTPUTTYPE&#39;</span><span class="p">,</span> <span class="n">fsl_output_type</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;strict&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="o">|</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>img_files:</strong></dt>
+<dd><p class="first last">cellstr of files to remove disdaqs from - each cell represents a run</p>
+</dd>
+<dt><strong>num_vols_per_run:</strong></dt>
+<dd><p class="first last">vector of volume counts per run, <em>not</em> including disdaq vols</p>
+</dd>
+<dt><strong>num_disdaq_vols:</strong></dt>
+<dd><p class="first last">constant describing how many data points to remove from the beginning of each run</p>
+</dd>
+<dt><strong>&#8216;overwrite&#8217;:</strong></dt>
+<dd><p class="first last">if set, will overwriting images in place - defaults to 0</p>
+</dd>
+<dt><strong>&#8216;FSLOUTPUTTYPE&#8217;:</strong></dt>
+<dd><p class="first last">outputfile type - defaults to &#8216;NIFTI&#8217;</p>
+</dd>
+<dt><strong>&#8216;strict&#8217;:</strong></dt>
+<dd><p class="first last">if set, will error out unless data given to it is
+exactly proper length - defaults to 1 - turn off ONLY with good reason</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>new_files:</strong></dt>
+<dd><p class="first last">input files, but with a &#8216;d&#8217; prepended, unless &#8216;overwriting&#8217; was specified</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>NB: Not set up for 3d files yet!!!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% for an experiment
+num_vols_per_run = [124 140 109];  % NOT including disdaqs
+num_disdaq_vols = 4;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.rename_lowercase">
+<code class="descclassname">Filename_tools.</code><code class="descname">rename_lowercase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.rename_lowercase" title="Permalink to this definition">¶</a></dt>
+<dd><p>renames all files in dir with lower case versions
+if all characters are capitalized.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>d = dir(&#39;0*&#39;); for i=1:length(d),cd(d(i).name),rename_lowercase, cd .., end
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.rename_uppercase">
+<code class="descclassname">Filename_tools.</code><code class="descname">rename_uppercase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.rename_uppercase" title="Permalink to this definition">¶</a></dt>
+<dd><p>renames all files in dir with upper case versions
+if all characters are capitalized.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>d = dir(&#39;0*&#39;); for i=1:length(d),cd(d(i).name),rename_lowercase, cd .., end
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.scan_get_files">
+<code class="descclassname">Filename_tools.</code><code class="descname">scan_get_files</code><span class="sig-paren">(</span><em>n</em>, <em>filt</em>, <em>mesg</em>, <em>wd</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.scan_get_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop-in replacement for spm_get. 
+Main advantage is that it can use spm_select for SPM5+ to mimic older spm_get behavior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">files</span> <span class="o">=</span> <span class="n">scan_get_files</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">filt</span><span class="p">,</span> <span class="n">mesg</span><span class="p">,</span> <span class="n">wd</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Filename_tools.sort_image_filenames">
+<code class="descclassname">Filename_tools.</code><code class="descname">sort_image_filenames</code><span class="sig-paren">(</span><em>P</em><span class="sig-paren">)</span><a class="headerlink" href="#Filename_tools.sort_image_filenames" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">P</span><span class="p">,</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_image_filenames</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Not all image name listing functions return imgs in the correct numbered
+order!</p>
+<p>This function resorts a string matrix of image file names by image number, 
+in ascending order
+At most, filename can have one number in it, or error is returned</p>
+<p>P can be a string matrix of a cell of string matrices</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -9499,6 +9976,7 @@ end
 <li><a class="reference internal" href="#module-Data_extraction">Data_extraction</a></li>
 <li><a class="reference internal" href="#data-processing-tools">Data_processing_tools</a></li>
 <li><a class="reference internal" href="#module-diagnostics">diagnostics</a></li>
+<li><a class="reference internal" href="#module-Filename_tools">Filename_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

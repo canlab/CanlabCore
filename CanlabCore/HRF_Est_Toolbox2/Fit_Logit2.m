@@ -1,35 +1,57 @@
 function [hrf, fit, e, param] = Fit_Logit2(tc, TR, Run, T, mode)
-% function [hrf, fit, e, param] = Fit_Logit(tc,Run,t,mode)
-%
 % Fits FIR and smooth FIR model  
 %
-% INPUTS:
-% 
-% tc    - time course
-% TR    - time resolution
-% Runs  - expermental design
-% T     - length of estimated HRF
-% mode  - deterministic or stochastic
-%   options:
-%       0 - deterministic aproach 
-%       1 - simulated annealing approach
+% :Usage:
+% ::
+%
+%     function [hrf, fit, e, param] = Fit_Logit(tc,Run,t,mode)
+%
+% :Inputs:
+%
+%   **tc:**
+%        time course
+%
+%   **TR:**
+%        time resolution
+%
+%   **Runs:**
+%        expermental design
+%
+%   **T:**
+%        length of estimated HRF
+%
+%   **mode:**
+%        deterministic or stochastic
+%
+%        Options:
+%           0 - deterministic aproach 
+%
+%           1 - simulated annealing approach
+%
 %       Please note that when using simulated annealing approach you
 %       may need to perform some tuning before use.
-% 
-% OUTPUTS:
 %
-% hrf   - estimated hemodynamic response function
-% fit   - estimated time course
-% e     - residual time course
-% param - estimated amplitude, height and width
+% :Outputs:
 %
-% Created by Martin Lindquist on 10/02/09
-% Last edited: 05/31/13 (ML)
+%   **hrf:**
+%        estimated hemodynamic response function
+%
+%   **fit:**
+%        estimated time course
+%
+%   **e:**
+%        residual time course
+%
+%   **param:**
+%        estimated amplitude, height and width
+%
+% ..
+%    Created by Martin Lindquist on 10/02/09
+%    Last edited: 05/31/13 (ML)
+% ..
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Fit the Logit model
 
-numstim = length(Run);
+numstim = length(Run); % Fit the Logit model
 len = length(Run{1});
 
 t=1:TR:T;

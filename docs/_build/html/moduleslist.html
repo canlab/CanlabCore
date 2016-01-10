@@ -12167,6 +12167,568 @@ method.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="hrf-est-toolbox2">
+<h1>HRF_Est_Toolbox2<a class="headerlink" href="#hrf-est-toolbox2" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-HRF_Est_Toolbox2"></span><dl class="function">
+<dt id="HRF_Est_Toolbox2.Anneal_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Anneal_Logit</code><span class="sig-paren">(</span><em>theta0</em>, <em>t</em>, <em>tc</em>, <em>Run</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Anneal_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate inverse logit (IL) HRF model using Simulated Annealing
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">theta</span><span class="p">,</span><span class="n">HH</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">P</span><span class="p">]</span> <span class="o">=</span> <span class="n">Anneal_Logit</span><span class="p">(</span><span class="n">theta0</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Run:</strong></dt>
+<dd><p class="first last">stick function</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>theta0:</strong></dt>
+<dd><p class="first last">initial value for the parameter vector</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Det_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Det_Logit</code><span class="sig-paren">(</span><em>V0</em>, <em>t</em>, <em>tc</em>, <em>Run</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Det_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate inverse logit (IL) HRF model 
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">VM</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Det_Logit_allstim</span><span class="p">(</span><span class="n">V0</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Run:</strong></dt>
+<dd><p class="first last">stick function</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>V0:</strong></dt>
+<dd><p class="first last">initial value for the parameter vector</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_Canonical_HRF">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_Canonical_HRF</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>p</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_Canonical_HRF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits GLM using canonical hrf (with option of using time and dispersion derivatives)&#8217;;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_Canonical_HRF</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runs</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">Model type</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><ul class="first simple">
+<li>p=1 - only canonical HRF</li>
+<li>p=2 - canonical + temporal derivative</li>
+<li>p=3 - canonical + time and dispersion derivative</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+<dt><strong>info:</strong></dt>
+<dd><p class="first last">struct containing design matrices, beta values etc</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_Logit2">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_Logit2</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_Logit2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits FIR and smooth FIR model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_Logit</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><blockquote class="first">
+<div><p>deterministic or stochastic</p>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><p class="first">0 - deterministic aproach</p>
+<p class="last">1 - simulated annealing approach</p>
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">Please note that when using simulated annealing approach you
+may need to perform some tuning before use.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_sFIR">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_sFIR</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_sFIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits FIR and smooth FIR model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_sFIR</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runs</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><p class="first">FIR or smooth FIR</p>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><p class="first">0 - standard FIR</p>
+<p class="last">1 - smooth FIR</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Get_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Get_Logit</code><span class="sig-paren">(</span><em>V</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Get_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate inverse logit (IL) HRF model
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_logit</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">parameters</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.HMHRFest">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">HMHRFest</code><span class="sig-paren">(</span><em>y</em>, <em>Runs</em>, <em>TR</em>, <em>nbasis</em>, <em>norder</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.HMHRFest" title="Permalink to this definition">¶</a></dt>
+<dd><p>HRF estimation algorithm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>y:</strong></dt>
+<dd><p class="first last">Data matrix (#time points) by (#subjects) by (#voxels)</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">Stick functions for each subject (#time points) by (#conditions) by (#subjects)</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">Time resolution</p>
+</dd>
+<dt><strong>nbasis:</strong></dt>
+<dd><p class="first last">Number of b-spline basis</p>
+</dd>
+<dt><strong>norder:</strong></dt>
+<dd><p class="first last">Order of b-spline basis</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.PowerLoss">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">PowerLoss</code><span class="sig-paren">(</span><em>modres</em>, <em>modfit</em>, <em>moddf</em>, <em>tc</em>, <em>TR</em>, <em>Run</em>, <em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.PowerLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates Power-loss due to mis-modeling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">PowLoss</span><span class="p">]</span> <span class="o">=</span> <span class="n">PowerLoss</span><span class="p">(</span><span class="n">modres</span><span class="p">,</span> <span class="n">modfit</span><span class="p">,</span> <span class="n">moddf</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">TR</span><span class="p">,</span> <span class="n">Run</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>modres:</strong></dt>
+<dd><p class="first last">residuals</p>
+</dd>
+<dt><strong>modfit:</strong></dt>
+<dd><p class="first last">model fit</p>
+</dd>
+<dt><strong>moddf:</strong></dt>
+<dd><p class="first last">model degrees of freedom</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>alpha:</strong></dt>
+<dd><p class="first last">alpha value</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>PowLoss:</strong></dt>
+<dd><p class="first last">Estimated power loss</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.ResidScan">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">ResidScan</code><span class="sig-paren">(</span><em>res</em>, <em>FWHM</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.ResidScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates P(M&gt;=t) where M is the max value of the smoothed residuals.
+In this implementation the residuals are smoothed using a Gaussian
+kernel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [p sres sres_ns] = ResidScan(res, FWHM)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>res:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>FWHM:</strong></dt>
+<dd><p class="first last">Full Width Half Maximum (in time units)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">pvalues</p>
+</dd>
+<dt><strong>sres:</strong></dt>
+<dd><p class="first last">smoothed residuals</p>
+</dd>
+<dt><strong>sres_ns:</strong></dt>
+<dd><p class="first last">smoothed residuals (non standardized)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.get_parameters2">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">get_parameters2</code><span class="sig-paren">(</span><em>hdrf</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.get_parameters2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find model parameters</p>
+<p>Height - h</p>
+<p>Time to peak - p (in time units of TR seconds)</p>
+<p>Width (at half peak) - w</p>
+<p>Calculate Heights and Time to peak:</p>
+<p>delta = 1/(t(2)-t(1));</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.hrf_fit_one_voxel">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">hrf_fit_one_voxel</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Runc</em>, <em>T</em>, <em>method</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.hrf_fit_one_voxel" title="Permalink to this definition">¶</a></dt>
+<dd><p>HRF estimation function for a single voxel;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span>  <span class="n">hrf_fit_one_voxel</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runc</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="nb">type</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Implemented methods include: IL-model (Deterministic/Stochastic), FIR
+(Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal &amp; dispersion)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>type:</strong></dt>
+<dd><p class="first last">Model type</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><p class="first last">Mode</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><ul class="first simple">
+<li>p=1 - only canonical HRF</li>
+<li>p=2 - canonical + temporal derivative</li>
+<li>p=3 - canonical + time and dispersion derivative</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.ilogit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">ilogit</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.ilogit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the inverse logit function corresponding to the value t</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">ilogit</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>L:</strong></dt>
+<dd><p class="first last">exp(t)./(1+exp(t));</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -12191,6 +12753,7 @@ method.</p>
 <li><a class="reference internal" href="#module-fmridisplay">fmridisplay</a></li>
 <li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
 <li><a class="reference internal" href="#module-hewma_utility">hewma_utility</a></li>
+<li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>
 </ul>
 
   <h4>Previous topic</h4>

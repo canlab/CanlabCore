@@ -1,32 +1,56 @@
 function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode)
-% function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,type,mode)
-%
 % HRF estimation function for a single voxel;
+%
+% :Usage:
+% ::
+%
+%     function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,type,mode)
 %
 % Implemented methods include: IL-model (Deterministic/Stochastic), FIR
 % (Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal & dispersion)
 %
-% INPUTS:
-% 
-% tc    - time course
-% TR    - time resolution
-% Runs  - expermental design
-% T     - length of estimated HRF
-% type  - Model type
-% mode  - Mode
+% :Inputs:
 %
-% Options: p=1 - only canonical HRF
-%          p=2 - canonical + temporal derivative
-%          p=3 - canonical + time and dispersion derivative
-% 
-% OUTPUTS:
+%   **tc:**
+%        time course
 %
-% hrf   - estimated hemodynamic response function
-% fit   - estimated time course
-% e     - residual time course
-% param - estimated amplitude, height and width
+%   **TR:**
+%        time resolution
 %
-% Created by Martin Lindquist on 04/11/14
+%   **Runs:**
+%        expermental design
+%
+%   **T:**
+%        length of estimated HRF
+%
+%   **type:**
+%        Model type
+%
+%   **mode:**
+%        Mode
+%
+% :Options:
+%    - p=1 - only canonical HRF
+%    - p=2 - canonical + temporal derivative
+%    - p=3 - canonical + time and dispersion derivative
+%
+% :Outputs:
+%
+%   **hrf:**
+%        estimated hemodynamic response function
+%
+%   **fit:**
+%        estimated time course
+%
+%   **e:**
+%        residual time course
+%
+%   **param:**
+%        estimated amplitude, height and width
+%
+% ..
+%    Created by Martin Lindquist on 04/11/14
+% ..
 
 
 if (strcmp(method,'IL')),

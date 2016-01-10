@@ -1,19 +1,31 @@
 function [VM, hrf, fit, e, param] = Det_Logit(V0,t,tc,Run)
-%
-% [VM, h, fit, e, param] = Det_Logit_allstim(V0,t,tc,Run)
-%
 % Estimate inverse logit (IL) HRF model 
 % Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates
 %
-% INPUT: V0, t, tc, Run
-% Run = stick function
-% tc = time course
-% t = vector of time points
-% V0 = initial value for the parameter vector
+% :Usage:
+% ::
 %
-% By Martin Lindquist, Christian Waugh and Tor Wager
-% Created by Martin Lindquist on 10/02/09
-% Last edited: 05/26/10 (ML)
+%     [VM, h, fit, e, param] = Det_Logit_allstim(V0,t,tc,Run)
+%
+% :Inputs:
+%
+%   **Run:**
+%        stick function
+%
+%   **tc:**
+%        time course
+%
+%   **t:**
+%        vector of time points
+%
+%   **V0:**
+%        initial value for the parameter vector
+%
+% ..
+%    By Martin Lindquist, Christian Waugh and Tor Wager
+%    Created by Martin Lindquist on 10/02/09
+%    Last edited: 05/26/10 (ML)
+% ..
 
 
 numstim = length(Run);

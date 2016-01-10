@@ -78,3 +78,8 @@ hewma_utility
 ===============
 .. automodule:: hewma_utility
    :members:
+
+HRF_Est_Toolbox2
+===============
+.. automodule:: HRF_Est_Toolbox2
+   :members:

@@ -1,12 +1,17 @@
-function [cl2,classes] = hewma_plot_runlen
-%[cl2,classes] = hewma_plot_runlen
-%
+function [cl2,classes] = hewma_plot_runlen()
 % Visualize a change_point map stored in hewma_cp.img
 % (output from hewma2)
 % and classify voxels into groupings based on CP
+%
+% :Usage:
+% ::
+%
+%     [cl2,classes] = hewma_plot_runlen
+%
 
-%name = 'hewma_cp.img';
+
 name = 'hewma_runlen.img';
+%name = 'hewma_cp.img';
 
 
 % ----------------------------------------------------

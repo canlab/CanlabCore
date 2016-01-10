@@ -1,7 +1,11 @@
 function [cnt, tot, lenmat] = cnt_runs(tc)
-% function [cnt, tot, lenmat] = cnt_runs(tc)
-%
 % Counts number of contiguous 1s in a timeseries
+%
+% :Usage:
+% ::
+%
+%     function [cnt, tot, lenmat] = cnt_runs(tc)
+%
 
 tot = sum(tc);
 [a1 b1] = max(diff(tc));

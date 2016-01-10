@@ -10776,7 +10776,6 @@ Ex:</p>
 </tr>
 </tbody>
 </table>
-<p>setup</p>
 </dd></dl>
 
 <dl class="function">
@@ -10875,6 +10874,1299 @@ see that function for more info.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-hewma_utility">
+<span id="hewma-utility"></span><h1>hewma_utility<a class="headerlink" href="#module-hewma_utility" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hewma_utility.Gaussian_mix">
+<code class="descclassname">hewma_utility.</code><code class="descname">Gaussian_mix</code><span class="sig-paren">(</span><em>x</em>, <em>niter</em>, <em>basepts</em>, <em>verbose</em>, <em>doplot</em>, <em>doplot2</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.Gaussian_mix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two-Gaussian mixture model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">ind</span><span class="p">,</span><span class="n">ind2</span><span class="p">,</span><span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gaussian_mix</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">niter</span><span class="p">,</span><span class="n">basepts</span><span class="p">,</span><span class="n">verbose</span><span class="p">,</span><span class="n">doplot</span><span class="p">,</span> <span class="n">doplot2</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">data</p>
+</dd>
+<dt><strong>iter:</strong></dt>
+<dd><p class="first last">number of iterations</p>
+</dd>
+<dt><strong>basepts:</strong></dt>
+<dd><p class="first last">number of baseline pts at start of run. The modal class in the
+baseline period is defined as the 0-class</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>ind:</strong></dt>
+<dd><p class="first last">indicator function of class belonging</p>
+</dd>
+<dt><strong>ind2:</strong></dt>
+<dd><p class="first last">indicator function of class belonging where 3 consecutive points
+are needed to switch states</p>
+</dd>
+<dt><strong>mu:</strong></dt>
+<dd><p class="first last">mean vector</p>
+</dd>
+<dt><strong>sigma:</strong></dt>
+<dd><p class="first last">standard deviation</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">probability that latent class random variable (delta) is equal
+to [0,1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[ind,ind2,stats] = Gaussian_mix(linear_detrending(dat),20);
+% dat is n subjects by t time points
+% plotting is on
+
+% Simulated data
+r = normrnd(1, 1, 200, 1); r(1:50) = r(1:50) + normrnd(3, 1, 50, 1);
+[ind, ind2, stats] = Gaussian_mix(r, 50, [], 0, 1);
+</pre></div>
+</div>
+<p>We recommend 50 iterations
+..</p>
+<p>Set up inputs</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.change_point">
+<code class="descclassname">hewma_utility.</code><code class="descname">change_point</code><span class="sig-paren">(</span><em>t</em>, <em>tt</em>, <em>Mode</em>, <em>tthresh</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.change_point" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[cp,tm,b,t,wh,ooc_vector] = change_point(t,tt,Mode,tthresh)
+
+[cp,baseline mean,max t value,time of max t] = change_point(Zm,sterr,tt,tthresh)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tt:</strong></dt>
+<dd><p class="first last">is number of baseline timepoints</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">is group t-value timeseries</p>
+</dd>
+<dt><strong>Mode: &#8216;thresh&#8217; or &#8216;time&#8217;:</strong></dt>
+<dd><p class="first">if &#8216;thresh&#8217;: tthresh = threshold for significant t-values.</p>
+<p>change_point finds the first significant supra-threshold t-value and
+looks back in time to estimate the change point.</p>
+<p>if Mode = &#8216;time&#8217;</p>
+<p class="last">change_point finds the estimated change-point for process determined
+to be out of control at time tthresh</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>wh:</strong></dt>
+<dd><p class="first last">indices of out of control points</p>
+</dd>
+<dt><strong>ooc_vector:</strong></dt>
+<dd><p class="first last">indicator vector for ooc points</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.cluster_kmeans_parcel">
+<code class="descclassname">hewma_utility.</code><code class="descname">cluster_kmeans_parcel</code><span class="sig-paren">(</span><em>x</em>, <em>CLU</em>, <em>doplot</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.cluster_kmeans_parcel" title="Permalink to this definition">¶</a></dt>
+<dd><p>K-means clustering of voxels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[cl2,nclasses,colors] = function cluster_kmeans_parcel(x,CLU,doplot,[overlay img])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">a voxels x data matrix</p>
+</dd>
+<dt><strong>CLU:</strong></dt>
+<dd><p class="first last">a structure containing a list of XYZ coordinates and z-scores for voxels
+(see clusters2CLU.m)</p>
+</dd>
+</dl>
+<p>a plot flag</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cl2:</strong></dt>
+<dd><p class="first last">a k-length cell array of clusters structures
+each cell contains a clusters structure for one data class</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.cnt_runs">
+<code class="descclassname">hewma_utility.</code><code class="descname">cnt_runs</code><span class="sig-paren">(</span><em>tc</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.cnt_runs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts number of contiguous 1s in a timeseries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">cnt</span><span class="p">,</span> <span class="n">tot</span><span class="p">,</span> <span class="n">lenmat</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt_runs</span><span class="p">(</span><span class="n">tc</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.ewma5">
+<code class="descclassname">hewma_utility.</code><code class="descname">ewma5</code><span class="sig-paren">(</span><em>X</em>, <em>lambda</em>, <em>L</em>, <em>type</em>, <em>tt</em>, <em>doplot</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.ewma5" title="Permalink to this definition">¶</a></dt>
+<dd><p>EWMA - Exponentially Weighted Moving Average for fMRI slice</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>SMap, SMapTh, CPMap, CNTMap, TWidMap, W1Map, W2Map, W3Map, Tsq,stats] = ewma3(X, lambda , L, type);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>X:</strong></dt>
+<dd><p class="first last">Data over one slice (N x N x T data matrix) or (N x T) data matrix</p>
+</dd>
+<dt><strong>lambda:</strong></dt>
+<dd><p class="first last">smoothing factor</p>
+</dd>
+<dt><strong>L:</strong></dt>
+<dd><p class="first last">width of control limits, in standard errors</p>
+</dd>
+<dt><strong>type:</strong></dt>
+<dd><p class="first last">Type of noise model - White Noise: &#8216;WN&#8217;, AR(1): &#8216;AR&#8217;, AR+WN:
+&#8216;ARMA&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>SMap:</strong></dt>
+<dd><p class="first last">Significance Map</p>
+</dd>
+<dt><strong>SMap:</strong></dt>
+<dd><p class="first last">Significance Map Thresholded at L standard errors</p>
+</dd>
+<dt><strong>CPMap:</strong></dt>
+<dd><p class="first last">Changepoint Map</p>
+</dd>
+<dt><strong>CNTMap:</strong></dt>
+<dd><p class="first last">Map that depicts the number of times the process is
+out-of-control</p>
+</dd>
+<dt><strong>TWidMap:</strong></dt>
+<dd><p class="first last">map of total number of points out-of-control (all runs)</p>
+</dd>
+<dt><strong>W1Map:</strong></dt>
+<dd><p class="first last">map of number of points out-of-control in first run</p>
+</dd>
+<dt><strong>W2Map:</strong></dt>
+<dd><p class="first last">map of number of points out-of-control in second run</p>
+</dd>
+<dt><strong>W3Map:</strong></dt>
+<dd><p class="first last">map of number of points out-of-control in third run</p>
+</dd>
+<dt><strong>Tsq:</strong></dt>
+<dd><p class="first last">Squared, normalized data set for multi-subject analysis</p>
+</dd>
+<dt><strong>stats.model:</strong></dt>
+<dd><p class="first last">noise type</p>
+</dd>
+<dt><strong>stats.lam:</strong></dt>
+<dd><p class="first last">value of lambda</p>
+</dd>
+<dt><strong>stats.Z:</strong></dt>
+<dd><p class="first last">EWMA statistic (smoothed timeseries)</p>
+</dd>
+<dt><strong>stats.var:</strong></dt>
+<dd><p class="first last">variance of EWMA statistic</p>
+</dd>
+<dt><strong>stats.doasym:</strong></dt>
+<dd><p class="first last">1 for asymptotic variance 0 otherwise</p>
+</dd>
+<dt><strong>stats.dim:</strong></dt>
+<dd><p class="first last">data dimension</p>
+</dd>
+<dt><strong>stats.Z3:</strong></dt>
+<dd><p class="first last">EWMA statistic on the format NxVxT</p>
+</dd>
+<dt><strong>stats.UCL:</strong></dt>
+<dd><p class="first last">upper control limit (at L standard errors, depends on lambda)</p>
+</dd>
+<dt><strong>stats.LCL:</strong></dt>
+<dd><p class="first last">lower control limit</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% to plot voxel i,j from a slice
+i=8;
+j=17;
+ts=squeeze(fsl(i,j,:));
+tor_fig;
+plot(ts);
+hold on;
+plot(squeeze(stats.Z(i,j,:)),&#39;r&#39;);
+plot(squeeze(stats.UCL(i,j,:)),&#39;r:&#39;);
+plot(squeeze(stats.LCL(i,j,:)),&#39;r:&#39;);
+plot([chptmap(i,j)],stats.Z(i,j,chptmap(i,j)),&#39;yo&#39;,&#39;MarkerFaceColor&#39;,&#39;r&#39;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.get_ax_slice">
+<code class="descclassname">hewma_utility.</code><code class="descname">get_ax_slice</code><span class="sig-paren">(</span><em>imgs</em>, <em>slice_num</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.get_ax_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an axial slice</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function slice_data = get_ax_slice(imgs, slice_num)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">img filenames or spm_vols eg. &#8216;spmT_0004.img&#8217;;</p>
+</dd>
+<dt><strong>slice_num:</strong></dt>
+<dd><p class="first last">slice number eg. 31</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>slice_data:</strong></dt>
+<dd><p class="first last">unprocessed slice data</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.get_max_t">
+<code class="descclassname">hewma_utility.</code><code class="descname">get_max_t</code><span class="sig-paren">(</span><em>Zpop</em>, <em>sterr</em>, <em>tt</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.get_max_t" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">tm</span><span class="p">,</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_max_t</span><span class="p">(</span><span class="n">Zpop</span><span class="p">,</span><span class="n">sterr</span><span class="p">,</span><span class="n">tt</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">t-value timeseries</p>
+</dd>
+<dt><strong>tm:</strong></dt>
+<dd><p class="first last">max t-value (abs)</p>
+</dd>
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">time (index) of max t-value</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma2">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma2</code><span class="sig-paren">(</span><em>Zm</em>, <em>varZm</em>, <em>lambda</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma2" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [p,tm,Zcor,sterr,Zpop,tvals,sb,stats] = hewma2(Zm, varZm, lambda,[doplot],[dodetrend],[grpcontrast], [tt]);
+</pre></div>
+</div>
+<p>Hierarchical (Group) Ewma - HEWMA</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Zm:</strong></dt>
+<dd><p class="first last">data matrix (nsubjects x Time)</p>
+</dd>
+<dt><strong>varZm:</strong></dt>
+<dd><p class="first last">variance for each time point and subject</p>
+</dd>
+<dt><strong>lambda:</strong></dt>
+<dd><p class="first last">smoothing parameter</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional:</th><td class="field-body"><p class="first">Plot flag, 1 or 0</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">p-value</p>
+</dd>
+<dt><strong>tm:</strong></dt>
+<dd><p class="first last">maximumum (over time) group t-statistic</p>
+</dd>
+<dt><strong>Zcor:</strong></dt>
+<dd><p class="first last">temporal-search corrected Z-score (max t - nullmaxt) / std(nullmax t)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">The speed of this function is largely determined by nrep, which is</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>the number of repititions in the Monte carlo integration. A large value
+of nrep gives greater accuracy, but is slower.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Generate random data where there should be a true effect and test
+n = noisevector(100,[1 .9 .8 .6 .4 .1],1);
+n = [zeros(1,60) n];
+for i = 1:20, Zm(i,:) = n + randn(1,160);,end
+varZm = ones(size(Zm));
+[p,tm,Zcor,sterr,Zpop,tvals,sb,stats] = hewma2(Zm, varZm,.2,1);
+
+% Now try with random, non-identical weights:
+varZm = rand(size(Zm));
+
+% Now try with random autocorrelated data
+for i = 1:20, Zm(i,:) = noisevector(160,[1 .9 .8 .5 .2],1)&#39;;,end
+[p,tm,Zcor,sterr,Zpop,tvals,sb,stats] = hewma2(Zm, varZm, .2,1);
+
+% Add a group difference:
+n = noisevector(100,[1 .9 .8 .6 .4 .1],1);
+n = [zeros(1,60) n];
+for i = 1:10, Zm(i,:) = n + randn(1,160);,end
+n = noisevector(100,[1 .9 .8 .6 .4 .1],1);
+n = [zeros(1,60) n];
+for i = 11:20, Zm(i,:) = n + randn(1,160);,end
+varZm = ones(size(Zm));
+[p,tm,Zcor,sterr,Zpop,tvals,sb,stats] = hewma2(Zm, varZm,.2,1,0,[ones(10,1); -1*ones(10,1)]);
+
+% Add linear drift, to test detrending:
+n = noisevector(100,[1 .9 .8 .6 .4 .1],1);
+n = [zeros(1,60) n];
+for i = 1:10, Zm(i,:) = n + randn(1,160) + (rand(1)-.5) * (1:160);,end
+n = noisevector(100,[1 .9 .8 .6 .4 .1],1);
+n = [zeros(1,60) n];
+for i = 11:20, Zm(i,:) = n + randn(1,160) + (rand(1)-.5) * (1:160);,end
+varZm = ones(size(Zm));
+[p,tm,Zcor,sterr,Zpop,tvals,sb,stats] = hewma2(Zm, varZm,.2,1,0,[ones(10,1); -1*ones(10,1)]);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma2_plot">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma2_plot</code><span class="sig-paren">(</span><em>Zpop</em>, <em>mu</em>, <em>cp</em>, <em>cp_ind</em>, <em>ooc_indices</em>, <em>maxtime</em>, <em>tthresh</em>, <em>tt</em>, <em>tm</em>, <em>q</em>, <em>Wm</em>, <em>Zm</em>, <em>sterr</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma2_plot" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">hewma2_plot</span><span class="p">(</span><span class="n">Zpop</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">cp</span><span class="p">,</span><span class="n">cp_ind</span><span class="p">,</span><span class="n">ooc_indices</span><span class="p">,</span><span class="n">maxtime</span><span class="p">,</span><span class="n">tthresh</span><span class="p">,</span><span class="n">tt</span><span class="p">,</span><span class="n">tm</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">Wm</span><span class="p">,</span><span class="n">Zm</span><span class="p">,</span><span class="n">sterr</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>see hewma2.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_extract_voxel">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_extract_voxel</code><span class="sig-paren">(</span><em>EXPT</em>, <em>coords</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_extract_voxel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts data for one voxel and runs hewma2 on it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">dat</span><span class="p">,</span><span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">hewma_extract_voxel</span><span class="p">(</span><span class="n">EXPT</span><span class="p">,</span><span class="n">coords</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Uses plot option in hewma2 to create plots.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_from_raw_timeseries">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_from_raw_timeseries</code><span class="sig-paren">(</span><em>raw_data</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_from_raw_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">STATS</span> <span class="o">=</span> <span class="n">hewma_from_raw_timeseries</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">imraw_data, a N subjects x T time points matrix of data</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">For all optional inputs, enter a keyword followed by an input value/argument
+(this is a standard Matlab format for entering optional arguments)
+e.g., &#8216;lam&#8217;, .3 to enter a lambda value of .3</p>
+<p>Here are the optional inputs and their defaults:</p>
+<dl class="docutils">
+<dt><strong>lam = .2;</strong></dt>
+<dd><p class="first last">ewma smoothing param</p>
+</dd>
+<dt><strong>L = 2;</strong></dt>
+<dd><p class="first last">ewma control limit</p>
+</dd>
+<dt><strong>noisemodel = &#8216;AR(2)&#8217;;</strong></dt>
+<dd><p class="first last">noise structure type</p>
+</dd>
+<dt><strong>base_timepts = 60;</strong></dt>
+<dd><p class="first last">baseline time points to use</p>
+</dd>
+<dt><strong>doplot = 1;</strong></dt>
+<dd><p class="first last">plot toggle (1/0)</p>
+</dd>
+<dt><strong>dodetrend = 1;</strong></dt>
+<dd><p class="first last">hewma linear detrending toggle (1/0)</p>
+</dd>
+<dt><strong>grpcontrast = [];</strong></dt>
+<dd><p class="first last">vector of 1 or -1 values for group assignment for
+each subject</p>
+</dd>
+<dt><strong>samprate = .5;</strong></dt>
+<dd><p class="first last">sampling rate in Hz, 1/TR;  TR = 2 by default</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">see ewma5.m and hewma2.m for more information on these inputs</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_gui">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_gui</code><span class="sig-paren">(</span><em>Action</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_gui" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">varargout</span><span class="o">=</span><span class="n">hewma_gui</span><span class="p">(</span><span class="n">Action</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To run, type &#8220;hewma&#8221; at the Matlab prompt</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_plot_bivariate">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_plot_bivariate</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_plot_bivariate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize a change_point map stored in hewma_cp.img
+and a run-length map stored in hewma_runlen.img
+(output from hewma2)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[cl,cl2] = hewma_plot_bivariate([Method],[optional overlay image])
+</pre></div>
+</div>
+<p>and classify voxels into groupings based on locations in the bivariate
+space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_plot_coord_btnupfcn">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_plot_coord_btnupfcn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_plot_coord_btnupfcn" title="Permalink to this definition">¶</a></dt>
+<dd><p>function for loading and plotting hewma data from a voxel.  must have
+declared globals f,f2,VOL,EXPT</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat</span><span class="p">,</span><span class="n">stats</span><span class="p">,</span><span class="n">mycov</span><span class="p">]</span> <span class="o">=</span> <span class="n">hewma_plot_coord_btnupfcn</span>
+</pre></div>
+</div>
+<p>see hewma_timeseries_plot, the shell function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_plot_cpmap">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_plot_cpmap</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_plot_cpmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize a change_point map stored in hewma_cp.img
+(output from hewma2)
+and classify voxels into groupings based on CP</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl2</span><span class="p">,</span><span class="n">classes</span><span class="p">]</span> <span class="o">=</span> <span class="n">hewma_plot_cpmap</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_plot_runlen">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_plot_runlen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_plot_runlen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize a change_point map stored in hewma_cp.img
+(output from hewma2)
+and classify voxels into groupings based on CP</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl2</span><span class="p">,</span><span class="n">classes</span><span class="p">]</span> <span class="o">=</span> <span class="n">hewma_plot_runlen</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.hewma_save_timeseries">
+<code class="descclassname">hewma_utility.</code><code class="descname">hewma_save_timeseries</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.hewma_save_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cl = hewma_save_timeseries([mask to extract from or cl],[k],[[set of:grpmean,grpste,xdim,ydim]])
+</pre></div>
+</div>
+<p>load hewma_timeseries
+run this to save data in clusters format</p>
+<p>Function: extract timeseries data from a mask (and extent thr k)
+Gets group avg data for clusters, not individual.  For indiv, use
+hewma_extract_voxel.m</p>
+<p>Last args contain the data for the group for each voxel.
+If last args are not entered, attempts to load from hewma_timeseries.mat
+defaults</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.linear_detrending">
+<code class="descclassname">hewma_utility.</code><code class="descname">linear_detrending</code><span class="sig-paren">(</span><em>Zm</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.linear_detrending" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Zdt</span> <span class="o">=</span> <span class="n">linear_detrending</span><span class="p">(</span><span class="n">Zm</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Zm:</strong></dt>
+<dd><p class="first last">nsub x T matrix;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Zdt:</strong></dt>
+<dd><p class="first last">linearly detrended version of Zm (baseline retained)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.timeseries_btwngroups_plot">
+<code class="descclassname">hewma_utility.</code><code class="descname">timeseries_btwngroups_plot</code><span class="sig-paren">(</span><em>dat</em>, <em>cov</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.timeseries_btwngroups_plot" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>h = timeseries_btwngroups_plot(dat,cov,[baseperiod],[dedetrend],[x],[legend text])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imdat:</strong></dt>
+<dd><p class="first last">subjects x time matrix of estimates</p>
+</dd>
+<dt><strong>baseperiod:</strong></dt>
+<dd><p class="first last">integer; removes mean of 1:baseperiod for each subject</p>
+</dd>
+<dt><strong>cov:</strong></dt>
+<dd><p class="first last">subjects x 1 contrast vector (individual/group differences)</p>
+</dd>
+<dt><strong>dodetrend:</strong></dt>
+<dd><p class="first last">linear detrending of each subject&#8217;s estimates</p>
+</dd>
+<dt><strong>legend text:</strong></dt>
+<dd><p class="first last">{&#8216;name1&#8217; &#8216;name2&#8217; ...}</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>h:</strong></dt>
+<dd><p class="first last">line handles</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.timeseries_mc_pvalue">
+<code class="descclassname">hewma_utility.</code><code class="descname">timeseries_mc_pvalue</code><span class="sig-paren">(</span><em>varZm</em>, <em>lambda</em>, <em>Wm</em>, <em>sesq</em>, <em>df</em>, <em>tm</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.timeseries_mc_pvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses Monte Carlo simulation on a timeeseries to get the null hypothesis
+max t-value over time and establish an appropriate statistical threshold</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[Zcor,p,tthresh,q,C] = timeseries_mc_pvalue(varZm,lambda,Wm,sesq,df,tm)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>varZm:</strong></dt>
+<dd><p class="first last">within subjects variances, subj x time</p>
+</dd>
+<dt><strong>lambda:</strong></dt>
+<dd><p class="first last">smoothing parameter in EWMA</p>
+</dd>
+<dt><strong>Wm:</strong></dt>
+<dd><p class="first last">individual case (subject) weights</p>
+</dd>
+<dt><strong>sesq:</strong></dt>
+<dd><p class="first last">squared standard error between subjects (variance of group error estimate)</p>
+</dd>
+<dt><strong>df:</strong></dt>
+<dd><p class="first last">degrees of freedom between subjects (est.)</p>
+</dd>
+<dt><strong>tm:</strong></dt>
+<dd><p class="first last">max t stat for group over time</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.wb_hewma_shell">
+<code class="descclassname">hewma_utility.</code><code class="descname">wb_hewma_shell</code><span class="sig-paren">(</span><em>EXPT</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.wb_hewma_shell" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>EXPT = wb_hewma_shell(EXPT,[start slice or vector of slices],[dools],[mask])
+</pre></div>
+</div>
+<p>Run EWMA first: wb_multisubject_ewma.</p>
+<dl class="docutils">
+<dt>Fields in EXPT needed:</dt>
+<dd><ul class="first last simple">
+<li>subdir</li>
+<li>im_files</li>
+<li>FILES.ewma_z</li>
+<li>FILES.ewma_var</li>
+<li>[cov]</li>
+<li>[mask]</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.weighted_reg">
+<code class="descclassname">hewma_utility.</code><code class="descname">weighted_reg</code><span class="sig-paren">(</span><em>Y</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.weighted_reg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate weighted average using weighted linear least squares
+See examples below for usage</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Model:</th><td class="field-body"><p class="first">Y_i = 1*Ypop + noise</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Y:</strong></dt>
+<dd><p class="first last">data matrix (nsub x T)</p>
+</dd>
+<dt><strong>w:</strong></dt>
+<dd><p class="first last">weights</p>
+</dd>
+<dt><strong>varY:</strong></dt>
+<dd><p class="first last">variance of data at each time point (nsub x T) + var between</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Ymean:</strong></dt>
+<dd><p class="first last">weighted mean of each column of Y</p>
+</dd>
+<dt><strong>dfe:</strong></dt>
+<dd><p class="first last">error degrees of freedom, adjusted for inequality of variance
+(Sattherwaite) and pooled across data columns</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Extended output in stats structure:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>stats.t:</strong></dt>
+<dd>t-values for weighted t-test</dd>
+<dt><strong>stats.p:</strong></dt>
+<dd>2-tailed p-values for weighted t-test</dd>
+<dt><strong>r:</strong></dt>
+<dd>weighted correlation coeff across columns of Y</dd>
+<dt><strong>xy:</strong></dt>
+<dd>weighted covariance matrix</dd>
+<dt><strong>v:</strong></dt>
+<dd><blockquote class="first">
+<div>weighted variance estimates for each column of Y</div></blockquote>
+<ul class="last simple">
+<li>sqrt(v) is the standard error of the mean (or grp difference)</li>
+</ul>
+</dd>
+<dt><strong>stats.fits:</strong></dt>
+<dd>fits  for each group (Ymean by group), low contrast weight group then high
+Fastest if no stats are asked for.</dd>
+</dl>
+</div></blockquote>
+<p>Computation time:
+For FULL stats report</p>
+<blockquote>
+<div><ul class="simple">
+<li>Triples from 500 -&gt; 1000 columns of Y, continues to increase</li>
+</ul>
+</div></blockquote>
+<p>For mean/dfe only, fast for full dataset (many columns of Y)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Basic multivariate stats for 1000 columns of dat, no weighting
+% Multivariate covariances are meaningful if cols of Y are organized, e.g., timeseries
+[means,stats] = weighted_reg(dat(:,1:1000));
+
+% The same, but return univariate stats only (good for large Y)
+[means,stats] = weighted_reg(dat,&#39;uni&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.weighted_reg_old2">
+<code class="descclassname">hewma_utility.</code><code class="descname">weighted_reg_old2</code><span class="sig-paren">(</span><em>y</em>, <em>w</em>, <em>varz</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.weighted_reg_old2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate weighted average using weighted linear least squares</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Model:</th><td class="field-body"><p class="first">z_i = 1*zpop + noise</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Y:</strong></dt>
+<dd><p class="first last">data matrix (nsub x T)</p>
+</dd>
+<dt><strong>w:</strong></dt>
+<dd><p class="first last">weights</p>
+</dd>
+<dt><strong>varz:</strong></dt>
+<dd><p class="first last">variance of data at each time point (nsub x T)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">weighted correlation coeff across columns of y</p>
+</dd>
+<dt><strong>xy:</strong></dt>
+<dd><p class="first last">weighted covariance matrix</p>
+</dd>
+<dt><strong>v:</strong></dt>
+<dd><p class="first last">weighted variance estimates for each column of y</p>
+</dd>
+<dt><strong>zp:</strong></dt>
+<dd><p class="first last">weighted mean of each column of y</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.weighted_reg_oldglmfit_old">
+<code class="descclassname">hewma_utility.</code><code class="descname">weighted_reg_oldglmfit_old</code><span class="sig-paren">(</span><em>Y</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.weighted_reg_oldglmfit_old" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate weighted average using weighted linear least squares
+See examples below for usage</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Model:</th><td class="field-body"><p class="first">Y_i = 1*Ypop + noise</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Y:</strong></dt>
+<dd><p class="first last">data matrix (nsub x T)</p>
+</dd>
+<dt><strong>w:</strong></dt>
+<dd><p class="first last">weights</p>
+</dd>
+<dt><strong>varY:</strong></dt>
+<dd><p class="first last">variance of data at each time point (nsub x T) + var between</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Ymean:</strong></dt>
+<dd><p class="first last">weighted mean of each column of Y</p>
+</dd>
+<dt><strong>dfe:</strong></dt>
+<dd><p class="first last">error degrees of freedom, adjusted for inequality of variance
+(Sattherwaite) and pooled across data columns</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Extended output in stats structure:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>stats.t:</strong></dt>
+<dd>t-values for weighted t-test</dd>
+<dt><strong>stats.p:</strong></dt>
+<dd>2-tailed p-values for weighted t-test</dd>
+<dt><strong>r:</strong></dt>
+<dd>weighted correlation coeff across columns of Y</dd>
+<dt><strong>xy:</strong></dt>
+<dd>weighted covariance matrix</dd>
+<dt><strong>v:</strong></dt>
+<dd><blockquote class="first">
+<div>weighted variance estimates for each column of Y</div></blockquote>
+<ul class="last simple">
+<li>sqrt(v) is the standard error of the mean (or grp difference)</li>
+</ul>
+</dd>
+<dt><strong>stats.fits:</strong></dt>
+<dd>fits  for each group (Ymean by group), low contrast weight group then high
+Fastest if no stats are asked for.</dd>
+</dl>
+</div></blockquote>
+<p>Computation time:
+For FULL stats report</p>
+<blockquote>
+<div><ul class="simple">
+<li>Triples from 500 -&gt; 1000 columns of Y, continues to increase</li>
+</ul>
+</div></blockquote>
+<p>For mean/dfe only, fast for full dataset (many columns of Y)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Basic multivariate stats for 1000 columns of dat, no weighting
+% Multivariate covariances are meaningful if cols of Y are organized, e.g., timeseries
+[means,stats] = weighted_reg(dat(:,1:1000));
+
+% The same, but return univariate stats only (good for large Y)
+[means,stats] = weighted_reg(dat,&#39;uni&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.whole_brain_ewma">
+<code class="descclassname">hewma_utility.</code><code class="descname">whole_brain_ewma</code><span class="sig-paren">(</span><em>P</em>, <em>DX</em>, <em>TR</em>, <em>HP</em>, <em>nruns</em>, <em>numframes</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.whole_brain_ewma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single-subject timeseries extraction and model fitting
+saves filtered images f* and full-model betas (model fits)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,[doplot],[mask],[smoothlen],[startslice])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>P:</strong></dt>
+<dd><blockquote class="first">
+<div><p>list of image names, raw functionals or beta images (see &#8220;type&#8221;</p>
+</div></blockquote>
+<p class="last">below)</p>
+</dd>
+<dt><strong>DX:</strong></dt>
+<dd><p class="first last">model matrix of effects to REMOVE before EWMA, see, e.g., for FIR tor_make_deconv_mtx3.m</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">repetition time of your study (sampling rate)</p>
+</dd>
+<dt><strong>HP:</strong></dt>
+<dd><p class="first last">high-pass filter cutoff in seconds to apply (SPM style)</p>
+</dd>
+<dt><strong>nruns:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>number of sessions (intercepts) OR num. of images in each sess,</dt>
+<dd><p class="first last">e.g., [169 169 172]</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>numframes:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>number of beta images per event type, e.g., [20 20 20] for FIR</dt>
+<dd><p class="first last">model</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>[doplot]:</strong></dt>
+<dd><p class="first last">optional graphics</p>
+</dd>
+<dt><strong>[mask]:</strong></dt>
+<dd><p class="first last">optional name of mask image to limit processing to brain, or []</p>
+</dd>
+<dt><strong>[smoothlen]:</strong></dt>
+<dd><dl class="first docutils">
+<dt>exponential smoothing filter length for timeseries and</dt>
+<dd><p class="first last">betas; influence is 0 after smoothlen seconds; default:**</p>
+</dd>
+</dl>
+<p class="last">6</p>
+</dd>
+<dt><strong>[startslice]:</strong></dt>
+<dd><p class="first last">slice to start at, default = 1</p>
+</dd>
+<dt><strong>[type]:</strong></dt>
+<dd><p class="first">optional type of analysis to run.  Options:
+&#8216;full&#8217;    Everything, from filtering to height/time/width, enter</p>
+<blockquote>
+<div><p>raw image names and model matrix DX</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>&#8216;data&#8217;    Filter data only and save images in f*img</dt>
+<dd><p class="first last">Enter raw image names and empty model matrix []</p>
+</dd>
+<dt>&#8216;htw&#8217;     Smooths beta series and computes height/time/width only</dt>
+<dd><dl class="first docutils">
+<dt>Enter beta images from FIR model within condition,</dt>
+<dd><p class="first last">e.g., beta1_event1 beta2_event1 ... beta1_event2 b2_e2
+...</p>
+</dd>
+</dl>
+<p class="last">One possibility is to use images from SPM2 at this
+stage.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For a shell to run this function, see whole_brain_fir.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">The analysis sequence:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Run whole_brain_fir, which mainly just calls whole_brain_filter
+whole_brain_filter gives you:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><dl class="first docutils">
+<dt>trimmed, filtered images, saved in f*img</dt>
+<dd><p class="first last">these can be passed to SPM2, e.g., if desired</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>extraction of beta images for FIR model, saved in dx_beta*img</dt>
+<dd><p class="first last">in individual subject folders; also smooths betas if desired</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>calculation of height, delay, and width for each FIR extracted</dt>
+<dd><p class="first last">saved on images in individual subject folders.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+<p>After running this, you&#8217;ll need to collect image names for use in random
+effects analyses, and most likely create contrasts across conditions for
+differences in height, delay, and width.</p>
+<p>to do this, first go to main model directory, with subject subfolders
+to save a list of height/delay/width images:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">EXPT</span> <span class="o">=</span> <span class="n">get_htw_image_names</span><span class="p">(</span><span class="n">EXPT</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to create contrasts across those images and save in EXPT.SNPM for rfx
+analysis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">EXPT</span> <span class="o">=</span> <span class="n">make_htw_contrast_images</span><span class="p">(</span><span class="n">EXPT</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Now you can run robust regression across the images in EXPT.SNPM.
+The robust reg uses image names in EXPT.SNPM.P, so you may have to save
+images from another field (e.g., EXPT.SNPM.heightP) in the .P field.
+you may also want to test individual contrasts against zero, in which
+case you can use EXPT.NLCON.height images, for example (and others in
+NLCON) instead.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">EXPT</span> <span class="o">=</span> <span class="n">robfit</span><span class="p">(</span><span class="n">EXPT</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Explanations of some more variables</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>vb:</strong></dt>
+<dd>[optional] verbose output level: 0 none, 1 some, 2 lots</dd>
+<dt><strong>mask:</strong></dt>
+<dd>[optional] mask 3-D volume to apply before extracting</dd>
+<dt><strong>P:</strong></dt>
+<dd>image file names (str matrix)</dd>
+<dt><strong>S:</strong></dt>
+<dd>filtering matrix (e.g., high-pass)</dd>
+<dt><strong>DX:</strong></dt>
+<dd>full model to fit, unfiltered</dd>
+<dt><strong>vb:</strong></dt>
+<dd>[optional] verbose output level: 0 none, 1 some, 2 lots</dd>
+<dt><strong>mask:</strong></dt>
+<dd>[optional] mask 3-D volume to apply before extracting</dd>
+<dt><strong>nsess:</strong></dt>
+<dd>number of sessions (intercepts): assumes last nsess columns
+of DX are run intercepts to be removed before trimming</dd>
+<dt><strong>dims:</strong></dt>
+<dd>dimensions of image files in data</dd>
+<dt><strong>cols:</strong></dt>
+<dd>no. of columns of DX, also no. of beta images to write</dd>
+<dt><strong>SDX:</strong></dt>
+<dd>smoothed (filtered) full model to fit</dd>
+<dt><strong>PSDX:</strong></dt>
+<dd>pseudoinverse of filtered full model</dd>
+<dt><strong>PSDXS:</strong></dt>
+<dd>PSDX * S, ready to multiply with data y for pinv(SX) * Sy</dd>
+<dt><strong>betas:</strong></dt>
+<dd>4-D array of x,y,z,column</dd>
+<dt><strong>ntrimmed:</strong></dt>
+<dd>number of outliers trimmed from timeseries at each voxel</dd>
+<dt><strong>Pw:</strong></dt>
+<dd>string matrix of output file names</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>Pw = whole_brain_filter(d,c.model(1:166,:),2,120,5,c.numframes,1,10);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hewma_utility.zero_crossing">
+<code class="descclassname">hewma_utility.</code><code class="descname">zero_crossing</code><span class="sig-paren">(</span><em>M</em>, <em>T</em>, <em>XX</em>, <em>ZIU</em>, <em>ZIL</em>, <em>Z</em>, <em>mu</em><span class="sig-paren">)</span><a class="headerlink" href="#hewma_utility.zero_crossing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate out of control points and change-point using zero-crossing
+method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">CP2</span><span class="p">,</span><span class="n">CNTmat</span><span class="p">,</span><span class="n">TOTmat</span><span class="p">,</span><span class="n">LENmat</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_crossing</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">XX</span><span class="p">,</span><span class="n">ZIU</span><span class="p">,</span><span class="n">ZIL</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span><span class="n">mu</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Used in ewma5.m  See ewma5 for description of variables.</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -10898,6 +12190,7 @@ see that function for more info.</p>
 <li><a class="reference internal" href="#module-Filename_tools">Filename_tools</a></li>
 <li><a class="reference internal" href="#module-fmridisplay">fmridisplay</a></li>
 <li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
+<li><a class="reference internal" href="#module-hewma_utility">hewma_utility</a></li>
 </ul>
 
   <h4>Previous topic</h4>

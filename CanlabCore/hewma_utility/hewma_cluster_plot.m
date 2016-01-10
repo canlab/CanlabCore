@@ -1,5 +1,4 @@
 function hewma_cluster_plot(cl,i)
-% hewma_cluster_plot(cl,i)
 
 ti = cl(i).timeseries;
 

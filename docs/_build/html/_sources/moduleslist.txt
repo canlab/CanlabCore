@@ -73,3 +73,8 @@ GLM_Batch_tools
 ===============
 .. automodule:: GLM_Batch_tools
    :members:
+
+hewma_utility
+===============
+.. automodule:: hewma_utility
+   :members:

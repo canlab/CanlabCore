@@ -1,9 +1,20 @@
 function [t,tm,b] = get_max_t(Zpop,sterr,tt)
-% [t,tm,b] = get_max_t(Zpop,sterr,tt)
+% :Usage:
+% ::
 %
-% t = t-value timeseries
-% tm = max t-value (abs)
-% b = time (index) of max t-value
+%     [t,tm,b] = get_max_t(Zpop,sterr,tt)
+%
+% :Outputs:
+%
+%   **t:**
+%        t-value timeseries
+%
+%   **tm:**
+%        max t-value (abs)
+%
+%   **b:**
+%        time (index) of max t-value
+%
 
 mu = mean(Zpop(1:tt));                              % population mean
 t = (Zpop - mu) ./ sterr;

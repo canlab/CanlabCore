@@ -1,7 +1,12 @@
-function [dat,stats,mycov] = hewma_plot_coord_btnupfcn
-% [dat,stats,mycov] = hewma_plot_coord_btnupfcn
+function [dat,stats,mycov] = hewma_plot_coord_btnupfcn()
+% function for loading and plotting hewma data from a voxel.  must have
+% declared globals f,f2,VOL,EXPT
 %
-% function for loading and plotting hewma data from a voxel.  must have declared globals f,f2,VOL,EXPT
+% :Usage:
+% ::
+%
+%     [dat,stats,mycov] = hewma_plot_coord_btnupfcn
+%
 % see hewma_timeseries_plot, the shell function.
 
 global f

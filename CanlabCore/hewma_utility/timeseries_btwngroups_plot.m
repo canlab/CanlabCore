@@ -1,13 +1,30 @@
 function h = timeseries_btwngroups_plot(dat,cov,varargin)
-% h = timeseries_btwngroups_plot(dat,cov,[baseperiod],[dedetrend],[x],[legend text])
+% :Usage:
+% ::
 %
-% h = line handles
+%     h = timeseries_btwngroups_plot(dat,cov,[baseperiod],[dedetrend],[x],[legend text])
 %
-% dat = subjects x time matrix of estimates
-% baseperiod = integer; removes mean of 1:baseperiod for each subject
-% cov = subjects x 1 contrast vector (individual/group differences)
-% dodetrend = linear detrending of each subject's estimates
-% legend text ={'name1' 'name2' ...}
+% :Inputs:
+%
+%   **imdat:**
+%        subjects x time matrix of estimates
+%
+%   **baseperiod:**
+%        integer; removes mean of 1:baseperiod for each subject
+%
+%   **cov:**
+%        subjects x 1 contrast vector (individual/group differences)
+%
+%   **dodetrend:**
+%        linear detrending of each subject's estimates
+%
+%   **legend text:**
+%        {'name1' 'name2' ...}
+%
+% :Output:
+%
+%   **h:**
+%        line handles
 
 x = 1:size(dat,2);
 

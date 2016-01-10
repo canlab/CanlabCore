@@ -1,18 +1,19 @@
 function varargout=hewma_gui(Action,varargin)
-% varargout=hewma_gui(Action,varargin)
+% :Usage:
+% ::
+%
+%     varargout=hewma_gui(Action,varargin)
+%
 % To run, type "hewma" at the Matlab prompt
 %
-% Tor Wager 
-% 
-% Thanks to Tom Nichols for the excellent GUI shell!
-
-%-----------------------------functions-called------------------------
+% ..
+%    Tor Wager 
 %
-%-----------------------------functions-called------------------------
+%    Thanks to Tom Nichols for the excellent GUI shell!
+% ..
 
-% global variables we need for this shell
 
-global EXPT
+global EXPT % global variables we need for this shell
 global cl
     
 %-Format arguments

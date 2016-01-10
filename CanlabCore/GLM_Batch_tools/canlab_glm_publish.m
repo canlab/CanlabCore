@@ -66,10 +66,10 @@ function canlab_glm_publish(varargin)
 %
 
 
-%% setup
 thresh = [.001 .005 .05];
 size = [5 1 1];
 
+%% setup
 STARTINGDIR = pwd;
 
 %% parse arguments

@@ -1,24 +1,51 @@
 function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,varargin)
-% function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,[doplot],[mask],[smoothlen],[startslice])
-%
-% single-subject timeseries extraction and model fitting
+% Single-subject timeseries extraction and model fitting
 % saves filtered images f* and full-model betas (model fits) 
 %
-% P = list of image names, raw functionals or beta images (see "type"
+% :Usage:
+% ::
+%
+%     function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,[doplot],[mask],[smoothlen],[startslice])
+%
+% :Inputs:
+%
+%   **P:**
+%        list of image names, raw functionals or beta images (see "type"
 %       below)
-% DX = model matrix of effects to REMOVE before EWMA, see, e.g., for FIR tor_make_deconv_mtx3.m
-% TR = repetition time of your study (sampling rate)
-% HP = high-pass filter cutoff in seconds to apply (SPM style)
-% nruns = number of sessions (intercepts) OR num. of images in each sess,
+%
+%   **DX:**
+%        model matrix of effects to REMOVE before EWMA, see, e.g., for FIR tor_make_deconv_mtx3.m
+%
+%   **TR:**
+%        repetition time of your study (sampling rate)
+%
+%   **HP:**
+%        high-pass filter cutoff in seconds to apply (SPM style)
+%
+%   **nruns:**
+%        number of sessions (intercepts) OR num. of images in each sess,
 %           e.g., [169 169 172]
-% numframes = number of beta images per event type, e.g., [20 20 20] for FIR
+%
+%   **numframes:**
+%        number of beta images per event type, e.g., [20 20 20] for FIR
 %           model
-% [doplot] = optional graphics
-% [mask] = optional name of mask image to limit processing to brain, or []
-% [smoothlen] = exponential smoothing filter length for timeseries and
-%           betas; influence is 0 after smoothlen seconds; default = 6
-% [startslice] = slice to start at, default = 1
-% [type] = optional type of analysis to run.  Options:
+%
+%   **[doplot]:**
+%        optional graphics
+%
+%   **[mask]:**
+%        optional name of mask image to limit processing to brain, or []
+%
+%   **[smoothlen]:**
+%        exponential smoothing filter length for timeseries and
+%           betas; influence is 0 after smoothlen seconds; default:**
+%        6
+%
+%   **[startslice]:**
+%        slice to start at, default = 1
+%
+%   **[type]:**
+%        optional type of analysis to run.  Options:
 %        'full'    Everything, from filtering to height/time/width, enter
 %                  raw image names and model matrix DX
 %
@@ -34,10 +61,7 @@ function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,varargin)
 %
 % For a shell to run this function, see whole_brain_fir.m
 %
-% Tor Wager, 2/20/05
-%
-% %
-% The analysis sequence:
+% :The analysis sequence:
 % Run whole_brain_fir, which mainly just calls whole_brain_filter
 % whole_brain_filter gives you:
 %       1) trimmed, filtered images, saved in f*img
@@ -50,48 +74,93 @@ function Pw = whole_brain_ewma(P,DX,TR,HP,nruns,numframes,varargin)
 % After running this, you'll need to collect image names for use in random
 % effects analyses, and most likely create contrasts across conditions for
 % differences in height, delay, and width.  
+%
 % to do this, first go to main model directory, with subject subfolders
 % to save a list of height/delay/width images:
-%EXPT = get_htw_image_names(EXPT)
+% ::
+%
+%    EXPT = get_htw_image_names(EXPT)
+%
 % to create contrasts across those images and save in EXPT.SNPM for rfx
 % analysis:
-%EXPT = make_htw_contrast_images(EXPT);
+% ::
+%
+%    EXPT = make_htw_contrast_images(EXPT);
+%
 % Now you can run robust regression across the images in EXPT.SNPM.
 % The robust reg uses image names in EXPT.SNPM.P, so you may have to save
 % images from another field (e.g., EXPT.SNPM.heightP) in the .P field.
 % you may also want to test individual contrasts against zero, in which
 % case you can use EXPT.NLCON.height images, for example (and others in
 % NLCON) instead.
-% EXPT = robfit(EXPT);
-
-
+% ::
+%
+%    EXPT = robfit(EXPT);
+%
 % Explanations of some more variables
-% vb    = [optional] verbose output level: 0 none, 1 some, 2 lots
-% mask  = [optional] mask 3-D volume to apply before extracting
 %
-% P     = image file names (str matrix)
-% S     = filtering matrix (e.g., high-pass)
-% DX    = full model to fit, unfiltered
-% vb    = [optional] verbose output level: 0 none, 1 some, 2 lots
-% mask  = [optional] mask 3-D volume to apply before extracting
-% nsess = number of sessions (intercepts): assumes last nsess columns
-%         of DX are run intercepts to be removed before trimming
+%   **vb:**
+%        [optional] verbose output level: 0 none, 1 some, 2 lots
 %
-% dims  = dimensions of image files in data
-% cols  = no. of columns of DX, also no. of beta images to write
-% SDX   = smoothed (filtered) full model to fit
-% PSDX  = pseudoinverse of filtered full model
-% PSDXS = PSDX * S, ready to multiply with data y for pinv(SX) * Sy
-% betas = 4-D array of x,y,z,column
+%   **mask:**
+%        [optional] mask 3-D volume to apply before extracting
 %
-% ntrimmed = number of outliers trimmed from timeseries at each voxel
-% Pw    = string matrix of output file names
 %
-% Pw = whole_brain_filter(d,c.model(1:166,:),2,120,5,c.numframes,1,10);
+%   **P:**
+%        image file names (str matrix)
+%
+%   **S:**
+%        filtering matrix (e.g., high-pass)
+%
+%   **DX:**
+%        full model to fit, unfiltered
+%
+%   **vb:**
+%        [optional] verbose output level: 0 none, 1 some, 2 lots
+%
+%   **mask:**
+%        [optional] mask 3-D volume to apply before extracting
+%
+%   **nsess:**
+%        number of sessions (intercepts): assumes last nsess columns
+%        of DX are run intercepts to be removed before trimming
+%
+%   **dims:**
+%        dimensions of image files in data
+%
+%   **cols:**
+%        no. of columns of DX, also no. of beta images to write
+%
+%   **SDX:**
+%        smoothed (filtered) full model to fit
+%
+%   **PSDX:**
+%        pseudoinverse of filtered full model
+%
+%   **PSDXS:**
+%        PSDX * S, ready to multiply with data y for pinv(SX) * Sy
+%
+%   **betas:**
+%        4-D array of x,y,z,column
+%
+%   **ntrimmed:**
+%        number of outliers trimmed from timeseries at each voxel
+%
+%   **Pw:**
+%        string matrix of output file names
+%
+% :Example:
+% ::
+%
+%    Pw = whole_brain_filter(d,c.model(1:166,:),2,120,5,c.numframes,1,10);
+%
+% ..
+%    Tor Wager, 2/20/05
+% ..
 
-% -------------------------------------------------------------------
-% * configure input arguments
-% -------------------------------------------------------------------
+% ..
+%    configure input arguments
+% ..
 
 if isempty(P), warning('Empty image names!  No processing done.'), Pw = [], return, end
 

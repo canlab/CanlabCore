@@ -197,6 +197,10 @@ if do_preproc
     
     %% white matter, ventricle
     
+    create_figure('plot_qc',2,4);
+    set(gcf, 'position', get(0,'screensize')); drawnow;
+    plot_qc(dat,1,0,[]); drawnow;
+    
     if remove_vent_wm
         
         fprintf('::: removing ventricle & white matter signal ... \n');
@@ -211,7 +215,7 @@ if do_preproc
             canlab_create_wm_ventricle_masks(wm_mask, gm_mask, 'wm_thr', .9, 'vent_thr', .9);
         end
         
-        [wm_nuisance, wm_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(fullfile(subject_dir, 'Structural/SPGR'), dat);
+        [wm_nuisance, wm_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(fullfile(subject_dir, 'Structural/SPGR'), dat, 'noplot');
         if use_pca_comp_vw
             comb_R = [comb_R scale(wm_nuisance_comps)];
         elseif ~use_pca_comp_vw
@@ -247,14 +251,19 @@ if do_preproc
         dat.dat = (dat.dat' - xpxy)';
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
+        clim = plot_qc(dat,2,1,[]); drawnow;
+        
     else  % no filtering
         
     end
     
+   
     
     %% Windsorize entire data matrix to k STD
     if do_windsorize
         dat = windsorize(dat, k_std);
+        
+        plot_qc(dat,3,0,clim); drawnow;
         %done below dat.history{end+1} = sprintf('Windsorized data matrix to %3.0f st. dev.', k_std);
     end
     
@@ -266,6 +275,8 @@ if do_preproc
             + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); % conn_filter does mean-center by default. 
                                                            % So need mean back in
         dat.history{end+1} = 'Done temporal filtering';
+        
+        plot_qc(dat,4,0,clim); drawnow;
     end
     
     t = toc;
@@ -466,4 +477,42 @@ percbad = 100 .* nbad ./ numel(obj.dat);
 
 obj.history{end+1} = sprintf('Windsorized data matrix to %d STD; adjusted %3.0f values, %3.1f%% of values', k, nbad, percbad);
 disp(obj.history{end});
+end
+
+function clim = plot_qc(dat,n, use7sd, clim)
+
+% dat
+% n: steps
+% use7sd: use -6sd~+6sd as a range
+% clim: specify color limit
+
+titles = {'RAW:before Conn preproc', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize', 'Pass filter'};
+
+subplot(2,4,n);
+plot(mean(dat.dat)); 
+set(gca, 'xlim', [0 size(dat.dat,2)]);
+xlabel('timeseries');
+ylabel('Global mean');
+title(titles{n});
+
+subplot(2,4,n+4);
+
+if use7sd
+    m = nanmean(dat.dat(:));
+    sd = nanstd(dat.dat(:));
+    clim = [m-7*sd m+7*sd];    
+end
+
+if isempty(clim)
+    imagesc(dat.dat);
+else
+    imagesc(dat.dat, clim);
+end
+
+colormap(gray);
+set(gca, 'xlim', [0 size(dat.dat,2)]);
+xlabel('timeseries');
+ylabel('voxels');
+colorbar('southoutside');
+
 end

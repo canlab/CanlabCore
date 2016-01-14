@@ -1,29 +1,46 @@
-% function [P2,P,sigmat,sigmatneg] = threshold_imgs(dd,u,[k],['pos' 'neg' 'both'])
-%
-% dd    list of filenames (str matrix)
-% u     height threshold for images
-% k     extent threshold for contiguous voxels
-% [str] 'pos' 'neg' or 'both', to values above, below,
-%       - and + threshold
-%
-%
-% tor wager
-%
-% output - threshold t - generic function
-% also do: plot rob vs ols benefit by tissue class and ols-irls average
-% example:
-% [P2,P,s,sn] = threshold_imgs(p([5 8],:),tinv(1-.001,10),0,'both');
-% compare_filtered_t([],P2(1,:),P2(2,:))
-%[p2,p1] = threshold_imgs('irls-ols_z_0001.img',norminv(.9),0,'both');
-% % compare_filtered_t([],P2(1,:),P2(2,:),p2)
-%h = image_scatterplot(str2mat(P,p1),'avgvs3');
-%xlabel('Average OLS and Robust t-value'), ylabel('Z-score of Robust - OLS difference')
-%
-% example:
-% s = str2mat('rob_tmap_0002.img','rob_tmap_0003.img');
-% P = threshold_imgs(s,tinv(1-.05,36),[],'pos');P = threshold_imgs(s,tinv(1-.05,36),[],'neg');
-
 function [P2,P,sigmat,sigmatneg] = threshold_imgs(dd,u,varargin)
+% :Usage:
+% ::
+%
+%     function [P2,P,sigmat,sigmatneg] = threshold_imgs(dd,u,[k],['pos' 'neg' 'both'])
+%
+% :Inputs:
+%
+%   **dd:**
+%        list of filenames (str matrix)
+%
+%   **u:**
+%        height threshold for images
+%
+%   **k:**
+%        extent threshold for contiguous voxels
+%
+%   **[str]:**
+%        'pos' 'neg' or 'both', to values above, below,
+%         - and + threshold
+%
+% Output - threshold t - generic function
+%
+% also do: plot rob vs ols benefit by tissue class and ols-irls average
+%
+% :Examples:
+% ::
+%
+%    [P2,P,s,sn] = threshold_imgs(p([5 8],:),tinv(1-.001,10),0,'both');
+%    compare_filtered_t([],P2(1,:),P2(2,:))
+%    [p2,p1] = threshold_imgs('irls-ols_z_0001.img',norminv(.9),0,'both');
+%
+%    % compare_filtered_t([],P2(1,:),P2(2,:),p2)
+%    h = image_scatterplot(str2mat(P,p1),'avgvs3');
+%    xlabel('Average OLS and Robust t-value'), ylabel('Z-score of Robust - OLS difference')
+%
+%    s = str2mat('rob_tmap_0002.img','rob_tmap_0003.img');
+%    P = threshold_imgs(s,tinv(1-.05,36),[],'pos');P = threshold_imgs(s,tinv(1-.05,36),[],'neg');
+%
+% ..
+%    tor wager
+% ..
+
     t = u;      % t-threshold
     iind = 1;   % grandfathered
     jind = 1;   % index of images

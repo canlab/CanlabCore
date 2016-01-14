@@ -93,3 +93,8 @@ Image_space_tools
 ===============
 .. automodule:: Image_space_tools
    :members:
+
+Image_thresholding
+===============
+.. automodule:: Image_thresholding
+   :members:

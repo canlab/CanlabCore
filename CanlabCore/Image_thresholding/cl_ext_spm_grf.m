@@ -1,34 +1,56 @@
 function [cl_ext_spm, fwhm] = cl_ext_spm_grf(corrected_p, prim_p, residual_images, mask, varargin) 
-
-% [cl_ext, fwhm] = cl_ext_spm_grf(corrected_p, prim_p, residual_images, mask, varargin) 
-%
-% Overview: this function is designed to estimate a cluster extent size for 
+% This function is designed to estimate a cluster extent size for 
 % the correction for multiple comparisons based on a Gaussian Random Field 
 % Theory using SPM toolboxes. 
 %
-% Inputs:
-% - corrected_p = corrected p value
-%   e.g.) cluster-extent corrected p < .05: corrected_p = .05
-% - prim_p = primary threshold for height (i.e., cluster-defining threshold)
-%   e.g.) prim_p = [0.01 0.005 0.001];
-% - residual_images = residual image names; if you used
-%   cl_ext_make_resid.m, this should be 'Res4d.nii'
-% - mask = mask image name
-% 
-% Output: 
-% cl_ext_spm - cl_ext_spm is the cluster size that makes a corrected p value under 
+% :Usage:
+% ::
+%
+%     [cl_ext, fwhm] = cl_ext_spm_grf(corrected_p, prim_p, residual_images, mask, varargin) 
+%
+% :Inputs:
+%
+%   **corrected_p:**
+%        corrected p value
+%
+%        e.g.) cluster-extent corrected p < .05: corrected_p = .05
+%
+%   **prim_p:**
+%        primary threshold for height (i.e., cluster-defining threshold)
+%
+%        e.g.) prim_p = [0.01 0.005 0.001];
+%
+%   **residual_images:**
+%        residual image names; if you used
+%
+%        cl_ext_make_resid.m, this should be 'Res4d.nii'
+%
+%   **mask:**
+%        mask image name
+%
+% :Optional Inputs:
+%
+%   **'doplot':**
+%
+%   **'twotail':**
+%        default is one-tail - with this option, primary_p/2 will be used 
+%        for all clsuter extent estimations. 
+%
+% Output:
+%
+%   **cl_ext_spm:**
+%        cl_ext_spm is the cluster size that makes a corrected p value under 
 %       corrected_p (e.g., 0.05). 
-% fwhm (x, y, z in voxels) - intrinsic smoothness level estimated by SPM (spm_est_smoothness.m)
+%
+%   **fwhm (x, y, z in voxels):**
+%        intrinsic smoothness level estimated by SPM (spm_est_smoothness.m)
 %       If you want to convert this into mm, you need to multiply these
 %       values by voxel sizes in mm. 
 %
-% Options:
-% - 'doplot'
-% - 'twotail': default is one-tail - with this option, primary_p/2 will be used 
-%   for all clsuter extent estimations. 
-%
-% Choong-Wan (Wani) Woo, 08/13/2012
+% ..
+%    Choong-Wan (Wani) Woo, 08/13/2012
 %    modified by Wani, 05/18/2013
+% ..
  
 doplot = false;
 isTwoTailed = false;

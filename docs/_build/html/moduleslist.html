@@ -14096,6 +14096,694 @@ see mm2voxel.m</p>
 </dd></dl>
 
 </div>
+<div class="section" id="image-thresholding">
+<h1>Image_thresholding<a class="headerlink" href="#image-thresholding" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Image_thresholding"></span><dl class="function">
+<dt id="Image_thresholding.FDR">
+<code class="descclassname">Image_thresholding.</code><code class="descname">FDR</code><span class="sig-paren">(</span><em>p</em>, <em>q</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.FDR" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">pt</span> <span class="o">=</span> <span class="n">FDR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">vector of p-values</p>
+</dd>
+<dt><strong>q:</strong></dt>
+<dd><p class="first last">False Discovery Rate level</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>pID:</strong></dt>
+<dd><p class="first last">p-value threshold based on independence or positive dependence</p>
+</dd>
+<dt><strong>pN:</strong></dt>
+<dd><p class="first last">Nonparametric p-value threshold</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.cl_ext_3dClustSim">
+<code class="descclassname">Image_thresholding.</code><code class="descname">cl_ext_3dClustSim</code><span class="sig-paren">(</span><em>corrected_p</em>, <em>prim_p</em>, <em>residual_images</em>, <em>mask</em>, <em>voxelsize_mm</em>, <em>ClustSim_dir</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.cl_ext_3dClustSim" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl_ext_ClustSim</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">]</span> <span class="o">=</span> <span class="n">cl_ext_3dClustSim</span><span class="p">(</span><span class="n">corrected_p</span><span class="p">,</span> <span class="n">prim_p</span><span class="p">,</span> <span class="n">residual_images</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">voxelsize_mm</span><span class="p">,</span> <span class="n">ClustSim_dir</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>corrected_p:</strong></dt>
+<dd><p class="first">cluster-extent corrected p value</p>
+<p class="last">e.g.) if cluster-extent corrected p &lt; .05: corrected_p = .05</p>
+</dd>
+<dt><strong>prim_p:</strong></dt>
+<dd><p class="first">primary threshold for height (i.e., cluster-defining threshold)</p>
+<p class="last">e.g.) prim_p = [0.01 0.005 0.001];</p>
+</dd>
+<dt><strong>residual_images:</strong></dt>
+<dd><p class="first">residual image names; if you used</p>
+<p>cl_ext_make_resid.m, this should be &#8216;Res4d.nii&#8217;.</p>
+<p>e.g.) residual_images = filenames(&#8216;Res4d.hdr&#8217;, &#8216;char&#8217;, &#8216;absolute&#8217;);</p>
+<blockquote class="last">
+<div><p>residual_images = filenames(&#8216;Res4d.nii&#8217;, &#8216;char&#8217;, &#8216;absolute&#8217;);</p>
+</div></blockquote>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><p class="first">mask image name (should have header)</p>
+<p>e.g.) mask = filenames(&#8216;mask.hdr&#8217;, &#8216;char&#8217;, &#8216;absolute&#8217;);</p>
+<blockquote class="last">
+<div><p>mask = filenames(&#8216;mask.nii&#8217;, &#8216;char&#8217;, &#8216;absolute&#8217;);</p>
+</div></blockquote>
+</dd>
+<dt><strong>voxelsize_mm:</strong></dt>
+<dd><p class="first last">voxel sizes in milimeter. e.g) voxelsize_mm = [2 2 2];</p>
+</dd>
+<dt><strong>3dClustSim_dir:</strong></dt>
+<dd><p class="first">directory where alphasim is installed.</p>
+<p>e.g.) 3dClustSim_dir = &#8216;/Users/clinpsywoo/abin/macosx_10.6_Intel_64&#8217;;</p>
+<p class="last">If you don&#8217;t have 3dClustSim, see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/HOWTO/howto/ht00_inst/html/index.shtml">http://afni.nimh.nih.gov/pub/dist/HOWTO/howto/ht00_inst/html/index.shtml</a></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;iter&#8217;:</strong></dt>
+<dd><p class="first last">you can set up the iteration number for Monte Carlo simulation.
+default is doing 1000 iterations.</p>
+</dd>
+<dt><strong>&#8216;twotail&#8217;:</strong></dt>
+<dd><p class="first last">default is one-tail - with this option, primary_p/2 will be used 
+for all clsuter extent estimations.</p>
+</dd>
+<dt><strong>&#8216;fwhm&#8217;:</strong></dt>
+<dd><p class="first last">you can add fwhm manually</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>cl_ext_ClustSim:</strong></dt>
+<dd><p class="first last">cl_ext_ClustSim is the cluster size that makes a corrected p value under 
+corrected_p (e.g., 0.05).</p>
+</dd>
+<dt><strong>fwhm (x, y, z in voxel):</strong></dt>
+<dd><p class="first last">intrinsic smoothness level estimated by AFNI(3dFWHMx). 
+If you want to convert this into mm, you need to multiply these
+values by voxel sizes in mm.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.cl_ext_make_resid">
+<code class="descclassname">Image_thresholding.</code><code class="descname">cl_ext_make_resid</code><span class="sig-paren">(</span><em>con_files</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.cl_ext_make_resid" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will create residual images (4d) and mask image in 
+a current or assigned directory in order to use them in estimating smoothness 
+(relevant functions: spm_est_smoothness (SPM), 3dFWHMx (AFNI), smoothest (FSL).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function cl_ext_make_resid(conimgs, varargin)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>con_files:</strong></dt>
+<dd><p class="first">contrast image file names; This could be a cell array or
+strings. This could be 4d images.</p>
+<p>Best: Input a cell string. e.g., for a string matrix:</p>
+<p class="last">Use cl_ext_make_resid(cellstr(imgs)); % save residual images</p>
+</dd>
+</dl>
+<ul class="simple">
+<li>If you are not providing the absolute paths of the images, you need to</li>
+</ul>
+<p>be in the directory that has the image files.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Res4d.nii:</strong></dt>
+<dd><p class="first last">residual images saved by SPM.</p>
+</dd>
+<dt><strong>mask.nii:</strong></dt>
+<dd><p class="first last">the mask image that was used.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Options for varargin:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;mask&#8217;</strong></dt>
+<dd><p class="first">This option can be used to estimate a cluster size for the correction for multiple
+comparisons &#8220;within the mask&#8221;. You can put in a ROI mask or gray matter,
+whatever. If you don&#8217;t specify a mask image, brainmask.nii (default) will be
+used, but the image has to be in your path.</p>
+<blockquote class="last">
+<div><p>e.g.)</p>
+<div class="highlight-python"><div class="highlight"><pre>mask = fullfile(basedir, &#39;ROI_image.img&#39;); 
+mask = which(&#39;scalped_avg152T1_graymatter_smoothed.img&#39;); % limited to gray matter
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+<dt><strong>&#8216;outputdir&#8217;</strong></dt>
+<dd><p class="first last">With this option, this will save residual and mask images and in the 
+outputdir directory. If you don&#8217;t give outputdir, the current directory
+will be used (default).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function calls cl_ext_spm_spm.m, which is a modified spm_spm not to
+delete residual images.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.cl_ext_spm_grf">
+<code class="descclassname">Image_thresholding.</code><code class="descname">cl_ext_spm_grf</code><span class="sig-paren">(</span><em>corrected_p</em>, <em>prim_p</em>, <em>residual_images</em>, <em>mask</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.cl_ext_spm_grf" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to estimate a cluster extent size for 
+the correction for multiple comparisons based on a Gaussian Random Field 
+Theory using SPM toolboxes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl_ext</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">]</span> <span class="o">=</span> <span class="n">cl_ext_spm_grf</span><span class="p">(</span><span class="n">corrected_p</span><span class="p">,</span> <span class="n">prim_p</span><span class="p">,</span> <span class="n">residual_images</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span> 
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>corrected_p:</strong></dt>
+<dd><p class="first">corrected p value</p>
+<p class="last">e.g.) cluster-extent corrected p &lt; .05: corrected_p = .05</p>
+</dd>
+<dt><strong>prim_p:</strong></dt>
+<dd><p class="first">primary threshold for height (i.e., cluster-defining threshold)</p>
+<p class="last">e.g.) prim_p = [0.01 0.005 0.001];</p>
+</dd>
+<dt><strong>residual_images:</strong></dt>
+<dd><p class="first">residual image names; if you used</p>
+<p class="last">cl_ext_make_resid.m, this should be &#8216;Res4d.nii&#8217;</p>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><p class="first last">mask image name</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>&#8216;doplot&#8217;:</strong></p>
+<dl class="last docutils">
+<dt><strong>&#8216;twotail&#8217;:</strong></dt>
+<dd><p class="first last">default is one-tail - with this option, primary_p/2 will be used 
+for all clsuter extent estimations.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>cl_ext_spm:</strong></dt>
+<dd><blockquote class="first">
+<div>cl_ext_spm is the cluster size that makes a corrected p value under</div></blockquote>
+<p class="last">corrected_p (e.g., 0.05).</p>
+</dd>
+<dt><strong>fwhm (x, y, z in voxels):</strong></dt>
+<dd><blockquote class="first">
+<div>intrinsic smoothness level estimated by SPM (spm_est_smoothness.m)</div></blockquote>
+<p class="last">If you want to convert this into mm, you need to multiply these
+values by voxel sizes in mm.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.cl_ext_spm_spm">
+<code class="descclassname">Image_thresholding.</code><code class="descname">cl_ext_spm_spm</code><span class="sig-paren">(</span><em>SPM</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.cl_ext_spm_spm" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Re]ML Estimation of a General Linear Model</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">FORMAT</span> <span class="p">[</span><span class="n">SPM</span><span class="p">]</span> <span class="o">=</span> <span class="n">spm_spm</span><span class="p">(</span><span class="n">SPM</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Required fields of SPM:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>xY.VY - nScan x 1 struct array of image handles (see spm_vol)</dt>
+<dd><blockquote class="first">
+<div>Images must have the same orientation, voxel size and data type</div></blockquote>
+<ul class="last simple">
+<li>Any scaling should have already been applied via the image handle
+scalefactors.</li>
+</ul>
+</dd>
+<dt>xX    - Structure containing design matrix information</dt>
+<dd><ul class="first last">
+<li><p class="first">Required fields are:
+xX.X      - Design matrix (raw, not temporally smoothed)
+xX.name   - cellstr of parameter names corresponding to columns</p>
+<blockquote>
+<div><p>of design matrix</p>
+</div></blockquote>
+</li>
+<li><p class="first">Optional fields are:
+xX.K      - cell of session-specific structures (see spm_filter)</p>
+<blockquote>
+<div><ul class="simple">
+<li>Design &amp; data are pre-multiplied by K
+(K*Y = K*X*beta + K*e)</li>
+<li>Note that K should not smooth across block boundaries</li>
+<li>defaults to speye(size(xX.X,1))</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>xX.W      - Optional whitening/weighting matrix used to give</dt>
+<dd><p class="first last">weighted least squares estimates (WLS). If not specified
+spm_spm will set this to whiten the data and render
+the OLS estimates maximum likelihood
+i.e. W*W&#8217; = inv(xVi.V).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>xVi   - Structure describing intrinsic temporal non-sphericity</dt>
+<dd><ul class="first last">
+<li><p class="first">Required fields are:
+xVi.Vi    - array of non-sphericity components</p>
+<blockquote>
+<div><ul class="simple">
+<li>defaults to {speye(size(xX.X,1))} - i.i.d.</li>
+<li>specifying a cell array of constraints (Qi)
+These constraints invoke spm_reml to estimate
+hyperparameters assuming V is constant over voxels.
+that provide a high precise estimate of xX.V</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Optional fields are:
+xX.V      - Optional non-sphericity matrix.  Cov(e) = sigma^2*V</p>
+<blockquote>
+<div><p>If not specified spm_spm will compute this using
+a 1st pass to identify significant voxels over which
+to estimate V.  A 2nd pass is then used to re-estimate
+the parameters with WLS and save the ML estimates
+(unless xX.W is already specified).</p>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt>xM    - Structure containing masking information, or a simple column vector</dt>
+<dd><blockquote class="first">
+<div>of thresholds corresponding to the images in VY [default: -Inf]</div></blockquote>
+<ul class="last">
+<li><p class="first">If a structure, the required fields are:
+xM.TH - nVar x nScan matrix of analysis thresholds, one per image
+xM.I  - Implicit masking (0=&gt;none, 1 =&gt; implicit zero/NaN mask)
+xM.VM - struct array of explicit mask image handles</p>
+</li>
+<li><dl class="first docutils">
+<dt>(empty if no explicit masks)</dt>
+<dd><ul class="first last simple">
+<li>Explicit mask images are &gt;0 for valid voxels to assess.</li>
+<li>Mask images can have any orientation, voxel size or data
+type. They are interpolated using nearest neighbour
+interpolation to the voxel locations of the data Y.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Note that voxels with constant data (i.e. the same value across
+scans) are also automatically masked out.</p>
+</li>
+</ul>
+</dd>
+<dt>swd   - Directory where the output files will be saved [default: pwd]</dt>
+<dd>If exists, it becomes the current working directory.</dd>
+</dl>
+<p>In addition, global SPM &#8220;defaults&#8221; variable is used (see spm_defaults):</p>
+<dl class="docutils">
+<dt>stats.&lt;modality&gt;.UFp - critical F-threshold for selecting voxels over </dt>
+<dd>which the non-sphericity is estimated (if 
+required) [default: 0.001]</dd>
+<dt>stats.maxres         - maximum number of residual images for smoothness</dt>
+<dd>estimation</dd>
+</dl>
+<p>stats.maxmem         - maximum amount of data processed at a time (in bytes)</p>
+<p>modality             - SPM modality {&#8216;PET&#8217;,&#8217;FMRI&#8217;,&#8217;EEG&#8217;}</p>
+</div></blockquote>
+<blockquote>
+<div><p>spm_spm is the heart of the SPM package. Given image files and a
+General Linear Model, it estimates the model parameters, variance
+hyperparameters, and smoothness of standardised residual fields, writing
+these out to disk in the current working directory for later
+interrogation in the results section. (NB: Existing analyses in the
+current working directory are overwritten).  This directory
+now becomes the working directory for this analysis and all saved
+images are relative to this directory.</p>
+<p>The model is expressed via the design matrix (xX.X). The basic model
+at each voxel is of the form is Y = X*B + e, for data Y, design
+matrix X, (unknown) parameters B and residual errors e. The errors
+are assumed to have a normal distribution.</p>
+<p>Sometimes confounds (e.g. drift terms in fMRI) are necessary. These
+can be specified directly in the design matrix or implicitly, in terms
+of a residual forming matrix K to give a generalised linear model
+K*Y = K*X*B + K*e.  In fact K can be any matrix (e.g. a convolution
+matrix).</p>
+<p>In some instances i.i.d. assumptions about errors do not hold. For
+example, with serially correlated (fMRI) data or correlations among the
+levels of a factor in repeated measures designs. This non-sphericity
+can be specified in terms of components (SPM.xVi.Vi{i}). If specified
+these covariance components will then be estimated with ReML (restricted
+maximum likelihood) hyperparameters. This estimation assumes the same
+non-sphericity for voxels that exceed the global F-threshold. The ReML
+estimates can then be used to whiten the data giving maximum likelihood
+(ML) or Gauss-Markov estimators. This entails a second pass of the data
+with an augmented model K*W*Y = K*W*X*B + K*W*e where W*W&#8217; = inv(xVi.V).
+xVi.V is the non-sphericity based on the hyperparameter estimates.
+W is stored in xX.W and cov(K*W*e) in xX.V. The covariance of the
+parameter estimates is then xX.Bcov = pinv(K*W*X)*xX.V*pinv(K*W*X)&#8217;.</p>
+<p>If you do not want ML estimates but want to use ordinary least squares
+(OLS) then simply set SPM.xX.W to the identity matrix. Any non-sphericity
+V will still be estimated but will be used to adjust the degrees of freedom
+of the ensuing statistics using the Satterthwaite approximation (c.f.
+the Greenhouse-Geisser corrections).</p>
+<p>If [non-spherical] variance components Vi are not specified xVi.Vi and
+xVi.V default to the identity matrix (i.e. i.i.d). The parameters are
+then estimated by OLS.  In this instance the OLS and ML estimates are
+the same.</p>
+<p>Note that only a single voxel-specific hyperparameter (i.e. variance
+component) is estimated, even if V is not i.i.d.  This means spm_spm
+always implements a fixed-effects model.
+Random effects models can be emulated using a multi-stage procedure:
+This entails summarising the data with contrasts such that the fixed
+effects in a second model on the summary data are those effects of
+interest (i.e. the population effects). This means contrasts are
+re-entered into spm_spm to make an inference (SPM) at the next
+level. At this higher hierarchical level the residual variance for the
+model contains the appropriate variance components from lower levels.
+See spm_RandFX.man for further details and below.</p>
+<p>Under the additional assumption that the standardised error fields
+are non-stationary standard Gaussian random fields, results from
+Random field theory can be applied to estimate the significance
+statistic images (SPM&#8217;s) adjusting p values for the multiple tests
+at all voxels in the search volume. The parameters required for
+this random field correction are the volume, and Lambda, the covariance
+matrix of partial derivatives of the standardised error fields, estimated
+by spm_est_smoothness.</p>
+<blockquote>
+<div></div></blockquote>
+<p>The volume analysed is the intersection of the threshold masks,
+explicit masks and implicit masks. See spm_spm_ui for further details
+on masking options.</p>
+</div></blockquote>
+<blockquote>
+<div><p>The output of spm_spm takes the form of an SPM.mat file of the analysis
+parameters, and &#8216;float&#8217; flat-file images of the parameter and variance
+[hyperparameter] estimates. An 8bit zero-one mask image indicating the
+voxels assessed is also written out, with zero indicating voxels outside
+tha analysed volume.</p>
+<blockquote>
+<div></div></blockquote>
+<p>The following SPM.fields are set by spm_spm (unless specified)</p>
+<blockquote>
+<div><p>xVi.V      - estimated non-sphericity trace(V) = rank(V)
+xVi.h      - hyperparameters  xVi.V = xVi.h(1)*xVi.Vi{1} + ...
+xVi.Cy     - spatially whitened &lt;Y*Y&#8217;&gt; (used by ReML to estimate h)
+xVi.CY     - &lt;(Y - &lt;Y&gt;)*(Y - &lt;Y&gt;)&#8217;&gt;    (used by spm_spm_Bayes)</p>
+<blockquote>
+<div></div></blockquote>
+<p>Vbeta     - struct array of beta image handles (relative)
+VResMS    - file struct of ResMS image handle  (relative)
+VM        - file struct of Mask  image handle  (relative)</p>
+<blockquote>
+<div></div></blockquote>
+<p>xX.W      - if not specified W*W&#8217; = inv(x.Vi.V)
+xX.V      - V matrix (K*W*Vi*W&#8217;<a href="#id31"><span class="problematic" id="id32">*</span></a>K&#8217;) = correlations after K*W is applied
+xX.xKXs   - space structure for K*W*X, the &#8216;filtered and whitened&#8217;</p>
+<blockquote>
+<div><blockquote>
+<div>design matrix</div></blockquote>
+<ul class="simple">
+<li>given as spm_sp(&#8216;Set&#8217;,xX.K*xX.W*xX.X) - see spm_sp</li>
+</ul>
+</div></blockquote>
+<p>xX.pKX    - pseudoinverse of K*W*X, computed by spm_sp
+xX.Bcov   - xX.pKX*xX.V*xX.pKX - variance-covariance matrix of</p>
+<blockquote>
+<div>parameter estimates
+(when multiplied by the voxel-specific hyperparameter ResMS
+of the parameter estimates (ResSS/xX.trRV = ResMS) )</div></blockquote>
+<p>xX.trRV   - trace of R*V
+xX.trRVRV - trace of RVRV
+xX.erdf   - effective residual degrees of freedom (trRV^2/trRVRV)
+xX.nKX    - design matrix (xX.xKXs.X) scaled for display</p>
+<blockquote>
+<div><p>(see spm_DesMtx(&#8216;sca&#8217;,... for details)</p>
+<blockquote>
+<div></div></blockquote>
+</div></blockquote>
+<p>xVol.M    - 4x4 voxel-&gt;mm transformation matrix
+xVol.iM   - 4x4 mm-&gt;voxel transformation matrix
+xVol.DIM  - image dimensions - column vector (in voxels)
+xVol.XYZ  - 3 x S vector of in-mask voxel coordinates
+xVol.S    - Lebesgue measure or volume       (in voxels)
+xVol.R    - vector of resel counts           (in resels)
+xVol.FWHM - Smoothness of components - FWHM, (in voxels)</p>
+<blockquote>
+<div></div></blockquote>
+<p>xCon      - Contrast structure (created by spm_FcUtil.m)
+xCon.name - Name of contrast
+xCon.STAT - &#8216;F&#8217;, &#8216;T&#8217; or &#8216;P&#8217; - for F/T-contrast (&#8216;P&#8217; for PPMs)
+xCon.c    - (F) Contrast weights
+xCon.X0   - Reduced design matrix (spans design space under Ho)</p>
+<blockquote>
+<div>It is in the form of a matrix (spm99b) or the
+coordinates of this matrix in the orthogonal basis
+of xX.X defined in spm_sp.</div></blockquote>
+<dl class="docutils">
+<dt>xCon.iX0  - Indicates how contrast was specified:</dt>
+<dd>If by columns for reduced design matrix then iX0 contains
+the column indices. Otherwise, it&#8217;s a string containing
+the spm_FcUtil &#8216;Set&#8217; action: Usually one of {&#8216;c&#8217;,&#8217;c+&#8217;,&#8217;X0&#8217;}
+(Usually this is the input argument F_iX0.)</dd>
+<dt>xCon.X1o  - Remaining design space (orthogonal to X0).</dt>
+<dd>It is in the form of a matrix (spm99b) or the
+coordinates of this matrix in the orthogonal basis
+of xX.X defined in spm_sp.</dd>
+</dl>
+<p>xCon.eidf - Effective interest degrees of freedom (numerator df)
+xCon.Vcon - ...for handle of contrast/ESS image (empty at this stage)
+xCon.Vspm - ...for handle of SPM image (empty at this stage)</p>
+<blockquote>
+<div></div></blockquote>
+</div></blockquote>
+<p>The following images are written to file</p>
+<p>mask.{img,hdr}                                   - analysis mask image
+8-bit (uint8) image of zero-s &amp; one&#8217;s indicating which voxels were
+included in the analysis. This mask image is the intersection of the
+explicit, implicit and threshold masks specified in the xM argument.
+The XYZ matrix contains the voxel coordinates of all voxels in the
+analysis mask. The mask image is included for reference, but is not
+explicitly used by the results section.</p>
+<blockquote>
+<div></div></blockquote>
+<p><a href="#id37"><span class="problematic" id="id38">beta_</span></a>????.{img,hdr}                                 - parameter images
+These are 32-bit (float32) images of the parameter estimates. The image
+files are numbered according to the corresponding column of the
+design matrix. Voxels outside the analysis mask (mask.img) are given
+value NaN.</p>
+<blockquote>
+<div></div></blockquote>
+<p>ResMS.{img,hdr}                    - estimated residual variance image
+This is a 64-bit (float64) image of the residual variance estimate.
+Voxels outside the analysis mask are given value NaN.</p>
+<blockquote>
+<div></div></blockquote>
+<p>RPV.{img,hdr}                      - estimated resels per voxel image
+This is a 64-bit (float64) image of the RESELs per voxel estimate.
+Voxels outside the analysis mask are given value 0.  These images
+reflect the nonstationary aspects the spatial autocorrelations.</p>
+<blockquote>
+<div></div></blockquote>
+<p><a href="#id39"><span class="problematic" id="id40">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
+These are 64-bit (float64) images of standardised residuals. At most
+maxres images will be saved and used by spm_est_smoothness, after which
+they will be deleted.</p>
+</div></blockquote>
+<blockquote>
+<div><p>References:</p>
+<dl class="docutils">
+<dt>Christensen R (1996) Plane Answers to Complex Questions</dt>
+<dd>Springer Verlag</dd>
+</dl>
+<p>Friston KJ, Holmes AP, Worsley KJ, Poline JB, Frith CD, Frackowiak RSJ (1995)
+<a href="#id33"><span class="problematic" id="id34">``</span></a>Statistical Parametric Maps in Functional Imaging:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>A General Linear Approach&#8217;&#8216;</dt>
+<dd>Human Brain Mapping 2:189-210</dd>
+</dl>
+</div></blockquote>
+<p>Worsley KJ, Friston KJ (1995)
+<a href="#id35"><span class="problematic" id="id36">``</span></a>Analysis of fMRI Time-Series Revisited - Again&#8217;&#8216;</p>
+<blockquote>
+<div>NeuroImage 2:173-181</div></blockquote>
+</div></blockquote>
+<blockquote>
+<div>Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.clusterSizeMask">
+<code class="descclassname">Image_thresholding.</code><code class="descname">clusterSizeMask</code><span class="sig-paren">(</span><em>sizeThresh</em>, <em>height_mask</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.clusterSizeMask" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">mask</span><span class="p">,</span><span class="n">numClusters</span><span class="p">,</span><span class="n">XYZ</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusterSizeMask</span><span class="p">(</span><span class="n">sizeThresh</span><span class="p">,</span><span class="n">height_mask</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_thresholding.threshold_imgs">
+<code class="descclassname">Image_thresholding.</code><code class="descname">threshold_imgs</code><span class="sig-paren">(</span><em>dd</em>, <em>u</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_thresholding.threshold_imgs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">P2</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">sigmat</span><span class="p">,</span><span class="n">sigmatneg</span><span class="p">]</span> <span class="o">=</span> <span class="n">threshold_imgs</span><span class="p">(</span><span class="n">dd</span><span class="p">,</span><span class="n">u</span><span class="p">,[</span><span class="n">k</span><span class="p">],[</span><span class="s">&#39;pos&#39;</span> <span class="s">&#39;neg&#39;</span> <span class="s">&#39;both&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dd:</strong></dt>
+<dd><p class="first last">list of filenames (str matrix)</p>
+</dd>
+<dt><strong>u:</strong></dt>
+<dd><p class="first last">height threshold for images</p>
+</dd>
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">extent threshold for contiguous voxels</p>
+</dd>
+<dt><strong>[str]:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;pos&#8217; &#8216;neg&#8217; or &#8216;both&#8217;, to values above, below,</dt>
+<dd><ul class="first last simple">
+<li>and + threshold</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Output - threshold t - generic function</p>
+<p>also do: plot rob vs ols benefit by tissue class and ols-irls average</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[P2,P,s,sn] = threshold_imgs(p([5 8],:),tinv(1-.001,10),0,&#39;both&#39;);
+compare_filtered_t([],P2(1,:),P2(2,:))
+[p2,p1] = threshold_imgs(&#39;irls-ols_z_0001.img&#39;,norminv(.9),0,&#39;both&#39;);
+
+% compare_filtered_t([],P2(1,:),P2(2,:),p2)
+h = image_scatterplot(str2mat(P,p1),&#39;avgvs3&#39;);
+xlabel(&#39;Average OLS and Robust t-value&#39;), ylabel(&#39;Z-score of Robust - OLS difference&#39;)
+
+s = str2mat(&#39;rob_tmap_0002.img&#39;,&#39;rob_tmap_0003.img&#39;);
+P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(1-.05,36),[],&#39;neg&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -14123,6 +14811,7 @@ see mm2voxel.m</p>
 <li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>
 <li><a class="reference internal" href="#image-computation-tools">Image_computation_tools</a></li>
 <li><a class="reference internal" href="#image-space-tools">Image_space_tools</a></li>
+<li><a class="reference internal" href="#image-thresholding">Image_thresholding</a></li>
 </ul>
 
   <h4>Previous topic</h4>

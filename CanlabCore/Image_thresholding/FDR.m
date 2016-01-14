@@ -1,15 +1,31 @@
 function [pID,pN] = FDR(p,q)
-    % FORMAT pt = FDR(p,q)
-    %
-    % p   - vector of p-values
-    % q   - False Discovery Rate level
-    %
-    % pID - p-value threshold based on independence or positive dependence
-    % pN  - Nonparametric p-value threshold
-    %______________________________________________________________________________
-    % @(#)FDR.m	1.3 Tom Nichols 02/01/18
+% :Usage:
+% ::
+%
+%     pt = FDR(p,q)
+%
+% :Inputs:
+%
+%   **p:**
+%        vector of p-values
+%
+%   **q:**
+%        False Discovery Rate level
+%
+% :Outputs:
+%
+%   **pID:**
+%        p-value threshold based on independence or positive dependence
+%
+%   **pN:**
+%        Nonparametric p-value threshold
+%
+% ..
+%    % @(#)FDR.m	1.3 Tom Nichols 02/01/18
+%
+%    The checking code below was added by Tor Wager
+% ..
 
-    % The checking code below was added by Tor Wager
     p(isnan(p)) = [];
 
     if any(p == 0)

@@ -1,8 +1,12 @@
 function [SPM] = cl_ext_spm_spm(SPM)
 % [Re]ML Estimation of a General Linear Model
-% FORMAT [SPM] = spm_spm(SPM)
 %
-% Required fields of SPM:
+% :Usage:
+% ::
+%
+%     FORMAT [SPM] = spm_spm(SPM)
+%
+% :Required fields of SPM:
 %
 % xY.VY - nScan x 1 struct array of image handles (see spm_vol)
 %         Images must have the same orientation, voxel size and data type
@@ -279,9 +283,11 @@ function [SPM] = cl_ext_spm_spm(SPM)
 %
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
- 
-% Andrew Holmes, Jean-Baptiste Poline & Karl Friston
-% $Id: spm_spm.m 3960 2010-06-30 17:41:24Z ged $
+%
+% ..
+%    % Andrew Holmes, Jean-Baptiste Poline & Karl Friston
+%    $Id: spm_spm.m 3960 2010-06-30 17:41:24Z ged $
+% ..
  
 SVNid     = '$Rev: 3960 $';
  

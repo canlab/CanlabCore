@@ -1,17 +1,27 @@
-% function XYZout = mm2voxel(XYZ, M, [uniqueness options])
+% :Usage:
+% ::
 %
-% VOL must contain M or mat field, which is mat file matrix in SPM
-% XYZ can be either 3 rows or 3 columns
-% by transforming to x y z in ROWS, coords in COLUMNS
-% so if you have 3 coordinates, you'd better put the 3 coords
-% in different COLS, with ROWS coding x, y, z!
+%     function XYZout = mm2voxel(XYZ, M, [uniqueness options])
+%
+% :Inputs:
+%
+%   **M:**
+%        VOL must contain M or mat field, which is mat file matrix in SPM
+%
+%   **XYZ:**
+%        can be either 3 rows or 3 columns
+%        by transforming to x y z in ROWS, coords in COLUMNS
+%        so if you have 3 coordinates, you'd better put the 3 coords
+%        in different COLS, with ROWS coding x, y, z!
 %
 % If a 3rd argument is entered, enter either:
-%   1  uniqueness not required; allows repeats
-%   2  unique and sorted
+%   1. uniqueness not required; allows repeats
+%   2. unique and sorted
+%
 % Otherwise, voxels are unique and relative order is preserved. 
+%
 % NB: Unless you require that relative order be preserved, *ALWAYS* set a
-%   uniqueness option. They are orders of magnitude faster.
+%     uniqueness option. They are orders of magnitude faster.
 
 function XYZout = mm2voxel(XYZ, M, varargin)
     XYZout = [];

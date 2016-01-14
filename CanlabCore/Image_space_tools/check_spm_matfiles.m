@@ -1,8 +1,12 @@
 function [anybad] = check_spm_matfiles(P)
-% [anybad] = check_spm_matfiles(P)
+% Check a list of SPM-style images to see if they all have the same
+% space, dims.
 %
-% Check a list of SPM-style images to see if they all have the same space,
-% dims
+% :Usage:
+% ::
+%
+%     [anybad] = check_spm_matfiles(P)
+%
 
 V=spm_vol(P);
 for i=2:length(V),

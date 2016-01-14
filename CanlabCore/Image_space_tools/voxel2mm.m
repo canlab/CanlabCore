@@ -1,14 +1,27 @@
 function XYZmm = voxel2mm(XYZ,m)
-%function XYZmm = voxel2mm(XYZ,m)
-% XYZ is 3 vector point list (3 rows, n columns)
-% m is SPM mat - 4 x 4 affine transform
-% (what's stored in the .mat file)
+% :Usage:
+% ::
 %
-% Verified that this works 10/27/01.
-% Tor Wager, 10/27/01
+%     function XYZmm = voxel2mm(XYZ,m)
 %
-% Example:
-% XYZmm = voxel2mm([x y z]',V.mat);
+% :Inputs:
+%
+%   **XYZ:**
+%        is 3 vector point list (3 rows, n columns)
+%
+%   **m:**
+%        is SPM mat - 4 x 4 affine transform
+%        (what's stored in the .mat file)
+%
+% :Example:
+% ::
+%
+%    XYZmm = voxel2mm([x y z]',V.mat);
+%
+% ..
+%    Verified that this works 10/27/01.
+%    Tor Wager, 10/27/01
+% ..
 
 if isempty(XYZ), XYZmm = [];, return, end
 

@@ -1,33 +1,41 @@
 function [img, Vto] = scn_map_image(loadImg, sampleTo, varargin)
-    % [imgData, volInfo_mapto] = scn_map_image(loadImg, sampleTo, varargin)
-    %
-    % Tor Wager, July 2007
-    % edited, Oct 2010, to take volInfo and fmri_mask_image inputs as well
-    % as image file names
-    %
-    % This function takes an image name in loadImg
-    % and loads the data, resampling to the space defined
-    % in the image sampleTo. The resampled image will retain
-    % the data type of the input image.
-    %
-    % Optional:
-    % 'write' followed by name of resampled image to write
-    %
-    % Compatible with SPM5/8.
-    %
-    % Input images can have the following formats:
-    % 1) String with name of image file (.img or .nii)
-    % 2) spm_vol-style V struct (see spm_vol)
-    % 3) volInfo struct (see iimg_read_img)
-    % 4) fmri_mask_image object (see fmri_mask_image)
-    %
-    % Examples:
-    % img = scn_map_image(EXPT.mask, EXPT.SNPM.P{1}(1,:), 'write', 'resliced_mask.img');
-    %
-    %
+% This function takes an image name in loadImg
+% and loads the data, resampling to the space defined
+% in the image sampleTo. The resampled image will retain
+% the data type of the input image.
+%
+% :Usage:
+% ::
+%
+%     [imgData, volInfo_mapto] = scn_map_image(loadImg, sampleTo, varargin)
+%
+% :Optional Inputs:
+%
+%   **'write':**
+%        followed by name of resampled image to write
+%
+% Compatible with SPM5/8.
+%
+% Input images can have the following formats:
+%   1) String with name of image file (.img or .nii)
+%   2) spm_vol-style V struct (see spm_vol)
+%   3) volInfo struct (see iimg_read_img)
+%   4) fmri_mask_image object (see fmri_mask_image)
+%
+% :Examples:
+% ::
+%
+%    img = scn_map_image(EXPT.mask, EXPT.SNPM.P{1}(1,:), 'write', 'resliced_mask.img');
+%
+% ..
+%    Tor Wager, July 2007
+%    edited, Oct 2010, to take volInfo and fmri_mask_image inputs as well
+%    as image file names
+% ..
 
-    % optional input arguments
-    % -------------------------------------------------------
+    % ..
+    %    optional input arguments
+    % ..
     if ~isempty(varargin)
         for i = 1:length(varargin)
             if ischar(varargin{i})

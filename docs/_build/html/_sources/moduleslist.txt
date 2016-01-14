@@ -88,3 +88,8 @@ Image_computation_tools
 ===============
 .. automodule:: Image_computation_tools
    :members:
+
+Image_space_tools
+===============
+.. automodule:: Image_space_tools
+   :members:

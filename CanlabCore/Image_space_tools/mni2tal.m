@@ -1,11 +1,23 @@
 function outpoints = mni2tal(inpoints)
 % Converts coordinates from MNI brain to best guess
 % for equivalent Talairach coordinates
-% FORMAT outpoints = mni2tal(inpoints)
+%
+% :Usage:
+% ::
+%
+%     outpoints = mni2tal(inpoints)
+%
 % Where inpoints is N by 3 or 3 by N matrix of coordinates
-%  (N being the number of points)
-% outpoints is the coordinate matrix with Talairach points
-% Matthew Brett 10/8/99
+% (N being the number of points)
+%
+% :Output:
+%
+%   **outpoints:**
+%        is the coordinate matrix with Talairach points
+%
+% ..
+%    Matthew Brett 10/8/99
+% ..
 
 dimdim = find(size(inpoints) == 3);
 if isempty(dimdim)

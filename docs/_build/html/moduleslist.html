@@ -13734,6 +13734,368 @@ spm_write_plane(Vout, fsl(:, :, i), slicei);
 </dd></dl>
 
 </div>
+<div class="section" id="image-space-tools">
+<h1>Image_space_tools<a class="headerlink" href="#image-space-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Image_space_tools"></span><dl class="function">
+<dt id="Image_space_tools.check_spm_mat">
+<code class="descclassname">Image_space_tools.</code><code class="descname">check_spm_mat</code><span class="sig-paren">(</span><em>mat1</em>, <em>mat2</em>, <em>clusters</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.check_spm_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>mat1 is from clusters, mat2 is functional (imgs to extract)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">check_spm_mat</span><span class="p">(</span><span class="n">mat1</span><span class="p">,</span><span class="n">mat2</span><span class="p">,</span><span class="n">clusters</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.check_spm_matfiles">
+<code class="descclassname">Image_space_tools.</code><code class="descname">check_spm_matfiles</code><span class="sig-paren">(</span><em>P</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.check_spm_matfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check a list of SPM-style images to see if they all have the same
+space, dims.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">anybad</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_spm_matfiles</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.img2voxel">
+<code class="descclassname">Image_space_tools.</code><code class="descname">img2voxel</code><span class="sig-paren">(</span><em>P</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.img2voxel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a mask or filtered image file name, 
+returns XYZ coordinates in voxels and mm
+of nonzero, non-NaN voxels</p>
+<p>and img values at these coordinates in val</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.mask2voxel">
+<code class="descclassname">Image_space_tools.</code><code class="descname">mask2voxel</code><span class="sig-paren">(</span><em>mask</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.mask2voxel" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert from 3-D mask to voxel list in canonical orientation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function voxels = mask2voxel(mask)
+</pre></div>
+</div>
+<p>[i j k] = row, column, slice</p>
+<p>[x y z] in brain if brain is in analyze format</p>
+<p>(x is rows, y is columns, z is slices)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.mni2tal">
+<code class="descclassname">Image_space_tools.</code><code class="descname">mni2tal</code><span class="sig-paren">(</span><em>inpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.mni2tal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts coordinates from MNI brain to best guess
+for equivalent Talairach coordinates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">outpoints</span> <span class="o">=</span> <span class="n">mni2tal</span><span class="p">(</span><span class="n">inpoints</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where inpoints is N by 3 or 3 by N matrix of coordinates
+(N being the number of points)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>outpoints:</strong></dt>
+<dd><p class="first last">is the coordinate matrix with Talairach points</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.scn_map_image">
+<code class="descclassname">Image_space_tools.</code><code class="descname">scn_map_image</code><span class="sig-paren">(</span><em>loadImg</em>, <em>sampleTo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.scn_map_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an image name in loadImg
+and loads the data, resampling to the space defined
+in the image sampleTo. The resampled image will retain
+the data type of the input image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">imgData</span><span class="p">,</span> <span class="n">volInfo_mapto</span><span class="p">]</span> <span class="o">=</span> <span class="n">scn_map_image</span><span class="p">(</span><span class="n">loadImg</span><span class="p">,</span> <span class="n">sampleTo</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;write&#8217;:</strong></dt>
+<dd><p class="first last">followed by name of resampled image to write</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Compatible with SPM5/8.</p>
+<dl class="docutils">
+<dt>Input images can have the following formats:</dt>
+<dd><ol class="first last arabic simple">
+<li>String with name of image file (.img or .nii)</li>
+<li>spm_vol-style V struct (see spm_vol)</li>
+<li>volInfo struct (see iimg_read_img)</li>
+<li>fmri_mask_image object (see fmri_mask_image)</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>img = scn_map_image(EXPT.mask, EXPT.SNPM.P{1}(1,:), &#39;write&#39;, &#39;resliced_mask.img&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.scn_resample_voxel_size">
+<code class="descclassname">Image_space_tools.</code><code class="descname">scn_resample_voxel_size</code><span class="sig-paren">(</span><em>loadImg</em>, <em>voxsize</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.scn_resample_voxel_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an image name in loadImg
+and loads the data, resampling to the space defined
+in the image sampleTo.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">imgData</span><span class="p">,</span> <span class="n">volInfo_mapto</span><span class="p">]</span> <span class="o">=</span> <span class="n">scn_resample_voxel_size</span><span class="p">(</span><span class="n">loadImg</span><span class="p">,</span> <span class="n">voxsize</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>take volInfo and fmri_mask_image inputs as well
+as image file names</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;write&#8217;:</strong></dt>
+<dd><p class="first last">followed by name of resampled image to write</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Compatible with SPM5/8.</p>
+<dl class="docutils">
+<dt>Input images can have the following formats:</dt>
+<dd><ol class="first last arabic simple">
+<li>String with name of image file (.img or .nii)</li>
+<li>spm_vol-style V struct (see spm_vol)</li>
+<li>volInfo struct (see iimg_read_img)</li>
+<li>fmri_mask_image object (see fmri_mask_image)</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Reslice standard brain mask to 3 x 3 x 3 voxels.
+img = which(&#39;brainmask.nii&#39;);
+[dat, Vto] = scn_resample_voxel_size(img, [3 3 3], &#39;write&#39;, &#39;test.img&#39;);
+spm_image(&#39;init&#39;, &#39;test.img&#39;);
+spm_check_registration(char(img, &#39;test.img&#39;));
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.tal2mni">
+<code class="descclassname">Image_space_tools.</code><code class="descname">tal2mni</code><span class="sig-paren">(</span><em>inpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.tal2mni" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts coordinates to MNI brain best guess
+from Talairach coordinates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">outpoints</span> <span class="o">=</span> <span class="n">tal2mni</span><span class="p">(</span><span class="n">inpoints</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where inpoints is N by 3 or 3 by N matrix of coordinates
+(N being the number of points)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>outpoints:</strong></dt>
+<dd><p class="first last">is the coordinate matrix with MNI points</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.tal2vox">
+<code class="descclassname">Image_space_tools.</code><code class="descname">tal2vox</code><span class="sig-paren">(</span><em>tal</em>, <em>VOL</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.tal2vox" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts from talairach coordinate to voxel coordinate
+based on variables from SPM.M (passed here for 
+faster operation)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>foo = tal2vox([-30 28 -30], VOL)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.transform_coordinates">
+<code class="descclassname">Image_space_tools.</code><code class="descname">transform_coordinates</code><span class="sig-paren">(</span><em>CLU</em>, <em>mat</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.transform_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms XYZ voxel coordinates in CLU (clusters or CLU)
+to new voxel coordinates, given mm coordinates in CLU
+and a mat file describing the transformation, as in SPM99</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">CLU</span> <span class="o">=</span> <span class="n">transform_coordinates</span><span class="p">(</span><span class="n">CLU</span><span class="p">,</span><span class="n">mat</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This preserves the order of the voxels, but is slower
+and gives UNIQUE XYZ voxels given XYZmm.
+see mm2voxel.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.voxel2mask">
+<code class="descclassname">Image_space_tools.</code><code class="descname">voxel2mask</code><span class="sig-paren">(</span><em>voxels</em>, <em>maskdims</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.voxel2mask" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function mask = voxel2mask(voxels, x y z mask dimensions)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Voxels:</th><td class="field-body"><ul class="first last">
+<li><p class="first">3 column vectors</p>
+</li>
+<li><p class="first">[i j k] = row, column, slice</p>
+</li>
+<li><p class="first">[x y z] in brain if brain is in analyze format</p>
+<p>(x is rows, y is columns, z is slices)</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_space_tools.voxel2mm">
+<code class="descclassname">Image_space_tools.</code><code class="descname">voxel2mm</code><span class="sig-paren">(</span><em>XYZ</em>, <em>m</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_space_tools.voxel2mm" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function XYZmm = voxel2mm(XYZ,m)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>XYZ:</strong></dt>
+<dd><p class="first last">is 3 vector point list (3 rows, n columns)</p>
+</dd>
+<dt><strong>m:</strong></dt>
+<dd><p class="first last">is SPM mat - 4 x 4 affine transform
+(what&#8217;s stored in the .mat file)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>XYZmm = voxel2mm([x y z]&#39;,V.mat);
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -13760,6 +14122,7 @@ spm_write_plane(Vout, fsl(:, :, i), slicei);
 <li><a class="reference internal" href="#module-hewma_utility">hewma_utility</a></li>
 <li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>
 <li><a class="reference internal" href="#image-computation-tools">Image_computation_tools</a></li>
+<li><a class="reference internal" href="#image-space-tools">Image_space_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

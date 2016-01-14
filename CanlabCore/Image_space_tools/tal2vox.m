@@ -2,7 +2,11 @@ function vox=tal2vox(tal,VOL)
 % converts from talairach coordinate to voxel coordinate
 % based on variables from SPM.M (passed here for 
 % faster operation)
-% e.g., foo=tal2vox([-30 28 -30], VOL)
+%
+% :Example:
+% ::
+%
+%    foo = tal2vox([-30 28 -30], VOL)
 
 if(isfield(VOL, 'M'))
     M = VOL.M;

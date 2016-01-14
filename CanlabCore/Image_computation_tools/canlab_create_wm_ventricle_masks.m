@@ -1,26 +1,44 @@
 function canlab_create_wm_ventricle_masks(wm_mask, gm_mask, varargin)
-
-% function canlab_create_wm_ventricle_masks(wm_mask, gm_mask)
 % This function saves white matter and ventricle masks.
-% output: "white_matter.img" and "ventricles.img" in the same folder of
-%         the input structural files
 %
-% input
-% wm_mask: white matter structural image file  
-%   eg) wm_mask = filenames('Structural/SPGR/wc2*.nii', 'char', 'absolute');
-% gm_mask: gray matter structural image file 
-%   eg) gm_mask = filenames('Structural/SPGR/wc1*.nii', 'char', 'absolute');
-% optional:  
-%   you can specify how liberal or conservative to be in estimating white
-%   matter and ventricles. 1 is most conservative and will yield no
-%   ventricles, and 0 is very liberal. The default of wm_thr is .9, the
-%   default of vent_thr is .9. 
-%   e.g)  'wm_thr', .99
-%         'vent_thr', .95
-
-% 5/4/2012 by Tor Wager and Wani Woo
-% 7/16/2014 creation of ventricle mask updated by Yoni Ashar
-% 12/11/2014 fixed some bugs by Wani Woo
+% :Usage:
+% ::
+%
+%     function canlab_create_wm_ventricle_masks(wm_mask, gm_mask)
+%
+% :Inputs:
+%
+%   **wm_mask:**
+%        white matter structural image file
+%        ::
+%
+%            wm_mask = filenames('Structural/SPGR/wc2*.nii', 'char', 'absolute');
+%
+%   **gm_mask:**
+%        gray matter structural image file 
+%        ::
+%
+%            gm_mask = filenames('Structural/SPGR/wc1*.nii', 'char', 'absolute');
+%
+% :Optional:  
+%    You can specify how liberal or conservative to be in estimating white
+%    matter and ventricles. 1 is most conservative and will yield no
+%    ventricles, and 0 is very liberal. The default of wm_thr is .9, the
+%    default of vent_thr is .9. 
+%    e.g)
+%      - 'wm_thr', .99
+%      - 'vent_thr', .95
+%
+% :Output:
+%
+%   **"white_matter.img" and "ventricles.img":**
+%        in the same folder of the input structural files
+%
+% ..
+%    5/4/2012 by Tor Wager and Wani Woo
+%    7/16/2014 creation of ventricle mask updated by Yoni Ashar
+%    12/11/2014 fixed some bugs by Wani Woo
+% ..
 
 canonvent_mask = which('canonical_ventricles.img');
 bstem = which('spm2_brainstem.img');

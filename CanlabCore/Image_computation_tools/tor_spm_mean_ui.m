@@ -1,8 +1,12 @@
 function tor_spm_mean_ui(P,varargin)
-%tor_spm_mean_ui(Pinputnames,[outputname])
-% promts for a series of images and averages them
+% Promts for a series of images and averages them
+%
+% :Usage:
+% ::
+%
+%     tor_spm_mean_ui(Pinputnames,[outputname])
+^
 % FORMAT spm_mean_ui
-%_______________________________________________________________________
 %
 % spm_mean_ui simply averages a set of images to produce a mean image
 % that is written as type int16 to "mean.img" (in the current directory).
@@ -12,12 +16,11 @@ function tor_spm_mean_ui(P,varargin)
 % voxel sizes.
 %
 % This is not a "softmean" - zero voxels are treated as zero.
-%_______________________________________________________________________
-% @(#)spm_mean_ui.m	2.4 John Ashburner, Andrew Holmes 98/10/21
+%
+
 SCCSid = '2.4';
 
 % Tor modified: select output file name
-%-----------------------------------------------------------------------
 if nargin > 1, 
 	outname = varargin{1};
 else
@@ -27,12 +30,10 @@ end
 
 
 %-Say hello
-%-----------------------------------------------------------------------
 SPMid = spm('FnBanner',mfilename,SCCSid);
 
 
 %-Select images & check dimensions, orientations and voxel sizes
-%-----------------------------------------------------------------------
 if nargin == 0
 	fprintf('\t...select files')
 	P = spm_get(Inf,'.img','Select images to be averaged');
@@ -51,7 +52,6 @@ if any(any(any(diff(cat(3,Vi.mat),1,3),3)))
 
 
 %-Compute mean and write headers etc.
-%-----------------------------------------------------------------------
 fprintf(' ...computing')
 Vo = struct(	'fname',	outname,...
 		'dim',		[Vi(1).dim(1:3),4],...

@@ -1,66 +1,75 @@
 function image_eval_function_multisubj(imageNames,fhandle,varargin)
-    % image_eval_function_multisubj(imgnames,fhandle,['mask',mask],['preprochandle',preprochandle],['outnames',outimagelabels],varargin)
-    % other optional args: 'outimagelabels' , 'connames'
-    %
-    % evaluate any function, defined by the function handle fhandle,
-    % on each in-mask voxel for a set of images.
-    % imageNames is a cell array of N cells, each containing images for one
-    % replication (i.e., subject)
-    %
-    % At each voxel, a cell array is formed, one cell per subject.
-    % This would correspond to a matrix is formed of t x N, where t is time and N is
-    % replication (subject) but cells can deal with unequal data vector lengths for each subject.
-    % The anonymous function in fhandle should operate on data from each cell (subject).
-    %
-    % varargout = image_eval_function(Y,fhandle,varargin)
-    % evaluate fhandle on paired columns of X and Y
-    %
-    % fhandle is a function handle:
-    % fhandle = @(variable inputs) fit_gls(variable_input,fixed_inputs);
-    % fhandle = @(y) fit_gls(y,X,c,p,PX);
-    %
-    % specify the outputs by adding them as output image names.
-    % The number of outputs returned is determined by the number of named
-    % images in the list entered following the 'outnames' keyword.
-    %
-    % Note on output images: You specify the names of the output images
-    % One image will be written per output of fhandle.
-    % The images will have one volume per element of the output variable.
-    % If you are returning an output with one value per subject, for
-    % example, then a single image will be written with one volume in it
-    % per subject.
-    %
-    % preprochandle is a function handle.
-    % it encapsulates the preprocessing function.
-    % the function should work on each cell (subject) of a t x N cell array of time courses for each
-    % subject, where each  cell contains a t x v matrix of data from a
-    % slice. The preproc function should thus be able to handle a whole slice as
-    % input.
-    % the function can itself be a cell array with multiple handles in
-    % different cells
-    %
-    % Example: Generalized least squares fitting on 100 Y-variables, same X
-    % ---------------------------------------------------------------------
-    %
-    % Get image list
-    % imgs = filenames('trial_height*img','char')
-    % imgs = sort_image_filenames(imgs)
-    %
-    % Get pre-stored design matrix
-    % X = eventdesign{3};
-    %
-    % preprochandle = @(y) trimts(y,3,[]);
-    %
+% Evaluate any function, defined by the function handle fhandle,
+% on each in-mask voxel for a set of images.
+% imageNames is a cell array of N cells, each containing images for one
+% replication (i.e., subject)
+%
+% :Usage:
+% ::
+%
+%     image_eval_function_multisubj(imgnames,fhandle,['mask',mask],['preprochandle',preprochandle],['outnames',outimagelabels],varargin)
+%
+% other optional args: 'outimagelabels' , 'connames'
+%
+% At each voxel, a cell array is formed, one cell per subject.
+% This would correspond to a matrix is formed of t x N, where t is time and N is
+% replication (subject) but cells can deal with unequal data vector lengths for each subject.
+% The anonymous function in fhandle should operate on data from each cell (subject).
+% ::
+%
+%    varargout = image_eval_function(Y,fhandle,varargin)
+%
+% evaluate fhandle on paired columns of X and Y
+%
+% fhandle is a function handle:
+% ::
+%
+%    fhandle = @(variable inputs) fit_gls(variable_input,fixed_inputs);
+%    fhandle = @(y) fit_gls(y,X,c,p,PX);
+%
+% specify the outputs by adding them as output image names.
+% The number of outputs returned is determined by the number of named
+% images in the list entered following the 'outnames' keyword.
+%
+% :Note on output images: You specify the names of the output images
+% One image will be written per output of fhandle.
+% The images will have one volume per element of the output variable.
+% If you are returning an output with one value per subject, for
+% example, then a single image will be written with one volume in it
+% per subject.
+%
+% preprochandle is a function handle.
+% it encapsulates the preprocessing function.
+% the function should work on each cell (subject) of a t x N cell array of time courses for each
+% subject, where each  cell contains a t x v matrix of data from a
+% slice. The preproc function should thus be able to handle a whole slice as
+% input.
+% the function can itself be a cell array with multiple handles in
+% different cells
+%
+% :Examples: Generalized least squares fitting on 100 Y-variables, same X
+% ::
+%
+%
+%    % Get image list
+%    imgs = filenames('trial_height*img','char')
+%    imgs = sort_image_filenames(imgs)
+%
+%    % Get pre-stored design matrix
+%    X = eventdesign{3};
+%
+%    preprochandle = @(y) trimts(y,3,[]);
+%
+%    y = rand(100,100); X = y + rand(100,1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
+%    fhandle = @(y) fit_gls(y,X,c,p,PX);
+%    [t, df, beta, Phi, sigma,stebeta, F] = fhandle(y);
+%
+% ..
+%    tor wager, jan 31, 2007
+% ..
 
-    % y = rand(100,100); X = y + rand(100,1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
-    % fhandle = @(y) fit_gls(y,X,c,p,PX);
-    % [t, df, beta, Phi, sigma,stebeta, F] = fhandle(y);
-    %
-    % tor wager, jan 31, 2007
-    %
 
-    % setup inputs
-    setup_inputs;
+    setup_inputs; % setup inputs
     connames;
     outimagenames;
     

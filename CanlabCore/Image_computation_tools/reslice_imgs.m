@@ -1,20 +1,23 @@
-% function [P, reslicedImgs] = reslice_imgs(sampleTo, resliceThis, [domask], [overwrite])
-%
+function [P, reslicedImgs] = reslice_imgs(sampleTo, resliceThis, varargin)
 % arguments are file names of .img files
-% if empty, select from GUI
+% if empty, select from GUI% :Usage:
+%
+% ::
+%
+%     function [P, reslicedImgs] = reslice_imgs(sampleTo, resliceThis, [domask], [overwrite])
 %
 % if domask, recalculates a 1 or 0 mask for each image file in resliceThis
 % if overwrite, overwrite the original instead of prepending an 'r'
 %
-% Example:
-% Reslice a mask image into the space of some functional images, and move
-% to the current directory
-% -----------------------------------------------------------------------
-% [tmp, maskname] = reslice_imgs(image_names(1, :), maskname, 1);
-% eval(['!mv ' maskname ' ./'])
-% eval(['!mv ' maskname(1:end-4) '.hdr ./'])
+% :Examples:
+% ::
+%
+%    % Reslice a mask image into the space of some functional images, and move to the current directory
+%
+%    [tmp, maskname] = reslice_imgs(image_names(1, :), maskname, 1);
+%    eval(['!mv ' maskname ' ./'])
+%    eval(['!mv ' maskname(1:end-4) '.hdr ./'])
 
-function [P, reslicedImgs] = reslice_imgs(sampleTo, resliceThis, varargin)
     domask = 0;
     overwrite = 0;
 

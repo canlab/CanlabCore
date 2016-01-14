@@ -1,4 +1,4 @@
-%+---------------------------------------------------------
+%++
 %|
 %|  Robert C. Welsh
 %|  University of Michigan
@@ -13,7 +13,7 @@
 %|     function [maskedImage maskingImage]] = ...
 %|             maskImg(inputImage,maskLow,maskHi)
 %|
-%+---------------------------------------------------------
+%--
  
 function [maskedImage, maskingImage] = maskImg(inputImage,maskLow,maskHi)
  

@@ -1,33 +1,44 @@
-% OUT = mean_image(input file names, output file name, [weights], [string command args]);
+% :Usage:
+% ::
+%
+%     OUT = mean_image(input file names, output file name, [weights], [string command args]);
 %
 % Creates a weighted mean of images based on weights for each image
 %
-% String arguments:
-% 'normlike' : do in style of mean_warped_image, for norm toolbox;
-%              ignore other string arguments
+% :Inputs:
 %
-% 'reweight' : weight by distance from median in 2nd round of averaging
-% 'plot' : plot output
-% 'sharpen' : segments and smooths within tissue classes
-%
-% Examples:
-% w = filenames('w*T1.img', 'char')
-% w = mean_image(w, 'final_mean.img', [], 'normlike'); % trimmed, weighted best 50%
-%
-% worig = filenames('hr*/wT1.img', 'char')           % no weights
-% w = mean_image(worig, 'orig_mean_noweights.img', []);
+%   **'normlike':**
+%        do in style of mean_warped_image, for norm toolbox;
+%        ignore other string arguments
 %
 %
-% mean_image(DB.PP, 'Activation.img', DB.studyweight);
+%   **'reweight':**
+%        weight by distance from median in 2nd round of averaging
 %
-% mean_image(P, 'mean_wmeanw1007.img', ones(size(P, 1), 1), 'sharpen', 'plot', 'reweight');
+%   **'plot':**
+%        plot output
 %
-% P = filenames('w*mr.img', 1);
+%   **'sharpen':**
+%        segments and smooths within tissue classes
 %
-% Enter empty inputs for default settings.
+% :Examples:
+% ::
 %
-% OUT.P = filenames
-% OUT.dist
+%    w = filenames('w*T1.img', 'char')
+%    w = mean_image(w, 'final_mean.img', [], 'normlike'); % trimmed, weighted best 50%
+%
+%    worig = filenames('hr*/wT1.img', 'char')           % no weights
+%    w = mean_image(worig, 'orig_mean_noweights.img', []);
+%
+%    mean_image(DB.PP, 'Activation.img', DB.studyweight);
+%
+%    mean_image(P, 'mean_wmeanw1007.img', ones(size(P, 1), 1), 'sharpen', 'plot', 'reweight');
+%
+%    P = filenames('w*mr.img', 1);
+%
+%    % Enter empty inputs for default settings.
+%    OUT.P = filenames
+%    OUT.dist
 
 function OUT = mean_image(VP, Pout, w, varargin)
     % --------------------------------------

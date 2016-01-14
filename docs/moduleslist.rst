@@ -83,3 +83,8 @@ HRF_Est_Toolbox2
 ===============
 .. automodule:: HRF_Est_Toolbox2
    :members:
+
+Image_computation_tools
+===============
+.. automodule:: Image_computation_tools
+   :members:

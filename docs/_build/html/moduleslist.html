@@ -12729,6 +12729,1011 @@ kernel.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="image-computation-tools">
+<h1>Image_computation_tools<a class="headerlink" href="#image-computation-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Image_computation_tools"></span><dl class="function">
+<dt id="Image_computation_tools.apply_derivative_boost">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">apply_derivative_boost</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.apply_derivative_boost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows for recalculation of amplitude images from the fitted responses
+for each trial type. Necessary for calculating group statistics when
+using multiple basis functions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function apply_derivative_boost(varargin)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">NOTES:</th><td class="field-body">DB estimation only works for 2 specific basis sets:
+timeonly, with 2 parameters (canonical + time derivative)
+timedispersion,&#8217; with 3 parameters (canonical hrf + temporal and spatial dispersion)</td>
+</tr>
+</tbody>
+</table>
+<p>This function loads the SPM.mat file in the current directory and uses
+the basis set specified in the loaded SPM structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;amplitudes&#8217;</strong></dt>
+<dd><p class="first last">will only create amping images (combination of betas
+across basis functions)</p>
+</dd>
+<dt><strong>&#8216;contrasts&#8217;</strong></dt>
+<dd><p class="first last">assumes that amping images are already created; will only
+create contrast images</p>
+</dd>
+<dt><strong>&#8216;all&#8217;</strong></dt>
+<dd><p class="first">will run both the amplitudes and contrasts sections</p>
+<dl class="last docutils">
+<dt>In addition, &#8216;amplitudes&#8217; now has two separate parts:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>The first uses Vince Calhoun&#8217;s derivative boost (Calhoun, 2004) to</dt>
+<dd><p class="first last">estimate amplitudes.  NOTE: <em>We have not worked out the scaling yet, so
+I&#8217;m not sure this is working right</em>
+To turn this OFF, enter &#8216;nodb&#8217; as an optional argument</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">The second way uses our HTW code to estimate height, time to peak,
+width, and area under the curve (see Lindquist &amp; Wager 2007 for
+simulations using a version of this code).
+It requires SCANlab specific functions, in SCN_Core_Support
+(unlike the deriv. boost).
+To turn this OFF, enter &#8216;nohtw&#8217; as an optional argument</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>&#8216;startend&#8217;</strong></dt>
+<dd><p class="first last">followed by starting and ending values in seconds for amplitude
+estimation window (for HTW estimation only).
+If you do not enter this, it will show you a plot and ask you to pick
+these values.
+If you enter them here as inputs, you can skip the interactive step and
+loop over subjects.</p>
+</dd>
+<dt><strong>&#8216;condition_numbers&#8217;</strong></dt>
+<dd><p class="first last">followed by which index numbers in your list should
+be used to calculate h, t, w from.  You should use this if you
+are entering regressors of no interest, besides the intercepts.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Important for Contrasts:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">disp(&#8216;Using contrasts entered as F-contrasts. Assuming the first contrast vector in each F-contrast &#8216;</p>
+<p>disp(&#8216;is a contrast of interest across the CANONICAL basis function regressors.&#8217;)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% RUN THIS IN COMMAND WINDOW TO BATCH
+subj = dir(&#39;06*&#39;)
+for i = 1:length(subj), cd(subj(i).name), apply_derivative_boost, cd(&#39;..&#39;); end
+
+% ANOTHER BATCH EXAMPLE:
+d = dir(&#39;remi*&#39;); d = d(cat(2, d.isdir)); [mydirs{1:length(d)}] = deal(d.name)
+for i = 1:length(mydirs), cd(mydirs{i}), apply_derivative_boost(&#39;all&#39;, &#39;nodb&#39;, &#39;startend&#39;, [4 15]), cd(&#39;..&#39;); end
+
+%An example for an event-related design, specifying condition numbers to get HTW from:
+apply_derivative_boost(&#39;all&#39;, &#39;nodb&#39;, &#39;contrasts&#39;, &#39;condition_numbers&#39;, 1:14, &#39;startend&#39;, [4 10]);
+
+% CALCULATE CONTRASTS ONLY ON ALREADY-ESTIMATED HTW IMAGES
+apply_derivative_boost(&#39;contrasts&#39;,&#39;condition_numbers&#39;,1:14);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.canlab_create_wm_ventricle_masks">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">canlab_create_wm_ventricle_masks</code><span class="sig-paren">(</span><em>wm_mask</em>, <em>gm_mask</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.canlab_create_wm_ventricle_masks" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function saves white matter and ventricle masks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function canlab_create_wm_ventricle_masks(wm_mask, gm_mask)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>wm_mask:</strong></dt>
+<dd><p class="first">white matter structural image file</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">wm_mask</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;Structural/SPGR/wc2*.nii&#39;</span><span class="p">,</span> <span class="s">&#39;char&#39;</span><span class="p">,</span> <span class="s">&#39;absolute&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>gm_mask:</strong></dt>
+<dd><p class="first">gray matter structural image file</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">gm_mask</span> <span class="o">=</span> <span class="n">filenames</span><span class="p">(</span><span class="s">&#39;Structural/SPGR/wc1*.nii&#39;</span><span class="p">,</span> <span class="s">&#39;char&#39;</span><span class="p">,</span> <span class="s">&#39;absolute&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional:</th><td class="field-body"><p class="first">You can specify how liberal or conservative to be in estimating white
+matter and ventricles. 1 is most conservative and will yield no
+ventricles, and 0 is very liberal. The default of wm_thr is .9, the
+default of vent_thr is .9. 
+e.g)</p>
+<blockquote>
+<div><ul class="simple">
+<li>&#8216;wm_thr&#8217;, .99</li>
+<li>&#8216;vent_thr&#8217;, .95</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8220;white_matter.img&#8221; and &#8220;ventricles.img&#8221;:</strong></dt>
+<dd><p class="first last">in the same folder of the input structural files</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.fisherp">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">fisherp</code><span class="sig-paren">(</span><em>p</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.fisherp" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">pt</span><span class="p">]</span> <span class="o">=</span> <span class="n">fisherp</span><span class="p">(</span><span class="n">p</span><span class="p">,[</span><span class="n">alph</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first">values in 4-D array</p>
+<p class="last">1st 3 dims are within images, dim4 = image</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional:</th><td class="field-body"><p class="first">alpha value for thresholding</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>z:</strong></dt>
+<dd><p class="first last">Fisher&#8217;s combined test statistic, compare to normal</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">p-values for combined test</p>
+</dd>
+<dt><strong>sig:</strong></dt>
+<dd><p class="first last">signficance 1 / 0 binary mask, p &lt; .05 (or alph) FDR-corr</p>
+</dd>
+<dt><strong>pt:</strong></dt>
+<dd><p class="first last">p-value threshold for FDR corrected significance at alph</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Described in:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Lazar, N. A., Luna, B., Sweeney, J. A., &amp; Eddy, W. F. (2002). 
+Combining brains: a survey of methods for statistical pooling 
+of information. Neuroimage, 16(2), 538-550.</p>
+<p>Stouffer, S. A., Suchman, E. A., DeVinney, L. C., Star, S. A., and
+Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
+During Army Life. Princeton University Press, Princeton.</p>
+<p>Threshold is determined with False Discovery Rate (Benjamini &amp; Hochberg, 1995)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.get_mask_vol">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">get_mask_vol</code><span class="sig-paren">(</span><em>Pf</em>, <em>Pm</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.get_mask_vol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns 3-D volume of binary mask values,
+in the space of the functional image Pf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function mask = get_mask_vol(Pf,Pm)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Pf:</strong></dt>
+<dd><p class="first last">filename of functional image</p>
+</dd>
+<dt><strong>Pm:</strong></dt>
+<dd><p class="first last">filename of mask image (should be 1&#8217;s and 0&#8217;s)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.image_eval_function">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">image_eval_function</code><span class="sig-paren">(</span><em>imageNames</em>, <em>fhandle</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.image_eval_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate any function, defined by the function handle fhandle,
+on each in-mask voxel for a set of images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">varargout</span> <span class="o">=</span> <span class="n">image_eval_function</span><span class="p">(</span><span class="n">imgnames</span><span class="p">,</span> <span class="n">fhandle</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;mask&#39;</span><span class="p">,</span> <span class="n">mask</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;preprochandle&#39;</span><span class="p">,</span> <span class="n">preprochandle</span><span class="p">],</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Other Optional args:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">&#8216;outimagelabels&#8217; , &#8216;connames&#8217;</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">varargout</span> <span class="o">=</span> <span class="n">image_eval_function</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">fhandle</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>evaluate fhandle on paired columns of X and Y</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body">You must call image_eval_function with outputs, one output for</td>
+</tr>
+</tbody>
+</table>
+<p>each output you&#8217;re requesting from the voxel-level function.
+Eg:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">betaorcontrast</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">stebeta</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">pvals</span><span class="p">]</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">image_eval_function</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">fhandle</span><span class="p">,</span> <span class="s">&#39;mask&#39;</span><span class="p">,</span> <span class="n">maskimg</span><span class="p">,</span> <span class="s">&#39;outimagelabels&#39;</span> <span class="p">,</span> <span class="n">names</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>fhandle:</strong></dt>
+<dd><p class="first">is a function handle:</p>
+<div class="last highlight-python"><div class="highlight"><pre>fhandle = @(variable inputs) fit_gls(variable_input, fixed_inputs);
+
+fhandle = @(y) fit_gls(y, X, c, p, PX);
+</pre></div>
+</div>
+</dd>
+<dt><strong>&#8216;outimagelabels&#8217;:</strong></dt>
+<dd><p class="first last">should be followed by a set of image names, one name
+per output of fhandle per element. e.g., outnames{j}{i} is the output
+image for output j and element (input image) i.  elements may be images for each
+subject, if a set of one image per subject is entered, or something
+else depending on the nature of input imgs.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Note: do not include suffixes: no .img</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Generalized least squares fitting on 100 Y-variables, same X</p>
+<div class="highlight-python"><div class="highlight"><pre>% Get image list
+imgs = filenames(&#39;trial_height*img&#39;, &#39;char&#39;)
+imgs = sort_image_filenames(imgs)
+
+% Get pre-stored design matrix
+X = eventdesign{3};
+
+preprochandle = @(y) trimts(y, 3, []);
+</pre></div>
+</div>
+<p>Generate an image with the number of in-analysis (valid)
+subjects in each voxel</p>
+<p>EXPT.SNPM.P{2} is a list of subject-level contrast images.</p>
+<div class="highlight-python"><div class="highlight"><pre>fhan = @(y) sum(abs(y) &gt; 0 &amp; ~isnan(y));
+y = image_eval_function(EXPT.SNPM.P{2}, fhan, &#39;mask&#39;, EXPT.mask, &#39;outimagelabels&#39;, {{&#39;sum_valid_antic.img&#39;}});
+
+y = rand(100, 100); X = y + rand(100, 1); X(:,end+1) = 1; c = [1 0]&#39;; p = 2; PX = pinv(X);
+fhandle = @(y) fit_gls(y, X, c, p, PX);
+[t, df, beta, Phi, sigma, stebeta, F] = fhandle(y);
+</pre></div>
+</div>
+<p>setup inputs</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.image_eval_function_multisubj">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">image_eval_function_multisubj</code><span class="sig-paren">(</span><em>imageNames</em>, <em>fhandle</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.image_eval_function_multisubj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate any function, defined by the function handle fhandle,
+on each in-mask voxel for a set of images.
+imageNames is a cell array of N cells, each containing images for one
+replication (i.e., subject)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">image_eval_function_multisubj</span><span class="p">(</span><span class="n">imgnames</span><span class="p">,</span><span class="n">fhandle</span><span class="p">,[</span><span class="s">&#39;mask&#39;</span><span class="p">,</span><span class="n">mask</span><span class="p">],[</span><span class="s">&#39;preprochandle&#39;</span><span class="p">,</span><span class="n">preprochandle</span><span class="p">],[</span><span class="s">&#39;outnames&#39;</span><span class="p">,</span><span class="n">outimagelabels</span><span class="p">],</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>other optional args: &#8216;outimagelabels&#8217; , &#8216;connames&#8217;</p>
+<p>At each voxel, a cell array is formed, one cell per subject.
+This would correspond to a matrix is formed of t x N, where t is time and N is
+replication (subject) but cells can deal with unequal data vector lengths for each subject.
+The anonymous function in fhandle should operate on data from each cell (subject).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">varargout</span> <span class="o">=</span> <span class="n">image_eval_function</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">fhandle</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>evaluate fhandle on paired columns of X and Y</p>
+<p>fhandle is a function handle:</p>
+<div class="highlight-python"><div class="highlight"><pre>fhandle = @(variable inputs) fit_gls(variable_input,fixed_inputs);
+fhandle = @(y) fit_gls(y,X,c,p,PX);
+</pre></div>
+</div>
+<p>specify the outputs by adding them as output image names.
+The number of outputs returned is determined by the number of named
+images in the list entered following the &#8216;outnames&#8217; keyword.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Note on output images:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">You specify the names of the output images</td>
+</tr>
+</tbody>
+</table>
+<p>One image will be written per output of fhandle.
+The images will have one volume per element of the output variable.
+If you are returning an output with one value per subject, for
+example, then a single image will be written with one volume in it
+per subject.</p>
+<p>preprochandle is a function handle.
+it encapsulates the preprocessing function.
+the function should work on each cell (subject) of a t x N cell array of time courses for each
+subject, where each  cell contains a t x v matrix of data from a
+slice. The preproc function should thus be able to handle a whole slice as
+input.
+the function can itself be a cell array with multiple handles in
+different cells</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body">Generalized least squares fitting on 100 Y-variables, same X</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Get image list
+imgs = filenames(&#39;trial_height*img&#39;,&#39;char&#39;)
+imgs = sort_image_filenames(imgs)
+
+% Get pre-stored design matrix
+X = eventdesign{3};
+
+preprochandle = @(y) trimts(y,3,[]);
+
+y = rand(100,100); X = y + rand(100,1); X(:,end+1) = 1; c = [1 0]&#39;; p = 2; PX = pinv(X);
+fhandle = @(y) fit_gls(y,X,c,p,PX);
+[t, df, beta, Phi, sigma,stebeta, F] = fhandle(y);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.image_histogram1d">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">image_histogram1d</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.image_histogram1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize a change_point map stored in hewma_cp.img
+(output from hewma2)
+and classify voxels into groupings based on CP</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[cl2,classes] = image_histogram1d([image name],[overlay])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_create_from_image_set">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_create_from_image_set</code><span class="sig-paren">(</span><em>imgs</em>, <em>outname</em>, <em>atleastN</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_create_from_image_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a set of images and create a mask of voxels in which at least N
+subjects have valid (not exactly zero, non NaN) data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mask</span> <span class="o">=</span> <span class="n">mask_create_from_image_set</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">atleastN</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;sum&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This makes a useful results mask for a set of images, i.e., in a
+group analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional:</th><td class="field-body">&#8216;sum&#8217; input writes the sum image instead of the mask image,</td>
+</tr>
+</tbody>
+</table>
+<p>so that the values in the image reflect the number of input images
+with valid values.</p>
+<p>compatible with SPM5 and above only!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>mask_create_from_image_set(EXPT.SNPM.P{1}, &#39;mask_all_valid.img&#39;);
+
+imgs = filenames(&#39;vascular_mask_*img&#39;);
+mask_create_from_image_set(imgs, &#39;vascular_group_sum.img&#39;, 6, &#39;sum&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_create_results_mask">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_create_results_mask</code><span class="sig-paren">(</span><em>mask</em>, <em>study_img</em>, <em>kern_size</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_create_results_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a mask image name (mask)
+smooths it by smooth_mm (optional; enter 0 for kern_size to avoid this)
+Resamples it to study image dimensions (study_img)
+writes output image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[cl_out, out_name] = mask_create_results_mask(mask, study_img, kern_size, [opt: expression to evaluate on mask])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Optional:</th><td class="field-body">Applies an expression to be evaluated to the image,</td>
+</tr>
+</tbody>
+</table>
+<p>in spm_imcalc format, e.g., &#8216;i1 &lt; .05&#8217;  (uses spm_imcalc_ui.m)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body">Returns mask_clusters (mask_cl) and mask name (out_name)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>mask = which(&#39;spm2_amy.img&#39;)
+study_img = &#39;/Users/tor/Documents/Tor_Documents/PublishedProjects/inpress_2007_Emotion_handbook_2006/an_metaFWE_rad10/exp_vs_percept/Activation_FWE_all.img&#39;;
+kern_size = 3;
+cl_out = mask_create_results_mask(mask, study_img, kern_size);
+cluster_orthviews(cl_out, {[0 1 0]}, &#39;add&#39;, &#39;handle&#39;, 1);
+
+[cl_out, out_name] = mask_create_results_mask(&#39;X-Y_total_pvals.img&#39;, &#39;X-Y_total_pvals.img&#39;, 0, &#39;i1 &lt; .05 &amp; i1 &gt; eps&#39;);
+spm_image(&#39;init&#39;, &#39;X-Y_total_pvals.img&#39;);
+cluster_orthviews(cl_out, {[1 0 0]}, &#39;trans&#39;, &#39;add&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_fisher">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_fisher</code><span class="sig-paren">(</span><em>clsize</em>, <em>outname</em>, <em>k</em>, <em>Pimg</em>, <em>Timg</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_fisher" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs combination of p-values across images using the 
+Fisher method (see refs below).  Voxels are thresholded with FDR, and can
+be positive and negative at once if both positive and negative sig
+effects exist in input images.  FDR correction is based on 2-tailed
+p-values - so this function assumes 2-tailed p-values!!  (robfit does
+this, glmfit and robustfit both return 2-tailed p-values as well.)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">clpos</span><span class="p">,</span><span class="n">clneg</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_fisher</span><span class="p">(</span><span class="n">clsize</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">Pimg</span><span class="p">,</span><span class="n">Timg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Assumes input p-values are 1-tailed, and divides by two to get 2-tailed
+p-value inputs!!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Pimg:</strong></dt>
+<dd><p class="first">string mtx of p-value image names</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">Pimg</span><span class="o">=</span><span class="n">get_filename2</span><span class="p">(</span><span class="s">&#39;rob*\*_p_*0002.img&#39;</span><span class="p">);</span> <span class="n">Timg</span> <span class="o">=</span> <span class="n">get_filename2</span><span class="p">(</span><span class="s">&#39;rob*\*_tmap_0002.img&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Timg:</strong></dt>
+<dd><p class="first last">t-value img names, used to ensure signs are same across all tests</p>
+</dd>
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">num voxels/num comparisons <a href="#id29"><span class="problematic" id="id30">**</span></a>NOT USED NOW - FDR USED INSTEAD
+if empty, uses # of non-zero, non-NaN values in images</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>empty i1 prompts for graphic selection of filenames
+extra arguments are more file names for 3 - n-way intersection
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Described in:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Lazar, N. A., Luna, B., Sweeney, J. A., &amp; Eddy, W. F. (2002). 
+Combining brains: a survey of methods for statistical pooling 
+of information. Neuroimage, 16(2), 538-550.</p>
+<p>Stouffer, S. A., Suchman, E. A., DeVinney, L. C., Star, S. A., and
+Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
+During Army Life. Princeton University Press, Princeton.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_image">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_image</code><span class="sig-paren">(</span><em>img</em>, <em>mask</em>, <em>outname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_image" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">masked_dat</span> <span class="o">=</span> <span class="n">mask_image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;reverse&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Mask an image file (img) with a mask (mask), and save in outname.
+zero and NaN values are considered invalid values, and so voxels with
+these values are considered &#8220;excluded&#8221;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;minmask&#8217;:</strong></dt>
+<dd><p class="first last">mask values less than next argument are excluded</p>
+</dd>
+<dt><strong>&#8216;maxmask&#8217;:</strong></dt>
+<dd><p class="first last">mask values greater than next argument are excluded</p>
+</dd>
+<dt><strong>&#8216;minimg&#8217;:</strong></dt>
+<dd><p class="first last">img values less than next argument are excluded</p>
+</dd>
+<dt><strong>&#8216;maximg&#8217;:</strong></dt>
+<dd><p class="first last">img values greater than next argument are excluded</p>
+</dd>
+<dt><strong>&#8216;abs&#8217;:</strong></dt>
+<dd><p class="first last">impose min/max thresholds based on absolute values</p>
+</dd>
+<dt><strong>&#8216;reverse&#8217;:</strong></dt>
+<dd><blockquote class="first">
+<div><p>make &#8220;reverse mask,&#8221; including only previously excluded
+areas (values of zero or NaN)</p>
+<p>Note: applies to mask, not img values
+So values with 0 in img will always be 0, whether</p>
+</div></blockquote>
+<p class="last">standard or &#8220;reverse&#8221; mask is used.</p>
+</dd>
+<dt><strong>&#8216;binary&#8217;:</strong></dt>
+<dd><p class="first last">make the image values binary (i.e., create a new mask)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function can handle images of different dimensions.  The output
+image will use the dimensions of img.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Create an image with non-zero numbers only where p-values in an image are greater than .05
+img = &#39;X-M_pvals.img&#39;
+mask = &#39;X-M_pvals.img&#39;;
+maxmask = .05
+outname = &#39;notX_p05.img&#39;;
+mask_image(img, mask, outname, &#39;reverse&#39;, &#39;maxmask&#39;, maxmask);
+spm_image(&#39;init&#39;, outname);
+
+mask_image(my_mean_image, &#39;functional_mask.img&#39;, ...
+              &#39;functional_mask.img&#39;, &#39;minimg&#39;, cutoff, &#39;abs&#39;);
+
+
+mask_image(&#39;n15_avgpet.img&#39;,EXPT.mask,&#39;n15_avgpet_brain.img&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_intersection">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_intersection</code><span class="sig-paren">(</span><em>clsize</em>, <em>outname</em>, <em>i1</em>, <em>i2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>empty i1 prompts for graphic selection of filenames
+extra arguments are more file names for 3 - n-way intersection
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">vol</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">XYZ</span><span class="p">,</span><span class="n">clusters</span><span class="p">,</span><span class="n">Q</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_intersection</span><span class="p">(</span><span class="n">clsize</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_intersection2">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_intersection2</code><span class="sig-paren">(</span><em>clsize</em>, <em>outname</em>, <em>P</em>, <em>calcstr</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_intersection2" title="Permalink to this definition">¶</a></dt>
+<dd><p>empty P prompts for graphic selection of filenames
+extra arguments are more file names for 3 - n-way intersection
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">clusters</span><span class="p">,</span><span class="n">vol</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">XYZ</span><span class="p">,</span><span class="n">Q</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_intersection2</span><span class="p">(</span><span class="n">clsize</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">calcstr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>this version allows contrasts
+last argument, calcstr, is the string to evaluate in imcalc</p>
+<p>e.g., intersection of 4 images:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&#39;i1 &amp; i2 &amp; i3 &amp; i4 &amp; ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))&#39;</span>
+</pre></div>
+</div>
+<p>e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;i1 &amp; i2 &amp; ~i3 &amp; ~i4 &amp; ~(isnan(i1) | isnan(i2)) = intersection of i1 and i2 and not i3 and not i4
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-python"><div class="highlight"><pre>  &#39;i1 &amp; i2 &amp; isnan(i3) &amp; isnan(i4) &amp; ~(isnan(i1) | isnan(i2))&#39;
+... for nan masked images
+
+   cl = mask_intersection2(5,&#39;intersect001.img&#39;,P,&#39;i1 &amp; i2 &amp; i3 &amp; i4 &amp; ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_stouffer">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_stouffer</code><span class="sig-paren">(</span><em>clsize</em>, <em>outname</em>, <em>k</em>, <em>Pimg</em>, <em>Timg</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_stouffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs combination of p-values across images using the 
+Stouffer method (see refs below).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">vol</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">XYZ</span><span class="p">,</span><span class="n">clusters</span><span class="p">,</span><span class="n">Q</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_stouffer</span><span class="p">(</span><span class="n">clsize</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">Pimg</span><span class="p">,</span><span class="n">Timg</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Pimg:</strong></dt>
+<dd><p class="first last">string mtx of p-value image names</p>
+</dd>
+<dt><strong>Timg:</strong></dt>
+<dd><p class="first last">t-value img names, used to ensure signs are same across all tests</p>
+</dd>
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">num voxels/num comparisons 
+if empty, uses # of non-zero, non-NaN values in images</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>empty i1 prompts for graphic selection of filenames
+extra arguments are more file names for 3 - n-way intersection
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Described in:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Lazar, N. A., Luna, B., Sweeney, J. A., &amp; Eddy, W. F. (2002). 
+Combining brains: a survey of methods for statistical pooling 
+of information. Neuroimage, 16(2), 538-550.</p>
+<p>Stouffer, S. A., Suchman, E. A., DeVinney, L. C., Star, S. A., and
+Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
+During Army Life. Princeton University Press, Princeton.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Pimg</span><span class="o">=</span><span class="n">get_filename2</span><span class="p">(</span><span class="s">&#39;rob*\*_p_*0002.img&#39;</span><span class="p">);</span>
+<span class="n">Timg</span> <span class="o">=</span> <span class="n">get_filename2</span><span class="p">(</span><span class="s">&#39;rob*\*_tmap_0002.img&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.mask_union">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">mask_union</code><span class="sig-paren">(</span><em>clsize</em>, <em>outname</em>, <em>i1</em>, <em>i2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.mask_union" title="Permalink to this definition">¶</a></dt>
+<dd><p>empty i1 prompts for graphic selection of filenames
+extra arguments are more file names for 3 - n-way intersection
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">vol</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">XYZ</span><span class="p">,</span><span class="n">clusters</span><span class="p">,</span><span class="n">Q</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_union</span><span class="p">(</span><span class="n">clsize</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.percent_sig_image">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">percent_sig_image</code><span class="sig-paren">(</span><em>imgs</em>, <em>baseimg</em>, <em>outname</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.percent_sig_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a percent signal change image saved in outname by dividing each
+image by baseimg</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function Vo = percent_sig_image(imgs, baseimg, outname)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.reslice_imgs">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">reslice_imgs</code><span class="sig-paren">(</span><em>sampleTo</em>, <em>resliceThis</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.reslice_imgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>arguments are file names of .img files
+if empty, select from GUI% :Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">P</span><span class="p">,</span> <span class="n">reslicedImgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">reslice_imgs</span><span class="p">(</span><span class="n">sampleTo</span><span class="p">,</span> <span class="n">resliceThis</span><span class="p">,</span> <span class="p">[</span><span class="n">domask</span><span class="p">],</span> <span class="p">[</span><span class="n">overwrite</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>if domask, recalculates a 1 or 0 mask for each image file in resliceThis
+if overwrite, overwrite the original instead of prepending an &#8216;r&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Reslice a mask image into the space of some functional images, and move to the current directory
+
+[tmp, maskname] = reslice_imgs(image_names(1, :), maskname, 1);
+eval([&#39;!mv &#39; maskname &#39; ./&#39;])
+eval([&#39;!mv &#39; maskname(1:end-4) &#39;.hdr ./&#39;])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.reverse_mask">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">reverse_mask</code><span class="sig-paren">(</span><em>inname</em>, <em>outname</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.reverse_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes 1 and greater&#8217;s to 0&#8217;s in an .img file, and vice versa
+NaNs are still NaNs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">reverse_mask</span><span class="p">(</span><span class="n">inname</span><span class="p">,</span><span class="n">outname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.scn_write_plane">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">scn_write_plane</code><span class="sig-paren">(</span><em>filenames_or_V</em>, <em>dat</em>, <em>wh_slice</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.scn_write_plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>Images can be 3D or 4D (4D is possible with SPM2+ using ,xx indexing, or SPM5+).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">V</span> <span class="o">=</span> <span class="n">scn_write_plane</span><span class="p">(</span><span class="n">filenames_or_V</span><span class="p">,</span> <span class="n">dat</span><span class="p">,</span> <span class="n">wh_slice</span><span class="p">,</span> <span class="p">[</span><span class="n">exampleV</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ofilenames_or_V:</strong></dt>
+<dd><p class="first last">is string matrix or cell array of names, or structures created with spm_vol(names)</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">is 3-D array of data, vox x vox x slices, with data on 3rd dim being
+written to separate image files</p>
+</dd>
+<dt><strong>wh_slice:</strong></dt>
+<dd><p class="first last">slice number (voxel space)</p>
+</dd>
+<dt><strong>exampleV:</strong></dt>
+<dd><p class="first last">is optional, but required if filenames are passed in.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Write a plane, given filenames or spm_vol structures and 4-D data with
+the slice to write.</p>
+<p>SPM2/5 compatible, and creates image if necessary from file name and
+example V structure.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">P</span> <span class="o">=</span> <span class="n">char</span><span class="p">({</span><span class="s">&#39;one.img&#39;</span><span class="p">,</span> <span class="s">&#39;two.img&#39;</span><span class="p">,</span> <span class="s">&#39;three.img&#39;</span><span class="p">})</span>
+<span class="n">dat</span> <span class="o">=</span> <span class="n">randn</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">Vout</span> <span class="o">=</span> <span class="n">scn_write_plane</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">dat</span><span class="p">,</span> <span class="n">wh_slice</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+<span class="n">spm_image</span><span class="p">(</span><span class="s">&#39;init&#39;</span><span class="p">,</span> <span class="n">Vout</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fname</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Notes on SPM5 and why we need to do what we do the way we do it:
+Write data...in SPM5, by accessing file_array object in
+V.private directly (with spm_write_plane. spm_write_vol 
+first creates NIFTI obj/file array and then uses spm_write_plane.)</p>
+<p>The file_array object points to data in
+the actual file, so when values are assigned to the array
+object, they are written directly in the file.
+These values depend on the offset and slope values (spm
+scaling factors!) in V.private.dat as well, so care must be
+taken to assign data to a file_array object with the correct
+scaling factors.  This is why it is better to load the
+structure one wants to write to with spm_vol first, so that
+the name in V.private.dat.fname will be correct, and
+V.private.dat.scl_slope and ...inter will be correct as well.
+Vout = spm_vol(V(i));  % loads correct .private info from V.fname</p>
+<p>in SPM5, this simply assigns data in Vout.private.dat
+in SPM2, it does something different, but should be
+compatible, since spm_vol was used above...</p>
+<div class="highlight-python"><div class="highlight"><pre>spm_write_plane(Vout, fsl(:, :, i), slicei);
+if isfield(V, &#39;dt&#39;), Vout.dt = V.dt; end      % SPM5 only
+if isfield(V, &#39;n&#39;), Vout.n = V.n;  end        % SPM5 only
+    Vout = spm_create_vol(Vout);
+else
+    Vout = spm_vol(V(i).fname);
+end
+spm_write_plane(Vout, fsl(:, :, i), slicei);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Image_computation_tools.tor_spm_mean_ui">
+<code class="descclassname">Image_computation_tools.</code><code class="descname">tor_spm_mean_ui</code><span class="sig-paren">(</span><em>P</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Image_computation_tools.tor_spm_mean_ui" title="Permalink to this definition">¶</a></dt>
+<dd><p>Promts for a series of images and averages them</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tor_spm_mean_ui</span><span class="p">(</span><span class="n">Pinputnames</span><span class="p">,[</span><span class="n">outputname</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -12754,6 +13759,7 @@ kernel.</p>
 <li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
 <li><a class="reference internal" href="#module-hewma_utility">hewma_utility</a></li>
 <li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>
+<li><a class="reference internal" href="#image-computation-tools">Image_computation_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

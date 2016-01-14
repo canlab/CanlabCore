@@ -1,55 +1,76 @@
 function varargout = image_eval_function(imageNames, fhandle, varargin)
-    % varargout = image_eval_function(imgnames, fhandle, ['mask', mask], ['preprochandle', preprochandle], varargin)
-    % other optional args: 'outimagelabels' , 'connames'
-    %
-    % evaluate any function, defined by the function handle fhandle,
-    % on each in-mask voxel for a set of images.
-    %
-    % varargout = image_eval_function(Y, fhandle, varargin)
-    % evaluate fhandle on paired columns of X and Y
-    %
-    % NOTE: You must call image_eval_function with outputs, one output for
-    % each output you're requesting from the voxel-level function
-    % e.g.,     [t, df, betaorcontrast, Phi, sigma, stebeta, F, pvals] = ...
-    %    image_eval_function(imgs, fhandle, 'mask', maskimg, 'outimagelabels' , names);
-    %
-    % fhandle is a function handle:
-    % fhandle = @(variable inputs) fit_gls(variable_input, fixed_inputs);
-    % fhandle = @(y) fit_gls(y, X, c, p, PX);
-    %
-    % 'outimagelabels' should be followed by a set of image names, one name
-    % per output of fhandle per element. e.g., outnames{j}{i} is the output
-    % image for output j and element (input image) i.  elements may be images for each
-    % subject, if a set of one image per subject is entered, or something
-    % else depending on the nature of input imgs.
-    % Note: do not include suffixes: no .img
-    %
-    % Example: Generalized least squares fitting on 100 Y-variables, same X
-    % ---------------------------------------------------------------------
-    %
-    % Get image list
-    % imgs = filenames('trial_height*img', 'char')
-    % imgs = sort_image_filenames(imgs)
-    %
-    % Get pre-stored design matrix
-    % X = eventdesign{3};
-    %
-    % preprochandle = @(y) trimts(y, 3, []);
-    %
-    % Example: Generate an image with the number of in-analysis (valid)
-    % subjects in each voxel
-    % EXPT.SNPM.P{2} is a list of subject-level contrast images.
-    % fhan = @(y) sum(abs(y) > 0 & ~isnan(y));
-    % y = image_eval_function(EXPT.SNPM.P{2}, fhan, 'mask', EXPT.mask, 'outimagelabels', {{'sum_valid_antic.img'}});
-
-    % y = rand(100, 100); X = y + rand(100, 1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
-    % fhandle = @(y) fit_gls(y, X, c, p, PX);
-    % [t, df, beta, Phi, sigma, stebeta, F] = fhandle(y);
-    %
-    % tor wager, jan 31, 2007
-    %
-    %
-    %
+% Evaluate any function, defined by the function handle fhandle,
+% on each in-mask voxel for a set of images.
+%
+% :Usage:
+% ::
+%
+%     varargout = image_eval_function(imgnames, fhandle, ['mask', mask], ['preprochandle', preprochandle], varargin)
+%
+% :Other Optional args: 'outimagelabels' , 'connames'
+% ::
+%
+%     varargout = image_eval_function(Y, fhandle, varargin)
+%
+%
+% evaluate fhandle on paired columns of X and Y
+%
+% :Note: You must call image_eval_function with outputs, one output for
+% each output you're requesting from the voxel-level function.
+% Eg:
+% ::
+%     [t, df, betaorcontrast, Phi, sigma, stebeta, F, pvals] = ...
+%     image_eval_function(imgs, fhandle, 'mask', maskimg, 'outimagelabels' , names);
+%
+% :Inputs:
+%
+%   **fhandle:**
+%        is a function handle:
+%        ::
+%            fhandle = @(variable inputs) fit_gls(variable_input, fixed_inputs);
+%
+%            fhandle = @(y) fit_gls(y, X, c, p, PX);
+%
+%
+%   **'outimagelabels':**
+%        should be followed by a set of image names, one name
+%        per output of fhandle per element. e.g., outnames{j}{i} is the output
+%        image for output j and element (input image) i.  elements may be images for each
+%        subject, if a set of one image per subject is entered, or something
+%        else depending on the nature of input imgs.
+%
+% Note: do not include suffixes: no .img
+%
+% :Examples: 
+%
+% Generalized least squares fitting on 100 Y-variables, same X
+% ::
+%
+%    % Get image list
+%    imgs = filenames('trial_height*img', 'char')
+%    imgs = sort_image_filenames(imgs)
+%
+%    % Get pre-stored design matrix
+%    X = eventdesign{3};
+%
+%    preprochandle = @(y) trimts(y, 3, []);
+%
+% Generate an image with the number of in-analysis (valid)
+% subjects in each voxel
+%
+% EXPT.SNPM.P{2} is a list of subject-level contrast images.
+% ::
+%
+%    fhan = @(y) sum(abs(y) > 0 & ~isnan(y));
+%    y = image_eval_function(EXPT.SNPM.P{2}, fhan, 'mask', EXPT.mask, 'outimagelabels', {{'sum_valid_antic.img'}});
+%
+%    y = rand(100, 100); X = y + rand(100, 1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
+%    fhandle = @(y) fit_gls(y, X, c, p, PX);
+%    [t, df, beta, Phi, sigma, stebeta, F] = fhandle(y);
+%
+% ..
+%    tor wager, jan 31, 2007
+% ..
 
     % setup inputs
     nout = nargout;

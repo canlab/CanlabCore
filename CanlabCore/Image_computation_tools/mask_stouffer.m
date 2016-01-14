@@ -1,21 +1,29 @@
 function [vol,V,XYZ,clusters,Q] = mask_stouffer(clsize,outname,k,Pimg,Timg)
-% function [vol,V,XYZ,clusters,Q] = mask_stouffer(clsize,outname,k,Pimg,Timg)
-% by Tor Wager
-%
 % This function performs combination of p-values across images using the 
 % Stouffer method (see refs below).  
 %
-% Inputs:
-%   Pimg    string mtx of p-value image names
-%   Timg    t-value img names, used to ensure signs are same across all tests
-%   k       num voxels/num comparisons 
-%           if empty, uses # of non-zero, non-NaN values in images
+% :Usage:
+% ::
+%
+%     function [vol,V,XYZ,clusters,Q] = mask_stouffer(clsize,outname,k,Pimg,Timg)
+%
+% :Inputs:
+%
+%   **Pimg:**
+%        string mtx of p-value image names
+%
+%   **Timg:**
+%        t-value img names, used to ensure signs are same across all tests
+%
+%   **k:**
+%        num voxels/num comparisons 
+%        if empty, uses # of non-zero, non-NaN values in images
 %
 % empty i1 prompts for graphic selection of filenames
 % extra arguments are more file names for 3 - n-way intersection
 % empty outname prompts for entry of output img file name
 %
-% Described in:
+% :Described in:
 % Lazar, N. A., Luna, B., Sweeney, J. A., & Eddy, W. F. (2002). 
 % Combining brains: a survey of methods for statistical pooling 
 % of information. Neuroimage, 16(2), 538-550.
@@ -23,12 +31,20 @@ function [vol,V,XYZ,clusters,Q] = mask_stouffer(clsize,outname,k,Pimg,Timg)
 % Stouffer, S. A., Suchman, E. A., DeVinney, L. C., Star, S. A., and
 % Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
 % During Army Life. Princeton University Press, Princeton.
-% 
-% Pimg=get_filename2('rob*\*_p_*0002.img'); Timg = get_filename2('rob*\*_tmap_0002.img')
-% 
+%
+% :Examples:
+% ::
+%
+%    Pimg=get_filename2('rob*\*_p_*0002.img');
+%    Timg = get_filename2('rob*\*_tmap_0002.img')
+%
+% ..
+%    by Tor Wager
+% ..
 
-% get file names and calcstr to evaluate
-% ------------------------------------------------
+% ..
+%    get file names and calcstr to evaluate
+% ..
 
 if isempty(Pimg),Pimg = spm_get(Inf,'*.img','Select p-value images',pwd,0);,end
 if isempty(Timg),Timg = spm_get(Inf,'*.img','Select t-value images',pwd,0);,end

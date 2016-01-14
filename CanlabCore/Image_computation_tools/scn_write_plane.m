@@ -1,13 +1,25 @@
 function V = scn_write_plane(filenames_or_V, dat, wh_slice, varargin)
-% V = scn_write_plane(filenames_or_V, dat, wh_slice, [exampleV])
-%
-% filenames_or_V    is string matrix or cell array of names, or structures created with spm_vol(names)
-% dat               is 3-D array of data, vox x vox x slices, with data on 3rd dim being
-%                   written to separate image files
-% wh_slice          slice number (voxel space)
-% exampleV          is optional, but required if filenames are passed in.
-%
 % Images can be 3D or 4D (4D is possible with SPM2+ using ,xx indexing, or SPM5+).
+%
+% :Usage:
+% ::
+%
+%     V = scn_write_plane(filenames_or_V, dat, wh_slice, [exampleV])
+%
+% :Inputs:
+%
+%   **ofilenames_or_V:**
+%        is string matrix or cell array of names, or structures created with spm_vol(names)
+%
+%   **dat:**
+%        is 3-D array of data, vox x vox x slices, with data on 3rd dim being
+%        written to separate image files
+%
+%   **wh_slice:**
+%        slice number (voxel space)
+%
+%   **exampleV:**
+%        is optional, but required if filenames are passed in.
 %
 % Write a plane, given filenames or spm_vol structures and 4-D data with
 % the slice to write.
@@ -15,19 +27,19 @@ function V = scn_write_plane(filenames_or_V, dat, wh_slice, varargin)
 % SPM2/5 compatible, and creates image if necessary from file name and
 % example V structure.
 %
-% Tor Wager, March 2008
+% ::
 %
-% Examples:
-% P = char({'one.img', 'two.img', 'three.img'})
-% dat = randn(64, 64, 3);
-% Vout = scn_write_plane(P, dat, wh_slice, V)
-% spm_image('init', Vout(1).fname);
+%    P = char({'one.img', 'two.img', 'three.img'})
+%    dat = randn(64, 64, 3);
+%    Vout = scn_write_plane(P, dat, wh_slice, V)
+%    spm_image('init', Vout(1).fname);
 %
 %
 % Notes on SPM5 and why we need to do what we do the way we do it:
 % Write data...in SPM5, by accessing file_array object in
 % V.private directly (with spm_write_plane. spm_write_vol 
-%  first creates NIFTI obj/file array and then uses spm_write_plane.)
+% first creates NIFTI obj/file array and then uses spm_write_plane.)
+%
 % The file_array object points to data in
 % the actual file, so when values are assigned to the array
 % object, they are written directly in the file.
@@ -38,24 +50,31 @@ function V = scn_write_plane(filenames_or_V, dat, wh_slice, varargin)
 % structure one wants to write to with spm_vol first, so that
 % the name in V.private.dat.fname will be correct, and
 % V.private.dat.scl_slope and ...inter will be correct as well.
-%Vout = spm_vol(V(i));  % loads correct .private info from V.fname
+% Vout = spm_vol(V(i));  % loads correct .private info from V.fname
 %
 % in SPM5, this simply assigns data in Vout.private.dat
 % in SPM2, it does something different, but should be
 % compatible, since spm_vol was used above...
-% spm_write_plane(Vout, fsl(:, :, i), slicei);
-% if isfield(V, 'dt'), Vout.dt = V.dt; end      % SPM5 only
-% if isfield(V, 'n'), Vout.n = V.n;  end        % SPM5 only
-% Vout = spm_create_vol(Vout);
-% else
-%     Vout = spm_vol(V(i).fname);
-% end
-% spm_write_plane(Vout, fsl(:, :, i), slicei);
+% ::
+%
+%    spm_write_plane(Vout, fsl(:, :, i), slicei);
+%    if isfield(V, 'dt'), Vout.dt = V.dt; end      % SPM5 only
+%    if isfield(V, 'n'), Vout.n = V.n;  end        % SPM5 only
+%        Vout = spm_create_vol(Vout);
+%    else
+%        Vout = spm_vol(V(i).fname);
+%    end
+%    spm_write_plane(Vout, fsl(:, :, i), slicei);
+%
+% ..
+%    Tor Wager, March 2008
+% ..
 
-% ------------------------------------------------------
-% Make sure all images exist, and create if not
-% Return V structure of spm_vol mapped image structures
-% ------------------------------------------------------
+
+% ..
+%    Make sure all images exist, and create if not
+%    Return V structure of spm_vol mapped image structures
+% ..
 
 if ~isstruct(filenames_or_V)
     % Assume we have a string matrix of file names

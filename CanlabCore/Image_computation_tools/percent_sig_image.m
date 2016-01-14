@@ -1,10 +1,16 @@
 function Vo = percent_sig_image(imgs, baseimg, outname)
-% function Vo = percent_sig_image(imgs, baseimg, outname)
-%
-% Tor Wager
-%
 % Creates a percent signal change image saved in outname by dividing each
 % image by baseimg
+%
+% :Usage:
+% ::
+%
+%     function Vo = percent_sig_image(imgs, baseimg, outname)
+%
+% ..
+%    by Tor Wager
+% ..
+
 
 
 V = spm_vol(imgs);

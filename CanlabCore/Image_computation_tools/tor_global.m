@@ -1,24 +1,39 @@
-% [g, gslice, stdslice, s]] = tor_global(P, [maskname])
+% :Usage:
+% ::
+%
+%     [g, gslice, stdslice, s]] = tor_global(P, [maskname])
 %
 % Compute global image values within an optional mask
 % alternative to spm_global
 %
 % Pass in a file name for mask:
-% g = tor_global(P, 'my_gray_mask.img')
+% ::
+%
+%    g = tor_global(P, 'my_gray_mask.img')
 %
 % Use Worsley's fmri_mask_thresh to implicitly mask based on first image:
-% g = tor_global(P, 1);
+% ::
+%
+%    g = tor_global(P, 1);
 %
 % No masking, use whole image
-% g = tor_global(P)
+% ::
 %
+%    g = tor_global(P)
 %
-% OUTPUT
-% --------------------------------
-%   g: array mean intensity for each image
-%   gslice: 2D array with mean intensity for each slice
-%   stdslice: 2D array with std for each slice
-%   s: array std for each image
+% :Outputs:
+%
+%   **g:**
+%         array mean intensity for each image
+%
+%   **gslice:**
+%         2D array with mean intensity for each slice
+%
+%   **stdslice:**
+%         2D array with std for each slice
+%
+%   **s:**
+%         array std for each image
 
 function [g, gslice, stdslice, s] = tor_global(P, varargin)
     

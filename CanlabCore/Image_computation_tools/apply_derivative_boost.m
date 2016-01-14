@@ -1,83 +1,85 @@
-% function apply_derivative_boost(varargin)
-%
-% allows for recalculation of amplitude images from the fitted responses
+function apply_derivative_boost(varargin)
+% Allows for recalculation of amplitude images from the fitted responses
 % for each trial type. Necessary for calculating group statistics when
 % using multiple basis functions
 %
-% NOTES:
-%   DB estimation only works for 2 specific basis sets:
-%   timeonly, with 2 parameters (canonical + time derivative)
-%   timedispersion,' with 3 parameters (canonical hrf + temporal and spatial dispersion)
+% :Usage:
+% ::
 %
-%   This function loads the SPM.mat file in the current directory and uses
-%   the basis set specified in the loaded SPM structure.
+%     function apply_derivative_boost(varargin)
 %
-% INPUTS
-% -------------------------------------------------------------------------
-% Optional inputs: You must enter something here to specify what the function should do:
-% -------------------------------------------------------------------------
-%   'amplitudes' will only create amping images (combination of betas
-%      across basis functions)
+% :NOTES:
+%    DB estimation only works for 2 specific basis sets:
+%    timeonly, with 2 parameters (canonical + time derivative)
+%    timedispersion,' with 3 parameters (canonical hrf + temporal and spatial dispersion)
 %
-%   'contrasts' assumes that amping images are already created; will only
-%      create contrast images
+% This function loads the SPM.mat file in the current directory and uses
+% the basis set specified in the loaded SPM structure.
 %
-%   'all' will run both the amplitudes and contrasts sections
+% :Optional Inputs:
 %
-%   In addition, 'amplitudes' now has two separate parts:
-%   - The first uses Vince Calhoun's derivative boost (Calhoun, 2004) to
-%      estimate amplitudes.  NOTE: *We have not worked out the scaling yet, so
-%      I'm not sure this is working right*
-%      To turn this OFF, enter 'nodb' as an optional argument
+%   **'amplitudes'**
+%        will only create amping images (combination of betas
+%        across basis functions)
 %
-%   - The second way uses our HTW code to estimate height, time to peak,
-%   width, and area under the curve (see Lindquist & Wager 2007 for
-%   simulations using a version of this code).
-%   It requires SCANlab specific functions, in SCN_Core_Support
-%   (unlike the deriv. boost).
-%   To turn this OFF, enter 'nohtw' as an optional argument
+%   **'contrasts'**
+%        assumes that amping images are already created; will only
+%        create contrast images
 %
-%   'startend', followed by starting and ending values in seconds for amplitude estimation window (for HTW estimation only).
-%   If you do not enter this, it will show you a plot and ask you to pick
-%   these values.
-%   If you enter them here as inputs, you can skip the interactive step and
-%   loop over subjects.
+%   **'all'**
+%        will run both the amplitudes and contrasts sections
 %
-% 'condition_numbers', followed by which index numbers in your list should
-% be used to calculate h, t, w from.  You should use this if you are
-% entering regressors of no interest, besides the intercepts.
+%        In addition, 'amplitudes' now has two separate parts:
+%          - The first uses Vince Calhoun's derivative boost (Calhoun, 2004) to
+%             estimate amplitudes.  NOTE: *We have not worked out the scaling yet, so
+%             I'm not sure this is working right*
+%             To turn this OFF, enter 'nodb' as an optional argument
 %
-% -------------------------------------------------------------------------
+%          - The second way uses our HTW code to estimate height, time to peak,
+%            width, and area under the curve (see Lindquist & Wager 2007 for
+%            simulations using a version of this code).
+%            It requires SCANlab specific functions, in SCN_Core_Support
+%            (unlike the deriv. boost).
+%            To turn this OFF, enter 'nohtw' as an optional argument
 %
-% IMPORTANT FOR CONTRASTS:
+%   **'startend'**
+%        followed by starting and ending values in seconds for amplitude
+%        estimation window (for HTW estimation only).
+%        If you do not enter this, it will show you a plot and ask you to pick
+%        these values.
+%        If you enter them here as inputs, you can skip the interactive step and
+%        loop over subjects.
+%
+%   **'condition_numbers'**
+%        followed by which index numbers in your list should
+%        be used to calculate h, t, w from.  You should use this if you
+%        are entering regressors of no interest, besides the intercepts.
+%
+% :Important for Contrasts:
 %    disp('Using contrasts entered as F-contrasts. Assuming the first contrast vector in each F-contrast '
+%
 %    disp('is a contrast of interest across the CANONICAL basis function regressors.')
 %
-% RUN THIS IN COMMAND WINDOW TO BATCH
-% subj = dir('06*')
-% for i = 1:length(subj), cd(subj(i).name), apply_derivative_boost, cd('..'); end
+% :Examples:
+% ::
 %
-% ANOTHER BATCH EXAMPLE:
-% d = dir('remi*'); d = d(cat(2, d.isdir)); [mydirs{1:length(d)}] = deal(d.name)
-% for i = 1:length(mydirs), cd(mydirs{i}), apply_derivative_boost('all', 'nodb', 'startend', [4 15]), cd('..'); end
+%    % RUN THIS IN COMMAND WINDOW TO BATCH
+%    subj = dir('06*')
+%    for i = 1:length(subj), cd(subj(i).name), apply_derivative_boost, cd('..'); end
 %
-% An example for an event-related design, specifying condition numbers to get HTW from:
-% apply_derivative_boost('all', 'nodb', 'contrasts', 'condition_numbers', 1:14, 'startend', [4 10]);
+%    % ANOTHER BATCH EXAMPLE:
+%    d = dir('remi*'); d = d(cat(2, d.isdir)); [mydirs{1:length(d)}] = deal(d.name)
+%    for i = 1:length(mydirs), cd(mydirs{i}), apply_derivative_boost('all', 'nodb', 'startend', [4 15]), cd('..'); end
 %
-% EXAMPLE: CALCULATE CONTRASTS ONLY ON ALREADY-ESTIMATED HTW IMAGES
-% apply_derivative_boost('contrasts','condition_numbers',1:14);
+%    %An example for an event-related design, specifying condition numbers to get HTW from:
+%    apply_derivative_boost('all', 'nodb', 'contrasts', 'condition_numbers', 1:14, 'startend', [4 10]);
+%
+%    % CALCULATE CONTRASTS ONLY ON ALREADY-ESTIMATED HTW IMAGES
+%    apply_derivative_boost('contrasts','condition_numbers',1:14);
+%
 
-function apply_derivative_boost(varargin)
 
-    % ---------------------------------------------
-    % ---------------------------------------------
-
-    % SETUP INPUTS
-
-    % ---------------------------------------------
-    % ---------------------------------------------
-
-    spmname = fullfile(pwd, 'SPM.mat');
+    spmname = fullfile(pwd, 'SPM.mat');     % SETUP INPUTS
     if ~exist(spmname, 'file'), error('You must be in an SPM 1st-level results directory with SPM5 SPM.mat file.'); end
     
     load(spmname);

@@ -1,19 +1,33 @@
 function [z,p,sig,pt] = fisherp(p,varargin)
-% function [z,p,sig,pt] = fisherp(p,[alph])
-% 
-% inputs: p values in 4-D array
-%         1st 3 dims are within images, dim4 = image
-%         optional: alpha value for thresholding
-% 
-% outputs:
-%   z   Fisher's combined test statistic, compare to normal
-%   p   p-values for combined test
-%   sig signficance 1 / 0 binary mask, p < .05 (or alph) FDR-corr
-%   pt  p-value threshold for FDR corrected significance at alph
+% :Usage:
+% ::
 %
-% tor wager
+%     function [z,p,sig,pt] = fisherp(p,[alph])
+% 
+% :Inputs:
 %
-% Described in:
+%   **p:**
+%        values in 4-D array
+%
+%        1st 3 dims are within images, dim4 = image
+%
+% :Optional: alpha value for thresholding
+% 
+% :Outputs:
+%
+%   **z:**
+%        Fisher's combined test statistic, compare to normal
+%
+%   **p:**
+%        p-values for combined test
+%
+%   **sig:**
+%        signficance 1 / 0 binary mask, p < .05 (or alph) FDR-corr
+%
+%   **pt:**
+%        p-value threshold for FDR corrected significance at alph
+%
+% :Described in:
 % Lazar, N. A., Luna, B., Sweeney, J. A., & Eddy, W. F. (2002). 
 % Combining brains: a survey of methods for statistical pooling 
 % of information. Neuroimage, 16(2), 538-550.
@@ -23,6 +37,11 @@ function [z,p,sig,pt] = fisherp(p,varargin)
 % During Army Life. Princeton University Press, Princeton.
 % 
 % Threshold is determined with False Discovery Rate (Benjamini & Hochberg, 1995)
+%
+% ..
+%    tor wager
+% ..
+
 
 if length(varargin) > 0, alph = varargin{1};,else,alph = 0.05;,end
 

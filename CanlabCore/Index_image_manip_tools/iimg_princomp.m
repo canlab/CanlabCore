@@ -1,8 +1,11 @@
 function [volInfo,clusters] = iimg_princomp(maskname,image_names) 
-%[volInfo,clusters] = iimg_princomp(maskname,image_names) 
+% :Usage:
+% ::
+%
+%     [volInfo,clusters] = iimg_princomp(maskname,image_names) 
 
-%% Get data and principal components
-[dat,volInfo] = iimg_get_data(maskname,image_names);
+
+[dat,volInfo] = iimg_get_data(maskname,image_names); % Get data and principal components
 
 [eigvec, compscore, eigval] = princomp(dat,'econ');
 figure;plot(eigval,'ko-');

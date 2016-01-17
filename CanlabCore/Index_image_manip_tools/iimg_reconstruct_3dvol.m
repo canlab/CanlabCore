@@ -1,16 +1,25 @@
-% voldata = iimg_reconstruct_3dvol(dat, volInfo, [optional args])
+function voldata = iimg_reconstruct_3dvol(dat, volInfo, varargin)
 % Reconstruct a 3-D volume from a dat index list
 %
+% :Usage:
+% ::
 %
-% Optional inputs: if entered, will write .img file to disk
-% 'outname', followed by output name
-% 'descrip', followed by description for img file
-% 'slice', followed by slice number of single-slice data in image
+%     voldata = iimg_reconstruct_3dvol(dat, volInfo, [optional args])
+%
+% :Optional Inputs: if entered, will write .img file to disk
+%
+%   **'outname':**
+%        followed by output name
+%
+%   **'descrip':**
+%        followed by description for img file
+%
+%   **'slice':**
+%        followed by slice number of single-slice data in image
 % 
 % THIS FUNCTION IS DEPRECATED. USE IIMG_RECONSTRUCT_VOLS.M'
 % WHICH CAN DEAL WITH 4-D VOLUMES AS WELL
 
-function voldata = iimg_reconstruct_3dvol(dat, volInfo, varargin)
 
 disp('THIS FUNCTION IS DEPRECATED. USE IIMG_RECONSTRUCT_VOLS.M');
 

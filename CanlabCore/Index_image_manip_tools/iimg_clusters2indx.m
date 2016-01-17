@@ -1,14 +1,22 @@
 function [imgvec,maskvec] = iimg_clusters2indx(cl,volInfo)
-% [imgvec,maskvec] = iimg_clusters2indx(cl,volInfo)
-% [imgvec,maskvec] = iimg_clusters2indx(cl,my_image_name)
-%
 % Take a clusters structure and turn it into an indexed image of dims
 % volInfo.dim
 %
-% imgvec: vector of all image voxels
-% maskvec: vector of in-mask voxels
-% uses
-% volInfo.nvox, .wh_inmask, .dim
+% :Usage:
+% ::
+%
+%     [imgvec,maskvec] = iimg_clusters2indx(cl,volInfo)
+%     [imgvec,maskvec] = iimg_clusters2indx(cl,my_image_name)
+%
+% :Outputs:
+%
+%   **imgvec:**
+%        vector of all image voxels
+%
+%   **maskvec:**
+%        vector of in-mask voxels
+%
+% Uses:  volInfo.nvox, .wh_inmask, .dim
 
 % convert image to volinfo struct, if necessary
 if isstr(volInfo)

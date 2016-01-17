@@ -1,10 +1,19 @@
 function indx = iimg_xyz2spheres(xyz, mask_xyzlist, r)
-    % indx = iimg_xyz2spheres(xyz, mask_xyzlist, r)
-    %
-    %
-    % mask_xyzlist is a list of voxel coords of all in-mask voxels
-    % xyz is a list of voxels to be convolved with spheres
-    % r is sphere radius (voxels)
+% :Usage:
+% ::
+%
+%     indx = iimg_xyz2spheres(xyz, mask_xyzlist, r)
+%
+% :Inputs:
+%
+%   **mask_xyzlist:**
+%        is a list of voxel coords of all in-mask voxels
+%
+%   **xyz:**
+%        is a list of voxels to be convolved with spheres
+%
+%   **r:**
+%        is sphere radius (voxels)
 %
 % more generally, finds mask_xyzlist entries that are within r units of xyz
 % i.e., to find database points within r mm of a cluster xyz list:
@@ -12,8 +21,10 @@ function indx = iimg_xyz2spheres(xyz, mask_xyzlist, r)
 %
 % indx is length mask_xyzlist and contains all in-mask, in-sphere voxels
 % for all xyz coordinates.
-
-% See programmers' notes testing this function: Tested OK, 7/28/13, tor
+%
+% ..
+%    See programmers' notes testing this function: Tested OK, 7/28/13, tor
+% ..
 
     num_mask_voxels = size(mask_xyzlist,1);
     indx = zeros(num_mask_voxels,1);

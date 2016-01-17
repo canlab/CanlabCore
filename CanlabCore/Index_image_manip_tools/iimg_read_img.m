@@ -1,4 +1,8 @@
-% [volInfo, dat] = iimg_read_img(inputimgs, [extended_output_flag (1|2)], [reading_data (0|1)], [first vol only (0|1)]);
+function [volInfo, dat] = iimg_read_img(inputimgs, extended_output_flag, reading_data, first_vol)
+% :Usage:
+% ::
+%
+%     [volInfo, dat] = iimg_read_img(inputimgs, [extended_output_flag (1|2)], [reading_data (0|1)], [first vol only (0|1)]);
 %
 % - reads 3-D or 4-D img/nii files, with extended volInfo output
 % - flag to read first volume only
@@ -7,23 +11,24 @@
 %
 % volInfo fields:
 %   - all fields returned by spm_vol, plus:
-%   .nvox - number of voxels in 3d image
-%   .image_indx - logical index (e.g., [0 1 1 0 1 ...]) of all nonzero voxels
-%   .wh_inmask (extended_output_flag > 0) - linear index (e.g., [2 3 5 ...]) - same as image_indx, but as a result of find
-%   .n_inmask (extended_output_flag > 0) - length of .wh_inmask
-%   .xyzlist (extended_output_flag > 0) - voxel coords of .wh_inmask voxels
-%   .cluster (extended_output_flag > 1) - cluster structure of in-mask voxels
-%
+%   - .nvox - number of voxels in 3d image
+%  - .image_indx - logical index (e.g., [0 1 1 0 1 ...]) of all nonzero voxels
+%  - .wh_inmask (extended_output_flag > 0) - linear index (e.g., [2 3 5 ...]) - same as image_indx, but as a result of find
+%  - .n_inmask (extended_output_flag > 0) - length of .wh_inmask
+%  - .xyzlist (extended_output_flag > 0) - voxel coords of .wh_inmask voxels
+%  - .cluster (extended_output_flag > 1) - cluster structure of in-mask voxels
 %
 % Extended output flag values:
-% 1: Add xyz coord list and linear index of which voxels nonzero & non-nan in mask
-% 2: Add clusters from spm_clusters
+%   1: Add xyz coord list and linear index of which voxels nonzero & non-nan in mask
+%   2: Add clusters from spm_clusters
 %
 % Enforces that dat is a vector of data values, regardless of input.
 %
-% Example:
-% imname = 'rob_tmap_0001_filt_t_3-05_k5_pos.img';
-% volInfo = iimg_read_img(imname);
+% :Examples:
+% ::
+%
+%    imname = 'rob_tmap_0001_filt_t_3-05_k5_pos.img';
+%    volInfo = iimg_read_img(imname);
 %
 % WARNING: 
 % The behavior of this function is SPM version dependent.
@@ -32,31 +37,34 @@
 %
 % Example of image reading/writing
 % -------------------------------------------------------------------------
-% % 1) Get volume info from first volume of a 3-D or 4-D image
-% %     volInfo structure has necessary info for converting to/from
-% %     "vectorized" format
-% %     dat returns 4-D data from entire image (all volumes)
+%   1) Get volume info from first volume of a 3-D or 4-D image
+%       volInfo structure has necessary info for converting to/from
+%       "vectorized" format
+%       dat returns 4-D data from entire image (all volumes)
+%       ::
 %
-% img_name = 'test_run1_pca.img';
+%           iimg_name = 'test_run1_pca.img';
 % [maskInfo, dat] = iimg_read_img(img_name, 2);
 %
-% % 2) Get data in "vectorized" image format for each volume in the
-% %    image. Works for a list of images too. data is in-mask voxels x volumes
-% %    this can be useful when you want to return whole-brain data for many
-% %    images, but in a search volume only (i.e., no extra-brain voxels)
+%   2) Get data in "vectorized" image format for each volume in the
+%      image. Works for a list of images too. data is in-mask voxels x volumes
+%      this can be useful when you want to return whole-brain data for many
+%      images, but in a search volume only (i.e., no extra-brain voxels)
+%      ::
 %
-% data = iimg_get_data(maskInfo, img_name);
-% data = data';  % make sure columns are volumes
+%           idata = iimg_get_data(maskInfo, img_name);
+%           data = data';  % make sure columns are volumes
 %
 % % 3) Write out a 4-D image with the same data, called test_run1_pca2.img
-% voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname',
-% 'test_run1_pca2.img');
+%       ::
+%
+%           ivoldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname',
+%                                                 'test_run1_pca2.img');
 
-function [volInfo, dat] = iimg_read_img(inputimgs, extended_output_flag, reading_data, first_vol)
 
-% --------------------------------------
-% * Set up arguments
-% --------------------------------------
+% ..
+%    Set up arguments
+% ..
 if ~exist('inputimgs', 'var') || isempty(inputimgs)
     
     error('Input image not found. Check file and path names.');

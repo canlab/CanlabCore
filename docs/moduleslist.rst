@@ -98,3 +98,8 @@ Image_thresholding
 ===============
 .. automodule:: Image_thresholding
    :members:
+
+Index_image_manip_tools
+===============
+.. automodule:: Index_image_manip_tools
+   :members:

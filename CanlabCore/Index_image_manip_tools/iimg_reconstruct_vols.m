@@ -1,38 +1,53 @@
-% voldata = iimg_reconstruct_vols(dat, volInfo, [optional args])
+function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
 % Reconstruct a 3-D or 4-D volume from a "dat" matrix of vectorized images
 %
+% :Usage:
+% ::
 %
-% Optional inputs: if entered, will write .img file to disk
-% 'outname', followed by output name
-% 'descrip', followed by description for img file
-% 'slice', followed by slice number of single-slice data in image
+%     voldata = iimg_reconstruct_vols(dat, volInfo, [optional args])
 %
-% Example of image reading
-% -------------------------------------------------------------------------
-% % 1) Get volume info from first volume of a 3-D or 4-D image
-% %     volInfo structure has necessary info for converting to/from
-% %     "vectorized" format
-% %     dat returns 4-D data from entire image (all volumes)
+% :Optional Inputs: If entered, will write .img file to disk
 %
-% img_name = 'test_run1_pca.img';
-% [maskInfo, dat] = iimg_read_img(img_name, 2);
+%   **'outname':**
+%        followed by output name
 %
-% % 2) Get data in "vectorized" image format for each volume in the
-% %    image. Works for a list of images too. data is in-mask voxels x volumes
-% %    this can be useful when you want to return whole-brain data for many
-% %    images, but in a search volume only (i.e., no extra-brain voxels)
+%   **'descrip':**
+%        followed by description for img file
 %
-% data = iimg_get_data(maskInfo, img_name);
+%   **'slice':**
+%        followed by slice number of single-slice data in image
+%
+% :Example of image reading:
+%
+%   1) Get volume info from first volume of a 3-D or 4-D image
+%       volInfo structure has necessary info for converting to/from
+%       "vectorized" format
+%       dat returns 4-D data from entire image (all volumes)
+%       ::
+%
+%           img_name = 'test_run1_pca.img';
+%           [maskInfo, dat] = iimg_read_img(img_name, 2);
+%
+%   2) Get data in "vectorized" image format for each volume in the
+%      image. Works for a list of images too. data is in-mask voxels x volumes
+%      this can be useful when you want to return whole-brain data for many
+%      images, but in a search volume only (i.e., no extra-brain voxels)
+%      ::
+%
+%            data = iimg_get_data(maskInfo, img_name);
 % data = data';  % make sure columns are volumes
 %
-% % 3) Write out a 4-D image with the same data, called test_run1_pca2.img
-% voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname', 'test_run1_pca2.img');
+%   3) Write out a 4-D image with the same data, called test_run1_pca2.img
+%      ::
+%
+%           voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname', 'test_run1_pca2.img');
+%
+% ..
+%    NOTES:
+%    2013/3/25: 
+%    Luke[ea] added optional input to retain original datatype (default = float32)
+% ..
 
-% NOTES:
-% 2013/3/25: 
-%           Luke[ea] added optional input to retain original datatype (default = float32)
-
-function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
     is_writing_file = 0;
     is_single_slice = 0;
     keepdt = 0;

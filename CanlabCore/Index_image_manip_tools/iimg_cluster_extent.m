@@ -1,15 +1,21 @@
 function [dat,nvox] = iimg_cluster_extent(dat,volInfo,k)
-%[dat,nvox] = iimg_cluster_extent(dat,volInfo,k)
-%
 % Apply a cluster size threshold to a series of index image data vectors
 % (each img is one column)
 % given volInfo (must be created with iimg_read_img, with extended output)
 %
-% dat may be an indexed image of all image values or only those in mask
-% defined by volInfo
+% :Usage:
+% ::
+%
+%     [dat,nvox] = iimg_cluster_extent(dat,volInfo,k)
+%
+% :Inputs:
+%
+%   **dat:**
+%        may be an indexed image of all image values or only those in mask
+%        defined by volInfo
 
-% do nothing if extent threshold
-if isempty(k) || k < 2, nvox = []; return, end
+
+if isempty(k) || k < 2, nvox = []; return, end % do nothing if extent threshold
 
 if size(dat,1) == volInfo.nvox
     dattype = 'full';

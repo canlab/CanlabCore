@@ -1,20 +1,20 @@
 function iimg_weighted_ttest(image_names,varargin)
-%
 % fast weighted test
 %
-% Tor Wager
+% :Examples:
+% ::
 %
-% Examples:
+%    iimg_weighted_ttest(image_names,'mask',maskname)
 %
-% iimg_weighted_ttest(image_names,'mask',maskname)
+% ..
+%    Tor Wager
+% ..
 
+% ..
+%    Set up arguments
+% ..
 
-% --------------------------------------
-% * Set up arguments
-% --------------------------------------
-
-% defaults
-maskname = deblank(image_names(1,:));
+maskname = deblank(image_names(1,:)); % defaults
 w = []; varY = []; bcon = [];
 
 % inputs

@@ -1,93 +1,105 @@
-% function [dat, volInfo, cl] = iimg_threshold(image_names, varargin)
+function [dat, volInfo, cl] = iimg_threshold(image_names, varargin)
 % Thresholds images to be at least thresh(1) and at most thresh(2)
 %
-% Input types for image names:
-% 1) String matrix of filenames
-% 2) 4-D array of 3-D data volumes
-% 3) voxels x images 2-D index array
-% 4) image_vector object
+% :Usage:
+% ::
 %
-% Outputs:
-% dat, index vector of thresholded data
-% volInfo, structure of info about volume
-% cl, optional (slower) clusters structure from dat
+%     function [dat, volInfo, cl] = iimg_threshold(image_names, varargin)
 %
-% Command strings:
-% 'imgtype', followed by 't', 'p', or 'data' (default)
+% :Input types for image names:
+%   1) String matrix of filenames
+%   2) 4-D array of 3-D data volumes
+%   3) voxels x images 2-D index array
+%   4) image_vector object
+%
+% :Outputs:
+%
+%   **imdat:**
+%        index vector of thresholded data
+%
+%   **volInfo:**
+%        structure of info about volume
+%
+%   **cl:**
+%        optional (slower) clusters structure from dat
+%
+% :Command strings:
+%
+%   **'imgtype':**
+%        followed by 't', 'p', or 'data' (default)
 %       specify type of values in image
 %
-% 'threshtype', followed by 't' or 'p'
+%   **'threshtype':**
+%        followed by 't' or 'p'
 %
-% 'df', followed by degrees of freedom, for p- and t-image threshold calc
+%   **'df':**
+%        followed by degrees of freedom, for p- and t-image threshold calc
 %
-% 'k', followed by extent threshold in voxels (slower)
+%   **'k':**
+%        followed by extent threshold in voxels (slower)
 %
-% 'abs', absolute value must be > threshold.  Use to get both pos. and neg.
+%   **'abs':**
+%        absolute value must be > threshold.  Use to get both pos. and neg.
 %        results in two-tailed test.
 %
-% 'intersect':  Create intersection of images; uses abs, so + and - values
-% count as yesses for intersection
+%   **'intersect:**
+%        Create intersection of images; uses abs, so + and - values
+%        count as yesses for intersection
 %
-% 'contrast', followed by contrasts across images
+%   **'contrast':**
+%        followed by contrasts across images
 %
-% 'volInfo': followed by volInfo structure.  Necessary for extended output
+%   **'volInfo:**
+%        followed by volInfo structure.  Necessary for extended output
 %
-% 
-% Authorship and Updates:
-% *                                                         *
-% Created by Tor Wager, edited by Matthew Davidson
-% Update April 2007 by TW : correct FDR-thresholding bug
+% :Examples:
+% ::
 %
+%    % Threshold an image set (p) to be at least zero
+%    image_names =
+%    /Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/rscalped_avg152T1_graymatter_smoothed.img
+%    /Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img
 %
+%    [dat, volInfo] = iimg_threshold(image_names, 'thr', 0);
 %
-% Examples:
-% Threshold an image set (p) to be at least zero
-% -----------------------------------------------------------
-% image_names =
-% /Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/rscalped_avg152T1_graymatter_smoothed.img
-% /Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img
-%
-% [dat, volInfo] = iimg_threshold(image_names, 'thr', 0);
-%
-% Do the same, but take the intersection and write an output image
-% -----------------------------------------------------------
-% [dat, volInfo] = iimg_threshold(image_names, 'thr', 3, 'outnames', 'intersct', 'masked_t.img');
+%    % Do the same, but take the intersection and write an output image
+%    [dat, volInfo] = iimg_threshold(image_names, 'thr', 3, 'outnames', 'intersct', 'masked_t.img');
 %
 %
-% Threshold a t-image based on a p-value and a df
-% -----------------------------------------------------------
-% image_names = '/Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img'
-% [dat, volInfo] = iimg_threshold(image_names, 'thr', .005, 'imgtype', 't', 'threshtype', 'p', 'df', 28, 'outnames', 'thresh_t.img');
+%    % Threshold a t-image based on a p-value and a df
+%    image_names = '/Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img'
+%    [dat, volInfo] = iimg_threshold(image_names, 'thr', .005, 'imgtype', 't', 'threshtype', 'p', 'df', 28, 'outnames', 'thresh_t.img');
 %
-% cl = mask2clusters('masked_t.img');
-% cluster_orthviews(cl);
+%    cl = mask2clusters('masked_t.img');
+%    cluster_orthviews(cl);
 %
-% The same, but threshold based on absolute value (+ and - values)
-% [dat, volInfo] = iimg_threshold(image_names, 'thr', .005, 'abs', 'imgtype', 't', 'threshtype', 'p', 'df', 28, 'outnames', 'thresh_t.img');
+%    % The same, but threshold based on absolute value (+ and - values)
+%    [dat, volInfo] = iimg_threshold(image_names, 'thr', .005, 'abs', 'imgtype', 't', 'threshtype', 'p', 'df', 28, 'outnames', 'thresh_t.img');
 %
-% % Threshold a p-value image directly
-% -----------------------------------------------------------
-% [dat, volInfo] = iimg_threshold('X-M-Y_pvals.img', 'thr', [0 .05], 'outnames', 'X-M-Y_pvals_thresh.img');
-% [dat, volInfo, cl] = iimg_threshold(inname, 'thr', [0 .05], 'outnames', outname);
+%    % Threshold a p-value image directly
+%    [dat, volInfo] = iimg_threshold('X-M-Y_pvals.img', 'thr', [0 .05], 'outnames', 'X-M-Y_pvals_thresh.img');
+%    [dat, volInfo, cl] = iimg_threshold(inname, 'thr', [0 .05], 'outnames', outname);
 %
-% Threshold a p-value image, with cluster sizes
-% [dat, volInfo, cl] = iimg_threshold(inname, 'thr', [0 .05], 'k', 10);
+%    % Threshold a p-value image, with cluster sizes
+%    [dat, volInfo, cl] = iimg_threshold(inname, 'thr', [0 .05], 'k', 10);
 %
-% % Threshold and display a t-image using FDR, getting both positive and negative results
-% -----------------------------------------------------------
-% [dat, volInfo, cl] = iimg_threshold('contrast_t.img', 'imgtype', 't', 'df', 37, 'thr', .2, 'threshtype', 'fdr', 'k', 3, 'abs');
-% cluster_orthviews(cl);
-% spm_orthviews_hotcool_colormap(cat(2,cl.Z), 1.52);
+%    % Threshold and display a t-image using FDR, getting both positive and negative results
+%    [dat, volInfo, cl] = iimg_threshold('contrast_t.img', 'imgtype', 't', 'df', 37, 'thr', .2, 'threshtype', 'fdr', 'k', 3, 'abs');
+%    cluster_orthviews(cl);
+%    spm_orthviews_hotcool_colormap(cat(2,cl.Z), 1.52);
 %
+% ..
+%    Authorship and Updates:
+%    Created by Tor Wager, edited by Matthew Davidson
+%    Update April 2007 by TW : correct FDR-thresholding bug
+% ..
 
-function [dat, volInfo, cl] = iimg_threshold(image_names, varargin)
-    %% --------------------------------------
-    % * Set up arguments
-    % --------------------------------------
+    % ..
+    %    Set up arguments
+    % ..
 
-    % defaults
+    df = []; % defaults
     % maskname = deblank(image_names(1, :));
-    df = [];
     thr = [0 Inf];                  % must be > 0, < Inf
     imgtype = 'data';               % could be data, t, p, or F
     threshtype = 'none';

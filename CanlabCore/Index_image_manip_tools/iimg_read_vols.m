@@ -1,9 +1,9 @@
+function [Y, XYZ] = iimg_read_vols(V, mask)
 % Drop-in replacement for spm_read_vols
 % Primary difference is that if the images have the same voxel size but are NOT resliced
 % (e.g., have differing affine matrices), this will handle reading each individually and
 % putting them together.
 
-function [Y, XYZ] = iimg_read_vols(V, mask)
 
     if nargin<2, mask = 0; end
     if nargin<1, error('insufficient arguments'); end

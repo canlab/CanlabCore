@@ -1,74 +1,122 @@
-% [cl, dat, cl_extent, dat_extent] = iimg_multi_threshold(inname, varargin)
+function [cl, dat, cl_extent, dat_extent] = iimg_multi_threshold(inname, varargin)
+% :Usage:
+% ::
+%
+%     [cl, dat, cl_extent, dat_extent] = iimg_multi_threshold(inname, varargin)
 %
 % Multi-threshold application and orthview display of blobs
 %
-% inname: Either the name of an image file or a data vector
-% if data, enter volInfo structure separately as below.
+% :Inputs:
 %
-% Command strings:
-% 'prune' : consider only contiguous blobs for which at least 1 voxel meets
-% the most stringent threshold
-% 'pruneseed' : followed by a vectorized thresholded activation image
-%       Only those blobs overlapping with at least one 'seed' data voxel
-%       are saved
-%       Also: the first color (highest threshold) in the output images is assigned to the seed
-% 'add' : add new blobs to existing orthviews
-% 'p' : if image is a p-value image (and thresholds are p-values)
+%   **inname:**
+%        Either the name of an image file or a data vector
 %
-% 'thresh' : followed by a vector of n thresholds, most to least stringent
-% 'size' : followed by a vector of size thresholds
-% 'volInfo': followed by volInfo struct; needed if inname is data rather
+%        if data, enter volInfo structure separately as below.
+%
+% :Command strings:
+%
+%   **'prune':**
+%        consider only contiguous blobs for which at least 1 voxel meets
+%        the most stringent threshold
+%
+%   **'pruneseed':**
+%        followed by a vectorized thresholded activation image
+%
+%        Only those blobs overlapping with at least one 'seed' data voxel
+%        are saved
+%
+%        Also: the first color (highest threshold) in the output images is assigned to the seed
+%
+%   **'add':**
+%        add new blobs to existing orthviews
+%
+%   **'p':**
+%        if image is a p-value image (and thresholds are p-values)
+%
+%
+%   **'thresh':**
+%        followed by a vector of n thresholds, most to least stringent
+%
+%   **'size':**
+%        followed by a vector of size thresholds
+%
+%   **'volInfo': followed by volInfo struct; needed if inname is data rather
 % than filenames
-% 'overlay' : followed by overlay image (anatomical) filename
-% 'transseed': transparent seed
-% 'hideseed': do not show seed regions on plot
-% 'pos': positive results only
-% 'neg': negative results only
-% 'add': add to existing multi-threshold plot
+%
+%   **'overlay':**
+%        followed by overlay image (anatomical) filename
+%
+%   **'transseed':**
+%        transparent seed
+%
+%   **'hideseed':**
+%        do not show seed regions on plot
+%
+%   **'pos':**
+%        positive results only
+%
+%   **'neg':**
+%        negative results only
+%
+%   **'add':**
+%        add to existing multi-threshold plot
 %
 % Needs (development): Legend, nice handling of colors, input
 % colors, color maps specified with command words (like 'red')
 %
-% tor wager, July 1, 2006
+% :Examples:
+% ::
 %
-% Examples:
-% inname = 'Activation_proportion.img';
-% [cl, dat] = iimg_multi_threshold(inname, 'prune', 'thresh', [.1 .5 .3], 'size', [1 5 10]);
+%    inname = 'Activation_proportion.img';
+%    [cl, dat] = iimg_multi_threshold(inname, 'prune', 'thresh', [.1 .5 .3], 'size', [1 5 10]);
 %
-% cl2 = iimg_multi_threshold(Pimg(1, :), 'thresh', [.001 .01 .05], 'size', [3 5 10], 'p');
-% cl2 = iimg_multi_threshold(Pimg(1, :), 'thresh', [.001 .01 .05], 'size', [3 3 3], 'p', 'prune');
+%    cl2 = iimg_multi_threshold(Pimg(1, :), 'thresh', [.001 .01 .05], 'size', [3 5 10], 'p');
+%    cl2 = iimg_multi_threshold(Pimg(1, :), 'thresh', [.001 .01 .05], 'size', [3 3 3], 'p', 'prune');
 %
 % from act + corr results (see robust_results_act_plus_corr)
 % First prepare 'seed' regions that overlap with correlated regions, then
 % use multi_threshold to see full extent of clusters
-% [dattype, seeddat] = iimg_check_indx(res.act.overlapdat, res.volInfo, 'full');
-% [cl, dat] = iimg_multi_threshold('rob_p_0001.img', 'p', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'pruneseed', seeddat)
+% ::
+%
+%    [dattype, seeddat] = iimg_check_indx(res.act.overlapdat, res.volInfo, 'full');
+%    [cl, dat] = iimg_multi_threshold('rob_p_0001.img', 'p', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'pruneseed', seeddat)
 %
 % Display an F-map from robust regression on a customized mean anatomical,
 % with pruning.
-% cl = iimg_multi_threshold('rob_pmap_full.img', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'p', 'prune', 'overlay', EXPT.overlay);
+% ::
+%
+%    cl = iimg_multi_threshold('rob_pmap_full.img', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'p', 'prune', 'overlay', EXPT.overlay);
 %
 % Display regions at 3 thresholds with an input data 'seed' vector
-% [cl, dat] = iimg_multi_threshold(pvals, 'p', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'pruneseed', p_sig', 'volInfo', R.volInfo);
+% ::
+%
+%    [cl, dat] = iimg_multi_threshold(pvals, 'p', 'thresh', [.001 .01 .05], 'size', [1 1 1], 'pruneseed', p_sig', 'volInfo', R.volInfo);
 %
 % As above, but ONLY POSITIVE RESULTS
-% [cl, datout] = iimg_multi_threshold(pimg1, 'thresh', [.001 .01 .05], 'size', [1 1 1], 'p', 'pruneseed', dat, 'overlay', EXPT.overlay, 'colors', colors, 'transseed', 'pos', 'rob_tmap_0001.img');
+% ::
+%
+%    [cl, datout] = iimg_multi_threshold(pimg1, 'thresh', [.001 .01 .05], 'size', [1 1 1], 'p', 'pruneseed', dat, 'overlay', EXPT.overlay, 'colors', colors, 'transseed', 'pos', 'rob_tmap_0001.img');
 %
 % Complete example for showing positive and negative blobs:
-% [clpos] = iimg_multi_threshold('slope_p.img', 'p', 'thresh', [.005 .01 .05], 'size', [1 1 1], 'prune', 'overlay', anat, 'pos', 'slope_t.img');
-% [clneg] = iimg_multi_threshold('slope_p.img', 'p', 'thresh', [.005 .01 .05], 'size', [1 1 1], 'prune', 'overlay', anat, 'neg', 'slope_t.img', 'add', 'colors', {[0 0 1] [0 .5 1] [.4 .5 1]});
+% ::
+%
+%    [clpos] = iimg_multi_threshold('slope_p.img', 'p', 'thresh', [.005 .01 .05], 'size', [1 1 1], 'prune', 'overlay', anat, 'pos', 'slope_t.img');
+%    [clneg] = iimg_multi_threshold('slope_p.img', 'p', 'thresh', [.005 .01 .05], 'size', [1 1 1], 'prune', 'overlay', anat, 'neg', 'slope_t.img', 'add', 'colors', {[0 0 1] [0 .5 1] [.4 .5 1]});
+%
+% ..
+%    tor wager, July 1, 2006
+%
+%    Programmers' notes:
+%    tor: changed to SPM8 overlay, April 2011
+%    tor: fixed bug in table printing (cluster_extent) that was not using sign
+%    info to calculate extent, returning unsigned extent maps identical across
+%    positive and negative results in some cases.
+% ..
 
-% Programmers' notes:
-% tor: changed to SPM8 overlay, April 2011
-% tor: fixed bug in table printing (cluster_extent) that was not using sign
-% info to calculate extent, returning unsigned extent maps identical across
-% positive and negative results in some cases.
 
-function [cl, dat, cl_extent, dat_extent] = iimg_multi_threshold(inname, varargin)
-
-% --------------------------------------
-% Setup and defaults
-% --------------------------------------
+% ..
+%    Setup and defaults
+% ..
 
 cl = [];
 cl_extent = [];

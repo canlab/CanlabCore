@@ -1,11 +1,16 @@
-%out = iimg_reslice(matchto, reslicethis, varargin)
-%
-%out = iimg_reslice(matchto, reslicethis, 'write', 'outname', 'myimg.img')
-%
-% tor wager
-% nov. 06
-
 function out = iimg_reslice(matchto, reslicethis, varargin)
+% :Usage:
+% ::
+%
+%     out = iimg_reslice(matchto, reslicethis, varargin)
+%
+%     out = iimg_reslice(matchto, reslicethis, 'write', 'outname', 'myimg.img')
+%
+% ..
+%    tor wager
+%    nov. 06
+% ..
+
     % default flags
     % interp = 2 is trilinear
     flags = struct('interp', 2, 'vox', NaN, 'bb', NaN, 'wrap', [0 0 0], 'preserve', 0);

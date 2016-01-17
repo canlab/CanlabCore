@@ -14655,7 +14655,7 @@ analysis mask. The mask image is included for reference, but is not
 explicitly used by the results section.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id37"><span class="problematic" id="id38">beta_</span></a>????.{img,hdr}                                 - parameter images
+<p><a href="#id39"><span class="problematic" id="id40">beta_</span></a>????.{img,hdr}                                 - parameter images
 These are 32-bit (float32) images of the parameter estimates. The image
 files are numbered according to the corresponding column of the
 design matrix. Voxels outside the analysis mask (mask.img) are given
@@ -14673,7 +14673,7 @@ Voxels outside the analysis mask are given value 0.  These images
 reflect the nonstationary aspects the spatial autocorrelations.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id39"><span class="problematic" id="id40">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
+<p><a href="#id41"><span class="problematic" id="id42">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
 These are 64-bit (float64) images of standardised residuals. At most
 maxres images will be saved and used by spm_est_smoothness, after which
 they will be deleted.</p>
@@ -14784,6 +14784,1120 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 </dd></dl>
 
 </div>
+<div class="section" id="index-image-manip-tools">
+<h1>Index_image_manip_tools<a class="headerlink" href="#index-image-manip-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Index_image_manip_tools"></span><dl class="function">
+<dt id="Index_image_manip_tools.iimg_check_indx">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_check_indx</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_check_indx" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dattype</span><span class="p">,</span><span class="n">dat</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_check_indx</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,[</span><span class="n">outtype</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dattype:</strong></dt>
+<dd><p class="first last">is &#8216;full&#8217; or &#8216;masked&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional Input:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>outtype:</strong></dt>
+<dd><p class="first last">&#8216;full&#8217; or &#8216;masked&#8217; output</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>make sure data is correct format</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_check_volinfo">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_check_volinfo</code><span class="sig-paren">(</span><em>maskInfo</em>, <em>imgInfo</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_check_volinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks a series of image .mat files and dims against a reference
+(maskInfo)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">anybad</span> <span class="o">=</span> <span class="n">iimg_check_volinfo</span><span class="p">(</span><span class="n">maskInfo</span><span class="p">,</span><span class="n">imgInfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>maskInfo</strong> and <strong>volInfo :</strong></dt>
+<dd><p class="first last">are spm-style volume info structures</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>see spm_vol.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_cluster_extent">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_extent</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>k</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_extent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a cluster size threshold to a series of index image data vectors
+(each img is one column)
+given volInfo (must be created with iimg_read_img, with extended output)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat</span><span class="p">,</span><span class="n">nvox</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_extent</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">may be an indexed image of all image values or only those in mask
+defined by volInfo</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_cluster_index">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_index</code><span class="sig-paren">(</span><em>dat</em>, <em>xyz</em>, <em>k</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_index" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">clindx</span><span class="p">,</span><span class="n">nvox</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_index</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">xyz</span><span class="p">,[</span><span class="n">k</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>xyz:</strong></dt>
+<dd><p class="first last">is 3 x n list of voxel coords, volInfo.xyzlist&#8217;</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">is index vector of image values</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns: cluster index and cluster sizes for non-zero, non-nan voxels</p>
+<p>initialize</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_cluster_intersect">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_intersect</code><span class="sig-paren">(</span><em>dat1</em>, <em>dat2</em>, <em>volInfo</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prunes two image data vectors (dat1 and dat2) assumed to contain suprathreshold
+contiguous clusters (&#8220;blobs&#8221;) by saving only those blobs that have one or
+more significant (nonzero) elements in both images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl1</span><span class="p">,</span><span class="n">cl2</span><span class="p">,</span><span class="n">dat1</span><span class="p">,</span><span class="n">dat2</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_intersect</span><span class="p">(</span><span class="n">dat1</span><span class="p">,</span><span class="n">dat2</span><span class="p">,</span><span class="n">volInfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>volInfo.xyzlist:</strong></dt>
+<dd><p class="first last">must contain xyz coordinates corresponding to dat1 and dat2</p>
+</dd>
+<dt><strong>dat1 and dat2:</strong></dt>
+<dd><p class="first last">can be either image-length or in-mask length vectorized images</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Try iimg_threshold to create dat vectors from Analyze images (e.g.,
+statistic images)</p>
+<p>The outputs cl1 and cl2 are the overlap (intersection) clusters, in the
+space of dat1 (cl1) and dat2 (cl2).  The outputs dat1 and dat2 are the
+&#8216;pruned&#8217; intersection data vectors.</p>
+<p>prune dat1 with sig values in dat2</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_cluster_prune">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_prune</code><span class="sig-paren">(</span><em>dat</em>, <em>datsig</em>, <em>volInfo</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_prune" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prunes an image data vector (dat) assumed to contain suprathreshold
+contiguous clusters (&#8220;blobs&#8221;) by saving only those blobs that have one or
+more significant (nonzero) elements in another image, datsig</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat_out</span><span class="p">,</span><span class="n">clindx</span><span class="p">,</span><span class="n">keepit</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_prune</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">datsig</span><span class="p">,</span><span class="n">volInfo</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One intended use is to define an FWE-corrected significance map in
+datsig, and report blobs at some lower threshold (in dat) that have at
+least one corrected voxel.</p>
+<p>Try iimg_threshold to create dat vectors from Analyze images (e.g.,
+statistic images)</p>
+<p>check data type and reduce to in-mask only if necessary</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_clusters2indx">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_clusters2indx</code><span class="sig-paren">(</span><em>cl</em>, <em>volInfo</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_clusters2indx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a clusters structure and turn it into an indexed image of dims
+volInfo.dim</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">imgvec</span><span class="p">,</span><span class="n">maskvec</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_clusters2indx</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">volInfo</span><span class="p">)</span>
+<span class="p">[</span><span class="n">imgvec</span><span class="p">,</span><span class="n">maskvec</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_clusters2indx</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">my_image_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>imgvec:</strong></dt>
+<dd><p class="first last">vector of all image voxels</p>
+</dd>
+<dt><strong>maskvec:</strong></dt>
+<dd><p class="first last">vector of in-mask voxels</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Uses:  volInfo.nvox, .wh_inmask, .dim
+convert image to volinfo struct, if necessary</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_indx2contiguousxyz">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_indx2contiguousxyz</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>remove_mean_flag</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_indx2contiguousxyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take in index image data vector (in-mask values only) and a volume info structure with xyzlist
+and return a cl structure whose XYZ values list contiguous sets of voxels
+(&#8220;blobs&#8221;)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">iimg_indx2contiguousxyz</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,[</span><span class="n">remove_mean_flag</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If a 3rd arg is entered, means of each blob are subtracted
+This is to facilitate randomizing blob centers in
+meta_stochastic_activation_blobs.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_intersection">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_intersection</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a mask of the intersection of n image files (pos or neg values)
+If &#8216;name&#8217; followed by an image file name is entered, writes output to
+that image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[int_dat,mask_vol,outname] = iimg_intersection(name1, name2, etc.)
+[int_dat,mask_vol,outname] = iimg_intersection(dat1, dat2, etc.)
+</pre></div>
+</div>
+<p>If special string &#8216;posneg&#8217; is entered, separates first two images into
+combinations of pos/neg values in each image.
+The order returned in columns of int_dat is pospos, posneg, negpos, and
+negneg</p>
+<p>fastest if one output requested.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_make_sure_indx">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_make_sure_indx</code><span class="sig-paren">(</span><em>inputarg</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_make_sure_indx" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">iimg_make_sure_indx</span><span class="p">(</span><span class="n">inputarg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Make sure input is an index list, and convert if not</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_mask">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_mask</code><span class="sig-paren">(</span><em>maskindx</em>, <em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Masks index image vector or filenames in dat
+With img vector or filenames in maskindx
+* Checks dimensions to make sure origins and vox. sizes are same</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">masked_indx</span><span class="p">,</span> <span class="n">volInfo</span><span class="p">,</span> <span class="n">masked_vol</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_mask</span><span class="p">(</span><span class="n">maskindx</span><span class="p">,</span><span class="n">dat</span><span class="p">,[</span><span class="n">volInfo</span><span class="p">],</span> <span class="p">[</span><span class="n">outname</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Fastest way to mask an image:</p>
+<div class="highlight-python"><div class="highlight"><pre>[masked_indx_data, volInfo] = iimg_mask(maskindx,dat)
+
+% or
+
+[masked_indx, xyz, masked_vol] = iimg_mask(mask filename,image filenames)
+</pre></div>
+</div>
+<p>even slower: reconstruct a 3-D volume and return in masked_vol</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_multi_threshold">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_multi_threshold</code><span class="sig-paren">(</span><em>inname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_multi_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">cl</span><span class="p">,</span> <span class="n">dat</span><span class="p">,</span> <span class="n">cl_extent</span><span class="p">,</span> <span class="n">dat_extent</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_multi_threshold</span><span class="p">(</span><span class="n">inname</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Multi-threshold application and orthview display of blobs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>inname:</strong></dt>
+<dd><p class="first">Either the name of an image file or a data vector</p>
+<p class="last">if data, enter volInfo structure separately as below.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Command strings:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;prune&#8217;:</strong></dt>
+<dd><p class="first last">consider only contiguous blobs for which at least 1 voxel meets
+the most stringent threshold</p>
+</dd>
+<dt><strong>&#8216;pruneseed&#8217;:</strong></dt>
+<dd><p class="first">followed by a vectorized thresholded activation image</p>
+<p>Only those blobs overlapping with at least one &#8216;seed&#8217; data voxel
+are saved</p>
+<p class="last">Also: the first color (highest threshold) in the output images is assigned to the seed</p>
+</dd>
+<dt><strong>&#8216;add&#8217;:</strong></dt>
+<dd><p class="first last">add new blobs to existing orthviews</p>
+</dd>
+<dt><strong>&#8216;p&#8217;:</strong></dt>
+<dd><p class="first last">if image is a p-value image (and thresholds are p-values)</p>
+</dd>
+<dt><strong>&#8216;thresh&#8217;:</strong></dt>
+<dd><p class="first last">followed by a vector of n thresholds, most to least stringent</p>
+</dd>
+<dt><strong>&#8216;size&#8217;:</strong></dt>
+<dd><p class="first last">followed by a vector of size thresholds</p>
+</dd>
+</dl>
+<p class="last"><a href="#id37"><span class="problematic" id="id38">**</span></a>&#8216;volInfo&#8217;: followed by volInfo struct; needed if inname is data rather</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>than filenames</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;overlay&#8217;:</strong></dt>
+<dd>followed by overlay image (anatomical) filename</dd>
+<dt><strong>&#8216;transseed&#8217;:</strong></dt>
+<dd>transparent seed</dd>
+<dt><strong>&#8216;hideseed&#8217;:</strong></dt>
+<dd>do not show seed regions on plot</dd>
+<dt><strong>&#8216;pos&#8217;:</strong></dt>
+<dd>positive results only</dd>
+<dt><strong>&#8216;neg&#8217;:</strong></dt>
+<dd>negative results only</dd>
+<dt><strong>&#8216;add&#8217;:</strong></dt>
+<dd>add to existing multi-threshold plot</dd>
+</dl>
+</div></blockquote>
+<p>Needs (development): Legend, nice handling of colors, input
+colors, color maps specified with command words (like &#8216;red&#8217;)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>inname = &#39;Activation_proportion.img&#39;;
+[cl, dat] = iimg_multi_threshold(inname, &#39;prune&#39;, &#39;thresh&#39;, [.1 .5 .3], &#39;size&#39;, [1 5 10]);
+
+cl2 = iimg_multi_threshold(Pimg(1, :), &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [3 5 10], &#39;p&#39;);
+cl2 = iimg_multi_threshold(Pimg(1, :), &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [3 3 3], &#39;p&#39;, &#39;prune&#39;);
+</pre></div>
+</div>
+<p>from act + corr results (see robust_results_act_plus_corr)
+First prepare &#8216;seed&#8217; regions that overlap with correlated regions, then
+use multi_threshold to see full extent of clusters</p>
+<div class="highlight-python"><div class="highlight"><pre>[dattype, seeddat] = iimg_check_indx(res.act.overlapdat, res.volInfo, &#39;full&#39;);
+[cl, dat] = iimg_multi_threshold(&#39;rob_p_0001.img&#39;, &#39;p&#39;, &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [1 1 1], &#39;pruneseed&#39;, seeddat)
+</pre></div>
+</div>
+<p>Display an F-map from robust regression on a customized mean anatomical,
+with pruning.</p>
+<div class="highlight-python"><div class="highlight"><pre>cl = iimg_multi_threshold(&#39;rob_pmap_full.img&#39;, &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [1 1 1], &#39;p&#39;, &#39;prune&#39;, &#39;overlay&#39;, EXPT.overlay);
+</pre></div>
+</div>
+<p>Display regions at 3 thresholds with an input data &#8216;seed&#8217; vector</p>
+<div class="highlight-python"><div class="highlight"><pre>[cl, dat] = iimg_multi_threshold(pvals, &#39;p&#39;, &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [1 1 1], &#39;pruneseed&#39;, p_sig&#39;, &#39;volInfo&#39;, R.volInfo);
+</pre></div>
+</div>
+<p>As above, but ONLY POSITIVE RESULTS</p>
+<div class="highlight-python"><div class="highlight"><pre>[cl, datout] = iimg_multi_threshold(pimg1, &#39;thresh&#39;, [.001 .01 .05], &#39;size&#39;, [1 1 1], &#39;p&#39;, &#39;pruneseed&#39;, dat, &#39;overlay&#39;, EXPT.overlay, &#39;colors&#39;, colors, &#39;transseed&#39;, &#39;pos&#39;, &#39;rob_tmap_0001.img&#39;);
+</pre></div>
+</div>
+<p>Complete example for showing positive and negative blobs:</p>
+<div class="highlight-python"><div class="highlight"><pre>[clpos] = iimg_multi_threshold(&#39;slope_p.img&#39;, &#39;p&#39;, &#39;thresh&#39;, [.005 .01 .05], &#39;size&#39;, [1 1 1], &#39;prune&#39;, &#39;overlay&#39;, anat, &#39;pos&#39;, &#39;slope_t.img&#39;);
+[clneg] = iimg_multi_threshold(&#39;slope_p.img&#39;, &#39;p&#39;, &#39;thresh&#39;, [.005 .01 .05], &#39;size&#39;, [1 1 1], &#39;prune&#39;, &#39;overlay&#39;, anat, &#39;neg&#39;, &#39;slope_t.img&#39;, &#39;add&#39;, &#39;colors&#39;, {[0 0 1] [0 .5 1] [.4 .5 1]});
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_princomp">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_princomp</code><span class="sig-paren">(</span><em>maskname</em>, <em>image_names</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_princomp" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">volInfo</span><span class="p">,</span><span class="n">clusters</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_princomp</span><span class="p">(</span><span class="n">maskname</span><span class="p">,</span><span class="n">image_names</span><span class="p">)</span> 
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_princomp_display">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_princomp_display</code><span class="sig-paren">(</span><em>volInfo</em>, <em>k</em>, <em>overlay</em>, <em>dofigs</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_princomp_display" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span> <span class="o">=</span> <span class="n">iimg_princomp_display</span><span class="p">(</span><span class="n">volInfo</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">overlay</span><span class="p">,</span><span class="n">dofigs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Show output from iimg_princomp</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl2</span> <span class="o">=</span> <span class="n">iimg_princomp_display</span><span class="p">(</span><span class="n">volInfo2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_read_img">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_read_img</code><span class="sig-paren">(</span><em>inputimgs</em>, <em>extended_output_flag</em>, <em>reading_data</em>, <em>first_vol</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_read_img" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[volInfo, dat] = iimg_read_img(inputimgs, [extended_output_flag (1|2)], [reading_data (0|1)], [first vol only (0|1)]);
+</pre></div>
+</div>
+<ul class="simple">
+<li>reads 3-D or 4-D img/nii files, with extended volInfo output</li>
+<li>flag to read first volume only</li>
+<li>can read iimg_data vectorized form as well as file names (just passes dat to output)</li>
+<li>uses SPM</li>
+</ul>
+<dl class="docutils">
+<dt>volInfo fields:</dt>
+<dd><blockquote class="first">
+<div><ul class="simple">
+<li>all fields returned by spm_vol, plus:</li>
+<li>.nvox - number of voxels in 3d image</li>
+</ul>
+</div></blockquote>
+<ul class="last simple">
+<li>.image_indx - logical index (e.g., [0 1 1 0 1 ...]) of all nonzero voxels</li>
+<li>.wh_inmask (extended_output_flag &gt; 0) - linear index (e.g., [2 3 5 ...]) - same as image_indx, but as a result of find</li>
+<li>.n_inmask (extended_output_flag &gt; 0) - length of .wh_inmask</li>
+<li>.xyzlist (extended_output_flag &gt; 0) - voxel coords of .wh_inmask voxels</li>
+<li>.cluster (extended_output_flag &gt; 1) - cluster structure of in-mask voxels</li>
+</ul>
+</dd>
+<dt>Extended output flag values:</dt>
+<dd>1: Add xyz coord list and linear index of which voxels nonzero &amp; non-nan in mask
+2: Add clusters from spm_clusters</dd>
+</dl>
+<p>Enforces that dat is a vector of data values, regardless of input.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">imname</span> <span class="o">=</span> <span class="s">&#39;rob_tmap_0001_filt_t_3-05_k5_pos.img&#39;</span><span class="p">;</span>
+<span class="n">volInfo</span> <span class="o">=</span> <span class="n">iimg_read_img</span><span class="p">(</span><span class="n">imname</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>WARNING: 
+The behavior of this function is SPM version dependent.
+volInfo only contains the spm_vol structure of the FIRST image!!!
+Data in SPM5/8 should be 4-D, but in SPM2 should be 3-D</p>
+<blockquote>
+<div><ol class="arabic">
+<li><dl class="first docutils">
+<dt>Get volume info from first volume of a 3-D or 4-D image</dt>
+<dd><p class="first">volInfo structure has necessary info for converting to/from
+&#8220;vectorized&#8221; format
+dat returns 4-D data from entire image (all volumes)</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">iimg_name</span> <span class="o">=</span> <span class="s">&#39;test_run1_pca.img&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+<p>[maskInfo, dat] = iimg_read_img(img_name, 2);</p>
+<blockquote>
+<div><ol class="arabic" start="2">
+<li><p class="first">Get data in &#8220;vectorized&#8221; image format for each volume in the
+image. Works for a list of images too. data is in-mask voxels x volumes
+this can be useful when you want to return whole-brain data for many
+images, but in a search volume only (i.e., no extra-brain voxels)</p>
+<div class="highlight-python"><div class="highlight"><pre>idata = iimg_get_data(maskInfo, img_name);
+data = data&#39;;  % make sure columns are volumes
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+<dl class="docutils">
+<dt>% 3) Write out a 4-D image with the same data, called test_run1_pca2.img</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">ivoldat3D</span> <span class="o">=</span> <span class="n">iimg_reconstruct_vols</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">maskInfo</span><span class="p">,</span> <span class="s">&#39;outname&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;test_run1_pca2.img&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_read_vols">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_read_vols</code><span class="sig-paren">(</span><em>V</em>, <em>mask</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_read_vols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop-in replacement for spm_read_vols
+Primary difference is that if the images have the same voxel size but are NOT resliced
+(e.g., have differing affine matrices), this will handle reading each individually and
+putting them together.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_reconstruct_3dvol">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_reconstruct_3dvol</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_reconstruct_3dvol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct a 3-D volume from a dat index list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>voldata = iimg_reconstruct_3dvol(dat, volInfo, [optional args])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">if entered, will write .img file to disk</p>
+<dl class="last docutils">
+<dt><strong>&#8216;outname&#8217;:</strong></dt>
+<dd><p class="first last">followed by output name</p>
+</dd>
+<dt><strong>&#8216;descrip&#8217;:</strong></dt>
+<dd><p class="first last">followed by description for img file</p>
+</dd>
+<dt><strong>&#8216;slice&#8217;:</strong></dt>
+<dd><p class="first last">followed by slice number of single-slice data in image</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>THIS FUNCTION IS DEPRECATED. USE IIMG_RECONSTRUCT_VOLS.M&#8217;
+WHICH CAN DEAL WITH 4-D VOLUMES AS WELL</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_reconstruct_vols">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_reconstruct_vols</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_reconstruct_vols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct a 3-D or 4-D volume from a &#8220;dat&#8221; matrix of vectorized images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>voldata = iimg_reconstruct_vols(dat, volInfo, [optional args])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">If entered, will write .img file to disk</p>
+<dl class="docutils">
+<dt><strong>&#8216;outname&#8217;:</strong></dt>
+<dd><p class="first last">followed by output name</p>
+</dd>
+<dt><strong>&#8216;descrip&#8217;:</strong></dt>
+<dd><p class="first last">followed by description for img file</p>
+</dd>
+<dt><strong>&#8216;slice&#8217;:</strong></dt>
+<dd><p class="first last">followed by slice number of single-slice data in image</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Example of image reading:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ol class="first last arabic">
+<li><dl class="first docutils">
+<dt>Get volume info from first volume of a 3-D or 4-D image</dt>
+<dd><p class="first">volInfo structure has necessary info for converting to/from
+&#8220;vectorized&#8221; format
+dat returns 4-D data from entire image (all volumes)</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">img_name</span> <span class="o">=</span> <span class="s">&#39;test_run1_pca.img&#39;</span><span class="p">;</span>
+<span class="p">[</span><span class="n">maskInfo</span><span class="p">,</span> <span class="n">dat</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_read_img</span><span class="p">(</span><span class="n">img_name</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p class="first">Get data in &#8220;vectorized&#8221; image format for each volume in the
+image. Works for a list of images too. data is in-mask voxels x volumes
+this can be useful when you want to return whole-brain data for many
+images, but in a search volume only (i.e., no extra-brain voxels)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">data</span> <span class="o">=</span> <span class="n">iimg_get_data</span><span class="p">(</span><span class="n">maskInfo</span><span class="p">,</span> <span class="n">img_name</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p>data = data&#8217;;  % make sure columns are volumes</p>
+<blockquote>
+<div><ol class="arabic" start="3">
+<li><p class="first">Write out a 4-D image with the same data, called test_run1_pca2.img</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">voldat3D</span> <span class="o">=</span> <span class="n">iimg_reconstruct_vols</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">maskInfo</span><span class="p">,</span> <span class="s">&#39;outname&#39;</span><span class="p">,</span> <span class="s">&#39;test_run1_pca2.img&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_reslice">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_reslice</code><span class="sig-paren">(</span><em>matchto</em>, <em>reslicethis</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_reslice" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">out</span> <span class="o">=</span> <span class="n">iimg_reslice</span><span class="p">(</span><span class="n">matchto</span><span class="p">,</span> <span class="n">reslicethis</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+
+<span class="n">out</span> <span class="o">=</span> <span class="n">iimg_reslice</span><span class="p">(</span><span class="n">matchto</span><span class="p">,</span> <span class="n">reslicethis</span><span class="p">,</span> <span class="s">&#39;write&#39;</span><span class="p">,</span> <span class="s">&#39;outname&#39;</span><span class="p">,</span> <span class="s">&#39;myimg.img&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>default flags
+interp = 2 is trilinear</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_smooth_3d">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_smooth_3d</code><span class="sig-paren">(</span><em>w</em>, <em>volInfo</em>, <em>sfwhm</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_smooth_3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth 3-D images stored in columns with FWHM in mm of sfwhm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function w = smooth_3d(w, volInfo, sfwhm, [badvox])
+</pre></div>
+</div>
+<p>NOTE: SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>w:</strong></dt>
+<dd><p class="first last">Take v x n matrix w, and smooth columns (images), returning
+v x n matrix again</p>
+</dd>
+<dt><strong>volInfo:</strong></dt>
+<dd><p class="first last">is volume info structure from iimg_read_img.m</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional:</th><td class="field-body"><p class="first last">If v is smaller than the original image because some voxels</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>were removed, enter logical vector badvox, and the missing voxels
+will be filled with zeros.</p>
+<p>NOTE: 4-D version is horribly slow and memory intensive:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>wvol = iimg_reconstruct_vols(w&#39;, fmri_data_obj.mask.volInfo);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_sphere_timeseries">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_sphere_timeseries</code><span class="sig-paren">(</span><em>images</em>, <em>XYZmmCenter</em>, <em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_sphere_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">data</span><span class="p">,</span> <span class="n">XYZvoxSphere</span><span class="p">,</span> <span class="n">XYZmmSphere</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_sphere_timeseries</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">XYZmm</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>images:</strong></dt>
+<dd><p class="first last">list of image files</p>
+</dd>
+<dt><strong>XYZmm:</strong></dt>
+<dd><p class="first last">[3 x n] array of mm coords</p>
+</dd>
+<dt><strong>radiu:</strong></dt>
+<dd><p class="first last">radius in mm of sphere to generate</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>data:</strong></dt>
+<dd><p class="first last">voxel data</p>
+</dd>
+<dt><strong>XYZvoxSphere:</strong></dt>
+<dd><p class="first last">voxel</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_stouffer">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_stouffer</code><span class="sig-paren">(</span><em>Pimg</em>, <em>maskname</em>, <em>thr</em>, <em>clsize</em>, <em>outname</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_stouffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs combination of p-values across images using the 
+Stouffer method (see refs below).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function cl = iimg_stouffer(Pimg,maskname,thr,clsize,outname)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Pimg:</strong></dt>
+<dd><p class="first last">string mtx of p-value image names</p>
+</dd>
+<dt><strong>k:</strong></dt>
+<dd><p class="first last">num voxels/num comparisons 
+if empty, uses # of non-zero, non-NaN values in images</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>empty Pimg prompts for graphic selection of filenames
+empty outname prompts for entry of output img file name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">clusters, cl{1} is stouffer, cl{2} is image 1, cl{3} is image 2</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Described in:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Lazar, N. A., Luna, B., Sweeney, J. A., &amp; Eddy, W. F. (2002). 
+Combining brains: a survey of methods for statistical pooling 
+of information. Neuroimage, 16(2), 538-550.</p>
+<p>Stouffer, S. A., Suchman, E. A., DeVinney, L. C., Star, S. A., and
+Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
+During Army Life. Princeton University Press, Princeton.</p>
+<p>...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_threshold">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_threshold</code><span class="sig-paren">(</span><em>image_names</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Thresholds images to be at least thresh(1) and at most thresh(2)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">dat</span><span class="p">,</span> <span class="n">volInfo</span><span class="p">,</span> <span class="n">cl</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_threshold</span><span class="p">(</span><span class="n">image_names</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Input types for image names:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ol class="first arabic simple">
+<li>String matrix of filenames</li>
+<li>4-D array of 3-D data volumes</li>
+<li>voxels x images 2-D index array</li>
+<li>image_vector object</li>
+</ol>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imdat:</strong></dt>
+<dd><p class="first last">index vector of thresholded data</p>
+</dd>
+<dt><strong>volInfo:</strong></dt>
+<dd><p class="first last">structure of info about volume</p>
+</dd>
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">optional (slower) clusters structure from dat</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Command strings:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;imgtype&#8217;:</strong></dt>
+<dd><blockquote class="first">
+<div><p>followed by &#8216;t&#8217;, &#8216;p&#8217;, or &#8216;data&#8217; (default)</p>
+</div></blockquote>
+<p class="last">specify type of values in image</p>
+</dd>
+<dt><strong>&#8216;threshtype&#8217;:</strong></dt>
+<dd><p class="first last">followed by &#8216;t&#8217; or &#8216;p&#8217;</p>
+</dd>
+<dt><strong>&#8216;df&#8217;:</strong></dt>
+<dd><p class="first last">followed by degrees of freedom, for p- and t-image threshold calc</p>
+</dd>
+<dt><strong>&#8216;k&#8217;:</strong></dt>
+<dd><p class="first last">followed by extent threshold in voxels (slower)</p>
+</dd>
+<dt><strong>&#8216;abs&#8217;:</strong></dt>
+<dd><p class="first last">absolute value must be &gt; threshold.  Use to get both pos. and neg.
+results in two-tailed test.</p>
+</dd>
+<dt><strong>&#8216;intersect:</strong></dt>
+<dd><p class="first last">Create intersection of images; uses abs, so + and - values
+count as yesses for intersection</p>
+</dd>
+<dt><strong>&#8216;contrast&#8217;:</strong></dt>
+<dd><p class="first last">followed by contrasts across images</p>
+</dd>
+<dt><strong>&#8216;volInfo:</strong></dt>
+<dd><p class="first last">followed by volInfo structure.  Necessary for extended output</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Threshold an image set (p) to be at least zero
+image_names =
+/Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/rscalped_avg152T1_graymatter_smoothed.img
+/Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img
+
+[dat, volInfo] = iimg_threshold(image_names, &#39;thr&#39;, 0);
+
+% Do the same, but take the intersection and write an output image
+[dat, volInfo] = iimg_threshold(image_names, &#39;thr&#39;, 3, &#39;outnames&#39;, &#39;intersct&#39;, &#39;masked_t.img&#39;);
+
+
+% Threshold a t-image based on a p-value and a df
+image_names = &#39;/Users/tor/Documents/Tor_Documents/CurrentExperiments/Lab/Pre-appraisal/Results/t_intercept.img&#39;
+[dat, volInfo] = iimg_threshold(image_names, &#39;thr&#39;, .005, &#39;imgtype&#39;, &#39;t&#39;, &#39;threshtype&#39;, &#39;p&#39;, &#39;df&#39;, 28, &#39;outnames&#39;, &#39;thresh_t.img&#39;);
+
+cl = mask2clusters(&#39;masked_t.img&#39;);
+cluster_orthviews(cl);
+
+% The same, but threshold based on absolute value (+ and - values)
+[dat, volInfo] = iimg_threshold(image_names, &#39;thr&#39;, .005, &#39;abs&#39;, &#39;imgtype&#39;, &#39;t&#39;, &#39;threshtype&#39;, &#39;p&#39;, &#39;df&#39;, 28, &#39;outnames&#39;, &#39;thresh_t.img&#39;);
+
+% Threshold a p-value image directly
+[dat, volInfo] = iimg_threshold(&#39;X-M-Y_pvals.img&#39;, &#39;thr&#39;, [0 .05], &#39;outnames&#39;, &#39;X-M-Y_pvals_thresh.img&#39;);
+[dat, volInfo, cl] = iimg_threshold(inname, &#39;thr&#39;, [0 .05], &#39;outnames&#39;, outname);
+
+% Threshold a p-value image, with cluster sizes
+[dat, volInfo, cl] = iimg_threshold(inname, &#39;thr&#39;, [0 .05], &#39;k&#39;, 10);
+
+% Threshold and display a t-image using FDR, getting both positive and negative results
+[dat, volInfo, cl] = iimg_threshold(&#39;contrast_t.img&#39;, &#39;imgtype&#39;, &#39;t&#39;, &#39;df&#39;, 37, &#39;thr&#39;, .2, &#39;threshtype&#39;, &#39;fdr&#39;, &#39;k&#39;, 3, &#39;abs&#39;);
+cluster_orthviews(cl);
+spm_orthviews_hotcool_colormap(cat(2,cl.Z), 1.52);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_weighted_ttest">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_weighted_ttest</code><span class="sig-paren">(</span><em>image_names</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_weighted_ttest" title="Permalink to this definition">¶</a></dt>
+<dd><p>fast weighted test</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">iimg_weighted_ttest</span><span class="p">(</span><span class="n">image_names</span><span class="p">,</span><span class="s">&#39;mask&#39;</span><span class="p">,</span><span class="n">maskname</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_write_images">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_write_images</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>outnames</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_write_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a series of Analyze images given inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">iimg_write_images</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,</span><span class="n">outnames</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">voxels x images matrix of image data in index format</p>
+</dd>
+<dt><strong>volInfo:</strong></dt>
+<dd><p class="first last">spm-style info structure; see iimg_read_img</p>
+</dd>
+<dt><strong>outnames:</strong></dt>
+<dd><p class="first last">a string matrix (or cell array) of output filenames, or the name of a 4-D file to create</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_xyz2indx">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_xyz2indx</code><span class="sig-paren">(</span><em>xyz</em>, <em>xyztype</em>, <em>V</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_xyz2indx" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[indx, wh] = iimg_xyz2indx(xyz, input type:[&#39;mm&#39; or &#39;vox&#39;], [V: needed if &#39;mm&#39;])
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Index_image_manip_tools.iimg_xyz2spheres">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_xyz2spheres</code><span class="sig-paren">(</span><em>xyz</em>, <em>mask_xyzlist</em>, <em>r</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_xyz2spheres" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">indx</span> <span class="o">=</span> <span class="n">iimg_xyz2spheres</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">mask_xyzlist</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>mask_xyzlist:</strong></dt>
+<dd><p class="first last">is a list of voxel coords of all in-mask voxels</p>
+</dd>
+<dt><strong>xyz:</strong></dt>
+<dd><p class="first last">is a list of voxels to be convolved with spheres</p>
+</dd>
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">is sphere radius (voxels)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>more generally, finds mask_xyzlist entries that are within r units of xyz
+i.e., to find database points within r mm of a cluster xyz list:
+indx = iimg_xyz2spheres(clusterxyz,databasexyz,r)</p>
+<p>indx is length mask_xyzlist and contains all in-mask, in-sphere voxels
+for all xyz coordinates.</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -14812,6 +15926,7 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 <li><a class="reference internal" href="#image-computation-tools">Image_computation_tools</a></li>
 <li><a class="reference internal" href="#image-space-tools">Image_space_tools</a></li>
 <li><a class="reference internal" href="#image-thresholding">Image_thresholding</a></li>
+<li><a class="reference internal" href="#index-image-manip-tools">Index_image_manip_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

@@ -23,16 +23,11 @@ function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-%
-% Example:
-% mask1 = which('weights_NSF_grouppred_cvpcr.img');
-% mask2 = '/Users/clinpsywoo/Documents/Workspace/Wagerlab_Single_Trial_Pain_Datasets/wani_results/v4_wonps/ttest_v6_studyscaling_take2/nonnoc_v6_109subjmap_mean.nii';
 % 
-% [r, dat] = searchlight_correlation(mask1, mask2, 'r', 5);
-% searchlight_dream.m
-%
 % see also
-% xval_cross_classify.m, fmri_data.predict.m, 
+% searchlight_dream.m, xval_cross_classify.m, fmri_data.predict.m, 
+
+% Example:
 
 % Programmers' notes:
 % 

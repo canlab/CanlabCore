@@ -1,8 +1,8 @@
-function M = optimizeGA(GA);
-%
+function M = optimize_rand_search(GA)
 % Just like the GA, but generates random designs each time!
 %
 % outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations%
+%
 % Ways to avoid block designs
 %   counterbalancing factor
 %   power lower limit cutoff pushes power higher
@@ -12,9 +12,10 @@ function M = optimizeGA(GA);
 %   avoid transformation errors in using high pass filter
 %   efficiency is based on the sample size, determined by TR, of the model - but so is fft power...
 %
-% Tor Wager 2/10/01 
-% Last edit 11/17/01
-%
+% ..
+%    Tor Wager 2/10/01 
+%    Last edit 11/17/01
+% ..
 
 conditions = GA.conditions;
 freqConditions = GA.freqConditions;

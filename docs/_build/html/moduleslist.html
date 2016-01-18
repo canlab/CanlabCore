@@ -17896,6 +17896,60 @@ Time resolution is in TRs</p>
 </dd></dl>
 
 </div>
+<div class="section" id="optimizedesign11">
+<h1>OptimizeDesign11<a class="headerlink" href="#optimizedesign11" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-OptimizeDesign11"></span><dl class="function">
+<dt id="OptimizeDesign11.optimizeGA">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimizeGA</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimizeGA" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">M</span> <span class="o">=</span> <span class="n">optimizeGA</span><span class="p">(</span><span class="n">GA</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>outputs a pseudo-random list of condition codes that optimizes
+multiple fitness measures for fMRI task designs</p>
+<p>more help can be found in ga_example_script.m
+and in Genetic_Algorithm_readme.rtf</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="OptimizeDesign11.optimizeGA_epochs">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimizeGA_epochs</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimizeGA_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations</p>
+<dl class="docutils">
+<dt>Ways to avoid block designs</dt>
+<dd>counterbalancing factor
+power lower limit cutoff pushes power higher</dd>
+<dt>Why using avg power is better than efficiency</dt>
+<dd>efficiency doesn&#8217;t account for 1/f model (altho here we just use a cutoff, the same thing)
+avoid transformation errors in using high pass filter
+efficiency is based on the sample size, determined by TR, of the model - but so is fft power...</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="OptimizeDesign11.optimize_rand_search">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimize_rand_search</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimize_rand_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just like the GA, but generates random designs each time!</p>
+<p>outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations%</p>
+<dl class="docutils">
+<dt>Ways to avoid block designs</dt>
+<dd>counterbalancing factor
+power lower limit cutoff pushes power higher</dd>
+<dt>Why using avg power is better than efficiency</dt>
+<dd>efficiency doesn&#8217;t account for 1/f model (altho here we just use a cutoff, the same thing)
+avoid transformation errors in using high pass filter
+efficiency is based on the sample size, determined by TR, of the model - but so is fft power...</dd>
+</dl>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -17927,6 +17981,7 @@ Time resolution is in TRs</p>
 <li><a class="reference internal" href="#index-image-manip-tools">Index_image_manip_tools</a></li>
 <li><a class="reference internal" href="#module-Misc_utilities">Misc_utilities</a></li>
 <li><a class="reference internal" href="#model-building-tools">Model_building_tools</a></li>
+<li><a class="reference internal" href="#optimizedesign11">OptimizeDesign11</a></li>
 </ul>
 
   <h4>Previous topic</h4>

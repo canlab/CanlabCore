@@ -113,3 +113,8 @@ Model_building_tools
 ===============
 .. automodule:: Model_building_tools
    :members:
+
+OptimizeDesign11
+===============
+.. automodule:: OptimizeDesign11
+   :members:

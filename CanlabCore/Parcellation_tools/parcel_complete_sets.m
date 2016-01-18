@@ -1,40 +1,61 @@
 function [mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(s,varargin)
-    % [mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(s,['dounique','nofuzzy'])
-    %
-    % Find sets of elements in logical n x n matrix s in which all pairs in set are 'true' (1 in
-    % matrix s)
-    % Optional: input a distance/correlation/etc. matrix and threshold
-    %
-    % Optional inputs:
-    % 'dounique' : provides single-variable sets as well
-    % 'nofuzzy'  : chooses closest set for each var so that each var
-    % can belong to only one set
-    % 'threshold' : followed by threshold thr for matrix s.
-    %           if thr is a string, thr will be evaluated on s: e.g., 's < 10'
-    %           in this case, thr should be a logical expr. involving s
-    %           if thr is a number, s >= thr will be evaluated
-    %           the resulting logical matrix will be used to determine sets
-    % 'min' or 'max' : works only with 'nofuzzy' option. 
-    %           if max, uses max to find most similar set; good if s is a
-    %               covariance matrix
-    %           if min, uses min to find closest set; good if s is a
-    %           distance matrix
-    %           default is max
-    %
-    % %%% runs on Matlab 7.2 or higher %%%
-    % tor wager, nov 10, 2006
-    %
-    % Example:
-    % Find sets of coordinates within 10 mm of one another
-    %     xyz = cat(1,cl{1}.mm_center);
-    %     d = pdist(xyz); d = squareform(d);
-    %     [mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(d,'dounique','nofuzzy','threshold','s<10','min');
-    
+% :Usage:
+% ::
+%
+%     [mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(s,['dounique','nofuzzy'])
+%
+% Find sets of elements in logical n x n matrix s in which all pairs in set are 'true' (1 in
+% matrix s)
+%
+% Optional: input a distance/correlation/etc. matrix and threshold
+%
+% :Optional Inputs:
+%
+%   **'dounique':**
+%        provides single-variable sets as well
+%
+%   **'nofuzzy':**
+%        chooses closest set for each var so that each var
+% can belong to only one set
+%
+%   **'threshold':**
+%        followed by threshold thr for matrix s.
+%
+%        if thr is a string, thr will be evaluated on s: e.g., 's < 10'
+%
+%        in this case, thr should be a logical expr. involving s
+%
+%        if thr is a number, s >= thr will be evaluated
+%
+%        the resulting logical matrix will be used to determine sets
+%
+%   **'min' or 'max':**
+%        works only with 'nofuzzy' option. 
+%
+%        if max, uses max to find most similar set; good if s is a
+%        covariance matrix
+%
+%        if min, uses min to find closest set; good if s is a
+%        distance matrix
+%
+%        default is max
+%
+% runs on Matlab 7.2 or higher %%%
+%
+% :Examples:
+% ::
+%
+%    % Find sets of coordinates within 10 mm of one another
+%    xyz = cat(1,cl{1}.mm_center);
+%    d = pdist(xyz); d = squareform(d);
+%    [mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(d,'dounique','nofuzzy','threshold','s<10','min');
+%
+% ..
+%    tor wager, nov 10, 2006
+% ..
 
-    % process inputs and initialize variables
-    % ---------------------------------------------------------------
+    keywords = varargin; % process inputs and initialize variables
     %keywords = {'dounique' 'nofuzzy' 'threshold'};
-    keywords = varargin;
     classes = [];
     minmax = 'max';
     

@@ -1,51 +1,64 @@
 function parcel_images(image_names, extract_mask, nuisance_covs)
-% function parcel_images(image_names, extract_mask, nuisance_covs)
+% :Usage:
+% ::
 %
-% parcel_images
-% Principal components + anatomical parcellation of data
-% Tor Wager, v. June 2010
+%     parcel_images(image_names, extract_mask, nuisance_covs)
+%
 %
 % This function performs the following steps, in this order
-% ============================================================
-% - map mask to functional space
-% - extract data from in-mask voxels
-% - remove nuisance covariates (before assessing connectivity)
-% - data reduction (pca)
-% - plot cases (detect outliers)
-% - separate data into a priori anatomical regions (LBPA40 hard-coded
-%      right now; downloadable from web; see wiki)
+%
+%   - map mask to functional space
+%   - extract data from in-mask voxels
+%   - remove nuisance covariates (before assessing connectivity)
+%   - data reduction (pca)
+%   - plot cases (detect outliers)
+%   - separate data into a priori anatomical regions (LBPA40 hard-coded
+%     right now; downloadable from web; see wiki)
 %     (save label image mapped to functional space)
-% - cluster voxels in each region to get parcels
-% - save parcels and images
-% - NMDS on the parcels to group them into "networks" (default = use rank data)
-% - Visualization of the networks
-% ============================================================
+%   - cluster voxels in each region to get parcels
+%   - save parcels and images
+%   - NMDS on the parcels to group them into "networks" (default = use rank data)
+%   - Visualization of the networks
 %
-% Outputs:
+% :Outputs:
+%
 % Creates and goes to a new directory: parcel_images_output
-% Outputs saved to disk include
-% (1) An image with unique numerical codes for each parcel 
-% (2) A 'clusters' structure containing the parcels, with image data extracted and
-% averaged over voxels within each parcel
 %
-% Inputs:
-% image_names: names of images to extract data from, and to use for
-% functional parcellation. SEE ALTERNATE FORMAT BELOW FOR DIRECT DATA INPUT
-% extract_mask: a mask image
-% nuisance_covs: columns of a matrix to remove from the data, so that this
-% subspace is not used to determine connectivity
-% e.g., nuisance_covs = SPM.xX.X(:, 1:3); if these are nuisance
-% covariates...
+% Outputs saved to disk include
+%   1. An image with unique numerical codes for each parcel 
+%   2. A 'clusters' structure containing the parcels, with image data extracted and
+%      averaged over voxels within each parcel
+%
+% :Inputs:
+%
+%   **image_names:**
+%        names of images to extract data from, and to use for
+%        functional parcellation. SEE ALTERNATE FORMAT BELOW FOR DIRECT DATA INPUT
+%
+%   **extract_mask:**
+%        a mask image
+%
+%   **nuisance_covs:**
+%        columns of a matrix to remove from the data, so that this
+%        subspace is not used to determine connectivity
+%
+%        e.g., nuisance_covs = SPM.xX.X(:, 1:3); if these are nuisance
+%        covariates...
 %
 % Alternate input formats for image_names:
+%
 % If you have data already extracted, image_names can be a structure with
 % these fields:
+%
 % image_names.V, spm_vol-style volume info for the mask volume and image space
 % image_names.data, extracted data from all valid in-mask (non-zero,
 % non-nan) voxels, one column per voxel, in standard matlab (:) order.
 % The mask and the data must match!
 %
-%
+% ..
+%    Principal components + anatomical parcellation of data
+%    Tor Wager, v. June 2010
+% ..
 
 spm_defaults
 

@@ -118,3 +118,8 @@ OptimizeDesign11
 ===============
 .. automodule:: OptimizeDesign11
    :members:
+
+Parcellation_tools
+===============
+.. automodule:: Parcellation_tools
+   :members:

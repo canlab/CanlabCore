@@ -14655,7 +14655,7 @@ analysis mask. The mask image is included for reference, but is not
 explicitly used by the results section.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id39"><span class="problematic" id="id40">beta_</span></a>????.{img,hdr}                                 - parameter images
+<p><a href="#id45"><span class="problematic" id="id46">beta_</span></a>????.{img,hdr}                                 - parameter images
 These are 32-bit (float32) images of the parameter estimates. The image
 files are numbered according to the corresponding column of the
 design matrix. Voxels outside the analysis mask (mask.img) are given
@@ -14673,7 +14673,7 @@ Voxels outside the analysis mask are given value 0.  These images
 reflect the nonstationary aspects the spatial autocorrelations.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id41"><span class="problematic" id="id42">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
+<p><a href="#id47"><span class="problematic" id="id48">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
 These are 64-bit (float64) images of standardised residuals. At most
 maxres images will be saved and used by spm_est_smoothness, after which
 they will be deleted.</p>
@@ -16782,7 +16782,7 @@ Each field is a cell array whose length = rows in the csv file.  Column
 names are assumed to be in the first row.
 If column names are invalid struct field names, edits them by replacing
 funky characters with an underscore, or if first char is a number, I
-prepend <a href="#id43"><span class="problematic" id="id44">aa_</span></a> to the field name.</p>
+prepend <a href="#id49"><span class="problematic" id="id50">aa_</span></a> to the field name.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -17950,6 +17950,482 @@ efficiency is based on the sample size, determined by TR, of the model - but so 
 </dd></dl>
 
 </div>
+<div class="section" id="parcellation-tools">
+<h1>Parcellation_tools<a class="headerlink" href="#parcellation-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Parcellation_tools"></span><dl class="function">
+<dt id="Parcellation_tools.cluster_princomp">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">cluster_princomp</code><span class="sig-paren">(</span><em>clusters</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.cluster_princomp" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [clusters,subclusters] = cluster_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[locflag])
+</pre></div>
+</div>
+<p>ALSO TRY: subcluster_montage(subclusters{1}) % to plot the output</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>clusters:</strong></dt>
+<dd><p class="first last">is structure of clusters from tor_extract_rois.m</p>
+</dd>
+</dl>
+<p>behavioral vector is row vector of behavioral or other scores to correlate</p>
+<p>corr flag:  <a href="#id39"><span class="problematic" id="id40">*</span></a>1 = work on correlations among voxels, 2 = work on covariance</p>
+<p>plotflag:   <a href="#id41"><span class="problematic" id="id42">*</span></a>1 = yes, 0 = no.  plots.</p>
+<dl class="last docutils">
+<dt>locflag:    1 yes, <a href="#id43"><span class="problematic" id="id44">*</span></a>0 no; add XYZ voxel locations (scaled) to data submitted to clustering</dt>
+<dd><p class="first last">pushes voxels closer in space to be classified in the same cluster</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>try this to test the program on random data:</p>
+<div class="highlight-python"><div class="highlight"><pre>cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
+cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
+cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)&#39;,1,6);
+cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)&#39;,1,4);
+cl = cluster_princomp(cl,EXPT.behavior,1,1);
+</pre></div>
+</div>
+<p>mean-center everything now:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span><span class="o">.</span><span class="n">PCA</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="n">cl</span><span class="o">.</span><span class="n">all_data</span> <span class="o">-</span> <span class="n">cl</span><span class="o">.</span><span class="n">all_data</span> <span class="o">-</span> <span class="n">repmat</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">all_data</span><span class="p">),</span><span class="n">size</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">all_data</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">cluster_princomp</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">EXPT</span><span class="o">.</span><span class="n">behavior</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>add another correlated group:</p>
+<div class="highlight-python"><div class="highlight"><pre>cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
+cl = cluster_princomp(cl,EXPT.behavior,1,1);
+</pre></div>
+</div>
+<p>if component scores are used and correlated with behavior, this means that the subjects
+tend to show the behavioral effect who also show the pattern associated with comp. x.  
+this may mean high on a number of voxels, or high on some and low on others.  
+the weights may be used to interpret what the components mean, and this can be done
+graphically.</p>
+<p>t-tests on component scores have ambiguous interpretations, because a high t-score
+may indicate negative values or close-to-zero values on some voxels.
+a component could have the interpretation, &#8220;high on this component means high on V1
+and low on V2.&#8221;</p>
+<p>classifying voxels is done using cluster analysis (hierarchical, centroid linkage)
+on the voxels (observations) using the PCA weights (eigenvectors) as variables.
+This lets the clustering algorithm work in the reduced variable space with dimensionality
+equal to the number of components.  
+The max number of clusters is restricted based on the gradient of the eigenvalues in the PCA
+maxclusters = 1 + the number of eigenvalues with gradient at least 20% of the initial drop 
+from 1 to 2 eigenvalues.</p>
+<p>Requires clustering library in Matlab.
+Robust option also uses the robust PCA algorithm RAPCA,
+created by:
+Hubert, M., Rousseeuw, P.J., Verboven, S. (2002),</p>
+<blockquote>
+<div>&#8220;A fast method for robust principal components with applications to chemometrics&#8221;, by Mia Hubert, Peter J. Rousseeuw, 
+Chemometrics and Intelligent Laboratory Systems, 60, 101-111.</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.inconsistent">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">inconsistent</code><span class="sig-paren">(</span><em>Z</em>, <em>depth</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.inconsistent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inconsistent values of a cluster tree.</p>
+<p>Y = INCONSISTENT(Z) computes the inconsistent value of each non-leaf
+node in the hierarchical cluster tree Z.  Z is a (M-1)-by-3 matrix
+generated by the function LINKAGE.  Each inconsistent value is a
+measure of separation between the two clusters whose merge is
+represented by that node, compared to the separation between
+subclusters merged within those clusters.</p>
+<p>Y = INCONSISTENT(Z, DEPTH) computes inconsistent values by looking
+to a depth DEPTH below each node.</p>
+<p>Y is a (M-1)-by-4 matrix, with rows corresponding to each of the
+non-leaf nodes represented in Z.  INCONSISTENT computes the
+inconsistent value for node (M+i) using S_i, the set of nodes less than
+DEPTH branches below node (M+i), excluding any leaf nodes.  Then</p>
+<blockquote>
+<div><ul class="simple">
+<li>Y(i,1) = mean(Z(S_i,3)), the mean height of nodes in S_i</li>
+<li>Y(i,2) = std(Z(S_i,3)), the standard deviation of node heights in S_i</li>
+<li>Y(i,3) = length(S_i), the number of nodes in S_i</li>
+<li>Y(i,4) = (Z(i,3) - Y(i,1))/Y(i,2), the inconsistent value</li>
+</ul>
+</div></blockquote>
+<p>The default value for DEPTH is 2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See Also:</th><td class="field-body">PDIST, LINKAGE, COPHENET, DENDROGRAM, CLUSTER, CLUSTERDATA.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.mask_princomp">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">mask_princomp</code><span class="sig-paren">(</span><em>clusters</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.mask_princomp" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[clusters] = mask_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[saveflag])
+</pre></div>
+</div>
+<p>This function is just like cluster_princomp, except that it works on the SET
+of activations in all clusters, rather than within each cluster.</p>
+<p>clusters is structure of clusters from tor_extract_rois.m</p>
+<p>behavioral vector is row vector of behavioral or other scores to correlate</p>
+<p>corr flag:  1 = work on correlations among voxels, 2 = work on covariance</p>
+<p>plotflag:   1 = yes, 0 = no.  plots.</p>
+<p>try this to test the program on random data:</p>
+<div class="highlight-python"><div class="highlight"><pre>cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
+cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
+cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)&#39;,1,6);
+cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)&#39;,1,4);
+cl = cluster_princomp(cl,EXPT.behavior,1,1);
+</pre></div>
+</div>
+<p>mean-center everything now:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl</span><span class="o">.</span><span class="n">PCA</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">cl</span><span class="o">.</span><span class="n">all_data</span> <span class="o">-</span> <span class="n">cl</span><span class="o">.</span><span class="n">all_data</span> <span class="o">-</span> <span class="n">repmat</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">all_data</span><span class="p">),</span><span class="n">size</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">all_data</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">cluster_princomp</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">EXPT</span><span class="o">.</span><span class="n">behavior</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>add another correlated group:</p>
+<div class="highlight-python"><div class="highlight"><pre>cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
+cl = cluster_princomp(cl,EXPT.behavior,1,1);
+</pre></div>
+</div>
+<p>if component scores are used and correlated with behavior, this means that the subjects
+tend to show the behavioral effect who also show the pattern associated with comp. x.  
+this may mean high on a number of voxels, or high on some and low on others.  
+the weights may be used to interpret what the components mean, and this can be done
+graphically.</p>
+<p>t-tests on component scores have ambiguous interpretations, because a high t-score
+may indicate negative values or close-to-zero values on some voxels.
+a component could have the interpretation, &#8220;high on this component means high on V1
+and low on V2.&#8221;</p>
+<p>classifying voxels is done using cluster analysis (hierarchical, centroid linkage)
+on the voxels (observations) using the PCA weights (eigenvectors) as variables.
+This lets the clustering algorithm work in the reduced variable space with dimensionality
+equal to the number of components.  
+The max number of clusters is restricted based on the gradient of the eigenvalues in the PCA
+maxclusters = 1 + the number of eigenvalues with gradient at least 20% of the initial drop 
+from 1 to 2 eigenvalues.</p>
+<p>Requires clustering library in Matlab.
+Robust option also uses the robust PCA algorithm RAPCA,
+created by:
+Hubert, M., Rousseeuw, P.J., Verboven, S. (2002),</p>
+<blockquote>
+<div>&#8220;A fast method for robust principal components with applications to chemometrics&#8221;, by Mia Hubert, Peter J. Rousseeuw, 
+Chemometrics and Intelligent Laboratory Systems, 60, 101-111.</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.parcel_cl_nmds">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">parcel_cl_nmds</code><span class="sig-paren">(</span><em>parcel_cl_avgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.parcel_cl_nmds" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">parcel_cl_avgs</span><span class="p">,</span> <span class="n">NMDS</span><span class="p">,</span> <span class="n">class_clusters</span><span class="p">]</span> <span class="o">=</span> <span class="n">parcel_cl_nmds</span><span class="p">(</span><span class="n">parcel_cl_avgs</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>load Parcellation_info/parcellation.mat
+[parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
+
+parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, &#39;save&#39;)
+parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, &#39;save&#39;, &#39;savedir&#39;, &#39;Parcellation_info&#39;)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Complete methods example:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<ol class="arabic simple">
+<li>Dimension reduction</li>
+</ol>
+<p>Clustering of multivariate data is most stable when the data is not sparse, i.e., the dimensionality is low relative to the number of observations. To limit the dimensionality of the data, a spatio-temporal dimension-reduction step is first performed on the [n x v x N] data matrix of  AUC data for n trials x v voxels x N participants (here, n = 48 trials [usually], v = 17,112 voxels , and N = 26 participants).  A temporal data reduction is first performed to identify components with correlated AUC trial time series within each participant, followed by a spatial reduction to identify components with correlated spatial patterns across subjects.  First, the [n x v] matrix of AUC data for each participant was subjected to PCA, using the [v x v] correlation matrices.  Based on the scree plots across subjects, we saved the first 7 eigenvectors (spatial maps).  These eigenvectors explained 74 +- 2.5% (st. dev. across subjects) of the variance in the full dataset. These eigenvectors were scaled by their variances (eigenvalues) and concatenated across subjects to form an [v x N*7] matrix of eigenvectors.   This matrix was subjected to second (across participant) PCA step to identify components with similar spatial maps across participants.  We retained 12 eigenvectors (maps) based on the scree plot, which explained 65% of the variance across individuals. Component scores in this space were used for clustering.  This is a data reduction step, and the results are not expected to depend strongly on the number of eigenvectors retained at either step, as long as most of the variance in the data is explained.</p>
+<ol class="arabic simple" start="2">
+<li>Parcellation</li>
+</ol>
+<p>Hierarchical agglomerative clustering with average linkage was used to group voxels into parcels&#8211;sets of contiguous voxels with similar profiles&#8211;in the [v x 12] matrix of component maps.  The goal of parcellation was to reduce the space from voxels to parcels (regions) for non-metric multidimensional scaling (NMDS)-based clustering of regions, so that NMDS is computationally tractable. Voxels whose trial AUC time series did not correlate with that of other voxels in the same parcel at p &lt; .001 (in a random effects analysis across participants) were pruned from each parcel. Out of 140 parcels total, 127 parcels with more than 3 voxels after pruning were retained for subsequent analysis.</p>
+<ol class="arabic simple" start="3">
+<li>NMDS and clustering</li>
+</ol>
+<p>Parcels were now treated as the unit of analysis, and the AUC trial time series data were extracted from each parcel for each subject.  Values in the  [n trials x parcels x N subjects]  data matrix were z-scored within participant to remove inter-subject differences in scaling, then concatenated into an [n*N x parcels] data matrix.  Correlations among parcels were converted into a [parcels x parcels] matrix of distances using the formula distance = (1 - r) / 2. The NMDS stress plot (which operates on ranked distances and is therefore more robust to outliers and does not require a strictly Euclidean distance space) was examined and 7 dimensions (which explained 79% of the variance in distances) were retained for the final cluster analysis.  
+Hierarchical agglomerative clustering with average linkage was used to cluster the parcels in this space into interconnected networks with correlated AUC trial time series. To choose the number of clusters in the final solution (k), for every possible choice of clusters between  k = 2 and 20, we compared the cluster solution to the average and standard deviation of 1,000 clustering iterations with permuted parcel time series.  This yielded a Z-score ([actual solution - mean permuted solution] /  standard deviation of permuted solution for each value of k. The best solution was k = 13, with a value of Z = 5.57 compared to the null-hypothesis single-cluster solution (p &lt; .0001).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.parcel_cl_nmds_plots">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">parcel_cl_nmds_plots</code><span class="sig-paren">(</span><em>parcel_cl_avgs</em>, <em>NMDS</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.parcel_cl_nmds_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot: data panel</p>
+<p>case &#8216;save&#8217;, dosave = 1;
+case {&#8216;savedir&#8217;, &#8216;mysavedir&#8217;}, mysavedir = varargin{i+1};
+case {&#8216;figs&#8217;, &#8216;dotfigs&#8217;}, savedotfigs = 1;</p>
+<p>Doc not complete yet.  Please update me!</p>
+<p>See parcel_clusters.m
+See parcel_cl_nmds.m</p>
+<p>load Parcellation_info/parcellation.mat</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">parcel_cl_nmds_plots</span><span class="p">(</span><span class="n">parcel_cl_avgs</span><span class="p">,</span> <span class="n">NMDS</span><span class="p">,</span> <span class="s">&#39;save&#39;</span><span class="p">)</span>
+<span class="n">parcel_cl_nmds_plots</span><span class="p">(</span><span class="n">parcel_cl_avgs</span><span class="p">,</span> <span class="n">NMDS</span><span class="p">,</span> <span class="s">&#39;save&#39;</span><span class="p">,</span> <span class="s">&#39;savedir&#39;</span><span class="p">,</span> <span class="s">&#39;Parcellation_info&#39;</span><span class="p">)</span>
+<span class="n">parcel_cl_nmds_plots</span><span class="p">(</span><span class="n">parcel_cl_avgs</span><span class="p">,</span> <span class="n">NMDS</span><span class="p">,</span> <span class="s">&#39;save&#39;</span><span class="p">,</span> <span class="s">&#39;savedir&#39;</span><span class="p">,</span> <span class="s">&#39;Parcellation_info_tor_mask_try1&#39;</span><span class="p">,</span> <span class="s">&#39;savedotfig&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.parcel_clusters">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">parcel_clusters</code><span class="sig-paren">(</span><em>clpos_data</em>, <em>clneg_data</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.parcel_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">parcel_clusters</span><span class="p">(</span><span class="n">clpos_data</span><span class="p">,</span> <span class="n">clneg_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>No outputs. Saves all output in separate directory.</p>
+<p>First, get eigenvectors for each subject.</p>
+<p>We&#8217;re interested obtaining PARCELS of voxels that tend to co-activate, 
+or have the same activation profile.</p>
+<p>We can find these by using clustering algorithms to group voxels with
+similar profiles.</p>
+<p>Because we have a many voxel x many voxel covariance matrix for each
+subject (lots of data!), it&#8217;s important to reduce the dimensionality of
+the problem and peform clustering on a REDUCED_DIMENSIONAL space.</p>
+<p>We use PCA to do this.  Instead of clustering activation profiles (e.g.,
+time-courses) directly, we cluster eigenvector loadings for each voxel on
+a reduced set of components that explains most of the variance in the
+data.</p>
+<p>Similar voxels will have similar loadings across the set of 
+eigenvectors.  e.g., two voxels may load high on components [1 3 and 5],
+and low on components [10 and 13].  If they have the same pattern of
+loadings, they should be considered part of the same CLASS.  Groups
+of voxels that are contiguous in space and are members of the same CLASS 
+are called parcels.</p>
+<p>Images and outputs are saved in their own subdirectory called
+Parcellation_info</p>
+<p>The main outputs are: 
+parcel_cl             % parcels, one cell per subject, one parcel per</p>
+<blockquote>
+<div>element within cells. same format as clpos_data</div></blockquote>
+<dl class="docutils">
+<dt>parcel_cl_avgs        % parcels, one parcel per element within cells. </dt>
+<dd>same format as clpos_data2</dd>
+</dl>
+<p>parcel_cl_avgs(x).timeseries contains one cell per subject, with data
+averaged across voxels within that parcel for that subject
+This kind of output is useful, because you can input it directly into
+other mediation analyses.
+[paths, stats2] = mediation(SETUP.data.X, SETUP.data.Y, parcel_cl_avgs(1).timeseries, &#8216;plots&#8217;, &#8216;verbose&#8217;, &#8216;names&#8217;, {&#8216;Hi-Low Cue&#8217; &#8216;Pain Report&#8217; &#8216;Parcel&#8217;}, &#8216;boot&#8217;);
+cluster_orthviews(parcel_cl_avgs(1), {[0 1 0]}, &#8216;add&#8217;);</p>
+<div class="highlight-python"><div class="highlight"><pre>cd(&#39;/Volumes/SCNAlpha/Data_and_Tools/SpeechTask/analysis/wb_multisubject_correl_HR_corrected/mediation_Xprepvsb_Mbrain_Yhr&#39;)
+load cl_b_fdr05_002_01_k3_1_1_prune
+</pre></div>
+</div>
+<p>then run</p>
+<dl class="docutils">
+<dt>There are 2 dimension-reduction steps:</dt>
+<dd><ol class="first last arabic simple">
+<li>within-subjects</li>
+<li>is on eigenvectors concatenated across subjects</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.parcel_complete_sets">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">parcel_complete_sets</code><span class="sig-paren">(</span><em>s</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.parcel_complete_sets" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">mysets</span><span class="p">,</span><span class="n">n_in_set</span><span class="p">,</span><span class="n">sets_by_vars</span><span class="p">,</span><span class="n">classes</span><span class="p">]</span> <span class="o">=</span> <span class="n">parcel_complete_sets</span><span class="p">(</span><span class="n">s</span><span class="p">,[</span><span class="s">&#39;dounique&#39;</span><span class="p">,</span><span class="s">&#39;nofuzzy&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Find sets of elements in logical n x n matrix s in which all pairs in set are &#8216;true&#8217; (1 in
+matrix s)</p>
+<p>Optional: input a distance/correlation/etc. matrix and threshold</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;dounique&#8217;:</strong></dt>
+<dd><p class="first last">provides single-variable sets as well</p>
+</dd>
+<dt><strong>&#8216;nofuzzy&#8217;:</strong></dt>
+<dd><p class="first last">chooses closest set for each var so that each var</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>can belong to only one set</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;threshold&#8217;:</strong></dt>
+<dd><p class="first">followed by threshold thr for matrix s.</p>
+<p>if thr is a string, thr will be evaluated on s: e.g., &#8216;s &lt; 10&#8217;</p>
+<p>in this case, thr should be a logical expr. involving s</p>
+<p>if thr is a number, s &gt;= thr will be evaluated</p>
+<p class="last">the resulting logical matrix will be used to determine sets</p>
+</dd>
+<dt><strong>&#8216;min&#8217; or &#8216;max&#8217;:</strong></dt>
+<dd><p class="first">works only with &#8216;nofuzzy&#8217; option.</p>
+<p>if max, uses max to find most similar set; good if s is a
+covariance matrix</p>
+<p>if min, uses min to find closest set; good if s is a
+distance matrix</p>
+<p class="last">default is max</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>runs on Matlab 7.2 or higher %%%</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Find sets of coordinates within 10 mm of one another
+xyz = cat(1,cl{1}.mm_center);
+d = pdist(xyz); d = squareform(d);
+[mysets,n_in_set,sets_by_vars,classes] = parcel_complete_sets(d,&#39;dounique&#39;,&#39;nofuzzy&#39;,&#39;threshold&#39;,&#39;s&lt;10&#39;,&#39;min&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Parcellation_tools.parcel_images">
+<code class="descclassname">Parcellation_tools.</code><code class="descname">parcel_images</code><span class="sig-paren">(</span><em>image_names</em>, <em>extract_mask</em>, <em>nuisance_covs</em><span class="sig-paren">)</span><a class="headerlink" href="#Parcellation_tools.parcel_images" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">parcel_images</span><span class="p">(</span><span class="n">image_names</span><span class="p">,</span> <span class="n">extract_mask</span><span class="p">,</span> <span class="n">nuisance_covs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This function performs the following steps, in this order</p>
+<blockquote>
+<div><ul class="simple">
+<li>map mask to functional space</li>
+<li>extract data from in-mask voxels</li>
+<li>remove nuisance covariates (before assessing connectivity)</li>
+<li>data reduction (pca)</li>
+<li>plot cases (detect outliers)</li>
+<li>separate data into a priori anatomical regions (LBPA40 hard-coded
+right now; downloadable from web; see wiki)
+(save label image mapped to functional space)</li>
+<li>cluster voxels in each region to get parcels</li>
+<li>save parcels and images</li>
+<li>NMDS on the parcels to group them into &#8220;networks&#8221; (default = use rank data)</li>
+<li>Visualization of the networks</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Creates and goes to a new directory: parcel_images_output</p>
+<dl class="docutils">
+<dt>Outputs saved to disk include</dt>
+<dd><ol class="first last arabic simple">
+<li>An image with unique numerical codes for each parcel</li>
+<li>A &#8216;clusters&#8217; structure containing the parcels, with image data extracted and
+averaged over voxels within each parcel</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>image_names:</strong></dt>
+<dd><p class="first last">names of images to extract data from, and to use for
+functional parcellation. SEE ALTERNATE FORMAT BELOW FOR DIRECT DATA INPUT</p>
+</dd>
+<dt><strong>extract_mask:</strong></dt>
+<dd><p class="first last">a mask image</p>
+</dd>
+<dt><strong>nuisance_covs:</strong></dt>
+<dd><p class="first">columns of a matrix to remove from the data, so that this
+subspace is not used to determine connectivity</p>
+<p class="last">e.g., nuisance_covs = SPM.xX.X(:, 1:3); if these are nuisance
+covariates...</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Alternate input formats for image_names:</p>
+<p>If you have data already extracted, image_names can be a structure with
+these fields:</p>
+<p>image_names.V, spm_vol-style volume info for the mask volume and image space
+image_names.data, extracted data from all valid in-mask (non-zero,
+non-nan) voxels, one column per voxel, in standard matlab (:) order.
+The mask and the data must match!</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -17982,6 +18458,7 @@ efficiency is based on the sample size, determined by TR, of the model - but so 
 <li><a class="reference internal" href="#module-Misc_utilities">Misc_utilities</a></li>
 <li><a class="reference internal" href="#model-building-tools">Model_building_tools</a></li>
 <li><a class="reference internal" href="#optimizedesign11">OptimizeDesign11</a></li>
+<li><a class="reference internal" href="#parcellation-tools">Parcellation_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

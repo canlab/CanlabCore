@@ -1,10 +1,15 @@
 function in = scn_mat_conform(in)
-    %function in = scn_mat_conform(in)
-    %
-    % sets flipping to 0 (no flip) in SPM2 and adjusts mat file accordingly
-    % input in spm-style mat file or struct with .mat or .M fields
-    %
-    % tor wager, dec 06
+% :Usage:
+% ::
+%
+%     function in = scn_mat_conform(in)
+%
+% sets flipping to 0 (no flip) in SPM2 and adjusts mat file accordingly
+% input in spm-style mat file or struct with .mat or .M fields
+%
+% ..
+%    tor wager, dec 06
+% ..
 
     global defaults
 

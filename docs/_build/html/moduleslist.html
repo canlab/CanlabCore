@@ -15898,6 +15898,1223 @@ for all xyz coordinates.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-Misc_utilities">
+<span id="misc-utilities"></span><h1>Misc_utilities<a class="headerlink" href="#module-Misc_utilities" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="Misc_utilities.CERTreader">
+<code class="descclassname">Misc_utilities.</code><code class="descname">CERTreader</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.CERTreader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an output file from CERT, returns a struct with the data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fname:</strong></dt>
+<dd><p class="first last">filename</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first last">struct with the data</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.append">
+<code class="descclassname">Misc_utilities.</code><code class="descname">append</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>field</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends second parameter to the end of the first. If field is set,
+writes into the field instead of directly into the variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="n">field</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This function solely exists because Matlab has no ability to create
+empty objects (e.g. with one dimension being 0) and thus, trying to append
+to an empty array results in type cast errors, since empty matrices are
+double by default.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.blank_struct">
+<code class="descclassname">Misc_utilities.</code><code class="descname">blank_struct</code><span class="sig-paren">(</span><em>A</em>, <em>blank_val</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.blank_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to create a blank structure, using an existing one
+as a template.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>A:</strong></dt>
+<dd><p class="first last">template structure</p>
+</dd>
+<dt><strong>blank_val:</strong></dt>
+<dd><p class="first last">all fields will be set to this value, e.g. [] or &#8216;&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>C:</strong></dt>
+<dd><p class="first last">structure containing fields of A , with values set to empty array</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Only works for single-element non-nested structures, for now</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.checkMatlabVersion">
+<code class="descclassname">Misc_utilities.</code><code class="descname">checkMatlabVersion</code><span class="sig-paren">(</span><em>datestr</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.checkMatlabVersion" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ok</span> <span class="o">=</span> <span class="n">checkMatlabVersion</span><span class="p">(</span><span class="n">datestr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>check Matlab version against release date of version needed (or
+recommended)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>datestr:</strong></dt>
+<dd><p class="first last">format is one of the forms taken by datenum.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><p class="first last">check for Matlab release date on or after Aug. 3, 2006</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ok</span> <span class="o">=</span> <span class="n">checkMatlabVersion</span><span class="p">(</span><span class="s">&#39;8/3/2006&#39;</span><span class="p">)</span> 
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.circle">
+<code class="descclassname">Misc_utilities.</code><code class="descname">circle</code><span class="sig-paren">(</span><em>center</em>, <em>radius</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.circle" title="Permalink to this definition">¶</a></dt>
+<dd><p>draws a circle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[h, fillh] = circle(center, radius, [&#39;fill&#39;], [color string or numbers])
+</pre></div>
+</div>
+<p>&#8216;fill&#8217; requires the geom2d toolbox, by David Legland</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.combine_structs">
+<code class="descclassname">Misc_utilities.</code><code class="descname">combine_structs</code><span class="sig-paren">(</span><em>A</em>, <em>B</em>, <em>prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.combine_structs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to combine the fields of two structures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>A, B:</strong></dt>
+<dd><p class="first last">structs to be combined</p>
+</dd>
+<dt><strong>prefix:</strong></dt>
+<dd><p class="first last">string applied to fields of structure B</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>C:</strong></dt>
+<dd><p class="first last">structure containing fields of both A and B</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Only works for single-element non-nested structures, for now</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.condf2indic">
+<code class="descclassname">Misc_utilities.</code><code class="descname">condf2indic</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.condf2indic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create N x k indicator matrix of ones/zeros from N x 1 list of numeric
+values (X)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">indic</span><span class="p">,</span> <span class="n">xlevels</span><span class="p">]</span> <span class="o">=</span> <span class="n">condf2indic</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>indic:</strong></dt>
+<dd><p class="first last">is returned as single precision type, because it can then be
+used as a design matrix in a GLM</p>
+</dd>
+<dt><strong>xlevels:</strong></dt>
+<dd><p class="first last">are the values of X corresponding to columns of indic</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.depfun_aggregate">
+<code class="descclassname">Misc_utilities.</code><code class="descname">depfun_aggregate</code><span class="sig-paren">(</span><em>funname</em>, <em>excludes</em>, <em>save_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.depfun_aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>depfun_aggregate is for packaging all the files needed for a function in one spot</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dependencies</span> <span class="o">=</span> <span class="n">depfun_aggregate</span><span class="p">(</span><span class="n">funname</span><span class="p">,</span> <span class="n">excludes</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>funname:</strong></dt>
+<dd><p class="first last">function to analyze</p>
+</dd>
+<dt><strong>excludes:</strong></dt>
+<dd><p class="first last">cellstrs to exclude from the matches</p>
+</dd>
+<dt><strong>save_dir:</strong></dt>
+<dd><p class="first last">directory to copy files to - defaults to &#8216;tmp_files&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dependencies</span> <span class="o">=</span> <span class="n">depfun_aggregate</span><span class="p">(</span><span class="s">&#39;whole_brain_fir&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;spm2&#39;</span><span class="p">,</span> <span class="s">&#39;spm5&#39;</span><span class="p">},</span> <span class="s">&#39;fir_files&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.distance">
+<code class="descclassname">Misc_utilities.</code><code class="descname">distance</code><span class="sig-paren">(</span><em>u</em>, <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Euclidean distance between u and v</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">d</span> <span class="o">=</span> <span class="n">distance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>u</strong> and <strong>v:</strong></dt>
+<dd><p class="first">should be column vectors or matrices in k-dim space, where k is
+the number of columns of u and v.</p>
+<p class="last">if u is a single row, replicates u to size(v,1)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.distance_euclid">
+<code class="descclassname">Misc_utilities.</code><code class="descname">distance_euclid</code><span class="sig-paren">(</span><em>u</em>, <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.distance_euclid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Euclidean distance between u and v</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">d</span> <span class="o">=</span> <span class="n">distance_euclid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>u</strong> and <strong>v:</strong></dt>
+<dd><p class="first">should be column vectors or matrices in k-dim space, where k is
+the number of columns of u and v.</p>
+<p class="last">if u is a single row, replicates u to size(v,1)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.erase_and_display">
+<code class="descclassname">Misc_utilities.</code><code class="descname">erase_and_display</code><span class="sig-paren">(</span><em>old_str</em>, <em>new_str</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.erase_and_display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Backspaces the number of chars of the length of old_str, then prints new_str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.erase_string">
+<code class="descclassname">Misc_utilities.</code><code class="descname">erase_string</code><span class="sig-paren">(</span><em>str</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.erase_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Backspaces the number of chars of the length of str</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.explode">
+<code class="descclassname">Misc_utilities.</code><code class="descname">explode</code><span class="sig-paren">(</span><em>string</em>, <em>delimiters</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.explode" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPLODE    Splits string into pieces.</p>
+<p>EXPLODE(STRING,DELIMITERS) returns a cell array with the pieces
+of STRING found between any of the characters in DELIMITERS.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">SPLIT</span><span class="p">,</span><span class="n">NUMPIECES</span><span class="p">]</span> <span class="o">=</span> <span class="n">EXPLODE</span><span class="p">(</span><span class="n">STRING</span><span class="p">,</span><span class="n">DELIMITERS</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>also returns the number of pieces found in STRING.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>STRING:</strong></dt>
+<dd><p class="first last">the string to split (string)</p>
+</dd>
+<dt><strong>DELIMITERS:</strong></dt>
+<dd><p class="first last">the delimiter characters (string)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>SPLIT:</strong></dt>
+<dd><p class="first last">the split string (cell array), each cell is a piece</p>
+</dd>
+<dt><strong>NUMPIECES:</strong></dt>
+<dd><p class="first last">the number of pieces found (integer)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">STRING</span> <span class="o">=</span> <span class="s">&#39;ab_c,d,e fgh&#39;</span>
+<span class="n">DELIMITERS</span> <span class="o">=</span> <span class="s">&#39;_,&#39;</span>
+<span class="p">[</span><span class="n">SPLIT</span><span class="p">,</span><span class="n">NUMPIECES</span><span class="p">]</span> <span class="o">=</span> <span class="n">EXPLODE</span><span class="p">(</span><span class="n">STRING</span><span class="p">,</span><span class="n">DELIMITERS</span><span class="p">)</span>
+<span class="n">SPLIT</span> <span class="o">=</span> <span class="s">&#39;ab&#39;</span>    <span class="s">&#39;c&#39;</span>    <span class="s">&#39;d&#39;</span>    <span class="s">&#39;e fgh&#39;</span>
+<span class="n">NUMPIECES</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>IMPLODE, STRTOK</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.fast_conv_fft">
+<code class="descclassname">Misc_utilities.</code><code class="descname">fast_conv_fft</code><span class="sig-paren">(</span><em>hrf</em>, <em>x</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.fast_conv_fft" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">fast_conv_fft</span><span class="p">(</span><span class="n">hrf</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Much faster than conv or using matrix multiplication.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">should be length of x</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span> <span class="o">=</span> <span class="n">fast_conv_fft</span><span class="p">(</span><span class="n">hrf</span><span class="p">,</span><span class="n">x</span><span class="p">);</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">fast_conv_fft</span><span class="p">(</span><span class="n">hrf</span><span class="p">,</span><span class="n">x3</span><span class="p">,</span><span class="s">&#39;deconv&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.getRandom">
+<code class="descclassname">Misc_utilities.</code><code class="descname">getRandom</code><span class="sig-paren">(</span><em>stimList</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.getRandom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Randomizes rows of a matrix, preserving dependencies between columns</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">stimList</span> <span class="o">=</span> <span class="n">getRandom</span><span class="p">(</span><span class="n">stimList</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first">a col. vector or matrix of stimulus conditions,</p>
+<p class="last">e.g. [1 1 1 1 2 2 2 2 3 3 4 4]&#8217;</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<dl class="docutils">
+<dt>output: a randomized permutation of this vector or matrix</dt>
+<dd>all columns are resorted with the same order</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.get_first_help_lines">
+<code class="descclassname">Misc_utilities.</code><code class="descname">get_first_help_lines</code><span class="sig-paren">(</span><em>functionname</em>, <em>maxlines</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.get_first_help_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first n lines of the help for a function in a cell array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">helptext</span> <span class="o">=</span> <span class="n">get_first_help_lines</span><span class="p">(</span><span class="n">functionname</span><span class="p">,</span> <span class="p">[</span><span class="n">maxlines</span><span class="p">])</span>
+
+<span class="n">helptext</span> <span class="o">=</span> <span class="n">get_first_help_lines</span><span class="p">(</span><span class="n">functionname</span><span class="p">,</span> <span class="n">maxlines</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>helptext = get_first_help_lines(&#39;fmri_data.apply_mask&#39;, 5);
+char(helptext{:})
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.implode">
+<code class="descclassname">Misc_utilities.</code><code class="descname">implode</code><span class="sig-paren">(</span><em>pieces</em>, <em>delimiter</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.implode" title="Permalink to this definition">¶</a></dt>
+<dd><p>IMPLODE    Joins strings with delimiter in between.</p>
+<p>IMPLODE(PIECES,DELIMITER) returns a string containing all the
+strings in PIECES joined with the DELIMITER string in between.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>PIECES:</strong></dt>
+<dd><p class="first last">the pieces of string to join (cell array), each cell is a piece</p>
+</dd>
+<dt><strong>DELIMITER:</strong></dt>
+<dd><p class="first last">the delimiter string to put between the pieces (string)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>STRING:</strong></dt>
+<dd><p class="first last">all the pieces joined with the delimiter in between (string)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>PIECES = {&#39;ab&#39;,&#39;c&#39;,&#39;d&#39;,&#39;e fgh&#39;}
+DELIMITER = &#39;-&gt;&#39;
+STRING = IMPLODE(PIECES,DELIMITER)
+STRING = ab-&gt;c-&gt;d-&gt;e fgh
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>EXPLODE, STRCAT</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.naninsert">
+<code class="descclassname">Misc_utilities.</code><code class="descname">naninsert</code><span class="sig-paren">(</span><em>nanvec</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.naninsert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert NaNs back into data series from which they were removed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yout</span> <span class="o">=</span> <span class="n">naninsert</span><span class="p">(</span><span class="n">nanvec</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>nanvec is indicator for NaNs, of size size(yout).  y is data.</p>
+<p>If y is a matrix, length(nanvec) should equal number of rows in y.
+NaNs are inserted for true values in nanvec in all columns of y.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>nanremove.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.nanremove">
+<code class="descclassname">Misc_utilities.</code><code class="descname">nanremove</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.nanremove" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>varargout = nanremove(varargin)
+[nanvec, x1, x2, etc.] = nanremove(x1,x2,etc...)
+</pre></div>
+</div>
+<p>removes cases that are NaN in any column of any variable x1...xn</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.oneinsert">
+<code class="descclassname">Misc_utilities.</code><code class="descname">oneinsert</code><span class="sig-paren">(</span><em>removed_voxels</em>, <em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.oneinsert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert ones (for p values) back into data series (i.e., obj.p)
+from which they were removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yout</span> <span class="o">=</span> <span class="n">oneinsert</span><span class="p">(</span><span class="n">removed_voxels</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>removed_voxels is indicator for the locations of removed voxels</p>
+<p>This function is a modified version of naninsert.m, but different.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>naninsert.m, nanremove.m, zeroinsert.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.orthviews_multiple_objs">
+<code class="descclassname">Misc_utilities.</code><code class="descname">orthviews_multiple_objs</code><span class="sig-paren">(</span><em>imgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.orthviews_multiple_objs" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot multiple image objects on one orthviews</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body">cell array of image_vectors or statistic_images</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.pad">
+<code class="descclassname">Misc_utilities.</code><code class="descname">pad</code><span class="sig-paren">(</span><em>x</em>, <em>L</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.pad" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">pad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">L</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>pads x with zeros of length L</p>
+<p>or, if L is a vector, to longest of two (NOT DONE)</p>
+<p>COLUMN VECTORS</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.padwithnan">
+<code class="descclassname">Misc_utilities.</code><code class="descname">padwithnan</code><span class="sig-paren">(</span><em>A</em>, <em>B</em>, <em>dim</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.padwithnan" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the two input arrays, with the smaller padded to the size of the
+larger in the particular dimension(s) with NaNs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[Anew Bnew] = padwithnan(A, B, dim)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.parse_char_to_cell">
+<code class="descclassname">Misc_utilities.</code><code class="descname">parse_char_to_cell</code><span class="sig-paren">(</span><em>invar</em>, <em>sepval</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.parse_char_to_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>take a row of characters and separate into cells, breaking at either
+spaces or tabs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">outcell</span> <span class="o">=</span> <span class="n">parse_char_to_cell</span><span class="p">(</span><span class="n">invar</span><span class="p">,</span><span class="n">sepval</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% copy from Excel as row, then parse:
+disorder = [&#39;SAD    PTSD    PTSD    PTSD    PTSD    PTSD    SP      SAD     PTSD    PTSD    PTSD    PTSD    PTSD    SAD     SAD     PTSD    PTSD    SP      SP      SP      PTSD    PTSD    PTSD    PTSD    SAD     SAD     SAD     SP      SAD     SAD     SAD     SP      SP      SP      SAD     SP      PTSD    SP      PTSD    PTSD&#39;];
+disorder = parse_char_to_cell(disorder, &#39;tab&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.parse_edat_txt">
+<code class="descclassname">Misc_utilities.</code><code class="descname">parse_edat_txt</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.parse_edat_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads EPrime .txt output (equivalent to EDAT) directly into matlab cell arrays/structures</p>
+<p>Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>fname:</strong></dt>
+<dd>name of file to parse</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>edat_struct:</strong></dt>
+<dd><p class="first">Structure containing the following fields:</p>
+<p>header: 1-element structure whose fields are header items from EDAT</p>
+<p>run: 1-element structure whose fields are run-specific items from EDAT</p>
+<dl class="last docutils">
+<dt>trials: n-element structure whose fields are trial-specific items from EDAT</dt>
+<dd><p class="first last">where n is the number of trials</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>edat_cells:</strong></dt>
+<dd><p class="first">Structure containing the following fields:</p>
+<p>header_cols: 1-row cell array whose fields are header column names from EDAT</p>
+<p>run_cols: 1-row cell array whose cells are run-specific column names from EDAT</p>
+<p>trials_cols: 1-row cell array whose cells are trial-specific column names from EDAT</p>
+<p>header: 1-row cell array whose cells are header items from EDAT</p>
+<p>run: 1-row cell array whose cells are run-specific items from EDAT</p>
+<dl class="last docutils">
+<dt>trials: n-row cell array whose cells are trial-specific items from EDAT</dt>
+<dd><p class="first last">where n is the number of trials</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Two passes are necessary:</dt>
+<dd><ol class="first last arabic simple">
+<li>find all fields used in the file</li>
+<li>actually read the data</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.print_matrix">
+<code class="descclassname">Misc_utilities.</code><code class="descname">print_matrix</code><span class="sig-paren">(</span><em>x</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.print_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>prints matrix values as tab delimited, 2 decimal places</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>print_matrix(x,[col names cell array], [row names cell], [format string])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>t = [1 2; 3 4; 5 6];
+print_matrix(t,{&#39;col1&#39; &#39;col2&#39;},{&#39;row1&#39; &#39;row2&#39; &#39;row3&#39;);
+
+print_matrix(rand(5), [], [], &#39;%3.2f&#39;);
+print_matrix(rand(5), {&#39;A&#39; &#39;B&#39; &#39;C&#39; &#39;D&#39; &#39;E&#39;}, {&#39;A&#39; &#39;B&#39; &#39;C&#39; &#39;D&#39; &#39;E&#39;}, &#39;%3.2f&#39;);
+print_matrix(rand(5), {&#39;A&#39; &#39;B&#39; &#39;C&#39; &#39;D&#39; &#39;E&#39;}, {&#39;A&#39; &#39;B&#39; &#39;C&#39; &#39;D&#39; &#39;E&#39;}, &#39;%d&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.progressbar">
+<code class="descclassname">Misc_utilities.</code><code class="descname">progressbar</code><span class="sig-paren">(</span><em>meth</em>, <em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.progressbar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a progress bar window with tag &#8216;progressbar&#8217;
+that can be updated</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">progressbar</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span><span class="n">val</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>meth:</strong></dt>
+<dd><p class="first last">can be &#8216;init&#8217; or &#8216;update&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>x-axis limits are 0 - 100, so val should be % complete for best results</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body">the f and ax handles are not really needed
+as &#8216;update&#8217; finds the axis with &#8216;progressbar&#8217; tag.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>progressbar(&#39;update&#39;,100*i./nvars);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.read_edat_output_2008">
+<code class="descclassname">Misc_utilities.</code><code class="descname">read_edat_output_2008</code><span class="sig-paren">(</span><em>fname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.read_edat_output_2008" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that creates a structure DATA containing columns
+of the edat file output (saved in text tab delimited &#8220;excel&#8221; format)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATA</span> <span class="o">=</span> <span class="n">read_edat_output_2008</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For this code to work on a Mac, you must: 1) export .edat2 file as an Excel file, 
+then 2) open this file in Excel on a Mac and save as a .csv, 3) read that
+.csv file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;myfile.txt&#39;</span><span class="p">;</span> 
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">read_edat_output_2008</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Defaults:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>These are the default formats this function expects:
+tab delimited, 1 header row, then row of column names, then data</p>
+<p>You can override some of them by using the following &#8211;
+E.g., for zero header rows and comma delimited data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATA</span> <span class="o">=</span> <span class="n">read_edat_output_2008</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&#39;nheaderrows&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;mydelimiter&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can force the number of columns to be a certain value by doing the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATA</span> <span class="o">=</span> <span class="n">read_edat_output_2008</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&#39;nheaderrows&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;numc&#39;</span><span class="p">,</span> <span class="mi">103</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This could be useful if your last row contains empty cells at the end,
+which will mess up the automatic calculation of number of columns.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.robustcsvread">
+<code class="descclassname">Misc_utilities.</code><code class="descname">robustcsvread</code><span class="sig-paren">(</span><em>filename</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.robustcsvread" title="Permalink to this definition">¶</a></dt>
+<dd><p>ROBUSTCSVREAD reads in CSV files with different number of columns
+on different lines</p>
+<p>This returns a struct, with one field per column of the csv file.
+Each field is a cell array whose length = rows in the csv file.  Column
+names are assumed to be in the first row.
+If column names are invalid struct field names, edits them by replacing
+funky characters with an underscore, or if first char is a number, I
+prepend <a href="#id43"><span class="problematic" id="id44">aa_</span></a> to the field name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first">cols:  how many cols to read in, by defaults reads them all</p>
+<p>rows_to_skip:  how many rows to skip</p>
+<p>delim:  cell delimiter</p>
+<dl class="last docutils">
+<dt>missing:  followed by cell array, first cell is val for missing,</dt>
+<dd><p class="first last">second cell is what to replace with</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.scn_get_datetime">
+<code class="descclassname">Misc_utilities.</code><code class="descname">scn_get_datetime</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.scn_get_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">str</span> <span class="o">=</span> <span class="n">scn_get_datetime</span>
+</pre></div>
+</div>
+<p>pass in &#8216;ymd&#8217; to get the string in yyyy_mm_dd-HH_MM format, so that
+alphanumeric order will correspond to chronological order</p>
+<p>Returns a string with the date and time
+Useful for annotating data and output</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.scn_mat_conform">
+<code class="descclassname">Misc_utilities.</code><code class="descname">scn_mat_conform</code><span class="sig-paren">(</span><em>in</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.scn_mat_conform" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function in = scn_mat_conform(in)
+</pre></div>
+</div>
+<p>sets flipping to 0 (no flip) in SPM2 and adjusts mat file accordingly
+input in spm-style mat file or struct with .mat or .M fields</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.search_struct_fields">
+<code class="descclassname">Misc_utilities.</code><code class="descname">search_struct_fields</code><span class="sig-paren">(</span><em>search_struct</em>, <em>fieldname</em>, <em>fieldpath</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.search_struct_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all paths inside structure search_struct that match
+the fieldname (or start with it)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">found_paths</span> <span class="o">=</span> <span class="n">search_struct_fields</span><span class="p">(</span><span class="n">search_struct</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>foo = [];
+foo.foo = [];
+foo.foo.foo = [];
+search_struct_fields(foo, &#39;foo&#39;)
+ans = 
+   &#39;foo.foo&#39;
+   &#39;foo.foo.foo&#39;
+
+% or
+
+search_struct_fields(SPM, &#39;x&#39;)
+ans = 
+   &#39;SPM.xX&#39;
+   &#39;SPM.xM&#39;
+   &#39;SPM.xsDes&#39;
+   &#39;SPM.xX.xVi&#39;
+   &#39;SPM.xX.xKXs&#39;
+   &#39;SPM.xM.xs&#39;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.strip_git_dirs">
+<code class="descclassname">Misc_utilities.</code><code class="descname">strip_git_dirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.strip_git_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the .svn dirs from the path</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.strip_path_dirs">
+<code class="descclassname">Misc_utilities.</code><code class="descname">strip_path_dirs</code><span class="sig-paren">(</span><em>patterns</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.strip_path_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes directories from the Matlab path, based on the rgex patterns passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function strip_path_dirs(regexes)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.strip_svn_dirs">
+<code class="descclassname">Misc_utilities.</code><code class="descname">strip_svn_dirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.strip_svn_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the .svn dirs from the path</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.strrep_recurse">
+<code class="descclassname">Misc_utilities.</code><code class="descname">strrep_recurse</code><span class="sig-paren">(</span><em>old_var</em>, <em>old_string</em>, <em>new_string</em>, <em>depth</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.strrep_recurse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively traverses depth-first through an entire variable, replacing
+old_string with new_string everywhere it goes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">new_var</span> <span class="o">=</span> <span class="n">strrep_recurse</span><span class="p">(</span><span class="n">old_var</span><span class="p">,</span> <span class="n">old_string</span><span class="p">,</span> <span class="n">new_string</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.struct_strrep">
+<code class="descclassname">Misc_utilities.</code><code class="descname">struct_strrep</code><span class="sig-paren">(</span><em>old_struct</em>, <em>old_string</em>, <em>new_string</em>, <em>depth</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.struct_strrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverses depth-first through an entire structure, replacing 
+old_string with new_string everywhere it goes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">new_struct</span> <span class="o">=</span> <span class="n">struct_strrep</span><span class="p">(</span><span class="n">old_struct</span><span class="p">,</span> <span class="n">old_string</span><span class="p">,</span> <span class="n">new_string</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.tor_ga">
+<code class="descclassname">Misc_utilities.</code><code class="descname">tor_ga</code><span class="sig-paren">(</span><em>gensize</em>, <em>numgen</em>, <em>inputs</em>, <em>ofun</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.tor_ga" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[best_params,fit,beff,in,isconverged] = tor_ga(gensize,numgen,inputs,ofun,[optional in any order: genfun,fixed inputs,cmd strings])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">a cell array describing the inputs to the optimization function
+(parameters to be optimized).</td>
+</tr>
+</tbody>
+</table>
+<p>Each cell of inputs is a p x q matrix of parameters.
+p and q are arbitrary, as each organism is described by a p x q
+matrix...but the objective function must be able to handle inputs in
+the format you provide.
+Internally, a set of &#8216;organisms&#8217; is created that is
+params x params x organisms (3-D).
+This matrix is subject to crossover across orgs. separately for each
+cell.
+If inputs is a p x q matrix, it will be placed in a single cell.</p>
+<p>By default, it is only necessary to enter a single set of params
+for an example organism.  The range of those input values is used to
+generate random starting values for each organism.</p>
+<p>There can be more than one set of
+parameters that are combined in some way by ofun to produce a fitness
+value.  if there is more than one set of input parameters,
+inputs should be entered as a cell array, one cell per input.
+inputs should be in ORDER of inputs entered to ofun!</p>
+<p><strong>RECOMMENDED</strong></p>
+<p>If you enter each cell of inputs as a 3-D array so that inputs(:,:,1)
+is the min acceptable value for each param and inputs(:,:,2) is the
+max acceptable value, then the ga will create a series of organisms
+at start that evenly span the range of the multivariate parameter
+space, with the spacing between values determined by the gensize.
+This can provide a huge advantage in efficiency for the GA.
+This is the idea behind the &#8220;Sobol sequence,&#8221; which chooses values
+that evenly span a multivariate space.
+With this option, if gensize is sufficiently large and the param
+space is sufficiently small, then the ga may find the correct
+solution on the first iteration.
+However, it is not likely to work well if the num. params &gt;&gt; gensize</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>start = [-15 -15];
+start(:,:,2) = [15 15];
+[best_params,fit,beff,in] = tor_ga(324,30,{start},objfun_ga,&#39;genconverge&#39;,5);
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>ofun</strong></dt>
+<dd><ul class="first last simple">
+<li>the objective function that combines the inputs.</li>
+</ul>
+</dd>
+<dt>There are two options for passing this in:</dt>
+<dd><ol class="first last arabic">
+<li><p class="first">enter the name of the function as a string.  the program creates a handle for the
+function, and evaluates it using inputs specified in the inputs variable.
+In this case, pass in fixed inputs after ofun, in the varargin fields
+fixed inputs  optional, fixed inputs that do not change!  same structure
+as inputs.</p>
+</li>
+<li><p class="first">You can also enter ofun as a function handle durectly, with fixed inputs already
+embedded before running the program.
+The function should take as input a param list, and return fitness.
+e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>objhan = @(params) my_function_name(params,fixed_inputs1,fixed_inputs1,fixed_inputs1);
+objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
+</pre></div>
+</div>
+</li>
+</ol>
+</dd>
+</dl>
+<p>Pass in objhan as the &#8216;ofun&#8217; input argument</p>
+<dl class="docutils">
+<dt><strong>genfun</strong></dt>
+<dd><ul class="first last simple">
+<li>[optional] input param generation function</li>
+</ul>
+</dd>
+</dl>
+<p>A function handle that generates a parameter set for each organism</p>
+<dl class="docutils">
+<dt><strong>command strings</strong></dt>
+<dd><ul class="first last simple">
+<li>&#8216;noverbose&#8217;   turn off verbose reporting and plots</li>
+<li>&#8216;genconverge&#8217; followed by integer x: converge if no change in last x generations</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Example for fitting indscal model:</p>
+<div class="highlight-python"><div class="highlight"><pre>inputs{1} = X; fixin{1} = sp; fixin{2} = B1; fixin{3} = B2;
+tor_ga(30,10,inputs,&#39;indscalf&#39;,fixin);
+
+W = rand(size(W)); W(1,:) = [10 10];, W(2,:) = [-10 -10];
+inputs{2} = W;
+</pre></div>
+</div>
+<p>Example: Optimize gambles for prospect theory model
+See prospect_optimize_design.m for definition of population of
+gambles from which to draw (pop), truep, iter (all fixed inputs)</p>
+<div class="highlight-python"><div class="highlight"><pre>objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
+genfun = @() randsample(gindx,ntrials,&#39;true&#39;)&#39;;
+[best_params,fit,beff,in] = tor_ga(5,3,wh,objhan,genfun);
+</pre></div>
+</div>
+<p>Using string inputs to control behavior:</p>
+<div class="highlight-python"><div class="highlight"><pre>[best_params,fit,beff,in] = tor_ga(300,30,{[15; -15]},objfun_ga,&#39;genconverge&#39;,5,&#39;noverbose&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Misc_utilities.zeroinsert">
+<code class="descclassname">Misc_utilities.</code><code class="descname">zeroinsert</code><span class="sig-paren">(</span><em>wasbad</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#Misc_utilities.zeroinsert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-insert removed CASES (rows) and fill with zeros</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yout</span> <span class="o">=</span> <span class="n">zeroinsert</span><span class="p">(</span><span class="n">wasbad</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>wasbad is indicator for removed cases, of size size(yout).  y is data.</p>
+<p>if you enter y&#8217;, inserts VARIABLES (cols).  here, pass in v x n matrix, y&#8217;
+to fill empty/removed vars</p>
+<p>See nanremove.m and naninsert.m</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -15927,6 +17144,7 @@ for all xyz coordinates.</p>
 <li><a class="reference internal" href="#image-space-tools">Image_space_tools</a></li>
 <li><a class="reference internal" href="#image-thresholding">Image_thresholding</a></li>
 <li><a class="reference internal" href="#index-image-manip-tools">Index_image_manip_tools</a></li>
+<li><a class="reference internal" href="#module-Misc_utilities">Misc_utilities</a></li>
 </ul>
 
   <h4>Previous topic</h4>

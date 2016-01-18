@@ -1,15 +1,26 @@
 function y = fast_conv_fft(hrf,x,varargin)
-% y = fast_conv_fft(hrf,x)
+% :Usage:
+% ::
+%
+%     y = fast_conv_fft(hrf,x)
 %
 % Much faster than conv or using matrix multiplication.
 %
-% hrf should be length of x
+% :Inputs:
 %
-% tor wager, jan 07
+%   **hrf:**
+%        should be length of x
 %
-% y = fast_conv_fft(hrf,x);
-% y = fast_conv_fft(hrf,x3,'deconv');
+% :Examples:
+% ::
 %
+%    y = fast_conv_fft(hrf,x);
+%    y = fast_conv_fft(hrf,x3,'deconv');
+%
+% ..
+%    tor wager, jan 07
+% ..
+
 
 dodeconv = 0;
 if length(varargin)

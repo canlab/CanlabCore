@@ -103,3 +103,8 @@ Index_image_manip_tools
 ===============
 .. automodule:: Index_image_manip_tools
    :members:
+
+Misc_utilities
+===============
+.. automodule:: Misc_utilities
+   :members:

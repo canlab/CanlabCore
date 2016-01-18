@@ -2,16 +2,18 @@
 %
 % First line: One-line summary description of function
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [list outputs here] = function_name(list inputs here, [optional inputs])
+% :Usage:
+% ::
+%
+%     [list outputs here] = function_name(list inputs here, [optional inputs])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
 %              methods.
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) <year>  <name of author>
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -26,46 +28,57 @@
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% xxx           xxx
+% :Inputs:
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% xxx           xxx
+%   **param1:**
+%        description of param1
 %
-% Examples:
-% -------------------------------------------------------------------------
+%   **param2:**
+%        description of param2
 %
-% give examples here
+% :Outputs:
 %
-% See also:
-% * list other functions related to this one, and alternatives*
-
-% Programmers' notes:
-% List dates and changes here, and author of changes
+%   **out1:**
+%        description of out1
+%
+%   **out2:**
+%        description of out2
+%
+% :Examples:
+% ::
+%
+%    % give examples of code here
+%    param1 = abc();
+%    param2 = xyz();
+%    [out1,out2] = func_call(param1, param2)
+%
+% :See also:
+%   - list other functions related to this one, and alternatives*
+%
+% ..
+%    Programmers' notes:
+%    List dates and changes here, and author of changes
+% ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
 % ARGUMENTS. MANY FUNCTIONS NEED TO PARSE OPTIONAL ARGS, SO THIS MAY BE
 % USEFUL.
 
 
-% -------------------------------------------------------------------------
-% DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
+%    DEFAULTS AND INPUTS
+% ..
 
-% Defaults
-% -----------------------------------
-% initalize optional variables to default values here.
+
 rowsz = [];
 doplot = 0;
 basistype = 'spm+disp';
+% initalize optional variables to default values here.
 
 
 % optional inputs with default values
-% -----------------------------------
-
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}

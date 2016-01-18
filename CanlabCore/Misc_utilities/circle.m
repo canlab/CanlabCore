@@ -1,8 +1,12 @@
 function [h, fillh] = circle(center, radius, varargin)
-    % draws a circle
-    %[h, fillh] = circle(center, radius, ['fill'], [color string or numbers])
-    %
-    % 'fill' requires the geom2d toolbox, by David Legland
+% draws a circle
+%
+% :Usage:
+% ::
+%
+%     [h, fillh] = circle(center, radius, ['fill'], [color string or numbers])
+%
+% 'fill' requires the geom2d toolbox, by David Legland
 
 
     x = pi*[0:.5:2];

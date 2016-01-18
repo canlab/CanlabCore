@@ -123,3 +123,8 @@ Parcellation_tools
 ===============
 .. automodule:: Parcellation_tools
    :members:
+
+peak_coordinates
+===============
+.. automodule:: peak_coordinates
+   :members:

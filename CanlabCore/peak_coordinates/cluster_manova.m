@@ -1,16 +1,27 @@
 function cluster_manova(clusters,fnames,varargin)
-% function cluster_manova(clusters,fnames,verbose)
-% tor wager
+% :Usage:
+% ::
 %
-% clusters is output of clusters2database, with all fields
-%   from database
-% fnames is cell array of strings with names to test
-%   e.g., {'Rule' 'Task'}
+%     cluster_manova(clusters,fnames,verbose)
 %
-% uses stats toolbox
-% example: cluster_manova(clusters,fnames)
+% :Inputs:
 %
-% verbose: optional, produces more output and tests
+%   **clusters:**
+%        is output of clusters2database, with all fields
+%        from database
+%
+%   **fnames:**
+%        is cell array of strings with names to test
+%        e.g., {'Rule' 'Task'}
+%
+%   uses stats toolbox
+%
+%   **verbose:**
+%        optional, produces more output and tests
+%
+% ..
+%    tor wager
+% ..
 
 if length(varargin) > 0, verb = 1; else, verb = 0;, end
 

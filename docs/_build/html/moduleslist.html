@@ -18426,6 +18426,187 @@ The mask and the data must match!</p>
 </dd></dl>
 
 </div>
+<div class="section" id="peak-coordinates">
+<h1>peak_coordinates<a class="headerlink" href="#peak-coordinates" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-peak_coordinates"></span><dl class="function">
+<dt id="peak_coordinates.cluster_manova">
+<code class="descclassname">peak_coordinates.</code><code class="descname">cluster_manova</code><span class="sig-paren">(</span><em>clusters</em>, <em>fnames</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#peak_coordinates.cluster_manova" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cluster_manova</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span><span class="n">fnames</span><span class="p">,</span><span class="n">verbose</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>clusters:</strong></dt>
+<dd><p class="first last">is output of clusters2database, with all fields
+from database</p>
+</dd>
+<dt><strong>fnames:</strong></dt>
+<dd><p class="first last">is cell array of strings with names to test
+e.g., {&#8216;Rule&#8217; &#8216;Task&#8217;}</p>
+</dd>
+</dl>
+<p>uses stats toolbox</p>
+<dl class="last docutils">
+<dt><strong>verbose:</strong></dt>
+<dd><p class="first last">optional, produces more output and tests</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="peak_coordinates.extract_ind_peak">
+<code class="descclassname">peak_coordinates.</code><code class="descname">extract_ind_peak</code><span class="sig-paren">(</span><em>imnames</em>, <em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#peak_coordinates.extract_ind_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets individual spatial peaks from clusters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[clusters] = extract_ind_peak(imnames [can be empty],clusters,[vols])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>imnames::</strong></dt>
+<dd><p class="first">a matrix of image names, in spm_list_files output format</p>
+<p class="last">if imnames is empty, enter full data (vols) as 3rd argument
+or else this program will use cl.all_data to get data</p>
+</dd>
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">clusters, see tor_extract_rois</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE (WARNING): WORKS ON XYZ VOXEL COORDINATES - NO TRANSFORMATION TO DIFFERENT SPACES
+see transform_coordinates.m for this.</p>
+<dl class="docutils">
+<dt>Functions called</dt>
+<dd><p class="first">C:matlabR12toolboxmatlabdatatypessqueeze.m</p>
+<p class="last">c:tor_scriptsvoistatutilitynanmean.m
+(calls other spm functions)</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See Also:</th><td class="field-body">cluster_manova</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="peak_coordinates.image2coordinates">
+<code class="descclassname">peak_coordinates.</code><code class="descname">image2coordinates</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="headerlink" href="#peak_coordinates.image2coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Threshold a statistic image and turn it into a list of x, y, z
+coordinates (in mm &#8220;world space&#8221;) with SPM</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">XYZmm</span> <span class="o">=</span> <span class="n">image2coordinates</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>img = &#39;h25_aerger.img&#39;;
+XYZmm = image2coordinates(img)
+figure;
+plot3(XYZmm{1}(1, :)&#39;, XYZmm{1}(2, :)&#39;, XYZmm{1}(3,:)&#39;, &#39;ko&#39;);
+addbrain
+axis image
+</pre></div>
+</div>
+<p>Example with multiple images:</p>
+<div class="highlight-python"><div class="highlight"><pre>% list all images in dir
+imgs = filenames(fullfile(pwd, &#39;*img&#39;), &#39;char&#39;, &#39;absolute&#39;)
+XYZmm = image2coordinates(imgs); 
+% save images names and coordinates
+% imgs2 has cell array of image names, without full paths
+imgs2 = filenames(fullfile(pwd, &#39;*img&#39;)); 
+save silke_senders_xyz_coordinates imgs imgs2 XYZmm
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="peak_coordinates.spatial_contrast">
+<code class="descclassname">peak_coordinates.</code><code class="descname">spatial_contrast</code><span class="sig-paren">(</span><em>XYZ1</em>, <em>XYZ2</em><span class="sig-paren">)</span><a class="headerlink" href="#peak_coordinates.spatial_contrast" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function tests relative locations of individual 
+spatial peaks from clusters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="nb">str</span><span class="p">,</span><span class="n">dcon</span><span class="p">]</span> <span class="o">=</span> <span class="n">spatial_contrast</span><span class="p">(</span><span class="n">XYZ1</span><span class="p">,</span><span class="n">XYZ2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>plots position of XYZ2 relative to XYZ1
+thus, an &#8216;anterior&#8217; group position means that XYZ2
+peaks are anterior to XYZ1 peaks</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>XYZ1,2:</strong></dt>
+<dd><p class="first last">n x 3 coordinates (in mm)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>con:</strong></dt>
+<dd><p class="first last">contrast vector, e.g., [1 -1]</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>See help conf_region for details of the test.</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -18459,6 +18640,7 @@ The mask and the data must match!</p>
 <li><a class="reference internal" href="#model-building-tools">Model_building_tools</a></li>
 <li><a class="reference internal" href="#optimizedesign11">OptimizeDesign11</a></li>
 <li><a class="reference internal" href="#parcellation-tools">Parcellation_tools</a></li>
+<li><a class="reference internal" href="#peak-coordinates">peak_coordinates</a></li>
 </ul>
 
   <h4>Previous topic</h4>

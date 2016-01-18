@@ -128,3 +128,8 @@ peak_coordinates
 ===============
 .. automodule:: peak_coordinates
    :members:
+
+ROI_drawing_tools
+===============
+.. automodule:: ROI_drawing_tools
+   :members:

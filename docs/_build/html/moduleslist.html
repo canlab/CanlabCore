@@ -18607,6 +18607,231 @@ peaks are anterior to XYZ1 peaks</p>
 </dd></dl>
 
 </div>
+<div class="section" id="roi-drawing-tools">
+<h1>ROI_drawing_tools<a class="headerlink" href="#roi-drawing-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-ROI_drawing_tools"></span><dl class="function">
+<dt id="ROI_drawing_tools.add2mask">
+<code class="descclassname">ROI_drawing_tools.</code><code class="descname">add2mask</code><span class="sig-paren">(</span><em>mask</em>, <em>x</em>, <em>r</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ROI_drawing_tools.add2mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds or subtracts spheres around x coordinates to/from existing mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">add2mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>mask:</strong></dt>
+<dd><p class="first last">is a string filename</p>
+</dd>
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">is n x 3 list of coordinates</p>
+</dd>
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">is radius</p>
+</dd>
+</dl>
+<p>a 4th argument causes us to SUBTRACT!</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>mask = &#39;insula_from_part1.img&#39;
+x = [-29.6 28.6 5.3; 37.0 27.5 3.2; -34.9 8.5 -14.8;38.1 10.6 -14.8];
+add2mask(mask,x,8);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ROI_drawing_tools.clusters2roimask">
+<code class="descclassname">ROI_drawing_tools.</code><code class="descname">clusters2roimask</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#ROI_drawing_tools.clusters2roimask" title="Permalink to this definition">¶</a></dt>
+<dd><p>The purpose of this function is to facilitate making masks with ROIs for
+future studies, give a clusters structure.  ROIs are constrained to be
+within activation blobs specified by input clusters, and are masked by
+selected ICBM regions. Clusters may be smoothed before or after masking.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">clout</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusters2roimask</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Option to do 3 things, in order:</dt>
+<dd><ol class="first last arabic simple">
+<li>Enlarge selected clusters</li>
+<li>Mask clusters with anatomical regions from ICBM atlas</li>
+<li>Subdivide clusters using hierarchical clustering of voxel coordinates</li>
+</ol>
+</dd>
+</dl>
+<p>Output is a clusters file and a mask file in a 2 x 2 x 2 standard brain
+space.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ROI_drawing_tools.draw_anatomical_roi_2008">
+<code class="descclassname">ROI_drawing_tools.</code><code class="descname">draw_anatomical_roi_2008</code><span class="sig-paren">(</span><em>meth</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ROI_drawing_tools.draw_anatomical_roi_2008" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quick start guide:
+type draw_anatomical_roi_2008</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">draw_anatomical_roi_2008</span><span class="p">(</span><span class="s">&#39;init&#39;</span><span class="p">);</span>
+<span class="n">draw_anatomical_roi_2008</span><span class="p">(</span><span class="s">&#39;load&#39;</span><span class="p">,</span> <span class="s">&#39;ROI_midbrain.img&#39;</span><span class="p">);</span>
+<span class="n">draw_anatomical_roi_2008</span><span class="p">(</span><span class="s">&#39;init&#39;</span><span class="p">,</span> <span class="s">&#39;overlay&#39;</span><span class="p">,</span>  <span class="s">&#39;remi_mean_T2.img&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">no arguments: init</p>
+<dl class="docutils">
+<dt><strong>&#8216;init&#8217;:</strong></dt>
+<dd><p class="first last">initialize gui and orthviews and remove previous ROI</p>
+</dd>
+<dt><strong>&#8216;load&#8217;:</strong></dt>
+<dd><p class="first last">load an ROI from a mask</p>
+</dd>
+<dt><strong>&#8216;free&#8217;:</strong></dt>
+<dd><p class="first last">draw an ROI freehand (click on one of the slices in the Slices window 1st)</p>
+</dd>
+<dt><strong>&#8216;poly&#8217;:</strong></dt>
+<dd><p class="first last">don&#8217;t run this yet</p>
+</dd>
+<dt><strong>&#8216;add&#8217;:</strong></dt>
+<dd><p class="first last">add a region you&#8217;ve drawn on a slice to your ROI</p>
+</dd>
+<dt><strong>&#8216;remove&#8217;:</strong></dt>
+<dd><p class="first last">remove a region you&#8217;ve drawn from your ROI</p>
+</dd>
+<dt><strong>&#8216;smooth&#8217;:</strong></dt>
+<dd><p class="first last">3-d smoothing of ROI</p>
+</dd>
+<dt><strong>&#8216;write&#8217;:</strong></dt>
+<dd><p class="first last">write mask image of ROI and return clusters to workspace</p>
+</dd>
+<dt><strong>&#8216;exit&#8217;:</strong></dt>
+<dd><p class="first last">exit. ROI data is stored in the Slices figure, so you can
+continue to edit, etc. after exiting.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Note:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>You can use cluster_orthviews to image multiple blobs, and then
+draw relative to those.
+this function saves it&#8217;s data in the Slices figure, so you can draw,
+re-initialize the orthviews, and keep drawing before you save.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cluster_orthviews(red, {[1 0 0]}, &#39;overlay&#39;, &#39;remi_mean_T2.img&#39;);
+cluster_orthviews(stn, {[0 1 0]}, &#39;add&#39;);
+set(findobj(&#39;Tag&#39;,&#39;Graphics&#39;), &#39;WindowButtonUpFcn&#39;, &#39;draw_anatomical_roi_2008(&#39;&#39;moveslice&#39;&#39;);&#39;);
+% Use the spm_orthviews menu to ZOOM IN...and keep drawing!
+</pre></div>
+</div>
+<p>Example of brainstem ROI drawing:</p>
+<div class="highlight-python"><div class="highlight"><pre>draw_anatomical_roi_2008(&#39;init&#39;, &#39;overlay&#39;,  &#39;remi_mean_T2.img&#39;);
+set(findobj(&#39;Tag&#39;,&#39;Graphics&#39;), &#39;WindowButtonUpFcn&#39;, &#39;&#39;);
+cluster_orthviews(red, {[1 0 0]}, &#39;overlay&#39;, &#39;remi_mean_T2.img&#39;);
+stn = mask2clusters(&#39;ROI_STN.img&#39;);
+cluster_orthviews(stn, {[0 1 1]}, &#39;add&#39;);
+% Now zoom in to the midbrain in SPM orthviews and draw new ROIs
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ROI_drawing_tools.sphere_mask">
+<code class="descclassname">ROI_drawing_tools.</code><code class="descname">sphere_mask</code><span class="sig-paren">(</span><em>P</em>, <em>XYZmm</em>, <em>r</em>, <em>outname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ROI_drawing_tools.sphere_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates mask images and clusters for a set of spheres defined around
+coordinates you specify.  Used for creating regions of interest (ROIs).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">clusters</span><span class="p">,</span><span class="n">maskCLU</span><span class="p">]</span> <span class="o">=</span> <span class="n">sphere_mask</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="n">XYZmm</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">outname</span><span class="p">,[</span><span class="n">maskname</span><span class="p">],[</span><span class="n">overlay</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Spheres may be masked with an anatomical mask file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>P:</strong></dt>
+<dd><p class="first last">is input image name with correct dimensions and vox sizes for your
+study</p>
+</dd>
+<dt><strong>XYZmm:</strong></dt>
+<dd><p class="first last">is mm coordinates (row vector) for sphere center</p>
+</dd>
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">is radius in mm</p>
+</dd>
+<dt><strong>outname:</strong></dt>
+<dd><p class="first last">is string for output mask name, e.g., &#8216;sphere_mask.img&#8217;</p>
+</dd>
+<dt><strong>[maskname]:</strong></dt>
+<dd><p class="first last">is optional mask .img containing additional constraints
+(e.g., gray matter mask, etc.), can be in different dimensions</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">See Also:</th><td class="field-body"><p class="first">mask2clusters, montage_clusters</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>tmp = sphere_mask(EXPT.SNPM.P{1}(1,:),[25.6 -45.5 77.0],10,&#39;test.img&#39;,&#39;ICBM_area74.img&#39;);
+icbm_localize(tmp)
+
+M =which(&#39;ICBM_brainonly_1mm_seg1.img&#39;)
+cl = sphere_mask(d(1).name,[35 -57 54; -23 -59 56;13 -63 62; -7 -77 50; 25 -79 30; -23 -81 18;41 -7 46;-37 -7 46; 35 -1 30; 29 -3 60; -29 -13 46; -5 -1 56;-37 29 30; 53 21 32;51 11 -4;43 -69 14;-45 -71 12;29 -83 4;11 -89 -4;-11 -79 2; -1 -95 -14; 17 -99 -8;31 -77 -20;-23 -81 -20;41 -71 -20;-43 -79 -12],8,&#39;tmp.img&#39;,M);
+</pre></div>
+</div>
+<p>Matlab 6.5/OSX bug gives seg fault or something if mask is too big.</p>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -18641,6 +18866,7 @@ peaks are anterior to XYZ1 peaks</p>
 <li><a class="reference internal" href="#optimizedesign11">OptimizeDesign11</a></li>
 <li><a class="reference internal" href="#parcellation-tools">Parcellation_tools</a></li>
 <li><a class="reference internal" href="#peak-coordinates">peak_coordinates</a></li>
+<li><a class="reference internal" href="#roi-drawing-tools">ROI_drawing_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

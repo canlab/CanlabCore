@@ -1,20 +1,34 @@
 function add2mask(mask, x, r,varargin)
-% add2mask(mask, x, r,varargin)
-% adds or subtracts spheres around x coordinates to/from existing mask
+% Adds or subtracts spheres around x coordinates to/from existing mask
 %
-% mask is a string filename
-% x is n x 3 list of coordinates
-% r is radius
-% a 4th argument causes us to SUBTRACT!
+% :Usage:
+% ::
 %
-% e.g.,
-% mask = 'insula_from_part1.img'
-% x = [-29.6 28.6 5.3; 37.0 27.5 3.2; -34.9 8.5 -14.8;38.1 10.6 -14.8];
-% add2mask(mask,x,8);
+%     add2mask(mask, x, r,varargin)
+%
+% :Inputs:
+%
+%   **mask:**
+%        is a string filename
+%
+%   **x:**
+%        is n x 3 list of coordinates
+%
+%   **r:**
+%        is radius
+%
+%   a 4th argument causes us to SUBTRACT!
+%
+% :Examples:
+% ::
+%
+%    mask = 'insula_from_part1.img'
+%    x = [-29.6 28.6 5.3; 37.0 27.5 3.2; -34.9 8.5 -14.8;38.1 10.6 -14.8];
+%    add2mask(mask,x,8);
 %
 
-% get spheres
-add3 = sphere_mask(mask,x,r,'add3.img');
+
+add3 = sphere_mask(mask,x,r,'add3.img'); % get spheres
 
 % add or subtract
 if length(varargin) == 0

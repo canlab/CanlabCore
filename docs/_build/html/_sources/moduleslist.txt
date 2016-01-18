@@ -108,3 +108,8 @@ Misc_utilities
 ===============
 .. automodule:: Misc_utilities
    :members:
+
+Model_building_tools
+===============
+.. automodule:: Model_building_tools
+   :members:

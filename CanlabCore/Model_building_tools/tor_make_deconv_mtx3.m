@@ -1,32 +1,48 @@
 function [DX,sf] = tor_make_deconv_mtx3(sf,tp,eres,varargin)
-% function [DX,sf] = tor_make_deconv_mtx(sf,tp,eres,[opt] TRs before stim onset,[num. sessions],[docenter],[scanspersess])
-%   sf: cell array of stick functions, one per condition
-%       all sf cells should be of the same length
-%	Or matrix of stick functions, 1 column per condition 
+% :Usage:
+% ::
 %
+%     function [DX,sf] = tor_make_deconv_mtx(sf,tp,eres,[opt] TRs before stim onset,[num. sessions],[docenter],[scanspersess])
 %
-%   tp: number of timepoints to estimate in hrf deconvolution matrix
-%   eres: timebins in sf array for each TR
+% :Inputs:
 %
-%   DX: deconvolution matrix
-%       estimates O.tp time points for each condition
-%       Time resolution is in TRs
-%   
-%   sf: stick function resampled at TR
-%   
-%   Optional:
-%   1 - TRs before: 0 or number of time-points to shift LEFT
-%   2 - number of sessions; if > 1, adds session-specific intercepts
-%   3 - docenter, 1/0 for do/do not center columns, default 0
-%   4 - scanspersess: how many scans per session?  prevents regressors from
+%   **sf:**
+%        cell array of stick functions, one per condition
+%        all sf cells should be of the same length
+%
+%        Or matrix of stick functions, 1 column per condition 
+%
+%   **tp:**
+%        number of timepoints to estimate in hrf deconvolution matrix
+%
+%   **eres:**
+%        timebins in sf array for each TR
+%
+%   **DX:**
+%        deconvolution matrix
+%        estimates O.tp time points for each condition
+%        Time resolution is in TRs
+%
+% :Optional:
+%
+%   1. TRs before: 0 or number of time-points to shift LEFT
+%   2. number of sessions; if > 1, adds session-specific intercepts
+%   3. docenter, 1/0 for do/do not center columns, default 0
+%   4. scanspersess: how many scans per session?  prevents regressors from
 %       running over into the next session (recursive).
-%
 %
 %   No parametric modulation of sf's allowed.
 %
-% Tor Wager, 10/20/01   modified 9/20/02 for variable tp's for diff evt types
-% modified 4/22/04  to center columns, 2/9/05 for multi-session boundary
-% respect
+% :Outputs:
+%
+%   **sf:**
+%        stick function resampled at TR
+%
+% ..
+%    Tor Wager, 10/20/01   modified 9/20/02 for variable tp's for diff evt types
+%    modified 4/22/04  to center columns, 2/9/05 for multi-session boundary
+%    respect
+% ..
 
 docenter = 0;
 if nargin > 5, docenter = varargin{3};,end

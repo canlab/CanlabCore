@@ -1,6 +1,4 @@
 function ideal_data = make_ideal_data(hrf,sf,eres,finalLength)
-% function ideal_data = make_ideal_data(hrf,sf,eres,finalLength)
-% 
 
 mylen = size(sf{1},1);
 

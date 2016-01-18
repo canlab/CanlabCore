@@ -17115,6 +17115,787 @@ to fill empty/removed vars</p>
 </dd></dl>
 
 </div>
+<div class="section" id="model-building-tools">
+<h1>Model_building_tools<a class="headerlink" href="#model-building-tools" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Model_building_tools"></span><dl class="function">
+<dt id="Model_building_tools.fmri_spline_basis">
+<code class="descclassname">Model_building_tools.</code><code class="descname">fmri_spline_basis</code><span class="sig-paren">(</span><em>TR</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.fmri_spline_basis" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>xBF = spline_hrf_basis(TR, optional args)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>imTR:</strong></dt>
+<dd><p class="first last">repetition time; sampling resolution of data</p>
+</dd>
+<dt><strong>&#8216;plot&#8217;:</strong></dt>
+<dd><p class="first last">optional: plot basis set</p>
+</dd>
+<dt><strong>&#8216;nbasis&#8217;:</strong></dt>
+<dd><p class="first last">optional: number of knot points</p>
+</dd>
+<dt><strong>&#8216;order&#8217;:</strong></dt>
+<dd><p class="first last">optional: order of spline model (# matched derivatives)</p>
+</dd>
+<dt><strong>&#8216;length&#8217;:</strong></dt>
+<dd><p class="first last">optional: length of window to model, in seconds</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Outputs:
+:Inputs:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>xBF.dt:</strong></dt>
+<dd>time bin length {seconds}</dd>
+<dt><strong>xBF.name:</strong></dt>
+<dd>description of basis functions specified</dd>
+<dt><strong>xBF.length:</strong></dt>
+<dd>window length (seconds)</dd>
+<dt><strong>xBF.order:</strong></dt>
+<dd>order</dd>
+<dt><strong>xBF.bf:</strong></dt>
+<dd><p class="first">Matrix of basis functions</p>
+<p class="last">32 second long spline basis set for fmri model</p>
+</dd>
+<dt><strong>xBF_hires:</strong></dt>
+<dd>Sampled at high resolution, TR * 16</dd>
+<dt><strong>xBF:</strong></dt>
+<dd>Sampled at TR</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">xBF_hires</span><span class="p">,</span> <span class="n">xBF</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmri_spline_basis</span><span class="p">(</span><span class="n">TR</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<span class="p">[</span><span class="n">xBF_hires</span><span class="p">,</span> <span class="n">xBF</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmri_spline_basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;length&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s">&#39;nbasis&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&#39;order&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&#39;plot&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.getPredictors">
+<code class="descclassname">Model_building_tools.</code><code class="descname">getPredictors</code><span class="sig-paren">(</span><em>stimList</em>, <em>HRF</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.getPredictors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build predictors and delta functions, given a condition function or delta
+function and either a convolution matrix or vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">model</span><span class="p">,</span><span class="n">delta</span><span class="p">]</span> <span class="o">=</span> <span class="n">getPredictors</span><span class="p">(</span><span class="n">stimList</span><span class="p">,</span> <span class="n">HRF</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>IMPORTANT: YOU MUST ADD THE INTERCEPT YOURSELF!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>stimList:</strong></dt>
+<dd><p class="first last">condition function OR delta function (1/0 indicator)</p>
+</dd>
+<dt><strong>HRF:</strong></dt>
+<dd><ol class="first last arabic">
+<li><p class="first">hemodynamic response function</p>
+</li>
+<li><p class="first">Basis set (columns)</p>
+</li>
+<li><p class="first">or convolution matrix (columns
+are HRF), defined as:
+HRF = tril(toeplitz(hrf));</p>
+<p>multiple column vectors for HRF are treated as basis functions!</p>
+</li>
+</ol>
+</dd>
+<dt><strong>varargin</strong> for downsampleing:</dt>
+<dd><p class="first">&#8216;dsrate&#8217;: takes every nth element of the design matrix</p>
+<p class="last">&#8216;dslen&#8217;: the target number (length) you want to downsample to</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Other Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;force_delta&#8217;:</strong></dt>
+<dd><p class="first last">getPredictors tries to determine if the input stimList
+is a condition function with integers or a delta function with
+indicators, but this can fail in some cases.  Use this to force
+it to treat as a delta function.</p>
+</dd>
+</dl>
+<ol class="arabic">
+<li><p class="first">a col. vector of stimulus conditions OR a delta function matrix</p>
+</li>
+<li><dl class="first docutils">
+<dt>an HRF vector sampled at the frequency of the stimulus vector, OR</dt>
+<dd><p class="first last">a convolution matrix H (empty for default)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">Optional: downsampling factor for final design (i.e., TR)</p>
+</li>
+<li><p class="first">Optional: parametric modulator keyword and modulator values</p>
+<dl class="docutils">
+<dt>&#8216;parametric_singleregressor&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">Parametrically modulate onsets by</span></dt>
+<dd><blockquote class="first">
+<div><p>modulator values, using single regressor with modulated amplitude
+Enter a cell array with modulator values for each event
+type, with a column vector (empty cell for no modulation)</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>&#8216;parametric_standard&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">Parametrically modulate onsets by</span></dt>
+<dd><p class="first last">modulator values, using two regressors per event type - One
+to model the average response, and one for the
+mean-centered modulator values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ol>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><ol class="first arabic simple">
+<li>a n x 2 matrix of regressors (cols) for each condition</li>
+<li>a n x k delta matrix with onsets</li>
+</ol>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"><p class="first last">TR = 2, 16 samples per second in hi-res delta dhr</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">X</span> <span class="o">=</span> <span class="n">getPredictors</span><span class="p">(</span><span class="n">dhr</span><span class="p">,</span> <span class="n">hrf</span><span class="p">,</span> <span class="s">&#39;dsrate&#39;</span><span class="p">,</span> <span class="n">res</span><span class="o">*</span><span class="n">TR</span><span class="p">);</span> 
+<span class="n">X</span> <span class="o">=</span> <span class="n">getPredictors</span><span class="p">(</span><span class="n">dhr</span><span class="p">,</span> <span class="n">hrf</span><span class="p">,</span> <span class="s">&#39;dslen&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="o">/</span><span class="p">(</span><span class="n">res</span><span class="o">*</span><span class="n">TR</span><span class="p">));</span> 
+</pre></div>
+</div>
+<p>stimList can be condition function e.g., [1 3 2 4 3 2 1]&#8217; or
+delta matrix (n x k), n samples and k conditions, e.g., [1 0 0 0 1 0 1]&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Resampling:</th><td class="field-body">the default N in matlab resample has built-in antialiasing,</td>
+</tr>
+</tbody>
+</table>
+<p>but may not be good for fmri designs!  The appropriate downsampling
+is expected to be res*TR (res is units of samples/s), but we use 0
+because the model will depend on the analysis method used, and this is
+the most veridical approach.  With N = 0, every ith sample is used, where
+i is the downsampling factor you input.  Popular choices are 16*TR (for
+onsets2delta.m), using the SPM default res of 16.
+Delta is NOT resampled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body">TR = 2, 16 samples per second in hi-res delta dhr</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">tmp</span><span class="p">,</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">downsample_delta</span><span class="p">(</span><span class="n">dhr</span><span class="p">,</span><span class="mi">16</span><span class="o">*</span><span class="mi">2</span><span class="p">);</span> <span class="n">X</span><span class="o">=</span><span class="n">getPredictors</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">hrf</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.ideal_deconv6">
+<code class="descclassname">Model_building_tools.</code><code class="descname">ideal_deconv6</code><span class="sig-paren">(</span><em>conditions</em>, <em>mspec</em>, <em>ttype</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.ideal_deconv6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests deconvolution matrix directly against idealized data
+you put in the exact temporal sequence to be deconvolved,
+in the form of the DX matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">rmsd</span><span class="p">,</span><span class="n">msdstd</span><span class="p">,</span><span class="n">msdb</span><span class="p">,</span><span class="n">biasmean</span><span class="p">,</span><span class="n">meanest</span><span class="p">,</span><span class="n">min95est</span><span class="p">,</span><span class="n">max95est</span><span class="p">,</span><span class="n">ALLINFO</span><span class="p">,</span><span class="n">hrf</span><span class="p">,</span><span class="n">snr</span><span class="p">,</span><span class="n">TR</span><span class="p">]</span> <span class="o">=</span> <span class="n">ideal_deconv6</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span><span class="n">mspec</span><span class="p">,</span><span class="n">ttype</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>DX:</strong></dt>
+<dd><p class="first last">deconvolution matrix</p>
+</dd>
+<dt><strong>tp:</strong></dt>
+<dd><p class="first last">time points estimated for each condition in DX</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">repetition time of scan</p>
+</dd>
+<dt><strong>ttype:</strong></dt>
+<dd><p class="first last">trial types to test (out of 1:n different conditions in DX)
+recommended for time saving to use ttype = a single number only</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function is like ideal_deconv5, but tests variability across designs as well.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.intercept_model">
+<code class="descclassname">Model_building_tools.</code><code class="descname">intercept_model</code><span class="sig-paren">(</span><em>nvols_per_run</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.intercept_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build design matrix X for intercepts
+given vector of session lengths [s1 s2 s3] in images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>x = intercept_model(nvols_per_run, [indx of dummy scans in each session])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>nvols_per_run = [166 166 144 137];
+x = intercept_model(nvols_per_run);
+
+x = intercept_model(repmat(166, 1, 5));
+
+Xi = intercept_model(EXPT.FIR.nruns, 1:2);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.modifiedconv">
+<code class="descclassname">Model_building_tools.</code><code class="descname">modifiedconv</code><span class="sig-paren">(</span><em>tr</em>, <em>condf</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.modifiedconv" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"><div class="first highlight-python"><div class="highlight"><pre>model = modifiedconv(tr,condf,heighteq [all opt],delayeq,ttopeakeq,uonseteq)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tr:</strong></dt>
+<dd><p class="first last">repetition time (sampling rate) of scanning, in seconds</p>
+</dd>
+<dt><strong>condf:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>condition function</dt>
+<dd><p class="first last">an indicator vector of zeros and ones, where ones indicate event
+onsets</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>USES nonlinear saturation in height only
+with a guess as to what the decrease in saturation is as a function of
+the time since previous stimulation (exponential model, alpha version)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>condf = [1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0]&#39;;
+X = modifiedconv(2,condf);
+% X is convolved predictor
+plot(X)
+X2 = conv(condf,spm_hrf(2)./max(spm_hrf(2)));
+hold on;
+plot(X2,&#39;r&#39;);
+legend({&#39;Modified&#39; &#39;Linear&#39;})
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Please see:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p class="last">Wager, T. D., Hernandez, L., Vasquez, A., Nichols, T., and Noll, D.
+C. (in press). Accounting for nonlinear BOLD effects in fMRI: Parameter 
+estimates and model for accurate prediction in variable-duration blocked 
+and rapid event-related studies.  Neuroimage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>heighteq = []; delayeq = []; peakeq = []; uonseteq = [];</dt>
+<dd><ul class="first last simple">
+<li>defaults</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.onsets2delta">
+<code class="descclassname">Model_building_tools.</code><code class="descname">onsets2delta</code><span class="sig-paren">(</span><em>ons</em>, <em>len</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.onsets2delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds high-res delta function, given cell array of onset times</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>delta = onsets2delta(ons, [length: num rows in original units])
+</pre></div>
+</div>
+<p>Tor Wager, 2 / 24 / 04, update 10 / 12 / 10</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>ons:</strong></dt>
+<dd><p class="first">onsets for each of a series of conditions</p>
+<p>One cell per condition per session, e.g., ons{1} = [24 27 29 44]&#8217;;</p>
+<p>Units are arbitrary (e.g., TRs or seconds)</p>
+<p>Onsets are assumed to start at time 0 (0 is start of run/session)</p>
+<p>e.g., from an SPM.mat fmri design structure, for one session:</p>
+<div class="last highlight-python"><div class="highlight"><pre>ons = cell(1, nconds);
+[ons{:}] = deal(reportmod_model.Sess(1).U(:).ons)
+</pre></div>
+</div>
+</dd>
+<dt><strong>len:</strong></dt>
+<dd><blockquote class="first">
+<div><p>optional: number of rows in original units.  Useful for making</p>
+</div></blockquote>
+<p class="last">a design matrix with the right number of rows after convolution and downsampling</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>delta:</strong></dt>
+<dd><p class="first">indicator matrix of vectors for each condition with 1/0 for each onset</p>
+<p>Type is logical; you may want to do double(delta) before operating</p>
+<p>Resolution of high-res delta functions = original units (secs or TRs) * 16</p>
+<p class="last">The number of rows is the max onset + 1, times 16</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For what to do with output, see:
+getPredictors : for design-matrix building
+downsample_canlab : for downsampling to TR/secs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">ONSETS2FMRIDESIGN and object-oriented fmri_model object</td>
+</tr>
+</tbody>
+</table>
+<p>(methods: build, etc.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.onsets2dx">
+<code class="descclassname">Model_building_tools.</code><code class="descname">onsets2dx</code><span class="sig-paren">(</span><em>onsets</em>, <em>TR</em>, <em>scansperrun</em>, <em>numseconds</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.onsets2dx" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">DX</span><span class="p">,</span><span class="n">delta</span><span class="p">]</span> <span class="o">=</span> <span class="n">onsets2dx</span><span class="p">(</span><span class="n">onsets</span><span class="p">,</span> <span class="n">TR</span><span class="p">,</span> <span class="n">scansperrun</span><span class="p">,</span> <span class="n">numseconds</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>onsets:</strong></dt>
+<dd><p class="first last">cell array whose length is num runs * num conditions,
+e.g., {run 1 ant onsets, run 1 stim onsets, run 2 ant onsets,
+run 2 stim onsets}</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">TR in seconds</p>
+</dd>
+<dt><strong>scansperrun:</strong></dt>
+<dd><p class="first last">number of volumes in each run</p>
+</dd>
+<dt><strong>numseconds:</strong></dt>
+<dd><p class="first last">number of seconds after event onsets to generate regressors for [default: 32]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>TR = 2;
+scansperrun = [192 196 196 184 190 192];
+numseconds = 30;
+[DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
+EXPT.FIR.model{subjectnumber} = DX;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.onsets2fmridesign">
+<code class="descclassname">Model_building_tools.</code><code class="descname">onsets2fmridesign</code><span class="sig-paren">(</span><em>ons</em>, <em>TR</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.onsets2fmridesign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds design matrix X and delta function, given cell array of onset times in s
+One cell per condition per session, e.g., ons{1} = [24 27 29 44]&#8217;;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[X, delta, delta_hires, hrf] = onsets2fmridesign(onsets, TR, [len], [custom hrf or basis set name],[other optional args, i.e., norm])
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Summary:</dt>
+<dd><ul class="first last simple">
+<li>handles multiple conditions</li>
+<li>handles custom HRFs and multiple basis functions</li>
+<li>handles input event durations</li>
+<li>handles two kinds of parametric modulators</li>
+<li>handles variable-duration onsets</li>
+<li>handles nonlinear saturation (see hrf_saturation.m)</li>
+<li>Can build single-trial model</li>
+<li>not yet: variable-duration parametric
+modulators</li>
+<li>See the code comments for a discussion of absolute scaling of
+regressors and efficiency.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>onsets:</strong></dt>
+<dd><ul class="first last simple">
+<li>1st column is onsets for events,</li>
+<li>2nd column is optional durations for each event</li>
+<li>Enter single condition or cell vector with cells for each condition (each event type).</li>
+</ul>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">RT in seconds</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">First two are fixed, then keywords:</p>
+<dl class="last docutils">
+<dt><strong>len:</strong></dt>
+<dd><p class="first last">optional length in s for model, or [] to skip if using additional. 
+&#8220;len&#8221; is usually the number of images multiplied by TR.</p>
+</dd>
+<dt><strong>HRF name:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>string or actual values</dt>
+<dd><ol class="first last arabic simple">
+<li>a string used by spm_get_bf.m</li>
+<li>a custom HRF, sampled in seconds</li>
+<li>or [] to skip</li>
+</ol>
+</dd>
+</dl>
+</dd>
+<dt><strong>&#8216;norm&#8217;:</strong></dt>
+<dd><p class="first last">mean-center, orthogonalize, and L2-norm basis set</p>
+</dd>
+<dt><strong>&#8216;parametric_singleregressor&#8217;:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Parametrically modulate onsets by</dt>
+<dd><p class="first last">modulator values, using single regressor with modulated amplitude
+Enter a cell array with modulator values for each event
+type, with a column vector (empty cell for no modulation)</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>&#8216;parametric_standard&#8217;:</strong></dt>
+<dd><p class="first last">Parametrically modulate onsets by
+modulator values, using two regressors per event type - One
+to model the average response, and one for the
+mean-centered modulator values
+of modulator values in each cell</p>
+</dd>
+<dt><strong>&#8216;noampscale&#8217;:</strong></dt>
+<dd><p class="first last">Do not scale HRF to max amplitude = 1; default with SPM
+basis sets is to scale.  Custom HRF entries are not scaled.</p>
+</dd>
+<dt><strong>&#8216;noundershoot&#8217;:</strong></dt>
+<dd><p class="first last">Do not model undershoot - ONLY when using the canonical HRF</p>
+</dd>
+<dt><strong>&#8216;customneural&#8217;:</strong></dt>
+<dd><p class="first last">Followed by a vector of custom neural values (instead of
+standard event/epochs), sampled in sec.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Limitation: can only handle two events max within the same TR</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>X:</strong></dt>
+<dd><p class="first last">model, sampled at TR</p>
+</dd>
+<dt><strong>delta:</strong></dt>
+<dd><p class="first last">indicator mtx, sampled at TR</p>
+</dd>
+<dt><strong>delta_hires:</strong></dt>
+<dd><p class="first last">indicator sampled at 16 Hz</p>
+</dd>
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">hemodynamic response function, sampled at 16 Hz</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>X = onsets2fmridesign(ons, TR, size(imgs, 1) .* TR, &#39;hrf (with time derivative)&#39;);
+
+X = onsets2fmridesign({[0 30 60]&#39; [15 45 90&#39;]}, 1.5, 180, spm_hrf(1), &#39;parametric_standard&#39;, {[2 .5 1]&#39; [1 2 2.5]&#39;}); figure; plot(X)
+X = onsets2fmridesign({[0 30 60]&#39; [15 45 90&#39;]}, 1, 180, spm_hrf(1), &#39;parametric_standard&#39;, {[2 .5 1]&#39; [1 2 2.5]&#39;}); figure; plot(X)
+X = onsets2fmridesign({[0 30 60]&#39; [15 45 90&#39;]}, 2, 180, spm_hrf(1), &#39;parametric_standard&#39;, {[2 .5 1]&#39; [1 2 2.5]&#39;}); figure; plot(X)
+X = onsets2fmridesign({[0 30 60]&#39; [15 45 90&#39;]}, 2, 180, spm_hrf(1), &#39;parametric_singleregressor&#39;, {[2 .5 1]&#39; [1 2 2.5]&#39;}); figure; plot(X)
+X = onsets2fmridesign({[0 30 60]&#39; [15 45 90&#39;]}, 1, 180, spm_hrf(1), &#39;parametric_singleregressor&#39;, {[2 .5 1]&#39; [1 2 2.5]&#39;}); figure; plot(X)
+
+% Here, spm_hrf(1) is for the canonical HRF in spm.
+
+X = onsets2fmridesign(ons, 2, size(dat.dat, 2) .* 2, [], [], &#39;noampscale&#39;);
+
+X2 = onsets2fmridesign(onsp, 2, length(dat.removed_images) .* 2, [], [], &#39;customneural&#39;, report_predictor);
+plotDesign(ons,[], TR, &#39;yoffset&#39;, 1);
+</pre></div>
+</div>
+<p>A note on absolute scaling and efficiency:
+Scaling of the response influences efficiency. It does not affect model
+fits or power when the scaling is equated (constant across events in a
+design), but it does affect efficiency simulations.</p>
+<dl class="docutils">
+<dt>Event duration:</dt>
+<dd>assumes that the max neural sampling rate is about 1 Hz,
+which produces responses that do not exceed about 5x the
+unit, single-event response.  This is a reasonable
+assumption, and affects only the absolute scaling across
+ISIs/block lengths.</dd>
+</dl>
+<p>An event duration of about 1 sec produces a response of unit amplitude.
+The sampling resolution is 0.1 sec, so that is the lowest you can go - and it will produce lower response amplitude/less efficient designs, as less neural activity is being delivered.
+If event durations are not entered, then events will have unit amplitude by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See Also:</th><td class="field-body">tor_make_deconv_mtx3, [or 2], plotDesign</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.onsets2parametric_mod_X">
+<code class="descclassname">Model_building_tools.</code><code class="descname">onsets2parametric_mod_X</code><span class="sig-paren">(</span><em>ons</em>, <em>pm_vals</em>, <em>nscan</em>, <em>basisset</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.onsets2parametric_mod_X" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>ons = ons{1}; %obj.Sess(1).U(1).ons ./ TR;
+pm_vals = obj.Sess(1).U(1).P.P;
+nscan = obj.nscan(s);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.plot_ideal_deconv5">
+<code class="descclassname">Model_building_tools.</code><code class="descname">plot_ideal_deconv5</code><span class="sig-paren">(</span><em>rmsd</em>, <em>msdstd</em>, <em>msdb</em>, <em>biasmean</em>, <em>meanest</em>, <em>min95est</em>, <em>max95est</em>, <em>INFO</em>, <em>hrf</em>, <em>snr</em>, <em>TR</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.plot_ideal_deconv5" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function plot_ideal_deconv5(rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,INFO,hrf,snr,TR,[truer])
+</pre></div>
+</div>
+<p>delta should be matrix of column vectors</p>
+<p>optional: truer, vector of &#8220;true&#8221; responses for each trial type</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.spm_mat2batchinput">
+<code class="descclassname">Model_building_tools.</code><code class="descname">spm_mat2batchinput</code><span class="sig-paren">(</span><em>SPM</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.spm_mat2batchinput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract info from SPM structure and format in batch input mode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">imgs</span><span class="p">,</span> <span class="n">TR</span><span class="p">,</span> <span class="n">scanspersess</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">onsets</span><span class="p">,</span> <span class="n">durations</span><span class="p">]</span> <span class="o">=</span> <span class="n">spm_mat2batchinput</span><span class="p">(</span><span class="n">SPM</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>:Input into SPM8:</p>
+<div class="highlight-python"><div class="highlight"><pre>tmod = time modulator (number per cell, order, linear = 1)
+</pre></div>
+</div>
+<p>For parametric modulation include a structure array, which is up to 1 x n in size, called pmod. n must be less
+than  or  equal  to  the  number  of  cells in the names/onsets/durations cell arrays. The structure array pmod
+must  have the fields: name, param and poly.  Each of these fields is in turn a cell array to allow the inclusion
+R for regressors of no interest</p>
+<p>NOTES:
+This is a preliminary version of this function and does not extract
+covariates, parametric modulators, etc.</p>
+<p>Returns output in the format you would use to enter into the SPM GUI to
+set up a model. Same format is used by canlab_spm_fmri_model_job.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Model_building_tools.tor_make_deconv_mtx3">
+<code class="descclassname">Model_building_tools.</code><code class="descname">tor_make_deconv_mtx3</code><span class="sig-paren">(</span><em>sf</em>, <em>tp</em>, <em>eres</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Model_building_tools.tor_make_deconv_mtx3" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [DX,sf] = tor_make_deconv_mtx(sf,tp,eres,[opt] TRs before stim onset,[num. sessions],[docenter],[scanspersess])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>sf:</strong></dt>
+<dd><p class="first">cell array of stick functions, one per condition
+all sf cells should be of the same length</p>
+<p class="last">Or matrix of stick functions, 1 column per condition</p>
+</dd>
+<dt><strong>tp:</strong></dt>
+<dd><p class="first last">number of timepoints to estimate in hrf deconvolution matrix</p>
+</dd>
+<dt><strong>eres:</strong></dt>
+<dd><p class="first last">timebins in sf array for each TR</p>
+</dd>
+<dt><strong>DX:</strong></dt>
+<dd><p class="first last">deconvolution matrix
+estimates O.tp time points for each condition
+Time resolution is in TRs</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional:</th><td class="field-body"><ol class="first arabic">
+<li><p class="first">TRs before: 0 or number of time-points to shift LEFT</p>
+</li>
+<li><p class="first">number of sessions; if &gt; 1, adds session-specific intercepts</p>
+</li>
+<li><p class="first">docenter, 1/0 for do/do not center columns, default 0</p>
+</li>
+<li><dl class="first docutils">
+<dt>scanspersess: how many scans per session?  prevents regressors from</dt>
+<dd><p class="first last">running over into the next session (recursive).</p>
+</dd>
+</dl>
+</li>
+</ol>
+<p>No parametric modulation of sf&#8217;s allowed.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>sf:</strong></dt>
+<dd><p class="first last">stick function resampled at TR</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 
 
           </div>
@@ -17145,6 +17926,7 @@ to fill empty/removed vars</p>
 <li><a class="reference internal" href="#image-thresholding">Image_thresholding</a></li>
 <li><a class="reference internal" href="#index-image-manip-tools">Index_image_manip_tools</a></li>
 <li><a class="reference internal" href="#module-Misc_utilities">Misc_utilities</a></li>
+<li><a class="reference internal" href="#model-building-tools">Model_building_tools</a></li>
 </ul>
 
   <h4>Previous topic</h4>

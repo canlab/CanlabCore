@@ -1,12 +1,19 @@
 function [anybad,wh] = iimg_check_volinfo(maskInfo,imgInfo)
-% anybad = iimg_check_volinfo(maskInfo,imgInfo)
-%
 % Checks a series of image .mat files and dims against a reference
 % (maskInfo)
 %
-% maskInfo and volInfo are spm-style volume info structures
+% :Usage:
+% ::
+%
+%     anybad = iimg_check_volinfo(maskInfo,imgInfo)
+%
+% :Inputs:
+%
+%   **maskInfo** and **volInfo :**
+%        are spm-style volume info structures
+%
 % see spm_vol.m
-% 
+ 
 wh = [];
 
 n = length(imgInfo);

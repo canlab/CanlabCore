@@ -1,10 +1,18 @@
 function d = distance(u, v)
-% d = distance(u, v)
 % Euclidean distance between u and v
-% u and v should be column vectors or matrices in k-dim space, where k is
-% the number of columns of u and v.
 %
-% if u is a single row, replicates u to size(v,1)
+% :Usage:
+% ::
+%
+%     d = distance(u, v)
+%
+% :Inputs:
+%
+%   **u** and **v:**
+%        should be column vectors or matrices in k-dim space, where k is
+%        the number of columns of u and v.
+%
+%        if u is a single row, replicates u to size(v,1)
 
 if size(u,1) < size(v,1)
     u = repmat(u,size(v,1),1);

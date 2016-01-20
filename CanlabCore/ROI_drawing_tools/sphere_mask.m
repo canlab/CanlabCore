@@ -1,32 +1,52 @@
 function [clusters,CLU] = sphere_mask(P,XYZmm,r,outname,varargin)
-% [clusters,maskCLU] = sphere_mask(fname,XYZmm,r,outname,[maskname],[overlay])
-%
 % Creates mask images and clusters for a set of spheres defined around
 % coordinates you specify.  Used for creating regions of interest (ROIs).
+%
+% :Usage:
+% ::
+%
+%     [clusters,maskCLU] = sphere_mask(fname,XYZmm,r,outname,[maskname],[overlay])
+%
 % Spheres may be masked with an anatomical mask file.
 %
+% :Inputs:
 %
-% P       is input image name with correct dimensions and vox sizes for your
-% study
-% XYZmm   is mm coordinates (row vector) for sphere center
-% r       is radius in mm
-% outname is string for output mask name, e.g., 'sphere_mask.img'
-% [maskname]    is optional mask .img containing additional constraints
-%       (e.g., gray matter mask, etc.), can be in different dimensions
-% see also mask2clusters, montage_clusters
+%   **P:**
+%        is input image name with correct dimensions and vox sizes for your
+%        study
 %
-% tor wager, Fall 2003.
-% modified March 2004 to provide additional anatomical masking based on
-% anatomical ROI (e.g., a gray matter region from the ICBM template)
+%   **XYZmm:**
+%        is mm coordinates (row vector) for sphere center
 %
-% Example:
-% tmp = sphere_mask(EXPT.SNPM.P{1}(1,:),[25.6 -45.5 77.0],10,'test.img','ICBM_area74.img');
-% icbm_localize(tmp)
+%   **r:**
+%        is radius in mm
 %
-% M =which('ICBM_brainonly_1mm_seg1.img')
-% cl = sphere_mask(d(1).name,[35 -57 54; -23 -59 56;13 -63 62; -7 -77 50; 25 -79 30; -23 -81 18;41 -7 46;-37 -7 46; 35 -1 30; 29 -3 60; -29 -13 46; -5 -1 56;-37 29 30; 53 21 32;51 11 -4;43 -69 14;-45 -71 12;29 -83 4;11 -89 -4;-11 -79 2; -1 -95 -14; 17 -99 -8;31 -77 -20;-23 -81 -20;41 -71 -20;-43 -79 -12],8,'tmp.img',M);
+%   **outname:**
+%        is string for output mask name, e.g., 'sphere_mask.img'
+%
+%   **[maskname]:**
+%        is optional mask .img containing additional constraints
+%        (e.g., gray matter mask, etc.), can be in different dimensions
+%
+% :See Also: mask2clusters, montage_clusters
+%
+% :Examples:
+% ::
+%
+%    tmp = sphere_mask(EXPT.SNPM.P{1}(1,:),[25.6 -45.5 77.0],10,'test.img','ICBM_area74.img');
+%    icbm_localize(tmp)
+%
+%    M =which('ICBM_brainonly_1mm_seg1.img')
+%    cl = sphere_mask(d(1).name,[35 -57 54; -23 -59 56;13 -63 62; -7 -77 50; 25 -79 30; -23 -81 18;41 -7 46;-37 -7 46; 35 -1 30; 29 -3 60; -29 -13 46; -5 -1 56;-37 29 30; 53 21 32;51 11 -4;43 -69 14;-45 -71 12;29 -83 4;11 -89 -4;-11 -79 2; -1 -95 -14; 17 -99 -8;31 -77 -20;-23 -81 -20;41 -71 -20;-43 -79 -12],8,'tmp.img',M);
 %
 % Matlab 6.5/OSX bug gives seg fault or something if mask is too big.
+%
+% ..
+%    tor wager, Fall 2003.
+%    modified March 2004 to provide additional anatomical masking based on
+%    anatomical ROI (e.g., a gray matter region from the ICBM template)
+% ..
+
 
 CLU = [];
 

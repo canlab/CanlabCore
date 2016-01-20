@@ -1,16 +1,21 @@
 function [dat, volInfo, masked_vol] = iimg_mask(maskindx,dat,varargin)
-% [masked_indx, volInfo, masked_vol] = iimg_mask(maskindx,dat,[volInfo], [outname])
-%
 % Masks index image vector or filenames in dat
 % With img vector or filenames in maskindx
 % * Checks dimensions to make sure origins and vox. sizes are same
 %
-% fastest way to mask an image:
-% [masked_indx_data, volInfo] = iimg_mask(maskindx,dat)
+% :Usage:
+% ::
 %
-% or
+%     [masked_indx, volInfo, masked_vol] = iimg_mask(maskindx,dat,[volInfo], [outname])
 %
-% [masked_indx, xyz, masked_vol] = iimg_mask(mask filename,image filenames)
+% Fastest way to mask an image:
+% ::
+%
+%    [masked_indx_data, volInfo] = iimg_mask(maskindx,dat)
+%
+%    % or
+%
+%    [masked_indx, xyz, masked_vol] = iimg_mask(mask filename,image filenames)
 %
 % even slower: reconstruct a 3-D volume and return in masked_vol
 

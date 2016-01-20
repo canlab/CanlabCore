@@ -1,22 +1,34 @@
 function [str,dcon] = spatial_contrast(XYZ1,XYZ2)
-% function [str,dcon] = spatial_contrast(XYZ1,XYZ2)
-%
-% this function tests relative locations of individual 
+% This function tests relative locations of individual 
 % spatial peaks from clusters.
+%
+% :Usage:
+% ::
+%
+%     [str,dcon] = spatial_contrast(XYZ1,XYZ2)
 %
 % plots position of XYZ2 relative to XYZ1
 % thus, an 'anterior' group position means that XYZ2
 % peaks are anterior to XYZ1 peaks
 %
-% input:  
-%	XYZ1,2: n x 3 coordinates (in mm)
-%   con:    contrast vector, e.g., [1 -1]
+% :Inputs:
 %
-% 11/2/03 by Tor Wager
+%   **XYZ1,2:**
+%        n x 3 coordinates (in mm)
 %
-% Minor modification/documentation by Tor Wager, Aug 2010
-% Now correctly indicates that permutation test is used for p-values.
+% :Output:
+%
+%   **con:**
+%        contrast vector, e.g., [1 -1]
+%
 % See help conf_region for details of the test.
+%
+% ..
+%    11/2/03 by Tor Wager
+%
+%    Minor modification/documentation by Tor Wager, Aug 2010
+%    Now correctly indicates that permutation test is used for p-values.
+% ..
 
 
 dcon = XYZ2 - XYZ1;

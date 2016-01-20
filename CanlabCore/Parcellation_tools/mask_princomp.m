@@ -1,28 +1,40 @@
 function [clout] = mask_princomp(clusters,varargin)
-% function [clusters] = mask_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[saveflag])
+% :Usage:
+% ::
+%
+%     [clusters] = mask_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[saveflag])
 % 
-% this function is just like cluster_princomp, except that it works on the SET
+% This function is just like cluster_princomp, except that it works on the SET
 % of activations in all clusters, rather than within each cluster.
 %
 % clusters is structure of clusters from tor_extract_rois.m
-% 
+%
 % behavioral vector is row vector of behavioral or other scores to correlate
+%
 % corr flag:  1 = work on correlations among voxels, 2 = work on covariance
+%
 % plotflag:   1 = yes, 0 = no.  plots.
 %
-%
 % try this to test the program on random data:
-% cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
-% cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
-% cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)',1,6);
-% cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)',1,4);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%    cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%    cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)',1,6);
+%    cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)',1,4);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%
 % mean-center everything now:
-% cl.PCA = []; cl.all_data - cl.all_data - repmat(mean(cl.all_data),size(cl.all_data,1),1);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl.PCA = []; cl.all_data - cl.all_data - repmat(mean(cl.all_data),size(cl.all_data,1),1);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%
 % add another correlated group:
-% cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
 %
 % if component scores are used and correlated with behavior, this means that the subjects
 % tend to show the behavioral effect who also show the pattern associated with comp. x.  
@@ -49,7 +61,6 @@ function [clout] = mask_princomp(clusters,varargin)
 % Hubert, M., Rousseeuw, P.J., Verboven, S. (2002),
 %  "A fast method for robust principal components with applications to chemometrics", by Mia Hubert, Peter J. Rousseeuw, 
 %  Chemometrics and Intelligent Laboratory Systems, 60, 101-111.
-%
 %
 
 corrflag = 1; plotflag = 1; robustflag = 1; saveflag = 0;

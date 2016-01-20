@@ -1,36 +1,45 @@
-%---------------------------------------------------------------------
-% EPrime helper function
-% 2/22/10 Joe Wielgosz
-%
+function [edat_struct, edat_cells] = parse_edat_txt(fname)
 % Reads EPrime .txt output (equivalent to EDAT) directly into matlab cell arrays/structures
-%
-% Outputs:
-%
-%   edat_struct: Structure containing the following fields:
-%
-%     header: 1-element structure whose fields are header items from EDAT
-%     run: 1-element structure whose fields are run-specific items from EDAT
-%     trials: n-element structure whose fields are trial-specific items from EDAT
-%        where n is the number of trials
-%
-%   edat_cells: Structure containing the following fields:
-%
-%     header_cols: 1-row cell array whose fields are header column names from EDAT
-%     run_cols: 1-row cell array whose cells are run-specific column names from EDAT
-%     trials_cols: 1-row cell array whose cells are trial-specific column names from EDAT
-% 
-%     header: 1-row cell array whose cells are header items from EDAT
-%     run: 1-row cell array whose cells are run-specific items from EDAT
-%     trials: n-row cell array whose cells are trial-specific items from EDAT
-%        where n is the number of trials
 %
 % Inputs:
 %
-%   fname: name of file to parse
+%   **fname:**
+%        name of file to parse
+%
+% :Outputs:
+%
+%   **edat_struct:**
+%        Structure containing the following fields:
+%
+%        header: 1-element structure whose fields are header items from EDAT
+%
+%        run: 1-element structure whose fields are run-specific items from EDAT
+%
+%        trials: n-element structure whose fields are trial-specific items from EDAT
+%                where n is the number of trials
+%
+%   **edat_cells:**
+%        Structure containing the following fields:
+%
+%        header_cols: 1-row cell array whose fields are header column names from EDAT
+%
+%        run_cols: 1-row cell array whose cells are run-specific column names from EDAT
+%
+%        trials_cols: 1-row cell array whose cells are trial-specific column names from EDAT
 % 
+%        header: 1-row cell array whose cells are header items from EDAT
+%
+%        run: 1-row cell array whose cells are run-specific items from EDAT
+%
+%        trials: n-row cell array whose cells are trial-specific items from EDAT
+%                where n is the number of trials
+%
+% ..
+%    EPrime helper function
+%    2/22/10 Joe Wielgosz
+% ..
 
 
-function [edat_struct, edat_cells] = parse_edat_txt(fname)
 
 % Two passes are necessary:
 %  1) find all fields used in the file

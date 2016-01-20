@@ -1,8 +1,10 @@
 function model = onsets2parametric_mod_X(ons, pm_vals, nscan, basisset, varargin)
-
-% ons = ons{1}; %obj.Sess(1).U(1).ons ./ TR;
-% pm_vals = obj.Sess(1).U(1).P.P;
-% nscan = obj.nscan(s);
+% :Examples:
+% ::
+%
+%    ons = ons{1}; %obj.Sess(1).U(1).ons ./ TR;
+%    pm_vals = obj.Sess(1).U(1).P.P;
+%    nscan = obj.nscan(s);
 
 if ~iscell(ons)
     error('ons must be cell array.')

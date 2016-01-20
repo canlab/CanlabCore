@@ -98,3 +98,38 @@ Image_thresholding
 ===============
 .. automodule:: Image_thresholding
    :members:
+
+Index_image_manip_tools
+===============
+.. automodule:: Index_image_manip_tools
+   :members:
+
+Misc_utilities
+===============
+.. automodule:: Misc_utilities
+   :members:
+
+Model_building_tools
+===============
+.. automodule:: Model_building_tools
+   :members:
+
+OptimizeDesign11
+===============
+.. automodule:: OptimizeDesign11
+   :members:
+
+Parcellation_tools
+===============
+.. automodule:: Parcellation_tools
+   :members:
+
+peak_coordinates
+===============
+.. automodule:: peak_coordinates
+   :members:
+
+ROI_drawing_tools
+===============
+.. automodule:: ROI_drawing_tools
+   :members:

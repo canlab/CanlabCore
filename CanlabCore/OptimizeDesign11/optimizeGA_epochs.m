@@ -1,5 +1,6 @@
-function M = optimizeGA_epochs(GA);
-% outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations%
+function M = optimizeGA_epochs(GA)
+% outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations
+%
 % Ways to avoid block designs
 %   counterbalancing factor
 %   power lower limit cutoff pushes power higher
@@ -9,8 +10,9 @@ function M = optimizeGA_epochs(GA);
 %   avoid transformation errors in using high pass filter
 %   efficiency is based on the sample size, determined by TR, of the model - but so is fft power...
 %
-% Tor Wager 12/29/01 
-%
+% ..
+%    Tor Wager 12/29/01 
+% ..
 
 N = fieldnames(GA);
 for i = 1:length(N)

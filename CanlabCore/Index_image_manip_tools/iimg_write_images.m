@@ -1,11 +1,22 @@
-% iimg_write_images(dat,volInfo,outnames)
-%
-% Write a series of Analyze images given:
-% dat, voxels x images matrix of image data in index format
-% volInfo, spm-style info structure; see iimg_read_img
-% outnames, a string matrix (or cell array) of output filenames, or the name of a 4-D file to create 
-
 function iimg_write_images(dat, volInfo, outnames)
+% Write a series of Analyze images given inputs.
+%
+% :Usage:
+% ::
+%
+%     iimg_write_images(dat,volInfo,outnames)
+%
+% :Inputs:
+%
+%   **dat:**
+%        voxels x images matrix of image data in index format
+%
+%   **volInfo:**
+%        spm-style info structure; see iimg_read_img
+%
+%   **outnames:**
+%        a string matrix (or cell array) of output filenames, or the name of a 4-D file to create 
+
     
     if isempty(outnames)
         error('You must specify a string array of output names, or a single 4-D image file name');

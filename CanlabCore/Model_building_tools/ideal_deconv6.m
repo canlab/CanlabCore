@@ -1,21 +1,33 @@
 function [rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,ALLINFO,hrf,snr,TR] = ideal_deconv6(conditions,mspec,ttype)
-% [rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,ALLINFO,hrf,snr,TR] = ideal_deconv6(conditions,mspec,ttype)
-%
-% tests deconvolution matrix directly against idealized data
+% Tests deconvolution matrix directly against idealized data
 % you put in the exact temporal sequence to be deconvolved,
 % in the form of the DX matrix.
 %
-% Tor Wager, 4/19/02
+% :Usage:
+% ::
 %
-% inputs:
-%	DX	    deconvolution matrix
-%	tp	    time points estimated for each condition in DX
-%	TR	    repetition time of scan
-%	ttype   trial types to test (out of 1:n different conditions in DX)
-%           recommended for time saving to use ttype = a single number only
+%     [rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,ALLINFO,hrf,snr,TR] = ideal_deconv6(conditions,mspec,ttype)
 %
+% :Inputs:
 %
-% this function is like ideal_deconv5, but tests variability across designs as well.
+%   **DX:**
+%        deconvolution matrix
+%
+%   **tp:**
+%        time points estimated for each condition in DX
+%
+%   **TR:**
+%        repetition time of scan
+%
+%   **ttype:**
+%        trial types to test (out of 1:n different conditions in DX)
+%        recommended for time saving to use ttype = a single number only
+%
+% This function is like ideal_deconv5, but tests variability across designs as well.
+%
+% ..
+%    Tor Wager, 4/19/02
+% ..
 
 hrf = spm_hrf(mspec.TR);
 hrf = hrf ./ max(hrf);

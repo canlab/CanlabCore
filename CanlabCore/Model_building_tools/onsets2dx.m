@@ -1,21 +1,34 @@
-% function [DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
-%
-% onsets - cell array whose length is num runs * num conditions,
-%   e.g., {run 1 ant onsets, run 1 stim onsets, run 2 ant onsets, run 2 stim
-%   onsets}
-% TR - TR in seconds
-% scansperrun - number of volumes in each run
-% numseconds - number of seconds after event onsets to generate regressors for [default: 32]
-%
-% E.g.:
-% TR = 2;
-% scansperrun = [192 196 196 184 190 192];
-% numseconds = 30;
-% [DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
-% EXPT.FIR.model{subjectnumber} = DX;
-
 function [DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
-    
+% :Usage:
+% ::
+%
+%     [DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
+%
+% :Inputs:
+%
+%   **onsets:**
+%        cell array whose length is num runs * num conditions,
+%        e.g., {run 1 ant onsets, run 1 stim onsets, run 2 ant onsets,
+%        run 2 stim onsets}
+%
+%   **TR:**
+%        TR in seconds
+%
+%   **scansperrun:**
+%        number of volumes in each run
+%
+%   **numseconds:**
+%        number of seconds after event onsets to generate regressors for [default: 32]
+%
+% :Examples:
+% ::
+%
+%    TR = 2;
+%    scansperrun = [192 196 196 184 190 192];
+%    numseconds = 30;
+%    [DX,delta] = onsets2dx(onsets, TR, scansperrun, numseconds)
+%    EXPT.FIR.model{subjectnumber} = DX;
+
     if ~iscell(onsets)
         for i = 1:size(onsets,2), tmp{i} = onsets(:,i); end 
         onsets = tmp;

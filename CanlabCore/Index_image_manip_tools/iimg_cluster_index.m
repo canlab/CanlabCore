@@ -1,12 +1,23 @@
 function [clindx,nvox] = iimg_cluster_index(dat,xyz,k)
-% [clindx,nvox] = iimg_cluster_index(dat,xyz,[k])
-% xyz is 3 x n list of voxel coords, volInfo.xyzlist'
-% dat is index vector of image values
+% :Usage:
+% ::
+%
+%     [clindx,nvox] = iimg_cluster_index(dat,xyz,[k])
+%
+% :Inputs:
+%
+%   **xyz:**
+%        is 3 x n list of voxel coords, volInfo.xyzlist'
+%
+%   **dat:**
+%        is index vector of image values
 %
 % Returns: cluster index and cluster sizes for non-zero, non-nan voxels
 %
-% Updates: Tor Wager, July 2015, removed 50K voxel clustering limitation
-% based on now-fixed SPM bug
+% ..
+%    Updates: Tor Wager, July 2015, removed 50K voxel clustering limitation
+%    based on now-fixed SPM bug
+% ..
 
 %% initialize
 nimgs = size(dat,2);

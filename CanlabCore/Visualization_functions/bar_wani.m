@@ -143,7 +143,7 @@ for i = 1:length(varargin)
     end
 end
 
-handle = create_figure('Bar plot');
+handle.main = create_figure('Bar plot');
 set(gcf, 'Position', [1   450   300.*size(y,1)   250]);
 
 barnum = size(y,2);
@@ -162,8 +162,8 @@ if doyline
     line([0.55 .45+size(y,1)], [yln_y yln_y], 'linewidth', 1, 'linestyle', '--', 'color', [.4 .4 .4]);  
 end
 
-barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
-barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
+handle.bar = barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
+handle.bar = barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
 set(gcf, 'Color', 'w')
 set(gca, 'ylim', [ymin ymax], 'XLim', [0.55 .45+size(y,1)], 'fontsize', 20, 'linewidth', 1.8); % **ADJUST**: adjust basic setting for axis
 
@@ -258,7 +258,14 @@ if dobtwlines
 end
 
 set(gca, 'tickdir', 'out', 'ticklength', [.01 .01]);
-set(gca, 'xtick', sort(xdata_all(:)));
+
+xtickdata = sort(xdata_all(:));
+
+if size(y,1)==1
+    set(gca, 'xtick', xtickdata(~isnan(y)));
+else
+    set(gca, 'xtick', xtickdata(~any(isnan(y))));
+end
 
 if dosave
     try
@@ -431,6 +438,9 @@ else
 	
 	% Plot bars
 	handles.bars = bar(barvalues, width,'edgecolor','k', 'linewidth', 2);
+    h_temp = handles.bars(any(isnan(barvalues)));
+    set(h_temp, 'linestyle', 'none')
+    
 	hold on
 	if ~isempty(bw_colormap)
 		colormap(bw_colormap);

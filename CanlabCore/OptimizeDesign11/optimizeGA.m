@@ -1,5 +1,8 @@
 function M = optimizeGA(GA)
-% M = optimizeGA(GA)
+% :Usage:
+% ::
+%
+%     M = optimizeGA(GA)
 %
 % outputs a pseudo-random list of condition codes that optimizes
 % multiple fitness measures for fMRI task designs
@@ -7,14 +10,15 @@ function M = optimizeGA(GA)
 % more help can be found in ga_example_script.m
 % and in Genetic_Algorithm_readme.rtf
 %
-% Tor Wager 2/10/01
-
-% Edited 11/17/01
-% Edited 11/8/09    - add check for designs with missing trial types;
+% ..
+%    Tor Wager 2/10/01
+%    Edited 11/17/01
+%    Edited 11/8/09    - add check for designs with missing trial types;
 %                          - output and error checking a bit more
 %                          informative
-% Edited 8/15/10    - fixed minor bug in contrast length checking with
+%    Edited 8/15/10    - fixed minor bug in contrast length checking with
 %                       trans2block option
+% ..
 
 N = fieldnames(GA);
 for i = 1:length(N)

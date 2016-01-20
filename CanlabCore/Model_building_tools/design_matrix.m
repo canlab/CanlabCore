@@ -1,4 +1,3 @@
-classdef design_matrix < handle
     % design_matrix: data class for creating a design matrix to be used with a linear model including fmri data.
     %
     %
@@ -23,7 +22,8 @@ classdef design_matrix < handle
     % Need to add these Methods:
     % -create regressor from stim times
     % -pca
-    
+
+classdef design_matrix < handle
     properties
         dat = [];
         varname = {};

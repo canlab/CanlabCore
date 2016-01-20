@@ -1,19 +1,27 @@
 function [clout] = clusters2roimask(cl)
-% [clout] = clusters2roimask(cl)
 % The purpose of this function is to facilitate making masks with ROIs for
 % future studies, give a clusters structure.  ROIs are constrained to be
 % within activation blobs specified by input clusters, and are masked by
-% selected ICBM regions.  Clusters may be smoothed before or after masking.
+% selected ICBM regions. Clusters may be smoothed before or after masking.
 %
+% :Usage:
+% ::
+%
+%     [clout] = clusters2roimask(cl)
+
 % Option to do 3 things, in order:
-% 1) Enlarge selected clusters
-% 2) Mask clusters with anatomical regions from ICBM atlas
-% 3) Subdivide clusters using hierarchical clustering of voxel coordinates
+%   1) Enlarge selected clusters
+%   2) Mask clusters with anatomical regions from ICBM atlas
+%   3) Subdivide clusters using hierarchical clustering of voxel coordinates
 %
-% output is a clusters file and a mask file in a 2 x 2 x 2 standard brain
-% space.  Well, no mask file yet.  And no shrinking.
+% Output is a clusters file and a mask file in a 2 x 2 x 2 standard brain
+% space.
 %
-% Tor Wager, Aug 2004.
+% ..
+%    Well, no mask file yet. And no shrinking.
+%
+%    Tor Wager, Aug 2004.
+% ..
 
 gom = input('Mask clusters with anatomical regions from ICBM (1/0)? ');
 clout = [];

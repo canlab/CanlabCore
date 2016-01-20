@@ -1,12 +1,28 @@
-% function [data, XYZvoxSphere, XYZmmSphere] = iimg_sphere_timeseries(images, XYZmm, radius)
-%   images - list of image files
-%   XYZmm - [3 x n] array of mm coords
-%   radius - radius in mm of sphere to generate
-%
-%   data - voxel data
-%   XYZvoxSphere - voxel
-
 function [data, XYZvoxSphere, XYZmmSphere] = iimg_sphere_timeseries(images, XYZmmCenter, radius)
+% :Usage:
+% ::
+%
+%     function [data, XYZvoxSphere, XYZmmSphere] = iimg_sphere_timeseries(images, XYZmm, radius)
+%
+% :Inputs:
+%
+%   **images:**
+%        list of image files
+%
+%   **XYZmm:**
+%        [3 x n] array of mm coords
+%
+%   **radiu:**
+%        radius in mm of sphere to generate
+%
+% :Outputs:
+%
+%   **data:**
+%        voxel data
+%
+%   **XYZvoxSphere:**
+%        voxel
+
     Vimages = spm_vol(images);
     [XYZvox(1,:) XYZvox(2,:) XYZvox(3,:)] = ind2sub(Vimages(1).dim(1:3), 1:prod(Vimages(1).dim(1:3)));
     XYZmm = Vimages(1).mat(1:3, :)*[XYZvox; ones(1, size(XYZvox, 2))];

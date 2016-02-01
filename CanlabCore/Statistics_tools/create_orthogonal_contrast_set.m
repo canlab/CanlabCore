@@ -1,14 +1,20 @@
 function contrasts = create_orthogonal_contrast_set(nconditions)
-% create_orthogonal_contrast_set(nconditions)
-%
 % Create an orthogonal contrast set across nconditions conditions
+%
+% :Usage:
+% ::
+%
+%     create_orthogonal_contrast_set(nconditions)
+%
 % Contrasts sum to zero, are orthogonal, and positive values and negative
 % values each sum to 1.
 %
 % This is useful in evaluating designs, and for F-tests across all pairwise
 % differences (e.g., one-way ANOVA contrast).
 %
-% Tor Wager, Aug 2015
+% ..
+%    Tor Wager, Aug 2015
+% ..
 
 [row1, col1] = deal(zeros(1, nconditions));
 col1(:) = 1;

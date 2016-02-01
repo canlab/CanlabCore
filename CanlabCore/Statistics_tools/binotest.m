@@ -1,14 +1,25 @@
 function RES = binotest(X, p)
-% RES = binotest(X, p)
-% 
 % Test the number of "hits" in each column of X against a null-hypothesis
 % proportion p, using a binomial test.
+%
+% :Usage:
+% ::
+%
+%     RES = binotest(X, p)
+% 
 % Assumes elements of each column of X are independent Bernoulli trials.
 %
-% X is a matrix of "hits" and "misses", coded as 1s and 0s.
-% p is the null hypothesis proportion of "hits", e.g., often p = 0.5
+% :Inputs:
 %
-% Tor Wager, April 2011
+%   **X:**
+%        is a matrix of "hits" and "misses", coded as 1s and 0s.
+%
+%   **p:**
+%        is the null hypothesis proportion of "hits", e.g., often p = 0.5
+%
+% ..
+%    Tor Wager, April 2011
+% ..
 
 X = double(X); % just in case
 

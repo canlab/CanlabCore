@@ -1,70 +1,86 @@
 function out = matrix_direct_effects_ridge(data, varargin)
-%[out] = matrix_direct_effects_ridge(data, [optional args]);
+% :Usage:
+% ::
 %
+%     [out] = matrix_direct_effects_ridge(data, [optional args]);
 %
-% Take an n x v matrix of data for each of N subjects
+% Take an n x v matrix of data for each of N subjects.
 % data are entered in a square matrix within each cell of data,
 % data{1}, {2}, etc.
 %
 % Uses ridge regression to assess linear slopes for each variable on
 % each other one.
 %
-% Optional arguments:
-% 'k', followed by ridge parameter value.  Default = 0.
-% 'scale' or 'zscore', which z-scores within-subjects
+% :Optional Inputs:
+%
+%   **'k':**
+%        followed by ridge parameter value.  Default = 0.
+%
+%   **'scale' or 'zscore':**
+%        which z-scores within-subjects
 %
 % Future: Consider weighting based on multicolinearity
 %
 % Note: Matrix is asymmetrical! Rows predicting columns...
 %
-% Tor Wager, March 2008
+% :Examples:
 %
-% Example:
 % Take mediation brain results clusters cell clpos_data{...}
 % Concatenate data matrix and run to get connections.
+% ::
 %
-%for i = 1:length(clpos_data), data{i} = cat(2, clpos_data{i}.timeseries); end
-% out = matrix_direct_effects_ridge(data);
-%[out.GroupSpace,out.obs_dist,out.implied_dissim] = shepardplot(out.dissim,[]);
-% create_figure('nmdsfig');
-% nmdsfig(out.GroupSpace,'classes',ones(out.k, 1),'names',[],'sig',out.fdrsig, 'legend',{'Pos' 'Neg'},'sizescale',[4 16]);
+%    for i = 1:length(clpos_data), data{i} = cat(2, clpos_data{i}.timeseries); end
+%    out = matrix_direct_effects_ridge(data);
+%    [out.GroupSpace,out.obs_dist,out.implied_dissim] = shepardplot(out.dissim,[]);
+%    create_figure('nmdsfig');
+%    nmdsfig(out.GroupSpace,'classes',ones(out.k, 1),'names',[],'sig',out.fdrsig, 'legend',{'Pos' 'Neg'},'sizescale',[4 16]);
 %
 % Example 2:
 % Include mediation predictor and outcome
-% for i = 1:length(clpos_data), data{i} = [SETUP.data.X{i} SETUP.data.Y{i} data{i}]; end
-% out = matrix_direct_effects_ridge(data);
+% ::
+%
+%    for i = 1:length(clpos_data), data{i} = [SETUP.data.X{i} SETUP.data.Y{i} data{i}]; end
+%    out = matrix_direct_effects_ridge(data);
 %
 % Example of MDS and plotting direct relationships:
-% -------------------------------------------------
-% OUT.ridge = matrix_direct_effects_ridge(data);
-% D = OUT.ridge.mean; D(find(eye(size(D)))) = 1;
-% D = (D' + D) ./ 2;
-% OUT.ridge.D = (1 - D) ./ 2;
-% [OUT.stats_mds.GroupSpace,OUT.stats_mds.obs,OUT.stats_mds.implied_dissim] = shepardplot(OUT.ridge.D,[]);
-% OUT.stats_mds = nmdsfig_tools('cluster_solution',OUT.stats_mds, OUT.stats_mds.GroupSpace, 2:10, 1000, []);
-% OUT.stats_mds.colors = {'ro' 'go' 'bo' 'yo' 'co' 'mo' 'ko' 'r^' 'g^' 'b^' 'y^' 'c^' 'm^' 'k^'};
-% create_figure('nmdsfig');
-% nmdsfig(OUT.stats_mds.GroupSpace,'classes',OUT.stats_mds.ClusterSolution.classes,'names',OUT.stats_mds.names,'sig',OUT.ridge.fdrsig);
-% hh = nmdsfig_fill(OUT.stats_mds);
+% ::
+%
+%    OUT.ridge = matrix_direct_effects_ridge(data);
+%    D = OUT.ridge.mean; D(find(eye(size(D)))) = 1;
+%    D = (D' + D) ./ 2;
+%    OUT.ridge.D = (1 - D) ./ 2;
+%    [OUT.stats_mds.GroupSpace,OUT.stats_mds.obs,OUT.stats_mds.implied_dissim] = shepardplot(OUT.ridge.D,[]);
+%    OUT.stats_mds = nmdsfig_tools('cluster_solution',OUT.stats_mds, OUT.stats_mds.GroupSpace, 2:10, 1000, []);
+%    OUT.stats_mds.colors = {'ro' 'go' 'bo' 'yo' 'co' 'mo' 'ko' 'r^' 'g^' 'b^' 'y^' 'c^' 'm^' 'k^'};
+%    create_figure('nmdsfig');
+%    nmdsfig(OUT.stats_mds.GroupSpace,'classes',OUT.stats_mds.ClusterSolution.classes,'names',OUT.stats_mds.names,'sig',OUT.ridge.fdrsig);
+%    hh = nmdsfig_fill(OUT.stats_mds);
 %
 % Prediction using multiple regions:
-% stats = rsquare_multiple_regions_multilevel(Y, X, varargin)
+% ::
+%
+%    stats = rsquare_multiple_regions_multilevel(Y, X, varargin)
 %
 % Visualization of networks:
-% -------------------------------------------------
-% classes = OUT.stats_mds.ClusterSolution.classes;
-% % create_figure('Surfaces');
-% % shan = addbrain;
-% shan = mediation_brain_surface_figs({}, {});
-% scolors = {[1 0 0] [0 1 0] [0 0 1] [1 1 0] [0 1 1] [1 0 1] [0 0 0] [1 0 0] [0 1 0] [0 0 1] [1 1 0] [0 1 1] [1 0 1] [0 0 0] };
-% for j = 1:max(classes)
-% wh = (classes == j); sum(wh)
-% montage_clusters([], cl(wh), scolors(j))
-% % create_figure('Surfaces', 1, 1, 1);
-% cluster_surf(cl(wh), 5, scolors(j), shan);
-% end
+% ::
 %
-% see also xcorr_multisubject.m
+%    classes = OUT.stats_mds.ClusterSolution.classes;
+%    % create_figure('Surfaces');
+%    % shan = addbrain;
+%    shan = mediation_brain_surface_figs({}, {});
+%    scolors = {[1 0 0] [0 1 0] [0 0 1] [1 1 0] [0 1 1] [1 0 1] [0 0 0] [1 0 0] [0 1 0] [0 0 1] [1 1 0] [0 1 1] [1 0 1] [0 0 0] };
+%    for j = 1:max(classes)
+%    wh = (classes == j); sum(wh)
+%    montage_clusters([], cl(wh), scolors(j))
+%    % create_figure('Surfaces', 1, 1, 1);
+%    cluster_surf(cl(wh), 5, scolors(j), shan);
+%    end
+%
+% :See Also: xcorr_multisubject.m
+%
+% ..
+%    Tor Wager, March 2008
+% ..
 
 kval = 0; % 0 is no ridge reg; other k > 0 implements ridge
 doscale = 0;

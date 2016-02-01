@@ -1,21 +1,28 @@
 function X = intercept(X, meth)
-%
 % Intercept-related functions for working with design matrices, etc.
 %
 % Return which columns are intercept(s), if any
-% wh = intercept(X, 'which')
+% ::
+%
+%    wh = intercept(X, 'which')
 %
 % Remove an intercept, if there is one
-% X = intercept(X, 'remove');
+% ::
+%
+%    X = intercept(X, 'remove');
 %
 % Add an intercept to the end
-% X = intercept(X, 'add');
+% ::
+%
+%    X = intercept(X, 'add');
 %
 % Ensure that the intercept is at the end, moving or adding it as necessary
-% X = intercept(X, 'end');
+% ::
 %
-% which column is the intercept?
-wh_is_intercept = find( ~any(diff(X)) );
+%    X = intercept(X, 'end');
+%
+
+wh_is_intercept = find( ~any(diff(X)) ); % which column is the intercept?
 
 switch meth
     

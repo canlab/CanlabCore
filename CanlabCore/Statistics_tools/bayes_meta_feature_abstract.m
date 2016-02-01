@@ -1,14 +1,17 @@
 function [reducedY, cl, cluster_indx] = bayes_meta_feature_abstract(Y, thresh, shrink, bayes_model, volInfo, doplot)
-%
 % Purpose: Instead of original matrix of activations in studies x voxels,
 % we may want to work with a data matrix of activations in contiguous
 % regions x voxels
+%
 % This function calculates Y = 0,1 for Y = 1 in any voxel in each
 % contiguous cluster
 %
-% reducedY = bayes_meta_feature_abstract(Y, .1, bayes_model, volInfo);
-% xval = classify_naive_bayes('xval', reducedY, Xi, 0, 0, bestk, bestg );
-% xval.prop_correct_by_class
+% :Examples:
+% ::
+%
+%    reducedY = bayes_meta_feature_abstract(Y, .1, bayes_model, volInfo);
+%    xval = classify_naive_bayes('xval', reducedY, Xi, 0, 0, bestk, bestg );
+%    xval.prop_correct_by_class
 %
 % needs bayes_model.pa1_given_t, nclasses, params.k
 

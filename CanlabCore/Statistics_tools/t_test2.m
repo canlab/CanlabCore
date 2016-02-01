@@ -1,28 +1,37 @@
 function [h,sig,ci,tval,ser] = t_test2(x,m,alpha,tail)
-%TTEST  Hypothesis test: Compares the sample average to a constant.
-%   [H,SIG] = TTEST(X,M,ALPHA,TAIL) performs a T-test to determine
-%   if a sample from a normal distribution (in X) could have mean M.
-%   M = 0, ALPHA = 0.05 and TAIL = 0 by default.
+% TTEST Hypothesis test: Compares the sample average to a constant.
 %
-%   The Null hypothesis is: "mean is equal to M".
-%   For TAIL=0,  alternative: "mean is not M".
-%   For TAIL=1,  alternative: "mean is greater than M"
-%   For TAIL=-1, alternative: "mean is less than M"
-%   TAIL = 0 by default.
+% :Usage:
+% ::
 %
-%   ALPHA is desired significance level. 
-%   SIG is the probability of observing the given result by chance
-%   given that the null hypothesis is true. Small values of SIG cast
-%   doubt on the validity of the null hypothesis.
-%   H=0 => "Do not reject null hypothesis at significance level of alpha."
-%   H=1 => "Reject null hypothesis at significance level of alpha."
-
-%   References:
-%      [1] E. Kreyszig, "Introductory Mathematical Statistics",
-%      John Wiley, 1970, page 206. 
-
-%   Copyright (c) 1993-98 by The MathWorks, Inc.
-%   $Revision: 2.7 $  $Date: 1998/05/28 20:13:56 $
+%    [H,SIG] = TTEST(X,M,ALPHA,TAIL)
+%
+% performs a T-test to determine if a sample from a normal distribution
+% (in X) could have mean M.
+%
+% M = 0, ALPHA = 0.05 and TAIL = 0 by default.
+%
+% The Null hypothesis is: "mean is equal to M".
+%   - For TAIL=0,  alternative: "mean is not M".
+%   - For TAIL=1,  alternative: "mean is greater than M"
+%   - For TAIL=-1, alternative: "mean is less than M"
+%   - TAIL = 0 by default.
+%
+% ALPHA is desired significance level. 
+%
+% SIG is the probability of observing the given result by chance
+% given that the null hypothesis is true. Small values of SIG cast
+% doubt on the validity of the null hypothesis.
+%   - H=0 => "Do not reject null hypothesis at significance level of alpha."
+%   - H=1 => "Reject null hypothesis at significance level of alpha."
+%
+% :References:
+%    [1] E. Kreyszig, "Introductory Mathematical Statistics",
+%    John Wiley, 1970, page 206. 
+% ..
+%    Copyright (c) 1993-98 by The MathWorks, Inc.
+%    $Revision: 2.7 $  $Date: 1998/05/28 20:13:56 $
+% ..
 
 if nargin < 1, 
     error('Requires at least one input argument.'); 

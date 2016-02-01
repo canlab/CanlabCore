@@ -1,40 +1,50 @@
 function out = correl_compare_dep(y1,y2,varargin)
-    % out = correl_compare_dep(y1,y2,['alpha',myalpha],['rank'],['table'])
-    %
-    % Compare dependent correlations between pairs of vectors in y1 and y2.
-    % Each of y1 and y2 would contain at least 2 columns, which would be
-    % correlated and saved in r1 and r2 matrices in output.
-    % Then, the r1 and r2 matrices are subtracted, and P-values are
-    % returned for the differences.
-    % - In the simplest case, y1 would contain vectors [a b] and y2 would
-    % contain vectors [a c].  tests are provided on the a-b vs. a-c
-    % difference in correlations.
-    %
-    % Repeats dep. correl. analysis for each pair of columns
-    % Returns results in correlation matrix form, where number of rows and
-    % cols. are the number of pairs [y1(:,i) y2(:,i)]
-    %
-    % myalpha is 2-tailed alpha value; p-values are 2-tailed
-    % FDR correction is at .01, 2-tailed
-    %
-    % Based on Steiger, 1980, tests for comparing dependent correlations.
-    %
-    % for i = 1:length(cl), y1(:,i) = cl.CONTRAST.data(:,2); y2(:,i) = cl.CONTRAST.data(:,1); end
-    % for i = 1:length(cl), y1(:,i) = cl(i).CONTRAST.data(:,2); y2(:,i) = cl(i).CONTRAST.data(:,1); end
-    % y1 is matrix of obs x data vectors for condition 1
-    % y2 is matrix of obs x data vectors for condition 2
-    % out = correl_compare_dep(y1,y2)
-    %
-    % figure('Color','w');nmdsfig(c.GroupSpace,c.ClusterSolution.classes, ...
-    % c.names,out.sig,1,{'Pos' 'Neg'});
-    % nmdsfig_legend(c.ClusterSolution.X,c.r)
-    %
-    % Example: compare correlations on cluster averages
-    % c_compare =
-    % correl_compare_dep(y1avg,y2avg,'alpha',.05,'rank','table','names',c.APPLY_CLUSTER.names);
-    %
-    % out = correl_compare_dep([ypred pain],[ypred temp], 'alpha', .06, 'table', 'names', {'biomarker resp' 'pain or temp'});
-    
+% Compare dependent correlations between pairs of vectors in y1 and y2.
+%
+% :Usage:
+% ::
+%
+%     out = correl_compare_dep(y1,y2,['alpha',myalpha],['rank'],['table'])
+%
+% Each of y1 and y2 would contain at least 2 columns, which would be
+% correlated and saved in r1 and r2 matrices in output.
+% Then, the r1 and r2 matrices are subtracted, and P-values are
+% returned for the differences.
+%   - In the simplest case, y1 would contain vectors [a b] and y2 would
+%     contain vectors [a c].  tests are provided on the a-b vs. a-c
+%     difference in correlations.
+%
+% Repeats dep. correl. analysis for each pair of columns
+%
+% Returns results in correlation matrix form, where number of rows and
+% cols. are the number of pairs [y1(:,i) y2(:,i)]
+%
+% myalpha is 2-tailed alpha value; p-values are 2-tailed
+% FDR correction is at .01, 2-tailed
+%
+% Based on Steiger, 1980, tests for comparing dependent correlations.
+%
+% :Examples:
+% ::
+%
+%    for i = 1:length(cl), y1(:,i) = cl.CONTRAST.data(:,2); y2(:,i) = cl.CONTRAST.data(:,1); end
+%    for i = 1:length(cl), y1(:,i) = cl(i).CONTRAST.data(:,2); y2(:,i) = cl(i).CONTRAST.data(:,1); end
+%
+%    % y1 is matrix of obs x data vectors for condition 1
+%    % y2 is matrix of obs x data vectors for condition 2
+%    out = correl_compare_dep(y1,y2)
+%
+%    figure('Color','w');nmdsfig(c.GroupSpace,c.ClusterSolution.classes, ...
+%    c.names,out.sig,1,{'Pos' 'Neg'});
+%    nmdsfig_legend(c.ClusterSolution.X,c.r)
+%
+% :Examples:
+% ::
+%
+%    c_compare = correl_compare_dep(y1avg,y2avg,'alpha',.05,'rank','table','names',c.APPLY_CLUSTER.names);
+%
+%    out = correl_compare_dep([ypred pain],[ypred temp], 'alpha', .06, 'table', 'names', {'biomarker resp' 'pain or temp'});
+
 
     myalpha = .05;
     dorankdata = 0;

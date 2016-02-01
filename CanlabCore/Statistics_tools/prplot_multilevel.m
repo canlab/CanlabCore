@@ -1,7 +1,11 @@
 function [X_resid, Y_resid, handles] = prplot_multilevel(Y, X, wh_col)
-% [X_resid, Y_resid, handles] = prplot_multilevel(Y, X, wh_col)
-%
 % Partial correlation plot for multi-level analysis
+%
+% :Usage:
+% ::
+%
+%     [X_resid, Y_resid, handles] = prplot_multilevel(Y, X, wh_col)
+%
 % Uses unweighted estimates.
 %
 % do not enter intercept in X

@@ -1,96 +1,106 @@
 function stats = glmfit_multilevel(Y, X1, X2, varargin)
-% stats = glmfit_multilevel(Y, X1, X2, varargin)
+% :Usage:
+% ::
 %
-% Y is data
-%   - in cell array, one cell per subject
-%   Column vector of subject outcome data in each cell.
+%     stats = glmfit_multilevel(Y, X1, X2, varargin)
+%
+% :Inputs:
+%
+%   **Y:**
+%        is data in cell array, one cell per subject.
+%        Column vector of subject outcome data in each cell.
 %    
 %
-% X1 and X2 are first and 2nd level design matrices
-%   - X1 in cell array, one cell per subject
-%     design matrix for each subject in each cell.  
-%     *columns must code for the same variable for all subjects*
+%   **X1 and X2:**
+%        are first and 2nd level design matrices
+%          - X1 in cell array, one cell per subject
+%            design matrix for each subject in each cell.  
+%            *columns must code for the same variable for all subjects*
 %
-%   - X2 in rect. matrix
-%   - can be empty (intercept only)
+%         - X2 in rect. matrix
+%         - can be empty (intercept only)
 %
 % E.g., with one 2nd-level predictor:
 % stats = glmfit_multilevel(Y, X1, X2, ...
 % 'names', {'Int' 'Temp'}, 'beta_names', {'2nd-level Intercept (overall group effect)' '2nd-lev predictor: Group membership'});
 %
-% OUTPUT
-% stats is structure with results
-% intercept is always added as first column!
-% (do not add intercept to input predictors)
+% :Output:
 %
-% see glmfit_general.m for varargin variable input options.
+%   **stats:**
+%        is structure with results.
+%        Intercept is always added as first column!
+%        (do not add intercept to input predictors)
 %
-% tor wager, sept. 2007
-% Modified Oct 31, 2008 -- add matrix input format as well as cell
+% See glmfit_general.m for varargin variable input options.
 %
-% Examples:
-% len = 200; sub = 20;
-% x = zeros(len,sub);
-% x(11:20,:) = 2;                   % create signal
-% x(111:120,:) = 2;
-% c = normrnd(0.5,0.1,sub,1);       % slope between-subjects variations
-% d = normrnd(3,0.2,sub,1);         % intercept between-subjects variations
-% % Create y: Add between-subjects error (random effects) and measurement noise
-% % (within-subjects error)
-% for i=1:sub, y(:,i) = d(i) + c(i).*x(:,i) + normrnd(0,0.5,len,1);
-% end;
+% :Examples:
+% ::
+%
+%    len = 200; sub = 20;
+%    x = zeros(len,sub);
+%    x(11:20,:) = 2;                   % create signal
+%    x(111:120,:) = 2;
+%    c = normrnd(0.5,0.1,sub,1);       % slope between-subjects variations
+%    d = normrnd(3,0.2,sub,1);         % intercept between-subjects variations
+%    % Create y: Add between-subjects error (random effects) and measurement noise
+%    % (within-subjects error)
+%    for i=1:sub, y(:,i) = d(i) + c(i).*x(:,i) + normrnd(0,0.5,len,1);
+%    end;
+%
+%    for i = 1:size(y, 2), YY{i} = y(:, i); end
+%    for i = 1:size(y, 2), XX{i} = x(:, i); end
+%
+%    % one-sample t-test, weighted by inv of btwn + within vars
+%    stats = glmfit_multilevel(YY, XX, [], 'verbose', 'weighted');
+%
+%    statsg = glmfit_multilevel(y, x, covti, 'names', {'L1 Intercept' 'L1 Slope'},...
+%    'beta_names', {'Group Average', 'L2_Covt'});
+%
+% :Input Options:
+%
+% General Defaults
+%  - case 'names', Names of first-level predictors, starting
+%    with 'Intercept', in cell array
+%
+%  - case 'analysisname', analysisname = varargin{i+1}; varargin{i+1} = [];
+%  - case 'beta_names', beta_names = Names of 2nd-level predictors, starting
+%    with 'Intercept', in cell array
+%
+% Estimation Defaults
+%  - case 'robust', robust_option = 'yes';
+%  - case {'weight', 'weighted', 'var', 's2'}, weight_option = 'weighted';
+%
+% Inference defaults
+%  - case {'boot1', 'boot', 'bootstrap'}, inference_option = 'bootstrap';
+%  - case {'sign perm', 'signperm', 'sign'}, inference_option = 'signperm';
+%  - case {'t-test', 'ttest'}, inference_option = 't-test';
+%
+% Display control defaults
+%  - case 'plots', doplots = 1; plotstr = 'plots';
+%  - case 'noplots', doplots = 0; plotstr = 'noplots';
+%
+%  - case {'dosave', 'save', 'saveplots'}, dosave = 1; savestr = 'save';
+%  - case 'verbose', verbose = 1; verbstr = 'verbose';
+%  - case 'noverbose', verbose = 0; verbstr = 'noverbose';
 % 
-% for i = 1:size(y, 2), YY{i} = y(:, i); end
-% for i = 1:size(y, 2), XX{i} = x(:, i); end
-% 
-% % one-sample t-test, weighted by inv of btwn + within vars
-% stats = glmfit_multilevel(YY, XX, [], 'verbose', 'weighted');
-% 
-% statsg = glmfit_multilevel(y, x, covti, 'names', {'L1 Intercept' 'L1 Slope'},...
-% 'beta_names', {'Group Average', 'L2_Covt'});
+%  - case {'savefile', 'savefilename'}, savefilename = varargin{i + 1}; varargin{i+1} = [];
 %
-% Input options:
-% % %
-% % %             % General Defaults
-% %             case 'names', Names of first-level predictors, starting
-%                   with 'Intercept', in cell array
+% Bootstrap defaults
+%  - case 'nresample', nresample = varargin{i+1};
+%  - case {'pvals', 'whpvals_for_boot'}, whpvals_for_boot = varargin{i+1};
 %
-% %             case 'analysisname', analysisname = varargin{i+1}; varargin{i+1} = [];
-% %             case 'beta_names', beta_names = Names of 2nd-level predictors, starting
-%                   with 'Intercept', in cell array
-% % 
-% %                 % Estimation Defaults
-% %             case 'robust', robust_option = 'yes';
-% %             case {'weight', 'weighted', 'var', 's2'}, weight_option = 'weighted';
-% % 
-% %                 % Inference defaults
-% %             case {'boot1', 'boot', 'bootstrap'}, inference_option = 'bootstrap';
-% %             case {'sign perm', 'signperm', 'sign'}, inference_option = 'signperm';
-% %             case {'t-test', 'ttest'}, inference_option = 't-test';
-% % 
-% %                 % Display control defaults
-% %             case 'plots', doplots = 1; plotstr = 'plots';
-% %             case 'noplots', doplots = 0; plotstr = 'noplots';
-% % 
-% %             case {'dosave', 'save', 'saveplots'}, dosave = 1; savestr = 'save';
-% %             case 'verbose', verbose = 1; verbstr = 'verbose';
-% %             case 'noverbose', verbose = 0; verbstr = 'noverbose';
-% %  
-% %             case {'savefile', 'savefilename'}, savefilename = varargin{i + 1}; varargin{i+1} = [];
-% % 
-% %                 % Bootstrap defaults
-% %             case 'nresample', nresample = varargin{i+1};
-% %             case {'pvals', 'whpvals_for_boot'}, whpvals_for_boot = varargin{i+1};
-% % 
-% % 
-% %                 % Sign perm defaults
-% %             case {'permsign'}, permsign = varargin{i+1};
 %
-% Scroll up for examples!
-
-% Programmer's notes:
-% 9/2/09: Tor and Lauren: Edited to drop NaNs within-subject, and drop
-% subject only if there are too few observations to estimate.
+% Sign perm defaults
+%  - case {'permsign'}, permsign = varargin{i+1};
+%
+% ..
+%    tor wager, sept. 2007
+%    Modified Oct 31, 2008 -- add matrix input format as well as cell
+%
+%    Programmer's notes:
+%    9/2/09: Tor and Lauren: Edited to drop NaNs within-subject, and drop
+%    subject only if there are too few observations to estimate.
+% ..
 
 if ~iscell(Y)
     N = size(Y, 2);

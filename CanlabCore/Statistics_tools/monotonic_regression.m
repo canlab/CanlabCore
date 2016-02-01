@@ -1,12 +1,13 @@
 function [yhat,yhat_sorted,err,goodness,mymad] = monotonic_regression(x,y,doplot)
-    %  monotonic_regression(x,y,doplot)
-% see lsqisotonic.m
+% See lsqisotonic.m
 %
-% tor wager, nov. 06
+% ..
+%    tor wager, nov. 06
 %
-% mymad is median absolute deviation from isotonic regression line
-% goodness was mad(yhat) / mymad : ratio of mean values to error
-% is now % variance explained by fit (r-square)
+%    mymad is median absolute deviation from isotonic regression line
+%    goodness was mad(yhat) / mymad : ratio of mean values to error
+%    is now % variance explained by fit (r-square)
+% ..
 
 if nargin < 3, doplot = 0; end
 

@@ -1,69 +1,72 @@
 function stats = rsquare_multiple_regions_multilevel(Y, X, varargin)
-%
-% stats = rsquare_multiple_regions_multilevel(Y, X, varargin)
-%
-% Tor Wager, June 2008
 % Predict outcome var (y) using data from multiple vars (X, e.g., brain regions)
 % Test R-square against permuted data
 %
-% Variable args:
-% 'colors', followed by colors cell ({'r' 'g' 'b'}) for each col. of X
-% 'nperms', then num perms
+% :Usage:
+% ::
 %
-% var args not all done yet (in development).
+%     stats = rsquare_multiple_regions_multilevel(Y, X, varargin)
 %
-% Example:
-% %% SETUP data
+% :Inputs: Variable args
 %
-% cl = [clpos_data clneg_data];
+%   **'colors':**
+%        followed by colors cell ({'r' 'g' 'b'}) for each col. of X
+%
+%   **'nperms:**
+%        then num perms
+%
+% :Examples:
+% ::
+%
+%    % SETUP data
+%    cl = [clpos_data clneg_data];
+%
+%    cl(cat(1, cl.numVox) < min_cluster_size) = [];
 % 
-% cl(cat(1, cl.numVox) < min_cluster_size) = [];
-% 
-% % get brain data cell
-% 
-% for i = 1:size(cl(1).all_data, 2) 
-%     for c = 1:length(cl)
-%         data{i}(:,c) = cl(c).all_data(:, i); 
-%     end
-% end
-% 
-% %% NMDS ANALYSIS
-% OUT = [];
-% 
-% OUT.ridge = matrix_direct_effects_ridge(data);
-% D = OUT.ridge.mean; D(find(eye(size(D)))) = 1;
-% D = (D' + D) ./ 2;
-% OUT.ridge.D = (1 - D) ./ 2;
-% [OUT.stats_mds.GroupSpace,OUT.stats_mds.obs,OUT.stats_mds.implied_dissim] = shepardplot(OUT.ridge.D,[]);
-% 
-% OUT.stats_mds = nmdsfig_tools('cluster_solution',OUT.stats_mds, OUT.stats_mds.GroupSpace, 2:max_networks, nperms, []);
-% OUT.stats_mds.colors = {'ro' 'go' 'bo' 'yo' 'co' 'mo' 'ko' 'r^' 'g^' 'b^' 'y^' 'c^' 'm^' 'k^'};
-% create_figure('nmdsfig');
-% 
-% OUT.stats_mds.names = [];
-% nmdsfig(OUT.stats_mds.GroupSpace,'classes',OUT.stats_mds.ClusterSolution.classes,'names',OUT.stats_mds.names,'sig',OUT.ridge.fdrsig);
-% hh = nmdsfig_fill(OUT.stats_mds);
-% axis image; axis equal
-% 
-% %
-% %% Multiple regions predict behavior
-% 
-% % Design matrix with cluster averages
-% classes = OUT.stats_mds.ClusterSolution.classes;
-% clear X
-% for i = 1:length(data)
-%     
-%     for j = 1:max(classes)
-%     
-%         X{i}(:, j) = nanmean(data{i}(:, classes == j), 2); 
-% 
-%     end
-%     
-% end
-% 
-% 
-% OUT.stats_regression = rsquare_multiple_regions_multilevel(acc_x_dist, X, 'colors', OUT.stats_mds.colors, 'nperms', 100);
-% 
+%    % get brain data cell
+%    for i = 1:size(cl(1).all_data, 2) 
+%        for c = 1:length(cl)
+%            data{i}(:,c) = cl(c).all_data(:, i); 
+%        end
+%    end
+%
+%    % NMDS ANALYSIS
+%    OUT = [];
+%
+%    OUT.ridge = matrix_direct_effects_ridge(data);
+%    D = OUT.ridge.mean; D(find(eye(size(D)))) = 1;
+%    D = (D' + D) ./ 2;
+%    OUT.ridge.D = (1 - D) ./ 2;
+%    [OUT.stats_mds.GroupSpace,OUT.stats_mds.obs,OUT.stats_mds.implied_dissim] = shepardplot(OUT.ridge.D,[]);
+%
+%    OUT.stats_mds = nmdsfig_tools('cluster_solution',OUT.stats_mds, OUT.stats_mds.GroupSpace, 2:max_networks, nperms, []);
+%    OUT.stats_mds.colors = {'ro' 'go' 'bo' 'yo' 'co' 'mo' 'ko' 'r^' 'g^' 'b^' 'y^' 'c^' 'm^' 'k^'};
+%    create_figure('nmdsfig');
+%
+%    OUT.stats_mds.names = [];
+%    nmdsfig(OUT.stats_mds.GroupSpace,'classes',OUT.stats_mds.ClusterSolution.classes,'names',OUT.stats_mds.names,'sig',OUT.ridge.fdrsig);
+%    hh = nmdsfig_fill(OUT.stats_mds);
+%    axis image; axis equal
+%
+%
+%    % Multiple regions predict behavior
+%
+%    % Design matrix with cluster averages
+%    classes = OUT.stats_mds.ClusterSolution.classes;
+%    clear X
+%    for i = 1:length(data)
+%        for j = 1:max(classes)
+%            X{i}(:, j) = nanmean(data{i}(:, classes == j), 2); 
+%        end
+%    end
+%
+%    OUT.stats_regression = rsquare_multiple_regions_multilevel(acc_x_dist, X, 'colors', OUT.stats_mds.colors, 'nperms', 100);
+%
+% ..
+%    Tor Wager, June 2008
+%
+%    var args not all done yet (in development)
+% ..
 
 
 nperms = 100;

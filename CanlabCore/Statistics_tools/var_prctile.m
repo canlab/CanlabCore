@@ -1,25 +1,42 @@
 function [var_prc,pci,Nneeded,pcitarget] = var_prctile(p,n_in_sample,varargin)
-% [var_prc,pci,Nneeded,pcitarget] = var_prctile(p,n_in_sample,['nboot',nboot],['x',data])
+% :Usage:
+% ::
 %
-% [var_prc,pci,Nneeded,pcitarget] = var_prctile(p,50,'nboot',5000)
+%     [var_prc,pci,Nneeded,pcitarget] = var_prctile(p,n_in_sample,['nboot',nboot],['x',data])
 %
+%     [var_prc,pci,Nneeded,pcitarget] = var_prctile(p,50,'nboot',5000)
 %
-% p is desired prctile of data (threshold)
-% nboot is number of bootstrap samples (if bootstrapping)
-% n_in_sample is number of obs. in original sample
+% :Inputs:
 %
-% x is data sample of distribution of interest (empirical pdf based on
-% this)
-% Note: using empirical PDF/CDF depends a great deal on choice of h (see
-% code).
+%   **p:**
+%        is desired prctile of data (threshold)
 %
-% tor wager, jan 2007
+%   **nboot:**
+%        is number of bootstrap samples (if bootstrapping)
 %
-% Nneeded = [];
-% for p = [.05:-.001:.001]
-% [var_prc,pci,Nneeded(end+1),pcitarget] = var_prctile(x,p);
-% end
-% figure; plot([.05:-.001:.001],Nneeded)
+%   **n_in_sample:**
+%        is number of obs. in original sample
+%
+%   **x:**
+%        is data sample of distribution of interest (empirical pdf based on
+%        this)
+%
+%        Note: using empirical PDF/CDF depends a great deal on choice of h (see
+%        code).
+%
+% :Examples:
+% ::
+%
+%    Nneeded = [];
+%    for p = [.05:-.001:.001]
+%        [var_prc,pci,Nneeded(end+1),pcitarget] = var_prctile(x,p);
+%    end
+%    figure;
+%    plot([.05:-.001:.001],Nneeded)
+%
+% ..
+%    tor wager, jan 2007
+% ..
 
 nboot = Inf;
 norm_model = 1;

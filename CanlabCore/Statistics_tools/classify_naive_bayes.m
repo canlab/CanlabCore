@@ -1,109 +1,121 @@
 function varargout = classify_naive_bayes(meth, varargin)
-%
 % Naive Bayes classifier
 %
-% Tor Wager, Sept 2007
+% :Usage:
+% ::
 %
-% =========================================================
-% SETUP: set up model structure
-% ---------------------------------------------------------
-% bayes_model = classify_naive_bayes('setup', Y, Xi, [activation_cutoff, selectivity_cutoff]);
-%   Inputs:
-%   Y is full (not sparse); empty features will be eliminated
-%   Xi is obs x classes, an indicator matrix of 1's and 0's
+%     % set up model structure
+%     bayes_model = classify_naive_bayes('setup', Y, Xi, [activation_cutoff, selectivity_cutoff]);
 %
-% =========================================================
-% TEST: test classifier; make a prediction about classes from data
-% ---------------------------------------------------------
-% [class_est log_joint best_log map p_obs_act_given_class] = classify_naive_bayes('test', Y, bayes_model);
+% :Inputs:
 %
+%   **Y:**
+%        is full (not sparse); empty features will be eliminated
 %
-% =========================================================
-% EVAL: evaluate classification accuracy
-% ---------------------------------------------------------
-% [prop_correct, confusion_mtx, misclass, prop_correct_by_class, chance, chance_95_ci] = classify_naive_bayes('eval', true_class, class_est, wh_obs);
+%   **Xi:**
+%        is obs x classes, an indicator matrix of 1's and 0's
 %
+% :TEST: test classifier; make a prediction about classes from data
+% ::
 %
-% =========================================================
-% APPARENT: apparent classification; with full dataset
-% ---------------------------------------------------------
-% bayes_model = classify_naive_bayes('apparent', Y, bayes_model);
+%    [class_est log_joint best_log map p_obs_act_given_class] = classify_naive_bayes('test', Y, bayes_model);
 %
+% :EVAL: evaluate classification accuracy
+% ::
 %
-% =========================================================
-% XVAL: crossvalidate
-% ---------------------------------------------------------
-% xval = classify_naive_bayes('xval', Y, Xi);
+%    [prop_correct, confusion_mtx, misclass, prop_correct_by_class, chance, chance_95_ci] = classify_naive_bayes('eval', true_class, class_est, wh_obs);
 %
-% bayes_model = classify_naive_bayes('write', bayes_model, Y, volInfo, conditionnames)
-% bayes_model = classify_naive_bayes('write', bayes_model, Y, MC_Setup.volInfo, MC_Setup.Xinms);
+% :APPARENT: apparent classification; with full dataset
+% ::
+%
+%     bayes_model = classify_naive_bayes('apparent', Y, bayes_model);
+%
+% :XVAL: crossvalidate
+% ::
+%
+%    xval = classify_naive_bayes('xval', Y, Xi);
+%
+%    bayes_model = classify_naive_bayes('write', bayes_model, Y, volInfo, conditionnames)
+%    bayes_model = classify_naive_bayes('write', bayes_model, Y, MC_Setup.volInfo, MC_Setup.Xinms);
 %
 % To add feature abstraction step within xval:
-% xval = classify_naive_bayes('xval', Y, Xi, 0, .9, .05, 1, volInfo );
+% ::
 %
-% =========================================================
-% PLOT
-% ---------------------------------------------------------
-% classify_naive_bayes('plot', bayes_model, ['pa|t', 'lr', 'lr surface',  'map plot', or 'class plot']);
+%    xval = classify_naive_bayes('xval', Y, Xi, 0, .9, .05, 1, volInfo );
 %
-% Optional inputs (any order):
+% :PLOT:
+% ::
+%
+%    classify_naive_bayes('plot', bayes_model, ['pa|t', 'lr', 'lr surface',  'map plot', or 'class plot']);
+%
+% :Optional Inputs: (any order)
+%
 % Threshold (abs. value), and colors in cell array
-% classify_naive_bayes('plot', bayes_model, 'lr', .10, {[1 .7 0] [0 0 1]});
+% ::
+%
+%    classify_naive_bayes('plot', bayes_model, 'lr', .10, {[1 .7 0] [0 0 1]});
 %
 %
-% Example:
-% ==========================================================================
-% [bayes_model, Y] = classify_naive_bayes('setup', Y, Xi);
+% :Examples:
+% ::
 %
-% % Test obs. 2
-% tic, [class_est log_joint best_log map] = classify_naive_bayes('test',Y(2,:), bayes_model); toc
+%    [bayes_model, Y] = classify_naive_bayes('setup', Y, Xi);
 %
-% % Get apparent classification rate and look at confusion matrix
-% tic, bayes_model = classify_naive_bayes('apparent', Y, bayes_model); toc
-% bayes_model.apparent.confusion_mtx
+%    % Test obs. 2
+%    tic, [class_est log_joint best_log map] = classify_naive_bayes('test',Y(2,:), bayes_model); toc
 %
-% % Cross-validate
-% bayes_model.xval = classify_naive_bayes('xval', Y, Xi);
-% bayes_model.xval.confusion_mtx
+%    % Get apparent classification rate and look at confusion matrix
+%    tic, bayes_model = classify_naive_bayes('apparent', Y, bayes_model); toc
+%    bayes_model.apparent.confusion_mtx
 %
-% Example 2:
-% ---------------------------------------------------------
-% Select features, and do apparent and cross-validated classification
-% Y = MC_Setup.unweighted_study_data';
-% wh = sum(Y) > 5;
-% Y = Y(:, wh);
-% whos Y
-% [bayes_model, Y] = classify_naive_bayes('setup', Y, Xi);
-% bayes_model = classify_naive_bayes('apparent', Y, bayes_model);
-% bayes_model.apparent.prop_correct, bayes_model.apparent.confusion_mtx
-% bayes_model.xval = classify_naive_bayes('xval', Y, Xi);
-% bayes_model.xval.prop_correct, bayes_model.xval.confusion_mtx
+%    % Cross-validate
+%    bayes_model.xval = classify_naive_bayes('xval', Y, Xi);
+%    bayes_model.xval.confusion_mtx
 %
-% Example 3:
-% create_figure('hist'); hist(bayes_model.pa1_given_t, 100);
-% xval = classify_naive_bayes('xval', Y, Xi, .05, .3);
+% :Example 2:
+% ::
+%
+%     Select features, and do apparent and cross-validated classification
+%    Y = MC_Setup.unweighted_study_data';
+%    wh = sum(Y) > 5;
+%    Y = Y(:, wh);
+%    whos Y
+%    [bayes_model, Y] = classify_naive_bayes('setup', Y, Xi);
+%    bayes_model = classify_naive_bayes('apparent', Y, bayes_model);
+%    bayes_model.apparent.prop_correct, bayes_model.apparent.confusion_mtx
+%    bayes_model.xval = classify_naive_bayes('xval', Y, Xi);
+%    bayes_model.xval.prop_correct, bayes_model.xval.confusion_mtx
+%
+% :Example 3:
+%    create_figure('hist'); hist(bayes_model.pa1_given_t, 100);
+%    xval = classify_naive_bayes('xval', Y, Xi, .05, .3);
 %
 % Get results from key regions and run classifier only on those regions:
-% ---------------------------------------------------------
-% cl = classify_naive_bayes('plot', bayes_model, 'lr', .10, {[1 .7 0] [0 0 1]});
-% [studybyroi,studybyset] = Meta_cluster_tools('getdata',cl{1},dat',volInfo);
-% bayes_model_regions = classify_naive_bayes('setup', studybyroi, Xi);
-% bayes_model_regions = classify_naive_bayes('apparent', studybyroi,bayes_model_regions);
-% disp('Apparent confusion')
-% disp(bayes_model_regions.apparent.confusion_mtx)
+% ::
 %
-% bayes_model_regions.xval = classify_naive_bayes('xval', studybyroi, Xi);
-% disp('Cross-validated confusion')
-% disp(bayes_model_regions.xval.confusion_mtx)
+%     cl = classify_naive_bayes('plot', bayes_model, 'lr', .10, {[1 .7 0] [0 0 1]});
+%    [studybyroi,studybyset] = Meta_cluster_tools('getdata',cl{1},dat',volInfo);
+%    bayes_model_regions = classify_naive_bayes('setup', studybyroi, Xi);
+%    bayes_model_regions = classify_naive_bayes('apparent', studybyroi,bayes_model_regions);
+%    disp('Apparent confusion')
+%    disp(bayes_model_regions.apparent.confusion_mtx)
 %
-% fprintf('Proportion correct: Apparent: %3.0f%%  Xval: %3.0f%%\n', 100*bayes_model_regions.apparent.prop_correct, 100*bayes_model_regions.xval.prop_correct);
-% fprintf('Proportion correct by class: \t'); fprintf('%3.0f%%\t', 100*bayes_model_regions.xval.prop_correct_by_class);
-% fprintf('\n');
+%    bayes_model_regions.xval = classify_naive_bayes('xval', studybyroi, Xi);
+%    disp('Cross-validated confusion')
+%    disp(bayes_model_regions.xval.confusion_mtx)
+%
+%    fprintf('Proportion correct: Apparent: %3.0f%%  Xval: %3.0f%%\n', 100*bayes_model_regions.apparent.prop_correct, 100*bayes_model_regions.xval.prop_correct);
+%    fprintf('Proportion correct by class: \t'); fprintf('%3.0f%%\t', 100*bayes_model_regions.xval.prop_correct_by_class);
+%    fprintf('\n');
 
-% sz = cat(1,cl{1}(:).numVox);
-% cl{1}(sz < 10) = [];
+%    sz = cat(1,cl{1}(:).numVox);
+%    cl{1}(sz < 10) = [];
 %
-% subcl = subclusters_from_local_max(cl{1}, 10);
+%    subcl = subclusters_from_local_max(cl{1}, 10);
+%
+% ..
+%    Tor Wager, Sept 2007
+% ..
 
 switch meth
 

@@ -1,14 +1,15 @@
 function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
-
-% run the actual searchlight analysis on each brain chunck 
+% Run the actual searchlight analysis on each brain chunck 
 % searchlight_dream.m will generate codes to run this funtion.
 %
-% Usage:
-% -------------------------------------------------------------------------
-% out = searchlight_disti(dat, mask, dist_i, [additional_inputs])
-% 
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% :Usage:
+% ::
+%
+%     out = searchlight_disti(dat, mask, dist_i, [additional_inputs])
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Wani Woo, Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -23,16 +24,11 @@ function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% 
-% see also
+% ..
+%
+% :See Also:
 % searchlight_dream.m, xval_cross_classify.m, fmri_data.predict.m, 
 
-% Example:
-
-% Programmers' notes:
-% 
-
-%% set-up variables
 
 do_cross = false;
 do_saveweight = false;

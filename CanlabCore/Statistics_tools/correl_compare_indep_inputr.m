@@ -1,17 +1,25 @@
 function [rdiff, Z, pval, stats] = correl_compare_indep_inputr(r1, r2, N1, N2, varargin)
-    % [rdiff, Z, pval, stats] = correl_compare_indep_inputr(r1, r2, N1, N2, varargin)
-    %
-    % Compare two Pearson's correlation values (r1 and r2) collected from independent
-    % samples with sample sizes N1 and N2
-    %
-    % Tor Wager, March 2010
-    %
-    % Based on: www.stat-help.com/
-    % see also: correl_compare_indep.m and correl_compare_dep.m
-    %
-    % Example:
-    % [rdiff, Z, pval, stats] = correl_compare_indep_inputr(.33, .77, 100, 100)
-    
+% Compare two Pearson's correlation values (r1 and r2) collected from independent
+% samples with sample sizes N1 and N2
+%
+% :Usage:
+% ::
+%
+%     [rdiff, Z, pval, stats] = correl_compare_indep_inputr(r1, r2, N1, N2, varargin)
+%
+% :Based on: www.stat-help.com/
+%
+% :See Also: correl_compare_indep.m and correl_compare_dep.m
+%
+% :Example:
+% ::
+%
+%    [rdiff, Z, pval, stats] = correl_compare_indep_inputr(.33, .77, 100, 100)
+%
+% ..
+%    Tor Wager, March 2010
+% ..
+
     if nargin == 0
         disp('Using sample values for r1 r2 N1 N2')
         N1 = 100;

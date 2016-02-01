@@ -1,35 +1,41 @@
 function [corr,t,p, fdrsig, fdrthresh] = correlation(meth,x,varargin)
-% [corr,t,p,fdrp, fdrthresh] = correlation(method,x,[y],['matrix'])
-% multiple types of correlations, including Spearman's rho (nonparametric) and phi (dichotomous)
+% Multiple types of correlations, including Spearman's rho
+% (nonparametric) and phi (dichotomous)
 %
-% tor wager, november 2006, Jan 2007
+% :Usage:
+% ::
+%
+%     [corr,t,p,fdrp, fdrthresh] = correlation(method,x,[y],['matrix'])
+%
 % IN PROGRESS : Warning : Use at your own risk.
 % Some methods are not adequately tested yet.
 % Spearman's rho does not correct for ties
 %
-% Methods:
-% Pearson's r.          Enter: {'r','pearson',[]}
-% IRLS                  Enter: {'irls','robust'}
-% Phi                   Enter: {'phi'}
-% Spearman's rho        Enter: {'rho','spearman'}
-% Kendall's Tau (a)     Enter: {'taua','kendalla'}
-% Tau (b)               Enter: {'tau','kendall','taub','kendallb'}
-% Gamma                 Ehter: {'gamma','kruskal'}
+% :Methods:
+%  - Pearson's r.          Enter: {'r','pearson',[]}
+%  - IRLS                  Enter: {'irls','robust'}
+%  - Phi                   Enter: {'phi'}
+%  - Spearman's rho        Enter: {'rho','spearman'}
+%  - Kendall's Tau (a)     Enter: {'taua','kendalla'}
+%  - Tau (b)               Enter: {'tau','kendall','taub','kendallb'}
+%  - Gamma                 Ehter: {'gamma','kruskal'}
 %
+% :Examples:
+% ::
 %
-% Examples:
+%    % Corelation between two variables, Pearson's
+%    x = rand(10,1); y = rand(10,1);
+%    [corr,t,p] = correlation('r',x,y);
 %
-% % Corelation between two variables, Pearson's
-% % --------------------------------
-% x = rand(10,1); y = rand(10,1);
-% [corr,t,p] = correlation('r',x,y);
+%    % Correlation matrix of 10 variables, phi correlation:
+%    studybyroi = magic(10);
+%    [corr,t,p] = correlation('phi',studybyroi);
 %
-% % Correlation matrix of 10 variables, phi correlation:
-% % --------------------------------
-% studybyroi = magic(10);
-% [corr,t,p] = correlation('phi',studybyroi);
+% :See Also: correlation_fast_series.m
 %
-% See also correlation_fast_series.m
+% ..
+%    tor wager, november 2006, Jan 2007
+% ..
 
 corr = []; t = []; p = [];
 

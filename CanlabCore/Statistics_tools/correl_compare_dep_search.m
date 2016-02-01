@@ -1,62 +1,66 @@
 function correl_compare_dep_search(seed1,seed2,y1,y2,varargin)
-    % correl_compare_dep_search(seed1,seed2,y1,y2,['alpha',myalpha],['rank'],['mask',maskimage])
-    %
-    % Compare dependent correlations between seed1<->y1 and seed2<->y2
-    %
-    % Repeats dep. correl. analysis for each pair of columns
-    % Returns results in correlation matrix form, where number of rows and
-    % cols. are the number of pairs [y1(:,i) y2(:,i)]
-    %
-    % myalpha is 2-tailed alpha value; p-values are 2-tailed
-    % FDR correction is at .01, 2-tailed
-    %
-    % Based on Steiger, 1980, tests for comparing dependent correlations.
-    %
-    % for i = 1:length(cl), y1(:,i) = cl.CONTRAST.data(:,2); y2(:,i) = cl.CONTRAST.data(:,1); end
-    % for i = 1:length(cl), y1(:,i) = cl(i).CONTRAST.data(:,2); y2(:,i) = cl(i).CONTRAST.data(:,1); end
-    % y1 is matrix of obs x data vectors for condition 1
-    % y2 is matrix of obs x data vectors for condition 2
-    % out = correl_compare_dep(y1,y2)
-    %
-    % figure('Color','w');nmdsfig(c.GroupSpace,c.ClusterSolution.classes, ...
-    % c.names,out.sig,1,{'Pos' 'Neg'});
-    % nmdsfig_legend(c.ClusterSolution.X,c.r)
-    %
-    % Example: compare correlations on cluster averages
-    % c_compare =
-    % correl_compare_dep(y1avg,y2avg,'alpha',.05,'rank','table','names',c.APPLY_CLUSTER.names);
-    %
-    %
-    % Example:
-    % --------------------------------------------------------------------
-    % %%%get image names
-    % EXPT.subjects = {'ambar_carvalho' 'andreas_nguyen' 'angela_valle' 'brad_wilson' 'dominic_ricci'};
-    % EXPT = getfunctnames2(EXPT,'con_0004.img','tmp','SPM_analysis/physical_pain/full_model_gv_p_v_np')
-    % self = str2mat(EXPT.tmp{:})
-    %
-    % EXPT = getfunctnames2(EXPT,'con_0003.img','tmp','SPM_analysis/Videos/event_pain_only')
-    % other = str2mat(EXPT.tmp{:})
-    %
-    %maskimage = which('scalped_avg152T1_graymatter_smoothed.img')
-    %
-    % %%%get seeds
-    %cd Jamil/GROUP_ANALYSES/Overlaps/Overlap_29_Aug/
-    %cl = mask2clusters('con_0002.img');
-    %cl = cl(4)
-    % cl = extract_contrast_data([{self} {other}],cl);
-    % seedself = cl(1).CONTRAST.data(:,1);
-    %seedother = cl(1).CONTRAST.data(:,2);
-    %
-    % correl_compare_dep_search(seedself,seedother,self,other,'alpha',.005,'mask',mask);
-    % RESULTS:
-    % cl = mask2clusters('Correl_seed1_sig.img'); cluster_orthviews(cl,'bivalent');
-    %
-    % Try the whole thing on ranks:
-    %correl_compare_dep_search(seedself,seedother,self,other,'alpha',.005,'mask',mask,'rank');
-    %
-    %
-    % Edited: Tor Wager, Feb 2010; cosmetic fixes only 
-    
+% Compare dependent correlations between seed1<->y1 and seed2<->y2
+%
+% :Usage:
+% ::
+%
+%     correl_compare_dep_search(seed1,seed2,y1,y2,['alpha',myalpha],['rank'],['mask',maskimage])
+%
+% Repeats dep. correl. analysis for each pair of columns
+% Returns results in correlation matrix form, where number of rows and
+% cols. are the number of pairs [y1(:,i) y2(:,i)]
+%
+% myalpha is 2-tailed alpha value; p-values are 2-tailed
+% FDR correction is at .01, 2-tailed
+%
+% Based on Steiger, 1980, tests for comparing dependent correlations.
+%
+% :Examples:
+% ::
+%
+%    for i = 1:length(cl), y1(:,i) = cl.CONTRAST.data(:,2); y2(:,i) = cl.CONTRAST.data(:,1); end
+%    for i = 1:length(cl), y1(:,i) = cl(i).CONTRAST.data(:,2); y2(:,i) = cl(i).CONTRAST.data(:,1); end
+%    y1 is matrix of obs x data vectors for condition 1
+%    y2 is matrix of obs x data vectors for condition 2
+%    out = correl_compare_dep(y1,y2)
+%
+%    figure('Color','w');nmdsfig(c.GroupSpace,c.ClusterSolution.classes, ...
+%    c.names,out.sig,1,{'Pos' 'Neg'});
+%    nmdsfig_legend(c.ClusterSolution.X,c.r)
+%
+%    % compare correlations on cluster averages
+%    c_compare = correl_compare_dep(y1avg,y2avg,'alpha',.05,'rank','table','names',c.APPLY_CLUSTER.names);
+%
+%    % get image names
+%    EXPT.subjects = {'ambar_carvalho' 'andreas_nguyen' 'angela_valle' 'brad_wilson' 'dominic_ricci'};
+%    EXPT = getfunctnames2(EXPT,'con_0004.img','tmp','SPM_analysis/physical_pain/full_model_gv_p_v_np')
+%    self = str2mat(EXPT.tmp{:})
+%
+%    EXPT = getfunctnames2(EXPT,'con_0003.img','tmp','SPM_analysis/Videos/event_pain_only')
+%    other = str2mat(EXPT.tmp{:})
+%
+%    maskimage = which('scalped_avg152T1_graymatter_smoothed.img')
+%
+%    % get seeds
+%    cd Jamil/GROUP_ANALYSES/Overlaps/Overlap_29_Aug/
+%    cl = mask2clusters('con_0002.img');
+%    cl = cl(4)
+%    cl = extract_contrast_data([{self} {other}],cl);
+%    seedself = cl(1).CONTRAST.data(:,1);
+%    seedother = cl(1).CONTRAST.data(:,2);
+%
+%    correl_compare_dep_search(seedself,seedother,self,other,'alpha',.005,'mask',mask);
+%
+%    % RESULTS:
+%    cl = mask2clusters('Correl_seed1_sig.img'); cluster_orthviews(cl,'bivalent');
+%
+%    % Try the whole thing on ranks:
+%    correl_compare_dep_search(seedself,seedother,self,other,'alpha',.005,'mask',mask,'rank');
+%
+% ..
+%    Edited: Tor Wager, Feb 2010; cosmetic fixes only 
+% ..
+
     myalpha = .05;
     dorankdata = 0;
     dotable = 0;

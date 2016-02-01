@@ -1,25 +1,49 @@
-function [cc,stats] = cancor(X,w,varargin);
-% [cc,stats] = cancor(X,w,[permutations],[MCD robust outlier removal])
+function [cc,stats] = cancor(X,w,varargin)
+% :Usage:
+% ::
 %
-% X     data matrix, columns are variables, rows observations
-% w     first w columns are Set 1, rest are Set 2
+%     [cc,stats] = cancor(X,w,[permutations],[MCD robust outlier removal])
 %
-% cc    canonical correlations
-% UV    canonical variates
-% UVa   caonical variates for set a
-% UVb   canonical variates for set b
-% ccor  correlations between canonical variates and X variables
-% ab    weights of canon. variates in row vectors, e.g., U = Xa'
+% :Inputs:
 %
-% tor wager, 6 / 4 / 03
+%   **X:**
+%        data matrix, columns are variables, rows observations
+%
+%   **w:**
+%        first w columns are Set 1, rest are Set 2
+%
+%   **cc:**
+%        canonical correlations
+%
+%   **UV:**
+%        canonical variates
+%
+%   **UVa:**
+%        caonical variates for set a
+%
+%   **UVb:**
+%        canonical variates for set b
+%
+%   **ccor:**
+%        correlations between canonical variates and X variables
+%
+%   **ab:**
+%        weights of canon. variates in row vectors, e.g., U = Xa'
+%
 % Johnson & Wichern, Applied Multivariate Statistical Analysis, 5th ed. 
 % tested on examples from the book.  cc and ab are right, not positive about ccor
 %
-% Example:
+% :Example:
+%
 % Compute canonical correlations between first 2 and last 2 columns
 % of X, testing against permuted column data with 1000 iterations.
+% ::
 %
-% [cc,stats] = cancor(X,2,1000,1);
+%    [cc,stats] = cancor(X,2,1000,1);
+%
+% ..
+%    tor wager, 6 / 4 / 03
+% ..
 
 if length(varargin) > 0, perms = varargin{1};,else,perms = 0;,end
 

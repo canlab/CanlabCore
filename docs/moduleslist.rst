@@ -1,6 +1,6 @@
-.. toctree::
-   :maxdepth: 4
 
+.. toctree::
+    :maxdepth: 2
 
 canlab_dataset
 =========
@@ -132,4 +132,9 @@ peak_coordinates
 ROI_drawing_tools
 ===============
 .. automodule:: ROI_drawing_tools
+   :members:
+
+Statistics_tools
+===============
+.. automodule:: Statistics_tools
    :members:

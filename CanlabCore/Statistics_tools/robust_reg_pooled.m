@@ -1,9 +1,11 @@
 function [betas,w] = robust_reg_pooled(X,Y)
-% [betas,w] = robust_reg_pooled(X,Y)
-% [betas,stats] = weighted_reg(X,Y,'w',w,'uni');
+% :Usage:
+% ::
+%
+%     [betas,w] = robust_reg_pooled(X,Y)
+%     [betas,stats] = weighted_reg(X,Y,'w',w,'uni');
 
-% Get rid of missing values
-nancols = find(any(isnan(Y) | Y==0,1));
+nancols = find(any(isnan(Y) | Y==0,1)); % Get rid of missing values
 Y(:,nancols) = [];
 
 [m,n] = size(Y);

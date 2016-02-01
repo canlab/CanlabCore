@@ -1,17 +1,22 @@
 function [my_ste,t,n,p,m] = ste(dat)
-% function [my_ste,t,n_in_column,p,mean] = ste(dat)
+% :Usage:
+% ::
 %
-% tor wager 
+%     [my_ste,t,n_in_column,p,mean] = ste(dat)
 %
 % standard error of the mean
 % and t-values, columnwise
 % and p-values, if asked for
 %
 % omits NaN values row-wise within each column
-%  (edit Nov 30, 2006 by tor)
 %
 % does NOT use n - 1
 % matches matlab t-test function
+%
+% ..
+%    tor wager
+%    edit Nov 30, 2006 by tor
+% ..
 
 n = sum(~isnan(dat),1);
 %if ~isempty(whom), dat(whom,:) = [];, end

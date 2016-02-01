@@ -8,41 +8,51 @@ function [yhat,yhi,loTime,highTime,x] = nonlin_parammod_predfun(y,ons,pm_vals,p,
 % 
 % This function replaces nonlin_parammod_predfun.m, which is obsolete
 %
-% [yhat,yhi,loTime,highTime,x] = nonlin_parammod_predfun(y,ons,pm_vals,p,varargin)
+% :Usage:
+% ::
 %
-% 
-% p = params
-% 1) mag. scale (amplitude)
-% 2) mag. X RT slope (linear effect of RT)
-% 3) duration intercept (neural epoch duration)
-% 4) duration x RT slope (linear effect of RT on duration)
-% 5) overall fitted response intercept
+%     [yhat,yhi,loTime,highTime,x] = nonlin_parammod_predfun(y,ons,pm_vals,p,varargin)
 %
-% INPUTS:
-% y, data; can be dummy data, needs only be the correct size
-%          This function does not actually fit the data, so y is only used
-%          to get the correct vector size
+% :Inputs:
 %
-% ons, onsets (in samples)
-% pm_vals, modulator values, preferably centered
-% p, parameter values; see below
-% varargin: optional inputs, see below
+%   **p:**
+%        params
+%          1) mag. scale (amplitude)
+%          2) mag. X RT slope (linear effect of RT)
+%          3) duration intercept (neural epoch duration)
+%          4) duration x RT slope (linear effect of RT on duration)
+%          5) overall fitted response intercept
 %
-% Special cases of parameter sets
-% -------------------------------------------------------------------------
+%   **y:**
+%        data. Can be dummy data, needs only be the correct size
+%        This function does not actually fit the data, so y is only used
+%        to get the correct vector size
+%
+%   **ons:**
+%        onsets (in samples)
+%
+%   **pm_vals:**
+%        modulator values, preferably centered
+%
+%   **p:**
+%        parameter values; see below
+%
+%   **varargin:**
+%        optional inputs, see below
+%
+% :Special cases of parameter sets:
+%
 % p = [1 0 1 0 0];  % "Impulse model" : fixed boxcar of 1 s
 %
 % p = [1 0 3 0 0];  % "Epoch model" : fixed boxcar of 3 s
 %
 % p = [1 1 1 0 0];  % "Parametric modulator" : Impulse height modulated by
-%                       RT (with centered pm_vals)
+% RT (with centered pm_vals)
 %
 % p = [1 0 0 1 0];  % "Variable epoch": convolve RT with duration 
-%                       (with non-centered, raw pm_vals).  Parametric
-%                       modulation of duration
+% (with non-centered, raw pm_vals).  Parametric modulation of duration
 %
-% p = [1 1 1 1 0];  % combo of Parametric and Duration modulators of
-%                   impulses
+% p = [1 1 1 1 0];  % combo of Parametric and Duration modulators of impulses
 %
 % p = [1 1.5 3 1.5 0];  % combo of Parametric and Duration modulators of
 %                   a 3-s epoch model
@@ -50,67 +60,71 @@ function [yhat,yhi,loTime,highTime,x] = nonlin_parammod_predfun(y,ons,pm_vals,p,
 % event signal magnitude = p1 * p2*RT           % was previously: RT^p2
 % event signal  duration = p3 + pm_vals * p4
 %
-% OPTIONAL INPUTS
-% -------------------------------------------------------------------------
-% case 'random', dorandom = 1;
-% case 'plot', doplot = 1;
-% 
-% case 'hrf', hrf = varargin{i + 1}; % HIGH_RES HRF
-%   case 'tr', followed by TR
+% :Optional Inputs:
+%   - case 'random', dorandom = 1;
+%   - case 'plot', doplot = 1;
+%   - case 'hrf', hrf = varargin{i + 1}; % HIGH_RES HRF
+%   - case 'tr', followed by TR
 %
-% tor wager, jan 07
+% :Examples of generating predicted BOLD timeseries:
+% ::
 %
-% Examples of generating predicted BOLD timeseries:
-% ------------------------------------------------------------------------
-% y = rand(330,1);
-% ons = [1:20:320]'; pm_vals = rand(size(ons));
-% [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[1 1 1 0 0],'plot');  % linear RT modulation of height
-% [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[1 0 1 10 0],'plot');  % linear RT modulation of duration
-% 
-% [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[.5 1 1 0 0],'plot');  % other linear RT modulation of height
-% [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[.5 .7 1 5 0],'plot');  % saturated RT modulation of height; linear width
+%    y = rand(330,1);
+%    ons = [1:20:320]'; pm_vals = rand(size(ons));
+%    [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[1 1 1 0 0],'plot');  % linear RT modulation of height
+%    [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[1 0 1 10 0],'plot');  % linear RT modulation of duration
+%
+%    [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[.5 1 1 0 0],'plot');  % other linear RT modulation of height
+%    [yhat,yhi] = nonlin_parammod_predfun(y,ons,pm_vals,[.5 .7 1 5 0],'plot');  % saturated RT modulation of height; linear width
 %
 % Example of fitting observed timeseries and estimating parameters:
-% ------------------------------------------------------------------------
+%
 % * SEE ALSO nonlin_param_modulator
+% ::
 %
-% RTcenter = pm_vals - mean(pm_vals);
-% true_p = [1 1.5 3 1.5 0];          % true parameters
-% xvals = (1:length(y))';
+%    RTcenter = pm_vals - mean(pm_vals);
+%    true_p = [1 1.5 3 1.5 0];          % true parameters
+%    xvals = (1:length(y))';
 %
-%                               % fitting function: times is a dummy var to
-%                               % get this to work with nonlin_fit
-% fhan = @(p, times) nonlin_parammod_predfun(y,ons,RTcenter,p);
+% Fitting function: times is a dummy var to get this to work with nonlin_fit
+% ::
 %
-% y = fhan(true_p);                  % generate simulated "true" signal
+%    fhan = @(p, times) nonlin_parammod_predfun(y,ons,RTcenter,p);
 %
-% fitting_fun = @(y) nonlin_fit(y, xvals, 'link', fhan, 'start',[1 1 1 1 .5]);
-% [p, errval, fit] = fitting_fun(y)     % get parameters for a timeseries of
-%                                       % interest
+%    y = fhan(true_p);                  % generate simulated "true" signal
 %
-% [p,errval,fit] = nonlin_fit(y,(1:length(y))','link',fhan,'start',[1 1 1 1 .5]);
-% hold on; plot(fit,'r');
+%    fitting_fun = @(y) nonlin_fit(y, xvals, 'link', fhan, 'start',[1 1 1 1 .5]);
+%    [p, errval, fit] = fitting_fun(y)     % get parameters for a timeseries of interest
+%
+%    [p,errval,fit] = nonlin_fit(y,(1:length(y))','link',fhan,'start',[1 1 1 1 .5]);
+%    hold on; plot(fit,'r');
 %
 % A second example using the genetic algorithm:
-% ------------------------------------------------------------------------
-% objfun = @(p) sum(abs(y - fhan(p))); % objective function: absolute error
-% start = [-10 -10 0 -10 0]; start(:,:,2) = [10 10 10 10 2000];
-% [best_params,fit,beff,in] = tor_ga(200,50,{start},objfun,'genconverge',5,'noverbose');
-% %***note: does not work now, needs debugging***
+% ::
+%
+%    objfun = @(p) sum(abs(y - fhan(p))); % objective function: absolute error
+%    start = [-10 -10 0 -10 0]; start(:,:,2) = [10 10 10 10 2000];
+%    [best_params,fit,beff,in] = tor_ga(200,50,{start},objfun,'genconverge',5,'noverbose');
+%    %***note: does not work now, needs debugging***
 %
 % Simulation: Test cov of param estimates
-% ------------------------------------------------------------------------
+%
 % Run 1000 times to see cov. of param estimates
-% Right now: ****development: p(1,2) are highly + corr, p(3:4) are high -
-% corr
+% Right now: ****development: p(1,2) are highly + corr, p(3:4) are high - corr
 % should probably choose one or the other for each.
-% for i = 1:1000
-%   yi = y + randn(length(y),1) * 10; % new noise
-%   p(i,:) = fitting_fun(yi);
-%   if mod(i,10) == 0, fprintf(1,' %3.0f',i); end
-% end
+% ::
+%
+%    for i = 1:1000
+%       yi = y + randn(length(y),1) * 10; % new noise
+%       p(i,:) = fitting_fun(yi);
+%       if mod(i,10) == 0, fprintf(1,' %3.0f',i); end
+%    end
 %
 % Note: Could create linear basis set of plausible forms
+%
+% ..
+%    tor wager, jan 07
+% ..
 
 if ~isrow(pm_vals), pm_vals = pm_vals'; end
 

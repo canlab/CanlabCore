@@ -1,26 +1,30 @@
 function dat_comb = searchlight_applymask_collate(dat2, file_list)
-
 % Estimate local pattern weight on train data using SVR and searchlight and
 % apply weights to the test dataset
 %
-% Usage:
-% -------------------------------------------------------------------------
-% dat_comb = searchlight_applymask(dat2, file_list)
+% :Usage:
+% ::
 %
+%     dat_comb = searchlight_applymask(dat2, file_list)
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat2          fmri_data test object
-% file_list     Cellarray of list of file distributed in parallel.  Make sure
-%               it is sorted correctly (e.g., sort_nat())
+% :Inputs:
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% dat_comb      An fmri_data object with searchlight weights applied to
-%               test dataset.
+%   **dat2:**
+%        fmri_data test object
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%   **file_list:**
+%        Cellarray of list of file distributed in parallel.  Make sure
+%        it is sorted correctly (e.g., sort_nat())
+%
+% :Output:
+%
+%   **dat_comb:**
+%        An fmri_data object with searchlight weights applied to
+%        test dataset.
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2015  Luke Chang & Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -35,17 +39,15 @@ function dat_comb = searchlight_applymask_collate(dat2, file_list)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Example
-% -------------------------------------------------------------------------
+% :Example:
+% ::
 %
-% dat_comb = searchlight_applymask_collate(dat2, file_list);
+%    dat_comb = searchlight_applymask_collate(dat2, file_list);
 
-% Programmers' notes:
-%
 
-% Check inputs
-if ~isa(dat2,'fmri_data')
+if ~isa(dat2,'fmri_data') % Check inputs
     dat1 = fmri_data(dat2); dat2 = remove_empty(dat2);
 end
 

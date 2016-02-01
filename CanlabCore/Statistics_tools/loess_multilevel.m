@@ -1,20 +1,26 @@
 function stats = loess_multilevel(X, Y, varargin)
-% stats = loess_multilevel(X, Y, varargin)
+% :Usage:
+% ::
+%
+%     stats = loess_multilevel(X, Y, varargin)
 %
 % Options:
-%             case 'fit_and_average', meth = 'fit_and_average';
-%             case 'regularization', regularization = varargin{i+1};
-%             case 'order', loessorder = varargin{i+1};
-%             case {'robust', 'dorobust'}, dorobust = varargin{i+1};
-%             case {'nboot', 'bootsamples'}, nboot = varargin{i+1};
-%             case 'plot', doplot = 1;
-%             case {'plotall'}, plotsummary = 0; doplot = 1;
-%             case 'color', color = varargin{i+1};
-%             case {'existingfig', 'samefig'}, newfig = 0;
-% Tor Wager; see also scn_stats_helper_functions
+%  - case 'fit_and_average', meth = 'fit_and_average';
+%  - case 'regularization', regularization = varargin{i+1};
+%  - case 'order', loessorder = varargin{i+1};
+%  - case {'robust', 'dorobust'}, dorobust = varargin{i+1};
+%  - case {'nboot', 'bootsamples'}, nboot = varargin{i+1};
+%  - case 'plot', doplot = 1;
+%  - case {'plotall'}, plotsummary = 0; doplot = 1;
+%  - case 'color', color = varargin{i+1};
+%  - case {'existingfig', 'samefig'}, newfig = 0;
 %
-% Examples:
-% stats = loess_multilevel(models{i}.X, models{i}.Y, 'regularization', .8, 'order', 1, 'color', [.8 .3 0], 'plot', 'samefig');
+% :Example:
+% ::
+%
+%    stats = loess_multilevel(models{i}.X, models{i}.Y, 'regularization', .8, 'order', 1, 'color', [.8 .3 0], 'plot', 'samefig');
+%
+% :See Also: scn_stats_helper_functions
 
 if ~exist('loess.m', 'file')
     disp('You must have loess.m from the Dataviz toolbox on your path.');

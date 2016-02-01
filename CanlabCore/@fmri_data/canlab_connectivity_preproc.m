@@ -7,7 +7,7 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 % :Usage:
 % ::
 %
-%     [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin)
+%    [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin)
 %
 % :Features:
 %

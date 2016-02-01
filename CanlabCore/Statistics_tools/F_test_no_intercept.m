@@ -1,33 +1,41 @@
 function [Fobs, p, dfb, dfe] = F_test_no_intercept(X,y,s)
-% [Fobs, p, dfb, dfe] = F_test_no_intercept(X,y,s)
-%
 % Test of the null hypothesis that the ENTIRE regression model X explains no
 % variance in the data (y)
 %
-% WOrking function; in progress
+% :Usage:
+% ::
 %
+%     [Fobs, p, dfb, dfe] = F_test_no_intercept(X,y,s)
+%
+% :Examples:
 % Assess false positive rate with robust regression:
-% iter = 5000; 
-% warning off
-% fvals = zeros(1,iter); pvals = fvals;
-% for i = 1:iter
-%   X = randn(10,1); y = randn(10,1);
-%   [bb,stats]=robustfit(X,y);
-%   % [bb,dev,stats] =glmfit(X,y);
-%   [Fobs, p, dfb, dfe] = F_test_no_intercept(X,y,stats.s);
-%   fvals(i) = Fobs; pvals(i) = p;
-% end
-% fpr = sum(pvals<.05) ./ iter
-% warning on
+% ::
 %
-% Based on:
+%    iter = 5000; 
+%    warning off
+%    fvals = zeros(1,iter); pvals = fvals;
+%    for i = 1:iter
+%      X = randn(10,1); y = randn(10,1);
+%      [bb,stats]=robustfit(X,y);
+%      % [bb,dev,stats] =glmfit(X,y);
+%      [Fobs, p, dfb, dfe] = F_test_no_intercept(X,y,stats.s);
+%      fvals(i) = Fobs; pvals(i) = p;
+%    end
+%    fpr = sum(pvals<.05) ./ iter
+%    warning on
+%
+% :Based on:
 % Johnson & Wichern, 5th ed., p. 371, Result 7.6
-% 
+%
 % for a regression model with k predictors, and q regression parameters 
 % in reduced model, test the addition of q+1...k by extra sums of squares
 % [n(s2red - s2full) / (k-q)]  / [n*s2full / (n-k-1)] ~ F(k-q),(n-k-1) 
-% 
-% i'm trying to generalize this to q = 0, when we care about the intercept
+%
+% ..
+%    WOrking function; in progress
+%
+%    i'm trying to generalize this to q = 0, when we care about the intercept
+% ..
 
 q = 0;                % number of params in reduced model; 0 for test of ENTIRE model, including intercept
 interceptp = 0;       % number of intercept params; 0 for test of ENTIRE model, 1 for standard intercept

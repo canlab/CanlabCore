@@ -1,25 +1,31 @@
 function out = ICC(cse,typ,dat)
-    % iccvalue = ICC([1 to 6],['single' or 'k'], data matrix)
-    %
-%function to work out ICCs according to shrout & fleiss' schema (Shrout PE,
-%Fleiss JL. Intraclass correlations: uses in assessing rater reliability.
-%Psychol Bull. 1979;86:420-428).
+% Function to work out ICCs according to shrout & fleiss' schema (Shrout PE,
+% Fleiss JL. Intraclass correlations: uses in assessing rater reliability.
+% Psychol Bull. 1979;86:420-428).
 %
-% Modified 10/09 by Tor Wager; minor bug fix and changes to documentation
+% :Usage:
+% ::
 %
-% 'dat' is data whose *columns* represent k different raters (judges) & whose
-% *rows* represent n different cases or targets being measured. Each target
-% is assumed to be a random sample from a population of targets.
+%     iccvalue = ICC([1 to 6],['single' or 'k'], data matrix)
 %
-% 'cse' is either 1,2,3. 'cse' is: 1 if each target is measured by a
-% different set of raters from a population of raters, 2 if each target is
-% measured by the same raters, but that these raters are sampled from a
-% population of raters, 3 if each target is measured by the same raters and
-% these raters are the only raters of interest.
+% :Inputs:
 %
-% 'typ' is either 'single' or 'k' & denotes whether the ICC is based on a
-% single measurement or on an average of k measurements, where k = the
-% number of ratings/raters.
+%   **'dat':**
+%        is data whose *columns* represent k different raters (judges) & whose
+%        *rows* represent n different cases or targets being measured. Each target
+%        is assumed to be a random sample from a population of targets.
+%
+%   **'cse':**
+%        is either 1,2,3. 'cse' is: 1 if each target is measured by a
+%        different set of raters from a population of raters, 2 if each target is
+%        measured by the same raters, but that these raters are sampled from a
+%        population of raters, 3 if each target is measured by the same raters and
+%        these raters are the only raters of interest.
+%
+%   **'typ':**
+%        is either 'single' or 'k' & denotes whether the ICC is based on a
+%        single measurement or on an average of k measurements, where k = the
+%        number of ratings/raters.
 %
 % This has been tested using the example data in the paper by shrout & fleiss.
 % 
@@ -27,9 +33,9 @@ function out = ICC(cse,typ,dat)
 % returns ICC(3,k) of data 'S_Fdata' to double 'out'.
 %
 % Kevin Brownhill, Imaging Sciences, KCL, London kevin.brownhill@kcl.ac.uk
-%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %
-% Additional documentation
+% :Additional documentation:
+%
 % iccvalue = ICC([1 to 6],['single' or 'k'], data matrix)
 %
 % Here, columns are 'judges', or more generally, 'measures' that are
@@ -62,14 +68,15 @@ function out = ICC(cse,typ,dat)
 % Cronbach's alpha is equal to ICC(3, k) - case 3, k
 % This assumes no target x rater interaction
 %
-% More examples:
+% :Examples:
+% ::
 %
-%dat = mvnrnd([1 1 1], [1 .5 .5; .5 1 .5; .5 .5 1], 50); whos dat
-% corrcoef(dat)
-% ri = ICC(2, 'k', dat)
-% dat = mvnrnd([1 1 1], [1 .9 .9; .9 1 .9; .9 .9 1], 50); whos dat
-% corrcoef(dat)
-% ri = ICC(2, 'k', dat)
+%    dat = mvnrnd([1 1 1], [1 .5 .5; .5 1 .5; .5 .5 1], 50); whos dat
+%    corrcoef(dat)
+%    ri = ICC(2, 'k', dat)
+%    dat = mvnrnd([1 1 1], [1 .9 .9; .9 1 .9; .9 .9 1], 50); whos dat
+%    corrcoef(dat)
+%    ri = ICC(2, 'k', dat)
 %
 % In the example below, judges (measures) have systematically different
 % means, and the ICC values are different.  ICC(1, 1) is low because judge
@@ -77,11 +84,14 @@ function out = ICC(cse,typ,dat)
 % intermediate, because judge is considered as a random effect and modeled,
 % but we want to generalize to new judges.  ICC(3, 1) is highest, because
 % judge is modeled 
-% dat = mvnrnd([1 2 3], [1 .5 .5; .5 1 .5; .5 .5 1], 50); whos dat
-% ri = ICC(1, 'single', dat)
-% ri = ICC(2, 'single', dat)
-% ri = ICC(3, 'single', dat)
-
+%    dat = mvnrnd([1 2 3], [1 .5 .5; .5 1 .5; .5 .5 1], 50); whos dat
+%    ri = ICC(1, 'single', dat)
+%    ri = ICC(2, 'single', dat)
+%    ri = ICC(3, 'single', dat)
+%
+% ..
+%    Modified 10/09 by Tor Wager; minor bug fix and changes to documentation
+% ..
 
 %number of raters/ratings
 k = size(dat,2);

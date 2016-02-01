@@ -3,13 +3,18 @@ function A = sdt_A(H, F)
 % a non-parametric estimate of sensitivity in ROC analysis
 % per Zhang and Mueller (2005)
 %
-% A = sdt_A(H, F)
+% :Usage:
+% ::
 %
-% Author: Joe Wielgosz 8/13/2009
+%     A = sdt_A(H, F)
 %
-% Inputs:
-%    H: hit rate
-%    F: false alarm rate
+% :Inputs:
+%
+%   **H:**
+%        hit rate
+%
+%   **F:**
+%        false alarm rate
 %
 % Meaning of values where F > H ("reverse skill"): 
 %
@@ -21,10 +26,16 @@ function A = sdt_A(H, F)
 % as (1 - sdt_A(F,H)), so the full range from 0 to 1 is used.
 % For comparisons of sensitivity use abs(sdt_A(H,F) - 0.5).
 %
-% Example: sdt_A(0.6,0.8) = 0.325. This indicates the same sensitivity as 
-% sdt_A(0.8,0.6) = 0.675, but with reversed skill. 
-
+% :Example:
 %
+% sdt_A(0.6,0.8) = 0.325. This indicates the same sensitivity as 
+% sdt_A(0.8,0.6) = 0.675, but with reversed skill. 
+%
+% ..
+%    Author: Joe Wielgosz 8/13/2009
+% ..
+
+
 if F <= H % Normal case
 
     if (F <= 0.5) && (0.5 <= H)

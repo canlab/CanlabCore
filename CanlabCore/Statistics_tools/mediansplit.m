@@ -1,5 +1,4 @@
 function y = mediansplit(y)
-% y =  mediansplit(y)
 
 wh = find(y > median(y));
 

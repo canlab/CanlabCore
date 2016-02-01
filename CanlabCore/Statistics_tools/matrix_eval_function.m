@@ -1,26 +1,33 @@
 function varargout = matrix_eval_function(Y,fhandle,varargin)
-    % varargout = matrix_eval_function(Y,fhandle,varargin)
-    % evaluate any arbitrary function fhandle on each column of an input matrix Y
-    %
-    % varargout = matrix_eval_function(Y,fhandle,varargin)
-    % evaluate fhandle on paired columns of X and Y
-    %
-    % fhandle is a function handle:
-    % fhandle = @(variable inputs) fit_gls(variable_input,fixed_inputs);
-    % fhandle = @(y) fit_gls(y,X,c,p,PX);
-    %
-    % Function is fhandle should return (multiple possible) outputs, each
-    % in a row vector.  Matrix outputs of this function are Y-cols x output
-    % values for each output argument.
-    %
-    % Example: Generalized least squares fitting on 100 Y-variables, same X
-    % ---------------------------------------------------------------------
-    % y = rand(100,100); X = y + rand(100,1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
-    % fhandle = @(y) fit_gls(y,X,c,p,PX);
-    % [t, df, beta, Phi, sigma,stebeta, F] = fhandle(y);
-    %
-    % tor wager, jan 31, 2007
-    %
+% Evaluate any arbitrary function fhandle on each column of an input matrix Y
+%
+% :Usage:
+% ::
+%
+%     varargout = matrix_eval_function(Y,fhandle,varargin)
+%
+% evaluate fhandle on paired columns of X and Y
+%
+% fhandle is a function handle:
+% ::
+%
+%    fhandle = @(variable inputs) fit_gls(variable_input,fixed_inputs);
+%    fhandle = @(y) fit_gls(y,X,c,p,PX);
+%
+% Function is fhandle should return (multiple possible) outputs, each
+% in a row vector.  Matrix outputs of this function are Y-cols x output
+% values for each output argument.
+%
+% :Example: Generalized least squares fitting on 100 Y-variables, same X
+% ::
+%
+%    y = rand(100,100); X = y + rand(100,1); X(:,end+1) = 1; c = [1 0]'; p = 2; PX = pinv(X);
+%    fhandle = @(y) fit_gls(y,X,c,p,PX);
+%    [t, df, beta, Phi, sigma,stebeta, F] = fhandle(y);
+%
+% ..
+%    tor wager, jan 31, 2007
+% ..
 
     varargout = {};
 

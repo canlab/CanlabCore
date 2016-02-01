@@ -1,8 +1,11 @@
 function [varargout] = binotest_dependent(X, Po)
-
-% [varargout] = binotest_dependent(X, Po)
-% -------------------------------------------------------------------------%
 % This function runs several different types of tests on dependent binomial data.
+%
+% :Usage:
+% ::
+%
+%     [varargout] = binotest_dependent(X, Po)
+%
 % Overall, it tests the number of "hits" for each subject (row in X) against a null-hypothesis
 % proportion p, across all subjects using a Z-test (two-tailed).
 % The second level null hypothesis should be approximated by a normal
@@ -12,40 +15,49 @@ function [varargout] = binotest_dependent(X, Po)
 % Also, calculates tests for each separate trial (e.g., subject columns),
 % and the difference between proportions (two proportion z-test).
 %
-% -------------------------------------------------------------------------
-% Inputs:
-% -------------------------------------------------------------------------
-% X:          X is a matrix of "hits" and "misses", coded as 1s and 0s.
-%             where rows = subjects and columns = observations within
-%             subject
+% :Inputs:
 %
-% Po:          Po is the null hypothesis proportion of "hits", e.g., often p = 0.5
+%   **X:**
+%        X is a matrix of "hits" and "misses", coded as 1s and 0s.
+%        where rows = subjects and columns = observations within
+%        subject
 %
-% -----------------------------------------------------------------------
-% Outputs:
-% -------------------------------------------------------------------------
-
-% RES [1:5]    a structure containing the output of the stats for the
-%              z-test, includes the number of subject (N), number of overall 
-%              hits (hits), the overall proportion of hits (prop), the standard 
-%              deviation (SE), z-statistic (Z), and the two tailed p-value (pval) 
-%              trial across all subjects.  Assumes independence
+%   **Po:**
+%        Po is the null hypothesis proportion of "hits", e.g., often p = 0.5
 %
-% RES1:        Independent Single Interval Test for Column 1 (Column 1 only against Po)
-% RES2:        Independent Single Interval Test for Column 2 (Column 2 only against Po)
-% RES3:        Two proportion dependent difference z-test (Column 1 minus Column 2 against 0) 
-% RES4:        Dependent single-interval test (Mean of Column 1 and Column 2 against Po)
-% RES5:        Two proportion dependent addition z-test (Column 1 plus Column 2 against 2 * Po) 
+% :Outputs:
+%
+%   **RES [1:5]:**
+%        a structure containing the output of the stats for the
+%        z-test, includes the number of subject (N), number of overall 
+%        hits (hits), the overall proportion of hits (prop), the standard 
+%        deviation (SE), z-statistic (Z), and the two tailed p-value (pval) 
+%        trial across all subjects.  Assumes independence
+%
+%   **RES1:**
+%        Independent Single Interval Test for Column 1 (Column 1 only against Po)
+%
+%   **RES2:**
+%        Independent Single Interval Test for Column 2 (Column 2 only against Po)
+%
+%   **RES3:**
+%        Two proportion dependent difference z-test (Column 1 minus Column 2 against 0) 
+%
+%   **RES4:**
+%        Dependent single-interval test (Mean of Column 1 and Column 2 against Po)
+%
+%   **RES5:**
+%        Two proportion dependent addition z-test (Column 1 plus Column 2 against 2 * Po) 
 %              (Similar to mean, not sure what this will be used for)
 %
-% Examples:
-% -------------------------------------------------------------------------
+% :Examples:
+% ::
 %
-% [RES1, RES2, RES3, RES4, RES5] = binotest_dependent([1,1,1,1,0; 1,0,1,0,1]',.5)
+%    [RES1, RES2, RES3, RES4, RES5] = binotest_dependent([1,1,1,1,0; 1,0,1,0,1]',.5)
 %
-% -------------------------------------------------------------------------
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Luke Chang & Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -60,11 +72,11 @@ function [varargout] = binotest_dependent(X, Po)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% -------------------------------------------------------------------------
+% ..
 
-% -------------------------------------------------------------------------
-% Process Data
-% -------------------------------------------------------------------------
+% ..
+%    Process Data
+% ..
 
 X = double(X); % just in case
 [N, k] = size(X);  % number of subjects x dependent obs per person

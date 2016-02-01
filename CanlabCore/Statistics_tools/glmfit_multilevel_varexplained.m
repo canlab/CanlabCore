@@ -1,12 +1,14 @@
 function vardecomp = glmfit_multilevel_varexplained(X, Y, b, varargin)
 % Variance explained estimates, table, and pie chart for multi-level linear model
 %
-% Usage:
-% -------------------------------------------------------------------------
-% vardecomp =  glmfit_multilevel_varexplained(XX,YY, b, ['noplots' 'notable'])
+% :Usage:
+% ::
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%     vardecomp =  glmfit_multilevel_varexplained(XX,YY, b, ['noplots' 'notable'])
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) <year>  <name of author>
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -21,39 +23,45 @@ function vardecomp = glmfit_multilevel_varexplained(X, Y, b, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% b is a column vector of beta weights for fixed effects (i.e., returned by glmfit_multilevel: stats.beta')
+% :Inputs:
 %
-% X is a cell vector containing the design matrix for each subject, each subject in a cell. 
-%     *columns must code for the same variable for all subjects*
+%   **b:**
+%        is a column vector of beta weights for fixed effects (i.e., returned by glmfit_multilevel: stats.beta')
 %
-% Y is the data vector for each subject in each cell
+%   **X:**
+%        is a cell vector containing the design matrix for each subject, each subject in a cell. 
+%        *columns must code for the same variable for all subjects*
 %
-% Optional inputs:
-% 'noplots', 'notable' : suppress output
-% 'colors', followed by n x 3 vector of rgb colors
-% other inputs to wani_pie OK too.
+%   **Y:**
+%        is the data vector for each subject in each cell
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% vardecomp           structure of variance explained and description
+% :Optional Inputs:
 %
-% Examples:
-% -------------------------------------------------------------------------
+%   **'noplots', 'notable':**
+%        suppress output
 %
-% give examples here
+%   **'colors':**
+%        followed by n x 3 vector of rgb colors
+%        other inputs to wani_pie OK too.
 %
-% See also:
+% :Output:
+%
+%   **vardecomp:**
+%        structure of variance explained and description
+%
+% :See also:
 % glmfit_multilevel, igls_multicond, glmfit_general, wani_pie
+%
+% ..
+%    Programmers' notes:
+%    Created by Tor Wager and Anjali Krishnan, May 2015
+% ..
 
-% Programmers' notes:
-% Created by Tor Wager and Anjali Krishnan, May 2015
-
-% -------------------------------------------------------------------------
-% DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
+%    DEFAULTS AND INPUTS
+% ..
 
 doplots = 1;
 dotable = 1;

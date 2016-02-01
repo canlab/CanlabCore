@@ -2,20 +2,22 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 % Connectivity and multivariate pattern-based prediction for multi-subject timeseries data
 % Currently runs predictive algorithm(s) on pairwise correlations among regions
 %
-% Usage:
-% -------------------------------------------------------------------------
-% OUT = canlab_connectivity_predict(dat, subject_grouping, ['outcome', outcome_dat])
+% :Usage:
+% ::
 %
-% Features:
-% - Within-subject correlation matrices and 'random effects' statistics
-% - [optional] Prediction with LASSO-PCR/SVR/SVM of outcomes from pairwise connectivity
-% - Time-lagged cross-correlation options
-% - Graph theoretic measures
-% - [optional] Prediction with LASSO-PCR/SVR/SVM of outcomes from graph measures
-% - Can easily be extended to handle partial regression/correlation coefficients
+%     OUT = canlab_connectivity_predict(dat, subject_grouping, ['outcome', outcome_dat])
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% :Features:
+%   - Within-subject correlation matrices and 'random effects' statistics
+%   - [optional] Prediction with LASSO-PCR/SVR/SVM of outcomes from pairwise connectivity
+%   - Time-lagged cross-correlation options
+%   - Graph theoretic measures
+%   - [optional] Prediction with LASSO-PCR/SVR/SVM of outcomes from graph measures
+%   - Can easily be extended to handle partial regression/correlation coefficients
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2015  Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -30,56 +32,65 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat           concatenated data matrix of time points (t) within subjects x variables (e.g., ROIs)
-%               [subj x time] x [variables]
+% :Inputs:
 %
-% subject_grouping  [subj x time]-length integer vector of which
-%               observations belong to which subjects, e.g., [1 1 1 ... 2 2 2 ... 3 3 3 ...]'
+%   **dat:**
+%        concatenated data matrix of time points (t) within subjects x variables (e.g., ROIs)
+%        [subj x time] x [variables]
 %
-% Optional:
-% 'outcome'     followed by outcome data for multivariate prediction.  connectivity
+%  **subject_grouping:**
+%        [subj x time]-length integer vector of which
+%        observations belong to which subjects, e.g., [1 1 1 ... 2 2 2 ... 3 3 3 ...]'
+%
+% :Optional Inputs:
+%
+%   **'outcome':**
+%        followed by outcome data for multivariate prediction.  connectivity
 %               values and graph metrics are used to predict outcome data.
 %
-% 'shift_by'    Followed by integer value for max number of time points to shift
-% 'partialr'    Use partial correlation instead of raw correlation
+%   **'shift_by':**
+%        Followed by integer value for max number of time points to shift
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% OUT           A structure containing subject correlation matrices, the mean
-%               matrix, and raw and FDR-thresholded group matrix
-%               Also contains matrices with [subjects x variables] pairwise
-%               correlation elements and graph metrics
+%   **'partialr':**
+%        Use partial correlation instead of raw correlation
 %
-% Examples:
-% -------------------------------------------------------------------------
+% :Outputs:
 %
-% % Use partial correlations:
-% OUT = canlab_connectivity_predict(dat, subject_grouping, 'partialr');
 %
-% Omit graph met
-% OUT = canlab_connectivity_predict(dat, subject_grouping, 'outcome', y, 'nograph');
+%   **OUT:**
+%        A structure containing subject correlation matrices, the mean
+%        matrix, and raw and FDR-thresholded group matrix
+%        Also contains matrices with [subjects x variables] pairwise
+%        correlation elements and graph metrics
 %
-% See also:
+% :Examples:
+% ::
+%
+%    % Use partial correlations:
+%    OUT = canlab_connectivity_predict(dat, subject_grouping, 'partialr');
+%
+%    % Omit graph met
+%    OUT = canlab_connectivity_predict(dat, subject_grouping, 'outcome', y, 'nograph');
+%
+% :See also:
 % parcel_cl, parcel_cl_nmds_plots, canlab_force_directed_graph,
 % canlab_connectivity_preproc
-
-% Programmers' notes:
-% Created 2/5/15 by tor wager
 %
-% TO-DOS:  Thresholds and sig matrix should probably be individualized
+% ..
+%    Programmers' notes:
+%    Created 2/5/15 by tor wager
+%
+%    TO-DOS:  Thresholds and sig matrix should probably be individualized
 %          - plotting methods if you input Clusters/regions
+% ..
 
-% -------------------------------------------------------------------------
-% DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
+%    DEFAULTS AND INPUTS
+% ..
 
-% Defaults
-% -----------------------------------
-
-docluster = 1;
+docluster = 1; % Defaults
 dograph = 1;
 doplot = 1;
 y = [];             % this is for the outcome data, if any

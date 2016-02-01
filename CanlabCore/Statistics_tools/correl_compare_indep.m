@@ -1,17 +1,24 @@
 function [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g2, varargin)
-    % [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g2, varargin)
-    %
-    % Compute statistics on the difference between correlation coefficients for indepndent samples g1 and g2.
-    % correlations are computed over y (n observations x k variables) for each
-    % group.
-    %
-    % Tor Wager, Aug. 2008
-    %
-    % Source, Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
-    % From notes on Garson stats website.
-    %
-    % Edit: March 2010-add no verbose option.  input 'noverbose'
-    % Bug fix in Fisher's Z transform
+% Compute statistics on the difference between correlation coefficients
+% for indepndent samples g1 and g2.
+%
+% :Usage:
+% ::
+%
+%     [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g2, varargin)
+%
+% Correlations are computed over y (n observations x k variables) for each
+% group.
+%
+% Source, Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
+% From notes on Garson stats website.
+%
+% ..
+%    Tor Wager, Aug. 2008
+%
+%    Edit: March 2010-add no verbose option.  input 'noverbose'
+%    Bug fix in Fisher's Z transform
+% ..
 
     verbose = 1;
     if length(varargin) > 0

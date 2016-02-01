@@ -1,17 +1,26 @@
 function [priors, pa1_given_t, pa0_given_t, varargout] = bayes_get_probabilities(Y, Xi, k)
+% :Usage:
+% ::
 %
-% [priors, pa1_given_t, pa0_given_t, pt_given_act1, pt_given_act0, pa1_given_not_t] =
-% bayes_get_probabilities(Y, Xi, k)
+%     [priors, pa1_given_t, pa0_given_t, pt_given_act1, pt_given_act0, pa1_given_not_t] = bayes_get_probabilities(Y, Xi, k)
 %
-% k is regularization param, biases towards 0.5
-% Y is data matrix, obs x features, 1/0 (active/not)
-% Xi is task indicator matrix
+% :Inputs:
 %
-% tor wager, oct 07
+%   **k:**
+%        is regularization param, biases towards 0.5
+%
+%   **Y:**
+%        is data matrix, obs x features, 1/0 (active/not)
+%
+%   **Xi:**
+%        is task indicator matrix
+%
 % This is a sub-function of classify_naive_bayes.m
 % For complete help, see classify_naive_bayes.m
 %
-%
+% ..
+%    tor wager, oct 07
+% ..
 
 [nobs, nfeatures] = size(Y);
 nclasses = size(Xi, 2);

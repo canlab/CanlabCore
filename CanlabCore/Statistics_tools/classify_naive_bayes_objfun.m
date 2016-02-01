@@ -1,10 +1,14 @@
 function goodness = classify_naive_bayes_objfun(dat, Xi, volInfo, a, s, g, k, t, h)
+% :Usage:
+% ::
 %
-% goodness = classify_naive_bayes_objfun(dat, Xi, volInfo, 0, .9, 1, .05, .1, .1);
+%     goodness = classify_naive_bayes_objfun(dat, Xi, volInfo, 0, .9, 1, .05, .1, .1);
 %
-% 
-%objfun = @(t, h) classify_naive_bayes_objfun(dat, Xi, volInfo, 0, .9, 1, .05, t, h);
-%goodness = objfun(.1, .1)
+% :Examples:
+% ::
+%
+%    objfun = @(t, h) classify_naive_bayes_objfun(dat, Xi, volInfo, 0, .9, 1, .05, t, h);
+%    goodness = objfun(.1, .1)
 
 bayes_model = classify_naive_bayes('setup', dat, Xi, a, s, g, k);
 

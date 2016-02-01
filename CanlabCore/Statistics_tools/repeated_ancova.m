@@ -1,23 +1,32 @@
 function [b,stats,yadj] = repeated_ancova(X,Y,wicons,btwnnames,winames,ynames,varargin)
-%[b,stats,yadj] = repeated_ancova(X,Y,wicons,btwnnames,winames,ynames,varargin)
-%
 % Repeated measures ANCOVA with table and plot
 % uses Robust IRLS
 %
-% tor wager, Aug. 06
+% :Usage:
+% ::
 %
-%Y = rand(15,2);
-%X = Y + rand(15,2);
-%cons = [-1 1 -1 1; 1 1 -1 -1];  % placebo vs control, hot vs. warm
+%     [b,stats,yadj] = repeated_ancova(X,Y,wicons,btwnnames,winames,ynames,varargin)
 %
-% X = R.X(:,1:2);
-% Y = cl(2).CONTRAST.data;
-% cons = [-1 1 0 0; 0 0 -1 1];  % placebo vs control for heat then warm
-% repeated_ancova(X,Y,cons,{'Reported Placebo (C - P)' 'Order'},{'P-C Heat' 'P-C Warm'},{'CH' 'PH' 'CW' 'PW'});
+% :Examples:
+% ::
 %
-% DOES NOT WORK WITH FIXED BTWN-SUBJECTS COVARIATES 
+%    Y = rand(15,2);
+%    X = Y + rand(15,2);
+%    cons = [-1 1 -1 1; 1 1 -1 -1];  % placebo vs control, hot vs. warm
+%
+%    X = R.X(:,1:2);
+%    Y = cl(2).CONTRAST.data;
+%    cons = [-1 1 0 0; 0 0 -1 1];  % placebo vs control for heat then warm
+%    repeated_ancova(X,Y,cons,{'Reported Placebo (C - P)' 'Order'},{'P-C Heat' 'P-C Warm'},{'CH' 'PH' 'CW' 'PW'});
+%
+% DOES NOT WORK WITH FIXED BTWN-SUBJECTS COVARIATES
+%
 % X must be a random variable that is observed multiple times for each
-% subject, as does Y 
+% subject, as does Y
+%
+% ..
+%    tor wager, Aug. 06
+% ..
 
 dotable = 1;
 doplot = 1;

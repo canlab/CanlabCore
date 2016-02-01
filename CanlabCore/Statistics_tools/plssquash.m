@@ -1,21 +1,37 @@
 function [V, S, varexp, w, Yhat] = plssquash(X, Y, varargin)
-%[V, S, varexp, w, Yhat] = plssquash(X, Y, varargin)
-%
-% Tor Wager, 9/12/09
-%
-% decomposes data X into K components that are ordered in their 
+% Decomposes data X into K components that are ordered in their 
 % covariance with Y, designed to predict orthogonal parts of Y
 %
-% V = 'eigenvetors', or weights, on data (columns)
-% S = score matrix, N x K
-% varexp = sqrt(r-square) with first k components predicting Y
-% w = V*b, integrated weights.  for predicting new data, pred = X*w
-% Yhat = X*V*b, or S*b
+% :Usage:
+% ::
 %
-% Optional inputs:
-% case {'noplot'}, turn off plotting
-% case 'ndims', save only first ndims (K) vectors
-                
+%     [V, S, varexp, w, Yhat] = plssquash(X, Y, varargin)
+%
+% :Optional Inputs:
+%   - case {'noplot'}, turn off plotting
+%   - case 'ndims', save only first ndims (K) vectors
+%
+% :Outputs:
+%
+%   **V:**
+%        'eigenvetors', or weights, on data (columns)
+%
+%   **S:**
+%        score matrix, N x K
+%
+%   **varexp:**
+%        sqrt(r-square) with first k components predicting Y
+%
+%   **w:**
+%        V*b, integrated weights.  for predicting new data, pred = X*w
+%
+%   **Yhat:**
+%        X*V*b, or S*b
+%
+% ..
+%    Tor Wager, 9/12/09
+% ..
+
 doplot = 1;
 ndims = length(Y) - 1; 
 

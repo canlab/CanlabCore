@@ -1,80 +1,98 @@
+function varargout = glmfit_general(Y, X, varargin)
 % This function was designed to run a second-level GLS analysis on
 % coefficients and variance estimates from a 1st-level model, but it may be
 % used generally to implement weighted GLS with options to bootstrap or run
 % a sign permutation test to get p-values.
 %
-% inputs:
-%   Y = data for n subjects on k variables
-%       run tests on each column of y independently
-%       if this is a 2nd-level analysis in a two-level model, Y is coefficients from 1st level (mu-hat)
+% :Inputs:
 %
-%   s2 = estimates of variance (sigma-squared??) for k variables
+%   **Y:**
+%        data for n subjects on k variables
 %
-%   X = design matrix; include intercept (first) + predictors
+%        run tests on each column of y independently
 %
-% Estimation method:
-%   'unweighted' / 'weighted'
-%   'robust' / 'nonrobust'
-%   's2',      
-%                       NEW: followed by n-length cell array of var/cov mtx
-%                       (xtxi*sigma2) estimates from previous level
-%                       OLD: followed by n x k matrix of first-level variance estimates
+%        if this is a 2nd-level analysis in a two-level model, Y is coefficients from 1st level (mu-hat)
 %
-% Inference method:
-%   't-test'
-%   'bootstrap'
-%   'signperm'
+%   **s2:**
+%        estimates of variance (sigma-squared??) for k variables
+%
+%   **X:**
+%        design matrix; include intercept (first) + predictors
+%
+% :Estimation method:
+%  - 'unweighted' / 'weighted'
+%  - 'robust' / 'nonrobust'
+%  - 's2'
+%
+% NEW: followed by n-length cell array of var/cov mtx
+% (xtxi*sigma2) estimates from previous level
+%
+% OLD: followed by n x k matrix of first-level variance estimates
+%
+% :Inference method:
+%  - 't-test'
+%  - 'bootstrap'
+%  - 'signperm'
 %
 %
-% Optional inputs
-%   'names' : names of each col. of y:  string followed by input
-%   'name'  : text string tag for analysis
-%   'verbose' : print verbose output and tables
-%   'nresample' : number of boot/sign perm samples to run; string followed by input
-%   'noint' : do not require intercept to be first column of X.
+% :Optional Inputs:
+%   **'names':**
+%        names of each col. of y:  string followed by input
 %
-% Notes:
+%   **'name'  : text string tag for analysis
+%
+%   **'verbose':**
+%        print verbose output and tables
+%
+%   **'nresample':**
+%        number of boot/sign perm samples to run; string followed by input
+%
+%   **'noint':**
+%        do not require intercept to be first column of X.
+%
+% :Notes:
 % Same as glmfit.m (2007a) without weights.'
+%
 % With weights, we estimate w and use Satterthwaite, whereas glmfit uses
 % n - k for dfe (assumes correct weights are known.)
 %
-% Outputs:
-% stats.b_star = Weighted fixed effects estimate (if using 'weighted' option)
-% stats.Y_star = Y_star';  % Empirical Bayes estimates; don't use for group
-% inference, but save;
-% if this is run in a context of a multi-level model, these are the individual subjects'
-% (first-level) Empirical Bayes slope estimates
+% :Outputs:
 %
-% Output to screen:
-%  Coeff is "beta", the effect magnitude
-%  STE is the standard error, a function of variance and df 
-%  T = beta / STE
-%  Z = beta / the STE for infinite df
-%  p
+%   **stats.b_star:**
+%        Weighted fixed effects estimate (if using 'weighted' option)
 %
+%   **stats.Y_star:**
+%        Y_star';  % Empirical Bayes estimates; don't use for group
+%        inference, but save;
 %
-% %
-% % Examples:
-% -------------------------------------------------------------------------
+%        if this is run in a context of a multi-level model, these are the individual subjects'
+%        (first-level) Empirical Bayes slope estimates
 %
-% Y = randn(100, 4); X = Y(:,1) + randn(100,1); X = [ones(size(X)) X];
-% stats = glmfit_general(Y, X, 'verbose');
-% stats
-% first_lev_var = rand(100, 4);
+% :Output to screen:
+% Coeff is "beta", the effect magnitude
+% STE is the standard error, a function of variance and df 
+%   - T = beta / STE
+%   - Z = beta / the STE for infinite df
+%   - p
 %
-% stats = glmfit_general(Y, X, 'weighted', first_lev_var, 'dfwithin', 20, ...
-% 'verbose', 'names', {'DMPFC' 'ACC' 'VMPFC' 'SII'}, ...
-% 'beta_names', {'Mean activity' 'Rating covariate'}, ...
-% 'analysisname','My Sample ROI analysis');
+% :Examples:
+% ::
 %
+%    Y = randn(100, 4); X = Y(:,1) + randn(100,1); X = [ones(size(X)) X];
+%    stats = glmfit_general(Y, X, 'verbose');
+%    stats
+%    first_lev_var = rand(100, 4);
+%
+%    stats = glmfit_general(Y, X, 'weighted', first_lev_var, 'dfwithin', 20, ...
+%    'verbose', 'names', {'DMPFC' 'ACC' 'VMPFC' 'SII'}, ...
+%    'beta_names', {'Mean activity' 'Rating covariate'}, ...
+%    'analysisname','My Sample ROI analysis');
 %
 
 
-function varargout = glmfit_general(Y, X, varargin)
-
-% -------------------------------------------------------------------------
-% Setup inputs, print info to screen if verbose
-% -------------------------------------------------------------------------
+% ..
+%    Setup inputs, print info to screen if verbose
+% ..
 
 varargout = cell(1, nargout - 1);
 

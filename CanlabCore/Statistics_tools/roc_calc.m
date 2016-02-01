@@ -1,36 +1,53 @@
 function [xvals, tpr, fpr, auc, c_bias] = roc_calc(input_vals, binary_outcome, xvals)
 % Calculate Receiver Operating Characteristic plot (ROC) given P-values
 %
-%  function [xvals, tpr, fpr, auc, c_bias] = roc_calc(input_vals or input values, binary_outcome, [xvals : threshold vals to assess])
+% :Usage:
+% ::
 %
-% input_vals : continuous-valued observations to classify (e.g., fMRI activity)
-% 
-% binary_outcome : 1 / 0 vector of which input observations are "hits"
+%     [xvals, tpr, fpr, auc, c_bias] = roc_calc(input_vals or input values, binary_outcome, [xvals : threshold vals to assess])
 %
-% 
-% xvals : Criterion values you put in or every 10th percentile of the input
-%         data distribution by default
+% :Inputs:
 %
-% tpr : True positive rate for every step of ROC curve (sensitivity)
-% fpr : False positive rate (1 - specificity)
-% auc : Empirical estimate of area under the ROC curve
-% c_bias : c measure of response bias at each step; MacMillan and Creelman 2005
+%   **input_vals:**
+%        continuous-valued observations to classify (e.g., fMRI activity)
 %
-% Examples:
+%   **binary_outcome:**
+%        1 / 0 vector of which input observations are "hits"
 %
-% pvals = STATS.WTS.p; % May not work for p-values?  may need to convert
-% to t or something.
-% isnull = DATA.true_weights == 0;
-% [xvals, tpr, fpr] = roc_calc(pvals, isnull);
-% figure; plot(fpr, tpr, 'ko-','Color', 'k', 'LineWidth', 2);
+%   **xvals:**
+%        Criterion values you put in or every 10th percentile of the input
+%        data distribution by default
 %
-% figure; plot(xvals, fpr, 'bo-')
-% hold on; plot([0 1], [0 1], 'k', 'LineWidth', 2);
-% set(gca, 'XLim', [0 .2], 'YLim', [0 .2])
-% xlabel('Nominal false positive rate');
-% ylabel('Actual false positive rate');
+% :Outputs:
 %
-% See also roc_plot.m
+%   **tpr:**
+%        True positive rate for every step of ROC curve (sensitivity)
+%
+%   **fpr:**
+%        False positive rate (1 - specificity)
+%
+%   **auc:**
+%        Empirical estimate of area under the ROC curve
+%
+%   **c_bias:**
+%        c measure of response bias at each step; MacMillan and Creelman 2005
+%
+% :Examples:
+% ::
+%
+%    % May not work for p-values? may need to convert to t or something.
+%    pvals = STATS.WTS.p;
+%    isnull = DATA.true_weights == 0;
+%    [xvals, tpr, fpr] = roc_calc(pvals, isnull);
+%    figure; plot(fpr, tpr, 'ko-','Color', 'k', 'LineWidth', 2);
+%
+%    figure; plot(xvals, fpr, 'bo-')
+%    hold on; plot([0 1], [0 1], 'k', 'LineWidth', 2);
+%    set(gca, 'XLim', [0 .2], 'YLim', [0 .2])
+%    xlabel('Nominal false positive rate');
+%    ylabel('Actual false positive rate');
+%
+% :See Also: roc_plot.m
 
 if ~islogical(binary_outcome), disp('Warning!! binary_outcome must be logical.'); end
 binary_outcome = logical(binary_outcome);

@@ -1,12 +1,18 @@
 function [ci, names] = roc_boot(input_vals, binary_outcome, thr, verbose)
-% [ci, names] = roc_boot(input_vals, binary_outcome, thr, [verbose flag])
+% :Usage:
+% ::
+%
+%     [ci, names] = roc_boot(input_vals, binary_outcome, thr, [verbose flag])
 %
 % Returns bootstrapped 95% confidence intervals for sensitivity,
 % specificity, and PPV at a given threshold.
 %
-% thr = ROC.class_threshold
-% input_vals = input(ind);
-% binary_outcome = outcome(ind);
+% :Examples:
+% ::
+%
+%    thr = ROC.class_threshold
+%    input_vals = input(ind);
+%    binary_outcome = outcome(ind);
 
 
 if nargin < 4, verbose = 1; end

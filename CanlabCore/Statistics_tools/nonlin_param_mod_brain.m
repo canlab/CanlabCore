@@ -1,45 +1,69 @@
 function nonlin_param_mod_brain(ons, modulator, image_names, SETUP, varargin)
-    % nonlin_param_mod_brain(X, image_names, SETUP, [SETUPional inputs])
-    %
-    % Nonlinear fits with a parametric modulator on a set of brain images
-    %
-    % Inputs
-    % ------------------------------------------------
-    % ons                   onsets for each condition; one cell per
-    %                       condition, one col. vector per series of onsets
-    % modulator             modulator values for each condition; same
-    %                       format as above
-    % image_names                     outcome variable; Images (volume names) for each subject, in
-    %                       string matrix (list of image names); 3-D for
-    %                       now!
-    %
-    % SETUP.(fields)
-    % .mask                 name of mask image
-    % .preprocX             flag for whether to HP filter X data
-    % .preprocY             flag for whether to HP filter Y data
-    % 'nopreproc'           Turn off preproc
-    %
-    % .TR                   repetition time of volume (image) acquisition
-    % .HPlength             high-pass filter length, in s
-    % .scans_per_session    vector of # volumes in each run, e.g., [128 128 128 128 128]
-    % .dummyscans           indices of images in each run that will be modeled
-    %                       with separate dummy variables
-    % .startslice           starting slice number (to resume analysis)
-    % SETUPional inputs:
-    % Any of the SETUPions in mediation.m
-    % Also: 'nopreproc' to skip preprocessing (i.e., for trial-level inputs)
-    %
-    % Tor Wager, May 2008
-    %
-    % Examples:
+% Nonlinear fits with a parametric modulator on a set of brain images
+%
+% :Usage:
+% ::
+%
+%     nonlin_param_mod_brain(X, image_names, SETUP, [SETUPional inputs])
+%
+% :Inputs:
+%
+%   **ons:**
+%        onsets for each condition; one cell per
+%        condition, one col. vector per series of onsets
+%
+%   **modulator:**
+%        modulator values for each condition; same
+%        format as above
+%
+%   **image_names:**
+%        outcome variable; Images (volume names) for each subject, in
+%        string matrix (list of image names); 3-D for now!
+%
+% :SETUP.(fields):
+%
+%   **.mask:**
+%        name of mask image
+%
+%   **.preprocX:**
+%        flag for whether to HP filter X data
+%
+%   **.preprocY:**
+%        flag for whether to HP filter Y data
+%
+%   **'nopreproc':**
+%        Turn off preproc
+%
+%   **.TR:**
+%        repetition time of volume (image) acquisition
+%
+%   **.HPlength:**
+%        high-pass filter length, in s
+%
+%   **.scans_per_session:**
+%        vector of # volumes in each run, e.g., [128 128 128 128 128]
+%
+%   **.dummyscans:**
+%        indices of images in each run that will be modeled
+%        with separate dummy variables
+%
+%   **.startslice:**
+%        starting slice number (to resume analysis)
+%
+% SETUPional inputs:
+% Any of the SETUPions in mediation.m
+%
+% Also: 'nopreproc' to skip preprocessing (i.e., for trial-level inputs)
+%
+% ..
+%    Tor Wager, May 2008
+% ..
 
     
-
-    
-    % ---------------------------------------------------------------------
-    % Set up preprocessing
-    % To skip, enter 'nopreproc' as var. arg.
-    % ---------------------------------------------------------------------
+    % ..
+    %    Set up preprocessing
+    %    To skip, enter 'nopreproc' as var. arg.
+    % ..
 
     [preprochandle, SETUP] = filter_setup(SETUP, varargin{:});
 

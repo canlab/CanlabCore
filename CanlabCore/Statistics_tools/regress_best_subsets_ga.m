@@ -1,10 +1,21 @@
 function [wh_predictors, betas, b, stat] = regress_best_subsets_ga(X, Y)
-%     [wh_predictors, betas, b_subset, stat_subset] = regress_best_subsets_ga(X, Y)
+% :Usage:
 % GA-based best subsets regression
 %
-% Y is outcome data
-% X is predictor matrix
-% wh_predictors is the primary outcome -- it is vector of which predictors to include in the model
+% ::
+%
+%     [wh_predictors, betas, b_subset, stat_subset] = regress_best_subsets_ga(X, Y)
+%
+% :Inputs:
+%
+%   **Y:**
+%        is outcome data
+%
+%   **X:**
+%        is predictor matrix
+%
+%   **wh_predictors:**
+%        is the primary outcome -- it is vector of which predictors to include in the model
 %
 % the objective criterion is AIC
 

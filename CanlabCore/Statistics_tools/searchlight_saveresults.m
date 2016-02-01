@@ -1,13 +1,14 @@
 function searchlight_saveresults(modeldir)
-
 % This function combines and saves searchlight analysis results. 
 %
-% Usage:
-% -------------------------------------------------------------------------
-% searchlight_saveresults(modeldir)
+% :Usage:
+% ::
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%     searchlight_saveresults(modeldir)
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -22,37 +23,41 @@ function searchlight_saveresults(modeldir)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% modeldir      the directory where the searchlight result mat files (e.g.,
-%               searchlight_results_*_01Aug2014.mat)
+% :Input:
+%
+%   **modeldir:**
+%        the directory where the searchlight result mat files (e.g.,
+%        searchlight_results_*_01Aug2014.mat)
 % 
-% Outputs:
-% -------------------------------------------------------------------------
-% This function saves the brain maps where each voxel contains a summary 
-% stat value (e.g., accuracy or outcome correlation) in the modeldir. The
-% naming convention of the result maps are as follow:
-%    results_searchlight_(a)_(b)_dat(c).nii
-%     (a) will be a number - the number of test results
-%     (b) acc: accuracy, r: outcome correlation, p: p-values, se: standard error, 
+% :Outputs:
+%
+%   This function saves the brain maps where each voxel contains a summary 
+%   stat value (e.g., accuracy or outcome correlation) in the modeldir. The
+%   naming convention of the result maps are as follow:
+%
+%   results_searchlight_(a)_(b)_dat(c).nii
+%      1. will be a number - the number of test results
+%      2. acc: accuracy, r: outcome correlation, p: p-values, se: standard error, 
 %         and thr: threshold for the single-interval test
-%     (c) If the test was on one dataset, (c) will be empty, but if the
+%      3. If the test was on one dataset, (c) will be empty, but if the
 %         test was cross-prediction, (c) will be 11, 12, 21, or 22. 
-%         11: trained on the first dataset, and tested on the first dataset
-%         12: trained on the first dataset, and tested on the second dataset
-%         21: trained on the second dataset, and tested on the first dataset
-%         22: trained on the second dataset, and tested on the second dataset
+%           - 11: trained on the first dataset, and tested on the first dataset
+%           - 12: trained on the first dataset, and tested on the second dataset
+%           - 21: trained on the second dataset, and tested on the first dataset
+%           - 22: trained on the second dataset, and tested on the second dataset
 % 
-% Output Examples
-% -----------------------------------------------------
-% results_searchlight_1_r_dat11.nii (outcome correlation)
-% results_searchlight_1_p_dat11.nii (p value for the correlation values)
-% 
-% results_searchlight_2_acc_dat11.nii (accuracy)
-% results_searchlight_2_p_dat11.nii (p value for the accuracy)
-% results_searchlight_2_se_dat11.nii (standard error for the accuracy)
-% results_searchlight_2_thr_dat11.nii (threshold for the accuracy test)
+% :Output Examples:
+% ::
+%
+%    results_searchlight_1_r_dat11.nii (outcome correlation)
+%    results_searchlight_1_p_dat11.nii (p value for the correlation values)
+%
+%    results_searchlight_2_acc_dat11.nii (accuracy)
+%    results_searchlight_2_p_dat11.nii (p value for the accuracy)
+%    results_searchlight_2_se_dat11.nii (standard error for the accuracy)
+%    results_searchlight_2_thr_dat11.nii (threshold for the accuracy test)
 
 
 load(fullfile(modeldir, 'searchlight_dream_variables.mat'));

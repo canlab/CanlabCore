@@ -1,34 +1,56 @@
 function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclustnew(X,clust,varargin)
-
-% function [bestpval,bestmyclass,bestnames,bestX,where,clustnames]=testclustnew(X,clust,[r],[nperm],[names],[remove],[linkagetype]);
-% this function tests for the significance of the cluster solution
+% This function tests for the significance of the cluster solution
 %
-% inputs: X is the Group Space
-%        --- clust is the cluster solutions (between how many and how many solutions is reasonable?)
-%         the default for this option is 2:r/2 where r is the number of
-%         REGIONS
-%        --- r is the number of DIMENSIONS in the solution (from choose_ndims)
-%        --- nperm is the number of permutations for nonparametric testing
+% Usage
+% ::
+%
+%     [bestpval,bestmyclass,bestnames,bestX,where,clustnames]=testclustnew(X,clust,[r],[nperm],[names],[remove],[linkagetype]);
+%
+% :Inputs:
+%
+%   **X:**
+%        is the Group Space
+%
+%   **clust:**
+%        is the cluster solutions (between how many and how many solutions is reasonable?)
+%        the default for this option is 2:r/2 where r is the number of
+%
+%   **REGIONS:**
+%        r is the number of DIMENSIONS in the solution (from choose_ndims)
+%
+%   **nperm:**
+%        is the number of permutations for nonparametric testing
 %         (default 1000)
-%        --- names specifies the names of each region
-%        --- remove specifies what to do about elements which fit the cluster
-%         solution poorly.  There are 3 possibilities:
-%         'keep' - keeps all elements regardless of quality.  If you choose
-%         this option, you are assuming that every region you enter
-%         contributes something to your solution
-%         'thresh' - this removes elements which fail to reach 95%
-%         confidence as determined by random permutation testing
-%         'iter'  - this option removes elements which fall in the bottom
-%         5% of the permuted distribution, and remcomputes the solution
-%         without these elements. This iterative recomputation means that
-%         you are pruning your solution *until* you get a good one.  The
-%         p-values which accompany each solution are thus difficult to
-%         intepret if you use this option
-%        --- linkagetype is the input to linkage ('single','average',etc) 
-%         see help linkage_t
 %
-% outputs:
-%        --- bestpval is the overall significance of the derived solution.
+%   **names:**
+%        specifies the names of each region
+%
+%   **remove:**
+%        specifies what to do about elements which fit the cluster
+%        solution poorly.  There are 3 possibilities:
+%
+%        'keep' - keeps all elements regardless of quality.  If you choose
+%        this option, you are assuming that every region you enter
+%        contributes something to your solution
+%        'thresh' - this removes elements which fail to reach 95%
+%        confidence as determined by random permutation testing
+%
+%        'iter'  - this option removes elements which fall in the bottom
+%        5% of the permuted distribution, and remcomputes the solution
+%        without these elements. This iterative recomputation means that
+%        you are pruning your solution *until* you get a good one.  The
+%        p-values which accompany each solution are thus difficult to
+%        intepret if you use this option
+%
+%   **linkagetype:**
+%        is the input to linkage ('single','average',etc) 
+%
+%        see help linkage_t
+%
+% :Outputs:
+%
+%   **bestpval:**
+%        is the overall significance of the derived solution.
 %        significance is calculated by permuting the group space in all
 %        dimensions to derive a completely new configuration of elements in
 %        n-dimensional space.  These elements are then assigned to clusters
@@ -36,23 +58,28 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 %        (silhouette value) across the entire plot is used to form a
 %        distribution against which to test the sihouette value of the true
 %        solution
-%        --- bestmyclass is the assignment of REGIONS to CLUSTERS for the best
+%
+%   **bestmyclass:**
+%        is the assignment of REGIONS to CLUSTERS for the best
 %        soluton
-%        --- bestnames contains the names of the REGIONS included in the
+%
+%   **bestnames:**
+%        contains the names of the REGIONS included in the
 %        best solution (if remove==keep, this will be the same as names);
-%        --- bestX is the best group space
-%        --- where is a vector indexing which of the original regions (in
+%
+%   **bestX:**
+%        is the best group space
+%
+%   **where:**
+%        is a vector indexing which of the original regions (in
 %        order) are included in the new group space.
 %        clustnames is a cell containing the names of the elements in each
 %        cluster
 %
-%        calls:
-%        getmeanquality,clustquality,pdist1,linkage_t,cluster_t,makebinary
-%
+% :Calls: getmeanquality,clustquality,pdist1,linkage_t,cluster_t,makebinary
 %
 
-% inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if length(varargin)>0,r=varargin{1}; else r = 2; end
+if length(varargin)>0,r=varargin{1}; else r = 2; end % inputs
 if length(varargin)>1,nperm=varargin{2}; else nperm = 1000; end
 if length(varargin)>2,names=varargin{3}; else names = cell(1,15); end
 if length(varargin)>3,remove=varargin{4}; else remove='keep'; end

@@ -2,28 +2,40 @@ function stats = rmanova2(data,alpha,doplot,ttst)
 %
 %Repeated-measures two-way ANOVA
 %
-%USAGE: stats = rmanova2(data,[alpha],[doplot],[ttst]);
+% :Usage:
+% ::
 %
-%INPUTS: 
-%    data: can be one of two formats:
-%          1. Cell array - each row represents a level of factor 1, and
-%          each column represents a level of factor 2. Each cell contains a
-%          vector of values of the dependent variable for each subject.
-%          2. Matrix - each row represents a trial, with the following
-%          columns:
-%               column1 - dependent variable
-%               column2 - grouping variable for subject
-%               column3 - grouping variable for factor 1
-%               column4 - grouping variable for factor 2
-%    alpha (optional): p-value threshold (default: 0.05)
-%    doplot (optional): if 1, will produce a line plot.  
+%     stats = rmanova2(data,[alpha],[doplot],[ttst]);
+%
+% :Inputs:
+%
+%   **data:**
+%        can be one of two formats:
+%        1. Cell array - each row represents a level of factor 1, and
+%           each column represents a level of factor 2. Each cell contains a
+%           vector of values of the dependent variable for each subject.
+%        2. Matrix - each row represents a trial, with the following
+%           columns:
+%             - column1 - dependent variable
+%             - column2 - grouping variable for subject
+%             - column3 - grouping variable for factor 1
+%             - column4 - grouping variable for factor 2
+%
+%   **alpha:**
+%        (optional) p-value threshold (default: 0.05)
+%
+%   **doplot:**
+%        (optional) if 1, will produce a line plot.  
 %                       Works only for cell input data (default: 1)
-%    ttst (optional): if 1, will perform pairwise t-tests (default: 0)
 %
-% Aaron Schurger (2005.02.04)
-%   Derived from Keppel & Wickens (2004) "Design and Analysis" ch. 18
-% Modified by Sam Gershman (2006.11.16)
+%   **ttst:**
+%        (optional) if 1, will perform pairwise t-tests (default: 0)
 %
+% ..
+%    Aaron Schurger (2005.02.04)
+%    Derived from Keppel & Wickens (2004) "Design and Analysis" ch. 18
+%    Modified by Sam Gershman (2006.11.16)
+% ..
 
 if nargin < 2; alpha = 0.05; doplot = 0; ttst = 0; end
 if nargin < 3; doplot = 1;  ttst = 0; end

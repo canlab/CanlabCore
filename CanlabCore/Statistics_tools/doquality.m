@@ -1,9 +1,18 @@
 function [equality center] = doquality(Xcx,X)
-%[equality] = doquality(Xcx,X)
+% :Usage:
+% ::
 %
-% Xcx : binary indicator matrix of cluster assignments, 
-% X   : stimulus coordinates in group space
-% also: takes group spaces with zeros;
+%     [equality] = doquality(Xcx,X)
+%
+% :Inputs:
+%
+%   **Xcx:**
+%        binary indicator matrix of cluster assignments, 
+%
+%   **X:**
+%        stimulus coordinates in group space
+%
+%        also: takes group spaces with zeros;
 
 
 if size(Xcx>1);    

@@ -6,48 +6,59 @@ function [trIdx, teIdx] = tscv(vectorlen, varargin)
 % -See http://robjhyndman.com/hyndsight/tscvexample/ for more info about rolling cv
 % -See Racine, J. (2000). Consistent cross-validatory model-selection for dependent data: hv-block cross-validation. Journal of Econometrics, 99(1), 39-61.
 %
-% [trIdx, teIdx] = tscv(vectorlen, stepsize)
+% :Usage:
+% ::
 %
-% Inputs:
-% ---------------------------------------------------------------------
-% vectorlen                 : length of vector to create holdout cross-validation set
+%    [trIdx, teIdx] = tscv(vectorlen, stepsize)
 %
-% Optional inputs with their default values:
-% :--------------------------------------------
+% :Inputs:
 %
-% 'hvblock' = [h,v]         : use hvblock cross-validation with a block
-%                             size of 'h' (0 reduces to v-fold xval)and
-%                             number of test observations 'v' (0 reduces
-%                             to h-block xval)
+%   **vectorlen:**
+%        length of vector to create holdout cross-validation set
 %
-% 'rolling' = [h,v,g]       : use hvblock cross-validation with g training steps
-%                             surrounding hv block.  Akin to Rolling
-%                             crossval.  Same properties as hvblock.
+% :Optional Inputs with their default values:
 %
-% Outputs:
-% ---------------------------------------------------------------------
-% trIdx                     : structure with training label index
-% teIdx                     : structure with test label index
+%   **'hvblock' = [h,v]:**
+%        use hvblock cross-validation with a block
+%        size of 'h' (0 reduces to v-fold xval)and
+%        number of test observations 'v' (0 reduces
+%        to h-block xval)
 %
-% Examples:
-% ---------------------------------------------------------------------
-% [trIdx, teIdx] = tscv(100, 'hvblock',[5,2]); % use hvblock with h=5 and v=2
-% [trIdx, teIdx] = tscv(100, 'rolling',[5,2,10]); % use hvblock with h=5, v=2 and g=10
+%   **'rolling' = [h,v,g]:**
+%        use hvblock cross-validation with g training steps
+%        surrounding hv block.  Akin to Rolling
+%        crossval. Same properties as hvblock.
 %
-% Original version: Copyright Luke Chang & Hedwig Eisenbarth 11/2013
-
-% Programmer's Notes:
-% LC 11/28/13:
-%       -changed input and documentation
-%       -Don't use matlab functions as variable names (e.g., median) -
-%       median > mid
-%       rewrote the hv block so that it loops though all available data -
-%       need to finish coding the rollingcv option
-% LC & HE 12/16/13:
-%       -added rollingcv option
+% :Outputs:
 %
-% HE & LC 11/19/14: 
-%       -increased the test data used by adjusting how the training blocks work at the ends
+%   **trIdx:**
+%        structure with training label index
+%
+%   **teIdx:**
+%        structure with test label index
+%
+% :Examples:
+% ::
+%
+%    [trIdx, teIdx] = tscv(100, 'hvblock',[5,2]); % use hvblock with h=5 and v=2
+%    [trIdx, teIdx] = tscv(100, 'rolling',[5,2,10]); % use hvblock with h=5, v=2 and g=10
+%
+% ..
+%    Original version: Copyright Luke Chang & Hedwig Eisenbarth 11/2013
+%
+%    Programmer's Notes:
+%    LC 11/28/13:
+%          -changed input and documentation
+%          -Don't use matlab functions as variable names (e.g., median) -
+%          median > mid
+%          rewrote the hv block so that it loops though all available data -
+%          need to finish coding the rollingcv option
+%    LC & HE 12/16/13:
+%          -added rollingcv option
+%
+%    HE & LC 11/19/14: 
+%          -increased the test data used by adjusting how the training blocks work at the ends
+% ..
 
 for i = 1:length(varargin)
     if ischar(varargin{i})

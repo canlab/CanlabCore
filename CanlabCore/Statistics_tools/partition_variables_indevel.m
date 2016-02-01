@@ -1,23 +1,28 @@
 function best_classes = partition_variables_indevel(x, k, obsk)
-    %
-    %
-    % partition n x v matrix into k classes
-    % maximize within-class condition number or minimize cov. determinant
-    % minimize between-class condition number or maximize cov. determinant...
+% partition n x v matrix into k classes
+%
+% maximize within-class condition number or minimize cov. determinant
+%
+% minimize between-class condition number or maximize cov. determinant...
+%
+% Simulate two-class data
+% ::
+%
+%    nvars = 100; nsubj = 20; corval = .5;
+%    S = eye(nvars./2) + corval*(1 - eye(nvars./2));
+%    S = blkdiag(S,S); S(S==0) = corval;
+%    x = mvnrnd(zeros(1,nvars), S, nsubj); det((corrcoef(x)))
+%    figure; imagesc(corrcoef(x)); colorbar
 
-    % simulate two-class data
-    % nvars = 100; nsubj = 20; corval = .5;
-    % S = eye(nvars./2) + corval*(1 - eye(nvars./2)); S = blkdiag(S,S); S(S==0) = corval; x = mvnrnd(zeros(1,nvars), S, nsubj); det((corrcoef(x)))
-    % figure; imagesc(corrcoef(x)); colorbar
 
-
-    % create population of possible solutions
-    % k^v possible solutions, where v is variables and k is classes
-    % we can only do this with very small sets of variables
 
     if nargin < 3, obsk = 1; end  % classes of observations
     v = size(x,2);
     npossible = k ^ v;
+
+% create population of possible solutions
+% k^v possible solutions, where v is variables and k is classes
+% we can only do this with very small sets of variables
 
     
     if npossible <= 10 ^ 5

@@ -1,19 +1,25 @@
 function cluster_orthviews_overlap_3colors(mask1, mask2, mask3, varargin)
-% cluster_orthviews_overlap_3colors(mask1, mask2, mask3, ['colors', colors cell], ['surface'] )
-%
 % Plot three clusters on the orthviews, and their intersections for
 % activations and deactivations in intermediate colors
-% Positive effects only!!!
 %
-% A good function, but not polished yet.  needs debugging for various
-% minor issues.
+% :Usage:
+% ::
 %
-% mask1 mask2 mask3 are either image names (preferred!) or clusters
-% structures.  for clusters structures, need to add .dim field
-% and you need the 2010 object-oriented code in the canlab repository.
+%    cluster_orthviews_overlap_3colors(mask1, mask2, mask3, ['colors', colors cell], ['surface'] )
 %
-% tor wager, june 2010
-
+% Positive effects only!
+%
+% :Inputs:
+%
+%   mask1 mask2 mask3 are either image names (preferred!) or clusters
+%   structures.  for clusters structures, need to add .dim field
+%   and you need the 2010 object-oriented code in the canlab repository.
+%
+% ..
+%    tor wager, june 2010
+%    A good function, but not polished yet.  needs debugging for various
+%    minor issues.
+% ..
 
 colors = {[0 0 1] [1 0 0] [1 1 0]};
 dosurface = 0;

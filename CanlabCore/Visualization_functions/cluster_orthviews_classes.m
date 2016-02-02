@@ -1,29 +1,50 @@
 function colors2 = cluster_orthviews_classes(cl,classes,overlay,myview,domontage, varargin)
-%function colors2 = cluster_orthviews_classes(cl,classes,overlay,myview,domontage, [orthview axis], [colors cell])
+% :Usage:
+% ::
+%
+%    colors2 = cluster_orthviews_classes(cl,classes,overlay,myview,domontage, [orthview axis], [colors cell])
 %
 % Makes montage and cluster orthviews of classes of clusters in different
 % colors (hard coded colors right now).
 %
-% Inputs:
-% cl        clusters structure with regions
-% classes   integers with classes (i.e., networks) to be color-coded on plot
-% overlay   anatomical underlay image
-% myview    if entered, shows centers on plot
-% domontage if non-zero, make montages of networks
-% [orthview axis] Optional; integer for which orthviews axis to use, 1:kk
+% :Inputs:
 %
-% Output: Cell of colors, in order, for use in other functions
+%   **cl:**
+%        clusters structure with regions
 %
-% tor wager
-% Colors update, minor improvements, Jan 2010
-% 
-% Examples:
-%classes = c.ClusterSolution.classes;
-%overlay = EXPT.overlay;
-% cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'saggital', 0);
-% cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'axial', 0);
-% cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'coronal', 0);
-% cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, [], 0);
+%   **classes:**
+%        integers with classes (i.e., networks) to be color-coded on plot
+%
+%   **overlay:**
+%        anatomical underlay image
+%
+%   **myview:**
+%        if entered, shows centers on plot
+%
+%   **domontage:**
+%        if non-zero, make montages of networks
+%
+%   **[orthview axis]:**
+%        Optional; integer for which orthviews axis to use, 1:kk
+%
+% :Output:
+%
+%   Cell of colors, in order, for use in other functions
+%
+% :Examples:
+% ::
+%
+%    classes = c.ClusterSolution.classes;
+%    overlay = EXPT.overlay;
+%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'saggital', 0);
+%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'axial', 0);
+%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'coronal', 0);
+%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, [], 0);
+%
+% ..
+%    tor wager
+%    Colors update, minor improvements, Jan 2010
+% ..
 
 whichorth = 1;
 if ~isempty(varargin), whichorth = varargin{1}; end

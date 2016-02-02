@@ -1,5 +1,8 @@
 function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
-% [axishandle,adjusted data,x-data, barhandle] = barplot_columns(dat, [other optional arguments])
+% :Usage:
+% ::
+%
+%    [axishandle,adjusted data,x-data, barhandle] = barplot_columns(dat, [other optional arguments])
 %
 % This function makes a barplot of columns of data, with standard error
 % bars.  Optional arguments include removing continuous covariates before plotting,
@@ -9,83 +12,90 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 % but is the standard error for a 1-way repeated measures ANOVA.
 %
 % plots circles around points at z >= 1.96
+%
 % plots individual points, unless you enter 4th argument
 %
 % if dat is a cell array, each entry becomes one "bar".  Useful if n
 % observations is different for each column.
 %
-% Examples:  Just plot means and SE
-% h = barplot_columns(tmp,'Cluster 1',[],1);
+% :Examples: Just plot means and SE
+% ::
 %
-% Optional arguments
-% 1 - Title for figure
-% 2 - covariates
-% 3 - String Arguments
-%       'nofig' : do not make figure
-%       'noind' : do not plot individual scores
-%       'plotout': circle potential outliers at z>1.96 in red
-%       'dorob' : do robust IRLS means and correlations
-%       'dolines' : plot lines showing individual effects
-%       'within' : within-subjects standard errors, followed by contrast
+%    h = barplot_columns(tmp,'Cluster 1',[],1);
+%
+% :Optional arguments:
+%   1. Title for figure
+%   2. covariates
+%   3. String Arguments
+%        - 'nofig' : do not make figure
+%        - 'noind' : do not plot individual scores
+%        - 'plotout': circle potential outliers at z>1.96 in red
+%        - 'dorob' : do robust IRLS means and correlations
+%        - 'dolines' : plot lines showing individual effects
+%        - 'within' : within-subjects standard errors, followed by contrast
 %                   matrix
-%       '95CI'   : error bars are 95% CI instead of SE
-%       'line' : Make line plot instead of bar plot
-%       'number' : plot case numbers instead of points
-%       'x' : followed by x-axis values for bars
-%       'color' : followed by color for bars (text: 'r' or [r g b]) OR
+%        - '95CI'   : error bars are 95% CI instead of SE
+%        - 'line' : Make line plot instead of bar plot
+%        - 'number' : plot case numbers instead of points
+%        - 'x' : followed by x-axis values for bars
+%        - 'color' : followed by color for bars (text: 'r' or [r g b]) OR
 %               cell array with names of colors cell for each line/bar
-%       'violin': add violin plot to each bar, with data points
+%        - 'violin': add violin plot to each bar, with data points
 %
 %
-% Examples:
-% barplot_columns(ctmp,'RT effects by Switch Type',overall_sw,'nofig','dorob')
+% :Examples:
+% ::
+%
+%    barplot_columns(ctmp,'RT effects by Switch Type',overall_sw,'nofig','dorob')
 %
 % Standard Errors ARE NOT Adjusted for covariate, right now.
 %
 % Example: within-subjects std. errors
-% barplot_columns(dat, 'Means', [], 'nofig', 'within', c);
+% ::
+%
+%    barplot_columns(dat, 'Means', [], 'nofig', 'within', c);
 %
 % The example below uses color, width, and xposition arguments to make a grouped
-% barplot showing effects for two groups:
-% exp_dat = EXPT.error_rates(EXPT.group==1,:);
-% control_dat = EXPT.error_rates(EXPT.group==-1,:);
-% barplot_columns(exp_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'r','width', .4);
-% barplot_columns(control_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'b','width', .4, 'x', (1:9)+.5);
-% set(gca, 'XLim', [0 10], 'XTick', 1:9)
+% ::
 %
-% barplot_columns(nps_by_study, 'NPS by study', [], 'doind', 'colors', mycolors, 'nofig');
+%    barplot showing effects for two groups:
+%    exp_dat = EXPT.error_rates(EXPT.group==1,:);
+%    control_dat = EXPT.error_rates(EXPT.group==-1,:);
+%    barplot_columns(exp_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'r','width', .4);
+%    barplot_columns(control_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'b','width', .4, 'x', (1:9)+.5);
+%    set(gca, 'XLim', [0 10], 'XTick', 1:9)
 %
-% -----------------------------------------------------------------------------
-% create_figure('example_plots', 1, 4);
-% 
-% Y{:,1} = rand(20,1);
-% Y{:,2} = rand(100,1);
-% 
-% [h, L, MX, MED, bw, F, U] = violinplot(Y,'facecolor',[1 .5 0; 0 .5 1],'edgecolor',[1 .5 0; 0 .5 1].*.75,'mc', [1 .5 0].*.5, 'x', [1 3], 'medc', []);
-% title('Violinplot.m', 'FontSize', 16)
-% 
-% subplot(1, 4, 2)
-% barplot_columns(Y, 'nofig')
-% title('barplot\_columns.m default', 'FontSize', 16)
-% 
-% subplot(1, 4, 3)
-% barplot_columns(Y, 'nofig', 'violin', 'colors', {[1 .5 0] [0 .5 1]})
-% title('barplot\_columns.m colored', 'FontSize', 16)
-% 
-% subplot(1, 4, 4)
-% 
-% Y{:,1} = randn(50,1) + 5;
-% Y{:,2} = Y{1} + .3 * randn(50,1) + 3; 
-% 
-% barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
-% title('barplot\_columns.m parallel coords', 'FontSize', 16)
-% -----------------------------------------------------------------------------
+%    barplot_columns(nps_by_study, 'NPS by study', [], 'doind', 'colors', mycolors, 'nofig');
+%
+%    create_figure('example_plots', 1, 4);
+%
+%    Y{:,1} = rand(20,1);
+%    Y{:,2} = rand(100,1);
+%
+%    [h, L, MX, MED, bw, F, U] = violinplot(Y,'facecolor',[1 .5 0; 0 .5 1],'edgecolor',[1 .5 0; 0 .5 1].*.75,'mc', [1 .5 0].*.5, 'x', [1 3], 'medc', []);
+%    title('Violinplot.m', 'FontSize', 16)
+%
+%    subplot(1, 4, 2)
+%    barplot_columns(Y, 'nofig')
+%    title('barplot\_columns.m default', 'FontSize', 16)
+%
+%    subplot(1, 4, 3)
+%    barplot_columns(Y, 'nofig', 'violin', 'colors', {[1 .5 0] [0 .5 1]})
+%    title('barplot\_columns.m colored', 'FontSize', 16)
+%
+%    subplot(1, 4, 4)
+%
+%    Y{:,1} = randn(50,1) + 5;
+%    Y{:,2} = Y{1} + .3 * randn(50,1) + 3; 
+%
+%    barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
+%    title('barplot\_columns.m parallel coords', 'FontSize', 16)
 %
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
 
-% ----------------------------------------------------
-% > Defaults
-% ----------------------------------------------------
+% ..
+%    Defaults
+% ..
 
 dofig = 1;
 doind = 1;

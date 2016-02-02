@@ -1,75 +1,84 @@
 function f1 = nmdsfig(pc,varargin)
-% f1 = nmdsfig(pc,[opt. inputs in any order])
+% ::
 %
-%------------------------------------------------------------------------
+%    f1 = nmdsfig(pc,[opt. inputs in any order])
 %
-%  Create a 1-D or 2-D plot with stimulus coordinates
+% Create a 1-D or 2-D plot with stimulus coordinates
 %
-%------------------------------------------------------------------------
+% reserved keywords, each followed by appropriate input:
+%   - case 'classes', clus = varargin{i+1};
+%   - case 'names', names = varargin{i+1};
+%   - case 'sig', sigmat = varargin{i+1};
+%   - case 'thr', thr = varargin{i+1};
+%   - case 'legend', legmat = varargin{i+1};
+%   - case 'sig2', sigmat2 = varargin{i+1};a
+%     sigmat2 can be thresholded at multiple values in thr
+%   - case 'colors', colors = varargin{i+1};
+%   - case 'sizes', sizes = varargin{i+1};
+%   - case 'sigonly' plot regions with significant connections only
+%   - case 'nolines', do not plot lines (lines plotted by default, but only if
+%     sigmat is entered)
 %
-% % reserved keywords, each followed by appropriate input:
-% case 'classes', clus = varargin{i+1};
-% case 'names', names = varargin{i+1};
-% case 'sig', sigmat = varargin{i+1};
-% case 'thr', thr = varargin{i+1};
-% case 'legend', legmat = varargin{i+1};
-% case 'sig2', sigmat2 = varargin{i+1};a
-%   sigmat2 can be thresholded at multiple values in thr
-% case 'colors', colors = varargin{i+1};
-% case 'sizes', sizes = varargin{i+1};
-% case 'sigonly' plot regions with significant connections only
-% case 'nolines', do not plot lines (lines plotted by default, but only if
-%   sigmat is entered)
-% 'linethickness', followed by matrix of line thickness values
+%     'linethickness', followed by matrix of line thickness values
+%
 %     NOTE: can enter sig matrix with non-zero values equal to line
 %     thickness and use for both sig and linethickness inputs
-%     % but thickness values should be scaled to integers for line thickness  
+%     % but thickness values should be scaled to integers for line thickness
+%
 % Creates a figure only if f1 output is requested
-% 'fill', fill in areas around groups
 %
-% pc is objects x dimensions
-% clus is a vector of object classes
-% names is cell array of names for rows of pc (objects), or empty ([])
+%  'fill', fill in areas around groups
 %
-% sig is optional matrix of 1, -1, and 0 entries
-% signifies which pairs to connect with lines
-% positive elements are solid lines, negative elements are dashed
-% -- Can be a series of t-maps in 3-D array
+%   **pc:**
+%        is objects x dimensions
 %
-% [opt] threshold vector of critical t-values, e.g., [2.2 5.4]
-% If used, enter t-maps in sigmat
+%   **clus:**
+%        is a vector of object classes
 %
-% [opt] a 2nd sigmat, if entered, will plot dashed lines instead of solid
-% ones.  this is used by cluster_nmdsfig to plot interactions between
-% covariance and behavioral scores
+%   **names:**
+%        is cell array of names for rows of pc (objects), or empty ([])
 %
-% % Figure creation:
+%   **sig:**
+%        is optional matrix of 1, -1, and 0 entries
+%        signifies which pairs to connect with lines
+%        positive elements are solid lines, negative elements are dashed
+%          - Can be a series of t-maps in 3-D array
+%
+%   [opt] threshold vector of critical t-values, e.g., [2.2 5.4]
+%   If used, enter t-maps in sigmat
+%
+%   [opt] a 2nd sigmat, if entered, will plot dashed lines instead of solid
+%   ones. This is used by cluster_nmdsfig to plot interactions between
+%   covariance and behavioral scores
+%
+% :Figure creation:
 % If existing fig with tag 'nmdsfig', activates
 % Otherwise, if fig handle requested as output, creates
 % or if not, uses current figure.
 %
-% New examples: c is output of cluster_nmdsfig
-% ----------------------------------------------
-% sizes = sum(c.STATS.sigmat);
-% f1 = nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'},'sizes',sizes,'sizescale',[4 12]);
+% :Examples: c is output of cluster_nmdsfig
+% ::
 %
-% add length legend
-% f1 =
-% nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'}, ...
-% 'sizes',sizes,'sizescale',[4 12],'lengthlegend',c.r);
+%    sizes = sum(c.STATS.sigmat);
+%    f1 = nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'},'sizes',sizes,'sizescale',[4 12]);
 %
-% Auto size scaling based on number of connections:
-% f1 =
-% nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',c.STATS.sigmat,'legend',{'Pos' 'Neg'},'sizescale',[4 12],'lengthlegend',c.r);
+%    % add length legend
+%    f1 =
+%    nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'}, ...
+%    'sizes',sizes,'sizescale',[4 12],'lengthlegend',c.r);
 %
-% f1 =
-% nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'},'sizescale',[4 16],'sigonly');
+%    % Auto size scaling based on number of connections:
+%    f1 =
+%    nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',c.STATS.sigmat,'legend',{'Pos' 'Neg'},'sizescale',[4 12],'lengthlegend',c.r);
 %
-% SEE ALSO: cluster_nmdsfig
+%    f1 =
+%    nmdsfig(c.GroupSpace,'classes',c.ClusterSolution.classes,'names',c.names,'sig',p_vs_c_heat.sig,'legend',{'Pos' 'Neg'},'sizescale',[4 16],'sigonly');
+%
+% :SEE ALSO: cluster_nmdsfig
 
-% --------------------------------------
-% set up defaults
-% --------------------------------------
+% ..
+%    set up defaults
+% ..
 pc = double(pc);
 
 nobj = size(pc,1);

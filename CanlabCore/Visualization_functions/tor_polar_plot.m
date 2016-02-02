@@ -1,26 +1,44 @@
 function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 % Make polar line plot(s)
 %
-% Usage:
-% hh = tor_polar_plot(vals, colors, names, ['nofigure'])
+% :Usage:
+% ::
 %
-% vals = cell array, one cell per plot
-% in each cell, matrix of observations x variables
-% plots one line for each variable.
+%    hh = tor_polar_plot(vals, colors, names, ['nofigure'])
 %
-% names is cell array, one cell per plot
-% contains cell array of names for each condition
+% :Inputs:
 %
-% Optional:
-% 'nofigure'    suppress figure
-% 'nonneg'      make all values non-negative by subtracting min value from all values in series (plot)
-% 'nofill'      Do not fill in polygons
+%   **vals:**
+%        cell array, one cell per plot
 %
-% Outputs:
-% hh            Handles to line objects
+%        in each cell, matrix of observations x variables
+%        plots one line for each variable.
 %
-% e.g.,
-% tor_polar_plot({w+1}, {'r' 'b'}, setnames(1))
+%   **names:**
+%        is cell array, one cell per plot
+%
+%        contains cell array of names for each condition
+%
+% :Optional Inputs:
+%
+%   **'nofigure':**
+%        suppress figure
+%
+%   **'nonneg':**
+%        make all values non-negative by subtracting min value from all values in series (plot)
+%
+%   **'nofill':**
+%        Do not fill in polygons
+%
+% :Output:
+%
+%   **hh:**
+%        Handles to line objects
+%
+% :Examples:
+% ::
+%
+%    tor_polar_plot({w+1}, {'r' 'b'}, setnames(1))
 %
 % Note: Dark grey inner line is zero point if nonneg option is used.
 % Otherwise, zero is the origin.

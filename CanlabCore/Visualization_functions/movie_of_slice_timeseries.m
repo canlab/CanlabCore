@@ -1,13 +1,24 @@
 function movie_of_slice_timeseries(imgs, slicenumber, moviename, orientation)
-    % movie_of_slice_timeseries(imgs, slicenumber, moviename, orientation)
-    % imgs: Image names
-    % slicenumber: which slice to view (in volume)
-    % moviename: something like: 'slice10_timeseries.avi'
-    % orientation: 'axial' or 'sagittal'
-    % 
-    % slicenumber = 10;
-    % moviename = 'slice10_timeseries.avi';
-    
+% :Inputs:
+%
+%   **imgs:**
+%        Image names
+%
+%   **slicenumber:**
+%        which slice to view (in volume)
+%
+%   **moviename:**
+%        something like: 'slice10_timeseries.avi'
+%
+%   **orientation:**
+%        'axial' or 'sagittal'
+%
+% :Examples:
+% ::
+%
+%    slicenumber = 10;
+%    moviename = 'slice10_timeseries.avi';
+
     if(~exist('orientation', 'var') || isempty(orientation))
         orientation = 'axial';
     end

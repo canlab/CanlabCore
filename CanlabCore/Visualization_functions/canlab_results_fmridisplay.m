@@ -1,93 +1,118 @@
 function o2 = canlab_results_fmridisplay(input_activation, varargin)
-
-% usage: function canlab_results_fmridisplay(input_activation, [optional inputs])
-% Tor Wager
-% 1/27/2012
+% :Usage:
+% ::
+%
+%    canlab_results_fmridisplay(input_activation, [optional inputs])
+%
 % purpose:  This function display fmri results.
 %
-% input:    input_activation - nii, img,
-%           This image has the blobs you want to
-%           display. You can also enter a cl "clusters" structure or
-%           "region" object.
+% :Input:
 %
-%           you can also get a thresholded image like the examples used here
-%           from a number of places - by thresholding your results in SPM
-%           and using "write filtered" to save the image, by creating masks
-%           from meta-analysis or anatomical atlases, or by using
-%           mediation_brain_results, robust_results_threshold,
-%           robust_results_batch_script, threshold_imgs, or object
-%           oriented tools including fmri_data and statistic_image objects.
+%   **input_activation:**
+%        nii, img,
 %
-% optional inputs:
-% -------------------------------------------------------------------------
-% 'noblobs' : do not display blobs
-% 'nooutline' : do not display blob outlines
-% 'addmontages' : when entering existing fmridisplay obj, add new montages
-% 'noremove' : do not remove current blobs when adding new ones
-% 'outlinecolor : followed by new outline color
-% 'splitcolor' : followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
+%        This image has the blobs you want to
+%        display. You can also enter a cl "clusters" structure or
+%        "region" object.
 %
-% 'montagetype' : 'full' for full montages of axial and sagg slices.
-%                 'compact' [default] for single-figure parasagittal and
-%                 axials slices.
-%                 'compact2': like 'compact', but fewer axial slices.
+%        you can also get a thresholded image like the examples used here
+%        from a number of places - by thresholding your results in SPM
+%        and using "write filtered" to save the image, by creating masks
+%        from meta-analysis or anatomical atlases, or by using
+%        mediation_brain_results, robust_results_threshold,
+%        robust_results_batch_script, threshold_imgs, or object
+%        oriented tools including fmri_data and statistic_image objects.
 %
-% 'noverbose' : suppress verbose output, good for scripts/publish to html, etc.
+% :Optional Inputs:
 %
-% * Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+%   **'noblobs':**
+%        do not display blobs
+%
+%   **'nooutline':**
+%        do not display blob outlines
+%
+%   **'addmontages':**
+%        when entering existing fmridisplay obj, add new montages
+%
+%   **'noremove':**
+%        do not remove current blobs when adding new ones
+%
+%   **'outlinecolor:**
+%        followed by new outline color
+%
+%   **'splitcolor':**
+%        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
+%
+%   **'montagetype':**
+%        'full' for full montages of axial and sagg slices.
+%
+%        'compact' [default] for single-figure parasagittal and axials slices.
+%
+%        'compact2': like 'compact', but fewer axial slices.
+%
+%   **'noverbose':**
+%        suppress verbose output, good for scripts/publish to html, etc.
+%
+% Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+%
 % See help fmridisplay
 % e.g., 'color', [1 0 0]
 %
 % You can also input an existing fmridisplay object, and it will use the
 % one you have created rather than setting up the canonical slices.
 %
-% example script:
-% -------------------------------------------------------------------------
-% input_activation = 'Pick_Atlas_PAL_large.nii';
+% :Example Script:
+% ::
 %
-% % set up the anatomical underlay and display blobs
-% % (see the code of this function and help fmridisplay for more examples)
+%    input_activation = 'Pick_Atlas_PAL_large.nii';
 %
-% o2 = canlab_results_fmridisplay(input_activation);
+%    % set up the anatomical underlay and display blobs
+%    % (see the code of this function and help fmridisplay for more examples)
 %
-% %% ========== remove those blobs and change the color ==========
+%    o2 = canlab_results_fmridisplay(input_activation);
 %
-% cl = mask2clusters(input_activation);
-% removeblobs(o2);
-% o2 = addblobs(o2, cl, 'color', [0 0 1]);
+%    %% ========== remove those blobs and change the color ==========
 %
-% %% ========== OR
+%    cl = mask2clusters(input_activation);
+%    removeblobs(o2);
+%    o2 = addblobs(o2, cl, 'color', [0 0 1]);
 %
-% r = region(input_activation);
-% o2 = removeblobs(o2);
-% o2 = addblobs(o2, r, 'color', [1 0 0]);
+%    %% ========== OR
 %
-% %% ========== Create empty fmridisplay object on which to add blobs:
-% o2 = canlab_results_fmridisplay
-% o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
+%    r = region(input_activation);
+%    o2 = removeblobs(o2);
+%    o2 = addblobs(o2, r, 'color', [1 0 0]);
 %
-% %% ========== If you want to start over with a new fmridisplay object,
-% % make sure to clear o2, because it uses lots of memory
+%    %% ========== Create empty fmridisplay object on which to add blobs:
+%    o2 = canlab_results_fmridisplay
+%    o2 = canlab_results_fmridisplay([], 'compact2', 'noverbose');
 %
-% % This image should be on your path in the "canlab_canonical_brains" subfolder:
+%    %% ========== If you want to start over with a new fmridisplay object,
+%    % make sure to clear o2, because it uses lots of memory
 %
-% input_activation = 'pain-emotion_2s_z_val_FDR_05.img';
-% clear o2
-% close all
-% o2 = canlab_results_fmridisplay(input_activation);
+%    % This image should be on your path in the "canlab_canonical_brains" subfolder:
 %
-% %% ========== save PNGs of your images to insert into powerpoint, etc.
-% % for your paper/presentation
+%    input_activation = 'pain-emotion_2s_z_val_FDR_05.img';
+%    clear o2
+%    close all
+%    o2 = canlab_results_fmridisplay(input_activation);
 %
-% scn_export_papersetup(400);
-% saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
+%    %% ========== save PNGs of your images to insert into powerpoint, etc.
+%    % for your paper/presentation
 %
-% scn_export_papersetup(350);
-% saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
+%    scn_export_papersetup(400);
+%    saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
 %
-% Change colors, removing old blobs and replacing with new ones:
-% o2 = canlab_results_fmridisplay(d, o2, 'cmaprange', [.3 .45], 'splitcolor', {[0 0 1] [.3 0 .8] [.9 0 .5] [1 1 0]}, 'outlinecolor', [.5 0 .5]);
-
+%    scn_export_papersetup(350);
+%    saveas(gcf, 'results_images/pain_meta_fmridisplay_example_sagittal.png');
+%
+%    Change colors, removing old blobs and replacing with new ones:
+%    o2 = canlab_results_fmridisplay(d, o2, 'cmaprange', [.3 .45], 'splitcolor', {[0 0 1] [.3 0 .8] [.9 0 .5] [1 1 0]}, 'outlinecolor', [.5 0 .5]);
+%
+% ..
+%    Tor Wager
+%    1/27/2012
+% ..
 
 if ~which('fmridisplay.m')
     disp('fmridisplay is not on path.  it is in canlab tools, which must be on your path!')

@@ -1,6 +1,4 @@
-function close_non_spm_graphics_figures
-%close_non_spm_graphics_figures
-%
+function close_non_spm_graphics_figures()
 % closes all figure windows that are not the SPM orthviews window
 
 

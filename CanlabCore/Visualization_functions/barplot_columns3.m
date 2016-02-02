@@ -1,5 +1,8 @@
-function [hout,dat,xdat, h] = barplot_columns2(dat,plottitle,varargin)
-% [axishandle,adjusted data,x-data,barhandle] = barplot_columns(dat,title,[options])
+function [hout,dat,xdat, h] = barplot_columns3(dat,plottitle,varargin)
+% :Usage:
+% ::
+%
+%    [axishandle,adjusted data,x-data,barhandle] = barplot_columns(dat,title,[options])
 %
 % Makes a barplot of columns of data, with standard error bars.
 % Optional arguments include removing continuous covariates before plotting,
@@ -9,67 +12,109 @@ function [hout,dat,xdat, h] = barplot_columns2(dat,plottitle,varargin)
 % but is the standard error for a 1-way repeated measures ANOVA.
 %
 % plots circles around points at z >= 1.96
+%
 % plots individual points, unless you enter 4th argument
 %
 % if dat is a cell array, each entry becomes one "bar".  Useful if n
 % observations is different for each column.
 %
-% Examples:  Just plot means and SE
-% h = barplot_columns(tmp,'Cluster 1');
+% :Examples: Just plot means and SE
+% ::
 %
-% Options
-%    'cov'   : followed by matrix of covariates
-%    'labels' : followed by cellstring of bar labels
-%    'nofig' : do not make figure
-%    'ind' : plot individual scores on top of bars
-%    'plotout': circle potential outliers at z>1.96 in red
-%    'robust' : do robust IRLS means and correlations
-%    'indlines' : plot lines showing individual effects
-%    'within' : within-subjects standard errors, followed by contrast
-%                   matrix
-%    'line' : Make line plot instead of bar plot
-%    'number' : plot case numbers instead of points
-%    'x' : followed by x-axis values for bars
-%    'color' : followed by color for bars (text: 'r' or [r g b]) OR
-%               cell array with names of colors cell for each line/bar
-%    'cons' : followed by contrastXweights matrix
+%    h = barplot_columns(tmp,'Cluster 1',[],1);
+%
+% :Options:
+%
+%   **'cov':**
+%        followed by matrix of covariates
+%
+%   **'labels':**
+%        followed by cellstring of bar labels
+%
+%   **'nofig':**
+%        do not make figure
+%
+%   **'ind':**
+%        plot individual scores on top of bars
+%
+%   **'plotout':**
+%        circle potential outliers at z>1.96 in red
+%
+%   **'robust':**
+%        do robust IRLS means and correlations
+%
+%   **'indlines':**
+%        plot lines showing individual effects
+%
+%   **'within':**
+%        within-subjects standard errors, followed by contrast
+%        matrix
+%
+%   **'line':**
+%        Make line plot instead of bar plot
+%
+%   **'number':**
+%        plot case numbers instead of points
+%
+%   **'x':**
+%        followed by x-axis values for bars
+%
+%   **'color':**
+%        followed by color for bars (text: 'r' or [r g b]) OR
+%        cell array with names of colors cell for each line/bar
+%
+%   **'cons':**
+%        followed by contrastXweights matrix
 %
 % To convert from long form to wide form
-%   'subcol'     column numbers with subject numbers
-%   'propcols'   vector of column numbers with properties
-%   'propnames'  cell array of names of properties
 %
+%   **'subcol':**
+%        column numbers with subject numbers
 %
-% Examples:
-% barplot_columns(ctmp,'RT effects by Switch Type',overall_sw,'nofig','robust')
+%   **'propcols':**
+%        vector of column numbers with properties
+%
+%   **'propnames':**
+%        cell array of names of properties
+%
+% :Examples:
+% ::
+%
+%    barplot_columns(ctmp,'RT effects by Switch Type',overall_sw,'nofig','robust')
 %
 % Standard Errors ARE NOT Adjusted for covariate, right now.
 %
 % Example: within-subjects std. errors
-% barplot_columns(dat, 'Means', 'nofig', 'within', 'ind');
+% ::
+%
+%    barplot_columns(dat, 'Means', 'nofig', 'within', 'ind');
 %
 % The example below uses color, width, and xposition arguments to make a grouped
-% barplot showing effects for two groups:
-% exp_dat = EXPT.error_rates(EXPT.group==1,:);
-% control_dat = EXPT.error_rates(EXPT.group==-1,:);
-% barplot_columns(exp_dat, 'Error rates', 'nofig', 'color', 'r', 'width', .4);
-% barplot_columns(control_dat, 'Error rates', 'nofig', 'color', 'b', 'width', .4, 'x', (1:9)+.5);
-% set(gca, 'XLim', [0 10], 'XTick', 1:9)
+% ::
+%
+%    barplot showing effects for two groups:
+%    exp_dat = EXPT.error_rates(EXPT.group==1,:);
+%    control_dat = EXPT.error_rates(EXPT.group==-1,:);
+%    barplot_columns(exp_dat, 'Error rates', 'nofig', 'color', 'r', 'width', .4);
+%    barplot_columns(control_dat, 'Error rates', 'nofig', 'color', 'b', 'width', .4, 'x', (1:9)+.5);
+%    set(gca, 'XLim', [0 10], 'XTick', 1:9)
+%
+% ..
+%    PROGRAMMERS' NOTES
+%    4/2013 (Luka): changed input format (title and cov now varargin options, not sequential arguments)
+%    4/2013 (Luka): changed input parsing
+%    4/2013 (Luka): added labels option (adds diagonal labels)
+%    4/2013 (Luka): moved labeling to after doind (axis is stable then)
+%    4/2013 (Luka): added plabels and toplabels options
+%    5/2013 (Luka): made no individuals default
+%    need to sort out plabel option (including p values from glms in plot)
+%    right now does not account for inclusion of cov
+%    figure out how to add stars, legend?
+% ..
 
-% PROGRAMMERS' NOTES
-% 4/2013 (Luka): changed input format (title and cov now varargin options, not sequential arguments)
-% 4/2013 (Luka): changed input parsing
-% 4/2013 (Luka): added labels option (adds diagonal labels)
-% 4/2013 (Luka): moved labeling to after doind (axis is stable then)
-% 4/2013 (Luka): added plabels and toplabels options
-% 5/2013 (Luka): made no individuals default
-% need to sort out plabel option (including p values from glms in plot)
-%   right now does not account for inclusion of cov
-% figure out how to add stars, legend?
-
-% ----------------------------------------------------
-% > Set up input arguments
-% ----------------------------------------------------
+% ..
+%    Set up input arguments
+% ..
 DO_fig = 1;
 DO_ind = 0;
 DO_plotout = 0;

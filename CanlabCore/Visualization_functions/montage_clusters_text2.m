@@ -1,10 +1,9 @@
 function montage_clusters_text2(cl)
-% montage_clusters_text2(cl)
-% tor wager
+% ..
+%    Tor Wager
+% ..
 
-
-% how many slices, which ones
-rc = ceil(sqrt(length(cl)));
+rc = ceil(sqrt(length(cl))); % how many slices, which ones
 
 
 for i = 1:length(cl)

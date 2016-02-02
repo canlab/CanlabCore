@@ -1,18 +1,31 @@
 function h = image_histogram(P,varargin)
-% h = image_histogram(P,[method(string)],[range])
+% :Usage:
+% ::
 %
-% tor wager
+%    h = image_histogram(P,[method(string)],[range])
+%
 % eliminates 0, NaN voxels from either image
 % red then blue
 %
-% P is one or two images in string array
+% :Inputs:
 %
-% Methods:
-% 'def'
+%   **P:**
+%        is one or two images in string array
 %
-% range: optional 3rd input, range of values to include in histogram
+%   **Methods:**
+%        'def'
 %
-% h = image_histogram('p_Omnibus.img','def',[0 1-eps]);
+%   **range:**
+%        optional 3rd input, range of values to include in histogram
+%
+% :Example:
+% ::
+%
+%    h = image_histogram('p_Omnibus.img','def',[0 1-eps]);
+%
+% ..
+%    tor wager
+% ..
 
 V = spm_vol(P); %v = spm_read_vols(V);
 

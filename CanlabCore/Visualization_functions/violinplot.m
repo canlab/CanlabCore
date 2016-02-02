@@ -1,105 +1,136 @@
-%__________________________________________________________________________
-% violinplot.m - Simple violin plot using matlab default kernel density estimation
+function [h, L, MX, MED, bw, F, U] = violinplot(Y,varargin)
+% Simple violin plot using matlab default kernel density estimation
 %
-% Updates:
-% v2: extended for accepting also cells of different length
-% v3:
-%    - changed varargin to parameter - value list
-%    - specification of x-axis vals possible now
-% Last update: 09/2014
-%__________________________________________________________________________
 % This function creates violin plots based on kernel density estimation
 % using ksdensity with default settings. Please be careful when comparing pdfs
 % estimated with different bandwidth!
 %
 % Differently to other boxplot functions, you may specify the x-position.
 % This is particularly usefule when overlaying with other data / plots.
-%__________________________________________________________________________
 %
-% Please cite this function as:
-% Hoffmann H, 2013: violinplot.m - Simple violin plot using matlab default kernel
-% density estimation. INRES (University of Bonn), Katzenburgweg 5, 53115 Germany.
-% hhoffmann@uni-bonn.de
+% :Input:
 %
-% Updated 9/2015 by Tor Wager
-% - cleaned up spacing a bit, added documentation for 'x' feature
-% - set x axis limits depending on x
-% - added F, U outputs for point plotting later
-% - added point plotting subfunction [now default to plot]
-% - return point and fill handles in handles structure for later use
-% - allow different colors for means, lines for different columns
+%   **Y:**
+%        Data to be plotted, being either
+%        n x m matrix. A 'violin' is plotted for each column m, OR
+%        1 x m Cellarry with elements being numerical colums of nx1 length.
 %
-%__________________________________________________________________________
+% **varargin:**
 %
-% Input:
-% Y:     Data to be plotted, being either
-% n x m matrix. A 'violin' is plotted for each column m, OR
-% 1 x m Cellarry with elements being numerical colums of nx1 length.
+%   **xlabel:**
+%        xlabel. Set either [] or in the form {'txt1','txt2','txt3',...}
 %
-% varargin:
-% xlabel:    xlabel. Set either [] or in the form {'txt1','txt2','txt3',...}
-% facecolor=[1 0.5 0]%FaceColor: Specify abbrev. or m x 3 matrix (e.g. [1 0 0])
-% edgecolor='k'      %LineColor: Specify abbrev. (e.g. 'k' for black); set either [],'' or 'none' if the mean should not be plotted
-% linewidth=2        Linewidth for boundary of violin plot
-% facealpha=0.5     %Alpha value (transparency)
-% mc='k'      %Color of the bars indicating the mean; set either [],'' or 'none' if the mean should not be plotted
-% medc='r'    %Color of the bars indicating the median; set either [],'' or 'none' if the mean should not be plotted
-% bw=[];      %Kernel bandwidth, prescribe if wanted.
+%   **facecolor=[1 0.5 0]:**
+%        FaceColor: Specify abbrev. or m x 3 matrix (e.g. [1 0 0])
+%
+%   **edgecolor='k':**
+%        LineColor: Specify abbrev. (e.g. 'k' for black); set either [],'' or 'none' if the mean should not be plotted
+%
+%   **linewidth=2:**
+%        Linewidth for boundary of violin plot
+%
+%   **facealpha=0.5:**
+%        Alpha value (transparency)
+%
+%   **mc='k':**
+%        Color of the bars indicating the mean; set either [],'' or 'none' if the mean should not be plotted
+%
+%   **medc='r':**
+%        Color of the bars indicating the median; set either [],'' or 'none' if the mean should not be plotted
+%
+%   **bw=[];:**
+%        Kernel bandwidth, prescribe if wanted.
 %            %If b is a single number, b will be applied to all estimates
 %            %If b is an array of 1xm or mx1, b(i) will be applied to
 %            column (i).
-% 'x'       followed by x position for center(s) of plots
-% 'nopoints'   don't display dots
 %
-% Output:
-% h: figure handle
-% L: Legend handle
-% MX: Means of groups
-% MED: Medians of groups
-% bw: bandwidth of kernel
-%__________________________________________________________________________
-% % Example1 (default):
-% %
+%   **'x':**
+%        followed by x position for center(s) of plots
+%
+%   **'nopoints':**
+%        don't display dots
+%
+% :Outputs:
+%
+%   **h:**
+%        figure handle
+%
+%   **L:**
+%        Legend handle
+%
+%   **MX:**
+%        Means of groups
+%
+%   **MED:**
+%        Medians of groups
+%
+%   **bw:**
+%        bandwidth of kernel
+%
+% :Example1 (default):
+% ::
+%
+%    disp('this example uses the statistical toolbox')
+%    Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
+%    [h,L,MX,MED]=violinplot(Y);
+%    ylabel('\Delta [yesno^{-2}]','FontSize',14)
+%
+% :Example2 (specify facecolor, edgecolor, xlabel):
+% ::
+%
+%    disp('this example uses the statistical toolbox')
+%    Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
+%    violinplot(Y,'xlabel',{'a','b','c','d'},'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','b',...
+%               'bw',0.3,...
+%               'mc','k',...
+%               'medc','r--')
+%    ylabel('\Delta [yesno^{-2}]','FontSize',14)
+%
+% :Example3 (specify x axis location):
+% ::
+%
+%    disp('this example uses the statistical toolbox')
+%    Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
+%    violinplot(Y,'x',[-1 .7 3.4 8.8],'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none',...
+%               'bw',0.3,'mc','k','medc','r-.')
+%    axis([-2 10 -0.5 20])
+%    ylabel('\Delta [yesno^{-2}]','FontSize',14)
+%
+% :Example4 (Give data as cells with different n):
+%
 % disp('this example uses the statistical toolbox')
-% Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
-% [h,L,MX,MED]=violinplot(Y);
-% ylabel('\Delta [yesno^{-2}]','FontSize',14)
-% %
-% %Example2 (specify facecolor, edgecolor, xlabel):
-% %
-% disp('this example uses the statistical toolbox')
-% Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
-% violinplot(Y,'xlabel',{'a','b','c','d'},'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','b',...
-% 'bw',0.3,...
-% 'mc','k',...
-% 'medc','r--')
-% ylabel('\Delta [yesno^{-2}]','FontSize',14)
-% %
-% %Example3 (specify x axis location):
-% %
-% disp('this example uses the statistical toolbox')
-% Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
-% violinplot(Y,'x',[-1 .7 3.4 8.8],'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none',...
-% 'bw',0.3,'mc','k','medc','r-.')
-% axis([-2 10 -0.5 20])
-% ylabel('\Delta [yesno^{-2}]','FontSize',14)
-% %
-% %Example4 (Give data as cells with different n):
-% %
-% disp('this example uses the statistical toolbox')
-% %
-% Y{:,1}=rand(10,1);
-% Y{:,2}=rand(1000,1);
-% violinplot(Y,'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none','bw',0.1,'mc','k','medc','r-.')
-% ylabel('\Delta [yesno^{-2}]','FontSize',14)
-%__________________________________________________________________________
-%__________________________________________________________________________
+% ::
+%
+%    Y{:,1}=rand(10,1);
+%    Y{:,2}=rand(1000,1);
+%    violinplot(Y,'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none','bw',0.1,'mc','k','medc','r-.')
+%    ylabel('\Delta [yesno^{-2}]','FontSize',14)
+%
+% ..
+%    Updates:
+%    v2: extended for accepting also cells of different length
+%    v3:
+%       - changed varargin to parameter - value list
+%       - specification of x-axis vals possible now
+%    Last update: 09/2014
+%
+%    Please cite this function as:
+%    Hoffmann H, 2013: violinplot.m - Simple violin plot using matlab default kernel
+%    density estimation. INRES (University of Bonn), Katzenburgweg 5, 53115 Germany.
+%    hhoffmann@uni-bonn.de
+%
+%    Updated 9/2015 by Tor Wager
+%    - cleaned up spacing a bit, added documentation for 'x' feature
+%    - set x axis limits depending on x
+%    - added F, U outputs for point plotting later
+%    - added point plotting subfunction [now default to plot]
+%    - return point and fill handles in handles structure for later use
+%    - allow different colors for means, lines for different columns
+% ..
 
-function[h, L, MX, MED, bw, F, U] = violinplot(Y,varargin)
 
-%defaults:
-%_____________________
-xL=[];
+
+xL=[]; %defaults
 fc=[1 0.5 0];
 lc='k';
 lw = 1;

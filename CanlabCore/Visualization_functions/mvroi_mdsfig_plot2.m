@@ -1,9 +1,12 @@
 function mvroi_mdsfig_plot2(CLUSTER,SPEC,sigmatavg,sigmatdif,titlestr)
-% function mvroi_mdsfig_plot2(CLUSTER,SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,titlestr)
+% ::
 %
-% e.g., 
+%    mvroi_mdsfig_plot2(CLUSTER,SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,titlestr)
 %
-% mvroi_mdsfig_plot2(DATA.CLUSTER,DATA.SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,'Uncorrected');
+% :Example:
+% ::
+%
+%    mvroi_mdsfig_plot2(DATA.CLUSTER,DATA.SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,'Uncorrected');
 %
 scnsize = get(0,'ScreenSize');
 figure('position',[50 50 scnsize(3)-100 scnsize(4)/2],'color','white')

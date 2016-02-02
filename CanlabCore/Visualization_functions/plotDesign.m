@@ -1,56 +1,75 @@
 function [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
-% [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
+% :Usage:
+% ::
+%
+%    [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
 %
 % simple function to plot a design
 % plots regressors and color-coded onset times as little sticks, with RT represented as height of the stick
 %
-% Inputs:
-% --------------------------------------------------------------------------
-% ons   a cell array of onset times in s
-%       OR a delta indicator function matrix
-%       Event durations (durs) will ONLY work with cell array inputs
-%       * optional *
-%       The second column of each cell of ons can be a series of event durations for
-%       each event.
+% :Inputs:
 %
-% rt is a cell array of rts or other parametric modulator for each onset event (or empty if no values)
+%   **ons:**
+%        a cell array of onset times in s
 %
-% TR    repetition time for sampling, in s
+%        OR a delta indicator function matrix
+%        Event durations (durs) will ONLY work with cell array inputs
 %
-% Optional inputs:
-% optional argument is the
+%        * optional *
+%        The second column of each cell of ons can be a series of event durations for
+%        each event.
 %
+%   **rt:**
+%        is a cell array of rts or other parametric modulator for each onset event (or empty if no values)
+%
+%   **TR:**
+%        repetition time for sampling, in s
+%
+% :Optional Inputs:
 % returns the model matrix (X) and the delta function d
 %
-% optional arguments
-% 1     y offset for plotting rts, default = 2
-% 2     vector of epoch durations in sec for each trial type, default is events
+%   optional arguments
+%     1. y offset for plotting rts, default = 2
+%     2. vector of epoch durations in sec for each trial type, default is events
 %
-% 'yoffset',            followed by yoffset for plotting rts; default is auto scale
-% 'durs',               followed by durations in sec, either:
-%                        Constant duration
-%                        Vector of one duration for each event type
-%                        Cell array of one duration per trial
-%                        * Note: You can also add duration to ons input
-%                        instead; see ons above for more info *
+%   **'yoffset':**
+%        followed by yoffset for plotting rts; default is auto scale
 %
-% {'color', 'colors'},  followed by cell array of colors
-% 'samefig',            keep on same figure
-% 'basisset',           followed by name of basis set
-% 'overlapping'         Default is to plot separate lines in separate
-%                       vertical positions.  To plot overlapping in same location, enter this.
-% examples:
-% plot epochs of different lengths stored in conditions(*).stimlength
-% [X3,d] = plotDesign(evtonsets,[],1,2,cat(2,conditions.stimlength));
+%   **'durs':**
+%        followed by durations in sec, either:
 %
-% See also: onsets2fmridesign
-
-% Programmers' notes
-% DURS still needs some work to match onsets2fmridesign
-% tor edited 8/2015 to fix some ease-of-usage issues and document
-
-% Default inputs
-% ------------------------------------------------------------------------
+%        Constant duration
+%
+%        Vector of one duration for each event type
+%        Cell array of one duration per trial
+%        * Note: You can also add duration to ons input
+%        instead; see ons above for more info *
+%
+%   **{'color', 'colors'}:**
+%        followed by cell array of colors
+%
+%   **'samefig':**
+%        keep on same figure
+%
+%   **'basisset':**
+%        followed by name of basis set
+%
+%   **'overlapping':**
+%        Default is to plot separate lines in separate
+%        vertical positions. To plot overlapping in same location, enter this.
+%
+% :Examples: plot epochs of different lengths stored in conditions(*).stimlength
+% ::
+%
+%    [X3,d] = plotDesign(evtonsets,[],1,2,cat(2,conditions.stimlength));
+%
+% :See Also: onsets2fmridesign
+%
+% ..
+%    Programmers' notes
+%    DURS still needs some work to match onsets2fmridesign
+%    tor edited 8/2015 to fix some ease-of-usage issues and document
+% ..
 
 rtin = rt;      % original rt, to tell if rt is values or empty
 yoffset = [];

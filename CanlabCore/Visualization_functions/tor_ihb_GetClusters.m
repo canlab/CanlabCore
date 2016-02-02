@@ -1,43 +1,73 @@
-function clusters = tor_ihb_GetClusters
-%----------------------------------------------------------------------------------
-% FORMAT clusters = ihb_getClusters
+function clusters = tor_ihb_GetClusters()
+% :Usage:
+% ::
+%
+%    clusters = ihb_getClusters
+%
 % Get cluster information (use [SPM,VOL,xX,xCon,xSDM] = spm_getSPM;)
-%----------------------------------------------------------------------------------
-%   01.03.01    Sergey Pakhomov
-%   01.08.01    last modified
-%----------------------------------------------------------------------------------
-% clusters          - array of structs with fields:
 %
-% Common to all clusters in the set
-% 
-% isSpmCluster      - 1 if got from SPM data; 0 - if constructed by 
+% :Output:
+%
+%   **clusters:**
+%        array of structs with fields:
+%
+% :Common to all clusters in the set:
+%
+%   **isSpmCluster:**
+%        1 if got from SPM data; 0 - if constructed by 
 %                     symmetrical or intersection
-% title             - title for comparison (string) (SPM.title)
-% hThreshold        - height threshold (SPM.u)
-% voxSize           - voxel dimensions {mm} - column vector (VOL.VOX)
 %
-% specific for every cluster
-% name              - name of the cluster
-% numVox            - number of voxels in cluster
-% Z                 - minimum of n Statistics {filtered on u and k} (1 x num_vox)
-% XYZmm             - location of voxels {mm} (3 x num_vox)
-% pVoxelLev         - corrected p for max value in cluster
-% pClustLev         - corrected p for given cluster (cluster level)
+%   **title:**
+%        title for comparison (string) (SPM.title)
 %
-% Talariach volume
-% xTal  - x Talariach coordinates ready for contourslice & isosurface
-% yTal  - y Talariach coordinates ready for contourslice & isosurface
-% zTal  - z Talariach coordinates ready for contourslice & isosurface
-% vTal  - Talariach volume values ready for contourslice & isosurface
-% xMin, yMin, zMin, xMax, yMax, zMax - bounding box in mm for Talariach
-%----------------------------------------------------------------------------------
-%   10.04.01    Sergey Pakhomov
-%   01.08.01    last modified
-%----------------------------------------------------------------------------------
-%----------------------------------------------------------------------------------
-% Check existance of figures used by spm_getSPM
-%----------------------------------------------------------------------------------
-dflFileName = ihb_FileFolderName('dfl');
+%   **hThreshold:**
+%        height threshold (SPM.u)
+%
+%   **voxSize:**
+%        voxel dimensions {mm} - column vector (VOL.VOX)
+%
+% :Specific for every cluster:
+%
+%   **name:**
+%        name of the cluster
+%
+%   **numVox:**
+%        number of voxels in cluster
+%
+%   **Z:**
+%        minimum of n Statistics {filtered on u and k} (1 x num_vox)
+%
+%   **XYZmm:**
+%        location of voxels {mm} (3 x num_vox)
+%
+%   **pVoxelLev:**
+%        corrected p for max value in cluster
+%
+%   **pClustLev:**
+%        corrected p for given cluster (cluster level)
+%
+% :Talariach volume:
+%
+%   **xTal:**
+%        x Talariach coordinates ready for contourslice & isosurface
+%
+%   **yTal:**
+%        y Talariach coordinates ready for contourslice & isosurface
+%
+%   **zTal:**
+%        z Talariach coordinates ready for contourslice & isosurface
+%
+%   **vTal:**
+%        Talariach volume values ready for contourslice & isosurface
+%
+%   xMin, yMin, zMin, xMax, yMax, zMax - bounding box in mm for Talariach
+%
+% ..
+%    10.04.01    Sergey Pakhomov
+%    01.08.01    last modified
+% ..
+
+dflFileName = ihb_FileFolderName('dfl'); % Check existance of figures used by spm_getSPM
 load(dflFileName, 'ihbdfl_spm_fig_Interactive');
 load(dflFileName, 'ihbdfl_spm_fig_SelFileWin');
 load(dflFileName, 'ihbdfl_spm_fig_ConMan');

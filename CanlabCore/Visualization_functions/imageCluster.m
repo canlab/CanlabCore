@@ -1,5 +1,8 @@
 function [out,cl] = imageCluster(varargin)
-% function [out,cl] = imageCluster(arguments as specified below)
+% :Usage:
+% ::
+%
+%    [out,cl] = imageCluster(arguments as specified below)
 %
 % Images a cluster isosurface on an existing 3D head or brain plot
 %
@@ -8,36 +11,63 @@ function [out,cl] = imageCluster(varargin)
 % 
 % Inputs (in any order): keyword followed by input argument
 %
-% 'cluster'         followed by cluster to image, from SPM or TSU.
-% 'getclusters'     no other args necessary - starts gui for cluster selection
-%                   function returns all clusters.  select with clusters(i)
-% 'getfigclusters'  get clusters from TSU main figure.  must be current figure.
-% 'figure'          create a new figure to image color on
-% 'color'           followed by color value - either text or vector
-% 'alpha'           followed by transparency value for cluster surface, 0-1
-%                   1 is opaque, 0 is completely transparent
+%   **'cluster':**
+%        followed by cluster to image, from SPM or TSU.
+%
+%   **'getclusters':**
+%        no other args necessary - starts gui for cluster selection
+%        function returns all clusters.  select with clusters(i)
+%
+%   **'getfigclusters':**
+%        get clusters from TSU main figure.  must be current figure.
+%
+%   **'figure':**
+%        create a new figure to image color on
+%
+%   **'color':**
+%        followed by color value - either text or vector
+%
+%   **'alpha':**
+%        followed by transparency value for cluster surface, 0-1
+%        1 is opaque, 0 is completely transparent
 % 
-% Control of smoothing:
-%  'heightthresh', 	followed by cutoff threshold post-smooth, in percentage of min Z value in cl
-%                   - enter a number between 0 and 1
-%  'fwhm',          followed by smoothing kernel FWHM (Gaussian)
-%  'kernelsize'     followed by box size for kernel support (5 5 5 is  default)
+% :Control of smoothing:
 %
+%   **'heightthresh':**
+%        followed by cutoff threshold post-smooth, in percentage of min Z value in cl
+%          - enter a number between 0 and 1
 %
-%  Output: out = Patch handle, cl = cluster struct
+%   **'fwhm':**
+%        followed by smoothing kernel FWHM (Gaussian)
 %
-%  Uses: cl.XYZmm and cl.voxSize
+%   **'kernelsize':**
+%        followed by box size for kernel support (5 5 5 is  default)
 %
-%  Works in Matlab 5.3, but with no transparency.
-%  By Tor Wager, 10/3/2001, last edit 7/2012
+% :Outputs:
 %
-% Example:
-% p(i) = imageCluster('cluster',region2struct(r(i)),'color',colors{i},'alpha',1, 'fwhm', 1.2, 'heightthresh', .3); 
-% view(135, 30); lighting gouraud; lightRestoreSingle; axis image; camlight right;
+%   **out:**
+%        Patch handle
+%
+%   **cl:**
+%        cluster struct
+%
+% :Uses: cl.XYZmm and cl.voxSize
+%
+% Works in Matlab 5.3, but with no transparency.
+%
+% :Example:
+% ::
+%
+%    p(i) = imageCluster('cluster',region2struct(r(i)),'color',colors{i},'alpha',1, 'fwhm', 1.2, 'heightthresh', .3); 
+%    view(135, 30); lighting gouraud; lightRestoreSingle; axis image; camlight right;
+%
+% ..
+%    By Tor Wager, 10/3/2001, last edit 7/2012
+% ..
 
-%------------------------------------------------------------------------------
-% Set up arguments and default values
-%------------------------------------------------------------------------------
+% ..
+%    Set up arguments and default values
+% ..
 clusters = [];
 mycolor = 'y';
 myalpha = 1;

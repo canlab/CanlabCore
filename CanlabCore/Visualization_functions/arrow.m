@@ -59,49 +59,50 @@ function [h,yy,zz] = arrow(varargin)
 %  This version of ARROW uses features of MATLAB 5 and is incompatible with
 %  earlier MATLAB versions (ARROW for MATLAB 4.2c is available separately);
 %  some problems with perspective plots still exist.
-
-% Copyright (c)1995-1997, Erik A. Johnson <johnsone@uiuc.edu>, 8/14/97
-
-% Revision history:
-%    8/14/97  EAJ  Added workaround for MATLAB 5.1 scalar logical transpose bug.
-%    7/21/97  EAJ  Fixed a few misc bugs.
-%    7/14/97  EAJ  Make arrow([],'Prop',...) do nothing (no old handles)
-%    6/23/97  EAJ  MATLAB 5 compatible version, release.
-%    5/27/97  EAJ  Added Line Arrows back in.  Corrected a few bugs.
-%    5/26/97  EAJ  Changed missing Start/Stop to mouse-selected arrows.
-%    5/19/97  EAJ  MATLAB 5 compatible version, beta.
-%    4/13/97  EAJ  MATLAB 5 compatible version, alpha.
-%    1/31/97  EAJ  Fixed bug with multiple arrows and unspecified Z coords.
-%   12/05/96  EAJ  Fixed one more bug with log plots and NormalDir specified
-%   10/24/96  EAJ  Fixed bug with log plots and NormalDir specified
-%   11/13/95  EAJ  Corrected handling for 'reverse' axis directions
-%   10/06/95  EAJ  Corrected occasional conflict with SUBPLOT
-%    4/24/95  EAJ  A major rewrite.
-%    Fall 94  EAJ  Original code.
-
-% Things to be done:
-%  - segment parsing, computing, and plotting into separate subfunctions
-%  - change computing from Xform to Camera paradigms
-%     + this will help especially with 3-D perspective plots
-%     + if the WarpToFill section works right, remove warning code
-%     + when perpsective works properly, remove perspective warning code
-%  - add cell property values and struct property name/values (like get/set)
-%  - get rid of NaN as the "default" data label
-%     + perhaps change userdata to a struct and don't include (or leave
-%       empty) the values specified as default; or use a cell containing
-%       an empty matrix for a default value
-%  - add functionality of GET to retrieve current values of ARROW properties
 %
-% Modified slightly by Tor Wager in 2 places for Matlab 6.5 compat. with
-% NaNs.
+% ..
+%    Copyright (c)1995-1997, Erik A. Johnson <johnsone@uiuc.edu>, 8/14/97
 %
+%    Revision history:
+%       8/14/97  EAJ  Added workaround for MATLAB 5.1 scalar logical transpose bug.
+%       7/21/97  EAJ  Fixed a few misc bugs.
+%       7/14/97  EAJ  Make arrow([],'Prop',...) do nothing (no old handles)
+%       6/23/97  EAJ  MATLAB 5 compatible version, release.
+%       5/27/97  EAJ  Added Line Arrows back in.  Corrected a few bugs.
+%       5/26/97  EAJ  Changed missing Start/Stop to mouse-selected arrows.
+%       5/19/97  EAJ  MATLAB 5 compatible version, beta.
+%       4/13/97  EAJ  MATLAB 5 compatible version, alpha.
+%       1/31/97  EAJ  Fixed bug with multiple arrows and unspecified Z coords.
+%      12/05/96  EAJ  Fixed one more bug with log plots and NormalDir specified
+%      10/24/96  EAJ  Fixed bug with log plots and NormalDir specified
+%      11/13/95  EAJ  Corrected handling for 'reverse' axis directions
+%      10/06/95  EAJ  Corrected occasional conflict with SUBPLOT
+%       4/24/95  EAJ  A major rewrite.
+%       Fall 94  EAJ  Original code.
+%
+%    Things to be done:
+%     - segment parsing, computing, and plotting into separate subfunctions
+%     - change computing from Xform to Camera paradigms
+%        + this will help especially with 3-D perspective plots
+%        + if the WarpToFill section works right, remove warning code
+%        + when perpsective works properly, remove perspective warning code
+%     - add cell property values and struct property name/values (like get/set)
+%     - get rid of NaN as the "default" data label
+%        + perhaps change userdata to a struct and don't include (or leave
+%          empty) the values specified as default; or use a cell containing
+%          an empty matrix for a default value
+%     - add functionality of GET to retrieve current values of ARROW properties
+%
+%    Modified slightly by Tor Wager in 2 places for Matlab 6.5 compat. with
+%    NaNs.
+%
+%
+%    Many thanks to Keith Rogers <kerog@ai.mit.edu> for his many excellent
+%    suggestions and beta testing. Check out his shareware package MATDRAW.
+%    He has permission to distribute ARROW with MATDRAW.
+% ..
 
-% Many thanks to Keith Rogers <kerog@ai.mit.edu> for his many excellent
-% suggestions and beta testing.  Check out his shareware package MATDRAW.
-% He has permission to distribute ARROW with MATDRAW.
-
-% global variable initialization
-global ARROW_PERSP_WARN ARROW_STRETCH_WARN ARROW_AXLIMITS
+global ARROW_PERSP_WARN ARROW_STRETCH_WARN ARROW_AXLIMITS % global variable initialization
 if isempty(ARROW_PERSP_WARN  ), ARROW_PERSP_WARN  =1; end;
 if isempty(ARROW_STRETCH_WARN), ARROW_STRETCH_WARN=1; end;
 

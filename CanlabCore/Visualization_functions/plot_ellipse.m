@@ -1,16 +1,21 @@
+function [hh,h2]=plot_ellipse(x,y,theta,a,b)
 % PLOT_ELLIPSE
-% [h,h2]=plot_ellipse(x,y,theta,a,b)
+%
+% :Usage:
+% ::
+%
+%    [h,h2]=plot_ellipse(x,y,theta,a,b)
 %
 % This routine plots an ellipse with centre (x,y), axis lengths a,b
 % with major axis at an angle of theta radians from the horizontal.
-
 %
-% Author: P. Fieguth
-%         Jan. 98
+% ..
+%    Author: P. Fieguth
+%            Jan. 98
 %
-%http://ocho.uwaterloo.ca/~pfieguth/Teaching/372/plot_ellipse.m
+%    http://ocho.uwaterloo.ca/~pfieguth/Teaching/372/plot_ellipse.m
+% ..
 
-function [hh,h2]=plot_ellipse(x,y,theta,a,b)
 
 np = 100;
 ang = [0:np]*2*pi/np;

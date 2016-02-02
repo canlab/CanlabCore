@@ -1,20 +1,21 @@
-% surf_handles = cluster_surf_batch(varargin)
-%
-%
-% Uses
-% Single-map visualization
-% ------------------------------------------------------------------
-% P2 = threshold_imgs('rob_tmap_0001.img', tinv(1-.005, 12), 15, 'pos');
-% cluster_surf_batch(P2);
-%
-% surf_handles = cluster_surf_batch({cl cl2}, {[1 0 0]});
-%
-% Two maps with overlap
-% ------------------------------------------------------------------
-% surf_handles = cluster_surf_batch(cl, {[1 0 0] [0 1 0] [1 1 0]}, cl2);
-
-
 function surf_handles = cluster_surf_batch2(varargin)
+% :Usage:
+% ::
+%
+%    surf_handles = cluster_surf_batch(varargin)
+%
+% :Examples:
+% ::
+%
+%    % Single-map visualization
+%    P2 = threshold_imgs('rob_tmap_0001.img', tinv(1-.005, 12), 15, 'pos');
+%    cluster_surf_batch(P2);
+%    surf_handles = cluster_surf_batch({cl cl2}, {[1 0 0]});
+%
+%    % Two maps with overlap
+%    surf_handles = cluster_surf_batch(cl, {[1 0 0] [0 1 0] [1 1 0]}, cl2);
+
+
     OVERLAP_COLOR = [1 1 1];
     DEFAULT_DISTANCE = 5;
 

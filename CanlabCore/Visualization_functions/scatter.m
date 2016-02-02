@@ -1,10 +1,16 @@
 function [h]=scatter(x,y,stats,varargin)
-
-% Usage: [h]=scatter(x,y,stats,varargin)
-% 
 % scatterplots x and y and draws the logistic function specified by the
 % parameters in the stats structure (output from glmfit).
-% h is the handle to the figure axis.
+%
+% :Usage:
+% ::
+%
+%    [h]=scatter(x,y,stats,varargin)
+%
+% :Output:
+%
+%   **h:**
+%        is the handle to the figure axis.
 
 Title = [];
 Xlabel = [];

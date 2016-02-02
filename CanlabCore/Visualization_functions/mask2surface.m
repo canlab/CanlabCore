@@ -1,18 +1,39 @@
 function [hPatch,outP,FV, cl, myLight] = mask2surface(P,varargin)
-% [hPatch,outP,FV, cl, myLight] = mask2surface(P)
+% ::
 %
-% P         :   a file name for a mask file, OR a clusters structure
+%    [hPatch,outP,FV, cl, myLight] = mask2surface(P)
 %
-% hPatch    :   handle to surface patch
-% outP      :   file name, with path, of mat file containing faces and vertices
-% FV        :   isosurface
-% cl        :   clusters structure with coords and meshgrid info
+% :Input:
 %
-% varargin  :   suppress lighting (0) or do lighting (1)
-% varargin{2}:  color for patch objects
+%   **P:**
+%        a file name for a mask file, OR a clusters structure
 %
-% tor wager 9/23/02
+% :Inputs:
+%
+%   **hPatch:**
+%        handle to surface patch
+%
+%   **outP:**
+%        file name, with path, of mat file containing faces and vertices
+%
+%   **FV:**
+%        isosurface
+%
+%   **cl:**
+%        clusters structure with coords and meshgrid info
+%
+%   **varargin:**
+%        suppress lighting (0) or do lighting (1)
+%
+%   **varargin{2}:**
+%        color for patch objects
+%
+% ..
+%    tor wager 9/23/02
+% ..
+%
 % uses get_cluster_volume, adapted from Sergey Pakhomov
+%
 % use with cluster_surf.m to map activations onto surfaces:
 % cluster_surf(clusters1,clusters2,outP,10,{[0 1 0] [1 0 0]})
 %

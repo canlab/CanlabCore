@@ -1,6 +1,8 @@
 function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,varargin)
-% function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,[coords for center of cuts],[revx])
-% example: O = cluster_cutaways(clusters,'myoutname','y','yzx',[0 0 0],[revx])
+% :Usage:
+% ::
+%
+%    O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,[coords for center of cuts],[revx])
 %
 % groups clusters to image on brains by the first letter in whichcuts
 % therefore, if you enter 'y' for whichcuts, the program will select
@@ -9,6 +11,7 @@ function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,varargin)
 %
 % you need files called brain_render_T1.img/hdr on the path
 % these should be scalped anatomicals for the brain image.
+%
 % you would also need 'brain_render_T1.mat' for the
 % transparent brain surface, if you changed this script to get
 % the transparent brain surface.
@@ -16,9 +19,16 @@ function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,varargin)
 % if it cuts from the wrong side, try 'revx' as input into tor_3d.m
 % or enter anything as 2nd var arg.
 %
-% uses renderCluster_ui.m
+% :Examples:
+% ::
 %
-% by Tor Wager, Jan 2003
+%    O = cluster_cutaways(clusters,'myoutname','y','yzx',[0 0 0],[revx])
+%
+% Uses renderCluster_ui.m
+%
+% ..
+%    by Tor Wager, Jan 2003
+% ..
 
 mm = cat(1,clusters.mm_center);
 d = tril(dist(mm(:,2)') < 15);  %distances

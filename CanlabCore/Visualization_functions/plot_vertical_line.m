@@ -1,7 +1,7 @@
 function han = plot_vertical_line(x,color)
-% function han = plot_vertical_line(x,color)
-%
-% Edited by Tor, Feb 08, to plot multiple lines
+% ..
+%    Edited by Tor, Feb 08, to plot multiple lines
+% ..
 
 if nargin < 2, color = 'k'; end
 

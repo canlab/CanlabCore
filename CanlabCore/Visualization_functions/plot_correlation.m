@@ -1,37 +1,69 @@
 function h = plot_correlation(X,Y,varargin)
-% handles = plot_correlation(X,Y,varargin)
+% :Usage:
+% ::
+%
+%    handles = plot_correlation(X,Y,varargin)
 %
 % plots robust or OLS simple or partial correlations
 % replaces prplot and plot_correlation_samefig
 %
+% :Inputs:
 %
-% X is matrix of columns of interest plus nuisance
-% default is to plot partial effect of 1st column
-% Y is one or more columns of data
+%   **X:**
+%        is matrix of columns of interest plus nuisance
+%        default is to plot partial effect of 1st column
 %
-% Optional inputs:
-% 'robust', robust IRLS plot
-% 'noprint', suppress text output
-% 'doquad', quadratic term; not tested, may not work
+%   **Y:**
+%        is one or more columns of data
 %
-% % 'col', followed by column of interest
-% 'labels', followed by cell array of text labels for each obs.
-% 'colors', followed by cell array of colors for each column of Y
-% 'ylabel', followed by y-axis label string
-% 'xlabel', followed by x-axis label string
-% 'weights', followed by weights that override any computed ones
+% :Optional Inputs:
 %
-% tor wager, august 2006
+%   **'robust':**
+%        robust IRLS plot
 %
-% Examples:
-% Plot robust partial corr. 2 of X against col. 17 of Y, controlling for other X
-% figure; h = plot_correlation(X,Y(:,17),'col',2,'robust','ylabel','Brain
-% data','xlabel','Order effect');
+%   **'noprint':**
+%        suppress text output
+%
+%   **'doquad':**
+%        quadratic term; not tested, may not work
+%
+%   **'col':**
+%        followed by column of interest
+%
+%   **'labels':**
+%        followed by cell array of text labels for each obs.
+%
+%   **'colors':**
+%        followed by cell array of colors for each column of Y
+%
+%   **'ylabel':**
+%        followed by y-axis label string
+%
+%   **'xlabel':**
+%        followed by x-axis label string
+%
+%   **'weights':**
+%        followed by weights that override any computed ones
+%
+% :Examples: Plot robust partial corr. 2 of X against col. 17 of Y,
+% controlling for other X
+% ::
+%
+%    figure;
+%    h = plot_correlation(X,Y(:,17),'col',2,'robust','ylabel','Brain
+%                         data','xlabel','Order effect');
 %
 % Plot Col. 1 of X vs. Y in red squares
-% figure; h = plot_correlation(X,Y(:,17),'robust','colors',{'rs'});
-
-%tor_fig;
+% ::
+%
+%    figure;
+%    h = plot_correlation(X,Y(:,17),'robust','colors',{'rs'});
+%
+%    tor_fig;
+%
+% ..
+%    tor wager, august 2006
+% ..
 
 % ---------------------------------------------
 % default behaviors

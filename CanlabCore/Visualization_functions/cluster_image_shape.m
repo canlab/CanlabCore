@@ -1,52 +1,69 @@
 function [hpatch, cl] = cluster_image_shape(cl, varargin)
-% function [hpatch, cl] = cluster_image_sphere(cl or [k x 3 list of mm coords], varargin)
+% :Usage:
+% ::
+%
+%    [hpatch, cl] = cluster_image_sphere(cl or [k x 3 list of mm coords], varargin)
 %
 % Images spheres at cluster centers
 % Combine with addbrain and cluster_tools('connect3d') 
 % or cluster_nmdsfig_glassbrain
 % to get 3-D plots of connected blobs
 %
-% Outputs: patch handles, and new cl with sphere coordiates in XYZmm and
-% XYZ
+% :Optional Inputs:
 %
-% Optional inputs:
-% {'color', 'colors'}, mycolor = varargin{i+1};
-% 'radius', myradius = varargin{i+1};
+%   {'color', 'colors'}, mycolor = varargin{i+1};
 %
+%   'radius', myradius = varargin{i+1};
 %
-% Tor Wager, July 2007 (original version)
+% :Outputs:
 %
-% Usage:
-% -------------------------------------------------------------------------
-% function [hpatch, cl] = cluster_image_sphere(cl)
-% With optional arguments:
-% [hpatch, cl] = cluster_image_sphere(cl, 'color', 'b', 'radius', 10)
-% [hpatch, cl] = cluster_image_sphere(cl, 'color', {'r' 'g' 'b' etc}, 'radius', 10)
+%   **hpatch:**
+%        patch handles
 %
-% Example: Given an MNI coordinate, plot a sphere on a brain surface
-% -------------------------------------------------------------------------
-% my_mm_coord = [40, 46, 22]';
-% create_figure('surface')
-% cl = [];
-% cl.XYZmm = my_mm_coord;
-% cl.mm_center = my_mm_coord';
-% V = spm_vol(which('brainmask.nii'));
-% cl.M = V.mat;
-% [hpatch, cl] = cluster_image_sphere(cl, 'color', 'g', 'radius', 10)
-% p = addbrain;
-% set(p, 'FaceAlpha', 1);
-% axis image
-% view(135, 30); lighting gouraud; lightRestoreSingle; material dull;
+%   **cl:**
+%        new cl with sphere coordiates in XYZmm and XYZ
 %
-% Example: Turn xyz mm coordinates into clusters and image them
-% -------------------------------------------------------------------------
-% my_mm_coord = [40 46 22; 50 26 40; 45 36 50; 60 12 0]
-% [hpatch, cl] = cluster_image_sphere(my_mm_coord, 'color', 'b', 'radius', 4);
-
-% Programmers' notes:
-% Tor Wager, July 2007
-% updated April 2011 for flexible radius
-% updated 12/2012 for xyz to spheres
+% :Examples:
+% ::
+%
+%    function [hpatch, cl] = cluster_image_sphere(cl)
+%
+%    % With optional arguments:
+%    [hpatch, cl] = cluster_image_sphere(cl, 'color', 'b', 'radius', 10)
+%    [hpatch, cl] = cluster_image_sphere(cl, 'color', {'r' 'g' 'b' etc}, 'radius', 10)
+%
+% :Example: Given an MNI coordinate, plot a sphere on a brain surface
+% ::
+%
+%    my_mm_coord = [40, 46, 22]';
+%    create_figure('surface')
+%    cl = [];
+%    cl.XYZmm = my_mm_coord;
+%    cl.mm_center = my_mm_coord';
+%    V = spm_vol(which('brainmask.nii'));
+%    cl.M = V.mat;
+%    [hpatch, cl] = cluster_image_sphere(cl, 'color', 'g', 'radius', 10)
+%    p = addbrain;
+%    set(p, 'FaceAlpha', 1);
+%    axis image
+%    view(135, 30);
+%    lighting gouraud;
+%    lightRestoreSingle;
+%    material dull;
+%
+%    % Turn xyz mm coordinates into clusters and image them
+%
+%    my_mm_coord = [40 46 22; 50 26 40; 45 36 50; 60 12 0]
+%    [hpatch, cl] = cluster_image_sphere(my_mm_coord, 'color', 'b', 'radius', 4);
+%
+% ..
+%    Tor Wager, July 2007 (original version)
+%
+%    Programmers' notes:
+%    Tor Wager, July 2007
+%    updated April 2011 for flexible radius
+%    updated 12/2012 for xyz to spheres
+% ..
 
 hpatch = [];
 mycolor = 'r';

@@ -1,10 +1,15 @@
 function scn_export_papersetup(minsize)
-% scn_export_papersetup([opt: min size in pixels, default = 400])
-% 
+% :Usage:
+% ::
+%
+%    scn_export_papersetup([opt: min size in pixels, default = 400])
+%
 % set paper size for current figure so that print to png or tiff looks as
 % it should (as it does on-screen)
 %
-% tor wager, aug. 06
+% ..
+%    tor wager, aug. 06
+% ..
 
 if nargin < 1, minsize = 400; end
 

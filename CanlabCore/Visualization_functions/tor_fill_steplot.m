@@ -1,5 +1,8 @@
 function [h,t,dat,d,m1,m2,sterr] = tor_fill_steplot(dat,color,varargin)
-% [h,t] = tor_fill_steplot(dat,color,[robust flag],[p-thresh],[x vector],[covs no interest])
+% :Usage:
+% ::
+%
+%    [h,t] = tor_fill_steplot(dat,color,[robust flag],[p-thresh],[x vector],[covs no interest])
 %
 % Plots a mean vector (mean of each column of dat)
 % surrounded by a fill with standard err bars
@@ -14,8 +17,11 @@ function [h,t,dat,d,m1,m2,sterr] = tor_fill_steplot(dat,color,varargin)
 % 
 % Optional: robust flag (1/0), robust IRLS
 %
-% tor_fig; tor_fill_steplot(dat,{'b' 'r'},0,.05,secs);
+% :Examples:
+% ::
 %
+%    tor_fig;
+%    tor_fill_steplot(dat,{'b' 'r'},0,.05,secs);
 
 dorobust = 0; pthresh = 0; x = 1:size(dat,2);
 t = []; m1 = []; m2 = []; X = [];

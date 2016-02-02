@@ -1,12 +1,11 @@
-function tor_ihb_TalSpace
-%----------------------------------------------------------------------------------
-% FORMAT ihb_TalSpace
-%----------------------------------------------------------------------------------
+function tor_ihb_TalSpace()
+% :Usage:
+% ::
+%
+%    tor_ihb_TalSpace
+%
 % Main function to view SPM99 cluster's (contours & 3D) in Talariach space
-%----------------------------------------------------------------------------------
-%----------------------------------------------------------------------------------
-%   09.04.01    Sergey Pakhomov
-%   01.08.01    last modified
+%
 %==================================================================================
 %   Graphic objects and their 'Tags':
 %==================================================================================
@@ -61,6 +60,7 @@ function tor_ihb_TalSpace
 %   uimenu                      ihb_LineWidthMenuThin
 %   uimenu                      ihb_LineWidthMenuNormal
 %   uimenu                      ihb_LineWidthMenuThick
+%
 %==================================================================================
 %  Application data (name used with setappdata the same as handle or variable name
 %==================================================================================
@@ -166,10 +166,15 @@ function tor_ihb_TalSpace
 %----------------------------------------------------------------------------------
 % ihbdfl_line_width
 %==================================================================================
-%**********************************************************************************
-%==================================================================================
-% Create Default information file if necessary
-%==================================================================================
+%
+% ..
+%   09.04.01    Sergey Pakhomov
+%   01.08.01    last modified
+% ..
+
+% ..
+%    Create Default information file if necessary
+% ..
 dflFileName = ihb_FileFolderName('dfl');
 fid = fopen(dflFileName);
 if fid == -1

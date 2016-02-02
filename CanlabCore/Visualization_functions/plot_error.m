@@ -1,23 +1,24 @@
-% PLOT_ERROR    Plot a matrix with shaded error area around it
-%   PLOT_ERROR(X, Y) plots matrix Y against x-values in X, where Y is a matrix with each row representing a signal.
-%   The shaded area represents the standard error across the columns of Y.
-%
-%   PLOT_ERROR(Y) plots the data matrix Y versus its index.
-%
-%   PLOT_ERROR(..., 'errorData', errorData) uses external data for the error areas. In this case, Y is assumed to be a mean
-%   timeseries already. Y and errorData must be vectors of the same length.
-%
-%   PLOT_ERROR(..., 'allowNaNs', [0|1]) indicates whether to handle NaNs in the data. If set, plot_error will use nanmean, 
-%   nanstd, etc. Off by default.
-%
-%   PLOT_ERROR(..., colorSpecString) plots the line according to the designated ColorSpec string, and shades the error area
-%   by the color of the line
-%
-%   PLOT_ERROR(AX, ...) plots into the axes designated by the AX axes handle.
-%
-%   [line_handle patch_handle] = PLOT_ERROR return the handle of the main line object
-
 function [line_handle patch_handle] = plot_error(varargin)
+% PLOT_ERROR    Plot a matrix with shaded error area around it
+%
+% PLOT_ERROR(X, Y) plots matrix Y against x-values in X, where Y is a matrix with each row representing a signal.
+% The shaded area represents the standard error across the columns of Y.
+%
+% PLOT_ERROR(Y) plots the data matrix Y versus its index.
+%
+% PLOT_ERROR(..., 'errorData', errorData) uses external data for the error areas. In this case, Y is assumed to be a mean
+% timeseries already. Y and errorData must be vectors of the same length.
+%
+% PLOT_ERROR(..., 'allowNaNs', [0|1]) indicates whether to handle NaNs in the data. If set, plot_error will use nanmean, 
+% nanstd, etc. Off by default.
+%
+% PLOT_ERROR(..., colorSpecString) plots the line according to the designated ColorSpec string, and shades the error area
+% by the color of the line
+%
+% PLOT_ERROR(AX, ...) plots into the axes designated by the AX axes handle.
+%
+% [line_handle patch_handle] = PLOT_ERROR return the handle of the main line object
+
     using_external_error_data = 0;
     plotArgs = {};
     meanFun = @mean;

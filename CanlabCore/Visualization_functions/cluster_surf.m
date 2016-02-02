@@ -1,110 +1,127 @@
 function [p,str] = cluster_surf(varargin)
-% [suface_handle,colorchangestring] = cluster_surf(varargin)
-% Tor Wager
-% surface plot of clusters on a standard brain
+% Surface plot of clusters on a standard brain
 %
-% INPUTS, in any order:
-% ---------------------------------------------------------------------
-%   - CLUSTERS: clusters structures, as created in tor_extract_rois.m
+% :Usage:
+% ::
 %
-%   - COLORS: cell array of colors for each cluster: {[1 0 0] [0 1 0] [0 0 1]}
+%    [suface_handle,colorchangestring] = cluster_surf(varargin)
+%
+% :Inputs:
+%
+%   **CLUSTERS:**
+%        clusters structures, as created in tor_extract_rois.m
+%
+%   **COLORS:**
+%        cell array of colors for each cluster: {[1 0 0] [0 1 0] [0 0 1]}
 %       if number of colors specified is greater than number of clusters
 %       structures entered, n+1 and n+2 colors are overlap of 2 and overlap
 %       of all clusters, respectively.
 %
-%   - SURFACE MAT FILE: file name of mat file containing brain surface vertices and faces
+%   **SURFACE MAT FILE:**
+%        file name of mat file containing brain surface vertices and faces
 %       as created with isosurface.
 %
-%   - SPECIAL SURFACE KEYWORDS: special string: 'bg' 'hipp' (hcmp,thal,amy)
-%   number of mm to plot from surface (mmdeep)
+%   **SPECIAL SURFACE KEYWORDS:**
+%        special string: 'bg' 'hipp' (hcmp,thal,amy)
+%        number of mm to plot from surface (mmdeep)
 %
-%    - Special keywords for sets of surfaces are:
-% left, right, bg, limbic, cerebellum, brainstem
+%          - Special keywords for sets of surfaces are:
+%            left, right, bg, limbic, cerebellum, brainstem
 %
-%   - Other keywords: 'left' 'right' 'amygdala' 'thalamus' 'hippocampus' '
-% 'midbrain'  'caudate'   'globus pallidus'  'putamen'  'nucleus accumbens'  'hypothalamus'
-% 'cerebellum'
+%          - Other keywords: 'left' 'right' 'amygdala' 'thalamus' 'hippocampus' '
+%            'midbrain'  'caudate'   'globus pallidus'  'putamen'  'nucleus accumbens'
+%             'hypothalamus' 'cerebellum'
 %
-%   - EXISTING SURFACE HANDLE(S): handles for surface patches, created,
-%   e.g., with addbrain.m.  This lets you be very flexible in the
-%   surfaces you image onto.
+%   **EXISTING SURFACE HANDLE(S):**
+%        handles for surface patches, created,
+%        e.g., with addbrain.m.  This lets you be very flexible in the
+%        surfaces you image onto.
 %
-%   'colorscale'.  This scales colors by Z-scores of voxels if used
-%                  - Uses input color, unless also used with 'heatmap'
-%                  - Z scores should be in ROW vector
-%                  - use with 'normalize' to scale Z-scores between -1 and 1
-%                  - will also create transparent effects, mixing
-%                  blob color with existing surface color in linear
-%                  proportion to Z-scores
+%   **'colorscale':**
+%        This scales colors by Z-scores of voxels if used
+%          - Uses input color, unless also used with 'heatmap'
+%          - Z scores should be in ROW vector
+%          - use with 'normalize' to scale Z-scores between -1 and 1
+%          - will also create transparent effects, mixing
+%            blob color with existing surface color in linear
+%            proportion to Z-scores
 %
-%   'heatmap'.  Map Z-scores to surface colors
-%                   - Used WITH or instead of 'colorscale'
-%                   - Blobs can have a range of colors
-%                   - Use with REFERENCE RANGE option below to control scale
-%                   - solid colors entered as input will be ignored
-%                   - use with 'colormaps' option below to be flexible
-%                   in which color maps you apply.
-%                   - if 'colorscale' is also used, will produce transparent blobs.
+%   **'heatmap':**
+%        Map Z-scores to surface colors
+%          - Used WITH or instead of 'colorscale'
+%          - Blobs can have a range of colors
+%          - Use with REFERENCE RANGE option below to control scale
+%          - solid colors entered as input will be ignored
+%          - use with 'colormaps' option below to be flexible
+%            in which color maps you apply.
+%          - if 'colorscale' is also used, will produce transparent blobs.
 %
-%   - REFERENCE RANGE : reference Z-scores range, [zmin_act zmax_act
-%                   zmax_negact zmin_negact], e.g., [0 5 -5 0], use only
-%                   with 'heatmap' option
-%                   to get refZ from clusters, try:
-%                   clZ = cat(2,clusters.Z); refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
-%   'colormaps'
-%       - followed by custom [colors x 3] matrices for positive colors
-%       and negative colors.
-%       - matlab can create some: e.g., colormap summer, jet, etc.
-%       others can be created with colormap_tor.m
+%   **REFERENCE RANGE:**
+%        reference Z-scores range, [zmin_act zmax_act
+%        zmax_negact zmin_negact], e.g., [0 5 -5 0], use only
+%        with 'heatmap' option
+%        to get refZ from clusters, try:
+%        ::
 %
-% see also 
+%            clZ = cat(2,clusters.Z);
+%            refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
 %
-% color [0 1 1] (cyan) is reserved for the overlap color btwn cluster sets.
+%   **'colormaps':**
+%        - followed by custom [colors x 3] matrices for positive colors
+%          and negative colors.
+%        - matlab can create some: e.g., colormap summer, jet, etc.
+%          others can be created with colormap_tor.m
 %
-% examples:
-% ---------------------------------------------------------------------
-% P = 'C:\tor_scripts\3DheadUtility\canonical_brains\surf_single_subj_T1_gray.mat';
-% cluster_surf(tcl,acl,P,10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
+%        color [0 1 1] (cyan) is reserved for the overlap color btwn cluster sets.
 %
-% or P = h (surface handle) to use current surface in figure, and refZ
-% cluster_surf(tcl,acl,h,[3 5 -5 -3],10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
+% :Examples:
+% ::
 %
-% More examples:
-% cluster_surf(cl,2,'heatmap');     % brain surface.  vertices colored @2 mm
-% cluster_surf(cl,2,'bg','heatmap');    % heatmap on basal ganglia
-% cluster_surf(cl,5,'left','heatmap');  % heatmap on left surface @5 mm
-% cluster_surf(cl,2,'right','heatmap');
+%    P = 'C:\tor_scripts\3DheadUtility\canonical_brains\surf_single_subj_T1_gray.mat';
+%    cluster_surf(tcl,acl,P,10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
 %
-% A multi-color, multi-threshold display on the cerebellum
-% colors = {[1 1 0] [1 .5 0] [1 .3 .3]};
-% tor_fig;
-% sh = cluster_surf(cl{3},colors(3),5,'cerebellum');
-% cluster_surf(cl{2},colors(2),5,sh);
-% cluster_surf(cl{1},colors(1),5,sh);
+%    or P = h (surface handle) to use current surface in figure, and refZ
+%    cluster_surf(tcl,acl,h,[3 5 -5 -3],10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
 %
-% Custom colormaps:
-% create_figure('Brain Surface'); cluster_surf(cl, 2, 'heatmap','left');
+% :More examples:
+% ::
 %
-% poscm = colormap_tor([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
-% negcm = colormap_tor([0 0 1], [0 .3 1]);  % light blue to dark blue
-% create_figure('Brain Surface'); cluster_surf(cl, 2, 'heatmap', 'colormaps', poscm, negcm, 'left');
+%    cluster_surf(cl,2,'heatmap');     % brain surface.  vertices colored @2 mm
+%    cluster_surf(cl,2,'bg','heatmap');    % heatmap on basal ganglia
+%    cluster_surf(cl,5,'left','heatmap');  % heatmap on left surface @5 mm
+%    cluster_surf(cl,2,'right','heatmap');
 %
-% Single-color transparent map (green):
-% cluster_surf(cl, 2, {[0 1 0]}, 'colorscale', p3(2), 'normalize');
+%    % A multi-color, multi-threshold display on the cerebellum
+%    colors = {[1 1 0] [1 .5 0] [1 .3 .3]};
+%    tor_fig;
+%    sh = cluster_surf(cl{3},colors(3),5,'cerebellum');
+%    cluster_surf(cl{2},colors(2),5,sh);
+%    cluster_surf(cl{1},colors(1),5,sh);
 %
-% See also: addbrain, img2surf.m, surface() methods for objects, cluster_cutaways
+%    % Custom colormaps:
+%    create_figure('Brain Surface'); cluster_surf(cl, 2, 'heatmap','left');
+%
+%    poscm = colormap_tor([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
+%    negcm = colormap_tor([0 0 1], [0 .3 1]);  % light blue to dark blue
+%    create_figure('Brain Surface'); cluster_surf(cl, 2, 'heatmap', 'colormaps', poscm, negcm, 'left');
+%
+%    % Single-color transparent map (green):
+%    cluster_surf(cl, 2, {[0 1 0]}, 'colorscale', p3(2), 'normalize');
+%
+% :See Also: addbrain, img2surf.m, surface() methods for objects, cluster_cutaways
+%
+% ..
+%    Programmers' Notes
+%    Created by Tor, a long time ago
+%    updated Sept 2015 to keep up with matlab graphics and handle some weird
+%    stuff with processing inputs.  
+%      - Figures are now scalars and we need to check for those first.
+%      - Also changed default surface and colormap
+% ..
 
-
-% Programmers' Notes
-% Created by Tor, a long time ago
-% updated Sept 2015 to keep up with matlab graphics and handle some weird
-% stuff with processing inputs.  
-% - Figures are now scalars and we need to check for those first.
-% - Also changed default surface and colormap
-
-% -------------------------------------------------------------------------
-% * set up input arguments and defaults
-% -------------------------------------------------------------------------
+% ..
+%    set up input arguments and defaults
+% ..
 mmdeep = 10;
 cscale = 0;
 heatm = 0;

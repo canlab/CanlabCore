@@ -1,6 +1,7 @@
-%function [c, alld] = getVertexColors(xyz, v, actcolor, [basecolor], [mind], 'vert', [xyz2], [actcolor2], 'vert', [xyz3], [actcolor3])
+% :Usage:
+% ::
 %
-% by Tor Wager  August 25, 2002
+%    [c, alld] = getVertexColors(xyz, v, actcolor, [basecolor], [mind], 'vert', [xyz2], [actcolor2], 'vert', [xyz3], [actcolor3])
 %
 % given a point list of XYZ mm coordinates (3 columns)
 % and a list of vertices in an isosurface, 
@@ -48,8 +49,13 @@
 %axis image; myLight = camlight(0, 0);set(myLight, 'Tag', 'myLight');
 %set(gcf, 'WindowButtonUpFcn', 'lightFollowView');lightfollowview
 %drawnow
+%
+% ..
+% by Tor Wager  August 25, 2002
+% ..
 
-function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
+
+function [c, alld] = getVertexColors_old_backup(xyz, v, actcolor, varargin)
 
     mind = 3;
     basecolor = [.5 .5 .5];

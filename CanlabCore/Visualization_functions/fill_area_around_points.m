@@ -1,18 +1,26 @@
 function h = fill_area_around_points(x, y, borderscale, color)
-    % h = fill_area_around_points(x, y, borderscale, color)
-    %
-    % tor wager, feb 07
-    % fills area around list of coordinates in a color
-    % using spline interpolation and other stuff.
-    % designed for cluster imaging in nmdsfig figures.
-    %
-    % tor recommends .2 for borderscale...
-% 
-% Example:
-% x = randn(3,1); y = randn(3,1);
-% figure; plot(x,y,'k.');
-% h = fill_area_around_points(x, y, .2, 'r');
-    
+% :Usage:
+% ::
+%
+%    h = fill_area_around_points(x, y, borderscale, color)
+%
+% fills area around list of coordinates in a color
+% using spline interpolation and other stuff.
+% designed for cluster imaging in nmdsfig figures.
+%
+% :Example:
+% ::
+%
+%    x = randn(3,1);
+%    y = randn(3,1);
+%    figure; plot(x,y,'k.');
+%    h = fill_area_around_points(x, y, .2, 'r');
+%
+% ..
+%    tor wager, feb 07
+%    tor recommends .2 for borderscale...
+% ..
+
 if length(x) == 1 & length(y) == 1
     % only one point; exit
     h = [];

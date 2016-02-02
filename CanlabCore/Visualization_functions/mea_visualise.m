@@ -1,6 +1,9 @@
-function mea_visualise(plotmat,xaxis,yaxis,caxis);
-%%%this program allows the visualisation of 3D images in separate subplots
-%%%chris summerfield 2003. summerfd@paradox.columbia.edu
+function mea_visualise(plotmat,xaxis,yaxis,caxis)
+% This program allows the visualisation of 3D images in separate subplots
+%
+% ..
+%    chris summerfield 2003. summerfd@paradox.columbia.edu
+% ..
 
 if min(min(min(plotmat))) ~= max(max(max(plotmat))) 
     constrain_axis=1;

@@ -1,6 +1,10 @@
 function spm_orthviews_name_axis(name, axisnum)
-    % spm_orthviews_name_axis(name, axis#)
-    % put names on spm_orthviews axes
+% :Usage:
+% ::
+%
+%    spm_orthviews_name_axis(name, axis#)
+%
+% put names on spm_orthviews axes
 
     global st
 

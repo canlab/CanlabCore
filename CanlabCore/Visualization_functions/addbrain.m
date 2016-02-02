@@ -1,71 +1,93 @@
 function p = addbrain(varargin)
-% handle = addbrain([method],enter 2nd arg to suppress lighting changes)
-% quick function to add transparent brain surface to figure
+% :Usage:
+% ::
 %
-% % han = addbrain;   % lateral surface
-% han = addbrain('brainstem');
+%    handle = addbrain([method],enter 2nd arg to suppress lighting changes)
+%
+% quick function to add transparent brain surface to figure
+% ::
+%
+%    han = addbrain;   % lateral surface
+%
+%    han = addbrain('brainstem');
 %
 % NOTE: this version uses structures in SPM2 space (Colin atlas)
 % Available keywords:
 %
-%  CORTICAL SURFACES
-% -----------------------------------------------------------------
-% 'transparent_surface' : the default.  2 mm res SPM2 brain surface
-% 'hires'       : a high-resolution surface (from Caret segmentation)
-% 'hires left'  : hi-resolution left medial with cerebellum (Caret seg)
-% 'hires right' : same, right hem
-% 'left'        :  2 mm resolution left hem, no cerebellum
-% 'right'
-% 'vmpfc'
+% :CORTICAL SURFACES:
 %
-% CUTAWAY SURFACES
-% -----------------------------------------------------------------
-% 'brainbottom'
+%   **'transparent_surface':**
+%        the default.  2 mm res SPM2 brain surface
 %
-% COMPOSITES
-% -----------------------------------------------------------------
-% 'limbic' : A collection of subcortical nuclei with left surface
-% 'foursurfaces' : Lateral and medial views, with brainstem
-% 'BG' : Basal ganglia
+%   **'hires':**
+%        a high-resolution surface (from Caret segmentation)
 %
-% SUBCORTICAL SURFACES
-% -----------------------------------------------------------------
-% 'brainstem'
-% 'amygdala'
-% 'thalamus'
-% 'hippocampus'
-%  midbrain'
-% 'caudate'
-% 'globus pallidus'
-% 'putamen'
-% 'nucleus accumbens'
-% 'hypothalamus'
-% 'cerebellum'
-% {'md','mediodorsal'}
-% {'cm','centromedian'}
-% 'pbn'
-% 'rvm'
-% 'nts'
-% 'lc'
-% {'sn', 'substantia nigra'}
-% {'stn', 'subthalamic nucleus'}
-% {'rn', 'red nucleus'}
-% {'olive', 'inferior olive'}
-% {'nrm', 'raphe magnus'}
+%   **'hires left':**
+%        hi-resolution left medial with cerebellum (Caret seg)
 %
-% SPECIAL COMMANDS
-% -----------------------------------------------------------------
+%   **'hires right':**
+%        same, right hem
+%
+%   **'left':**
+%        2 mm resolution left hem, no cerebellum
+%
+%   **'right':**
+%
+%   **'vmpfc':**
+%
+% :CUTAWAY SURFACES:
+%
+%   **'brainbottom':**
+%
+% :COMPOSITES:
+%
+%   **'limbic':**
+%        A collection of subcortical nuclei with left surface
+%
+%   **'foursurfaces':**
+%        Lateral and medial views, with brainstem
+%
+%   **'BG':**
+%        Basal ganglia
+%
+% :SUBCORTICAL SURFACES:
+%   - 'brainstem'
+%   - 'amygdala'
+%   - 'thalamus'
+%   - 'hippocampus'
+%   - 'midbrain'
+%   - 'caudate'
+%   - 'globus pallidus'
+%   - 'putamen'
+%   - 'nucleus accumbens'
+%   - 'hypothalamus'
+%   - 'cerebellum'
+%   - {'md','mediodorsal'}
+%   - {'cm','centromedian'}
+%   - 'pbn'
+%   - 'rvm'
+%   - 'nts'
+%   - 'lc'
+%   - {'sn', 'substantia nigra'}
+%   - {'stn', 'subthalamic nucleus'}
+%   - {'rn', 'red nucleus'}
+%   - {'olive', 'inferior olive'}
+%   - {'nrm', 'raphe magnus'}
+%
+% :SPECIAL COMMANDS:
 % 
 % han = addbrain('colorchange',my_rgb_color,han);
+%
 % Change gray background to some other color, excluding blobs already rendered
-% - han: Input handles with patch object
-% - my_rgb_color: [x x x] color triplet
-% - Only works for changing from gray background right now. 
+%  - han: Input handles with patch object
+%  - my_rgb_color: [x x x] color triplet
+%  - Only works for changing from gray background right now. 
 %
 % han = addbrain('eraseblobs',han);
+%
 % Set all rendered blob colors back to gray; useful for re-rendering on existing surfaces.
-% - han: Input handles with patch object
-% - Only works for changing to gray background right now. 
+%  - han: Input handles with patch object
+%  - Only works for changing to gray background right now. 
 %
 % See also: cluster_surf, img2surf.m, surface() methods for objects, cluster_cutaways
 

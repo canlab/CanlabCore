@@ -1,22 +1,36 @@
 function [r,str,sig,ploth] = plot_correlation_samefig(xvec,yvec,varargin)
-% [r,infostring,sig,h] = plot_correlation_samefig(xvec,yvec,[textlabs],[color],[doquad],[dorobust])
-% varargin is string of text labels
+% :Usage:
+% ::
 %
-% for text labels only, try:
-% plot_correlation(beh1,mri1,highlow,'w.');
+%    [r,infostring,sig,h] = plot_correlation_samefig(xvec,yvec,[textlabs],[color],[doquad],[dorobust])
 %
-% doquad: flag for quadratic correlations as well!
-% dorobust: remove n outliers from data, using Min Cov Determinant (MCD) 
-%          Rousseeuw, P.J. (1984), "Least Median of Squares Regression," 
-%          Journal of the American Statistical Association, Vol. 79, pp. 871-88
-%            outliers calculated using IRLS (robustfit.m) do not work well.
-%           you enter n
+% :Inputs:
 %
-% empty variable arguments are OK, defaults will be used
+%   varargin is string of text labels
 %
-% figure; [r, infos] = plot_correlation_samefig(x, y, [], 'ko', 0, 1);
+%   for text labels only, try:
+%   ::
 %
-% tor wager
+%       plot_correlation(beh1,mri1,highlow,'w.');
+%
+%   doquad: flag for quadratic correlations as well!
+%
+%   dorobust: remove n outliers from data, using Min Cov Determinant (MCD) 
+%             Rousseeuw, P.J. (1984), "Least Median of Squares Regression," 
+%             Journal of the American Statistical Association, Vol. 79, pp. 871-88
+%             outliers calculated using IRLS (robustfit.m) do not work well.
+%             you enter n
+%
+%   empty variable arguments are OK, defaults will be used
+%
+% :Examples:
+% ::
+%
+%    figure; [r, infos] = plot_correlation_samefig(x, y, [], 'ko', 0, 1);
+%
+% ..
+%    tor wager
+% ..
 
 robopt = 'IRLS';    %'IRLS' or 'MCD'
 

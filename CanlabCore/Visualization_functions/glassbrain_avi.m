@@ -1,10 +1,17 @@
 function M1 = glassbrain_avi(fps,len,clusters)
-% function M = glassbrain_avi(fps,len,clusters)
-% tor wager
+% :Usage:
+% ::
+%
+%    M = glassbrain_avi(fps,len,clusters)
 %
 % works with cluster_surf.m
 % assumes a gray brain where no activation, or creates one
+%
 % SEE ALSO cluster_surf_movie.m, which works well too.
+%
+% ..
+%    tor wager 
+% ..
 
 dofadein = 0;
 dozionimg = 0;

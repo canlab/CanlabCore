@@ -1,8 +1,11 @@
 function f1 = create_figure(tagname, varargin)
-    % f1 = create_figure(['tagname'], [subplotrows], [subplotcols], [do not clear flag])
-    %
-    % checks for old figure with tag of tagname
-    % clears it if it exists, or creates new one if it doesn't
+% :Usage:
+% ::
+%
+%    f1 = create_figure(['tagname'], [subplotrows], [subplotcols], [do not clear flag])
+%
+% checks for old figure with tag of tagname,
+% clears it if it exists, or creates new one if it doesn't
     
     if nargin < 1 || isempty(tagname)
         tagname = 'nmdsfig';

@@ -1,17 +1,24 @@
 function [r,str,sig,ry,rx,h,rr] = prplot(yy,X,k,varargin)
-% [r,str,sig,ry,rx,h,rr] = prplot(y,X,col,[dorobust],[colors])
+% :Usage:
+% ::
+%
+%    [r,str,sig,ry,rx,h,rr] = prplot(y,X,col,[dorobust],[colors])
+%
 % Partial residual plot of one column of X against y.
 % Uses IRLS estimation to downweight outliers 
 % if you enter a 4th argument
 %
 % Partial residual plot of y ~ X for column k
-% tor wager
 %
 % if y contains multiple columns, different colors
 % and symbols will be used, with a separate regression
 % for each.
 %
 % colors: e.g., {'ro' 'bs' 'gd' 'y^' 'cv' 'mx'}
+%
+% ..
+%    tor wager
+% ..
 
 mycols = {'ko'};
 robopt = 'IRLS';    %'IRLS' or 'MCD'

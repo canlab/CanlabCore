@@ -1,13 +1,17 @@
 function plot_hrf_model_fit(m,TR,bf,varargin)
-% plot_hrf_model_fit(m,TR,bf,[stim input function for epoch, in 1 s resolution])
+% :Usage:
+% ::
+%
+%    plot_hrf_model_fit(m,TR,bf,[stim input function for epoch, in 1 s resolution])
 %
 % if m is an hrf curve sampled at 1 s,
+%
 % plot_model_fit(m,1,'fir');
+%
 % plot_model_fit(m,1,'hrf');
 
 
-% interpolate hrf to 1 s
-len = length(m);
+len = length(m); % interpolate hrf to 1 s
 
 m = interp1((0:TR:TR*len-TR)',m',(0:1:ceil(len.*TR))');
 m = m ./ max(m);

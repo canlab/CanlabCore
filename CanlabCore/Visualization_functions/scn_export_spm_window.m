@@ -1,9 +1,14 @@
-% scn_export_spm_window(meth, [savefilename] or [overlay])
+% :Usage:
+% ::
+%
+%    scn_export_spm_window(meth, [savefilename] or [overlay])
 %
 % Modes:
-% scn_export_spm_window('setup')
-% scn_export_spm_window('setup', overlayimgname)
+%   - scn_export_spm_window('setup')
+%   - scn_export_spm_window('setup', overlayimgname)
+%
 % Set up SPM figure window paper size, etc. for saving
+%
 % The optional argument sets the spm_orthviews display range based on your
 % image
 %
@@ -12,8 +17,10 @@
 %
 % Run setup first, then save.
 %
-% tor wager
-% aug 3, 06
+% ..
+%    tor wager
+%    aug 3, 06
+% ..
 
 function scn_export_spm_window(meth, savefilename)
     fh = findobj('Tag', 'Graphics');

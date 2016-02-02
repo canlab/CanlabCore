@@ -1,21 +1,25 @@
 function spm_ov_black2white(varargin)
-    %
-    % Plugin for spm_orthviews to change the black background and dark edges to
-    % a white background with softer gray edges, for pub. quality figures
-    %
-    % if st (a global variable) st.plugins has 'black2white' added, and the
-    % st.vols{i} struct has a field called 'black2white', then this will be
-    % called.
-    %
-    % Sept 2010, Tor Wager
-    %
-    % To initialize, add this code to the calling function:
-    % st.vols{1}.black2white = 1;
-    % bwexist = strfind(st.plugins, 'black2white')
-    % bwexist = any(cat(2, bwexist{:}))
-    % if ~bwexist
-    %   st.plugins{end+1} = 'black2white';
-    % end
+% Plugin for spm_orthviews to change the black background and dark edges to
+% a white background with softer gray edges, for pub. quality figures
+%
+% if st (a global variable) st.plugins has 'black2white' added, and the
+% st.vols{i} struct has a field called 'black2white', then this will be
+% called.
+%
+% To initialize, add this code to the calling function:
+% ::
+%
+%    st.vols{1}.black2white = 1;
+%    bwexist = strfind(st.plugins, 'black2white')
+%    bwexist = any(cat(2, bwexist{:}))
+%    if ~bwexist
+%        st.plugins{end+1} = 'black2white';
+%    end
+%
+% ..
+%    Sept 2010, Tor Wager
+% ..
+
 
     % soften edges; 0 is no softening, a range is more softening
     softenvals = [.01:.01:.35]; % higher ending values of k will be more 'softening'; lower = less

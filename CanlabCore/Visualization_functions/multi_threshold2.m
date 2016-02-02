@@ -1,7 +1,11 @@
-% cl = multi_threshold(P, type, df, ['overlay', overlay file name], ['thresholds', thrs], ['large montage prompt', 0|1], ['title', titlestring], ['save images', 0|1])
+% ::
 %
+%    cl = multi_threshold(P, type, df, ['overlay', overlay file name], ['thresholds', thrs], ['large montage prompt', 0|1], ['title', titlestring], ['save images', 0|1])
+%
+
 % F contrast:  df = xSPM.df;
-% type = 'F', 'T' or 'none'
+%
+% type = 'F' or 'T'or 'none'
 %
 
 

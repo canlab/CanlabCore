@@ -1,10 +1,22 @@
-function ph = montage_clusters(ovl,clusters,XYZpts,varargin)
-% ph = montage_clusters(ovl,clusters,XYZpts,varargin)
-% 
-% Tor Wager
-% varargin = additional clusters structures
-% XYZpts = XYZ mm coordinates of points to plot
-% ph = point handles
+function ph = montage_clusters_points(ovl,clusters,XYZpts,varargin)
+% ::
+%
+%    ph = montage_clusters_points(ovl,clusters,XYZpts,varargin)
+%
+% :Inputs:
+%
+%   **varargin:**
+%        additional clusters structures
+%
+%   **XYZpts:**
+%        XYZ mm coordinates of points to plot
+%
+%   **ph:**
+%        point handles
+%
+% ..
+%    Tor Wager
+% ..
 
 if isempty(ovl), ovl = which('scalped_single_subj_T1.img');, end
 myc = {'b' 'r' 'y' 'g' 'm' 'c'};

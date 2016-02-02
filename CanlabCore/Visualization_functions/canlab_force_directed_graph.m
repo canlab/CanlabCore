@@ -2,13 +2,15 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 % Creates a force-directed graph from a set of variables, and plots
 % clusters on 3-D brain as well if entered. Requires matlab BGL toolbox.
 %
-% Usage:
-% -------------------------------------------------------------------------
-% canlab_force_directed_graph(activationdata OR connection matrix, ['cl', cl])
+% :Usage:
+% ::
+%
+%    canlab_force_directed_graph(activationdata OR connection matrix, ['cl', cl])
 %
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
 %     Copyright (C) 2013  Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -23,58 +25,63 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% activationdata    observations x variables matrix of data to be
-%                   inter-correlated
-%                   OR
-%                   signed, thresholded connection matrix to be used (e.g.,
-%                   thresholded t-values from multi-subject group analysis
+% :Inputs:
 %
-% Optional inputs: Enter keyword followed by variable with values
-% 'cl'              followed by clusters or region structure with brain clusters
-% 'threshtype'      followed by threshold type; 'bonf' is option now
-% 'connectmetric'
-% 'sizescale'       Followed by values to use in sizing of nodes on graph
-% 'setcolors'       Cell array of colors for each group, [1 x g]
-% 'rset'            Cell of vectors, with indices (integers) of member
-%                   elements in each group, [1 x g] cell
-%                   rset can ALSO be a vector of integers, i.e., output
-%                   from clusterdata
-% 'names'
-% 'namesfield'
+%   **activationdata:**
+%        observations x variables matrix of data to be
+%        inter-correlated
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% stats         structure with descriptive statistics, including
-%               betweenness-centrality, degree of each node
+%        OR
 %
-% Examples:
-% -------------------------------------------------------------------------
+%        signed, thresholded connection matrix to be used (e.g.,
+%        thresholded t-values from multi-subject group analysis
 %
-% [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle');
-% [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree');
-% [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree', 'rset', rset, 'setcolors', setcolors);
+% :Optional Inputs: Enter keyword followed by variable with values
 %
+%   **'cl':**
+%        followed by clusters or region structure with brain clusters
 %
-% See also:
-% * list other functions related to this one, and alternatives*
+%   **'threshtype':**
+%        followed by threshold type; 'bonf' is option now
+%
+%   **'connectmetric':**
+%
+%   **'sizescale':**
+%        Followed by values to use in sizing of nodes on graph
+%
+%   **'setcolors':**
+%        Cell array of colors for each group, [1 x g]
+%
+%   **'rset':**
+%        Cell of vectors, with indices (integers) of member
+%        elements in each group, [1 x g] cell
+%        rset can ALSO be a vector of integers, i.e., output
+%        from clusterdata
+%
+%   **'names':**
+%
+%   **'namesfield':**
+%
+% :Output:
+%
+%   **stats:**
+%        structure with descriptive statistics, including
+%        betweenness-centrality, degree of each node
+%
+% :Examples:
+% ::
+%
+%    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle');
+%    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree');
+%    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree', 'rset', rset, 'setcolors', setcolors);
+%
 
-% Programmers' notes:
-% List dates and changes here, and author of changes
+% ..
+%    DEFAULTS AND INPUTS
+% ..
 
-% BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
-% ARGUMENTS. MANY FUNCTIONS NEED TO PARSE OPTIONAL ARGS, SO THIS MAY BE
-% USEFUL.
-
-
-% -------------------------------------------------------------------------
-% DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
-
-% Defaults
-% -----------------------------------
 shan = [];              % outputs
 spherehan = [];
 handles = [];

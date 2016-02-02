@@ -1,12 +1,16 @@
 function montage_clusters_text(ovl,clusters,varargin)
-% montage_clusters_text(ovl,clusters,varargin)
-% 
-% Tor Wager
-% varargin = additional clusters structures
-% this function puts text cluster numbers on cluster centers
-
-% color = cell array of text strings indicating colors {'r' 'g'} etc...
-
+% :Inputs:
+%
+%   **varargin:**
+%        additional clusters structures
+%        this function puts text cluster numbers on cluster centers
+%
+%   **color:**
+%        cell array of text strings indicating colors {'r' 'g'} etc...
+%
+% ..
+%    Tor Wager
+% ..
 
 if isempty(ovl), ovl = which('scalped_single_subj_T1.img');, end
 

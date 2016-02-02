@@ -1,24 +1,37 @@
 function actcolor = map_data_to_colormap(datavaluesets, poscm, negcm, varargin)
-    %function actcolor = map_data_to_colormap(datavaluesets, poscm, negcm, varargin)
+% Usage
+% ::
 %
-    % Given sets of data values (each cell is a row vector of data values,
-    % e.g., z-scores) and color maps for positive and negative values,
-    % returns mapped colors for each data value in order.
-    % These colors can be used for direct plotting.
-    %
-    % input 1: data values (e.g., z-scores). k data value sets, in cells.  Each cell contains row vector of data values
-    % input 2/3: color maps [n x 3] for positive and negative values
-    % input 4: optional: fixed range of data defining max and min colors
-    %
-    % Tor Wager, Sept. 2007
-    %
-    % e.g.,
-    %
-    % poscm = colormap_tor([0 0 0], [1 1 0]);
-    % negcm = colormap_tor([0 0 1], [0 0 0]);
-    % Z = randn(40, 1)';
-    % actcolors = map_data_to_colormap({Z}, poscm, negcm)
-    % [Z' actcolors{1}]
+%    actcolor = map_data_to_colormap(datavaluesets, poscm, negcm, varargin)
+%
+% Given sets of data values (each cell is a row vector of data values,
+% e.g., z-scores) and color maps for positive and negative values,
+% returns mapped colors for each data value in order.
+% These colors can be used for direct plotting.
+%
+% :Inputs:
+%
+%   input 1:
+%        data values (e.g., z-scores). k data value sets, in cells.  Each cell contains row vector of data values
+%
+%   input 2/3:
+%        color maps [n x 3] for positive and negative values
+%
+%   input 4:
+%        optional: fixed range of data defining max and min colors
+%
+% :Examples:
+% ::
+%
+%    poscm = colormap_tor([0 0 0], [1 1 0]);
+%    negcm = colormap_tor([0 0 1], [0 0 0]);
+%    Z = randn(40, 1)';
+%    actcolors = map_data_to_colormap({Z}, poscm, negcm)
+%    [Z' actcolors{1}]
+%
+% ..
+% Tor Wager, Sept. 2007
+% ..
 
     nposcolors = size(poscm, 1);
     nnegcolors = size(negcm, 1);

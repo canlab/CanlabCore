@@ -138,3 +138,8 @@ Statistics_tools
 ===============
 .. automodule:: Statistics_tools
    :members:
+
+Visualization_functions
+===============
+.. automodule:: Visualization_functions
+   :members:

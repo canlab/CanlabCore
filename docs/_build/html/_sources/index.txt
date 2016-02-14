@@ -8,11 +8,16 @@
 CanlabCore documentation home
 =============================
 
+The CANlab Core Tools package is a set of Matlab functions that are designed
+to serve miscellaneous purposes. Many of them have stand-alone command line
+function, but the toolbox also contains functions that are used in other
+CANlab toolboxes, and so this package should be downloaded and put on the
+Matlab path when using any of the toolboxes.
 
 Contents:
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    moduleslist
 

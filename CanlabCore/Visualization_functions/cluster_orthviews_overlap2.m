@@ -9,6 +9,27 @@ function cluster_orthviews_overlap2(masks, varargin)
 %
 % Positive effects only!
 %
+% :Inputs
+% 
+%     **masks**
+%     image_vector  or fmri_data object
+%     
+% :Optional Inputs
+% 
+% 	**colors**
+%     'colors',{[RGB],[RGB],..} cell array of RGB triplets
+%     
+%     **surface**
+%     'surface',[0/1]
+%     default =1 
+%     
+%     **negative**
+%     'negative' string to only use negative clusters, otherwise only positive clusters
+%     
+%     **nomontage**
+%     'nomontage',[0/1]
+%     don't do montage, default do a montage
+%     
 % ..
 %    tor wager, june 2010
 %    A good function, but not polished yet.  needs debugging for various

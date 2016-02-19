@@ -1,10 +1,11 @@
 function [b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 % Calculate the approximate bias and power loss due to mis-modeling
+% This works with the Mismodeling Toolbox described by Loh et al. 2008
 %
 % :Usage:
 % ::
 %
-%     function [b pl] = BiasPowerloss(z, X, V)
+%     [b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 %
 % :Inputs:
 %
@@ -12,7 +13,7 @@ function [b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 %        fMRI time course
 %
 %   **X:**
-%        design matrix
+%        design matrix for multiple regression
 %
 %   **c:**
 %        contrast of interest
@@ -41,9 +42,14 @@ function [b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 %   **pl:**
 %        power loss
 %
+% :References:
+%   Loh, J. M., Lindquist, M. A., Wager, T. D. (2008). Residual Analysis for Detecting Mis-modeling in fMRI. Statistica Sinica, 18, 1421-1448.
+%
 % ..
 %    By Martin Lindquist & Ji-Meng Loh, July 2007
 % ..
+%
+
 
 
 % Update design matrix using correct model

@@ -6,7 +6,7 @@ function [results_obj, stats, indx] = searchlight(dat, varargin)
 % ::
 %
 %    [list outputs here] = function_name(list inputs here, [optional inputs])
-%    [results_obj, indx] = searchlight(dat, [optional inputs])
+%    [results_obj, stats, indx] = searchlight(dat, [optional inputs])
 %
 %
 % :Features:
@@ -56,7 +56,10 @@ function [results_obj, stats, indx] = searchlight(dat, varargin)
 %        sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
 %        This takes a long time to calculate, but can be saved and
 %        re-used for a given mask
-%
+%   **holdout_set:**
+%        Followed by integer vector of which observations belong to which
+%        holdout set, for cross-validation. This is passed into fmri_data.predict.m.  Default is
+%        empty.
 %
 % :Outputs:
 %
@@ -86,7 +89,7 @@ function [results_obj, stats, indx] = searchlight(dat, varargin)
 %
 %    % Run, and run again with existing indx
 %    pool = parpool(12);  % initialize parallel processing (12 cores)
-%    [results_obj, indx] = searchlight(dat, 'holdout_set', holdout_set);
+%    [results_obj, stats, indx] = searchlight(dat, 'holdout_set', holdout_set);
 %    results_obj = searchlight(dat, 'holdout_set', holdout_set, 'indx', indx);
 %
 % :See also:
@@ -259,6 +262,8 @@ t = tic;
 
 fprintf('Constructing spheres for each seed...');
 
+%infdist = inf * ones(size(dat.volInfo.xyzlist(:, 1), 1), 1);
+
 parfor i = 1:n
     
     mydist = sum([dat.volInfo.xyzlist(:, 1) - seed{i}(1) dat.volInfo.xyzlist(:, 2) - seed{i}(2) dat.volInfo.xyzlist(:, 3) - seed{i}(3)] .^ 2, 2);
@@ -328,8 +333,13 @@ switch algorithm_name
         output_val.weight_obj = stats.weight_obj;
         output_val.intercept = stats.other_output{3};
 end
+
 end % subfunction
 
+
+
+% PREDICTION time estimate
+% -------------------------------------------------------------------------
 
 function predict_time_estimate(dat, indx, algorithm_name, holdout_set)
 
@@ -356,6 +366,12 @@ estim = e * n / n_to_run;
 fprintf(1,'Estimate for whole brain = %3.0f hours %3.0f min %2.0f sec\n',hour, minute, second);
 
 end
+
+
+
+
+% Convert time
+% -------------------------------------------------------------------------
 
 
 function [hour, minute, second] = sec2hms(sec)

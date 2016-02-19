@@ -1,9 +1,8 @@
 function [ds,g,mystd,d,d2,c,c2,mi,b,eigv,eigval] = compare_subjects256(varargin)
-% This function compares the GLOBAL signal
-% after standardizing each image, in case 1
-% or the REGIONAL values in each cluster, in case 2
-% ...and does some diagnostics on the similarity 
-% between images.
+% This function compares a set of images to one another and does some diagnostics on the similarity among images.
+% - It returns multivariate distances and dissimilarities among images
+% - It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+% - You can also enter a reference image, in which case each image will be correlated with the ref.
 %
 % :Usage:
 % ::
@@ -76,11 +75,11 @@ function [ds,g,mystd,d,d2,c,c2,mi,b,eigv,eigval] = compare_subjects256(varargin)
 % ..
 
 doplot = 1; dostd = 0; textlab = [];
-if length(varargin) > 2, doplot = varargin{3};, end
-if length(varargin) > 3, mytitle = varargin{4};, end
-if length(varargin) > 4, dostd = varargin{5};, end
-if length(varargin) > 5, textlab = varargin{6};, end
-if length(varargin) > 6, refimg = varargin{7};, end
+if length(varargin) > 2, doplot = varargin{3};  end
+if length(varargin) > 3, mytitle = varargin{4};  end
+if length(varargin) > 4, dostd = varargin{5};  end
+if length(varargin) > 5, textlab = varargin{6};  end
+if length(varargin) > 6, refimg = varargin{7};  end
 
 if length(varargin) == 0
     disp('no inputs.'), return
@@ -101,9 +100,9 @@ else
     fprintf(1,'\nLoading volumes.\t')
 
     v = spm_read_vols(spm_vol(hP));
-    % for i = 1:size(hP,1), v(:,:,:,i) = spm_read_vols(spm_vol(deblank(hP(i,:))));,end
+    % for i = 1:size(hP,1), v(:,:,:,i) = spm_read_vols(spm_vol(deblank(hP(i,:)))); end
     
-    if length(varargin) > 1, mP = varargin{2};, 
+    if length(varargin) > 1, mP = varargin{2};  
         fprintf(1,'masking volumes.\t')
         % ----------------------------------------------------------------------------------
         % * load mask, and mask all subjects' contrast values
@@ -178,7 +177,7 @@ else
     
         subplot 223, imagesc(d2), colormap hot, xlabel('Image'),ylabel('Image'),title('Avg abs dist')
     
-        if isempty(textlab), for i = 1:size(b,1), textlab{i} = num2str(i);, end, end
+        if isempty(textlab), for i = 1:size(b,1), textlab{i} = num2str(i);  end, end
         
         % mds-like (pca version) on similarities (correlations)
         subplot 224, hold on
@@ -237,7 +236,7 @@ function [c,c2,vv,mi] = get_correl(v,varargin)
     fprintf(1,'getting correlations.\t')
     
     if length(varargin) > 0,    % we have a ref image instead of the grand mean
-        rimg = varargin{1};,
+        rimg = varargin{1}; 
         gv = rimg(:);
     else
         gmn = mean(v,4); gv = gmn(:);
@@ -249,9 +248,9 @@ function [c,c2,vv,mi] = get_correl(v,varargin)
     
     % eliminate NaNs
     wh = find(isnan(gv));
-    if ~isempty(wh), gv(wh,:) = []; vv(wh,:) = [];, end
+    if ~isempty(wh), gv(wh,:) = []; vv(wh,:) = [];  end
     wh = find(any(isnan(vv),2));
-    if ~isempty(wh), gv(wh,:) = []; vv(wh,:) = [];, end
+    if ~isempty(wh), gv(wh,:) = []; vv(wh,:) = [];  end
     
     for i = 1:size(v,4),
         cc = corrcoef(gv,vv(:,i));
@@ -293,7 +292,7 @@ end
 
 d = d(1:num);
 
-if num == 0, warning('No eigenvalues above 1!');, origd, end
+if num == 0, warning('No eigenvalues above 1!');  origd, end
 
 %figure;plot(b,'r'),hold on;plot(a,'k'), hold on; plot(mean(a,2),'g--'),legend({'eig' 'orig' 'avg'})
 

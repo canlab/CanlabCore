@@ -1,9 +1,9 @@
 function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects(varargin)
-% This function compares the GLOBAL signal
-% after standardizing each image, in case 1
-% or the REGIONAL values in each cluster, in case 2
-% ...and does some diagnostics on the similarity
-% between images.
+% This function compares a set of images to one another and does some diagnostics on the similarity among images.
+% - It returns multivariate distances and dissimilarities among images
+% - It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+% - You can also enter a reference image, in which case each image will be correlated with the ref.
+%
 %
 % :Usage:
 % ::

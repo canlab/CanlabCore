@@ -31,10 +31,6 @@ function obj = montage(obj, varargin)
 %      o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow');
 % 'spacing' : followed by inter-slice spacing in mm
 %
-% Define new axes in existing figure, and use those for montage:
-% axh = axes('Position', [0.05 0.4 .1 .5]);
-% o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
-%
 % Returns:
 % obj, an fmridisplay object
 % obj =
@@ -53,7 +49,25 @@ function obj = montage(obj, varargin)
 %     additional_info: ''
 %
 % Examples:
-% See help fmridisplay
+% o2 = fmridisplay; % create starting fmridisplay container object
+%
+% Define new axes in existing figure, and use those for montage:
+% axh = axes('Position', [0.05 0.4 .1 .5]);
+% o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
+%
+% o2 = montage(o2, 'saggital', 'slice_range', [-10 10], 'onerow');
+% o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 4);
+% o2 = montage(o2, 'axial', 'slice_range', [-20 30], 'onerow', 'spacing', 8);
+% o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
+% 
+% Parasaggital only:
+% o2 = montage(o2, 'saggital', 'slice_range', [-4 4], 'onerow', 'spacing', 8);
+%
+% Add/remove blobs and points with fmridisplay.addblobs,
+% fmridisplay.addpoints, fmridisplay.removeblobs, fmridisplay.removepoints
+%
+% See also:
+% fmridisplay, cluster_orthviews, montage_clusters and variants
 
 % Programmers' notes:
 % 3/2012 : Fixed bug in slices displayed when choosing exactly 3 custom
@@ -78,7 +92,11 @@ myview = 'axial';
 disptype = 'solid';  % or contour
 doonerow = 0;
 spacing = 6; % slice spacing, in mm
-ovl = which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
+
+% note: ovl is not functional here...set up in fmridisplay constructor 
+ovl = which('mni_icbm152_t1_tal_nlin_sym_09a_brainonly.img');  % symmetric ICBM 152-brain nonlinear iterative registration
+% which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
+
 textcodes = [];
 texthandles = [];
 slice_range = 'auto';

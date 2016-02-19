@@ -54,9 +54,13 @@
 %    param2 = xyz();
 %    [out1,out2] = func_call(param1, param2)
 %
+% :References:
+%   CITATION(s) HERE
+%
 % :See also:
 %   - list other functions related to this one, and alternatives*
 %
+
 % ..
 %    Programmers' notes:
 %    List dates and changes here, and author of changes

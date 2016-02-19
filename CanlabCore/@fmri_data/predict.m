@@ -302,7 +302,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 % ..
 %    Original version: Copyright Tor Wager, Dec 2010
-%
+
 %    Programmers' notes:
 %    Dec 2011: Changed to input double format to algorithms; some have
 %    problems with single format

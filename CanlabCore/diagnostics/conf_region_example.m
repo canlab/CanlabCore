@@ -1,3 +1,5 @@
+% This function 
+
 % Johnson & Wichern, p. 237, ex. 5.3
 % multivariate confindence regions
 % data is microwave radiation, door closed (x1) and open (x2)

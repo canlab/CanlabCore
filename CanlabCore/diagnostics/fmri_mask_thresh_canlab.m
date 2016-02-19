@@ -104,7 +104,7 @@ else
     
     V = spm_vol(fmri_file(1,:));
     %if (size(V,1) == 1)
-        fname = [V(1).fname ',1'] %passed in 4D image
+        fname = [V(1).fname ',1']; %passed in 4D image
     %else
     %    fname = V{1}.fname % passed in 3D images
     %end

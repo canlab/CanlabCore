@@ -4,27 +4,29 @@ function O = renderCluster_ui4(O)
 %
 %    O = renderCluster_ui4(O)
 %
-% :O:
+% :Inputs:
 %
-%   **head:**
+%   **O**
+%
+%   **O.head:**
 %        name of head to use, no .img extension
 %
-%   **surf:**
+%   **O.surf:**
 %        'y' or 'n': image surface
 %
-%   **sets:**
+%   **O.sets:**
 %        number of sets
 %
-%   **getfrom:**
+%   **O.getfrom:**
 %        cell array of where to get clusters from: 'workspace' 'file' etc.
 %
-%   **varname:**
+%   **O.varname:**
 %        cell array of variable names
 %
-%   **color:**
+%   **O.color:**
 %        cell array of colors - strings or vectors
 %
-%   **numbers:**
+%   **O.numbers:**
 %        'y' or 'n': add numbers to plot
 %
 %   also need individual fields named contents of varname, which contain clusters

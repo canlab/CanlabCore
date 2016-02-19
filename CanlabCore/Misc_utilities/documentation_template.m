@@ -38,6 +38,13 @@
 %   **param2:**
 %        description of param2
 %
+% :Optional Inputs:
+%   **param1:**
+%        description of param1
+%
+%   **param2:**
+%        description of param2
+%
 % :Outputs:
 %
 %   **out1:**

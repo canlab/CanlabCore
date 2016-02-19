@@ -1,4 +1,7 @@
-% This function 
+% This script contains an example dataset for multivariate confidence
+% intervals from Johnson & Wichern, p. 237, ex. 5.3, and demonstrates the
+% use of the function conf_region to estimate and plot the confidence
+% region.
 
 % Johnson & Wichern, p. 237, ex. 5.3
 % multivariate confindence regions
@@ -49,4 +52,6 @@ x = [    0.1500    0.3000
     0.0500    0.1200];
 
 X = x.^.25;
-[ci,ax,S,e,lam,Fm,Fc] = conf_region(X)
+
+figure;
+[ci,ax,S,e,lam,Fm,Fc] = conf_region(X, 1);

@@ -7,18 +7,35 @@ function [corr,t,p, fdrsig, fdrthresh] = correlation(meth,x,varargin)
 %
 %     [corr,t,p,fdrp, fdrthresh] = correlation(method,x,[y],['matrix'])
 %
-% IN PROGRESS : Warning : Use at your own risk.
-% Some methods are not adequately tested yet.
-% Spearman's rho does not correct for ties
+%     IN PROGRESS : Warning : Use at your own risk.
+%     Some methods are not adequately tested yet.
+%     Spearman's rho does not correct for ties
 %
-% :Methods:
-%  - Pearson's r.          Enter: {'r','pearson',[]}
-%  - IRLS                  Enter: {'irls','robust'}
-%  - Phi                   Enter: {'phi'}
-%  - Spearman's rho        Enter: {'rho','spearman'}
-%  - Kendall's Tau (a)     Enter: {'taua','kendalla'}
-%  - Tau (b)               Enter: {'tau','kendall','taub','kendallb'}
-%  - Gamma                 Ehter: {'gamma','kruskal'}
+% :Inputs:
+%
+%   **Methods:**
+%        String indicating the method for computing the correlation
+%        coefficient
+%        - Pearson's r.          Enter: {'r','pearson',[]}
+%        - IRLS                  Enter: {'irls','robust'}
+%        - Phi                   Enter: {'phi'}
+%        - Spearman's rho        Enter: {'rho','spearman'}
+%        - Kendall's Tau (a)     Enter: {'taua','kendalla'}
+%        - Tau (b)               Enter: {'tau','kendall','taub','kendallb'}
+%        - Gamma                 Enter: {'gamma','kruskal'}
+%
+%   **x:**
+%        Matrix of observations (n instances by p varianbles)
+%
+% :Optional Inputs:
+%
+%   **varargin:**
+%        To be documented
+%
+% :Outputs:
+%
+%   **OUT:**
+%        Output stats structure
 %
 % :Examples:
 % ::

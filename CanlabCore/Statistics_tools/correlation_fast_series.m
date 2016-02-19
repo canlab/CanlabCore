@@ -6,6 +6,28 @@ function [r, p, Tstat] = correlation_fast_series(Xi, Yi)
 %
 % Fast, memory-efficient way to get correlation between each column of Xi and Yi
 %
+%
+% :Inputs:
+%
+%   **Xi:**
+%        Matrix of observations (n instances by p variables)
+%
+%   **Yi:**
+%        Matrix of observations (n instances by p variables)
+%
+%
+% :Outputs:
+%
+%   **r:**
+%        Pearson correlation coefficients
+%
+%   **p:**
+%        Corresponding p-value for correlation coeffieints
+%
+%   **Tstat:**
+%        T statistic for comparing correlation coefficients against 0
+%
+%
 % :Examples:
 % ::
 %

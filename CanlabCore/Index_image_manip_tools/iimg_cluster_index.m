@@ -1,4 +1,5 @@
 function [clindx,nvox] = iimg_cluster_index(dat,xyz,k)
+% Get voxel cluster indices and sizes
 % :Usage:
 % ::
 %

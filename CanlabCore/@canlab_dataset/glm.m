@@ -1,5 +1,4 @@
 function out = glm(D, Yvarname, Xvarnames, wh_keep)
-%
 % predict Y from X using GLM
 %
 % :Usage:
@@ -7,6 +6,24 @@ function out = glm(D, Yvarname, Xvarnames, wh_keep)
 %
 %    out = glm(D, Yvarname, Xvarnames, wh_keep)
 %
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 % :Inputs:
 %
@@ -21,11 +38,15 @@ function out = glm(D, Yvarname, Xvarnames, wh_keep)
 %        cell array. must be subject_level
 %
 %   **wh_keep:**
-%        a vector of 1/0 values to use as wh_keep
+%        a logical vector of 1/0 values
 %
 %
 % :Outputs:
-%   same as for glmfit()
+%   **out:**
+%       structure containing same output as for glmfit()
+%       out.b: a vector of coefficient estimates
+%       out.dev: the deviance of the fit
+%       out.stat: see glmfit documentation for stat structure fields
 %
 %
 % :Examples:
@@ -33,9 +54,6 @@ function out = glm(D, Yvarname, Xvarnames, wh_keep)
 %
 %     out = glm(D, 'DeltaDon_avg', prednames, wh_keep)
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
 
 if nargin < 4 || isempty(wh_keep)
     wh_keep = true(size(D.Subj_Level.id)); %everyone

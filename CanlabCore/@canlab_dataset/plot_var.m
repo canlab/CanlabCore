@@ -4,9 +4,26 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 % :Usage:
 % ::
 %
-%    plot_var(D, varname)
+%    [meandat, stedat] = plot_var(D, varname, [optional inputs])
 %
-%    [meandat, stedat] = plot_var(D, varname, [opt inputs])
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 %
 % :Inputs:
@@ -16,7 +33,7 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %
 %   **varname:**
 %        the name of a valid variable to get from dataset
-%               - Looks for var name at either level, returns Event level if exists at both levels
+%           -Looks for var name at either level, returns Event level if exists at both levels
 %
 % :Optional inputs:
 %
@@ -51,7 +68,15 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %        of SE bars.
 %
 %
-% Examples:
+% :Outputs:
+%
+%   **meandat:**
+%        mean values
+%
+%   **stedat:**
+%        standard error values
+%
+% :Examples:
 % ::
 %
 %    plot_var(D, 'Frustration')
@@ -61,9 +86,6 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %    plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo');
 %    plot_var(D, 'RT', 'eventmeans', 'subjtype', 'Placebo', 'color', {'r' 'b'});
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
 
 
 grouping_var_name = ''; % plot variable as a function of event number

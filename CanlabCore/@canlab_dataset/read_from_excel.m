@@ -18,7 +18,27 @@ function dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargi
 % :Usage:
 % ::
 %
-%    dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargin)
+%    dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
 %
 % :Inputs:
 %
@@ -32,7 +52,7 @@ function dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargi
 %        list of absolute paths for individual subject files
 %             - plays well with filenames()
 %
-% :Optional inputs:
+% :Optional Inputs:
 %
 %   **fmri:**
 %        Indicates construction of canlab_dataset object using 'fmri'
@@ -55,6 +75,9 @@ function dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, varargi
 %    dat = canlab_dataset('fmri');
 %    dat = read_from_excel(dat,DesignFile,SubjectFiles,'fmri');
 %
+
+
+
 
 fmri = 0;
 warnflag = 1;

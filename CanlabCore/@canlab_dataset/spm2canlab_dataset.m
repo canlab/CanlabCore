@@ -5,14 +5,35 @@ function obj = spm2canlab_dataset(obj, subject, spm)
 % :Usage:
 % ::
 %
-%    D = spm2canlab_dataset(D, subjects, spm)
+%    obj = spm2canlab_dataset(obj, subject, spm)
+%
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2015  Wani Woo
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
 %
 % :Inputs:
 %
-%   **D:**
+%   **obj:**
 %        Canlab_dataset object (see canlab_dataset)
 %
-%   **subjects:**
+%   **subject:**
 %        Subject list (it could be one subject [in a string 
 %        format], or it could be multiple subjects in cell array)
 %
@@ -23,12 +44,8 @@ function obj = spm2canlab_dataset(obj, subject, spm)
 %
 % :Outputs:
 %
-%   **D:**
+%   **obj:**
 %        Canlab_dataset object with new data
-%
-% fter running this, please check D.Subj_Level.data and
-% D.Event_level.data to see if there are NaNs. NaNs could be there when 
-% information cannot be extracted from the given SPM.mat files. 
 %
 %
 % :Examples: 
@@ -41,11 +58,18 @@ function obj = spm2canlab_dataset(obj, subject, spm)
 %    D = spm2canlab_dataset(D, subj, spm);
 %
 %
-% See also canlab_dataset, spm_mat2batchinput
+% :See also:
+%   canlab_dataset
+%   spm_mat2batchinput
 %
+
 % ..
-%     Copyright (C) 2015  Wani Woo
+%    Programmers' notes:
+%       After running this, please check D.Subj_Level.data and
+%       D.Event_level.data to see if there are NaNs. NaNs could be there when 
+%       information cannot be extracted from the given SPM.mat files. 
 % ..
+
 
 subj = parseSUBJ(subject); % Check 1: parsing subjects
 

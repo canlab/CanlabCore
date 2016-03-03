@@ -21,6 +21,8 @@ if nargin > 2
     direction = varargin{1};
 end
 
+if compare_space(si1, si2), error('Objects are not in same space'); end
+
 % split first si into pos/neg significant voxels
 si1_pos = si1;
 posinds = si1.dat > 0;

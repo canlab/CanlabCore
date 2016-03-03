@@ -1,5 +1,5 @@
 function out = get_wh_image(dat, wh)
-% For an image_vector with multiple images (cases, contrasts, etc.), select one.
+% For an image_vector with multiple images (cases, contrasts, etc.), select a subset.
 %
 % :Usage:
 % ::
@@ -12,12 +12,13 @@ function out = get_wh_image(dat, wh)
 %        An image_vector object
 %
 %   **wh:**
-%        An integer indicating which image
+%        An array indicating which images
 %
 % :Examples:
 % ::
 %
 %    my_image_vector = get_wh_image(dat, 3) %to get 3rd image
+%    my_image_vector = get_wh_image(dat, [1 3]) %to get 1st and 3rd image
 %
 % ..
 %    Programmer Notes
@@ -26,8 +27,8 @@ function out = get_wh_image(dat, wh)
 
 % check that wh is in range
 
-if wh <= 0 || wh > size(dat.dat, 2)
-    error('No image at index %i', wh);
+if min(wh) < 0 || max(wh) > size(dat.dat, 2)
+    error('Invalid image index');
 end
 
 out = dat;

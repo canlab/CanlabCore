@@ -114,8 +114,7 @@ classdef fmridisplay
             % arguments
             % ---------------------------------
             
-            %obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-            obj.overlay = which('mni_icbm152_t1_tal_nlin_sym_09a_brainonly.img');  % symmetric ICBM 152-brain nonlinear iterative registration
+            obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
 
             if any(strcmp(varargin, 'overlay'))
                 wh = find(strcmp(varargin, 'overlay'));

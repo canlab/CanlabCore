@@ -94,8 +94,8 @@ doonerow = 0;
 spacing = 6; % slice spacing, in mm
 
 % note: ovl is not functional here...set up in fmridisplay constructor 
-ovl = which('mni_icbm152_t1_tal_nlin_sym_09a_brainonly.img');  % symmetric ICBM 152-brain nonlinear iterative registration
-% which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
+%ovl = which('mni_icbm152_t1_tal_nlin_sym_09a_brainonly.img');  % symmetric ICBM 152-brain nonlinear iterative registration
+ovl= which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
 
 textcodes = [];
 texthandles = [];

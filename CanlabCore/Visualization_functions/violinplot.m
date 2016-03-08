@@ -251,7 +251,7 @@ for i=1:size(Y,2)
     
     if doweights 
         ww = w{i}./nansum(w{i});
-        MX(:,i) = sum(Y{i}.*ww); % weighted mean
+        MX(:,i) = nansum(Y{i}.*ww); % weighted mean
     end
     
     bw(:,i)=bb;

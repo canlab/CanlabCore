@@ -50,6 +50,15 @@ function [h, L, MX, MED, bw, F, U] = violinplot(Y,varargin)
 %   **'nopoints':**
 %        don't display dots
 %
+%   **'pointsize':**
+%        you can define point size. 
+%
+%   **'weights':**
+%        You can add weights in the same format of the data. It will
+%        use weighted version of kdensity function, show weighted mean, and
+%        weighted point sizes. Be careful: if some data points have NaNs,
+%        this will remove those data points from the plot. 
+%
 % :Outputs:
 %
 %   **h:**
@@ -126,6 +135,10 @@ function [h, L, MX, MED, bw, F, U] = violinplot(Y,varargin)
 %    - added point plotting subfunction [now default to plot]
 %    - return point and fill handles in handles structure for later use
 %    - allow different colors for means, lines for different columns
+%
+%    Updated 3/2016 by Wani Woo
+%    - add pointsize option ('pointsize')
+%    - add weight option ('weights')
 % ..
 
 
@@ -142,6 +155,7 @@ plotlegend=1;
 plotmean=1;
 plotmedian=1;
 dopoints = true;
+doweights = false;
 x = [];
 %_____________________
 
@@ -169,6 +183,11 @@ end
 if isempty(find(strcmp(varargin,'nopoints')))==0
     dopoints = false;
 end
+if isempty(find(strcmp(varargin,'weights')))==0
+    doweights = true;
+    w = varargin{find(strcmp(varargin,'weights'))+1};
+    if iscell(w)==0, w = num2cell(w,1); end
+end
 if isempty(find(strcmp(varargin,'mc')))==0
     if isempty(varargin{find(strcmp(varargin,'mc'))+1})==0
         mc = varargin{find(strcmp(varargin,'mc'))+1};
@@ -186,7 +205,7 @@ if isempty(find(strcmp(varargin,'medc')))==0
     end
 end
 if isempty(find(strcmp(varargin,'bw')))==0
-    b = varargin{find(strcmp(varargin,'bw'))+1}
+    b = varargin{find(strcmp(varargin,'bw'))+1};
     if length(b)
         disp(['same bandwidth bw = ',num2str(b),' used for all cols'])
         b=repmat(b,size(Y,2),1);
@@ -206,20 +225,35 @@ if size(fc,1)
     fc=repmat(fc,size(Y,2),1);
 end
 %-------------------------------------------------------------------------
-i=1;
+
 for i=1:size(Y,2)
-    
-    if isempty(b)==0
-        [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i));
-    elseif isempty(b)
-        [f, u, bb]=ksdensity(Y{i});
+    if ~doweights
+        if isempty(b)==0
+            [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i));
+        elseif isempty(b)
+            [f, u, bb]=ksdensity(Y{i});
+        end
+    else
+        if isempty(b)==0
+            [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i), 'weights', w{i}(~isnan(Y{i})));
+        elseif isempty(b)
+            [f, u, bb]=ksdensity(Y{i}(~isnan(Y{i}) & ~isnan(w{i})), ...
+                'weights', w{i}(~isnan(Y{i}) & ~isnan(w{i})));
+        end
     end
+        
     
     f=f/max(f)*0.3; %normalize
     F(:,i)=f;
     U(:,i)=u;
     MED(:,i)=nanmedian(Y{i});
     MX(:,i)=nanmean(Y{i});
+    
+    if doweights 
+        ww = w{i}./nansum(w{i});
+        MX(:,i) = sum(Y{i}.*ww); % weighted mean
+    end
+    
     bw(:,i)=bb;
     
 end
@@ -340,15 +374,20 @@ end % For each column
 
 %-------------------------------------------------------------------------
 if plotlegend && (plotmean || plotmedian)
-    
+    if doweights
+        meanleg = 'Weighted mean';
+    else
+        meanleg = 'Mean';
+    end
+        
     if plotmean && plotmedian
-        L=legend([p(1) p(2)],'Mean','Median');
+        L=legend([p(1) p(2)],meanleg,'Median');
         
     elseif plotmean==0 && plotmedian
         L=legend([p(2)],'Median');
         
     elseif plotmean && plotmedian==0
-        L=legend([p(1)],'Mean');
+        L=legend([p(1)],meanleg);
     end
     
     set(L,'box','off','FontSize',14)
@@ -430,10 +469,17 @@ function linehandles = plot_violin_points(x, Y, U, F, lc, fc, varargin)
 % designed to increase contrast
 
 manual_pointsize = false;
+doweights = false;
 
 if isempty(find(strcmp(varargin{1},'pointsize')))==0
     pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
     manual_pointsize = true;
+end
+
+if isempty(find(strcmp(varargin{1},'weights')))==0
+    doweights = true;
+    w = varargin{1}{find(strcmp(varargin{1},'weights'))+1};
+    if iscell(w)==0, w = num2cell(w,1); end
 end
 
 if isempty(F) || isempty(U)
@@ -467,6 +513,7 @@ for i = 1:size(Y, 2)
     myF = F(:, i);  % y-values (density) of ksdensity output
     
     myY = Y{i};     % data points
+    if doweights, myw = w{i}; end
     mybins = linspace(min(myY), max(myY), nbins);
     
     % starting and ending values
@@ -506,12 +553,17 @@ for i = 1:size(Y, 2)
         % xlocs is left to right, ylocs is y-values to plot
         
         ylocs = myY(whpoints);
+        if doweights, myw_points = myw(whpoints); end
         %xlocs = repmat(my_xvals, ceil(length(ylocs) ./ length(my_xvals)), 1);
         
         xlocs = my_xvals(1:length(ylocs));
         
-        
-        linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
+        if ~doweights
+            linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
+        else
+            linehandles{i, j} =  scatter(xlocs, ylocs, myw_points.*pointsize, mylinecolor);
+            set(linehandles{i, j}, 'MarkerFaceColor', myfillcolor);
+        end
         
     end % slab
     

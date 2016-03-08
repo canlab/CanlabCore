@@ -8,6 +8,21 @@ function cluster_orthviews_overlap(mask1, mask2, varargin)
 %    cluster_orthviews_overlap(mask1, mask2, [colors cell])
 %
 % ..
+%  
+% :Inputs:
+% 
+%     **mask1**
+%     path to nifit image
+% 
+%     **mask2**
+%     path to nifit image
+%     
+% :Optional Inputs:
+%     
+%     **colors**
+%     cell array of RGB colors like: {[1 0 0] [0 0 1] [1 1 0] [0 1 1]}
+% 
+% ..
 %    tor wager, june 2010
 %    A good function, but not polished yet.  needs debugging for various
 %    minor issues.

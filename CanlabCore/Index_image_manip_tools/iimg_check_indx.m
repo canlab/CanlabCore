@@ -1,3 +1,4 @@
+% Checks the index of an image
 function [dattype,dat] = iimg_check_indx(dat,volInfo,varargin)
 % :Usage:
 % ::

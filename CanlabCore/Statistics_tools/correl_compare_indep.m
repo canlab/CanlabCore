@@ -13,6 +13,54 @@ function [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1, y_g
 % Source, Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
 % From notes on Garson stats website.
 %
+%
+% :Inputs:
+%
+%   **y_g1:**
+%        Matrix of variables for group 1 (n observations x k variables)
+%
+%   **y_g2:**
+%        Matrix of variables for group 2 (n observations x k variables)
+%     
+% :Optional Inputs:
+%
+%   **varargin:**
+%        String 'noverbose' can be used to prevent output from being
+%        printed to command line
+%
+% :Outputs:
+%
+%   **r1:**
+%        Matrix of correlation coefficients for group 1
+%
+%   **r2:**
+%        Matrix of correlation coefficients for group 2
+%
+%   **rdiff:**
+%        Difference in correlation coefficient matrices (r1 - r2)
+%
+%   **rdiff_p:**
+%        p values testing against no difference between r1 and r2. 
+%        Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
+%
+%   **rdiff_zscore:**
+%        z scores for the difference between r1 and r2. 
+%
+% :Examples:
+% ::
+%
+%    %generate two random input matrices (20 subjects x 5 variables)
+%    y_g1 = rand(20,5);
+%    y_g2 = rand(20,5);
+%    [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2);
+%
+%    %supress output
+%    [r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2,'noverbose');
+%
+%
+% :See also:
+%   - correl_compare_indep_inputr, correl_compare_permute*
+%
 % ..
 %    Tor Wager, Aug. 2008
 %

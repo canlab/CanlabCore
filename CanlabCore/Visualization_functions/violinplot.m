@@ -415,8 +415,10 @@ end
 set(gca,'TickLength',[0 0],'FontSize',12)
 box on
 
-if isempty(xL)==0
+if isempty(xL)
     set(gca,'XtickLabel',xL2)
+else
+    set(gca,'Xticklabel', xL)
 end
 %-------------------------------------------------------------------------
 

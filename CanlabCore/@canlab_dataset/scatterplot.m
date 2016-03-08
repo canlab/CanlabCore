@@ -7,34 +7,74 @@ function fig_han = scatterplot(D, v1, v2, varargin)
 % :Usage:
 % ::
 %
-%    fig_han = scatterplot(D, varname1, varname2, varargin)
+%    fig_han = scatterplot(D, varname1, varname2, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
+%
+% :Inputs:
+%
+%   **D:**
+%        a canlab_dataset object
+%
+%   **v1:**
+%        x variable
+%
+%   **v2:**
+%        y variable
 %
 %
 % :Optional Inputs:
 %
 %   **nofig:**
 %        suppress creation of new figure
+%
 %   **subjtype:**
 %        group by the following variable name
+%
 %   **wh_keep:**
 %        followed by logical
+%
 %   **colors:**
 %        followed by colors. 
+%
 %   **dorobust:**
 %        do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until
-%  the function plot_correlation_samefig is updated, at some point in the future.
+%        the function plot_correlation_samefig is updated, at some point in the future.
 %
 %
-% :Example:
+% :Outputs:
+%
+%   **fig_han:**
+%        figure handle
+%
+% :Examples:
 % ::
 %
 %    scatterplot(D, 'Anxiety', 'Frustration');
 %    fig_han = scatterplot(D, D.Subj_Level.names{1}, D.Subj_Level.names{2});
 %    scatterplot(D, D.Event_Level.names{1}, D.Event_Level.names{2});
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
+
+
+
 
 fig_han = [];
 dofig = 1;

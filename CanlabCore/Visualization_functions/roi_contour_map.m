@@ -178,13 +178,13 @@ for jj = 1:rnum
                 datsig{jj} = dat{jj}; 
                 datsig{jj}.dat = dat{jj}.sig; 
                 datsig{jj}.dat = dat{jj}.dat.*~dat{jj}.sig*10^-6 + dat{jj}.sig;
-                dat{jj}.sig = []; datsig{jj}.sig = [];
+                dat{jj}.sig = ones(size(dat{jj}.dat)); datsig{jj}.sig = ones(size(datsig{jj}.dat));
             else
                 error('There is no sig data. Please check your data.');
             end
         else
             if any(strcmp(fields(dat{jj}), 'sig'))
-                dat{jj}.sig = [];
+                dat{jj}.sig = ones(size(dat{jj}.dat));
             end
         end
         

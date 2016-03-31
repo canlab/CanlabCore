@@ -1,5 +1,8 @@
 function obj = addthreshblobs(obj, statimg, varargin)
-% obj = addthreshblobs(obj, statimg, varargin)
+% :Usage:
+% ::
+%
+%     obj = addthreshblobs(obj, statimg, varargin)
 %
 % Add blobs from a statistical image object at multiple thresholds to
 % montage and other surface plots. 
@@ -8,34 +11,48 @@ function obj = addthreshblobs(obj, statimg, varargin)
 % for options. In addition it has the parameters 'thresh' and
 % 'pruneclusters' are used and have default values.
 %
-% obj       = fmridisplay object, e.g. from a montage
-% statimg   = statistics_image object
-% 'thresh',{'fdr',0.01}     = cell array of p-value thresholds in ascending order. 
-%                             can be 'fdr', or uncorrecetd p-value. defaults to:
-%                             thresh = {'fdr','0.001','0.01'}
-% 'pruneclusters', [0 or 1] = Prune clusters that do not have at least one voxel
-%                             surving at the most stringent threshold. Defaults to 1.
+% :Inputs:
 %
+%   **obj:**
+%        fmridisplay object, e.g. from a montage
 %
+%   **statimg:**
+%        statistics_image object
 %
-% Examples:
-% obj = addthreshblobs(obj, statimg); 
+%   **'thresh',{'fdr',0.01}:**
+%        cell array of p-value thresholds in ascending order. 
+%        can be 'fdr', or uncorrecetd p-value. defaults to:
+%
+%        thresh = {'fdr','0.001','0.01'}
+%
+%   **'pruneclusters', [0 or 1]:**
+%        Prune clusters that do not have at least one voxel
+%        surving at the most stringent threshold. Defaults to 1.
+%
+% :Examples:
+%
 % Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.].
 % Prune clusters.
+% ::
 %
-% obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001, 0.01}); 
+%    obj = addthreshblobs(obj, statimg); 
+%
 % Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.]. 
 % Prune clusters.
+% ::
 %
-% obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001},'pruneclusters',0);
+%    obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001, 0.01}); 
+%
 % Add blobs from statimg at 2 significance levels [FDR, 0.001 unc.]. 
 % Do not prune clusters
+% ::
 %
-
+%    obj = addthreshblobs(obj, statimg, 'thresh', {'fdr', 0.001},'pruneclusters',0);
 %
-% 24-Feb-2015 14:17:20 
-% stephan geuter
-
+% ..
+%    24-Feb-2015 14:17:20 
+%    stephan geuter
+% ..
 
 
 % set defaults for thresholds and cluster pruning

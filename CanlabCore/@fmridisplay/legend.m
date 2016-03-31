@@ -2,10 +2,16 @@ function obj = legend(obj, varargin)
 % Creates legend for fmridisplay object
 % Adds legend axis handles to obj.activation_maps{:}
 %
-% obj = legend(obj, varargin)
-% obj = legend(obj, 'figure') % new figure
-% 
-% Tor Wager
+% :Usage:
+% ::
+%
+%     obj = legend(obj, varargin)
+%
+%     obj = legend(obj, 'figure') % new figure
+%
+% ..
+%    Tor Wager
+% ..
 
 donewfig = 0;
 

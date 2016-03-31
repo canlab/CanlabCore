@@ -1,9 +1,11 @@
 function transparency_change(o2, multval)
-% transparency_change(o2, multval)
-%
 % Change the transparency of blobs in an fmridisplay object
 %
-% multval: multiply transparency values by this.
+% :Inputs:
+%
+%   **multval:**
+%        multiply transparency values by this.
+%
 % values < 1 makes blobs more transparent, > 1 makes blobs more opaque
 
 for m = 1:length(o2.activation_maps)

@@ -1,94 +1,149 @@
 function obj = addblobs(obj, cl, varargin)
-% obj = addblobs(obj, cl, varargin)
-%
 % This is a method for fmridisplay objects that adds blobs to one or more montages and other surface plot(s). 
+%
+% :Usage:
+% ::
+%
+%     obj = addblobs(obj, cl, varargin)
 %
 % See addthreshblobs and multi_threshold methods for a multiple thresholds version
 % render_blobs does most of the hard work.
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% obj           an fmridisplay object
-% cl            a region object.  If you're using an fmri_data object pass in region(fmri_data_obj)
+% :Inputs:
+%
+%   **obj:**
+%        an fmridisplay object
+%
+%   **cl:**
+%        a region object. If you're using an fmri_data object pass in region(fmri_data_obj)
 % 
-% Optional inputs:
+% :Optional inputs:
 %
 % There are many optional inputs that control display features of blobs.
 % These are determined by render_blobs
-% COLOR
-% 'color',      followed by color vector, e.g., [0 1 1]
-% 'maxcolor'    followed by color vector for max color range, e.g., [0 1 1]
-% 'mincolor'    followed by color vector for min color range, e.g., [0 0 1]
-% 'onecolor'    force solid-color blobs
-% 'splitcolor'  Positive and negative values are mapped to different
-%               colormaps. Default is +=hot, -=cool colors.  Followed
-%               optionally by cell array with 
-%               vectors of 4 colors defining max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
-% OUTLINING
-% 'outline' 
-% 'linewidth',  followed by width value, e.g., 1
-% Note: add 'no_surface' to stop updating the existing surface blobs
+%   **COLOR:**
 %
-% COLOR RANGE
-% 'cmaprange',  followed by range of values, e.g., [0 40], [-3 3]. Used in
-%               color and transparency setting under some circumstances.
-% 
-% TRANSPARENCY
-% {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
-% 'trans'               Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
-% 'scaledtransparency'  Transparency is a function of voxel value, lower values are more transparent
-% 'transvalue'          Followed by width value, e.g., 1. also 'constanttrans'
+%   **'color':**
+%        followed by color vector, e.g., [0 1 1]
 %
-% OTHER OPTIONS
+%   **'maxcolor':**
+%        followed by color vector for max color range, e.g., [0 1 1]
 %
-% 'smooth'      Smooth blobs
-% 'contour'
-% 'no_surface'  Do not add blobs to surface handles, if they exist
+%   **'mincolor':**
+%        followed by color vector for min color range, e.g., [0 0 1]
+%
+%   **'onecolor':**
+%        force solid-color blobs
+%
+%   **'splitcolor':**
+%        Positive and negative values are mapped to different
+%        colormaps. Default is +=hot, -=cool colors. Followed
+%        optionally by cell array with 
+%        vectors of 4 colors defining max/min for +/- range,
+%        e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
+%
+%   **'OUTLINING:**
+%
+%   **''outline'
+%
+%   **'linewidth':**
+%        followed by width value, e.g., 1
+%
+%        Note: add 'no_surface' to stop updating the existing surface blobs
+%
+%
+%   **'COLOR RANGE:**
+%
+%   **''cmaprange':**
+%        followed by range of values, e.g., [0 40], [-3 3]. Used in
+%        color and transparency setting under some circumstances.
+%
+%   **'TRANSPARENCY:**
+%        {'trans', 'transparent','scaledtransparency', 'constanttrans', [val], 'transvalue', [val]}
+%
+%   **'trans':**
+%        Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)
+%
+%   **'scaledtransparency':**
+%        Transparency is a function of voxel value, lower values are more transparent
+%
+%   **'transvalue':**
+%        Followed by width value, e.g., 1. also 'constanttrans'
+%
+%
+% :Other Options:
+%
+%   **'smooth':**
+%        Smooth blobs
+%
+%   **'contour':**
+%
+%   **'no_surface':**
+%        Do not add blobs to surface handles, if they exist
 %
 % CONTROL OF WHICH MONTAGE
-% 'wh_montages',    followed by vector of montage numbers as they appear in
-%                   the list of registered montages in the fmridisplay object
+%
+%   **'wh_montages':**
+%        followed by vector of montage numbers as they appear in
+%        the list of registered montages in the fmridisplay object
 %
 % CONTROL OF WHICH SURFACE
-% 'wh_surfaces',    followed by vector of surface numbers as they appear in
+%
+%   **'wh_surfaces':**
+%        followed by vector of surface numbers as they appear in
 %                   the list of registered surfaces in the fmridisplay object
 %
-% Examples:
-% ----------------------------------------------------------------------------
-% obj = addblobs(obj, cl, 'color', [0 1 1]);
-% obj = addblobs(obj, cl, 'color', [0 0 1], 'outline');
-% obj = addblobs(obj, cl, 'color', [0 1 0], 'outline', 'linewidth', 1, 'smooth');
-% obj = addblobs(obj, cl, 'color', [1 0 0], 'smooth', 'cmaprange', [0 40]);
-% obj = addblobs(obj, cl, ... 'wh_montages', 1);
-% obj = addblobs(obj, cl, 'splitcolor', ... 'cmaprange', ... 'trans');
+% :Examples:
+% ::
 %
-% add only to montage 2 in vector of montages in obj.montage 
-% obj = addblobs(obj, cl, 'which_montages', 2); 
+%    obj = addblobs(obj, cl, 'color', [0 1 1]);
+%    obj = addblobs(obj, cl, 'color', [0 0 1], 'outline');
+%    obj = addblobs(obj, cl, 'color', [0 1 0], 'outline', 'linewidth', 1, 'smooth');
+%    obj = addblobs(obj, cl, 'color', [1 0 0], 'smooth', 'cmaprange', [0 40]);
+%    obj = addblobs(obj, cl, ... 'wh_montages', 1);
+%    obj = addblobs(obj, cl, 'splitcolor', ... 'cmaprange', ... 'trans');
+%
+% Add only to montage 2 in vector of montages in obj.montage 
+% ::
+%
+%    obj = addblobs(obj, cl, 'which_montages', 2); 
 % 
-% % Map values to the colormap red->yellow.
-% % This uses the default percentile-based mapping so that 20% of voxels
-% will have the low color and 20% will have the high color, and the rest will be in between:
-% obj = addblobs(obj, cl, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);
+% Map values to the colormap red->yellow.
 %
-% % Same, but now Map a specific range of values in image ([0 to .05])
-% obj = addblobs(obj, cl, 'maxcolor', [1 1 0], 'mincolor', [1 0 0], 'cmaprange', [0 .05]);
+% This uses the default percentile-based mapping so that 20% of voxels
+% will have the low color and 20% will have the high color, and the rest will be in between:
+% ::
+%
+%    obj = addblobs(obj, cl, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);
+%
+% Same, but now Map a specific range of values in image ([0 to .05])
+% ::
+%
+%    obj = addblobs(obj, cl, 'maxcolor', [1 1 0], 'mincolor', [1 0 0], 'cmaprange', [0 .05]);
 %
 % Separate positive and negative activations and map to a split colormap;
-% see render_blobs
-% o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}, 'wh_montages', 1);
+%
+% See render_blobs
+% ::
+%
+%    o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}, 'wh_montages', 1);
 %
 % It is possible to transparency-map values in a statistic image so you
 % can show 'unthresholded' statistic values.  e.g.:
-% o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'trans', 'scaledtransparency');
+% ::
 %
-% Copyright Tor Wager, 2011
+%    o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'trans', 'scaledtransparency');
+%
+% ..
+%    Copyright Tor Wager, 2011
+% ..
 
-% Add the volume to activation maps in fmridisplay object
-% -------------------------------------------------------------------------
+% ..
+%    Add the volume to activation maps in fmridisplay object
+% ..
 
-% turn clusters into mask and volume info
-[dummy, mask] = clusters2mask2011(cl);
+[dummy, mask] = clusters2mask2011(cl); % turn clusters into mask and volume info
 
 if sum(mask(:)) == 0, warning('No voxels in cl! Empty/zero cl.Z field? Bad cl? No results?'); return, end
 

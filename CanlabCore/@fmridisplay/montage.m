@@ -1,85 +1,127 @@
 function obj = montage(obj, varargin)
-% obj = montage(obj, varargin)
-%
 % Creates montage of slices
-% - Solid brain slices or contour outlines
-% - Points or text labels or both
-% - Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)
-% - axial or saggital orientation
+%  - Solid brain slices or contour outlines
+%  - Points or text labels or both
+%  - Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)
+%  - axial or saggital orientation
 %
-% Takes all inputs of plot_points_on_slice.  Optional inputs:
-%     {'noslice', 'nodraw'}, drawslice = 0;
-%     'color', color = varargin{i+1}; varargin{i+1} = [];
-%     'marker', marker = varargin{i+1}; varargin{i + 1} = [];
-%     {'wh_slice'}, wh_slice = varargin{i+1};
-%     {'close', 'closeenough', 'close_enough'}, close_enough =    varargin{i+1};
-%     {'sagg','saggital','sagittal'}, orientation = 'sagittal';
-%     {'MarkerSize', 'markersize'}, markersize = varargin{i+1};
-%     {'MarkerFaceColor', 'markerfacecolor'}, facecolor = varargin{i+1};
-%     'solid', disptype = 'solid';
-%     'overlay', ovl = varargin{i + 1}; NOTE! DO NOT ENTER THIS HERE; ENTER
-%     WHEN YOU INITIALIZE FMRIDISPLAY OBJECT
-%     {'text', 'textcodes'}, textcodes = varargin{i + 1};
-%     {'condf' 'colorcond'}, condf = varargin{i + 1};
+% :Usage:
+% ::
+%
+%     obj = montage(obj, varargin)
+%
+% Takes all inputs of plot_points_on_slice.
+%
+% :Optional Inputs:
+%
+%   **{'noslice', 'nodraw'}:**
+%        drawslice = 0;
+%
+%   **'color':**
+%        color = varargin{i+1}; varargin{i+1} = [];
+%
+%   **'marker':**
+%        marker = varargin{i+1}; varargin{i + 1} = [];
+%
+%   **{'wh_slice'}:**
+%        wh_slice = varargin{i+1};
+%
+%   **{'close', 'closeenough', 'close_enough'}:**
+%        close_enough =    varargin{i+1};
+%
+%   **{'sagg','saggital','sagittal'}:**
+%        orientation = 'sagittal';
+%
+%   **{'MarkerSize', 'markersize'}:**
+%        markersize = varargin{i+1};
+%
+%   **{'MarkerFaceColor', 'markerfacecolor'}:**
+%        facecolor = varargin{i+1};
+%
+%   **'solid':**
+%        disptype = 'solid';
+%
+%   **'overlay':**
+%        ovl = varargin{i + 1};
+%        NOTE! DO NOT ENTER THIS HERE; ENTER WHEN YOU INITIALIZE FMRIDISPLAY OBJECT
+%
+%   **{'text', 'textcodes'}:**
+%        textcodes = varargin{i + 1};
+%
+%   **{'condf' 'colorcond'}:**
+%        condf = varargin{i + 1};
 %
 % In addition:
-% 'onerow' : arrange axes in one row
-% 'slice_range' : [min max] values in mm for slices to plot
-% 'wh_slice' or 'custom_coords' : followed my mm values for slices desired
+%
+%   **'onerow':**
+%        arrange axes in one row
+%
+%   **'slice_range':**
+%        [min max] values in mm for slices to plot
+%
+%   **'wh_slice' or 'custom_coords':**
+%        followed my mm values for slices desired
 %      e.g., for cluster/region centers, xyz = cat(1, cl.mm_center)
 %      o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
 %      o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow');
-% 'spacing' : followed by inter-slice spacing in mm
 %
-% Returns:
-% obj, an fmridisplay object
-% obj =
+%   **'spacing':**
+%        followed by inter-slice spacing in mm
 %
-%   fmridisplay
+% :Outputs:
 %
-%   Properties:
-%             overlay: [1x105 char]
-%               SPACE: [1x1 struct]
-%     activation_maps: {[1x1 struct]}
-%             montage: {[1x1 struct]}
-%             surface: {}
-%           orthviews: {}
-%             history: {}
-%     history_descrip: []
-%     additional_info: ''
+%   **obj:**
+%        an fmridisplay object
+%
+% :Properties:
+%
+%  - overlay: [1x105 char]
+%  - SPACE: [1x1 struct]
+%  - activation_maps: {[1x1 struct]}
+%  - montage: {[1x1 struct]}
+%  - surface: {}
+%  - orthviews: {}
+%  - history: {}
+%  - history_descrip: []
+%  - additional_info: ''
 %
 % Examples:
-% o2 = fmridisplay; % create starting fmridisplay container object
+% ::
+%
+%    o2 = fmridisplay; % create starting fmridisplay container object
 %
 % Define new axes in existing figure, and use those for montage:
-% axh = axes('Position', [0.05 0.4 .1 .5]);
-% o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
+% ::
 %
-% o2 = montage(o2, 'saggital', 'slice_range', [-10 10], 'onerow');
-% o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 4);
-% o2 = montage(o2, 'axial', 'slice_range', [-20 30], 'onerow', 'spacing', 8);
-% o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
-% 
-% Parasaggital only:
-% o2 = montage(o2, 'saggital', 'slice_range', [-4 4], 'onerow', 'spacing', 8);
+%    axh = axes('Position', [0.05 0.4 .1 .5]);
+%    o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
+%
+%    o2 = montage(o2, 'saggital', 'slice_range', [-10 10], 'onerow');
+%    o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 4);
+%    o2 = montage(o2, 'axial', 'slice_range', [-20 30], 'onerow', 'spacing', 8);
+%    o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
+%
+%    % Parasaggital only:
+%    o2 = montage(o2, 'saggital', 'slice_range', [-4 4], 'onerow', 'spacing', 8);
 %
 % Add/remove blobs and points with fmridisplay.addblobs,
 % fmridisplay.addpoints, fmridisplay.removeblobs, fmridisplay.removepoints
 %
-% See also:
+% :See also:
 % fmridisplay, cluster_orthviews, montage_clusters and variants
-
-% Programmers' notes:
-% 3/2012 : Fixed bug in slices displayed when choosing exactly 3 custom
-% slices.  Transposed coordinates for voxel2mm.  (Tor)
-
-
 %
-% initialize, if nothing passed in; but you would have to call overloaded
-% method, fmridisplay.montage, to invoke this.
+% ..
+%    Programmers' notes:
+%    3/2012: Fixed bug in slices displayed when choosing exactly 3 custom
+%    slices. Transposed coordinates for voxel2mm. (Tor)
+% ..
+
 if nargin == 0 || isempty(obj) || ~isa(obj, 'fmridisplay')
     obj = fmridisplay;
 end
+% initialize, if nothing passed in; but you would have to call overloaded
+% method, fmridisplay.montage, to invoke this.
+
 
 if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
     error('fmridisplay is not initialized correctly. run obj = fmridisplay; first and then pass in to this method.')

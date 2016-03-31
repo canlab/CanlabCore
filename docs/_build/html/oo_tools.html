@@ -65,14 +65,14 @@
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat</span><span class="p">,</span> <span class="n">descrip</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">bars</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">varnames</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>[dat, descrip, colors, h1, s1] = bars(obj, varnames, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>obj:</strong></dt>
 <dd><p class="first last">canlab_dataset object</p>
 </dd>
@@ -82,16 +82,37 @@
 </dl>
 </td>
 </tr>
-</tbody>
-</table>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><blockquote class="first">
+<div><dl class="docutils">
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">defined colors (default are set by scn_standard_colors.m)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt><strong>nofig:</strong></dt>
+<dd><p class="first last">do not generate figure</p>
+</dd>
+</dl>
 <p>Takes any optional inputs to barplot_colored.m</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
+</td>
+</tr>
 <tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>dat:</strong></dt>
 <dd><p class="first last">data matrix for each variable</p>
+</dd>
+<dt><strong>descrip:</strong></dt>
+<dd><p class="first last">the description for this variable</p>
+</dd>
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">selected colors (default are set by scn_standard_colors.m)</p>
+</dd>
+<dt><strong>h1:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+<dt><strong>s1:</strong></dt>
+<dd><p class="first last">axis handle</p>
 </dd>
 </dl>
 </td>
@@ -122,7 +143,7 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>[names ids dat] = concatenate(D)
+<div class="highlight-python"><div class="highlight"><pre>[names ids dat] = concatenate(D, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -131,20 +152,22 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
-<dd><p class="first last">canlab_dataset</p>
-</dd>
-<dt><strong>varargin:</strong></dt>
-<dd><p class="first last">currently accepts a wh_keep (logical array)</p>
+<dd><p class="first last">canlab_dataset object</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>Names:</strong></dt>
-<dd><p class="first last">cell array of variable names</p>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>a logical array</strong></dt>
+<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
 </dd>
-<dt><strong>Descrip:</strong></dt>
-<dd><p class="first last">cell array of variable descriptions</p>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>names:</strong></dt>
+<dd><p class="first last">cell array of variable names</p>
 </dd>
 <dt><strong>ids:</strong></dt>
 <dd><p class="first last">subject IDs matching data rows in dat</p>
@@ -160,10 +183,13 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 </dd>
 </dl>
 </dd>
+<dt><strong>descrips:</strong></dt>
+<dd><p class="first last">cell array of variable descriptions</p>
+</dd>
 </dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -217,7 +243,7 @@ in this case, dat is a n x m matrix, where n=subjs and m=variables requested</li
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">a vector of 1/0 values to use as wh_keep</p>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>a logical array vector of 1/0 values to use as wh_keep</strong></p>
 <dl class="docutils">
 <dt><strong>conditional:</strong></dt>
 <dd><p class="first last">to be followed by a cell array; the first cell is the name
@@ -293,12 +319,19 @@ and igls.m</li>
 cell array. must be subject_level</p>
 </dd>
 <dt><strong>wh_keep:</strong></dt>
-<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+<dd><p class="first last">a logical vector of 1/0 values</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">same as for glmfit()</p>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>out:</strong></dt>
+<dd><p class="first last">structure containing same output as for glmfit()
+out.b: a vector of coefficient estimates
+out.dev: the deviance of the fit
+out.stat: see glmfit documentation for stat structure fields</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
@@ -322,14 +355,14 @@ cell array. must be subject_level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">glm</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;DeltaDon_avg&#39;</span><span class="p">,</span> <span class="n">prednames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">glm_multilevel</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Yvarname</span><span class="p">,</span> <span class="n">Xvarnames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
 <dd><p class="first last">a canlab_dataset object</p>
 </dd>
@@ -341,7 +374,20 @@ cell array. must be subject_level</p>
 cell array. must be event level</p>
 </dd>
 <dt><strong>wh_keep:</strong></dt>
-<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+<dd><p class="first last">a logical vector of 1/0 values</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">a vector of coefficient estimates (same as for glmfit())</p>
+</dd>
+<dt><strong>dev:</strong></dt>
+<dd><p class="first last">the deviance of the fit (same as for glmfit())</p>
+</dd>
+<dt><strong>stat:</strong></dt>
+<dd><p class="first last">structure containing stats fields (see glmfit() documentation)</p>
 </dd>
 </dl>
 </td>
@@ -370,14 +416,30 @@ cell array. must be event level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">histogram</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Anxiety&#39;</span><span class="p">);</span>
+<div class="highlight-python"><div class="highlight"><pre>fig_han = histogram(D, [optional inputs]);
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Optional Input:</th><td class="field-body"><a href="#id1"><span class="problematic" id="id2">**</span></a>nofig&#8217;: suppress creation of new figure</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">canlab_dataset</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><a href="#id1"><span class="problematic" id="id2">**</span></a>nofig&#8217;: suppress creation of new figure</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -386,7 +448,8 @@ cell array. must be event level</p>
 <dl class="function">
 <dt id="&#64;canlab_dataset.mediation">
 <code class="descclassname">&#64;canlab_dataset.</code><code class="descname">mediation</code><span class="sig-paren">(</span><em>D</em>, <em>xvarname</em>, <em>yvarname</em>, <em>mvarname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.mediation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run single or multilevel mediation analysis on a canlab_dataset object</p>
+<dd><p>Run single or multilevel mediation analysis on a canlab_dataset object.
+Calls mediation.m (see mediation.m) in mediation toolbox</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -395,7 +458,7 @@ cell array. must be event level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">paths</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">mediation</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">xvarname</span><span class="p">,</span> <span class="n">yvarname</span><span class="p">,</span> <span class="n">mvarname</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>[paths, stats] = mediation(D, xvarname, yvarname, mvarname, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -406,8 +469,14 @@ cell array. must be event level</p>
 <dt><strong>D:</strong></dt>
 <dd><p class="first last">is a canlab_dataset object</p>
 </dd>
-<dt><strong>xvarname, mvarname, and yvarname:</strong></dt>
-<dd><p class="first last">are valid variable names in the dataset.</p>
+<dt><strong>xvarname:</strong></dt>
+<dd><p class="first last">X, the initial variable (valid variable name in the dataset)</p>
+</dd>
+<dt><strong>yvarname:</strong></dt>
+<dd><p class="first last">Y, the outcome variable (valid variable name in the dataset)</p>
+</dd>
+<dt><strong>mvarname:</strong></dt>
+<dd><p class="first last">M, the potential mediator ((valid variable name in the dataset)</p>
 </dd>
 </dl>
 </td>
@@ -433,8 +502,11 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>[paths, stats]:</strong></dt>
-<dd><p class="first last">mediation output variable</p>
+<dt><strong>paths:</strong></dt>
+<dd><p class="first last">see mediation.m from mediation toolbox</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">see mediation.m from mediation toolbox</p>
 </dd>
 </dl>
 </td>
@@ -460,9 +532,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>plot_var(D, varname)
-
-[meandat, stedat] = plot_var(D, varname, [opt inputs])
+<div class="highlight-python"><div class="highlight"><pre>[meandat, stedat] = plot_var(D, varname, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -476,9 +546,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 <dt><strong>varname:</strong></dt>
 <dd><dl class="first last docutils">
 <dt>the name of a valid variable to get from dataset</dt>
-<dd><ul class="first last simple">
-<li>Looks for var name at either level, returns Event level if exists at both levels</li>
-</ul>
+<dd><p class="first last">-Looks for var name at either level, returns Event level if exists at both levels</p>
 </dd>
 </dl>
 </dd>
@@ -486,7 +554,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>subjtype:</strong></dt>
 <dd><dl class="first last docutils">
 <dt>followed by name of grouping variable</dt>
@@ -535,9 +603,20 @@ of SE bars.</p>
 </dl>
 </td>
 </tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>meandat:</strong></dt>
+<dd><p class="first last">mean values</p>
+</dd>
+<dt><strong>stedat:</strong></dt>
+<dd><p class="first last">standard error values</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Frustration&#39;</span><span class="p">)</span>
 <span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">)</span>
 <span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;eventmeans&#39;</span><span class="p">);</span>
@@ -551,19 +630,31 @@ of SE bars.</p>
 <dl class="function">
 <dt id="&#64;canlab_dataset.print_summary">
 <code class="descclassname">&#64;canlab_dataset.</code><code class="descname">print_summary</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.print_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints summaries for every variable, or specified variables
-:Usage:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">print_summary</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span> 
+<dd><p>Prints summaries for every variable, or specified variables</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>print_summary(D, [optional inputs]) 
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
-<dd><p class="first last">dataset</p>
+<dd><p class="first last">a canlab_dataset object</p>
 </dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>subj:</strong></dt>
 <dd><p class="first last">followed by a cell array of subject level var names, to only see those vars</p>
 </dd>
@@ -571,11 +662,11 @@ of SE bars.</p>
 <dd><p class="first last">followed by a cell array of event level var names, to only see those vars</p>
 </dd>
 </dl>
+<p class="last">if either varargin is unspecified, all variables will be printed</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p>if either varargin is unspecified, all variables will be printed</p>
 </dd></dl>
 
 <dl class="function">
@@ -627,7 +718,7 @@ extensions .xls or .xlsx, but in the future will use importdata to take
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">read_from_excel</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">ExperimentFileName</span><span class="p">,</span> <span class="n">SubjectFileList</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -653,7 +744,7 @@ extensions .xls or .xlsx, but in the future will use importdata to take
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>fmri:</strong></dt>
 <dd><p class="first last">Indicates construction of canlab_dataset object using &#8216;fmri&#8217;
@@ -702,16 +793,27 @@ dat = read_from_excel(dat,DesignFile,SubjectFiles,&#39;fmri&#39;);
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
 <dt><strong>wh_level:</strong></dt>
 <dd><p class="first last">1 (Subject) or 2 (Event)</p>
 </dd>
 </dl>
 </td>
 </tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre>fig_han = scattermatrix(D);
 
 wh = [5:9];
@@ -742,16 +844,28 @@ f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;Switc
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fig_han</span> <span class="o">=</span> <span class="n">scatterplot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname1</span><span class="p">,</span> <span class="n">varname2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>fig_han = scatterplot(D, varname1, varname2, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><blockquote class="first">
-<div><dl class="docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>v1:</strong></dt>
+<dd><p class="first last">x variable</p>
+</dd>
+<dt><strong>v2:</strong></dt>
+<dd><p class="first last">y variable</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>nofig:</strong></dt>
 <dd><p class="first last">suppress creation of new figure</p>
 </dd>
@@ -765,14 +879,20 @@ f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;Switc
 <dd><p class="first last">followed by colors.</p>
 </dd>
 <dt><strong>dorobust:</strong></dt>
-<dd><p class="first last">do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until</p>
+<dd><p class="first last">do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until
+the function plot_correlation_samefig is updated, at some point in the future.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p>the function plot_correlation_samefig is updated, at some point in the future.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -796,7 +916,7 @@ canlab_dataset object.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">D</span> <span class="o">=</span> <span class="n">spm2canlab_dataset</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">spm</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">spm2canlab_dataset</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">spm</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -804,10 +924,10 @@ canlab_dataset object.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>D:</strong></dt>
+<dt><strong>obj:</strong></dt>
 <dd><p class="first last">Canlab_dataset object (see canlab_dataset)</p>
 </dd>
-<dt><strong>subjects:</strong></dt>
+<dt><strong>subject:</strong></dt>
 <dd><p class="first last">Subject list (it could be one subject [in a string 
 format], or it could be multiple subjects in cell array)</p>
 </dd>
@@ -819,22 +939,13 @@ paths in cell array</p>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>D:</strong></dt>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
 <dd><p class="first last">Canlab_dataset object with new data</p>
 </dd>
 </dl>
 </td>
 </tr>
-</tbody>
-</table>
-<p>fter running this, please check D.Subj_Level.data and
-D.Event_level.data to see if there are NaNs. NaNs could be there when 
-information cannot be extracted from the given SPM.mat files.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
@@ -846,7 +957,15 @@ D = canlab_dataset; % if D doesn&#39;t exist yet
 D = spm2canlab_dataset(D, subj, spm);
 </pre></div>
 </div>
-<p>See also canlab_dataset, spm_mat2batchinput</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">canlab_dataset
+spm_mat2batchinput</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -861,7 +980,7 @@ D = spm2canlab_dataset(D, subj, spm);
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ttest2</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">wh_keep1</span><span class="p">,</span> <span class="n">wh_keep2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>ttest2(D, varname, wh_keep1, wh_keep2, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -886,13 +1005,16 @@ D = spm2canlab_dataset(D, subj, spm);
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
-<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>varargin:     passed directly to MATLAB&#8217;s ttest2</dt>
-<dd><p class="first last">&#8216;noverbose&#8217; will suppress print out of results and bargraph</p>
+<dt><strong>noverbose:</strong></dt>
+<dd><p class="first last">will suppress print out of results and bargraph</p>
+</dd>
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">other variables passed directly to MATLAB&#8217;s ttest2</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">as from MATLAB&#8217;s ttest2,</p>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">same as MATLAB&#8217;s ttest2 output</p>
 </td>
 </tr>
 </tbody>
@@ -913,14 +1035,36 @@ current working directory.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">headername</span><span class="p">,</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">fid</span><span class="p">]</span> <span class="o">=</span> <span class="n">write_text</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>function [headername, dataname, fid] = write_text(D, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">First <a href="#id5"><span class="problematic" id="id6">**</span></a>varargin* parameter is the delimiter. Comma-delimited by default.</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">the first varargin parameter is the delimiter. Comma-delimited by default.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>headername:</strong></dt>
+<dd><p class="first last">filename of header output file</p>
+</dd>
+<dt><strong>dataname:</strong></dt>
+<dd><p class="first last">filename of data output file</p>
+</dd>
+<dt><strong>fid:</strong></dt>
+<dd><p class="first last">file ID (currently does not look to be used)</p>
+</dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1867,8 +2011,7 @@ added if not detected unless &#8216;nointercept&#8217; is specified.</p>
 vector using the &#8216;brainony&#8217; option.  This is essentially a univariate
 version of the &#8216;predict&#8217; command.  Warning: this is very slow as it loops
 through all voxels.</p>
-<p>Regression is OLS by default, but can be robust using &#8216;robust&#8217; flag.
-Warning: Running robust option is considerably slower than OLS.</p>
+<p>Regression is OLS by default, but can be robust using &#8216;robust&#8217; flag.</p>
 <p>Creates thresholded plot by default</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1913,6 +2056,10 @@ dat.X can be a design_matrix() object.</p>
 </dd>
 <dt><strong>noverbose:</strong></dt>
 <dd><p class="first last">Suppress verbose outputs</p>
+</dd>
+<dt><strong>robust:</strong></dt>
+<dd><p class="first last">Run a robust regression (default is OLS).  Robust is considerably
+slower than OLS</p>
 </dd>
 </dl>
 </td>
@@ -2489,382 +2636,8 @@ colinearity influences the single-trial parameter estimates.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-fmridisplay">
-<span id="fmridisplay"></span><h1>fmridisplay<a class="headerlink" href="#module-fmridisplay" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="fmridisplay.clusters2mask2011">
-<code class="descclassname">fmridisplay.</code><code class="descname">clusters2mask2011</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.clusters2mask2011" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns 3-D mask of voxels included in a cl structure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">mask2</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusters2mask2011</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="p">[</span><span class="n">dim</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Mask values are coded with the cluster index. That is, the non-zero entries
-in mask are integers that reflect the index of the unique contiguous cluster to
-which each voxel belongs.</p>
-<p>Any non-zero value indicates membership in a cluster
-Uses VOXEL values from cl, so define cl in the space you wish to have for
-mask first!</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Optional:</th><td class="field-body"><p class="first">A 2nd argument will be treated as &#8216;dim&#8217;, dimensions in voxels of the
-new mask image.  If empty, uses max value in cluster to determine
-automatically, but then the mask may not match image dimensions desired
-for .img/.nii reading/writing purposes.</p>
-<p class="last">If a second output is requested, the second output (maskz) is a mask
-like the first, but the values in the mask reflect the numeric value
-stored in the cl.Z field (whether Z-scores or other values, depending on
-how cl is constructed.)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="fmridisplay.define_sampling_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">define_sampling_space</code><span class="sig-paren">(</span><em>V</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.define_sampling_space" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define the sampling space of an image, with an upsampled space to 0.5 mm
-resolution</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SPACE</span> <span class="o">=</span> <span class="n">define_sampling_space</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="p">[</span><span class="n">upsamplefactor</span><span class="p">])</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>V:</strong></dt>
-<dd><p class="first last">spm-style .mat structure, e.g., from spm_vol</p>
-</dd>
-<dt><strong>V.mat:</strong></dt>
-<dd><p class="first last">4 x 4 matrix of voxel sizes and mm coords for the bottom
-back left vox</p>
-</dd>
-<dt><strong>V.dim:</strong></dt>
-<dd><p class="first last">dimensions of image</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>Xo, Yo:</strong></dt>
-<dd><p class="first last">Meshgrid for original voxel space</p>
-</dd>
-<dt><strong>X, Y:</strong></dt>
-<dd><p class="first last">Meshgrid for upsampled voxel space at 0.5 mm resolution</p>
-</dd>
-<dt><strong>Xmm, Ymm:</strong></dt>
-<dd><p class="first last">Meshgrid for upsampled space in mm</p>
-</dd>
-<dt><strong>xcoords, ycoords:</strong></dt>
-<dd><p class="first last">mm coordinates for rows and cols for slice locations</p>
-</dd>
-<dt><strong>new_voxSize:</strong></dt>
-<dd><p class="first last">new voxel size in mm for upsampled space</p>
-</dd>
-<dt><strong>usfactor:</strong></dt>
-<dd><p class="first last">Upsampling factor for new sampleing space</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre>overlay = which(&#39;SPM8_colin27T1_seg.img&#39;);  % spm8 seg cleaned up
-V = spm_vol(overlay);
-SPACE = define_sampling_space(V)
-
-% Define mm sampling space in original voxel coord resolution
-SPACE = define_sampling_space(V, 1)
-
-original (o) and new (X, Y) grid space
-xcoords, ycoords: mm coords centered on origin
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="fmridisplay.display_slice">
-<code class="descclassname">fmridisplay.</code><code class="descname">display_slice</code><span class="sig-paren">(</span><em>dat</em>, <em>wh_slice</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.display_slice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resample slice data in dat to SPACE and display</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">Z</span> <span class="o">=</span> <span class="n">display_slice</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">wh_slice</span><span class="p">,</span> <span class="n">SPACE</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="fmridisplay.map_to_world_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">map_to_world_space</code><span class="sig-paren">(</span><em>V</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.map_to_world_space" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SPACE</span> <span class="o">=</span> <span class="n">map_to_world_space</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>V:</strong></dt>
-<dd><p class="first last">spm-style .mat structure, e.g., from spm_vol</p>
-</dd>
-<dt><strong>V.mat:</strong></dt>
-<dd><p class="first last">4 x 4 matrix of voxel sizes and mm coords for the bottom
-back left vox</p>
-</dd>
-<dt><strong>V.dim:</strong></dt>
-<dd><p class="first last">dimensions of image</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">SPACE structure, with fields:</p>
-<dl class="last docutils">
-<dt><strong>Xmm, Ymm, Zmm:</strong></dt>
-<dd><p class="first last">Meshgrid for voxel volume in mm space</p>
-</dd>
-<dt><strong>xcoords, ycoords, zcoords:</strong></dt>
-<dd><p class="first last">mm coordinates for rows, cols, slices</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="fmridisplay.render_blobs">
-<code class="descclassname">fmridisplay.</code><code class="descname">render_blobs</code><span class="sig-paren">(</span><em>currentmap</em>, <em>mymontage</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.render_blobs" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a helper function for fmridisplay objects, called by the addblobs method</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">blobhan</span><span class="p">,</span> <span class="n">cmaprange</span><span class="p">,</span> <span class="n">mincolor</span><span class="p">,</span> <span class="n">maxcolor</span><span class="p">]</span> <span class="o">=</span> <span class="n">render_blobs</span><span class="p">(</span><span class="n">currentmap</span><span class="p">,</span> <span class="n">mymontage</span><span class="p">,</span> <span class="n">SPACE</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See fmridisplay.m and addblobs.m method in fmridisplay for more details and options.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>currentmap:</strong></dt>
-<dd><p class="first last">see addblobs method. Montage within fmridisplay object.</p>
-</dd>
-<dt><strong>mymontage:</strong></dt>
-<dd><p class="first last">ditto</p>
-</dd>
-<dt><strong>SPACE:</strong></dt>
-<dd><p class="first last">space of map to sample to (object display SPACE in fmridisplay object)</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">There are many optional inputs that control display features of blobs.</p>
-<p><strong>COLOR:</strong></p>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>&#8216;color&#8217;:</strong></dt>
-<dd><p class="first last">followed by color vector, e.g., [0 1 1]</p>
-</dd>
-<dt><strong>maxcolor&#8217;:</strong></dt>
-<dd><p class="first last">followed by color vector for max color range, e.g., [0 1 1]</p>
-</dd>
-<dt><strong>mincolor&#8217;:</strong></dt>
-<dd><p class="first last">followed by color vector for min color range, e.g., [0 0 1]</p>
-</dd>
-<dt><strong>onecolor&#8217;:</strong></dt>
-<dd><p class="first last">force solid-color blobs</p>
-</dd>
-<dt><strong>splitcolor&#8217;:</strong></dt>
-<dd><p class="first last">Positive and negative values are mapped to different
-colormaps. Default is +=hot, -=cool colors.  Followed
-optionally by cell array with vectors of 4 colors defining
-max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}</p>
-</dd>
-</dl>
-</div></blockquote>
-<p><strong>OUTLINING:</strong></p>
-<blockquote>
-<div><p><strong>&#8216;outline&#8217;</strong></p>
-<dl class="docutils">
-<dt><strong>&#8216;linewidth&#8217;:</strong></dt>
-<dd><p class="first last">followed by width value, e.g., 1</p>
-</dd>
-</dl>
-</div></blockquote>
-<p><strong>COLOR RANGE:</strong></p>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>&#8216;cmaprange&#8217;:</strong></dt>
-<dd><p class="first last">followed by range of values, e.g., [0 40], [-3 3]. Used in
-color and transparency setting under some circumstances.</p>
-</dd>
-</dl>
-</div></blockquote>
-<p><strong>TRANSPARENCY:</strong></p>
-<p>{&#8216;trans&#8217;, &#8216;transparent&#8217;,&#8217;scaledtransparency&#8217;, &#8216;constanttrans&#8217;, [val], &#8216;transvalue&#8217;, [val]}</p>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>&#8216;trans&#8217;:</strong></dt>
-<dd><p class="first last">Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)</p>
-</dd>
-<dt><strong>&#8216;scaledtransparency&#8217;:</strong></dt>
-<dd><p class="first last">Transparency is a function of voxel value, lower values are more transparent</p>
-</dd>
-<dt><strong>&#8216;transvalue&#8217;:</strong></dt>
-<dd><p class="first last">Followed by width value, e.g., 1. also &#8216;constanttrans&#8217;</p>
-</dd>
-</dl>
-</div></blockquote>
-<p><strong>OTHER OPTIONS:</strong></p>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>&#8216;smooth&#8217;:</strong></dt>
-<dd><p class="first last">Smooth blobs</p>
-</dd>
-</dl>
-<p><strong>&#8216;contour&#8217;:</strong></p>
-</div></blockquote>
-<dl class="docutils">
-<dt><strong>Orientation:</strong></dt>
-<dd><p class="first last">&#8216;sagittal&#8217;, &#8216;coronal&#8217;, &#8216;axial&#8217;</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">[blobhan, cmaprange, mincolor, maxcolor]</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p>All used in addblobs.m</p>
-<p>Use addblobs; do not run this function directly unless you are
-programming with it.</p>
-<p>See also:
-fmridisplay/addblobs, fmridisplay, fmridisplay/multi_threshold</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="fmridisplay.resample_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">resample_space</code><span class="sig-paren">(</span><em>dat</em>, <em>V</em>, <em>targetsp</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.resample_space" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre>[resampled_dat, SPACEto] = resample_space(dat, V, [target V or target SPACE])
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>imdat:</strong></dt>
-<dd><p class="first last">3-D volume data</p>
-</dd>
-<dt><strong>V:</strong></dt>
-<dd><p class="first last">spm-style .mat structure for dat, e.g., from spm_vol</p>
-</dd>
-<dt><strong>V.mat:</strong></dt>
-<dd><dl class="first last docutils">
-<dt>4 x 4 matrix of voxel sizes and mm coords for the bottom</dt>
-<dd><p class="first last">back left vox</p>
-</dd>
-</dl>
-</dd>
-<dt><strong>V.dim:</strong></dt>
-<dd><p class="first last">dimensions of image</p>
-</dd>
-</dl>
-<p><strong>targetsp:</strong></p>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>target V:</strong></dt>
-<dd><p class="first last">spm-style .mat structure defining space to transform to</p>
-</dd>
-</dl>
-<p class="attribution">&mdash;OR &#8211;</p>
-</div></blockquote>
-<blockquote>
-<div><dl class="docutils">
-<dt><strong>target SPACE:</strong></dt>
-<dd><p class="first last">target SPACE, with Xmm, Ymm, Zmm; see map_to_world_space.m</p>
-</dd>
-</dl>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>resampled_dat:</strong></dt>
-<dd><p class="first last">data sampled in new space</p>
-</dd>
-</dl>
-<p><strong>SPACE structure, with fields:</strong></p>
-<blockquote class="last">
-<div><dl class="docutils">
-<dt><strong>Xmm, Ymm, Zmm:</strong></dt>
-<dd><p class="first last">Meshgrid for voxel volume in mm space</p>
-</dd>
-<dt><strong>xcoords, ycoords, zcoords:</strong></dt>
-<dd><p class="first last">mm coordinates for rows, cols, slices</p>
-</dd>
-<dt><strong>V:</strong></dt>
-<dd><p class="first last">Vol info structure for image in new space</p>
-</dd>
-</dl>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<div class="section" id="fmridisplay">
+<h1>fmridisplay<a class="headerlink" href="#fmridisplay" title="Permalink to this headline">¶</a></h1>
 </div>
 <div class="section" id="module-&#64;image_vector">
 <span id="image-vector"></span><h1>image_vector<a class="headerlink" href="#module-@image_vector" title="Permalink to this headline">¶</a></h1>
@@ -3159,6 +2932,46 @@ and right hemispheres</td>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">flip</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;mirror&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;image_vector.get_wh_image">
+<code class="descclassname">&#64;image_vector.</code><code class="descname">get_wh_image</code><span class="sig-paren">(</span><em>dat</em>, <em>wh</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.get_wh_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>For an image_vector with multiple images (cases, contrasts, etc.), select a subset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function obj_out = get_wh_image(obj1, wh)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj1:</strong></dt>
+<dd><p class="first last">An image_vector object</p>
+</dd>
+<dt><strong>wh:</strong></dt>
+<dd><p class="first last">An array indicating which images</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>my_image_vector = get_wh_image(dat, 3) %to get 3rd image
+my_image_vector = get_wh_image(dat, [1 3]) %to get 1st and 3rd image
+</pre></div>
+</div>
+<p>check that wh is in range</p>
 </dd></dl>
 
 <dl class="function">
@@ -3612,7 +3425,7 @@ Requires that each object has an equal number of columns and voxels</p>
 <dt id="&#64;image_vector.montage">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">montage</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.montage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a montage of an image_vector (or statistic_image or fmri_data) object</p>
-<p><a href="#id7"><span class="problematic" id="id8">*</span></a>Usage:</p>
+<p><a href="#id3"><span class="problematic" id="id4">*</span></a>Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre>[fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
 </pre></div>
 </div>
@@ -3644,7 +3457,7 @@ Requires that each object has an equal number of columns and voxels</p>
 <dt id="&#64;image_vector.orthviews">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">orthviews</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.orthviews" title="Permalink to this definition">¶</a></dt>
 <dd><p>Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object</p>
-<p><a href="#id9"><span class="problematic" id="id10">*</span></a>Usage:</p>
+<p><a href="#id5"><span class="problematic" id="id6">*</span></a>Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">orthviews</span><span class="p">(</span><span class="n">image_obj</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -4107,7 +3920,7 @@ Enter an image_vector or fmri_data object (usually with time series)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">sagg_slice_movie</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="n">full_path_of_movie_output_file</span><span class="p">,</span><span class="n">image_skip_interval</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><a href="#id11"><span class="problematic" id="id12">*</span></a>Optional Inputs:</p>
+<p><a href="#id7"><span class="problematic" id="id8">*</span></a>Optional Inputs:</p>
 <blockquote>
 <div><dl class="docutils">
 <dt><strong>movie_output_file:</strong></dt>
@@ -4156,7 +3969,7 @@ or fmri_data object OR two objects, for cross-prediction.</p>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre>[list outputs here] = function_name(list inputs here, [optional inputs])
-[results_obj, indx] = searchlight(dat, [optional inputs])
+[results_obj, stats, indx] = searchlight(dat, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4202,6 +4015,10 @@ or fmri_data object OR two objects, for cross-prediction.</p>
 <dd>sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
 This takes a long time to calculate, but can be saved and
 re-used for a given mask</dd>
+<dt><strong>holdout_set:</strong></dt>
+<dd>Followed by integer vector of which observations belong to which
+holdout set, for cross-validation. This is passed into fmri_data.predict.m.  Default is
+empty.</dd>
 </dl>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4238,7 +4055,7 @@ holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]
 
 % Run, and run again with existing indx
 pool = parpool(12);  % initialize parallel processing (12 cores)
-[results_obj, indx] = searchlight(dat, &#39;holdout_set&#39;, holdout_set);
+[results_obj, stats, indx] = searchlight(dat, &#39;holdout_set&#39;, holdout_set);
 results_obj = searchlight(dat, &#39;holdout_set&#39;, holdout_set, &#39;indx&#39;, indx);
 </pre></div>
 </div>
@@ -5263,23 +5080,7 @@ cluster_orthviews(cl, &#39;unique&#39;)
 <dl class="function">
 <dt id="&#64;statistic_image.select_one_image">
 <code class="descclassname">&#64;statistic_image.</code><code class="descname">select_one_image</code><span class="sig-paren">(</span><em>obj</em>, <em>wh</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.select_one_image" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>obj:</strong></dt>
-<dd><p class="first last">A statistic_image object</p>
-</dd>
-<dt><strong>wh:</strong></dt>
-<dd><p class="first last">An integer for which image in a series of images stored in obj you want</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="&#64;statistic_image.threshold">
@@ -6009,7 +5810,7 @@ dimensions and voxel sizes.</p>
 <li><a class="reference internal" href="#module-&#64;fmri_data">fmri_data</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_mask_image">fmri_mask_image</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_model">fmri_model</a></li>
-<li><a class="reference internal" href="#module-fmridisplay">fmridisplay</a></li>
+<li><a class="reference internal" href="#fmridisplay">fmridisplay</a></li>
 <li><a class="reference internal" href="#module-&#64;image_vector">image_vector</a></li>
 <li><a class="reference internal" href="#module-&#64;region">region</a></li>
 <li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>

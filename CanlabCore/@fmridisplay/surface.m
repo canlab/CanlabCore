@@ -1,35 +1,45 @@
 function obj = surface(obj, varargin)
-% obj = surface(obj, varargin)
-%
 % Adds surfaces of brain to figure
 %
-% o2 = surface(o2, axes, [0.15 0.28 .15 1], 'direction', 'hires right', 'orientation', 'lateral');
+% :Usage:
+% ::
 %
-% Returns:
-% obj, an fmridisplay object
-% obj =
+%     obj = surface(obj, varargin)
 %
-%   fmridisplay
+% :Inputs:
 %
-%   Properties:
-%             overlay: ''
-%               SPACE: ''
-%     activation_maps: {}
-%             montage: {}
-%             surface: {[1x1 struct]}
-%           orthviews: {}
-%             history: {}
-%     history_descrip: []
-%     additional_info: ''
+%   **obj:**
+%        fmridisplay
 %
-% Examples:
+% :Outputs:
+%
+%   **obj:**
+%        an fmridisplay object
+%
+% :Properties:
+%
+%  - overlay: ''
+%  - SPACE: ''
+%  - activation_maps: {}
+%  - montage: {}
+%  - surface: {[1x1 struct]}
+%  - orthviews: {}
+%  - history: {}
+%  - history_descrip: []
+%  - additional_info: ''
+%
+% :Examples:
+%
+%     o2 = surface(o2, axes, [0.15 0.28 .15 1], 'direction', 'hires right', 'orientation', 'lateral');
+%
 % See help fmridisplay
-%
-% initialize, if nothing passed in; but you would have to call overloaded
-% method, fmridisplay.montage, to invoke this.
+
 if nargin == 0 || isempty(obj) || ~isa(obj, 'fmridisplay')
     obj = fmridisplay;
 end
+% initialize, if nothing passed in; but you would have to call overloaded
+% method, fmridisplay.montage, to invoke this.
+
 
 if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
     error('fmridisplay is not initialized correctly. run obj = fmridisplay; first and then pass in to this method.')

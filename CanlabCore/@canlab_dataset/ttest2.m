@@ -4,7 +4,26 @@ function [h, p, ci, stats] = ttest2(D, varname, wh_keep1, wh_keep2, varargin)
 % :Usage:
 % ::
 %
-%    ttest2(D, varname, wh_keep1, wh_keep2, varargin)
+%    ttest2(D, varname, wh_keep1, wh_keep2, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 %
 % :Inputs:
@@ -23,16 +42,17 @@ function [h, p, ci, stats] = ttest2(D, varname, wh_keep1, wh_keep2, varargin)
 %
 % :Optional Inputs:
 %
-%   **varargin:     passed directly to MATLAB's ttest2
-%               'noverbose' will suppress print out of results and bargraph
+%   **noverbose:**
+%         will suppress print out of results and bargraph
+%
+%   **varargin:**
+%         other variables passed directly to MATLAB's ttest2
 %
 % :Outputs:
 %
-%   as from MATLAB's ttest2, 
+%   same as MATLAB's ttest2 output 
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
+
 
 if any(wh_keep1 & wh_keep2), warning('YOUR SAMPLES ARE OVERLAPPING!!'); end
 

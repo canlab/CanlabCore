@@ -1,11 +1,11 @@
-function [h]=scatter(x,y,stats,varargin)
+function [h]=scatter_glm(x,y,stats,varargin)
 % scatterplots x and y and draws the logistic function specified by the
 % parameters in the stats structure (output from glmfit).
 %
 % :Usage:
 % ::
 %
-%    [h]=scatter(x,y,stats,varargin)
+%    [h]=scatter_glm(x,y,stats,varargin)
 %
 % :Output:
 %

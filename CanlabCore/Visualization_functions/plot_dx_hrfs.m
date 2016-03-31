@@ -4,16 +4,17 @@ function EXPT = plot_dx_hrfs(EXPT,clusters,varargin)
 %
 %    EXPT = plot_dx_hrfs(EXPT,clusters,[dolegend],[dosave],[dosmooth],[doindiv])
 %
-% uses EXPT.FIR and clusters
+% :Inputs:
 %
-% If not found, creates:
+%    uses EXPT.FIR and clusters
 %
-% EXPT.FIR.regsofinterest = trial types
+%    If not found, creates:
 %
-% EXPT.FIR.mcol = colors
+%    EXPT.FIR.regsofinterest = trial types
+%    EXPT.FIR.mcol = colors
 %
-% Seems to be a problem with showing the brain slice when it makes the
-% legend as well!  Weird bug.  Optional argument turns legend off.
+%    Seems to be a problem with showing the brain slice when it makes the
+%    legend as well!  Weird bug.  Optional argument turns legend off.
 %
 % :Optional Inputs: (all defaults are zero)
 %
@@ -30,7 +31,8 @@ function EXPT = plot_dx_hrfs(EXPT,clusters,varargin)
 %   **doindiff:**
 %        plot low vs. high groups of individuals (indiv diffs)
 %
-% :See: extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m
+% :See also: 
+%   - extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m
 %
 % :Examples:
 % ::

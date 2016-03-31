@@ -4,7 +4,7 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 % :Usage:
 % ::
 %
-%    [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
+%    [dat, descrip, colors, h1, s1] = bars(obj, varnames, [optional inputs])
 %
 % ..
 %     Author and copyright information:
@@ -34,13 +34,32 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 %   **varnames:**
 %        Cell string of variable names to plot
 %
-% Takes any optional inputs to barplot_colored.m
+% :Optional Inputs:
+%    **colors:**
+%        defined colors (default are set by scn_standard_colors.m)
+%
+%   **nofig:**
+%        do not generate figure
+%
+%   Takes any optional inputs to barplot_colored.m
 %
 %
 % :Outputs:
 %
 %   **dat:**
 %        data matrix for each variable
+%
+%   **descrip:**
+%        the description for this variable
+%
+%   **colors:**
+%        selected colors (default are set by scn_standard_colors.m)
+%
+%   **h1:**
+%        figure handle
+%
+%   **s1:**
+%        axis handle
 %
 % :Examples:
 % ::
@@ -52,7 +71,6 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 %     colors = {[1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0]};
 %     bars(LevoNPS, varnames, 'x', xvals, 'colors', colors, 'XTickLabels', varnames, 'within', 'nofig');
 %
-
 
 n = length(varnames);
 colors = scn_standard_colors(n);

@@ -1,4 +1,4 @@
-function [all_reg, uniq_reg] = check_roi_extraction()
+function check_roi_extraction()
 
 % test ROI extraction
 mask_image = fmri_data(which('atlas_labels_combined.img'));

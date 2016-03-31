@@ -29,7 +29,12 @@ fmri_model
 
 fmridisplay
 ---------------
-.. automodule:: fmridisplay
+.. automodule:: @fmridisplay
+   :members:
+
+fmridisplay_helper_functions
+---------------
+.. automodule:: fmridisplay_helper_functions
    :members:
 
 image_vector
@@ -47,14 +52,15 @@ statistic_image
 .. automodule:: @statistic_image
    :members:
 
+
+Toolboxes
+=========
+
 Cluster_contig_region_tools
 ---------------
 .. automodule:: Cluster_contig_region_tools
    :members:
 
-
-Toolboxes
-=========
 
 diagnostics
 ---------------

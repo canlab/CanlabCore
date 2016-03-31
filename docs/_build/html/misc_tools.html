@@ -5658,9 +5658,10 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 <div class="section" id="index-image-manip-tools">
 <h1>Index_image_manip_tools<a class="headerlink" href="#index-image-manip-tools" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-Index_image_manip_tools"></span><dl class="function">
-<dt id="Index_image_manip_tools.iimg_check_indx">
-<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_check_indx</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_check_indx" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dt id="Index_image_manip_tools.flip_endianness">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">flip_endianness</code><span class="sig-paren">(</span><em>imgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.flip_endianness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips fMRI images (swap R/L)</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -5668,7 +5669,7 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dattype</span><span class="p">,</span><span class="n">dat</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_check_indx</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,[</span><span class="n">outtype</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">Vimgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">flip_endianness</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -5676,22 +5677,43 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>dattype:</strong></dt>
-<dd><p class="first last">is &#8216;full&#8217; or &#8216;masked&#8217;</p>
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">Give this a list of fMRI images (paths, char str)</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Optional Input:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>outtype:</strong></dt>
-<dd><p class="first last">&#8216;full&#8217; or &#8216;masked&#8217; output</p>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Vimgs:</strong></dt>
+<dd><p class="first last">Your images, flipped</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>::</dt>
+<dd>load EXPT  %study specific spm design file
+imgs = EXPT.SNPM.P{1};
+[Vimgs] = flip_endianness(imgs)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">References:</th><td class="field-body"><p class="first">N/A</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>spm_vol</li>
+</ul>
 </td>
 </tr>
 </tbody>
 </table>
-<p>make sure data is correct format</p>
 </dd></dl>
 
 <dl class="function">
@@ -5762,14 +5784,8 @@ defined by volInfo</p>
 <dl class="function">
 <dt id="Index_image_manip_tools.iimg_cluster_index">
 <code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_index</code><span class="sig-paren">(</span><em>dat</em>, <em>xyz</em>, <em>k</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_index" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Get voxel cluster indices and sizes
+:Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">clindx</span><span class="p">,</span><span class="n">nvox</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_index</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">xyz</span><span class="p">,[</span><span class="n">k</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -11183,21 +11199,81 @@ for indepndent samples g1 and g2.</p>
 group.</p>
 <p>Source, Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
 From notes on Garson stats website.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>y_g1:</strong></dt>
+<dd><p class="first last">Matrix of variables for group 1 (n observations x k variables)</p>
+</dd>
+<dt><strong>y_g2:</strong></dt>
+<dd><p class="first last">Matrix of variables for group 2 (n observations x k variables)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">String &#8216;noverbose&#8217; can be used to prevent output from being
+printed to command line</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r1:</strong></dt>
+<dd><p class="first last">Matrix of correlation coefficients for group 1</p>
+</dd>
+<dt><strong>r2:</strong></dt>
+<dd><p class="first last">Matrix of correlation coefficients for group 2</p>
+</dd>
+<dt><strong>rdiff:</strong></dt>
+<dd><p class="first last">Difference in correlation coefficient matrices (r1 - r2)</p>
+</dd>
+<dt><strong>rdiff_p:</strong></dt>
+<dd><p class="first last">p values testing against no difference between r1 and r2. 
+Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.</p>
+</dd>
+<dt><strong>rdiff_zscore:</strong></dt>
+<dd><p class="first last">z scores for the difference between r1 and r2.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>%generate two random input matrices (20 subjects x 5 variables)
+y_g1 = rand(20,5);
+y_g2 = rand(20,5);
+[r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2);
+
+%supress output
+[r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2,&#39;noverbose&#39;);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_permute*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="Statistics_tools.correl_compare_indep_inputr">
 <code class="descclassname">Statistics_tools.</code><code class="descname">correl_compare_indep_inputr</code><span class="sig-paren">(</span><em>r1</em>, <em>r2</em>, <em>N1</em>, <em>N2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Statistics_tools.correl_compare_indep_inputr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare two Pearson&#8217;s correlation values (r1 and r2) collected from independent
-samples with sample sizes N1 and N2</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Compare two Pearson&#8217;s correlation values collected from independent samples
+:Based on: www.stat-help.com/
+:Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">rdiff</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">correl_compare_indep_inputr</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">N1</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -11205,17 +11281,63 @@ samples with sample sizes N1 and N2</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Based on:</th><td class="field-body">www.stat-help.com/</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r1:</strong></dt>
+<dd><p class="first last">Correlation coefficient for group 1</p>
+</dd>
+<dt><strong>r2:</strong></dt>
+<dd><p class="first last">Correlation coefficient for group 2</p>
+</dd>
+<dt><strong>N1:</strong></dt>
+<dd><p class="first last">Sample size for group 1</p>
+</dd>
+<dt><strong>N2:</strong></dt>
+<dd><p class="first last">Sample size for group 2</p>
+</dd>
+</dl>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">See Also:</th><td class="field-body">correl_compare_indep.m and correl_compare_dep.m</td>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>rdiff:</strong></dt>
+<dd><p class="first last">Difference in correlation coefficient matrices (r1 - r2)</p>
+</dd>
+<dt><strong>Z:</strong></dt>
+<dd><p class="first last">Z score for difference in correlation coefficients.</p>
+</dd>
+<dt><strong>pval:</strong></dt>
+<dd><p class="first last">p value for two-tailed z-test</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">Structure of variables including r1, r2, N1, N2, rdiff, zdiff, Z,
+pval, myalpha, sig</p>
+</dd>
+</dl>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">rdiff</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">correl_compare_indep_inputr</span><span class="p">(</span><span class="o">.</span><span class="mi">33</span><span class="p">,</span> <span class="o">.</span><span class="mi">77</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre> %generate two random input matrices (20 subjects x 5 variables)
+ r1 = .77;
+ r2 = .33;
+ N1 = 100;
+ N2 = 100;
+
+[rdiff, Z, pval, stats] = correl_compare_indep_inputr(r1, r2, N1, N2);
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_permute*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -11231,12 +11353,50 @@ sets of observations</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">correl_compare_permute</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span><span class="n">dat</span><span class="p">,</span><span class="n">nperms</span><span class="p">,</span><span class="n">condition</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>dat is obs x variables, and an n x n association matrix will be computed
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first">correl_compare_permute(meth,dat,nperms,condition)</p>
+<p class="last">dat is obs x variables, and an n x n association matrix will be computed
 on the n(n - 1) pairs of columns using one of the methods in
 correlation.m and specified by meth</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>meth:</strong></dt>
+<dd><p class="first last">String indicating the method for computing the correlation
+coefficient (e.g., &#8216;taub&#8217;) see correlation.m for details</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+<dt><strong>nperms:</strong></dt>
+<dd><p class="first last">Number of permutations for inferential tests</p>
+</dd>
+<dt><strong>condition:</strong></dt>
+<dd><p class="first last">Vector indicating condition membership for each instance
+(currently only works for two conditions)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>OUT:</strong></dt>
+<dd><p class="first last">Output stats structure</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_indep, correlation*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -11252,25 +11412,48 @@ correlation.m and specified by meth</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">corr</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">fdrp</span><span class="p">,</span> <span class="n">fdrthresh</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlation</span><span class="p">(</span><span class="n">method</span><span class="p">,</span><span class="n">x</span><span class="p">,[</span><span class="n">y</span><span class="p">],[</span><span class="s">&#39;matrix&#39;</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre>[corr,t,p,fdrp, fdrthresh] = correlation(method,x,[y],[&#39;matrix&#39;])
+
+IN PROGRESS : Warning : Use at your own risk.
+Some methods are not adequately tested yet.
+Spearman&#39;s rho does not correct for ties
 </pre></div>
 </div>
-<p>IN PROGRESS : Warning : Use at your own risk.
-Some methods are not adequately tested yet.
-Spearman&#8217;s rho does not correct for ties</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Methods:</th><td class="field-body"><ul class="first simple">
-<li>Pearson&#8217;s r.          Enter: {&#8216;r&#8217;,&#8217;pearson&#8217;,[]}</li>
-<li>IRLS                  Enter: {&#8216;irls&#8217;,&#8217;robust&#8217;}</li>
-<li>Phi                   Enter: {&#8216;phi&#8217;}</li>
-<li>Spearman&#8217;s rho        Enter: {&#8216;rho&#8217;,&#8217;spearman&#8217;}</li>
-<li>Kendall&#8217;s Tau (a)     Enter: {&#8216;taua&#8217;,&#8217;kendalla&#8217;}</li>
-<li>Tau (b)               Enter: {&#8216;tau&#8217;,&#8217;kendall&#8217;,&#8217;taub&#8217;,&#8217;kendallb&#8217;}</li>
-<li>Gamma                 Ehter: {&#8216;gamma&#8217;,&#8217;kruskal&#8217;}</li>
-</ul>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Methods:</strong></dt>
+<dd><p class="first last">String indicating the method for computing the correlation
+coefficient
+- Pearson&#8217;s r.          Enter: {&#8216;r&#8217;,&#8217;pearson&#8217;,[]}
+- IRLS                  Enter: {&#8216;irls&#8217;,&#8217;robust&#8217;}
+- Phi                   Enter: {&#8216;phi&#8217;}
+- Spearman&#8217;s rho        Enter: {&#8216;rho&#8217;,&#8217;spearman&#8217;}
+- Kendall&#8217;s Tau (a)     Enter: {&#8216;taua&#8217;,&#8217;kendalla&#8217;}
+- Tau (b)               Enter: {&#8216;tau&#8217;,&#8217;kendall&#8217;,&#8217;taub&#8217;,&#8217;kendallb&#8217;}
+- Gamma                 Enter: {&#8216;gamma&#8217;,&#8217;kruskal&#8217;}</p>
+</dd>
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p varianbles)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">To be documented</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>OUT:</strong></dt>
+<dd><p class="first last">Output stats structure</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
@@ -11315,6 +11498,29 @@ studybyroi = magic(10);
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Xi:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+<dt><strong>Yi:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">Pearson correlation coefficients</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">Corresponding p-value for correlation coeffieints</p>
+</dd>
+<dt><strong>Tstat:</strong></dt>
+<dd><p class="first last">T statistic for comparing correlation coefficients against 0</p>
+</dd>
+</dl>
+</td>
+</tr>
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
@@ -16238,9 +16444,104 @@ o2 = canlab_results_fmridisplay(d, o2, &#39;cmaprange&#39;, [.3 .45], &#39;split
 </dd></dl>
 
 <dl class="function">
+<dt id="Visualization_functions.cl_line_plots">
+<code class="descclassname">Visualization_functions.</code><code class="descname">cl_line_plots</code><span class="sig-paren">(</span><em>clusters</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cl_line_plots" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl_line_plots</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>purpose:  ???</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first"><strong>clusters</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first"><strong>lineH</strong></p>
+<blockquote class="last">
+<div><p>handle</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Visualization_functions.cl_overlap">
+<code class="descclassname">Visualization_functions.</code><code class="descname">cl_overlap</code><span class="sig-paren">(</span><em>in1</em>, <em>in2</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cl_overlap" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl_overlap</span><span class="p">(</span><span class="n">in1</span><span class="p">,</span><span class="n">in2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>purpose:  compute overlap of two clusters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first"><strong>in1</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+<p><strong>in1</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first"><strong>ov_mat</strong></p>
+<blockquote class="last">
+<div><p>matrix of overlaps</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="Visualization_functions.close_non_spm_graphics_figures">
 <code class="descclassname">Visualization_functions.</code><code class="descname">close_non_spm_graphics_figures</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.close_non_spm_graphics_figures" title="Permalink to this definition">¶</a></dt>
-<dd><p>closes all figure windows that are not the SPM orthviews window</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">close_non_spm_graphics_figures</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>purpose:  closes all figure windows that are not the SPM orthviews window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -16350,7 +16651,8 @@ RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
 <dl class="function">
 <dt id="Visualization_functions.cluster_cutaways">
 <code class="descclassname">Visualization_functions.</code><code class="descname">cluster_cutaways</code><span class="sig-paren">(</span><em>clusters</em>, <em>textprefix</em>, <em>mycolor</em>, <em>whichcuts</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cluster_cutaways" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>groups clusters to image on brains by the first letter in whichcuts</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -16364,8 +16666,7 @@ RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
 <p>groups clusters to image on brains by the first letter in whichcuts
 therefore, if you enter &#8216;y&#8217; for whichcuts, the program will select
 clusters with similar y values (w/i 15 mm) and image them on the same
-brain.</p>
-<p>you need files called brain_render_T1.img/hdr on the path
+brain. you need files called brain_render_T1.img/hdr on the path
 these should be scalped anatomicals for the brain image.</p>
 <p>you would also need &#8216;brain_render_T1.mat&#8217; for the
 transparent brain surface, if you changed this script to get
@@ -16376,7 +16677,44 @@ or enter anything as 2nd var arg.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>clusters:</strong></dt>
+<dd><p class="first last">cluster object to display on brain cuts</p>
+</dd>
+<dt><strong>textprefix:</strong></dt>
+<dd><blockquote class="first">
+<div><p>prefix for saving images to files</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt><strong>mycolor:</strong></dt>
+<dd><blockquote class="first">
+<div><p>cluster colors - 3 el. vector, single letter, or string of letters</p>
+</div></blockquote>
+<p class="last">enter letter or letter string in single quotes. e.g., O.clcol = &#8216;yrgb&#8217;;</p>
+</dd>
+<dt><strong>whichcuts:</strong></dt>
+<dd><p class="first last">letter string (no quotes) - which axes to cut along - xyz are choices</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>bestc</strong>
+best cut, 3-element vector of coordinates, default [0 0 0]</p>
+<p><strong>revx</strong>
+text string to reverse x cut direction, enter 1 to do it.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>O:</strong></dt>
+<dd><p class="first last">output returned from renderCluster_ui.m</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -16730,6 +17068,23 @@ activations and deactivations in intermediate colors</p>
 <div class="highlight-python"><div class="highlight"><pre>cluster_orthviews_overlap(mask1, mask2, [colors cell])
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>mask1</strong>
+path to nifit image</p>
+<p><strong>mask2</strong>
+path to nifit image</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><strong>colors</strong>
+cell array of RGB colors like: {[1 0 0] [0 0 1] [1 1 0] [0 1 1]}</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -16749,6 +17104,24 @@ activations and deactivations in intermediate colors</p>
 </pre></div>
 </div>
 <p>Positive effects only!</p>
+<p>:Inputs</p>
+<blockquote>
+<div><strong>masks</strong>
+image_vector  or fmri_data object</div></blockquote>
+<p>:Optional Inputs</p>
+<blockquote>
+<div><blockquote>
+<div><strong>colors</strong></div></blockquote>
+<p>&#8216;colors&#8217;,{[RGB],[RGB],..} cell array of RGB triplets</p>
+<p><strong>surface</strong>
+&#8216;surface&#8217;,[0/1]
+default =1</p>
+<p><strong>negative</strong>
+&#8216;negative&#8217; string to only use negative clusters, otherwise only positive clusters</p>
+<p><strong>nomontage</strong>
+&#8216;nomontage&#8217;,[0/1]
+don&#8217;t do montage, default do a montage</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -19052,15 +19425,27 @@ tor_fig;
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">varargin is string of text labels</p>
-<p>for text labels only, try:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">plot_correlation</span><span class="p">(</span><span class="n">beh1</span><span class="p">,</span><span class="n">mri1</span><span class="p">,</span><span class="n">highlow</span><span class="p">,</span><span class="s">&#39;w.&#39;</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>doquad: flag for quadratic correlations as well!</p>
-<dl class="docutils">
-<dt>dorobust: remove n outliers from data, using Min Cov Determinant (MCD) </dt>
-<dd><p class="first last">Rousseeuw, P.J. (1984), &#8220;Least Median of Squares Regression,&#8221; 
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>xvec:</strong></dt>
+<dd><p class="first last">x vector</p>
+</dd>
+<dt><strong>yvec:</strong></dt>
+<dd><p class="first last">y vector</p>
+</dd>
+<dt><strong>varargin</strong></dt>
+<dd><p class="first last">string of text labels</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>doquad:</strong></dt>
+<dd><p class="first last">flag for quadratic correlations as well!</p>
+</dd>
+<dt><strong>dorobust:</strong></dt>
+<dd><p class="first last">remove n outliers from data, using Min Cov Determinant (MCD) 
+Rousseeuw, P.J. (1984), &#8220;Least Median of Squares Regression,&#8221; 
 Journal of the American Statistical Association, Vol. 79, pp. 871-88
 outliers calculated using IRLS (robustfit.m) do not work well.
 you enter n</p>
@@ -19069,11 +19454,14 @@ you enter n</p>
 <p>empty variable arguments are OK, defaults will be used</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">figure</span><span class="p">;</span> <span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">infos</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_correlation_samefig</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;ko&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<div class="highlight-python"><div class="highlight"><pre>figure; [r, infos] = plot_correlation_samefig(x, y, [], &#39;ko&#39;, 0, 1);
+
+% for text labels only, try:
+plot_correlation(beh1,mri1,highlow,&#39;w.&#39;);
 </pre></div>
 </div>
 </dd></dl>
@@ -19092,18 +19480,20 @@ you enter n</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">EXPT</span> <span class="o">=</span> <span class="n">plot_dx_hrfs</span><span class="p">(</span><span class="n">EXPT</span><span class="p">,</span><span class="n">clusters</span><span class="p">,[</span><span class="n">dolegend</span><span class="p">],[</span><span class="n">dosave</span><span class="p">],[</span><span class="n">dosmooth</span><span class="p">],[</span><span class="n">doindiv</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>uses EXPT.FIR and clusters</p>
-<p>If not found, creates:</p>
-<p>EXPT.FIR.regsofinterest = trial types</p>
-<p>EXPT.FIR.mcol = colors</p>
-<p>Seems to be a problem with showing the brain slice when it makes the
-legend as well!  Weird bug.  Optional argument turns legend off.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">(all defaults are zero)</p>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">uses EXPT.FIR and clusters</p>
+<p>If not found, creates:</p>
+<p>EXPT.FIR.regsofinterest = trial types
+EXPT.FIR.mcol = colors</p>
+<p>Seems to be a problem with showing the brain slice when it makes the
+legend as well!  Weird bug.  Optional argument turns legend off.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">(all defaults are zero)</p>
 <dl class="docutils">
 <dt><strong>dolegend:</strong></dt>
 <dd><p class="first last">1 on, 0 off</p>
@@ -19121,10 +19511,12 @@ values stored in clusters.HRF.HRF and .STE</p>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">See:</th><td class="field-body"><p class="first">extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m</p>
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first simple">
+<li>extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m</li>
+</ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -19156,18 +19548,55 @@ with major axis at an angle of theta radians from the horizontal.</p>
 <dl class="function">
 <dt id="Visualization_functions.plot_error">
 <code class="descclassname">Visualization_functions.</code><code class="descname">plot_error</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.plot_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>PLOT_ERROR    Plot a matrix with shaded error area around it</p>
-<p>PLOT_ERROR(X, Y) plots matrix Y against x-values in X, where Y is a matrix with each row representing a signal.
-The shaded area represents the standard error across the columns of Y.</p>
-<p>PLOT_ERROR(Y) plots the data matrix Y versus its index.</p>
-<p>PLOT_ERROR(..., &#8216;errorData&#8217;, errorData) uses external data for the error areas. In this case, Y is assumed to be a mean
-timeseries already. Y and errorData must be vectors of the same length.</p>
-<p>PLOT_ERROR(..., &#8216;allowNaNs&#8217;, [0|1]) indicates whether to handle NaNs in the data. If set, plot_error will use nanmean, 
-nanstd, etc. Off by default.</p>
-<p>PLOT_ERROR(..., colorSpecString) plots the line according to the designated ColorSpec string, and shades the error area
-by the color of the line</p>
-<p>PLOT_ERROR(AX, ...) plots into the axes designated by the AX axes handle.</p>
-<p>[line_handle patch_handle] = PLOT_ERROR return the handle of the main line object</p>
+<dd><p>Plot a matrix with shaded error area around it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[line_handle patch_handle] = plot_error(varargin)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% plots matrix Y against x-values in X, where Y is a matrix with 
+% each row representing a signal. The shaded area represents the 
+% standard error across the columns of Y.
+PLOT_ERROR(X, Y) 
+
+% plots the data matrix Y versus its index.
+PLOT_ERROR(Y) 
+
+% uses external data for the error areas. In this case, Y is assumed 
+% to be a mean timeseries already. Y and errorData must be vectors 
+% of the same length.
+PLOT_ERROR(..., &#39;errorData&#39;, errorData)
+
+% The following example indicates whether to handle NaNs in the data. 
+% If set, plot_error will use nanmean, nanstd, etc. Off by default.
+PLOT_ERROR(..., &#39;allowNaNs&#39;, [0|1]) 
+
+% The following example plots the line according to the designated 
+% ColorSpec string, and shades the error area by the color of the line
+PLOT_ERROR(..., colorSpecString) 
+
+% The following example plots into the axes designated by the AX 
+% axes handle.
+PLOT_ERROR(AX, ...) 
+
+% The following example returns the handle of the main line object
+[line_handle patch_handle] = PLOT_ERROR 
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -19305,7 +19734,10 @@ within denoising, plot_matrix_cols(X, &#8216;denoising&#8217;) to make red plots
 <dl class="function">
 <dt id="Visualization_functions.prplot">
 <code class="descclassname">Visualization_functions.</code><code class="descname">prplot</code><span class="sig-paren">(</span><em>yy</em>, <em>X</em>, <em>k</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.prplot" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Partial residual plot of y ~ X for column k
+Partial residual plot of one column of X against y. Uses IRLS estimation 
+to downweight outliers if you enter a 4th argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -19316,14 +19748,23 @@ within denoising, plot_matrix_cols(X, &#8216;denoising&#8217;) to make red plots
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="nb">str</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">ry</span><span class="p">,</span><span class="n">rx</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">rr</span><span class="p">]</span> <span class="o">=</span> <span class="n">prplot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">X</span><span class="p">,</span><span class="n">col</span><span class="p">,[</span><span class="n">dorobust</span><span class="p">],[</span><span class="n">colors</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Partial residual plot of one column of X against y.
-Uses IRLS estimation to downweight outliers 
-if you enter a 4th argument</p>
-<p>Partial residual plot of y ~ X for column k</p>
-<p>if y contains multiple columns, different colors
-and symbols will be used, with a separate regression
-for each.</p>
-<p>colors: e.g., {&#8216;ro&#8217; &#8216;bs&#8217; &#8216;gd&#8217; &#8216;y^&#8217; &#8216;cv&#8217; &#8216;mx&#8217;}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>y</strong> </dt>
+<dd><p class="first last">if y contains multiple columns, different colors and symbols will 
+be used, with a separate regression for each.</p>
+</dd>
+<dt><strong>colors</strong></dt>
+<dd><p class="first last">e.g., {&#8216;ro&#8217; &#8216;bs&#8217; &#8216;gd&#8217; &#8216;y^&#8217; &#8216;cv&#8217; &#8216;mx&#8217;}</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -19453,26 +19894,27 @@ renderCluster_ui(O)
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">O:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>head:</strong></dt>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>O</strong></p>
+<dl class="docutils">
+<dt><strong>O.head:</strong></dt>
 <dd><p class="first last">name of head to use, no .img extension</p>
 </dd>
-<dt><strong>surf:</strong></dt>
+<dt><strong>O.surf:</strong></dt>
 <dd><p class="first last">&#8216;y&#8217; or &#8216;n&#8217;: image surface</p>
 </dd>
-<dt><strong>sets:</strong></dt>
+<dt><strong>O.sets:</strong></dt>
 <dd><p class="first last">number of sets</p>
 </dd>
-<dt><strong>getfrom:</strong></dt>
+<dt><strong>O.getfrom:</strong></dt>
 <dd><p class="first last">cell array of where to get clusters from: &#8216;workspace&#8217; &#8216;file&#8217; etc.</p>
 </dd>
-<dt><strong>varname:</strong></dt>
+<dt><strong>O.varname:</strong></dt>
 <dd><p class="first last">cell array of variable names</p>
 </dd>
-<dt><strong>color:</strong></dt>
+<dt><strong>O.color:</strong></dt>
 <dd><p class="first last">cell array of colors - strings or vectors</p>
 </dd>
-<dt><strong>numbers:</strong></dt>
+<dt><strong>O.numbers:</strong></dt>
 <dd><p class="first last">&#8216;y&#8217; or &#8216;n&#8217;: add numbers to plot</p>
 </dd>
 </dl>
@@ -19595,37 +20037,6 @@ for i = 1:2, cl{i} = region(mask{i}); end
 info = roi_contour_map([cl{1} cl{2}], &#39;cluster&#39;, &#39;use_same_range&#39;, &#39;colorbar&#39;); 
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="Visualization_functions.scatter">
-<code class="descclassname">Visualization_functions.</code><code class="descname">scatter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>stats</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.scatter" title="Permalink to this definition">¶</a></dt>
-<dd><p>scatterplots x and y and draws the logistic function specified by the
-parameters in the stats structure (output from glmfit).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">h</span><span class="p">]</span><span class="o">=</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">stats</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>h:</strong></dt>
-<dd><p class="first last">is the handle to the figure axis.</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -20938,6 +21349,16 @@ column (i).</dd>
 <dd>followed by x position for center(s) of plots</dd>
 <dt><strong>&#8216;nopoints&#8217;:</strong></dt>
 <dd>don&#8217;t display dots</dd>
+<dt><strong>&#8216;pointsize&#8217;:</strong></dt>
+<dd>you can define point size.</dd>
+<dt><strong>&#8216;pointcolor&#8217;:</strong></dt>
+<dd>if you want to use different color for points, you can use this
+option.</dd>
+<dt><strong>&#8216;weights&#8217;:</strong></dt>
+<dd>You can add weights in the same format of the data. It will
+use weighted version of kdensity function, show weighted mean, and
+weighted point sizes. Be careful: if some data points have NaNs,
+this will remove those data points from the plot.</dd>
 </dl>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -20959,6 +21380,11 @@ column (i).</dd>
 </dd>
 <dt><strong>bw:</strong></dt>
 <dd><p class="first last">bandwidth of kernel</p>
+</dd>
+<dt><strong>pointloc:</strong></dt>
+<dd><p class="first last">point locations on violin plot
+This has x, y, idx as subfields. 
+idx indicates the order of the data in the original input.</p>
 </dd>
 </dl>
 </td>

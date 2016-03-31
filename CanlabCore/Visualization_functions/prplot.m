@@ -1,24 +1,42 @@
 function [r,str,sig,ry,rx,h,rr] = prplot(yy,X,k,varargin)
+
+% Partial residual plot of y ~ X for column k
+% Partial residual plot of one column of X against y. Uses IRLS estimation 
+% to downweight outliers if you enter a 4th argument.
+% 
 % :Usage:
 % ::
 %
 %    [r,str,sig,ry,rx,h,rr] = prplot(y,X,col,[dorobust],[colors])
 %
-% Partial residual plot of one column of X against y.
-% Uses IRLS estimation to downweight outliers 
-% if you enter a 4th argument
-%
-% Partial residual plot of y ~ X for column k
-%
-% if y contains multiple columns, different colors
-% and symbols will be used, with a separate regression
-% for each.
-%
-% colors: e.g., {'ro' 'bs' 'gd' 'y^' 'cv' 'mx'}
-%
 % ..
-%    tor wager
+%     Author and copyright information:
+%
+%     Copyright (C) Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % ..
+%
+% :Inputs:
+%   **y** 
+%       if y contains multiple columns, different colors and symbols will 
+%       be used, with a separate regression for each.
+%
+%   **colors**
+%       e.g., {'ro' 'bs' 'gd' 'y^' 'cv' 'mx'}
+%
+
 
 mycols = {'ko'};
 robopt = 'IRLS';    %'IRLS' or 'MCD'

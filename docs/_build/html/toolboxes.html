@@ -56,7 +56,8 @@
 <dl class="function">
 <dt id="diagnostics.BiasPowerloss">
 <code class="descclassname">diagnostics.</code><code class="descname">BiasPowerloss</code><span class="sig-paren">(</span><em>tc</em>, <em>X</em>, <em>c</em>, <em>beta</em>, <em>df</em>, <em>z</em>, <em>pval</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.BiasPowerloss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the approximate bias and power loss due to mis-modeling</p>
+<dd><p>Calculate the approximate bias and power loss due to mis-modeling
+This works with the Mismodeling Toolbox described by Loh et al. 2008</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -65,7 +66,7 @@
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>function [b pl] = BiasPowerloss(z, X, V)
+<div class="highlight-python"><div class="highlight"><pre>[b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -77,7 +78,7 @@
 <dd><p class="first last">fMRI time course</p>
 </dd>
 <dt><strong>X:</strong></dt>
-<dd><p class="first last">design matrix</p>
+<dd><p class="first last">design matrix for multiple regression</p>
 </dd>
 <dt><strong>c:</strong></dt>
 <dd><p class="first last">contrast of interest</p>
@@ -97,7 +98,7 @@
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>b:</strong></dt>
 <dd><p class="first last">updated (correct) beta value</p>
 </dd>
@@ -108,6 +109,9 @@
 <dd><p class="first last">power loss</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">References:</th><td class="field-body"><p class="first last">Loh, J. M., Lindquist, M. A., Wager, T. D. (2008). Residual Analysis for Detecting Mis-modeling in fMRI. Statistica Sinica, 18, 1421-1448.</p>
 </td>
 </tr>
 </tbody>
@@ -431,11 +435,10 @@ QC = canlab_qc_metrics1(epi_names, mask_name, &#39;noplot&#39;, &#39;printfile&#
 <dl class="function">
 <dt id="diagnostics.compare_subjects">
 <code class="descclassname">diagnostics.</code><code class="descname">compare_subjects</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function compares the GLOBAL signal
-after standardizing each image, in case 1
-or the REGIONAL values in each cluster, in case 2
-...and does some diagnostics on the similarity
-between images.</p>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -522,11 +525,10 @@ P = get_filename2([&#39;sub*\Anatomy\nscalped_ft1.img&#39;]);
 <dl class="function">
 <dt id="diagnostics.compare_subjects256">
 <code class="descclassname">diagnostics.</code><code class="descname">compare_subjects256</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects256" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function compares the GLOBAL signal
-after standardizing each image, in case 1
-or the REGIONAL values in each cluster, in case 2
-...and does some diagnostics on the similarity 
-between images.</p>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2673,9 +2675,9 @@ see that function for more info.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="hrf-est-toolbox2">
-<h1>HRF_Est_Toolbox2<a class="headerlink" href="#hrf-est-toolbox2" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-HRF_Est_Toolbox2"></span><dl class="function">
+<div class="section" id="module-HRF_Est_Toolbox2">
+<span id="hrf-est-toolbox2"></span><h1>HRF_Est_Toolbox2<a class="headerlink" href="#module-HRF_Est_Toolbox2" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
 <dt id="HRF_Est_Toolbox2.Anneal_Logit">
 <code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Anneal_Logit</code><span class="sig-paren">(</span><em>theta0</em>, <em>t</em>, <em>tc</em>, <em>Run</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Anneal_Logit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate inverse logit (IL) HRF model using Simulated Annealing
@@ -3235,9 +3237,9 @@ kernel.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="optimizedesign11">
-<h1>OptimizeDesign11<a class="headerlink" href="#optimizedesign11" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-OptimizeDesign11"></span><dl class="function">
+<div class="section" id="module-OptimizeDesign11">
+<span id="optimizedesign11"></span><h1>OptimizeDesign11<a class="headerlink" href="#module-OptimizeDesign11" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
 <dt id="OptimizeDesign11.optimizeGA">
 <code class="descclassname">OptimizeDesign11.</code><code class="descname">optimizeGA</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimizeGA" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -3301,8 +3303,8 @@ efficiency is based on the sample size, determined by TR, of the model - but so 
 <li><a class="reference internal" href="#">Toolboxes</a></li>
 <li><a class="reference internal" href="#module-diagnostics">diagnostics</a></li>
 <li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
-<li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>
-<li><a class="reference internal" href="#optimizedesign11">OptimizeDesign11</a></li>
+<li><a class="reference internal" href="#module-HRF_Est_Toolbox2">HRF_Est_Toolbox2</a></li>
+<li><a class="reference internal" href="#module-OptimizeDesign11">OptimizeDesign11</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

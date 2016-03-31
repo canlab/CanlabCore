@@ -68,14 +68,14 @@
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dat</span><span class="p">,</span> <span class="n">descrip</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">s1</span><span class="p">]</span> <span class="o">=</span> <span class="n">bars</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">varnames</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>[dat, descrip, colors, h1, s1] = bars(obj, varnames, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>obj:</strong></dt>
 <dd><p class="first last">canlab_dataset object</p>
 </dd>
@@ -85,16 +85,37 @@
 </dl>
 </td>
 </tr>
-</tbody>
-</table>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><blockquote class="first">
+<div><dl class="docutils">
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">defined colors (default are set by scn_standard_colors.m)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt><strong>nofig:</strong></dt>
+<dd><p class="first last">do not generate figure</p>
+</dd>
+</dl>
 <p>Takes any optional inputs to barplot_colored.m</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
+</td>
+</tr>
 <tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>dat:</strong></dt>
 <dd><p class="first last">data matrix for each variable</p>
+</dd>
+<dt><strong>descrip:</strong></dt>
+<dd><p class="first last">the description for this variable</p>
+</dd>
+<dt><strong>colors:</strong></dt>
+<dd><p class="first last">selected colors (default are set by scn_standard_colors.m)</p>
+</dd>
+<dt><strong>h1:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+<dt><strong>s1:</strong></dt>
+<dd><p class="first last">axis handle</p>
 </dd>
 </dl>
 </td>
@@ -125,7 +146,7 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>[names ids dat] = concatenate(D)
+<div class="highlight-python"><div class="highlight"><pre>[names ids dat] = concatenate(D, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -134,20 +155,22 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
-<dd><p class="first last">canlab_dataset</p>
-</dd>
-<dt><strong>varargin:</strong></dt>
-<dd><p class="first last">currently accepts a wh_keep (logical array)</p>
+<dd><p class="first last">canlab_dataset object</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>Names:</strong></dt>
-<dd><p class="first last">cell array of variable names</p>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>a logical array</strong></dt>
+<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
 </dd>
-<dt><strong>Descrip:</strong></dt>
-<dd><p class="first last">cell array of variable descriptions</p>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>names:</strong></dt>
+<dd><p class="first last">cell array of variable names</p>
 </dd>
 <dt><strong>ids:</strong></dt>
 <dd><p class="first last">subject IDs matching data rows in dat</p>
@@ -163,10 +186,13 @@ bars(LevoNPS, varnames, &#39;x&#39;, xvals, &#39;colors&#39;, colors, &#39;XTick
 </dd>
 </dl>
 </dd>
+<dt><strong>descrips:</strong></dt>
+<dd><p class="first last">cell array of variable descriptions</p>
+</dd>
 </dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -220,7 +246,7 @@ in this case, dat is a n x m matrix, where n=subjs and m=variables requested</li
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">a vector of 1/0 values to use as wh_keep</p>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>a logical array vector of 1/0 values to use as wh_keep</strong></p>
 <dl class="docutils">
 <dt><strong>conditional:</strong></dt>
 <dd><p class="first last">to be followed by a cell array; the first cell is the name
@@ -296,12 +322,19 @@ and igls.m</li>
 cell array. must be subject_level</p>
 </dd>
 <dt><strong>wh_keep:</strong></dt>
-<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+<dd><p class="first last">a logical vector of 1/0 values</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">same as for glmfit()</p>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>out:</strong></dt>
+<dd><p class="first last">structure containing same output as for glmfit()
+out.b: a vector of coefficient estimates
+out.dev: the deviance of the fit
+out.stat: see glmfit documentation for stat structure fields</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
@@ -325,14 +358,14 @@ cell array. must be subject_level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">glm</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;DeltaDon_avg&#39;</span><span class="p">,</span> <span class="n">prednames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">glm_multilevel</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Yvarname</span><span class="p">,</span> <span class="n">Xvarnames</span><span class="p">,</span> <span class="n">wh_keep</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
 <dd><p class="first last">a canlab_dataset object</p>
 </dd>
@@ -344,7 +377,20 @@ cell array. must be subject_level</p>
 cell array. must be event level</p>
 </dd>
 <dt><strong>wh_keep:</strong></dt>
-<dd><p class="first last">a vector of 1/0 values to use as wh_keep</p>
+<dd><p class="first last">a logical vector of 1/0 values</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">a vector of coefficient estimates (same as for glmfit())</p>
+</dd>
+<dt><strong>dev:</strong></dt>
+<dd><p class="first last">the deviance of the fit (same as for glmfit())</p>
+</dd>
+<dt><strong>stat:</strong></dt>
+<dd><p class="first last">structure containing stats fields (see glmfit() documentation)</p>
 </dd>
 </dl>
 </td>
@@ -373,14 +419,30 @@ cell array. must be event level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">histogram</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Anxiety&#39;</span><span class="p">);</span>
+<div class="highlight-python"><div class="highlight"><pre>fig_han = histogram(D, [optional inputs]);
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Optional Input:</th><td class="field-body"><a href="#id1"><span class="problematic" id="id2">**</span></a>nofig&#8217;: suppress creation of new figure</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">canlab_dataset</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><a href="#id1"><span class="problematic" id="id2">**</span></a>nofig&#8217;: suppress creation of new figure</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -389,7 +451,8 @@ cell array. must be event level</p>
 <dl class="function">
 <dt id="&#64;canlab_dataset.mediation">
 <code class="descclassname">&#64;canlab_dataset.</code><code class="descname">mediation</code><span class="sig-paren">(</span><em>D</em>, <em>xvarname</em>, <em>yvarname</em>, <em>mvarname</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.mediation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run single or multilevel mediation analysis on a canlab_dataset object</p>
+<dd><p>Run single or multilevel mediation analysis on a canlab_dataset object.
+Calls mediation.m (see mediation.m) in mediation toolbox</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -398,7 +461,7 @@ cell array. must be event level</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">paths</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">mediation</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">xvarname</span><span class="p">,</span> <span class="n">yvarname</span><span class="p">,</span> <span class="n">mvarname</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>[paths, stats] = mediation(D, xvarname, yvarname, mvarname, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -409,8 +472,14 @@ cell array. must be event level</p>
 <dt><strong>D:</strong></dt>
 <dd><p class="first last">is a canlab_dataset object</p>
 </dd>
-<dt><strong>xvarname, mvarname, and yvarname:</strong></dt>
-<dd><p class="first last">are valid variable names in the dataset.</p>
+<dt><strong>xvarname:</strong></dt>
+<dd><p class="first last">X, the initial variable (valid variable name in the dataset)</p>
+</dd>
+<dt><strong>yvarname:</strong></dt>
+<dd><p class="first last">Y, the outcome variable (valid variable name in the dataset)</p>
+</dd>
+<dt><strong>mvarname:</strong></dt>
+<dd><p class="first last">M, the potential mediator ((valid variable name in the dataset)</p>
 </dd>
 </dl>
 </td>
@@ -436,8 +505,11 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>[paths, stats]:</strong></dt>
-<dd><p class="first last">mediation output variable</p>
+<dt><strong>paths:</strong></dt>
+<dd><p class="first last">see mediation.m from mediation toolbox</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">see mediation.m from mediation toolbox</p>
 </dd>
 </dl>
 </td>
@@ -463,9 +535,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>plot_var(D, varname)
-
-[meandat, stedat] = plot_var(D, varname, [opt inputs])
+<div class="highlight-python"><div class="highlight"><pre>[meandat, stedat] = plot_var(D, varname, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -479,9 +549,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 <dt><strong>varname:</strong></dt>
 <dd><dl class="first last docutils">
 <dt>the name of a valid variable to get from dataset</dt>
-<dd><ul class="first last simple">
-<li>Looks for var name at either level, returns Event level if exists at both levels</li>
-</ul>
+<dd><p class="first last">-Looks for var name at either level, returns Event level if exists at both levels</p>
 </dd>
 </dl>
 </dd>
@@ -489,7 +557,7 @@ e.g., &#8216;noverbose&#8217;, &#8216;dosave&#8217;, &#8216;names&#8217;, &#8216
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>subjtype:</strong></dt>
 <dd><dl class="first last docutils">
 <dt>followed by name of grouping variable</dt>
@@ -538,9 +606,20 @@ of SE bars.</p>
 </dl>
 </td>
 </tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>meandat:</strong></dt>
+<dd><p class="first last">mean values</p>
+</dd>
+<dt><strong>stedat:</strong></dt>
+<dd><p class="first last">standard error values</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;Frustration&#39;</span><span class="p">)</span>
 <span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">)</span>
 <span class="n">plot_var</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s">&#39;RT&#39;</span><span class="p">,</span> <span class="s">&#39;eventmeans&#39;</span><span class="p">);</span>
@@ -554,19 +633,31 @@ of SE bars.</p>
 <dl class="function">
 <dt id="&#64;canlab_dataset.print_summary">
 <code class="descclassname">&#64;canlab_dataset.</code><code class="descname">print_summary</code><span class="sig-paren">(</span><em>D</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@canlab_dataset.print_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints summaries for every variable, or specified variables
-:Usage:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">print_summary</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span> 
+<dd><p>Prints summaries for every variable, or specified variables</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>print_summary(D, [optional inputs]) 
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>D:</strong></dt>
-<dd><p class="first last">dataset</p>
+<dd><p class="first last">a canlab_dataset object</p>
 </dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>subj:</strong></dt>
 <dd><p class="first last">followed by a cell array of subject level var names, to only see those vars</p>
 </dd>
@@ -574,11 +665,11 @@ of SE bars.</p>
 <dd><p class="first last">followed by a cell array of event level var names, to only see those vars</p>
 </dd>
 </dl>
+<p class="last">if either varargin is unspecified, all variables will be printed</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p>if either varargin is unspecified, all variables will be printed</p>
 </dd></dl>
 
 <dl class="function">
@@ -630,7 +721,7 @@ extensions .xls or .xlsx, but in the future will use importdata to take
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">read_from_excel</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">ExperimentFileName</span><span class="p">,</span> <span class="n">SubjectFileList</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>dat = read_from_excel(dat, ExperimentFileName, SubjectFileList, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -656,7 +747,7 @@ extensions .xls or .xlsx, but in the future will use importdata to take
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>fmri:</strong></dt>
 <dd><p class="first last">Indicates construction of canlab_dataset object using &#8216;fmri&#8217;
@@ -705,16 +796,27 @@ dat = read_from_excel(dat,DesignFile,SubjectFiles,&#39;fmri&#39;);
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
 <dt><strong>wh_level:</strong></dt>
 <dd><p class="first last">1 (Subject) or 2 (Event)</p>
 </dd>
 </dl>
 </td>
 </tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
 </tbody>
 </table>
-<p>Examples:</p>
 <div class="highlight-python"><div class="highlight"><pre>fig_han = scattermatrix(D);
 
 wh = [5:9];
@@ -745,16 +847,28 @@ f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;Switc
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fig_han</span> <span class="o">=</span> <span class="n">scatterplot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname1</span><span class="p">,</span> <span class="n">varname2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>fig_han = scatterplot(D, varname1, varname2, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><blockquote class="first">
-<div><dl class="docutils">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+<dt><strong>v1:</strong></dt>
+<dd><p class="first last">x variable</p>
+</dd>
+<dt><strong>v2:</strong></dt>
+<dd><p class="first last">y variable</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
 <dt><strong>nofig:</strong></dt>
 <dd><p class="first last">suppress creation of new figure</p>
 </dd>
@@ -768,14 +882,20 @@ f = scattermatrix(D, 2, {&#39;Choice&#39; &#39;RT&#39; &#39;Pain&#39; &#39;Switc
 <dd><p class="first last">followed by colors.</p>
 </dd>
 <dt><strong>dorobust:</strong></dt>
-<dd><p class="first last">do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until</p>
+<dd><p class="first last">do robust corr.  if enabled, colors will not work and subjtype grouping will not work well until
+the function plot_correlation_samefig is updated, at some point in the future.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p>the function plot_correlation_samefig is updated, at some point in the future.</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fig_han:</strong></dt>
+<dd><p class="first last">figure handle</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -799,7 +919,7 @@ canlab_dataset object.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">D</span> <span class="o">=</span> <span class="n">spm2canlab_dataset</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">spm</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">spm2canlab_dataset</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">spm</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -807,10 +927,10 @@ canlab_dataset object.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>D:</strong></dt>
+<dt><strong>obj:</strong></dt>
 <dd><p class="first last">Canlab_dataset object (see canlab_dataset)</p>
 </dd>
-<dt><strong>subjects:</strong></dt>
+<dt><strong>subject:</strong></dt>
 <dd><p class="first last">Subject list (it could be one subject [in a string 
 format], or it could be multiple subjects in cell array)</p>
 </dd>
@@ -822,22 +942,13 @@ paths in cell array</p>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>D:</strong></dt>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
 <dd><p class="first last">Canlab_dataset object with new data</p>
 </dd>
 </dl>
 </td>
 </tr>
-</tbody>
-</table>
-<p>fter running this, please check D.Subj_Level.data and
-D.Event_level.data to see if there are NaNs. NaNs could be there when 
-information cannot be extracted from the given SPM.mat files.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
@@ -849,7 +960,15 @@ D = canlab_dataset; % if D doesn&#39;t exist yet
 D = spm2canlab_dataset(D, subj, spm);
 </pre></div>
 </div>
-<p>See also canlab_dataset, spm_mat2batchinput</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body">canlab_dataset
+spm_mat2batchinput</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -864,7 +983,7 @@ D = spm2canlab_dataset(D, subj, spm);
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ttest2</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">wh_keep1</span><span class="p">,</span> <span class="n">wh_keep2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>ttest2(D, varname, wh_keep1, wh_keep2, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -889,13 +1008,16 @@ D = spm2canlab_dataset(D, subj, spm);
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
-<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>varargin:     passed directly to MATLAB&#8217;s ttest2</dt>
-<dd><p class="first last">&#8216;noverbose&#8217; will suppress print out of results and bargraph</p>
+<dt><strong>noverbose:</strong></dt>
+<dd><p class="first last">will suppress print out of results and bargraph</p>
+</dd>
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">other variables passed directly to MATLAB&#8217;s ttest2</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">as from MATLAB&#8217;s ttest2,</p>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first last">same as MATLAB&#8217;s ttest2 output</p>
 </td>
 </tr>
 </tbody>
@@ -916,14 +1038,36 @@ current working directory.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">headername</span><span class="p">,</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">fid</span><span class="p">]</span> <span class="o">=</span> <span class="n">write_text</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre>function [headername, dataname, fid] = write_text(D, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body">First <a href="#id5"><span class="problematic" id="id6">**</span></a>varargin* parameter is the delimiter. Comma-delimited by default.</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>D:</strong></dt>
+<dd><p class="first last">a canlab_dataset object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">the first varargin parameter is the delimiter. Comma-delimited by default.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>headername:</strong></dt>
+<dd><p class="first last">filename of header output file</p>
+</dd>
+<dt><strong>dataname:</strong></dt>
+<dd><p class="first last">filename of data output file</p>
+</dd>
+<dt><strong>fid:</strong></dt>
+<dd><p class="first last">file ID (currently does not look to be used)</p>
+</dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1870,8 +2014,7 @@ added if not detected unless &#8216;nointercept&#8217; is specified.</p>
 vector using the &#8216;brainony&#8217; option.  This is essentially a univariate
 version of the &#8216;predict&#8217; command.  Warning: this is very slow as it loops
 through all voxels.</p>
-<p>Regression is OLS by default, but can be robust using &#8216;robust&#8217; flag.
-Warning: Running robust option is considerably slower than OLS.</p>
+<p>Regression is OLS by default, but can be robust using &#8216;robust&#8217; flag.</p>
 <p>Creates thresholded plot by default</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1916,6 +2059,10 @@ dat.X can be a design_matrix() object.</p>
 </dd>
 <dt><strong>noverbose:</strong></dt>
 <dd><p class="first last">Suppress verbose outputs</p>
+</dd>
+<dt><strong>robust:</strong></dt>
+<dd><p class="first last">Run a robust regression (default is OLS).  Robust is considerably
+slower than OLS</p>
 </dd>
 </dl>
 </td>
@@ -2492,11 +2639,547 @@ colinearity influences the single-trial parameter estimates.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-fmridisplay">
-<span id="fmridisplay"></span><h2>fmridisplay<a class="headerlink" href="#module-fmridisplay" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-&#64;fmridisplay">
+<span id="fmridisplay"></span><h2>fmridisplay<a class="headerlink" href="#module-@fmridisplay" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="fmridisplay.clusters2mask2011">
-<code class="descclassname">fmridisplay.</code><code class="descname">clusters2mask2011</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.clusters2mask2011" title="Permalink to this definition">¶</a></dt>
+<dt id="&#64;fmridisplay.addblobs">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">addblobs</code><span class="sig-paren">(</span><em>obj</em>, <em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.addblobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a method for fmridisplay objects that adds blobs to one or more montages and other surface plot(s).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">cl</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See addthreshblobs and multi_threshold methods for a multiple thresholds version
+render_blobs does most of the hard work.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">an fmridisplay object</p>
+</dd>
+<dt><strong>cl:</strong></dt>
+<dd><p class="first last">a region object. If you&#8217;re using an fmri_data object pass in region(fmri_data_obj)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>There are many optional inputs that control display features of blobs.
+These are determined by render_blobs</p>
+<blockquote>
+<div><p><strong>COLOR:</strong></p>
+<dl class="docutils">
+<dt><strong>&#8216;color&#8217;:</strong></dt>
+<dd>followed by color vector, e.g., [0 1 1]</dd>
+<dt><strong>&#8216;maxcolor&#8217;:</strong></dt>
+<dd>followed by color vector for max color range, e.g., [0 1 1]</dd>
+<dt><strong>&#8216;mincolor&#8217;:</strong></dt>
+<dd>followed by color vector for min color range, e.g., [0 0 1]</dd>
+<dt><strong>&#8216;onecolor&#8217;:</strong></dt>
+<dd>force solid-color blobs</dd>
+<dt><strong>&#8216;splitcolor&#8217;:</strong></dt>
+<dd>Positive and negative values are mapped to different
+colormaps. Default is +=hot, -=cool colors. Followed
+optionally by cell array with 
+vectors of 4 colors defining max/min for +/- range,
+e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}</dd>
+</dl>
+<p><strong>&#8216;OUTLINING:</strong></p>
+<p><a href="#id3"><span class="problematic" id="id4">**</span></a>&#8216;&#8217;outline&#8217;</p>
+<dl class="docutils">
+<dt><strong>&#8216;linewidth&#8217;:</strong></dt>
+<dd><p class="first">followed by width value, e.g., 1</p>
+<p class="last">Note: add &#8216;no_surface&#8217; to stop updating the existing surface blobs</p>
+</dd>
+</dl>
+<p><strong>&#8216;COLOR RANGE:</strong></p>
+<dl class="docutils">
+<dt><strong>&#8216;&#8217;cmaprange&#8217;:</strong></dt>
+<dd>followed by range of values, e.g., [0 40], [-3 3]. Used in
+color and transparency setting under some circumstances.</dd>
+<dt><strong>&#8216;TRANSPARENCY:</strong></dt>
+<dd>{&#8216;trans&#8217;, &#8216;transparent&#8217;,&#8217;scaledtransparency&#8217;, &#8216;constanttrans&#8217;, [val], &#8216;transvalue&#8217;, [val]}</dd>
+<dt><strong>&#8216;trans&#8217;:</strong></dt>
+<dd>Transparent blobs; with no other input, transparency = 0.75 (1 is opaque, 0 is transparent/invisible)</dd>
+<dt><strong>&#8216;scaledtransparency&#8217;:</strong></dt>
+<dd>Transparency is a function of voxel value, lower values are more transparent</dd>
+<dt><strong>&#8216;transvalue&#8217;:</strong></dt>
+<dd>Followed by width value, e.g., 1. also &#8216;constanttrans&#8217;</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Other Options:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;smooth&#8217;:</strong></dt>
+<dd><p class="first last">Smooth blobs</p>
+</dd>
+</dl>
+<p><strong>&#8216;contour&#8217;:</strong></p>
+<dl class="last docutils">
+<dt><strong>&#8216;no_surface&#8217;:</strong></dt>
+<dd><p class="first last">Do not add blobs to surface handles, if they exist</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>CONTROL OF WHICH MONTAGE</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;wh_montages&#8217;:</strong></dt>
+<dd>followed by vector of montage numbers as they appear in
+the list of registered montages in the fmridisplay object</dd>
+</dl>
+</div></blockquote>
+<p>CONTROL OF WHICH SURFACE</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;wh_surfaces&#8217;:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>followed by vector of surface numbers as they appear in</dt>
+<dd>the list of registered surfaces in the fmridisplay object</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj = addblobs(obj, cl, &#39;color&#39;, [0 1 1]);
+obj = addblobs(obj, cl, &#39;color&#39;, [0 0 1], &#39;outline&#39;);
+obj = addblobs(obj, cl, &#39;color&#39;, [0 1 0], &#39;outline&#39;, &#39;linewidth&#39;, 1, &#39;smooth&#39;);
+obj = addblobs(obj, cl, &#39;color&#39;, [1 0 0], &#39;smooth&#39;, &#39;cmaprange&#39;, [0 40]);
+obj = addblobs(obj, cl, ... &#39;wh_montages&#39;, 1);
+obj = addblobs(obj, cl, &#39;splitcolor&#39;, ... &#39;cmaprange&#39;, ... &#39;trans&#39;);
+</pre></div>
+</div>
+<p>Add only to montage 2 in vector of montages in obj.montage</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">cl</span><span class="p">,</span> <span class="s">&#39;which_montages&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> 
+</pre></div>
+</div>
+<p>Map values to the colormap red-&gt;yellow.</p>
+<p>This uses the default percentile-based mapping so that 20% of voxels
+will have the low color and 20% will have the high color, and the rest will be in between:</p>
+<div class="highlight-python"><div class="highlight"><pre>obj = addblobs(obj, cl, &#39;maxcolor&#39;, [1 1 0], &#39;mincolor&#39;, [1 0 0]);
+</pre></div>
+</div>
+<p>Same, but now Map a specific range of values in image ([0 to .05])</p>
+<div class="highlight-python"><div class="highlight"><pre>obj = addblobs(obj, cl, &#39;maxcolor&#39;, [1 1 0], &#39;mincolor&#39;, [1 0 0], &#39;cmaprange&#39;, [0 .05]);
+</pre></div>
+</div>
+<p>Separate positive and negative activations and map to a split colormap;</p>
+<p>See render_blobs</p>
+<div class="highlight-python"><div class="highlight"><pre>o2 = addblobs(o2, cl, &#39;splitcolor&#39;, {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}, &#39;wh_montages&#39;, 1);
+</pre></div>
+</div>
+<p>It is possible to transparency-map values in a statistic image so you
+can show &#8216;unthresholded&#8217; statistic values.  e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>o2 = addblobs(o2, cl, &#39;splitcolor&#39;, {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, &#39;cmaprange&#39;, [-2 2], &#39;trans&#39;, &#39;scaledtransparency&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.addpoints">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">addpoints</code><span class="sig-paren">(</span><em>obj</em>, <em>xyz</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.addpoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots points on fmridisplay objects (e.g., montages of slices)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">newax</span> <span class="o">=</span> <span class="n">addpoints</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Registers handles with the object (referred to as obj)</p>
+<ul class="simple">
+<li>enter xyz as n x 3 list of coordinates in mm to plot (world space)</li>
+<li>Points or text labels or both</li>
+<li>Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)</li>
+<li>axial, saggital, or coronal orientation handled automatically</li>
+<li>Multiple different sets of points can be plotted in different colors/text labels</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Takes all inputs of plot_points_on_slice.  See help for additional
+documentation of options.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>{&#8216;text&#8217;, &#8216;textcodes&#8217;}:</strong></dt>
+<dd>cell array of text values corresponding to points</dd>
+<dt><strong>{&#8216;condf&#8217; &#8216;colorcond&#8217;}:</strong></dt>
+<dd>vector of integers to define color conditions</dd>
+<dt><strong>&#8216;close_enough&#8217;:</strong></dt>
+<dd>mm within which to plot; defined automatically based on slice distance if not entered</dd>
+<dt><strong>&#8216;color&#8217;:</strong></dt>
+<dd>string, &#8216;b&#8217;, or vector, [1 0 0], to define colors; cell if condf is used, e.g., {&#8216;b&#8217; &#8216;g&#8217;}</dd>
+<dt><strong>{&#8216;marker&#8217;, &#8216;MarkerStyle&#8217;}:</strong></dt>
+<dd>e.g., &#8216;o&#8217;, &#8216;v&#8217;, &#8216;s&#8217;</dd>
+</dl>
+<p><strong>{&#8216;MarkerSize&#8217;, &#8216;markersize&#8217;}:</strong></p>
+<dl class="docutils">
+<dt><strong>{&#8216;MarkerFaceColor&#8217;, &#8216;markerfacecolor&#8217;}:</strong></dt>
+<dd>see color above</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Plot points (i.e., coordinate locations) for xyz coords:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">o2</span> <span class="o">=</span> <span class="n">addpoints</span><span class="p">(</span><span class="n">o2</span><span class="p">,</span> <span class="n">DB</span><span class="o">.</span><span class="n">xyz</span><span class="p">,</span> <span class="s">&#39;MarkerFaceColor&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;Marker&#39;</span><span class="p">,</span> <span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="s">&#39;MarkerSize&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+<span class="n">o2</span> <span class="o">=</span> <span class="n">addpoints</span><span class="p">(</span><span class="n">o2</span><span class="p">,</span> <span class="n">DB</span><span class="o">.</span><span class="n">xyz</span><span class="p">,</span> <span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="n">DB</span><span class="o">.</span><span class="n">textcodes</span><span class="p">,</span> <span class="s">&#39;condf&#39;</span><span class="p">,</span> <span class="n">DB</span><span class="o">.</span><span class="n">condf</span><span class="p">,</span> <span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;b&#39;</span> <span class="s">&#39;g&#39;</span><span class="p">});</span>
+<span class="n">o2</span> <span class="o">=</span> <span class="n">removepoints</span><span class="p">(</span><span class="n">o2</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.addthreshblobs">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">addthreshblobs</code><span class="sig-paren">(</span><em>obj</em>, <em>statimg</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.addthreshblobs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addthreshblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">statimg</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Add blobs from a statistical image object at multiple thresholds to
+montage and other surface plots.</p>
+<p>It passes options specified in varargin onto addblobs, see help addblobs
+for options. In addition it has the parameters &#8216;thresh&#8217; and
+&#8216;pruneclusters&#8217; are used and have default values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">fmridisplay object, e.g. from a montage</p>
+</dd>
+<dt><strong>statimg:</strong></dt>
+<dd><p class="first last">statistics_image object</p>
+</dd>
+<dt><strong>&#8216;thresh&#8217;,{&#8216;fdr&#8217;,0.01}:</strong></dt>
+<dd><p class="first">cell array of p-value thresholds in ascending order. 
+can be &#8216;fdr&#8217;, or uncorrecetd p-value. defaults to:</p>
+<p class="last">thresh = {&#8216;fdr&#8217;,&#8216;0.001&#8217;,&#8216;0.01&#8217;}</p>
+</dd>
+<dt><strong>&#8216;pruneclusters&#8217;, [0 or 1]:</strong></dt>
+<dd><p class="first last">Prune clusters that do not have at least one voxel
+surving at the most stringent threshold. Defaults to 1.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.].
+Prune clusters.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addthreshblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">statimg</span><span class="p">);</span> 
+</pre></div>
+</div>
+<p>Add blobs from statimg at 3 significance levels [FDR, 0.001 unc., 0.01 unc.]. 
+Prune clusters.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addthreshblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">statimg</span><span class="p">,</span> <span class="s">&#39;thresh&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;fdr&#39;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">});</span> 
+</pre></div>
+</div>
+<p>Add blobs from statimg at 2 significance levels [FDR, 0.001 unc.]. 
+Do not prune clusters</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">addthreshblobs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">statimg</span><span class="p">,</span> <span class="s">&#39;thresh&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;fdr&#39;</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">},</span><span class="s">&#39;pruneclusters&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>set defaults for thresholds and cluster pruning</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.legend">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">legend</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates legend for fmridisplay object
+Adds legend axis handles to obj.activation_maps{:}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>obj = legend(obj, varargin)
+
+obj = legend(obj, &#39;figure&#39;) % new figure
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.montage">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">montage</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.montage" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Creates montage of slices</dt>
+<dd><ul class="first last simple">
+<li>Solid brain slices or contour outlines</li>
+<li>Points or text labels or both</li>
+<li>Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)</li>
+<li>axial or saggital orientation</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">montage</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Takes all inputs of plot_points_on_slice.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>{&#8216;noslice&#8217;, &#8216;nodraw&#8217;}:</strong></dt>
+<dd><p class="first last">drawslice = 0;</p>
+</dd>
+<dt><strong>&#8216;color&#8217;:</strong></dt>
+<dd><p class="first last">color = varargin{i+1}; varargin{i+1} = [];</p>
+</dd>
+<dt><strong>&#8216;marker&#8217;:</strong></dt>
+<dd><p class="first last">marker = varargin{i+1}; varargin{i + 1} = [];</p>
+</dd>
+<dt><strong>{&#8216;wh_slice&#8217;}:</strong></dt>
+<dd><p class="first last">wh_slice = varargin{i+1};</p>
+</dd>
+<dt><strong>{&#8216;close&#8217;, &#8216;closeenough&#8217;, &#8216;close_enough&#8217;}:</strong></dt>
+<dd><p class="first last">close_enough =    varargin{i+1};</p>
+</dd>
+<dt><strong>{&#8216;sagg&#8217;,&#8217;saggital&#8217;,&#8217;sagittal&#8217;}:</strong></dt>
+<dd><p class="first last">orientation = &#8216;sagittal&#8217;;</p>
+</dd>
+<dt><strong>{&#8216;MarkerSize&#8217;, &#8216;markersize&#8217;}:</strong></dt>
+<dd><p class="first last">markersize = varargin{i+1};</p>
+</dd>
+<dt><strong>{&#8216;MarkerFaceColor&#8217;, &#8216;markerfacecolor&#8217;}:</strong></dt>
+<dd><p class="first last">facecolor = varargin{i+1};</p>
+</dd>
+<dt><strong>&#8216;solid&#8217;:</strong></dt>
+<dd><p class="first last">disptype = &#8216;solid&#8217;;</p>
+</dd>
+<dt><strong>&#8216;overlay&#8217;:</strong></dt>
+<dd><p class="first last">ovl = varargin{i + 1};
+NOTE! DO NOT ENTER THIS HERE; ENTER WHEN YOU INITIALIZE FMRIDISPLAY OBJECT</p>
+</dd>
+<dt><strong>{&#8216;text&#8217;, &#8216;textcodes&#8217;}:</strong></dt>
+<dd><p class="first last">textcodes = varargin{i + 1};</p>
+</dd>
+<dt><strong>{&#8216;condf&#8217; &#8216;colorcond&#8217;}:</strong></dt>
+<dd><p class="first last">condf = varargin{i + 1};</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>In addition:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>&#8216;onerow&#8217;:</strong></dt>
+<dd>arrange axes in one row</dd>
+<dt><strong>&#8216;slice_range&#8217;:</strong></dt>
+<dd>[min max] values in mm for slices to plot</dd>
+<dt><strong>&#8216;wh_slice&#8217; or &#8216;custom_coords&#8217;:</strong></dt>
+<dd><blockquote class="first">
+<div>followed my mm values for slices desired</div></blockquote>
+<p class="last">e.g., for cluster/region centers, xyz = cat(1, cl.mm_center)
+o2 = montage(o2, &#8216;axial&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;onerow&#8217;);
+o2 = montage(o2, &#8216;saggital&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;onerow&#8217;);</p>
+</dd>
+<dt><strong>&#8216;spacing&#8217;:</strong></dt>
+<dd>followed by inter-slice spacing in mm</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">an fmridisplay object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Properties:</th><td class="field-body"><ul class="first last simple">
+<li>overlay: [1x105 char]</li>
+<li>SPACE: [1x1 struct]</li>
+<li>activation_maps: {[1x1 struct]}</li>
+<li>montage: {[1x1 struct]}</li>
+<li>surface: {}</li>
+<li>orthviews: {}</li>
+<li>history: {}</li>
+<li>history_descrip: []</li>
+<li>additional_info: &#8216;&#8217;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre>o2 = fmridisplay; % create starting fmridisplay container object
+</pre></div>
+</div>
+<p>Define new axes in existing figure, and use those for montage:</p>
+<div class="highlight-python"><div class="highlight"><pre>axh = axes(&#39;Position&#39;, [0.05 0.4 .1 .5]);
+o2 = montage(o2, &#39;saggital&#39;, &#39;wh_slice&#39;, xyz(1,:), &#39;existing_axes&#39;, axh);
+
+o2 = montage(o2, &#39;saggital&#39;, &#39;slice_range&#39;, [-10 10], &#39;onerow&#39;);
+o2 = montage(o2, &#39;axial&#39;, &#39;slice_range&#39;, [-40 50], &#39;onerow&#39;, &#39;spacing&#39;, 4);
+o2 = montage(o2, &#39;axial&#39;, &#39;slice_range&#39;, [-20 30], &#39;onerow&#39;, &#39;spacing&#39;, 8);
+o2 = montage(o2, &#39;axial&#39;, &#39;wh_slice&#39;, xyz, &#39;onerow&#39;);
+
+% Parasaggital only:
+o2 = montage(o2, &#39;saggital&#39;, &#39;slice_range&#39;, [-4 4], &#39;onerow&#39;, &#39;spacing&#39;, 8);
+</pre></div>
+</div>
+<p>Add/remove blobs and points with fmridisplay.addblobs,
+fmridisplay.addpoints, fmridisplay.removeblobs, fmridisplay.removepoints</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>fmridisplay, cluster_orthviews, montage_clusters and variants</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.surface">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">surface</code><span class="sig-paren">(</span><em>obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.surface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds surfaces of brain to figure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span> <span class="o">=</span> <span class="n">surface</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">fmridisplay</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">an fmridisplay object</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Properties:</th><td class="field-body"><ul class="first simple">
+<li>overlay: &#8216;&#8217;</li>
+<li>SPACE: &#8216;&#8217;</li>
+<li>activation_maps: {}</li>
+<li>montage: {}</li>
+<li>surface: {[1x1 struct]}</li>
+<li>orthviews: {}</li>
+<li>history: {}</li>
+<li>history_descrip: []</li>
+<li>additional_info: &#8216;&#8217;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"><p class="first last">o2 = surface(o2, axes, [0.15 0.28 .15 1], &#8216;direction&#8217;, &#8216;hires right&#8217;, &#8216;orientation&#8217;, &#8216;lateral&#8217;);</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>See help fmridisplay</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;fmridisplay.transparency_change">
+<code class="descclassname">&#64;fmridisplay.</code><code class="descname">transparency_change</code><span class="sig-paren">(</span><em>o2</em>, <em>multval</em><span class="sig-paren">)</span><a class="headerlink" href="#@fmridisplay.transparency_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the transparency of blobs in an fmridisplay object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>multval:</strong></dt>
+<dd><p class="first last">multiply transparency values by this.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>values &lt; 1 makes blobs more transparent, &gt; 1 makes blobs more opaque</p>
+</dd></dl>
+
+</div>
+<div class="section" id="fmridisplay-helper-functions">
+<h2>fmridisplay_helper_functions<a class="headerlink" href="#fmridisplay-helper-functions" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-fmridisplay_helper_functions"></span><dl class="function">
+<dt id="fmridisplay_helper_functions.clusters2mask2011">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">clusters2mask2011</code><span class="sig-paren">(</span><em>cl</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.clusters2mask2011" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns 3-D mask of voxels included in a cl structure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2534,8 +3217,8 @@ how cl is constructed.)</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="fmridisplay.define_sampling_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">define_sampling_space</code><span class="sig-paren">(</span><em>V</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.define_sampling_space" title="Permalink to this definition">¶</a></dt>
+<dt id="fmridisplay_helper_functions.define_sampling_space">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">define_sampling_space</code><span class="sig-paren">(</span><em>V</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.define_sampling_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the sampling space of an image, with an upsampled space to 0.5 mm
 resolution</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2607,8 +3290,8 @@ xcoords, ycoords: mm coords centered on origin
 </dd></dl>
 
 <dl class="function">
-<dt id="fmridisplay.display_slice">
-<code class="descclassname">fmridisplay.</code><code class="descname">display_slice</code><span class="sig-paren">(</span><em>dat</em>, <em>wh_slice</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.display_slice" title="Permalink to this definition">¶</a></dt>
+<dt id="fmridisplay_helper_functions.display_slice">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">display_slice</code><span class="sig-paren">(</span><em>dat</em>, <em>wh_slice</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.display_slice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resample slice data in dat to SPACE and display</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2624,8 +3307,8 @@ xcoords, ycoords: mm coords centered on origin
 </dd></dl>
 
 <dl class="function">
-<dt id="fmridisplay.map_to_world_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">map_to_world_space</code><span class="sig-paren">(</span><em>V</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.map_to_world_space" title="Permalink to this definition">¶</a></dt>
+<dt id="fmridisplay_helper_functions.map_to_world_space">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">map_to_world_space</code><span class="sig-paren">(</span><em>V</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.map_to_world_space" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2671,8 +3354,8 @@ back left vox</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="fmridisplay.render_blobs">
-<code class="descclassname">fmridisplay.</code><code class="descname">render_blobs</code><span class="sig-paren">(</span><em>currentmap</em>, <em>mymontage</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.render_blobs" title="Permalink to this definition">¶</a></dt>
+<dt id="fmridisplay_helper_functions.render_blobs">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">render_blobs</code><span class="sig-paren">(</span><em>currentmap</em>, <em>mymontage</em>, <em>SPACE</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.render_blobs" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a helper function for fmridisplay objects, called by the addblobs method</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2790,8 +3473,8 @@ fmridisplay/addblobs, fmridisplay, fmridisplay/multi_threshold</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="fmridisplay.resample_space">
-<code class="descclassname">fmridisplay.</code><code class="descname">resample_space</code><span class="sig-paren">(</span><em>dat</em>, <em>V</em>, <em>targetsp</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay.resample_space" title="Permalink to this definition">¶</a></dt>
+<dt id="fmridisplay_helper_functions.resample_space">
+<code class="descclassname">fmridisplay_helper_functions.</code><code class="descname">resample_space</code><span class="sig-paren">(</span><em>dat</em>, <em>V</em>, <em>targetsp</em><span class="sig-paren">)</span><a class="headerlink" href="#fmridisplay_helper_functions.resample_space" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -3162,6 +3845,46 @@ and right hemispheres</td>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">dat</span> <span class="o">=</span> <span class="n">flip</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;mirror&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="&#64;image_vector.get_wh_image">
+<code class="descclassname">&#64;image_vector.</code><code class="descname">get_wh_image</code><span class="sig-paren">(</span><em>dat</em>, <em>wh</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.get_wh_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>For an image_vector with multiple images (cases, contrasts, etc.), select a subset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function obj_out = get_wh_image(obj1, wh)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>obj1:</strong></dt>
+<dd><p class="first last">An image_vector object</p>
+</dd>
+<dt><strong>wh:</strong></dt>
+<dd><p class="first last">An array indicating which images</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>my_image_vector = get_wh_image(dat, 3) %to get 3rd image
+my_image_vector = get_wh_image(dat, [1 3]) %to get 1st and 3rd image
+</pre></div>
+</div>
+<p>check that wh is in range</p>
 </dd></dl>
 
 <dl class="function">
@@ -3615,7 +4338,7 @@ Requires that each object has an equal number of columns and voxels</p>
 <dt id="&#64;image_vector.montage">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">montage</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.montage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a montage of an image_vector (or statistic_image or fmri_data) object</p>
-<p><a href="#id7"><span class="problematic" id="id8">*</span></a>Usage:</p>
+<p><a href="#id5"><span class="problematic" id="id6">*</span></a>Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre>[fig_handle or o2 fmridisp object] = montage(image_obj, [optional arguments])
 </pre></div>
 </div>
@@ -3647,7 +4370,7 @@ Requires that each object has an equal number of columns and voxels</p>
 <dt id="&#64;image_vector.orthviews">
 <code class="descclassname">&#64;image_vector.</code><code class="descname">orthviews</code><span class="sig-paren">(</span><em>image_obj</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#@image_vector.orthviews" title="Permalink to this definition">¶</a></dt>
 <dd><p>Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object</p>
-<p><a href="#id9"><span class="problematic" id="id10">*</span></a>Usage:</p>
+<p><a href="#id7"><span class="problematic" id="id8">*</span></a>Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">orthviews</span><span class="p">(</span><span class="n">image_obj</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -4110,7 +4833,7 @@ Enter an image_vector or fmri_data object (usually with time series)</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">sagg_slice_movie</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="p">[</span><span class="n">full_path_of_movie_output_file</span><span class="p">,</span><span class="n">image_skip_interval</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><a href="#id11"><span class="problematic" id="id12">*</span></a>Optional Inputs:</p>
+<p><a href="#id9"><span class="problematic" id="id10">*</span></a>Optional Inputs:</p>
 <blockquote>
 <div><dl class="docutils">
 <dt><strong>movie_output_file:</strong></dt>
@@ -4159,7 +4882,7 @@ or fmri_data object OR two objects, for cross-prediction.</p>
 </tbody>
 </table>
 <div class="highlight-python"><div class="highlight"><pre>[list outputs here] = function_name(list inputs here, [optional inputs])
-[results_obj, indx] = searchlight(dat, [optional inputs])
+[results_obj, stats, indx] = searchlight(dat, [optional inputs])
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4205,6 +4928,10 @@ or fmri_data object OR two objects, for cross-prediction.</p>
 <dd>sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
 This takes a long time to calculate, but can be saved and
 re-used for a given mask</dd>
+<dt><strong>holdout_set:</strong></dt>
+<dd>Followed by integer vector of which observations belong to which
+holdout set, for cross-validation. This is passed into fmri_data.predict.m.  Default is
+empty.</dd>
 </dl>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4241,7 +4968,7 @@ holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]
 
 % Run, and run again with existing indx
 pool = parpool(12);  % initialize parallel processing (12 cores)
-[results_obj, indx] = searchlight(dat, &#39;holdout_set&#39;, holdout_set);
+[results_obj, stats, indx] = searchlight(dat, &#39;holdout_set&#39;, holdout_set);
 results_obj = searchlight(dat, &#39;holdout_set&#39;, holdout_set, &#39;indx&#39;, indx);
 </pre></div>
 </div>
@@ -5266,23 +5993,7 @@ cluster_orthviews(cl, &#39;unique&#39;)
 <dl class="function">
 <dt id="&#64;statistic_image.select_one_image">
 <code class="descclassname">&#64;statistic_image.</code><code class="descname">select_one_image</code><span class="sig-paren">(</span><em>obj</em>, <em>wh</em><span class="sig-paren">)</span><a class="headerlink" href="#@statistic_image.select_one_image" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>obj:</strong></dt>
-<dd><p class="first last">A statistic_image object</p>
-</dd>
-<dt><strong>wh:</strong></dt>
-<dd><p class="first last">An integer for which image in a series of images stored in obj you want</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="&#64;statistic_image.threshold">
@@ -5393,6 +6104,9 @@ dat = threshold(dat, 0.001, &#39;unc&#39;, &#39;k&#39;, 35, &#39;mask&#39;, mask
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="toolboxes">
+<h1>Toolboxes<a class="headerlink" href="#toolboxes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="cluster-contig-region-tools">
 <h2>Cluster_contig_region_tools<a class="headerlink" href="#cluster-contig-region-tools" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-Cluster_contig_region_tools"></span><dl class="function">
@@ -5998,15 +6712,13 @@ dimensions and voxel sizes.</p>
 </dd></dl>
 
 </div>
-</div>
-<div class="section" id="toolboxes">
-<h1>Toolboxes<a class="headerlink" href="#toolboxes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-diagnostics">
 <span id="diagnostics"></span><h2>diagnostics<a class="headerlink" href="#module-diagnostics" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="diagnostics.BiasPowerloss">
 <code class="descclassname">diagnostics.</code><code class="descname">BiasPowerloss</code><span class="sig-paren">(</span><em>tc</em>, <em>X</em>, <em>c</em>, <em>beta</em>, <em>df</em>, <em>z</em>, <em>pval</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.BiasPowerloss" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the approximate bias and power loss due to mis-modeling</p>
+<dd><p>Calculate the approximate bias and power loss due to mis-modeling
+This works with the Mismodeling Toolbox described by Loh et al. 2008</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -6015,7 +6727,7 @@ dimensions and voxel sizes.</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre>function [b pl] = BiasPowerloss(z, X, V)
+<div class="highlight-python"><div class="highlight"><pre>[b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -6027,7 +6739,7 @@ dimensions and voxel sizes.</p>
 <dd><p class="first last">fMRI time course</p>
 </dd>
 <dt><strong>X:</strong></dt>
-<dd><p class="first last">design matrix</p>
+<dd><p class="first last">design matrix for multiple regression</p>
 </dd>
 <dt><strong>c:</strong></dt>
 <dd><p class="first last">contrast of interest</p>
@@ -6047,7 +6759,7 @@ dimensions and voxel sizes.</p>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>b:</strong></dt>
 <dd><p class="first last">updated (correct) beta value</p>
 </dd>
@@ -6058,6 +6770,9 @@ dimensions and voxel sizes.</p>
 <dd><p class="first last">power loss</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">References:</th><td class="field-body"><p class="first last">Loh, J. M., Lindquist, M. A., Wager, T. D. (2008). Residual Analysis for Detecting Mis-modeling in fMRI. Statistica Sinica, 18, 1421-1448.</p>
 </td>
 </tr>
 </tbody>
@@ -6381,11 +7096,10 @@ QC = canlab_qc_metrics1(epi_names, mask_name, &#39;noplot&#39;, &#39;printfile&#
 <dl class="function">
 <dt id="diagnostics.compare_subjects">
 <code class="descclassname">diagnostics.</code><code class="descname">compare_subjects</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function compares the GLOBAL signal
-after standardizing each image, in case 1
-or the REGIONAL values in each cluster, in case 2
-...and does some diagnostics on the similarity
-between images.</p>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -6472,11 +7186,10 @@ P = get_filename2([&#39;sub*\Anatomy\nscalped_ft1.img&#39;]);
 <dl class="function">
 <dt id="diagnostics.compare_subjects256">
 <code class="descclassname">diagnostics.</code><code class="descname">compare_subjects256</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects256" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function compares the GLOBAL signal
-after standardizing each image, in case 1
-or the REGIONAL values in each cluster, in case 2
-...and does some diagnostics on the similarity 
-between images.</p>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -6724,7 +7437,7 @@ extension. Empty [] means do not write output image.</p>
 </div></blockquote>
 <p class="last">first positive gradient</p>
 </dd>
-<dt><a href="#id13"><span class="problematic" id="id14">**</span></a>plotfigs</dt>
+<dt><a href="#id11"><span class="problematic" id="id12">**</span></a>plotfigs</dt>
 <dd><p class="first last">[1/0]: enable or suppress mask display and orthviews</p>
 </dd>
 </dl>
@@ -6779,7 +7492,7 @@ defaults</p>
 </dd>
 <dt><strong>wcard:</strong></dt>
 <dd><p class="first last">Enter wcard for image or file to get - e.g., &#8216;beta_0001.img&#8217;
-This can also include subdirectories (no <a href="#id15"><span class="problematic" id="id16">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
+This can also include subdirectories (no <a href="#id13"><span class="problematic" id="id14">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
 </dd>
 </dl>
 </td>
@@ -6806,7 +7519,7 @@ removed from the list.</p>
 <span class="n">P</span> <span class="o">=</span> <span class="n">get_filename</span><span class="p">(</span><span class="s">&#39;020515sp*&#39;</span><span class="p">,</span><span class="s">&#39;anatomy/nnhe*_seg1.img&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>one * is allowed in first string, multiple <a href="#id17"><span class="problematic" id="id18">*</span></a>&#8216;s in second,
+<p>one * is allowed in first string, multiple <a href="#id15"><span class="problematic" id="id16">*</span></a>&#8216;s in second,
 as long as they are in the filename, not directory names!</p>
 </dd></dl>
 
@@ -6835,7 +7548,7 @@ as long as they are in the filename, not directory names!</p>
 </dd>
 <dt><strong>wcard:</strong></dt>
 <dd><p class="first last">Enter wcard for image or file to get - e.g., &#8216;beta_0001.img&#8217;
-This can also include subdirectories (no <a href="#id19"><span class="problematic" id="id20">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
+This can also include subdirectories (no <a href="#id17"><span class="problematic" id="id18">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
 </dd>
 </dl>
 </td>
@@ -6873,7 +7586,7 @@ NOT entering a * in dwcard seems to produce an error.</p>
 </pre></div>
 </div>
 <p>one * is allowed in the directory structure right now, 
-multiple <a href="#id21"><span class="problematic" id="id22">*</span></a>&#8216;s in the filename.</p>
+multiple <a href="#id19"><span class="problematic" id="id20">*</span></a>&#8216;s in the filename.</p>
 </dd></dl>
 
 <dl class="function">
@@ -8008,7 +8721,7 @@ false positive activations.  Orthogonalization of the nuisance set precludes thi
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
 <dt><strong>mP:</strong></dt>
-<dd><p class="first last">CSF mask image file.  <a href="#id23"><span class="problematic" id="id24">*</span></a>_seg3.img output from SPM is appropriate
+<dd><p class="first last">CSF mask image file.  <a href="#id21"><span class="problematic" id="id22">*</span></a>_seg3.img output from SPM is appropriate
 should be in same space and have same dims as functionals
 but automatic reslicing is done if necessary.</p>
 </dd>
@@ -8304,7 +9017,7 @@ only the last entered option will count.</p>
 <dt><strong>&#8216;onlyresults&#8217;:</strong></dt>
 <dd><p class="first last">just run/publish robfit_results_batch, don&#8217;t run robfit (assumes existing analyses)</p>
 </dd>
-<dt><a href="#id25"><span class="problematic" id="id26">**</span></a>&#8216;whichcons&#8217;, [which cons]</dt>
+<dt><a href="#id23"><span class="problematic" id="id24">**</span></a>&#8216;whichcons&#8217;, [which cons]</dt>
 <dd><p class="first last">vector of contrasts to analyze (DEFAULT: aall subject level contrasts)
 see [which cons] in help robfit</p>
 </dd>
@@ -10406,7 +11119,7 @@ by the number of elements in SPMs &#8220;hi-res&#8221; onset boxcar to adjust.</
 </tbody>
 </table>
 <p>With &#8220;zero-duration&#8221; events, an hrf input scaled to reflect &#8220;event response&#8221; amplitudes
-might look something like this: (<a href="#id27"><span class="problematic" id="id28">**</span></a><em>may not be exactly right because
+might look something like this: (<a href="#id25"><span class="problematic" id="id26">**</span></a><em>may not be exactly right because
 i think dt is in sec)
 figure; plot(conv(SPM.xBF.bf(:, 1), my_ons))
 my_ons = ones(1, TR ./ SPM.xBF.dt .</em> SPM.Sess.U(1).dur(1));</p>
@@ -13387,7 +14100,7 @@ p-value inputs!!</p>
 <dd><p class="first last">t-value img names, used to ensure signs are same across all tests</p>
 </dd>
 <dt><strong>k:</strong></dt>
-<dd><p class="first last">num voxels/num comparisons <a href="#id29"><span class="problematic" id="id30">**</span></a>NOT USED NOW - FDR USED INSTEAD
+<dd><p class="first last">num voxels/num comparisons <a href="#id27"><span class="problematic" id="id28">**</span></a>NOT USED NOW - FDR USED INSTEAD
 if empty, uses # of non-zero, non-NaN values in images</p>
 </dd>
 </dl>
@@ -14648,7 +15361,7 @@ VM        - file struct of Mask  image handle  (relative)</p>
 <blockquote>
 <div></div></blockquote>
 <p>xX.W      - if not specified W*W&#8217; = inv(x.Vi.V)
-xX.V      - V matrix (K*W*Vi*W&#8217;<a href="#id31"><span class="problematic" id="id32">*</span></a>K&#8217;) = correlations after K*W is applied
+xX.V      - V matrix (K*W*Vi*W&#8217;<a href="#id29"><span class="problematic" id="id30">*</span></a>K&#8217;) = correlations after K*W is applied
 xX.xKXs   - space structure for K*W*X, the &#8216;filtered and whitened&#8217;</p>
 <blockquote>
 <div><blockquote>
@@ -14717,7 +15430,7 @@ analysis mask. The mask image is included for reference, but is not
 explicitly used by the results section.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id65"><span class="problematic" id="id66">beta_</span></a>????.{img,hdr}                                 - parameter images
+<p><a href="#id63"><span class="problematic" id="id64">beta_</span></a>????.{img,hdr}                                 - parameter images
 These are 32-bit (float32) images of the parameter estimates. The image
 files are numbered according to the corresponding column of the
 design matrix. Voxels outside the analysis mask (mask.img) are given
@@ -14735,7 +15448,7 @@ Voxels outside the analysis mask are given value 0.  These images
 reflect the nonstationary aspects the spatial autocorrelations.</p>
 <blockquote>
 <div></div></blockquote>
-<p><a href="#id67"><span class="problematic" id="id68">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
+<p><a href="#id65"><span class="problematic" id="id66">ResI_</span></a>????.{img,hdr}        - standardised residual (temporary) images
 These are 64-bit (float64) images of standardised residuals. At most
 maxres images will be saved and used by spm_est_smoothness, after which
 they will be deleted.</p>
@@ -14747,7 +15460,7 @@ they will be deleted.</p>
 <dd>Springer Verlag</dd>
 </dl>
 <p>Friston KJ, Holmes AP, Worsley KJ, Poline JB, Frith CD, Frackowiak RSJ (1995)
-<a href="#id33"><span class="problematic" id="id34">``</span></a>Statistical Parametric Maps in Functional Imaging:</p>
+<a href="#id31"><span class="problematic" id="id32">``</span></a>Statistical Parametric Maps in Functional Imaging:</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>A General Linear Approach&#8217;&#8216;</dt>
@@ -14755,7 +15468,7 @@ they will be deleted.</p>
 </dl>
 </div></blockquote>
 <p>Worsley KJ, Friston KJ (1995)
-<a href="#id35"><span class="problematic" id="id36">``</span></a>Analysis of fMRI Time-Series Revisited - Again&#8217;&#8216;</p>
+<a href="#id33"><span class="problematic" id="id34">``</span></a>Analysis of fMRI Time-Series Revisited - Again&#8217;&#8216;</p>
 <blockquote>
 <div>NeuroImage 2:173-181</div></blockquote>
 </div></blockquote>
@@ -14849,9 +15562,10 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 <div class="section" id="index-image-manip-tools">
 <h2>Index_image_manip_tools<a class="headerlink" href="#index-image-manip-tools" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-Index_image_manip_tools"></span><dl class="function">
-<dt id="Index_image_manip_tools.iimg_check_indx">
-<code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_check_indx</code><span class="sig-paren">(</span><em>dat</em>, <em>volInfo</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_check_indx" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dt id="Index_image_manip_tools.flip_endianness">
+<code class="descclassname">Index_image_manip_tools.</code><code class="descname">flip_endianness</code><span class="sig-paren">(</span><em>imgs</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.flip_endianness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips fMRI images (swap R/L)</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -14859,7 +15573,7 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">dattype</span><span class="p">,</span><span class="n">dat</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_check_indx</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">volInfo</span><span class="p">,[</span><span class="n">outtype</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">Vimgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">flip_endianness</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -14867,22 +15581,43 @@ P = threshold_imgs(s,tinv(1-.05,36),[],&#39;pos&#39;);P = threshold_imgs(s,tinv(
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>dattype:</strong></dt>
-<dd><p class="first last">is &#8216;full&#8217; or &#8216;masked&#8217;</p>
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">Give this a list of fMRI images (paths, char str)</p>
 </dd>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Optional Input:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>outtype:</strong></dt>
-<dd><p class="first last">&#8216;full&#8217; or &#8216;masked&#8217; output</p>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Vimgs:</strong></dt>
+<dd><p class="first last">Your images, flipped</p>
 </dd>
 </dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>::</dt>
+<dd>load EXPT  %study specific spm design file
+imgs = EXPT.SNPM.P{1};
+[Vimgs] = flip_endianness(imgs)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">References:</th><td class="field-body"><p class="first">N/A</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>spm_vol</li>
+</ul>
 </td>
 </tr>
 </tbody>
 </table>
-<p>make sure data is correct format</p>
 </dd></dl>
 
 <dl class="function">
@@ -14953,14 +15688,8 @@ defined by volInfo</p>
 <dl class="function">
 <dt id="Index_image_manip_tools.iimg_cluster_index">
 <code class="descclassname">Index_image_manip_tools.</code><code class="descname">iimg_cluster_index</code><span class="sig-paren">(</span><em>dat</em>, <em>xyz</em>, <em>k</em><span class="sig-paren">)</span><a class="headerlink" href="#Index_image_manip_tools.iimg_cluster_index" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Get voxel cluster indices and sizes
+:Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">clindx</span><span class="p">,</span><span class="n">nvox</span><span class="p">]</span> <span class="o">=</span> <span class="n">iimg_cluster_index</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">xyz</span><span class="p">,[</span><span class="n">k</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -15231,7 +15960,7 @@ are saved</p>
 <dd><p class="first last">followed by a vector of size thresholds</p>
 </dd>
 </dl>
-<p class="last"><a href="#id37"><span class="problematic" id="id38">**</span></a>&#8216;volInfo&#8217;: followed by volInfo struct; needed if inname is data rather</p>
+<p class="last"><a href="#id35"><span class="problematic" id="id36">**</span></a>&#8216;volInfo&#8217;: followed by volInfo struct; needed if inname is data rather</p>
 </td>
 </tr>
 </tbody>
@@ -16844,7 +17573,7 @@ Each field is a cell array whose length = rows in the csv file.  Column
 names are assumed to be in the first row.
 If column names are invalid struct field names, edits them by replacing
 funky characters with an underscore, or if first char is a number, I
-prepend <a href="#id69"><span class="problematic" id="id70">aa_</span></a> to the field name.</p>
+prepend <a href="#id67"><span class="problematic" id="id68">aa_</span></a> to the field name.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -17979,10 +18708,10 @@ Time resolution is in TRs</p>
 </dd>
 </dl>
 <p>behavioral vector is row vector of behavioral or other scores to correlate</p>
-<p>corr flag:  <a href="#id39"><span class="problematic" id="id40">*</span></a>1 = work on correlations among voxels, 2 = work on covariance</p>
-<p>plotflag:   <a href="#id41"><span class="problematic" id="id42">*</span></a>1 = yes, 0 = no.  plots.</p>
+<p>corr flag:  <a href="#id37"><span class="problematic" id="id38">*</span></a>1 = work on correlations among voxels, 2 = work on covariance</p>
+<p>plotflag:   <a href="#id39"><span class="problematic" id="id40">*</span></a>1 = yes, 0 = no.  plots.</p>
 <dl class="last docutils">
-<dt>locflag:    1 yes, <a href="#id43"><span class="problematic" id="id44">*</span></a>0 no; add XYZ voxel locations (scaled) to data submitted to clustering</dt>
+<dt>locflag:    1 yes, <a href="#id41"><span class="problematic" id="id42">*</span></a>0 no; add XYZ voxel locations (scaled) to data submitted to clustering</dt>
 <dd><p class="first last">pushes voxels closer in space to be classified in the same cluster</p>
 </dd>
 </dl>
@@ -20374,21 +21103,81 @@ for indepndent samples g1 and g2.</p>
 group.</p>
 <p>Source, Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.
 From notes on Garson stats website.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>y_g1:</strong></dt>
+<dd><p class="first last">Matrix of variables for group 1 (n observations x k variables)</p>
+</dd>
+<dt><strong>y_g2:</strong></dt>
+<dd><p class="first last">Matrix of variables for group 2 (n observations x k variables)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">String &#8216;noverbose&#8217; can be used to prevent output from being
+printed to command line</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r1:</strong></dt>
+<dd><p class="first last">Matrix of correlation coefficients for group 1</p>
+</dd>
+<dt><strong>r2:</strong></dt>
+<dd><p class="first last">Matrix of correlation coefficients for group 2</p>
+</dd>
+<dt><strong>rdiff:</strong></dt>
+<dd><p class="first last">Difference in correlation coefficient matrices (r1 - r2)</p>
+</dd>
+<dt><strong>rdiff_p:</strong></dt>
+<dd><p class="first last">p values testing against no difference between r1 and r2. 
+Hubert Blalock, Social Statistics, NY: McGraw-Hill, 1972:  406-407.</p>
+</dd>
+<dt><strong>rdiff_zscore:</strong></dt>
+<dd><p class="first last">z scores for the difference between r1 and r2.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>%generate two random input matrices (20 subjects x 5 variables)
+y_g1 = rand(20,5);
+y_g2 = rand(20,5);
+[r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2);
+
+%supress output
+[r1, r2, rdiff, rdiff_p, rdiff_zscore] = correl_compare_indep(y_g1,y_g2,&#39;noverbose&#39;);
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_permute*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="Statistics_tools.correl_compare_indep_inputr">
 <code class="descclassname">Statistics_tools.</code><code class="descname">correl_compare_indep_inputr</code><span class="sig-paren">(</span><em>r1</em>, <em>r2</em>, <em>N1</em>, <em>N2</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Statistics_tools.correl_compare_indep_inputr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare two Pearson&#8217;s correlation values (r1 and r2) collected from independent
-samples with sample sizes N1 and N2</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
+<dd><p>Compare two Pearson&#8217;s correlation values collected from independent samples
+:Based on: www.stat-help.com/
+:Usage:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">rdiff</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">correl_compare_indep_inputr</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">N1</span><span class="p">,</span> <span class="n">N2</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -20396,17 +21185,63 @@ samples with sample sizes N1 and N2</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Based on:</th><td class="field-body">www.stat-help.com/</td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r1:</strong></dt>
+<dd><p class="first last">Correlation coefficient for group 1</p>
+</dd>
+<dt><strong>r2:</strong></dt>
+<dd><p class="first last">Correlation coefficient for group 2</p>
+</dd>
+<dt><strong>N1:</strong></dt>
+<dd><p class="first last">Sample size for group 1</p>
+</dd>
+<dt><strong>N2:</strong></dt>
+<dd><p class="first last">Sample size for group 2</p>
+</dd>
+</dl>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">See Also:</th><td class="field-body">correl_compare_indep.m and correl_compare_dep.m</td>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>rdiff:</strong></dt>
+<dd><p class="first last">Difference in correlation coefficient matrices (r1 - r2)</p>
+</dd>
+<dt><strong>Z:</strong></dt>
+<dd><p class="first last">Z score for difference in correlation coefficients.</p>
+</dd>
+<dt><strong>pval:</strong></dt>
+<dd><p class="first last">p value for two-tailed z-test</p>
+</dd>
+<dt><strong>stats:</strong></dt>
+<dd><p class="first last">Structure of variables including r1, r2, N1, N2, rdiff, zdiff, Z,
+pval, myalpha, sig</p>
+</dd>
+</dl>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">rdiff</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">pval</span><span class="p">,</span> <span class="n">stats</span><span class="p">]</span> <span class="o">=</span> <span class="n">correl_compare_indep_inputr</span><span class="p">(</span><span class="o">.</span><span class="mi">33</span><span class="p">,</span> <span class="o">.</span><span class="mi">77</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre> %generate two random input matrices (20 subjects x 5 variables)
+ r1 = .77;
+ r2 = .33;
+ N1 = 100;
+ N2 = 100;
+
+[rdiff, Z, pval, stats] = correl_compare_indep_inputr(r1, r2, N1, N2);
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_permute*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -20422,12 +21257,50 @@ sets of observations</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">correl_compare_permute</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span><span class="n">dat</span><span class="p">,</span><span class="n">nperms</span><span class="p">,</span><span class="n">condition</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>dat is obs x variables, and an n x n association matrix will be computed
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first">correl_compare_permute(meth,dat,nperms,condition)</p>
+<p class="last">dat is obs x variables, and an n x n association matrix will be computed
 on the n(n - 1) pairs of columns using one of the methods in
 correlation.m and specified by meth</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>meth:</strong></dt>
+<dd><p class="first last">String indicating the method for computing the correlation
+coefficient (e.g., &#8216;taub&#8217;) see correlation.m for details</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+<dt><strong>nperms:</strong></dt>
+<dd><p class="first last">Number of permutations for inferential tests</p>
+</dd>
+<dt><strong>condition:</strong></dt>
+<dd><p class="first last">Vector indicating condition membership for each instance
+(currently only works for two conditions)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>OUT:</strong></dt>
+<dd><p class="first last">Output stats structure</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first last simple">
+<li>correl_compare_indep_inputr, correl_compare_indep, correlation*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -20443,25 +21316,48 @@ correlation.m and specified by meth</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">corr</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">fdrp</span><span class="p">,</span> <span class="n">fdrthresh</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlation</span><span class="p">(</span><span class="n">method</span><span class="p">,</span><span class="n">x</span><span class="p">,[</span><span class="n">y</span><span class="p">],[</span><span class="s">&#39;matrix&#39;</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre>[corr,t,p,fdrp, fdrthresh] = correlation(method,x,[y],[&#39;matrix&#39;])
+
+IN PROGRESS : Warning : Use at your own risk.
+Some methods are not adequately tested yet.
+Spearman&#39;s rho does not correct for ties
 </pre></div>
 </div>
-<p>IN PROGRESS : Warning : Use at your own risk.
-Some methods are not adequately tested yet.
-Spearman&#8217;s rho does not correct for ties</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Methods:</th><td class="field-body"><ul class="first simple">
-<li>Pearson&#8217;s r.          Enter: {&#8216;r&#8217;,&#8217;pearson&#8217;,[]}</li>
-<li>IRLS                  Enter: {&#8216;irls&#8217;,&#8217;robust&#8217;}</li>
-<li>Phi                   Enter: {&#8216;phi&#8217;}</li>
-<li>Spearman&#8217;s rho        Enter: {&#8216;rho&#8217;,&#8217;spearman&#8217;}</li>
-<li>Kendall&#8217;s Tau (a)     Enter: {&#8216;taua&#8217;,&#8217;kendalla&#8217;}</li>
-<li>Tau (b)               Enter: {&#8216;tau&#8217;,&#8217;kendall&#8217;,&#8217;taub&#8217;,&#8217;kendallb&#8217;}</li>
-<li>Gamma                 Ehter: {&#8216;gamma&#8217;,&#8217;kruskal&#8217;}</li>
-</ul>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Methods:</strong></dt>
+<dd><p class="first last">String indicating the method for computing the correlation
+coefficient
+- Pearson&#8217;s r.          Enter: {&#8216;r&#8217;,&#8217;pearson&#8217;,[]}
+- IRLS                  Enter: {&#8216;irls&#8217;,&#8217;robust&#8217;}
+- Phi                   Enter: {&#8216;phi&#8217;}
+- Spearman&#8217;s rho        Enter: {&#8216;rho&#8217;,&#8217;spearman&#8217;}
+- Kendall&#8217;s Tau (a)     Enter: {&#8216;taua&#8217;,&#8217;kendalla&#8217;}
+- Tau (b)               Enter: {&#8216;tau&#8217;,&#8217;kendall&#8217;,&#8217;taub&#8217;,&#8217;kendallb&#8217;}
+- Gamma                 Enter: {&#8216;gamma&#8217;,&#8217;kruskal&#8217;}</p>
+</dd>
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p varianbles)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>varargin:</strong></dt>
+<dd><p class="first last">To be documented</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>OUT:</strong></dt>
+<dd><p class="first last">Output stats structure</p>
+</dd>
+</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
@@ -20506,6 +21402,29 @@ studybyroi = magic(10);
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>Xi:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+<dt><strong>Yi:</strong></dt>
+<dd><p class="first last">Matrix of observations (n instances by p variables)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>r:</strong></dt>
+<dd><p class="first last">Pearson correlation coefficients</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">Corresponding p-value for correlation coeffieints</p>
+</dd>
+<dt><strong>Tstat:</strong></dt>
+<dd><p class="first last">T statistic for comparing correlation coefficients against 0</p>
+</dd>
+</dl>
+</td>
+</tr>
 <tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
@@ -20821,7 +21740,7 @@ a sign permutation test to get p-values.</p>
 <dd><p class="first last">names of each col. of y:  string followed by input</p>
 </dd>
 </dl>
-<p><a href="#id45"><span class="problematic" id="id46">**</span></a>&#8216;name&#8217;  : text string tag for analysis</p>
+<p><a href="#id43"><span class="problematic" id="id44">**</span></a>&#8216;name&#8217;  : text string tag for analysis</p>
 <dl class="docutils">
 <dt><strong>&#8216;verbose&#8217;:</strong></dt>
 <dd><p class="first last">print verbose output and tables</p>
@@ -21784,7 +22703,7 @@ start = [-10 -10 0 -10 0]; start(:,:,2) = [10 10 10 10 2000];
 </div>
 <p>Simulation: Test cov of param estimates</p>
 <p>Run 1000 times to see cov. of param estimates
-Right now: <a href="#id47"><span class="problematic" id="id48">**</span></a><a href="#id49"><span class="problematic" id="id50">**</span></a>development: p(1,2) are highly + corr, p(3:4) are high - corr
+Right now: <a href="#id45"><span class="problematic" id="id46">**</span></a><a href="#id47"><span class="problematic" id="id48">**</span></a>development: p(1,2) are highly + corr, p(3:4) are high - corr
 should probably choose one or the other for each.</p>
 <div class="highlight-python"><div class="highlight"><pre>for i = 1:1000
    yi = y + randn(length(y),1) * 10; % new noise
@@ -24365,12 +25284,12 @@ pass an empty matrix for the earlier ones (e.g., TipAngle=[]).</dd>
 used in a modified fashion, others are passed directly to LINE, PATCH,
 or SET.  For a detailed properties explanation, call ARROW PROPERTIES.</p>
 <p>Start         The starting points.                     B
-Stop          The end points.                         /<a href="#id61"><span class="problematic" id="id62">|\           ^
+Stop          The end points.                         /<a href="#id59"><span class="problematic" id="id60">|\           ^
 Length        Length of the arrowhead in pixels.     /|||</span></a>         |
 BaseAngle     Base angle in degrees (ADE).          //|||\        L|
 TipAngle      Tip angle in degrees (ABC).          ///|||\      e|
 Width         Width of the base in pixels.        ////|||\\      n|
-Page          Use hardcopy proportions.          /////<a href="#id63"><span class="problematic" id="id64">|D|</span></a>\\    g|
+Page          Use hardcopy proportions.          /////<a href="#id61"><span class="problematic" id="id62">|D|</span></a>\\    g|
 CrossDir      Vector || to arrowhead plane.     ////  |||  \\    t|
 NormalDir     Vector out of arrowhead plane.   ///    |||    \  h|
 Ends          Which end has an arrowhead.     //&lt;&#8212;&#8211;&gt;||      \   |
@@ -24456,7 +25375,7 @@ the intervals between bars.</p>
 </dd>
 <dt><strong>&#8216;ast&#8217;:</strong></dt>
 <dd><p class="first last">put asterisks according to p values, which should be
-given. (e.g., &#8216;ast&#8217;, p [m x n]) <a href="#id51"><span class="problematic" id="id52">*</span></a>p&lt;.05, <a href="#id53"><span class="problematic" id="id54">**</span></a>p&lt;.01, <a href="#id55"><span class="problematic" id="id56">**</span></a><a href="#id57"><span class="problematic" id="id58">*</span></a>p&lt;.001</p>
+given. (e.g., &#8216;ast&#8217;, p [m x n]) <a href="#id49"><span class="problematic" id="id50">*</span></a>p&lt;.05, <a href="#id51"><span class="problematic" id="id52">**</span></a>p&lt;.01, <a href="#id53"><span class="problematic" id="id54">**</span></a><a href="#id55"><span class="problematic" id="id56">*</span></a>p&lt;.001</p>
 </dd>
 <dt><strong>&#8216;btwlines&#8217;:</strong></dt>
 <dd><p class="first last">this option puts lines between bar groups. This is
@@ -25429,9 +26348,104 @@ o2 = canlab_results_fmridisplay(d, o2, &#39;cmaprange&#39;, [.3 .45], &#39;split
 </dd></dl>
 
 <dl class="function">
+<dt id="Visualization_functions.cl_line_plots">
+<code class="descclassname">Visualization_functions.</code><code class="descname">cl_line_plots</code><span class="sig-paren">(</span><em>clusters</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cl_line_plots" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl_line_plots</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>purpose:  ???</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first"><strong>clusters</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first"><strong>lineH</strong></p>
+<blockquote class="last">
+<div><p>handle</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Visualization_functions.cl_overlap">
+<code class="descclassname">Visualization_functions.</code><code class="descname">cl_overlap</code><span class="sig-paren">(</span><em>in1</em>, <em>in2</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cl_overlap" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cl_overlap</span><span class="p">(</span><span class="n">in1</span><span class="p">,</span><span class="n">in2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>purpose:  compute overlap of two clusters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first"><strong>in1</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+<p><strong>in1</strong></p>
+<blockquote>
+<div><p>cluster object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first"><strong>ov_mat</strong></p>
+<blockquote class="last">
+<div><p>matrix of overlaps</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="Visualization_functions.close_non_spm_graphics_figures">
 <code class="descclassname">Visualization_functions.</code><code class="descname">close_non_spm_graphics_figures</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.close_non_spm_graphics_figures" title="Permalink to this definition">¶</a></dt>
-<dd><p>closes all figure windows that are not the SPM orthviews window</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">close_non_spm_graphics_figures</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>purpose:  closes all figure windows that are not the SPM orthviews window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -25541,7 +26555,8 @@ RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
 <dl class="function">
 <dt id="Visualization_functions.cluster_cutaways">
 <code class="descclassname">Visualization_functions.</code><code class="descname">cluster_cutaways</code><span class="sig-paren">(</span><em>clusters</em>, <em>textprefix</em>, <em>mycolor</em>, <em>whichcuts</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.cluster_cutaways" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>groups clusters to image on brains by the first letter in whichcuts</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -25555,8 +26570,7 @@ RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
 <p>groups clusters to image on brains by the first letter in whichcuts
 therefore, if you enter &#8216;y&#8217; for whichcuts, the program will select
 clusters with similar y values (w/i 15 mm) and image them on the same
-brain.</p>
-<p>you need files called brain_render_T1.img/hdr on the path
+brain. you need files called brain_render_T1.img/hdr on the path
 these should be scalped anatomicals for the brain image.</p>
 <p>you would also need &#8216;brain_render_T1.mat&#8217; for the
 transparent brain surface, if you changed this script to get
@@ -25567,7 +26581,44 @@ or enter anything as 2nd var arg.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>clusters:</strong></dt>
+<dd><p class="first last">cluster object to display on brain cuts</p>
+</dd>
+<dt><strong>textprefix:</strong></dt>
+<dd><blockquote class="first">
+<div><p>prefix for saving images to files</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt><strong>mycolor:</strong></dt>
+<dd><blockquote class="first">
+<div><p>cluster colors - 3 el. vector, single letter, or string of letters</p>
+</div></blockquote>
+<p class="last">enter letter or letter string in single quotes. e.g., O.clcol = &#8216;yrgb&#8217;;</p>
+</dd>
+<dt><strong>whichcuts:</strong></dt>
+<dd><p class="first last">letter string (no quotes) - which axes to cut along - xyz are choices</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first"><strong>bestc</strong>
+best cut, 3-element vector of coordinates, default [0 0 0]</p>
+<p><strong>revx</strong>
+text string to reverse x cut direction, enter 1 to do it.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>O:</strong></dt>
+<dd><p class="first last">output returned from renderCluster_ui.m</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -25921,6 +26972,23 @@ activations and deactivations in intermediate colors</p>
 <div class="highlight-python"><div class="highlight"><pre>cluster_orthviews_overlap(mask1, mask2, [colors cell])
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>mask1</strong>
+path to nifit image</p>
+<p><strong>mask2</strong>
+path to nifit image</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last"><strong>colors</strong>
+cell array of RGB colors like: {[1 0 0] [0 0 1] [1 1 0] [0 1 1]}</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -25940,6 +27008,24 @@ activations and deactivations in intermediate colors</p>
 </pre></div>
 </div>
 <p>Positive effects only!</p>
+<p>:Inputs</p>
+<blockquote>
+<div><strong>masks</strong>
+image_vector  or fmri_data object</div></blockquote>
+<p>:Optional Inputs</p>
+<blockquote>
+<div><blockquote>
+<div><strong>colors</strong></div></blockquote>
+<p>&#8216;colors&#8217;,{[RGB],[RGB],..} cell array of RGB triplets</p>
+<p><strong>surface</strong>
+&#8216;surface&#8217;,[0/1]
+default =1</p>
+<p><strong>negative</strong>
+&#8216;negative&#8217; string to only use negative clusters, otherwise only positive clusters</p>
+<p><strong>nomontage</strong>
+&#8216;nomontage&#8217;,[0/1]
+don&#8217;t do montage, default do a montage</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -26672,7 +27758,7 @@ and the FaceVertexCData to the color matrix c</p>
 <dd><p class="first last">optional - min distance to color vertex
 Vertices within mind of an xyz coordinate will be colored</p>
 </dd>
-<dt><a href="#id59"><span class="problematic" id="id60">**</span></a>colorscale</dt>
+<dt><a href="#id57"><span class="problematic" id="id58">**</span></a>colorscale</dt>
 <dd><p class="first">optional.  followed by vector of values by which to multiply input
 color
 these are scaled to be between .3 and one.</p>
@@ -28243,15 +29329,27 @@ tor_fig;
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">varargin is string of text labels</p>
-<p>for text labels only, try:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">plot_correlation</span><span class="p">(</span><span class="n">beh1</span><span class="p">,</span><span class="n">mri1</span><span class="p">,</span><span class="n">highlow</span><span class="p">,</span><span class="s">&#39;w.&#39;</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>doquad: flag for quadratic correlations as well!</p>
-<dl class="docutils">
-<dt>dorobust: remove n outliers from data, using Min Cov Determinant (MCD) </dt>
-<dd><p class="first last">Rousseeuw, P.J. (1984), &#8220;Least Median of Squares Regression,&#8221; 
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>xvec:</strong></dt>
+<dd><p class="first last">x vector</p>
+</dd>
+<dt><strong>yvec:</strong></dt>
+<dd><p class="first last">y vector</p>
+</dd>
+<dt><strong>varargin</strong></dt>
+<dd><p class="first last">string of text labels</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>doquad:</strong></dt>
+<dd><p class="first last">flag for quadratic correlations as well!</p>
+</dd>
+<dt><strong>dorobust:</strong></dt>
+<dd><p class="first last">remove n outliers from data, using Min Cov Determinant (MCD) 
+Rousseeuw, P.J. (1984), &#8220;Least Median of Squares Regression,&#8221; 
 Journal of the American Statistical Association, Vol. 79, pp. 871-88
 outliers calculated using IRLS (robustfit.m) do not work well.
 you enter n</p>
@@ -28260,11 +29358,14 @@ you enter n</p>
 <p>empty variable arguments are OK, defaults will be used</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">figure</span><span class="p">;</span> <span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">infos</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_correlation_samefig</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;ko&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<div class="highlight-python"><div class="highlight"><pre>figure; [r, infos] = plot_correlation_samefig(x, y, [], &#39;ko&#39;, 0, 1);
+
+% for text labels only, try:
+plot_correlation(beh1,mri1,highlow,&#39;w.&#39;);
 </pre></div>
 </div>
 </dd></dl>
@@ -28283,18 +29384,20 @@ you enter n</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">EXPT</span> <span class="o">=</span> <span class="n">plot_dx_hrfs</span><span class="p">(</span><span class="n">EXPT</span><span class="p">,</span><span class="n">clusters</span><span class="p">,[</span><span class="n">dolegend</span><span class="p">],[</span><span class="n">dosave</span><span class="p">],[</span><span class="n">dosmooth</span><span class="p">],[</span><span class="n">doindiv</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>uses EXPT.FIR and clusters</p>
-<p>If not found, creates:</p>
-<p>EXPT.FIR.regsofinterest = trial types</p>
-<p>EXPT.FIR.mcol = colors</p>
-<p>Seems to be a problem with showing the brain slice when it makes the
-legend as well!  Weird bug.  Optional argument turns legend off.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">(all defaults are zero)</p>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">uses EXPT.FIR and clusters</p>
+<p>If not found, creates:</p>
+<p>EXPT.FIR.regsofinterest = trial types
+EXPT.FIR.mcol = colors</p>
+<p>Seems to be a problem with showing the brain slice when it makes the
+legend as well!  Weird bug.  Optional argument turns legend off.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">(all defaults are zero)</p>
 <dl class="docutils">
 <dt><strong>dolegend:</strong></dt>
 <dd><p class="first last">1 on, 0 off</p>
@@ -28312,10 +29415,12 @@ values stored in clusters.HRF.HRF and .STE</p>
 </dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">See:</th><td class="field-body"><p class="first">extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m</p>
+<tr class="field-odd field"><th class="field-name">See also:</th><td class="field-body"><ul class="first simple">
+<li>extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m</li>
+</ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
@@ -28347,18 +29452,55 @@ with major axis at an angle of theta radians from the horizontal.</p>
 <dl class="function">
 <dt id="Visualization_functions.plot_error">
 <code class="descclassname">Visualization_functions.</code><code class="descname">plot_error</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.plot_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>PLOT_ERROR    Plot a matrix with shaded error area around it</p>
-<p>PLOT_ERROR(X, Y) plots matrix Y against x-values in X, where Y is a matrix with each row representing a signal.
-The shaded area represents the standard error across the columns of Y.</p>
-<p>PLOT_ERROR(Y) plots the data matrix Y versus its index.</p>
-<p>PLOT_ERROR(..., &#8216;errorData&#8217;, errorData) uses external data for the error areas. In this case, Y is assumed to be a mean
-timeseries already. Y and errorData must be vectors of the same length.</p>
-<p>PLOT_ERROR(..., &#8216;allowNaNs&#8217;, [0|1]) indicates whether to handle NaNs in the data. If set, plot_error will use nanmean, 
-nanstd, etc. Off by default.</p>
-<p>PLOT_ERROR(..., colorSpecString) plots the line according to the designated ColorSpec string, and shades the error area
-by the color of the line</p>
-<p>PLOT_ERROR(AX, ...) plots into the axes designated by the AX axes handle.</p>
-<p>[line_handle patch_handle] = PLOT_ERROR return the handle of the main line object</p>
+<dd><p>Plot a matrix with shaded error area around it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[line_handle patch_handle] = plot_error(varargin)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% plots matrix Y against x-values in X, where Y is a matrix with 
+% each row representing a signal. The shaded area represents the 
+% standard error across the columns of Y.
+PLOT_ERROR(X, Y) 
+
+% plots the data matrix Y versus its index.
+PLOT_ERROR(Y) 
+
+% uses external data for the error areas. In this case, Y is assumed 
+% to be a mean timeseries already. Y and errorData must be vectors 
+% of the same length.
+PLOT_ERROR(..., &#39;errorData&#39;, errorData)
+
+% The following example indicates whether to handle NaNs in the data. 
+% If set, plot_error will use nanmean, nanstd, etc. Off by default.
+PLOT_ERROR(..., &#39;allowNaNs&#39;, [0|1]) 
+
+% The following example plots the line according to the designated 
+% ColorSpec string, and shades the error area by the color of the line
+PLOT_ERROR(..., colorSpecString) 
+
+% The following example plots into the axes designated by the AX 
+% axes handle.
+PLOT_ERROR(AX, ...) 
+
+% The following example returns the handle of the main line object
+[line_handle patch_handle] = PLOT_ERROR 
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -28496,7 +29638,10 @@ within denoising, plot_matrix_cols(X, &#8216;denoising&#8217;) to make red plots
 <dl class="function">
 <dt id="Visualization_functions.prplot">
 <code class="descclassname">Visualization_functions.</code><code class="descname">prplot</code><span class="sig-paren">(</span><em>yy</em>, <em>X</em>, <em>k</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.prplot" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Partial residual plot of y ~ X for column k
+Partial residual plot of one column of X against y. Uses IRLS estimation 
+to downweight outliers if you enter a 4th argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -28507,14 +29652,23 @@ within denoising, plot_matrix_cols(X, &#8216;denoising&#8217;) to make red plots
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="nb">str</span><span class="p">,</span><span class="n">sig</span><span class="p">,</span><span class="n">ry</span><span class="p">,</span><span class="n">rx</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">rr</span><span class="p">]</span> <span class="o">=</span> <span class="n">prplot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">X</span><span class="p">,</span><span class="n">col</span><span class="p">,[</span><span class="n">dorobust</span><span class="p">],[</span><span class="n">colors</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Partial residual plot of one column of X against y.
-Uses IRLS estimation to downweight outliers 
-if you enter a 4th argument</p>
-<p>Partial residual plot of y ~ X for column k</p>
-<p>if y contains multiple columns, different colors
-and symbols will be used, with a separate regression
-for each.</p>
-<p>colors: e.g., {&#8216;ro&#8217; &#8216;bs&#8217; &#8216;gd&#8217; &#8216;y^&#8217; &#8216;cv&#8217; &#8216;mx&#8217;}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>y</strong> </dt>
+<dd><p class="first last">if y contains multiple columns, different colors and symbols will 
+be used, with a separate regression for each.</p>
+</dd>
+<dt><strong>colors</strong></dt>
+<dd><p class="first last">e.g., {&#8216;ro&#8217; &#8216;bs&#8217; &#8216;gd&#8217; &#8216;y^&#8217; &#8216;cv&#8217; &#8216;mx&#8217;}</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -28644,26 +29798,27 @@ renderCluster_ui(O)
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">O:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>head:</strong></dt>
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first"><strong>O</strong></p>
+<dl class="docutils">
+<dt><strong>O.head:</strong></dt>
 <dd><p class="first last">name of head to use, no .img extension</p>
 </dd>
-<dt><strong>surf:</strong></dt>
+<dt><strong>O.surf:</strong></dt>
 <dd><p class="first last">&#8216;y&#8217; or &#8216;n&#8217;: image surface</p>
 </dd>
-<dt><strong>sets:</strong></dt>
+<dt><strong>O.sets:</strong></dt>
 <dd><p class="first last">number of sets</p>
 </dd>
-<dt><strong>getfrom:</strong></dt>
+<dt><strong>O.getfrom:</strong></dt>
 <dd><p class="first last">cell array of where to get clusters from: &#8216;workspace&#8217; &#8216;file&#8217; etc.</p>
 </dd>
-<dt><strong>varname:</strong></dt>
+<dt><strong>O.varname:</strong></dt>
 <dd><p class="first last">cell array of variable names</p>
 </dd>
-<dt><strong>color:</strong></dt>
+<dt><strong>O.color:</strong></dt>
 <dd><p class="first last">cell array of colors - strings or vectors</p>
 </dd>
-<dt><strong>numbers:</strong></dt>
+<dt><strong>O.numbers:</strong></dt>
 <dd><p class="first last">&#8216;y&#8217; or &#8216;n&#8217;: add numbers to plot</p>
 </dd>
 </dl>
@@ -28786,37 +29941,6 @@ for i = 1:2, cl{i} = region(mask{i}); end
 info = roi_contour_map([cl{1} cl{2}], &#39;cluster&#39;, &#39;use_same_range&#39;, &#39;colorbar&#39;); 
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="Visualization_functions.scatter">
-<code class="descclassname">Visualization_functions.</code><code class="descname">scatter</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>stats</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.scatter" title="Permalink to this definition">¶</a></dt>
-<dd><p>scatterplots x and y and draws the logistic function specified by the
-parameters in the stats structure (output from glmfit).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">h</span><span class="p">]</span><span class="o">=</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">stats</span><span class="p">,</span><span class="n">varargin</span><span class="p">)</span>
-</pre></div>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>h:</strong></dt>
-<dd><p class="first last">is the handle to the figure axis.</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -30129,6 +31253,16 @@ column (i).</dd>
 <dd>followed by x position for center(s) of plots</dd>
 <dt><strong>&#8216;nopoints&#8217;:</strong></dt>
 <dd>don&#8217;t display dots</dd>
+<dt><strong>&#8216;pointsize&#8217;:</strong></dt>
+<dd>you can define point size.</dd>
+<dt><strong>&#8216;pointcolor&#8217;:</strong></dt>
+<dd>if you want to use different color for points, you can use this
+option.</dd>
+<dt><strong>&#8216;weights&#8217;:</strong></dt>
+<dd>You can add weights in the same format of the data. It will
+use weighted version of kdensity function, show weighted mean, and
+weighted point sizes. Be careful: if some data points have NaNs,
+this will remove those data points from the plot.</dd>
 </dl>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -30150,6 +31284,11 @@ column (i).</dd>
 </dd>
 <dt><strong>bw:</strong></dt>
 <dd><p class="first last">bandwidth of kernel</p>
+</dd>
+<dt><strong>pointloc:</strong></dt>
+<dd><p class="first last">point locations on violin plot
+This has x, y, idx as subfields. 
+idx indicates the order of the data in the original input.</p>
 </dd>
 </dl>
 </td>
@@ -30320,14 +31459,15 @@ end
 <li><a class="reference internal" href="#module-&#64;fmri_data">fmri_data</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_mask_image">fmri_mask_image</a></li>
 <li><a class="reference internal" href="#module-&#64;fmri_model">fmri_model</a></li>
-<li><a class="reference internal" href="#module-fmridisplay">fmridisplay</a></li>
+<li><a class="reference internal" href="#module-&#64;fmridisplay">fmridisplay</a></li>
+<li><a class="reference internal" href="#fmridisplay-helper-functions">fmridisplay_helper_functions</a></li>
 <li><a class="reference internal" href="#module-&#64;image_vector">image_vector</a></li>
 <li><a class="reference internal" href="#module-&#64;region">region</a></li>
 <li><a class="reference internal" href="#module-&#64;statistic_image">statistic_image</a></li>
-<li><a class="reference internal" href="#cluster-contig-region-tools">Cluster_contig_region_tools</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#toolboxes">Toolboxes</a><ul>
+<li><a class="reference internal" href="#cluster-contig-region-tools">Cluster_contig_region_tools</a></li>
 <li><a class="reference internal" href="#module-diagnostics">diagnostics</a></li>
 <li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
 <li><a class="reference internal" href="#hrf-est-toolbox2">HRF_Est_Toolbox2</a></li>

@@ -142,28 +142,31 @@ if strcmp(get(fh, 'Type'), 'figure') && ishandle(fh)
     set(slices_fig_h, 'colormap', get(fh, 'colormap'))
 end
 
-% Resize figure based on view
-ss = get(0, 'ScreenSize');
-if doonerow
+				% Resize figure based on view
+if not(feature('ShowFigureWindows'));
+  ss = get(0, 'ScreenSize');
+  if doonerow
     switch myview
-        case {'axial'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.9) round(ss(4)/7) ])
-        case {'coronal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/7) ])
-        case 'sagittal'
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.7) round(ss(3)*.6) round(ss(4)/5.5) ])
+      case {'axial'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.9) round(ss(4)/7) ])
+      case {'coronal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/7) ])
+      case 'sagittal'
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.7) round(ss(3)*.6) round(ss(4)/5.5) ])
     end
-else
+  else
     switch myview
-        case {'axial'}
-            %how far right, how far up, how big across, how big up
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
-        case {'coronal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
-        case {'sagittal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'axial'}
+		%how far right, how far up, how big across, how big up
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'coronal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'sagittal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
     end
+  end
 end
+
 
 for i = 1:num_axes
     

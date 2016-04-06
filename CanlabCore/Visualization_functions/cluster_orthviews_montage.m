@@ -132,7 +132,7 @@ axh = axh(whview);
 
 slices_fig_h = create_figure(['montage_' myview]);
 set(slices_fig_h, 'Color', 'k');
-if feature('ShowFigureWindows')
+if not(feature('ShowFigureWindows'));
   set(slices_fig_h, 'Visible', 'off');
 end
 

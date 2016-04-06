@@ -143,7 +143,7 @@ if strcmp(get(fh, 'Type'), 'figure') && ishandle(fh)
 end
 
 				% Resize figure based on view
-if not(feature('ShowFigureWindows'));
+if feature('ShowFigureWindows');
   ss = get(0, 'ScreenSize');
   if doonerow
     switch myview

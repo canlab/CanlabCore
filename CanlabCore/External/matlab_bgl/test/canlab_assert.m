@@ -1,4 +1,4 @@
-function assert(condition,varargin)
+function canlab_assert(condition,varargin)
 
 if condition, return;
 else

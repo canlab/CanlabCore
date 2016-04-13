@@ -1,21 +1,35 @@
 function [h, z] = plot_joint_hist_contour(z, xbins, ybins, color, varargin)
 % plot a 95% 2-D density region for a 2-D histogram
 %
-% h = plot_joint_hist_contour(z, xbins, ybins, color, ['confval', confval], ['maxalpha', maxalpha])
+% :Usage:
+% ::
 %
-% Inputs:
-% z = 2-D histogram values, counts in bins.  See joint_hist.m
-% confval = optional input; [0 - 1], retain this proportion of values in confidence region
-% maxalpha = optional; [0 - 1], maximum transparency 
+%    h = plot_joint_hist_contour(z, xbins, ybins, color, ['confval', confval], ['maxalpha', maxalpha])
 %
-% Outputs:
-% h = handle to graphical contour object
-% z = thresholded z matrix of counts
+% :Inputs:
 %
-% Examples:
-% -------------------------------------------------------------------
-% z = joint_hist(nnmfscores{i}{j}(:, 1),nnmfscores{i}{j}(:, 2), 50, 'noplot');
-% h = plot_joint_hist_contour(z, [0 0 1]);
+%   **z:**
+%        2-D histogram values, counts in bins.  See joint_hist.m
+%
+%   **confval:**
+%        optional input; [0 - 1], retain this proportion of values in confidence region
+%
+%   **maxalpha:**
+%        optional; [0 - 1], maximum transparency 
+%
+% :Outputs:
+%
+%   **h:**
+%        handle to graphical contour object
+%
+%   **z:**
+%        thresholded z matrix of counts
+%
+% :Examples:
+% ::
+%
+%    z = joint_hist(nnmfscores{i}{j}(:, 1),nnmfscores{i}{j}(:, 2), 50, 'noplot');
+%    h = plot_joint_hist_contour(z, [0 0 1]);
 
 confval = .95;
 maxalpha = 1;

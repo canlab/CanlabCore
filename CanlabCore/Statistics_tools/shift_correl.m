@@ -1,6 +1,10 @@
-% function [shiftvals, corrvals, bestshift, bestcorr, aout, bout] = shift_correl(a, b, ['max_shift', max_shift], ['shift_step', shift_step], ['use_rob_stats', 0|1], ['return_betas', 0|1], ['display_plots', 0|1],['priors',[mu sig]])
+function [shiftvals, corrvals, bestshift, bestcorr, aout, bout] = shift_correl(a, b, varargin)
+% :Usage:
+% ::
 %
-% shifts a backwards and forwards by max_shift elements (default 12)
+%     [shiftvals, corrvals, bestshift, bestcorr, aout, bout] = shift_correl(a, b, ['max_shift', max_shift], ['shift_step', shift_step], ['use_rob_stats', 0|1], ['return_betas', 0|1], ['display_plots', 0|1],['priors',[mu sig]])
+%
+% Shifts a backwards and forwards by max_shift elements (default 12)
 % in each direction, computing the correlation
 % between a and b at each shift value
 %
@@ -10,56 +14,84 @@
 % truncates the tails of a and b where necessary
 % to ensure they're the same length.
 %
-% INPUTS:
-% a, b              two vectors to correlate
-% max_shift         max number of elements to shift (default 12)
-% shift_step        size of incremental shifts (default .1)
-% use_rob_stats     robust regression, IRLS (default 0)
-% return_betas      return betas rather than corr coeffs (default 0)
-% display_plots     display plot of shift vals and correlations/betas (default 0)
-%                   NOTE: robust r value of chosen solution may not be max,
-%                   as weighted_corrcoef now does not account for variance
-%                   inflation with low weights for some observations
-% priors           Incorporate gaussian priors with mean priors(1) and std
-%                   priors(2)
-% example:
+% :Inputs:
 %
-% % first extract data for a subject into clusters:
-% clusters = roi_probe(spm_get(Inf), 'snpm0002_varsm_cov_clusters.mat');
+%   **a, b:**
+%        two vectors to correlate
 %
-% % OR
+%   **max_shift:**
+%        max number of elements to shift (default 12)
 %
-% clusters = mask2clusters('SnPMt_filtered.img', spm_get(Inf));
+%   **shift_step:**
+%        size of incremental shifts (default .1)
 %
-% % Then do the shifting:
+%   **use_rob_stats:**
+%        robust regression, IRLS (default 0)
 %
-% for i=1:length(clusters)
-% 	[shiftvals, corrvals] = shift_correl(xX.X(:, 1), clusters(i).timeseries);
-%	title(['Cluster' num2str(i)]);
-%	disp(['Cluster ' num2str(i) ' estimate shift by ' num2str(1.5 * shiftvals(corrvals == max(corrvals)))]);
-% end
+%   **return_betas:**
+%        return betas rather than corr coeffs (default 0)
+%
+%   **display_plots:**
+%        display plot of shift vals and correlations/betas (default 0)
+%
+%        NOTE: robust r value of chosen solution may not be max,
+%        as weighted_corrcoef now does not account for variance
+%        inflation with low weights for some observations
+%
+%   **priors:**
+%        Incorporate gaussian priors with mean priors(1) and std
+%        priors(2)
+%
+% :Examples:
+% ::
+%
+%    % first extract data for a subject into clusters:
+%    clusters = roi_probe(spm_get(Inf), 'snpm0002_varsm_cov_clusters.mat');
+%
+%    % OR
+%
+%    clusters = mask2clusters('SnPMt_filtered.img', spm_get(Inf));
+%
+%    % Then do the shifting:
+%
+%    for i=1:length(clusters)
+%        [shiftvals, corrvals] = shift_correl(xX.X(:, 1), clusters(i).timeseries);
+%        title(['Cluster' num2str(i)]);
+%        disp(['Cluster ' num2str(i) ' estimate shift by ' num2str(1.5 * shiftvals(corrvals == max(corrvals)))]);
+%    end
 %
 %
-% Simulation:
-% ===================================================
-% trueval = 1; n = 100; noisevar = 0;
-% a = randn(n,1); b = a + randn(n,1).*noisevar;
-% a=smooth_timeseries(a,n./5); b=smooth_timeseries(b,n./5);
-% a = shift_signal(a,trueval); b = b(1:length(a));
-% figure;plot(a);hold on; plot(b,'r')
-%[shiftvals, corrvals, bestshift, bestcorr, aout, bout] = ...
-% shift_correl(a, b, 'max_shift', 4, 'shift_step', .2, 'use_rob_stats', 1, 'return_betas', 0, 'display_plots', 1,'optimize'); bestshift
+%    % Simulation
+%    trueval = 1;
+%    n = 100;
+%    noisevar = 0;
+%    a = randn(n,1);
+%    b = a + randn(n,1).*noisevar;
+%    a=smooth_timeseries(a,n./5);
+%    b=smooth_timeseries(b,n./5);
+%    a = shift_signal(a,trueval);
+%    b = b(1:length(a));
+%    figure;plot(a);
+%    hold on;
+%    plot(b,'r')
+%    [shiftvals, corrvals, bestshift, bestcorr, aout, bout] = ...
+%    shift_correl(a, b, 'max_shift', 4, 'shift_step', .2, 'use_rob_stats', 1, 'return_betas', 0, 'display_plots', 1,'optimize'); bestshift
 %
-% r = .7; shiftstep = 1; optstr = 'optimize'; % or 'noopt'
-% tic
-% for i = 1:10
-%   ab = mvnrnd([0 0],[1 r; r 1],n); a = ab(:,1); b = ab(:,2);
-%   a=smooth_timeseries(a,n./5); b=smooth_timeseries(b,n./5); a = shift_signal(a,trueval); b = b(1:length(a));
-%   [shiftvals, corrvals, bestshift(i), bestcorr(i), aout, bout] = shift_correl(a, b, 'max_shift', 4, 'shift_step', shiftstep, 'use_rob_stats', 1,optstr);
-% end
-% toc
+%    r = .7; shiftstep = 1;
+%    optstr = 'optimize'; %    or 'noopt'
+%    tic
+%    for i = 1:10
+%        ab = mvnrnd([0 0],[1 r; r 1],n);
+%        a = ab(:,1);
+%        b = ab(:,2);
+%        a=smooth_timeseries(a,n./5);
+%        b=smooth_timeseries(b,n./5);
+%        a = shift_signal(a,trueval);
+%        b = b(1:length(a));
+%        [shiftvals, corrvals, bestshift(i), bestcorr(i), aout, bout] = shift_correl(a, b, 'max_shift', 4, 'shift_step', shiftstep, 'use_rob_stats', 1,optstr);
+%    end
+%    toc
 
-function [shiftvals, corrvals, bestshift, bestcorr, aout, bout] = shift_correl(a, b, varargin)
     displaying_plots = 0;
     using_rob_stats = 0;
     returning_betas = 0;

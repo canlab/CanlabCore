@@ -1,98 +1,135 @@
 function ROC = roc_plot(input_values, binary_outcome, varargin)
-% ROC = roc_plot(input_values, binary_outcome, ['include', include])
-%
 % This function makes a specific kind of ROC curve plot, based on input
 % values along a continuous distribution and a binary outcome variable
 % (logical)
+%
+% :Usage:
+% ::
+%
+%     ROC = roc_plot(input_values, binary_outcome, ['include', include])
+%
 % Include is an optional logical variable of cases to include
 %
-% Optional inputs:
-% ---------------------------------------------------------------------
-% 'include' :         followed by logical vector of cases to include
-% 'threshold' :       followed by a priori threshold cutoff for determining misclassification
-% 'threshold_type' :  followed by thresh type: choices below:
-%                     'Optimal balanced error rate'
-%                     'Optimal overall accuracy' [default]
-%                     'Minimum SDT bias'
-%                     [Enter threshold OR threshold_type]
+% :Optional Inputs:
 %
-% 'color':            followed by color, e.g., 'r' or [1 .5 0]
-% 'plotmethod':       followed by 'deciles' [default] or 'observed'
-% 'nonormfit':        suppress normal curve fitting to ROC
-% 'plothistograms':   plot histograms of the signal present/absent
-%                     distributions
-% 'writerscoreplus':  Write text file for input into RScorePlus by Lew Harvey
-% 'boot' [default]:   Bootstrap 95% confidence intervals for sens, spec, PPV at threshold
-% 'noboot':           Skip bootstrap
-% 'balanced':         Balanced accuracy for single interval classification
-% 'dependent':        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
-%                     This will perform multilevel version of binomial test for single interval classifation.
-% 'noplot':           Skip generating plots
-% 'nooutput':         Suppress text output
+%   **'include':**
+%        followed by logical vector of cases to include
 %
-% Outputs:
-% ---------------------------------------------------------------------
-% A structure containing the true and false pos rates (tpr, fpr) along the curve
-% and the criterion threshold values of the input variable (thr) corresponding to these rates.
-% Uses the function roc_calc.m
+%   **'threshold':**
+%        followed by a priori threshold cutoff for determining misclassification
 %
-% Also returns some information about misclassified observations
-% and line handle for ROC line plot and other statistics:
-% area under ROC curve
-% accuracy statistics based on binomial test
-% PPV
+%   **'threshold_type':**
+%        followed by thresh type: choices below:
+%          - 'Optimal balanced error rate'
+%          - 'Optimal overall accuracy' [default]
+%          - 'Minimum SDT bias'
+%          - [Enter threshold OR threshold_type]
 %
-% Tor Wager, Feb 2012
-% See Notes in text for more programming details.
+%   **'color':**
+%        followed by color, e.g., 'r' or [1 .5 0]
 %
-% Examples:
-% ROC = roc_plot(pattern_exp_values, ishot);
-% ROC = roc_plot(pattern_exp_values, ishot, 'threshold', 2.5);
-% ROC = roc_plot(pattern_exp_values, ishot, 'color', 'r', 'twochoice');
-% ROC = roc_plot(pattern_exp_values, ishot, 'color', 'r', 'twochoice', 'nonormfit');
-% ROC = roc_plot(pexp, logical(outcome), 'color', 'g', 'plothistograms', 'threshold', 0.3188);
-% ROC = roc_plot(pexp, logical(outcome), 'twochoice', 'color', 'b', 'plothistograms');
-% ROC = roc_plot(pexp, logical(outcome), 'writerscoreplus');
-% ROC = roc_plot(pexp, logical(outcome), 'color', 'r', 'plotmethod', 'observed', 'plothistograms');
-% ROC = roc_plot(pexp, logical(outcome), 'color', 'm', 'plotmethod', 'observed', 'plothistograms', 'Optimal overall accuracy');
+%   **'plotmethod':**
+%        followed by 'deciles' [default] or 'observed'
+%
+%   **'nonormfit':**
+%        suppress normal curve fitting to ROC
+%
+%   **'plothistograms':**
+%        plot histograms of the signal present/absent distributions
+%
+%   **'writerscoreplus':**
+%        Write text file for input into RScorePlus by Lew Harvey
+%
+%   **'boot':**
+%        [default] Bootstrap 95% confidence intervals for sens, spec, PPV at threshold
+%
+%   **'noboot':**
+%        Skip bootstrap
+%
+%   **'balanced':**
+%        Balanced accuracy for single interval classification
+%
+%   **'dependent':**
+%        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
+%
+%        This will perform multilevel version of binomial test for single interval classifation.
+%
+%   **'noplot':**
+%        Skip generating plots
+%
+%   **'nooutput':**
+%        Suppress text output
+%
+% :Outputs:
+%
+%   A structure containing the true and false pos rates (tpr, fpr) along the curve
+%   and the criterion threshold values of the input variable (thr) corresponding to these rates.
+%
+%   Uses the function roc_calc.m
+%
+%   Also returns some information about misclassified observations
+%   and line handle for ROC line plot and other statistics:
+%     - area under ROC curve
+%     - accuracy statistics based on binomial test
+%     - PPV
+%
+% :Examples:
+% ::
+%
+%    ROC = roc_plot(pattern_exp_values, ishot);
+%    ROC = roc_plot(pattern_exp_values, ishot, 'threshold', 2.5);
+%    ROC = roc_plot(pattern_exp_values, ishot, 'color', 'r', 'twochoice');
+%    ROC = roc_plot(pattern_exp_values, ishot, 'color', 'r', 'twochoice', 'nonormfit');
+%    ROC = roc_plot(pexp, logical(outcome), 'color', 'g', 'plothistograms', 'threshold', 0.3188);
+%    ROC = roc_plot(pexp, logical(outcome), 'twochoice', 'color', 'b', 'plothistograms');
+%    ROC = roc_plot(pexp, logical(outcome), 'writerscoreplus');
+%    ROC = roc_plot(pexp, logical(outcome), 'color', 'r', 'plotmethod', 'observed', 'plothistograms');
+%    ROC = roc_plot(pexp, logical(outcome), 'color', 'm', 'plotmethod', 'observed', 'plothistograms', 'Optimal overall accuracy');
 %
 % For a whole image with p-values, this may be helpful.
+%
 % Pre-specifies p-values you want to evaluate at.
-% rocout = roc_plot(1-t.p, truevals, 'plotmethod', 'observed', 'valuestoevaluate', 1 - [.5:-.1:.1 .05 .01 .005 .001 .0001 .00001 .000001 .0000001 .00000001]);
-
-% Notes:
-% Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
-% effect size estimates based on Gaussian equal variance model
+% ::
+%    rocout = roc_plot(1-t.p, truevals, 'plotmethod', 'observed', 'valuestoevaluate', 1 - [.5:-.1:.1 .05 .01 .005 .001 .0001 .00001 .000001 .0000001 .00000001]);
 %
-% Edited 3/20/2012 to fix AUC estimate and add/change output.
+% ..
+%    Tor Wager, Feb 2012
+%    See Notes in text for more programming details.
 %
-% Tested 3/20/12 against RScorePlus.  There are some consequences of
-% binning for input to RScorePlus, inclding that the "response" criteria are inferred
-% in RScorePlus, but they are given if we are selecting arbitrary criteria based on
-% continuous measures (e.g., brain activity). This influences the actual
-% estimates of the mean and std. signal distributions, as well as the
-% sens/spec estimates within response bins. This function does not use
-% arbitrary bins whenever possible, and uses the full ROC across thresholds
-% corresponding to each unique increment in specificity for AUC
-% calculation.
+%    Notes:
+%    Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
+%    effect size estimates based on Gaussian equal variance model
 %
-% Edited 3/11/2014: Luke Chang to add balanced accuracy option for single
-% interval classification when classes are unbalanced
+%    Edited 3/20/2012 to fix AUC estimate and add/change output.
 %
-% Edited 6/24/2014: Luke Chang to add multilevel binomial test for single
-% interval classification.  Assumes each subject has equal number of
-% trials.  Requires at least more than 20 subjects to ensure distribution
-% is reasonably approximated by normal distribution.  Uses one sample-test
-% across subjects.
+%    Tested 3/20/12 against RScorePlus.  There are some consequences of
+%    binning for input to RScorePlus, inclding that the "response" criteria are inferred
+%    in RScorePlus, but they are given if we are selecting arbitrary criteria based on
+%    continuous measures (e.g., brain activity). This influences the actual
+%    estimates of the mean and std. signal distributions, as well as the
+%    sens/spec estimates within response bins. This function does not use
+%    arbitrary bins whenever possible, and uses the full ROC across thresholds
+%    corresponding to each unique increment in specificity for AUC
+%    calculation.
 %
-% Edited 1/13/2015: Luke Chang - added option to suppress plots for running
-% on cluster.
+%    Edited 3/11/2014: Luke Chang to add balanced accuracy option for single
+%    interval classification when classes are unbalanced
 %
-% Edited 3/25/2015: Luke Chang - added option to suppress text output for
-% speeding up computations on cluster
+%    Edited 6/24/2014: Luke Chang to add multilevel binomial test for single
+%    interval classification.  Assumes each subject has equal number of
+%    trials.  Requires at least more than 20 subjects to ensure distribution
+%    is reasonably approximated by normal distribution.  Uses one sample-test
+%    across subjects.
 %
-% Edited 8/2015: Tor Wager - reduced length of thr to speed computation
-% with large numbers of values (e.g., images with 50K+voxels)
+%    Edited 1/13/2015: Luke Chang - added option to suppress plots for running
+%    on cluster.
+%
+%    Edited 3/25/2015: Luke Chang - added option to suppress text output for
+%    speeding up computations on cluster
+%
+%    Edited 8/2015: Tor Wager - reduced length of thr to speed computation
+%    with large numbers of values (e.g., images with 50K+voxels)
+% ..
 
 include = true(size(binary_outcome));
 threshold_type = 'Optimal overall accuracy';

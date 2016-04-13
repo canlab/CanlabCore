@@ -1,22 +1,60 @@
 function [r,str,sig,ploth] = plot_correlation_samefig(xvec,yvec,varargin)
-% [r,infostring,sig,h] = plot_correlation_samefig(xvec,yvec,[textlabs],[color],[doquad],[dorobust])
-% varargin is string of text labels
+% :Usage:
+% ::
 %
-% for text labels only, try:
-% plot_correlation(beh1,mri1,highlow,'w.');
+%    [r,infostring,sig,h] = plot_correlation_samefig(xvec,yvec,[textlabs],[color],[doquad],[dorobust])
 %
-% doquad: flag for quadratic correlations as well!
-% dorobust: remove n outliers from data, using Min Cov Determinant (MCD) 
-%          Rousseeuw, P.J. (1984), "Least Median of Squares Regression," 
-%          Journal of the American Statistical Association, Vol. 79, pp. 871-88
-%            outliers calculated using IRLS (robustfit.m) do not work well.
-%           you enter n
+% ..
+%     Author and copyright information:
 %
-% empty variable arguments are OK, defaults will be used
+%     Copyright (C) Tor Wager
 %
-% figure; [r, infos] = plot_correlation_samefig(x, y, [], 'ko', 0, 1);
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
 %
-% tor wager
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
+% :Inputs:
+%
+%   **xvec:**
+%        x vector
+%
+%   **yvec:**
+%        y vector
+%
+%   **varargin**
+%        string of text labels
+%
+% :Optional Inputs:
+%   **doquad:**
+%        flag for quadratic correlations as well!
+%
+%   **dorobust:**
+%        remove n outliers from data, using Min Cov Determinant (MCD) 
+%        Rousseeuw, P.J. (1984), "Least Median of Squares Regression," 
+%        Journal of the American Statistical Association, Vol. 79, pp. 871-88
+%        outliers calculated using IRLS (robustfit.m) do not work well.
+%        you enter n
+%
+%   empty variable arguments are OK, defaults will be used
+%
+% :Examples:
+% ::
+%
+%    figure; [r, infos] = plot_correlation_samefig(x, y, [], 'ko', 0, 1);
+%
+%    % for text labels only, try:
+%    plot_correlation(beh1,mri1,highlow,'w.');
+
 
 robopt = 'IRLS';    %'IRLS' or 'MCD'
 

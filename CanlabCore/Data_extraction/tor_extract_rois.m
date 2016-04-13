@@ -1,44 +1,55 @@
 function [clusters,SPM,xX,xCon] = tor_extract_rois(imnames,varargin)
-    % function [clusters, SPM, xX, xCon] = tor_extract_rois(imnames [can be empty],[opt] SPM, [opt] VOL, [opt] xX)
-    %
-    % this function gets timeseries data from all clusters in an SPM results output.
-    % input:
-    %	imnames: a matrix of image names, in spm_list_files output format
-    %		 if empty, no timeseries data will be extracted.
-    %
-    %   clusters: if only 2 arguments, clusters structure is 2nd arg, and we
-    %   extract data using existing clusters structure
-    %
-    %   If 3 arguments, enter SPM and VOL to extract data from VOXEL
-    %   coordinates in these structures
-    %	SPM:	 SPM variable from loaded results
-    %	VOL:	 VOL variable from loaded results
-    %
-    %   Optional 4th argument fits a design matrix and returns betas
-    %   xX:      xX design matrix to fit to timeseries
-    %        OR 4th argument can be 0 (or any non-structure arg), suppressing verbose output.
-    %
-    %	[Last 2 arguments are optional.  Use if results are already loaded into workspace]
-    %
-    % Automatic fitting of model to cluster timeseries average using analyze_cluster_rois
-    % with High-Pass filter length of your choice.
-    % This only works if you input only the file names or input all optional arguments, including xX
-    %
-    % 10/17/01 by Tor Wager
-    % Last modified 3/19/04 by Tor, to get clusters structure as input and use
-    % timeseries3 instead of (bad on mac osx) timeseries2
-    %
-    % NOTE (WARNING): WORKS ON XYZ VOXEL COORDINATES - TRANSFORMATION TO
-    % DIFFERENT SPACES ONLY IF ENTERING 2 ARGS, 1st one names, 2nd one clusters
-    %
-    % see transform_coordinates.m for transformation, or check_spm_mat, or cluster_interp.
-    %
-    % Functions called
-    %   C:\matlabR12\toolbox\matlab\datatypes\squeeze.m
-    %   c:\tor_scripts\voistatutility\nanmean.m
-    %   (calls other spm functions)
-    %   center_of_mass.m
-    %   analyze_cluster_rois.m
+% This function gets timeseries data from all clusters in an SPM results output.
+%
+% :Usage:
+% ::
+%
+%     function [clusters, SPM, xX, xCon] = tor_extract_rois(imnames [can be empty],[opt] SPM, [opt] VOL, [opt] xX)
+%
+% :Inputs:
+%
+%   **imnames:**
+%        a matrix of image names, in spm_list_files output format
+%        if empty, no timeseries data will be extracted.
+%
+%   **clusters:**
+%        if only 2 arguments, clusters structure is 2nd arg, and we
+%        extract data using existing clusters structure
+%
+%   If 3 arguments, enter SPM and VOL to extract data from VOXEL
+%   coordinates in these structures
+%   - SPM:	 SPM variable from loaded results
+%   - VOL:	 VOL variable from loaded results
+%
+%   Optional 4th argument fits a design matrix and returns betas
+%   - xX:	 xX design matrix to fit to timeseries
+%   OR 4th argument can be 0 (or any non-structure arg), suppressing verbose output.
+%
+% [Last 2 arguments are optional.  Use if results are already loaded into workspace]
+%
+% Automatic fitting of model to cluster timeseries average using analyze_cluster_rois
+% with High-Pass filter length of your choice.
+% This only works if you input only the file names or input all optional arguments, including xX
+%
+% ..
+%    10/17/01 by Tor Wager
+%    Last modified 3/19/04 by Tor, to get clusters structure as input and use
+%    timeseries3 instead of (bad on mac osx) timeseries2
+% ..
+%
+% NOTE (WARNING): WORKS ON XYZ VOXEL COORDINATES - TRANSFORMATION TO
+% DIFFERENT SPACES ONLY IF ENTERING 2 ARGS, 1st one names, 2nd one clusters
+%
+% see transform_coordinates.m for transformation, or check_spm_mat, or cluster_interp.
+%
+% ..
+%    Functions called
+%       C:\matlabR12\toolbox\matlab\datatypes\squeeze.m
+%       c:\tor_scripts\voistatutility\nanmean.m
+%       (calls other spm functions)
+%       center_of_mass.m
+%       analyze_cluster_rois.m
+% ..
 
     persistent prev_imnames
     persistent Vimnames

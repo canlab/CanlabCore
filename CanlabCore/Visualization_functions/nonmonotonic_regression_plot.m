@@ -1,6 +1,6 @@
-function nonmonotonic_regression_plot(x,y)
-    %  nonmonotonic_regression_plot(x,y)
+%  nonmonotonic_regression_plot(x,y)
 % see lsqisotonic.m
+function nonmonotonic_regression_plot(x,y)
 
 figure('Color','w');plot(x,y,'ko','MarkerFaceColor','k')
 

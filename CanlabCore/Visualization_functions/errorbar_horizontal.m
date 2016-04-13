@@ -1,39 +1,63 @@
 function hh = errorbar_horizontal(varargin)
-%errorbar_horizontal: Error bar plot.
-%   errorbar_horizontal(X,Y,L,U) plots the graph of vector X vs. vector Y with
-%   error bars specified by the vectors L and U.  L and U contain the
-%   lower and upper error ranges for each point in Y.  Each error bar
-%   is L(i) + U(i) long and is drawn a distance of U(i) above and L(i)
-%   below the points in (X,Y).  The vectors X,Y,L and U must all be
-%   the same length.  If X,Y,L and U are matrices then each column
-%   produces a separate line.
+% Error bar plot
 %
-%   errorbar_horizontal(X,Y,E) or errorbar_horizontal(Y,E) plots Y with error bars [Y-E Y+E].
-%   ERRORBAR(...,'LineSpec') uses the color and linestyle specified by
-%   the string 'LineSpec'.  The color is applied to the data line and
-%   error bars while the linestyle and marker are applied to the data 
-%   line only.  See PLOT for possibilities.
+% :Usage:
+% ::
 %
-%   errorbar_horizontal(AX,...) plots into AX instead of GCA.
+%    errorbar_horizontal(X,Y,L,U)
 %
-%   H = errorbar_horizontal(...) returns a vector of errorbarseries handles in H.
+% plots the graph of vector X vs. vector Y with
+% error bars specified by the vectors L and U.  L and U contain the
+% lower and upper error ranges for each point in Y.  Each error bar
+% is L(i) + U(i) long and is drawn a distance of U(i) above and L(i)
+% below the points in (X,Y).  The vectors X,Y,L and U must all be
+% the same length.  If X,Y,L and U are matrices then each column
+% produces a separate line.
+% ::
 %
-%   For example,
-%      x = 1:10;
-%      y = sin(x);
-%      e = std(y)*ones(size(x));
-%      errorbar(x,y,e)
-%   draws symmetric error bars of unit standard deviation.
+%    errorbar_horizontal(X,Y,E)
+%    % or
+%    errorbar_horizontal(Y,E)
 %
-% NOTE: Tor Wager modified from Matlab's ERRORBAR function to plot
-% HORIZONTAL error bars.
+% plots Y with error bars [Y-E Y+E].
+% ::
 %
-% EXAMPLE:
+%    ERRORBAR(...,'LineSpec')
+%
+% uses the color and linestyle specified by
+% the string 'LineSpec'.  The color is applied to the data line and
+% error bars while the linestyle and marker are applied to the data 
+% line only.  See PLOT for possibilities.
+% ::
+%
+%    errorbar_horizontal(AX,...)
+%
+% plots into AX instead of GCA.
+% ::
+%
+%    H = errorbar_horizontal(...)
+%
+% returns a vector of errorbarseries handles in H.
+%
+% :Examples: To draws symmetric error bars of unit standard deviation
+% ::
+%
+%    x = 1:10;
+%    y = sin(x);
+%    e = std(y)*ones(size(x));
+%    errorbar(x,y,e)
+%
 % If means(:, 1) is x-values, means(:, 2) is y-values, stds(:, 1) is error
 % on x, and stds(:, 2) is error on y, then:
+% ::
 %
-% lineh = errorbar_horizontal(means(:, 1), means(:, 2), stds(:, 1));
-% linehx = errorbar(means(:, 1), means(:, 2), stds(:, 2));
+%    lineh = errorbar_horizontal(means(:, 1), means(:, 2), stds(:, 1));
+%    linehx = errorbar(means(:, 1), means(:, 2), stds(:, 2));
+%
+% ..
+%    NOTE: Tor Wager modified from Matlab's ERRORBAR function to plot
+%    HORIZONTAL error bars.
+% ..
 
 [v6,args] = usev6plotapi(varargin{:});
 if v6

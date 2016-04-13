@@ -1,104 +1,131 @@
 function [p,errval,fit,linkfun,fhan] = nonlin_fit(y,x,varargin)
-% Purpose:
 % Multi-purpose nonlinear fitting to data
 %
-% Author and date / revision info:
-% Tor Wager, Dec. 6, 2006   % created
-% Tor        Dec. 10        % last modified
+% :Usage:
+% ::
 %
-% Function definition:
-% [p,errval,fit] = nonlin_fit(y,x,['link',linktype],['err',objtype],['start',startp], ...
-% ['plot'],['verbose'],[noverbose'],['quickstart'],['smartstart'])
+%     [p,errval,fit] = nonlin_fit(y,x,['link',linktype],['err',objtype],['start',startp], ...
+%                                ['plot'],['verbose'],[noverbose'],['quickstart'],['smartstart'])
 %
 % (Optional arguments are in [ ])
 %
-% _________________________________________________________________
-% Arguments:
-% y         data vector
-% x         vector of x-values
-% linktype  functional form to fit to data.  options are:
-%           'sigmoid' 'exp0' 'exp2' 'exp3' 'exps'
-% objtype   error measures to be minimized.  options are:
-%           'sse' : sums of squared errors
-%           'mad' : median absolute deviation (more robust to outliers)
-% 'plot'    Create plot of data and fit
-% startp    Vector of starting parameters for minimization
-% _________________________________________________________________
+% :Inputs:
 %
-% Functions
-% 'sigmoid'
-% 'exp1', 'exp2', 'exp3' Exponential function
-% 'exp1'        y = e^(ax)          with free parameter a
-% 'exp2'        y = b*e^(ax)        with free a, b
-% 'exp3'        y = c + b*e^(ax)    with free a, b, c
-% 
-% Power functions: 'pow0' 'pow2' 'pow3' 'pows1' 'pows2' 'pows'
-% 'pows'        a + -(bx)^(-c)     with params a, b, c
-%               simplifies to 1 - (1/x) with all p = 1
-%               range: (for + b and c) -Inf at x = 0, to asymptote = a at x = Inf.
+%   **y:**
+%        data vector
 %
-% Usage:
+%   **x:**
+%        vector of x-values
+%
+%   **linktype:**
+%        functional form to fit to data.  options are:
+%
+%        'sigmoid' 'exp0' 'exp2' 'exp3' 'exps'
+%
+%   **objtype:**
+%        error measures to be minimized.  options are:
+%
+%        'sse' : sums of squared errors
+%
+%        'mad' : median absolute deviation (more robust to outliers)
+%
+%   **'plot':**
+%        Create plot of data and fit
+%
+%   **startp:**
+%        Vector of starting parameters for minimization
+%
+% :Functions:
+%
+%   **'sigmoid':**
+%
+%
+%   **'exp1', 'exp2', 'exp3':**
+%        Exponential function
+%          - 'exp1'        y = e^(ax)          with free parameter a
+%          - 'exp2'        y = b*e^(ax)        with free a, b
+%          - 'exp3'        y = c + b*e^(ax)    with free a, b, c
+%
+%   **'pow0' 'pow2' 'pow3' 'pows1' 'pows2' 'pows':**
+%       Power functions: 
+%          - 'pows'        a + -(bx)^(-c)     with params a, b, c
+%             simplifies to 1 - (1/x) with all p = 1
+%             range: (for + b and c) -Inf at x = 0, to asymptote = a at x = Inf.
+%
+% :Usage:
+%
 % Default behavior: sigmoid fit, SSE objective:
-% [p,sse,fit] = nonlin_fit(y,x,'plot');
+% ::
+%
+%     [p,sse,fit] = nonlin_fit(y,x,'plot');
 %
 % Specify sigmoid function and SSE objective, starting at params [2 1 1]:
-% [p,sse,fit] = nonlin_fit(y,x,'start',[2 1 1],'link','sigmoid','err','sse');
+% ::
+%
+%     [p,sse,fit] = nonlin_fit(y,x,'start',[2 1 1],'link','sigmoid','err','sse');
 %
 % Specify median absolute deviation error minimization (more robust):
-% [p,sse,fit] = nonlin_fit(y,x,'err','mad','plot');
+% ::
+%
+%     [p,sse,fit] = nonlin_fit(y,x,'err','mad','plot');
 %
 % Fit and add a fit line on a graph
-% [p,errval,fit,linkfun,fhan] = nonlin_fit(y,x,'linktype','exps','start',[1.2 .5 .8]);
-% fitx = 1:.1:5; fitline = fhan(p,fitx);
-% hold on; plot(fitx,fitline,'r');
+% ::
 %
-% Extended examples
-% _________________________________________________________________
-% Example: sigmoid fit to y
-% Generate fake data:
+%     [p,errval,fit,linkfun,fhan] = nonlin_fit(y,x,'linktype','exps','start',[1.2 .5 .8]);
+%     fitx = 1:.1:5; fitline = fhan(p,fitx);
+%     hold on; plot(fitx,fitline,'r');
 %
-% x = -5:.01:5;
-% sigmoid = inline('p(1) .* ( 1 ./ (1 + p(2)*exp(-p(3)*x)) )','p','x');
-% y = sigmoid([2 1 1.5],x);
-% y = y + .3 .* randn(1,size(y,2)) ;
+% :Examples:
+% ::
 %
-% Fit, starting at param values [1 1 1]:
-% [p,sse,fit] = nonlin_fit(y,x,'plot','start',[1 1 1]);
+%    % sigmoid fit to y
+%    % Generate fake data:
+%    x = -5:.01:5;
+%    sigmoid = inline('p(1) .* ( 1 ./ (1 + p(2)*exp(-p(3)*x)) )','p','x');
+%    y = sigmoid([2 1 1.5],x);
+%    y = y + .3 .* randn(1,size(y,2)) ;
 %
-% Bit more complicated data
-%  x2 = -5:.01:5;
-% y = sigmoid([2 1 .5],x2);
-% y = [y 2*ones(1,100)];
-% y = y + .3 .* randn(1,size(y,2)) ;
-% x = 1:length(y);
+%    % Fit, starting at param values [1 1 1]:
+%    [p,sse,fit] = nonlin_fit(y,x,'plot','start',[1 1 1]);
 %
-% Exponential function (see also exp1, exp2, exp3 keywords)
-% expfun = inline('p(1)*exp(p(2)*x)','p','x');    % the exponential function
+%    % Bit more complicated data
+%    x2 = -5:.01:5;
+%    y = sigmoid([2 1 .5],x2);
+%    y = [y 2*ones(1,100)];
+%    y = y + .3 .* randn(1,size(y,2)) ;
+%    x = 1:length(y);
+%
+%    % Exponential function (see also exp1, exp2, exp3 keywords)
+%    expfun = inline('p(1)*exp(p(2)*x)','p','x');
 % 
-% % simulated sample data
-% x = -1:.01:5;
-% y = expfun([.5 .7], x);                               
-% y = y + 1 .* randn(1,size(y,2));
-% 
-% funhandle = @(p, x) expfun(p, x);               % function handle to pass in
-% [p,sse,fit] = nonlin_fit(y,x,'linktype', funhandle, 'plot','start',[1 1]);
+%    % simulated sample data
+%    x = -1:.01:5;
+%    y = expfun([.5 .7], x);                               
+%    y = y + 1 .* randn(1,size(y,2));
 %
-% Then, try to fit one-parameter exponential model to the same data:
-% [p,sse,fit] = nonlin_fit(y,x,'linktype', 'exp1', 'plot','start', 1);
-% _________________________________________________________________
+%    % function handle to pass in
+%    funhandle = @(p, x) expfun(p, x);
+%    [p,sse,fit] = nonlin_fit(y,x,'linktype', funhandle, 'plot','start',[1 1]);
 %
+%    % Then, try to fit one-parameter exponential model to the same data:
+%    [p,sse,fit] = nonlin_fit(y,x,'linktype', 'exp1', 'plot','start', 1);
 %
-% to-do ideas:
-% rsquare and other output stats in output structure
-% convergence flag : run 10 times w/random starting points and assess
-% convergence
-% sobol : sample space of starting params with sobol sequence
-% verbose output table with verbose flag
+% ..
+%    Author and date / revision info:
+%    Tor Wager, Dec. 6, 2006   % created
+%    Tor        Dec. 10        % last modified
 %
+%    to-do ideas:
+%    rsquare and other output stats in output structure
+%    convergence flag : run 10 times w/random starting points and assess
+%    convergence
+%    sobol : sample space of starting params with sobol sequence
+%    verbose output table with verbose flag
+% ..
 
-% setup defaults and inputs
-% _________________________________________________________________
-[linktype,objtype,startp,doplot,doverbose,dosmartstart] = setup_inputs;
+
+[linktype,objtype,startp,doplot,doverbose,dosmartstart] = setup_inputs; % setup defaults and inputs
 startp;
 
 

@@ -1,14 +1,22 @@
 function compare_filtered_t(anatP,varargin)
-% function compare_filtered_t(anatP,P1,P2, etc...)
-% tor wager
+% :Usage:
+% ::
 %
-% example:
-% compare_filtered_t([],'rob_tmap_filtered_0001.img','rob_tmap_filtered_0002.img')
+%    compare_filtered_t(anatP,P1,P2, etc...)
 %
-% Threshold spm T images and display them together in SPM orthviews
-% threshold_spm_t(.005,22,0,'pos')
-% compare_filtered_t([],'rfx0009/spmT_filtered_0002.img','rfx0011/spmT_filtered_0002.img', ...
-% 'rfx0013/spmT_filtered_0002.img','rfx0015/spmT_filtered_0002.img','rfx0017/spmT_filtered_0002.img')
+% :Examples:
+% ::
+%
+%    compare_filtered_t([],'rob_tmap_filtered_0001.img','rob_tmap_filtered_0002.img')
+%
+%    Threshold spm T images and display them together in SPM orthviews
+%    threshold_spm_t(.005,22,0,'pos')
+%    compare_filtered_t([],'rfx0009/spmT_filtered_0002.img','rfx0011/spmT_filtered_0002.img', ...
+%    'rfx0013/spmT_filtered_0002.img','rfx0015/spmT_filtered_0002.img','rfx0017/spmT_filtered_0002.img')
+%
+% ..
+%    tor wager
+% ..
 
 if isempty(anatP), 
     

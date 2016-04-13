@@ -1,12 +1,15 @@
-% given an output file from CERT, returns a struct with the data
+function AUs = CERTreader(fname)
+% Given an output file from CERT, returns a struct with the data
 %
-% input:
-%   filename
+% :Input:
 %
-% output:
+%   **fname:**
+%        filename
+%
+% :Output:
+%
 %   struct with the data
 
-function AUs = CERTreader(fname)
 
 r=robustcsvread(fname, 'rows_to_skip', 1, 'delim', '\t');
 

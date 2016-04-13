@@ -883,7 +883,7 @@ else
 end
 
 if bootweights
-    stats.WTS = boot_weights(funhan, obj, cv_assignment, bootfun_inputs{:});
+    stats.WTS = boot_weights(funhan, obj, cv_assignment,doMultiClass, bootfun_inputs{:}); %1/20/16 add multiclass support
     fprintf('Returning weights and Z, p values in stats.WTS\n')
     
     % Replace weight_obj with better statistic_image version:
@@ -1806,13 +1806,14 @@ end % function
 % ---------------------------------------------------------------------
 % ---------------------------------------------------------------------
 
-function WTS = boot_weights(funhan, obj, cv_assignment, varargin)
+function WTS = boot_weights(funhan, obj, cv_assignment,doMultiClass, varargin)
 
 %default options
 opt = statset('UseParallel','never');
 doParallel = 0;
 doSaveWeights = 0;
 bootsamples = 100;
+
 WTS = struct;
 rng 'shuffle' %pick random seed for randomization
 
@@ -1864,8 +1865,20 @@ fprintf('Done in %3.0f sec\n', toc(t0));
 
 %7/2/13: Luke changed to use nan mean and outputs mean of weights and to reduce
 %duplicating variables
-WTS.wste = nanstd(WTS.w);
-WTS.wmean = nanmean(WTS.w);
+
+%1/20/16 Phil added code to deal with multiclass case
+if doMultiClass
+    tv=WTS.w;
+    WTS.w=zeros(size(tv,1),size(obj.dat,1),size(cv_assignment,2));
+    for i=1:size(tv,1)
+        for j=1:size(cv_assignment,2)
+             WTS.w(i,:,j)=tv(i,j:size(cv_assignment,2):end);
+        end
+    end%reshape because MATLAB's bootstrp makes a single row
+end
+
+WTS.wste = squeeze(nanstd(WTS.w)); %1/20/16 add squeeze for multiclass case
+WTS.wmean = squeeze(nanmean(WTS.w)); %1/20/16 add squeeze for  multiclass case
 WTS.wste(WTS.wste == 0) = Inf;  % in case unstable regression returns all zeros
 WTS.wZ = WTS.wmean ./ WTS.wste;  % tor changed from wmean; otherwise bootstrap variance in mean inc in error; Luke renamed to avoid confusion
 WTS.wP = 2 * (1 - normcdf(abs(WTS.wZ)));
@@ -1874,14 +1887,21 @@ if ~doSaveWeights %clear weights if they don't need to be saved (better for memo
     WTS.w = [];
 end
 
+
 singlemn = bootfunhan(obj.dat', obj.Y, cv_assignment);
-if min(size(singlemn)) > 1 % in case bootfunhan returns matrix; bootstrp vectorizes
-    singlemn = singlemn(:)';
+
+if ~doMultiClass %1/20/16 Phil added case for multiclass (average correlation across models)
+    if min(size(singlemn)) > 1 % in case bootfunhan returns matrix; bootstrp vectorizes
+        singlemn = singlemn(:)';
+    end
+    %r = corr(wmean, singlemn,'rows','pairwise');
+    r=nancorr(WTS.wmean,singlemn); %7/2/13: LC ignore nans
+else
+    for i=1:size(singlemn,1)
+        r(i)=nancorr(WTS.wmean(:,i),singlemn(i,:)');
+    end
+    r=mean(r);
 end
-
-%r = corr(wmean, singlemn,'rows','pairwise');
-r=nancorr(WTS.wmean,singlemn); %7/2/13: LC ignore nans
-
 % create_figure('bootweights', 1, 2); plot(wmean, mean(w), 'k.');
 % xlabel('Weights - full sample');
 % ylabel('Mean bootstrap weights');

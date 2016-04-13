@@ -1,4 +1,4 @@
-function plot3d(X,names,clus,linemat,cordir);
+function plot3d(X,names,clus,linemat,cordir)
 
 %%% define scaling %%%%%%%
 numel=size(X,1);

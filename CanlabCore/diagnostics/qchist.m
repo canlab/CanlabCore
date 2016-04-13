@@ -1,34 +1,49 @@
 function h = qchist(images,Nbins,sparse,XLim,titles)
-
-%function: h = qchist(dat,Nbins,sparse,XLim)
-%date: 2/1/2011
-%author: Tor Wager
-%usage: This function generates a histogram of activations from a set of
-%       statistic images.  Generally, you want the images to have a normal
-%       distribution.  Highly skewed distributions may be indicative of bad
-%       data.
+% This function generates a histogram of activations from a set of
+% statistic images.  Generally, you want the images to have a normal
+% distribution.  Highly skewed distributions may be indicative of bad
+% data.
+%
+% :Usage:
+% ::
+%
+%     function: h = qchist(dat,Nbins,sparse,XLim)
 %
 %       This function may generate multiple figuresa with 30 histograms
 %       each
 %
-%       required inputs:
-%       images:       List of image file names OR fmri_data object.
+% :Inputs:
 %
-%       optional inputs:
-%       'Nbins':      Number of bins in each histogram (default = 100)
-%       'sparse':     flag for generating ONLY histograms (default = 0)
-%       'XLim':       Xlim (default = [-1 1])
-%       'titles':     a cell array of subplot titles.  If omitted, titles
-%                       are inferred from assuming images come from a
-%                       directory structure that looks like the following:
-%                       /.../subjname/contrastimage.nii
+%   **images:**
+%        List of image file names OR fmri_data object.
+%
+% :Optional Inputs:
+%
+%   **Nbins:**
+%        Number of bins in each histogram (default = 100)
+%
+%   **sparse:**
+%        flag for generating ONLY histograms (default = 0)
+%
+%   **XLim:**
+%        Xlim (default = [-1 1])
+%
+%   **titles:**
+%        a cell array of subplot titles.  If omitted, titles
+%        are inferred from assuming images come from a
+%        directory structure that looks like the following:
+%        /.../subjname/contrastimage.nii
 %
 %
 %
-%  --------------------------------------------------------------
-%   Edit: Turned into a function - Scott Schafer 7/14/2012
-%   Minor edits - Tor Wager, 8/6/2012
-%   Added 'sparse' option - Scott Schafer 1/31/2013
+% ..
+%    date: 2/1/2011
+%    author: Tor Wager
+%
+%    Edit: Turned into a function - Scott Schafer 7/14/2012
+%    Minor edits - Tor Wager, 8/6/2012
+%    Added 'sparse' option - Scott Schafer 1/31/2013
+% ..
 
 
 if nargin < 2

@@ -1,5 +1,28 @@
 function lineH = cl_line_plots(clusters)
 
+% :Usage:
+% ::
+%
+%    cl_line_plots(clusters)
+%
+% purpose:  ???
+%
+% :Input:
+%
+%   **clusters**
+%        
+%       cluster object
+%
+% :Output:
+%
+%   **lineH**
+% 
+%       handle
+%
+%
+
+
+
     index = 1;
     tabtext = [];
     

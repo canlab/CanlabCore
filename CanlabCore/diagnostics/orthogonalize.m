@@ -1,6 +1,12 @@
 function X = orthogonalize(mX,X,varargin)
-% function X = orthogonalize(mX,X,[scale])
-% orthogonalizes X with respect to mX, optionally scaling predictors of X% For each nuisance covariate (column of X)
+% orthogonalizes X with respect to mX, optionally scaling predictors of X
+% For each nuisance covariate (column of X)
+%
+% :Usage:
+% ::
+%
+%     function X = orthogonalize(mX,X,[scale])
+%
 % Regresses out model fits and saves residuals in X
 
 

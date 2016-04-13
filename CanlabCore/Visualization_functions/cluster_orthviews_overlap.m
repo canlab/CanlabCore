@@ -1,13 +1,33 @@
 function cluster_orthviews_overlap(mask1, mask2, varargin)
-    % cluster_orthviews_overlap(mask1, mask2, [colors cell])
-    %
-    % Plot two clusters on the orthviews, and their intersections for
-    % activations and deactivations in intermediate colors
-    %
-    % A good function, but not polished yet.  needs debugging for various
-    % minor issues.
-    % tor wager, june 2010
-    
+% Plot two clusters on the orthviews, and their intersections for
+% activations and deactivations in intermediate colors
+%
+% :Usage:
+% ::
+%
+%    cluster_orthviews_overlap(mask1, mask2, [colors cell])
+%
+% ..
+%  
+% :Inputs:
+% 
+%     **mask1**
+%     path to nifit image
+% 
+%     **mask2**
+%     path to nifit image
+%     
+% :Optional Inputs:
+%     
+%     **colors**
+%     cell array of RGB colors like: {[1 0 0] [0 0 1] [1 1 0] [0 1 1]}
+% 
+% ..
+%    tor wager, june 2010
+%    A good function, but not polished yet.  needs debugging for various
+%    minor issues.
+% ..
+
     colors = {[1 0 0] [0 0 1] [1 1 0] [0 1 1]};
     
     if length(varargin) > 0

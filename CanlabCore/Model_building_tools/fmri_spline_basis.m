@@ -1,30 +1,58 @@
 function [xBF_hires, xBF] = fmri_spline_basis(TR, varargin)
-
-% xBF = spline_hrf_basis(TR, optional args)
-% 
-% Inputs:
-% TR : repetition time; sampling resolution of data
-% 'plot' : optional: plot basis set
-% 'nbasis' : optional: number of knot points
-% 'order' : optional: order of spline model (# matched derivatives)
-% 'length' : optional: length of window to model, in seconds
+% :Usage:
+% ::
+%
+%     xBF = spline_hrf_basis(TR, optional args)
+%
+% :Inputs:
+%
+%   **imTR:**
+%        repetition time; sampling resolution of data
+%
+%   **'plot':**
+%        optional: plot basis set
+%
+%   **'nbasis':**
+%        optional: number of knot points
+%
+%   **'order':**
+%        optional: order of spline model (# matched derivatives)
+%
+%   **'length':**
+%        optional: length of window to model, in seconds
 %
 % Outputs:
+% :Inputs:
 %
-% xBF.dt      - time bin length {seconds}
-% xBF.name    - description of basis functions specified
-% xBF.length  - window length (seconds)
-% xBF.order   - order
-% xBF.bf      - Matrix of basis functions
-%  
-% 32 second long spline basis set for fmri model
+%   **xBF.dt:**
+%        time bin length {seconds}
 %
-% xBF_hires: Sampled at high resolution, TR * 16
-% xBF: Sampled at TR
+%   **xBF.name:**
+%        description of basis functions specified
 %
-% Examples:
-% [xBF_hires, xBF] = fmri_spline_basis(TR, varargin)
-% [xBF_hires, xBF] = fmri_spline_basis(2, 'length', 12, 'nbasis', 3, 'order', 3, 'plot');
+%   **xBF.length:**
+%        window length (seconds)
+%
+%   **xBF.order:**
+%        order
+%
+%   **xBF.bf:**
+%        Matrix of basis functions
+%
+%        32 second long spline basis set for fmri model
+%
+%   **xBF_hires:**
+%        Sampled at high resolution, TR * 16
+%
+%   **xBF:**
+%        Sampled at TR
+%
+% :Examples:
+% ::
+%
+%    [xBF_hires, xBF] = fmri_spline_basis(TR, varargin)
+%    [xBF_hires, xBF] = fmri_spline_basis(2, 'length', 12, 'nbasis', 3, 'order', 3, 'plot');
+
 
 doplot = 0;
 nBas = 8; % number of basis functions; higher = more spatial resolution. Must be at least k.

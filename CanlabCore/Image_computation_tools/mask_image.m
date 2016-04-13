@@ -1,41 +1,61 @@
 function dat = mask_image(img, mask, outname, varargin)
-    % masked_dat = mask_image(img, mask, outname, ['reverse'])
-    %
-    % Mask an image file (img) with a mask (mask), and save in outname.
-    % zero and NaN values are considered invalid values, and so voxels with
-    % these values are considered "excluded"
-    %
-    % Optional arguments:
-    % 'minmask' : mask values less than next argument are excluded
-    % 'maxmask' : mask values greater than next argument are excluded
-    % 'minimg' : img values less than next argument are excluded
-    % 'maximg' : img values greater than next argument are excluded
-    %
-    % 'abs': impose min/max thresholds based on absolute values
-    %
-    % 'reverse' : make "reverse mask," including only previously excluded
-    %               areas (values of zero or NaN)
-    %             Note: applies to mask, not img values
-    %             So values with 0 in img will always be 0, whether
-    %             standard or "reverse" mask is used.
-    %
-    % 'binary' : make the image values binary (i.e., create a new mask)
-    %
-    % This function can handle images of different dimensions.  The output
-    % image will use the dimensions of img.
-    %
-    % Examples:
-    %
-    % Create an image with non-zero numbers only where p-values in an image are greater than .05
-    % img = 'X-M_pvals.img'; mask = 'X-M_pvals.img'; maxmask = .05; outname = 'notX_p05.img';
-    % mask_image(img, mask, outname, 'reverse', 'maxmask', maxmask);
-    % spm_image('init', outname);
-    %
-    % mask_image(my_mean_image, 'functional_mask.img', ...
-    % 'functional_mask.img', 'minimg', cutoff, 'abs');
-    %
-    %
-    % mask_image('n15_avgpet.img',EXPT.mask,'n15_avgpet_brain.img');
+% :Usage:
+% ::
+%
+%     masked_dat = mask_image(img, mask, outname, ['reverse'])
+%
+% Mask an image file (img) with a mask (mask), and save in outname.
+% zero and NaN values are considered invalid values, and so voxels with
+% these values are considered "excluded"
+%
+% :Optional Inputs:
+%
+%   **'minmask':**
+%        mask values less than next argument are excluded
+%
+%   **'maxmask':**
+%        mask values greater than next argument are excluded
+%
+%   **'minimg':**
+%        img values less than next argument are excluded
+%
+%   **'maximg':**
+%        img values greater than next argument are excluded
+%
+%   **'abs':**
+%        impose min/max thresholds based on absolute values
+%
+%   **'reverse':**
+%        make "reverse mask," including only previously excluded
+%        areas (values of zero or NaN)
+%
+%        Note: applies to mask, not img values
+%        So values with 0 in img will always be 0, whether
+%       standard or "reverse" mask is used.
+%
+%   **'binary':**
+%        make the image values binary (i.e., create a new mask)
+%
+% This function can handle images of different dimensions.  The output
+% image will use the dimensions of img.
+%
+% :Examples:
+% ::
+%
+%    % Create an image with non-zero numbers only where p-values in an image are greater than .05
+%    img = 'X-M_pvals.img'
+%    mask = 'X-M_pvals.img';
+%    maxmask = .05
+%    outname = 'notX_p05.img';
+%    mask_image(img, mask, outname, 'reverse', 'maxmask', maxmask);
+%    spm_image('init', outname);
+%
+%    mask_image(my_mean_image, 'functional_mask.img', ...
+%                  'functional_mask.img', 'minimg', cutoff, 'abs');
+%
+%
+%    mask_image('n15_avgpet.img',EXPT.mask,'n15_avgpet_brain.img');
+%
 
     doreverse = 0;
     minmask = 0;

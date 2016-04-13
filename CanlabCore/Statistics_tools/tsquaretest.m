@@ -1,5 +1,4 @@
 function [t2, S, p, t2crit, dfb, dfe, sc] = tsquaretest(X,pthresh, u0)
-%
 % Hotelling's t-square test that the multivariate sample mean of X is
 % different from u0.
 %
@@ -8,7 +7,9 @@ function [t2, S, p, t2crit, dfb, dfe, sc] = tsquaretest(X,pthresh, u0)
 % If u0 is not entered, the default null hypothesis is mean zero (the
 % origin)
 %
-% tor wager, july 7, 2006
+% ..
+%    tor wager, july 7, 2006
+% ..
 
 [n,k] = size(X);
 

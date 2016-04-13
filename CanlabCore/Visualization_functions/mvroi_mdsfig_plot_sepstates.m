@@ -1,11 +1,14 @@
 function mvroi_mdsfig_plot_sepstates(CLUSTER,CORRELS,SPEC)
-% function mvroi_mdsfig_plot_sepstates(CLUSTER,CORRELS,SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,titlestr)
+% ::
+%
+%    mvroi_mdsfig_plot_sepstates(CLUSTER,CORRELS,SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,titlestr)
 %
 % Plots SEPARATE STATES
 %
-% e.g., 
+% :Example: 
+% ::
 %
-% mvroi_mdsfig_plot2(DATA.CLUSTER,DATA.SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,'Uncorrected');
+%    mvroi_mdsfig_plot2(DATA.CLUSTER,DATA.SPEC,DATA.CORRELS.AVGSTATS.sigmat_uncorrected,DATA.CORRELS.DIFSTATS.sigmat_uncorrected,'Uncorrected');
 %
 scnsize = get(0,'ScreenSize');
 figure('position',[50 50 scnsize(3)-100 scnsize(4)/2],'color','white')

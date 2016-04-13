@@ -1,12 +1,17 @@
-% varargout = nanremove(varargin)
-% [nanvec, x1, x2, etc.] = nanremove(x1,x2,etc...)
+function [nanvec, varargout] = nanremove(varargin)
+% :Usage:
+% ::
+%
+%     varargout = nanremove(varargin)
+%     [nanvec, x1, x2, etc.] = nanremove(x1,x2,etc...)
 %
 % removes cases that are NaN in any column of any variable x1...xn
 %
-% tor wager
-% update: 7/10/2007 to handle multi-column matrix inputs
+% ..
+%    tor wager
+%    update: 7/10/2007 to handle multi-column matrix inputs
+% ..
 
-function [nanvec, varargout] = nanremove(varargin)
     if nargin == 0, error('nanremove: no input args.'), end
 
     m = size(varargin{1}, 1);

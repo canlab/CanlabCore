@@ -1,18 +1,45 @@
 function [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
-% Run single or multilevel mediation analysis on a canlab_dataset object
+% Run single or multilevel mediation analysis on a canlab_dataset object.
+% Calls mediation.m (see mediation.m) in mediation toolbox
 %
 % :Usage:
 % ::
 %
-%    [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
+%    [paths, stats] = mediation(D, xvarname, yvarname, mvarname, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 % :Inputs:
 %
 %   **D:**
 %        is a canlab_dataset object
 %
-%   **xvarname, mvarname, and yvarname:**
-%        are valid variable names in the dataset.
+%   **xvarname:**
+%        X, the initial variable (valid variable name in the dataset)
+%
+%   **yvarname:**
+%        Y, the outcome variable (valid variable name in the dataset)
+%
+%   **mvarname:**
+%        M, the potential mediator ((valid variable name in the dataset)
+%
 %
 % :Optional Inputs:
 %
@@ -30,17 +57,19 @@ function [paths, stats] = mediation(D, xvarname, yvarname, mvarname, varargin)
 %
 % :Outputs:
 %
-%   **[paths, stats]:**
-%        mediation output variable
+%   **paths:**
+%        see mediation.m from mediation toolbox
+%
+%   **stats:**
+%        see mediation.m from mediation toolbox
 %
 % :Examples:
 % ::
 %
 %    [paths, stats] = mediation(D, 'Group', 'DeltaDon', 'DeltaDist', 'M2', 'DeltaTend', 'wh_keep', wh_keep);
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
+
+
 
 covstr = 'nocovs';
 covvarnames = {};

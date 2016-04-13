@@ -1,12 +1,23 @@
 function mask = get_mask_vol(Pf,Pm)
-% function mask = get_mask_vol(Pf,Pm)
-% 
-% Tor Wager
 % Returns 3-D volume of binary mask values,
 % in the space of the functional image Pf.
 %
-% Pf    filename of functional image
-% Pm    filename of mask image (should be 1's and 0's)
+% :Usage:
+% ::
+%
+%     function mask = get_mask_vol(Pf,Pm)
+%
+% :Inputs:
+%
+%   **Pf:**
+%        filename of functional image
+%
+%   **Pm:**
+%        filename of mask image (should be 1's and 0's)
+%
+% ..
+%    Tor Wager
+% ..
 
     Vm = spm_vol(Pm);
     Vf = spm_vol(Pf);

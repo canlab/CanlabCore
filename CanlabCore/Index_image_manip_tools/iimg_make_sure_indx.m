@@ -1,5 +1,8 @@
 function dat = iimg_make_sure_indx(inputarg)
-% dat = iimg_make_sure_indx(inputarg)
+% :Usage:
+% ::
+%
+%     dat = iimg_make_sure_indx(inputarg)
 %
 % Make sure input is an index list, and convert if not
 

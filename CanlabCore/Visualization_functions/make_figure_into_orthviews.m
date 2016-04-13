@@ -1,18 +1,26 @@
-function [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews
-% [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews
+function [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews()
+% :Usage:
+% ::
+%
+%    [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews
 %
 % Copies a surface rendering or glass brain into three separate view
 % panels, one saggital, one axial, and one coronal
 %
-% tor wager
 % returns handles to objects in each view and hl light handles
 %
-% example:
-% [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews;
-% axes(a1)
-% text(-55,60,70,'L','FontSize',24);text(55,60,70,'R','FontSize',24);
-% axes(a3)
-% text(-55,60,70,'L','FontSize',24);text(55,60,70,'R','FontSize',24);
+% :Examples:
+% ::
+%
+%    [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews;
+%    axes(a1)
+%    text(-55,60,70,'L','FontSize',24);text(55,60,70,'R','FontSize',24);
+%    axes(a3)
+%    text(-55,60,70,'L','FontSize',24);text(55,60,70,'R','FontSize',24);
+%
+% ..
+%    tor wager
+% ..
 
 fo = gcf;
 f = figure('Color','w'); a1=subplot(1,3,1); set(gca,'FontSize',16);

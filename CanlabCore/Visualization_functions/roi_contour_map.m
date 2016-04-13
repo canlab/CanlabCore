@@ -1,77 +1,118 @@
 function info = roi_contour_map(dat, varargin)
-
 % Draw a pattern map of one slice (either saggital, axial, or coronal) that
 % shows the most voxels, or the slice that you specify (e.g., x = #). 
 % You can also draw outlines for the significant voxels from a statistical test. 
 %
-% Usage:
-% -------------------------------------------------------------------------
-% info = roi_contour_map(dat, varargin)
+% :Usage:
+% ::
+%
+%    info = roi_contour_map(dat, varargin)
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2014 Choong-Wan (Wani) Woo
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
+% :Inputs:
+%
+%   **dat:**
+%        dat can be fmri_data, statistic_image (to mark significant 
+%        voxels), and region objects. If your dat is the "region" 
+%        object, please add 'cluster' as an optional input. 
+%        You can display two pattern maps for the purpose of
+%        comparison by putting additional columns of data in cell array. 
+%
+%        An example of displaying two pattern maps:
+%        ::
+%
+%            dat{1} = region('img1.nii'); 
+%            dat{2} = region('img2.nii'); )
+%
+% :Optional Inputs:
+%
+%   **'cluster':**
+%        When the data is a region object, you need this option.
+%
+%   **'sig':**
+%        This option outlines significant voxels. To use this
+%        option, data in a format of statistic_image with a "sig" 
+%        field should be given. 
+%
+%   **'colorbar':**
+%        display colorbar under the plot. 
+%
+%   **'use_same_range':**
+%        When you display two pattern maps, this option uses the
+%        same color range for the two maps. 
+%
+%   **'surf':**
+%        surface plot rather than voxel-by-voxel mapping.
+%
+%   **'xyz':**
+%        When you want a specific view and slice, you can use this
+%        option with 'coord'. (1:x - saggital view, 2:y - coronal 
+%        view, 3:z - axial view)
+%
+%   **'coord':**
+%        With 'xyz' option, this specifies the slice displayed. 
+%
+%   **'notfill':**
+%        Default is to fill in the blank voxels using a black
+%        color. With this option, you can color the blank voxels
+%        with the white color. 
+%
+%   **'whole':**
+%        Default is dividing the data into contiguous regions and
+%        show only one region that has the most voxels. This option
+%        akes this function not to divide into contiguous regions. 
+%
+%   **'colors' or 'color':**
+%        you can specify your own colormap. 
+%
+%   **'contour':**
+%        Not fully implemented yet. 
+%
+% :Outputs:
+%
+%   **info:**
+%        information about the display with the following fields.
+%
+%   info.dat:
+%     - [2x30 double] (xyz mesh)
+%     - Z: [1x30 double] (z values)
+%     - xyz: 3 (1:x-saggital, 2:y-coronal, 3:z-axial)
+%     - xyz_coord: -2 (slice coordinate; in this case, z = 3)
+%     - region_idx: 1 
 %
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat            dat can be fmri_data, statistic_image (to mark significant 
-%                voxels), and region objects. If your dat is the "region" 
-%                object, please add 'cluster' as an optional input. 
-%                You can display two pattern maps for the purpose of
-%                comparison by putting additional columns of data in cell array. 
-%                (an example of displaying two pattern maps: 
-%                   dat{1} = region('img1.nii'); 
-%                   dat{2} = region('img2.nii'); )
-%
-% Some optional inputs
-% -------------------------------------------------------------------------
-% 'cluster'      When the data is a region object, you need this option.
-% 'sig'          This option outlines significant voxels. To use this
-%                option, data in a format of statistic_image with a "sig" 
-%                field should be given. 
-% 'colorbar'     display colorbar under the plot. 
-% 'use_same_range'  When you display two pattern maps, this option uses the
-%                   same color range for the two maps. 
-% 'surf'         surface plot rather than voxel-by-voxel mapping.
-% 'xyz'          When you want a specific view and slice, you can use this
-%                option with 'coord'. (1:x - saggital view, 2:y - coronal 
-%                view, 3:z - axial view)
-% 'coord'        With 'xyz' option, this specifies the slice displayed. 
-% 'notfill'      Default is to fill in the blank voxels using a black
-%                color. With this option, you can color the blank voxels
-%                with the white color. 
-% 'whole'        Default is dividing the data into contiguous regions and
-%                show only one region that has the most voxels. This option
-%                makes this function not to divide into contiguous regions. 
-% 'colors' or 'color'  you can specify your own colormap. 
-% 'contour'      Not fully implemented yet. 
-%
-%
-% Outputs:
-% -------------------------------------------------------------------------
-% info           information about the display with the following fields.
-%
-% info.dat: [2x30 double] (xyz mesh)
-%      Z: [1x30 double] (z values)
-%      xyz: 3 (1:x-saggital, 2:y-coronal, 3:z-axial)
-%      xyz_coord: -2 (slice coordinate; in this case, z = 3)
-%      region_idx: 1 
-%
-%
-% Examples: you can also see the same example and output in 
+% :Examples: you can also see the same example and output in 
 % http://wagerlab.colorado.edu/wiki/doku.php/help/core/figure_gallery
-% -------------------------------------------------------------------------
+% ::
 %
-% mask{1} = 'dACC_hw_pattern_sl6mm.nii';
-% mask{2} = 'dACC_rf_pattern_sl6mm.nii';
-% for i = 1:2, cl{i} = region(mask{i}); end
-% info = roi_contour_map([cl{1} cl{2}], 'cluster', 'use_same_range', 'colorbar'); 
+%    mask{1} = 'dACC_hw_pattern_sl6mm.nii';
+%    mask{2} = 'dACC_rf_pattern_sl6mm.nii';
+%    for i = 1:2, cl{i} = region(mask{i}); end
+%    info = roi_contour_map([cl{1} cl{2}], 'cluster', 'use_same_range', 'colorbar'); 
 %
-% -------------------------------------------------------------------------
-% Copyright (C) 2014  Wani Woo
+% ..
+%    Copyright (C) 2014  Wani Woo
+% ..
 
-% Programmers' notes:
-
-
-% parsing optional inputs
-docolor = 0;
+docolor = 0; % parsing optional inputs
 dosig = 0;
 docolorbar = 0; 
 usesamerange = 0;
@@ -137,13 +178,13 @@ for jj = 1:rnum
                 datsig{jj} = dat{jj}; 
                 datsig{jj}.dat = dat{jj}.sig; 
                 datsig{jj}.dat = dat{jj}.dat.*~dat{jj}.sig*10^-6 + dat{jj}.sig;
-                dat{jj}.sig = []; datsig{jj}.sig = [];
+                dat{jj}.sig = ones(size(dat{jj}.dat)); datsig{jj}.sig = ones(size(datsig{jj}.dat));
             else
                 error('There is no sig data. Please check your data.');
             end
         else
             if any(strcmp(fields(dat{jj}), 'sig'))
-                dat{jj}.sig = [];
+                dat{jj}.sig = ones(size(dat{jj}.dat));
             end
         end
         

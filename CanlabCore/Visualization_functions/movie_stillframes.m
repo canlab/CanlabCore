@@ -1,6 +1,4 @@
 function mov = movie_stillframes(numframes,mov) 
-% function mov = movie_stillframes(numframes,mov) 
-%
 % Add still frames to a movie
 
 if nargin < 2 || isempty(mov)

@@ -1,10 +1,19 @@
 function batch_efficiency(dwcard)
-% function batch_efficiency(dwcard)
-% 
 % Start in directory above individual model/results directories
-% dwcard is a wildcard for directories to probe, e.g., 'subject*'
 %
-% Tor Wager, 10/8/02
+% :Usage:
+% ::
+%
+%     function batch_efficiency(dwcard)
+% 
+% :Inputs:
+%
+%   **dwcard:**
+%        is a wildcard for directories to probe, e.g., 'subject*'
+%
+% ..
+%    Tor Wager, 10/8/02
+% ..
 
 d = dir(dwcard);
 

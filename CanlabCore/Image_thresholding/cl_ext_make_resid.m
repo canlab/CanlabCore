@@ -1,40 +1,59 @@
 function cl_ext_make_resid(con_files, varargin)
-
-% function cl_ext_make_resid(conimgs, varargin)
-%
-% Overview: this function will create residual images (4d) and mask image in 
+% This function will create residual images (4d) and mask image in 
 % a current or assigned directory in order to use them in estimating smoothness 
 % (relevant functions: spm_est_smoothness (SPM), 3dFWHMx (AFNI), smoothest (FSL). 
 %
-% Inputs:
-% - con_files = contrast image file names; This could be a cell array or
-%   strings. This could be 4d images. 
-%   Best: Input a cell string. e.g., for a string matrix:
-%   Use cl_ext_make_resid(cellstr(imgs)); % save residual images
+% :Usage:
+% ::
+%
+%     function cl_ext_make_resid(conimgs, varargin)
+%
+% :Inputs:
+%
+%   **con_files:**
+%        contrast image file names; This could be a cell array or
+%        strings. This could be 4d images. 
+%
+%        Best: Input a cell string. e.g., for a string matrix:
+%
+%        Use cl_ext_make_resid(cellstr(imgs)); % save residual images
 %
 %   * If you are not providing the absolute paths of the images, you need to
 %   be in the directory that has the image files. 
 %
-% Outputs: 
-% - Res4d.nii: residual images saved by SPM. 
-% - mask.nii: the mask image that was used.
+% :Outputs: 
 %
-% Options for varargin:
-% - 'mask': This option can be used to estimate a cluster size for the correction for multiple
-%   comparisons "within the mask". You can put in a ROI mask or gray matter,
-%   whatever. If you don't specify a mask image, brainmask.nii (default) will be
-%   used, but the image has to be in your path.
-%   e.g.) mask = fullfile(basedir, 'ROI_image.img'); 
-%         mask = which('scalped_avg152T1_graymatter_smoothed.img'); % limited to gray matter
-% - 'outputdir': With this option, this will save residual and mask images and in the 
-%   outputdir directory. If you don't give outputdir, the current directory
-%   will be used (default). 
+%   **Res4d.nii:**
+%        residual images saved by SPM. 
+%
+%   **mask.nii:**
+%        the mask image that was used.
+%
+% :Options for varargin:
+%
+%   **'mask'**
+%        This option can be used to estimate a cluster size for the correction for multiple
+%        comparisons "within the mask". You can put in a ROI mask or gray matter,
+%        whatever. If you don't specify a mask image, brainmask.nii (default) will be
+%        used, but the image has to be in your path.
+%         e.g.)
+%         ::
+%
+%              mask = fullfile(basedir, 'ROI_image.img'); 
+%              mask = which('scalped_avg152T1_graymatter_smoothed.img'); % limited to gray matter
+%
+%   **'outputdir'**
+%        With this option, this will save residual and mask images and in the 
+%        outputdir directory. If you don't give outputdir, the current directory
+%        will be used (default). 
 %
 % This function calls cl_ext_spm_spm.m, which is a modified spm_spm not to
 % delete residual images. 
 %
-% Choong-Wan (Wani) Woo, 01/22/2013
+% ..
+%    Choong-Wan (Wani) Woo, 01/22/2013
 %    modified by Wani, 05/18/2013
+% ..
 
 outputdir = pwd;
 mask = [];

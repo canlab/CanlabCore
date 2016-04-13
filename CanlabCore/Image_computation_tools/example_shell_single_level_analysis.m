@@ -1,18 +1,29 @@
-%function my_function_name(imgs, fixed_inputs, varargin)
+% :Usage:
+% ::
 %
-% imgs         image names, in string matrix
-% fixed_inputs one or more inputs that should always be entered
-% varargin     optional inputs. Entered as 'name', value pairs of input
-%               arguments
-% 
-function my_function_name(imgs, fixed_inputs, varargin)
+%     function my_function_name(imgs, fixed_inputs, varargin)
+%
+% :Inputs:
+%
+%   **imgs:**
+%        image names, in string matrix
+%
+%   **fixed_inputs:**
+%        one or more inputs that should always be entered
+%
+%   **varargin:**
+%        optional inputs. Entered as 'name', value pairs of input
+%        arguments
+%
 
-    % -------------------------------------------------------------
-    % Define Optional Inputs Here
-    % -------------------------------------------------------------
-    
-    % Default values for all optional inputs
-    % ---------------------------------------
+    function my_function_name(imgs, fixed_inputs, varargin)
+    % ..
+    %    Define Optional Inputs Here
+    % ..
+
+    % ..
+    %    Default values for all optional inputs
+    % ..
     nobs = size(imgs, 1);
     weights = ones(nobs, 1);        % default weights
     contrasts = [];

@@ -1,14 +1,23 @@
 function add_nuisance_to_SPMcfg(Xn)
-% function add_nuisance_to_SPMcfg(Xn)
-% Tor Wager
-% 
 % Adds a matrix Xn to the end of covariates of interest in
 % xX structure in SPMcfg.mat
 %
-% Xn should contain ALL nuisance covariates and intercepts
-% as in output of tor_get_physio.m
+% :Usage:
+% ::
+%
+%     function add_nuisance_to_SPMcfg(Xn)
+% 
+% :Inputs:
+%
+%   **oXn:**
+%        should contain ALL nuisance covariates and intercepts
+%        as in output of tor_get_physio.m
 %
 % This function is automatically run by tor_get_physio.m
+%
+% ..
+%    Tor Wager
+%..
 
     if exist([pwd filesep 'SPMcfg.mat']) == 2
         load SPMcfg

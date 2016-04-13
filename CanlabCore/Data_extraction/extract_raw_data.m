@@ -7,19 +7,24 @@
 %
 % Options: High-pass filtering, spline detrending, principal components
 %
-% inputs:  EXPT, as defined with get_expt_info.m
-%          clusters, as defined with tor_extract_rois.m
-%           Uses EXPT.FILES.im_files to get raw image names
+% :Inputs:
 %
-%           Optional: a string matrix of contrast or t-images to define
-%           individually significant regions.  Empty input skips this step.
+%   **EXPT:**
+%        as defined with get_expt_info.m
+%   **clusters:**
+%        as defined with tor_extract_rois.m
+%        Uses EXPT.FILES.im_files to get raw image names
 %
-%           For high-pass filtering (recommended), use the 'hpfilter' option, and
-%           enter HPDESIGN.TR, HPDESIGN.HP, and HPDESIGN.spersess = [number of images in each session], e.g., [220 220 220 220].
-%           For session intercept fitting only, use EXPT.HP = Inf;
-%           requires hpfilter.m
+%        Optional: a string matrix of contrast or t-images to define
+%        individually significant regions.  Empty input skips this step.
 %
-% Optional inputs:
+%        For high-pass filtering (recommended), use the 'hpfilter' option, and
+%        enter HPDESIGN.TR, HPDESIGN.HP, and HPDESIGN.spersess = [number of images in each session], e.g., [220 220 220 220].
+%        For session intercept fitting only, use EXPT.HP = Inf;
+%        requires hpfilter.m
+%
+% :Optional Inputs:
+%
 % case 'extract_from', extract_imgs = varargin{i + 1}; varargin{i + 1} = [];
 %
 % case 'define_ind_rois', imgs = varargin{i + 1}; varargin{i + 1} = [];
@@ -42,16 +47,21 @@
 % cl = extract_raw_data(EXPT, cl, 'subjects', [2:7 9:length(EXPT.FILES.im_files) 1]);
 % save conjunction_cl_raw cl
 %
-% Modified March 9, 2008, Tor Wager; remove automatic spline detrending if no HP filter
-% Mod. May 23, 2008, Tor Wager; re-format input options
+% :Examples:
+% ::
 %
-% Example: Extract data from amygdala and put in convenient format:
-% SETUP.data.M contains data images from a mediation analysis directory
-% Amygdala mask images were created with SPM Anatomy toolbox
-% cm = mask2clusters('/Users/tor/Documents/matlab_code/3DheadUtility/SPM2_brains/ROI_spmanatomy_CMamy_MNI.img');
-% bl = mask2clusters('/Users/tor/Documents/matlab_code/3DheadUtility/SPM2_brains/ROI_spmanatomy_BLamy_MNI.img');
-% [cl, clcell] = extract_raw_data([], [cm bl], 'extract_from', SETUP.data.M, 'noraw');
-% amy = mediation_multilev_reformat_cl(clcell)
+%    % Extract data from amygdala and put in convenient format:
+%    % SETUP.data.M contains data images from a mediation analysis directory
+%    % Amygdala mask images were created with SPM Anatomy toolbox
+%    cm = mask2clusters('/Users/tor/Documents/matlab_code/3DheadUtility/SPM2_brains/ROI_spmanatomy_CMamy_MNI.img');
+%    bl = mask2clusters('/Users/tor/Documents/matlab_code/3DheadUtility/SPM2_brains/ROI_spmanatomy_BLamy_MNI.img');
+%    [cl, clcell] = extract_raw_data([], [cm bl], 'extract_from', SETUP.data.M, 'noraw');
+%   amy = mediation_multilev_reformat_cl(clcell)
+%
+% ..
+%    Modified March 9, 2008, Tor Wager; remove automatic spline detrending if no HP filter
+%    Mod. May 23, 2008, Tor Wager; re-format input options
+% ..
 
 function [clusters, varargout] = extract_raw_data(EXPT, clusters, varargin)
     global defaults;

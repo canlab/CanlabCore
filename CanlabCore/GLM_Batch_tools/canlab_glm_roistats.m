@@ -5,87 +5,136 @@ fprintf('Use canlab_glm_maskstats instead\n');
 
 return
 
-% ROISTATS = canlab_glm_roistats(robfitdir, roi)
-%
-% DESCRIPTION
 % Returns a ROISTATS structure containing data from robfitdir's input subject level
-%    SPM analyses.
+% SPM analyses.
 %
-% output structure:
-% ROISTATS
-%   COV - subject x covariate matrix (EXPT.cov from robfit design)
-%   COVNAME - names of covariates in COV
-%   ROI - array of structs (1 per roi)
-%     MASK - the filename of the roi mask used
-%     SUB - struct containing data from subject level images
-%       CON - struct contains data from contrast images
-%         NAME - cell array (1 cell per contrast) of contrast names
-%         FILES - cell array (1 cell per contrast) of character arrays of 
-%                 contrast image filenames
-%         DATA - cell array (1 cell per contrast) of voxel x subject matrices of
-%                contrast values (vectorized image data from dat field of fmri_data objects)
-%         MEANS - subject x contrast matrix of contrast means across voxels within
-%                 roi mask
-%         COVxCON - arrays of covariate matrix X contrast means correlation
+% :Usage:
+% ::
+%
+%     ROISTATS = canlab_glm_roistats(robfitdir, roi)
+%
+% :Output structure:
+%
+%   **ROISTATS
+%
+%   **COV:**
+%        subject x covariate matrix (EXPT.cov from robfit design)
+%
+%   **COVNAME:**
+%        names of covariates in COV
+%
+%   **ROI:**
+%        array of structs (1 per roi)
+%
+%   **MASK:**
+%        the filename of the roi mask used
+%
+%   **SUB:**
+%        struct containing data from subject level images
+%
+%   **CON:**
+%        struct contains data from contrast images
+%
+%   **NAME:**
+%        cell array (1 cell per contrast) of contrast names
+%
+%   **FILES:**
+%        cell array (1 cell per contrast) of character arrays of 
+%        contrast image filenames
+%
+%   **DATA:**
+%        cell array (1 cell per contrast) of voxel x subject matrices of
+%        contrast values (vectorized image data from dat field of fmri_data objects)
+%
+%   **MEANS:**
+%        subject x contrast matrix of contrast means across voxels within
+%        roi mask
+%
+%   **COVxCON:**
+%        arrays of covariate matrix X contrast means correlation
 %                   results (RHO and P, see help corr())
-%     GRP - struct containing data from group level images
-%       BETA - struct array (1 struct per group level regressor) of data
-%              from beta images
-%         NAME - name of group level regressor
-%         FILES - cell array (1 cell per robust directory) of beta image files
-%         DATA - cell array (1 cell per robust directory) of vectorized image
-%                data 
-%         MEANS - array (1 value per robust directory) of beta means 
-%                 across voxels within roi mask
+%
+%   **GRP:**
+%        struct containing data from group level images
+%
+%   **BETA:**
+%        struct array (1 struct per group level regressor) of data
+%        from beta images
+%
+%   **NAME:**
+%        name of group level regressor
+%
+%   **FILES:**
+%        cell array (1 cell per robust directory) of beta image files
+%
+%   **DATA:**
+%        cell array (1 cell per robust directory) of vectorized image
+%        data 
+%
+%   **MEANS:**
+%        array (1 value per robust directory) of beta means 
+%        across voxels within roi mask
 %
 % The following plots are saved in each roi's directory in the plots directory:
 %   - contrast means by contrast (means are lines across subjects on x axis)
 %   - contrast means by subject (means are dots, lined up along the x axis by contrast)
 %   - group level betas (bar plot with group level regressors grouped by
 %                        subject level contrasts)
-% if there's more than one regressor in the group level model, for each regressor:
+%
+% If there's more than one regressor in the group level model, for each regressor:
 %   - scatter plot of subject level contrast means against group level regressor
 %
-% ARGUMENTS
-%   robfitdir
-%       a directory in which robfit was run
+% :Arguments:
+%
+%   **robfitdir:**
+%        a directory in which robfit was run
 %       contains robfit directories (e.g., robust0001)
 %       preferably contains EXPT.mat or EXPTm.mat
-%   roi
-%       a filename or cell array of filenames of masks to apply to data
-% OPTIONS
-%   'c', connums
-%       (vector of contrast numbers)
+%
+%   **roi:**
+%        a filename or cell array of filenames of masks to apply to data
+%
+% :Options:
+%
+%   **'c', connums:**
+%        (vector of contrast numbers)
 %       only include data from contrasts specified by numbers
-%   'c', conname(s)
-%       (string or cell array of strings)
+%
+%   **'c', conname(s):**
+%        (string or cell array of strings)
 %       only include data from contrasts specified by name
-%   'data'
-%       include DATA cells in output structure (they can take up space)
-%   'noplots'
-%       no plots will be made
-%   'od', dir
-%       will save plots in dir (DEFAULT: robfitdir/roistats_scatterplots)
-%   'dotproduct'
-%       include dot product of weighted mask multiplication ("pattern expression")
-%       
+%
+%   **'data':**
+%        include DATA cells in output structure (they can take up space)
+%
+%   **'noplots':**
+%        no plots will be made
+%
+%   **'od', dir:**
+%        will save plots in dir (DEFAULT: robfitdir/roistats_scatterplots)
+%
+%   **'dotproduct':**
+%        include dot product of weighted mask multiplication ("pattern expression")
+%
+% ..
+%    Programmers' notes:
+%    to write:
+%    save data option
+%    save as csv option
+%    option to include subject-level beta data
+%    option to break input mask into regions
+%    within subjects error bars
+%    grouped bar plots?
+%    save volInfo (for mask? betas? cons? from fmri_data or spm?)
+% ..
 
-% Programmers' notes:
-% to write:
-%   save data option
-%   save as csv option
-%   option to include subject-level beta data
-%   option to break input mask into regions
-%   within subjects error bars
-%   grouped bar plots?
-%   save volInfo (for mask? betas? cons? from fmri_data or spm?)
 
-
-%% SETUP
-% set defaults
 DO_PLOTS = true;
 DO_SAVEDATA = false;
 DO_DOTPRODUCT = false;
+
+%% SETUP
+% set defaults
 
 applymaskopts = '';
 

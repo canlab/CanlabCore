@@ -1,8 +1,12 @@
 function escapedString = escapeForShell(string)
-    % [escapedString] = escapeForShell(string)
-    %
-    % Returns converted string for use with the current OS's shell. Hence, it's
-    % operation will be different, depending on where it's executed.
+% Returns converted string for use with the current OS's shell. Hence,
+% it's operation will be different, depending on where it's executed.
+%
+% :Usage:
+% ::
+%
+%     [escapedString] = escapeForShell(string)
+%
 
     if(ischar(string))
         for i=1:size(string,1)

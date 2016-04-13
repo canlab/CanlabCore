@@ -1,38 +1,41 @@
 function O = img_hist2(subdir)
-%
-%
-% Tor Wager
-% 
-% imgname	name of image file to make intensity histograms from
-% subdir		cell array of text strings containing names of individual subject
-%				directories (wherein are contained the file specified in imgname 
-%				for each subject)
-% 
 % A general function for plotting histograms of any image
 % For each subject, comparing across subjects
+%
+% :Inputs:
+%
+%   **imgname:**
+%        name of image file to make intensity histograms from
+%
+%   **subdir:**
+%        cell array of text strings containing names of individual subject
+%        directories (wherein are contained the file specified in imgname 
+%        or each subject)
 %
 % Performs the histogram plot a number of times, without plotting
 % and reports the variance in pdf moments as a function of subject, 
 % run, and condition (beta img within run).
 %
-%
 % Start in directory above individual subject results
 %
-% example:
-% img_hist2(EXPT.subjects)
-% img_hist2({'020827mk' '020829jh' '020903lb'})
+% :Examples:
+% ::
 %
+%    img_hist2(EXPT.subjects)
+%    img_hist2({'020827mk' '020829jh' '020903lb'})
+%
+% ..
+% Tor Wager
+% ..
 
-% defaults 
-% -------------------------------------------------------------------------------------------------
-
+% ..
+%    defaults
+% ..
+dwcard = '02*';									% wildcard defining ind subject directories, e.g., '02*'
 %csfname = 'rnnhet1spgr_seg3.img';	% reslice first to space of functionals
 %grname = 'rnnhet1spgr_seg1.img';
 %csfpath = '/data/placebo/';		% before ind subject
 %csfp2 = 'anatomy';							% after ind subject
-dwcard = '02*';									% wildcard defining ind subject directories, e.g., '02*'
-
-% -------------------------------------------------------------------------------------------------
 
 Pc = getcsfname(subdir);
 PP = getimgname;

@@ -21,7 +21,7 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 %
 % :Optional inputs:
 %
-%   a vector of 1/0 values to use as wh_keep
+%   **a logical array vector of 1/0 values to use as wh_keep**
 %
 %   **conditional:**
 %        to be followed by a cell array; the first cell is the name

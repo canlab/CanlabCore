@@ -1,5 +1,8 @@
 function hewma2_plot(Zpop,mu,cp,cp_ind,ooc_indices,maxtime,tthresh,tt,tm,q,Wm,Zm,sterr,varargin)
-% hewma2_plot(Zpop,mu,cp,cp_ind,ooc_indices,maxtime,tthresh,tt,tm,q,Wm,Zm,sterr,varargin)
+% :Usage:
+% ::
+%
+%     hewma2_plot(Zpop,mu,cp,cp_ind,ooc_indices,maxtime,tthresh,tt,tm,q,Wm,Zm,sterr,varargin)
 %
 % see hewma2.m
 

@@ -1,8 +1,12 @@
-% new_var = strrep_recurse(old_var, old_string, new_string)
-%   Recursively traverses depth-first through an entire variable, replacing
-%   old_string with new_string everywhere it goes
-
 function new_var = strrep_recurse(old_var, old_string, new_string, depth)
+% Recursively traverses depth-first through an entire variable, replacing
+% old_string with new_string everywhere it goes
+%
+% :Usage:
+% ::
+%
+%     new_var = strrep_recurse(old_var, old_string, new_string)
+
     MAX_DEPTH = 200;
     new_var = old_var;
 

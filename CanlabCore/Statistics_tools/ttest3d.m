@@ -1,21 +1,29 @@
 function [mxc,t,sig,out] = ttest3d(xc)
-    % [mean,t,sig,out] = ttest3d(xc)
-    %
-    % calculate t-statistic values for a k x k x n 3-D matrix of
-    % values across n subjects.
-    % stats on each element, across 3rd dim
-    %
-    % tor wager
-    %
-    % to print output, see also:
-    % correlation_to_text(mxc,sig);
+% calculate t-statistic values for a k x k x n 3-D matrix of
+% values across n subjects.
+%
+% :Usage:
+% ::
+%
+%     [mean,t,sig,out] = ttest3d(xc)
+%
+% stats on each element, across 3rd dim
+%
+% to print output, see also:
+% correlation_to_text(mxc,sig);
+%
+% ..
+%    tor wager
+% ..
 
-    % ------------------------------------------------------------
-    % stats on each element, across 3rd dim
-    % ------------------------------------------------------------
 
     warning off, clear stelatency, clear tlat, clear stecorr, clear tcorr
     % standard errors and t-values, element by element
+
+% ------------------------------------------------------------
+% stats on each element, across 3rd dim
+% ------------------------------------------------------------
+
 
     for j = 1 : size(xc,2)
         for k = 1 : size(xc,2)

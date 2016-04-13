@@ -1,15 +1,27 @@
 function [Y,obs,imp,stress] = shepardplot(D, ntest, varargin)
-% [Y,obs,imp,stress] = shepardplot(D, [ntest], [k dims to save])
+% :Usage:
+% ::
 %
-% Y is stimulus locations (cols are dims, rows are stimuli)
-%   = eigenvectors of scalar product matrix from cmdscale
+%    [Y,obs,imp,stress] = shepardplot(D, [ntest], [k dims to save])
 %
-% obs is vector of observed distances
-% imp is vector of implied distances
-% squareform(obs) or (imp) = full matrix of distances
+% :Outputs:
 %
-% by Tor Wager, 8/1/04
-% Modified April 2010: ntest can be a vector of which dims to run
+%   **Y:**
+%        is stimulus locations (cols are dims, rows are stimuli)
+%        = eigenvectors of scalar product matrix from cmdscale
+%
+%   **obs:**
+%        is vector of observed distances
+%
+%   **imp:**
+%        is vector of implied distances
+%
+%   squareform(obs) or (imp) = full matrix of distances
+%
+% ..
+%    by Tor Wager, 8/1/04
+%    Modified April 2010: ntest can be a vector of which dims to run
+% ..
 
 criterion = 'sstress';
 

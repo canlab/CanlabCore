@@ -1,7 +1,11 @@
 function [dat,stats] = hewma_extract_voxel(EXPT,coords)
-% function [dat,stats] = hewma_extract_voxel(EXPT,coords)
-%
 % Extracts data for one voxel and runs hewma2 on it.
+%
+% :Usage:
+% ::
+%
+%     function [dat,stats] = hewma_extract_voxel(EXPT,coords)
+%
 % Uses plot option in hewma2 to create plots.
 
 dat = [];

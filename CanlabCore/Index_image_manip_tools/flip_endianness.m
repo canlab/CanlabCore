@@ -1,4 +1,56 @@
 function flip_endianness(imgs)
+% Flips fMRI images (swap R/L)
+%
+% :Usage:
+% ::
+%
+%     [Vimgs] = flip_endianness(imgs)
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) <2006>  <CANLab>
+%     Written by Tor? Documented by Marianne
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
+% :Inputs:
+%
+%   **imgs:**
+%        Give this a list of fMRI images (paths, char str)
+%
+% :Outputs:
+%
+%   **Vimgs:**
+%        Your images, flipped
+%
+% :Examples:
+% ::
+%    load EXPT  %study specific spm design file
+%    imgs = EXPT.SNPM.P{1};
+%    [Vimgs] = flip_endianness(imgs)
+%
+% :References:
+%   N/A
+%
+% :See also:
+%   - spm_vol
+%
+% ..
+%    Programmers' notes:
+%    This just capitalizes on spm tools
     if(iscellstr(imgs))
         imgs = char(imgs);
     end

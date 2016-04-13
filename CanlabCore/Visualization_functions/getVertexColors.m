@@ -1,55 +1,79 @@
-%function [c, alld] = getVertexColors(xyz, v, actcolor, [basecolor], [mind], 'vert', [xyz2], [actcolor2], 'vert', [xyz3], [actcolor3])
+function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
+% :Usage:
+% ::
 %
-% by Tor Wager  August 25, 2002
+%    [c, alld] = getVertexColors(xyz, v, actcolor, [basecolor], [mind], 'vert', [xyz2], [actcolor2], 'vert', [xyz3], [actcolor3])
 %
 % given a point list of XYZ mm coordinates (3 columns)
 % and a list of vertices in an isosurface, 
 % returns FaceVertexCData color values for brain near points and brain not near points.
 % c is vertex color specification, 3 columns indicating RGB values
 %
-% Inputs:
-% xyz   a 3-vol list of vertices to color
-% v     can be a matrix of vertices
-%       or a handle to a patch object containing vertices
-%       if it's a handle, this function sets the color to interp
-%       and the FaceVertexCData to the color matrix c
-% actcolor
-%       [r g b] activation color
-% basecolor
-%       [r g b] baseline color - optional.
-% mind  optional - min distance to color vertex
-%       Vertices within mind of an xyz coordinate will be colored
-% colorscale
+% :Inputs:
+%
+%   **xyz:**
+%        a 3-vol list of vertices to color
+%
+%   **v:**
+%        can be a matrix of vertices
+%        or a handle to a patch object containing vertices
+%        if it's a handle, this function sets the color to interp
+%        and the FaceVertexCData to the color matrix c
+%
+%   **actcolor:**
+%        [r g b] activation color
+%
+%   **basecolor:**
+%        [r g b] baseline color - optional.
+%
+%   **mind:**
+%        optional - min distance to color vertex
+%        Vertices within mind of an xyz coordinate will be colored
+%
+%   **colorscale
 %       optional.  followed by vector of values by which to multiply input
 %       color
 %       these are scaled to be between .3 and one.
+%
 %       if entered, this will make the colors vary by, for example, Z score
 %       so Z-scores are an acceptable input.
+%
 %       cscale should be in the same coordinate order as xyz
+%
 %       for ADDITIONAL clusters, repeat the 'colorscale', Z argument pair in the function call
 %
 %       YOU CAN ALSO pass true RGB values for each xyz coordinate in: 'colorscale', rgblist, 
 %       IF cscale is a 3-vector, it specifies the ACTUAL colors, and is not scaled to .3 - 1
 %
+%   Following basecolor and mind:
 %
-% following basecolor and mind:
-% additional xyz coordinate lists, with syntax:
-% 'vert', xyz2 [your xyz input], [r g b] color for xyz plot
+%   additional xyz coordinate lists, with syntax:
+%   vert', xyz2 [your xyz input], [r g b] color for xyz plot
 %
-% also, you can enter 'ovlcolor' followed by [r g b] for overlaps between xyz sets
+%   also, you can enter 'ovlcolor' followed by [r g b] for overlaps between xyz sets
 %   colors will ONLY appear in the overlap color if they share actual coordinates in common, 
 %   not necessarily if surface vertices are within the specified distance from both sets of coords.
 %
-% to get a good brain surface, try this:
-%figure
-%p = patch('Faces', faces, 'Vertices', vertices, 'FaceColor', [.5 .5 .5], ...
-% 'EdgeColor', 'none', 'SpecularStrength', .2, 'FaceAlpha', 1, 'SpecularExponent', 200);
-%lighting gouraud;camlight right
-%axis image; myLight = camlight(0, 0);set(myLight, 'Tag', 'myLight');
-%set(gcf, 'WindowButtonUpFcn', 'lightFollowView');lightfollowview
-%drawnow
+% :Examples:
+% ::
+%
+%    % to get a good brain surface, try this:
+%    figure
+%    p = patch('Faces', faces, 'Vertices', vertices, 'FaceColor', [.5 .5 .5], ...
+%            å  'EdgeColor', 'none', 'SpecularStrength', .2, 'FaceAlpha', 1, 'SpecularExponent', 200);
+%    lighting gouraud;
+%    camlight right
+%    axis image;
+%    myLight = camlight(0, 0);
+%    set(myLight, 'Tag', 'myLight');
+%    set(gcf, 'WindowButtonUpFcn', 'lightFollowView');
+%    lightfollowview
+%    drawnow
+%
+% ..
+% by Tor Wager  August 25, 2002
+% ..
 
-function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
 
     mind = 3;
     basecolor = [.5 .5 .5];

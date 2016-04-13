@@ -1,15 +1,20 @@
 function cl = iimg_indx2contiguousxyz(dat,volInfo,remove_mean_flag)
-% cl = iimg_indx2contiguousxyz(dat,volInfo,[remove_mean_flag])
-%
 % Take in index image data vector (in-mask values only) and a volume info structure with xyzlist
 % and return a cl structure whose XYZ values list contiguous sets of voxels
 % ("blobs")
+%
+% :Usage:
+% ::
+%
+%     cl = iimg_indx2contiguousxyz(dat,volInfo,[remove_mean_flag])
 %
 % If a 3rd arg is entered, means of each blob are subtracted
 % This is to facilitate randomizing blob centers in
 % meta_stochastic_activation_blobs.m
 %
-% Tor Wager, June 06
+% ..
+%    Tor Wager, June 06
+% ..
 
 if nargin > 2, docenter = 1; else docenter = 0; end
 

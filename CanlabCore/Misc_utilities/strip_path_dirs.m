@@ -1,7 +1,11 @@
-% function strip_path_dirs(regexes)
-%   Removes directories from the Matlab path, based on the rgex patterns passed in.
-
 function strip_path_dirs(patterns)
+% Removes directories from the Matlab path, based on the rgex patterns passed in.
+%
+% :Usage:
+% ::
+%
+%     function strip_path_dirs(regexes)
+
     if(ischar(patterns))
         patterns = cellstr(patterns);
     end

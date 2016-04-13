@@ -1,28 +1,40 @@
 function struct2yaml(yamlfilename, DB, yamlfilemethod, dbmethod)
-% struct2yaml(yamlfilename, DB, yamlfilemethod, dbmethod)
+% :Usage:
+% ::
 %
-% yamlfilemethod:  'new' or 'add' (append)
-% dbmethod: how the canlab database will handle the record.
-% 'add', 'replace', or 'keep_existing'
+%     struct2yaml(yamlfilename, DB, yamlfilemethod, dbmethod)
+%
+% :Inputs:
+%
+%   **yamlfilemethod:**
+%        'new' or 'add' (append)
+%
+%   **dbmethod:**
+%        how the canlab database will handle the record.
+%        'add', 'replace', or 'keep_existing'
 %
 % translate structure into YAML format text file
 % this will be interpretable by the canlab database
 %
-% For example:
-% yamlfilename = 'YAML_tmp.yaml';
+% :Examples:
+% ::
 %
-% DB.study = 'NSF';     % string; study code letters
-% DB.subject = '001';   % string; subject ID number
-% DB.occasion = '21';   % string; occasion ID; unique to subj*session
-% DB.unique_id = [DB.study '_' DB.subject '_' DB.occasion];
-% DB.mean_spikes_per_image = mean(cat(2, spikesperimg{:}));
+%    yamlfilename = 'YAML_tmp.yaml';
 %
-% struct2yaml(yamlfilename, DB, 'add', 'replace');
+%    DB.study = 'NSF';     % string; study code letters
+%    DB.subject = '001';   % string; subject ID number
+%    DB.occasion = '21';   % string; occasion ID; unique to subj*session
+%    DB.unique_id = [DB.study '_' DB.subject '_' DB.occasion];
+%    DB.mean_spikes_per_image = mean(cat(2, spikesperimg{:}));
 %
-% See canlab_database WIKI page for more details (internal access only.)
+%    struct2yaml(yamlfilename, DB, 'add', 'replace');
 %
-% you could upload your file to the canlab repository like this:
-%rsync -v /Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/PSYC_7215_Fall_2010/Sample_data_NSF_study/SubjectData/denoised_canlab/nsf2/YAML_tmp.yaml canlab.colorado.edu:/Volumes/RAID1/labdata/qc_yaml_repository/
+% ..
+%    See canlab_database WIKI page for more details (internal access only.)
+%
+%    you could upload your file to the canlab repository like this:
+%    rsync -v /Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/PSYC_7215_Fall_2010/Sample_data_NSF_study/SubjectData/denoised_canlab/nsf2/YAML_tmp.yaml canlab.colorado.edu:/Volumes/RAID1/labdata/qc_yaml_repository/
+% ..
 
 switch dbmethod           % database behavior - instructions to canlab database
     case 'add'              % add to existing .yaml file.

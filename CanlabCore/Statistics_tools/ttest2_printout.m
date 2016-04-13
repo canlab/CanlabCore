@@ -1,14 +1,24 @@
 function [H,p,ci,stats] = ttest2_printout(sc1,sc2,varargin)
-% [H,p,ci,stats] = ttest2_printout(sc1,sc2,[doplot],[covts])
+% :Usage:
+% ::
+%
+%     [H,p,ci,stats] = ttest2_printout(sc1,sc2,[doplot],[covts])
 %
 % one or two sample t-test printout and plot
 % covariates are not done yet!
 %
-% sc1: data from first group
-% sc2: data from second group (if missing or empty, performs one-sample
-% t-test)
+% :Inputs:
 %
-% tor wager, last updated Sept 2007 (cosmetic update)
+%   **sc1:**
+%        data from first group
+%
+%   **sc2:**
+%        data from second group (if missing or empty, performs one-sample
+%        t-test)
+%
+% ..
+%    tor wager, last updated Sept 2007 (cosmetic update)
+% ..
 
 if length(varargin) > 2
     % covariates of no interest

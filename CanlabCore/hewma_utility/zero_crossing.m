@@ -1,16 +1,16 @@
 function [CP2,CNTmat,TOTmat,LENmat] = zero_crossing(M,T,XX,ZIU,ZIL,Z,mu)
-%
-% [CP2,CNTmat,TOTmat,LENmat] = zero_crossing(M,T,XX,ZIU,ZIL,Z,mu)
-%
 % Estimate out of control points and change-point using zero-crossing
 % method.
+%
+% :Usage:
+% ::
+%
+%     [CP2,CNTmat,TOTmat,LENmat] = zero_crossing(M,T,XX,ZIU,ZIL,Z,mu)
 %
 % Used in ewma5.m  See ewma5 for description of variables.
 
 
-% Estimation via Zero-crossings
-
-CP2 = NaN .* zeros(M,1);
+CP2 = NaN .* zeros(M,1); % Estimation via Zero-crossings
 CNTmat  = zeros(M,1);
 TOTmat = zeros(M,1);
 LENmat = zeros(M,T);

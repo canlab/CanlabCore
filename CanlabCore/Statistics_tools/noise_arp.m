@@ -1,14 +1,20 @@
 function [w,e] = noise_arp(n, phi, sigma, e)
-    % w = noise_arp(n, phi)
-    %
-    % Generate n-length AR(p) noise vector w
-    % given phi (default = [.5 .1])
-    % Based on Gaussian noise process e with standard deviation sigma (default = 1)
-    %
-    % w will have a variance greater than that of the underlyling gaussian
-    % process e
-    %
-    % Martin Lindquist / Tor Wager, Feb 2007
+% :Usage:
+% ::
+%
+%     w = noise_arp(n, phi)
+%
+% Generate n-length AR(p) noise vector w
+% given phi (default = [.5 .1])
+%
+% Based on Gaussian noise process e with standard deviation sigma (default = 1)
+%
+% w will have a variance greater than that of the underlyling gaussian
+% process e
+%
+% ..
+%    Martin Lindquist / Tor Wager, Feb 2007
+% ..
 
     if nargin < 2
         phi = [0.5 .1];

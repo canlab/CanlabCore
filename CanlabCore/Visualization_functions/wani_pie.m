@@ -1,59 +1,75 @@
 function h = wani_pie(X, varargin)
 % Draw a little better pie chart
 %
-% Usage:
-% -------------------------------------------------------------------------
-% h = wani_pie(X, varargin)
+% :Usage:
+% ::
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% X a vector
+%    h = wani_pie(X, varargin)
 %
-% Optional inputs: Enter keyword followed by variable with values
-% 'cols' or 'colors': colors N x 3 {default: using colors from microsoft office}
+% :Inputs:
+%
+%   **X:**
+%        a vector
+%
+% :Optional Inputs: Enter keyword followed by variable with values
+%
+%   **'cols' or 'colors':**
+%        colors N x 3 {default: using colors from microsoft office}
 %        OR cell array of 3-element colors (no text input for colors!)
 %
-% 'notext' no text for percentage {default: false}
-% 'fontsize' font size for percentage {default: 15}
-% 'hole' add a hole in the middle of the pie chart {default: no hole}
-% 'hole_size' specify the size of the middle hole {default: 5000}
-% 'outline'
-% 'outlinecol'
-% 'outlinewidth'
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% h graphic handles
+%   **'notext':**
+%        no text for percentage {default: false}
 %
-% Examples:
-% -------------------------------------------------------------------------
-% % data
-% X = rand(10,1);
-% h = wani_pie(X, 'notext', 'hole')
+%   **'fontsize':**
+%        font size for percentage {default: 15}
 %
-% savename = 'example_pie.pdf';
+%   **'hole':**
+%        add a hole in the middle of the pie chart {default: no hole}
 %
-% try
-% pagesetup(gcf);
-% saveas(gcf, savename);
-% catch
-% pagesetup(gcf);
-% saveas(gcf, savename);
-% end
+%   **'hole_size':**
+%        specify the size of the middle hole {default: 5000}
 %
-% -------------------------------------------------------------------------
-% Copyright (C) 2015 Wani Woo
+%   **'outline'**
+%
+%   **'outlinecol'**
+%
+%   **'outlinewidth'**
+%
+% :Output:
+%
+%   **h:**
+%        graphic handles
+%
+% :Examples:
+% ::
+%
+%    % data
+%    X = rand(10,1);
+%    h = wani_pie(X, 'notext', 'hole')
+%
+%    savename = 'example_pie.pdf';
+%
+%    try
+%        pagesetup(gcf);
+%        saveas(gcf, savename);
+%    catch
+%        pagesetup(gcf);
+%        saveas(gcf, savename);
+%    end
+%
+% ..
+%    Copyright (C) 2015 Wani Woo
+% ..
 
-% Defaults
-% -------------------------------------------------------------------------
 
-cols = [0.0902 0.2157 0.3686
+cols = [0.0902 0.2157 0.3686 
     0.2157 0.3765 0.5725
     0.5843 0.2157 0.2078
     0.4667 0.5765 0.2353
     0.3765 0.2902 0.4824
     0.1922 0.5216 0.6118
-    0.8941 0.4235 0.0392];
+    0.8941 0.4235 0.0392]; % Defaults
 
 n = numel(X);
 

@@ -1,9 +1,23 @@
-function Pso = fullpath(Pspm)
-% Pso = fullpath(Pspm)
-% tor wager
-% Pspm is file name with no path or relative path
+function Pso = getfullpath(Pspm)
 % Searches for file in curr dir, then in specified dir
-% Returns absolute path name (full path)
+%
+% :Usage:
+% ::
+%
+%     Pso = getfullpath(Pspm)
+%
+% :Input:
+%
+%   **Pspm:**
+%        is file name with no path or relative path
+%
+% :Output:
+%
+%   Returns absolute path name (full path)
+%
+% ..
+%    tor wager
+% ..
 
 for i = 1:size(Pspm,1)
     

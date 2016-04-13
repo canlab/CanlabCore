@@ -1,6 +1,10 @@
-% fig_handle = montage_clusters(ovl, clusters, varargin)
+function mch = montage_clusters(ovl, clusters, varargin)
+% :Usage:
+% ::
 %
-% varargin (in any order) =
+%    fig_handle = montage_clusters(ovl, clusters, varargin)
+%
+% :varargin: (in any order) =
 %   a) additional clusters structures
 %   b) cell array of colors (text format), must be ROW vector {'r' 'g'} etc...
 %       if length of color string is longer than number of clusters inputs,
@@ -21,18 +25,23 @@
 %
 % Intersections of 2 colors are magenta, and ALL colors are yellow
 % unless otherwise specified
+% try:
+% ::
 %
-% by Tor Wager
-% Edited: Jan 2010, to add functionality to display underlay image only if
-% no clusters are entered (with 9 mm slice spacing)
+%    CLU = clusters2clu(clusters);
+%    spm_orthviews('AddColouredBlobs', 1, CLU.XYZ, CLU.Z, CLU.M, [1 0 0])
+%
+% ..
+%    Tor Wager
+%
+%    Edited: Jan 2010, to add functionality to display underlay image only if
+%    no clusters are entered (with 9 mm slice spacing)
+% ..
 
-function mch = montage_clusters(ovl, clusters, varargin)
-    % try: CLU = clusters2clu(clusters);
-    % spm_orthviews('AddColouredBlobs', 1, CLU.XYZ, CLU.Z, CLU.M, [1 0 0])
 
-    % ----------------------------------------
-    % * defaults
-    % ----------------------------------------
+    % ..
+    %    defaults
+    % ..
     
     if ischar(ovl)
         [path, name, ext] = fileparts(ovl);

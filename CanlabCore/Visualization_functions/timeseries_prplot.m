@@ -1,36 +1,52 @@
 function [r,bb,f] = timeseries_prplot(y,X,cols,varargin)
-% function [r,bb,f] = timeseries_prplot(y,X,cols,varargin)
+% :Usage:
+% ::
+%
+%    [r,bb,f] = timeseries_prplot(y,X,cols,varargin)
 %
 % Plots timeseries data (y') against fitted response (X)
-% y is n x 1 data points, X is n x k model matrix of predictors
 %
-% y is adjusted to remove all effects OTHER THAN those columns of X
-% specified in cols, creating a partial residual vector y'.
+% :Inputs:
 %
-% The fitted response to X(:,cols) is plotted against y' to graphically assess the
-% effect of particular columns of X on y.
+%   **y:**
+%        y is n x 1 data points, X is n x k model matrix of predictors
 %
-% varargin includes two optional arguments:
-% 1) a vector of trial onsets (to shade in plot)
-% 2) length of elements to shade after trial onset.
+%        y is adjusted to remove all effects OTHER THAN those columns of X
+%        specified in cols, creating a partial residual vector y'.
 %
-% outputs:
-% r = partial residuals
-% bb = betas
-% f = partial fitted response
+%   **X:**
+%        The fitted response to X(:,cols) is plotted against y' to graphically assess the
+%        effect of particular columns of X on y.
 %
-% example:
-% timeseries_prplot(Yfla,X,[2 4],x2,18);
+%   varargin includes two optional arguments:
+%     1) a vector of trial onsets (to shade in plot)
+%     2) length of elements to shade after trial onset.
+%
+% :Outputs:
+%
+%   **r:**
+%        partial residuals
+%
+%   **bb:**
+%        betas
+%
+%   **f:**
+%        partial fitted response
+%
+% :Examples:
+% ::
+%
+%    timeseries_prplot(Yfla,X,[2 4],x2,18);
 %
 % to average across sessions 1 and 2:
 %
-% 
-% tor wager
+% ..
+%    Tor Wager
+% ..
 
 
-% get betas
 
-b = pinv(X) * y;
+b = pinv(X) * y; % get betas
 bb = b;
 
 % get fits

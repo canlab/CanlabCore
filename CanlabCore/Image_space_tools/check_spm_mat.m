@@ -1,6 +1,10 @@
 function [chk, clusters] = check_spm_mat(mat1,mat2,clusters)
-%check_spm_mat(mat1,mat2,clusters)
 % mat1 is from clusters, mat2 is functional (imgs to extract)
+%
+% :Usage:
+% ::
+%
+%     check_spm_mat(mat1,mat2,clusters)
 
 
 chk = mat1 - mat2; chk = chk(:);

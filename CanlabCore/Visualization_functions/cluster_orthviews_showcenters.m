@@ -1,14 +1,19 @@
-% slices_fig_h = cluster_orthviews_showcenters(cl, myview, [overlay], [xhairs], [order slices flag], [background color], [var args])
-%
-% cluster_orthviews_showcenters(cl, 'coronal');
-% cluster_orthviews_showcenters(cl, 'sagittal');
-% cluster_orthviews_showcenters(cl, 'axial');
-%
-% tor wager, aug 2006
-% used in cluster_orthviews_classes
-
 function slices_fig_h = cluster_orthviews_showcenters(cl, myview, overlay, xhairs, sliceorder, bgcolor, varargin)
-    
+% :Usage:
+% ::
+%
+%    slices_fig_h = cluster_orthviews_showcenters(cl, myview, [overlay], [xhairs], [order slices flag], [background color], [var args])
+%
+%    cluster_orthviews_showcenters(cl, 'coronal');
+%    cluster_orthviews_showcenters(cl, 'sagittal');
+%    cluster_orthviews_showcenters(cl, 'axial');
+%
+% used in cluster_orthviews_classes
+%
+% ..
+%    tor wager, aug 2006
+% ..
+
     if nargin < 3 || isempty(overlay), overlay = which('scalped_single_subj_T1.img'); end
     if nargin < 4, xhairs = 1; end
     if nargin < 5, sliceorder = 0; end

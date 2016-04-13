@@ -1,9 +1,11 @@
 function str = scn_get_datetime(varargin)
-% str = scn_get_datetime
+% :Usage:
+% ::
+%
+%     str = scn_get_datetime
 %
 % pass in 'ymd' to get the string in yyyy_mm_dd-HH_MM format, so that
 % alphanumeric order will correspond to chronological order
-%
 %
 % Returns a string with the date and time
 % Useful for annotating data and output

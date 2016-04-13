@@ -1,11 +1,13 @@
 function mdsfig_3d(X,names,clus,linemat,cordir)
-% function mdsfig_3d(X,names,clus,linemat,cordir)
+% ::
+%
+%    mdsfig_3d(X,names,clus,linemat,cordir)
 %
 % 3-D MDS figure
+%
 % Subfunction of mdsfig used if 3+ dims are available
 
-%%% define scaling %%%%%%%
-numel=size(X,1);
+numel=size(X,1); %%% define scaling %%%%%%%
 a=X(:,1);b=X(:,2);c=X(:,3);
 axa=ones(numel,1)*mean(a);
 axb=ones(numel,1)*mean(b);

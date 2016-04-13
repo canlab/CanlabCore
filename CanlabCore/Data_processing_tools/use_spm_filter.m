@@ -1,9 +1,20 @@
 function [S,KL,KH] = use_spm_filter(TR,dims,LChoice,HChoice,HParam,varargin)
-% function [S,KL,KH] = use_spm_filter(TR,dim of filter,LChoice,HChoice,HP filter in s,[LP Gauss len in s])
-% K{s}.LChoice  - Low-pass  filtering {'hrf' 'Gaussian' 'none'}
-% K{s}.LParam   - Gaussian parameter in seconds
-% K{s}.HChoice  - High-pass filtering {'specify' 'none'}
-% 05/22/01 Tor Wager
+% :Usage:
+% ::
+%
+%     function [S,KL,KH] = use_spm_filter(TR,dim of filter,LChoice,HChoice,HP filter in s,[LP Gauss len in s])
+%
+% :Inputs:
+%
+%   **K{s}.LChoice:**
+%        Low-pass  filtering {'hrf' 'Gaussian' 'none'}
+%   **K{s}.LParam:**
+%        Gaussian parameter in seconds
+%   **K{s}.HChoice:**
+%        High-pass filtering {'specify' 'none'}
+% ..
+%    05/22/01 Tor Wager
+% ..
 
 K{1}.RT = TR; 
 K{1}.LChoice = LChoice;

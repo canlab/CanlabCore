@@ -1,8 +1,13 @@
 function [h,t,w] = mvroi_plot_firs(DATA,r)
-%[h,t,w] = mvroi_plot_firs(DATA,region)
+% ::
 %
-%DATA.SPEC.firnames = {'Antic (C)'  'Pain (C)' 'Response (C)' 'Antic (P)' 'Pain (P)' 'Response (P)'};
-%DATA.SPEC.firconditions = [1 4]
+%    [h,t,w] = mvroi_plot_firs(DATA,region)
+%
+% :Examples:
+% ::
+%
+%    DATA.SPEC.firnames = {'Antic (C)'  'Pain (C)' 'Response (C)' 'Antic (P)' 'Pain (P)' 'Response (P)'};
+%    DATA.SPEC.firconditions = [1 4]
 
 c = DATA.SPEC.firconditions;
 nms = DATA.SPEC.firnames;

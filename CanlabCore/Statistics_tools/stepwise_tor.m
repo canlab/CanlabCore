@@ -1,12 +1,20 @@
 function STEPWISE = stepwise_tor(dat,y,varargin)
-% STEPWISE = stepwise_tor(dat, y, [pred. names], [alpha])
+% :Usage:
+% ::
+%
+%     STEPWISE = stepwise_tor(dat, y, [pred. names], [alpha])
 % 
 % Stepwise regression using Matlab with a couple of extras:
+%
 % Print omnibus F-values for stepwise regression
+%
 % get adjusted R-squared
+%
 % save output structure
 %
-% tor wager
+% ..
+%    tor wager
+% ..
 
 alph = .05;
 if length(varargin) > 1

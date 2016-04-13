@@ -13,28 +13,32 @@
 %   C:\matlabR12\toolbox\matlab\elmat\ind2sub.m
 %
 % c:\tor_scripts\roiutility\cluster\tor_extract_rois.m
-%   C:\matlabR12\toolbox\matlab\datatypes\squeeze.m
-%   c:\tor_scripts\voistatutility\nanmean.m
-%   center_of_mass.m
-%       C:\matlabR12\toolbox\matlab\elmat\repmat.m
-%   (calls other spm functions)
+%
+% C:\matlabR12\toolbox\matlab\datatypes\squeeze.m
+
+% c:\tor_scripts\voistatutility\nanmean.m
+% center_of_mass.m
+
+% C:\matlabR12\toolbox\matlab\elmat\repmat.m
+% (calls other spm functions)
 %
 % c:\tor_scripts\fixedfxutility\voxel2mm.m
 %
 % spm_vol.m
 % spm_read_vols.m
-% 
 %
+% ..
+%    by Tor Wager  last modified 9/22/02
+% ..
 %
-% by Tor Wager  last modified 9/22/02
-%
-% NOTE: readim2 works on little endian systems (Linux).
+% :Note: readim2 works on little endian systems (Linux).
 % If you're using Unix, you should modify this script
 % to call the function readim2_b.m instead.
 %
-% 
-%P = spm_get(1,'*.img','Choose whole-brain anatomical mask');
+
 P = spm_select(1,'image','Choose whole-brain anatomical mask');
+%P = spm_get(1,'*.img','Choose whole-brain anatomical mask');
+
 
 V = spm_vol(P);
 vol = spm_read_vols(V);

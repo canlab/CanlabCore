@@ -1,10 +1,16 @@
 function reg = modifiedconv(tr,condf,varargin)
-% model = modifiedconv(tr,condf,heighteq [all opt],delayeq,ttopeakeq,uonseteq)
+% :Usage:
+% ::
 %
-% 06/20/01 Tor Wager
+%     model = modifiedconv(tr,condf,heighteq [all opt],delayeq,ttopeakeq,uonseteq)
 %
-% tr = repetition time (sampling rate) of scanning, in seconds
-% condf = condition function
+% :Inputs:
+%
+%   **tr:**
+%        repetition time (sampling rate) of scanning, in seconds
+%
+%   **condf:**
+%        condition function
 %         an indicator vector of zeros and ones, where ones indicate event
 %         onsets
 %
@@ -12,19 +18,27 @@ function reg = modifiedconv(tr,condf,varargin)
 % with a guess as to what the decrease in saturation is as a function of
 % the time since previous stimulation (exponential model, alpha version)
 % 
-% example:
-% condf = [1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0]';
-% X = modifiedconv(2,condf);
-% X is convolved predictor
-%plot(X)
-%X2 = conv(condf,spm_hrf(2)./max(spm_hrf(2)));
-%hold on; plot(X2,'r'); legend({'Modified' 'Linear'})
+% :Examples:
+% ::
 %
-% Please see:
+%    condf = [1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0]';
+%    X = modifiedconv(2,condf);
+%    % X is convolved predictor
+%    plot(X)
+%    X2 = conv(condf,spm_hrf(2)./max(spm_hrf(2)));
+%    hold on;
+%    plot(X2,'r');
+%    legend({'Modified' 'Linear'})
+%
+% :Please see:
 % Wager, T. D., Hernandez, L., Vasquez, A., Nichols, T., and Noll, D.
 % C. (in press). Accounting for nonlinear BOLD effects in fMRI: Parameter 
 % estimates and model for accurate prediction in variable-duration blocked 
-% and rapid event-related studies.  Neuroimage. 
+% and rapid event-related studies.  Neuroimage.
+%
+% ..
+%    06/20/01 Tor Wager
+% ..
 
 %heighteq = []; delayeq = []; peakeq = []; uonseteq = [];
 

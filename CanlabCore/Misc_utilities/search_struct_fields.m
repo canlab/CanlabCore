@@ -1,29 +1,34 @@
-% found_paths = search_struct_fields(search_struct, fieldname)
-%   returns a list of all paths inside structure search_struct that match the fieldname (or start with it)
-%
-% E.g.:
-% foo = [];
-% foo.foo = [];
-% foo.foo.foo = [];
-% search_struct_fields(foo, 'foo')
-% ans = 
-% 
-%     'foo.foo'
-%     'foo.foo.foo'
-%
-% or:
-%
-% search_struct_fields(SPM, 'x')
-% ans = 
-% 
-%     'SPM.xX'
-%     'SPM.xM'
-%     'SPM.xsDes'
-%     'SPM.xX.xVi'
-%     'SPM.xX.xKXs'
-%     'SPM.xM.xs'
-
 function found_paths = search_struct_fields(search_struct, fieldname, fieldpath)
+% Returns a list of all paths inside structure search_struct that match
+% the fieldname (or start with it)
+%
+% :Usage:
+% ::
+%
+%     found_paths = search_struct_fields(search_struct, fieldname)
+%
+% :Examples:
+% ::
+%
+%    foo = [];
+%    foo.foo = [];
+%    foo.foo.foo = [];
+%    search_struct_fields(foo, 'foo')
+%    ans = 
+%       'foo.foo'
+%       'foo.foo.foo'
+%
+%    % or
+%
+%    search_struct_fields(SPM, 'x')
+%    ans = 
+%       'SPM.xX'
+%       'SPM.xM'
+%       'SPM.xsDes'
+%       'SPM.xX.xVi'
+%       'SPM.xX.xKXs'
+%       'SPM.xM.xs'
+
     found_paths = {};
     if(~isstruct(search_struct))
         error('search_struct not a structure');

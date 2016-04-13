@@ -1,17 +1,36 @@
 function [Zcor,p,tthresh,q,C] = timeseries_mc_pvalue(varZm,lambda,Wm,sesq,df,tm)
-% [Zcor,p,tthresh,q,C] = timeseries_mc_pvalue(varZm,lambda,Wm,sesq,df,tm)
-%
-% uses Monte Carlo simulation on a timeeseries to get the null hypothesis
+% Uses Monte Carlo simulation on a timeeseries to get the null hypothesis
 % max t-value over time and establish an appropriate statistical threshold
 %
-% varZm = within subjects variances, subj x time
-% % NOTE: TOR CHANGED INPUT TO ASSUME THAT WE SHOULD ENTER VARWI +
-% VARBETWEEN
-% lambda = smoothing parameter in EWMA
-% Wm = individual case (subject) weights
-% sesq = squared standard error between subjects (variance of group error estimate)
-% df = degrees of freedom between subjects (est.)
-% tm = max t stat for group over time
+% :Usage:
+% ::
+%
+%     [Zcor,p,tthresh,q,C] = timeseries_mc_pvalue(varZm,lambda,Wm,sesq,df,tm)
+%
+% :Inputs:
+%
+%   **varZm:**
+%        within subjects variances, subj x time
+%
+%
+%   **lambda:**
+%        smoothing parameter in EWMA
+%
+%   **Wm:**
+%        individual case (subject) weights
+%
+%   **sesq:**
+%        squared standard error between subjects (variance of group error estimate)
+%
+%   **df:**
+%        degrees of freedom between subjects (est.)
+%
+%   **tm:**
+%        max t stat for group over time
+%
+% ..
+%    NOTE: TOR CHANGED INPUT TO ASSUME THAT WE SHOULD ENTER VARWI + VARBETWEEN
+% ..
 
 C = get_correlationmat(varZm,lambda,Wm,sesq); % Calculate correlation matrix
 

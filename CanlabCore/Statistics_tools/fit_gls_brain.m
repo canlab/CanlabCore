@@ -1,9 +1,13 @@
-% function fit_gls_brain(imgs, X, arorder, conditionnames, maskimg, ['contrasts', contrast_mtx, 'contrastnames', contrastnames], ['weights', weights])
-%
+function fit_gls_brain(imgs, X, arorder, conditionnames, maskimg, varargin)
 % Run Generalized Least Squares model with AR-model autoregression (optional)
 % at each voxel in a set of images.
 % 
-% single trial model to get trial amplitude, width, AUC, etc.
+% :Usage:
+% ::
+%
+%     fit_gls_brain(imgs, X, arorder, conditionnames, maskimg, ['contrasts', contrast_mtx, 'contrastnames', contrastnames], ['weights', weights])
+%
+% Single trial model to get trial amplitude, width, AUC, etc.
 % Take one of those (e.g., AUC) and get a list of trial images
 % Pass that into this function.
 %
@@ -16,32 +20,34 @@
 % then it will write images for contrasts instead.
 %
 % conditionnames = column or contrast image names, in cell array
+%
 % e.g. eventnames{1} = {'high'    'medium'    'low'    'warm'}
 %
-% Output:
-% t
+% :Examples:
 %
-% Example:
 % This one looks @ significance for betas in X model:
-% -----------------------------------------------------------------
-% load ../Multilev_mediation-try4(resliced)_10k/mediation_SETUP.mat
-% imgs = SETUP.data.M{1};
-% X = eventdesign{1};
-% arorder = 1;
-% contrasts = [];
-% conditionnames = eventnames{1};
-% maskimg = spm_select(1); % try gray matter mask...
-% fit_gls_brain(imgs, X, arorder, contrasts, conditionnames, maskimg)
+% ::
+%
+%    load ../Multilev_mediation-try4(resliced)_10k/mediation_SETUP.mat
+%    imgs = SETUP.data.M{1};
+%    X = eventdesign{1};
+%    arorder = 1;
+%    contrasts = [];
+%    conditionnames = eventnames{1};
+%    maskimg = spm_select(1); % try gray matter mask...
+%    fit_gls_brain(imgs, X, arorder, contrasts, conditionnames, maskimg)
 %
 % Now define contrasts and re-run on contrast values:
-% contrasts = [3 1 -1 -3; .25 .25 .25 .25; 1 0 0 -1]'
-% conditionnames = {'Linearpain' 'Average_resp' 'High-Low'};
-% fit_gls_brain(imgs, X, arorder, contrasts, conditionnames, maskimg)
+% ::
+%
+%    contrasts = [3 1 -1 -3; .25 .25 .25 .25; 1 0 0 -1]'
+%    conditionnames = {'Linearpain' 'Average_resp' 'High-Low'};
+%    fit_gls_brain(imgs, X, arorder, contrasts, conditionnames, maskimg)
 
-function fit_gls_brain(imgs, X, arorder, conditionnames, maskimg, varargin)
 
-    % Optional inputs
-    % -------------------------------------------------------------
+    % ..
+    %    Optional inputs
+    % ..
     nobs = size(imgs, 1);
     weights = ones(nobs, 1);        % default weights
     contrasts = [];

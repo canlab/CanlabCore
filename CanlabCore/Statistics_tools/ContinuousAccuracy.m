@@ -1,36 +1,47 @@
-function acc = ContinousAccuracy(obj, pattern, predrange, unit)
+function acc = ContinuousAccuracy(obj, pattern, predrange, unit)
 % Calculate forced choice accuracy for unit increases in continuous
 % predictions.  Requires units to be ranked ordered from 1:end.  Will work
 % for Gianaros or Pain datasets.  Accuracies are not penalized for missing
 % cases.  Probably best to run this on single subjects and then aggregate
 % accuracies across subjects.
 %
-% acc = ContinuousAccuracy(obj, pattern, unit)
+% :Usage:
+% ::
 %
-% Inputs:
-% ---------------------------------------------------------------------
-% obj                       : fmri_data() object with data stacked by
-%                             increasing levels of prediction.  Make sure 
-%                             obj.Y includes the training labels
+%     acc = ContinuousAccuracy(obj, pattern, unit)
 %
-% pattern                   : fmri_data() object with weight pattern
+% :Inputs:
 %
-% predrange                 : specify the range of predictions (e.g., 1:5)
+%   **obj:**
+%        fmri_data() object with data stacked by
+%        increasing levels of prediction.  Make sure 
+%        obj.Y includes the training labels
 %
-% unit                      : specify the unit increase in prediction (e.g., 1 or 2)
+%   **pattern:**
+%        fmri_data() object with weight pattern
 %
-% Outputs:
-% ---------------------------------------------------------------------
-% acc                       : accuracy of prediction for specified units
+%   **predrange:**
+%        specify the range of predictions (e.g., 1:5)
 %
-% Examples:
-% ---------------------------------------------------------------------
-% acc = ContinuousAccuracy(dat, pine, 1:5, 1)
+%   **unit:**
+%        specify the unit increase in prediction (e.g., 1 or 2)
 %
-% Original version: Copyright Luke Chang 12/2013
+% :Outputs:
+%
+%   **acc:**
+%        accuracy of prediction for specified units
+%
+% :Examples:
+% ::
+%
+%    acc = ContinuousAccuracy(dat, pine, 1:5, 1)
+%
+% ..
+%    Original version: Copyright Luke Chang 12/2013
+% ..
 
-%Calculate pattern expression
-pexp = apply_mask(obj, pattern, 'pattern_expression', 'ignore_missing');
+pexp = apply_mask(obj, pattern, 'pattern_expression', 'ignore_missing'); %Calculate pattern expression
+
 
 %Create pairwise matrix and find positive values for lower triangle
 %-need to force it to be 5 and fill in missing with NaNs

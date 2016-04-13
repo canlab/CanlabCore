@@ -1,6 +1,7 @@
 function data = montage_image_Worsley(image_name, varargin)
+% ::
 %
-% data = montage_image_Worsley(3D or 4D image name)
+%    data = montage_image_Worsley(3D or 4D image name)
 %
 % Make a compact montage of some images
 % Designed by Keith Worsley for pca_image.m
@@ -8,16 +9,18 @@ function data = montage_image_Worsley(image_name, varargin)
 %
 % Limits and Colormap are designed for component loadings between [-1 1]
 %
-% Example:
-% create_figure('Montage');
-% montage_image_Worsley('test_run1_pca.img');
+% :Examples:
+% ::
 %
-% data = montage_image_Worsley(imgname, 'pcacov')  % changes scaling and colormap
-% data = montage_image_Worsley(imgname, 'pcacov', [1 3 5])  % show only
+%    create_figure('Montage');
+%    montage_image_Worsley('test_run1_pca.img');
+%
+%    data = montage_image_Worsley(imgname, 'pcacov')  % changes scaling and colormap
+%    data = montage_image_Worsley(imgname, 'pcacov', [1 3 5])  % show only
 %                                                           volumes 1, 3, 5 in image(s)
 
-%############################################################################
-% COPYRIGHT:   Copyright 2002 K.J. Worsley, 
+% ..
+%    COPYRIGHT:   Copyright 2002 K.J. Worsley, 
 %              Department of Mathematics and Statistics,
 %              McConnell Brain Imaging Center, 
 %              Montreal Neurological Institute,
@@ -31,9 +34,11 @@ function data = montage_image_Worsley(image_name, varargin)
 %              make no representations about the suitability of this
 %              software for any purpose.  It is provided "as is" without
 %              express or implied warranty.
-%############################################################################
-
-% optional inputs
+% ..
+%
+% ..
+%    Tor Wager
+% ..
 
 scaletype = 'pcacor';  % Scale image and colors for PCA component viewing
 whichvols = [];

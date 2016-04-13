@@ -1,14 +1,23 @@
 function cl = iimg_princomp_display(volInfo,k,overlay,dofigs)
-% cl = iimg_princomp_display(volInfo,k,overlay,dofigs)
+% :Usage:
+% ::
+%
+%     cl = iimg_princomp_display(volInfo,k,overlay,dofigs)
+%
 % Show output from iimg_princomp
 %
-% Example:
-% cl2 = iimg_princomp_display(volInfo2,1,EXPT.overlay);
+% :Example:
+% ::
+%
+%    cl2 = iimg_princomp_display(volInfo2,1,EXPT.overlay);
+
+
+
+tor_fig; plot(volInfo.eigval(:,k),'ko-','LineWidth',2);
 
 %overlay = [];
 %k = 1;
 
-tor_fig; plot(volInfo.eigval(:,k),'ko-','LineWidth',2);
 title('Eigenvalues');
 
 indx = double(volInfo.image_indx);

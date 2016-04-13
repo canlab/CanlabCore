@@ -1,9 +1,12 @@
 function [cl,cl2] = hewma_plot_bivariate(varargin)
-%[cl,cl2] = hewma_plot_bivariate([Method],[optional overlay image])
-%
 % Visualize a change_point map stored in hewma_cp.img
 % and a run-length map stored in hewma_runlen.img
 % (output from hewma2)
+%
+% :Usage:
+% ::
+%
+%     [cl,cl2] = hewma_plot_bivariate([Method],[optional overlay image])
 %
 % and classify voxels into groupings based on locations in the bivariate
 % space

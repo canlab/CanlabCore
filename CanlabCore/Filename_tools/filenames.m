@@ -1,26 +1,49 @@
-% files = FILENAMES(pattern, ['absolute'], ['cellstr'|'char'], ['sortField', fieldNums], ['sortFieldSeparator', separator_string], ['verbose'])
-%
 % A utility function that uses ls or dir on a pattern and returns a list of
 % filenames
-% OPTIONS:
-%   'absolute' - forces filenames to have an absolute path from root - default
-%       is to return based upon the pattern (i.e., a relative pattern will
-%       produce relative paths, an absolute pattern will return absolute
-%       paths
-%   'cellstr' - returns filenames as a cell array of strings, a cellstr -
-%      this is the default behavior
-%   'char' - return filenames as a character array
-%   'verbose' - display commands
-% PARAMS:
-%   'sortField' - if set, sort the filenames numerically based on the fields specified -
-%       type "man sort" in a terminal window for more info
-%   'sortFieldSeparator' - string to determine what is considered a field
-%       in the filename - defaults to whitespace
 %
-% Examples:
-%   % returns a cellstr of dcm files, sorted by the 3rd field, as
-%   % separated by the '-' character
-%   dcm_files = filenames('*.dcm', 'sortField', 3, 'sortFieldSeparator', '-');
+% :Usage:
+% ::
+%
+%     files = FILENAMES(pattern, ['absolute'], ['cellstr'|'char'], ['sortField', fieldNums], ['sortFieldSeparator', separator_string], ['verbose'])
+%
+% :Inputs:
+%
+%   **'absolute':**
+%        forces filenames to have an absolute path from root - default
+%        is to return based upon the pattern (i.e., a relative pattern will
+%        produce relative paths, an absolute pattern will return absolute
+%        paths
+%
+%   **'cellstr':**
+%        returns filenames as a cell array of strings, a cellstr -
+%        this is the default behavior
+%
+%   **'char':**
+%        return filenames as a character array
+%
+%   **'verbose':**
+%        display commands
+%
+% :PARAMS:
+%
+%   **'sortField':**
+%        if set, sort the filenames numerically based on the fields specified -
+%        type "man sort" in a terminal window for more info
+%
+%   **'sortFieldSeparator':**
+%        string to determine what is considered a field
+%        in the filename - defaults to whitespace
+%
+% :Examples:
+% ::
+%
+%    % returns a cellstr of dcm files, sorted by the 3rd field, as
+%    % separated by the '-' character
+%    dcm_files = filenames('*.dcm', 'sortField', 3, 'sortFieldSeparator', '-');
+%
+% ..
+%    tor wager
+% ..
 
 function files = filenames(pattern, varargin)
 

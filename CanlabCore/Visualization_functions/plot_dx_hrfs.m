@@ -1,28 +1,44 @@
 function EXPT = plot_dx_hrfs(EXPT,clusters,varargin)
-% EXPT = plot_dx_hrfs(EXPT,clusters,[dolegend],[dosave],[dosmooth],[doindiv])
+% :Usage:
+% ::
 %
-% uses EXPT.FIR and clusters
+%    EXPT = plot_dx_hrfs(EXPT,clusters,[dolegend],[dosave],[dosmooth],[doindiv])
 %
-% If not found, creates:
-% EXPT.FIR.regsofinterest = trial types
-% EXPT.FIR.mcol = colors
+% :Inputs:
 %
-% Seems to be a problem with showing the brain slice when it makes the
-% legend as well!  Weird bug.  Optional argument turns legend off.
+%    uses EXPT.FIR and clusters
 %
-% Optional inputs (all defaults are zero):
-% dolegend      1 on, 0 off
-% dosave        1 saves tiff files in timecourse_plots subdir, 0 does not
-% dosmooth      n smooths hrfs and re-calculates st. errors, 0 plots saved
-%               values stored in clusters.HRF.HRF and .STE
-% doindiff      plot low vs. high groups of individuals (indiv diffs)
+%    If not found, creates:
 %
-% see extract_dxbeta_data.m
-% plot_dx_hrfs_indiffs.m
+%    EXPT.FIR.regsofinterest = trial types
+%    EXPT.FIR.mcol = colors
 %
-% Examples:
-% plot_dx_hrfs(EXPT,cl(1),0,1,3);   % has some smoothing (0 weight @ 3 time
-% pts)
+%    Seems to be a problem with showing the brain slice when it makes the
+%    legend as well!  Weird bug.  Optional argument turns legend off.
+%
+% :Optional Inputs: (all defaults are zero)
+%
+%   **dolegend:**
+%        1 on, 0 off
+%
+%   **dosave:**
+%        1 saves tiff files in timecourse_plots subdir, 0 does not
+%
+%   **dosmooth:**
+%        n smooths hrfs and re-calculates st. errors, 0 plots saved
+%        values stored in clusters.HRF.HRF and .STE
+%
+%   **doindiff:**
+%        plot low vs. high groups of individuals (indiv diffs)
+%
+% :See also: 
+%   - extract_dxbeta_data.m, plot_dx_hrfs_indiffs.m
+%
+% :Examples:
+% ::
+%
+%    % has some smoothing (0 weight @ 3 time pts)
+%    plot_dx_hrfs(EXPT,cl(1),0,1,3);
 
 if length(varargin) > 0, dolegend = varargin{1}; else, dolegend = 0;, end
 if length(varargin) > 1, dosave = varargin{2}; else, dosave = 0;, end

@@ -1,17 +1,25 @@
 function outdata = luisFilter(data,  TR, cutoff, verbose)
-% function outdata = luisFilter(data,  TR, cutoff [, verbose])
-%
-% Luis Hernandez. University of Michigan.  Last Edit 9/13/01
-%
 % This is a low pass FIR filter using the Parks Mclellan design algorithm
 % The phase introduced by the filter is linear and is un-done by 
 % filtering the data again, backwards
 % if you want to see what it does to the data, use verbose=1
 % if just want to filter the data, don't use the argument at all.
 %
-   % close all
- 
-    %%%%%%  These are the important lines of the code   %%%%%%%%%%%%%
+% :Usage:
+% ::
+%
+%     function outdata = luisFilter(data,  TR, cutoff [, verbose])
+%
+% ..
+%    Luis Hernandez. University of Michigan.  Last Edit 9/13/01
+% ..
+
+
+% ..
+% close all
+%
+%%%%%%  These are the important lines of the code   %%%%%%%%%%%%%
+% ..
     cutoff = cutoff / (2*TR)
     b = remez(10, [0 cutoff-0.05  cutoff+0.05  1], [1 1 0 0]);
     outdata = filtfilt(b,1, data);

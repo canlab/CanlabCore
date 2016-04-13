@@ -1,77 +1,107 @@
 function [y,O,X,S] = filterAdjust(O)
-% [y,O,X,S] = filterAdjust(OPTIONS)
+% :Usage:
+% ::
 %
-%	O.y = signal
-%  O.HP = high pass freq. cutoff
-%  O.TR = sampling rate in s
+%     [y,O,X,S] = filterAdjust(OPTIONS)
 %
-%  O.doHP = [0 or 1] - do HP filter (spm), default is 0
-%  O.doLP = [0, 1, 2] - do LP filter (spm), default is 0
+% :O:
+%
+%   **O.y:**
+%        signal
+%
+%   **O.HP:**
+%        high pass freq. cutoff
+%
+%   **O.TR:**
+%        sampling rate in s
+%
+%   **O.doHP:**
+%        [0 or 1] - do HP filter (spm), default is 0
+%
+%   **O.doLP:**
+%        [0, 1, 2] - do LP filter (spm), default is 0
 %           2 = Gaussian filter with TR*2 s length
 %
-% O.firstimg - sets values for first image in each run to mean of the
-% remaining values.  Good for removing first-image artifacts present in
-% some scanner sequences.  Default is 1.
+%   **O.firstimg:**
+%        sets values for first image in each run to mean of the
+%        remaining values.  Good for removing first-image artifacts present in
+%        some scanner sequences.  Default is 1.
 %
-% O.cyclecorrection - checks for unimodal (normally distributed) data
-% within each session, because some bimodal data that cycles between two
-% mean scanner values has been observed in some data.  if a high proportion
-% of outliers are found in non-normal data, subtracts mean of higher mode
-% to adjust data. Sorry-not clear.  Check the code. Default is 0
+%   **O.cyclecorrection:**
+%        checks for unimodal (normally distributed) data
+%        within each session, because some bimodal data that cycles between two
+%        mean scanner values has been observed in some data.  if a high proportion
+%        of outliers are found in non-normal data, subtracts mean of higher mode
+%        to adjust data. Sorry-not clear.  Check the code. Default is 0
 %
-% O.cyclecorrection2 - removes large transitions from data, as in
-% detransition.m.  Default is 0.  Artifacts may be acquisition or
-% motion-correction/resampling related.
+%   **O.cyclecorrection2:**
+%        removes large transitions from data, as in
+%        detransition.m.  Default is 0.  Artifacts may be acquisition or
+%        motion-correction/resampling related.
+% 
+%        We do this after filtering, but if there's trouble, we re-do the
+%        scanadjust and filtering, because 'cycling' can affect these.
 %
-% We do this after filtering, but if there's trouble, we re-do the
-% scanadjust and filtering, because 'cycling' can affect these.
-%
-%  O.scanadjust = [0 or 1] - adjust to scan means, default is 0
+%   **O.scanadjust:**
+%        [0 or 1] - adjust to scan means, default is 0
 %           - If O.X is entered, assumes this is the session mean matrix,
 %           instead of recomputing.
-%  O.percent = [0 or 1] - adjust to percent change from baseline, default is 0
 %
-%	O.filtertype = filter style, default is 'none'
-%			'spm'		= use spm's filtering
-%                       - if O.S is entered, uses this instead of
-%                       recomputing
-%			'fourier' = Doug's fourier filter
-%           'fouriernotch' : Omit frequencies between HP(1) and HP(2)
-%			'cheby'	= chebyshev
-%			'Luis'		= Luis' custom filter
-%			'none'		= no filtering (or leave field out).
+%   **O.percent:**
+%        [0 or 1] - adjust to percent change from baseline, default is 0
 %
-% O.HP
-%           for SPM, the filter cutoff in s
-%           for fourier, the HP value or the [HP LP] values
-%           -notches out everything slower than HP and faster than LP, in s
-%           (1/s = Hz).  
+%   **O.filtertype:**
+%        filter style, default is 'none'
+%         - 'spm', use spm's filtering
+%         - if O.S is entered, uses this instead of recomputing
+%         - 'fourier', Doug's fourier filter
+%         - 'fouriernotch', Omit frequencies between HP(1) and HP(2)
+%         - 'cheby', chebyshev
+%         - 'Luis', Luis' custom filter
+%         - 'none', no filtering (or leave field out).
 %
-%	O.nruns = number of runs (scanadjust), default is 1
-%  O.adjustmatrix = custom adjustment matrix to regress out (e.g., movement params)
-%	O.plot [0 or 1] 	= plots intermediate products, default is 0
-%   O.verbose [0 or 1]   = verbose output
-%   O.trimts [0 or std]  = trim overall timseries values to std, 0 for no trimming  
-%   O.lindetrend         = specify linear detrending of timeseries.
-%                       . occurs after adjustment and filtering and
-%                       windsorizing
-%                       . detrending option -> what to enter in this field:
-%                       .   no detrending  -> empty, missing field, or 0
-%                       .   detrending every n elements -> single number (n)
-%                       .   piecewise linear detrend -> ROW vector of breakpoints
-%                           (do not specify 1 as the start of the 1st segment.)
+%   **O.HP:**
+%        for SPM, the filter cutoff in s
+%        for fourier, the HP value or the [HP LP] values
+%        notches out everything slower than HP and faster than LP, in s
+%        (1/s = Hz).  
 %
-% by Tor Wager, 09/24/01
-% modified 10/15/02 to add trial baseline adjustment and linear detrending.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% out = voistat('adjusty',y,HChoice,TR,nruns, [opt] adjustmatrix); 
-% disp('*	voistat adjusty')
+%   **O.nruns:**
+%        number of runs (scanadjust), default is 1
+%
+%   **O.adjustmatrix:**
+%        custom adjustment matrix to regress out (e.g., movement params)
+%
+%   **O.plot [0 or 1]:**
+%        plots intermediate products, default is 0
+%
+%   **O.verbose [0 or 1]:**
+%        verbose output
+%
+%   **O.trimts [0 or std]:**
+%        trim overall timseries values to std, 0 for no trimming  
+%
+%   **O.lindetrend:**
+%        specify linear detrending of timeseries.
+%        occurs after adjustment and filtering and windsorizing
+%            - detrending option -> what to enter in this field:
+%            - no detrending  -> empty, missing field, or 0
+%            - detrending every n elements -> single number (n)
+%            - piecewise linear detrend -> ROW vector of breakpoints
+%              (do not specify 1 as the start of the 1st segment.)
+%
+% ..
+%    by Tor Wager, 09/24/01
+%    modified 10/15/02 to add trial baseline adjustment and linear detrending.
+% ..
 
 if ~isfield(O,'verbose'), O.verbose = 0;,end
 if ~isfield(O,'trimts'), O.trimts = 0;,end
 if ~isfield(O,'lindetrend'), O.lindetrend = 0;, end
 if ~isfield(O,'percent'), O.percent = 0;, end
+
+% out = voistat('adjusty',y,HChoice,TR,nruns, [opt] adjustmatrix); 
+% disp('*	voistat adjusty')
 
 y = O.y;
 TR = O.TR;

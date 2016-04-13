@@ -1,8 +1,12 @@
 function [mask,numClusters,XYZ] = clusterSizeMask(sizeThresh,height_mask)
-% function [mask,numClusters,XYZ] = clusterSizeMask(sizeThresh,height_mask)
+% :Usage:
+% ::
 %
-% Tor Wager, 10/27/01
-
+%     function [mask,numClusters,XYZ] = clusterSizeMask(sizeThresh,height_mask)
+%
+% ..
+%    Tor Wager, 10/27/01
+% ..
 
 mask = []; numClusters = 0;, XYZ = [];
 

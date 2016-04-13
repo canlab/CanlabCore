@@ -1,10 +1,13 @@
 function [int_dat,mask_vol,outname] = iimg_intersection(varargin)
-%[int_dat,mask_vol,outname] = iimg_intersection(name1, name2, etc.)
-% [int_dat,mask_vol,outname] = iimg_intersection(dat1, dat2, etc.)
-%
 % Make a mask of the intersection of n image files (pos or neg values)
 % If 'name' followed by an image file name is entered, writes output to
 % that image
+%
+% :Usage:
+% ::
+%
+%     [int_dat,mask_vol,outname] = iimg_intersection(name1, name2, etc.)
+%     [int_dat,mask_vol,outname] = iimg_intersection(dat1, dat2, etc.)
 %
 % If special string 'posneg' is entered, separates first two images into
 % combinations of pos/neg values in each image.
@@ -13,9 +16,11 @@ function [int_dat,mask_vol,outname] = iimg_intersection(varargin)
 %
 % fastest if one output requested.
 %
-% ------------------------------------------------------
-% setup input read images and special strings
-% ------------------------------------------------------
+
+
+% ..
+%    setup input read images and special strings
+% ..
 
 dat = [];   % data
 doposneg = 0;  % separate results for pos and neg combos

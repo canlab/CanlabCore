@@ -1,27 +1,46 @@
 function [clusters,subclusters] = cluster_princomp(clusters,varargin)
-% function [clusters,subclusters] = cluster_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[locflag])
-% 
+% :Usage:
+% ::
+%
+%     function [clusters,subclusters] = cluster_princomp(clusters,[behavioral score vector],[corr flag],[plotflag],[locflag])
+%
 % ALSO TRY: subcluster_montage(subclusters{1}) % to plot the output
 %
-% clusters is structure of clusters from tor_extract_rois.m
-% behavioral vector is row vector of behavioral or other scores to correlate
-% corr flag:  *1 = work on correlations among voxels, 2 = work on covariance
-% plotflag:   *1 = yes, 0 = no.  plots.
-% locflag:    1 yes, *0 no; add XYZ voxel locations (scaled) to data submitted to clustering
+% :Inputs:
+%
+%   **clusters:**
+%        is structure of clusters from tor_extract_rois.m
+%
+%   behavioral vector is row vector of behavioral or other scores to correlate
+%
+%   corr flag:  *1 = work on correlations among voxels, 2 = work on covariance
+%
+%   plotflag:   *1 = yes, 0 = no.  plots.
+%
+%   locflag:    1 yes, *0 no; add XYZ voxel locations (scaled) to data submitted to clustering
 %             pushes voxels closer in space to be classified in the same cluster
 %
 % try this to test the program on random data:
-% cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
-% cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
-% cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)',1,6);
-% cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)',1,4);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl(1).all_data = randn(23,30);cl(1).numVox = 30;cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%    cl(1).all_data(:,1:10) = cl(1).all_data(:,1:10) + 10; cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%    cl(1).all_data(:,25:30) = cl(1).all_data(:,25:30) + repmat((EXPT.behavior .* 3)',1,6);
+%    cl(1).all_data(:,21:24) = cl(1).all_data(:,21:24) + repmat((1:23)',1,4);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%
 % mean-center everything now:
-% cl.PCA = []; cl.all_data - cl.all_data - repmat(mean(cl.all_data),size(cl.all_data,1),1);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl.PCA = [];
+%    cl.all_data - cl.all_data - repmat(mean(cl.all_data),size(cl.all_data,1),1);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
+%
 % add another correlated group:
-% cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
-% cl = cluster_princomp(cl,EXPT.behavior,1,1);
+% ::
+%
+%    cl.all_data(:,1:5) = cl.all_data(:,1:5) + repmat(rand(23,1)*5,1,5);
+%    cl = cluster_princomp(cl,EXPT.behavior,1,1);
 %
 % if component scores are used and correlated with behavior, this means that the subjects
 % tend to show the behavioral effect who also show the pattern associated with comp. x.  

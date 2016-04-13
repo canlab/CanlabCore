@@ -1,8 +1,12 @@
 function [se_within, stats] = barplot_get_within_ste(dat,varargin)
-% [se_within, stats] = barplot_get_within_ste(dat)
+% :Usage:
+% ::
+%
+%     [se_within, stats] = barplot_get_within_ste(dat)
 %
 % Compute within-subjects standard errors 
-% NOTE: The old version of this used average s.e.'s for contrasts
+%
+% :Note: The old version of this used average s.e.'s for contrasts
 % of interest, which depend on contrast scaling and are less appropriate
 % for use as error bars.
 %
@@ -14,37 +18,40 @@ function [se_within, stats] = barplot_get_within_ste(dat,varargin)
 %
 % Useful for barplots of conditions when calculating within-subject SEs
 %
-% Example:
-% ---------------------------------------------------------------
-% %% data from Loftus & Masson, Table 2
-% 
-% mtx = [1 10 13 13 12.00
-% 2 6 8 8 7.33
-% 3 11 14 14 13.00
-% 4 22 23 25 23.33
-% 5 16 18 20 18.00
-% 6 15 17 17 16.33
-% 7 1 1 4 2.00
-% 8 12 15 17 14.67
-% 9 9 12 12 11.00
-% 10 8 9 12 9.67];
-% 
-% dat = mtx(:, 2:4);  % data from Loftus & Masson, Table 2
-% 
-% [se_within, stats] = barplot_get_within_ste(dat)
-% fprintf('Within ste: %3.2f, 95%% CI: mean +/- %3.2f\n', se_within, stats.ci);
+% :Examples:
+% ::
 %
-% % Extra stuff from ANOVA table
-% % ---------------------------------------------------------------
-% % Mean square for condition: Variance of condition means * sample
-% % size...average squared variance accounted for by condition means
-% [n, k] = size(dat); 
-% MS_cond = var( mean(dat) - mean(dat(:)) ) * n;
-% 
-% MS_subject = var( mean(dat') - mean(dat(:)) ) * k;
-% 
-% datv = dat(:);
-% MS_total = scale(datv, 1)' * scale(datv, 1);
+%    %% data from Loftus & Masson, Table 2
+%
+%    mtx = [1 10 13 13 12.00
+%    2 6 8 8 7.33
+%    3 11 14 14 13.00
+%    4 22 23 25 23.33
+%    5 16 18 20 18.00
+%    6 15 17 17 16.33
+%    7 1 1 4 2.00
+%    8 12 15 17 14.67
+%    9 9 12 12 11.00
+%    10 8 9 12 9.67];
+%
+%    dat = mtx(:, 2:4);  % data from Loftus & Masson, Table 2
+%
+%    [se_within, stats] = barplot_get_within_ste(dat)
+%    fprintf('Within ste: %3.2f, 95%% CI: mean +/- %3.2f\n', se_within, stats.ci);
+%
+% Extra stuff from ANOVA table
+%
+% Mean square for condition: Variance of condition means * sample
+% size...average squared variance accounted for by condition means
+% ::
+%
+%    [n, k] = size(dat); 
+%    MS_cond = var( mean(dat) - mean(dat(:)) ) * n;
+%
+%    MS_subject = var( mean(dat') - mean(dat(:)) ) * k;
+%
+%    datv = dat(:);
+%    MS_total = scale(datv, 1)' * scale(datv, 1);
 
 
 if nargin > 1 && ~isempty(varargin{1})

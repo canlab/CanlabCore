@@ -1,4 +1,4 @@
-function reset_SPMcfg
+function reset_SPMcfg()
 % resets columns in SPMcfg by removing all non-intercept nuisance covariates.
 % runs on the SPMcfg.mat file in the current directory
 

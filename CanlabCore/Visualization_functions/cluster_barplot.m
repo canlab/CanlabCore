@@ -1,59 +1,85 @@
-% function [clusters, subcl] = cluster_barplot(P, clusters, varargin)
+function [clusters, subcl] = cluster_barplot(P, clusters, varargin)
+% :Usage:
+% ::
+%
+%    [clusters, subcl] = cluster_barplot(P, clusters, varargin)
 %
 % this function not only plots, but separates subclusters using pca / cluster_princomp.m
 % based on pattern across all conditions, covariance (not correlation),
 %
-% Inputs:
-% 1 - cell array of strings containing image file names (data extracted from these)
-% 2 - clusters
-% [opt] - 'subclusters' to get sub-clustering based on pca and clustering of voxels
+% :Inputs:
 %
-% [opt] - cell array of strings with condition names
+%   **P:**
+%        cell array of strings containing image file names (data extracted from these)
 %
-% [opt] - 'split' value is 1: to split into 2 plots (first half and last half of P)
-%                 value is 2: to plot individual subjects over bars
+%   **clusters:**
 %
-% [opt] - 'center' center parameter values in plot (subtract row means)
-%           this gives closer to correct "within subjects" error bars
-%           and may be used when the overall parameter values have no meaning
+%   **[opt] - 'subclusters':**
+%        to get sub-clustering based on pca and clustering of voxels
 %
-% [opt] - 'covs', followed by between-subject covariates (e.g., behavioral regressors)
+%   **[opt] - cell array:**
+%        of strings with condition names
+%
+%   **[opt] - 'split':**
+%        value is 1: to split into 2 plots (first half and last half of P)
+%
+%        value is 2: to plot individual subjects over bars
+%
+%   **[opt] - 'center':**
+%        center parameter values in plot (subtract row means)
+%        this gives closer to correct "within subjects" error bars
+%        and may be used when the overall parameter values have no meaning
+%
+%
+%   **[opt] - 'covs':**
+%        followed by between-subject covariates (e.g., behavioral regressors)
 %         plots remove these before plotting means and std. errors
 %
-% [opt] - 'max', to make plots based on max z-values within region for each dataset P
-%                not compatible with 'split' and 'center' (ignores these commands)
-%               right now, special for inhib - see also inhib2_cluster_barplot (good function)
+%   **[opt] - 'max':**
+%        to make plots based on max z-values within region for each dataset P
+%        not compatible with 'split' and 'center' (ignores these commands)
+%        right now, special for inhib - see also inhib2_cluster_barplot (good function)
 %
-% [opt] - 'indiv' to threshold based on individual t-statistics
-%               FOLLOW with cell array of t-images -- usually, there will be one cell, with images
-%               for each subject in rows, to define voxels for each ss.
-%               BUT Tnames can be the same length as
-%               contrast images, one t-img per subject per contrast, if
-%               desired.
+%   **[opt] - 'indiv':**
+%        to threshold based on individual t-statistics
 %
-% Outputs:
-% clusters struture, with BARPLOT substructure added
-% substructure contains data extracted and image file names
+%        FOLLOW with cell array of t-images -- usually, there will be one cell, with images
+%        for each subject in rows, to define voxels for each ss.
+%
+%        BUT Tnames can be the same length as
+%        contrast images, one t-img per subject per contrast, if
+%        desired.
+%
+% :Outputs:
+%
+%   **clusters:**
+%        clusters struture, with BARPLOT substructure added
+%
+%   **subcl:**
+%        substructure contains data extracted and image file names
 %
 % This program uses XYZmm millimeter coordinates in clusters to find voxels
 % So clusters and data files may have different dimensions.
 %
-% Examples:
-% cluster_barplot(EXPT.SNPM.P(4:6), clusters(2:3))
-% cluster_barplot(EXPT.SNPM.P(7:12), clusters(2:3), {'ObjE' 'AttE' 'InteractE' 'ObjI' 'AttI' 'InteractI'}, 'split')
-% [clusters, subclusters] = cluster_barplot(EXPT.SNPM.P(17:24), clusters, 'subclusters', 'split')
-% RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
-% 16]), RS2meta, 'indiv', T);
+% :Examples:
+% ::
 %
-% also see mask2clusters.m, a simpler version that just extracts clusters from a mask file.
+%    cluster_barplot(EXPT.SNPM.P(4:6), clusters(2:3))
+%    cluster_barplot(EXPT.SNPM.P(7:12), clusters(2:3), {'ObjE' 'AttE' 'InteractE' 'ObjI' 'AttI' 'InteractI'}, 'split')
+%    [clusters, subclusters] = cluster_barplot(EXPT.SNPM.P(17:24), clusters, 'subclusters', 'split')
+%    RS2_8vs2_placeboCP = cluster_barplot(EXPT.SNPM.P([8 10 12 14
+%    16]), RS2meta, 'indiv', T);
 %
-% by Tor Wager, 5/15/03
-% modified 3/19/04 by Tor to add individual subject plots
+% :See Also: mask2clusters.m, a simpler version that just extracts clusters from a mask file.
+%
+% ..
+%    by Tor Wager, 5/15/03
+%    modified 3/19/04 by Tor to add individual subject plots
+% ..
 
-function [clusters, subcl] = cluster_barplot(P, clusters, varargin)
-    % -------------------------------------------------
-    % * Set up optional inputs
-    % -------------------------------------------------
+    % ..
+    %    Set up optional inputs
+    % ..
     splitat = 0;
     dosubcl = 0;
     docenter = 0;

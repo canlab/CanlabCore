@@ -1,4 +1,4 @@
-function [blockbehavdata slope]=plotbehav(tmp,numcorr,replace);
+function [blockbehavdata slope]=plotbehav(tmp,numcorr,replace)
 
 if nargin<3
     replace=0;

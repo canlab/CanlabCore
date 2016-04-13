@@ -1,12 +1,14 @@
 function surface_handles = surface_cutaway(varargin)
 % Make a specialized cutaway surface and add blobs if entered
 %
-% Usage:
-% -------------------------------------------------------------------------
-% surface_handles = surface_cutaway(varargin)
+% :Usage:
+% ::
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%    surface_handles = surface_cutaway(varargin)
+%
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
 %     Copyright (C) 2013  Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -21,77 +23,87 @@ function surface_handles = surface_cutaway(varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs (all are optional):
-% -------------------------------------------------------------------------
-% With no inputs, this function creates a vector of surface handles and
-%               returns them in surface_handles
+% :Optional Inputs:
 %
-% 'cl'                  followed by clusters structure or region object with blob info
-% 'surface_handles'     followed by vector of existing surface handles to plot blobs on
-% 'ycut_mm'             followed by y-cutoff in mm for coronal section.
-%                       - if absent, shows entire medial surface
-% 'existingfig'         Use existing figure axis; do not create new one
-%                       - if 'handles' are passed in, this is irrelevant
-% 'pos_colormap'        followed by colormap for positive-going values
-%                       - n x 3 vector of rgb colors
-%                       - see colormap_tor or matlab's colormap
-% 'neg_colormap'        followed by colormap for negative-going values
-% 'color_upperboundpercentile'
-%                       followed by 1-100 percentile threshold; see Color values below
-% 'color_lowerboundpercentile'
-%                       followed by 1-100 percentile threshold; see Color values below
+%   With no inputs, this function creates a vector of surface handles and
+%   returns them in surface_handles
 %
+%   **'cl':**
+%        followed by clusters structure or region object with blob info
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% surface_handles       vector of surface handles for all surface objects
+%   **'surface_handles':**
+%        followed by vector of existing surface handles to plot blobs on
 %
-% Color values:
-% -------------------------------------------------------------------------
+%   **'ycut_mm':**
+%        followed by y-cutoff in mm for coronal section.
+%          - if absent, shows entire medial surface
+%
+%   **'existingfig':**
+%        Use existing figure axis; do not create new one
+%          - if 'handles' are passed in, this is irrelevant
+%
+%   **'pos_colormap':**
+%        followed by colormap for positive-going values
+%          - n x 3 vector of rgb colors
+%          - see colormap_tor or matlab's colormap
+%
+%   **'neg_colormap':**
+%        followed by colormap for negative-going values
+%
+%   **'color_upperboundpercentile':**
+%        followed by 1-100 percentile threshold; see Color values below
+%
+%   **'color_lowerboundpercentile':**
+%        followed by 1-100 percentile threshold; see Color values below
+%
+% :Output:
+%
+%   **surface_handles:**
+%        vector of surface handles for all surface objects
+%
+% :Color values:
+%
 % Creates color scale using color-mapped colors, thresholded based on
 % percentile of the distribution of scores in .Z field.
-% - To change the upper bound for which percentile of Z-scores is mapped to
-% the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
-% - To change the lower bound value mapped to the lowest color value, 
-% enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
+%   - To change the upper bound for which percentile of Z-scores is mapped to
+%     the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
+%   - To change the lower bound value mapped to the lowest color value, 
+%     enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
 %
+% :Examples:
+% ::
 %
-% Examples:
-% -------------------------------------------------------------------------
-% Create new surfaces:
-% r is a region object made from a thresholded image (see region.m)
-% surface_handles = surface_cutaway('cl', r, 'ycut_mm', -30);
+%    % Create new surfaces:
+%    % r is a region object made from a thresholded image (see region.m)
+%    surface_handles = surface_cutaway('cl', r, 'ycut_mm', -30);
 %
-% Image blobs on existing handles:
-% surface_handles = surface_cutaway('cl', r, 'handles', surface_handles);
+%    % Image blobs on existing handles:
+%    surface_handles = surface_cutaway('cl', r, 'handles', surface_handles);
 %
-% Do it step by step:
-% p = surface_cutaway();
-% p = surface_cutaway('cl', r, 'surface_handles', p);
+%    % Do it step by step:
+%    p = surface_cutaway();
+%    p = surface_cutaway('cl', r, 'surface_handles', p);
 %
-% Use custom colormaps (you can define 'pos_colormap' and 'neg_colormap'):
-% poscm = colormap_tor([.5 0 .5], [1 0 0]);  % purple to red
-% p = surface_cutaway('cl', r, 'surface_handles', p, 'pos_colormap', poscm);
-% p = surface_cutaway('cl', r, 'ycut_mm', -30, 'pos_colormap', poscm);
+%    % Use custom colormaps (you can define 'pos_colormap' and 'neg_colormap'):
+%    poscm = colormap_tor([.5 0 .5], [1 0 0]);  % purple to red
+%    p = surface_cutaway('cl', r, 'surface_handles', p, 'pos_colormap', poscm);
+%    p = surface_cutaway('cl', r, 'ycut_mm', -30, 'pos_colormap', poscm);
 %
-% use mediation_brain_surface_figs and re-make colors
-% all_surf_handles = mediation_brain_surface_figs([]);
-% surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
-
-% Programmers' notes:
-% List dates and changes here, and author of changes
+%    % use mediation_brain_surface_figs and re-make colors
+%    all_surf_handles = mediation_brain_surface_figs([]);
+%    surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
 
 
-% -------------------------------------------------------------------------
-% DEFAULTS AND INPUTS
-% -------------------------------------------------------------------------
+% ..
+%    DEFAULTS AND INPUTS
+% ..
 
-% Defaults
-% -----------------------------------
-% Set color maps for + / - values
 poscm = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 negcm = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
+% Set color maps for + / - values
+
 
 % optional inputs with default values
 % -----------------------------------

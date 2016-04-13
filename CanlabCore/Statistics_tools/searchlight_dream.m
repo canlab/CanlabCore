@@ -1,24 +1,25 @@
 function searchlight_dream(dat, dist_n, mask, varargin)
-
 % This function generates codes for submitting multiple distributed jobs to 
 % clusters to run a searchlight analysis on multiple chunks of the brain.
 %
-% Usage:
-% -------------------------------------------------------------------------
-% searchlight_dream(dat, dist_n, mask, 'algorithm_name', 'cv_svm' (or 'cv_lassopcr'), 'cv_assign', whfolds, [optional input])
+% :Usage:
+% ::
 %
-% Features:
-% - generates dist_n scripts in modeldir (or current directory)
-% - can run a searchlight analysis on one dataset, or two datasets
-%   (cross-classification)
-% - can apply different radius
-% - can obtain cross-validated results with 'cv_assign' option
-% - can use SVM (linear svm is a default) and LASSO-PCR. You need to have
-%   a spider toolbox and lasso rocha toolbox in your path
-% - you can save predictive weights for each searchlight or discard them
+%     searchlight_dream(dat, dist_n, mask, 'algorithm_name', 'cv_svm' (or 'cv_lassopcr'), 'cv_assign', whfolds, [optional input])
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% :Features:
+%   - generates dist_n scripts in modeldir (or current directory)
+%   - can run a searchlight analysis on one dataset, or two datasets
+%     (cross-classification)
+%   - can apply different radius
+%   - can obtain cross-validated results with 'cv_assign' option
+%   - can use SVM (linear svm is a default) and LASSO-PCR. You need to have
+%     a spider toolbox and lasso rocha toolbox in your path
+%   - you can save predictive weights for each searchlight or discard them
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -33,102 +34,124 @@ function searchlight_dream(dat, dist_n, mask, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat           image_vector or fmri_data object with data
-% dat1.Y(:,1)   for svm: true(1) or false(-1) for each observation (image) in Y(:,1)
-%               for lassopcr: continuous value for Y(:,1)
-% dat1.Y(:,[2:n])  Test sets: could be binary: and true(1), false(-1),
-%                  ignore(0) or continuous values
-% dist_n        The number of jobs (brain chunks) you want to create
-% mask          This will be run on voxels within the mask
-%               e.g., which('scalped_avg152T1_graymatter.img')
-% 'algorithm_name' should be followed by 'cv_svm' or 'cv_lassopcr'
-% 'cv_assign'   a vector of integers for membership in custom holdout set 
-%               of each fold
+%
+% :Inputs:
+%
+%   **dat:**
+%        image_vector or fmri_data object with data
+%
+%   **dat1.Y(:,1):**
+%        for svm: true(1) or false(-1) for each observation (image) in Y(:,1)
+%        for lassopcr: continuous value for Y(:,1)
+%
+%   **dat1.Y(:,[2:n]):**
+%        Test sets: could be binary: and true(1), false(-1),
+%        ignore(0) or continuous values
+%
+%   **dist_n:**
+%        The number of jobs (brain chunks) you want to create
+%
+%   **mask:**
+%        This will be run on voxels within the mask
+%        e.g., which('scalped_avg152T1_graymatter.img')
+%
+%   **'algorithm_name':**
+%        should be followed by 'cv_svm' or 'cv_lassopcr'
+%
+%   **'cv_assign':**
+%        a vector of integers for membership in custom holdout set 
+%        of each fold
 % 
-% Optional inputs: 
-% -----------------------------------------------------------------ll--------
-% 'dat2'        cross-classification; should be followed by dat2 and dat2.Y
-%               dat2.Y(:,1) - for training/testing, dat2(:,[2:n]) - for testing
-% 'r'           searchlight sphere radius (in voxel) (default: r = 3 voxels)
-% 'modeldir'    the directory where all the variables and results will be 
-%               saved; should be followed by a directory location 
-%               (default: the current directory)
-% 'scale'       z-scored input data in image_vector or fmri_data object
-%               (default = false)
-% 'balanced'    use the balanced ridge option - balanced ridge value should
-%               be followed. (default = false)
-% 'outcome_method'  followed by the following options
-%       'correlation' - "default" for for continuous measures
+% :Optional Inputs: 
+%
+%   **'dat2':**
+%        cross-classification; should be followed by dat2 and dat2.Y
+%        dat2.Y(:,1) - for training/testing, dat2(:,[2:n]) - for testing
+%
+%   **'r':**
+%        searchlight sphere radius (in voxel) (default: r = 3 voxels)
+%
+%   **'modeldir':**
+%        the directory where all the variables and results will be 
+%        saved; should be followed by a directory location 
+%        (default: the current directory)
+%
+%   **'scale':**
+%        z-scored input data in image_vector or fmri_data object
+%        (default = false)
+%
+%   **'balanced':**
+%        use the balanced ridge option - balanced ridge value should
+%        be followed. (default = false)
+%
+%   **'outcome_method':**
+%        followed by the following options
+%          - 'correlation' - "default" for for continuous measures
 %       'twochoice'- "default" for binary outcome
 %       'singleinterval'  - for binary outcome
-% 'save_weights' save weights for each searchlight (default = false)
-% 'email'       should be followed by an email adress (default = false)
 %
-% Outputs:
-% -------------------------------------------------------------------------
+%   **'save_weights':**
+%        save weights for each searchlight (default = false)
+%
+%   **'email':**
+%        should be followed by an email adress (default = false)
+%
+% :Outputs:
+%
 % This function will generate codes that call "searchlight_disti.m", which
 % will save the following output variables.
 %
-% out.test_results: accuracy, p, and se for binary classification, and
-%                   correlation (pearson), p for prediction of continuous values
-%                   For the cross-classification, test_results will save
-%                   four values for each searchlight. The order of the test 
-%                   results are [dat1-on-dat1, dat1-on-dat2, dat2-on-dat1, 
-%                   dat2-on-dat2]. All results are cross-validated results.
+%   **out.test_results:**
+%        accuracy, p, and se for binary classification, and
+%        correlation (pearson), p for prediction of continuous values
+%        For the cross-classification, test_results will save
+%        four values for each searchlight. The order of the test 
+%        results are [dat1-on-dat1, dat1-on-dat2, dat2-on-dat1, 
+%        dat2-on-dat2]. All results are cross-validated results.
 %
-% out.stats1 & stats2  stats1 and stats2 are similar to the outputs of predict
-%                      function. 
+%   **out.stats1 & stats2:**
+%        stats1 and stats2 are similar to the outputs of predict function. 
 %
-% Examples for lassopcr:
-% -----------------------------------------------------
-% % data preparation
-% % ---------------------------------------------------
-% dat = fmri_data(which('brainmask.nii'));
-% dat.dat = randn(dat.volInfo.n_inmask, 30);
+% :Examples for lassopcr:
+% ::
 %
-% % setting up training values
-% % ---------------------------------------------------
-% dat.Y = dat.dat(111111, :)' + .3 * randn(30, 1);
+%    % data preparation
+%    dat = fmri_data(which('brainmask.nii'));
+%    dat.dat = randn(dat.volInfo.n_inmask, 30);
 %
-% % setting up testing values
-% % ---------------------------------------------------
-% dat.Y(:,2) = [ones(10,1); zeros(10,1); -ones(10,1)];
-% dat.Y(:,3) = dat.dat(111111, :)' + .3 * randn(30, 1);
-% mask = which('scalped_avg152T1_graymatter.img');
-% dist_n = 50;
+%    % setting up training values
+%    dat.Y = dat.dat(111111, :)' + .3 * randn(30, 1);
 %
-% % data for cross classification
-% % ---------------------------------------------------
-% dat2 = fmri_data(which('brainmask.nii'));
-% dat2.dat = randn(dat.volInfo.n_inmask, 30);
-% dat2.Y = dat2.dat(111, :)' + .3 * randn(30, 1);
-% dat2.Y(:,2) = dat.Y(:,2);
-% dat2.Y(:,3) = dat2.dat(111111, :)' + .3 * randn(30, 1);
+%    % setting up testing values
+%    dat.Y(:,2) = [ones(10,1); zeros(10,1); -ones(10,1)];
+%    dat.Y(:,3) = dat.dat(111111, :)' + .3 * randn(30, 1);
+%    mask = which('scalped_avg152T1_graymatter.img');
+%    dist_n = 50;
 %
-% % setting up other variables
-% % ---------------------------------------------------
-% r = 6;
-% modeldir = '/dreamio/home/chwo9116/Documents/searchlight_dream_test';
-% holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end
+%    % data for cross classification
+%    dat2 = fmri_data(which('brainmask.nii'));
+%    dat2.dat = randn(dat.volInfo.n_inmask, 30);
+%    dat2.Y = dat2.dat(111, :)' + .3 * randn(30, 1);
+%    dat2.Y(:,2) = dat.Y(:,2);
+%    dat2.Y(:,3) = dat2.dat(111111, :)' + .3 * randn(30, 1);
 %
-% % generate scripts in modeldir
-% % ---------------------------------------------------
-% searchlight_dream(dat, dist_n, mask, 'dat2', dat2, 'algorithm_name', ...
+%    % setting up other variables
+%    r = 6;
+%    modeldir = '/dreamio/home/chwo9116/Documents/searchlight_dream_test';
+%    holdout_set = ones(6, 1); for i = 2:5, holdout_set = [holdout_set; i*ones(6, 1)]; end
+%
+%    % generate scripts in modeldir
+%    searchlight_dream(dat, dist_n, mask, 'dat2', dat2, 'algorithm_name', ...
 %    'cv_lassopcr', 'r', 6, 'modeldir', modeldir, 'cv_assign', holdout_set, ...
 %    'save_weights', 'outcome_method', 'singleinterval');
 %
-% See also:
+% :See Also:
 % searchlight_disti.m, xval_cross_classify.m, fmri_data.predict.m, 
 
-% Programmers' notes:
-% 
 
-%% where to save? 
-
-modeldir = pwd;
+modeldir = pwd; % where to save? 
 send_email = false;
 email_address = [];
 

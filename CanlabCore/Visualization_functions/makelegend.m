@@ -1,22 +1,31 @@
 function han = makelegend(names,colors,makefig)
-% makelegend(names,colors,[decimal places if numeric entries for names])
-% 
-% names must be cell array of names OR a vector of numbers (i.e., thresholds) that will be converted to
-% text
+% ::
 %
-% colors can be cell array of text or rgb values, or matrix of [r g b]
-% values
+%    makelegend(names,colors,[decimal places if numeric entries for names])
 %
-% Examples:
-% han = makelegend({'red' 'green' 'blue'}, {'r' 'g' 'b'});
+% :Inputs:
 %
-% han = makelegend([.001 .005 .01], {[1 1 0] [1 .5 0] [.7 .3 .3]});
+%   **names:**
+%        must be cell array of names OR a vector of numbers (i.e., thresholds) that will be converted to
+%        text
+%
+%   **colors:**
+%        can be cell array of text or rgb values, or matrix of [r g b]
+%        values
+%
+% :Examples:
+% ::
+%
+%    han = makelegend({'red' 'green' 'blue'}, {'r' 'g' 'b'});
+%
+%    han = makelegend([.001 .005 .01], {[1 1 0] [1 .5 0] [.7 .3 .3]});
 
+
+
+if nargin < 3, num_decimals = 3; end
 
 %if nargin < 3, makefig = 1; end
 %if makefig, tor_fig;  end
-
-if nargin < 3, num_decimals = 3; end
 
 num_entries = length(names);
 

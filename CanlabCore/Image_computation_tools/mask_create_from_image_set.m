@@ -1,26 +1,33 @@
 function mask = mask_create_from_image_set(imgs, outname, atleastN, varargin)
-    % mask = mask_create_from_image_set(imgs, outname, atleastN, ['sum'])
-    %
-    % Take a set of images and create a mask of voxels in which at least N
-    % subjects have valid (not exactly zero, non NaN) data.
-    %
-    % This makes a useful results mask for a set of images, i.e., in a
-    % group analysis.
-    %
-    % Optional: 'sum' input writes the sum image instead of the mask image,
-    % so that the values in the image reflect the number of input images
-    % with valid values.
-    %
-    % compatible with SPM5 and above only!
-    %
-    % Tor Wager, April 2, 2008
-    % Edit Sept 13, 2008: Sum image output option
-    %
-    % Examples:
-    % mask_create_from_image_set(EXPT.SNPM.P{1}, 'mask_all_valid.img');
-    %
-    % imgs = filenames('vascular_mask_*img');
-    % mask_create_from_image_set(imgs, 'vascular_group_sum.img', 6, 'sum');
+% Take a set of images and create a mask of voxels in which at least N
+% subjects have valid (not exactly zero, non NaN) data.
+%
+% :Usage:
+% ::
+%
+%     mask = mask_create_from_image_set(imgs, outname, atleastN, ['sum'])
+%
+% This makes a useful results mask for a set of images, i.e., in a
+% group analysis.
+%
+% :Optional: 'sum' input writes the sum image instead of the mask image,
+% so that the values in the image reflect the number of input images
+% with valid values.
+%
+% compatible with SPM5 and above only!
+%
+% :Examples:
+% ::
+%
+%    mask_create_from_image_set(EXPT.SNPM.P{1}, 'mask_all_valid.img');
+%
+%    imgs = filenames('vascular_mask_*img');
+%    mask_create_from_image_set(imgs, 'vascular_group_sum.img', 6, 'sum');
+%
+% ..
+%    Tor Wager, April 2, 2008
+%    Edit Sept 13, 2008: Sum image output option
+% ..
 
     write_sum = 0;
     

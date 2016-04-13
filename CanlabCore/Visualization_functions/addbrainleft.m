@@ -1,7 +1,11 @@
-function p = addbrain(varargin)
-% handle = addbrain(enter arg to suppress lighting changes)
-% quick function to add transparent brain surface to figure
+function p = addbrainleft(varargin)
+% :Usage:
+% ::
 %
+%    handle = addbrainleft(enter arg to suppress lighting changes)
+%
+% quick function to add transparent brain surface to figure
+
 
 Ps = which('surf_single_subj_T1_gray.mat'); %'c:\tor_scripts\3DheadUtility\surf_single_subj_T1_gray.mat';
 Ps = which('surf_single_subj_grayL.mat');

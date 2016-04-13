@@ -1,7 +1,12 @@
 function [Anew Bnew] = padwithnan(A, B, dim)
-    % [Anew Bnew] = padwithnan(A, B, dim)
-    % returns the two input arrays, with the smaller padded to the size of the
-    % larger in the particular dimension(s) with NaNs
+% returns the two input arrays, with the smaller padded to the size of the
+% larger in the particular dimension(s) with NaNs
+%
+% :Usage:
+% ::
+%
+%     [Anew Bnew] = padwithnan(A, B, dim)
+%
 
     if(nargin ~= 3)
         error('padwithnan: incorrect number of arguments');

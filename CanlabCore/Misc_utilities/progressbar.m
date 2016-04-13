@@ -1,17 +1,32 @@
 function [f,ax] = progressbar(meth,val)
-% progressbar(meth,val)
 % Create a progress bar window with tag 'progressbar'
 % that can be updated
-% 
-% meth can be 'init' or 'update'
+%
+% :Usage:
+% ::
+%
+%     progressbar(meth,val)
+%
+% :Inputs:
+%
+%   **meth:**
+%        can be 'init' or 'update'
+%
 % x-axis limits are 0 - 100, so val should be % complete for best results
 %
-% the f and ax handles are not really needed
-% as 'update' finds the axis with 'progressbar' tag.
+% :Outputs:
 %
-% progressbar('update',100*i./nvars);
+%   the f and ax handles are not really needed
+%   as 'update' finds the axis with 'progressbar' tag.
 %
-% tor wager
+% :Example:
+% ::
+%
+%    progressbar('update',100*i./nvars);
+%
+% ..
+%    tor wager
+% ..
 
     f = [];
     ax = [];

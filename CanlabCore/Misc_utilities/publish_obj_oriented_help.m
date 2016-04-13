@@ -1,4 +1,4 @@
-function publish_obj_oriented_help
+function publish_obj_oriented_help()
 
 outputbase = '/Users/tor/Dropbox/psyc7215_class_files/Part2_Machine_Learning/Toolboxes/help'; 
 if ~exist(outputbase, 'dir'), mkdir(outputbase); end

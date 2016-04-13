@@ -1,45 +1,94 @@
 function [D,Ds,hdr,p,coords,X,Y,Z] = tor_3d(varargin)
-% function [D,Ds,hdr,p,coords,X,Y,Z] = tor_3d(varargin)
+% :Usage:
+% ::
+%
+%    [D,Ds,hdr,p,coords,X,Y,Z] = tor_3d(varargin)
+%
 % made to use single_subj_T1.img from SPM99
 %
-% Made by Tor Wager, 10/3/2001 last modified 10/19/01
+% :Options:
 %
-% options:
-% 'data'        followed by image data, must also use 'hdr'; data is full image volume
-% 'hdr'         followed by hdr structure (use read_hdr)
-% 'coords'      3 element row vector of x,y,z coordinates at which to cut away
-% 'figure'      create a new figure to plot on
-% 'whichcuts'   followed by incisions; choices are x y z w (whole)
-%               example:'whichcuts','xyz' (xyz is default)
-%               order of output handles (p(i)) is 'wyzx'
-%               New: Special methods: 'coronal slice right'
-%               'coronal slice left'
-%               'coronal slice'
-% 'filename'    followed by filename of image data to load, in single quotes
-%               should be analyze img format, without the .img extension
-%               cluster imaging assumes neurological orientation, but should work anyway.
-% 'revx'        reverse x cut direction, so cut in from left instead of right
-% 'topmm', topmm = varargin{i+1};
-% ''intensity_threshold', percentile of data above which is considered in-object
-%               higher = more sparse object
-% output:
-%   D = img data, Ds = smoothed data, hdr = header, p = image handles, coords = coordinates
-%   X,Y,Z are the millimeter, origin centered reference frame for the head isosurface
+%   **'data':**
+%        followed by image data, must also use 'hdr'; data is full image volume
 %
-% examples:
-% [D,Ds,hdr,p,coords] = tor_3d('figure','data',D,'hdr',hdr,'whichcuts','yzx');
-% [D,Ds,hdr,p,coords] = tor_3d('figure');
-% [D,Ds,hdr,headhandle,coords] = tor_3d('whichcuts','z', 'coords', [-Inf
-% -Inf Inf], 'filename', 'T1_face_exemplar', 'intensity_threshold', 80); set(gcf, 'Color', 'w'); axis on
+%   **'hdr':**
+%        followed by hdr structure (use read_hdr)
 %
-% special slice example:
-% [D,Ds,hdr,handle,coords]  = tor_3d('whichcuts', 'coronal slice right', 'coords', [0 12 0], 'topmm', 100);
-% lightRestoreSingle
-% set(handle(1), 'FaceColor', [.5 .5 .5])
+%   **'coords':**
+%        3 element row vector of x,y,z coordinates at which to cut away
+%
+%   **'figure':**
+%        create a new figure to plot on
+%
+%   **'whichcuts':**
+%        followed by incisions; choices are x y z w (whole)
+%
+%        example:'whichcuts','xyz' (xyz is default)
+%        order of output handles (p(i)) is 'wyzx'
+%
+%        New: Special methods:
+%          - 'coronal slice right'
+%          - 'coronal slice left'
+%          - 'coronal slice'
+%
+%   **'filename':**
+%        followed by filename of image data to load, in single quotes
+%
+%        should be analyze img format, without the .img extension
+%
+%        cluster imaging assumes neurological orientation, but should work anyway.
+%
+%   **'revx':**
+%        reverse x cut direction, so cut in from left instead of right
+%
+%   **'topmm':**
+%        topmm = varargin{i+1};
+%
+%   **'intensity_threshold':**
+%        percentile of data above which is considered in-object
+%        higher = more sparse object
+%
+% :Outputs:
+%
+%   **D:**
+%        img data
+%
+%   **Ds:**
+%        smoothed data
+%
+%   **hdr:**
+%        header
+%
+%   **p:**
+%        image handles
+%
+%   **coords:**
+%        coordinates
+%
+%   **X, Y, Z:**
+%        are the millimeter, origin centered reference frame for the head isosurface
+%
+% :Examples:
+% ::
+%
+%    [D,Ds,hdr,p,coords] = tor_3d('figure','data',D,'hdr',hdr,'whichcuts','yzx');
+%    [D,Ds,hdr,p,coords] = tor_3d('figure');
+%    [D,Ds,hdr,headhandle,coords] = tor_3d('whichcuts','z', 'coords', [-Inf
+%    -Inf Inf], 'filename', 'T1_face_exemplar', 'intensity_threshold', 80); set(gcf, 'Color', 'w'); axis on
+%
+%    % Special slice example:
+%    [D,Ds,hdr,handle,coords]  = tor_3d('whichcuts', 'coronal slice right', 'coords', [0 12 0], 'topmm', 100);
+%    lightRestoreSingle
+%    set(handle(1), 'FaceColor', [.5 .5 .5])
+%
+% ..
+%    Made by Tor Wager, 10/3/2001 last modified 10/19/01
+% ..
 
-%------------------------------------------------------------------------------
-% Set up arguments and default values
-%------------------------------------------------------------------------------
+
+% ..
+%    Set up arguments and default values
+% ..
 D = [];
 Ds =[];
 p = zeros(1,2);

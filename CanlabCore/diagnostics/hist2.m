@@ -1,11 +1,17 @@
 function [H,mi,H2] = hist2(A,B,res,varargin)
-% [H,mi,H2] = hist2(A,B,res,[plot])
-%
 % 2-D histogram with res bins
+%
+% :Usage:
+% ::
+%
+%     [H,mi,H2] = hist2(A,B,res,[plot])
+%
 % A and B can be 3D, as in image volumes
 % mi is mutual information, a la spm_mireg.m
 %
-% tor wager, may 6, 2003
+% ..
+%    tor wager, may 6, 2003
+% ..
 
 A = A(:);
 B = B(:);

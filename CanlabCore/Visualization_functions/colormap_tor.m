@@ -1,14 +1,22 @@
 function newcm = colormap_tor(lowcolor, hicolor, varargin)
-    % newcolormap = colormap_tor(lowcolor, hicolor, [midcolor], [midcolor2], etc.)
-    %
-    % Create a new colormap of your choosing.
-    %
-    % colormap_tor([.2 .2 .6], [1 1 0]);  % slate to yellow
-    % colormap_tor([.9 .5 .2], [1 1 0]);  % orange to yellow
-    % colormap_tor([.8 .1 .1], [1 1 0], [.9 .6 .1]);  %red to orange to yellow
-    % colormap_tor([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
-    %
-    % tor wager, sept. 2007
+% :Usage:
+% ::
+%
+%    newcolormap = colormap_tor(lowcolor, hicolor, [midcolor], [midcolor2], etc.)
+%
+% Create a new colormap of your choosing.
+%
+% :Examples:
+% ::
+%
+%    colormap_tor([.2 .2 .6], [1 1 0]);  % slate to yellow
+%    colormap_tor([.9 .5 .2], [1 1 0]);  % orange to yellow
+%    colormap_tor([.8 .1 .1], [1 1 0], [.9 .6 .1]);  %red to orange to yellow
+%    colormap_tor([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
+%
+% ..
+%    tor wager, sept. 2007
+% ..
 
 
     n = 64;

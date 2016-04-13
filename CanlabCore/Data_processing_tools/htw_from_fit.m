@@ -1,109 +1,124 @@
 function [h, t, w, auc, w_times, halfh] = htw_from_fit(hrf, b, dt, varargin)
-    % [h, t, w, auc, w_times, halfh] = htw_from_fit(hrf, b, dt, [optional arguments])
-    %
-    % estimates height, time to peak,  width, and area under the curve of a fitted response
-    %
-    % tor wager, Sept 08
-    %
-    % Inputs
-    % -----------------------------------------------------------------
-    % hrf       a matrix of columns that form a linear basis set for an
-    %           event type in an fMRI design, t time points x k basis
-    %           functions
-    % b         betas associated with the columns of hrf, k x 1
-    % dt        the sampling resolution of hrf (in seconds)
-    % 
-    % Optional:
-    % 'plot', make plot
-    % 'verbose', verbose output
-    % 'startval', followed by the starting value in sec within which to calculate peak
-    % 'endval', followed by the ending value in sec within which to calculate peak
-    % 'colors', followed by a cell array, for example, {'r'} or {[1 0 0]}
-    %
-    % This function is essentially the same as fir2htw2.m, but the main
-    % differences are:
-    % 1) It imposes a time constraint on the peak amplitude automatically,
-    % which is constrained to be between 4 seconds and 12 seconds
-    % (endval, which was hconstraint) by default. YOU MAY WANT TO CHANGE hconstraint
-    % depending on whether you're expecting delayed hemodynamic responses.
-    % This requires input of the sampling resolution (e.g., dt)
-    %
-    % 2) This function will automatically create fitted responses, given a
-    % basis set and betas (parameters).  This is different from fir2htw2.m,
-    % which takes the fitted response as input.
-    %
-    % 3) The method for getting width (w) has been changed to work better
-    % for multi-modal (multi-peak) responses.
-    %
-    % Otherwise, the algorithm is the same.
-    % See Lindquist and Wager, 2007, for simulations that use a version of
-    % this method to estimate HRFs using different kinds of models.
-    %
-    % Notes on scaling:
-    % The scaling of the amplitude depends on the scaling of the hrf basis
-    % set, which (in SPM) depends on the time resolution.  You should at
-    % least use an hrf basis set with the same scaling for all subjects in
-    % a group analysis.  The amplitude of the fitted response is
-    % interpreted as the amplitude of the unit "impulse response," assuming
-    % that the hrf you enter here is the same as the impulse response
-    % function you used to create the design matrix.  In SPM5, higher-res
-    % impulse response functions are normalized by their positive sum, and
-    % the higher the time resolution, the lower the amplitude of the unit
-    % HRF.  (The scaling of regressors in the SPM design matrix isn't
-    % affected, because the hrf basis functions are convolved with a boxcar
-    % that also depends on the time resolution.  The bottom line is that if
-    % all your subjects have the same scaling, you should be fine.  And,
-    % secondly, the amplitudes that come out of this function reflect the
-    % scaling of the HRF you put in and are for an impulse response, NOT
-    % for an "event," and so the scaling here would not be expected to
-    % match up with the amplitudes on a plot that you'd get from a
-    % selective average time-course plot, unless you adjust by multiplying
-    % by the number of elements in SPMs "hi-res" onset boxcar to adjust.
-    %
-    % FOR example:
-    % With "zero-duration" events, an hrf input scaled to reflect "event response" amplitudes
-    % might look something like this: (***may not be exactly right because
-    % i think dt is in sec)
-    % figure; plot(conv(SPM.xBF.bf(:, 1), my_ons))
-    % my_ons = ones(1, TR ./ SPM.xBF.dt .* SPM.Sess.U(1).dur(1));
-    %
-    % If you have epochs and want "epoch response" amplitude, you have to consider that as well.
-    % If your durations are specified in TRs, and all durations are the
-    % same:
-    % TR = SPM.xY.RT;
-    % my_ons = ones(1, TR ./ SPM.xBF.dt .* SPM.Sess.U(1).dur(1));
-    %
-    % minh = min height
-    %
-    % This version uses turning points (zero gradient) to find the largest
-    % "hump" in the data and the time it occurs.
-    %
-    % Examples:
-    % --------------------------------------------------------------------
-    % Load and SPM mat file and use the basis set stored in that, and use
-    % that as the hrf.  Generate some arbitrary combos to test different
-    % shapes:
-    % cd('my spm directory')
-    % load SPM
-    % [h, t, w, auc] = htw_from_fit(SPM.xBF.bf, [1 .4 .4]', SPM.xBF.dt, 'plot', 'verbose');
-    %
-    % for i = 1:20
-    %   [h, t, w, auc] = htw_from_fit(SPM.xBF.bf, randn(3, 1), SPM.xBF.dt, 'plot'); pause(1.5);
-    % end
-    %
-    % --------------------------------------------------------------------
-    % Generate an SPM basis set at a lower resolution, and try that:
-    % bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
-    % for i = 1:20
-    %   [h, t, w, auc] = htw_from_fit(bf.bf, randn(3, 1), bf.dt, 'plot'); h, t, w, auc, pause(1.5)
-    % end
-    % --------------------------------------------------------------------
-    
-    
+% Estimates height, time to peak,  width, and area under the curve of a fitted response
+%
+% :Usage:
+% ::
+%
+%     h, t, w, auc, w_times, halfh] = htw_from_fit(hrf, b, dt, [optional arguments])
+%
+% ..
+%    tor wager, Sept 08
+% ..
+%
+% :Inputs:
+%
+%   **hrf:**
+%        a matrix of columns that form a linear basis set for an
+%           event type in an fMRI design, t time points x k basis
+%           functions
+%   **b:**
+%        betas associated with the columns of hrf, k x 1
+%   **dt:**
+%        the sampling resolution of hrf (in seconds)
+% 
+% :Optional Inputs:
+%
+%   **plot:**
+%        make plot
+%
+%   **verbose:**
+%        verbose output
+%
+%   **startval:**
+%        followed by the starting value in sec within which to calculate peak
+%
+%   **endval:**
+%        followed by the ending value in sec within which to calculate peak
+%
+%   **colors:**
+%        followed by a cell array, for example, {'r'} or {[1 0 0]}
+%
+% This function is essentially the same as fir2htw2.m, but the main
+% differences are:
+%   1) It imposes a time constraint on the peak amplitude automatically,
+%      which is constrained to be between 4 seconds and 12 seconds
+%      (endval, which was hconstraint) by default. YOU MAY WANT TO CHANGE hconstraint
+%      depending on whether you're expecting delayed hemodynamic responses.
+%      This requires input of the sampling resolution (e.g., dt)
+%
+%   2) This function will automatically create fitted responses, given a
+%      basis set and betas (parameters).  This is different from fir2htw2.m,
+%      which takes the fitted response as input.
+%
+%   3) The method for getting width (w) has been changed to work better
+%      for multi-modal (multi-peak) responses.
+%
+% Otherwise, the algorithm is the same.
+% See Lindquist and Wager, 2007, for simulations that use a version of
+% this method to estimate HRFs using different kinds of models.
+%
+% :Notes on scaling:
+% The scaling of the amplitude depends on the scaling of the hrf basis
+% set, which (in SPM) depends on the time resolution.  You should at
+% least use an hrf basis set with the same scaling for all subjects in
+% a group analysis.  The amplitude of the fitted response is
+% interpreted as the amplitude of the unit "impulse response," assuming
+% that the hrf you enter here is the same as the impulse response
+% function you used to create the design matrix.  In SPM5, higher-res
+% impulse response functions are normalized by their positive sum, and
+% the higher the time resolution, the lower the amplitude of the unit
+% HRF.  (The scaling of regressors in the SPM design matrix isn't
+% affected, because the hrf basis functions are convolved with a boxcar
+% that also depends on the time resolution.  The bottom line is that if
+% all your subjects have the same scaling, you should be fine.  And,
+% secondly, the amplitudes that come out of this function reflect the
+% scaling of the HRF you put in and are for an impulse response, NOT
+% for an "event," and so the scaling here would not be expected to
+% match up with the amplitudes on a plot that you'd get from a
+% selective average time-course plot, unless you adjust by multiplying
+% by the number of elements in SPMs "hi-res" onset boxcar to adjust.
+%
+% :For example:
+% With "zero-duration" events, an hrf input scaled to reflect "event response" amplitudes
+% might look something like this: (***may not be exactly right because
+% i think dt is in sec)
+% figure; plot(conv(SPM.xBF.bf(:, 1), my_ons))
+% my_ons = ones(1, TR ./ SPM.xBF.dt .* SPM.Sess.U(1).dur(1));
+%
+% If you have epochs and want "epoch response" amplitude, you have to consider that as well.
+% If your durations are specified in TRs, and all durations are the
+% same:
+% TR = SPM.xY.RT;
+% my_ons = ones(1, TR ./ SPM.xBF.dt .* SPM.Sess.U(1).dur(1));
+%
+% minh = min height
+%
+% This version uses turning points (zero gradient) to find the largest
+% "hump" in the data and the time it occurs.
+%
+% :Examples:
+% ::
+%
+%    % Load and SPM mat file and use the basis set stored in that, and use
+%    % that as the hrf.  Generate some arbitrary combos to test different shapes:
+%    % cd('my spm directory')
+%    % load SPM
+%    [h, t, w, auc] = htw_from_fit(SPM.xBF.bf, [1 .4 .4]', SPM.xBF.dt, 'plot', 'verbose');
+%
+%    for i = 1:20
+%        [h, t, w, auc] = htw_from_fit(SPM.xBF.bf, randn(3, 1), SPM.xBF.dt, 'plot'); pause(1.5);
+%    end
+%
+%    % Generate an SPM basis set at a lower resolution, and try that:
+%    bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
+%    for i = 1:20
+%       [h, t, w, auc] = htw_from_fit(bf.bf, randn(3, 1), bf.dt, 'plot'); h, t, w, auc, pause(1.5)
+%    end
+%
 
-    % --------------------------------------------------------
-    % Variable input arguments
-    % --------------------------------------------------------
+% ..
+%    Variable input arguments
+% ..
 
     doplot = 0;
     startval_sec = 4;

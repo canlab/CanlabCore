@@ -1,13 +1,17 @@
 function stats = signtest_matrix(dat)
-% stats = signtest_matrix(dat)
+% :Usage:
+% ::
+%
+%     stats = signtest_matrix(dat)
 %
 % This is a matric-ized version of Matlab 2010's signtest.m
 % it returns identical P-values to Matlab's function
 %
-% copyright 2011, tor wager
+% ..
+%    copyright 2011, tor wager
+% ..
 
-% n: how many obs in sign test
-n = size(dat, 1); 
+n = size(dat, 1); % n: how many obs in sign test
 n_omit = sum(dat == 0 | isnan(dat));
 n = (n - n_omit)'; 
 

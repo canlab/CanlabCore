@@ -1,4 +1,4 @@
-function [p, caphandle, mesh_struct] = brainstem_slices_3d
+function [p, caphandle, mesh_struct] = brainstem_slices_3d()
 
 mask = which('spm8_brainstem.img')
 overlay = which('SPM8_colin27T1_seg.img');

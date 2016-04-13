@@ -1,72 +1,89 @@
 function varargout = scn_stats_helper_functions(meth, varargin)
-%
 % Helper functions for stats routines, plotting, and printing
 %
-% Available methods
-% 'print'   : print outcome table from stats structure
-% 'gls'     : GLS function, weighted or unweighted; with AR model if
-%               specified as last input
-% 'boot'    : Boostrapping of GLS
-% 'signperm': Sign permutation test for intercept of GLS
+% :Available Methods:
 %
-% 'plot'    :
+%   **'print':**
+%        print outcome table from stats structure
 %
-% 'loess_xy'    : loess plots of multilevel X and Y data
-%                 X is cell array with X data for each subject, Y is cell array, same format
-% 'xycatplot'    LOESS (or no loess) plots of N subjects, categorical X vs Y
-% 'loess_partial'
-% 'xyplot'        % multilevel line plot of x vs y within subjects, grouping trials by
-%                optional G variable. X can be categorical or continuous.
+%   **'gls':**
+%        GLS function, weighted or unweighted; with AR model if
+%        specified as last input
 %
-% 'xytspanelplot' : X and Y are timeseries data; separate panel plot for each
-%                   cell
+%   **'boot':**
+%        Boostrapping of GLS
 %
-% FORMAT STRINGS
-% --------------------------------------------------------------------------------------------
-% scn_stats_helper_functions('print', stats, stats_within)
+%   **'signperm':**
+%        Sign permutation test for intercept of GLS
+%
+%   **'plot':**
+%
+%   **'loess_xy':**
+%        loess plots of multilevel X and Y data
+%
+%        X is cell array with X data for each subject, Y is cell array, same format
+%
+%   **'xycatplot':**
+%        LOESS (or no loess) plots of N subjects, categorical X vs Y
+%
+%   **'loess_partial':**
+%
+%   **'xyplot':**
+%        multilevel line plot of x vs y within subjects, grouping trials by
+%        optional G variable. X can be categorical or continuous.
+%
+%   **'xytspanelplot':**
+%        X and Y are timeseries data; separate panel plot for each cell
+%
+% :Format Strings:
+% ::
+%
+%    scn_stats_helper_functions('print', stats, stats_within)
+%
+%    [b, s2between_ols, stats] = scn_stats_helper_functions('gls', Y, W, X)
+%    [b, s2between_ols] = scn_stats_helper_functions('gls', Y, W, X, arorder);
+%
 % See glmfit_general for context and usage
+% ::
 %
-% [b, s2between_ols, stats] = scn_stats_helper_functions('gls', Y, W, X)
-% [b, s2between_ols] = scn_stats_helper_functions('gls', Y, W, X, arorder);
-% See glmfit_general for context and usage
+%    stats = scn_stats_helper_functions('boot', Y, W, X, bootsamples, stats, whpvals_for_boot, targetu, verbose )
+%    stats = scn_stats_helper_functions('boot', Y, stats.W, X, 1000, stats, 1:size(Y,2), .005, 1 )
 %
-% stats = scn_stats_helper_functions('boot', Y, W, X, bootsamples, stats, whpvals_for_boot, targetu, verbose )
-% stats = scn_stats_helper_functions('boot', Y, stats.W, X, 1000, stats, 1:size(Y,2), .005, 1 )
+%    stats = scn_stats_helper_functions('signperm', Y, W, X, nperms, stats, permsign, verbose )
+%    stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, [], 1 );
 %
-% stats = scn_stats_helper_functions('signperm', Y, W, X, nperms, stats, permsign, verbose )
-% stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, [], 1 );
+%    stats = scn_stats_helper_functions('xycatplot', X, Y);
+%    stats_plot = scn_stats_helper_functions('xycatplot', stats.inputOptions.X, stats.inputOptions.Y, 'weighted', 'samefig');
 %
-% stats = scn_stats_helper_functions('xycatplot', X, Y);
-% stats_plot = scn_stats_helper_functions('xycatplot', stats.inputOptions.X, stats.inputOptions.Y, 'weighted', 'samefig');
+%    scn_stats_helper_functions('xyplot', data(1:19), SETUP.data.Y, 'weighted', 'groupby', G, 'colors', {'y' [.2 .2 .2]});'y'
 %
-% scn_stats_helper_functions('xyplot', data(1:19), SETUP.data.Y, 'weighted', 'groupby', G, 'colors', {'y' [.2 .2 .2]});'y'
+% :Example: using sign permutation test
+% ::
 %
-% Example: using sign permutation test
-% --------------------------------------------------------------------------------------------
-% *Note: Out of memory errors for large n!
-%
-% Y = randn(20, 4); X = Y(:,1) + randn(20,1); X = [ones(size(X)) X];
-% first_lev_var = rand(20, 4);
-% stats = glmfit_general(Y, X, 'weighted', 's2', first_lev_var, 'dfwithin', 20, 'verbose');
-% W = stats.W;
-% stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, [], 1 );
-% % Re-run using already set-up permsign:
-% stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, stats.permsign, 1 );
+%    Y = randn(20, 4); X = Y(:,1) + randn(20,1); X = [ones(size(X)) X];
+%    first_lev_var = rand(20, 4);
+%    stats = glmfit_general(Y, X, 'weighted', 's2', first_lev_var, 'dfwithin', 20, 'verbose');
+%    W = stats.W;
+%    stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, [], 1 );
+%    % Re-run using already set-up permsign:
+%    stats = scn_stats_helper_functions('signperm', Y, W, X, 5000, stats, stats.permsign, 1 );
 %
 %
-% scn_stats_helper_functions('loess_xy', stats.inputOptions.X, stats.inputOptions.Y)
+%    scn_stats_helper_functions('loess_xy', stats.inputOptions.X, stats.inputOptions.Y)
 %
 %
-% Example: Loading mediation clusters and making line plot
-% G = SETUP.data.X;
-% whcl = 30; cluster_orthviews(clneg_data{1}(whcl));
-% clear data, for i = 1:length(clneg_data), data{i} = clneg_data{i}(whcl).timeseries; end
-% scn_stats_helper_functions('xyplot', data, SETUP.data.Y, 'weighted', 'groupby', G, 'colors', {'y' [.2 .2 .2]});
-% scn_stats_helper_functions('xyplot', SETUP.data.Y, data, 'weighted', 'groupby', G, 'colors', {'y' [.4 .4 .4]}); xlabel('Report'); ylabel('Brain');
+%    % Loading mediation clusters and making line plot
+%    G = SETUP.data.X;
+%    whcl = 30; cluster_orthviews(clneg_data{1}(whcl));
+%    clear data, for i = 1:length(clneg_data), data{i} = clneg_data{i}(whcl).timeseries; end
+%    scn_stats_helper_functions('xyplot', data, SETUP.data.Y, 'weighted', 'groupby', G, 'colors', {'y' [.2 .2 .2]});
+%    scn_stats_helper_functions('xyplot', SETUP.data.Y, data, 'weighted', 'groupby', G, 'colors', {'y' [.4 .4 .4]}); xlabel('Report'); ylabel('Brain');
 %
-% Called by:
-%   mediation.m
-%   glmfit_general.m
+% :Note: Out of memory errors for large n!
+%
+% :Called by:
+%   - mediation.m
+%   - glmfit_general.m
 %
 % Tor Wager, Sept 2007
 
@@ -1226,7 +1243,12 @@ rand('twister',sum(100*clock))
 
 % start with weights all equal whether multilevel or not
 means = bootstrp(final_boot_samples, wmean, Y, W, X);
-
+if any(any(isnan(means),2)) 
+    s = sprintf('%d among %d bootsamples have been deleted because of NaNs.', sum(any(isnan(means),2)),size(means,1));
+    disp('WARNING:*******************************')
+    warning(s);
+    means(any(isnan(means),2),:) = [];
+end
 stats = getstats(means, stats, k, nvars);
 stats.analysisname = 'Bootstrapped statistics';
 

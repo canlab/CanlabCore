@@ -1,10 +1,23 @@
+% Checks the index of an image
 function [dattype,dat] = iimg_check_indx(dat,volInfo,varargin)
-% [dattype,dat] = iimg_check_indx(dat,volInfo,[outtype])
+% :Usage:
+% ::
 %
-% dattype is 'full' or 'masked'
-% optional: outtype: 'full' or 'masked' output
+%     [dattype,dat] = iimg_check_indx(dat,volInfo,[outtype])
 %
-% tor wager
+% :Inputs:
+%
+%   **dattype:**
+%        is 'full' or 'masked'
+%
+% :Optional Input:
+%
+%   **outtype:**
+%        'full' or 'masked' output
+%
+% ..
+%    tor wager
+% ..
 
 
 % make sure data is correct format

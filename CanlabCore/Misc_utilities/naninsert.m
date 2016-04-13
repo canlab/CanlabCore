@@ -1,15 +1,23 @@
 function yout = naninsert(nanvec, y)
-    % yout = naninsert(nanvec, y)
-    %
-    % Insert NaNs back into data series from which they were removed
-    % nanvec is indicator for NaNs, of size size(yout).  y is data.
-    %
-    % If y is a matrix, length(nanvec) should equal number of rows in y.
-    % NaNs are inserted for true values in nanvec in all columns of y.
-    %
-    % Tor Wager, July 2007; Bug fix, March 2008;
-    % Updated functionality to include all columns in matrix, April 2015
-    % See nanremove.m
+% Insert NaNs back into data series from which they were removed
+%
+% :Usage:
+% ::
+%
+%     yout = naninsert(nanvec, y)
+%
+% nanvec is indicator for NaNs, of size size(yout).  y is data.
+%
+% If y is a matrix, length(nanvec) should equal number of rows in y.
+% NaNs are inserted for true values in nanvec in all columns of y.
+%
+% ..
+%    Tor Wager, July 2007; Bug fix, March 2008;
+%    Updated functionality to include all columns in matrix, April 2015
+%  ..
+%
+% :See also:
+% nanremove.m
 
     wh = find(nanvec);
     

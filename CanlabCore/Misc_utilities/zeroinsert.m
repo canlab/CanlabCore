@@ -1,12 +1,16 @@
 function yout = zeroinsert(wasbad, y)
-% yout = zeroinsert(wasbad, y)
-%
 % Re-insert removed CASES (rows) and fill with zeros
+%
+% :Usage:
+% ::
+%
+%     yout = zeroinsert(wasbad, y)
+%
 % wasbad is indicator for removed cases, of size size(yout).  y is data.
 %
 % if you enter y', inserts VARIABLES (cols).  here, pass in v x n matrix, y'
 % to fill empty/removed vars
-
+%
 % See nanremove.m and naninsert.m
 
 wh = find(wasbad);

@@ -1,39 +1,57 @@
-% nuisance_cov_estimates(X, images, SETUP, varargin)
+function nuisance_cov_estimates(X, images, SETUP, varargin)
+% Estimates F-map for model parameters of interest
+% Writes to disk:
+% 'F_cols_of_interest.img' 'p_cols_of_interest.img' (3-D images)
+% 'resid_full_model.img' (a 4-D image)
 %
-% 1) Estimates F-map for model parameters of interest
-%       Writes to disk:
-%       'F_cols_of_interest.img' 'p_cols_of_interest.img' (3-D images)
-%       'resid_full_model.img' (a 4-D image)
+% Locates voxels whose activity is unrelated to the model
 %
-% 2) Locates voxels whose activity is unrelated to the model
-% 3) Extracts principal components from these voxels for use as covariates in subsequent
-% models
-% 4) Note: invalidates statistical inference in subsequent models based on
+% Extracts principal components from these voxels for use as covariates
+% in subsequent models
+%
+% Note: invalidates statistical inference in subsequent models based on
 % these data, but may improve predictive accuracy and single-trial model.
 %
-% Defining the SETUP structure with inputs:
-% ------------------------------------------------------------------------
-% % SETUP.(fields)
-% .wh_of_interest       vector of which columns of X matrix are of interest
+% :Usage:
+% ::
+%
+%     nuisance_cov_estimates(X, images, SETUP, varargin)
+%
+% :Defining the SETUP structure with inputs:
+%
+% SETUP.(fields)
+%
+%   **.wh_of_interest:**
+%        vector of which columns of X matrix are of interest
 %                       % columns of interest in X matrix; tests var explained by these with F-test
 %
-% .mask                 name of mask image
+%   **.mask:**
+%        name of mask image
 %
-% .TR                   repetition time of volume (image) acquisition
-% .HPlength             high-pass filter length, in s
-% .scans_per_session    vector of # volumes in each run, e.g., [128 128 128
-% 128 128]
-% .dummyscans           indices of images in each run that will be modeled
-%                       with separate dummy variables
+%   **.TR:**
+%        repetition time of volume (image) acquisition
 %
-% .startslice           start at slice #...
+%   **.HPlength:**
+%        high-pass filter length, in s
 %
-% SETUP optional inputs:
-% Also: 'nopreproc' to skip preprocessing (i.e., for trial-level inputs)
+%   **.scans_per_session:**
+%        vector of # volumes in each run, e.g., [128 128 128 128 128]
 %
-% Tor Wager, Nov 07
+%   **.dummyscans:**
+%        indices of images in each run that will be modeled
+%        with separate dummy variables
+%
+%   **.startslice:**
+%        start at slice #...
+%
+% :SETUP Optional Inputs:
+%   **nopreproc:**
+%        to skip preprocessing (i.e., for trial-level inputs)
+%
+% ..
+%    Tor Wager, Nov 07
+% ..
 
-function nuisance_cov_estimates(X, images, SETUP, varargin)
     max_to_save = 10;
 
     % ---------------------------------------------------------------------

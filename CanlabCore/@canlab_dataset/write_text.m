@@ -6,15 +6,49 @@ function [headername, dataname, fid] = write_text(D, varargin)
 % :Usage:
 % ::
 %
-%    function [headername, dataname, fid] = write_text(D)
+%    function [headername, dataname, fid] = write_text(D, [optional inputs])
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
 %
 % :Inputs:
 %
-%   First **varargin* parameter is the delimiter. Comma-delimited by default.
+%   **D:**
+%        a canlab_dataset object
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
+% :Optional Inputs:
+%    the first varargin parameter is the delimiter. Comma-delimited by default.
+%
+%
+% :Outputs:
+%
+%   **headername:**
+%        filename of header output file
+%
+%   **dataname:**
+%        filename of data output file
+%
+%   **fid:**
+%        file ID (currently does not look to be used)
+%
+
 
 delim = ','; % flesh this out later as needed
 for i=1:length(varargin)

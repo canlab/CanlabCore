@@ -157,7 +157,7 @@ switch keyword
     case 'plus'
         
         obj_out = obj1;
-        obj_out.dat = obj_out.dat - obj2.dat;
+        obj_out.dat = obj_out.dat + obj2.dat;
         obj_out.history{end+1} = 'Image-wise addition operation by image_math';
         obj_out.dat_descrip = cell(1, 3);
         obj_out.dat_descrip{1} = 'Names of images added in next cells, 1st set plus 2nd';

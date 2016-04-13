@@ -1,6 +1,4 @@
 function nmdsfig_legend(X,r)
-% nmdsfig_legend(X,r)
-%
 % X is stim coords, r is correlation coefficient matrix
 % nmds figure should be current fig.
 %

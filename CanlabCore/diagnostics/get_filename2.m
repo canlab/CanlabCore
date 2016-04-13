@@ -1,26 +1,49 @@
-function [P,P2,d] = get_filename(dwcard,varargin)
-% function [P,P2,d] = get_filename(search string (as with ls command),[verbose])
-% 
-% P = file names with full paths
-% P2 = file names only
-% d = list of directories searched for files
+function [P,P2,d] = get_filename2(dwcard,varargin)
+% :Usage:
+% ::
 %
-% Tor Wager 5/2/03
+%     function [P,P2,d] = get_filename2(search string (as with ls command),[verbose])
+%
 % Start in directory above individual subject directories
-% Enter dwcard for wildcard of directories to look in; e.g. '02*'
-% Enter wcard for image or file to get - e.g., 'beta_0001.img'
-% 	This can also include subdirectories (no *'s) 'anatomy/beta*img'
-% Returns list of all files in individual directories  in string matrix
+%
+% :Inputs:
+%
+%   **dwcard:**
+%        Enter dwcard for wildcard of directories to look in; e.g. '02*'
+%
+%   **wcard:**
+%        Enter wcard for image or file to get - e.g., 'beta_0001.img'
+%        This can also include subdirectories (no *'s) 'anatomy/beta*img'
+%
+% :Outputs:
+%
+%     Returns list of all files in individual directories  in string matrix
+%
+%   **P:**
+%        file names with full paths
+%
+%   **P2:**
+%        file names only
+%
+%   **d:**
+%        list of directories searched for files
 %
 % Missing files, or entries in directory that do not contain files, are 
 % removed from the list.
 % NOT entering a * in dwcard seems to produce an error.
 %
-% Examples:
-% P = get_filename('02*/beta_0001*')
+% :Examples:
+% ::
+%
+%    P = get_filename2('02*/beta_0001*')
 %
 % one * is allowed in the directory structure right now, 
 % multiple *'s in the filename.
+%
+% ..
+%    Tor Wager 5/2/03
+% ..
+
 
 if length(varargin) > 0, verb = varargin{1};, else, verb = 0;,end
 

@@ -1,18 +1,27 @@
 function stats = xcorr_xy_multisubject(X, Y)
-%
 % This function will cross-correlate two variables, X and Y for each of N
 % subjects.  Correlation and latency values will be saved.
+%
 % Second-level tests are done across the N subjects on each of the
 % correlation and latency values.
 %
-% X must be an observations x N matrix
-%   **NOTE: observations are assumed to be timeseries values!**
-%   **this DOES matter because an AR(2) model is used...see below***
-% Y must be the same.
-% cross-correlations will be computed for pairs of columns, separately for 
-% each successive column of X / Y
+% :Inputs:
+%
+%   **X:**
+%        must be an observations x N matrix
+%
+%        NOTE: observations are assumed to be timeseries values!
+%
+%        this DOES matter because an AR(2) model is used...see below
+%
+%   **Y:**
+%        must be the same.
+%
+%        cross-correlations will be computed for pairs of columns, separately for 
+%        each successive column of X / Y
 %
 % This function ues shift_correl.m, with a two-pass procedure.
+%
 % The first pass provides initial estimates, including an estimate of the latency standard
 % deviation, which is used as an Empirical Bayes prior.  The second pass is used to
 % apply the EBayes priors and estimate latencies and cross-correlation values.

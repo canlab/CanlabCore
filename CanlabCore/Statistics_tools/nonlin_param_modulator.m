@@ -1,33 +1,39 @@
 function [h_mean h_by_mod d_mean d_by_mod intcpt auc_mean_trial auc_by_modulator errval] =  nonlin_param_modulator(y, ons, modulator_centered, tr, xvals)
-    %
-    % [h_mean h_by_mod d_mean d_by_mod intcpt auc_mean_trial auc_by_modulator errval] =  nonlin_param_modulator(y, ons, modulator_centered, tr, xvals)
-    %
-    % USE THIS with nonlin_param_mod_brain.m
-    % This function takes data (y) and other things (onsets, etc.) and
-    % produces parameter estimates for amplitude, duration, amp*modulator,
-    % dur*modulator
-    % 
-    % See rt_fit_brain.m for more info, and for examples creating fit
-    % plots, etc.
-    %
-    % Example:
-    % y = rand(360, 1);
-    % [h_mean h_by_mod d_mean d_by_mod intcpt auc_mean_trial auc_by_modulator errval] =  nonlin_param_modulator(y, ons, scale(RTs, 1), 2);
-    % nonlin_parammod_predfun(y, ons, scale(RTs), [h_mean h_by_mod d_mean d_by_mod intcpt], 'plot');
-    % hold on; plot(y, 'k')
-   %
-   % Tor Wager, May 2008
-    
-    % %         % THIS stuff is the same for each voxel
-    % %         % --------------------------------------
-    % % RTcenter = RTs - mean(RTs);
-    % % xvals = (1:length(y))';
-    % %
-    % % % fitting function: times is a dummy var to
-    % % % get this to work with nonlin_fit
-    % % fhan = @(p, times) nonlin_parammod_predfun(y,ons,RTcenter,p);
-    % %
-    % % fitting_fun = @(y) nonlin_fit(y, xvals, 'link', fhan, 'start',[1 1 1 1 mean(y)]);
+% :Usage:
+% ::
+%
+%     [h_mean h_by_mod d_mean d_by_mod intcpt auc_mean_trial auc_by_modulator errval] =  nonlin_param_modulator(y, ons, modulator_centered, tr, xvals)
+%
+% USE THIS with nonlin_param_mod_brain.m
+%
+% This function takes data (y) and other things (onsets, etc.) and
+% produces parameter estimates for amplitude, duration, amp*modulator,
+% dur*modulator
+% 
+% See rt_fit_brain.m for more info, and for examples creating fit
+% plots, etc.
+%
+% :Examples:
+% ::
+%
+%    y = rand(360, 1);
+%    [h_mean h_by_mod d_mean d_by_mod intcpt auc_mean_trial auc_by_modulator errval] =  nonlin_param_modulator(y, ons, scale(RTs, 1), 2);
+%    nonlin_parammod_predfun(y, ons, scale(RTs), [h_mean h_by_mod d_mean d_by_mod intcpt], 'plot');
+%    hold on; plot(y, 'k')
+
+%    % THIS stuff is the same for each voxel
+%   RTcenter = RTs - mean(RTs);
+%   xvals = (1:length(y))';
+%
+%  % fitting function: times is a dummy var to get this to work with nonlin_fit
+%   fhan = @(p, times) nonlin_parammod_predfun(y,ons,RTcenter,p);
+%
+%   fitting_fun = @(y) nonlin_fit(y, xvals, 'link', fhan, 'start',[1 1 1 1 mean(y)]);
+%
+% ..
+%    Tor Wager, May 2008
+% ..
+
 
     if nargin < 5 || isempty(xvals)
         xvals = (1:length(y))';

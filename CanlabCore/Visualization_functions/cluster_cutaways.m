@@ -1,14 +1,19 @@
 function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,varargin)
-% function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,[coords for center of cuts],[revx])
-% example: O = cluster_cutaways(clusters,'myoutname','y','yzx',[0 0 0],[revx])
+
+% groups clusters to image on brains by the first letter in whichcuts
 %
+% :Usage:
+% ::
+%
+%    O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,[coords for center of cuts],[revx])
+%
+% ..
 % groups clusters to image on brains by the first letter in whichcuts
 % therefore, if you enter 'y' for whichcuts, the program will select
 % clusters with similar y values (w/i 15 mm) and image them on the same
-% brain.
-%
-% you need files called brain_render_T1.img/hdr on the path
+% brain. you need files called brain_render_T1.img/hdr on the path
 % these should be scalped anatomicals for the brain image.
+%
 % you would also need 'brain_render_T1.mat' for the
 % transparent brain surface, if you changed this script to get
 % the transparent brain surface.
@@ -16,9 +21,48 @@ function O = cluster_cutaways(clusters,textprefix,mycolor,whichcuts,varargin)
 % if it cuts from the wrong side, try 'revx' as input into tor_3d.m
 % or enter anything as 2nd var arg.
 %
-% uses renderCluster_ui.m
+% 
 %
-% by Tor Wager, Jan 2003
+% :Inputs:
+%
+%   **clusters:**
+%        cluster object to display on brain cuts
+%
+%   **textprefix:**
+%        prefix for saving images to files
+% 
+%     **mycolor:**
+%         cluster colors - 3 el. vector, single letter, or string of letters
+%        enter letter or letter string in single quotes. e.g., O.clcol = 'yrgb';
+% 
+%     **whichcuts:**
+%         letter string (no quotes) - which axes to cut along - xyz are choices
+% 
+% :Optional Inputs:
+% 
+%     **bestc**
+%     best cut, 3-element vector of coordinates, default [0 0 0]
+% 
+%     **revx**
+%     text string to reverse x cut direction, enter 1 to do it.
+%     
+%     
+% :Outputs:
+%
+%   **O:**
+%        output returned from renderCluster_ui.m
+%
+%
+% :Examples:
+% ::
+%
+%    O = cluster_cutaways(clusters,'myoutname','y','yzx',[0 0 0],[revx])
+%
+% Uses renderCluster_ui.m
+%
+% ..
+%    by Tor Wager, Jan 2003
+% ..
 
 mm = cat(1,clusters.mm_center);
 d = tril(dist(mm(:,2)') < 15);  %distances
@@ -27,8 +71,8 @@ revx = 0;
 
 done = zeros(1,length(clusters));
 
-if length(varargin) > 0, bestc = varargin{1};, else bestc = [0 0 0];, end
-if length(varargin) > 1, revx = varargin{2};, else revx = 0;, end
+if length(varargin) > 0, bestc = varargin{1}; else bestc = [0 0 0]; end
+if length(varargin) > 1, revx = varargin{2}; else revx = 0; end
 
 clind = 1;
 while any(~done)

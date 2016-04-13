@@ -1,13 +1,35 @@
 function O = renderCluster_ui4(O)
-% function O = renderCluster_ui4(O)
-% head          name of head to use, no .img extension
-% surf          'y' or 'n': image surface
-% sets          number of sets
-% getfrom       cell array of where to get clusters from: 'workspace' 'file' etc.
-% varname       cell array of variable names
-% color         cell array of colors - strings or vectors
-% numbers       'y' or 'n': add numbers to plot
-% also need individual fields named contents of varname, which contain clusters
+% :Usage:
+% ::
+%
+%    O = renderCluster_ui4(O)
+%
+% :Inputs:
+%
+%   **O**
+%
+%   **O.head:**
+%        name of head to use, no .img extension
+%
+%   **O.surf:**
+%        'y' or 'n': image surface
+%
+%   **O.sets:**
+%        number of sets
+%
+%   **O.getfrom:**
+%        cell array of where to get clusters from: 'workspace' 'file' etc.
+%
+%   **O.varname:**
+%        cell array of variable names
+%
+%   **O.color:**
+%        cell array of colors - strings or vectors
+%
+%   **O.numbers:**
+%        'y' or 'n': add numbers to plot
+%
+%   also need individual fields named contents of varname, which contain clusters
 
 if ~isfield(O,'clusterAlpha'),O.clusterAlpha = .7;, end
 if ~isfield(O,'coords'),O.coords = [30 30 -5];, end

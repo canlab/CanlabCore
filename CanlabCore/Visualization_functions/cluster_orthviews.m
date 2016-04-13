@@ -1,39 +1,65 @@
-% cluster_orthviews(inputs in any order)
+function cluster_orthviews(varargin)
+% :Usage:
+% ::
+%
+%    cluster_orthviews(inputs in any order)
 %
 % This function uses spm_orthviews to display activation blobs from a
 % clusters structure on a canonical structural brain image. Multiple
 % clusters may be plotted in multiple colors, and blobs may be added to an
 % existing orthviews figure.
 %
-% inputs:
-% clusters structures
-% colors cell array, e.g., {[0 0 1] [1 0 0] [0 1 0]}
-% if no colors cell array, uses Z- or t-scores to color map
+% :Inputs:
 %
-% opt: 'add' to suppress making new orthviews
-% 'copy' to copy to smaller subfigure with empty axis beside it
-% 'unique' to display in unique colors for each cluster
-% 'overlay', followed by name of image, to use a custom anatomical overlay
-% 'bivalent', to plot increases in solid colors specified by colors cell
-%       {1} and {2}
-%       OR, if no colors entered, use hot/cool map in 
-%       spm_orthviews_hotcool_colormap
+%   clusters structures
 %
-% Options if you specify colors (addColouredBlobs):
-% 'trans', to make blobs transparent
-% 'solid', to make them solid
+%   colors cell array, e.g., {[0 0 1] [1 0 0] [0 1 0]}
+%   if no colors cell array, uses Z- or t-scores to color map
 %
-% Options for using spm's color map (addBlobs)
-% 'blue', display in blue split color map instead of default red-yellow
+% :Optional Inputs:
 %
-% 'handle', followed by integer for which orthviews window to use (default = 1)
+%   **'add':**
+%        to suppress making new orthviews
 %
-% By Tor Wager
-% Last update: April 2007 by TW : add hot/cool colormap to bivalent option
+%   **'copy':**
+%        to copy to smaller subfigure with empty axis beside it
+%
+%   **'unique':**
+%        to display in unique colors for each cluster
+%
+%   **'overlay':**
+%        followed by name of image, to use a custom anatomical overlay
+%
+%   **'bivalent':**
+%        to plot increases in solid colors specified by colors cell
+%        {1} and {2}
+%
+%        OR, if no colors entered, use hot/cool map in 
+%        spm_orthviews_hotcool_colormap
+%
+% :Options if you specify colors (addColouredBlobs):
+%
+%   **'trans':**
+%        to make blobs transparent
+%
+%   **'solid':**
+%        to make them solid
+%
+% :Options for using spm's color map (addBlobs):
+%
+%   **'blue':**
+%        display in blue split color map instead of default red-yellow
+%
+%
+%   **'handle':**
+%        followed by integer for which orthviews window to use (default = 1)
+%
+% ..
+%    By Tor Wager
+%    Last update: April 2007 by TW : add hot/cool colormap to bivalent option
 %               Add handles option
-%
+% ..
 
-function cluster_orthviews(varargin)
 
     spm_defaults;
     

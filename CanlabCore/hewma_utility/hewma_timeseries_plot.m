@@ -1,10 +1,11 @@
-%function hewma_timeseries_plot
 % function hewma_timeseries_plot
 %
 % graphic display of significant voxels in whole-brain hewma analysis
 % and plotting of timeseries points you click on in the image.
 %
-% tor wager
+% ..
+%    tor wager
+% ..
 if ~exist('overlayimg') == 1, overlayimg = 'hewma_sig.img';,end
 disp(['Overlay image is: ' overlayimg])
 

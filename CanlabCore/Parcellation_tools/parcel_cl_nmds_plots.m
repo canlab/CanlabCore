@@ -1,3 +1,4 @@
+function parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, varargin)
 % Plot: data panel
 %
 % case 'save', dosave = 1;
@@ -11,15 +12,17 @@
 %
 % load Parcellation_info/parcellation.mat
 %
-% parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save')
-% parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info')
-% parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info_tor_mask_try1', 'savedotfig')
+% :Examples:
+% ::
+%
+%    parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save')
+%    parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info')
+%    parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info_tor_mask_try1', 'savedotfig')
 
-function parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, varargin)
 
-    % --------------------------------------------------
-    % SETUP
-    % --------------------------------------------------
+    % ..
+    %    SETUP
+    % ..
 
     dosave = 0;
     mysavedir = [];

@@ -1,8 +1,5 @@
-% montage_clusters_medial(ovl,clusters,varargin)
-%
-% by Tor Wager  last edit 12/11/02
-%
-% varargin (in any order) =
+function mcmh = montage_clusters_medial(ovl,clusters,varargin)
+% :varargin: (in any order) =
 %   a) additional clusters structures
 %   b) cell array of colors (text format), must be ROW vector {'r' 'g'} etc...
 %       if length of color string is longer than number of clusters inputs,
@@ -22,14 +19,21 @@
 %
 % Intersections of 2 colors are magenta, and ALL colors are yellow
 % unless otherwise specified
+%
+% try:
+% ::
+%
+%    CLU = clusters2clu(clusters);
+%    spm_orthviews('AddColouredBlobs',1,CLU.XYZ,CLU.Z,CLU.M,[1 0 0])
+%
+% ..
+%    by Tor Wager  last edit 12/11/02
+% ..
 
-function mcmh = montage_clusters_medial(ovl,clusters,varargin)
-    % try: CLU = clusters2clu(clusters);
-    % spm_orthviews('AddColouredBlobs',1,CLU.XYZ,CLU.Z,CLU.M,[1 0 0])
 
-    % ----------------------------------------
-    % * defaults
-    % ----------------------------------------
+    % ..
+    %    defaults
+    % ..
     if ischar(ovl)
         [path, name, ext] = fileparts(ovl);
         if(isempty(path))

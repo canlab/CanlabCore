@@ -1,9 +1,13 @@
 function [cl2,classes] = hewma_plot_cpmap(varargin)
-%[cl2,classes] = hewma_plot_cpmap
-%
 % Visualize a change_point map stored in hewma_cp.img
 % (output from hewma2)
 % and classify voxels into groupings based on CP
+%
+% :Usage:
+% ::
+%
+%     [cl2,classes] = hewma_plot_cpmap
+%
 
 name = 'hewma_cp.img';
 %name = 'hewma_runlen.img';

@@ -1,63 +1,70 @@
 function [coeff, score, latent, tsquare] = princomp_largedata(x,econFlag)
-%PRINCOMP_LARGEDATA Principal Components Analysis.
-%   This is a version created for large data sets by Matthew Davidson
-%   The default Matlab PRINCOMP is naive to large data sets. Out-of-memory
-%   errors are easily obtained on imaging data. The solution is to replace
-%   concise but inefficient calls to repmat with loops and to eliminate
-%   large, unused variables.
+% Principal Components Analysis
 %
-%   Tested on random data sets and produces identical output as original
-%   PRINCOMP. Speed penalty is drastic for small data. 50% slower on
-%   50x1000 element data set, but on a 50x10000, only 2% slower.
+% This is a version created for large data sets by Matthew Davidson
 %
-%   COEFF = PRINCOMP(X) performs principal components analysis on the N-by-P
-%   data matrix X, and returns the principal component coefficients, also
-%   known as loadings.  Rows of X correspond to observations, columns to
-%   variables.  COEFF is a P-by-P matrix, each column containing coefficients
-%   for one principal component.  The columns are in order of decreasing
-%   component variance.
+% The default Matlab PRINCOMP is naive to large data sets. Out-of-memory
+% errors are easily obtained on imaging data. The solution is to replace
+% concise but inefficient calls to repmat with loops and to eliminate
+% large, unused variables.
 %
-%   PRINCOMP centers X by subtracting off column means, but does not
-%   rescale the columns of X.  To perform PCA with standardized variables,
-%   i.e., based on correlations, use PRINCOMP(ZSCORE(X)).  To perform PCA
-%   directly on a covariance or correlation matrix, use PCACOV.
+% Tested on random data sets and produces identical output as original
+% PRINCOMP. Speed penalty is drastic for small data. 50% slower on
+% 50x1000 element data set, but on a 50x10000, only 2% slower.
 %
-%   [COEFF, SCORE] = PRINCOMP(X) returns the principal component scores,
-%   i.e., the representation of X in the principal component space.  Rows
-%   of SCORE correspond to observations, columns to components.
+% COEFF = PRINCOMP(X) performs principal components analysis on the N-by-P
+% data matrix X, and returns the principal component coefficients, also
+% known as loadings.  Rows of X correspond to observations, columns to
+% variables.  COEFF is a P-by-P matrix, each column containing coefficients
+% for one principal component.  The columns are in order of decreasing
+% component variance.
 %
-%   [COEFF, SCORE, LATENT] = PRINCOMP(X) returns the principal component
-%   variances, i.e., the eigenvalues of the covariance matrix of X, in
-%   LATENT.
+% PRINCOMP centers X by subtracting off column means, but does not
+% rescale the columns of X.  To perform PCA with standardized variables,
+% i.e., based on correlations, use PRINCOMP(ZSCORE(X)).  To perform PCA
+% directly on a covariance or correlation matrix, use PCACOV.
 %
-%   [COEFF, SCORE, LATENT, TSQUARED] = PRINCOMP(X) returns Hotelling's
-%   T-squared statistic for each observation in X.
+% [COEFF, SCORE] = PRINCOMP(X) returns the principal component scores,
+% i.e., the representation of X in the principal component space.  Rows
+% of SCORE correspond to observations, columns to components.
 %
-%   When N <= P, SCORE(:,N:P) and LATENT(N:P) are necessarily zero, and the
-%   columns of COEFF(:,N:P) define directions that are orthogonal to X.
+% [COEFF, SCORE, LATENT] = PRINCOMP(X) returns the principal component
+% variances, i.e., the eigenvalues of the covariance matrix of X, in
+% LATENT.
 %
-%   [...] = PRINCOMP(X,'econ') returns only the elements of LATENT that are
-%   not necessarily zero, i.e., when N <= P, only the first N-1, and the
-%   corresponding columns of COEFF and SCORE.  This can be significantly
-%   faster when P >> N.
+% [COEFF, SCORE, LATENT, TSQUARED] = PRINCOMP(X) returns Hotelling's
+% T-squared statistic for each observation in X.
 %
-%   See also BARTTEST, BIPLOT, CANONCORR, FACTORAN, PCACOV, PCARES, ROTATEFACTORS.
-
-%   References:
-%     [1] Jackson, J.E., A User's Guide to Principal Components,
-%         Wiley, 1988.
-%     [2] Jolliffe, I.T. Principal Component Analysis, 2nd ed.,
-%         Springer, 2002.
-%     [3] Krzanowski, W.J., Principles of Multivariate Analysis,
-%         Oxford University Press, 1988.
-%     [4] Seber, G.A.F., Multivariate Observations, Wiley, 1984.
-
+% When N <= P, SCORE(:,N:P) and LATENT(N:P) are necessarily zero, and the
+% columns of COEFF(:,N:P) define directions that are orthogonal to X.
+%
+% [...] = PRINCOMP(X,'econ') returns only the elements of LATENT that are
+% not necessarily zero, i.e., when N <= P, only the first N-1, and the
+% corresponding columns of COEFF and SCORE.  This can be significantly
+% faster when P >> N.
+%
+% :See Also: BARTTEST, BIPLOT, CANONCORR, FACTORAN, PCACOV, PCARES, ROTATEFACTORS.
+%
+% :References:
+%   1. Jackson, J.E., A User's Guide to Principal Components,
+%      Wiley, 1988.
+%   2. Jolliffe, I.T. Principal Component Analysis, 2nd ed.,
+%      Springer, 2002.
+%   3. Krzanowski, W.J., Principles of Multivariate Analysis,
+%      Oxford University Press, 1988.
+%   4. Seber, G.A.F., Multivariate Observations, Wiley, 1984.
+%
+% ..
 %   Copyright 1993-2005 The MathWorks, Inc.
 %   $Revision: 2.9.2.9 $  $Date: 2006/10/02 16:35:01 $
+% ..
 
-% When X has more variables than observations, the default behavior is to
-% return all the pc's, even those that have zero variance.  When econFlag
-% is 'econ', those will not be returned.
+% ..
+%    When X has more variables than observations, the default behavior is to
+%    return all the pc's, even those that have zero variance.  When econFlag
+%    is 'econ', those will not be returned.
+% ..
+
 if nargin < 2, econFlag = 0; end
 
 [n,p] = size(x);

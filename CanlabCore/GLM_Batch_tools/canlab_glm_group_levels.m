@@ -1,88 +1,125 @@
 function canlab_glm_group_levels(varargin)
-% canlab_glm_group_levels([options])
-%
-% DESCRIPTION
 % Performs group level robust GLM analysis with robfit
-% 1 sets up analysis
-% 2 runs robfit
-% 3 (optionally) make inverse p maps (for FSL viewing)
-% 4 (optionally) estimate significant cluster sizes
-% 5 publishes analysis with robfit_results_batch
+%   1. sets up analysis
+%   2. runs robfit
+%   3. (optionally) make inverse p maps (for FSL viewing)
+%   4. (optionally) estimate significant cluster sizes
+%   5. publishes analysis with robfit_results_batch
 %
-% OPTIONS
-% (see DEFAULTS below)
-%   's', subjects
-%       cell array of filenames of subject-level analysis directories IN
-%         modeldir
-%       (note: modeldir won't be prepended to absolute paths)
-%   'm', modeldir
-%       filename of directory containing subject level analyses
-%   'o', grpmodeldir
-%       output directory name
-%   'c', cov
-%       a matrix describing group level model
-%       (do not include intercept, it is automatically included as first regressor)
-%       see help robfit
-%       note: requires specifying an output directory name
-%       note: ordering of inputs (rows) must match subjects ordering
-%   'n', covname
-%       a cell array of names for the covariates in cov
-%   'f', covfile
-%       a csv file will specify the group level model:
-%       first column, header 'subject', contains names of subject
-%         directories (to be found in modeldir)
-%       subsequent columns have covariates, headers are names of covariates
-%       name of covfile will be name of group analysis directory (placed in
-%         grpmodeldir)
-%   'mask', maskimage
-%       filename of mask image
-%   DSGN
-%       will use the following fields of the DSGN structure:
-%         modeldir    = DSGN.modeldir
-%         subjects    = DSGN.subjects
-%         maskimage   = DSGN.mask
+% :Usage:
+% ::
 %
-% NOTE: A covfile will cause other specifications of subject, cov, and 
-%         covnames to be ignored.
-%       If parameters are defined more than once (e.g., modeldir or subjects), 
-%         only the last entered option will count.
+%     canlab_glm_group_levels([options])
 %
-% DEFAULTS:
-%   subjects    = all SPM.mat-containing directories in modeldir  
-%   modeldir    = pwd
-%   grpmodeldir = modeldir/one_sample_t_test
-%   cov         = {} (run 1 sample t-test, see help robfit)
-%   covname     = 'groupmean'
-%   mask        = 'brainmask.nii'
+% :Optional Inputs:
 %
-% OPTIONS
-%   'README'
-%       prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels
-%   'overwrite'
-%       overwrite existing output directories
-%   'noresults'
-%       don't run/publish robfit_results_batch
-%   'onlyresults'
-%       just run/publish robfit_results_batch, don't run robfit (assumes existing analyses)
-%   'whichcons', [which cons]
+%   **'s', subjects:**
+%        cell array of filenames of subject-level analysis directories IN
+%        modeldir
+%        (note: modeldir won't be prepended to absolute paths)
+%
+%   **'m', modeldir:**
+%        filename of directory containing subject level analyses
+%
+%   **'o', grpmodeldir:**
+%        output directory name
+%
+%   **'c', cov:**
+%        a matrix describing group level model
+%        (do not include intercept, it is automatically included as first regressor)
+%
+%        see help robfit
+%
+%        note: requires specifying an output directory name
+%
+%        note: ordering of inputs (rows) must match subjects ordering
+%
+%   **'n', covname:**
+%        a cell array of names for the covariates in cov
+%
+%   **'f', covfile:**
+%        a csv file will specify the group level model:
+%        first column, header 'subject', contains names of subject
+%        directories (to be found in modeldir)
+%        subsequent columns have covariates, headers are names of covariates
+%        name of covfile will be name of group analysis directory (placed in
+%        grpmodeldir)
+%
+%   **'mask', maskimage:**
+%        filename of mask image
+%
+%   **DSGN:**
+%        will use the following fields of the DSGN structure:
+%        modeldir    = DSGN.modeldir
+%
+%        subjects    = DSGN.subjects
+%
+%        maskimage   = DSGN.mask
+%
+% :Note:
+%   A covfile will cause other specifications of subject, cov, and 
+%   covnames to be ignored.
+%
+%   If parameters are defined more than once (e.g., modeldir or subjects), 
+%   only the last entered option will count.
+%
+% :Defaults:
+%
+%   **subjects:**
+%        all SPM.mat-containing directories in modeldir  
+%
+%   **modeldir:**
+%        pwd
+%
+%   **grpmodeldir:**
+%        modeldir/one_sample_t_test
+%
+%   **cov:**
+%        {} (run 1 sample t-test, see help robfit)
+%
+%   **covname:**
+%        'groupmean'
+%
+%   **mask:**
+%        'brainmask.nii'
+%
+% :Options:
+%
+%   **'README':**
+%        prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels
+%
+%   **'overwrite':**
+%        overwrite existing output directories
+%
+%   **'noresults':**
+%        don't run/publish robfit_results_batch
+%
+%   **'onlyresults':**
+%        just run/publish robfit_results_batch, don't run robfit (assumes existing analyses)
+%
+%   **'whichcons', [which cons]
 %       vector of contrasts to analyze (DEFAULT: aall subject level contrasts)
 %       see [which cons] in help robfit
-%   'invp' [, target_space_image]
+%
+%   **'invp' [, target_space_image]:**
 %       generate inverse p maps and resample to the voxel and image dimensions
-%           of target_space_image
+%       of target_space_image
 %       (viewable on dream with ~ruzicl/scripts/invpview)
-%   'nolinks'
-%       do not make directory of named links to robust directories (using contrast names)
-%   'dream'
-%       if you're running on the dream cluster, this option will cause 
+%
+%   **'nolinks':**
+%        do not make directory of named links to robust directories (using contrast names)
+%
+%   **'dream':**
+%        if you're running on the dream cluster, this option will cause 
 %       all analyses (e.g., lower level contrasts) to be run in parallel 
 %       (submitted with matlab DCS and the Sun Grid Engine)
 %       Note: currently only works with MATLAB R2009a
-%   'email', address
+%
+%   **'email', address:**
 %       send notification email to address when done running
 %
-
-% -------------------------------------------------------------------------
+% ..
+%     ----------------------------------------------------------------------
 %     Copyright (C) 2013  Luka Ruzic
 % 
 %     This program is free software: you can redistribute it and/or modify
@@ -97,17 +134,17 @@ function canlab_glm_group_levels(varargin)
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%     ----------------------------------------------------------------------
 %
-
-% Programmers' notes
-% NOT READY YET:
-%   'grf'
+%     Programmers' notes
+%     NOT READY YET:
+%     'grf'
 %       estimate significant cluster sizes for each contrast using GRF theory
 %       will run at a=.05, voxelwise thresholds of .05, .01, .005, .001
 %       see help estimate_cluster_extent
+% ..
 
-%% SET UP
-STARTTIME = datestr(now,31);
+STARTTIME = datestr(now,31); % SET UP
 
 STARTINGDIR = pwd;
 

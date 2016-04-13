@@ -1,13 +1,16 @@
 function dice_coeff = dice_coeff_image(imagelist)
-% dice_coeff = dice_coeff_image([imagelist or fmri_data object])
-%
 % dice coefficient for the overlap between each pair of a set of images
+%
+% :Usage:
+% ::
+%
+%     dice_coeff = dice_coeff_image([imagelist or fmri_data object])
+%
+% ..
 % tor wager, June 2010
+% ..
 
-% Read data
-% --------------------------------------------------------
-if ischar(imagelist)
-    
+if ischar(imagelist) % Read data
     obj = fmri_data(imagelist);
     imagelist = obj;
     

@@ -1,5 +1,8 @@
 function cl = hewma_save_timeseries(varargin)
-% cl = hewma_save_timeseries([mask to extract from or cl],[k],[[set of:grpmean,grpste,xdim,ydim]])
+% :Usage:
+% ::
+%
+%     cl = hewma_save_timeseries([mask to extract from or cl],[k],[[set of:grpmean,grpste,xdim,ydim]])
 %
 % load hewma_timeseries
 % run this to save data in clusters format
@@ -7,6 +10,7 @@ function cl = hewma_save_timeseries(varargin)
 % Function: extract timeseries data from a mask (and extent thr k)
 % Gets group avg data for clusters, not individual.  For indiv, use
 % hewma_extract_voxel.m
+%
 % Last args contain the data for the group for each voxel.
 % If last args are not entered, attempts to load from hewma_timeseries.mat
 

@@ -1,24 +1,50 @@
 function han = barplot_grouped(dat,X,xnames,seriesnames,varargin)
-    % han = barplot_grouped(dat,X,xnames,seriesnames, [optional args]);
-    %
-    % dat = n x 4 data matrix (2 x 2 grouping only for now, but easy to expand
-    % later)
-    % X = covariates, no intercept; will be centered by this function
-    % xnames = x-axis labels
-    % seriesnames = series labels
-    %
-    % First two bars are group, and last two bars are group
-    %
-    % Optional inputs (keywords):
-    % 'within'   within-error flag.  1 = errors based on subject x
-    %            condition interaction
-    % 'stars'    put stars for significance on graph (default)
-    % 'nostars'  do not plot stars
-    % 'bars'     ...followed by number of bars in group
-    % 'pvals'    ...followed by matrix of p-values (for stars; will calculate if missing)
-    % 'inputmeans'  input means and errors in first 2 inputs rather than data
-    %               and X
-    % 'colors'   ...followed by colors, e.g., mycol = {[1 0 0] [0 1 0] [1 0 1] [1 1 0] [0 0 1]}
+% :Usage:
+% ::
+%
+%    han = barplot_grouped(dat,X,xnames,seriesnames, [optional args]);
+%
+% :Inputs:
+%
+%   **dat:**
+%        n x 4 data matrix (2 x 2 grouping only for now, but easy to
+%        expand later)
+%
+%   **X:**
+%        covariates, no intercept; will be centered by this function
+%
+%   **xnames:**
+%        x-axis labels
+%
+%   **seriesnames:**
+%        series labels
+%    
+% First two bars are group, and last two bars are group
+%    
+% :Optional Inputs: (keywords)
+%
+%   **'within':**
+%        within-error flag.  1 = errors based on subject x
+%        condition interaction
+%
+%   **'stars':**
+%        put stars for significance on graph (default)
+%
+%   **'nostars':**
+%        do not plot stars
+%
+%   **'bars':**
+%        followed by number of bars in group
+%
+%   **'pvals':**
+%        followed by matrix of p-values (for stars; will calculate if missing)
+%
+%   **'inputmeans':**
+%        input means and errors in first 2 inputs rather than data
+%        and X
+%
+%   **'colors':**
+%        followed by colors, e.g., mycol = {[1 0 0] [0 1 0] [1 0 1] [1 1 0] [0 0 1]}
 
     if isempty(dat), disp('Nothing to plot.'), return, end
     

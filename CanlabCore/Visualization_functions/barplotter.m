@@ -1,49 +1,59 @@
-% Usage:
+function h = barplotter(data, varargin)
+% :Usage:
+% ::
 %
-% h = barplotter(data)
+%    h = barplotter(data)
 %
 % Creates a barplot out of the columns or elements (if data is a cell
 % array containing vectors) of data.
+% ::
 %
-% h = barplotter(..., 'groups', grouping)
+%    h =barplotter(..., 'groups', grouping)
 %
 % grouping must have the same number of columns or elements (if data is a
 % cell array) as data, and must consist of integers beginning with 1 and
 % ending with the total number of groups. Data belonging to the same group
 % will be 'clustered' together in the plot. Ommitting groups (eg, [1 1 3 3])
 % will create extra spacing between groups.
+% ::
 %
-% h = barplotter(..., 'std')
+%    h =barplotter(..., 'std')
 %
 % overrides the default behavior and plots standard deviation bars instead
 % of standard error bars
+% ::
 %
-% h = barplotter(..., 'CI', alpha)
+%    h =barplotter(..., 'CI', alpha)
 %
 % this will override the default behavior (as well as 'std') and plot
 % 1-alpha confidence intervals.
+% ::
 %
-% h = barplotter(..., 'labels', labels)
+%    h =barplotter(..., 'labels', labels)
 %
 % labels must be a cell array of strings with the same number of elements
 % as data has columns or elements. The x-axis will be labeled with these.
+% ::
 %
-% h = barplotter(..., 'label_groups')
+%    h =barplotter(..., 'label_groups')
 %
 % Applies labels to groups instead to individual bars
+% ::
 %
-% h = barplotter(..., 'legend', names)
+%    h =barplotter(..., 'legend', names)
 %
 % Plots a legend in the figure, with labels corresponding to the elements
 % of the cell vector of strings, names.
+% ::
 %
-% h = barplotter(..., 'plegend', names, p)
+%    h =barplotter(..., 'plegend', names, p)
 %
 % As 'legend', above, but p is a vector of the barplots to include in the
 % legend (e.g. if you plotted 6 bars and p = [1 3], only the first and third
 % bar would be included in the legend.
+% ::
 %
-% h = barplotter(..., 'PlotLineHor', value)
+%    h =barplotter(..., 'PlotLineHor', value)
 %
 % Plots a horizontal line at the Y value indicated.
 % 
@@ -55,41 +65,41 @@
 % h = barplotter(..., 'ErrorWidth', errorwidth)
 % 
 % Sets the line weight (in points) for error bars
+% ::
 %
-% h = barplotter(..., 'PropertyName', PropertyValue)
+%    h =barplotter(..., 'PropertyName', PropertyValue)
 %
 % Properties correspond to various Matlab figure properties, as
 % appropriate. Currently supported properties (more to be added) are:
 %
-% 'Title'
-% 'XLabel'
-% 'YLabel'
-% 'YLim'
-% 'XLim'
-% 'YTick'
-% 'YTickLabel'
-% 'YMinorTick'
-% 'FontSize'
-% 'xFontSize' %for xlabel
-% 'yFontSize' %for ylabel
-% 'tFontSize' %for title
-% 'FaceColor' %note that you may specify a matrix of 3-element RGB vectors,
+%   - 'Title'
+%   - 'XLabel'
+%   - 'YLabel'
+%   - 'YLim'
+%   - 'XLim'
+%   - 'YTick'
+%   - 'YTickLabel'
+%   - 'YMinorTick'
+%   - 'FontSize'
+%   - 'xFontSize' %for xlabel
+%   - 'yFontSize' %for ylabel
+%   - 'tFontSize' %for title
+%   - 'FaceColor' %note that you may specify a matrix of 3-element RGB vectors,
 %               rather than a single vector. Barplotter will then cycle
 %               the rows of the matrix until all bars have been drawn.
-% 'Colormap'
-% 'GridLineStyle' % - | - -| {:} | -. | none
-% 'TickDir' % in or out
-% 'MarkerSize'
-% 'LineWidth'
+%   - 'Colormap'
+%   - 'GridLineStyle' % - | - -| {:} | -. | none
+%   - 'TickDir' % in or out
+%   - 'MarkerSize'
+%   - 'LineWidth'
 %
-%
-%
-% Note that this function has no native error handling. If you're
-% encountering inexplicable errors it's likely because you haven't passed
-% in the correct inputs.
-% 02/10/07 Jared Van Snellenberg
+% ..
+%    Note that this function has no native error handling. If you're
+%    encountering inexplicable errors it's likely because you haven't passed
+%    in the correct inputs.
+%    02/10/07 Jared Van Snellenberg
+% ..
 
-function h = barplotter(data, varargin)
 
 if ~iscell(data)
     X = data;

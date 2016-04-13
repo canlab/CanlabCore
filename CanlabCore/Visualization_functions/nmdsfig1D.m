@@ -1,31 +1,38 @@
-function f1 = nmdsfig(pc,clus,names,varargin)
-% f1 = nmdsfig(pc,clus,names)
-%  
-%------------------------------------------------------------------------ 
-
-%  Create the plot with stimulus coordinates
-%  
-%------------------------------------------------------------------------ 
-
-% pc is objects x dimensions
-% clus is a vector of object classes
-% names is cell array of names for rows of pc (objects), or empty ([])
+function f1 = nmdsfig1D(pc,clus,names,varargin)
+% ::
 %
-% sigm is optional matrix of 1, -1, and 0 entries
-% signifies which pairs to connect with lines
-% positive elements are solid lines, negative elements are dashed
+%    f1 = nmdsfig(pc,clus,names)
 %
-% example:
-% nmdsfig(pc,clus,names,sigmat);
+% Create the plot with stimulus coordinates
 %
-%x = randn(5,2);
-%y = [1 1 1 2 2]';
-%c = eye(5); c(1,2) = 1; c(1,4) = -1; c(2,3) = 1;
-%nmdsfig(x,y,[],c)
+% :Inputs:
+%
+%   **pc:**
+%        is objects x dimensions
+%
+%   **clus:**
+%        is a vector of object classes
+%
+%   **names:**
+%        is cell array of names for rows of pc (objects), or empty ([])
+%
+%   **sigm:**
+%        is optional matrix of 1, -1, and 0 entries
+%        signifies which pairs to connect with lines
+%        positive elements are solid lines, negative elements are dashed
+%
+% :Examples:
+% ::
+%
+%    nmdsfig(pc,clus,names,sigmat);
+%
+%    x = randn(5,2);
+%    y = [1 1 1 2 2]';
+%    c = eye(5); c(1,2) = 1; c(1,4) = -1; c(2,3) = 1;
+%    nmdsfig(x,y,[],c)
 
 
-%%% remove extra dimensions for plotting;
-if size(pc,2)~=1;
+if size(pc,2)~=1; %%% remove extra dimensions for plotting;
 error('only works with 1D configs. use nmdsfig() instead');
 end
 

@@ -1,101 +1,114 @@
 function [best_params,fit,beff,in,isconverged] = tor_ga(gensize,numgen,inputs,ofun,varargin)
-    %[best_params,fit,beff,in,isconverged] = tor_ga(gensize,numgen,inputs,ofun,[optional in any order: genfun,fixed inputs,cmd strings])
-    %
-    % ----------------------------------------------------------------------
-    % inputs    a cell array describing the inputs to the optimization function
-    % (parameters to be optimized).
-    % ----------------------------------------------------------------------
-    % Each cell of inputs is a p x q matrix of parameters.
-    % p and q are arbitrary, as each organism is described by a p x q
-    % matrix...but the objective function must be able to handle inputs in
-    % the format you provide.
-    % Internally, a set of 'organisms' is created that is
-    % params x params x organisms (3-D).
-    % This matrix is subject to crossover across orgs. separately for each
-    % cell.
-    % If inputs is a p x q matrix, it will be placed in a single cell.
-    %
-    % By default, it is only necessary to enter a single set of params
-    % for an example organism.  The range of those input values is used to
-    % generate random starting values for each organism.
-    %
-    % There can be more than one set of
-    % parameters that are combined in some way by ofun to produce a fitness
-    % value.  if there is more than one set of input parameters,
-    % inputs should be entered as a cell array, one cell per input.
-    % inputs should be in ORDER of inputs entered to ofun!
-    %
-    % **RECOMMENDED**
-    % If you enter each cell of inputs as a 3-D array so that inputs(:,:,1)
-    % is the min acceptable value for each param and inputs(:,:,2) is the
-    % max acceptable value, then the ga will create a series of organisms
-    % at start that evenly span the range of the multivariate parameter
-    % space, with the spacing between values determined by the gensize.
-    % This can provide a huge advantage in efficiency for the GA.
-    % This is the idea behind the "Sobol sequence," which chooses values
-    % that evenly span a multivariate space.
-    % With this option, if gensize is sufficiently large and the param
-    % space is sufficiently small, then the ga may find the correct
-    % solution on the first iteration.
-    % However, it is not likely to work well if the num. params >> gensize
-    % For example:
-    % start = [-15 -15];
-    % start(:,:,2) = [15 15];
-    % [best_params,fit,beff,in] = tor_ga(324,30,{start},objfun_ga,'genconverge',5);
-    %
-    % ----------------------------------------------------------------------
-    % ofun      the objective function that combines the inputs.
-    % ----------------------------------------------------------------------
-    % There are two options for passing this in:
-    % 1) enter the name of the function as a string.  the program creates a handle for the
-    % function, and evaluates it using inputs specified in the inputs variable.
-    % In this case, pass in fixed inputs after ofun, in the varargin fields
-    % fixed inputs  optional, fixed inputs that do not change!  same structure
-    % as inputs.
-    %
-    % 2) You can also enter ofun as a function handle durectly, with fixed inputs already
-    % embedded before running the program.
-    % The function should take as input a param list, and return fitness.
-    % e.g., objhan = @(params) my_function_name(params,fixed_inputs1,fixed_inputs1,fixed_inputs1);
-    % e.g., objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
-    % Pass in objhan as the 'ofun' input argument
-    %
-    % ----------------------------------------------------------------------
-    % genfun      [optional] input param generation function
-    % ----------------------------------------------------------------------
-    % A function handle that generates a parameter set for each organism
-    %
-    % ----------------------------------------------------------------------
-    % command strings
-    % ----------------------------------------------------------------------
-    % 'noverbose'   turn off verbose reporting and plots
-    % 'genconverge' followed by integer x: converge if no change in last x generations
-    %
-    %
-    % by Tor Wager, Last updated: Feb 2007, then June 2010 to add seeds
-    %
-    % Examples:
-    % ----------------------------------------------------------------------
-    % Example for fitting indscal model:
-    % inputs{1} = X; fixin{1} = sp; fixin{2} = B1; fixin{3} = B2;
-    % tor_ga(30,10,inputs,'indscalf',fixin);
-    %
-    % W = rand(size(W)); W(1,:) = [10 10];, W(2,:) = [-10 -10];
-    %inputs{2} = W;
-    %
-    % ---------------------------------------------------------------------
-    % Example: Optimize gambles for prospect theory model
-    % See prospect_optimize_design.m for definition of population of
-    % gambles from which to draw (pop), truep, iter (all fixed inputs)
-    %
-    % objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
-    % genfun = @() randsample(gindx,ntrials,'true')';
-    % [best_params,fit,beff,in] = tor_ga(5,3,wh,objhan,genfun);
-    % ---------------------------------------------------------------------
-    %
-    % Using string inputs to control behavior:
-    % ---------------------------------------------------------------------
-    % [best_params,fit,beff,in] = tor_ga(300,30,{[15; -15]},objfun_ga,'genconverge',5,'noverbose');
+% :Usage:
+% ::
+%
+%     [best_params,fit,beff,in,isconverged] = tor_ga(gensize,numgen,inputs,ofun,[optional in any order: genfun,fixed inputs,cmd strings])
+%
+% :Inputs:
+%
+%   a cell array describing the inputs to the optimization function
+%   (parameters to be optimized).
+%
+% Each cell of inputs is a p x q matrix of parameters.
+% p and q are arbitrary, as each organism is described by a p x q
+% matrix...but the objective function must be able to handle inputs in
+% the format you provide.
+% Internally, a set of 'organisms' is created that is
+% params x params x organisms (3-D).
+% This matrix is subject to crossover across orgs. separately for each
+% cell.
+% If inputs is a p x q matrix, it will be placed in a single cell.
+%
+% By default, it is only necessary to enter a single set of params
+% for an example organism.  The range of those input values is used to
+% generate random starting values for each organism.
+%
+% There can be more than one set of
+% parameters that are combined in some way by ofun to produce a fitness
+% value.  if there is more than one set of input parameters,
+% inputs should be entered as a cell array, one cell per input.
+% inputs should be in ORDER of inputs entered to ofun!
+%
+% **RECOMMENDED**
+%
+% If you enter each cell of inputs as a 3-D array so that inputs(:,:,1)
+% is the min acceptable value for each param and inputs(:,:,2) is the
+% max acceptable value, then the ga will create a series of organisms
+% at start that evenly span the range of the multivariate parameter
+% space, with the spacing between values determined by the gensize.
+% This can provide a huge advantage in efficiency for the GA.
+% This is the idea behind the "Sobol sequence," which chooses values
+% that evenly span a multivariate space.
+% With this option, if gensize is sufficiently large and the param
+% space is sufficiently small, then the ga may find the correct
+% solution on the first iteration.
+% However, it is not likely to work well if the num. params >> gensize
+%
+% :Examples:
+% ::
+%
+%    start = [-15 -15];
+%    start(:,:,2) = [15 15];
+%    [best_params,fit,beff,in] = tor_ga(324,30,{start},objfun_ga,'genconverge',5);
+%
+% **ofun**
+%   - the objective function that combines the inputs.
+%
+% There are two options for passing this in:
+%   1) enter the name of the function as a string.  the program creates a handle for the
+%      function, and evaluates it using inputs specified in the inputs variable.
+%      In this case, pass in fixed inputs after ofun, in the varargin fields
+%      fixed inputs  optional, fixed inputs that do not change!  same structure
+%      as inputs.
+%
+%   2) You can also enter ofun as a function handle durectly, with fixed inputs already
+%      embedded before running the program.
+%      The function should take as input a param list, and return fitness.
+%      e.g.,
+%      ::
+%
+%         objhan = @(params) my_function_name(params,fixed_inputs1,fixed_inputs1,fixed_inputs1);
+%         objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
+%
+% Pass in objhan as the 'ofun' input argument
+%
+% **genfun**
+%   - [optional] input param generation function
+%
+% A function handle that generates a parameter set for each organism
+%
+% **command strings**
+%   - 'noverbose'   turn off verbose reporting and plots
+%   - 'genconverge' followed by integer x: converge if no change in last x generations
+%
+% ..
+%    by Tor Wager, Last updated: Feb 2007, then June 2010 to add seeds
+% ..
+%
+% :Examples:
+%
+% Example for fitting indscal model:
+% ::
+%
+%    inputs{1} = X; fixin{1} = sp; fixin{2} = B1; fixin{3} = B2;
+%    tor_ga(30,10,inputs,'indscalf',fixin);
+%
+%    W = rand(size(W)); W(1,:) = [10 10];, W(2,:) = [-10 -10];
+%    inputs{2} = W;
+%
+% Example: Optimize gambles for prospect theory model
+% See prospect_optimize_design.m for definition of population of
+% gambles from which to draw (pop), truep, iter (all fixed inputs)
+% ::
+%
+%    objhan = @(wh) prospect_organism(ceil(wh),pop,truep,iter);
+%    genfun = @() randsample(gindx,ntrials,'true')';
+%    [best_params,fit,beff,in] = tor_ga(5,3,wh,objhan,genfun);
+%
+% Using string inputs to control behavior:
+% ::
+%
+%    [best_params,fit,beff,in] = tor_ga(300,30,{[15; -15]},objfun_ga,'genconverge',5,'noverbose');
 
     t0 = clock;
 

@@ -1,13 +1,13 @@
+function orthviews_multiple_objs(imgs)
 % plot multiple image objects on one orthviews
-% input:
+%
+% :Input:
+%
 %   cell array of image_vectors or statistic_images
 %
-% output:
-%   none
-%
-% Yoni Ashar, 11/2014
-%
-function orthviews_multiple_objs(imgs)
+% ..
+%    Yoni Ashar, 11/2014
+% ..
 
     n=length(imgs);
 

@@ -4,25 +4,41 @@ function [names, ids, dat, descrips] = concatenate(D, varargin)
 % :Usage:
 % ::
 %
-%    [names ids dat] = concatenate(D)
+%    [names ids dat] = concatenate(D, [optional inputs])
 %
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 % :Inputs:
 %
 %   **D:**
-%        canlab_dataset
+%        canlab_dataset object
 %
-%   **varargin:**
-%        currently accepts a wh_keep (logical array)
+% :Optional Inputs:
+%   **a logical array**
+%       a vector of 1/0 values to use as wh_keep
 %
 %
 % :Outputs:
 %
-%   **Names:**
+%   **names:**
 %        cell array of variable names
-%
-%   **Descrip:**
-%        cell array of variable descriptions
 %
 %   **ids:**
 %        subject IDs matching data rows in dat
@@ -32,6 +48,9 @@ function [names, ids, dat, descrips] = concatenate(D, varargin)
 %           - subject number, event number are included
 %           - all subject-level and event-level data are included
 %           - this format appropriate for, e.g., SAS/HLM
+%
+%   **descrips:**
+%        cell array of variable descriptions
 %
 % :Examples:
 % ::
@@ -43,9 +62,6 @@ function [names, ids, dat, descrips] = concatenate(D, varargin)
 %    wh_subjs([13 18 19]) = false;
 %    [names, ids, dat] = concatenate(D, wh_subjs);
 %
-% ..
-%    Copyright Tor Wager, 2013
-% ..
 
 wh_ids = true(length(D.Subj_Level.id), 1); % select subjects
 if length(varargin) > 0, wh_ids = logical(varargin{1}); end

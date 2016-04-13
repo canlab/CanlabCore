@@ -1,6 +1,9 @@
-% [indx, wh] = iimg_xyz2indx(xyz, input type:['mm' or 'vox'], [V: needed if 'mm'])
-
 function [indx, wh] = iimg_xyz2indx(xyz, xyztype, V)
+% :Usage:
+% ::
+%
+%     [indx, wh] = iimg_xyz2indx(xyz, input type:['mm' or 'vox'], [V: needed if 'mm'])
+
     if nargin > 1 && strcmp(xyztype, 'mm')
         xyz = mm2voxel(xyz, V);
     end

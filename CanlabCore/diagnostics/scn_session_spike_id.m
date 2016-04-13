@@ -1,35 +1,64 @@
 function [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs, varargin)
-%
-% [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs,[mask name],[MADs])
-%
 % Gets global image values for a session, and uses trimts.m to find
 % outliers. The optional input MADs allows one to lower or raise the
 % threshold for identifying scans as spikes (default = 10).
 %
+% :Usage:
+% ::
+%
+%     [g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs,'mask',[mask name],'MADs',[MADs],'doplot',[0/1])
+%
 % Multi-session mode returns much more output and more images, and
 % takes in a cell array with images (preferably 4-D) for each session
 % (run).
+% 
+% :Inputs:
+%
+%   **'mask',[pathtomaskfile]:**
+%        mask images using the mask in pathtomaskfile, default: implicit mask
+%
+%   **'MADs',[scalar]:**
+%        change Mahalanobis distance, default: 10
+%
+%   **'doplot',[0 / 1]:**
+%        plot result figures, default: true
 %
 % Returns:
-%   g, global values
-%   spikes, identified spikes
-%   gtrim, trimmed/adjusted global values, can be used as covariate in GLM
 %
-%   nuisance_covs,
-%   a matrix of 1)gtrim and 2) dummy regressors that can be used to minimize
-%   spike influence in GLM
+%   **g:**
+%        global values
+%
+%   **spikes:**
+%        identified spikes
+%
+%   **gtrim:**
+%        trimmed/adjusted global values, can be used as covariate in GLM
+%
+%
+%   **nuisance_covs:**
+%        a matrix of 1)gtrim and 2) dummy regressors that can be used to minimize
+%        spike influence in GLM
 %
 % We may want to save norms on the number of outliers found.
 %
-% e.g.,
-% % Get image names
-% for i = 1:6, sess_images{i} = filenames(sprintf('run%02d/vol0*img', i), 'char', 'absolute'); end
-% % Run
-% [g, spikes, gtrim, nuisance_covs, snr] = scn_session_spike_id(sess_images);
+% :Examples:
+% ::
+%
+%    % Get image names
+%    for i = 1:6, sess_images{i} = filenames(sprintf('run%02d/vol0*img', i), 'char', 'absolute'); end
+%
+%    % Run
+%    [g, spikes, gtrim, nuisance_covs, snr] = scn_session_spike_id(sess_images);
+%
+% ..
+%    Tor Wager
+%    figure options, new input format Stephan
+% ..
 
-MADs = 10;
 basedir = pwd;
 yamlfilename = 'qc_results.yaml'; % for database integration
+global doplot
+
 
 % Cell mode
 
@@ -57,7 +86,7 @@ if iscell(imgs)
         
     end
     
-    summarize_multisession_output;
+    summarize_multisession_output(doplot);
     
     % write a .yaml file with info to upload to QC database
     append_to_yaml_file;
@@ -80,40 +109,52 @@ else
     
     if isempty(imgs), disp('No Images.'); return, end
     
+    % defaults
     stdev = 3;
-    
-    % Stuff to save file (png)
-    % ---------------------------------------------------------------------
-    qcdir = fullfile(basedir, 'qc_images');
-    if ~exist('qc_images', 'dir'), mkdir('qc_images'); end
-    
-    i = 1;
-    fname = ['qc_images' filesep 'scn_session_spike_s' num2str(i) '.png'];
-    while exist(fname, 'file')
-        i = i + 1;
-        fname = ['qc_images' filesep 'scn_session_spike_s' num2str(i) '.png'];
-    end
-    fprintf('Will save image file: %s\n', fname);
-    
-    % 1 is a flag for implicit masking.  entering a file name creates a
-    %  mask image based on the implicit threshold, and uses that in the
-    %  next stage.
-    maskvalorname = 'implicit_mask.img';
-    [dummy, dummy, inmaskvox] = fmri_mask_thresh_canlab(imgs, maskvalorname);
-    
-    if ~isempty(varargin)
-        if ~isempty(varargin{1})
-            disp('Using input mask');
-            maskvalorname = varargin{1};
-        end
-        if length(varargin) > 1
-            MADs = varargin{2};
+    useimplicitmask = 1;
+    doplot = 1;
+    MADs = 10;
+ 
+    % parse inputs
+    for k = 1:length(varargin)
+        if ischar(varargin{k})
+            switch varargin{k}
+                case 'mask',
+                    useimplicitmask = 0;
+                    maskvalorname = varargin{k + 1};
+                    fprintf(1,'\nUsing input mask: %s\n',maskvalorname);
+                    
+                case 'MADs', MADs = varargin{k + 1};
+                    
+                case 'doplot', doplot = varargin{k + 1};
+            end
         end
     end
     
+    % create implicit mask (default)
+    if useimplicitmask == 1
+        maskvalorname = 'implicit_mask.img';
+        [dummy, dummy, inmaskvox] = fmri_mask_thresh_canlab(imgs, maskvalorname,'mean',doplot);
+    end
     if ~exist(maskvalorname, 'file')
         fprintf('Mask file does not exist:\n%s\n', maskvalorname)
         error('scn_session_spike_id: Quitting')
+    end
+    
+    
+    if doplot
+        % Stuff to save file (png)
+        % ---------------------------------------------------------------------
+        qcdir = fullfile(basedir, 'qc_images');
+        if ~exist('qc_images', 'dir'), mkdir('qc_images'); end
+        
+        i = 1;
+        fname = ['qc_images' filesep 'scn_session_spike_s' num2str(i) '.png'];
+        while exist(fname, 'file')
+            i = i + 1;
+            fname = ['qc_images' filesep 'scn_session_spike_s' num2str(i) '.png'];
+        end
+        fprintf('Will save image file: %s\n', fname);
     end
     
     % Do the work
@@ -123,26 +164,29 @@ else
     gslice(wh_no_data,:) = [];
     stdslice(wh_no_data,:) = [];
     
-    % save tor_global images
-    drawnow
-    h = findobj('Tag', 'Implicit Mask');
-    if ~isempty(h)
-        fname2 = fullfile('qc_images', ['implicit_mask_histogram_s' num2str(i) '.png']);
-        figure(h)
-        scn_export_papersetup(450);
-        saveas(h, fname2);
-        %close(h);
+    if doplot
+        % save tor_global images
+        drawnow
+        h = findobj('Tag', 'Implicit Mask');
+        if ~isempty(h)
+            fname2 = fullfile('qc_images', ['implicit_mask_histogram_s' num2str(i) '.png']);
+            figure(h)
+            scn_export_papersetup(450);
+            saveas(h, fname2);
+            %close(h);
+        end
+        
+        h = findobj('Tag', 'montage_axial'); %'SCNlab_Montage');
+        if ~isempty(h)
+            fname2 = fullfile('qc_images', ['implicit_mask_montage_s' num2str(i) '.png']);
+            figure(h)
+            %scn_export_papersetup(450);
+            scn_export_papersetup(300); % probs with invalid drawable otherwise
+            saveas(h, fname2);
+            %close(h);
+        end
     end
     
-    h = findobj('Tag', 'montage_axial'); %'SCNlab_Montage');
-    if ~isempty(h)
-        fname2 = fullfile('qc_images', ['implicit_mask_montage_s' num2str(i) '.png']);
-        figure(h)
-        %scn_export_papersetup(450);
-        scn_export_papersetup(300); % probs with invalid drawable otherwise
-        saveas(h, fname2);
-        %close(h);
-    end
     
     % mahalanobis: strange patterns across slices
     d2 = mahal([stdslice' gslice'], [stdslice' gslice']);
@@ -162,11 +206,12 @@ else
     nuisance_covs = intercept_model(length(gtrim), spikes);
     nuisance_covs(:, 1) = gtrim;
     
-    plot_session_figure();
+    if doplot, 
+        plot_session_figure();
+    end
     
     
 end
-
 
 % ---------------------------------------------------------------------
 % ---------------------------------------------------------------------
@@ -174,7 +219,7 @@ end
 % ---------------------------------------------------------------------
 % ---------------------------------------------------------------------
 
-    function summarize_multisession_output()
+    function summarize_multisession_output(plotfigs)
         %         fprintf('\n')
         %         for i = 1:length(spikes), fprintf('%3.0f Potential outliers\n', length(spikes{i})), end
         fprintf('\nTotal spikes:\t%3.0f\t%%Spikes/Image:\t%3.2f\tAvg SNR:\t%3.2f\n', ...
@@ -199,19 +244,24 @@ end
         fprintf('%3.0f\t', n_images_per_run);
         fprintf('\n');
         
-        create_figure('All globals');
         gg = cat(1, g{:});
-        plot(gg, 'k', 'LineWidth', 2);
-        title('All global values. Green = Sessions, Red = outliers');
+
+        if plotfigs
+            create_figure('All globals');
+            plot(gg, 'k', 'LineWidth', 2);
+            title('All global values. Green = Sessions, Red = outliers');
+            hh = plot_vertical_line(cumsum(n_images_per_run) + .5, 'g');
+            set(hh, 'LineWidth', 2);
+        end
         
         cc = [0 cumsum(n_images_per_run)];
-        hh = plot_vertical_line(cumsum(n_images_per_run) + .5, 'g');
-        set(hh, 'LineWidth', 2);
-        
         for i = 1:nsessions
             whspikes_sess = spikes{i} + cc(i);
-            hh = plot(whspikes_sess, gg(whspikes_sess), 'ro', 'LineWidth', 2);
+            if plotfigs
+                hh = plot(whspikes_sess, gg(whspikes_sess), 'ro', 'LineWidth', 2);
+            end
         end
+        
         
         % build model for variance explained
         cumulative_spikes = [];
@@ -282,23 +332,24 @@ end
         
         save scn_session_spike_id_output -append cumulative_spikes allspikes nuisanceX_sess_lin_spike res_std blk_std lin_std spike_std
         
-        create_figure('sources of global variation'); pie([blk_std lin_std spike_std res_std].^2, {'Session', 'Linear', 'Spikes', 'Residual'});
-        colormap winter
-        hh = findobj(gcf,'Type', 'text'); set(hh, 'FontSize', 24);
-        axis off
-        scn_export_papersetup;
-        fname2 = fullfile('qc_images', 'Sources_of_variance.png');
-        saveas(gcf, fname2);
-        
-        X = [Xint lineffect allspikes]; X(:, end+1) = 1;
-        r = gg - X * pinv(X) * gg;
-        create_figure('FFT of unexplained global variation');
-        fft_plot_scnlab(r, 1, 'samefig');
-        xlabel('Frequency (1/images)');
-        scn_export_papersetup;
-        fname2 = fullfile('qc_images', 'FFT_of_unexplained_global_signal.png');
-        saveas(gcf, fname2);
-        
+        if plotfigs
+            create_figure('sources of global variation'); pie([blk_std lin_std spike_std res_std].^2, {'Session', 'Linear', 'Spikes', 'Residual'});
+            colormap winter
+            hh = findobj(gcf,'Type', 'text'); set(hh, 'FontSize', 24);
+            axis off
+            scn_export_papersetup;
+            fname2 = fullfile('qc_images', 'Sources_of_variance.png');
+            saveas(gcf, fname2);
+            
+            X = [Xint lineffect allspikes]; X(:, end+1) = 1;
+            r = gg - X * pinv(X) * gg;
+            create_figure('FFT of unexplained global variation');
+            fft_plot_scnlab(r, 1, 'samefig');
+            xlabel('Frequency (1/images)');
+            scn_export_papersetup;
+            fname2 = fullfile('qc_images', 'FFT_of_unexplained_global_signal.png');
+            saveas(gcf, fname2);
+        end
     end
 
 

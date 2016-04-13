@@ -1,38 +1,43 @@
 function han = plot_matrix_cols(X, varargin)
-% han = plot_matrix_cols(X, [method], [x-values], [colors cell], [linewidth], [axis limits])
+% :Usage:
+% ::
+%
+%    han = plot_matrix_cols(X, [method], [x-values], [colors cell], [linewidth], [axis limits])
 %
 % Plot line plots showing each column of a matrix as a vertical or
 % horizontal line
+% ::
 %
-% han = plot_matrix_cols(X)
+%    han = plot_matrix_cols(X)
 %
-% Optional inputs:
-% 1. method:
-% plot_matrix_cols(X, 'horiz')
-% plot_matrix_cols(X, 'vertical')
+% :Optional Inputs:
 %
-% 2. x-values
-%   plot_matrix_cols(X, 'horiz', x_in_secs)
+%   **method:**
+%        plot_matrix_cols(X, 'horiz')
 %
-% 3. colors:
-%  plot_matrix_cols(X, 'horiz', [], {'r' 'g' 'b' 'y' 'm'})
+%        plot_matrix_cols(X, 'vertical')
 %
-% 4. Linewidth:
-% plot_matrix_cols(X, 'horiz', [], {'r' 'g' 'b' 'y' 'm'}, 2)
+%   **x-values:**
+%        plot_matrix_cols(X, 'horiz', x_in_secs)
 %
-% 5. axis limits:
-% plot_matrix_cols(X, 'horiz', [], [], [], [0 10])
+%   **colors:**
+%        plot_matrix_cols(X, 'horiz', [], {'r' 'g' 'b' 'y' 'm'})
+%
+%   **Linewidth:**
+%        plot_matrix_cols(X, 'horiz', [], {'r' 'g' 'b' 'y' 'm'}, 2)
+%
+%   **axis limits:**
+%        plot_matrix_cols(X, 'horiz', [], [], [], [0 10])
 % 
 % legacy 'method' string:
 % within denoising, plot_matrix_cols(X, 'denoising') to make red plots
 %
-% tor wager, feb 07
-% updated 8/2015 by tor to add colors, make faster
+% ..
+%    tor wager, feb 07
+%    updated 8/2015 by tor to add colors, make faster
+% ..
 
-% Default inputs
-% -----------------------------------------------------------
-
-meth = 'horiz';
+meth = 'horiz'; % Default inputs
 lineWidth = 1;
 
 % Calculated default variables

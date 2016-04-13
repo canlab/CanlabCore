@@ -1,40 +1,49 @@
-% DATA = read_edat_output_2008(fname, varargin)
-%
+function DATA = read_edat_output_2008(fname, varargin)
 % Function that creates a structure DATA containing columns
 % of the edat file output (saved in text tab delimited "excel" format)
-% 
+%
+% :Usage:
+% ::
+%
+%     DATA = read_edat_output_2008(fname, varargin)
+%
 % For this code to work on a Mac, you must: 1) export .edat2 file as an Excel file, 
 % then 2) open this file in Excel on a Mac and save as a .csv, 3) read that
 % .csv file
 %
-% Tor Wager, Oct 2008
-% 
-% Examples:
-% -----------------------------------------
-% fname = 'myfile.txt'; 
-% DATA = read_edat_output_2008(fname)
+% :Examples:
+% ::
 %
-% Defaults: 
+%    fname = 'myfile.txt'; 
+%    DATA = read_edat_output_2008(fname)
+%
+% :Defaults: 
 % These are the default formats this function expects:
 % tab delimited, 1 header row, then row of column names, then data
 %
 % You can override some of them by using the following --
 % E.g., for zero header rows and comma delimited data:
-% DATA = read_edat_output_2008(fname, 'nheaderrows', 0, 'mydelimiter', ',')
+% ::
+%
+%    DATA = read_edat_output_2008(fname, 'nheaderrows', 0, 'mydelimiter', ',')
 %
 % You can force the number of columns to be a certain value by doing the
 % following:
-% DATA = read_edat_output_2008(fname, 'nheaderrows', 1, 'numc', 103);
+%% ::
+%
+%    DATA = read_edat_output_2008(fname, 'nheaderrows', 1, 'numc', 103);
 %
 % This could be useful if your last row contains empty cells at the end,
 % which will mess up the automatic calculation of number of columns.
+%
+% ..
+%    Tor Wager, Oct 2008
+% ..
 
 
-function DATA = read_edat_output_2008(fname, varargin)
-    
-% ------------------------------------------------------------------------
-% read the database initially to get all column names, etc.
-% ------------------------------------------------------------------------
+% ..
+%    read the database initially to get all column names, etc.
+% ..
 DATA = [];
 
 % assume you have one header row

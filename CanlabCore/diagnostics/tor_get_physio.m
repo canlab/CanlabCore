@@ -1,5 +1,8 @@
 function [X,mP,spmP] = tor_get_physio(varargin)
-% [X,mP,spmP] = tor_get_physio([mP],[spmP],[nvoxels],[doortho])
+% :Usage:
+% ::
+%
+%     [X,mP,spmP] = tor_get_physio([mP],[spmP],[nvoxels],[doortho])
 % arguments are optional, but you must enter them in this order.
 %
 % Tor Wager 10/21/02
@@ -49,52 +52,60 @@ function [X,mP,spmP] = tor_get_physio(varargin)
 % actual response to both, and a random effects analysis on A-B will produce
 % false positive activations.  Orthogonalization of the nuisance set precludes this.
 %
-% mP     : CSF mask image file.  *_seg3.img output from SPM is appropriate
-%          should be in same space and have same dims as functionals
-%          but automatic reslicing is done if necessary.
+% :Inputs:
 %
-% spmP   : name (full path name preferred) of SPMcfg.mat file to use
-%          This contains the design matrix and raw/preproc image file names to use.
+%   **mP:**
+%        CSF mask image file.  *_seg3.img output from SPM is appropriate
+%        should be in same space and have same dims as functionals
+%        but automatic reslicing is done if necessary.
+%
+%   **spmP:**
+%        name (full path name preferred) of SPMcfg.mat file to use
+%        This contains the design matrix and raw/preproc image file names to use.
 % 
-% nvoxels: Number of CSF voxels to use in PCA analysis
-%          More than 100 can be very slow and memory intensive.
-%	   Fewer than 100 voxels loads a different way, and may be slower.
-%	   Best is probably between 100 - 1000.  800 runs pretty fast.
+%   **nvoxels:**
+%        Number of CSF voxels to use in PCA analysis
+%        More than 100 can be very slow and memory intensive.
+%        Fewer than 100 voxels loads a different way, and may be slower.
+%        Best is probably between 100 - 1000.  800 runs pretty fast.
 %
-% doortho: Orthogonalize nuisance covariates with respect to regs of interest
-%	   This assumes that any signal that covaries with the task is, in fact,
-%	   due to the task, so it gives you some bias towards finding positive results.
-%	   However, the alternative is that nuisance covariates may soak up variance
-%	   related to the task, and you'll miss activations.
-%	   In addition, if some regressors are more colinear with the nuisance set,
-%	   you can create false "activations" when comparing these regressors to other
-%	   ones.  This problem exists whether or not we choose to model nuisance 
-%          covariates.  One solution is to use the ortho when doing random effects analyses,
-%	   as the sign and magnitude of nuisance-related activations would not be expected to be
-%	   the same across subjects unless the variance was really task-related.
-%	   Default is 1, or "yes, do orthogonalization."
+%   **doortho:**
+%        Orthogonalize nuisance covariates with respect to regs of interest
+%        This assumes that any signal that covaries with the task is, in fact,
+%        due to the task, so it gives you some bias towards finding positive results.
+%        However, the alternative is that nuisance covariates may soak up variance
+%        related to the task, and you'll miss activations.
+%        In addition, if some regressors are more colinear with the nuisance set,
+%        you can create false "activations" when comparing these regressors to other
+%        ones.  This problem exists whether or not we choose to model nuisance 
+%        covariates.  One solution is to use the ortho when doing random effects analyses,
+%        as the sign and magnitude of nuisance-related activations would not be expected to be
+%        the same across subjects unless the variance was really task-related.
+%        Default is 1, or "yes, do orthogonalization."
 %
 % for functions called, see this .m file.
 %
-% BATCH EXAMPLE
-% % get filenames for SPMcfg files and CSF mask for each subject
-% cd C:\Tor_Documents\CurrentExperiments\intext2\RESULTS\model1
-% spmP = get_filename('sub*','SPMcfg.mat');
-% cd C:\Tor_Documents\CurrentExperiments\intext2\
-% mP = get_filename('sub*','anatomy/nscalped_f*seg3.img');
-% % Now run:
-% for i = 1:size(mP,1)  
-%   tor_get_physio(mP(i,:),spmP(i,:),300);  % 300 voxels
-%   pause(10); close all
-% end
+% :Examples:
+% ::
+%
+%    % get filenames for SPMcfg files and CSF mask for each subject
+%    cd C:\Tor_Documents\CurrentExperiments\intext2\RESULTS\model1
+%    spmP = get_filename('sub*','SPMcfg.mat');
+%    cd C:\Tor_Documents\CurrentExperiments\intext2\
+%    mP = get_filename('sub*','anatomy/nscalped_f*seg3.img');
+%    % Now run:
+%    for i = 1:size(mP,1)  
+%        tor_get_physio(mP(i,:),spmP(i,:),300);  % 300 voxels
+%        pause(10); close all
+%    end
 
-% Functions called
-% 	spm functions: spm_get, etc.
-%	timeseries2.m	(for < 100 voxels)
-%		read_hdr.m	(big-little endian dependent; validate for your data)
-%	timeseries3.m	(for > 100 voxels; uses SPM's image reading)
-%	reslice_imgs.m
-%	mask2voxel.m 	(only if ind2sub.m from Matlab is not found)
+% :Functions called:
+%   - spm functions: spm_get, etc.
+%   - timeseries2.m	(for < 100 voxels)
+%   - read_hdr.m	(big-little endian dependent; validate for your data)
+%   - timeseries3.m	(for > 100 voxels; uses SPM's image reading)
+%   - reslice_imgs.m
+%   - mask2voxel.m 	(only if ind2sub.m from Matlab is not found)
 
 
 CSFprob = .95;      % this is the value a voxel in the mask img must have to be considered

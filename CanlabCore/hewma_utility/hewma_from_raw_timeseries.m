@@ -1,33 +1,58 @@
 function STATS = hewma_from_raw_timeseries(raw_data, varargin)
-% STATS = hewma_from_raw_timeseries(raw_data, varargin)
+% :Usage:
+% ::
 %
-% Inputs: 
-% raw_data, a N subjects x T time points matrix of data
+%     STATS = hewma_from_raw_timeseries(raw_data, varargin)
 %
-% Optional inputs:
-% For all optional inputs, enter a keyword followed by an input value/argument
-% (this is a standard Matlab format for entering optional arguments)
-% e.g., 'lam', .3 to enter a lambda value of .3
+% :Inputs:
 %
-% Here are the optional inputs and their defaults:
-% lam = .2;             % ewma smoothing param
-% L = 2;                % ewma control limit
-% noisemodel = 'AR(2)'; % noise structure type
-% base_timepts = 60;    % baseline time points to use
-% doplot = 1;           % plot toggle (1/0)
-% dodetrend = 1;        % hewma linear detrending toggle (1/0)
-% grpcontrast = [];     % vector of 1 or -1 values for group assignment for
-%                           each subject
-% samprate = .5;        % sampling rate in Hz, 1/TR;  TR = 2 by default
+%   **obj:**
+%        imraw_data, a N subjects x T time points matrix of data
 %
-% Note: see ewma5.m and hewma2.m for more information on these inputs
-% Tor Wager, Dec 2008
+% :Optional Inputs:
+%
+%   For all optional inputs, enter a keyword followed by an input value/argument
+%   (this is a standard Matlab format for entering optional arguments)
+%   e.g., 'lam', .3 to enter a lambda value of .3
+%
+%   Here are the optional inputs and their defaults:
+%
+%   **lam = .2;**
+%        ewma smoothing param
+%
+%   **L = 2;**
+%        ewma control limit
+%
+%   **noisemodel = 'AR(2)';**
+%        noise structure type
+%
+%   **base_timepts = 60;**
+%        baseline time points to use
+%
+%   **doplot = 1;**
+%        plot toggle (1/0)
+%
+%   **dodetrend = 1;**
+%        hewma linear detrending toggle (1/0)
+%
+%   **grpcontrast = [];**
+%        vector of 1 or -1 values for group assignment for
+%        each subject
+%
+%   **samprate = .5;**
+%        sampling rate in Hz, 1/TR;  TR = 2 by default
+%
+% :Note: see ewma5.m and hewma2.m for more information on these inputs
+%
+% ..
+%    Tor Wager, Dec 2008
+% ..
 
+lam = .2;
 % -----------------------------------------------------------------------
 % defaults
 % -----------------------------------------------------------------------
 
-lam = .2;
 L = 2;
 noisemodel = 'AR(2)';
 base_timepts = 60;

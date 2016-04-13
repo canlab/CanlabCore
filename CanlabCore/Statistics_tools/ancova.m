@@ -1,17 +1,21 @@
 function [b,t,p,hh] = ancova(groups,x,y,varargin)
-% [b,t,p,pthandles] = ancova(groups,x,y,[plot],[covs of no interest])
-% 
-% 
-% elements of b, t, p
-% 1st = intercept, 2nd = group effect, 3rd = slope, 4th = grp x slope
-% interaction
-
-% -----------------------------------------
+% :Usage:
+% ::
+%
+%     b,t,p,pthandles] = ancova(groups,x,y,[plot],[covs of no interest])
+%
+% :Outputs:
+%
+%   **Elements of b, t, p:**
+%        1st = intercept, 2nd = group effect, 3rd = slope, 4th = grp x slope
+%        interaction
+%
 % recursive -- call ancova repeately if y is a matrix
 % get pairwise standardized slopes (corrs)
 % and group diffs and slope interaction for all 
 % pairs of y vectors
-% -----------------------------------------
+%
+
 hh = [];
 doplot = 0; if length(varargin) > 0, doplot = varargin{1};,end
 

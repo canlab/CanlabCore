@@ -2,57 +2,81 @@ function [h, axh]=barplot_colored(data,varargin)
 % Make a barplot of data with error bars, with colors specified by colormap
 % or color string.
 %
-% [h, axh]=barplot_colored(data, [optional arguments])
+% :Usage:
+% ::
+%
+%    [h, axh]=barplot_colored(data, [optional arguments])
+%
 % this is a good function though
 % within-subject error bars now added; use 'within'
+% ::
 %
-% [bar_handles, axis_handle]=barplot_colored(data,varargin)
+%    [bar_handles, axis_handle]=barplot_colored(data,varargin)
 % 
-% Input arguments: Optional 
-% 'within' : Do within-subject STE bars, average obs x variable interaction
-%            Loftus and Masson 1994 style.
+% :Input arguments: Optional
 %
-% Strings, followed by values for each:
-%       < Color control >
-% 'colormap' : followed by colormap name to use
-% 'colors' : followed by cell array of colors per bar; supercedes colormap
+%   **'within':**
+%        Do within-subject STE bars, average obs x variable interaction
+%        Loftus and Masson 1994 style.
 %
-%       < Display items >
-% 'fontsize'
-% 'title'
-% 'XTickLabels'
-% 'ylabel'
-% 'xlabel'
+%   Strings, followed by values for each:
 %
-%       < bar locations >
-% 'x' : followed by x values for bars (locations)
+%   :COLOR CONTROL:
+%
+%   **'colormap':**
+%        followed by colormap name to use
+%
+%   **'colors':**
+%        followed by cell array of colors per bar; supercedes colormap
+%
+%   :Display items:
+%     - 'fontsize'
+%     - 'title'
+%     - 'XTickLabels'
+%     - 'ylabel'
+%     - 'xlabel'
+%
+%   :Bar Locations:
+%     - 'x' : followed by x values for bars (locations)
 %
 % NOTE: For this function, keywords must be even-numbered argument entries,
 % e.g., arg 2, 4, 6.  Odd argument entries are values.
+%
 % For example: This works, and you need the extra empty arg after 'within'
-% [h1, s1] = barplot_colored(pexp1, 'within', ' ', 'title', 'Pattern expression', 'XTickLabels', dat.Y_names, 'x', 1:nterms);
+% ::
+%
+%    [h1, s1] = barplot_colored(pexp1, 'within', ' ', 'title', 'Pattern expression', 'XTickLabels', dat.Y_names, 'x', 1:nterms);
 %
 % You can assign arbitrary colors to bars by setting the colormap:
-% [h, s] = barplot_colored([corr_temp corr_rep]);
-% cm = [1 .5 0; .5 0 1];
-% colormap(cm)
+% ::
+%
+%    [h, s] = barplot_colored([corr_temp corr_rep]);
+%    cm = [1 .5 0; .5 0 1];
+%    colormap(cm)
 %
 % Example: A grouped barplot
-% ---------------------------------------------------
-% dat = rand(20, 4);
-% create_figure('bars');
-% [h1, s1] = barplot_colored(dat, 'x', [1 2 4 5]);
-% % set(h2, 'BarWidth', .9)
+% ::
+%
+%    dat = rand(20, 4);
+%    create_figure('bars');
+%    [h1, s1] = barplot_colored(dat, 'x', [1 2 4 5]);
+%    % set(h2, 'BarWidth', .9)
 %
 % Change colormap:
-%[h1, s1] = barplot_colored(dat, 'x', [1 2 4 5], 'colormap', 'summer');
+% ::
+%
+%    [h1, s1] = barplot_colored(dat, 'x', [1 2 4 5], 'colormap', 'summer');
 %
 % Enter values:
-% colors = {[.8 .25 .25] [.8 .5 .25] [.4 .5 .8] [.25 .25 .9]};
-% [h1, s1] = barplot_colored(dat, 'x', [1 2 4 5], 'colors', colors);
+% ::
+%
+%    colors = {[.8 .25 .25] [.8 .5 .25] [.4 .5 .8] [.25 .25 .9]};
+%    [h1, s1] = barplot_colored(dat, 'x', [1 2 4 5], 'colors', colors);
 %
 % Set X Tick Label:
-% [h1, s1] = barplot_colored(dat, 'XTicklabels', {'A' 'B' 'C' 'D'});
+% ::
+%
+%    [h1, s1] = barplot_colored(dat, 'XTicklabels', {'A' 'B' 'C' 'D'});
 %
 % See also: barplot_columns, lineplot_columns
 

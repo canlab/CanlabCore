@@ -1,32 +1,43 @@
-function [f1,hh] = nmdsfig(varargin)
-% [f1,hh] = nmdsfig(pc,names,classes,linemat,cordir)
-%  
-%------------------------------------------------------------------------ 
-
-%  Create the plot with stimulus coordinates
-%  
-%------------------------------------------------------------------------ 
-
-% pc is objects x dimensions
-% clus is a vector of object classes
-% names is cell array of names for rows of pc (objects), or empty ([])
+function [f1,hh] = mdsfig(varargin)
+% ::
 %
-% sigm is optional matrix of 1, -1, and 0 entries
-% signifies which pairs to connect with lines
-% positive elements are solid lines, negative elements are dashed
+%    [f1,hh] = mdsfig(pc,names,classes,linemat,cordir)
 %
-% example:
-% nmdsfig(pc,clus,names,sigmat);
+% Create the plot with stimulus coordinates
 %
-%x = randn(5,2);
-%y = [1 1 1 2 2]';
-%c = eye(5); c(1,2) = 1; c(1,4) = -1; c(2,3) = 1;
-%nmdsfig(x,y,[],c)
+% :Inputs:
 %
-% example2: using data output from mvroi.m
-% DAT.coords = CLUSTER.Gs(:,1:2); DAT.names = CLUSTER.names; DAT.classes =
-% CLUSTER.classes; DAT.lines = DATA.CORRELS.AVGSTATS.sigmat; 
-% figure;mdsfig(DAT.coords,DAT.names,DAT.classes,DAT.lines);
+%   **pc:**
+%        is objects x dimensions
+%
+%   **clus:**
+%        is a vector of object classes
+%
+%   **names:**
+%        is cell array of names for rows of pc (objects), or empty ([])
+%
+%   **sigm:**
+%        is optional matrix of 1, -1, and 0 entries
+%        signifies which pairs to connect with lines
+%        positive elements are solid lines, negative elements are dashed
+%
+% :Examples:
+% ::
+%
+%    mdsfig(pc,clus,names,sigmat);
+%
+%    x = randn(5,2);
+%    y = [1 1 1 2 2]';
+%    c = eye(5); c(1,2) = 1; c(1,4) = -1; c(2,3) = 1;
+%    mdsfig(x,y,[],c)
+%
+% :Example2: using data output from mvroi.m
+% ::
+%
+%    DAT.coords = CLUSTER.Gs(:,1:2); DAT.names = CLUSTER.names; DAT.classes =
+%    CLUSTER.classes; DAT.lines = DATA.CORRELS.AVGSTATS.sigmat; 
+%    figure;
+%    mdsfig(DAT.coords,DAT.names,DAT.classes,DAT.lines);
 
 hold off;
 f1 = [];

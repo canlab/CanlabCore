@@ -1,0 +1,3351 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Toolboxes &mdash; CanlabCore 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CanlabCore 1.0 documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mat-modindex.html" title="MATLAB Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">CanlabCore 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="toolboxes">
+<h1>Toolboxes<a class="headerlink" href="#toolboxes" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="module-diagnostics">
+<span id="diagnostics"></span><h1>diagnostics<a class="headerlink" href="#module-diagnostics" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="diagnostics.BiasPowerloss">
+<code class="descclassname">diagnostics.</code><code class="descname">BiasPowerloss</code><span class="sig-paren">(</span><em>tc</em>, <em>X</em>, <em>c</em>, <em>beta</em>, <em>df</em>, <em>z</em>, <em>pval</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.BiasPowerloss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the approximate bias and power loss due to mis-modeling
+This works with the Mismodeling Toolbox described by Loh et al. 2008</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[b bias pl Pc Pe] = BiasPowerloss(tc, X, c, beta, df, z, pval)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">fMRI time course</p>
+</dd>
+<dt><strong>X:</strong></dt>
+<dd><p class="first last">design matrix for multiple regression</p>
+</dd>
+<dt><strong>c:</strong></dt>
+<dd><p class="first last">contrast of interest</p>
+</dd>
+<dt><strong>beta:</strong></dt>
+<dd><p class="first last">(mismodeled) beta value</p>
+</dd>
+<dt><strong>df:</strong></dt>
+<dd><p class="first last">degrees of freedom</p>
+</dd>
+<dt><strong>z:</strong></dt>
+<dd><p class="first last">p-value calculated from ResidScan</p>
+</dd>
+<dt><strong>pval:</strong></dt>
+<dd><p class="first last">cut-off p-value</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">updated (correct) beta value</p>
+</dd>
+<dt><strong>bias:</strong></dt>
+<dd><p class="first last">bias</p>
+</dd>
+<dt><strong>pl:</strong></dt>
+<dd><p class="first last">power loss</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">References:</th><td class="field-body"><p class="first last">Loh, J. M., Lindquist, M. A., Wager, T. D. (2008). Residual Analysis for Detecting Mis-modeling in fMRI. Statistica Sinica, 18, 1421-1448.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Update design matrix using correct model</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.ResidScan">
+<code class="descclassname">diagnostics.</code><code class="descname">ResidScan</code><span class="sig-paren">(</span><em>res</em>, <em>FWHM</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.ResidScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates P(M&gt;=t) where M is the max value of the smoothed residuals.
+In this implementation the residuals are smoothed using a Gaussian
+kernel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [z sres] = ResidScan(res, FWHM)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>res:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>FWHM:</strong></dt>
+<dd><p class="first last">Full Width Half Maximum (in time units)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>z:</strong></dt>
+<dd><p class="first last">pvalues</p>
+</dd>
+<dt><strong>sres:</strong></dt>
+<dd><p class="first last">smoothed residuals</p>
+</dd>
+<dt><strong>sres_ns:</strong></dt>
+<dd><p class="first last">smoothed residuals (non standardized)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.add_nuisance_to_SPMcfg">
+<code class="descclassname">diagnostics.</code><code class="descname">add_nuisance_to_SPMcfg</code><span class="sig-paren">(</span><em>Xn</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.add_nuisance_to_SPMcfg" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Adds a matrix Xn to the end of covariates of interest in</dt>
+<dd><p class="first">xX structure in SPMcfg.mat</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function add_nuisance_to_SPMcfg(Xn)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>oXn:</strong></dt>
+<dd><p class="first last">should contain ALL nuisance covariates and intercepts
+as in output of tor_get_physio.m</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="last">This function is automatically run by tor_get_physio.m</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.batch_efficiency">
+<code class="descclassname">diagnostics.</code><code class="descname">batch_efficiency</code><span class="sig-paren">(</span><em>dwcard</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.batch_efficiency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start in directory above individual model/results directories</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function batch_efficiency(dwcard)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>dwcard:</strong></dt>
+<dd><p class="first last">is a wildcard for directories to probe, e.g., &#8216;subject*&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.batch_t_histograms">
+<code class="descclassname">diagnostics.</code><code class="descname">batch_t_histograms</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.batch_t_histograms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates page(s) of t stat histograms for each subject level contrast in
+set of subject level analyses using image_intensity_histograms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">batch_t_histograms</span><span class="p">([</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>{analysis_dirs}:</strong></dt>
+<dd><blockquote class="first">
+<div><p>run on all contrasts in directories of cell array {analysis_dirs}</p>
+</div></blockquote>
+<p class="last">(DEFAULT: use all directories in working directory containing spmT_*.img files)</p>
+</dd>
+<dt>&#8216;o&#8217;, &#8216;output_directory&#8217;:**</dt>
+<dd><p class="first last">specify output directory to contain saved .png files</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.canlab_qc_metrics1">
+<code class="descclassname">diagnostics.</code><code class="descname">canlab_qc_metrics1</code><span class="sig-paren">(</span><em>epi_names</em>, <em>mask_name</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.canlab_qc_metrics1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate quality control metrics on a 4-D EPI Analyze or Nifti file</p>
+<p>Standard CANlab usage is to enter a single 4-D ravol* for one run, and
+the brain mask implicit_mask.img created in canlab_preproc.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>epi_names:</strong></dt>
+<dd><p class="first last">Names of (usually one) 4-D EPI file, in cell or string, full path</p>
+</dd>
+<dt><strong>mask_name:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Name of brain mask image, string, full path</dt>
+<dd><p class="first last">IF EMPTY: Uses implict masking (better) and calculates
+ghost/signal outside mask</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>noplot:</strong></dt>
+<dd><p class="first last">skip plots</p>
+</dd>
+<dt><strong>noverbose:</strong></dt>
+<dd><p class="first last">skip output printout to screen</p>
+</dd>
+<dt><strong>printfile:</strong></dt>
+<dd><p class="first last">followed by name of file to print output to, full path</p>
+</dd>
+<dt><strong>noheader:</strong></dt>
+<dd><p class="first last">suppress printing of header (var names) in output</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Missing values and basic info:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>num_images:</strong></dt>
+<dd><p class="first last">number of images</p>
+</dd>
+<dt><strong>missing_vox:</strong></dt>
+<dd><p class="first last">Voxels in mask with NaN values or zero values at every time point</p>
+</dd>
+<dt><strong>missing_images:</strong></dt>
+<dd><p class="first last">Images with NaN values or zero values at every voxel</p>
+</dd>
+<dt><strong>missing_values:</strong></dt>
+<dd><p class="first last">NaN or zero values in valid images / voxels. Zeros could
+be interpreted as values of zero in analysis, causing artifacts in results
+if these are actually invalid values.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Missing voxels will often be ignored in analyses in most software, but
+Missing images/values could cause problems</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Basic signal to noise:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>perc-mean-ghost:</strong></dt>
+<dd><p class="first last">mean signal outside the mask / mean total signal</p>
+</dd>
+<dt><strong>mean_snr:</strong></dt>
+<dd><blockquote class="first">
+<div><p>mean Cohen&#8217;s d (signal/noise, SNR) across time (temporal SNR) within the mask.</p>
+</div></blockquote>
+<p class="last">Mean divided by standard deviation across time at each voxel, averaged.  Higher is better.</p>
+</dd>
+<dt><strong>snr_inhomogeneity:</strong></dt>
+<dd><p class="first last">standard deviation of SNR within the mask. Lower is better.</p>
+</dd>
+<dt><strong>snr_inhomogeneity95:</strong></dt>
+<dd><p class="first last">95% confidence range for SNR within the mask. Lower is better.</p>
+</dd>
+<dt><strong>rms_successive_diffs:</strong></dt>
+<dd><p class="first last">Essentially a high-pass filtered version of SNR,
+expressed as a fraction of the overall mean and averaged across voxels. Lower is better.</p>
+</dd>
+<dt><strong>rms_successive_diffs_inhomogeneity:</strong></dt>
+<dd><p class="first last">standard deviation of the above across voxels. Lower is better.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Left-right asymmetry:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>signal_rms_asymmetry:</strong></dt>
+<dd><p class="first last">Voxel-wise left/right root mean square asymmetry in mean signal across time, expressed as
+a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.</p>
+</dd>
+<dt><strong>signal_hemispheric_asymmetry:</strong></dt>
+<dd><p class="first last">Root mean square difference between left and
+right hemispheres, expressed as a fraction of the grand mean signal across time.  Reflects
+gross inhomogeneity.  Lower is better.</p>
+</dd>
+<dt><strong>snr_rms_asymmetry:</strong></dt>
+<dd><p class="first last">Voxel-wise left/right root mean square asymmetry in SNR, expressed as
+a fraction of the mean SNR.  Reflects both gross inhomogeneity and noise.  Lower is better.</p>
+</dd>
+<dt><strong>snr_hemispheric_asymmetry:</strong></dt>
+<dd><p class="first last">Root mean square difference between left and
+right hemispheres, expressed as a fraction of the mean SNR.  Reflects
+gross inhomogeneity.  Lower is better.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>%SETUP
+mydir{1} = &#39;/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw/Functional/Preprocessed/run_01&#39;;
+wcard = &#39;rarun*img&#39;;
+epi_names = filenames(fullfile(mydir{1}, wcard), &#39;absolute&#39;);
+
+maskdir = &#39;/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/psyc7215/Data/UM_Face_House/060518mw&#39;;
+mask = &#39;implicit_mask.img&#39;;
+mask_name = fullfile(maskdir, maskname);
+
+%RUN
+QC = canlab_qc_metrics1(epi_names, mask_name);
+
+QC = canlab_qc_metrics1(epi_names, mask_name, &#39;noplot&#39;, &#39;printfile&#39;, &#39;test_qc.txt&#39;);
+QC = canlab_qc_metrics1(epi_names, mask_name, &#39;noplot&#39;, &#39;printfile&#39;, &#39;test_qc.txt&#39;, &#39;noheader&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.check_cluster_data">
+<code class="descclassname">diagnostics.</code><code class="descname">check_cluster_data</code><span class="sig-paren">(</span><em>cl</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.check_cluster_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads the first 5 images from the first voxel</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">check_cluster_data</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>cl(1).imnames(1:5,:)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.compare_subjects">
+<code class="descclassname">diagnostics.</code><code class="descname">compare_subjects</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [ds, g, mystd, d, d2, c, c2, mi, b, eigv, eigval] = compare_subjects([img files or clusters], [mask], ...
+                                   [plot flag], [title on figure], [standardize flag], [text labels], [ref image])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">a list of image names to compare</p>
+<p>OR</p>
+<p class="last">a clusters structure, with data to compare
+in timeseries field</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If a mask is entered, only voxels in the mask (e.g., with value of 1) will be used.
+You can use this option to specify brain-only or gray-matter only voxels</p>
+<p>textlab: optional text labels for each image, can be empty []</p>
+<p>If a ref image is entered, each image will be correlated with the ref,
+and values will be saved for the correlation (plot 2 will show these values)
+Useful for comparing anatomical imgs with template, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">from correls with ref image are in variable &#8220;c&#8221;</p>
+<dl class="docutils">
+<dt><strong>ds:</strong></dt>
+<dd><p class="first last">multivariate distance (sim. to Mahalanobis) for each image
+ds is a matrix of squared distances, case numbers, and
+expected chi2 values (in columns in this order) rows are cases</p>
+</dd>
+<dt><strong>g:</strong></dt>
+<dd><p class="first last">global value for each image</p>
+</dd>
+<dt><strong>d:</strong></dt>
+<dd><p class="first last">global distance from mean image
+distance, or dissimilarity, is the average absolute deviation between images</p>
+</dd>
+<dt><strong>d2:</strong></dt>
+<dd><p class="first last">matrix of distances among all images</p>
+</dd>
+<dt><strong>c:</strong></dt>
+<dd><p class="first last">correlation between real valued voxels and mean image</p>
+</dd>
+<dt><strong>c2:</strong></dt>
+<dd><p class="first last">correlations among all images (treating voxels as cases)</p>
+</dd>
+<dt><strong>mi:</strong></dt>
+<dd><p class="first last">mutual information between images, with hist2.m</p>
+</dd>
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">principal component scores on correlation matrix for eigenvalues &gt; 1</p>
+</dd>
+<dt><strong>eigv:</strong></dt>
+<dd><p class="first last">eigenvectors</p>
+</dd>
+<dt><strong>eigval:</strong></dt>
+<dd><p class="first last">eigenvalues</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Compare normalized anatomcals with standard brain
+P = get_filename2([&#39;sub*\Anatomy\nscalped_ft1.img&#39;]);
+[ds, g, mystd, d, d2, c, c2, mi] = compare_subjects(P, which(&#39;brain_avg152T1.img&#39;), 1, &#39;intext_countloc&#39;, 1, [], which(&#39;avg152T1.img&#39;));
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.compare_subjects256">
+<code class="descclassname">diagnostics.</code><code class="descname">compare_subjects256</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.compare_subjects256" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function compares a set of images to one another and does some diagnostics on the similarity among images.
+- It returns multivariate distances and dissimilarities among images
+- It works on the GLOBAL signal after standardizing each image (case 1) or the REGIONAL values in each cluster (case 2) 
+- You can also enter a reference image, in which case each image will be correlated with the ref.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [ds,g,mystd,d,d2,c,c2,mi,b,eigv,eigval] = compare_subjects256([img files or clusters],[mask], ...
+                               [plot flag],[title on figure],[standardize flag],[text labels],[ref image])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">a list of image names to compare</p>
+<p>OR</p>
+<p class="last">a clusters structure, with data to compare
+in timeseries field</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If a mask is entered, only voxels in the mask (e.g., with value of 1) will be used.
+You can use this option to specify brain-only or gray-matter only voxels</p>
+<p>textlab: optional text labels for each image, can be empty []</p>
+<p>If a ref image is entered, each image will be correlated with the ref,
+and values will be saved for the correlation (plot 2 will show these values)
+Useful for comparing anatomical imgs with template, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">from correls with ref image are in variable &#8220;c&#8221;</p>
+<dl class="docutils">
+<dt><strong>ds:</strong></dt>
+<dd><p class="first last">multivariate distance (sim. to Mahalanobis) for each image
+ds is a matrix of squared distances, case numbers, and
+expected chi2 values (in columns in this order) rows are cases</p>
+</dd>
+<dt><strong>g:</strong></dt>
+<dd><p class="first last">global value for each image</p>
+</dd>
+<dt><strong>d:</strong></dt>
+<dd><p class="first last">global distance from mean image
+distance, or dissimilarity, is the average absolute deviation between images</p>
+</dd>
+<dt><strong>d2:</strong></dt>
+<dd><p class="first last">matrix of distances among all images</p>
+</dd>
+<dt><strong>c:</strong></dt>
+<dd><p class="first last">correlation between real valued voxels and mean image</p>
+</dd>
+<dt><strong>c2:</strong></dt>
+<dd><p class="first last">correlations among all images (treating voxels as cases)</p>
+</dd>
+<dt><strong>mi:</strong></dt>
+<dd><p class="first last">mutual information between images, with hist2.m</p>
+</dd>
+<dt><strong>b:</strong></dt>
+<dd><p class="first last">principal component scores on correlation matrix for eigenvalues &gt; 1</p>
+</dd>
+<dt><strong>eigv:</strong></dt>
+<dd><p class="first last">eigenvectors</p>
+</dd>
+<dt><strong>eigval:</strong></dt>
+<dd><p class="first last">eigenvalues</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Compare normalized anatomcals with standard brain
+P = get_filename2([&#39;sub*\Anatomy\nscalped_ft1.img&#39;]);
+[ds,g,mystd,d,d2,c,c2,mi] = compare_subjects256(P,which(&#39;brain_avg152T1.img&#39;),1,&#39;intext_countloc&#39;,1,[],which(&#39;avg152T1.img&#39;));
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.displayme">
+<code class="descclassname">diagnostics.</code><code class="descname">displayme</code><span class="sig-paren">(</span><em>mm</em>, <em>txtlab</em>, <em>tlab2</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.displayme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used in img_hist2 - included as internal function there.
+this function is for indepenent re-display after img_hist2 is finished.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">subjM</span><span class="p">,</span><span class="n">Mtotalv</span><span class="p">]</span> <span class="o">=</span> <span class="n">displayme</span><span class="p">(</span><span class="n">mm</span><span class="p">,</span><span class="n">txtlab</span><span class="p">,</span><span class="n">tlab2</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% TO run:
+[O.subjM,O.Mtotalv] = displayme(O.m,txtlab,&#39;MEANS&#39;);
+[O.subjS,O.Stotalv] = displayme(O.s,txtlab,&#39;STD&#39;);
+[O.subjW,O.Wtotalv] = displayme(O.w,txtlab,&#39;SKEWNESS&#39;);
+[O.subjK,O.Ktotalv] = displayme(O.k,txtlab,&#39;KURTOSIS&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.ellipse">
+<code class="descclassname">diagnostics.</code><code class="descname">ellipse</code><span class="sig-paren">(</span><em>x</em>, <em>v1</em>, <em>v2</em>, <em>c</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives x and y coordinates for an ellipse, given x coordinates,
+at a distance of c</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[x,y] = ellipse(x,v1,v2,c,[sorting method])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><p class="first">Based on the formula for an ellipse, x^2/v1^2 + y^2/v2^2 = c</p>
+<dl class="docutils">
+<dt><strong>c:</strong></dt>
+<dd><p class="first last">is the distance from the origin</p>
+</dd>
+<dt><strong>v1:</strong></dt>
+<dd><p class="first last">is the x half-length</p>
+</dd>
+<dt><strong>v2:</strong></dt>
+<dd><p class="first last">is the y half-length</p>
+</dd>
+<dt><strong>x:</strong></dt>
+<dd><p class="first last">is a vector of points covering the x coordinates in the ellipse</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Sorting methods:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
+<li>sort by x, produces elliptical line in plot</li>
+<li>sort by y, produces horizontal lines in plot</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[x,y]=ellipse((randn(1000,1)),1.5,2.5,1); figure; hh = plot(x(2:end-1),y(2:end-1),&#39;r-&#39;)
+rotate(hh,[0 90],45)  % rotate around z-axis by 45 degrees
+x2 = get(hh,&#39;XData&#39;); y2 = get(hh,&#39;YData&#39;); hold on; plot(x2,y2,&#39;bx&#39;);
+rotate(hh,[0 90],-45)  % rotate original ellipse back
+
+% fill
+fill(x,y,&#39;r&#39;,&#39;FaceAlpha&#39;,.2)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.fft_calc">
+<code class="descclassname">diagnostics.</code><code class="descname">fft_calc</code><span class="sig-paren">(</span><em>dat</em>, <em>TR</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.fft_calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple function to calculate the FFT power of a 
+data vector (dat) as a function of frequency,
+given a sample-to-sample repetition time (TR)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">myfft</span><span class="p">,</span> <span class="n">freq</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft_calc</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">TR</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.fmri_mask_thresh_canlab">
+<code class="descclassname">diagnostics.</code><code class="descname">fmri_mask_thresh_canlab</code><span class="sig-paren">(</span><em>fmri_file</em>, <em>outputname</em>, <em>implicit_masking_method</em>, <em>plotfigs</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.fmri_mask_thresh_canlab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implicit determination of which voxels are in-brain, based on the intensities of
+functional images.  Assumes much (most) of the image has near-zero
+background noise values, and the in-brain values are substantially
+higher.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">mask_thresh</span><span class="p">,</span> <span class="n">cl</span><span class="p">,</span> <span class="n">inmaskvox</span><span class="p">,</span> <span class="n">in_mask_logical_vector</span><span class="p">,</span> <span class="n">maskfilename</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmri_mask_thresh_canlab</span><span class="p">(</span><span class="n">fmri_file</span><span class="p">,</span> <span class="n">outputname</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fmri_file:</strong></dt>
+<dd><p class="first last">is either a list of file names or an fmri_data object</p>
+</dd>
+<dt><strong>File names:</strong></dt>
+<dd><p class="first last">a (preferably) 4-D file of imaging data, Analyze .img or .nii</p>
+</dd>
+<dt><strong>fmri_data object:</strong></dt>
+<dd><p class="first last">With multiple images loaded with <em>no</em> mask</p>
+</dd>
+<dt><strong>outputname:</strong></dt>
+<dd><p class="first last">is a mask file output name, e.g., &#8216;mask.img&#8217;, with .img
+extension. Empty [] means do not write output image.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Implicit_masking_method:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>mean:</strong></dt>
+<dd><blockquote class="first">
+<div><p>take the top 95% of voxels above the mean value.  used by</p>
+</div></blockquote>
+<p class="last">default if no value is entered</p>
+</dd>
+<dt><strong>dip:</strong></dt>
+<dd><blockquote class="first">
+<div><p>smooth the histogram and take the top 95% of values above the</p>
+</div></blockquote>
+<p class="last">first positive gradient</p>
+</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>plotfigs</dt>
+<dd><p class="first last">[1/0]: enable or suppress mask display and orthviews</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>mask_thresh:</strong></dt>
+<dd><p class="first last">signal-value above which voxels are considered in brain</p>
+</dd>
+<dt><strong>c1:</strong></dt>
+<dd><p class="first last">clusters, from iimg_indx2clusters</p>
+</dd>
+<dt><strong>inmaskvox:</strong></dt>
+<dd><p class="first last">number of inmask voxels</p>
+</dd>
+<dt><strong>dat:</strong></dt>
+<dd><p class="first last">binary matrix of voxels that are in (1) or out (0) of mask</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Note: we want to be more inclusive than not at this stage.</p>
+<p>last edited Oct 2011 - add support for fmri_data/image_vector objects
+added figure suppression, SG 12/14/15
+defaults</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.get_filename">
+<code class="descclassname">diagnostics.</code><code class="descname">get_filename</code><span class="sig-paren">(</span><em>dwcard</em>, <em>wcard</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.get_filename" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function P = get_filename(dir_wcard,file_wcard,[verbose])
+</pre></div>
+</div>
+<p>Start in directory above individual subject directories</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dwcard:</strong></dt>
+<dd><p class="first last">Enter dwcard for wildcard of directories to look in; e.g. &#8216;02*&#8217;</p>
+</dd>
+<dt><strong>wcard:</strong></dt>
+<dd><p class="first last">Enter wcard for image or file to get - e.g., &#8216;beta_0001.img&#8217;
+This can also include subdirectories (no <a href="#id3"><span class="problematic" id="id4">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first last">Returns list of all files in individual directories  in string matrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Missing files, or entries in directory that do not contain files, are 
+removed from the list.</p>
+<p>NOT entering a * in dwcard seems to produce an error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">P</span> <span class="o">=</span> <span class="n">get_filename</span><span class="p">(</span><span class="s">&#39;02*&#39;</span><span class="p">,</span><span class="s">&#39;beta_0001*&#39;</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">get_filename</span><span class="p">(</span><span class="s">&#39;02*&#39;</span><span class="p">,</span><span class="s">&#39;beta_0001.img&#39;</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">get_filename</span><span class="p">(</span><span class="s">&#39;02*&#39;</span><span class="p">,</span><span class="s">&#39;anatomy/nnhe*_seg1.img&#39;</span><span class="p">)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">get_filename</span><span class="p">(</span><span class="s">&#39;020515sp*&#39;</span><span class="p">,</span><span class="s">&#39;anatomy/nnhe*_seg1.img&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>one * is allowed in first string, multiple <a href="#id5"><span class="problematic" id="id6">*</span></a>&#8216;s in second,
+as long as they are in the filename, not directory names!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.get_filename2">
+<code class="descclassname">diagnostics.</code><code class="descname">get_filename2</code><span class="sig-paren">(</span><em>dwcard</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.get_filename2" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [P,P2,d] = get_filename2(search string (as with ls command),[verbose])
+</pre></div>
+</div>
+<p>Start in directory above individual subject directories</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>dwcard:</strong></dt>
+<dd><p class="first last">Enter dwcard for wildcard of directories to look in; e.g. &#8216;02*&#8217;</p>
+</dd>
+<dt><strong>wcard:</strong></dt>
+<dd><p class="first last">Enter wcard for image or file to get - e.g., &#8216;beta_0001.img&#8217;
+This can also include subdirectories (no <a href="#id7"><span class="problematic" id="id8">*</span></a>&#8216;s) &#8216;anatomy/beta*img&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><blockquote class="first">
+<div><p>Returns list of all files in individual directories  in string matrix</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt><strong>P:</strong></dt>
+<dd><p class="first last">file names with full paths</p>
+</dd>
+<dt><strong>P2:</strong></dt>
+<dd><p class="first last">file names only</p>
+</dd>
+<dt><strong>d:</strong></dt>
+<dd><p class="first last">list of directories searched for files</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Missing files, or entries in directory that do not contain files, are 
+removed from the list.
+NOT entering a * in dwcard seems to produce an error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">P</span> <span class="o">=</span> <span class="n">get_filename2</span><span class="p">(</span><span class="s">&#39;02*/beta_0001*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>one * is allowed in the directory structure right now, 
+multiple <a href="#id9"><span class="problematic" id="id10">*</span></a>&#8216;s in the filename.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.hist2">
+<code class="descclassname">diagnostics.</code><code class="descname">hist2</code><span class="sig-paren">(</span><em>A</em>, <em>B</em>, <em>res</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.hist2" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-D histogram with res bins</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">H</span><span class="p">,</span><span class="n">mi</span><span class="p">,</span><span class="n">H2</span><span class="p">]</span> <span class="o">=</span> <span class="n">hist2</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">res</span><span class="p">,[</span><span class="n">plot</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>A and B can be 3D, as in image volumes
+mi is mutual information, a la spm_mireg.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.image_intensity_histograms">
+<code class="descclassname">diagnostics.</code><code class="descname">image_intensity_histograms</code><span class="sig-paren">(</span><em>fout</em>, <em>imgs</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.image_intensity_histograms" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Makes a sheet (fout.png) of intensity distribution histograms of imgs.</dt>
+<dd>Will put an even number of rows of subplots on each page saved.
+If more than one page is needed, will title outputs fout_1.png, etc.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">image_intensity_histograms</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">imgs</span><span class="p">,</span> <span class="p">[</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>fout:</strong></dt>
+<dd><p class="first last">imfilename to be saved (&#8216;.png&#8217; will be appended)</p>
+</dd>
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">ima cell array of filenames of images to make histograms of</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>obj:</strong></dt>
+<dd><p class="first last">im</p>
+</dd>
+<dt><strong>&#8216;titles&#8217;, cellarray:</strong></dt>
+<dd><p class="first last">use strings in cellarray as plot titles (DEFAULT: use file names from imgs)</p>
+</dd>
+<dt><strong>&#8216;bins&#8217;, n:</strong></dt>
+<dd><p class="first last">use n bins in histograms (DEFAULT: 100)</p>
+</dd>
+<dt><strong>&#8216;ymax&#8217;, y:</strong></dt>
+<dd><p class="first last">use y-axis from 0 to y (DEFAULT: 10,000)</p>
+</dd>
+<dt><strong>&#8216;xmax&#8217;, x:</strong></dt>
+<dd><p class="first last">use x-axis from -x to x (DEFAULT: 10)</p>
+</dd>
+<dt><strong>&#8216;cols&#8217;, c:</strong></dt>
+<dd><p class="first last">use c columns of subplots (DEFAULT: 5)</p>
+</dd>
+<dt><strong>&#8216;maxrows&#8217;, r:</strong></dt>
+<dd><p class="first last">use no more than r columns of subplots per page (DEFAULT: 7)</p>
+</dd>
+<dt><strong>&#8216;includezeros&#8217;:</strong></dt>
+<dd><p class="first last">include zero intensities in histograms (DEFAULT: exclude zeros)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Tor Wager
+..
+add path if necessary</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.img_hist">
+<code class="descclassname">diagnostics.</code><code class="descname">img_hist</code><span class="sig-paren">(</span><em>imgname</em>, <em>subdir</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.img_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general function for plotting histograms of any image
+For each subject, comparing across subjects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>imgname:</strong></dt>
+<dd><p class="first last">name of image file to make intensity histograms from</p>
+</dd>
+<dt><strong>subdir:</strong></dt>
+<dd><p class="first last">cell array of text strings containing names of individual subject
+directories (wherein are contained the file specified in imgname 
+or each subject)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Performs the histogram plot twice, once for CSF space
+and once for gray matter</p>
+<p>Locations of gray and CSF masks for each subject must
+be defined in the defaults section of the script.
+(hard-coded)</p>
+<p>Start in directory above individual subject results</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>img_hist(&#39;beta_0010.img&#39;,subdir)
+img_hist(&#39;con_0002.img&#39;,{&#39;020827mk&#39; &#39;020829jh&#39; &#39;020903lb&#39;}
+
+% for batch
+d = dir(&#39;020726ag/beta*img&#39;); d = str2mat(d.name);
+for i = 1:10:size(d,1)
+    img_hist(deblank(d(i,:)),EXPT.subjects)
+end
+
+for i = 2:19, 
+   if i &lt; 10, myz = &#39;000&#39;;, else, myz = &#39;00&#39;;, end, 
+   img_hist([&#39;con_&#39; myz num2str(i) &#39;.img&#39;],EXPT.subjects);, 
+end
+</pre></div>
+</div>
+<p>Tor Wager
+..
+..</p>
+<blockquote>
+<div>defaults</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.img_hist2">
+<code class="descclassname">diagnostics.</code><code class="descname">img_hist2</code><span class="sig-paren">(</span><em>subdir</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.img_hist2" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general function for plotting histograms of any image
+For each subject, comparing across subjects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>imgname:</strong></dt>
+<dd><p class="first last">name of image file to make intensity histograms from</p>
+</dd>
+<dt><strong>subdir:</strong></dt>
+<dd><p class="first last">cell array of text strings containing names of individual subject
+directories (wherein are contained the file specified in imgname 
+or each subject)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Performs the histogram plot a number of times, without plotting
+and reports the variance in pdf moments as a function of subject, 
+run, and condition (beta img within run).</p>
+<p>Start in directory above individual subject results</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">img_hist2</span><span class="p">(</span><span class="n">EXPT</span><span class="o">.</span><span class="n">subjects</span><span class="p">)</span>
+<span class="n">img_hist2</span><span class="p">({</span><span class="s">&#39;020827mk&#39;</span> <span class="s">&#39;020829jh&#39;</span> <span class="s">&#39;020903lb&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Tor Wager
+..
+..</p>
+<blockquote>
+<div>defaults</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.joint_hist">
+<code class="descclassname">diagnostics.</code><code class="descname">joint_hist</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.joint_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create 2-D joint histogram from vectors x and y</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">xbins</span><span class="p">,</span> <span class="n">ybins</span><span class="p">]</span> <span class="o">=</span> <span class="n">joint_hist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,[</span><span class="n">nbins</span><span class="p">],[</span><span class="n">noplot</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt>x and y:**</dt>
+<dd><p class="first last">are vectors of paired observations on two variables</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>z:</strong></dt>
+<dd><p class="first last">is the matrix representing the joint histogram
+cols of z are bins of x, rows are bins of y
+in plot, X axis is y, Y axis is x</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Optional: number of bins, suppress plotting</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>z = joint_hist(nnmfscores{i}{j}(:, 1),nnmfscores{i}{j}(:, 2), 50, &#39;noplot&#39;);
+h = plot_joint_hist_contour(z, [0 0 1]);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.make_conv_mtx">
+<code class="descclassname">diagnostics.</code><code class="descname">make_conv_mtx</code><span class="sig-paren">(</span><em>sz</em>, <em>sampres</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.make_conv_mtx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs the matrix (H) for a linear convolution
+With the canonical SPM hrf
+such that Hx = conv(x,hrf)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function H = make_conv_mtx(sz,sampres)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>sz:</strong></dt>
+<dd><p class="first last">size of output matrix (elements)</p>
+</dd>
+<dt><strong>sampres:</strong></dt>
+<dd><p class="first">spm_hrf sampling resolution (~ TR), OR</p>
+<p class="last">if a vector, a custom HRF
+sampled at the appropriate frequency.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Tor Wager
+..</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.multivar_dist">
+<code class="descclassname">diagnostics.</code><code class="descname">multivar_dist</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.multivar_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>multivariate normality checking and diagnostic plots</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">ds</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">multivar_dist</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body"><p class="first">given matrix X with cases = rows, cols = variables</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ds:</strong></dt>
+<dd><p class="first">is matrix of squared distances, case numbers, and
+expected chi2 values (in columns in this order)
+rows are cases</p>
+<p class="last">NOTE: Sorted in order of ascending distance!</p>
+</dd>
+<dt><strong>S:</strong></dt>
+<dd><p class="first last">estimated covariance matrix</p>
+</dd>
+<dt><strong>mv_distance:</strong></dt>
+<dd><p class="first last">squared distances in original order of rows</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">p-values in original order of rows</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>center</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.orthogonalize">
+<code class="descclassname">diagnostics.</code><code class="descname">orthogonalize</code><span class="sig-paren">(</span><em>mX</em>, <em>X</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.orthogonalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>orthogonalizes X with respect to mX, optionally scaling predictors of X
+For each nuisance covariate (column of X)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function X = orthogonalize(mX,X,[scale])
+</pre></div>
+</div>
+<p>Regresses out model fits and saves residuals in X</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.power_from_variance">
+<code class="descclassname">diagnostics.</code><code class="descname">power_from_variance</code><span class="sig-paren">(</span><em>con</em>, <em>N</em>, <em>sig2b</em>, <em>sig2wi</em>, <em>pthresh</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.power_from_variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power and effect size measures, given contrast, N, and variance component
+estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>con:</strong></dt>
+<dd><p class="first last">contrast/effect magnitude estimate; &#8220;mean difference&#8221;</p>
+</dd>
+<dt><strong>N:</strong></dt>
+<dd><p class="first last">sample size</p>
+</dd>
+<dt><strong>sig2b:</strong></dt>
+<dd><p class="first last">between-subjects variance estimate</p>
+</dd>
+<dt><strong>sig2wi:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>within-subjects variance estimate</dt>
+<dd><p class="first last"><em>note</em> this is not the &#8220;raw&#8221; within-subjects variance; it is
+the contribution to the group (2nd-level) variance, which is
+sig2within / number of images within-subjects</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>pthresh:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>alpha (Type I error) rate; p-value threshold for power</dt>
+<dd><p class="first last">calculation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>con, sig2b, and sig2wi can all be vectors, so you can run this function
+voxel-wise for a whole map at once</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>power:</strong></dt>
+<dd><p class="first last">Power from 0 to 1</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">effect size : expected t-value</p>
+</dd>
+<dt><strong>d:</strong></dt>
+<dd><p class="first last">effect size : Cohen&#8217;s d</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>see effect_size_map.m for a whole-brain, image-based power mapping
+function</p>
+<p>t-value threshold for significance at alpha level pthresh</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.power_loss">
+<code class="descclassname">diagnostics.</code><code class="descname">power_loss</code><span class="sig-paren">(</span><em>y</em>, <em>ons</em>, <em>X</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.power_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8216;true&#8217; model fit
+assume &#8216;true&#8217; is FIR estimate</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.publish_scn_session_spike_id">
+<code class="descclassname">diagnostics.</code><code class="descname">publish_scn_session_spike_id</code><span class="sig-paren">(</span><em>inputimgs</em>, <em>SUBJDATA</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.publish_scn_session_spike_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is a wrapper function to call scn_session_spike_id in
+&#8216;multi-session&#8217; mode, using input data across the runs for a single
+subject.  It runs the program, and generates both a yaml-format text file
+for uploading into the CANlab database, and an html file with all the
+results and images for that subject embedded.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>inputimgs:</strong></dt>
+<dd><p class="first last">is a cell array of images (4-D) for each run in a separate cell.</p>
+</dd>
+<dt><strong>SUBJDATA:</strong></dt>
+<dd><p class="first last">Input fields of SUBJDATA define the experiment name, subject name,
+and directories for saving both QC images + yaml and HTML</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>SUBJDATA.study = &#39;NSF&#39;;
+SUBJDATA.subject = subjects{i};
+SUBJDATA.html_save_dir = fullfile(output_basedir, &#39;html_output&#39;);
+SUBJDATA.subject_dir = fullfile(output_basedir, &#39;SubjectData&#39;, &#39;denoised_canlab&#39;, SUBJDATA.subject);
+</pre></div>
+</div>
+<p>Initialize yaml file for database integration</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.qchist">
+<code class="descclassname">diagnostics.</code><code class="descname">qchist</code><span class="sig-paren">(</span><em>images</em>, <em>Nbins</em>, <em>sparse</em>, <em>XLim</em>, <em>titles</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.qchist" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates a histogram of activations from a set of
+statistic images.  Generally, you want the images to have a normal
+distribution.  Highly skewed distributions may be indicative of bad
+data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function: h = qchist(dat,Nbins,sparse,XLim)
+
+  This function may generate multiple figuresa with 30 histograms
+  each
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>images:</strong></dt>
+<dd><p class="first last">List of image file names OR fmri_data object.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>Nbins:</strong></dt>
+<dd><p class="first last">Number of bins in each histogram (default = 100)</p>
+</dd>
+<dt><strong>sparse:</strong></dt>
+<dd><p class="first last">flag for generating ONLY histograms (default = 0)</p>
+</dd>
+<dt><strong>XLim:</strong></dt>
+<dd><p class="first last">Xlim (default = [-1 1])</p>
+</dd>
+<dt><strong>titles:</strong></dt>
+<dd><p class="first last">a cell array of subplot titles.  If omitted, titles
+are inferred from assuming images come from a
+directory structure that looks like the following:
+/.../subjname/contrastimage.nii</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.reset_SPMcfg">
+<code class="descclassname">diagnostics.</code><code class="descname">reset_SPMcfg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.reset_SPMcfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>resets columns in SPMcfg by removing all non-intercept nuisance covariates.
+runs on the SPMcfg.mat file in the current directory</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scale_imgs_by_csf">
+<code class="descclassname">diagnostics.</code><code class="descname">scale_imgs_by_csf</code><span class="sig-paren">(</span><em>hP</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scale_imgs_by_csf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a string matrix of image file names
+finds the mean and std of the CSF space
+specified in a mask (hard-coded)
+and standardizes images by these values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Pout</span> <span class="o">=</span> <span class="n">scale_imgs_by_csf</span><span class="p">(</span><span class="n">hP</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Writes SC* images (SCaled)</p>
+<p>assumes images are spatially normalized.
+uses a canonical CSF mask!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scn_component_rsquare">
+<code class="descclassname">diagnostics.</code><code class="descname">scn_component_rsquare</code><span class="sig-paren">(</span><em>V</em>, <em>nuisanceX</em>, <em>designX</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scn_component_rsquare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a table of r-square values (variance explained) for each of V data
+vectors by nuisance (mvmt, physio) and task-related predictors</p>
+<p>Designed to work with components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Typical operation
+scn_component_rsquare(compscore, movement_params(1:157, :), X(1:157, :));
+
+% No design
+scn_component_rsquare(compscore, movement_params(1:157, :));
+
+% Neither design nor nuisance, uses linear drift
+scn_component_rsquare(compscore, []);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scn_session_spike_id">
+<code class="descclassname">diagnostics.</code><code class="descname">scn_session_spike_id</code><span class="sig-paren">(</span><em>imgs</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scn_session_spike_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets global image values for a session, and uses trimts.m to find
+outliers. The optional input MADs allows one to lower or raise the
+threshold for identifying scans as spikes (default = 10).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>[g, spikes, gtrim, nuisance_covs, spikesperimg, snr] = scn_session_spike_id(imgs,&#39;mask&#39;,[mask name],&#39;MADs&#39;,[MADs],&#39;doplot&#39;,[0/1])
+</pre></div>
+</div>
+<p>Multi-session mode returns much more output and more images, and
+takes in a cell array with images (preferably 4-D) for each session
+(run).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;mask&#8217;,[pathtomaskfile]:</strong></dt>
+<dd><p class="first last">mask images using the mask in pathtomaskfile, default: implicit mask</p>
+</dd>
+<dt><strong>&#8216;MADs&#8217;,[scalar]:</strong></dt>
+<dd><p class="first last">change Mahalanobis distance, default: 10</p>
+</dd>
+<dt><strong>&#8216;doplot&#8217;,[0 / 1]:</strong></dt>
+<dd><p class="first last">plot result figures, default: true</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>g:</strong></dt>
+<dd>global values</dd>
+<dt><strong>spikes:</strong></dt>
+<dd>identified spikes</dd>
+<dt><strong>gtrim:</strong></dt>
+<dd>trimmed/adjusted global values, can be used as covariate in GLM</dd>
+<dt><strong>nuisance_covs:</strong></dt>
+<dd>a matrix of 1)gtrim and 2) dummy regressors that can be used to minimize
+spike influence in GLM</dd>
+</dl>
+</div></blockquote>
+<p>We may want to save norms on the number of outliers found.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% Get image names
+for i = 1:6, sess_images{i} = filenames(sprintf(&#39;run%02d/vol0*img&#39;, i), &#39;char&#39;, &#39;absolute&#39;); end
+
+% Run
+[g, spikes, gtrim, nuisance_covs, snr] = scn_session_spike_id(sess_images);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scn_spm_choose_hpfilter">
+<code class="descclassname">diagnostics.</code><code class="descname">scn_spm_choose_hpfilter</code><span class="sig-paren">(</span><em>spm_results_dir</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scn_spm_choose_hpfilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots and choice of optimal high-pass filter from an SPM first-level
+model directory (with statistics and contrasts estimated.)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">scn_spm_choose_hpfilter</span><span class="p">(</span><span class="n">spm_results_dir</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;events_only&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>SPM5 compatible and SPM8.</p>
+<p>Called by: scn_spm_design_check.m
+For all regressors or events only: see scn_spm_choose_hpfilter.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scn_spm_design_check">
+<code class="descclassname">diagnostics.</code><code class="descname">scn_spm_design_check</code><span class="sig-paren">(</span><em>spm_results_dir</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scn_spm_design_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run in a single-subject (first-level) SPM directory to check 
+design matrix variance inflation factors and high-pass filtering.
+Prints out table of regressors and their above-threshold VIFs (see options).
+Saves .png images of the key figures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">scn_spm_design_check</span><span class="p">(</span><span class="n">spm_results_dir</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;events_only&#8217;:</strong></dt>
+<dd><p class="first last">Show plots and diagnostics for ONLY events, not nuisance covariates or
+other user-specified regressors.  Useful when you have many nuisance
+covs.</p>
+</dd>
+<dt><strong>&#8216;vif_thresh&#8217;, t&#8217;:</strong></dt>
+<dd><p class="first last">Only regressors with a VIF &gt; t will be printed in VIF table.</p>
+</dd>
+<dt><strong>&#8216;sort_by_vif&#8217;&#8216;:</strong></dt>
+<dd><p class="first last">Sort regressors in VIF table by VIF (DEFAULT: order regressors as in model).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Calls: scn_spm_choose_hpfilter.m, scn_spm_get_events_of_interest.m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">scn_spm_design_check</span><span class="p">(</span><span class="n">pwd</span><span class="p">,</span> <span class="s">&#39;events_only&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scn_spm_get_events_of_interest">
+<code class="descclassname">diagnostics.</code><code class="descname">scn_spm_get_events_of_interest</code><span class="sig-paren">(</span><em>SPM</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scn_spm_get_events_of_interest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets events of interest.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">wh_cols</span> <span class="o">=</span> <span class="n">scn_spm_get_events_of_interest</span><span class="p">(</span><span class="n">SPM</span><span class="p">,</span> <span class="n">varargin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All regressors, or events only if &#8216;events_only&#8217; is input as keyword
+&#8216;from_multireg&#8217;:  followed by an integer, to include first n columns from
+the multireg R matrix as &#8220;of interest&#8221;.  only works with &#8216;events_only&#8217;
+flag, of course.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scnlab_norm_check">
+<code class="descclassname">diagnostics.</code><code class="descname">scnlab_norm_check</code><span class="sig-paren">(</span><em>template</em>, <em>wanat_files</em>, <em>mean_func_files</em>, <em>subjects</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scnlab_norm_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compares the similarity of one or two sets of images (wanat_files,
+mean_func_files) to a template image and to one another (via Malanobis
+distance) to determine whether some images are potential outliers.
+This is used to check the quality of spatial warping/normalization for a
+group of subjects, though it could be used for other purposes as well.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">NORM_CHECK</span> <span class="o">=</span> <span class="n">scnlab_norm_check</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">wanat_files</span><span class="p">,</span> <span class="n">mean_func_files</span><span class="p">,</span> <span class="n">subjs</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>template:</strong></dt>
+<dd><p class="first last">Char array with name of image of normalization template</p>
+</dd>
+<dt><strong>wanat_files:</strong></dt>
+<dd><p class="first last">Warped (to template) anatomical file names</p>
+</dd>
+<dt><strong>mean_func_files:</strong></dt>
+<dd><p class="first last">Names of mean functional images
+These images should all be in the same space/in register.</p>
+</dd>
+<dt><strong>Subjs:</strong></dt>
+<dd><p class="first last">Optional cell array of names for each subject, for display
+purposes</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><p class="first">A structure with metrics (NORM_CHECK)</p>
+<dl class="last docutils">
+<dt><strong>NORM_CHECK.global_t1:</strong></dt>
+<dd><p class="first last">global values of first image series (wanat_files)</p>
+</dd>
+<dt><strong>NORM_CHECK.std_t1:</strong></dt>
+<dd><p class="first last">spatial standard deviation of first image series (wanat_files)</p>
+</dd>
+<dt><strong>NORM_CHECK.names_t1:</strong></dt>
+<dd><p class="first last">Names for columns of NORM_CHECK.norm_vs_template</p>
+</dd>
+<dt><strong>NORM_CHECK.subjects:</strong></dt>
+<dd><p class="first last">Cell array of names for each subject</p>
+</dd>
+<dt><strong>NORM_CHECK.norm_vs_template:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>Similarity data for subjects (rows) x metrics (cols)</dt>
+<dd><p class="first last">{&#8216;Dist. from group, actual chi2&#8217;, &#8216;Mutual info with template&#8217;, &#8216;Correlation with template&#8217;};</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>NB: Leave mean_func_files empty (e.g., []) to only check structural images</p>
+<p>Computes metrics on the goodness of normalization based on multivariate distance,
+mutual information, and correlation with template. Automatically saves a .mat file
+of the results into the current directory.</p>
+<p>the template file (i.e., avg152T1.nii) must be in the CURRENT working
+directory and have read/write permissions</p>
+<p>USES the subfunction compare_subjects, which may be useful as a
+stand-alone function.</p>
+<p>USED in canlab_preproc_norm_check.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scnlab_norm_check3">
+<code class="descclassname">diagnostics.</code><code class="descname">scnlab_norm_check3</code><span class="sig-paren">(</span><em>wt1</em>, <em>subjlabels</em>, <em>template</em>, <em>mask</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scnlab_norm_check3" title="Permalink to this definition">¶</a></dt>
+<dd><p>WARNING:  scnlab_norm_check3 is deprecated! All improvements are being placed in scnlab_norm_check.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>EXPT = scnlab_norm_check3(wt1,subjlabels,template,mask,[print out MI])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>wt1:</strong></dt>
+<dd><p class="first last">char array of wT1.img files, one per line</p>
+</dd>
+<dt><strong>subjlabels:</strong></dt>
+<dd><p class="first last">cell array of subject labels</p>
+</dd>
+<dt><strong>template:</strong></dt>
+<dd><p class="first last">template img that everything has been normalized to (usually the avg152T1.img file)</p>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><p class="first last">image to mask with</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Optional Input:</th><td class="field-body"><p class="first">print out mutual information table - flag for whether or not to print out the MI table; defaults to 0</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>cd(studyroot); % wherever your study root is
+wt1s = filenames(&#39;hr*/structural/wT1.img&#39;, &#39;char&#39;, &#39;absolute&#39;); % assuming that hr is your study code
+subjlabels = filenames(&#39;hr*&#39;);
+template = which(&#39;avg152T1.nii&#39;);
+mask = filenames(&#39;scalped_avg152T1_graymatter.img&#39;, &#39;char&#39;, &#39;absolute&#39;); % set to wherever your mask is...
+
+EXPT = scnlab_norm_check3(wt1, subjlabels, template, mask);
+</pre></div>
+</div>
+<p>THIS FUNCTION IS DEPRECATED; SCNLAB_NORM_CHECK IS PREFERRED</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.scnlab_pca_check1">
+<code class="descclassname">diagnostics.</code><code class="descname">scnlab_pca_check1</code><span class="sig-paren">(</span><em>imgs</em>, <em>realign_files</em>, <em>X</em>, <em>spersess</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.scnlab_pca_check1" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function scnlab_pca_check1(imgs, realign_files or params (t x 6) across all runs, X, spersess)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>imgs:</strong></dt>
+<dd><p class="first last">list of all image names in order</p>
+</dd>
+<dt><strong>realign_files:</strong></dt>
+<dd><p class="first">movement param file for each session, names in a cell array, OR</p>
+<p class="last">a t x 6 matrix of realignment parameters across all sessions</p>
+</dd>
+<dt><strong>X:</strong></dt>
+<dd><p class="first last">design matrix; no intercept is needed</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% setup code for auditory oddball data
+cd(&#39;/Users/tor/Documents/Tor_Documents/Coursework_and_Teaching/Mind_Res_Net_fMRI_Course_2008/data/auditory_oddball/2subjects-processed/s01/&#39;)
+
+imgs = filenames(&#39;*/sw*img&#39;,&#39;absolute&#39;,&#39;char&#39;)
+realign_files = filenames(&#39;*/rp*txt&#39;)
+
+% LOAD TASK ONSETS and CREATE DESIGN MATRIX
+onsets{1} = load(&#39;novel_stimuli_run1.asc&#39;);
+onsets{2} = load(&#39;target_stimuli_run1.asc&#39;);
+onsets{3} = load(&#39;standard_stimuli_run1.asc&#39;);
+onsets{4} = load(&#39;novel_stimuli_run2.asc&#39;);
+onsets{5} = load(&#39;target_stimuli_run2.asc&#39;);
+onsets{6} = load(&#39;standard_stimuli_run2.asc&#39;);
+
+regs_per_sess = 3;
+nsess = 2;
+for i = 1:length(onsets), onsets{i} = onsets{i}&#39;; end
+X = cell(1, nsess);
+X{1} = onsets2delta(onsets(1:3), 1, 249);
+X{1} = X{1}(:, 1:end-1);
+X{2} = onsets2delta(onsets(4:6), 1, 249);
+X{2} = X{2}(:, 1:end-1);
+X = blkdiag(X{:});
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.spm_general_hist">
+<code class="descclassname">diagnostics.</code><code class="descname">spm_general_hist</code><span class="sig-paren">(</span><em>hP</em>, <em>mP</em>, <em>textlab</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.spm_general_hist" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function M = spm_general_hist(hP,mP,textlab,[suppress plot - enter anything])
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>hP:</strong></dt>
+<dd><p class="first last">list of file names to compute histograms from</p>
+</dd>
+<dt><strong>mP:</strong></dt>
+<dd><p class="first last">list of file names to compute masks from</p>
+</dd>
+<dt><strong>textlab:</strong></dt>
+<dd><p class="first last">text string, e.g. &#8216;ventricles&#8217; to label output tiffs</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><p class="first last">histograms for all input images (usually contrast images from individual
+subjects) plotted against a normal curve.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The expected output is that each image will have roughly mean 0, with
+bumps or tails in the distribution of there are real activations in some
+parts of the brain.</p>
+<p>Looking at these histograms may be helpful for detecting outliers or 
+subjects with strange contrast values.  These may be caused by
+bad scaling, multicolinearity in the design matrix, acquisition artifacts,
+task-correlated head movement, or ???</p>
+<p>Histograms (blue) are overlaid on a Gaussian distribution (red)
+with a mean of 0 and a standard deviation equal to that of the observed data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.spm_rfx_hist">
+<code class="descclassname">diagnostics.</code><code class="descname">spm_rfx_hist</code><span class="sig-paren">(</span><em>cwd</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.spm_rfx_hist" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function spm_rfx_hist(cwd)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Input:</th><td class="field-body">a directory name where an spm or SnPM random effects analysis lives</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body">histograms for all input images (usually contrast images from individual
+subjects) plotted against a normal curve.</td>
+</tr>
+</tbody>
+</table>
+<p>The expected output is that each image will have roughly mean 0, with
+bumps or tails in the distribution of there are real activations in some
+parts of the brain.</p>
+<p>Looking at these histograms may be helpful for detecting outliers or 
+subjects with strange contrast values.  These may be caused by
+bad scaling, multicolinearity in the design matrix, acquisition artifacts,
+task-correlated head movement, or ???</p>
+<p>Histograms (blue) are overlaid on a Gaussian distribution (red)
+with a mean of 0 and a standard deviation equal to that of the observed data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.struct2yaml">
+<code class="descclassname">diagnostics.</code><code class="descname">struct2yaml</code><span class="sig-paren">(</span><em>yamlfilename</em>, <em>DB</em>, <em>yamlfilemethod</em>, <em>dbmethod</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.struct2yaml" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">struct2yaml</span><span class="p">(</span><span class="n">yamlfilename</span><span class="p">,</span> <span class="n">DB</span><span class="p">,</span> <span class="n">yamlfilemethod</span><span class="p">,</span> <span class="n">dbmethod</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>yamlfilemethod:</strong></dt>
+<dd><p class="first last">&#8216;new&#8217; or &#8216;add&#8217; (append)</p>
+</dd>
+<dt><strong>dbmethod:</strong></dt>
+<dd><p class="first last">how the canlab database will handle the record.
+&#8216;add&#8217;, &#8216;replace&#8217;, or &#8216;keep_existing&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>translate structure into YAML format text file
+this will be interpretable by the canlab database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>yamlfilename = &#39;YAML_tmp.yaml&#39;;
+
+DB.study = &#39;NSF&#39;;     % string; study code letters
+DB.subject = &#39;001&#39;;   % string; subject ID number
+DB.occasion = &#39;21&#39;;   % string; occasion ID; unique to subj*session
+DB.unique_id = [DB.study &#39;_&#39; DB.subject &#39;_&#39; DB.occasion];
+DB.mean_spikes_per_image = mean(cat(2, spikesperimg{:}));
+
+struct2yaml(yamlfilename, DB, &#39;add&#39;, &#39;replace&#39;);
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="diagnostics.tor_get_physio">
+<code class="descclassname">diagnostics.</code><code class="descname">tor_get_physio</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#diagnostics.tor_get_physio" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">X</span><span class="p">,</span><span class="n">mP</span><span class="p">,</span><span class="n">spmP</span><span class="p">]</span> <span class="o">=</span> <span class="n">tor_get_physio</span><span class="p">([</span><span class="n">mP</span><span class="p">],[</span><span class="n">spmP</span><span class="p">],[</span><span class="n">nvoxels</span><span class="p">],[</span><span class="n">doortho</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>arguments are optional, but you must enter them in this order.</p>
+<p>Tor Wager 10/21/02</p>
+<p>Get nuisance covariates likely to be related to physiological noise and head motion
+The algorithm:</p>
+<p>The program extracts raw/preprocessed image data from the ventricles (CSF space), as
+defined by a mask denoting which voxels are CSF for that subject.  
+Either all voxels or a randomly selected subset [nvoxels] is subjected to
+principal components analysis, to determine regular patters of drift over time
+and across voxels.  Those patterns are expected to be related to global signal drift,
+head movement, and physiological noise, and are assumed to be UNrelated to the task
+of interest, by virtue of the fact that they occur in the ventricles.</p>
+<p>PCA is done twice on the timeseries&#8217; of CSF voxels.  The first time, PCA is done
+on the sums of squared values (not the correlations) of voxel timeserieses across
+the entire experiment, mean-centered based on the whole experiment.  Most of the
+coherent variation in this case is expected to be due to head movement and changes
+in shims/gradients/etc. from run to run.  The SS values are used because we want to
+weight the voxels with the highest variation most heavily, as they are presumably
+picking up most of this signal.  The first 3 eigenvariates (canonical timeseries)
+are saved.</p>
+<p>Following, a separate, second PCA is done on the correlation matrix of data
+within each session.  Session data for each voxel are mean-centered and scaled
+relative to the session (variance of each voxel = 1).  We do this because 
+physiological noise-related signals may produce periodic signals of different
+magnitudes in different voxels, and we want to extract the most coherent signals
+we can within each session.  So these eigenvariates are expected to reflect
+primarily noise related to physiology (heart rate, respiration).  Up to 5 eigenvariates
+for each session are saved (nothing with eigenvalue &lt; 1 is saved).</p>
+<p>Next, the CSF-related nuisance covariates (eigenvariates from PCA) are combined
+with existing nuisance covariates and intercept columns from the existing 
+design matrix (SPMcfg xX).  The proportion of variance in each predictor of interest
+explained by this nuisance basis set is calculated using regression, and the
+nuisance covariates are orthogonalized with respect to each predictor of interest.
+There are good and bad results of this step.  The bad is that any signal that 
+tracks the predictors is attributed to the task, not to noise, even if it&#8217;s actually
+caused by physiological artifact.  So the orthogonalized basis set does not
+protect you from physiology or movement-related false positives.  However,
+the nuisance covariates are also unlikely to reduce power in estimating you effects
+of interest.  More importantly, it avoids false positives created when one 
+predictor (A) is more highly correlated with the nuisance covariates than another
+(B).  In practice, betas for A will tend to be smaller than B, given the same
+actual response to both, and a random effects analysis on A-B will produce
+false positive activations.  Orthogonalization of the nuisance set precludes this.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>mP:</strong></dt>
+<dd><p class="first last">CSF mask image file.  <a href="#id11"><span class="problematic" id="id12">*</span></a>_seg3.img output from SPM is appropriate
+should be in same space and have same dims as functionals
+but automatic reslicing is done if necessary.</p>
+</dd>
+<dt><strong>spmP:</strong></dt>
+<dd><p class="first last">name (full path name preferred) of SPMcfg.mat file to use
+This contains the design matrix and raw/preproc image file names to use.</p>
+</dd>
+<dt><strong>nvoxels:</strong></dt>
+<dd><p class="first last">Number of CSF voxels to use in PCA analysis
+More than 100 can be very slow and memory intensive.
+Fewer than 100 voxels loads a different way, and may be slower.
+Best is probably between 100 - 1000.  800 runs pretty fast.</p>
+</dd>
+<dt><strong>doortho:</strong></dt>
+<dd><p class="first last">Orthogonalize nuisance covariates with respect to regs of interest
+This assumes that any signal that covaries with the task is, in fact,
+due to the task, so it gives you some bias towards finding positive results.
+However, the alternative is that nuisance covariates may soak up variance
+related to the task, and you&#8217;ll miss activations.
+In addition, if some regressors are more colinear with the nuisance set,
+you can create false &#8220;activations&#8221; when comparing these regressors to other
+ones.  This problem exists whether or not we choose to model nuisance 
+covariates.  One solution is to use the ortho when doing random effects analyses,
+as the sign and magnitude of nuisance-related activations would not be expected to be
+the same across subjects unless the variance was really task-related.
+Default is 1, or &#8220;yes, do orthogonalization.&#8221;</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>for functions called, see this .m file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>% get filenames for SPMcfg files and CSF mask for each subject
+cd C:\Tor_Documents\CurrentExperiments\intext2\RESULTS\model1
+spmP = get_filename(&#39;sub*&#39;,&#39;SPMcfg.mat&#39;);
+cd C:\Tor_Documents\CurrentExperiments\intext2\
+mP = get_filename(&#39;sub*&#39;,&#39;anatomy/nscalped_f*seg3.img&#39;);
+% Now run:
+for i = 1:size(mP,1)  
+    tor_get_physio(mP(i,:),spmP(i,:),300);  % 300 voxels
+    pause(10); close all
+end
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Functions called:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li>spm functions: spm_get, etc.</li>
+<li>timeseries2.m      (for &lt; 100 voxels)</li>
+<li>read_hdr.m (big-little endian dependent; validate for your data)</li>
+<li>timeseries3.m      (for &gt; 100 voxels; uses SPM&#8217;s image reading)</li>
+<li>reslice_imgs.m</li>
+<li>mask2voxel.m       (only if ind2sub.m from Matlab is not found)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-GLM_Batch_tools">
+<span id="glm-batch-tools"></span><h1>GLM_Batch_tools<a class="headerlink" href="#module-GLM_Batch_tools" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_getinfo">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_getinfo</code><span class="sig-paren">(</span><em>modeldir</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_getinfo" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">SUBJECT LEVEL input:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">INFO</span> <span class="o">=</span> <span class="n">canlab_glm_getinfo</span><span class="p">(</span><span class="n">spm_subject_level_directory</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="p">[</span><span class="n">n</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Get information out of an spm subject level analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Options:</th><td class="field-body"><p class="first">(each option can be called by the listed letter or word + a number, when noted)</p>
+<dl class="docutils">
+<dt><strong>i&#8217; &#8216;input&#8217;:</strong></dt>
+<dd><p class="first last">number of volumes and (first) volume name for each run</p>
+</dd>
+<dt><strong>&#8216;b&#8217; &#8216;betas&#8217; [n]:</strong></dt>
+<dd><p class="first last">beta names (for nth session)</p>
+</dd>
+<dt><strong>&#8216;B&#8217; &#8216;taskbetas&#8217; [n]:</strong></dt>
+<dd><p class="first last">beta names (that didn&#8217;t come from multiple regressors)  (for nth session)</p>
+</dd>
+<dt><strong>&#8216;c&#8217; &#8216;cons&#8217; [n]:</strong></dt>
+<dd><p class="first last">contrast names (for nth contrast)</p>
+</dd>
+<dt><strong>&#8216;C&#8217; &#8216;conw&#8217; [n]:</strong></dt>
+<dd><p class="first last">beta names and weights for contrasts (for nth con)</p>
+</dd>
+<dt><strong>&#8216;v&#8217; &#8216;image&#8217; [n]:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>create figure of design matrix (for nth session)</dt>
+<dd><p class="first last">(design matrix is multiplied by 100 for visibility)
+(works well for multiple runs)</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>&#8216;V&#8217; &#8216;taskimage&#8217; [n]:</strong></dt>
+<dd><p class="first last">same as &#8216;image&#8217;, but only for task betas</p>
+</dd>
+<dt><strong>&#8216;imagesc&#8217;:</strong></dt>
+<dd><dl class="first last docutils">
+<dt>same as &#8216;image&#8217;, but uses imagesc</dt>
+<dd><p class="first last">(works well for single runs)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">GROUP LEVEL input:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">INFO</span> <span class="o">=</span> <span class="n">canlab_glm_getinfo</span><span class="p">(</span><span class="n">robfit_group_level_directory</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="p">[</span><span class="n">n</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Get information out of a robfit group level analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Options:</th><td class="field-body"><p class="first">(each option can be called by the listed word or letter + a number, when noted)</p>
+<p>Any of the subject level options can be used on a group level robfit
+analysis by prefixing &#8216;1i&#8217; (output is generated based on the first input
+to the first robust analysis).</p>
+<p>Ex:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">canlab_glm_getinfo</span><span class="p">(</span><span class="s">&#39;second_level/model3&#39;</span><span class="p">,</span><span class="s">&#39;1iconw&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>&#8216;i&#8217; &#8216;input&#8217; [n]:</strong></dt>
+<dd><p class="first last">input contrasts by number and name (for nth analysis)</p>
+</dd>
+<dt><strong>&#8216;I&#8217; &#8216;allinput&#8217; [n]:</strong></dt>
+<dd><p class="first last">input images (for nth analysis)</p>
+</dd>
+<dt><strong>&#8216;m&#8217; &#8216;model&#8217;:</strong></dt>
+<dd><p class="first last">weights by subject (i.e., directory containing input contrast images)</p>
+</dd>
+<dt><strong>&#8216;M&#8217; &#8216;allmodels&#8217; [n]:</strong></dt>
+<dd><p class="first last">weights and input images (for nth analysis)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Assumptions:</th><td class="field-body"><p class="first">In some options, the first contrasts and group level analysis
+directories are assumed to represent the rest, which may not be the
+case.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first last">group level options do not yet return a usable INFO struct.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_group_levels">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_group_levels</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_group_levels" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Performs group level robust GLM analysis with robfit</dt>
+<dd><ol class="first last arabic simple">
+<li>sets up analysis</li>
+<li>runs robfit</li>
+<li>(optionally) make inverse p maps (for FSL viewing)</li>
+<li>(optionally) estimate significant cluster sizes</li>
+<li>publishes analysis with robfit_results_batch</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">canlab_glm_group_levels</span><span class="p">([</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;s&#8217;, subjects:</strong></dt>
+<dd><p class="first last">cell array of filenames of subject-level analysis directories IN
+modeldir
+(note: modeldir won&#8217;t be prepended to absolute paths)</p>
+</dd>
+<dt><strong>&#8216;m&#8217;, modeldir:</strong></dt>
+<dd><p class="first last">filename of directory containing subject level analyses</p>
+</dd>
+<dt><strong>&#8216;o&#8217;, grpmodeldir:</strong></dt>
+<dd><p class="first last">output directory name</p>
+</dd>
+<dt><strong>&#8216;c&#8217;, cov:</strong></dt>
+<dd><p class="first">a matrix describing group level model
+(do not include intercept, it is automatically included as first regressor)</p>
+<p>see help robfit</p>
+<p>note: requires specifying an output directory name</p>
+<p class="last">note: ordering of inputs (rows) must match subjects ordering</p>
+</dd>
+<dt><strong>&#8216;n&#8217;, covname:</strong></dt>
+<dd><p class="first last">a cell array of names for the covariates in cov</p>
+</dd>
+<dt><strong>&#8216;f&#8217;, covfile:</strong></dt>
+<dd><p class="first last">a csv file will specify the group level model:
+first column, header &#8216;subject&#8217;, contains names of subject
+directories (to be found in modeldir)
+subsequent columns have covariates, headers are names of covariates
+name of covfile will be name of group analysis directory (placed in
+grpmodeldir)</p>
+</dd>
+<dt><strong>&#8216;mask&#8217;, maskimage:</strong></dt>
+<dd><p class="first last">filename of mask image</p>
+</dd>
+<dt><strong>DSGN:</strong></dt>
+<dd><p class="first">will use the following fields of the DSGN structure:
+modeldir    = DSGN.modeldir</p>
+<p>subjects    = DSGN.subjects</p>
+<p class="last">maskimage   = DSGN.mask</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Note:</th><td class="field-body"><p class="first">A covfile will cause other specifications of subject, cov, and 
+covnames to be ignored.</p>
+<p>If parameters are defined more than once (e.g., modeldir or subjects), 
+only the last entered option will count.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Defaults:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>subjects:</strong></dt>
+<dd><p class="first last">all SPM.mat-containing directories in modeldir</p>
+</dd>
+<dt><strong>modeldir:</strong></dt>
+<dd><p class="first last">pwd</p>
+</dd>
+<dt><strong>grpmodeldir:</strong></dt>
+<dd><p class="first last">modeldir/one_sample_t_test</p>
+</dd>
+<dt><strong>cov:</strong></dt>
+<dd><p class="first last">{} (run 1 sample t-test, see help robfit)</p>
+</dd>
+<dt><strong>covname:</strong></dt>
+<dd><p class="first last">&#8216;groupmean&#8217;</p>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><p class="first last">&#8216;brainmask.nii&#8217;</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;README&#8217;:</strong></dt>
+<dd><p class="first last">prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels</p>
+</dd>
+<dt><strong>&#8216;overwrite&#8217;:</strong></dt>
+<dd><p class="first last">overwrite existing output directories</p>
+</dd>
+<dt><strong>&#8216;noresults&#8217;:</strong></dt>
+<dd><p class="first last">don&#8217;t run/publish robfit_results_batch</p>
+</dd>
+<dt><strong>&#8216;onlyresults&#8217;:</strong></dt>
+<dd><p class="first last">just run/publish robfit_results_batch, don&#8217;t run robfit (assumes existing analyses)</p>
+</dd>
+<dt><a href="#id13"><span class="problematic" id="id14">**</span></a>&#8216;whichcons&#8217;, [which cons]</dt>
+<dd><p class="first last">vector of contrasts to analyze (DEFAULT: aall subject level contrasts)
+see [which cons] in help robfit</p>
+</dd>
+<dt><strong>&#8216;invp&#8217; [, target_space_image]:</strong></dt>
+<dd><p class="first last">generate inverse p maps and resample to the voxel and image dimensions
+of target_space_image
+(viewable on dream with ~ruzicl/scripts/invpview)</p>
+</dd>
+<dt><strong>&#8216;nolinks&#8217;:</strong></dt>
+<dd><p class="first last">do not make directory of named links to robust directories (using contrast names)</p>
+</dd>
+<dt><strong>&#8216;dream&#8217;:</strong></dt>
+<dd><blockquote class="first">
+<div><p>if you&#8217;re running on the dream cluster, this option will cause</p>
+</div></blockquote>
+<p class="last">all analyses (e.g., lower level contrasts) to be run in parallel 
+(submitted with matlab DCS and the Sun Grid Engine)
+Note: currently only works with MATLAB R2009a</p>
+</dd>
+<dt><strong>&#8216;email&#8217;, address:</strong></dt>
+<dd><p class="first last">send notification email to address when done running</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_group_levels_run1input">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_group_levels_run1input</code><span class="sig-paren">(</span><em>wd</em>, <em>c</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_group_levels_run1input" title="Permalink to this definition">¶</a></dt>
+<dd><p>child process of canlab_glm_group_levels
+(see canlab_glm_README.txt for an overview)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_maskstats">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_maskstats</code><span class="sig-paren">(</span><em>DIRS</em>, <em>MASK</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_maskstats" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns a MASKSTATS structure containing data from robfitdir&#8217;s input subject level</dt>
+<dd>SPM analyses.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">MASKSTATS</span> <span class="o">=</span> <span class="n">canlab_glm_maskstats</span><span class="p">(</span><span class="n">robfitdir</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="p">[</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>output structure:
+MASKSTATS</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>COV:</strong></dt>
+<dd>subject x covariate matrix (EXPT.cov from robfit design)</dd>
+<dt><strong>COVNAME:</strong></dt>
+<dd>names of covariates in COV</dd>
+<dt><strong>MASK:</strong></dt>
+<dd>array of structs (1 per mask)</dd>
+<dt><strong>MASKFILE:</strong></dt>
+<dd>the filename of the mask used</dd>
+<dt><strong>SUB:</strong></dt>
+<dd>struct containing data from subject level images</dd>
+<dt><strong>CON:</strong></dt>
+<dd>struct contains data from contrast images</dd>
+<dt><strong>NAME:</strong></dt>
+<dd>cell array (1 cell per contrast) of contrast names</dd>
+<dt><strong>IMGFILES:</strong></dt>
+<dd>cell array (1 cell per contrast) of character arrays of 
+contrast image filenames</dd>
+<dt><strong>(MEASURE):</strong></dt>
+<dd>subject X contrast matrix of measures (see canlab_maskstats)</dd>
+<dt><strong>COVxCON.(MEASURE):</strong></dt>
+<dd>arrays of covariate matrix X contrast means correlation
+results (RHO and P, see help corr())</dd>
+<dt><strong>GRP:</strong></dt>
+<dd>struct containing data from group level images</dd>
+<dt><strong>BETA:</strong></dt>
+<dd>struct array (1 struct per group level regressor) of data
+from beta images</dd>
+<dt><strong>NAME:</strong></dt>
+<dd>name of group level regressor</dd>
+<dt><strong>IMGFILES:</strong></dt>
+<dd>cell array (1 cell per robust directory) of beta image files</dd>
+<dt><strong>(MEASURE):</strong></dt>
+<dd>row vector (1 value per robust directory) of measures
+(see canlab_maskstats)</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt>The following plots are saved in each mask&#8217;s directory in the plots directory:</dt>
+<dd><ul class="first last simple">
+<li>contrast means by contrast (means are lines across subjects on x axis)</li>
+<li>contrast means by subject (means are dots, lined up along the x axis by contrast)</li>
+<li>group level betas (bar plot with group level regressors grouped by
+subject level contrasts)</li>
+</ul>
+</dd>
+<dt>If there&#8217;s more than one regressor in the group level model, for each regressor:</dt>
+<dd><ul class="first last simple">
+<li>scatter plot of subject level contrast means against group level regressor</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>robfitdir:</strong></dt>
+<dd><p class="first last">a directory in which robfit was run
+contains robfit directories (e.g., robust0001)
+preferably contains EXPT.mat or EXPTm.mat</p>
+</dd>
+<dt><strong>mask:</strong></dt>
+<dd><p class="first last">a filename or cell array of filenames of masks to apply to data</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>MEASURE OPTIONS:</strong></dt>
+<dd><p class="first last">(see canlab_maskstats) (DEFAULT: mean (within mask&#8217;s non-zero voxels))</p>
+</dd>
+<dt><strong>&#8216;cons&#8217;, connums:</strong></dt>
+<dd><p class="first last">(vector of contrast numbers)
+only include data from contrasts as specified by numbers</p>
+</dd>
+<dt><strong>&#8216;cons&#8217;, conname(s):</strong></dt>
+<dd><p class="first last">(string or cell array of strings)
+only include data from contrasts as specified by name</p>
+</dd>
+<dt><strong>&#8216;plots&#8217;:</strong></dt>
+<dd><p class="first last">make plots</p>
+</dd>
+<dt><strong>&#8216;od&#8217;, dir:</strong></dt>
+<dd><p class="first last">will save plots in dir (DEFAULT: robfitdir/stats_scatterplots)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_publish">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_publish</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_publish" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">canlab_glm_publish</span><span class="p">(</span><span class="n">directory_specifications</span> <span class="p">[</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Directory Specification:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt><strong>&#8216;s&#8217;, dirs:</strong></dt>
+<dd><p class="first">Generates HTML reports of the output from scn_spm_design_check for
+directories in cell array dires (string allowable for single dir).
+If a directory is a subject level analysis, the HTML will be generated 
+for that subject in the analysis directory.
+Ex:</p>
+<p>canlab_glm_publish(&#8216;s&#8217;,{&#8216;model1/1011&#8217; &#8216;model1/1014&#8217;})</p>
+<p>If a directory contains subject level analyses, an HTML will be
+generated with output for each subject level analysis.
+Ex:</p>
+<p>canlab_glm_publish(&#8216;s&#8217;,&#8217;model1&#8217;)</p>
+<p class="last">ASSUMPTION: lower level analyses contain an SPM.mat file.</p>
+</dd>
+<dt><strong>&#8216;g&#8217;, dirs:</strong></dt>
+<dd><p class="first">For each &#8220;robfit directory&#8221; in cell array dirs, will run robust_results_batch 
+on all contrast directories (e.g., robust0001/) (string allowable for single dir).
+(&#8220;robfit directories&#8221; contain robfit contrast directories (like robust0001))
+EITHER directories contain EXPT.mat files (see help robfit)
+OR an EXPT struct is loaded in the workspace and a single directory is specified
+OR will do best to figure out info normally contained in EXPT.mat
+Ex:</p>
+<p class="last">canlab_glm_publish(&#8216;g&#8217;, {&#8216;group_n35&#8217; &#8216;group_anxiety_n35&#8217; &#8216;group_sadness_n35&#8217;})</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Note:</th><td class="field-body"><p class="first">directory paths may be absolute or relative (to working directory)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Options:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;t&#8217;, {[pthresh clustersize] ...}:</strong></dt>
+<dd><p class="first">Use the paired voxelwise_pthresh and minimum_cluster_size thresholds 
+with which to produce robfit results maps.
+This option must follow immediately after a &#8216;g&#8217; option (see above) and
+will only apply to the analyses specified in that option.
+ONLY applies to robfit directories (no bearing on lower level design checks)</p>
+<p>DEFAULT: {[.001 5] [.005 1] [.05 1]}
+Ex:</p>
+<p class="last">canlab_glm_publish(&#8216;g&#8217;, pwd, &#8216;t&#8217;, {[.001 1] [.005 10] [.05 10] [.01 25]})</p>
+</dd>
+<dt><strong>&#8216;email&#8217;, address:</strong></dt>
+<dd><p class="first">send notification email to address when done running
+Ex:</p>
+<p class="last">canlab_glm_publish(&#8216;g&#8217;, pwd, &#8216;email&#8217;, <a class="reference external" href="mailto:'ruzic&#37;&#52;&#48;colorado&#46;edu">'ruzic<span>&#64;</span>colorado<span>&#46;</span>edu</a>&#8216;)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_roistats">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_roistats</code><span class="sig-paren">(</span><em>DIRS</em>, <em>ROI</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_roistats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use canlab_glm_maskstats instead</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_subject_levels">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_subject_levels</code><span class="sig-paren">(</span><em>dsgnarg</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_subject_levels" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Performs lower level GLM analysis with SPM:</dt>
+<dd><ol class="first last arabic simple">
+<li>specifies model</li>
+<li>estimates model</li>
+<li>generates contrast images for model</li>
+<li>creates directory with named links to spmT and con maps</li>
+<li>publishes analyses with scn_spm_design_check</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">canlab_glm_subject_levels</span><span class="p">(</span><span class="n">DSGN</span> <span class="p">[</span><span class="n">options</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>DSGN struct - defines the model and analysis parameters</p>
+<p>canlab_glm_subject_levels(&#8216;README&#8217;) to see description</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Options:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>&#8216;README&#8217;:</strong></dt>
+<dd><p class="first last">prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels</p>
+</dd>
+<dt><strong>&#8216;dsgninfo&#8217;:</strong></dt>
+<dd><p class="first last">prints description of DSGN structure</p>
+</dd>
+<dt><strong>&#8216;subjects&#8217;, subject_list:</strong></dt>
+<dd><p class="first last">ignore DSGN.subjects, use cell array subject_list</p>
+</dd>
+<dt><strong>&#8216;overwrite&#8217;:</strong></dt>
+<dd><p class="first last">turn on overwriting of existing analyses (DEFAULT: skip existing)</p>
+</dd>
+<dt><strong>&#8216;onlycons&#8217;:</strong></dt>
+<dd><p class="first last">only run contrast job (no model specification or estimation)
+note: will overwrite existing contrasts
+note: to not run contrasts, simply do not include a contrasts field in DSGN</p>
+</dd>
+<dt><strong>&#8216;addcons&#8217;:</strong></dt>
+<dd><p class="first last">only run contrasts that aren&#8217;t already in SPM.mat
+option to canlab_spm_contrast_job</p>
+</dd>
+<dt><strong>&#8216;nodelete&#8217;:</strong></dt>
+<dd><p class="first last">do not delete existing contrasts (consider using addcons, above)
+option to canlab_spm_contrast_job</p>
+</dd>
+<dt><strong>&#8216;nolinks&#8217;:</strong></dt>
+<dd><p class="first last">will not make directory with named links to contrast images</p>
+</dd>
+<dt><strong>&#8216;noreview&#8217;:</strong></dt>
+<dd><p class="first last">will not run scn_spm_design_check</p>
+</dd>
+<dt><strong>&#8216;dream&#8217;:</strong></dt>
+<dd><p class="first last">if you&#8217;re running on the dream cluster, this option will cause
+all subjects to be run in parallel (submitted with matlab DCS and
+the Sun Grid Engine)
+Note: currently only works with MATLAB R2009a</p>
+</dd>
+<dt><strong>&#8216;email&#8217;, address:</strong></dt>
+<dd><p class="first last">send notification email to address when done running</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Model specification and estimation done by canlab_spm_fmri_model_job</p>
+<p>Contrasts are specified by canlab_spm_contrast_job_luka
+see that function for more info.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="GLM_Batch_tools.canlab_glm_subject_levels_run1subject">
+<code class="descclassname">GLM_Batch_tools.</code><code class="descname">canlab_glm_subject_levels_run1subject</code><span class="sig-paren">(</span><em>wd</em>, <em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#GLM_Batch_tools.canlab_glm_subject_levels_run1subject" title="Permalink to this definition">¶</a></dt>
+<dd><p>child process of canlab_glm_subject_levels
+(see canlab_glm_README.txt for an overview)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-HRF_Est_Toolbox2">
+<span id="hrf-est-toolbox2"></span><h1>HRF_Est_Toolbox2<a class="headerlink" href="#module-HRF_Est_Toolbox2" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Anneal_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Anneal_Logit</code><span class="sig-paren">(</span><em>theta0</em>, <em>t</em>, <em>tc</em>, <em>Run</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Anneal_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate inverse logit (IL) HRF model using Simulated Annealing
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">theta</span><span class="p">,</span><span class="n">HH</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">P</span><span class="p">]</span> <span class="o">=</span> <span class="n">Anneal_Logit</span><span class="p">(</span><span class="n">theta0</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Run:</strong></dt>
+<dd><p class="first last">stick function</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>theta0:</strong></dt>
+<dd><p class="first last">initial value for the parameter vector</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Det_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Det_Logit</code><span class="sig-paren">(</span><em>V0</em>, <em>t</em>, <em>tc</em>, <em>Run</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Det_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate inverse logit (IL) HRF model 
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">VM</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Det_Logit_allstim</span><span class="p">(</span><span class="n">V0</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>Run:</strong></dt>
+<dd><p class="first last">stick function</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>V0:</strong></dt>
+<dd><p class="first last">initial value for the parameter vector</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_Canonical_HRF">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_Canonical_HRF</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>p</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_Canonical_HRF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits GLM using canonical hrf (with option of using time and dispersion derivatives)&#8217;;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">info</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_Canonical_HRF</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runs</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">Model type</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><ul class="first simple">
+<li>p=1 - only canonical HRF</li>
+<li>p=2 - canonical + temporal derivative</li>
+<li>p=3 - canonical + time and dispersion derivative</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+<dt><strong>info:</strong></dt>
+<dd><p class="first last">struct containing design matrices, beta values etc</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_Logit2">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_Logit2</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_Logit2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits FIR and smooth FIR model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_Logit</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">Run</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><blockquote class="first">
+<div><p>deterministic or stochastic</p>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><p class="first">0 - deterministic aproach</p>
+<p class="last">1 - simulated annealing approach</p>
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">Please note that when using simulated annealing approach you
+may need to perform some tuning before use.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Fit_sFIR">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Fit_sFIR</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Run</em>, <em>T</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Fit_sFIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits FIR and smooth FIR model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">hrf</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_sFIR</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runs</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><p class="first">FIR or smooth FIR</p>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><p class="first">0 - standard FIR</p>
+<p class="last">1 - smooth FIR</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.Get_Logit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">Get_Logit</code><span class="sig-paren">(</span><em>V</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.Get_Logit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate inverse logit (IL) HRF model
+Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_logit</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>t:</strong></dt>
+<dd><p class="first last">vector of time points</p>
+</dd>
+<dt><strong>V:</strong></dt>
+<dd><p class="first last">parameters</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.HMHRFest">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">HMHRFest</code><span class="sig-paren">(</span><em>y</em>, <em>Runs</em>, <em>TR</em>, <em>nbasis</em>, <em>norder</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.HMHRFest" title="Permalink to this definition">¶</a></dt>
+<dd><p>HRF estimation algorithm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>y:</strong></dt>
+<dd><p class="first last">Data matrix (#time points) by (#subjects) by (#voxels)</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">Stick functions for each subject (#time points) by (#conditions) by (#subjects)</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">Time resolution</p>
+</dd>
+<dt><strong>nbasis:</strong></dt>
+<dd><p class="first last">Number of b-spline basis</p>
+</dd>
+<dt><strong>norder:</strong></dt>
+<dd><p class="first last">Order of b-spline basis</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.PowerLoss">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">PowerLoss</code><span class="sig-paren">(</span><em>modres</em>, <em>modfit</em>, <em>moddf</em>, <em>tc</em>, <em>TR</em>, <em>Run</em>, <em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.PowerLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates Power-loss due to mis-modeling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">PowLoss</span><span class="p">]</span> <span class="o">=</span> <span class="n">PowerLoss</span><span class="p">(</span><span class="n">modres</span><span class="p">,</span> <span class="n">modfit</span><span class="p">,</span> <span class="n">moddf</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">TR</span><span class="p">,</span> <span class="n">Run</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>modres:</strong></dt>
+<dd><p class="first last">residuals</p>
+</dd>
+<dt><strong>modfit:</strong></dt>
+<dd><p class="first last">model fit</p>
+</dd>
+<dt><strong>moddf:</strong></dt>
+<dd><p class="first last">model degrees of freedom</p>
+</dd>
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>alpha:</strong></dt>
+<dd><p class="first last">alpha value</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>PowLoss:</strong></dt>
+<dd><p class="first last">Estimated power loss</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.ResidScan">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">ResidScan</code><span class="sig-paren">(</span><em>res</em>, <em>FWHM</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.ResidScan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates P(M&gt;=t) where M is the max value of the smoothed residuals.
+In this implementation the residuals are smoothed using a Gaussian
+kernel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre>function [p sres sres_ns] = ResidScan(res, FWHM)
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>res:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>FWHM:</strong></dt>
+<dd><p class="first last">Full Width Half Maximum (in time units)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>p:</strong></dt>
+<dd><p class="first last">pvalues</p>
+</dd>
+<dt><strong>sres:</strong></dt>
+<dd><p class="first last">smoothed residuals</p>
+</dd>
+<dt><strong>sres_ns:</strong></dt>
+<dd><p class="first last">smoothed residuals (non standardized)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.get_parameters2">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">get_parameters2</code><span class="sig-paren">(</span><em>hdrf</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.get_parameters2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find model parameters</p>
+<p>Height - h</p>
+<p>Time to peak - p (in time units of TR seconds)</p>
+<p>Width (at half peak) - w</p>
+<p>Calculate Heights and Time to peak:</p>
+<p>delta = 1/(t(2)-t(1));</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.hrf_fit_one_voxel">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">hrf_fit_one_voxel</code><span class="sig-paren">(</span><em>tc</em>, <em>TR</em>, <em>Runc</em>, <em>T</em>, <em>method</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.hrf_fit_one_voxel" title="Permalink to this definition">¶</a></dt>
+<dd><p>HRF estimation function for a single voxel;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span>  <span class="n">hrf_fit_one_voxel</span><span class="p">(</span><span class="n">tc</span><span class="p">,</span><span class="n">TR</span><span class="p">,</span><span class="n">Runc</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="nb">type</span><span class="p">,</span><span class="n">mode</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Implemented methods include: IL-model (Deterministic/Stochastic), FIR
+(Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal &amp; dispersion)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Inputs:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tc:</strong></dt>
+<dd><p class="first last">time course</p>
+</dd>
+<dt><strong>TR:</strong></dt>
+<dd><p class="first last">time resolution</p>
+</dd>
+<dt><strong>Runs:</strong></dt>
+<dd><p class="first last">expermental design</p>
+</dd>
+<dt><strong>T:</strong></dt>
+<dd><p class="first last">length of estimated HRF</p>
+</dd>
+<dt><strong>type:</strong></dt>
+<dd><p class="first last">Model type</p>
+</dd>
+<dt><strong>mode:</strong></dt>
+<dd><p class="first last">Mode</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Options:</th><td class="field-body"><ul class="first simple">
+<li>p=1 - only canonical HRF</li>
+<li>p=2 - canonical + temporal derivative</li>
+<li>p=3 - canonical + time and dispersion derivative</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Outputs:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>hrf:</strong></dt>
+<dd><p class="first last">estimated hemodynamic response function</p>
+</dd>
+<dt><strong>fit:</strong></dt>
+<dd><p class="first last">estimated time course</p>
+</dd>
+<dt><strong>e:</strong></dt>
+<dd><p class="first last">residual time course</p>
+</dd>
+<dt><strong>param:</strong></dt>
+<dd><p class="first last">estimated amplitude, height and width</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="HRF_Est_Toolbox2.ilogit">
+<code class="descclassname">HRF_Est_Toolbox2.</code><code class="descname">ilogit</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#HRF_Est_Toolbox2.ilogit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the inverse logit function corresponding to the value t</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">function</span> <span class="p">[</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">ilogit</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Output:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>L:</strong></dt>
+<dd><p class="first last">exp(t)./(1+exp(t));</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-OptimizeDesign11">
+<span id="optimizedesign11"></span><h1>OptimizeDesign11<a class="headerlink" href="#module-OptimizeDesign11" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="OptimizeDesign11.optimizeGA">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimizeGA</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimizeGA" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Usage:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">M</span> <span class="o">=</span> <span class="n">optimizeGA</span><span class="p">(</span><span class="n">GA</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>outputs a pseudo-random list of condition codes that optimizes
+multiple fitness measures for fMRI task designs</p>
+<p>more help can be found in ga_example_script.m
+and in Genetic_Algorithm_readme.rtf</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="OptimizeDesign11.optimizeGA_epochs">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimizeGA_epochs</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimizeGA_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations</p>
+<dl class="docutils">
+<dt>Ways to avoid block designs</dt>
+<dd>counterbalancing factor
+power lower limit cutoff pushes power higher</dd>
+<dt>Why using avg power is better than efficiency</dt>
+<dd>efficiency doesn&#8217;t account for 1/f model (altho here we just use a cutoff, the same thing)
+avoid transformation errors in using high pass filter
+efficiency is based on the sample size, determined by TR, of the model - but so is fft power...</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="OptimizeDesign11.optimize_rand_search">
+<code class="descclassname">OptimizeDesign11.</code><code class="descname">optimize_rand_search</code><span class="sig-paren">(</span><em>GA</em><span class="sig-paren">)</span><a class="headerlink" href="#OptimizeDesign11.optimize_rand_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just like the GA, but generates random designs each time!</p>
+<p>outputs a random-ordered list of condition #s that optimizes 3 fMRI considerations%</p>
+<dl class="docutils">
+<dt>Ways to avoid block designs</dt>
+<dd>counterbalancing factor
+power lower limit cutoff pushes power higher</dd>
+<dt>Why using avg power is better than efficiency</dt>
+<dd>efficiency doesn&#8217;t account for 1/f model (altho here we just use a cutoff, the same thing)
+avoid transformation errors in using high pass filter
+efficiency is based on the sample size, determined by TR, of the model - but so is fft power...</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Toolboxes</a></li>
+<li><a class="reference internal" href="#module-diagnostics">diagnostics</a></li>
+<li><a class="reference internal" href="#module-GLM_Batch_tools">GLM_Batch_tools</a></li>
+<li><a class="reference internal" href="#module-HRF_Est_Toolbox2">HRF_Est_Toolbox2</a></li>
+<li><a class="reference internal" href="#module-OptimizeDesign11">OptimizeDesign11</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/toolboxes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mat-modindex.html" title="MATLAB Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">CanlabCore 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Tor Wager.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

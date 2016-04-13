@@ -1,6 +1,7 @@
 function h = applycolormap(h,mapname)
-%
-% by Tor Wager
+% ..
+%    by Tor Wager
+% ..
 
 mp2 = colormap; % save current colormap
 mp = colormap(mapname);

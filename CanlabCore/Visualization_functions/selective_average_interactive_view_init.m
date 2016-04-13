@@ -1,29 +1,37 @@
 function selective_average_interactive_view_init(imgs, onsets, scans_per_sess, TR, hp_length, t, basepts, plotstes)
-    %
-    % selective_average_interactive_view_init(imgs, onsets, t, basepts, plotstes)
-    %
-    %
-    % e.g.,
-    % selective_average_interactive_view_init(imgs, onsets, 20, 1:2, 1);
-    %
-    % Initialize point-and-click data extraction and plotting of selective
-    % averages
-    %
-    % Input:
-    % imgs, cell array of image files, one cell per subject
-    %       imgs is cell array of time series image names for each subject
-    %
-    % onsets, cell array of onsets
-    %       Each cell contains its own cell array, with one cell per
-    %       condition.
-    %
-    % t     time points in average to estimate
-    % basepts   indices of baseline points to subtract from individual averages
-    % plotstes  plot standard errors: 1 or 0
+% :Usage:
+% ::
+%
+%    selective_average_interactive_view_init(imgs, onsets, 20, 1:2, 1);
+%
+% Initialize point-and-click data extraction and plotting of selective
+% averages
+%
+% :Inputs:
+%
+%   **imgs:**
+%        cell array of image files, one cell per subject
+%
+%        imgs is cell array of time series image names for each subject
+%
+%   **onsets:**
+%        cell array of onsets
+%
+%        Each cell contains its own cell array, with one cell per
+%        condition.
+%
+%   **t:**
+%        time points in average to estimate
+%
+%   **basepts:**
+%        indices of baseline points to subtract from individual averages
+%
+%   **plotstes:**
+%        plot standard errors: 1 or 0
 
-    % need to do the stuff below only once
 
-    disp('Initializing Selective Average interactive viewer')
+    disp('Initializing Selective Average interactive viewer') % need to do the stuff below only once
+
     disp('-------------------------------------------------')
 
     %     disp('Loading mediation_SETUP.mat')

@@ -1,4 +1,7 @@
-% [cl, dat] = iimg_indx2clusters(dat, volInfo, [u], [k])
+% :Usage:
+% ::
+%
+%     [cl, dat] = iimg_indx2clusters(dat, volInfo, [u], [k])
 %
 % cl is clusters
 % volInfo is vol info, see iimg_read_img
@@ -9,16 +12,23 @@
 % whose elements are the cluster in cl they belong to (useful for adding
 % fields later)
 %
-% Optional:
-% u is height threshold
-%   if single element, only dat values > u will be saved in clusters
-%   if two elements, only dat values BETWEEN u(1) and u(2) will be saved
-%   This convention is the same as that in iimg_threshold.
+% :Optional Input:
 %
-% Tor Wager, updated 4/07 (documentation only)
-% Updated March 16, 2009. Fixed bug in cluster extent threhshold dat output
-% and bug in returning z-scores for matching voxels when extent threshold +
-% abs. is used
+%   **u:**
+%        is height threshold
+%
+%        if single element, only dat values > u will be saved in clusters
+%
+%        if two elements, only dat values BETWEEN u(1) and u(2) will be saved
+%
+%        This convention is the same as that in iimg_threshold.
+%
+% ..
+%    Tor Wager, updated 4/07 (documentation only)
+%    Updated March 16, 2009. Fixed bug in cluster extent threhshold dat output
+%    and bug in returning z-scores for matching voxels when extent threshold +
+%    abs. is used
+% ..
 
 function [cl, dat] = iimg_indx2clusters(dat, volInfo, u, k)
 

@@ -1,30 +1,49 @@
 function [split,numpieces]=explode(string,delimiters)
-%EXPLODE    Splits string into pieces.
-%   EXPLODE(STRING,DELIMITERS) returns a cell array with the pieces
-%   of STRING found between any of the characters in DELIMITERS.
+% EXPLODE    Splits string into pieces.
+% 
+% EXPLODE(STRING,DELIMITERS) returns a cell array with the pieces
+% of STRING found between any of the characters in DELIMITERS.
 %
-%   [SPLIT,NUMPIECES] = EXPLODE(STRING,DELIMITERS) also returns the
-%   number of pieces found in STRING.
+% :Usage:
+% ::
 %
-%   Input arguments:
-%      STRING - the string to split (string)
-%      DELIMITERS - the delimiter characters (string)
-%   Output arguments:
-%      SPLIT - the split string (cell array), each cell is a piece
-%      NUMPIECES - the number of pieces found (integer)
+%     [SPLIT,NUMPIECES] = EXPLODE(STRING,DELIMITERS)
 %
-%   Example:
-%      STRING = 'ab_c,d,e fgh'
-%      DELIMITERS = '_,'
-%      [SPLIT,NUMPIECES] = EXPLODE(STRING,DELIMITERS)
-%      SPLIT = 'ab'    'c'    'd'    'e fgh'
-%      NUMPIECES = 4
+% also returns the number of pieces found in STRING.
 %
-%   See also IMPLODE, STRTOK
+% :Inputs:
 %
+%   **STRING:**
+%        the string to split (string)
+%
+%   **DELIMITERS:**
+%        the delimiter characters (string)
+%
+% :Outputs:
+%
+%   **SPLIT:**
+%        the split string (cell array), each cell is a piece
+%
+%   **NUMPIECES:**
+%        the number of pieces found (integer)
+%
+% :Examples:
+% ::
+%
+%    STRING = 'ab_c,d,e fgh'
+%    DELIMITERS = '_,'
+%    [SPLIT,NUMPIECES] = EXPLODE(STRING,DELIMITERS)
+%    SPLIT = 'ab'    'c'    'd'    'e fgh'
+%    NUMPIECES = 4
+%
+% :See also:
+% IMPLODE, STRTOK
+%
+% ..
 %   Created: Sara Silva (sara@itqb.unl.pt) - 2002.04.30
 %
 %   Modified: Matthew Davidson (matthew@psych.columbia.edu) - 2005.10.11
+% ..
 
 if isempty(string) % empty string, return empty and 0 pieces
     split{1}='';

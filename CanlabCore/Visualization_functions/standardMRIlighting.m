@@ -1,8 +1,18 @@
 function myLight = standardMRIlighting(option,handles)
-% function myLight = standardMRIlighting(option,handles)
-% option = 'full' - all lighting adjustments
-%          'reflectance' - ambient strength and reflectance only
-% handles = [isosurfaceHandle isocapsHandle]            
+% :Usage:
+% ::
+%
+%    myLight = standardMRIlighting(option,handles)
+%
+% :Inputs:
+%
+%   **option:**
+%        'full' - all lighting adjustments
+%
+%        'reflectance' - ambient strength and reflectance only
+%
+%   **handles:**
+%        [isosurfaceHandle isocapsHandle]            
 
 if strcmp(option,'full')
     

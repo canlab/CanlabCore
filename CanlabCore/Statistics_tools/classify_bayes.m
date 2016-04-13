@@ -1,49 +1,68 @@
 function [corrclass, taskclass, realclass, likeratio, m, misclass,ptask,indx,cl] = classify_bayes(meth,y,Xi,varargin)
-    % [corrclass, taskclass, realclass, likeratio, m, misclass,ptask,indx,cl] = classify_bayes(meth,y,Xi,[var args])
-    %
-    % INPUTS:
-    %
-    % y, observations (e.g., studies) x variables (e.g., brain voxels)
-    %
-    % y = SOMResults.dat';
-    %Xi = MC_Setup.Xi(:,1:2);
-    %
-    % meth can be:
-    % {'linear','diagLinear','quadratic','diagQuadratic','mahalanobis'}  :
-    % discriminant analysis
-    % 'bayes' : simple Bayes posterior prob classifier
-    %
-    % tor wager, 10/2/06
-    %
-    % Feature selection parameters: optional inputs
-    %         % selectivity_cutoff: max probability of task given a
-    %         response in a
-    % variable, divided by number of tasks.
-    % 1 = variable must exceed .5 for 2 tasks, .2 for 5 tasks, etc.
-    % 1.5 = .3 for 5 tasks, .75 for 2 tasks, etc.
-    % 0 = no selectivity
-    %
-    % activation_cutoff: max proportion of studies of some type that produced a
-    % response in a variable (e.g., voxel)
-    % .1 is default
-    % 0 is no selectivity
-    %
-    % Examples:
-    % [corrclass, taskclass, realclass, likeratio, m, misclass] = ...
-    % classify_bayes('bayes',MC_Setup.unweighted_study_data',Xi,'selectivity_cutoff',1); corrclass
-    %
-    % [corrclass, taskclass, realclass, likeratio, m, misclass] =
-    % classify_bayes('bayes',MC_Setup.unweighted_study_data',Xi,'selectivity_cutoff',1,'activation_cutoff',.08); corrclass
+% :Usage:
+% ::
+%
+%     [corrclass, taskclass, realclass, likeratio, m, misclass,ptask,indx,cl] = classify_bayes(meth,y,Xi,[var args])
+%
+% :Inputs:
+%
+%   **y:**
+%        observations (e.g., studies) x variables (e.g., brain voxels)
+%
+%        y = SOMResults.dat';
+%
+%   **Xi:**
+%        Xi = MC_Setup.Xi(:,1:2);
+%
+%   **meth:**
+%        can be: {'linear','diagLinear','quadratic','diagQuadratic','mahalanobis'}
+%
+%        discriminant analysis
+%        'bayes' : simple Bayes posterior prob classifier
+%
+% :Optional inputs:
+%
+% Feature selection parameters:
+%
+%   **selectivity_cutoff:**
+%        max probability of task given a response in a variable,
+%        divided by number of tasks.
+%
+%        1 = variable must exceed .5 for 2 tasks, .2 for 5 tasks, etc.
+%
+%        1.5 = .3 for 5 tasks, .75 for 2 tasks, etc.
+%
+%        0 = no selectivity
+%
+%   **activation_cutoff:**
+%        max proportion of studies of some type that produced a
+%        response in a variable (e.g., voxel)
+%
+%        .1 is default
+%
+%        0 is no selectivity
+%
+% :Examples:
+% ::
+%
+%    [corrclass, taskclass, realclass, likeratio, m, misclass] = ...
+%    classify_bayes('bayes',MC_Setup.unweighted_study_data',Xi,'selectivity_cutoff',1); corrclass
+%
+%    [corrclass, taskclass, realclass, likeratio, m, misclass] =
+%    classify_bayes('bayes',MC_Setup.unweighted_study_data',Xi,'selectivity_cutoff',1,'activation_cutoff',.08); corrclass
 %
 % Batch modes:
 % Permutation test: input 'permtest' followed by number of permutations
 % Do not request more than one output variable
- % [corrclass_nullhyp] = classify_bayes('bayes',dat,Xi,'selectivity_cutoff',1.8,'activation_cutoff',.02,'permtest',5);
- %
- % To get mask index of which areas meet feature selection:
- % whsave = sum(indx > 0, 2) > 0;
- %
- 
+% [corrclass_nullhyp] = classify_bayes('bayes',dat,Xi,'selectivity_cutoff',1.8,'activation_cutoff',.02,'permtest',5);
+%
+% To get mask index of which areas meet feature selection:
+% whsave = sum(indx > 0, 2) > 0;
+%
+% ..
+%    tor wager, 10/2/06
+% ..
+
     % select features first, instead of in x-validation (makes x-val
     % invalid; don't do it)
     selectfirst = 0;

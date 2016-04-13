@@ -1,45 +1,74 @@
+function draw_anatomical_roi_2008(meth, varargin)
 % Quick start guide:
 % type draw_anatomical_roi_2008
 %
-% draw_anatomical_roi_2008('init');
-% draw_anatomical_roi_2008('load', 'ROI_midbrain.img');
-% draw_anatomical_roi_2008('init', 'overlay',  'remi_mean_T2.img');
+% :Usage:
+% ::
 %
-% no arguments: init
-% 'init'  : initialize gui and orthviews and remove previous ROI
-% 'load' : load an ROI from a mask
-% 'free' : draw an ROI freehand (click on one of the slices in the Slices window 1st)
-% 'poly' : don't run this yet
-% 'add' : add a region you've drawn on a slice to your ROI 
-% 'remove' : remove a region you've drawn from your ROI
-% 'smooth' : 3-d smoothing of ROI
-% 'write' : write mask image of ROI and return clusters to workspace
-% 'exit': exit. ROI data is stored in the Slices figure, so you can
-% continue to edit, etc. after exiting.
+%     draw_anatomical_roi_2008('init');
+%     draw_anatomical_roi_2008('load', 'ROI_midbrain.img');
+%     draw_anatomical_roi_2008('init', 'overlay',  'remi_mean_T2.img');
 %
-% More notes:
+% :Inputs:
+%
+%   no arguments: init
+%
+%   **'init':**
+%        initialize gui and orthviews and remove previous ROI
+%
+%   **'load':**
+%        load an ROI from a mask
+%
+%   **'free':**
+%        draw an ROI freehand (click on one of the slices in the Slices window 1st)
+%
+%   **'poly':**
+%        don't run this yet
+%
+%   **'add':**
+%        add a region you've drawn on a slice to your ROI 
+%
+%   **'remove':**
+%        remove a region you've drawn from your ROI
+%
+%   **'smooth':**
+%        3-d smoothing of ROI
+%
+%   **'write':**
+%        write mask image of ROI and return clusters to workspace
+%
+%   **'exit':**
+%        exit. ROI data is stored in the Slices figure, so you can
+%        continue to edit, etc. after exiting.
+%
+% :Note:
 % You can use cluster_orthviews to image multiple blobs, and then
 % draw relative to those.
 % this function saves it's data in the Slices figure, so you can draw,
 % re-initialize the orthviews, and keep drawing before you save.
 %
-% e.g., 
-% cluster_orthviews(red, {[1 0 0]}, 'overlay', 'remi_mean_T2.img');
-% cluster_orthviews(stn, {[0 1 0]}, 'add');
-% set(findobj('Tag','Graphics'), 'WindowButtonUpFcn', 'draw_anatomical_roi_2008(''moveslice'');');
-% Use the spm_orthviews menu to ZOOM IN...and keep drawing!
+% :Examples:
+% ::
+%
+%    cluster_orthviews(red, {[1 0 0]}, 'overlay', 'remi_mean_T2.img');
+%    cluster_orthviews(stn, {[0 1 0]}, 'add');
+%    set(findobj('Tag','Graphics'), 'WindowButtonUpFcn', 'draw_anatomical_roi_2008(''moveslice'');');
+%    % Use the spm_orthviews menu to ZOOM IN...and keep drawing!
 %
 % Example of brainstem ROI drawing:
-% draw_anatomical_roi_2008('init', 'overlay',  'remi_mean_T2.img');
-% set(findobj('Tag','Graphics'), 'WindowButtonUpFcn', '');
-% cluster_orthviews(red, {[1 0 0]}, 'overlay', 'remi_mean_T2.img');
-% stn = mask2clusters('ROI_STN.img');
-% cluster_orthviews(stn, {[0 1 1]}, 'add');
-% % Now zoom in to the midbrain in SPM orthviews and draw new ROIs
+% ::
 %
-% Tor Wager, Dec 2008
+%    draw_anatomical_roi_2008('init', 'overlay',  'remi_mean_T2.img');
+%    set(findobj('Tag','Graphics'), 'WindowButtonUpFcn', '');
+%    cluster_orthviews(red, {[1 0 0]}, 'overlay', 'remi_mean_T2.img');
+%    stn = mask2clusters('ROI_STN.img');
+%    cluster_orthviews(stn, {[0 1 1]}, 'add');
+%    % Now zoom in to the midbrain in SPM orthviews and draw new ROIs
+%
+% ..
+%    Tor Wager, Dec 2008
+% ..
 
-function draw_anatomical_roi_2008(meth, varargin)
 
 if nargin < 1, meth = 'init'; end
 

@@ -52,10 +52,10 @@ function obj = threshold(obj, input_threshold, thresh_type, varargin)
 %   **k:**
 %        Followed by extent threshold cluster size, default = 1
 %
-%   **'trim_mask:**
+%   **trim_mask:**
 %        Reduce the mask in obj.voInfo based on thresholding
 %
-%   **'noverbose:**
+%   **noverbose:**
 %        Suppress verbose output
 %
 %

@@ -1,13 +1,40 @@
 function cluster_orthviews_overlap2(masks, varargin)
-% cluster_orthviews_overlap2(masks, ['colors', colors cell], ['surface'], ['negative'] )
-%
 % Plot blobs on the orthviews, and their intersections for
 % activations and deactivations in intermediate colors
-% Positive effects only!!!
 %
-% A good function, but not polished yet.  needs debugging for various
-% minor issues.
-% tor wager, june 2010
+% :Usage:
+% ::
+%
+%    cluster_orthviews_overlap2(masks, ['colors', colors cell], ['surface'], ['negative'] )
+%
+% Positive effects only!
+%
+% :Inputs
+% 
+%     **masks**
+%     image_vector  or fmri_data object
+%     
+% :Optional Inputs
+% 
+% 	**colors**
+%     'colors',{[RGB],[RGB],..} cell array of RGB triplets
+%     
+%     **surface**
+%     'surface',[0/1]
+%     default =1 
+%     
+%     **negative**
+%     'negative' string to only use negative clusters, otherwise only positive clusters
+%     
+%     **nomontage**
+%     'nomontage',[0/1]
+%     don't do montage, default do a montage
+%     
+% ..
+%    tor wager, june 2010
+%    A good function, but not polished yet.  needs debugging for various
+%    minor issues.
+% ..
 
 if isa(masks, 'image_vector')
     loadfromfile = 0;

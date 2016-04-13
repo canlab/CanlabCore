@@ -1,18 +1,22 @@
 function permindx = permute_setupperms(n,nperms)
-%
 % Set up permutations x observations matrix of observation indices for
 % permutation test
 %
-% Uses code from SnPM3b by Tom Nichols
-% adapted for this function by Tor Wager
+% :Usage:
+% ::
 %
-% permindx = permute_setupperms(n,nperms) % approximate test with nperms obs.
-% permindx = permute_setupperms(n,[])
+%    % approximate test with nperms obs.
+%    permindx = permute_setupperms(n,nperms)
+%    permindx = permute_setupperms(n,[])
 %
-% permindx = permute_setupperms(n)      % exact test (all permutations) of
-%                                       n observations
+%    % exact test (all permutations) of n observations
+%    permindx = permute_setupperms(n)
 %
-%
+% ..
+%    Uses code from SnPM3b by Tom Nichols
+%    adapted for this function by Tor Wager
+% ..
+
 
 if nargin < 2 || isempty(nperms) || nperms == 0
     OUT.meth = 'exact';

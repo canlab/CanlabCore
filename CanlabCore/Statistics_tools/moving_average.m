@@ -1,14 +1,16 @@
 function y = moving_average(meth,data,varargin)
-%
 % Symmetrical moving average filters
 % (matlab's internal moving avg filter functions are asymmetric)
 %
 % Works on each column of the data input matrix
 %
-% y = moving_average('gaussian',data,fwhm)
-% note: fwhm is not actually fhwm now...it's related to width though
-% (temporary)
-% y = moving_average('gaussian',data,20);
+% :Examples:
+% ::
+%
+%    y = moving_average('gaussian',data,fwhm)
+%
+%    % fwhm is not actually fhwm now...it's related to width though (temporary)
+%    y = moving_average('gaussian',data,20);
 
 nshift = 0;
 

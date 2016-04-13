@@ -1,18 +1,21 @@
-% [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
+function [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
+% :Usage:
+% ::
 %
-% Documentation not complete. please update me.
-% Tor Wager, Oct 2008
+%     [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
 %
-% Example:
-% -----------------------------------------
-% load Parcellation_info/parcellation.mat
-% [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
+% :Examples:
+% ::
 %
-% parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save')
-% parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info')
+%    load Parcellation_info/parcellation.mat
+%    [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
 %
-% Complete methods example:
-% 1. Dimension reduction
+%    parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save')
+%    parcel_cl_nmds_plots(parcel_cl_avgs, NMDS, 'save', 'savedir', 'Parcellation_info')
+%
+% :Complete methods example:
+
+%% 1. Dimension reduction
 % 
 % Clustering of multivariate data is most stable when the data is not sparse, i.e., the dimensionality is low relative to the number of observations. To limit the dimensionality of the data, a spatio-temporal dimension-reduction step is first performed on the [n x v x N] data matrix of  AUC data for n trials x v voxels x N participants (here, n = 48 trials [usually], v = 17,112 voxels , and N = 26 participants).  A temporal data reduction is first performed to identify components with correlated AUC trial time series within each participant, followed by a spatial reduction to identify components with correlated spatial patterns across subjects.  First, the [n x v] matrix of AUC data for each participant was subjected to PCA, using the [v x v] correlation matrices.  Based on the scree plots across subjects, we saved the first 7 eigenvectors (spatial maps).  These eigenvectors explained 74 +- 2.5% (st. dev. across subjects) of the variance in the full dataset. These eigenvectors were scaled by their variances (eigenvalues) and concatenated across subjects to form an [v x N*7] matrix of eigenvectors.   This matrix was subjected to second (across participant) PCA step to identify components with similar spatial maps across participants.  We retained 12 eigenvectors (maps) based on the scree plot, which explained 65% of the variance across individuals. Component scores in this space were used for clustering.  This is a data reduction step, and the results are not expected to depend strongly on the number of eigenvectors retained at either step, as long as most of the variance in the data is explained.
 % 
@@ -23,13 +26,15 @@
 % 3. NMDS and clustering
 % 
 % Parcels were now treated as the unit of analysis, and the AUC trial time series data were extracted from each parcel for each subject.  Values in the  [n trials x parcels x N subjects]  data matrix were z-scored within participant to remove inter-subject differences in scaling, then concatenated into an [n*N x parcels] data matrix.  Correlations among parcels were converted into a [parcels x parcels] matrix of distances using the formula distance = (1 - r) / 2. The NMDS stress plot (which operates on ranked distances and is therefore more robust to outliers and does not require a strictly Euclidean distance space) was examined and 7 dimensions (which explained 79% of the variance in distances) were retained for the final cluster analysis.  
-% 	Hierarchical agglomerative clustering with average linkage was used to cluster the parcels in this space into interconnected networks with correlated AUC trial time series. To choose the number of clusters in the final solution (k), for every possible choice of clusters between  k = 2 and 20, we compared the cluster solution to the average and standard deviation of 1,000 clustering iterations with permuted parcel time series.  This yielded a Z-score ([actual solution - mean permuted solution] /  standard deviation of permuted solution for each value of k. The best solution was k = 13, with a value of Z = 5.57 compared to the null-hypothesis single-cluster solution (p < .0001).
-        
-function [parcel_cl_avgs, NMDS, class_clusters] = parcel_cl_nmds(parcel_cl_avgs)
+% Hierarchical agglomerative clustering with average linkage was used to cluster the parcels in this space into interconnected networks with correlated AUC trial time series. To choose the number of clusters in the final solution (k), for every possible choice of clusters between  k = 2 and 20, we compared the cluster solution to the average and standard deviation of 1,000 clustering iterations with permuted parcel time series.  This yielded a Z-score ([actual solution - mean permuted solution] /  standard deviation of permuted solution for each value of k. The best solution was k = 13, with a value of Z = 5.57 compared to the null-hypothesis single-cluster solution (p < .0001).
+%
+% ..
+%    Documentation not complete. please update me.
+%    Tor Wager, Oct 2008
+% ..
 
-    % Get networks of these parcels
-    % ---------------------------
-    disp('Getting networks of parcels')
+
+    disp('Getting networks of parcels') % Get networks of these parcels
 
     clear data
     N = length(parcel_cl_avgs(1).timeseries);

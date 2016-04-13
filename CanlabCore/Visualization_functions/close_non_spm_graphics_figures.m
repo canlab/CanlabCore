@@ -1,7 +1,20 @@
-function close_non_spm_graphics_figures
-%close_non_spm_graphics_figures
+function close_non_spm_graphics_figures()
+
+% :Usage:
+% ::
 %
-% closes all figure windows that are not the SPM orthviews window
+%    close_non_spm_graphics_figures()
+%
+% purpose:  closes all figure windows that are not the SPM orthviews window
+%
+% :Input:
+%
+%   
+%
+% :Output:
+%
+%   
+% 
 
 
 fh = findobj('Type','Figure');

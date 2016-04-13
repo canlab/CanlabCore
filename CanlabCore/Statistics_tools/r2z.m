@@ -1,40 +1,60 @@
 function [rci,sig,Z,p,rcrit] = r2z(r,n,varargin)
-% [rci,sig,Z,p,rcrit] = r2z(r,n,[alph])
+% Fisher's r to Z transformation for providing CIs for a correlation
 %
-% Fisher's r to Z transformation
-% for providing CIs for a correlation
+% :Usage:
+% ::
 %
-% n = # of observations going into correlation
-% (count each row/subject once)
+%     [rci,sig,Z,p,rcrit] = r2z(r,n,[alph])
 %
-% df = n - 3
-% alph = two-tailed p-value cutoff, 
-% default is p < .05 
+% :Inputs:
 %
-% rci = confidence interval in correlation values
-% sig = significant at alpha value?
-% Z = z-scores of correlations
-% p = p-values
+%   **n:**
+%        n, # of observations going into correlation
+%        (count each row/subject once)
+%
+%        df = n - 3
+%
+%   **alph:**
+%        two-tailed p-value cutoff, 
+%        default is p < .05 
+%
+% :Outputs:
+%
+%   **rci:**
+%        confidence interval in correlation values
+%
+%   **sig:**
+%        significant at alpha value?
+%
+%   **Z:**
+%        z-scores of correlations
+%
+%   **p:**
+%        p-values
 %
 % can take a vector of r values
 %
-% tor wager
+% :Examples:
+% ::
 %
-% Example:
-%[rci,sig,z] = r2z(.1:.05:.9,5,.05); figure('Color','w');hold on; plot(.1:.05:.9,rci(:,1),'g','LineWidth',2)
-%[rci,sig,z] = r2z(.1:.05:.9,10,.05); hold on; plot(.1:.05:.9,rci(:,1),'r','LineWidth',2)
-%[rci,sig,z] = r2z(.1:.05:.9,20,.05); hold on; plot(.1:.05:.9,rci(:,1),'b','LineWidth',2)
-%[rci,sig,z] = r2z(.1:.05:.9,40,.05); hold on; plot(.1:.05:.9,rci(:,1),'m','LineWidth',2)
-%[rci,sig,z] = r2z(.1:.05:.9,80,.05); hold on; plot(.1:.05:.9,rci(:,1),'k','LineWidth',2)
-%set(gca,'FontSize',18)
-%legend({'n = 5' 'n = 10' 'n = 20' 'n = 40' 'n = 80'})
-%title('.05 Confidence interval lower bound on Pearson''s r')
-%xlabel('Correlation (r)')
-%ylabel('CI Lower Bound (r)')
-% c=.2:.01:.5;,[rci,sig,z,p,rcrit]=r2z(c,39,.05);[c' sig p]
+%    [rci,sig,z] = r2z(.1:.05:.9,5,.05); figure('Color','w');hold on; plot(.1:.05:.9,rci(:,1),'g','LineWidth',2)
+%    [rci,sig,z] = r2z(.1:.05:.9,10,.05); hold on; plot(.1:.05:.9,rci(:,1),'r','LineWidth',2)
+%    [rci,sig,z] = r2z(.1:.05:.9,20,.05); hold on; plot(.1:.05:.9,rci(:,1),'b','LineWidth',2)
+%    [rci,sig,z] = r2z(.1:.05:.9,40,.05); hold on; plot(.1:.05:.9,rci(:,1),'m','LineWidth',2)
+%    [rci,sig,z] = r2z(.1:.05:.9,80,.05); hold on; plot(.1:.05:.9,rci(:,1),'k','LineWidth',2)
+%    set(gca,'FontSize',18)
+%    legend({'n = 5' 'n = 10' 'n = 20' 'n = 40' 'n = 80'})
+%    title('.05 Confidence interval lower bound on Pearson''s r')
+%    xlabel('Correlation (r)')
+%    ylabel('CI Lower Bound (r)')
+%    c=.2:.01:.5;,[rci,sig,z,p,rcrit]=r2z(c,39,.05);[c' sig p]
 %
-% ind=1;for i=1:10:5000,[rci,s,z,p,rc(ind)]=r2z(.5,39,.05/i);,ind=ind+1;,end
-% figure;plot(1:10:5000,rc);title('Critical r with Bonf correction'),xlabel('Comparisons')
+%    ind=1;for i=1:10:5000,[rci,s,z,p,rc(ind)]=r2z(.5,39,.05/i);,ind=ind+1;,end
+%    figure;plot(1:10:5000,rc);title('Critical r with Bonf correction'),xlabel('Comparisons')
+%
+% ..
+%    tor wager
+% ..
 
 alph = .05;
 if length(varargin) > 0, alph = varargin{1};, end

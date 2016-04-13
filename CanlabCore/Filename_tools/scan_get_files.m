@@ -1,9 +1,12 @@
-% files = scan_get_files(n, filt, mesg, wd)
-%
+function files = scan_get_files(n, filt, mesg, wd)
 % Drop-in replacement for spm_get. 
 % Main advantage is that it can use spm_select for SPM5+ to mimic older spm_get behavior.
+%
+% :Usage:
+% ::
+%
+%     files = scan_get_files(n, filt, mesg, wd)
 
-function files = scan_get_files(n, filt, mesg, wd)
     if(~exist('wd', 'var') || isempty(wd))
         wd = pwd();
     end

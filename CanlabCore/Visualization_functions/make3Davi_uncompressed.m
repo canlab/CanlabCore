@@ -1,35 +1,63 @@
-function mov = make3davi(varargin)
-% function mov = make3davi([opt] Options_Structure)
+function mov = make3Davi_uncompressed(varargin)
+% :Usage:
+% ::
+%
+%    mov = make3davi([opt] Options_Structure)
 %
 % Makes an avi movie file called head3d[x].avi or whatever you specify.
 %
-% By Tor Wager, 10/07/01
+% :Options:
 %
-% Options:
-% O.name = 'output_name.avi';
-% O.fps = frames per second
-% O.length = length of movie in s
-% O.H = cluster handles in vector   (for adjusting transparency with time)
-% O.timecourse{i} = cell array of time courses for each cluster
-% O.timeres = resolution, in s, of timecourse data
-% O.azOffset = azimuth value to offset, positive = move clockwise
-% O.elOffset = elevation value to move through, positive = inf to superior
-% O.zoom = zoom value to end up with
-% O.add2movie = add to existing movie - enter mov structure in this field
-% O.closemovie = 1 or 0, close the movie afterward or not.
+%   **O.name:**
+%        'output_name.avi';
+%
+%   **O.fps:**
+%        frames per second
+%
+%   **O.length:**
+%        length of movie in s
+%
+%   **O.H:**
+%        cluster handles in vector   (for adjusting transparency with time)
+%
+%   **O.timecourse{i}:**
+%        cell array of time courses for each cluster
+%
+%   **O.timeres:**
+%        resolution, in s, of timecourse data
+%
+%   **O.azOffset:**
+%        azimuth value to offset, positive = move clockwise
+%
+%   **O.elOffset:**
+%        elevation value to move through, positive = inf to superior
+%
+%   **O.zoom:**
+%        zoom value to end up with
+%
+%   **O.add2movie:**
+%        add to existing movie - enter mov structure in this field
+%
+%   **O.closemovie:**
+%        1 or 0, close the movie afterward or not.
 %
 % Blank fields for az, el, zoom, timecourse indicate that these functions should not be performed
 % This script spirals up, right, and in 36 degrees
 %
-% notes: my indeo5 one wouldn't work in media player
-%        also only seems to work if you add clusters before head isosurfaces
+% :Notes: my indeo5 one wouldn't work in media player
+%         also only seems to work if you add clusters before head isosurfaces
 %
-% start with the image in the location you want to zoom in on
+% Start with the image in the location you want to zoom in on
 % but with no zoom.
+%
+% ..
+%    By Tor Wager, 10/07/01
+% ..
 
-% -------------------------------------------
-% * set default values and inputs
-% -------------------------------------------
+
+% ..
+%    set default values and inputs
+% ..
 myName = 'head3d1.avi'; i = 1;                      % set name to first unused file #
 while exist(myName) == 2, myName = ['head3d' num2str(i) '.avi'];, i = i+1;,end
 O.name = myName;

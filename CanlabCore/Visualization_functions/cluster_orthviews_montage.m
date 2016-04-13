@@ -1,25 +1,32 @@
-% [slices_fig_h, slice_mm_coords, slice_vox_coords, axis_handles] = cluster_orthviews_montage(spacing, myview, [overlay], [other optional args])
+function [slices_fig_h, slice_mm_coords, slice_vox_coords, newax] = cluster_orthviews_montage(spacing, myview, varargin)
+% :Usage:
+% ::
+%
+%    [slices_fig_h, slice_mm_coords, slice_vox_coords, axis_handles] = cluster_orthviews_montage(spacing, myview, [overlay], [other optional args])
 %
 % Runs on top of spm_orthviews, creates montages from current orthviews
 % display, whatever it is
 %
-% Usage:
-% cluster_orthviews_montage(6, 'coronal');   % 6 mm spacing
-% cluster_orthviews_montage(10, 'sagittal', 'range', [-10 10]); % 10 mm spacing sag view with only parasagittal slices
-% cluster_orthviews_montage(12, 'axial');    % 12 mm spacing, axial view
+% :Examples:
+% ::
+%
+%    cluster_orthviews_montage(6, 'coronal');   % 6 mm spacing
+%    cluster_orthviews_montage(10, 'sagittal', 'range', [-10 10]); % 10 mm spacing sag view with only parasagittal slices
+%    cluster_orthviews_montage(12, 'axial');    % 12 mm spacing, axial view
 %
 % additional options: enter AFTER overlay:
-%  'whichorth', whichorth = varargin{i+1}; varargin{i:i+1} = [];
-%  'onerow', doonerow = 1; varargin{i} = [];
-%  'range', followed by [min max] mm coords for slices
-%  'xhairs', xhairs = 1; turn on cross-hairs on slice plot
-%
-% tor wager, aug 2006; updated (minor) April 2011. Update: Aug 2012 -
-% changed default slices to match canlab_results_fmridisplay
+%   - 'whichorth', whichorth = varargin{i+1}; varargin{i:i+1} = [];
+%   - 'onerow', doonerow = 1; varargin{i} = [];
+%   - 'range', followed by [min max] mm coords for slices
+%   - 'xhairs', xhairs = 1; turn on cross-hairs on slice plot
 %
 % used in cluster_orthviews_classes
+%
+% ..
+%    tor wager, aug 2006; updated (minor) April 2011. Update: Aug 2012 -
+%    changed default slices to match canlab_results_fmridisplay
+% ..
 
-function [slices_fig_h, slice_mm_coords, slice_vox_coords, newax] = cluster_orthviews_montage(spacing, myview, varargin)
 
 overlay = [];
 xhairs = 0;
@@ -125,6 +132,9 @@ axh = axh(whview);
 
 slices_fig_h = create_figure(['montage_' myview]);
 set(slices_fig_h, 'Color', 'k');
+if not(feature('ShowFigureWindows'));
+  set(slices_fig_h, 'Visible', 'off');
+end
 
 % copy existing colormap
 fh = findobj('Tag', 'Graphics');
@@ -132,28 +142,31 @@ if strcmp(get(fh, 'Type'), 'figure') && ishandle(fh)
     set(slices_fig_h, 'colormap', get(fh, 'colormap'))
 end
 
-% Resize figure based on view
-ss = get(0, 'ScreenSize');
-if doonerow
+				% Resize figure based on view
+if feature('ShowFigureWindows');
+  ss = get(0, 'ScreenSize');
+  if doonerow
     switch myview
-        case {'axial'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.9) round(ss(4)/7) ])
-        case {'coronal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/7) ])
-        case 'sagittal'
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.7) round(ss(3)*.6) round(ss(4)/5.5) ])
+      case {'axial'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.9) round(ss(4)/7) ])
+      case {'coronal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/7) ])
+      case 'sagittal'
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)*.7) round(ss(3)*.6) round(ss(4)/5.5) ])
     end
-else
+  else
     switch myview
-        case {'axial'}
-            %how far right, how far up, how big across, how big up
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
-        case {'coronal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
-        case {'sagittal'}
-            set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'axial'}
+		%how far right, how far up, how big across, how big up
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'coronal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
+      case {'sagittal'}
+        set(slices_fig_h, 'Position', [round(ss(3)/12) round(ss(4)/12) round(ss(3)*.7) round(ss(4)*.7) ])
     end
+  end
 end
+
 
 for i = 1:num_axes
     

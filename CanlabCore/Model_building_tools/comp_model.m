@@ -1,5 +1,3 @@
-classdef comp_model < handle & design_matrix
-    
     % comp_model: data class for creating a computational model
     %
     % Computational Model Class: comp_model
@@ -64,7 +62,8 @@ classdef comp_model < handle & design_matrix
     %     You should have received a copy of the GNU General Public License
     %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     % -------------------------------------------------------------------------
-    
+
+classdef comp_model < handle & design_matrix
     properties
         % inherits properties from design_matrix
         model = [];

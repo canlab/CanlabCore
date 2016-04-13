@@ -1,8 +1,12 @@
-function spm_orthviews_white_background
-% spm_orthviews_white_background
+function spm_orthviews_white_background()
+% :Usage:
+% ::
+%
+%    spm_orthviews_white_background
 %
 % Set up orthviews to draw with a white background and softened grayscale
 % brain
+%
 % No input arguments.  Updates spm's global variable st
 % 
 % Uses SPM_OV_BLACK2WHITE.M

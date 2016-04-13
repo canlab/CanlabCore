@@ -1,49 +1,67 @@
 function [averages, stderrs, data, indices] = selective_average(y, onsets, varargin)
-    % [averages, stderrs, data, indices] = selective_average(y, onsets, varargin)
-    %
-    % Purpose: Get a selective average of values of data vector y, given
-    % onsets specified in onsets.  Onsets can be fractional; in this case,
-    % linear interpolation is used.
-    %
-    % INPUTS
-    % y is a data vector to get selective averages from.
-    % It should be a column vector.
-    %
-    % onsets should be a cell array, with one cell per condition
-    % each cell should contain a column vector of onset times in SAMPLES (same
-    % resolution as y; e.g., in TRs, if y is an fMRI time series.
-    %
-    % OPTIONAL INPUTS
-    % 't', followed by number of time points following onset to use;
-    % default is 20
-    %
-    % 'plot', plot results. 
-    %
-    % 'baseline', followed by vector of which time points are baseline
-    % values; will subtract from each
-    %
-    % OUTPUTS
-    % data, indices, averages, stderrs:  Cell vectors, one cell per condition
-    % data, indices: time points (observations) x trials (onsets)
-    %
-    % indices : Cell vector, one cell per condition; time points (observations) x trials (onsets)
-    %
-    %
-    % Example: with fake data
-    % onsets = {[1 10 30 80]'  [20 60 90]'}; y = (1:120)';
-    % [averages, stderrs, data, indices] = selective_average(y, onsets, 't', 20)
-    %
-    % V = spm_vol(EXPT.FILES.im_files{1});
-    % y = spm_get_data(V, [10 10 10 1]');
-    % [averages, stderrs, data, indices] = selective_average(y, onsets2(1), 't', 20, 'plot');
-    %
-    %
-    % Tor Wager, Dec 2007
-    % Minor update: June 2009
+% Purpose: Get a selective average of values of data vector y, given
+% onsets specified in onsets.  Onsets can be fractional; in this case,
+% linear interpolation is used.
+%
+% :Usage:
+% ::
+%
+%    [averages, stderrs, data, indices] = selective_average(y, onsets, varargin)
+%
+% :Inputs:
+%
+%   **y:**
+%        is a data vector to get selective averages from.
+%        It should be a column vector.
+%
+%   **onsets:**
+%        should be a cell array, with one cell per condition
+%        each cell should contain a column vector of onset times in SAMPLES (same
+%        resolution as y; e.g., in TRs, if y is an fMRI time series.
+%
+% :Optional Inputs:
+%
+%   **t:**
+%        followed by number of time points following onset to use;
+%        default is 20
+%
+%   **plot:**
+%        plot results. 
+%
+%   **baseline:**
+%        followed by vector of which time points are baseline
+%        values; will subtract from each
+%
+% :Outputs:
+%
+%   **data:**
+%        indices, averages, stderrs:  Cell vectors, one cell per condition
+%
+%   **data, indices:**
+%        time points (observations) x trials (onsets)
+%
+%   **indices:**
+%        Cell vector, one cell per condition; time points (observations) x trials (onsets)
+%
+%
+% :Examples:
+% ::
+%
+%    onsets = {[1 10 30 80]'  [20 60 90]'}; y = (1:120)';
+%    [averages, stderrs, data, indices] = selective_average(y, onsets, 't', 20)
+%
+%    V = spm_vol(EXPT.FILES.im_files{1});
+%    y = spm_get_data(V, [10 10 10 1]');
+%    [averages, stderrs, data, indices] = selective_average(y, onsets2(1), 't', 20, 'plot');
+%
+% ..
+%    Tor Wager, Dec 2007
+%    Minor update: June 2009
+% ..
 
-    % ---------------------------------------------------------------------
-    % Optional inputs
-    % ---------------------------------------------------------------------
+    % ..
+    %    Optional inputs
+    % ..
     t = 20;
     doplot = 0;
     basepts = [];

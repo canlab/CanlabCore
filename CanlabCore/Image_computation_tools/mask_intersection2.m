@@ -1,25 +1,42 @@
 function [clusters,vol,V,XYZ,Q] = mask_intersection2(clsize,outname,P,calcstr)
-% function [clusters,vol,V,XYZ,Q] = mask_intersection2(clsize,outname,P,calcstr)
-% by Tor Wager
-%
 % empty P prompts for graphic selection of filenames
 % extra arguments are more file names for 3 - n-way intersection
 % empty outname prompts for entry of output img file name
+%
+% :Usage:
+% ::
+%
+%     function [clusters,vol,V,XYZ,Q] = mask_intersection2(clsize,outname,P,calcstr)
 %
 % this version allows contrasts
 % last argument, calcstr, is the string to evaluate in imcalc
 %
 % e.g., intersection of 4 images: 
-% 'i1 & i2 & i3 & i4 & ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))'
-% e.g., 'i1 & i2 & ~i3 & ~i4 & ~(isnan(i1) | isnan(i2))
-%  = intersection of i1 and i2 and not i3 and not i4
-% or 'i1 & i2 & isnan(i3) & isnan(i4) & ~(isnan(i1) | isnan(i2))'
+% ::
+%
+%    'i1 & i2 & i3 & i4 & ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))'
+%
+% e.g.,
+% ::
+%
+%    'i1 & i2 & ~i3 & ~i4 & ~(isnan(i1) | isnan(i2)) = intersection of i1 and i2 and not i3 and not i4
+%
+% or
+%
+% ::
+%
+%    'i1 & i2 & isnan(i3) & isnan(i4) & ~(isnan(i1) | isnan(i2))'
 %  ... for nan masked images
 %
-% cl = mask_intersection2(5,'intersect001.img',P,'i1 & i2 & i3 & i4 & ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))');
+%     cl = mask_intersection2(5,'intersect001.img',P,'i1 & i2 & i3 & i4 & ~(isnan(i1) | isnan(i2) | isnan(i3) | isnan(i4))');
+%
+% ..
+%    by Tor Wager
+% ..
 
-% get file names and calcstr to evaluate
-% ------------------------------------------------
+% ..
+%    get file names and calcstr to evaluate
+% ..
 
 if isempty(P)
 	P = spm_get(Inf,'*.img','Select binary mask images to intersect',pwd,0);

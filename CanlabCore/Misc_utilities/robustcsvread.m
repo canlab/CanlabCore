@@ -1,6 +1,6 @@
-% ROBUSTCSVREAD reads in CSV files with
-% different number of columns on different
-% lines
+function MM=robustcsvread(filename, varargin)
+% ROBUSTCSVREAD reads in CSV files with different number of columns
+% on different lines
 %
 % This returns a struct, with one field per column of the csv file.
 % Each field is a cell array whose length = rows in the csv file.  Column
@@ -8,21 +8,26 @@
 % If column names are invalid struct field names, edits them by replacing
 % funky characters with an underscore, or if first char is a number, I
 % prepend aa_ to the field name.
-% 
-% varargin:  
-%    cols: how many cols to read in, by defaults reads them all
-%    rows_to_skip:  how many rows to skip
-%    delim:  cell delimiter
-%    missing:  followed by cell array, first cell is val for missing,
-%    second cell is what to replace with
 %
+% :Inputs:
 %
-% extended by Yoni Ashar, 10/2012
-% 
-% original code off the fileexchange, by
-% robbins@bloomberg.net
-% michael.robbins@us.cibc.com
-function MM=robustcsvread(filename, varargin)
+%   **varargin:**
+%        cols:  how many cols to read in, by defaults reads them all
+%
+%        rows_to_skip:  how many rows to skip
+%
+%        delim:  cell delimiter
+%
+%        missing:  followed by cell array, first cell is val for missing,
+%                   second cell is what to replace with
+%
+% ..
+%    extended by Yoni Ashar, 10/2012
+%
+%    original code off the fileexchange, by
+%    robbins@bloomberg.net
+%    michael.robbins@us.cibc.com
+% ..
 
 cols = NaN; 
 n_h = 0;

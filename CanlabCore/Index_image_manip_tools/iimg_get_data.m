@@ -1,51 +1,69 @@
-% [dat, maskInfo] = iimg_get_data(mask, imageNames, varargin)
-%
 % Read data within a mask (described by maskInfo) for 3-D or 4-D image data
 % See examples below.
 %
-% 3 input options for mask:
-% 1) a filename string, e.g., 'mask.img'
-% 2) volInfo structure (from iimg_read_img)
-% 3) xyz list, n rows x 3 voxel coordinates
+% :Usage:
+% ::
 %
-% Optional inputs:
+%     [dat, maskInfo] = iimg_get_data(mask, imageNames, varargin)
 %
-% 'nocheck': Skip checking of image dimensions for homogeneity (saves time)
-% 'verbose': Verbose output
-% 'single' : This option may be helpful for large datasets.  It
-%            pre-allocates a single-precision matrix for the data (which
-%            saves space), and then loads the data one image at a time.
-% 'noexpand': Skip expanding the list of volumes for 4-D filenames.  The
-%             expansion is the default, and is compatible with spm2 and spm5/8, but is
-%             not needed for spm5 and above.
+% :Inputs:
+%
+%   3 input options for mask:
+%      1) a filename string, e.g., 'mask.img'
+%      2) volInfo structure (from iimg_read_img)
+%      3) xyz list, n rows x 3 voxel coordinates
+%
+% :Optional inputs:
+%
+%   **'nocheck':**
+%        Skip checking of image dimensions for homogeneity (saves time)
+%
+%   **'verbose':**
+%        Verbose output
+%
+%   **'single':**
+%        This option may be helpful for large datasets.  It
+%        pre-allocates a single-precision matrix for the data (which
+%        saves space), and then loads the data one image at a time.
+%
+%   **'noexpand':**
+%        Skip expanding the list of volumes for 4-D filenames.  The
+%        expansion is the default, and is compatible with spm2 and spm5/8,
+%        but is not needed for spm5 and above.
 % 
-% Examples:
-% 1) [dat, volInfo] = iimg_get_data('graymask.img', imgs);
+% :Examples:
+% ::
 %
-% 3) xyz = [20 20 20; 25 25 25; 30 30 30; 5 5 5];
-% [dat, volInfo] = iimg_get_data(xyz, imgs);
+%    [dat, volInfo] = iimg_get_data('graymask.img', imgs);
+%
+%    xyz = [20 20 20; 25 25 25; 30 30 30; 5 5 5];
+%    [dat, volInfo] = iimg_get_data(xyz, imgs);
 %
 % Example of image reading
-% -------------------------------------------------------------------------
-% % 1) Get volume info from first volume of a 3-D or 4-D image
-% %     volInfo structure has necessary info for converting to/from
-% %     "vectorized" format
-% %     dat returns 4-D data from entire image (all volumes)
 %
-% img_name = 'test_run1_pca.img';
-% [maskInfo, dat] = iimg_read_img(img_name, 2);
+%   1) Get volume info from first volume of a 3-D or 4-D image
+%      volInfo structure has necessary info for converting to/from
+%      "vectorized" format
+%      dat returns 4-D data from entire image (all volumes)
+%      ::
 %
-% % 2) Get data in "vectorized" image format for each volume in the
-% %    image. Works for a list of images too. data is in-mask voxels x volumes
-% %    this can be useful when you want to return whole-brain data for many
-% %    images, but in a search volume only (i.e., no extra-brain voxels)
+%          img_name = 'test_run1_pca.img';
+%          [maskInfo, dat] = iimg_read_img(img_name, 2);
 %
-% data = iimg_get_data(maskInfo, img_name);
-% data = data';  % make sure columns are volumes
+%   2) Get data in "vectorized" image format for each volume in the
+%      image. Works for a list of images too. data is in-mask voxels x volumes
+%      this can be useful when you want to return whole-brain data for many
+%      images, but in a search volume only (i.e., no extra-brain voxels)
+%      ::
 %
-% % 3) Write out a 4-D image with the same data, called test_run1_pca2.img
-% voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname',
-% 'test_run1_pca2.img');
+%          data = iimg_get_data(maskInfo, img_name);
+%          data = data';  % make sure columns are volumes
+%
+%   3) Write out a 4-D image with the same data, called test_run1_pca2.img
+%      ::
+%
+%          voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname',
+%                                                  'test_run1_pca2.img');
 
 function [dat, maskInfo] = iimg_get_data(mask, imageNames, varargin)
 docheck = 1;

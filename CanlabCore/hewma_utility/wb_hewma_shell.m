@@ -1,18 +1,22 @@
 function EXPT = wb_hewma_shell(EXPT,varargin)
-% EXPT = wb_hewma_shell(EXPT,[start slice or vector of slices],[dools],[mask])
+% :Usage:
+% ::
 %
-% Tor Wager, 10/2/05
-%
-% 
+%     EXPT = wb_hewma_shell(EXPT,[start slice or vector of slices],[dools],[mask])
+
 % Run EWMA first: wb_multisubject_ewma.
 %
 % Fields in EXPT needed:
-% subdir
-% im_files
-% FILES.ewma_z
-% FILES.ewma_var
-% [cov]
-% [mask]
+%   - subdir
+%   - im_files
+%   - FILES.ewma_z
+%   - FILES.ewma_var
+%   - [cov]
+%   - [mask]
+%
+% ..
+%    Tor Wager, 10/2/05
+% ..
 
 global xdim
 global ydim

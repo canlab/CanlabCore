@@ -1,24 +1,45 @@
 function [fv,bp,yy,myfft] = splineDetrend(v,varargin)
-% [fv,bp,yy,myfft] = splineDetrend(v,'p' [opt])
-% input: v, a vector to be detrended
-% output: fv, the detrended vector, bp, the knot points,
-%           and myfft, the abs(fft) of the detrended vector.
-%
 % What it does:
 % A spline detrend with knot points every 2 s (hard coded number)
 % I made this up too - it's not the FDA approved method.
 %
-% By Tor Wager, 08/04/01
-% tmp = cl(1).raw_data(:,1,6); tmp2 = trimts(tmp,3,[],1); [fv,bp,yy]=splineDetrend(tmp2);
-% [fv,bp] = splineDetrend(tmp2,'p');
-% 
-% 'p' means plot
-% any other opt argument sets the knots and is treated as an integer, with detrending every n
-% elements.
+% :Usage:
+% ::
+%
+%     [fv,bp,yy,myfft] = splineDetrend(v,'p' [opt])
+%
+% :Input:
+%
+%   **v:**
+%        a vector to be detrended
+%
+% :Optional Inputs:
+%
+%   **p:**
+%        means plot
+%
+%   any other opt argument sets the knots and is treated as an integer, with detrending every n
+%   elements.
+%
+% :Outputs:
+%
+%   **fv:**
+%        the detrended vector, bp, the knot points, and myfft, the
+%        abs(fft) of the detrended vector.
+%
+% :Examples:
+% ::
+%
+%    tmp = cl(1).raw_data(:,1,6); tmp2 = trimts(tmp,3,[],1); [fv,bp,yy]=splineDetrend(tmp2);
+%    [fv,bp] = splineDetrend(tmp2,'p');
+%
+% ..
+%    By Tor Wager, 08/04/01
+% ..
 
-% -------------------------------------------------
-% * setup
-% -------------------------------------------------
+% ..
+%    * setup
+% ..
 
 samprate = 1;   % default to 1 to use every knotrate images
 knotrate = 10;   % every 100 images by default

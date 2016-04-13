@@ -1,14 +1,15 @@
 function [XYZ,XYZmm,val,V] = img2voxel(P,varargin)
-%
-% given a mask or filtered image file name, 
+% Given a mask or filtered image file name, 
 % returns XYZ coordinates in voxels and mm
 % of nonzero, non-NaN voxels
 %
 % and img values at these coordinates in val
 %
-% Tor Wager 02/04/02
-% Modified 2/15/06 to take raw data as well as image name
-% 
+% ..
+%    Tor Wager 02/04/02
+%    Modified 2/15/06 to take raw data as well as image name
+%
+% ..
 
 XYZ = [];
 XYZmm = [];

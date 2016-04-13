@@ -2,41 +2,64 @@ function [han, X, Y] = line_plot_multisubject(X, Y, varargin)
 % Plots a scatterplot with multi-subject data, with one line per subject
 % in a unique color.
 %
-% [han, X, Y] = line_plot_multisubject(X, Y, varargin)
+% :Usage:
+% ::
 %
-% Inputs:
-% % X and Y are cell arrays, one cell per upper level unit (subject)
+%    [han, X, Y] = line_plot_multisubject(X, Y, varargin)
+%
+% :Inputs:
+%
+%   **X and Y:**
+%        are cell arrays, one cell per upper level unit (subject)
 %
 % varargin:
-%    'n_bins' = pass in the number of point "bins".  Will divide each subj's trials
-%               into bins, get the avg X and Y per bin, and plot those
-%               points.  
-%    'noind' - suppress points
 %
-%    'subjid' - followed by integer vector of subject ID numbers. Use when
-%    passing in vectors (with subjects concatenated) rather than cell arrays in X and Y
+%   **'n_bins:**
+%        pass in the number of point "bins".  Will divide each subj's trials
+%        into bins, get the avg X and Y per bin, and plot those points.  
 %
-%    'center' - subtract means of each subject before plotting
-%    'colors' - followed by array size N of desired colors.  if not passed
-%    in, will use scn_standard_colors
-%    'MarkerTypes' - followed by char string.  if not passed in, uses
-%    'osvd^<>ph' by default
+%   **'noind':**
+%        suppress points
 %
-%    'group_avg_ref_line' - will make a reference line for the group avg
+%   **'subjid':**
+%        followed by integer vector of subject ID numbers. Use when
+%        passing in vectors (with subjects concatenated) rather than
+%        cell arrays in X and Y
 %
-% Outputs:
-% han = handles to points and lines
-% X, Y = new variables (binned if bins requested)
+%   **'center':**
+%        subtract means of each subject before plotting
 %
-% Examples:
-% -------------------------------------------------------------------------
-% for i = 1:20, X{i} = randn(4, 1); Y{i} = X{i} + .3*randn(4, 1) + randn(1); end
-% han = line_plot_multisubject(X, Y)
+%   **'colors':**
+%        followed by array size N of desired colors.  if not passed
+%        in, will use scn_standard_colors
+%
+%   **'MarkerTypes':**
+%        followed by char string.  if not passed in, uses
+%        'osvd^<>ph' by default
+%
+%   **'group_avg_ref_line':**
+%        will make a reference line for the group avg
+%
+% :Outputs:
+%
+%   **han:**
+%        handles to points and lines
+%
+%   **X, Y:**
+%        new variables (binned if bins requested)
+%
+% :Examples:
+]% ::
+%
+%    for i = 1:20, X{i} = randn(4, 1); Y{i} = X{i} + .3*randn(4, 1) + randn(1); end
+%    han = line_plot_multisubject(X, Y)
 %
 % Center within subjects and bin, then calculate correlation of
 % within-subject variables:
-% create_figure('lines'); [han, Xbin, Ybin] = line_plot_multisubject(stats.Y, stats.yfit, 'n_bins', 7, 'center');
-% corr(cat(1, Xbin{:}), cat(1, Ybin{:}))
+% ::
+%
+%    create_figure('lines'); [han, Xbin, Ybin] = line_plot_multisubject(stats.Y, stats.yfit, 'n_bins', 7, 'center');
+%    corr(cat(1, Xbin{:}), cat(1, Ybin{:}))
 
 docenter = 0;
 doind = 1;

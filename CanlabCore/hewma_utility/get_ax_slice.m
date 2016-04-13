@@ -1,14 +1,25 @@
-% function slice_data = get_ax_slice(imgs, slice_num)
-%
+function slice_data = get_ax_slice(imgs, slice_num)
 % Get an axial slice
 %
-% imgs          img filenames or spm_vols eg. 'spmT_0004.img';
-% slice_num     slice number eg. 31
+% :Usage:
+% ::
 %
-% slice_data    unprocessed slice data
+%     function slice_data = get_ax_slice(imgs, slice_num)
+%
+% :Inputs:
+%
+%   **imgs:**
+%        img filenames or spm_vols eg. 'spmT_0004.img';
+%
+%   **slice_num:**
+%        slice number eg. 31
+%
+% :Output:
+%
+%   **slice_data:**
+%        unprocessed slice data
+%
 
-function slice_data = get_ax_slice(imgs, slice_num)
-    
     global defaults
     
     

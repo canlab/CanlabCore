@@ -1,25 +1,32 @@
 function XYZmm = image2coordinates(img)
 % Threshold a statistic image and turn it into a list of x, y, z
 % coordinates (in mm "world space") with SPM
-% 
-% Usage:
-% XYZmm = image2coordinates(img)
 %
-% Example:
-% img = 'h25_aerger.img';
-% XYZmm = image2coordinates(img)
-% figure; plot3(XYZmm{1}(1, :)', XYZmm{1}(2, :)', XYZmm{1}(3,:)', 'ko');
-% addbrain
-% axis image
+% :Usage:
+% ::
+%
+%     XYZmm = image2coordinates(img)
+%
+% :Examples:
+% ::
+%
+%    img = 'h25_aerger.img';
+%    XYZmm = image2coordinates(img)
+%    figure;
+%    plot3(XYZmm{1}(1, :)', XYZmm{1}(2, :)', XYZmm{1}(3,:)', 'ko');
+%    addbrain
+%    axis image
 %
 % Example with multiple images:
-%   % list all images in dir
-% imgs = filenames(fullfile(pwd, '*img'), 'char', 'absolute')
-% XYZmm = image2coordinates(imgs); 
-%   % save images names and coordinates
-%   % imgs2 has cell array of image names, without full paths
-% imgs2 = filenames(fullfile(pwd, '*img')); 
-% save silke_senders_xyz_coordinates imgs imgs2 XYZmm
+% ::
+%
+%    % list all images in dir
+%    imgs = filenames(fullfile(pwd, '*img'), 'char', 'absolute')
+%    XYZmm = image2coordinates(imgs); 
+%    % save images names and coordinates
+%    % imgs2 has cell array of image names, without full paths
+%    imgs2 = filenames(fullfile(pwd, '*img')); 
+%    save silke_senders_xyz_coordinates imgs imgs2 XYZmm
 
 dat = fmri_data(img);
 

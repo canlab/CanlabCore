@@ -1,14 +1,20 @@
 function [vol,V,XYZ,clusters,Q] = mask_intersection(clsize,outname,i1,i2,varargin)
-% function [vol,V,XYZ,clusters,Q] = mask_intersection(clsize,outname,i1,i2,varargin)
-% by Tor Wager
-%
 % empty i1 prompts for graphic selection of filenames
 % extra arguments are more file names for 3 - n-way intersection
 % empty outname prompts for entry of output img file name
 %
+% :Usage:
+% ::
+%
+%     function [vol,V,XYZ,clusters,Q] = mask_intersection(clsize,outname,i1,i2,varargin)
+%
+% ..
+%    by Tor Wager
+% ..
 
-% get file names and calcstr to evaluate
-% ------------------------------------------------
+% ..
+%    get file names and calcstr to evaluate
+% ..
 
 calcstr = 'i1 .* i2';
 

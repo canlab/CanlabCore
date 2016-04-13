@@ -1,113 +1,143 @@
-% [X, delta, delta_hires, hrf] = onsets2fmridesign(onsets, TR, [len], [custom hrf or basis set name],[other optional args, i.e., norm])
-% 
+function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 % Builds design matrix X and delta function, given cell array of onset times in s
 % One cell per condition per session, e.g., ons{1} = [24 27 29 44]';
 %
+% :Usage:
+% ::
+%
+%     [X, delta, delta_hires, hrf] = onsets2fmridesign(onsets, TR, [len], [custom hrf or basis set name],[other optional args, i.e., norm])
+%
 % Summary:
-% - handles multiple conditions
-% - handles custom HRFs and multiple basis functions
-% - handles input event durations
-% - handles two kinds of parametric modulators
-% - handles variable-duration onsets
-% - handles nonlinear saturation (see hrf_saturation.m)
-% - Can build single-trial model
-% - not yet: variable-duration parametric
-%       modulators
-% - See the code comments for a discussion of absolute scaling of
-% regressors and efficiency.
+%   - handles multiple conditions
+%   - handles custom HRFs and multiple basis functions
+%   - handles input event durations
+%   - handles two kinds of parametric modulators
+%   - handles variable-duration onsets
+%   - handles nonlinear saturation (see hrf_saturation.m)
+%   - Can build single-trial model
+%   - not yet: variable-duration parametric
+%     modulators
+%   - See the code comments for a discussion of absolute scaling of
+%     regressors and efficiency.
 %
-% Inputs:
-%   onsets:
-%   - 1st column is onsets for events,
-%   - 2nd column is optional durations for each event
-%   - Enter single condition or cell vector with cells for each condition (each event type).
+% :Inputs:
 %
-%   TR: RT in seconds
+%   **onsets:**
+%        - 1st column is onsets for events,
+%        - 2nd column is optional durations for each event
+%        - Enter single condition or cell vector with cells for each condition (each event type).
 %
-%  Optional inputs: First two are fixed, then keywords:
-%   
-%  1. len: optional length in s for model, or [] to skip if using additional. 
+%   **TR:**
+%        RT in seconds
+%
+% :Optional Inputs: First two are fixed, then keywords:
+%
+%   **len:**
+%        optional length in s for model, or [] to skip if using additional. 
 %        "len" is usually the number of images multiplied by TR.
 %
-%  2. HRF name string or actual values
-%   hrf name: 1) a string used by spm_get_bf.m
+%   **HRF name:**
+%        string or actual values
+%             1) a string used by spm_get_bf.m
 %             2) a custom HRF, sampled in seconds
 %             3) or [] to skip
 %
-%  3 and more: Keywords
-%   'norm' : mean-center, orthogonalize, and L2-norm basis set
-%   'parametric_singleregressor' : Parametrically modulate onsets by
+%   **'norm':**
+%        mean-center, orthogonalize, and L2-norm basis set
+%
+%   **'parametric_singleregressor':**
+%        Parametrically modulate onsets by
 %               modulator values, using single regressor with modulated amplitude
 %               Enter a cell array with modulator values for each event
 %               type, with a column vector (empty cell for no modulation)
-%   'parametric_standard' : Parametrically modulate onsets by
-%               modulator values, using two regressors per event type - One
-%               to model the average response, and one for the
-%               mean-centered modulator values
-%               of modulator values in each cell
-%   'noampscale' Do not scale HRF to max amplitude = 1; default with SPM
-%                basis sets is to scale.  Custom HRF entries are not scaled.
-%   'noundershoot' Do not model undershoot - ONLY when using the canonical HRF
-%   'customneural' Followed by a vector of custom neural values (instead of
-%                   standard event/epochs), sampled in sec.
+%
+%   **'parametric_standard':**
+%        Parametrically modulate onsets by
+%        modulator values, using two regressors per event type - One
+%        to model the average response, and one for the
+%        mean-centered modulator values
+%        of modulator values in each cell
+%
+%   **'noampscale':**
+%        Do not scale HRF to max amplitude = 1; default with SPM
+%        basis sets is to scale.  Custom HRF entries are not scaled.
+%
+%   **'noundershoot':**
+%        Do not model undershoot - ONLY when using the canonical HRF
+%
+%   **'customneural':**
+%        Followed by a vector of custom neural values (instead of
+%        standard event/epochs), sampled in sec.
 %
 % Limitation: can only handle two events max within the same TR
 %
-% Outputs:
-%   X: model, sampled at TR
-%   delta: indicator mtx, sampled at TR
-%   delta_hires: indicator sampled at 16 Hz
-%   hrf: hemodynamic response function, sampled at 16 Hz
+% :Outputs:
 %
-% Test examples:
-% X = onsets2fmridesign(ons, TR, size(imgs, 1) .* TR, 'hrf (with time derivative)');
+%   **X:**
+%        model, sampled at TR
 %
-% X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1.5, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-% X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-% X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-% X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-% X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%   **delta:**
+%        indicator mtx, sampled at TR
 %
-%   Here, spm_hrf(1) is for the canonical HRF in spm.
+%   **delta_hires:**
+%        indicator sampled at 16 Hz
 %
-% X = onsets2fmridesign(ons, 2, size(dat.dat, 2) .* 2, [], [], 'noampscale');
+%   **hrf:**
+%        hemodynamic response function, sampled at 16 Hz
 %
-% X2 = onsets2fmridesign(onsp, 2, length(dat.removed_images) .* 2, [], [], 'customneural', report_predictor);
-% plotDesign(ons,[], TR, 'yoffset', 1);
+% :Examples:
+% ::
 %
-% see Also:  tor_make_deconv_mtx3, [or 2], plotDesign
-
-% Programmers' notes:
-% % Tor Wager, 2 / 24 / 04
-% Modified/updated 2/08 by Tor to add capacity for durations
-% Modified 10/1/11 by Tor to fix custom HRF sampling
-% Modified 3/14/12 by Tor to check variable duration and add noampscale option
-% 3/16/12: Tor modified custom HRF to divide by sum, as SPM basis functions
-% are scaled by default.
-% 9/3/12: Wani modified len and getPredictors.m to fix a bug when you're
-% using TR with some decimal points (e.g., TR = 1.3)
-% Modified 8/2015 by Tor to clean up documentation and change scaling of
-% regressors overall in better range
-
-
+%    X = onsets2fmridesign(ons, TR, size(imgs, 1) .* TR, 'hrf (with time derivative)');
+%
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1.5, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%
+%    % Here, spm_hrf(1) is for the canonical HRF in spm.
+%
+%    X = onsets2fmridesign(ons, 2, size(dat.dat, 2) .* 2, [], [], 'noampscale');
+%
+%    X2 = onsets2fmridesign(onsp, 2, length(dat.removed_images) .* 2, [], [], 'customneural', report_predictor);
+%    plotDesign(ons,[], TR, 'yoffset', 1);
+%
 % A note on absolute scaling and efficiency:
-% Scaling of the response influences efficiency.  It does not affect model fits or power when the scaling is equated (constant across events in a design), but it does affect efficiency simulations.
+% Scaling of the response influences efficiency. It does not affect model
+% fits or power when the scaling is equated (constant across events in a
+% design), but it does affect efficiency simulations.
 % 
-% Event duration: assumes that the max neural sampling rate is about 1 Hz,
-%             which produces responses that do not exceed about 5x the
-%             unit, single-event response.  This is a reasonable
-%             assumption, and affects only the absolute scaling across
-%             ISIs/block lengths. 
+% Event duration:
+%    assumes that the max neural sampling rate is about 1 Hz,
+%    which produces responses that do not exceed about 5x the
+%    unit, single-event response.  This is a reasonable
+%    assumption, and affects only the absolute scaling across
+%    ISIs/block lengths. 
 % 
 % An event duration of about 1 sec produces a response of unit amplitude.
 % The sampling resolution is 0.1 sec, so that is the lowest you can go - and it will produce lower response amplitude/less efficient designs, as less neural activity is being delivered.
 % If event durations are not entered, then events will have unit amplitude by default.
+%
+% :See Also: tor_make_deconv_mtx3, [or 2], plotDesign
+%
+% ..
+%    Programmers' notes:
+%    Tor Wager, 2 / 24 / 04
+%    Modified/updated 2/08 by Tor to add capacity for durations
+%    Modified 10/1/11 by Tor to fix custom HRF sampling
+%    Modified 3/14/12 by Tor to check variable duration and add noampscale option
+%    3/16/12: Tor modified custom HRF to divide by sum, as SPM basis functions
+%    are scaled by default.
+%    9/3/12: Wani modified len and getPredictors.m to fix a bug when you're
+%    using TR with some decimal points (e.g., TR = 1.3)
+%    Modified 8/2015 by Tor to clean up documentation and change scaling of
+%    regressors overall in better range
+% ..
 
-
-function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
-% ----------------------------------------------
-% Defaults
-% ----------------------------------------------
+% ..
+%    Defaults
+% ..
 
 res = 16;   % resolution, in samples per second
 

@@ -1,22 +1,30 @@
 function cl = iimg_stouffer(Pimg,maskname,thr,clsize,outname)
-% function cl = iimg_stouffer(Pimg,maskname,thr,clsize,outname)
-% by Tor Wager
-%
 % This function performs combination of p-values across images using the 
 % Stouffer method (see refs below).  
 %
-% Inputs:
-%   Pimg    string mtx of p-value image names
-%   k       num voxels/num comparisons 
-%           if empty, uses # of non-zero, non-NaN values in images
+% :Usage:
+% ::
+%
+%     function cl = iimg_stouffer(Pimg,maskname,thr,clsize,outname)
+%
+% :Inputs:
+%
+%   **Pimg:**
+%        string mtx of p-value image names
+%
+%   **k:**
+%        num voxels/num comparisons 
+%        if empty, uses # of non-zero, non-NaN values in images
 %
 % empty Pimg prompts for graphic selection of filenames
 % empty outname prompts for entry of output img file name
 %
-% Outputs:
-% clusters, cl{1} is stouffer, cl{2} is image 1, cl{3} is image 2
+% :Outputs:
 %
-% Described in:
+%   **cl:**
+%        clusters, cl{1} is stouffer, cl{2} is image 1, cl{3} is image 2
+%
+% :Described in:
 % Lazar, N. A., Luna, B., Sweeney, J. A., & Eddy, W. F. (2002). 
 % Combining brains: a survey of methods for statistical pooling 
 % of information. Neuroimage, 16(2), 538-550.
@@ -25,10 +33,13 @@ function cl = iimg_stouffer(Pimg,maskname,thr,clsize,outname)
 % Williams, R. M. 1949. The American Soldier: Vol. I. Adjustment
 % During Army Life. Princeton University Press, Princeton.
 % 
-% 
+% ..
+%    by Tor Wager
+% ..
 
-% get file names and calcstr to evaluate
-% ------------------------------------------------
+% ..
+%    get file names and calcstr to evaluate
+% ...
 
 if isempty(Pimg),Pimg = spm_get(Inf,'*.img','Select p-value images',pwd,0);,end
 

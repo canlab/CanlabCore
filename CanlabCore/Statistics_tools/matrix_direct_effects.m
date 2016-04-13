@@ -1,21 +1,26 @@
 function [direct_mtx, mediated_mtx, mediators] = matrix_direct_effects(sig, data)
-%[direct_mtx, mediated_mtx, mediators] = matrix_direct_effects(sig, data);
+% :Usage:
+% ::
 %
+%     [direct_mtx, mediated_mtx, mediators] = matrix_direct_effects(sig, data);
 %
 % Take an n x n matrix of significant correlations and the data for each
-% variable.  Test whether each link is completely mediated by another
-% variable.  Prune the correlation significance matrix, also noting which
+% variable. Test whether each link is completely mediated by another
+% variable. Prune the correlation significance matrix, also noting which
 % variables are mediators.
 %
-% Tor Wager, Feb 2007
-% 
 % Example:
 % Take output from cluster_nmds (c structure) and prune to return direct
 % links only:
-% [c.direct_mtx, c.mediated_mtx, c.mediators] = matrix_direct_effects(c.STATS.sigmat, c.dat);
-% nmdsfig_tools('removelines');
-% nmdsfig_tools('drawlines',c.GroupSpace, c.direct_mtx);
+% ::
 %
+%    [c.direct_mtx, c.mediated_mtx, c.mediators] = matrix_direct_effects(c.STATS.sigmat, c.dat);
+%    nmdsfig_tools('removelines');
+%    nmdsfig_tools('drawlines',c.GroupSpace, c.direct_mtx);
+%
+% ..
+%    Tor Wager, Feb 2007
+% ..
 
 [rows,cols] = find(tril(sig));
 

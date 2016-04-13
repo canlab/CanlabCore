@@ -1,15 +1,16 @@
 function img_hist(imgname,subdir)
-%
-%
-% Tor Wager
-% 
-% imgname	name of image file to make intensity histograms from
-% subdir		cell array of text strings containing names of individual subject
-%				directories (wherein are contained the file specified in imgname 
-%				for each subject)
-% 
 % A general function for plotting histograms of any image
 % For each subject, comparing across subjects
+%
+% :Inputs:
+%
+%   **imgname:**
+%        name of image file to make intensity histograms from
+%
+%   **subdir:**
+%        cell array of text strings containing names of individual subject
+%        directories (wherein are contained the file specified in imgname 
+%        or each subject)
 %
 % Performs the histogram plot twice, once for CSF space
 % and once for gray matter
@@ -20,24 +21,31 @@ function img_hist(imgname,subdir)
 %
 % Start in directory above individual subject results
 %
-% example:
-% img_hist('beta_0010.img',subdir)
-% img_hist('con_0002.img',{'020827mk' '020829jh' '020903lb'}
+% :Examples:
+% ::
 %
-% for batch:
-% d = dir('020726ag/beta*img'); d = str2mat(d.name);
-% for i = 1:10:size(d,1)
-%	img_hist(deblank(d(i,:)),EXPT.subjects)
-% end
-% 
-% for i = 2:19, 
-% 	if i < 10, myz = '000';, else, myz = '00';, end, 
-% 	img_hist(['con_' myz num2str(i) '.img'],EXPT.subjects);, 
-% end
-% 
-% defaults
-% -------------------------------------------------------------------------------------------------
+%    img_hist('beta_0010.img',subdir)
+%    img_hist('con_0002.img',{'020827mk' '020829jh' '020903lb'}
+%
+%    % for batch
+%    d = dir('020726ag/beta*img'); d = str2mat(d.name);
+%    for i = 1:10:size(d,1)
+%        img_hist(deblank(d(i,:)),EXPT.subjects)
+%    end
+%
+%    for i = 2:19, 
+%       if i < 10, myz = '000';, else, myz = '00';, end, 
+%       img_hist(['con_' myz num2str(i) '.img'],EXPT.subjects);, 
+%    end
+%
+% ..
+% Tor Wager
+% ..
 
+
+% ..
+%    defaults
+% ..
 csfname = 'rnnhet1spgr_seg3.img';	% reslice first to space of functionals
 grname = 'rnnhet1spgr_seg1.img';
 csfpath = '/data/placebo/';		% before ind subject

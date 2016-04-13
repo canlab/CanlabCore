@@ -1,40 +1,50 @@
 function out = lineplot_columns(dat_matrix, varargin)
-% out = lineplot_columns(dat_matrix, varargin)
+% :Usage:
+% ::
 %
-% Default values (see below for how to change)
-% w = 3;                          % width
-% color = 'k';                    % color
-% wh = true(size(dat_matrix));    % which observations
-% x = 1:size(dat_matrix, 2);      % x values
-% marker = 'o';                   % marker style
-% linestyle = '-';                % line
-% markersize = 8;                 % markersize
-% markerfacecolor = [.5 .5 .5];   % face color
-% dowithinste = 0;                % enter 'within' to get within-ss ste
-% atleast = 1;                    % 'atleast' followed by n for at least n valid obs to plot 
-% doshading = 0;                  % shaded vs. error-bar plots
-% CIs95 = 0;                      % 95% CI's.  Does not work with within subj error
+%    out = lineplot_columns(dat_matrix, varargin)
 %
-% Inputs:
-% dat_matrix is usually a rectangular matrix with rows = observations,
-% columns = variables.
-% It can also be a cell array with column vectors in each cell, for unequal
-% numbers of observations, but then the rows will not be the same
-% observations across variables.
+% :Default values: (see below for how to change)
+%   - w = 3;                          % width
+%   - color = 'k';                    % color
+%   - wh = true(size(dat_matrix));    % which observations
+%   - x = 1:size(dat_matrix, 2);      % x values
+%   - marker = 'o';                   % marker style
+%   - linestyle = '-';                % line
+%   - markersize = 8;                 % markersize
+%   - markerfacecolor = [.5 .5 .5];   % face color
+%   - dowithinste = 0;                % enter 'within' to get within-ss ste
+%   - atleast = 1;                    % 'atleast' followed by n for at least n valid obs to plot 
+%   - doshading = 0;                  % shaded vs. error-bar plots
+%   - CIs95 = 0;                      % 95% CI's.  Does not work with within subj error
 %
-% Optional inputs, followed by values:
-% {'w', 'color', 'x', 'marker', 'linestyle', 'markersize', 'markerfacecolor', 'wh'}
-% 
-% Keywords:
+% :Inputs:
+%
+%   **dat_matrix:**
+%        is usually a rectangular matrix with rows = observations,
+%        columns = variables.
+%
+%        It can also be a cell array with column vectors in each cell, for unequal
+%        numbers of observations, but then the rows will not be the same
+%        observations across variables.
+%
+% :Optional Inputs: followed by values:
+%
+%   {'w', 'color', 'x', 'marker', 'linestyle', 'markersize', 'markerfacecolor', 'wh'}
+%
+% :Keywords:
+%
 % {'within', 'dowithinste'}, 'shade', 'atleast', 'CIs' <- for 95% CI's
 %
-% Examples:
-% out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'r', 'markerfacecolor', [1 .5 0], 'wh', ispain);
-% out = lineplot_columns(dat_matrix, 'w', 3, 'color', [0 1 0], 'markerfacecolor', [1 .5 0], 'within');
-% out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'b', 'markerfacecolor', [0 .5 1], 'within');
+% :Examples:
+% ::
 %
-% shaded error regions
-% out = lineplot_columns(hotopen, 'color', 'r', 'marker', 'none', 'w', 1, 'shade');
+%    out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'r', 'markerfacecolor', [1 .5 0], 'wh', ispain);
+%    out = lineplot_columns(dat_matrix, 'w', 3, 'color', [0 1 0], 'markerfacecolor', [1 .5 0], 'within');
+%    out = lineplot_columns(dat_matrix, 'w', 3, 'color', 'b', 'markerfacecolor', [0 .5 1], 'within');
+%
+%    % shaded error regions
+%    out = lineplot_columns(hotopen, 'color', 'r', 'marker', 'none', 'w', 1, 'shade');
 
 w = 3;                          % width
 color = 'k';                    % color

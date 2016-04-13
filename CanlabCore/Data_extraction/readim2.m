@@ -1,31 +1,46 @@
 function [array,hdr,h,whichslices,rows,cols,figh] = readim2(varargin)
-% [array,hdr,h,whichslices,rows,cols,figh] = readim2(basename or array [opt],'p' [opt], 'sagg' or 'cor' [opt],flipy[opy],range [opt])
-% outputs: 
-% 	3d array of image
-% 	hdr of image
-% 	handles for axes of montage if plotting
+% :Usage:
+% ::
 %
-% inputs: IN ANY ORDER
-%	basename of file, without image extension	
-%	OR
-%	3-D array in the workspace to plot
-% 	OR
-%	nothing, to browse for file
+%    [array,hdr,h,whichslices,rows,cols,figh] = readim2(basename or array [opt],'p' [opt], 'sagg' or 'cor' [opt],flipy[opy],range [opt])
 %
-%	'p' to plot montage of slices to the screen
-%	'sagg' to rotate to saggital view
-%	'cor' to rotate to coronal view
+% :Inputs:
 %
-%   't' to save array as double instead of int16 - to save negative t values.
+%   - basename of file, without image extension ,OR
+%   - 3-D array in the workspace to plot, OR
+%   - nothing, to browse for file
 %
-%	Special Features:
-%     range, specified in mm, must be LAST and FIFTH input argument. 
-%        - OR range can specify slices, e.g. 1:4:28
-%     clim, color limits for axis plot, must be 1st or 2nd argument.  form: [-1 1]
+%   **p:**
+%        to plot montage of slices to the screen
 %
+%   **sagg:**
+%        to rotate to saggital view
 %
-%	Adapted 12/06/00 by Tor Wager from Luis Hernandez' original script
-%  Last modified 10/19/01 by Tor
+%   **cor:**
+%        to rotate to coronal view
+%
+%   **t:**
+%        to save array as double instead of int16 - to save negative t values.
+%
+% :Outputs:
+%
+%   - 3d array of image
+%   - hdr of image
+%   - handles for axes of montage if plotting
+%
+% :Special Features:
+%
+%   **range:**
+%        specified in mm, must be LAST and FIFTH input argument. 
+%          - OR range can specify slices, e.g. 1:4:28
+%
+%   **clim:**
+%        color limits for axis plot, must be 1st or 2nd argument.  form: [-1 1]
+%
+% ..
+%   Adapted 12/06/00 by Tor Wager from Luis Hernandez' original script
+%   Last modified 10/19/01 by Tor
+% ..
 
 warning off 
 

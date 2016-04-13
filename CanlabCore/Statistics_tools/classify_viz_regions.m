@@ -1,16 +1,24 @@
 function cl = classify_viz_regions(indx,colors,ptaskcutoff,sizecutoff,maskimage,names)
-% cl = classify_viz_regions(indx,colors,ptaskcutoff,sizecutoff,maskimage,names)
+% Visualize output of classify_bayes.m, or comparable output
 %
-% visualize output of classify_bayes.m, or comparable output
+% :Usage:
+% ::
+%
+%     cl = classify_viz_regions(indx,colors,ptaskcutoff,sizecutoff,maskimage,names)
+%
 % indx should be voxels x images, with prob task (ptask) in non-zero
 % elements
 %
-% tor wager
+% :Examples:
+% ::
 %
-% examples:
-% cl = classify_viz_regions(indx,[],.6,5);
-% cl = classify_viz_regions(indx,[],.6,5,[],names);
+%    cl = classify_viz_regions(indx,[],.6,5);
+%    cl = classify_viz_regions(indx,[],.6,5,[],names);
 %
+% ..
+%    tor wager
+% ..
+
 cl = [];
 
     if nargin < 2 || isempty(colors), colors = {[1 0 0] [0 1 0] [1 0 1] [1 1 0] [0 0 1]}; end

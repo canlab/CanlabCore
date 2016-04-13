@@ -1,23 +1,35 @@
 function compare_slice(ovlP,sxyz,sz,VOL,varargin)
-% compare_slice(ovlP,sxyz,sz,VOL)
-% tor wager, 2/16/03
+% :Usage:
+% ::
 %
-% ovlP is name of overlay image file (anatomical)
-% 
-% sxzy is a cell array, where each cell is a list of
+%    compare_slice(ovlP,sxyz,sz,VOL)
+%
+% :Inputs:
+%
+%   **ovlP:**
+%        is name of overlay image file (anatomical)
+%
+%   **sxzy:**
+%        is a cell array, where each cell is a list of
 %   VOXEL coordinates in 3 x n matrix
 %
-% sz is a cell array, where each cell contains the z values
-%   corresponding to sxyz.  This is used to create 
-%   pseudocolor on the plots.
+%   **sz:**
+%        is a cell array, where each cell contains the z values
+%        corresponding to sxyz.  This is used to create 
+%        pseudocolor on the plots.
 %
-% VOL is a structure containing the field M,
-% where M is the SPM99-style mapping matrix from voxel to mm 
-% space.  This is used to map sxyz values onto the overlay
-% image.
-% VOL must also contain field dim, which has the voxel dims
-% of the results image for all sxyz.
-% All sxyz must have the same dimensions!
+%   **VOL:**
+%        is a structure containing the field M,
+%        where M is the SPM99-style mapping matrix from voxel to mm 
+%        space. This is used to map sxyz values onto the overlay image.
+%
+%        VOL must also contain field dim, which has the voxel dims
+%        of the results image for all sxyz.
+%        All sxyz must have the same dimensions!
+%
+% ..
+%    tor wager, 2/16/03
+% ..
 
 if length(varargin) > 0, ptsize = varargin{1};, else, ptsize = 5;, end
 

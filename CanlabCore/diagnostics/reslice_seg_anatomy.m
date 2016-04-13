@@ -1,4 +1,4 @@
-function P3 = reslice_seg_anatomy
+function P3 = reslice_seg_anatomy()
 
 disp(['This script reslices all segmented n*het1*img anatomicals into space of functionals.'])
 disp(['Output images are thresholded (1 or 0) to be mask images.'])

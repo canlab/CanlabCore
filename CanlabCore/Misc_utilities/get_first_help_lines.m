@@ -1,14 +1,22 @@
 function helptext = get_first_help_lines(functionname, maxlines)
 % Returns the first n lines of the help for a function in a cell array
 %
-% helptext = get_first_help_lines(functionname, [maxlines])
-% helptext = get_first_help_lines(functionname, maxlines)
+% :Usage:
+% ::
 %
-% Examples:
-% helptext = get_first_help_lines('fmri_data.apply_mask', 5);
-% char(helptext{:})
+%     helptext = get_first_help_lines(functionname, [maxlines])
 %
-% Tor Wager, Oct 2012
+%     helptext = get_first_help_lines(functionname, maxlines)
+%
+% :Examples:
+% ::
+%
+%    helptext = get_first_help_lines('fmri_data.apply_mask', 5);
+%    char(helptext{:})
+%
+% ..
+%    Tor Wager, Oct 2012
+% ..
 
 if nargin < 2
     maxlines = 5;

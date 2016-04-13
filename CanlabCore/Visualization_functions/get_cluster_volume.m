@@ -1,16 +1,22 @@
 function clOut = get_cluster_volume(clIn)
-% function clOut = get_cluster_volume(clIn)
+% :Usage:
+% ::
+%
+%    clOut = get_cluster_volume(clIn)
 %
 % Adapted from:
-% FORMAT clusters = ihb_getClusters
-% Get cluster information (use [SPM,VOL,xX,xCon,xSDM] = spm_getSPM;)
-%----------------------------------------------------------------------------------
-%   01.03.01    Sergey Pakhomov
-%   01.08.01    last modified
-%----------------------------------------------------------------------------------
 %
-% Only change is to eliminate stuff in beginning - just update the cluster.
-% Tor Wager, 10/18/01
+% FORMAT clusters = ihb_getClusters
+%
+% Get cluster information (use [SPM,VOL,xX,xCon,xSDM] = spm_getSPM;)
+%
+% ..
+%    01.03.01    Sergey Pakhomov
+%    01.08.01    last modified
+%
+%    Only change is to eliminate stuff in beginning - just update the cluster.
+%    Tor Wager, 10/18/01
+% ..
 
 clOut = clIn;
 

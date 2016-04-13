@@ -1,35 +1,45 @@
 function [cl, varargout] = cluster_tmask(cl, tm, si, varargin)
-% [cl, varargout] = cluster_tmask(cl, tm, si, varargin)
-%
 % Given clusters and a string name of a t-image,  finds voxels that exceed a
 % specified t-threshold
 %
-% cl = clusters
-% tm = t-image
-% si = subject index integer
-% [dat] = cluster_barplot data structure
+% :Usage:
+% ::
+%
+%    [cl, varargout] = cluster_tmask(cl, tm, si, varargin)
+%
+% :Inputs:
+%
+%   **cl:**
+%        clusters
+%   **tm:**
+%        t-image
+%   **si:**
+%        subject index integer
+%   **[dat]:**
+%        cluster_barplot data structure
 %
 % creates new XYZ in the space of t-image using cl.XYZmm coordinates in mm.
 % Required fields of cl:  XYZmm
 %
 % Calculates and saves single-subject data avgd over voxels if:
-    % A) cl.all_data field is present
-    % THIS WORKS if all_data has individual subject contrast estimates in
-    % it,  with rows as subjects and columns as voxels
-    % indiv data saved in cl(region).timeseries(subject)
-    % 
-    % B) cl.raw_data is present
-    % raw_data should be time x voxels x subjects,  a 3D matrix
-    % see output of extract_raw_data.
-    % indiv data saved in cl(region).indiv_timeseries(:, subject)
+%    A) cl.all_data field is present
+%           THIS WORKS if all_data has individual subject contrast estimates
+%           in it,  with rows as subjects and columns as voxels
+%           indiv data saved in cl(region).timeseries(subject)
 %
-% NOTE: Retains upper 50% of voxels; highest t-values
+%    B) cl.raw_data is present
+%           raw_data should be time x voxels x subjects,  a 3D matrix
+%           see output of extract_raw_data.
+%           indiv data saved in cl(region).indiv_timeseries(:, subject)
+%
+% :Note: Retains upper 50% of voxels; highest t-values
+
+
+tt = [50 100];      % % of voxeis to save,  use with read_t2; 1st number is typically used,  2nd for very small regions.
 
 % get thresholds
 
 %tt = [3 2];        % t-thresholds in absolute values,  use with read_t
-
-tt = [50 100];      % % of voxeis to save,  use with read_t2; 1st number is typically used,  2nd for very small regions.
 
 reverse_vals = 0;
 if length(varargin) > 1,  reverse_vals = varargin{2}; end

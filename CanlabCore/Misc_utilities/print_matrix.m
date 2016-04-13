@@ -1,17 +1,24 @@
 function print_matrix(x,varargin)
-% print_matrix(x,[col names cell array], [row names cell], [format string])
-%
-% tor wager
 % prints matrix values as tab delimited, 2 decimal places
 %
-% Examples:
-% -------------------------------------------------------------
-% t = [1 2; 3 4; 5 6];
-% print_matrix(t,{'col1' 'col2'},{'row1' 'row2' 'row3');
+% :Usage:
+% ::
 %
-% print_matrix(rand(5), [], [], '%3.2f');
-% print_matrix(rand(5), {'A' 'B' 'C' 'D' 'E'}, {'A' 'B' 'C' 'D' 'E'}, '%3.2f');
-% print_matrix(rand(5), {'A' 'B' 'C' 'D' 'E'}, {'A' 'B' 'C' 'D' 'E'}, '%d');
+%     print_matrix(x,[col names cell array], [row names cell], [format string])
+%
+% :Examples:
+% ::
+%
+%    t = [1 2; 3 4; 5 6];
+%    print_matrix(t,{'col1' 'col2'},{'row1' 'row2' 'row3');
+%
+%    print_matrix(rand(5), [], [], '%3.2f');
+%    print_matrix(rand(5), {'A' 'B' 'C' 'D' 'E'}, {'A' 'B' 'C' 'D' 'E'}, '%3.2f');
+%    print_matrix(rand(5), {'A' 'B' 'C' 'D' 'E'}, {'A' 'B' 'C' 'D' 'E'}, '%d');
+%
+% ..
+%    tor wager
+% ..
 
 fmtstring = '%3.4f';
 if length(varargin) > 2 && ~isempty(varargin{3})

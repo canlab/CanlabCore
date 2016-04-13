@@ -1,5 +1,8 @@
 function [vec, outnames] = contrast_code(vec)
-% [vec,outnames] = contrast_code(vec)
+% :Usage:
+% ::
+%
+%     [vec,outnames] = contrast_code(vec)
 %
 % Changes values to 1, -1, or 0 for contrast coding
 

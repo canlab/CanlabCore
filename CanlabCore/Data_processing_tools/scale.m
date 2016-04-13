@@ -1,14 +1,19 @@
 function xout = scale(x,varargin)
-% x = scale(x,[just center])
+% Centers and scales column vectors to mean 0 and st. deviation 1
 %
-% centers and scales column vectors
-% to mean 0 and st. deviation 1
-
-%Programmer's notes:
-%   2/17/14 - Luke: rewrote using vectorization instead of loop -MUCH FASTER!
+% :Usage:
+% ::
+%
+%     x = scale(x,[just center])
+%
+% ..
+%    Programmer's notes:
+%    2/17/14 - Luke: rewrote using vectorization instead of loop -MUCH FASTER!
 %                   Still removes nans like original function
-%   6/13/14 - Wani: after Luke's edit, mean-centering didn't work right.
-%                   Fixed it. 
+%    6/13/14 - Wani: after Luke's edit, mean-centering didn't work right.
+%                   Fixed it.
+% ..
+
 
 xout = NaN .* zeros(size(x));
 

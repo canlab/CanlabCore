@@ -1,34 +1,45 @@
 function [dat, sl_size] = searchlight_applymask(dat1, dat2, varargin)
-
 % Estimate local pattern weight on train data using SVR and searchlight and 
 % apply weights to the test dataset 
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [dat, sl_size] = searchlight_applymask(train, test, varargin)
+% :Usage:
+% ::
+%
+%     [dat, sl_size] = searchlight_applymask(train, test, varargin)
 %
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% dat1         fmri_data object with train.Y == size(train.dat,2)
-% dat2         Data to apply local weight map.
+% :Inputs:
 %
-% Optional inputs:
-% -------------------------------------------------------------------------
-% 'r'           searchlight sphere radius (in voxel) (default: r = 3 voxels)
-% 'parallel'    run subset of voxels to distribute on a cluster.  flag must
+%   **dat1:**
+%        fmri_data object with train.Y == size(train.dat,2)
+%
+%   **dat2:**
+%        Data to apply local weight map.
+%
+% :Optional inputs:
+%
+%   **'r':**
+%        searchlight sphere radius (in voxel) (default: r = 3 voxels)
+%
+%   **'parallel':**
+%        run subset of voxels to distribute on a cluster.  flag must
 %               be followed by array specifing id and total number of jobs
 %               (e.g., 'parallel',[1,10]);
-% Outputs:
-% -------------------------------------------------------------------------
-% dat           This contains an fmri_data object that contain
-%               correlation pattern expression values
-% sl_size       The number of voxels within each searchlight. Based on this
-%               number, you can detect searchlights on the edge (searchlights
-%               with low sl_size should be on the edge of the brain.
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+% :Outputs:
+%
+%   **dat:**
+%        This contains an fmri_data object that contain
+%        correlation pattern expression values
+%
+%   **sl_size:**
+%        The number of voxels within each searchlight. Based on this
+%        number, you can detect searchlights on the edge (searchlights
+%        with low sl_size should be on the edge of the brain.
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2015  Luke Chang & Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -43,20 +54,16 @@ function [dat, sl_size] = searchlight_applymask(dat1, dat2, varargin)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Example
-% -------------------------------------------------------------------------
+% :Examples:
+% ::
 %
-% [r, dat] = searchlight_applymask(train, test, 'r', 5);
+%    [r, dat] = searchlight_applymask(train, test, 'r', 5);
 %
-% [r, dat] = searchlight_applymask(train, test, 'r', 5,'parallel',[1,10]);
+%    [r, dat] = searchlight_applymask(train, test, 'r', 5,'parallel',[1,10]);
 
-% Programmers' notes:
-%
 
-%% set-up variables
-
-% Defaults
 r = 4; % default radius (in voxel)
 doParallel = 0;
 

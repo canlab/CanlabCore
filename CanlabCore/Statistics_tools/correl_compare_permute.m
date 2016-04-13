@@ -1,15 +1,44 @@
 function OUT = correl_compare_permute(meth,dat,nperms,condition)
-% function correl_compare_permute(meth,dat,nperms,condition)
+% General function for comparing correlation matrices on two different
+% sets of observations
 %
-% General function for comparing correlation matrices on two different sets
-% of observations
+% :Usage:
+% ::
+%     correl_compare_permute(meth,dat,nperms,condition)
 %
-% dat is obs x variables, and an n x n association matrix will be computed
-% on the n(n - 1) pairs of columns using one of the methods in
-% correlation.m and specified by meth
+%     dat is obs x variables, and an n x n association matrix will be computed
+%     on the n(n - 1) pairs of columns using one of the methods in
+%     correlation.m and specified by meth
 %
-% this is a work in progress, and documentation is incomplete.
-% tor wager, Jan 15, 2007
+% :Inputs:
+%
+%   **meth:**
+%        String indicating the method for computing the correlation
+%        coefficient (e.g., 'taub') see correlation.m for details
+%
+%   **dat:**
+%        Matrix of observations (n instances by p variables)
+%
+%   **nperms:**
+%        Number of permutations for inferential tests 
+%
+%   **condition:**
+%        Vector indicating condition membership for each instance
+%        (currently only works for two conditions)
+%
+% :Outputs:
+%
+%   **OUT:**
+%        Output stats structure
+%
+%
+%
+% :See also:
+%   - correl_compare_indep_inputr, correl_compare_indep, correlation*
+% ..
+%    this is a work in progress, and documentation is incomplete.
+%    tor wager, Jan 15, 2007
+% ..
 
 if isempty(meth), meth = 'taub'; end
 

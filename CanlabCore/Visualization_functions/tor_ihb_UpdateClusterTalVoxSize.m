@@ -1,21 +1,36 @@
 function clOut = tor_ihb_UpdateClusterTalVoxSize(clIn, nTotalVox, nTotalProcessed)
-%==================================================================================
-% FORMAT clOut = ihb_ChangeTalVoxSize(clIn)
-%----------------------------------------------------------------------------------
-% clIn              - initial input cluster (structure see ihb_GetClusters)
-% nTotalVox         - total nmb of voxel in all clusters (used for waitbar)
-% nTotalProcessed   - total nmb of voxel in already processed clusters (used for waitbar)
-%----------------------------------------------------------------------------------
-% clOut - output cluster with new Talariach related fields
-- Tor changed to leave in MNI space!!!
-%----------------------------------------------------------------------------------
+% :Usage:
+% ::
+%
+%    clOut = ihb_ChangeTalVoxSize(clIn)
+%
+% :Inputs:
+%
+%   **clIn:**
+%        initial input cluster (structure see ihb_GetClusters)
+%
+%   **nTotalVox:**
+%        total nmb of voxel in all clusters (used for waitbar)
+%
+%   **nTotalProcessed:**
+%        total nmb of voxel in already processed clusters (used for waitbar)
+%
+% :Output:
+%
+%   **clOut:**
+%        output cluster with new Talariach related fields
+%
 % It is assumed that waitbar already exists
-%==================================================================================
-%   24.04.01    Sergey Pakhomov
-%==================================================================================
-%----------------------------------------------------------------------------------
+%
+% ..
+%    24.04.01    Sergey Pakhomov
+%
+%    - Tor changed to leave in MNI space!!!
+% ..
+
+% ..
 % Load current voxel size
-%----------------------------------------------------------------------------------
+% ..
 dflFileName = ihb_FileFolderName('dfl');
 load(dflFileName, 'ihbdfl_tal_x_vox', 'ihbdfl_tal_y_vox', 'ihbdfl_tal_z_vox');
 %----------------------------------------------------------------------------------

@@ -1,27 +1,40 @@
 function [cp,tm,b,t,wh,oocvec] = change_point(t,tt,Mode,tthresh)
-% [cp,tm,b,t,wh,ooc_vector] = change_point(t,tt,Mode,tthresh)
+% :Usage:
+% ::
 %
-% [cp,baseline mean,max t value,time of max t] = change_point(Zm,sterr,tt,tthresh)
+%     [cp,tm,b,t,wh,ooc_vector] = change_point(t,tt,Mode,tthresh)
 %
-% tt is number of baseline timepoints
-% t is group t-value timeseries
+%     [cp,baseline mean,max t value,time of max t] = change_point(Zm,sterr,tt,tthresh)
+%
+% :Inputs:
+%
+%   **tt:**
+%        is number of baseline timepoints
+%
+%   **t:**
+%        is group t-value timeseries
 % 
-% Mode: 'thresh' or 'time'
-% if 'thresh':
-% tthresh = threshold for significant t-values.
 %
-% change_point finds the first significant supra-threshold t-value and
-% looks back in time to estimate the change point.
+%   **Mode: 'thresh' or 'time':**
+%        if 'thresh': tthresh = threshold for significant t-values.
+%
+%        change_point finds the first significant supra-threshold t-value and
+%        looks back in time to estimate the change point.
 % 
-% if Mode = 'time'
-% change_point finds the estimated change-point for process determined to be out of control
-% at time tthresh
+%        if Mode = 'time'
 %
-% wh = indices of out of control points
-% ooc_vector = indicator vector for ooc points
+%        change_point finds the estimated change-point for process determined
+%        to be out of control at time tthresh
+%
+% :Outputs:
+%
+%   **wh:**
+%        indices of out of control points
+%
+%   **ooc_vector:**
+%        indicator vector for ooc points
+%
 
-
-    
     switch Mode
         case 'thresh'
             % find t-values above threshold

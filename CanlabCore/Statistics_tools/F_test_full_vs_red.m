@@ -1,20 +1,28 @@
-% [F, p, resid, df_model, df_error] = F_test_full_vs_red(y, X, Xred, px, pxred)
-%
-% E.g.:
-%
-% X = randn(100, 3); Xred = X(:,1); y = X(:,2) + randn(100, 1);
-% px = pinv(X); pxred = pinv(Xred);
-% [F, p, resid] = F_test_full_vs_red(y, X, Xred, px, pxred);
-%
-% Test full-model F-value against regress.m
-% Tested OK on 11/27/07, by tor
-% Xred = X(:,end); % intercept only
-% px = pinv(X);
-% pxred = pinv(Xred);
-% [F, p, resid, dfm, dfe] = F_test_full_vs_red(y, X, Xred, px, pxred); % full model F-test
-% [b, bint, r, rint, stats] = regress(y, X);
-
 function [F, p, resid, df_model, df_error] = F_test_full_vs_red(y, X, Xred, px, pxred)
+% :Usage:
+% ::
+%
+%     [F, p, resid, df_model, df_error] = F_test_full_vs_red(y, X, Xred, px, pxred)
+%
+% :Examples:
+% ::
+%
+%    X = randn(100, 3); Xred = X(:,1); y = X(:,2) + randn(100, 1);
+%    px = pinv(X); pxred = pinv(Xred);
+%    [F, p, resid] = F_test_full_vs_red(y, X, Xred, px, pxred);
+%
+%
+%    % Test full-model F-value against regress.m
+%    Xred = X(:,end); % intercept only
+%    px = pinv(X);
+%    pxred = pinv(Xred);
+%    [F, p, resid, dfm, dfe] = F_test_full_vs_red(y, X, Xred, px, pxred); % full model F-test
+%    [b, bint, r, rint, stats] = regress(y, X);
+%
+% ..
+%    Tested OK on 11/27/07, by tor
+% ..
+
     T = length(y);      % Length of time course
 
     k = size(px, 1);        % predictors: full model

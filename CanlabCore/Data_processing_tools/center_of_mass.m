@@ -1,9 +1,12 @@
 function com = center_of_mass(XYZ,Z)
-% com = center_of_mass(XYZ,Z)
-%
-% this function returns the center of mass of a cluster of voxels or mm coordinates
+% This function returns the center of mass of a cluster of voxels or mm coordinates
 % defined as the nearest in-list coordinate to the average of the 
 % coordinate values weighted by the Z-score
+%
+% :Usage:
+% ::
+%
+%     com = center_of_mass(XYZ,Z)
 %
 % assigns a rank to each coordinate based on Z scores
 % and includes 
@@ -11,13 +14,15 @@ function com = center_of_mass(XYZ,Z)
 % enter a 3 x n list of XYZ coordinates
 % returns 1 x 3 center of mass
 %
-% by Tor Wager
+% ..
+%   by Tor Wager
 %
-% Functions called:
-% C:\matlabR12\toolbox\matlab\elmat\repmat.m
-
-% Edits: Oct 2012, to fix bug if Z values sum to exactly zero
-% Now scales weights by abs value, instead of original value (Z)
+%   Functions called:
+%   C:\matlabR12\toolbox\matlab\elmat\repmat.m
+%
+%   Edits: Oct 2012, to fix bug if Z values sum to exactly zero
+%   Now scales weights by abs value, instead of original value (Z)
+% ..
 
 if size(Z,1) > size(Z,2), Z = Z'; end
 

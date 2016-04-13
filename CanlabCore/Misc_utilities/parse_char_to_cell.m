@@ -1,14 +1,23 @@
 function outcell = parse_char_to_cell(invar,sepval)
-% function outcell = parse_char_to_cell(invar,sepval)
 % take a row of characters and separate into cells, breaking at either
 % spaces or tabs
 %
-% tor wager
+% :Usage:
+% :Usage:
+% ::
 %
-% Example:
-% copy from Excel as row, then parse:
-% disorder = ['SAD	PTSD	PTSD	PTSD	PTSD	PTSD	SP	SAD	PTSD	PTSD	PTSD	PTSD	PTSD	SAD	SAD	PTSD	PTSD	SP	SP	SP	PTSD	PTSD	PTSD	PTSD	SAD	SAD	SAD	SP	SAD	SAD	SAD	SP	SP	SP	SAD	SP	PTSD	SP	PTSD	PTSD'];
-% disorder = parse_char_to_cell(disorder, 'tab');
+%     outcell = parse_char_to_cell(invar,sepval)
+%
+% :Examples:
+% ::
+%
+%    % copy from Excel as row, then parse:
+%    disorder = ['SAD	PTSD	PTSD	PTSD	PTSD	PTSD	SP	SAD	PTSD	PTSD	PTSD	PTSD	PTSD	SAD	SAD	PTSD	PTSD	SP	SP	SP	PTSD	PTSD	PTSD	PTSD	SAD	SAD	SAD	SP	SAD	SAD	SAD	SP	SP	SP	SAD	SP	PTSD	SP	PTSD	PTSD'];
+%    disorder = parse_char_to_cell(disorder, 'tab');
+%
+% ..
+%    tor wager
+% ..
 
 switch sepval
     case 'space'

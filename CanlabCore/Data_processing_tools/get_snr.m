@@ -1,9 +1,14 @@
 function snr = get_snr(data)
-% snr = get_snr(data)
+% Data is a matrix whos columns index voxels, and rows index subjects (or trials, etc.)
 %
-% data is a matrix whos columns index voxels, and rows index subjects (or trials, etc.)
+% :Usage:
+% ::
 %
-% Tor Wager
+%     snr = get_snr(data)
+%
+% ..
+%    Tor Wager
+% ..
 
 mystd = nanstd(data);
 mystd(mystd == 0) = NaN;

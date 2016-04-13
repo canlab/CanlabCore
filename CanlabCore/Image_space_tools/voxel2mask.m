@@ -1,11 +1,19 @@
 function mask = voxel2mask(voxels,maskdims)
-% function mask = voxel2mask(voxels, x y z mask dimensions)
-% voxels:
-% 3 column vectors
-% [i j k] = row, column, slice
-% [x y z] in brain if brain is in analyze format
-% (x is rows, y is columns, z is slices)
-% Tor Wager, 10/17/01
+% :Usage:
+% ::
+%
+%     function mask = voxel2mask(voxels, x y z mask dimensions)
+%
+% :Voxels:
+%   - 3 column vectors
+%   - [i j k] = row, column, slice
+%   - [x y z] in brain if brain is in analyze format
+%
+%     (x is rows, y is columns, z is slices)
+%
+% ..
+%    % Tor Wager, 10/17/01
+% ..
 
 [n, m] = size(voxels);
 wh_bad = false(n, 1);

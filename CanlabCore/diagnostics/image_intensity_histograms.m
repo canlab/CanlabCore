@@ -1,28 +1,50 @@
 function [noreturn] = image_intensity_histograms(fout, imgs, varargin)
-% image_intensity_histograms(fout, imgs, [options])
-%   fout -   filename to be saved ('.png' will be appended)
-%   imgs -   a cell array of filenames of images to make histograms of
-%
-% DESCRIPTION
 %   Makes a sheet (fout.png) of intensity distribution histograms of imgs.
 %   Will put an even number of rows of subplots on each page saved.
 %   If more than one page is needed, will title outputs fout_1.png, etc.
 %
-% OPTIONS
-%   'titles', cellarray
-%       use strings in cellarray as plot titles (DEFAULT: use file names from imgs)
-%   'bins', n
-%       use n bins in histograms (DEFAULT: 100)
-%   'ymax', y
-%       use y-axis from 0 to y (DEFAULT: 10,000)
-%   'xmax', x
-%       use x-axis from -x to x (DEFAULT: 10)
-%   'cols', c
-%       use c columns of subplots (DEFAULT: 5)
-%   'maxrows', r
-%       use no more than r columns of subplots per page (DEFAULT: 7)
-%   'includezeros'
-%       include zero intensities in histograms (DEFAULT: exclude zeros)
+% :Usage:
+% ::
+%
+%     image_intensity_histograms(fout, imgs, [options])
+%
+% :Inputs:
+%
+%   **fout:**
+%        imfilename to be saved ('.png' will be appended)
+%
+%   **imgs:**
+%        ima cell array of filenames of images to make histograms of
+%
+% :Optional Inputs:
+%
+%   **obj:**
+%        im
+%
+%   **'titles', cellarray:**
+%        use strings in cellarray as plot titles (DEFAULT: use file names from imgs)
+%
+%   **'bins', n:**
+%        use n bins in histograms (DEFAULT: 100)
+%
+%   **'ymax', y:**
+%        use y-axis from 0 to y (DEFAULT: 10,000)
+%
+%   **'xmax', x:**
+%        use x-axis from -x to x (DEFAULT: 10)
+%
+%   **'cols', c:**
+%        use c columns of subplots (DEFAULT: 5)
+%
+%   **'maxrows', r:**
+%        use no more than r columns of subplots per page (DEFAULT: 7)
+%
+%   **'includezeros':**
+%        include zero intensities in histograms (DEFAULT: exclude zeros)
+%
+% ..
+% Tor Wager
+% ..
 
 %% add path if necessary
 if exist('canlab_preproc.m','file') ~= 2

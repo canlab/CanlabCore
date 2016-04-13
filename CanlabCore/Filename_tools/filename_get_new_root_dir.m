@@ -1,26 +1,38 @@
 function Pout = filename_get_new_root_dir(P,newroot,nlevels)
-% Pout = filename_get_new_root_dir(P,newroot,nlevels)
+% :Usage:
+% ::
 %
-% P is files (string matrix)
+%     Pout = filename_get_new_root_dir(P,newroot,nlevels)
 %
-% Append a new root directory to filenames
-% if newroot is empty, prompt
+% :Inputs:
 %
-% Keeps nlevels dirs deep from old directory:
-% 1     keeps only filename
-% 2     keeps filename plus last subdir
-% 3     keeps filename plus last 2 subdirs, etc.
+%   **P:**
+%        is files (string matrix)
 %
-% tor wager
+%   **newroot:**
+%        Append a new root directory to filenames
+%        if newroot is empty, prompt
 %
-% Examples:
-% Pout = filename_get_new_root_dir(EXPT.SNPM.P{3},pwd,2)
+%   **nlevels:**
+%        Keeps nlevels dirs deep from old directory:
+%          - keeps only filename
+%          - keeps filename plus last subdir
+%          - keeps filename plus last 2 subdirs, etc.
 %
-% Change root dir to pwd for all images in EXPT
-% for i=1:length(EXPT.SNPM.P), EXPT.SNPM.P{i} = filename_get_new_root_dir(EXPT.SNPM.P{i},pwd,2); end
+% :Examples:
+% ::
+%
+%    Pout = filename_get_new_root_dir(EXPT.SNPM.P{3},pwd,2)
+%
+%    % Change root dir to pwd for all images in EXPT
+%    for i=1:length(EXPT.SNPM.P), EXPT.SNPM.P{i} = filename_get_new_root_dir(EXPT.SNPM.P{i},pwd,2); end
 %
 % Note: see regexprep.m for a simpler way!!! This function could be
 % improved by using it.
+%
+% ..
+%    tor wager
+% ..
 
 if isempty(newroot), newroot = spm_get(-1,'*','Get new root directory'); end
 

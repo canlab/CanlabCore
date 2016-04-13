@@ -1,21 +1,29 @@
 function cm = spm_orthviews_change_colormap(lowcolor, hicolor, varargin)
-% cm = spm_orthviews_change_colormap(lowcolor, hicolor, midcolor1, midcolor2, etc.)
+% :Usage:
+% ::
+%
+%    cm = spm_orthviews_change_colormap(lowcolor, hicolor, midcolor1, midcolor2, etc.)
 %
 % Create a new split colormap of your choosing and apply it to the
 % spm_orthviews figure.
 %
-% spm_orthviews_change_colormap([.2 .2 .6], [1 1 0]);  % slate to yellow
-% spm_orthviews_change_colormap([.9 .5 .2], [1 1 0]);  % orange to yellow
-% spm_orthviews_change_colormap([.8 .1 .1], [1 1 0], [.9 .6 .1]);  %red to orange to yellow
-% spm_orthviews_change_colormap([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
-% cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 .5 1], [0 .5 .5], ...
-% [0 1 .5], [0 1 0], [.5 1 0]);
-% cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [.5 0 1], [.5 .5 1], ... 
-% [1 .5 1], [1 .5 .5], [1 .5 0]);
-% tor wager, sept. 2007
+% :Examples:
+% ::
+%
+%    spm_orthviews_change_colormap([.2 .2 .6], [1 1 0]);  % slate to yellow
+%    spm_orthviews_change_colormap([.9 .5 .2], [1 1 0]);  % orange to yellow
+%    spm_orthviews_change_colormap([.8 .1 .1], [1 1 0], [.9 .6 .1]);  %red to orange to yellow
+%    spm_orthviews_change_colormap([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
+%    cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 .5 1], [0 .5 .5], ...
+%    [0 1 .5], [0 1 0], [.5 1 0]);
+%    cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [.5 0 1], [.5 .5 1], ... 
+%    [1 .5 1], [1 .5 .5], [1 .5 0]);
+%
+% ..
+%    tor wager, sept. 2007
+% ..
 
-% colormap
-myfig = findobj('Tag','Graphics');
+myfig = findobj('Tag','Graphics'); % colormap
 axishandles = findobj(myfig, 'Type', 'Axes');
 
 newcm = colormap_tor(lowcolor, hicolor, varargin{:});

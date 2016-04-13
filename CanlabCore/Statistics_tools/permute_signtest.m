@@ -1,44 +1,65 @@
 function [p, Z, xbar, permsign, pmean] = permute_signtest(data, nperms, w, permsign)
-%     [p, Z, xbar, permsign, pmean] = permute_signtest(data, nperms, [w], [permsign])
 % One-sample t-test against zero on each column of data
 % Using weighted sign permutation test
 %
+% :Usage:
+% ::
+%
+%     [p, Z, xbar, permsign, pmean] = permute_signtest(data, nperms, [w], [permsign])
+%
 % p-values are 2-tailed
 %
-% Inputs:
-% data: n x k matrix of k vectors to test against zero
-% nperms: number of permutations
-% w: n x k matrix of weights
-%    weights for each column should sum to 1
-%    default (for empty or missing input) is equal weights, i.e., 1/n
+% :Inputs:
 %
-% permindx: nperms x n matrix of exact permutation indices
-%    default (for empty or missing input) generates nperms permutations
+%   **data:**
+%        n x k matrix of k vectors to test against zero
 %
-% Tor Wager, march 2007
+%   **nperms:**
+%        number of permutations
 %
-% Example: Generate 5-vector dataset and test, first generating perms, then
+%   **w:**
+%        n x k matrix of weights
+%
+%        weights for each column should sum to 1
+%
+%        default (for empty or missing input) is equal weights, i.e., 1/n
+%
+%   **permindx:**
+%        nperms x n matrix of exact permutation indices
+%        default (for empty or missing input) generates nperms permutations
+%
+% :Example: Generate 5-vector dataset and test, first generating perms, then
 %          using already-generated ones
-% tic, [p, z, xbar, permsign] = permute_signtest(x, 1000); toc
-% tic, [p2, z2, xbar, permsign] = permute_signtest(x, [], [], permsign); toc
+% ::
+%
+%    tic, [p, z, xbar, permsign] = permute_signtest(x, 1000); toc
+%    tic, [p2, z2, xbar, permsign] = permute_signtest(x, [], [], permsign); toc
 %
 %
-% % Example: Generate fake data and simulate false positive rate
-% permsign = [];  % initialize to empty for first iteration
-% nperms = 2000; nreps = 5000;
-% tic, for i = 1:nreps
-%     x = randn(20,1); stat = mean(x);
-%     [p(i), z(i), xbar, permsign] = permute_signtest(x, nperms, [], permsign);
-%     if mod(i,10) == 0,fprintf(1,'%03d ',i); end
-% end
-% fprintf(1,'\n');
+% Example: Generate fake data and simulate false positive rate
+% ::
 %
-% % Example: Generate fake data and simulate false positive rate
-% % This uses the column-wise capabilities of this function and is much
-% % faster
-% nperms = 2000; nreps = 5000; nsubj = 15;
-% x = randn(nsubj, nreps);
-% [p, z, xbar, permsign] = permute_signtest(x, nperms);
+%    permsign = [];  % initialize to empty for first iteration
+%    nperms = 2000; nreps = 5000;
+%    tic, for i = 1:nreps
+%    x = randn(20,1); stat = mean(x);
+%    [p(i), z(i), xbar, permsign] = permute_signtest(x, nperms, [], permsign);
+%    if mod(i,10) == 0,fprintf(1,'%03d ',i); end
+%    end
+%    fprintf(1,'\n');
+%
+% Example: Generate fake data and simulate false positive rate
+% This uses the column-wise capabilities of this function and is much
+% faster
+% % ::
+%
+%    nperms = 2000; nreps = 5000; nsubj = 15;
+%    x = randn(nsubj, nreps);
+%    [p, z, xbar, permsign] = permute_signtest(x, nperms);
+%
+% ..
+%    Tor Wager, march 2007
+% ..
 
 
 [n, k] = size(data); % observations x columns

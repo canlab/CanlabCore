@@ -1,27 +1,38 @@
 function cm = spm_orthviews_hotcool_colormap(t, thr)
-    % cm = spm_orthviews_hotcool_colormap(t, thr)
-    %
-    % Create split-level colormap with hot colors for positive values and
-    % cool colors for negative ones
-    % Apply this colormap to the spm Graphics window (or any figure with the
-    % tag 'Graphics')
-    %
-    % Inputs:
-    %   t:  range of input statistic values (doesn't have to be t-values)
-    %   thr: threshold more extreme than which (+/-) colors should be used
-    %       enter a positive value
-    %
-    % Designed to work on blobs added using spm_orthviews 'addblobs' feature
-    %
-    % Tor Wager, April 2007
-    %
-    % Examples for using 'clusters' in torlab format:
-    % ----------------------------------------------------------------------
-    % Threshold an image to get clusters:
-    % [dat, volInfo, cl] = iimg_threshold('test_statistic.img', 'thr', 3.1440, 'k', 20);
-    %
-    % Display the clusters using spm_orthviews and apply the new color map:
-    % cluster_orthviews(cl); cm = spm_orthviews_hotcool_colormap(cat(2,cl.Z), 3);
+% :Usage:
+% ::
+%
+%    cm = spm_orthviews_hotcool_colormap(t, thr)
+%
+% Create split-level colormap with hot colors for positive values and
+% cool colors for negative ones
+%
+% Apply this colormap to the spm Graphics window (or any figure with the
+% tag 'Graphics')
+%
+% :Inputs:
+%
+%   **t:**
+%        range of input statistic values (doesn't have to be t-values)
+%
+%   **tthr:**
+%        threshold more extreme than which (+/-) colors should be used
+%       enter a positive value
+%
+% Designed to work on blobs added using spm_orthviews 'addblobs' feature
+%
+% :Examples: for using 'clusters' in torlab format
+% ::
+%
+%    % Threshold an image to get clusters:
+%    [dat, volInfo, cl] = iimg_threshold('test_statistic.img', 'thr', 3.1440, 'k', 20);
+%
+%    % Display the clusters using spm_orthviews and apply the new color map:
+%    cluster_orthviews(cl); cm = spm_orthviews_hotcool_colormap(cat(2,cl.Z), 3);
+%
+% ..
+%    Tor Wager, April 2007
+% ..
 
 
     myfig = findobj('Tag','Graphics');

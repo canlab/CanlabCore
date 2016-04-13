@@ -1,13 +1,18 @@
-function h = spm_orthviews_showposition
-    % handles = spm_orthviews_showposition;
-    %
-    % plots x, y, and z coordinates on SPM orthviews figure
-    %
-    % tor wager, august 2006
-    % updated: june 2007
-
-    % bring context structure variable into this script.
-    % contains handles, etc.
+function h = spm_orthviews_showposition()
+% :Usage:
+% ::
+%
+%    handles = spm_orthviews_showposition;
+%
+% plots x, y, and z coordinates on SPM orthviews figure
+%
+% bring context structure variable into this script.
+% contains handles, etc.
+%
+% ..
+%    tor wager, august 2006
+%    updated: june 2007
+% ..
 
     global st
 

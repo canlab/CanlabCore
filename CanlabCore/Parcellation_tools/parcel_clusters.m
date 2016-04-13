@@ -1,20 +1,28 @@
 function parcel_clusters(clpos_data, clneg_data)
-%    
-% parcel_clusters(clpos_data, clneg_data)
+% :Usage:
+% ::
+%
+%     parcel_clusters(clpos_data, clneg_data)
+%
 % No outputs. Saves all output in separate directory.
 %
 % First, get eigenvectors for each subject.
+%
 % We're interested obtaining PARCELS of voxels that tend to co-activate, 
 % or have the same activation profile.
+%
 % We can find these by using clustering algorithms to group voxels with
 % similar profiles.
+%
 % Because we have a many voxel x many voxel covariance matrix for each
 % subject (lots of data!), it's important to reduce the dimensionality of
 % the problem and peform clustering on a REDUCED_DIMENSIONAL space. 
+%
 % We use PCA to do this.  Instead of clustering activation profiles (e.g.,
 % time-courses) directly, we cluster eigenvector loadings for each voxel on
 % a reduced set of components that explains most of the variance in the
 % data.
+%
 % Similar voxels will have similar loadings across the set of 
 % eigenvectors.  e.g., two voxels may load high on components [1 3 and 5],
 % and low on components [10 and 13].  If they have the same pattern of
@@ -38,14 +46,16 @@ function parcel_clusters(clpos_data, clneg_data)
 % other mediation analyses.
 % [paths, stats2] = mediation(SETUP.data.X, SETUP.data.Y, parcel_cl_avgs(1).timeseries, 'plots', 'verbose', 'names', {'Hi-Low Cue' 'Pain Report' 'Parcel'}, 'boot');
 % cluster_orthviews(parcel_cl_avgs(1), {[0 1 0]}, 'add');
+% ::
 %
-% %cd('/Volumes/SCNAlpha/Data_and_Tools/SpeechTask/analysis/wb_multisubject_correl_HR_corrected/mediation_Xprepvsb_Mbrain_Yhr')
-%load cl_b_fdr05_002_01_k3_1_1_prune
-% then run.
-
+%     cd('/Volumes/SCNAlpha/Data_and_Tools/SpeechTask/analysis/wb_multisubject_correl_HR_corrected/mediation_Xprepvsb_Mbrain_Yhr')
+%     load cl_b_fdr05_002_01_k3_1_1_prune
+%
+% then run
+%
 % There are 2 dimension-reduction steps:
-% 1 within-subjects
-% 2 is on eigenvectors concatenated across subjects
+%   1. within-subjects
+%   2. is on eigenvectors concatenated across subjects
 
 initial_eigval_limit = 15;      % Number of eigenvalues to save initially for each subject
                                 % Need this to reduce computational burden

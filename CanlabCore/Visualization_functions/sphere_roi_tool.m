@@ -1,32 +1,52 @@
 function clusters = sphere_roi_tool(varargin)
-% clusters = sphere_roi_tool(varargin)
-% clusters = sphere_roi_tool('mask','mask.img','bilat',1)
-% cl = sphere_roi_tool('mask',EXPT.mask,'bilat',0,'overlay',EXPT.overlay);
+% :Usage:
+% ::
+%
+%    clusters = sphere_roi_tool('mask','mask.img','bilat',1)
+%    cl = sphere_roi_tool('mask',EXPT.mask,'bilat',0,'overlay',EXPT.overlay);
 %
 % A tool for building a number of spherical ROIs masked with some other
 % mask (e.g., gray matter).  High-level end-user function.
 %
-% arguments are in string - value pairs, in any order
-% mask: mask image for spheres, default:
-%       which('scalped_avg152T1_graymatter.img');
-% bilat:make all rois bilateral, default is 1
-% radius of sphere is defined on a region-by-region basis
+% :Inputs:
 %
-% write: followed by name of image to write out
+%   arguments are in string - value pairs, in any order
+%
+%   **mask:**
+%        mask image for spheres, default:
+%        which('scalped_avg152T1_graymatter.img');
+%
+%   **bilat:**
+%        make all rois bilateral, default is 1
+%
+%        radius of sphere is defined on a region-by-region basis
+%
+%   **write:**
+%        followed by name of image to write out
 %
 % afterwards, try eliminating few-voxel regions:
-% cl(find(cat(1,cl.numVox)<10)) = [];
+% ::
+%
+%    cl(find(cat(1,cl.numVox)<10)) = [];
 %
 % and naming the clusters:
-% clusters = cluster_names(clusters);
+% ::
+%
+%    clusters = cluster_names(clusters);
 %
 % draw on existing regions:
-% cl = sphere_roi_tool('mask',EXPT.mask,'bilat',0,'overlay',EXPT.overlay,'add');
+% ::
+%
+%    cl = sphere_roi_tool('mask',EXPT.mask,'bilat',0,'overlay',EXPT.overlay,'add');
 %
 % use existing clusters
-% cl = sphere_roi_tool(cl,'mask',mask,'bilat',0,'overlay',ovl,'add');
+% ::
+%
+%    cl = sphere_roi_tool(cl,'mask',mask,'bilat',0,'overlay',ovl,'add');
 
-% defaults
+% ..
+%    defaults
+% ..
 
 bilat = 1;      % bilateral ROIs
 rad = 8;        % radius in mm

@@ -1,4 +1,4 @@
-function plotclustfir(infir,oXc);
+function plotclustfir(infir,oXc)
 
 colors = {'r' 'g' 'b' 'y' 'c' 'm' 'k'};
 if max(oXc)>length(colors)

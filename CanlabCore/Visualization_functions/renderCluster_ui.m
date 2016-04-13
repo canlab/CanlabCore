@@ -1,54 +1,92 @@
 function O = renderCluster_ui(varargin)
-%function O = renderCluster_ui([opt] O)
+% :Usage:
+% ::
+%
+%    O = renderCluster_ui([opt] O)
+%
 % This ui is set to render on the default single_subj_T1, in default colors
 % More flexibility is available if you use the functions.
-% By Tor Wager, 10/3/2001, last edit 1/31/01
 %
 % main functions used:
-%   tor_3d.m - images head with cutaway views
-%   imageCluster.m - images a cluster isosurface
-%   mni_TSU.m and tor_ihb_TalSpace.m - to get clusters
-%       these and related functions are part of Talairach Space Utility
-%       written by Sergey Pakhomov, 2001
-%       modified very slightly by Tor Wager to not convert to Talairach Space
-%       and use MNI coordinates instead.
+%  - tor_3d.m - images head with cutaway views
+%  - imageCluster.m - images a cluster isosurface
+%  - mni_TSU.m and tor_ihb_TalSpace.m - to get clusters
+%    these and related functions are part of Talairach Space Utility
+%    written by Sergey Pakhomov, 2001
+%    modified very slightly by Tor Wager to not convert to Talairach Space
+%    and use MNI coordinates instead.
 %
 %   Use of the TSU functions for getting clusters require SPM99.
 %
-% Output to workspace:
+% :Output to workspace:
+%
 %   Isosurface handles are in p, for head isosurfaces, and cH, for the cluster isosurface
+%
 %   D = image data, Ds = smoothed data, hdr = img header
 %
 % Add more clusters by using:
-% cH(2) = imageCluster('cluster',clusters(i));
+% ::
 %
-% O = option structure with fields
-%   dohead               y/n add head surface
-%   head                 filename or 'default' for default canonical brain
-%   dobrain y/n/filename add (transparent) brain surface, y for default brain or enter filename
-%   get_from             workspace/file/TSU/TSUfigure/none get clusters from here
-%                        if workspace, enter clusters in O.clusters
-%   which_cl             vector of clusters to image (from list)
-%   clcol                cluster colors - 3 el. vector, single letter, or string of letters
-%                           enter letter or letter string in single quotes. e.g., O.clcol = 'yrgb';
-%   whichc               letter string (no quotes) - which axes to cut along - xyzw are choices
-%   addtext              y/n add text to clusters
-%   textfield            field in cluster structure containing text
-%   textcol              character code (r, b, g, etc.) for color of text
-%   bestCoords           coordinates in mm to define x,y, and z cuts
-%   revx                 text string to reverse x cut direction, enter 1 to do it.
+%    cH(2) = imageCluster('cluster',clusters(i));
+%
+% :O: = option structure with fields
+%
+%   **dohead:**
+%        y/n add head surface
+%
+%   **head:**
+%        filename or 'default' for default canonical brain
+%
+%   **dobrain:**
+%        y/n/filename add (transparent) brain surface, y for default brain or enter filename
+%
+%   **get_from:**
+%        workspace/file/TSU/TSUfigure/none get clusters from here
+%        if workspace, enter clusters in O.clusters
+%
+%   **which_cl:**
+%        vector of clusters to image (from list)
+%
+%   **clcol:**
+%        cluster colors - 3 el. vector, single letter, or string of letters
+%        enter letter or letter string in single quotes. e.g., O.clcol = 'yrgb';
+%
+%   **whichc:**
+%        letter string (no quotes) - which axes to cut along - xyzw are choices
+%
+%   **addtext:**
+%        y/n add text to clusters
+%
+%   **textfield:**
+%        field in cluster structure containing text
+%
+%   **textcol:**
+%        character code (r, b, g, etc.) for color of text
+%
+%   **bestCoords:**
+%        coordinates in mm to define x,y, and z cuts
+%
+%   **revx:**
+%        text string to reverse x cut direction, enter 1 to do it.
 % 
-%for solid brain rendering without the scalp, where dohead gives you a brain image,
-%use brain_render_T1.img
+% for solid brain rendering without the scalp, where dohead gives you a
+% brain image, use brain_render_T1.img
+%
 % see cluster_cutaways.m for an easy-to-use version.
 %
-%for transparent brain rendering of a set of clusters, try:
-% figure('Color','w');
-%O = struct('dohead','n','dobrain','y','get_from','workspace', ...
+% for transparent brain rendering of a set of clusters, try:
+% ::
+%
+%    figure('Color','w');
+%    O = struct('dohead','n','dobrain','y','get_from','workspace', ...
 %                'clusters',clusters, ...
-%            'which_cl',1:length(clusters),'whichc','y','bestCoords',[0 0 0],'clcol','y','addtext','n', ...
-%            'head','single_subj_T1');
-% renderCluster_ui(O)
+%                'which_cl',1:length(clusters),'whichc','y','bestCoords',[0 0 0],'clcol','y','addtext','n', ...
+%                'head','single_subj_T1');
+%    renderCluster_ui(O)
+%
+% ..
+%    By Tor Wager, 10/3/2001, last edit 1/31/01
+% ..
 
 if nargin > 0, O = varargin{1};, else, O.dummy = [];, end
 

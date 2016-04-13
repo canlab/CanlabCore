@@ -1,9 +1,13 @@
 function [cl2,classes] = image_histogram1d(varargin)
-%[cl2,classes] = image_histogram1d([image name],[overlay])
-%
 % Visualize a change_point map stored in hewma_cp.img
 % (output from hewma2)
 % and classify voxels into groupings based on CP
+%
+% :Usage:
+% ::
+%
+%     [cl2,classes] = image_histogram1d([image name],[overlay])
+%
 
 name = 'hewma_cp.img';
 %name = 'hewma_runlen.img';

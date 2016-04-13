@@ -1,10 +1,13 @@
 function colors = scn_standard_colors(varargin)
 % Create a set of unique colors in a standardized order.
 %
-% colors = scn_standard_colors(varargin)
-% colors = scn_standard_colors(100)
+% :Usage:
+% ::
+%
+%    colors = scn_standard_colors(100)
 %
 % Optional input: minimum number of colors to generate
+%
 % Repeats after 36 colors
 
         % unique colors for each blob

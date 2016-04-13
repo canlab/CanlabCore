@@ -1,18 +1,22 @@
 function cl = multi_threshold(P,type,df,varargin)
-% cl = multi_threshold(P,type,df,[overlay image name])
+% ::
+%
+%    cl = multi_threshold(P,type,df,[overlay image name])
 %
 % F contrast:  df = xSPM.df;
+%
 % type = 'F' or 'T'or 'none'
 %
-% really good function.
-% tor wager
+% ..
+%    really good function.
+%    tor wager
+% ..
 
-% ---------------------------------------------------
-% defaults
-% ---------------------------------------------------
-% Colors
+% ..
+%    defaults
+% ..
 
-red = [1 0 0];
+red = [1 0 0]; % Colors
 yellow = [1 1 0];
 orange = [.9 .5 0];
 orange2 = [1 .6 .1];

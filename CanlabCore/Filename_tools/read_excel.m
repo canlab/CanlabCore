@@ -1,16 +1,18 @@
 function [DAT, behdat] = read_excel(excelfilename, has_header_row)
 % Reads each sheet of an Excel input file into a data structure DAT
 %
-% Usage:
-% -------------------------------------------------------------------------
-% DAT = read_excel(excelfilename, has_header_row [1 or 0])
+% :Usage:
+% ::
 %
-% - reads multiple sheets
-% - adds fields named with variable names for easy access
-% - uses importdata <matlab internal> to do most of the work
+%     DAT = read_excel(excelfilename, has_header_row [1 or 0])
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%  - reads multiple sheets
+%  - adds fields named with variable names for easy access
+%  - uses importdata <matlab internal> to do most of the work
+%
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
 %     Copyright (C) 2015 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -25,34 +27,39 @@ function [DAT, behdat] = read_excel(excelfilename, has_header_row)
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% excelfilename           Char array with full path of input filename
+% :Input:
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% DAT           Structure with DAT.(sheetname).(varname) data fields
-%               DAT.(sheetname).varnames is cell array of var names
+%   **excelfilename:**
+%        Char array with full path of input filename
 %
-% behdat       Data structure as read in by importdata
+% :Outputs:
 %
-% Examples:
-% -------------------------------------------------------------------------
+%   **DAT:**
+%        Structure with DAT.(sheetname).(varname) data fields
+%        DAT.(sheetname).varnames is cell array of var names
 %
-% excelfilename = fullfile(basedir, 'data', 'SchulzNewcorn_regressor_demograph.xlsx');
-% has_header_row = 1;
-% [DAT, behdat] = read_excel(excelfilename, has_header_row)
+%   **behdat:**
+%        Data structure as read in by importdata
 %
-% See also:
+% :Examples:
+% ::
+%
+%    excelfilename = fullfile(basedir, 'data', 'SchulzNewcorn_regressor_demograph.xlsx');
+%    has_header_row = 1;
+%    [DAT, behdat] = read_excel(excelfilename, has_header_row)
+%
+% :See also:
 % importdata, read_database, read_database2, read_edat_output_2008, read_physio_data
+%
+% ..
+%    Programmers' notes:
+%    Created by Tor, 7/2815
+%    Not tested extensively yet.
+% ..
 
-% Programmers' notes:
-% Created by Tor, 7/2815
-% Not tested extensively yet.
-
-% read the original data
-behdat = importdata(excelfilename);
+behdat = importdata(excelfilename); % read the original data
 
 mysheets = fieldnames(behdat.data);
 

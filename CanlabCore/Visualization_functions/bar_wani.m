@@ -1,88 +1,124 @@
 function handle = bar_wani(y, e, bar_width, varargin)
-
 % Draw a bar plot with error bars with some additional useful features 
 % (work with up to the 2014a matlab).  
 %
-% Usage:
-% -------------------------------------------------------------------------
-% h = bar_wani(y, e, bar_width, varargin)
+% :Usage:
+% ::
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% y              y values for bars (row: bar grouping, column: bar values 
-%                within a bar group) (e.g., if there are m bar groups and 
-%                n bars for each group, y should be a m x n matrix)
-% e              error bars (m x n matrix)
-% bar_width      value for bar width between 0 and 1. This will determine
-%                the intervals between bars. 
+%    h = bar_wani(y, e, bar_width, varargin)
 %
-% Optional inputs: Enter keyword followed by variable with values
-% 'ylim'         y axis range, (e.g., 'ylim', [-1 1])
-% 'ytick'        y tick values (e.g., 'ytick', -.002:.001:.002)
-% 'errbar_width' the horizontal width of error bars (e.g., 'errbar_width', [-.01 .01])
-% 'colors'       bar colors: each row determines the color for each bar in order (n x 3 matrix)
-% 'ast'          put asterisks according to p values, which should be
-%                given. (e.g., 'ast', p [m x n]) *p<.05, **p<.01, ***p<.001
-% 'btwlines'     this option puts lines between bar groups. This is
-%                followed by the line style (e.g., 'btwlines', '--');
-% 'dosave'       followed by savename (e.g., 'dosave', savename)
+% :Inputs:
 %
-% Some advanced options
-% 'scatter'      show individual data points, which should be in cell array
-% 'text'         this will put a number for each bar (e.g., 'text', round(y) [m x n])
-% 'ast_adj_y_pos'   When the asterisk locations (on y axis) for bars with positive
-%                   values are off, you can adjust it using this option
-% 'ast_adj_y_neg'   When the asterisk locations (on y axis) for bars with negative
-%                   values are off, you can adjust it using this option
-% 'ast_adj_x'       When the asterisk locations (on x axis) are off, you 
-%                   can adjust it using this option
-% 'bar_edgecol'   You can use different colors for bar edges (col [n x 3 matrix])
-% 'bar_edgewidth' You can change linewidths for bar edges 
+%   **y:**
+%        y values for bars (row: bar grouping, column: bar values 
+%        within a bar group) (e.g., if there are m bar groups and 
+%        n bars for each group, y should be a m x n matrix)
 %
-% Outputs:
-% -------------------------------------------------------------------------
-% h              graphic handles for a bar plot
+%   **e:**
+%        error bars (m x n matrix)
 %
-% Examples: you can see the output in 
+%   **bar_width:**
+%        value for bar width between 0 and 1. This will determine
+%        the intervals between bars. 
+%
+% :Optional Inputs: Enter keyword followed by variable with values
+%
+%   **'ylim':**
+%        y axis range, (e.g., 'ylim', [-1 1])
+%
+%   **'ytick':**
+%        y tick values (e.g., 'ytick', -.002:.001:.002)
+%
+%   **'errbar_width':**
+%        the horizontal width of error bars (e.g., 'errbar_width', [-.01 .01])
+%
+%   **'colors':**
+%        bar colors: each row determines the color for each bar in order (n x 3 matrix)
+%
+%   **'ast':**
+%        put asterisks according to p values, which should be
+%        given. (e.g., 'ast', p [m x n]) *p<.05, **p<.01, ***p<.001
+%
+%   **'btwlines':**
+%        this option puts lines between bar groups. This is
+%        followed by the line style (e.g., 'btwlines', '--');
+%
+%   **'dosave':**
+%        followed by savename (e.g., 'dosave', savename)
+%
+% :Some advanced options:
+%
+%   **'scatter':**
+%        show individual data points, which should be in cell array
+%
+%   **'text':**
+%        this will put a number for each bar (e.g., 'text', round(y) [m x n])
+%
+%   **'ast_adj_y_pos':**
+%        When the asterisk locations (on y axis) for bars with positive
+%        values are off, you can adjust it using this option
+%
+%   **'ast_adj_y_neg':**
+%        When the asterisk locations (on y axis) for bars with negative
+%        values are off, you can adjust it using this option
+%
+%   **'ast_adj_x':**
+%        When the asterisk locations (on x axis) are off, you 
+%        can adjust it using this option
+%
+%   **'bar_edgecol':**
+%        You can use different colors for bar edges (col [n x 3 matrix])
+%
+%   **'bar_edgewidth':**
+%        You can change linewidths for bar edges 
+%
+% :Output:
+%
+%   **h:**
+%        graphic handles for a bar plot
+%
+% :Examples: you can see the output in 
 % http://wagerlab.colorado.edu/wiki/doku.php/help/core/figure_gallery
-% -------------------------------------------------------------------------
-% % data
-% y = [-0.6518   -0.6934   -0.5417   -0.6496   -0.5946   -0.3839
-%     1.1511    0.9090    1.1681    1.2892    0.9346    1.1383];
-% e = [0.3226    0.2936    0.3080    0.3203    0.3368    0.3167
-%     0.4026    0.4088    0.4012    0.5586    0.3734    0.4257];
-% p = [0.0433    0.0182    0.0785    0.0426    0.0775    0.2255
-%     0.0042    0.0262    0.0036    0.0210    0.0123    0.0075];
-% 
-% col =  [0    0.1157    0.2686
-%     0.1157    0.2765    0.4725
-%     0.4843    0.1157    0.1078
-%     0.3667    0.4765    0.1353
-%     0.2765    0.1902    0.3824
-%     0.0922    0.4216    0.5118
-%     0.7941    0.3235   0];
+% :Examples:
+% ::
 %
-% % draw
-% bar_wani(y, e, .8, 'colors', col, 'errbar_width', [0 0], 'ast', p, 'ylim', [-2.5 2.5], 'ytick', -2:2, 'ast_adj_x', 0, 'ast_adj_y_neg', .15);
-% set(gca, 'ytickLabel', num2str(get(gca, 'ytick')'));
-% set(gcf, 'position', [1   531   399   169]);
+%    % data
+%    y = [-0.6518   -0.6934   -0.5417   -0.6496   -0.5946   -0.3839
+%        1.1511    0.9090    1.1681    1.2892    0.9346    1.1383];
+%    e = [0.3226    0.2936    0.3080    0.3203    0.3368    0.3167
+%        0.4026    0.4088    0.4012    0.5586    0.3734    0.4257];
+%    p = [0.0433    0.0182    0.0785    0.0426    0.0775    0.2255
+%        0.0042    0.0262    0.0036    0.0210    0.0123    0.0075];
 % 
-% savename = 'example_barwani.pdf';
-% 
-% try
-%     pagesetup(gcf);
-%     saveas(gcf, savename);
-% catch
-%     pagesetup(gcf);
-%     saveas(gcf, savename);   
-% end
+%    col =  [0    0.1157    0.2686
+%            0.1157    0.2765    0.4725
+%            0.4843    0.1157    0.1078
+%            0.3667    0.4765    0.1353
+%            0.2765    0.1902    0.3824
+%            0.0922    0.4216    0.5118
+%            0.7941    0.3235   0];
 %
-% -------------------------------------------------------------------------
-% Copyright (C) 2014  Wani Woo
-
-% Programmers' notes:
-%  'yline'
-
+%    % draw
+%    bar_wani(y, e, .8, 'colors', col, 'errbar_width', [0 0], 'ast', p, 'ylim', [-2.5 2.5], 'ytick', -2:2, 'ast_adj_x', 0, 'ast_adj_y_neg', .15);
+%    set(gca, 'ytickLabel', num2str(get(gca, 'ytick')'));
+%    set(gcf, 'position', [1   531   399   169]);
+% 
+%    savename = 'example_barwani.pdf';
+% 
+%    try
+%        pagesetup(gcf);
+%        saveas(gcf, savename);
+%    catch
+%        pagesetup(gcf);
+%        saveas(gcf, savename);   
+%    end
+%
+% ..
+%    Copyright (C) 2014  Wani Woo
+%
+%    Programmers' notes:
+%    'yline'
+% ..
 
 dosave = 0;
 doman_ylim = 0;
@@ -142,7 +178,7 @@ for i = 1:length(varargin)
     end
 end
 
-handle = create_figure('Bar plot');
+handle.main = create_figure('Bar plot');
 set(gcf, 'Position', [1   450   300.*size(y,1)   250]);
 
 barnum = size(y,2);
@@ -161,8 +197,8 @@ if doyline
     line([0.55 .45+size(y,1)], [yln_y yln_y], 'linewidth', 1, 'linestyle', '--', 'color', [.4 .4 .4]);  
 end
 
-barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
-barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
+handle.bar = barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
+handle.bar = barweb(y, e, bar_width, [], [], [], [], [], [], [], [], []);
 set(gcf, 'Color', 'w')
 set(gca, 'ylim', [ymin ymax], 'XLim', [0.55 .45+size(y,1)], 'fontsize', 20, 'linewidth', 1.8); % **ADJUST**: adjust basic setting for axis
 
@@ -225,10 +261,13 @@ for i = 1:barnum
             if ymin > min(sc_data{j,i}), ymin = min(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
             if ymax < max(sc_data{j,i}), ymax = max(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
         end
-    
+        
+        xdata_all(i,j) = xdata(9*(j-1)+1);
+        
         if grnum == 1
             break
         end
+        
     end
     
     set(hh(2), 'xdata', xdata);
@@ -251,6 +290,16 @@ if dobtwlines
     for i = 1:size(btwx,1)
         line(btwx(i,:), btwy(i,:), 'linestyle', btwlnstyle, 'linewidth', btwlnwidth, 'color', btwcol)
     end
+end
+
+set(gca, 'tickdir', 'out', 'ticklength', [.01 .01]);
+
+xtickdata = sort(xdata_all(:));
+
+if size(y,1)==1
+    set(gca, 'xtick', xtickdata(~isnan(y)));
+else
+    set(gca, 'xtick', xtickdata(~any(isnan(y))));
 end
 
 if dosave
@@ -424,6 +473,9 @@ else
 	
 	% Plot bars
 	handles.bars = bar(barvalues, width,'edgecolor','k', 'linewidth', 2);
+    h_temp = handles.bars(any(isnan(barvalues)));
+    set(h_temp, 'linestyle', 'none')
+    
 	hold on
 	if ~isempty(bw_colormap)
 		colormap(bw_colormap);

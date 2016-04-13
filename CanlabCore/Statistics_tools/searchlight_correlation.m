@@ -1,36 +1,50 @@
 function [r_corr, dat, sl_size] = searchlight_correlation(mask1, mask2, varargin)
-
 % Calculate the local pattern similarity between two pattern maps using
 % the searchlight approach. 
 %
-% Usage:
-% -------------------------------------------------------------------------
-% [r_corr, dat, sl_size] = searchlight_correlation(mask1, mask2, [additional_inputs])
+% :Usage:
+% ::
+%
+%     [r_corr, dat, sl_size] = searchlight_correlation(mask1, mask2, [additional_inputs])
 % 
 %
-% Inputs:
-% -------------------------------------------------------------------------
-% mask1         pattern or activation maps 1
-% mask2         pattern or activation mediaps 2
-% 
-% Optional inputs: 
-% -------------------------------------------------------------------------
-% 'r'           searchlight sphere radius (in voxel) (default: r = 3 voxels)
-% 'type'        This calls corr.m, and can take 'type' option.
-%               'Pearson' (default), 'Kendall', 'Spearman'.
-% Outputs:
-% -------------------------------------------------------------------------
-% r_corr        Correlation between weights of two pattern masks
-% dat           This contains a statistic_image object that contain 
-%               correlation values between weights of two pattern masks 
-%               (=r_corr; in .dat) and p values for the correlation values 
-%               (in .p). 
-% sl_size       The number of voxels within each searchlight. Based on this 
-%               number, you can detect searchlights on the edge (searchlights 
-%               with low sl_size should be on the edge of the brain.
+% :Inputs:
 %
-% Author and copyright information:
-% -------------------------------------------------------------------------
+%   **mask1:**
+%        pattern or activation maps 1
+%
+%   **mask2:**
+%        pattern or activation mediaps 2
+%
+% :Optional inputs: 
+%
+%   **'r':**
+%        searchlight sphere radius (in voxel) (default: r = 3 voxels)
+%
+%   **'type':**
+%        This calls corr.m, and can take 'type' option.
+%
+%        'Pearson' (default), 'Kendall', 'Spearman'.
+%
+% :Outputs:
+%
+%   **r_corr:**
+%        Correlation between weights of two pattern masks
+%
+%   **dat:**
+%        This contains a statistic_image object that contain 
+%        correlation values between weights of two pattern masks 
+%        (=r_corr; in .dat) and p values for the correlation values 
+%        (in .p). 
+%
+%   **sl_size:**
+%        The number of voxels within each searchlight. Based on this 
+%        number, you can detect searchlights on the edge (searchlights 
+%        with low sl_size should be on the edge of the brain.
+%
+% ..
+%     Author and copyright information:
+%
 %     Copyright (C) 2014  Wani Woo
 %
 %     This program is free software: you can redistribute it and/or modify
@@ -45,19 +59,16 @@ function [r_corr, dat, sl_size] = searchlight_correlation(mask1, mask2, varargin
 %
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
-% Example 
-% -------------------------------------------------------------------------
-% mask1 = which('weights_NSF_grouppred_cvpcr.img');
-% mask2 = which('nonnoc_v6_109subjmap_mean.nii');
+% :Examples:
+% ::
 %
-% [r, dat] = searchlight_correlation(mask1, mask2, 'r', 5);
+%    mask1 = which('weights_NSF_grouppred_cvpcr.img');
+%    mask2 = which('nonnoc_v6_109subjmap_mean.nii');
 %
+%    [r, dat] = searchlight_correlation(mask1, mask2, 'r', 5);
 
-% Programmers' notes:
-% 
-
-%% set-up variables
  
 r = 4; % default radius (in voxel)
 corr_type = 'Pearson';

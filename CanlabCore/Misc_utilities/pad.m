@@ -1,5 +1,8 @@
 function [x,L] = pad(x,L)
-%x = pad(x,L)
+% :Usage:
+% ::
+%
+%     x = pad(x,L)
 % 
 % pads x with zeros of length L
 %

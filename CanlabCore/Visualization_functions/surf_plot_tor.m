@@ -1,16 +1,21 @@
 function [data_matrix12, xvals2, yvals2, data_matrix22, bestx, besty, bestz] = surf_plot_tor(data_matrix1, xvals, yvals, xname, yname, zname, varargin)
-    %
-    % Stylized surface plot of one or two surfaces
-    % Tor Wager, Sept. 07
-    %
-    % [data_matrix12, xvals2, yvals2, data_matrix22] = surf_plot_tor(data_matrix1, xvals, yvals, xname, yname, zname, [data_matrix2])
-    %
-    % e.g.,
-    % See classify_search_script3...in meta-analysis classification:
-    %
-    % surf_plot_tor(corrc_mean, mya, mys, 'Activation feature cutoff', 'Sensitivity feature cutoff', 'Classification accuracy', worstcat)
+% Stylized surface plot of one or two surfaces
 %
-% xvals are columns, yvals are rows! 
+% :Usage:
+% ::
+%
+%    [data_matrix12, xvals2, yvals2, data_matrix22] = surf_plot_tor(data_matrix1, xvals, yvals, xname, yname, zname, [data_matrix2])
+%
+% :Examples: See classify_search_script3...in meta-analysis classification
+% ::
+%
+%    surf_plot_tor(corrc_mean, mya, mys, 'Activation feature cutoff', 'Sensitivity feature cutoff', 'Classification accuracy', worstcat)
+%
+% xvals are columns, yvals are rows!
+%
+% ..
+%    Tor Wager, Sept. 07
+% ..
 
     data_matrix22 = [];
 

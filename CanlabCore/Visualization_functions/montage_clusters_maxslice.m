@@ -1,9 +1,5 @@
 function montage_clusters_maxslice(ovl,clusters,varargin)
-% montage_clusters(ovl,clusters,varargin)
-% 
-% by Tor Wager  last edit 12/11/02
-%
-% varargin (in any order) = 
+% :varargin: (in any order) = 
 %   a) additional clusters structures 
 %   b) cell array of colors (text format), must be ROW vector {'r' 'g'} etc...
 %       if length of color string is longer than number of clusters inputs,
@@ -26,14 +22,21 @@ function montage_clusters_maxslice(ovl,clusters,varargin)
 %
 % This maxslice version does 1) Not create a new figure, and 2) finds max
 % slice through clusters to create single slice image.
+%
 % Useful for displaying next to timecourse plots (for example)
+% try:
+% ::
+%
+%    CLU = clusters2clu(clusters);
+%    spm_orthviews('AddColouredBlobs',1,CLU.XYZ,CLU.Z,CLU.M,[1 0 0])
+%
+% ..
+%    by Tor Wager  last edit 12/11/02
+% ..
 
-% try: CLU = clusters2clu(clusters);
-% spm_orthviews('AddColouredBlobs',1,CLU.XYZ,CLU.Z,CLU.M,[1 0 0])
-
-% ----------------------------------------
-% * defaults
-% ----------------------------------------
+% ..
+%    defaults
+% ..
 
 if isempty(ovl), ovl = which('scalped_single_subj_T1.img');, end
 myc = {'b' 'r' 'g' 'c' 'm' 'w'};

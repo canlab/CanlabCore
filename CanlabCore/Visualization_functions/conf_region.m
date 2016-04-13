@@ -1,60 +1,92 @@
 function [ax,ci,cen,ub,lb,S,e,lam,Fm,Fc,F,pval, msb] = conf_region(X,varargin)
-% [ax,ci,cen,ub,lb,S,e,lam,Fm,Fc,F,pval, msb] = conf_region(X,[doplot])
+% :Usage:
+% ::
+%
+%    [ax,ci,cen,ub,lb,S,e,lam,Fm,Fc,F,pval, msb] = conf_region(X,[doplot])
 %
 % alternative conf region multivariate based on Johnson & Wichern, 4th ed., p. 236
 % 2D (3D)
 %
-% ax:   axes of confidence region, scaled to be half-length of confidence hyperellipsoid
-% ci:   length of axes of conf region (diagonal matrix), axes in reverse order of importance
-%       as in ouput of eig
-% cen:  center of region (means of variables)
-% ub:   upper boundary coordinates for region, rows are dims (vars), cols index coordinates
-%       last coordinate is on axis of greatest variation ("reverse order"), from output of eig
-% lb:   lower boundary coordinates
-%       to plot, try: plot(ub(1,:),ub(2,:),'bo'); hold on; plot(lb(1,:),lb(2,:),'ro')
-% S:    covariance matrix
-% e     eigenvectors
-% lam   eigenvalues
-% Fm    degrees of freedom multiplier, p(n-1) / n(n-p)
-% Fc    critical F value based on alpha level
-% F     F value for test - probably not quite right
-% pval  p value for test - probably not quite right
+% :Outputs:
 %
-% To plot:
+%   **ax:**
+%        axes of confidence region, scaled to be half-length of confidence hyperellipsoid
+%
+%   **ci:**
+%        length of axes of conf region (diagonal matrix), axes in reverse order of importance
+%        as in ouput of eig
+%
+%   **cen:**
+%        center of region (means of variables)
+%
+%   **ub:**
+%        upper boundary coordinates for region, rows are dims (vars), cols index coordinates
+%        last coordinate is on axis of greatest variation ("reverse order"), from output of eig
+%
+%   **lb:**
+%        lower boundary coordinates
+%        to plot, try: plot(ub(1,:),ub(2,:),'bo'); hold on; plot(lb(1,:),lb(2,:),'ro')
+%
+%   **S:**
+%        covariance matrix
+%
+%   **e:**
+%        eigenvectors
+%
+%   **lam:**
+%        eigenvalues
+%
+%   **Fm:**
+%        degrees of freedom multiplier, p(n-1) / n(n-p)
+%
+%   **Fc:**
+%        critical F value based on alpha level
+%
+%   **F:**
+%        F value for test - probably not quite right
+%
+%   **pval:**
+%        p value for test - probably not quite right
+%
+% :To plot:
 % Either enter 1 or color as a 2nd argument, or do it yourself:
+% ::
 %
-% [ax,ci,cen,ub,lb,S,e,lam] = conf_region(X);
-% b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
-% theta = atan(b(1)) - pi/2;
-% [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
+%    [ax,ci,cen,ub,lb,S,e,lam] = conf_region(X);
+%    b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
+%    theta = atan(b(1)) - pi/2;
+%    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
 %
-% Edit this function for more examples
 % There is also an example for rendering individual subject conf regions
-
-% Example:
-% N = 250;
-% X = mvnrnd([1 2], [1 .6; .6 1], N);
-% [ax,ci,cen,ub,lb,S,e,lam] = conf_region(X);
-% b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
-% theta = atan(b(1)) - pi/2;
-% %create_figure('test');
-% [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
-% 
-% % plot standard deviation - for boostrapping, or for individual cases
-% [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1)*sqrt(N),ci(2,2)*sqrt(N));
-
-% Example: Render individual subject conf regions
-% X = x(wh, [3 1]);
-% dfe = size(X, 1) - size(X, 2);   % df
-% alph = .1;  % .1 for 90%, .05 for 95%
-% tcrit = tinv(1 - alph, dfe); 
-% ci = ((lam) .^ .5) .* tcrit;
-% b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
-% theta = atan(b(1)) - pi/2;
-% [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
-% 
-% set(h, 'Color', 'k', 'LineWidth', 1);
-% set(h2, 'FaceColor', [.5 1 0]);
+%
+% :Examples:
+% ::
+%
+%    N = 250;
+%    X = mvnrnd([1 2], [1 .6; .6 1], N);
+%    [ax,ci,cen,ub,lb,S,e,lam] = conf_region(X);
+%    b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
+%    theta = atan(b(1)) - pi/2;
+%    %create_figure('test');
+%    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
+%
+%    % plot standard deviation - for boostrapping, or for individual cases
+%    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1)*sqrt(N),ci(2,2)*sqrt(N));
+%
+% :Example: Render individual subject conf regions
+% ::
+%
+%    X = x(wh, [3 1]);
+%    dfe = size(X, 1) - size(X, 2);   % df
+%    alph = .1;  % .1 for 90%, .05 for 95%
+%    tcrit = tinv(1 - alph, dfe); 
+%    ci = ((lam) .^ .5) .* tcrit;
+%    b = pinv([X(:,1) ones(size(X,1),1)] ) * X(:,2);
+%    theta = atan(b(1)) - pi/2;
+%    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
+%
+%    set(h, 'Color', 'k', 'LineWidth', 1);
+%    set(h2, 'FaceColor', [.5 1 0]);
 
 
 

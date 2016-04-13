@@ -1,18 +1,21 @@
-function bIsEmpty = tor_ihb_GetClusterSet
-%----------------------------------------------------------------------------------
-% FORMAT bIsEmpty = ihb_GetClusterSet
-%----------------------------------------------------------------------------------
+function bIsEmpty = tor_ihb_GetClusterSet()
+% :Usage:
+% ::
+%
+%    bIsEmpty = ihb_GetClusterSet
+%
 % Function to select set of cluster (SPM.mat) and select one cluster
 % from this set
+%
 % Return value == 1 if cluster set is nonempty and one cluster selected
 %                 0 otherwise
-%----------------------------------------------------------------------------------
+%
+% ..
 %   10.04.01    Sergey Pakhomov
-%==================================================================================
-%----------------------------------------------------------------------------------
-% Get clusters from SPM.mat
-%----------------------------------------------------------------------------------
-bIsEmpty = 1;
+% ..
+
+
+bIsEmpty = 1; % Get clusters from SPM.mat
 hFigMain = findobj('Type', 'figure', 'Tag', 'ihb_TalSpaceMain_fig');
 ihb_HideShowFigureAll('off');
 clusters = tor_ihb_GetClusters;

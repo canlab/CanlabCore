@@ -12,7 +12,6 @@ function out = regress(dat, varargin)
 % through all voxels.
 %
 % Regression is OLS by default, but can be robust using 'robust' flag.
-% Warning: Running robust option is considerably slower than OLS.
 %
 % Creates thresholded plot by default
 %
@@ -45,6 +44,10 @@ function out = regress(dat, varargin)
 %
 %  **noverbose:**
 %        Suppress verbose outputs
+%
+%  **robust:**
+%        Run a robust regression (default is OLS).  Robust is considerably
+%        slower than OLS
 %
 %
 % :Outputs:

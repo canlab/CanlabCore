@@ -1,9 +1,13 @@
-% delete_ana_imgs(imgs)
+function delete_ana_imgs(imgs)
 % Function to delete a list of .img files 
 %   - automatically removes associated .hdr files as well.
 %   - accepts cellstr or char inputs
+%
+% :Usage:
+% ::
+%
+%     delete_ana_imgs(imgs)
 
-function delete_ana_imgs(imgs)
     imgs = cellstr(imgs);
     for i = 1:length(imgs)
         delete(imgs{i});

@@ -1,19 +1,26 @@
-% x = intercept_model(nvols_per_run, [indx of dummy scans in each session])
-%
+function x = intercept_model(nvols_per_run, varargin)
 % Build design matrix X for intercepts
 % given vector of session lengths [s1 s2 s3] in images
 %
-% Examples:
-% nvols_per_run = [166 166 144 137];
-% x = intercept_model(nvols_per_run);
+% :Usage:
+% ::
 %
-% x = intercept_model(repmat(166, 1, 5));
+%     x = intercept_model(nvols_per_run, [indx of dummy scans in each session])
 %
-% Xi = intercept_model(EXPT.FIR.nruns, 1:2);
+% :Examples:
+% ::
 %
-% tor modified april 07: separate column for each run
+%    nvols_per_run = [166 166 144 137];
+%    x = intercept_model(nvols_per_run);
+%
+%    x = intercept_model(repmat(166, 1, 5));
+%
+%    Xi = intercept_model(EXPT.FIR.nruns, 1:2);
+%
+% ..
+%    tor modified april 07: separate column for each run
+% ..
 
-function x = intercept_model(nvols_per_run, varargin)
     if ~isvector(nvols_per_run), error('nvols_per_run must be a vector of the number of volumes for each run'); end
     nvols_per_run = nvols_per_run(:)'; %ensure row vector
     

@@ -1,9 +1,16 @@
 function plot_ideal_deconv5(rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,INFO,hrf,snr,TR,varargin)
-%function plot_ideal_deconv5(rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,INFO,hrf,snr,TR,[truer])
-% Tor Wager
+% :Usage:
+% ::
+%
+%     function plot_ideal_deconv5(rmsd,msdstd,msdb,biasmean,meanest,min95est,max95est,INFO,hrf,snr,TR,[truer])
+%
 % delta should be matrix of column vectors
+%
 % optional: truer, vector of "true" responses for each trial type
-
+%
+% ..
+%    Tor Wager
+% ..
 
 msdblim = max(max(abs(msdb)));
 bmlim = max(max(abs(biasmean))); bmlim = [-bmlim bmlim];

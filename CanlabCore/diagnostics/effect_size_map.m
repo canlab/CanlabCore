@@ -1,37 +1,70 @@
-
-% % %% SETUP Stuff
-% % 
-% % % Define a mask from one contrast
-% % % This contrast is [Nback - Baseline], where N-back is balanced across
-% % % 2-back and 3-back
-% % 
-% % % p < .0001 in localizer
-% % my_p_img = 'rob_p_0001.img';  % This could be any p-value image; or when using SPM, could be t image
-% % iimg_threshold(my_p_img, 'thr', [0 .0001], 'outnames', 'rob_p_0001_thresh_0001.img');
-% % mask = which('rob_p_0001_thresh_0001.img');
-% % 
-% % %  mask with brain mask as well
-% % mask_image(mask, which('brainmask.nii'), mask, 'minmask', .2);
-% % cl = mask2clusters(mask);
-% % cluster_orthviews(cl, {[0 1 0]}, 'solid', 'overlay', overlay);
-% % 
-% % % Calculate effect size/power from another contrast
-% % % This is the [3-back - 2-back] contrast
-% % %cd ../robust0002
-% % groupcon = which('rob_beta_0001.img');
-% % groupt = which('rob_tmap_0001.img');
-% % 
-% % % Now we need individual-subject MSE images (residual variance images) for
-% % % the test contrast
-% % 
-% % cd('/Volumes/Cort/Imaging/CORT/Analysis-NBACK/Errors_excluded_model2')
-% % resms_images = filenames('Cort*/ResMS.img', 'absolute', 'char');
-% % 
-% % wh_contrast = 2;
-% % 
-% % % load sample design matrix and pass in SPM
+% This SCRIPT does an analysis of between- and within-person effect sizes
+% in an SPM directory and reports on the effect sizes across voxels, the
+% optimal balance of within-person and between-person sample sizes, and
+% power for a replication.  It has yet to be developed into a function or
+% toolbox, but was used to create several example power analyses in Wager
+% and Lindquist's teaching materials.
+%
+%
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2010 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+%
+%
+% :Examples:
+% ::
+%
+% %% SETUP Stuff
+% 
+% % Define a mask from one contrast
+% % This contrast is [Nback - Baseline], where N-back is balanced across
+% % 2-back and 3-back
+% 
+% % p < .0001 in localizer
+% my_p_img = 'rob_p_0001.img';  % This could be any p-value image; or when using SPM, could be t image
+% iimg_threshold(my_p_img, 'thr', [0 .0001], 'outnames', 'rob_p_0001_thresh_0001.img');
+% mask = which('rob_p_0001_thresh_0001.img');
+% 
+% %  mask with brain mask as well
+% mask_image(mask, which('brainmask.nii'), mask, 'minmask', .2);
+% cl = mask2clusters(mask);
+% cluster_orthviews(cl, {[0 1 0]}, 'solid', 'overlay', overlay);
+% 
+% % Calculate effect size/power from another contrast
+% % This is the [3-back - 2-back] contrast
+% %cd ../robust0002
+% groupcon = which('rob_beta_0001.img');
+% groupt = which('rob_tmap_0001.img');
+% 
+% % Now we need individual-subject MSE images (residual variance images) for
+% % the test contrast
+% 
+% cd('/Volumes/Cort/Imaging/CORT/Analysis-NBACK/Errors_excluded_model2')
+% resms_images = filenames('Cort*/ResMS.img', 'absolute', 'char');
+% 
+% wh_contrast = 2;
+% 
+% % load sample design matrix and pass in SPM
 %cd('/Volumes/Cort/Imaging/CORT/Analysis-NBACK/Errors_excluded_model2/group_robust_triervscontrol_cov/robust0001/')
 % go to directory you want to save results in...
+%
+
+
 %%
 
 outputdir = 'Effect_Size_Maps'; 

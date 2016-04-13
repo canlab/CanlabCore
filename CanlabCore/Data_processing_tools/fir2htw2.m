@@ -1,24 +1,42 @@
 function [h,t,w,w_times,halfh, auc] = fir2htw2(b,varargin)
-    % [h,t,w,w_times,halfh, auc] = fir2htw2(b,[hconstraint],[doplot],[colors cell])
-    % estimates height, time to peak, and width of FIR response
-    %
-    % b : beta/estimate series for hemodynamic response curve
-    % hconstraint : max time in samples that can be considered the peak
-    % (default = last sample)
-    % doplot : flag for plot, 1/0
-    % colors : cell vector of colors for plot
-    %
-    % tor wager, 2/14/05
-    %
-    % minh = min height
-    %
-    % This version uses turning points (zero gradient) to find the largest
-    % "hump" in the data and the time it occurs.
-    %
-    % Example:
-    % hrf = spm_hrf(.5); hrf = hrf ./ max(hrf); hrf = hrf + .1 * randn(length(hrf), 1);
-    % create_figure('hrf'); plot(hrf);
-    % [h,t,w,w_times,halfh, auc] = fir2htw2(hrf, [], 1);
+% Estimates height, time to peak, and width of FIR response
+%
+% :Usage:
+% ::
+%
+%     [h,t,w,w_times,halfh, auc] = fir2htw2(b,[hconstraint],[doplot],[colors cell])
+%
+% :Inputs:
+%
+%   **b:**
+%        beta/estimate series for hemodynamic response curve
+%
+%   hconstraint:**
+%        max time in samples that can be considered the peak
+%        (default = last sample)
+%
+%   doplot:**
+%        flag for plot, 1/0
+%
+%   colors:**
+%        cell vector of colors for plot
+%
+% ..
+%    tor wager, 2/14/05
+% ..
+%
+% minh = min height
+%
+% This version uses turning points (zero gradient) to find the largest
+% "hump" in the data and the time it occurs.
+%
+% :Example:
+% ::
+%
+%    hrf = spm_hrf(.5); hrf = hrf ./ max(hrf); hrf = hrf + .1 * randn(length(hrf), 1);
+%    create_figure('hrf'); plot(hrf);
+%    [h,t,w,w_times,halfh, auc] = fir2htw2(hrf, [], 1);
+%
 
     if size(b,2) < length(b), b = b'; end
 

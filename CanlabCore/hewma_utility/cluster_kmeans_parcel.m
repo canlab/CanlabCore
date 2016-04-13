@@ -1,19 +1,31 @@
 function [cl2,nclasses,colors] = cluster_kmeans_parcel(x,CLU,doplot,varargin)
-% [cl2,nclasses,colors] = function cluster_kmeans_parcel(x,CLU,doplot,[overlay img])
-%
 % K-means clustering of voxels
-% input:  x, a voxels x data matrix
-%         CLU, a structure containing a list of XYZ coordinates and z-scores for voxels
-%         (see clusters2CLU.m)
-%         a plot flag
 %
-% output:
-%         cl2, a k-length cell array of clusters structures
-%         each cell contains a clusters structure for one data class
+% :Usage:
+% ::
 %
-% tor wager
+%     [cl2,nclasses,colors] = function cluster_kmeans_parcel(x,CLU,doplot,[overlay img])
 %
+% :Inputs:
 %
+%   **x:**
+%        a voxels x data matrix
+%
+%   **CLU:**
+%        a structure containing a list of XYZ coordinates and z-scores for voxels
+%        (see clusters2CLU.m)
+%
+%   a plot flag
+%
+% :Outputs:
+%
+%   **cl2:**
+%        a k-length cell array of clusters structures
+%        each cell contains a clusters structure for one data class
+%
+% ..
+%    tor wager
+% ..
 
 if length(varargin), ovl = varargin{1}; else, ovl = which('scalped_single_subj_T1.img');, end
 

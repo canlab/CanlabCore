@@ -1,5 +1,8 @@
-function [out,cl] = imageCluster(varargin)
-% function [out,cl] = imageCluster(input arguments)
+function [out,cl] = imageCluster_block(varargin)
+% :Usage:
+% ::
+%
+%    [out,cl] = imageCluster_block(input arguments)
 %
 % Images a cluster isosurface on an existing 3D head or brain plot
 %
@@ -8,23 +11,42 @@ function [out,cl] = imageCluster(varargin)
 % 
 % Inputs (in any order): keyword followed by input argument
 %
-% 'cluster'         followed by cluster to image, from SPM or TSU.
-% 'getclusters'     no other args necessary - starts gui for cluster selection
-%                   function returns all clusters.  select with clusters(i)
-% 'getfigclusters'  get clusters from TSU main figure.  must be current figure.
-% 'figure'          create a new figure to image color on
-% 'color'           followed by color value - either text or vector
-% 'alpha'           followed by transparency value for cluster surface, 0-1
-%                   1 is opaque, 0 is completely transparent
-% 
-%  Output: out = Patch handle, cl = cluster struct
+%   **'cluster':**
+%        followed by cluster to image, from SPM or TSU.
 %
-%  Works in Matlab 5.3, but with no transparency.
-%  By Tor Wager, 10/3/2001, last edit 10/18/01
+%   **'getclusters':**
+%        no other args necessary - starts gui for cluster selection
+%        function returns all clusters.  select with clusters(i)
+%
+%   **'getfigclusters':**
+%        get clusters from TSU main figure.  must be current figure.
+%
+%   **'figure':**
+%        create a new figure to image color on
+%
+%   **'color':**
+%        followed by color value - either text or vector
+%
+%   **'alpha':**
+%        followed by transparency value for cluster surface, 0-1
+%        1 is opaque, 0 is completely transparent
+%
+% :Outputs:
+%
+%   **out:**
+%        Patch handle
+%
+%   **cl:**
+%        cluster struct
+%
+% ..
+%    Works in Matlab 5.3, but with no transparency.
+%    By Tor Wager, 10/3/2001, last edit 10/18/01
+% ..
 
-%------------------------------------------------------------------------------
-% Set up arguments and default values
-%------------------------------------------------------------------------------
+% ..
+%    Set up arguments and default values
+% ..
 clusters = [];
 mycolor = 'y';
 myalpha = 1;

@@ -1,8 +1,12 @@
-% new_struct = struct_strrep(old_struct, old_string, new_string)
-%   Traverses depth-first through an entire structure, replacing 
-%   old_string with new_string everywhere it goes
-
 function new_struct = struct_strrep(old_struct, old_string, new_string, depth)
+% Traverses depth-first through an entire structure, replacing 
+% old_string with new_string everywhere it goes
+%
+% :Usage:
+% ::
+%
+%     new_struct = struct_strrep(old_struct, old_string, new_string)
+
     MAX_STRUCT_DEPTH = 200;
     new_struct = old_struct;
 

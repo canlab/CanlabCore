@@ -1,18 +1,25 @@
-%---------------------------------------------------------------------
-% Utility function
-% 2/15/10 Joe Wielgosz
+function C = combine_structs(A, B, prefix)
+% Utility function to combine the fields of two structures. 
 %
-% Combine the fields of two structures. 
+% :Inputs:
 %
-% Outputs:
-%   C: structure containing fields of both A and B
+%   **A, B:**
+%        structs to be combined
 %
-% Inputs:
-%   A, B: structs to be combined
-%   prefix: string applied to fields of structure B
+%   **prefix:**
+%        string applied to fields of structure B
+%
+% :Output:
+%
+%   **C:**
+%        structure containing fields of both A and B
 %
 % Only works for single-element non-nested structures, for now
-function C = combine_structs(A, B, prefix)
+%
+% ..
+%    2/15/10 Joe Wielgosz
+% ..
+
 C = A;
 
 % TODO: if B is array then loop..

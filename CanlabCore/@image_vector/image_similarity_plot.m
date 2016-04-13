@@ -7,12 +7,27 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %
 %    stats = image_similarity_plot(obj, 'average');
 %
-% This is a method for an image_vector object
+% This is a method for an image_vector object that compares the spatial
+% similarity of input image(s) to a specified set of a priori spatial basis maps.
+% It returns similarity values (Pearson's r) to each a priori basis map,
+% and a plot that shows these values.  If multiple images are entered, the
+% 'average' function can return a plot with standard error bars and
+% statistics on the significance of the correlation with each basis map
+% (across input images) and the differences (inhomogeneity) in similarity across basis
+% maps.  If a grouping variable is entered, statistics are calculated for
+% multivariate differences across the groups of input images. Such
+% differences are assessed treating the basis maps as variables and input
+% images as cases.  The basis sets are "NPSplus" (the default), which
+% includes the NPS map from Wager et al. 2013, Romantic Rejection
+% classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
+% pain (Krishnan).  Other sets are "bucknerlab" including 7 cortical [only]
+% networks from the Buckner Lab's 1000-person resting-state analyses and
+% "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.  
 %
 % ..
 %     Author and copyright information:
 %
-%     Copyright (C) 2015 Tor Wager
+%     Copyright (C) 2015 Tor Wager, stats added by Phil Kragel
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -153,22 +168,23 @@ end
 switch mapset
     
     case 'bucknerlab'
-        [mask, networknames] = load_bucknerlab_maps;
+        [mask, networknames, imagenames] = load_bucknerlab_maps;
         networknames=networknames';
     case 'npsplus'
-        [mask, networknames] = load_npsplus;
+        [mask, networknames, imagenames] = load_npsplus;
         
     case 'kragelemotion'
-        [mask, networknames] = load_kragelemotion;
+        [mask, networknames, imagenames] = load_kragelemotion;
         
     case 'custom'
         
     otherwise
         error('unknown map set');
         
-        
 end
 
+disp('Using images:');
+fprintf('%s\n', imagenames{:});
 
 
 % Deal with space and empty voxels so they line up
@@ -206,6 +222,8 @@ if ~doaverage
         [hh, hhfill] = tor_polar_plot({r}, scn_standard_colors(size(r, 2)), {networknames}, 'nonneg');
     end
     
+    print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
+    
 elseif doaverage
     
     z=fisherz(r'); %transform values
@@ -225,25 +243,25 @@ elseif doaverage
         end
         
         
-    for i=1:size(z,2)
-        disp(['Between-group comparisons for ' networknames{i} ':']);
-        disp('--------------------------------------');
-        disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
-        disp(' ')
-        disp('Multiple comparisons of means:')
-        disp(' ');
-        print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
-        disp(' ');
-    end
-    
+        for i=1:size(z,2)
+            disp(['Between-group comparisons for ' networknames{i} ':']);
+            disp('--------------------------------------');
+            disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
+            disp(' ')
+            disp('Multiple comparisons of means:')
+            disp(' ');
+            print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
+            disp(' ');
+        end
+        
         
         
     else
         group=ones(size(r,2),1); %otherwise all data is from same group
         groupValues=unique(group);
         g=num2cell(groupValues); %creat cell array of group numbers
-   
-    
+        
+        
     end
     
     
@@ -319,7 +337,10 @@ elseif doaverage
         
         hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', 20);
     end
+    
 end % doaverage
+
+
 end % function
 
 
@@ -333,7 +354,7 @@ end % function
 % -------------------------------------------------------------------------
 
 
-function [mask, networknames] = load_bucknerlab_maps
+function [mask, networknames, imagenames] = load_bucknerlab_maps
 
 % Load Bucker Lab 1,000FC masks
 % ------------------------------------------------------------------------
@@ -341,7 +362,7 @@ function [mask, networknames] = load_bucknerlab_maps
 names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
 img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
 
-mask = fmri_data(img);  % loads image with integer coding of networks
+mask = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
 
 networknames = names.rnames(1:7);
 k = length(networknames);
@@ -361,12 +382,13 @@ end
 
 mask.dat = newmaskdat;
 
+imagenames = {img};
 end  % function
 
 
 
 
-function [mask, networknames] = load_npsplus
+function [mask, networknames, imagenames] = load_npsplus
 
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
@@ -380,7 +402,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
 
 imagenames = check_image_names_get_full_path(imagenames);
 
-mask = fmri_data(imagenames);  % loads images with spatial basis patterns
+mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
 
 end  % function
 
@@ -390,7 +412,7 @@ end  % function
 
 
 
-function [mask, networknames] = load_kragelemotion
+function [mask, networknames, imagenames] = load_kragelemotion
 
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
@@ -408,7 +430,7 @@ imagenames = { ...
 
 imagenames = check_image_names_get_full_path(imagenames);
 
-mask = fmri_data(imagenames);  % loads images with spatial basis patterns
+mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
 
 end % function
 

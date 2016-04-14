@@ -8,6 +8,9 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 % Differently to other boxplot functions, you may specify the x-position.
 % This is particularly usefule when overlaying with other data / plots.
 %
+% :Usage:
+%        [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
+%
 % :Input:
 %
 %   **Y:**
@@ -77,13 +80,13 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %   **MED:**
 %        Medians of groups
 %
-%   **bw:**
-%        bandwidth of kernel
-%
 %   **pointloc:**
 %        point locations on violin plot
 %        This has x, y, idx as subfields. 
 %        idx indicates the order of the data in the original input.
+%
+%   **bw:**
+%        bandwidth of kernel
 %
 % :Example1 (default):
 % ::

@@ -49,7 +49,7 @@ function [han, X, Y] = line_plot_multisubject(X, Y, varargin)
 %        new variables (binned if bins requested)
 %
 % :Examples:
-]% ::
+% ::
 %
 %    for i = 1:20, X{i} = randn(4, 1); Y{i} = X{i} + .3*randn(4, 1) + randn(1); end
 %    han = line_plot_multisubject(X, Y)

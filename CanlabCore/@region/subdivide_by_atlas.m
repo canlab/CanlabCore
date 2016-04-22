@@ -91,7 +91,7 @@ for i = 1:length(r)
             rr{i} = region(mylabel, ivec, 'unique_mask_values');
             
             for jj = 1:length(rr{i})
-                if size(rr{i}(jj).XYZ, 1) ~= size(rr{i}(jj).val, 1)
+                if size(rr{i}(jj).XYZ, 2) ~= size(rr{i}(jj).val, 1)
                     % illegal
                     warning('Illegal length for data values...do not match voxels.')
                 end

@@ -1,6 +1,6 @@
 function [p, caphandle, mesh_struct] = brainstem_slices_3d()
 
-mask = which('spm8_brainstem.img')
+mask = which('spm8_brainstem_pag.img');
 overlay = which('SPM8_colin27T1_seg.img');
 
 dat = fmri_data(overlay);
@@ -25,7 +25,7 @@ skip = 10;
 thickness = 0;
 
 % these determine which slices to show
-z_mm = [-45 -35 -27 -16];
+z_mm = [-40 -11];
 
 % get z = top slice
 for i = 1:length(z_mm)

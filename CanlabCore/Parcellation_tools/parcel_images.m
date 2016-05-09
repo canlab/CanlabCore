@@ -62,8 +62,6 @@ function parcel_images(image_names, extract_mask, nuisance_covs)
 
 spm_defaults
 
-docorrmtx = 0;  % 0 to work on cov matrix for PCA (good for meta-analysis), or 1 to work on correlation matrix (maybe better for other cases?)
-
 % Go to directory: output images will be written here
 % ============================================================
 [dd, currdir] = fileparts(pwd);
@@ -144,7 +142,7 @@ if isbigmatrix
     %          score = U .* repmat(sigma',nrun,1); % == x0*coeff ***test to make sure output variables are same as svds and debug
 else
 
-    [pc, score, latent] = run_pca(dat, docorrmtx);
+    [pc, score, latent] = run_pca(dat);
     % Eigenvalue plot
     figure('Color','w'), set(gca,'FontSize',18), bar(latent)
     xlabel('Components'),ylabel('Variance'); drawnow
@@ -221,7 +219,7 @@ for i = 1:length(all_labels)
         % re-load later
         dat(:, wh_in_region) = 0;
 
-        [pc, score, latent] = run_pca(vox_dat, docorrmtx);  %[pc, score, latent] = run_pca
+        [pc, score, latent] = run_pca(vox_dat);  %[pc, score, latent] = run_pca
         clear vox_dat score
         num_to_save = sum(latent>1);
         vox_pcs = double(pc(:, 1:num_to_save));
@@ -374,36 +372,9 @@ function [dat, maskInfo] = extract_image_data(extract_mask, image_names)
 end
 
 
-function  [pc, score, latent] = run_pca(dat, docorrmtx)
-    
-    [nobs, nvars] = size(dat);
-    ncomponents = min( [min(size(dat)) 50 ] );
-
-    if docorrmtx, dat = zscore(dat); end
-    
-%     if nvars > 4000
-        warning off % lots of "slow matlab code" warnings
-        [U, sigma, pc] = lansvd(dat, ncomponents, 'L');
-        sigma = diag(sigma);
-        score = U .* repmat(sigma', nobs, 1); % == x0*coeff
-        sigma = sigma ./ sqrt(nobs-1);
-        latent = sigma.^2;
-        warning on
-
-%     elseif issparse(dat)
-%         % note: this can be slower and return different values from princomp. actually different? i think so
-%         % also: needs testing/debugging.
-%         nrun = min(n, 50);
-%         [U, sigma, pc] = svds(dat, nrun); % could be too big -- no memory!! [U, sigma, pc] = svds(dat, n);
-%         score = U .* repmat(diag(sigma)',n,1); % == x0*coeff
-%         sigma = sigma ./ sqrt(n-1);
-%         latent = sigma.^2;
-
-%     else
-% 
-%         [pc, score, latent] = princomp(single(full(dat)), 'econ');
-% 
-%     end
+function  [pc, score, latent] = run_pca(dat)
+ 
+         [pc, score, latent] = princomp(dat, 'econ');
 
 end % run_pca
 

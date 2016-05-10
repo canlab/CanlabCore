@@ -280,7 +280,7 @@ if dopatternexpression
                 
                 dat = dat.dat' * weights;  %Dot product
             else
-                dat = (dat.dat' * weights) / (norm(mydat)*norm(weights));  %cosine similarity
+                dat = (dat.dat' * weights) / (norm(dat)*norm(weights));  %cosine similarity
             end
             
         else

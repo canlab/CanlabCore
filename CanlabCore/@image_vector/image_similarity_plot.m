@@ -74,6 +74,9 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **noplot**
 %        Omits plot (print stats only)
 %
+%   **cosine_similarity**
+%        Use cosine similarity instead of Pearson's r
+%
 %
 % :Outputs:
 %
@@ -124,6 +127,10 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %       basis (e.g., for each buckner network)
 % 12/15/2015 (Phil Kragel)
 %   - added option to omit plotting
+% 5/10/2016 (Phil Kragel)
+%   - added option to use cosine similarity instead of Pearson
+%
+% 
 %
 % ..
 
@@ -136,6 +143,7 @@ mapset = 'npsplus';  % 'bucknerlab'
 table_group={}; %initialize output
 multcomp_group={}; %initialize output
 noplot=false;
+doCosine=0; %do cosine similarity
 % optional inputs with default values
 % -----------------------------------
 
@@ -145,6 +153,8 @@ for i = 1:length(varargin)
             
             case 'average', doaverage = 1;
                 
+            case 'cosine_similarity', doCosine = 1;
+                    
             case {'bucknerlab', 'kragelemotion'}
                 mapset = varargin{i};
                 
@@ -210,8 +220,16 @@ obj = replace_empty(obj);
 % if map or series of maps, point-biserial is better.
 
 % This is done for n images in obj
-
+r=zeros(size(mask.dat,2),size(obj.dat,2));
+if ~doCosine
 r = corr(double(obj.dat), double(mask.dat))';
+else
+    for im=1:size(mask.dat,2)
+    a = nansum(obj.dat .^ 2) .^ .5;
+    b = nansum(mask.dat(:,im) .^ 2) .^ .5;
+    r(im,:) = (nansum(bsxfun(@times,obj.dat,mask.dat(:,im))) ./ (a .* b))';
+    end
+end
 
 stats.r = r;
 

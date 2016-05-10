@@ -236,7 +236,11 @@ if dopatternexpression
             if ~docosine
                 dat = dat.dat' * weights; %dot-product
             else
-                dat = (dat.dat' * weights) / (norm(dat.dat')*norm(weights));  %cosine similarity
+                a = nansum(dat.dat' .^ 2) .^ .5;
+                b = nansum(weights .^ 2) .^ .5;
+                dat = (nansum(bsxfun(@times,dat.dat',weights)) ./ (a .* b))';                              
+                
+                
             end
             
         else
@@ -253,7 +257,10 @@ if dopatternexpression
                 if ~docosine
                     mypeval(i, 1) = mydat' * myweights;  %dot product
                 else
-                    mypeval(i, 1) = (mydat' * myweights) / (norm(mydat)*norm(myweights));  %cosine similarity
+                a = nansum(mydat' .^ 2) .^ .5;
+                b = nansum(myweights .^ 2) .^ .5;
+                mypeval(i, 1) = (nansum(bsxfun(@times,mydat,myweights)) ./ (a .* b))';                              
+               
                 end
             else
                 mypeval(i,1) = corr(mydat, myweights);  %correlation
@@ -280,7 +287,10 @@ if dopatternexpression
                 
                 dat = dat.dat' * weights;  %Dot product
             else
-                dat = (dat.dat' * weights) / (norm(dat)*norm(weights));  %cosine similarity
+                a = nansum(dat.dat .^ 2) .^ .5;
+                b = nansum(weights .^ 2) .^ .5;
+                dat = (nansum(bsxfun(@times,dat.dat,weights)) ./ (a .* b))';                              
+               
             end
             
         else

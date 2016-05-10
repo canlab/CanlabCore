@@ -10,7 +10,7 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % The mask or weight map does not have to be in the same space as the dat;
 % it will be resampled to the space of the data in dat.
 %
-% To extract pattern expression values for each ROI within a mask use extract_roi_averages() 
+% To extract pattern expression values for each ROI within a mask use extract_roi_averages()
 %
 % :Optional Inputs:
 %
@@ -32,13 +32,17 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %        use with pattern expression only. Ignore weights on voxels
 %        with zero values in test image. If this is not entered, the function will
 %        check for these values and give a warning.
-% 
+%
 %   **invert:**
 %        Invert the mask so that out-of-mask voxels are now in (using
 %        the mask as an 'exclude mask' rather than an include-mask. If pattern
 %        expression is requested, the behavior is different, and it inverts the
 %        sign of in-mask pattern weights.
-% 
+%
+%   **cosine_similarity:**
+%        use with pattern expression only. scales expression by product of
+%        l2 norms (norm(mask)*norm(dat))
+%
 % :Examples:
 % ::
 %
@@ -58,13 +62,17 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %    Notes:
 %    Last modified: 10/30/11 to add support for masks that are weight maps
 %    12/15/13:  Luke Chang - added correlation option for pattern-expression
-% .. 
+%    5/10/2016: Phil Kragel - added cosine similarity
+%
+%
+% ..
 
 dopatternexpression = 0; % set options
 donorm = 0;
 doignoremissing = 0;
 docorr = 0; %run correlation instead of dot-product for pattern expression
 doinvert = 0;
+docosine = 0;
 
 if any(strcmp(varargin, 'pattern_expression'))
     dopatternexpression = 1;
@@ -72,6 +80,11 @@ if any(strcmp(varargin, 'pattern_expression'))
     if any(strcmp(varargin, 'ignore_missing'))
         doignoremissing = 1;
     end
+    
+    if any(strcmp(varargin, 'cosine_similarity'))
+        docosine = 1;
+    end
+    
     
     if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
         docorr = 1;
@@ -220,7 +233,12 @@ if dopatternexpression
     if ~any(badvals)
         %weights(to_remove_mask) = [];
         if ~docorr
-            dat = dat.dat' * weights; %dot-product
+            if ~docosine
+                dat = dat.dat' * weights; %dot-product
+            else
+                dat = (dat.dat' * weights) / (norm(dat.dat')*norm(weights));  %cosine similarity
+            end
+            
         else
             dat = corr(dat.dat,weights); %correlation
         end
@@ -232,7 +250,11 @@ if dopatternexpression
             myweights = weights;
             myweights(mydat == 0 | isnan(mydat)) = 0;
             if ~docorr
-                mypeval(i, 1) = mydat' * myweights;  %dot product
+                if ~docosine
+                    mypeval(i, 1) = mydat' * myweights;  %dot product
+                else
+                    mypeval(i, 1) = (mydat' * myweights) / (norm(mydat)*norm(myweights));  %cosine similarity
+                end
             else
                 mypeval(i,1) = corr(mydat, myweights);  %correlation
             end
@@ -254,7 +276,13 @@ if dopatternexpression
         end
         
         if ~docorr
-            dat = dat.dat' * weights;  %Dot product
+            if ~docosine
+                
+                dat = dat.dat' * weights;  %Dot product
+            else
+                dat = (dat.dat' * weights) / (norm(mydat)*norm(weights));  %cosine similarity
+            end
+            
         else
             dat = corr(dat.dat,weights);  %correlation
         end

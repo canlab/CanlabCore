@@ -64,6 +64,10 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        Use 7 emotion-predictive models from Kragel & LaBar 2015 for
 %        basis of comparisons
 %
+%   **allengenetics**
+%        Five maps from the Allen Brain Project human gene expression maps
+%        from Luke Chang (unpublished)
+%
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
 %        each spatial basis); requires group as subsequent input
@@ -102,6 +106,15 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %             mutiple comparisons of means across groups, one output
 %             cell for each spatial basis, critical value determined
 %             by Tukey-Kramer method (see multcompare)
+%
+% Colors for multi-line plots
+%       Color
+% 1		Red
+% 2		Green
+% 3		Dark Blue
+% 4		Yellow
+% 5		Pink
+% 6		Turquoise
 %
 % :Examples:
 % ::
@@ -155,7 +168,7 @@ for i = 1:length(varargin)
                 
             case 'cosine_similarity', doCosine = 1;
                     
-            case {'bucknerlab', 'kragelemotion'}
+            case {'bucknerlab', 'kragelemotion' 'allengenetics'}
                 mapset = varargin{i};
                 
             case 'mapset'
@@ -180,11 +193,15 @@ switch mapset
     case 'bucknerlab'
         [mask, networknames, imagenames] = load_bucknerlab_maps;
         networknames=networknames';
+        
     case 'npsplus'
         [mask, networknames, imagenames] = load_npsplus;
         
     case 'kragelemotion'
         [mask, networknames, imagenames] = load_kragelemotion;
+ 
+    case 'allengenetics'
+        [mask, networknames, imagenames] = load_allengenetics;
         
     case 'custom'
         
@@ -445,6 +462,28 @@ imagenames = { ...
     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+
+end % function
+
+
+function [mask, networknames, imagenames] = load_allengenetics
+
+% Load Allen Brain Atlas project human genetic maps (from Luke Chang)
+% ------------------------------------------------------------------------
+
+networknames = {'5HT' 'Opioid' 'Dopamine' 'NEalpha' 'NEbeta'};
+
+imagenames = { ...
+    'Serotonin.nii' ...
+    'Opioid.nii' ...
+    'Dopamine.nii' ...
+    'AdrenoAlpha.nii' ...
+    'AdrenoBeta.nii' ...
+};
 
 imagenames = check_image_names_get_full_path(imagenames);
 

@@ -22,7 +22,7 @@ end
 
 time_elapsed = etime(clock, starttime);
 
-time_per_unit = n_done ./ time_elapsed;
+time_per_unit = time_elapsed ./ n_done;
 
 time_remaining = time_per_unit .* (n_total - n_done);
 

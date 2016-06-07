@@ -50,6 +50,11 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %
 %   **'sizescale':**
 %        Followed by values to use in sizing of nodes on graph
+%        'linear' 'sigmoidal' [default] or 'custom'
+%  
+%   ** 'sizes' **
+%       Followed by vector of point sizes for all points - works ONLY if sizescale
+%       is set to 'custom'
 %
 %   **'setcolors':**
 %        Cell array of colors for each group, [1 x g]
@@ -77,6 +82,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree');
 %    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree', 'rset', rset, 'setcolors', setcolors);
 %
+%    [stats, handles] = canlab_force_directed_graph(G, 'sizescale', 'custom', 'sizes', [6*ones(17, 1); 12*ones(7, 1)]);
 
 % ..
 %    DEFAULTS AND INPUTS
@@ -90,6 +96,7 @@ cl = [];
 threshtype = 'bonf';
 connectmetric = 'corr';  % or partial_corr
 sizescale = 'sigmoid';
+sizes = ones(size(activationdata, 1));
 
 setcolors = [];         % control of color subgroups
 rset = [];
@@ -111,7 +118,7 @@ for i = 1:length(varargin)
                 % functional commands
             case 'cl', cl = varargin{i + 1}; varargin{i + 1} = [];
                 
-            case {'threshtype' 'connectmetric' 'sizescale' 'setcolors' 'rset' 'names' 'namesfield'}
+            case {'threshtype' 'connectmetric' 'sizescale' 'setcolors' 'rset' 'names' 'namesfield' 'sizes'}
                 eval([varargin{i} ' = varargin{i + 1}; varargin{i + 1} = [];'])
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -136,7 +143,7 @@ if ~isempty(cl) && (size(activationdata, 2) ~= length(cl))
 end
 
 if isempty(rset)
-    rset = {1:length(cl)};
+    rset = {1:size(activationdata)};
 end
 
 if isempty(setcolors)
@@ -199,7 +206,7 @@ switch connectmetric
     otherwise error('Unknown connectmetric');
 end
 
- % end if issymmetric
+% end if issymmetric
 end
 
 % Enforce format for graph
@@ -264,15 +271,18 @@ set(lh, 'Color', [0 .5 1], 'LineStyle', ':')
 
 switch sizescale
     case 'linear'
-        %         ivals = 4 + 15 * intensity.(cnames{i}) ./max(intensity.(cnames{i}));  % LC none of these variables exist in the workspace
-        ivals =4 + 15 * ptsizemetric ./ max(ptsizemetric);
+        %         sizes = 4 + 15 * intensity.(cnames{i}) ./max(intensity.(cnames{i}));  % LC none of these variables exist in the workspace
+        sizes = 4 + 15 * ptsizemetric ./ max(ptsizemetric);
         
     case 'sigmoid'
         % Rationale: avoids some VERY large points in areas highly
         % focused on as a priori ROIs, with extreme z-scores in
         % intensity relative to other areas.
         
-        ivals = sigmoidscale(ptsizemetric);
+        sizes = sigmoidscale(ptsizemetric);
+        
+    case 'custom'
+        % we already have sizes
 end
 
 ph = [];
@@ -280,7 +290,7 @@ for k = 1:length(rset)
     
     for j = 1:length(rset{k})
         
-        ph(end+1) = plot(Xc(rset{k}(j), 1), Xc(rset{k}(j), 2), 'o', 'Color', setcolors{k}, 'MarkerSize', ivals(rset{k}(j)), 'MarkerFaceColor', setcolors{k});
+        ph(end+1) = plot(Xc(rset{k}(j), 1), Xc(rset{k}(j), 2), 'o', 'Color', setcolors{k}, 'MarkerSize', sizes(rset{k}(j)), 'MarkerFaceColor', setcolors{k});
         
         if ~isempty(names)
             offset = .02 * range(get(gca, 'XLim'));
@@ -300,10 +310,11 @@ set(gca, 'XLim', xlim, 'YLim', ylim);
 axis off
 drawnow
 
-if isempty(cl), return, end
-
 stats.Xc = Xc;
-stats.ivals = ivals;
+stats.sizes = sizes;
+
+
+if isempty(cl), return, end
 
 % -------------------------------------------------------------------------
 % Subcortical surface
@@ -318,12 +329,12 @@ xyz = cat(1, cl.mm_center);
 
 DB = struct('xyz', xyz, 'x', xyz(:, 1), 'y', xyz(:, 2), 'z', xyz(:, 3));
 
-ivals = sigmoidscale(ptsizemetric, 2, 6);
+sizes = sigmoidscale(ptsizemetric, 2, 6);
 
 % Make Brain with Spheres
 % ------------------------------------------------------------
 
-[shan, spherehan] = connectivity3dbrain(xyz, rset, ivals, setcolors, names);
+[shan, spherehan] = connectivity3dbrain(xyz, rset, sizes, setcolors, names);
 
 % Add lines
 % ------------------------------------------------------------
@@ -356,10 +367,10 @@ for i = 1:size(X, 2)
     xx = X;
     xx(:, i) = 1;  % intercept; need it, and also placeholder
     
-    [bb, dev, stats] = glmfit(xx, y, 'normal', 'constant', 'off');
+    [bb, dev, statsglm] = glmfit(xx, y, 'normal', 'constant', 'off');
     
     b(:, i) = bb;
-    p(:, i) = stats.p;
+    p(:, i) = statsglm.p;
     p(i, i) = 1;
     b(i, i) = NaN;
     
@@ -372,8 +383,8 @@ end % function
 
 
 
-function ivals = sigmoidscale(ivals, varargin)
-% ivals = sigmoidscale(ivals, [lower bound], [upper bound])
+function sizes = sigmoidscale(sizes, varargin)
+% sizes = sigmoidscale(sizes, [lower bound], [upper bound])
 %
 % rescales a vector based on sigmoid function of zcore(input values)
 
@@ -382,7 +393,7 @@ function ivals = sigmoidscale(ivals, varargin)
 % intensity relative to other areas.
 
 % scale size of nodes - intensity, or betweenness
-ivals = zscore(ivals);
+sizes = zscore(sizes);
 
 A = 4; % lower asymptote
 K = 15; % upper asymptote
@@ -399,8 +410,8 @@ M = .5;  % time of max growth, if v = Q
 
 richards = @(x, A, K, B, v, Q, M) A + (K - A) ./ ((1+Q*exp(-B*(x-M))).^(1/v));
 
-%figure; plot(sort(ivals), richards(sort(ivals), A,K,B,v,Q,M));
-ivals = richards(ivals, A,K,B,v,Q,M);
+%figure; plot(sort(sizes), richards(sort(sizes), A,K,B,v,Q,M));
+sizes = richards(sizes, A,K,B,v,Q,M);
 
 end
 
@@ -464,7 +475,7 @@ end
 
 
 
-function [shan, spherehan] = connectivity3dbrain(regioncenters, rset, ivals, setcolors, names)
+function [shan, spherehan] = connectivity3dbrain(regioncenters, rset, sizes, setcolors, names)
 
 % Colors
 % ----------------------------------------------------------
@@ -510,13 +521,13 @@ lighting gouraud
 % cortex is special, because it involves different colors
 
 % xyz = regioncenters(rset{1}, :);
-% sz = ivals(rset{1});
+% sz = sizes(rset{1});
 % if ~isempty(names)
 %     mynames = names(rset{1});
 % end
 
 xyz = regioncenters;
-sz = ivals;
+sz = sizes;
 if ~isempty(names)
     mynames = names;
 end
@@ -534,7 +545,7 @@ spherehan = {spherehan};
 % for i = 2:length(rset)
 %
 %     xyz = regioncenters(rset{i}, :);
-%     sz = ivals(rset{i});
+%     sz = sizes(rset{i});
 %     if ~isempty(names)
 %     mynames = names(rset{i});
 %     end

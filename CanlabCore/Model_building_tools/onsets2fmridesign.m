@@ -10,9 +10,9 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 % Summary:
 %   - handles multiple conditions
 %   - handles custom HRFs and multiple basis functions
-%   - handles input event durations
+%   - handles input event durations, variable-duration stimuli
 %   - handles two kinds of parametric modulators
-%   - handles variable-duration onsets
+%   - limited custom neural response function
 %   - handles nonlinear saturation (see hrf_saturation.m)
 %   - Can build single-trial model
 %   - not yet: variable-duration parametric

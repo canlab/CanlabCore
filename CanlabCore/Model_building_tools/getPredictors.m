@@ -255,10 +255,10 @@ end
 % must identify FIRST events, i.e., preceded by 0
 % for epochs... and must get back epoch duration, too.
 %wh = find(delta);
-wh = find(delta & [1; diff(delta) == 1]);
+wh = find(delta & [1; diff(delta) > 0 ]);  % tor modified 6/5/16 to generalize to non-integer input vals
 
 % wh_end values, for durs
-wh_end = find(~delta & [0; diff(delta) == -1]);
+wh_end = find(~delta & [0; diff(delta) < 0]);
 if delta(end), wh_end(end+1) = length(delta); end % fix if last event goes to end
 
 % transpose if horiz

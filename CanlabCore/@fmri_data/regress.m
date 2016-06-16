@@ -1,6 +1,6 @@
 function out = regress(dat, varargin)
-% Regression method for fmri_data object
-%
+			      % Regression method for fmri_data object
+			      %
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
 % and the intercept is the last column. Intercept will automatically be
@@ -130,315 +130,316 @@ function out = regress(dat, varargin)
 %    Verbose option updated by Tor, 7/2015
 % ..
 
-% ..
+				% ..
 %    ---------------------------------------------------------------------
 %    Defaults
 %    ---------------------------------------------------------------------
 % ..
-inputargs = {[.001], 'uncorrected'}; % default options for thresholding
-do_display = 1;
-do_x_on_brain = 1; %else do brain on Y
-do_robust = 0;
-do_intercept = 1;
-do_resid = 0;
-doverbose = true;
+  inputargs = {[.001], 'uncorrected'}; % default options for thresholding
+  do_display = 1;
+  do_x_on_brain = 1; %else do brain on Y
+  do_robust = 0;
+  do_intercept = 1;
+  do_resid = 0;
+  doverbose = true;
 
 % ---------------------------------------------------------------------
 % Parse Inputs
 % ---------------------------------------------------------------------
-for varg = 1:length(varargin)
+  for varg = 1:length(varargin)
     if ischar(varargin{varg})
-        % reserved keywords
-        if strcmpi('unc',varargin{varg})
-            inputargs = {varargin{varg-1}, 'uncorrected'};
-            varargin{varg} = {}; varargin{varg - 1} = {};
-        end
-        if strcmpi('fdr',varargin{varg})
-            inputargs = {varargin{varg-1}, 'fdr'};
-            varargin{varg} = {}; varargin{varg - 1} = {};
-        end
-        if strcmpi('nodisplay',varargin{varg})
-            do_display = 0;
-            varargin{varg} = {};
-        end
-        if strcmpi('robust',varargin{varg})
-            do_robust = 1;
-            varargin{varg} = {};
-        end
-        if strcmpi('brainony',varargin{varg})
-            do_x_on_brain = 0;
-            varargin{varg} = {};
-        end
-        if strcmpi('nointercept',varargin{varg})
-            do_intercept = 0;
-            varargin{varg} = {};
-        end
-        if strcmpi('residual',varargin{varg})
-            do_resid = 1;
-            varargin{varg} = {};
-        end
-        if strcmpi('noverbose',varargin{varg})
-            doverbose = false;
-            varargin{varg} = {};
-        end
+				% reserved keywords
+      if strcmpi('unc',varargin{varg})
+        inputargs = {varargin{varg-1}, 'uncorrected'};
+        varargin{varg} = {}; varargin{varg - 1} = {};
+      end
+      if strcmpi('fdr',varargin{varg})
+        inputargs = {varargin{varg-1}, 'fdr'};
+        varargin{varg} = {}; varargin{varg - 1} = {};
+      end
+      if strcmpi('nodisplay',varargin{varg})
+        do_display = 0;
+        varargin{varg} = {};
+      end
+      if strcmpi('robust',varargin{varg})
+        do_robust = 1;
+        varargin{varg} = {};
+      end
+      if strcmpi('brainony',varargin{varg})
+        do_x_on_brain = 0;
+        varargin{varg} = {};
+      end
+      if strcmpi('nointercept',varargin{varg})
+        do_intercept = 0;
+        varargin{varg} = {};
+      end
+      if strcmpi('residual',varargin{varg})
+        do_resid = 1;
+        varargin{varg} = {};
+      end
+      if strcmpi('noverbose',varargin{varg})
+        doverbose = false;
+        varargin{varg} = {};
+      end
     end
-end
+  end
 
 % ---------------------------------------------------------------------
 % Check Data
 % ---------------------------------------------------------------------
 
-% Check if fmri_data or image_vector
-if ~isa(dat,'fmri_data')
+				% Check if fmri_data or image_vector
+  if ~isa(dat,'fmri_data')
     error('dat input must be fmri_data object')
-end
+  end
 
-% Check of dat.X exists and is correct format
-if do_x_on_brain
+			 % Check of dat.X exists and is correct format
+  if do_x_on_brain
     if isempty(dat.X)
-        error('Make sure you include a design matrix in dat.X')
+      error('Make sure you include a design matrix in dat.X')
     end
     if size(dat.dat, 2) ~= size(dat.X, 1)
-        error('dat.dat must have same number of columns as dat.X has rows.')
+      error('dat.dat must have same number of columns as dat.X has rows.')
     end
     if isa(dat.X,'design_matrix')
-        dat.X = dat.X.dat;
+      dat.X = dat.X.dat;
     end
-else % Check if dat.Y exists and is in correct format if running brainony
+  else % Check if dat.Y exists and is in correct format if running brainony
     if isempty(dat.Y)
-        error('Make sure you include a vector in dat.Y.')
+      error('Make sure you include a vector in dat.Y.')
     end
     if size(dat.dat, 2) ~= size(dat.Y, 1)
-        error('dat.dat must have same number of columns as dat.Y has rows.')
+      error('dat.dat must have same number of columns as dat.Y has rows.')
     end
-end
+  end
 
-% Check if Rank Deficient
-if rank(dat.X) < size(dat.X,2)
+				% Check if Rank Deficient
+  if rank(dat.X) < size(dat.X,2)
     sprintf('Warning:  dat.X is rank deficient.')
-end
+  end
 
-% Check if Intercept is in model or specified for x_on_brain default
-if do_intercept && do_x_on_brain
+  % Check if Intercept is in model or specified for x_on_brain default
+  if do_intercept && do_x_on_brain
     wh_int = intercept(dat.X,'which');
     
     if isempty(wh_int)
-        if doverbose, sprintf('No intercept detected, adding intercept to last column of design matrix'), end
-        X = intercept(dat.X,'add');
+      if doverbose, sprintf('No intercept detected, adding intercept to last column of design matrix'), end
+      X = intercept(dat.X,'add');
     else
-        if doverbose, sprintf('Intercept detected in column %1.0f of dat.x',wh_int), end
-        X = dat.X;
+      if doverbose, sprintf('Intercept detected in column %1.0f of dat.x',wh_int), end
+      X = dat.X;
     end
     
-else
+  else
     X = dat.X;
-end
+  end
 
 % ---------------------------------------------------------------------
 % Run Regression
 % ---------------------------------------------------------------------
 
-tic
-warning off
+  tic
+  warning off
 
-if do_x_on_brain 
-% default is to regress dat.X on dat.dat (x on brain)
+  if do_x_on_brain 
+		 % default is to regress dat.X on dat.dat (x on brain)
 % ---------------------------------------------------------------------
-  
-    % display info about regression
+    
+				% display info about regression
     if doverbose
-        fprintf('regression > Y: %3.0f voxels. X: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(X, 2));
-        fprintf('\nPredicting Brain Activity from dat.X');
+      fprintf('regression > Y: %3.0f voxels. X: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(X, 2));
+      fprintf('\nPredicting Brain Activity from dat.X');
     end
     
     if do_robust %need to loop through voxels - Slow!
-        if doverbose, fprintf('\nRunning in Robust Mode'); end
+      if doverbose, fprintf('\nRunning in Robust Mode'); end
+      
+      for i = 1:size(dat.dat,1)
         
-        for i = 1:size(dat.dat,1)
-            
-            [n, k] = size(X);
-            [bb,stats] = robustfit(X, dat.dat(i,:)', 'bisquare', [], 'off');
-            
-            b(:,i)=bb; %Betas
-            t(:,i)=stats.t; %t-values
-            p(:,i)=stats.p; %p-values
-            dfe(:,i)=stats.dfe; %degrees of freedom
-            stderr(:,i)=stats.se; %Standard Error
-            sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
-        end
-        r = dat.dat' - X*b; %residual
-        
-    else %OLS - vectorized - Fast!
-        if doverbose, fprintf('\nRunning in OLS Mode'); end
-        
-        % Estimate Betas in vector
         [n, k] = size(X);
-        b = pinv(X) * dat.dat';
+        [bb,stats] = robustfit(X, dat.dat(i,:)', 'bisquare', [], 'off');
         
-        % Error
-        r = dat.dat' - X*b;
-        sigma = std(r);
-        stderr = ( diag(inv(X' * X)) .^ .5 ) * sigma;  % params x voxels matrix of std. errors
-        
-        % Inference
-        [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
-        
+        b(:,i)=bb; %Betas
+        t(:,i)=stats.t; %t-values
+        p(:,i)=stats.p; %p-values
+        dfe(:,i)=stats.dfe; %degrees of freedom
+        stderr(:,i)=stats.se; %Standard Error
+        sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
+      end
+      r = dat.dat' - X*b; %residual
+      
+    else %OLS - vectorized - Fast!
+      if doverbose, fprintf('\nRunning in OLS Mode'); end
+      
+				% Estimate Betas in vector
+      [n, k] = size(X);
+      b = pinv(X) * dat.dat';
+      
+				% Error
+      r = dat.dat' - X*b;
+      sigma = std(r);
+      stderr = ( diag(inv(X' * X)) .^ .5 ) * sigma;  % params x voxels matrix of std. errors
+      
+				% Inference
+      [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
+      
     end
     
-else
-% Regress brain on Y - loops through voxels, slow!
+  else
+		    % Regress brain on Y - loops through voxels, slow!
 % ---------------------------------------------------------------------
     
     if doverbose
-        % display info about regression
-        fprintf('regression > X: %3.0f voxels. Y: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(dat.Y, 2));
-        fprintf('\nPredicting dat.Y from Brain Activity');
+				% display info about regression
+      fprintf('regression > X: %3.0f voxels. Y: %3.0f obs, %3.0f regressors, intercept is last.\n', size(dat.dat, 1), size(dat.Y, 2));
+      fprintf('\nPredicting dat.Y from Brain Activity');
     end
     
     if do_robust %need to loop through voxels - Slow!
-        if doverbose, fprintf('\nRunning in Robust Mode'); end
+      if doverbose, fprintf('\nRunning in Robust Mode');
+      end
+      
+      for i = 1:size(dat.dat,1)
         
-        for i = 1:size(dat.dat,1)
-            
-            % Create X from brain Data
-            if do_intercept
-                X = intercept(dat.dat(i,:)','add');
-            else
-                X = dat.dat(i,:)';
-            end
-            [n, k] = size(X);
-            [bb,stats] = robustfit(X, dat.Y, 'bisquare', [], 'off');
-            
-            b(:,i)=bb; %Betas
-            t(:,i)=stats.t; %t-values
-            p(:,i)=stats.p; %p-values
-            dfe(:,i)=stats.dfe; %degrees of freedom
-            stderr(:,i)=stats.se; %Standard Error
-            sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
-            r(:,i) = dat.Y - X * b(:,i); %residual
+				% Create X from brain Data
+        if do_intercept
+          X = intercept(dat.dat(i,:)','add');
+        else
+          X = dat.dat(i,:)';
         end
+        [n, k] = size(X);
+        [bb,stats] = robustfit(X, dat.Y, 'bisquare', [], 'off');
         
+        b(:,i)=bb; %Betas
+        t(:,i)=stats.t; %t-values
+        p(:,i)=stats.p; %p-values
+        dfe(:,i)=stats.dfe; %degrees of freedom
+        stderr(:,i)=stats.se; %Standard Error
+        sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
+        r(:,i) = dat.Y - X * b(:,i); %residual
+      end
+      
     else %OLS
+      
+      if doverbose, fprintf('\nRunning in OLS Mode'); end
+      
+      for i = 1:size(dat.dat,1)
         
-        if doverbose, fprintf('\nRunning in OLS Mode'); end
-        
-        for i = 1:size(dat.dat,1)
-            
-            % Create X from brain Data
-            if do_intercept
-                X = intercept(dat.dat(i,:)','add');
-            else
-                X = dat.dat(i,:)';
-            end
-            
-            % Estimate Betas in vector
-            b(:,i) = pinv(X) * dat.Y;
-            
-            % Error
-            r(:,i) = dat.Y - X * b(:,i);
-            sigma(i) = std(r(:,i));
-            stderr(:,i) = ( diag(inv(X' * X)) .^ .5 ) * sigma(i);  % params x voxels matrix of std. errors
+				% Create X from brain Data
+        if do_intercept
+          X = intercept(dat.dat(i,:)','add');
+        else
+          X = dat.dat(i,:)';
         end
-        % Inference
-        [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
+        
+				% Estimate Betas in vector
+        b(:,i) = pinv(X) * dat.Y;
+        
+				% Error
+        r(:,i) = dat.Y - X * b(:,i);
+        sigma(i) = std(r(:,i));
+        stderr(:,i) = ( diag(inv(X' * X)) .^ .5 ) * sigma(i);  % params x voxels matrix of std. errors
+      end
+				% Inference
+      [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
     end
-end
+  end
 
-stop = toc;
-if doverbose, fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60)); end
+  stop = toc;
+  if doverbose, fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60)); end
 
 % ---------------------------------------------------------------------
 % Create Output
 % ---------------------------------------------------------------------
 
-out = struct;
+  out = struct;
 
-% Betas
-out.b = statistic_image;
-out.b.type = 'Beta';
-out.b.p = p';
-out.b.ste = stderr';
-out.b.N = n;
-out.b.dat = b';
-out.b.dat_descrip = sprintf('Beta Values from regression, intercept is last');
-out.b.volInfo = dat.volInfo;
-out.b.removed_voxels = dat.removed_voxels;
-out.b.removed_images = false;  % this image does not have the same dims as the original dataset
-out.b = threshold(out.b, inputargs{:}); % Threshold image
+				% Betas
+  out.b = statistic_image;
+  out.b.type = 'Beta';
+  out.b.p = p';
+  out.b.ste = stderr';
+  out.b.N = n;
+  out.b.dat = b';
+  out.b.dat_descrip = sprintf('Beta Values from regression, intercept is last');
+  out.b.volInfo = dat.volInfo;
+  out.b.removed_voxels = dat.removed_voxels;
+  out.b.removed_images = false;  % this image does not have the same dims as the original dataset
+  out.b = threshold(out.b, inputargs{:}); % Threshold image
 
-% T stats
-out.t = statistic_image;
-out.t.type = 'T';
-out.t.p = p';
-out.t.ste = stderr';
-out.t.N = n;
-out.t.dat = t';
-out.t.dat_descrip = sprintf('t-values from regression, intercept is last');
-out.t.volInfo = dat.volInfo;
-out.t.removed_voxels = dat.removed_voxels;
-out.t.removed_images = false;  % this image does not have the same dims as the original dataset
-out.t = threshold(out.t, inputargs{:}, 'noverbose'); %Threshold image
+				% T stats
+  out.t = statistic_image;
+  out.t.type = 'T';
+  out.t.p = p';
+  out.t.ste = stderr';
+  out.t.N = n;
+  out.t.dat = t';
+  out.t.dat_descrip = sprintf('t-values from regression, intercept is last');
+  out.t.volInfo = dat.volInfo;
+  out.t.removed_voxels = dat.removed_voxels;
+  out.t.removed_images = false;  % this image does not have the same dims as the original dataset
+  out.t = threshold(out.t, inputargs{:}, 'noverbose'); %Threshold image
 
-% DF as fmri_data
-out.df = dat;
-out.df.dat = dfe';
-out.df.dat_descrip = sprintf('Degrees of Freedom');
+				% DF as fmri_data
+  out.df = dat;
+  out.df.dat = dfe';
+  out.df.dat_descrip = sprintf('Degrees of Freedom');
 
-% Sigma as fmri_data
-out.sigma = dat;
-out.sigma.dat = sigma';
-out.sigma.dat_descrip = sprintf('Sigma from Regression');
+				% Sigma as fmri_data
+  out.sigma = dat;
+  out.sigma.dat = sigma';
+  out.sigma.dat_descrip = sprintf('Sigma from Regression');
 
-% Residual as fmri_data
-if do_resid
+				% Residual as fmri_data
+  if do_resid
     out.resid = dat;
     out.resid.dat = r';
     out.resid.dat_descrip = sprintf('Residual from Regression');
-end
+  end
 
 % ---------------------------------------------------------------------
 % Plot Results
 % ---------------------------------------------------------------------
-if k < 10 && do_display
+  if k < 10 && do_display
     
     orthviews(out.t);
     
-elseif do_display
-        disp('Warning: No display because >= 10 images.');
+  elseif do_display
+    disp('Warning: No display because >= 10 images.');
 
-end
+  end
 
-warning on
+  warning on
 
 % ---------------------------------------------------------------------
 % Subfunctions
 % ---------------------------------------------------------------------
 
-    function [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma)
-        % test whether parameter is significantly different from zero
-        %
-        % Inputs:
-        % X:        design matrix
-        % b:        beta values
-        % stderr:   standard error of beta estimate
-        % sigma:    standard deviation of residual
-        %
-        % Returns:
-        % t:        t-value
-        % dfe:      degrees of freedom
-        % p:        p-value
-        % sigma:    standard deviation of residual
-        
-        [n, k] = size(X);
-        t = b ./ stderr;
-        dfe = n - k;
-        p = 2 * (1 - tcdf(abs(t), dfe));
-        
-        sigma(sigma == 0) = Inf;
-        t(isnan(t)) = 0;
-        p(isnan(p)) = 0;
-        dfe = repmat(dfe,1,size(t,2));
-    end
+  function [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma)
+         % test whether parameter is significantly different from zero
+         %
+         % Inputs:
+         % X:        design matrix
+         % b:        beta values
+         % stderr:   standard error of beta estimate
+         % sigma:    standard deviation of residual
+         %
+         % Returns:
+         % t:        t-value
+         % dfe:      degrees of freedom
+         % p:        p-value
+         % sigma:    standard deviation of residual
+    
+    [n, k] = size(X);
+    t = b ./ stderr;
+    dfe = n - k;
+    p = 2 * (1 - tcdf(abs(t), dfe));
+    
+    sigma(sigma == 0) = Inf;
+    t(isnan(t)) = 0;
+    p(isnan(p)) = 0;
+    dfe = repmat(dfe,1,size(t,2));
+  end
 
 end
 

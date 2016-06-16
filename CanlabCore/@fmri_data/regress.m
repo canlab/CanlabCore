@@ -252,7 +252,9 @@ function out = regress(dat, varargin)
     end
     
     if do_robust %need to loop through voxels - Slow!
-      if doverbose, fprintf('\nRunning in Robust Mode'); end
+      if doverbose
+	fprintf('\nRunning in Robust Mode');
+      end
       
       for i = 1:size(dat.dat,1)
         
@@ -296,7 +298,8 @@ function out = regress(dat, varargin)
     end
     
     if do_robust %need to loop through voxels - Slow!
-      if doverbose, fprintf('\nRunning in Robust Mode');
+      if doverbose
+	fprintf('\nRunning in Robust Mode');
       end
       
       for i = 1:size(dat.dat,1)

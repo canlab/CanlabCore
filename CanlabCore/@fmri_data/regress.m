@@ -301,10 +301,8 @@ function out = regress(dat, varargin)
       if doverbose
 	fprintf('\nRunning in Robust Mode');
       end
-      
       for i = 1:size(dat.dat,1)
-        
-				% Create X from brain Data
+	% Create X from brain Data
         if do_intercept
           X = intercept(dat.dat(i,:)','add');
         else
@@ -321,7 +319,6 @@ function out = regress(dat, varargin)
         sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
         r(:,i) = dat.Y - X * b(:,i); %residual
       end
-      
     else %OLS
       
       if doverbose, fprintf('\nRunning in OLS Mode'); end

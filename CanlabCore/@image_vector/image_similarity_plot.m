@@ -107,7 +107,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %             cell for each spatial basis, critical value determined
 %             by Tukey-Kramer method (see multcompare)
 %
-% Colors for multi-line plots
+% Default colors for multi-line plots
 %       Color
 % 1		Red
 % 2		Green
@@ -156,7 +156,9 @@ mapset = 'npsplus';  % 'bucknerlab'
 table_group={}; %initialize output
 multcomp_group={}; %initialize output
 noplot=false;
-doCosine=0; %do cosine similarity
+doCosine = 0; %do cosine similarity
+groupColors = scn_standard_colors(size(obj.dat, 2));
+
 % optional inputs with default values
 % -----------------------------------
 
@@ -173,7 +175,7 @@ for i = 1:length(varargin)
                 
             case 'mapset'
                 mapset = 'custom';
-                mask = vararagin{i + 1}; varargin{i + 1} = [];
+                mask = varargin{i + 1}; varargin{i + 1} = [];
                 
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
             case 'compareGroups'
@@ -181,6 +183,9 @@ for i = 1:length(varargin)
                 group = varargin{i+1};
                 
             case 'noplot'; noplot=true;
+                
+            case 'colors'
+                groupColors = varargin{i + 1}; varargin{i + 1} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -237,9 +242,12 @@ obj = replace_empty(obj);
 % if map or series of maps, point-biserial is better.
 
 % This is done for n images in obj
-r=zeros(size(mask.dat,2),size(obj.dat,2));
+r = zeros(size(mask.dat, 2), size(obj.dat, 2));
+
 if ~doCosine
-r = corr(double(obj.dat), double(mask.dat))';
+
+    r = corr(double(obj.dat), double(mask.dat))';
+
 else
     for im=1:size(mask.dat,2)
     a = nansum(obj.dat .^ 2) .^ .5;
@@ -251,14 +259,20 @@ end
 stats.r = r;
 
 if ~doaverage
-    
+        
     if ~noplot
         % Plot values for each image in obj
-        [hh, hhfill] = tor_polar_plot({r}, scn_standard_colors(size(r, 2)), {networknames}, 'nonneg');
+        [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
     end
     
     print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
     
+    % Make legend
+
+    han = makelegend(obj.image_names, groupColors);
+
+
+
 elseif doaverage
     
     z=fisherz(r'); %transform values
@@ -346,11 +360,12 @@ elseif doaverage
         
         groupColors=repmat(scn_standard_colors(size(m, 2)),3,1);
         groupColors={groupColors{:}};
+        
         toplot=[];
+        
         for i=1:length(groupValues)
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
-        
         
         [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
         
@@ -374,6 +389,7 @@ elseif doaverage
     end
     
 end % doaverage
+
 
 
 end % function

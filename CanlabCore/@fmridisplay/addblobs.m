@@ -199,7 +199,7 @@ for i = 1:length(varargin)
             case 'no_surface'
                 addsurfaceblobs = 0;
 
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
+            otherwise %suppress warning because other options passed on.  warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end

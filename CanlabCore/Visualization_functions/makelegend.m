@@ -1,4 +1,4 @@
-function han = makelegend(names,colors,makefig)
+function han = makelegend(names, colors, makefig)
 % ::
 %
 %    makelegend(names,colors,[decimal places if numeric entries for names])
@@ -20,7 +20,8 @@ function han = makelegend(names,colors,makefig)
 %
 %    han = makelegend([.001 .005 .01], {[1 1 0] [1 .5 0] [.7 .3 .3]});
 
-
+% Enforce cell array for names, format strings
+names = format_strings_for_legend(names);
 
 if nargin < 3, num_decimals = 3; end
 

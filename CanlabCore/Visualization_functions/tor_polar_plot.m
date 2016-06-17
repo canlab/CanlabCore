@@ -96,6 +96,8 @@ for s = 1:p
         if any(vals{s}(:) < 0)
             origmin(s) = abs(min(vals{s}(:)));  % this is the new zero point
             vals{s} = vals{s} - min(vals{s}(:));
+        else
+            origmin(s) = 0;
         end
     end
     

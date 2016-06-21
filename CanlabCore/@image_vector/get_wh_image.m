@@ -49,11 +49,11 @@ end
 % and then grab a few more fields that are not found with the size check
 % above.  these field are all 1D
 
-otherfields = {'image_names', 'fullpath', 'removed_images'};
-for f = otherfields
-    field = char(f);
-    if ~isempty(out.(field))
-        out.(field) = out.(field)(wh); % these field are all 1D
-    end
-end
+% otherfields = {'image_names', 'fullpath', 'removed_images'};
+% for f = otherfields
+%     field = char(f);
+%     if ~isempty(out.(field))
+%         out.(field) = out.(field)(wh); % these field are all 1D
+%     end
+% end
         

@@ -41,18 +41,12 @@ aqua = [0 .5 .5];
 dkblue = [0 .1 .7];
 dkblue2 = [0 .2 .5];
 
-%colors = {[.8 0 0] [1 1 0] [.9 .5 0]}; 
-%colors ={red yellow orange};          % pos or neg 
-%colors = {yellow orange dkred};
-%colors2={blue ltblue aqua};   % for doboth
-
 % low thresh colors
 colors = {yellow orange3 orange2};
 colors2= {blue ltblue ltblue2};
 
 % thresholds
 
-%thr = [Inf .005 .05];   % Inf = FDR, thr should be increasing p-values
 thr = [.001 .005 .05];   % Inf = FDR, thr should be increasing p-values
 sizes = [5 5 10];     % minimum sizes
 direction = 'both';  % 'pos','neg','both'
@@ -67,10 +61,6 @@ maskimg = [];       % empty, or specify image name
 
 ovl = [];
 if length(varargin) > 0, ovl = varargin{1};,end
-
-% ---------------------------------------------------
-
-% ---------------------------------------------------
 
 % read image
 V = spm_vol(P); v = spm_read_vols(V);
@@ -217,24 +207,14 @@ cl = cl(saveme);
 colors = colors(saveme);
 thr = thr(saveme);
 
-
-
-% temporary for placebo!!!
-%load('/Users/tor/Documents/Tor_Documents/PublishedProjects/2004_Wager_Placebo_science/Current_UM_Study/fmri_results/RESULTS/model5_manip/eight_vs_two_clusters.mat')
-%cluster_orthviews(clusters,{[1 0 0]})
-
 if isempty(cl), return, end
 
 % now image clusters
 if ~isempty(cl{1}),  cluster_orthviews(cl{1},colors(1),'overlay',ovl);, end
-%if ~isempty(cl{1}),  cluster_orthviews(cl{1},colors(1),'add');, end
 
 for i = 2:length(cl)
     if ~isempty(cl{i}),cluster_orthviews(cl{i},colors(i),'add');, end
 end
-
-
-
 
 % make legend string and legend
 for i = 1:length(cl)
@@ -258,16 +238,13 @@ for i = 1:length(colors),hh(i)=plot(0,0,'Color',colors{i},'LineWidth',10);,end
 axis off
 legend(legstr)
 
-
 % check for cases in which we DO NOT want montage
-
 if strcmp(type,'none'), return, end
 
 tmp =[];
 for i = 1:length(cl), tmp = [tmp cat(2,cl{i}.XYZ)];,end
 tmp = unique(tmp(3,:));
 if length(tmp) > 30, stopme = input('More than 30 slices in montage.  Make montage figure? (1/0) ');,if ~stopme, return,end, end
-
 
 % montage
 if length(cl) == 6
@@ -286,13 +263,8 @@ end
 
 cl{1}(1).thr = thr; 
 cl{1}(1).colors = colors; 
-%set(gcf,'Position',[ 1722         -19         715         756])
-
-
 
 % montage medial slices
-
-
 tmp = unique(tmp(1,:));
 if length(tmp) > 30, stopme = input('More than 30 slices in medial montage.  Make montage figure? (1/0) ');,if ~stopme, return,end, end
 
@@ -312,9 +284,5 @@ end
 
 cl{1}(1).thr = thr; 
 cl{1}(1).colors = colors; 
-%set(gcf,'Position',[ 1722         -19         715         756])
 
 return
-
-    
-    

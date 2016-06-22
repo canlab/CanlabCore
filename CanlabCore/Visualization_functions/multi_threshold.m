@@ -2,10 +2,10 @@ function cl = multi_threshold(P,type,df,varargin)
 % ::
 %
 %    cl = multi_threshold(P,type,df,[overlay image name])
+%       This function wants a statistic image.
+%       F contrast:  df = xSPM.df;
 %
-% F contrast:  df = xSPM.df;
-%
-% type = 'F' or 'T'or 'none'
+%       type = 'F' or 'T'or 'none'
 %
 % ..
 %    really good function.
@@ -14,6 +14,16 @@ function cl = multi_threshold(P,type,df,varargin)
 
 % ..
 %    defaults
+%       Colors:     postive - Red Yellow Orange
+%                   negative -  Blue, Light Blue, Aqua
+%       Threshold:  [.001 .005 .05] uncorrected
+%       K Sizes:    [5 5 10]
+%   
+%   example
+%
+%   o2 = multi_threshold(out.t, 'o2', o2, 'thresh', [.005 .01 .05], 'sizethresh', [1 1 1]);
+%   o2 = montage(o2, 'coronal', 'slice_range', [-20 20], 'onerow');
+%   o2 = addblobs(o2, region(out.t));
 % ..
 
 red = [1 0 0]; % Colors

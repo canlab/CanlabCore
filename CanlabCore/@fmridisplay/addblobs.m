@@ -179,12 +179,36 @@ end
 
 % default values
 dosplitcolor = 0;
+doonecolor = 0;
+domaxcolor = 0;
+domincolor = 0;
 pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
+            case 'color'
+            case 'onecolor'
+                doonecolor = 1;
+                onecolor = varargin{i + 1};
+                maxposcolor = onecolor;
+                minposcolor = onecolor;
+                maxnegcolor = onecolor;
+                minnegcolor = onecolor;
+
+            case 'maxcolor'
+                domaxcolor = 1;
+                maxcolors = varargin{i + 1};
+                maxposcolor = maxcolors;
+                minposcolor = maxcolors;
+
+            case 'mincolor'
+                domincolor = 1;
+                mincolors = varargin{i + 1};
+                maxnegcolor = mincolors;
+                minnegcolor = mincolors;
+
             case 'splitcolor'
                 dosplitcolor = 1;
                 splitcolors = varargin{i + 1};
@@ -199,7 +223,7 @@ for i = 1:length(varargin)
             case 'no_surface'
                 addsurfaceblobs = 0;
 
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
+            otherwise %suppress warning because other options passed on.  warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
@@ -279,7 +303,7 @@ if addsurfaceblobs
         end
 
         % Set color maps for + / - values
-        if dosplitcolor
+        if dosplitcolor || doonecolor || domaxcolor || domincolor
             pos_colormap = colormap_tor(maxposcolor, minposcolor);
             neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
         end

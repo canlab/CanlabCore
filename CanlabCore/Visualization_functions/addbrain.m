@@ -119,7 +119,8 @@ switch meth
             set(myp(i), 'FaceVertexCData', repmat([.5 .5 .5], len, 1));
         end
         p = myp;
-
+        return
+        
     case 'left'
         pname = 'surf_spm2_left.mat';  % moderate res, no cerebellum
 

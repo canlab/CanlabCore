@@ -248,12 +248,14 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
 
+            wh_montages = [1 2 3 4];
             wh_surfaces = [1 2 3 4];
 
         case 'compact'
             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             axh = axes('Position', [0.05 0.4 .1 .5]);
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            wh_montages = [1 2];
             
         case 'compact2'
             %subplot(2, 1, 1);
@@ -275,11 +277,12 @@ if ~exist('o2', 'var')
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
             %images, makes it too big an overlapping
+            wh_montages = [1 2];
             
         otherwise error('illegal montage type. choose full or compact.');
     end
     
-    wh_montages = [1 2];
+    % wh_montages = [1 2];
 
 else
     if doverbose, disp('Using existing fmridisplay object'); end

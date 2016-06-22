@@ -25,14 +25,14 @@ function [mxc,t,sig,out] = ttest3d(xc)
 % ------------------------------------------------------------
 
 
-    for j = 1 : size(xc,2)
-        for k = 1 : size(xc,2)
+    for j = 1 : size(xc, 1)
+        for k = 1 : size(xc, 2)
 
-            tmp = squeeze(xc(j,k,:));
+            tmp = squeeze(xc(j, k, :));
             %z = .5 * log( (1+tmp) ./ (1-tmp) );     % Fisher's r-to-z
             %transform (old, for
             %correlation inputs)
-            [stecorr(j,k), t(j,k), nobs(j, k), p(j, k), mxc(j, k)] = ste(tmp);     % correl in rand fx analysis across ss
+            [stecorr(j, k), t(j, k), nobs(j, k), p(j, k), mxc(j, k)] = ste(tmp);     % correl in rand fx analysis across ss
         end
     end
     warning on
@@ -51,7 +51,7 @@ function [mxc,t,sig,out] = ttest3d(xc)
     out.pvals = p;
 
     % Alpha correction - bonferroni.
-    numtests = (size(mxc,1)*(size(mxc,1)-1))/2;       % number of obs in upper triangle
+    numtests = (size(mxc, 1)*(size(mxc, 2) - 1)) / 2;       % number of obs in upper triangle
     corrp = 1 - (0.05 / (2 * (   numtests   )));         % 2-tailed corr p
     
     %crit_t = tinv_t(corrp,size(xc,3)-1);          % critical t-value for corrected significance
@@ -86,15 +86,28 @@ function [mxc,t,sig,out] = ttest3d(xc)
 end
 
 
-function [pthr,sig] = fdr_correct_pvals(p,r)
+function [pthr,sig] = fdr_correct_pvals(p, t)
 
-    psq = p; psq(find(eye(size(p,1)))) = 0;
+issquarematrix = false;
+
+[m, n] = size(p);
+if m == n, issquarematrix = true; end
+
+psq = p;
+
+if issquarematrix
+    
+    psq(find(eye(size(p, 1)))) = 0;
     psq = squareform(psq);
-    pthr = FDR(p,.05);
-    if isempty(pthr), pthr = 0; end
+    
+end
 
-    sig = sign(r) .* (p < pthr);
+pthr = FDR(psq, .05);
+if isempty(pthr), pthr = 0; end
 
-    sig(isnan(sig)) = 0;
+sig = sign(t) .* (p < pthr);
+
+sig(isnan(sig)) = 0;
+
 end
 

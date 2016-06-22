@@ -35,6 +35,7 @@ function [headername, dataname, fid] = write_text(D, varargin)
 %
 % :Optional Inputs:
 %    the first varargin parameter is the delimiter. Comma-delimited by default.
+%    the second varargin parameter is a logical vector of subjects to use. All subjects by default.
 %
 %
 % :Outputs:
@@ -51,9 +52,11 @@ function [headername, dataname, fid] = write_text(D, varargin)
 
 
 delim = ','; % flesh this out later as needed
-for i=1:length(varargin)
-    delim = varargin{1};
-end
+wh_keep = true(size(D.Subj_Level.names));
+
+if nargin > 1, delim = varargin{1}; end
+if nargin > 2, wh_keep = varargin{2}; end
+
 
 
 % Checks
@@ -152,6 +155,8 @@ cellfun(printcell, names);
 fprintf(fid, '\n');
 
 for i = 1:n  % for each subject
+    
+    if ~wh_keep(i), continue; end % skip this subj
 
     e = size(D.Event_Level.data{i}, 1);
     

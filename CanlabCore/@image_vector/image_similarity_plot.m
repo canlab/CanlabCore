@@ -64,6 +64,10 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        Use 7 emotion-predictive models from Kragel & LaBar 2015 for
 %        basis of comparisons
 %
+%   **allengenetics**
+%        Five maps from the Allen Brain Project human gene expression maps
+%        from Luke Chang (unpublished)
+%
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
 %        each spatial basis); requires group as subsequent input
@@ -102,6 +106,15 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %             mutiple comparisons of means across groups, one output
 %             cell for each spatial basis, critical value determined
 %             by Tukey-Kramer method (see multcompare)
+%
+% Default colors for multi-line plots
+%       Color
+% 1		Red
+% 2		Green
+% 3		Dark Blue
+% 4		Yellow
+% 5		Pink
+% 6		Turquoise
 %
 % :Examples:
 % ::
@@ -143,7 +156,9 @@ mapset = 'npsplus';  % 'bucknerlab'
 table_group={}; %initialize output
 multcomp_group={}; %initialize output
 noplot=false;
-doCosine=0; %do cosine similarity
+doCosine = 0; %do cosine similarity
+groupColors = scn_standard_colors(size(obj.dat, 2));
+
 % optional inputs with default values
 % -----------------------------------
 
@@ -155,12 +170,12 @@ for i = 1:length(varargin)
                 
             case 'cosine_similarity', doCosine = 1;
                     
-            case {'bucknerlab', 'kragelemotion'}
+            case {'bucknerlab', 'kragelemotion' 'allengenetics'}
                 mapset = varargin{i};
                 
             case 'mapset'
                 mapset = 'custom';
-                mask = vararagin{i + 1}; varargin{i + 1} = [];
+                mask = varargin{i + 1}; varargin{i + 1} = [];
                 
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
             case 'compareGroups'
@@ -168,6 +183,9 @@ for i = 1:length(varargin)
                 group = varargin{i+1};
                 
             case 'noplot'; noplot=true;
+                
+            case 'colors'
+                groupColors = varargin{i + 1}; varargin{i + 1} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -180,11 +198,15 @@ switch mapset
     case 'bucknerlab'
         [mask, networknames, imagenames] = load_bucknerlab_maps;
         networknames=networknames';
+        
     case 'npsplus'
         [mask, networknames, imagenames] = load_npsplus;
         
     case 'kragelemotion'
         [mask, networknames, imagenames] = load_kragelemotion;
+ 
+    case 'allengenetics'
+        [mask, networknames, imagenames] = load_allengenetics;
         
     case 'custom'
         
@@ -220,9 +242,12 @@ obj = replace_empty(obj);
 % if map or series of maps, point-biserial is better.
 
 % This is done for n images in obj
-r=zeros(size(mask.dat,2),size(obj.dat,2));
+r = zeros(size(mask.dat, 2), size(obj.dat, 2));
+
 if ~doCosine
-r = corr(double(obj.dat), double(mask.dat))';
+
+    r = corr(double(obj.dat), double(mask.dat))';
+
 else
     for im=1:size(mask.dat,2)
     a = nansum(obj.dat .^ 2) .^ .5;
@@ -234,14 +259,20 @@ end
 stats.r = r;
 
 if ~doaverage
-    
+        
     if ~noplot
         % Plot values for each image in obj
-        [hh, hhfill] = tor_polar_plot({r}, scn_standard_colors(size(r, 2)), {networknames}, 'nonneg');
+        [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
     end
     
     print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
     
+    % Make legend
+
+    han = makelegend(obj.image_names, groupColors);
+
+
+
 elseif doaverage
     
     z=fisherz(r'); %transform values
@@ -329,11 +360,12 @@ elseif doaverage
         
         groupColors=repmat(scn_standard_colors(size(m, 2)),3,1);
         groupColors={groupColors{:}};
+        
         toplot=[];
+        
         for i=1:length(groupValues)
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
-        
         
         [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
         
@@ -357,6 +389,7 @@ elseif doaverage
     end
     
 end % doaverage
+
 
 
 end % function
@@ -445,6 +478,28 @@ imagenames = { ...
     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+
+end % function
+
+
+function [mask, networknames, imagenames] = load_allengenetics
+
+% Load Allen Brain Atlas project human genetic maps (from Luke Chang)
+% ------------------------------------------------------------------------
+
+networknames = {'5HT' 'Opioid' 'Dopamine' 'NEalpha' 'NEbeta'};
+
+imagenames = { ...
+    'Serotonin.nii' ...
+    'Opioid.nii' ...
+    'Dopamine.nii' ...
+    'AdrenoAlpha.nii' ...
+    'AdrenoBeta.nii' ...
+};
 
 imagenames = check_image_names_get_full_path(imagenames);
 

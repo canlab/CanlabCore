@@ -4,7 +4,10 @@ function out = regress(dat, varargin)
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
 % and the intercept is the last column. Intercept will automatically be
-% added if not detected unless 'nointercept' is specified.
+% added if not detected unless 'nointercept' is specified. 
+%
+% Does not use covariates field of fmri_data(). You must include covariates
+% manually in dat.X.
 %
 % This function can also create a map of brain regions that predict the dat.Y
 % vector using the 'brainony' option.  This is essentially a univariate

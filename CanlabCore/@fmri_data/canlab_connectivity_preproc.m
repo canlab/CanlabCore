@@ -87,12 +87,13 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %   **hpf', 'lpf', or 'bpf:**
 %        This option will do temporal filtering.
 %        - 'hpf': high pass filter. This option should be followed by
-%                 the lower bound of the frequency (e.g., .01 Hz [= 100 sec]).
+%                 the lower bound of the frequency (e.g., .01 Hz [= 100
+%                 sec]), then TR
 %        - 'lpf': low pass filter. This option should be followed by
-%                 the upper bound of the frequency (e.g., .25 Hz [= 4 sec]).
+%                 the upper bound of the frequency (e.g., .25 Hz [= 4 sec]), then TR.
 %        - 'bpf': bandpass filter. This should be followed by lower
-%                 and upper bounds of the frequency (e.g., [.01 .25]).
-%                 After the frequency value, you need to provide TR.
+%                 and upper bounds of the frequency (e.g., [.01 .25]), then TR.
+%                 In all cases, after the frequency value, you need to provide TR in sec.
 %        - *Example:* 'hpf', .01, TR
 %                     'bpf', [.01 .25], TR
 %
@@ -159,23 +160,33 @@ for i = 1:length(varargin)
         switch varargin{i}
             case {'additional_nuisance', 'additional_R'}
                 additional_R = varargin{i+1};
+                
             case {'vw', 'ventricle_whitematter', 'remove_vw'}
                 remove_vent_wm = true;
+                
                 % filter
             case {'hpf', 'lpf', 'bpf'}
-                do_filter = true; TR = varargin{i+2};
+                do_filter = true; 
+                TR = varargin{i+2};
+                
                 if any(strcmp(varargin, 'hpf')), filter(1) = varargin{i+1}; filter(2)= Inf; end
                 if any(strcmp(varargin, 'lpf')), filter(1) = 0; filter(2) = varargin{i+1}; end
                 if any(strcmp(varargin, 'bpf')), filter = varargin{i+1}; end
+                
             case {'windsorize'}
                 do_windsorize = true;
                 k_std = varargin{i+1};
-                % extract roi values
+                
+                
+                % detrend
             case {'linear_trend'}
                 do_linear = true;
+                
+                % extract roi values
             case {'extract_roi', 'roi', 'mask'}
                 do_extract_roi = true;
                 mask = varargin{i+1};
+                
             case {'no_preproc'}
                 do_preproc = false;
         end
@@ -430,12 +441,12 @@ end
 %    Sub-functions
 %   ---------------------------------------------------
 
-function [y,fy]=conn_filter(rt,filter,x,option)
+function [y,fy]=conn_filter(rt, filter, x, option)
 
 % from conn toolbox
 % http://www.nitrc.org/projects/conn/
 
-if nargin<4, option='full'; end
+if nargin < 4, option='full'; end
 
 fy=fft(x,[],1);
 f=(0:size(x,1)-1);
@@ -479,7 +490,7 @@ obj.history{end+1} = sprintf('Windsorized data matrix to %d STD; adjusted %3.0f 
 disp(obj.history{end});
 end
 
-function clim = plot_qc(dat,n, use7sd, clim)
+function clim = plot_qc(dat, n, use7sd, clim)
 
 % dat
 % n: steps
@@ -488,14 +499,14 @@ function clim = plot_qc(dat,n, use7sd, clim)
 
 titles = {'RAW:before Conn preproc', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize', 'Pass filter'};
 
-subplot(2,4,n);
+subplot(2, 4, n);
 plot(mean(dat.dat)); 
 set(gca, 'xlim', [0 size(dat.dat,2)]);
 xlabel('timeseries');
 ylabel('Global mean');
 title(titles{n});
 
-subplot(2,4,n+4);
+subplot(2, 4, n+4);
 
 if use7sd
     m = nanmean(dat.dat(:));

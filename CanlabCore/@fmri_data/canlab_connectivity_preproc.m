@@ -119,6 +119,9 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %        If you want to skip the preprocessing part, and want to
 %        extract ROI values only, you can use this option.
 %
+%   **no_plots:**
+%        To suppress plots, enter 'no_plots'
+%
 % :Outputs:
 %
 %  **preprocessed_dat:**
@@ -149,6 +152,7 @@ do_extract_roi = false;
 do_preproc = true;
 do_windsorize = false;
 do_linear = false;
+do_plots = true;
 
 z = '===============================================================';
 zz = '---------------------------------------------------------------';
@@ -189,6 +193,9 @@ for i = 1:length(varargin)
                 
             case {'no_preproc'}
                 do_preproc = false;
+                
+            case {'no_plots'};
+                do_plots = false;
         end
     end
 end
@@ -208,9 +215,11 @@ if do_preproc
     
     %% white matter, ventricle
     
-    create_figure('plot_qc',2,4);
-    set(gcf, 'position', get(0,'screensize')); drawnow;
-    plot_qc(dat,1,0,[]); drawnow;
+    if do_plots
+        create_figure('plot_qc',2,4);
+        set(gcf, 'position', get(0,'screensize')); drawnow;
+        plot_qc(dat,1,0,[]); drawnow;
+    end
     
     if remove_vent_wm
         
@@ -262,7 +271,9 @@ if do_preproc
         dat.dat = (dat.dat' - xpxy)';
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
-        clim = plot_qc(dat,2,1,[]); drawnow;
+        if do_plots
+            clim = plot_qc(dat,2,1,[]); drawnow;
+        end
         
     else  % no filtering
         
@@ -274,8 +285,11 @@ if do_preproc
     if do_windsorize
         dat = windsorize(dat, k_std);
         
-        plot_qc(dat,3,0,clim); drawnow;
-        %done below dat.history{end+1} = sprintf('Windsorized data matrix to %3.0f st. dev.', k_std);
+        if do_plots
+            plot_qc(dat,3,0,clim); drawnow;
+            %done below dat.history{end+1} = sprintf('Windsorized data matrix to %3.0f st. dev.', k_std);
+        end
+        
     end
     
     %% temporal filter (low and high): low pass, high pass, bandpass
@@ -287,7 +301,10 @@ if do_preproc
                                                            % So need mean back in
         dat.history{end+1} = 'Done temporal filtering';
         
-        plot_qc(dat,4,0,clim); drawnow;
+        if do_plots
+            plot_qc(dat,4,0,clim); drawnow;
+        end
+        
     end
     
     t = toc;

@@ -20,7 +20,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % images as cases.  The basis sets are "NPSplus" (the default), which
 % includes the NPS map from Wager et al. 2013, Romantic Rejection
 % classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
-% pain (Krishnan).  Other sets are "bucknerlab" including 7 cortical [only]
+% pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
 % networks from the Buckner Lab's 1000-person resting-state analyses and
 % "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.  
 %

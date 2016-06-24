@@ -200,8 +200,10 @@ all_surf_handles = [all_surf_handles surfh];
 
 figure(f1);
 axh = subplot(nrows, ncols , 4);
-copyobj(surfh, axh);
+surfh2 = copyobj(surfh, axh);
 view(270, 0);
+
+all_surf_handles = [all_surf_handles surfh2'];
 
 lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
 
@@ -229,8 +231,10 @@ all_surf_handles = [all_surf_handles surfh];
 
 figure(f1);
 axh = subplot(nrows, ncols , 3);
-copyobj(surfh, axh);
+surfh2 = copyobj(surfh, axh);
 view(90, 0);
+
+all_surf_handles = [all_surf_handles surfh2'];
 
 lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
 

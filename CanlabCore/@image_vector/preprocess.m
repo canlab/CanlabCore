@@ -95,6 +95,10 @@ switch meth
         
         imageseriesmean = mean(obj.dat(whgood, :), 2);
         
+        if isempty(obj.images_per_session)
+            obj.images_per_session = size(obj.dat, 2); % n images
+        end
+            
         obj.dat(whgood, :) = hpfilter(obj.dat(whgood, :)', TR, hpcutoff, obj.images_per_session, [], 1:2)';
         
         obj.dat(whgood, :) = obj.dat(whgood, :) + repmat(imageseriesmean, 1, size(obj.dat, 2));

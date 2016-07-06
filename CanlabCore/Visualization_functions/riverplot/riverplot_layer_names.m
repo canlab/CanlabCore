@@ -71,6 +71,8 @@ ax = gca;
 colors = custom_colors([.2 .2 .2], [.2 .2 .2], length(layerstruct)); % series of cells with colors for each layer
 leftright_string = 'left';
 
+if ~iscell(layernames), layernames = cellstr(layernames); end
+
 % optional inputs with default values
 for i = 1:length(varargin)
     if ischar(varargin{i})

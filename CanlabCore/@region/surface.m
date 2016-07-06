@@ -30,18 +30,21 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %   **r:**
 %        A region object
 %
-%   **cutaway:**
+%   **'cutaway':**
 %        String command for rendering cutaways instead of the default
 %           - default is call to mediation_brain_surface_figs
 %           - cutaways calls surface_cutaway
 %           - all optional arguments are passed to surface_cutaway
 %
-%   **rightsurface:**
+%   **'rightsurface':**
 %        String command for rendering a right frontal cortical
 %                      view complementary to 'cutaways'
 %
-%   **foursurfaces:**
+%   **'foursurfaces':**
 %        Compact plots of four surfaces
+%
+%   **'surface_handles':**
+%        Followed by surface handles to render on
 %
 % Other optional inputs to surface_cutaway
 % e.g., 'pos_colormap'
@@ -59,18 +62,25 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %        region object with negative-only clusters
 %
 %
-% :Example:
+% :Examples:
 % ::
 %
-%    % Use surface(r), with optional arguments taken by surface_cutaway:
+%    % Render on combined cortical cutaway and subcortical surfaces
+%    Use surface(r), with optional arguments taken by surface_cutaway:
 %    poscm = colormap_tor([1 .3 0], [1 1 0]); % orange to yellow
 %    [all_surf_handles, pcl, ncl] = surface(r, 'cutaway', 'ycut_mm', -30, 'pos_colormap', poscm, 'existingfig');
+%
+%    % Render on four cortical surfaces
 %    [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'pos_colormap', poscm, 'neg_colormap', negcm);
 %    [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'existingfig', 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]));
 %
 %    % use mediation_brain_surface_figs and re-make colors
 %    all_surf_handles = mediation_brain_surface_figs([]);
 %    surface(r, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
+%
+%    % Make a region of interest surface and render on that
+%    create_figure; p = addbrain('thalamus'); lightRestoreSingle;
+%    [all_surf_handles2, pcl, ncl] = surface(region(t_age), 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]), 'surface_handles', p);
 %
 %
 % :See also:*
@@ -81,11 +91,11 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %    DEFAULTS AND INPUTS
 % ..
 
-allowable_args = {'cutaway' 'rightsurface' 'existingfig', 'foursurfaces'}; % optional inputs
-default_values = {0, 0, 0, 0};
+allowable_args = {'cutaway' 'rightsurface' 'existingfig', 'foursurfaces', 'surface_handles'}; % optional inputs
+default_values = {0, 0, 0, 0, []};
 
 % actions for inputs can be: 'assign_next_input' or 'flag_on'
-actions = {'flag_on', 'flag_on', 'flag_on', 'flag_on'};
+actions = {'flag_on', 'flag_on', 'flag_on', 'flag_on', 'assign_next_input'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -126,11 +136,14 @@ end
 
 [pcl, ncl] = posneg_separate(r, 'Z');
 
-if cutaway
+if ~isempty(surface_handles)
+    %all_surf_handles = surface_handles;
     all_surf_handles = surface_cutaway('cl', r, varargin{:});
-end
+    
+elseif cutaway
+    all_surf_handles = surface_cutaway('cl', r, varargin{:});
 
-if rightsurface
+elseif rightsurface
     % could easily be extended to any methods for addbrain.m, but may be
     % better to build your own and pass in custom handles.
     
@@ -143,17 +156,15 @@ if rightsurface
     lightRestoreSingle; lighting gouraud
     
     all_surf_handles = surface_cutaway('cl', r, 'surface_handles', all_surf_handles, varargin{:});
-    
-end
 
-if foursurfaces
+elseif foursurfaces
     all_surf_handles = run_foursurfaces(r, existingfig, varargin{:});
-end
 
-if ~(cutaway || rightsurface || foursurfaces)
+else  %if ~(cutaway || rightsurface || foursurfaces)
     
     % default method
     all_surf_handles = mediation_brain_surface_figs({pcl}, {ncl});
+    
 end
 
 % Or, could modify to use this as an option:

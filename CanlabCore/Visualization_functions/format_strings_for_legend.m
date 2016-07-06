@@ -5,6 +5,8 @@ function legendnames = format_strings_for_legend(legendnames)
 %
 % See also: makelegend
 
+if isempty(legendnames), return, end
+
 if ~iscell(legendnames)
     legendnames = cellstr(legendnames);
 end

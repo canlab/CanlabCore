@@ -283,7 +283,9 @@ if ~doaverage
         % Plot values for each image in obj
         [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
         % Make legend
-        han = makelegend(obj.image_names, groupColors);
+        if ~isempty(obj.image_names)
+            han = makelegend(obj.image_names, groupColors);
+        end
     end
     
     print_matrix(r, {'Name' 'Pearson''s r'}, networknames)

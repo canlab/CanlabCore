@@ -132,6 +132,9 @@ axes(ax)
 
 ribbons = cell(n2, n1);
 
+if length(layer2) ~= size(sim_matrix, 1), error('layer2 size does not match sim matrix column size'); end
+if length(layer1) ~= size(sim_matrix, 2), error('layer1 size does not match sim matrix row size'); end
+
 for i = 1:n1
   
     myoffset = i .* (1 ./ (1.5*n1));  % adjust based on number of sources to reduce overlap in ribbon endings

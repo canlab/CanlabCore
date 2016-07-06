@@ -120,6 +120,10 @@ axes(ax)
 totalwid = y_wid + .1*y_wid;     % y space occupied, total
 y_loc = y_loc:totalwid:(y_loc + totalwid.* n_rects);
 
+if length(colors) < n_rects
+    error('Too few colors entered!');
+end
+
 for i = 1:n_rects
     mylayer{i} = riverplot_rect('color', colors{i}, 'position', [x_loc y_loc(i) x_wid y_wid]);
 end

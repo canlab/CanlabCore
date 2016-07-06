@@ -161,6 +161,7 @@ function [image_obj, networknames, imagenames] = load_custom(imagenames)
 
 % Load images, whatever they are
 % ------------------------------------------------------------------------
+if ~iscell(imagenames), imagenames = cellstr(imagenames); end
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -282,12 +283,16 @@ function imagenames = check_image_names_get_full_path(imagenames)
 
 for i = 1:length(imagenames)
     
-    if isempty(which(imagenames{i}))
+    if exist(imagenames{i}, 'file')
+        % do nothing
+        
+    elseif isempty(which(imagenames{i}))
         fprintf('CANNOT FIND %s \n', imagenames{i})
         error('Exiting.');
+    else
+        imagenames{i} = which(imagenames{i});
     end
     
-    imagenames{i} = which(imagenames{i});
 end
 end
 

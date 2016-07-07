@@ -178,6 +178,15 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'compact2');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'coronal');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'saggital');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'allslices');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = strcmp(varargin, 'noverbose');
 if any(wh), doverbose = false; varargin(wh) = []; end
 
@@ -278,6 +287,30 @@ if ~exist('o2', 'var')
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
             %images, makes it too big an overlapping
             wh_montages = [1 2];
+            
+        case 'coronal'
+            % coronal
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
+             wh_montages = 1;
+
+        case  'saggital'
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            
+             wh_montages = 1;
+
+        case 'allslices'
+            
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+            
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            wh_montages = [1 2 3];
             
         otherwise error('illegal montage type. choose full or compact.');
     end

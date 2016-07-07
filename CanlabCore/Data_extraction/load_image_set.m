@@ -100,9 +100,16 @@ for i = 1:length(varargin)
     end
 end
 
-if iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size(image_names_or_keyword, 1) > 1)
+if isa(image_names_or_keyword, 'fmri_data')
+    % We already have images loaded - just get the names
+    image_obj = image_names_or_keyword;
+    imagenames = image_obj.image_names;
+    networknames = format_strings_for_legend(imagenames);
+    return
+
+elseif iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size(image_names_or_keyword, 1) > 1)
     % We have custom image input
-    
+
     docustom = 1;
     
 else

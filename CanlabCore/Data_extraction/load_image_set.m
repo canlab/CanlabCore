@@ -291,16 +291,21 @@ function imagenames = check_image_names_get_full_path(imagenames)
 for i = 1:length(imagenames)
     
     if exist(imagenames{i}, 'file')
-        % do nothing
+        % do nothing. Sometimes which returns empty even though file
+        % exists. Do not use which if returns empty. Otherwise, do.
         
-    elseif isempty(which(imagenames{i}))
+        if ~isempty(which(imagenames{i}))
+            imagenames{i} = which(imagenames{i});
+        end
+        
+    else 
         fprintf('CANNOT FIND %s \n', imagenames{i})
         error('Exiting.');
-    else
-        imagenames{i} = which(imagenames{i});
+
     end
     
 end
-end
+
+end % function
 
 

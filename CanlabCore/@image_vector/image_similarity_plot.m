@@ -96,6 +96,11 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %               5		Pink
 %               6		Turquoise
 %
+%   **'dofixrange':**
+%        Set min and max of circles numbers (values on polar axis)
+%        Follow by range vector: [min_val max_val]
+%
+%
 % :Outputs:
 %
 %   **stats:**
@@ -172,6 +177,7 @@ multcomp_group={}; %initialize output
 noplot=false;
 doCosine = 0; %do cosine similarity
 groupColors = scn_standard_colors(size(obj.dat, 2));
+dofixRange=0;
 
 % optional inputs with default values
 % -----------------------------------
@@ -197,6 +203,10 @@ for i = 1:length(varargin)
                 group = varargin{i+1};
                 
             case 'noplot'; noplot=true;
+                
+            case 'dofixrange';
+                dofixRange=1;
+                fixedrange = varargin{i+1};
                 
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
@@ -280,11 +290,16 @@ stats.r = r;
 if ~doaverage
         
     if ~noplot
-        % Plot values for each image in obj
-        [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
+        
+        if ~dofixRange
+            % Plot values for each image in obj
+            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
+        else
+            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange); 
         % Make legend
         if ~isempty(obj.image_names)
             han = makelegend(obj.image_names, groupColors);
+        end
         end
     end
     
@@ -385,7 +400,11 @@ elseif doaverage
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
         
-        [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', varargin{:});
+        if ~dofixRange
+            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+        else
+            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
+        end
         
         set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
         set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);

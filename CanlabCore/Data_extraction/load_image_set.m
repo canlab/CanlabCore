@@ -288,9 +288,12 @@ end % function
 
 function imagenames = check_image_names_get_full_path(imagenames)
 
+if ~iscell(imagenames), imagenames = cellstr(imagenames); end
+
 for i = 1:length(imagenames)
     
     if exist(imagenames{i}, 'file')
+
         % do nothing. Sometimes which returns empty even though file
         % exists. Do not use which if returns empty. Otherwise, do.
         
@@ -304,6 +307,7 @@ for i = 1:length(imagenames)
 
     end
     
+
 end
 
 end % function

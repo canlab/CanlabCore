@@ -78,11 +78,7 @@ function image_eval_function_multisubj(imageNames,fhandle,varargin)
             % spm_defaults is a script
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
 
-        case 'SPM5'
-            % spm_defaults is a function
-            spm_defaults()
-
-        case 'SPM8'
+        case {'SPM5', 'SPM8', 'SPM12'}
             % spm_defaults is a function
             spm_defaults()
 

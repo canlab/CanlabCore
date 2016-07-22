@@ -47,7 +47,7 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %        Followed by surface handles to render on
 %
 % Other optional inputs to surface_cutaway
-% e.g., 'pos_colormap'
+% e.g., 'pos_colormap', 'existingfig', 'mm_deep'
 %
 %
 % :Outputs:

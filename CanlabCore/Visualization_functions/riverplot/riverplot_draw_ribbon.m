@@ -105,7 +105,7 @@ for i = 1:length(varargin)
                 
             case 'steepness', steepness = varargin{i+1}; varargin{i+1} = [];
                 
-            case {'coverage', 'from_bottom'} % pass it on, irrelevant but passed from higher level calling fcn
+            case {'coverage', 'from_bottom', 'y_offset'} % pass it on, irrelevant but passed from higher level calling fcn
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

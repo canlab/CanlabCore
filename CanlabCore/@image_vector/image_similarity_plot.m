@@ -194,8 +194,8 @@ for i = 1:length(varargin)
                 mapset = varargin{i};
                 
             case 'mapset'
-                mapset = 'custom';
-                mask = varargin{i + 1}; varargin{i + 1} = [];
+                %mapset = 'custom';
+                mapset = varargin{i + 1}; varargin{i + 1} = [];
                 
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
             case 'compareGroups'

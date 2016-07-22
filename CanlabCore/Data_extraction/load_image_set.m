@@ -100,9 +100,16 @@ for i = 1:length(varargin)
     end
 end
 
-if iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size(image_names_or_keyword, 1) > 1)
+if isa(image_names_or_keyword, 'fmri_data')
+    % We already have images loaded - just get the names
+    image_obj = image_names_or_keyword;
+    imagenames = image_obj.image_names;
+    networknames = format_strings_for_legend(imagenames);
+    return
+
+elseif iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size(image_names_or_keyword, 1) > 1)
     % We have custom image input
-    
+
     docustom = 1;
     
 else
@@ -161,6 +168,7 @@ function [image_obj, networknames, imagenames] = load_custom(imagenames)
 
 % Load images, whatever they are
 % ------------------------------------------------------------------------
+if ~iscell(imagenames), imagenames = cellstr(imagenames); end
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -280,15 +288,28 @@ end % function
 
 function imagenames = check_image_names_get_full_path(imagenames)
 
+if ~iscell(imagenames), imagenames = cellstr(imagenames); end
+
 for i = 1:length(imagenames)
     
-    if isempty(which(imagenames{i}))
+    if exist(imagenames{i}, 'file')
+
+        % do nothing. Sometimes which returns empty even though file
+        % exists. Do not use which if returns empty. Otherwise, do.
+        
+        if ~isempty(which(imagenames{i}))
+            imagenames{i} = which(imagenames{i});
+        end
+        
+    else 
         fprintf('CANNOT FIND %s \n', imagenames{i})
         error('Exiting.');
+
     end
     
-    imagenames{i} = which(imagenames{i});
+
 end
-end
+
+end % function
 
 

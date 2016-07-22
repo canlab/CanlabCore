@@ -98,7 +98,7 @@ function [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_i
     switch spm('Ver')
 
 
-        case {'SPM8', 'SPM5'}
+        case {'SPM12', 'SPM8', 'SPM5'}
 
 
             imgdat = iimg_get_data(volInfo, imgs_to_extract_from, 'single', 'verbose', 'noexpand');

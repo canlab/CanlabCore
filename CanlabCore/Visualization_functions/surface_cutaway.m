@@ -104,7 +104,6 @@ poscm = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange 
 negcm = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 % Set color maps for + / - values
 
-
 % optional inputs with default values
 % -----------------------------------
 % - allowable_args is a cell array of argument names
@@ -114,10 +113,11 @@ negcm = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 %   created in the workspace
 
 allowable_args = {'cl', 'ycut_mm', 'pos_colormap', 'neg_colormap', ...
-    'surface_handles', 'existingfig' 'color_upperboundpercentile', 'color_lowerboundpercentile'};
+    'surface_handles', 'existingfig' 'color_upperboundpercentile', 'color_lowerboundpercentile' ...
+    'mm_deep'};
 
 default_values = {[], [], poscm, negcm, ...
-    [], 0, 80, []};
+    [], 0, 80, [], 4};
 
 % define actions for each input
 % -----------------------------------
@@ -126,7 +126,7 @@ default_values = {[], [], poscm, negcm, ...
 % - allowable actions for inputs in the code below are: 'assign_next_input' or 'flag_on'
 
 actions = {'assign_next_input', 'assign_next_input', 'assign_next_input', 'assign_next_input', ...
-    'assign_next_input', 'flag_on', 'assign_next_input', 'assign_next_input'};
+    'assign_next_input', 'flag_on', 'assign_next_input', 'assign_next_input', 'assign_next_input'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -229,7 +229,7 @@ refZ = [color_lowerboundvaluepos prctile(clZ(clZ > 0), color_upperboundpercentil
 % make bigger to avoid cross-hatching bug/problem
 %specialp = false(size(surface_handles));
 %specialp([end end-2]) = true;
-cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
+cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
 
 %cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles(~specialp), refZ, 'colorscale');
 

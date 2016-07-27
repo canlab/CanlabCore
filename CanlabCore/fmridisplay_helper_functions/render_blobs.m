@@ -456,9 +456,9 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 elseif dosplitcolor
                     % split colormap around zero
                     
-                    if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
-                    if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
-                    
+%                     if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
+%                     if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
+
                     % make into 4-element: min neg, max neg, min pos, max pos
                     if length(cmaprange) == 2
                         cmaprange = [min(cmaprange) 0 0 max(cmaprange)]; % just like before = all the way to 0

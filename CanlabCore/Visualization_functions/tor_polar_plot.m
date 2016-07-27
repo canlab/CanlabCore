@@ -33,6 +33,9 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 %   **'nonumbers':**
 %        Suppress numbers (values on polar axis)
 %
+%   **'fixedrange':**
+%        Set min and max of circles numbers (values on polar axis)
+%        Follow by range vector: [min_val max_val]
 % :Output:
 %
 %   **hh:**
@@ -54,6 +57,7 @@ dofigure = 1;
 dofill = 1;
 dononneg = 0;
 donumbers = 1;
+dofixrange = 0;
 
 p = length(vals); % plots
 
@@ -78,6 +82,11 @@ if any(strcmp(varargin, 'nofill'))
     dofill = 0;
 end
 
+if any(strcmp(varargin, 'fixedrange'))
+    dofixrange = 1;
+    fixedrange=varargin{find(strcmp(varargin, 'fixedrange'))+1};
+end
+
 if any(strcmp(varargin, 'nonumbers'))
     donumbers = 0;
 end
@@ -99,6 +108,9 @@ for s = 1:p
         else
             origmin(s) = 0;
         end
+    elseif dofixrange
+        vals{s} = vals{s} - fixedrange(1);
+        origmin(s) = abs(fixedrange(1));
     end
     
     % Polar plots of values
@@ -127,11 +139,16 @@ for s = 1:p
     % ------------------------------------------------------------
     
     % Circles
+    if dofixrange
+        maxval=fixedrange(2)-fixedrange(1);
+    else
     maxval = max(max(vals{s})) + .1 * (max(max(vals{s})));
+    end
+    
     h = circle([0 0], maxval);
     set(h, 'Color', [.3 .3 .3], 'LineWidth', 2);
     
-    if dononneg
+    if dononneg| dofixrange
         minval = origmin(s);
     else
         minval = 0;

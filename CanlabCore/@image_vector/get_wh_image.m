@@ -36,10 +36,12 @@ out = dat;
 % for each field, if the field is of the same size as dat, select the 'wh'
 % column
 fnames = fieldnames(dat);
+datsz = size(dat.dat);
+
 for f=fnames'
     
     field = char(f);
-    if isequal( size(out.(field)) , size(dat.dat) )
+    if isequal( size(out.(field)) , datsz )
         
         out.(field) = out.(field)(:,wh);
         
@@ -49,11 +51,21 @@ end
 % and then grab a few more fields that are not found with the size check
 % above.  these field are all 1D
 
-% otherfields = {'image_names', 'fullpath', 'removed_images'};
-% for f = otherfields
-%     field = char(f);
-%     if ~isempty(out.(field))
-%         out.(field) = out.(field)(wh); % these field are all 1D
-%     end
-% end
+otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images'};
+for f = otherfields
+    field = char(f);
+    
+    sz = size(out.(field));
+    
+    if ~isempty(out.(field)) && sz(1) == datsz(2)
+        
+        out.(field) = out.(field)(wh, :); % these field are all 1D
+        
+    end
+    
+end
+
+end % function
+
+
         

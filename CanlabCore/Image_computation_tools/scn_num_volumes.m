@@ -64,7 +64,7 @@ function [n, V] = scn_num_volumes(V)
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
 
-        case {'SPM5' 'SPM8'}
+        case {'SPM5' 'SPM8' 'SPM12'}
             n = length(V);
 
         otherwise

@@ -115,7 +115,9 @@ classdef fmridisplay
             % ---------------------------------
             
             obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
+%             obj.overlay = which('clean_Q1-Q6_RelatedParcellation210_AverageT1w_restore.nii');  % spm8 seg cleaned up
 
+           
             if any(strcmp(varargin, 'overlay'))
                 wh = find(strcmp(varargin, 'overlay'));
                 wh = wh(1);

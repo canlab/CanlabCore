@@ -135,8 +135,23 @@ switch meth
         p = add_surface(pname);
         set(p,'FaceColor',[.5 .5 .5]);
 
-        view(90,0); axis off; axis image; lightRestoreSingle(gca); material dull;
-
+        view(90,0);
+        axis off; 
+        axis image; 
+        lightRestoreSingle(gca); 
+        material dull;
+    case 'surface left'
+       pname = 'L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
+        p1 = add_surface(pname);
+        set(p1,'FaceColor',[.5 .5 .5]);
+         p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
+        set(p2,'FaceColor',[.5 .5 .5]);
+        view(90,0);
+        axis off;
+        axis image;
+        %         lightRestoreSingle(gca);
+        material dull;
+        p=[p1 p2];
     case 'right'
 
         pname = 'surf_spm2_right.mat'; %'surf_single_subj_grayR.mat';
@@ -152,12 +167,28 @@ switch meth
         p = add_surface(pname);
 
         set(p,'FaceColor',[.5 .5 .5]);
-        view(270,0); axis off; axis image; lightRestoreSingle(gca); material dull;
-
+        view(270,0); 
+        axis off; 
+        axis image; 
+        lightRestoreSingle(gca);
+        material dull;
+    case 'surface right'
+        pname = 'R.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
+        p1 = add_surface(pname);
+        set(p1,'FaceColor',[.5 .5 .5]);
+         p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
+        set(p2,'FaceColor',[.5 .5 .5]);
+        view(90,0);
+        axis off;
+        axis image;
+        %         lightRestoreSingle(gca);
+        material dull;
+        p=[p1 p2];
     case 'transparent_surface'
 
         %spm99 pname = 'surf_single_subj_T1_gray.mat';  %'surf_single_subj_gw_sparse.mat'; %
         pname = 'surf_spm2_brain.mat';  % medium res, caret segmentation
+%         pname = 'LR.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
 
         p = add_surface(pname);
 
@@ -181,10 +212,19 @@ switch meth
     case 'brainstem'
 
         pname = 'surf_spm2_brainstem.mat';
+%         pname = 'suit_surface_brainstem_cerebellum.mat';
 
         p = add_surface(pname);
         set(p,'FaceColor',[.5 .65 .4]);
+    case 'suit brainstem'
 
+        pname = 'suit_surface_brainstem_cerebellum.mat';
+
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5]);
+         axis off;
+        axis image;
+        material dull;
     case 'brainbottom'
         [D,Ds,hdr,p,bestCoords] = tor_3d('whichcuts','z','coords',[0 0 -20],'filename','scalped_single_subj_T1');
         set(p(1),'FaceColor',[.6 .4 .3]); colormap copper;material dull;axis off
@@ -311,7 +351,6 @@ switch meth
 
     case {'cerebellum','cblm'}
         pname = 'surf_spm2_cblm.mat';
-
         p = add_surface(pname);
         set(p,'FaceColor',[.8 .65 .8]);
 
@@ -402,6 +441,28 @@ switch meth
     case 'foursurfaces'
         P = run_foursurfaces;
         
+    case 'flat left'
+        
+        pname = which('L.flat.32k.mat'); % from Glasser_et_al_2016_HCP
+        
+        p = add_surface(pname);
+        
+        view(0,90); 
+        axis off; 
+        axis image; 
+%         material dull;
+        
+    case 'flat right'
+        
+        pname = which('R.flat.32k.mat'); % from Glasser_et_al_2016_HCP
+        
+        p = add_surface(pname);
+        
+        view(0,90); 
+        axis off; 
+        axis image; 
+%         material dull;
+  
     otherwise
         error('Unknown method.');
 end
@@ -419,7 +480,11 @@ switch meth
 end
 
 if docolor && exist('color','var')
+    if isa(color,'double')
     set(p,'FaceColor',color);
+    elseif isa(color,'patch')
+        
+    end
 end
 
 
@@ -451,10 +516,23 @@ if isempty(Ps), disp(['I need the file: ' pname]); return; end
 %Ps = which('surf_single_subj_grayR.mat');
 %Ps = which('surf_brain_render_T1_preCarmack.mat');
 load(Ps)
-p = patch('Faces',faces,'Vertices',vertices,'FaceColor',[.5 .5 .5], ...
-    'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',1,'SpecularExponent',200);
 
-set(p,'FaceAlpha',.3)
+if exist('cdata','var')
+%     p = patch('Faces',faces,'Vertices',vertices,'FaceVertexCData',cdata, ...
+%         'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',1,'SpecularExponent',200,'FaceColor','interp');
+%     colormap(gray);
+ p = patch('Faces',faces,'Vertices',vertices,'FaceColor',[.5 .5 .5], ...
+        'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',1,'SpecularExponent',200);
+    set(p,'FaceAlpha',.3)
+    
+else
+    p = patch('Faces',faces,'Vertices',vertices,'FaceColor',[.5 .5 .5], ...
+        'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',1,'SpecularExponent',200);
+    set(p,'FaceAlpha',.3)
+    
+end
+
+
 end
 
 

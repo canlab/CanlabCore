@@ -46,12 +46,20 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %   **'montagetype':**
 %        'full' for full montages of axial and sagg slices.
 %
+%        'full hcp' for full montage, but with surfaces and volumes from
+%        HCP data
+%
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
 %        'compact2': like 'compact', but fewer axial slices.
 %
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
+%
+%   **'overlay':**
+%        specify anatomical image for montage (not surfaces), followed by
+%        image name
+%
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
@@ -66,7 +74,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 %    input_activation = 'Pick_Atlas_PAL_large.nii';
 %
-%    % set up the anatomical underlay and display blobs
+%    % set up the anatomical overlay and display blobs
 %    % (see the code of this function and help fmridisplay for more examples)
 %
 %    o2 = canlab_results_fmridisplay(input_activation);
@@ -150,6 +158,10 @@ outlinecolor = [0 0 0];
 splitcolor = {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]};
 montagetype = 'compact';
 doverbose = true;
+overlay='SPM8_colin27T1_seg.img';
+
+wh = strcmp(varargin, 'overlay');
+if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin(wh) = []; end
 
 wh = strcmp(varargin, 'noblobs');
 if any(wh), doblobs = false; varargin(wh) = []; end
@@ -170,6 +182,9 @@ wh = strcmp(varargin, 'noremove');
 if any(wh), doremove = false; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'compact');
@@ -223,7 +238,7 @@ if ~exist('o2', 'var')
         
     end
     
-    o2 = fmridisplay;
+    o2 = fmridisplay('overlay',which(overlay));
     
     % You can customize these and run them from the command line
     
@@ -312,6 +327,38 @@ if ~exist('o2', 'var')
             
             wh_montages = [1 2 3];
             
+        case 'full hcp'
+            % saggital
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+
+            % surface
+            o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'lateral');
+            
+            wh_montages = [1 2 3 4];
+            wh_surfaces = [1:8];
+
         otherwise error('illegal montage type. choose full or compact.');
     end
     

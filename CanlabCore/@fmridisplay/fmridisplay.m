@@ -129,6 +129,7 @@ classdef fmridisplay
             
             if ~isempty(obj.overlay)
                 V = spm_vol(obj.overlay);
+                V = V(1);
             end
             
             obj.SPACE = define_sampling_space(V);

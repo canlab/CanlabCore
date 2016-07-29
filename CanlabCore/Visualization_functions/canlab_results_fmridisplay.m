@@ -53,12 +53,16 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 %        'compact2': like 'compact', but fewer axial slices.
 %
+%        'multirow': followed by number of rows
+%           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
 %
 %   **'overlay':**
 %        specify anatomical image for montage (not surfaces), followed by
 %        image name
+%        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
 %
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
@@ -184,6 +188,13 @@ if any(wh), doremove = false; varargin(wh) = []; end
 wh = strcmp(varargin, 'full');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'multirow');
+if any(wh), montagetype = varargin{find(wh)};
+    nrows = varargin{find(wh) + 1};
+    varargin{find(wh) + 1} = [];
+        varargin(wh) = [];
+end
+
 wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
@@ -238,11 +249,30 @@ if ~exist('o2', 'var')
         
     end
     
-    o2 = fmridisplay('overlay',which(overlay));
+    o2 = fmridisplay('overlay', which(overlay));
     
     % You can customize these and run them from the command line
     
     switch montagetype
+        case 'multirow'
+            
+            shiftvals = [0:.17:nrows]; % more than we need, but works
+            
+            for i = 1:nrows
+                
+                % saggital
+                axh = axes('Position', [-0.02 0.15+shiftvals(i) .17 .17]);
+                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
+                drawnow
+                
+                % axial
+                axh = axes('Position', [.015 0.15+shiftvals(i) .17 .17]);
+                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+                drawnow
+                
+            end
+            
+            
         case 'full'
             % saggital
             o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');

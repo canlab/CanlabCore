@@ -18,7 +18,7 @@ function riverplot(layer1fmri_obj, varargin)
 % ..
 %     Author and copyright information:
 %
-%     Copyright (C) <year>  <name of author>
+%     Copyright (C) 2016 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -275,6 +275,9 @@ layer1names = format_strings_for_legend(layer1fmri_obj.image_names);
 layer2names = format_strings_for_legend(layer2fmri_obj.image_names);
 
 [n2, n1] = size(sim_matrix);
+
+if length(layer1names) < n1, error('Layer 1: Not enough names entered. Add names in input layer1 fmri_object.image_names'); end
+if length(layer2names) < n2, error('Layer 2: Not enough names entered. Add names in input layer1 fmri_object.image_names'); end
 
 % -------------------------------------------------------------------------
 % Reorder rows and columns if asked for

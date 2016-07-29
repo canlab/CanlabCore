@@ -95,6 +95,10 @@ axes(ax)
 
 n_rects = length(layerstruct);
 
+if n_rects > length(layernames)
+    error('Not enough names entered to riverplot_layer_names.m');
+end
+
 for i = 1:n_rects
     
     % Get y position: midpoint of layer

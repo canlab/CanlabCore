@@ -1,5 +1,5 @@
 function obj = addblobs(obj, cl, varargin)
-% This is a method for fmridisplay objects that adds blobs to one or more montages and other surface plot(s). 
+% This is a method for fmridisplay objects that adds blobs to one or more montages and other surface plot(s).
 %
 % :Usage:
 % ::
@@ -16,7 +16,7 @@ function obj = addblobs(obj, cl, varargin)
 %
 %   **cl:**
 %        a region object. If you're using an fmri_data object pass in region(fmri_data_obj)
-% 
+%
 % :Optional inputs:
 %
 % There are many optional inputs that control display features of blobs.
@@ -39,8 +39,9 @@ function obj = addblobs(obj, cl, varargin)
 %   **'splitcolor':**
 %        Positive and negative values are mapped to different
 %        colormaps. Default is +=hot, -=cool colors. Followed
-%        optionally by cell array with 
+%        optionally by cell array with
 %        vectors of 4 colors defining max/min for +/- range,
+%        {minnegcolor maxnegcolor minposcolor maxposcolor}
 %        e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
 %   **'OUTLINING:**
@@ -104,11 +105,11 @@ function obj = addblobs(obj, cl, varargin)
 %    obj = addblobs(obj, cl, ... 'wh_montages', 1);
 %    obj = addblobs(obj, cl, 'splitcolor', ... 'cmaprange', ... 'trans');
 %
-% Add only to montage 2 in vector of montages in obj.montage 
+% Add only to montage 2 in vector of montages in obj.montage
 % ::
 %
-%    obj = addblobs(obj, cl, 'which_montages', 2); 
-% 
+%    obj = addblobs(obj, cl, 'which_montages', 2);
+%
 % Map values to the colormap red->yellow.
 %
 % This uses the default percentile-based mapping so that 20% of voxels
@@ -178,54 +179,82 @@ if any(whs)
 end
 
 % default values
-dosplitcolor = 0;
+dosplitcolor = 1;
 doonecolor = 0;
 domaxcolor = 0;
 domincolor = 0;
-pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
-neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
+
+maxposcolor = [1 1 0]; % max pos, most extreme values
+minposcolor = [1 0 .5]; % min pos
+maxnegcolor = [0 1 1]; % max neg
+minnegcolor = [0 0 1]; % min neg, most extreme values
+
+add_splitcolor_to_varargin = 0; % internal control, not input option
+% pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
+% neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'color'
-            case 'onecolor'
+            case {'onecolor', 'solid'};
+                dosplitcolor = 0;
                 doonecolor = 1;
                 onecolor = varargin{i + 1};
                 maxposcolor = onecolor;
                 minposcolor = onecolor;
                 maxnegcolor = onecolor;
                 minnegcolor = onecolor;
-
+                
             case 'maxcolor'
                 domaxcolor = 1;
                 maxcolors = varargin{i + 1};
                 maxposcolor = maxcolors;
                 minposcolor = maxcolors;
-
+                
             case 'mincolor'
                 domincolor = 1;
                 mincolors = varargin{i + 1};
                 maxnegcolor = mincolors;
                 minnegcolor = mincolors;
-
+                
             case 'splitcolor'
                 dosplitcolor = 1;
-                splitcolors = varargin{i + 1};
-                if ~iscell(splitcolors) || length(splitcolors) ~= 4
-                    error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
+                
+                if length(varargin) > i && iscell(varargin{i + 1})
+                    % we have entered colors
+                    
+                    splitcolors = varargin{i + 1};
+                    if ~iscell(splitcolors) || length(splitcolors) ~= 4
+                        error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
+                    end
+                    maxposcolor = splitcolors{4}; % max pos
+                    minposcolor = splitcolors{3}; % min pos
+                    maxnegcolor = splitcolors{2}; % max neg
+                    minnegcolor = splitcolors{1}; % min neg
+                    
+                else
+                    % use defaults - but add the default colors to varargin
+                    % because these are passed on to render_blobs
+                    add_splitcolor_to_varargin = 1;
+                    
                 end
-                maxposcolor = splitcolors{4}; % max pos
-                minposcolor = splitcolors{3}; % min pos
-                maxnegcolor = splitcolors{2}; % max neg
-                minnegcolor = splitcolors{1}; % min neg
-
+                
             case 'no_surface'
                 addsurfaceblobs = 0;
-
+                
             otherwise %suppress warning because other options passed on.  warning(['Unknown input string option:' varargin{i}]);
         end
     end
+end
+
+if add_splitcolor_to_varargin
+    mysplitcolors = {minnegcolor maxnegcolor minposcolor maxposcolor};
+    
+    wh = strcmp(varargin, 'splitcolor');
+    varargin(wh) = [];  % remove, add to end
+    varargin{end + 1} = 'splitcolor';
+    varargin{end + 1} = mysplitcolors;
 end
 
 % Resampling whole map seems to be too slow: do this in render slice...
@@ -259,8 +288,10 @@ for i = wh_montage
     if length(obj.montage) < i
         error('Requested montage does not exist! Check input montage indices.');
     end
-
+    
     % render, and return color ranges (splitcolor will change these)
+    % Note: mincolor, maxcolor used in setting fields in fmridisplay for legend 
+    
     [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, obj.montage{i}, obj.SPACE, varargin{:});
     
     % Register blob handles and colormap-defining range in object
@@ -301,14 +332,14 @@ if addsurfaceblobs
             warning('Requested surface does not exist! Check input surface indices.');
             continue
         end
-
+        
         % Set color maps for + / - values
         if dosplitcolor || doonecolor || domaxcolor || domincolor
-            pos_colormap = colormap_tor(maxposcolor, minposcolor);
+            pos_colormap = colormap_tor(minposcolor, maxposcolor);
             neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
         end
         cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
-
+        
     end
 end
 

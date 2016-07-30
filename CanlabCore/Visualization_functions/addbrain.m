@@ -28,6 +28,14 @@ function p = addbrain(varargin)
 %   **'hires right':**
 %        same, right hem
 %
+%   **'surface left':**
+%        hi-resolution left medial with cerebellum
+%        slightly expanded, from Glasser et al. 2016 Nature 
+%        based on the Human Connectome Project
+%
+%   **'surface right':**
+%        same, right hem
+%
 %   **'left':**
 %        2 mm resolution left hem, no cerebellum
 %
@@ -52,6 +60,7 @@ function p = addbrain(varargin)
 %
 % :SUBCORTICAL SURFACES:
 %   - 'brainstem'
+%   - 'suit brainstem'
 %   - 'amygdala'
 %   - 'thalamus'
 %   - 'hippocampus'
@@ -140,6 +149,7 @@ switch meth
         axis image; 
         lightRestoreSingle(gca); 
         material dull;
+        
     case 'surface left'
        pname = 'L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
         p1 = add_surface(pname);
@@ -152,6 +162,7 @@ switch meth
         %         lightRestoreSingle(gca);
         material dull;
         p=[p1 p2];
+        
     case 'right'
 
         pname = 'surf_spm2_right.mat'; %'surf_single_subj_grayR.mat';
@@ -172,6 +183,7 @@ switch meth
         axis image; 
         lightRestoreSingle(gca);
         material dull;
+        
     case 'surface right'
         pname = 'R.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
         p1 = add_surface(pname);
@@ -184,6 +196,7 @@ switch meth
         %         lightRestoreSingle(gca);
         material dull;
         p=[p1 p2];
+        
     case 'transparent_surface'
 
         %spm99 pname = 'surf_single_subj_T1_gray.mat';  %'surf_single_subj_gw_sparse.mat'; %
@@ -216,6 +229,7 @@ switch meth
 
         p = add_surface(pname);
         set(p,'FaceColor',[.5 .65 .4]);
+        
     case 'suit brainstem'
 
         pname = 'suit_surface_brainstem_cerebellum.mat';
@@ -225,6 +239,7 @@ switch meth
          axis off;
         axis image;
         material dull;
+        
     case 'brainbottom'
         [D,Ds,hdr,p,bestCoords] = tor_3d('whichcuts','z','coords',[0 0 -20],'filename','scalped_single_subj_T1');
         set(p(1),'FaceColor',[.6 .4 .3]); colormap copper;material dull;axis off

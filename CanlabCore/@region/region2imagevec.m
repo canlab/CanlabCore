@@ -1,6 +1,7 @@
-function [ivecobj, orig_cluster_indx]  = region2imagevec(cl)
+function ivecobj  = region2imagevec(cl, varargin)
 % Convert a region object to an image_vector object, replacing the voxels
-% and reconstructing as much info as possible.
+% and reconstructing as much info as possible. Optional: Resample to the
+% space of another image_vector object.
 %
 % The .dat field of the new "ivecobj" is made from the cl.all_data field.
 % if this is empty, uses cl.val field, then cl.Z as a backup.
@@ -9,57 +10,54 @@ function [ivecobj, orig_cluster_indx]  = region2imagevec(cl)
 % :Usage:
 % ::
 %
-%    ivecobj = region2imagevec(cl)
+%    ivecobj = region2imagevec(cl, [image_vector object to resample space to])
 %
-% ..
-%    NEEDS SOME ADDITIONAL WORK/CHECKING
-% ..
 
 ivecobj = image_vector;
 ivecobj.volInfo.mat = cl(1).M;
 ivecobj.volInfo.dim = cl(1).dim;
 
-% no, will be reordered
-%ivecobj.volInfo.xyzlist = cat(2, cl.XYZ)';
+% Data in image_vector objects is stored in standard matlab vectorization order
+% So cannot assume that values in all_data and XYZ match in order. Must rebuild.
 
-mask = clusters2mask2011(cl, cl(1).dim);
+% Convert to 3-d mask
+% -------------------------------------------------------
+[~, mask] = clusters2mask2011(cl, cl(1).dim); % 2nd output: Z-field values stored in mask elements
 
-n = sum(mask(:) ~= 0);
+% Vectorize
+% -------------------------------------------------------
 
-% add data.  all_data if we have it, or .val or .Z
-ivecobj.dat = cat(2, cl.all_data)';
-if isempty(ivecobj.dat) || all(ivecobj.dat == 0), ivecobj.dat = cat(1, cl.val); end
-if isempty(ivecobj.dat) || all(ivecobj.dat == 0), ivecobj.dat = cat(2, cl.Z)'; end
+maskvec = mask(:);
 
-% Wani added the following 5 lines to get a correct data alignment
-% Tor: This is problematic in some cases.  Need to work on it.
-xyz = cat(2,cl.XYZ)';
-if ~isempty(xyz)
-    [dummy, idx1] = sort(xyz(:,1));
-    [dummy, idx2] = sort(xyz(idx1,2));
-    [dummy, idx3] = sort(xyz(idx1(idx2),3));
-    ivecobj.dat = ivecobj.dat(idx1(idx2(idx3)),:);
-end
+valid_vox = maskvec ~= 0 & ~isnan(maskvec);
+wh_valid_vox = find(valid_vox);
+n = sum(valid_vox);
+  
+ivecobj.dat = maskvec(valid_vox);
+ivecobj.removed_voxels = ~valid_vox;
 
-% tor changed april 28 2011 to be all voxels
-ivecobj.removed_voxels = mask(:) == 0 | isnan(mask(:)); %false(n, 1);
+% Add all_data instead of Z if we have it, or .val or .Z
+% -------------------------------------------------------
+% *this bit still needs to be tested for bugs*
+% alldat = cat(2, cl.all_data)';
+% if ~isempty(alldat)
+%     XYZ = cat(2, cl.XYZ);
+%     ind = sub2ind(cl(1).dim', XYZ(1, :), XYZ(2, :), XYZ(3, :));
+% 
+%     ivecobj.dat(valid_vox, :) = alldat';
+% end
 
-ivecobj.volInfo.image_indx = mask(:) ~= 0;
+ivecobj.volInfo.image_indx = valid_vox;
 ivecobj.volInfo.n_inmask = n;
 
-ivecobj.volInfo.wh_inmask = find(ivecobj.volInfo.image_indx);
+ivecobj.volInfo.wh_inmask = wh_valid_vox;
 
-% re-get continguity; don't just assume
-orig_cluster_indx = mask(:);
-orig_cluster_indx = orig_cluster_indx(ivecobj.volInfo.wh_inmask);
+ivecobj.volInfo.nvox = prod(ivecobj.volInfo.dim);
 
-%ivecobj.volInfo.cluster = mask(:);
-%ivecobj.volInfo.cluster = ivecobj.volInfo.cluster(ivecobj.volInfo.wh_inmask);
-
-ivecobj.volInfo.nvox = prod(cl(1).dim);
-
-[i, j, k] = ind2sub(cl(1).dim, ivecobj.volInfo.wh_inmask);
+[i, j, k] = ind2sub(ivecobj.volInfo.dim, wh_valid_vox);
 ivecobj.volInfo.xyzlist = [i j k];
+
+% % re-build contiguity cluster indices
 
 if ivecobj.volInfo.n_inmask < 50000
     ivecobj.volInfo.cluster = spm_clusters(ivecobj.volInfo.xyzlist')';
@@ -67,15 +65,29 @@ else
     ivecobj.volInfo.cluster = ones(ivecobj.volInfo.n_inmask, 1);
 end
 
-ivecobj.volInfo.dt = [16 0]; % for reslicing compatibility
-ivecobj.volInfo.fname = 'Reconstructed from clusters';
-% 
-% ivecobj.dat = cat(2, cl.all_data)';
-% ivecobj.removed_voxels = mask(:) == 0;
-% ivecobj.volInfo.image_indx = true(size(ivecobj.removed_voxels));
-% ivecobj.volInfo.n_inmask = length(ivecobj.removed_voxels);
-% ivecobj.volInfo.wh_inmask = [1:ivecobj.volInfo.n_inmask ]';
-% ivecobj.volInfo.cluster = mask(:);
-% ivecobj.volInfo.nvox = prod(size(cl(1).dim));
+% for reslicing compatibility
+
+ivecobj.volInfo.dt = [16 0]; 
+
+% meta-data 
+if ~iscell(cl(1).source_images)
+    ivecobj.volInfo.fname = ['Reconstructed from region object, source: ' cl(1).source_images(1, :)];
+else
+    ivecobj.volInfo.fname = 'Reconstructed from region object';
+end
+
+% resample, if asked for
+% -------------------------------------------------------
+if length(varargin) > 0
+    
+    sampleto = varargin{1};
+    
+    if ~isa(sampleto, 'image_vector')
+        error('2nd argument must be an image_vector object (including fmri_data / statistic_image) to sample to.');
+    end
+    
+    ivecobj = resample_space(ivecobj, sampleto);
+    
+end
 
 end

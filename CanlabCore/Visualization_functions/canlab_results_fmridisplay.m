@@ -64,7 +64,10 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        image name
 %        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
 %
-%
+%         The default brain for overlays is based on Keuken et al. 2014
+%         For legacy SPM8 single subject, enter as arguments:
+%         'overlay', which('SPM8_colin27T1_seg.img')
+% 
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
 % See help fmridisplay
@@ -72,6 +75,8 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 % You can also input an existing fmridisplay object, and it will use the
 % one you have created rather than setting up the canonical slices.
+%
+% Try "brighten(.4) to make the images brighter.
 %
 % :Example Script:
 % ::
@@ -162,7 +167,8 @@ outlinecolor = [0 0 0];
 splitcolor = {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]};
 montagetype = 'compact';
 doverbose = true;
-overlay='SPM8_colin27T1_seg.img';
+%overlay='SPM8_colin27T1_seg.img';
+overlay = 'keuken_2014_enhanced_for_underlay.img';
 
 wh = strcmp(varargin, 'overlay');
 if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin(wh) = []; end
@@ -254,6 +260,48 @@ if ~exist('o2', 'var')
     % You can customize these and run them from the command line
     
     switch montagetype
+        
+        case 'compact'
+            % The default
+            
+            % saggital
+            axh1 = axes('Position', [-0.02 0.4 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
+            text(50, -50, 'left')
+            drawnow
+            
+            axh2 = axes('Position', [-0.02 0.6 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
+            text(50, -50, 'right')
+            drawnow
+            
+            % sagg center
+            axh3 = axes('Position', [.08 0.5 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
+            drawnow
+            o2.montage{3}.slice_mm_coords
+         
+            % axial bottom
+            axh4 = axes('Position', [.10 0.4 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
+            
+            % axial top
+            axh5 = axes('Position', [.12 0.54 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
+            
+            wh_montages = [1 2 4 5];
+            
+            % Lines
+            axes(o2.montage{3}.axis_handles)
+            locs = [o2.montage{4}.slice_mm_coords; o2.montage{5}.slice_mm_coords];
+            for i = 1:length(locs)
+                %draw_vertical_line(locs(i));
+                hh(i) = plot( [-105 65], [locs(i) locs(i)], 'b', 'LineWidth', 1);
+            end
+            
+            brighten(.5)
+            
+            
         case 'multirow'
             
             shiftvals = [0:.17:nrows]; % more than we need, but works
@@ -305,12 +353,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
             wh_surfaces = [1 2 3 4];
 
-        case 'compact'
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
-            axh = axes('Position', [0.05 0.4 .1 .5]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-            wh_montages = [1 2];
-            
+
         case 'compact2'
             %subplot(2, 1, 1);
             o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
@@ -332,6 +375,8 @@ if ~exist('o2', 'var')
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
             %images, makes it too big an overlapping
             wh_montages = [1 2];
+            
+            brighten(.4)
             
         case 'coronal'
             % coronal

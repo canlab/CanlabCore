@@ -144,6 +144,10 @@ function obj = addblobs(obj, cl, varargin)
 %    Add the volume to activation maps in fmridisplay object
 % ..
 
+if ~isa(cl, 'region')
+    error('cl input must be a region object. Try region() constructor method.');
+end
+
 [dummy, mask] = clusters2mask2011(cl); % turn clusters into mask and volume info
 
 if sum(mask(:)) == 0, warning('No voxels in cl! Empty/zero cl.Z field? Bad cl? No results?'); return, end

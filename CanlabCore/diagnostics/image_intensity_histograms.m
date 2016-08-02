@@ -14,7 +14,7 @@ function [noreturn] = image_intensity_histograms(fout, imgs, varargin)
 %        imfilename to be saved ('.png' will be appended)
 %
 %   **imgs:**
-%        ima cell array of filenames of images to make histograms of
+%        cell array of filenames of images to make histograms of
 %
 % :Optional Inputs:
 %
@@ -123,9 +123,11 @@ end
 if ~exist('fout','var')
     error('no outputfile given')
 end
+
 if ~exist('imgs','var')
     error('no images given')
 end
+
 if numel(imgs)~=numel(TITLES)
     error('number of titles does not match number of images')
 end

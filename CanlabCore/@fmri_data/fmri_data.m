@@ -9,15 +9,46 @@
 % -----------------------------------------------------------------------
 % You can create an empty object by using:
 % fmri_dat = fmri_data
-% (fmri_dat is the object)
+% - fmri_dat is the object.
+% - It will be created with a standard brain mask, brainmask.nii
+% - This image should be placed on your Matlab path
+% - The space information is stored in fmri_dat.volInfo
+% - Data is stored in fmri_dat.dat, in a [voxels x images] matrix
+% - You can replace or append data to the fmri_dat.dat field.
 %
-% You can create an object and extract data from a mask (defining many of
-% the fields in the object) like this:
-% 
-% dat = fmri_data(imgs, maskimagename);
-% 
-% e.g.,
+% You can create an fmri_data object with extacted image data.
+% - Let "imgs" be a string array or cell array of image names
+% - This command creates an object with your (4-D) image data:
+% - fmri_dat = fmri_data(imgs);
+% - Only values in the standard brain mask, brainmask.nii, will be included.
+% - This saves memory by reducing the number of voxels saved dramatically.
+%
+% You can specify any mask you'd like to extract data from.
+% - Let "maskimagename" be a string array with a mask image name.
+% - this command creates the object with data saved in the mask:
+% - fmri_dat = fmri_data(imgs, maskimagename);
+% - The mask information is saved in fmri_dat.mask
+%
+% e.g., this extracts data from images within the standard brain mask:
 % dat = fmri_data(imgs, which('brainmask.nii'));
+%
+% Properties and methods
+% -----------------------------------------------------------------------
+% Properties are data fields associated with an object.
+% Try typing the name of an object (class instance) you create to see its
+% properties, and a link to its methods (things you can run specifically
+% with this object type). For example: After creating an fmri_data object 
+% called fmri_dat, as above, type fmri_dat to see its properties.
+%
+% There are many other methods that you can apply to fmri_data objects to
+% do different things.
+% - Try typing methods(fmri_data) for a list.
+% - You always pass in an fmri_data object as the first argument.
+% - Methods include utilities for many functions - e.g.,:
+% - resample_space(fmri_dat) resamples the voxels
+% - write(fmri_dat) writes an image file to disk (careful not to overwrite by accident!)
+% - regress runs multiple regression
+% - predict runs cross-validated machine learning/prediction algorithms
 %
 % Defining the space of the extracted data
 % -----------------------------------------------------------------------
@@ -29,20 +60,24 @@
 % YOU CAN ALSO map the image data to the space of the mask, by entering
 % 'sample2mask' as in input argument.
 %
-% Creating class instances
+% Attaching additional data
 % -----------------------------------------------------------------------
-% The fmri_data object will store image data (.X) also outcome data (.Y)
-% Try typing the name of an object (class instance) you create to see its
-% properties, and a link to its methods (things you can run specifically
-% with this object type).
+% The fmri_data object has a number of fields for appending specific types of data.
+%
+% - You can replace or append data to the fmri_dat.dat field.
+% - The fmri_data object will also store predictor data (.X) also outcome data (.Y)
+% - There are many fields for descriptions, notes, etc., like "dat_descrip" and "source_notes"
+% - Attach custom descriptions in these fields to document your object.
+% - The "history" field stores a cell array of strings with the processing
+% history of the object. Some methods add to this history automatically.
 %
 % Extracting ROI data easily
 % -----------------------------------------------------------------------
 % You can extract image data, and save averages within regions of
 % interest, by doing something like this:
-% [fmri_dat, cl] = read_image_files(image_names(3, :));
+% ****[fmri_dat, cl] = read_image_files(image_names(3, :));
 %
-% cl is the ROI data in a region object 
+% cl is the ROI data in a region object.
 % region is a class.  It's data structure is like the older "clusters"
 % structure format, with average data values stored in cl.dat
 % regions can be defined by EITHER contiguous voxels or based on unique integer
@@ -80,12 +115,12 @@ classdef fmri_data < image_vector
         % also inherits the properties of image_vector.
         
         source_notes = 'Source notes...';
-
+        
         X % legacy; temporary, so we can load old objects
         
         mask = fmri_mask_image;
         mask_descrip = 'mask is an fmri_mask_image object that defines the mask.';
-
+        
         images_per_session
         
         Y = [];
@@ -117,11 +152,11 @@ classdef fmri_data < image_vector
             % arguments
             % ---------------------------------
             
-
+            
             obj.source_notes = 'Info about image source here';
             obj.mask = fmri_mask_image;
             obj.mask_descrip = 'Volume and in-area mask info from iimg_read_img';
-
+            
             obj.X = []; % legacy; temporary, so we can load old objects
             obj.Y = [];
             obj.Y_names;
@@ -136,9 +171,8 @@ classdef fmri_data < image_vector
             obj.history_descrip = 'Cell array of names of methods applied to this data, in order';
             obj.additional_info = struct('');
             
-            if nargin == 0
-                return
-            end
+            % DEFAULT INPUTS
+            % -----------------------------------
             
             verbose = 1;
             verbosestr = 'verbose';
@@ -160,6 +194,24 @@ classdef fmri_data < image_vector
                 end
             end
             
+            if nargin == 0
+                % SPECIAL DEFAULT METHOD: Standard empty mask
+                % -----------------------------------
+                
+                % Empty: Define with standard default mask
+                [image_names, maskinput] = deal(which('brainmask.nii'));
+                
+                if isempty(maskinput)
+                    disp('Warning: Cannot find brainmask.nii, creating without mask info.');
+                    return
+                end
+                
+                verbose = 0; 
+                verbosestr = 'noverbose';
+                
+            end
+            
+            
             % ---------------------------------
             % Special: if existing image_vector
             % map into space of fmri_data and return
@@ -180,6 +232,7 @@ classdef fmri_data < image_vector
                 
                 obj.mask.volInfo = obj2.volInfo;
                 return
+                
             end
             
             % ---------------------------------
@@ -210,7 +263,7 @@ classdef fmri_data < image_vector
             
             if sample2mask
                 % Read data in mask space; map images to mask
-                % ------------------------------------------------ 
+                % ------------------------------------------------
                 if verbose, fprintf('Expanding image filenames if necessary\n'); end
                 
                 for i = 1:size(image_names, 1)
@@ -253,7 +306,7 @@ classdef fmri_data < image_vector
                 maskobj = resample_to_image_space(maskobj, space_defining_image);
                 
                 
-                % Now extract the actual data from the mask   
+                % Now extract the actual data from the mask
                 switch spm('Ver')
                     
                     case {'SPM12','SPM8', 'SPM5'}
@@ -283,7 +336,7 @@ classdef fmri_data < image_vector
             mask_image_name = [ff ee];
             %obj = create(obj, 'dat_descrip', sprintf('Data from %s: %s', mask_image_name, obj.dat_descrip));
             obj = create(obj, 'mask_descrip', mask_image_name, verbosestr);
-
+            
             obj.volInfo = maskobj.volInfo;
             
             obj.history(end+1) = {sprintf('Sampled to space of %s', maskobj.space_defining_image_name)};

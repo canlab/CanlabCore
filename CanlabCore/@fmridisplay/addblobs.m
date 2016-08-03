@@ -56,7 +56,7 @@ function obj = addblobs(obj, cl, varargin)
 %
 %   **'COLOR RANGE:**
 %
-%   **''cmaprange':**
+%   **'cmaprange':**
 %        followed by range of values, e.g., [0 40], [-3 3]. Used in
 %        color and transparency setting under some circumstances.
 %

@@ -228,6 +228,11 @@ end
 
 obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'slice_mm_coords', slice_mm_coords);
 
+% set color map to enhance contrast
+datvec = dat(:);
+datvec(datvec == 0) = [];
+cmap = contrast(datvec);
+colormap(cmap);
 
 % ------------------------------------------------------
 % INLINE FUNCTIONS

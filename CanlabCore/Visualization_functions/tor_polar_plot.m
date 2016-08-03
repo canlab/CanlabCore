@@ -101,7 +101,7 @@ for s = 1:p
     
     % make non-negative
     % this changes the interpretation of the origin of the plot
-    if dononneg
+    if dononneg & ~dofixrange
         if any(vals{s}(:) < 0)
             origmin(s) = abs(min(vals{s}(:)));  % this is the new zero point
             vals{s} = vals{s} - min(vals{s}(:));

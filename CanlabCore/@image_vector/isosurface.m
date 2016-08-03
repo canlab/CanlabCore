@@ -89,6 +89,7 @@ why = y < ylimvox(1) | y > ylimvox(2);
 whz = z < zlimvox(1) | z > zlimvox(2);
 
 obj.dat(whx | why | whz, :) = 0;
+
 %vsub = subvolume(
 
 % ------------------------------------------------------

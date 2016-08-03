@@ -68,6 +68,10 @@ function riverplot(layer1fmri_obj, varargin)
 %   **reorder:**
 %        Automatic reordering of rows of plot to try to improve visibility.
 %
+%   **recolor:**
+%        Automatic color assignment of layer2 colors based on layer1
+%        weights
+%
 %   **layer1order:**
 %        Followed by custom order for Layer 1, specified by vector of
 %        integers, e.g., [1 3 2 4 5 6]
@@ -99,6 +103,10 @@ function riverplot(layer1fmri_obj, varargin)
 %   **ribbons:**
 %        Vector of structures describing ribbons, with
 %        handles, positions, etc.
+%
+%   **layer2colors:**
+%        cell array specifying layer2 colors if recolor option is used
+%        
 %
 % :Examples:
 % ::
@@ -166,6 +174,7 @@ layer1colors = custom_colors([.2 .8 .2], [.8 .8 .2], nlayer1);
 layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
 
 doreorder = 0;
+recolor = 0;
 
 layer1coveragestr = 'layer1fullcoverage';
 
@@ -189,7 +198,8 @@ for i = 1:length(varargin)
             case {'colors2', 'layer2colors'}, layer2colors = varargin{i+1}; varargin{i+1} = [];
                 
             case 'reorder', doreorder = 1;
-                
+              case 'recolor', recolor = 1;
+                  
             case {'r', 'corr', 'correlation'}
                 sim_metric = 'r';
                 
@@ -304,6 +314,10 @@ if ~isempty(layer2order)
     layer2names = layer2names(layer2order);
     layer2colors = layer2colors(layer2order);
     
+end
+
+if recolor
+    layer2colors=riverplot_recolor_layer2(sim_matrix,layer1colors);
 end
 
 % -------------------------------------------------------------------------

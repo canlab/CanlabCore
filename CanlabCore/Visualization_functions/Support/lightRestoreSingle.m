@@ -7,6 +7,7 @@ if nargin == 0, axishandle = gca; end
 
 lh = lighthandles(axishandle);
 delete(lh)
+
 [az,el]=view; h = lightangle(az,el);
 
 return

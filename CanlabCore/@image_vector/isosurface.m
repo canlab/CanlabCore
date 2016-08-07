@@ -1,5 +1,5 @@
 function [p, mesh_struct] = isosurface(obj, varargin)
-%
+% Render a whole-brain or cutaway surface from volume data stored in an fmri_data object
 %
 % Examples:
 % % ------------------------------------------------------
@@ -16,6 +16,13 @@ function [p, mesh_struct] = isosurface(obj, varargin)
 % Make a brain-bottom cutaway:
 % p = isosurface(anat, 'thresh', 140, 'nosmooth', 'zlim', [-Inf 20]);
 %
+% Make a composite cutaway with multiple surfaces:
+% figure;
+% p = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'zlim', [-Inf 20]);
+% view(132, 6); drawnow; set(p, 'FaceAlpha', 1); colormap gray; brighten(.2); drawnow
+% p2 = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -50]);
+% set(p2, 'FaceAlpha', 1); lightRestoreSingle; brighten(.3); drawnow
+
 % See also: tor_3d, cluster_cutaway, cluster_image_shape
 
 % ------------------------------------------------------
@@ -62,63 +69,49 @@ for i = 1:length(varargin)
 end
 
 % ------------------------------------------------------
-% Get cutaways
-% ------------------------------------------------------
-
-x = obj.volInfo.xyzlist(:, 1);
-y = obj.volInfo.xyzlist(:, 2);
-z = obj.volInfo.xyzlist(:, 3);
-
-% Convert limits to voxels
-zeros = [0 0];
-xlimvox = mm2voxel([xlim; zeros; zeros], obj.volInfo.mat);
-xlimvox = xlimvox(:, 1)';
-
-ylimvox = mm2voxel([zeros; ylim; zeros], obj.volInfo.mat);
-ylimvox = ylimvox(:, 2)';
-
-zlimvox = mm2voxel([zeros; zeros; zlim], obj.volInfo.mat);
-zlimvox = zlimvox(:, 3)';
-
-% kludge in case x is flipped
-if diff(xlimvox) < 0, xlimvox = xlimvox(end:-1:1); end
-
-% Exclude relevant voxels; see also subvolume.m
-whx = x < xlimvox(1) | x > xlimvox(2);
-why = y < ylimvox(1) | y > ylimvox(2);
-whz = z < zlimvox(1) | z > zlimvox(2);
-
-obj.dat(whx | why | whz, :) = 0;
-
-%vsub = subvolume(
-
-% ------------------------------------------------------
 % Isosurface
 % ------------------------------------------------------
 
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
-voldata = mesh_struct.voldata;
+
+
+% ------------------------------------------------------
+% Get cutaways
+% ------------------------------------------------------
+
+limits = [xlim ylim zlim];
+limits(isinf(limits)) = NaN;
+
+[mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata] = ...
+    subvolume(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, limits);
+
+% ------------------------------------------------------
+% Smoothing
+% ------------------------------------------------------
 
 if dosmooth
-    V = smooth3(voldata, 'gaussian', mysmoothbox, mygaussstd);
-else
-    V = voldata;
+    mesh_struct.voldata = smooth3(mesh_struct.voldata, 'gaussian', mysmoothbox, mygaussstd);
 end
 
-Fvoldata = isosurface(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, V, mythresh);
+% ------------------------------------------------------
+% Rendering
+% ------------------------------------------------------
 
-p = patch('Faces',Fvoldata.faces,'Vertices',Fvoldata.vertices,'FaceColor', mycolor, ...
+surface_mesh = isosurface(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, mythresh);
+
+isocap_mesh = isocaps(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, mythresh);
+
+
+p = patch('Faces',surface_mesh.faces,'Vertices',surface_mesh.vertices,'FaceColor', mycolor, ...
     'EdgeColor','none','SpecularStrength', .2,'FaceAlpha', .3,'SpecularExponent', 200);
 
 drawnow
 
 % Isocaps, if needed
-% ***DAN WEFLEN ADD THIS***
-%vsub = subvolume(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata, [nan nan nan nan -Inf 10]);
 
 pp = [];
-isocap = isocaps(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata, mythresh);
-pp(end + 1) = patch(isocap, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
+
+pp = patch(isocap_mesh, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
 
 
 % ------------------------------------------------------
@@ -137,4 +130,45 @@ axis vis3d
 
 drawnow
 
+mesh_struct.surface_mesh = surface_mesh;
+mesh_struct.isocap_mesh = isocap_mesh;
+
+
 end
+
+
+
+% This would create a solid subvolume from the volume data
+% But does not render isocaps appropriately then because it's a solid
+% volume
+
+% ------------------------------------------------------
+% Get cutaways
+% ------------------------------------------------------
+
+% x = obj.volInfo.xyzlist(:, 1);
+% y = obj.volInfo.xyzlist(:, 2);
+% z = obj.volInfo.xyzlist(:, 3);
+% 
+% % Convert limits to voxels
+% zeros = [0 0];
+% xlimvox = mm2voxel([xlim; zeros; zeros], obj.volInfo.mat);
+% xlimvox = xlimvox(:, 1)';
+% 
+% ylimvox = mm2voxel([zeros; ylim; zeros], obj.volInfo.mat);
+% ylimvox = ylimvox(:, 2)';
+% 
+% zlimvox = mm2voxel([zeros; zeros; zlim], obj.volInfo.mat);
+% zlimvox = zlimvox(:, 3)';
+% 
+% % kludge in case x is flipped
+% if diff(xlimvox) < 0, xlimvox = xlimvox(end:-1:1); end
+
+% Exclude relevant voxels; see also subvolume.m
+% whx = x < xlimvox(1) | x > xlimvox(2);
+% why = y < ylimvox(1) | y > ylimvox(2);
+% whz = z < zlimvox(1) | z > zlimvox(2);
+% 
+% obj.dat(whx | why | whz, :) = 0;
+
+

@@ -111,8 +111,9 @@ drawnow
 
 pp = [];
 
-pp = patch(isocap_mesh, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
+pp = patch(isocap_mesh, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha', 1);
 
+p = [p pp];
 
 % ------------------------------------------------------
 % Colors and lighting

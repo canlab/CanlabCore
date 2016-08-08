@@ -48,6 +48,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
 %        networks from Pauli et al. 2016
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
+%        'bgloops_cortex' : Cortical regions most closely associated with
+%        the Pauli 5-region striatal clusters
 %
 % :Optional inputs:
 %   None yet.
@@ -159,6 +161,11 @@ else
             
         case {'bgloops', 'pauli'}
             [image_obj, networknames, imagenames] = load_pauli_bg;
+
+        case {'bgloops_cortex', 'pauli_cortex'}
+            [image_obj, networknames, imagenames] = load_pauli_bg_cortex;
+            
+            
            
         otherwise
             error('Unknown mapset keyword.');
@@ -486,9 +493,10 @@ function [image_obj, networknames, imagenames] = load_pauli_bg
 
 % Load Pauli et al. 2016 basal ganglia 5-cluster solution
 % ------------------------------------------------------------------------
-networknames = {};
 
-imagenames = {'Pauli_bg_cluster_mask_17.nii'};
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
+
+imagenames = {'Pauli_bg_cluster_mask_5.nii'};
 imagenames = check_image_names_get_full_path(imagenames);
 
 % load image with integer coding of networks
@@ -498,13 +506,27 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 % -------------------------------------------------
 image_obj = integer_coded_image_to_separate_images(image_obj);
 
-k = size(image_obj.dat, 2);
-
-for i = 1:k
-    networknames{i} = sprintf('BG%3.0f', i);
-end
 
 end % function
 
 
+
+function [image_obj, networknames, imagenames] = load_pauli_bg_cortex
+
+% Load Pauli et al. 2016 basal ganglia 5-cluster solution
+% ------------------------------------------------------------------------
+imagenames = {'Pauli_bg_nb_param_rank_fst_Cp.nii' ...
+                'Pauli_bg_nb_param_rank_fst_Pa.nii' ...
+                'Pauli_bg_nb_param_rank_fst_Ca.nii' ...
+                'Pauli_bg_nb_param_rank_fst_VS.nii' ...
+                'Pauli_bg_nb_param_rank_fst_Pp.nii' ...
+};
+
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
 

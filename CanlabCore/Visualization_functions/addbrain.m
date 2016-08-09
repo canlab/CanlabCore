@@ -330,9 +330,10 @@ switch meth
                    
     case {'BG', 'bg', 'basal ganglia'}
         p = addbrain('gp');
-        %set(p(end), 'Tag', 'gp');
+        
         p = [p  addbrain('put')];
         set(p(end), 'Tag', 'putamen');
+        
         p = [p  addbrain('caudate')];
         set(p(end), 'Tag', 'caudate');
          
@@ -480,7 +481,8 @@ switch meth
   
     otherwise
         error('Unknown method.');
-end
+        
+end  % method
 
 
 switch meth

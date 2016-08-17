@@ -6,5 +6,9 @@ for i=1:n2
     for j=1:n1
     temp_color= temp_color + layer1colors{j}*sim_matrix(i,j)/sum(sim_matrix(i,:));
     end
+    
+    if any(isnan(temp_color));
+       temp_color=[.5 .5 .5]; 
+    end
     layer2colors{i}=temp_color;
 end

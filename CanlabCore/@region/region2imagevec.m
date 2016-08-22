@@ -70,7 +70,7 @@ end
 ivecobj.volInfo.dt = [16 0]; 
 
 % meta-data 
-if ~iscell(cl(1).source_images)
+if ~strcmp(cl(1).source_images,'') && ~iscell(cl(1).source_images)
     ivecobj.volInfo.fname = ['Reconstructed from region object, source: ' cl(1).source_images(1, :)];
 else
     ivecobj.volInfo.fname = 'Reconstructed from region object';

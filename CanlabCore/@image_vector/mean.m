@@ -45,11 +45,21 @@ for i = 1:length(varargin)
     end
 end
 
+% return output in the same format as input object
+
 if isa(obj, 'fmri_data')
     m = image_vector('dat', mean(obj.dat', 1)', 'volInfo', obj.mask.volInfo);
+    m = fmri_data(m);
+    m.mask = obj.mask;
+    
 else
     m = image_vector('dat', mean(obj.dat', 1)', 'volInfo', obj.volInfo);
 end
+
+% Not completed for statistic_image
+% if isa(obj, 'statistic_image')
+%     m = statistic_image(m);
+% end
 
 m.removed_voxels = obj.removed_voxels;
 

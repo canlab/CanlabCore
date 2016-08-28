@@ -179,13 +179,14 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % ..
 [hh, hhfill] = deal(' ');
 doaverage = 0; % initalize optional variables to default values here.
-mapset = 'npsplus';  % 'bucknerlab'
-table_group={}; %initialize output
-multcomp_group={}; %initialize output
-noplot=false;
+mapset = 'bucknerlab';  % 'bucknerlab'
+table_group = {}; %initialize output
+multcomp_group = {}; %initialize output
+dofigure = true;
+noplot = false;
 doCosine = 0; %do cosine similarity
 groupColors = scn_standard_colors(size(obj.dat, 2));
-dofixRange=0;
+dofixRange = 0;
 
 % optional inputs with default values
 % -----------------------------------
@@ -213,7 +214,9 @@ for i = 1:length(varargin)
                 compareGroups = true;
                 group = varargin{i+1};
                 
-            case 'noplot'; noplot=true;
+            case 'noplot'; noplot = true;
+                
+            case 'nofigure', dofigure = false;
                 
             case 'dofixrange';
                 dofixRange=1;
@@ -410,6 +413,8 @@ elseif doaverage
         for i=1:length(groupValues)
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
+        
+        if dofigure, create_figure('tor_polar'); end
         
         if ~dofixRange
             [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');

@@ -53,31 +53,62 @@ function obj = preprocess(obj, meth, varargin)
 %        by logical vector whout.
 %          - obj = preprocess(obj, 'interp_images', whout);
 %
+%   **remove_white_csf:**
+%        Extract data values for gray, white, CSF
+%        Regress gray matter mean on first 5 components of white-matter and CSF
+%        Remove the fitted values from the images image-wise
+%        This adjusts for variations in overall image intensity that are explainable by variations in white-matter and CSF
+%        By default, uses a highly eroded standard mask for gray/white/CSF,
+%        that avoids mixing signal components coming from gray matter.
+%        Requires that images be registered in MNI space to work
+%        appropriately.
+%        This effectively removes a scalar multiple of each white/CSF regressor from
+%        all voxels in each image set.
+%        Estimating parameters for each voxel independently would add a lot of
+%        variability.  this way, we estimate the overall location of the image
+%        (shift up/down from zero in gray matter) that is predictable from
+%        gray/white variables, and remove that.
+%        we can apply this to any data - time series, contrast images, beta
+%        images, signature response values.
+%
 % :Examples:
 % ::
 %
-%    % two complementary ways to get and plot outliers:
+%   % two complementary ways to get and plot outliers:
+    % ---------------------------------------------------------------------
 %    dat = preprocess(dat, 'outliers', 'plot');
 %    subplot(5, 1, 5); % go to new panel...
 %    dat = preprocess(dat, 'outliers_rmssd', 'plot');
 %
+%    Concatenate a set of image objects and then regress out white/CSF components
+     % ---------------------------------------------------------------------
+%    DATA_CAT = cat(DATA_OBJ{:});
+%    for i = 1:size(DATA_OBJ, 2), sz(i) = size(DATA_OBJ{i}.dat, 2); end
+%    DATA_CAT.images_per_session = sz;
+%    DATA_CAT.removed_images = 0;
+% 
+%    DATA_CAT = preprocess(DATA_CAT, 'remove_white_csf');
+
 
 switch meth
     
+    % ---------------------------------------------------------------------
     case {'resid', 'residuals'}
+    % ---------------------------------------------------------------------
+    
         add_mean_in = 0;
         if ~isempty(varargin) > 0 && varargin{1}
             add_mean_in = 1;
         end
-
+        
         obj.dat = resid(obj.covariates, obj.dat', add_mean_in)';
         
         obj.history{end + 1} = 'Residualized voxels with respect to covariates.';
         
-        
+    % ---------------------------------------------------------------------
     case 'hpfilter'
-        
-        
+    % ---------------------------------------------------------------------
+    
         if length(varargin) == 0
             error('Enter HP filter cutoff in sec as 3rd argument.');
         end
@@ -98,7 +129,7 @@ switch meth
         if isempty(obj.images_per_session)
             obj.images_per_session = size(obj.dat, 2); % n images
         end
-            
+        
         obj.dat(whgood, :) = hpfilter(obj.dat(whgood, :)', TR, hpcutoff, obj.images_per_session, [], 1:2)';
         
         obj.dat(whgood, :) = obj.dat(whgood, :) + repmat(imageseriesmean, 1, size(obj.dat, 2));
@@ -106,8 +137,11 @@ switch meth
         obj.history{end+1} = 'HP filtered and residualized with respect to session intercepts and first 2 images of each run, mean added back in';
         
         fprintf('\n');
-        
+
+    % ---------------------------------------------------------------------
     case {'windsor', 'windsorize'}
+    % ---------------------------------------------------------------------
+
         % Windsorize entire data matrix
         %m = mean(obj.dat(:));
         % note: the line above was giving different values for operation on
@@ -128,8 +162,9 @@ switch meth
         obj.history{end+1} = sprintf('Windsorized data matrix to 3 STD; adjusted %3.0f values, %3.1f%% of values', nbad, percbad);
         disp(obj.history{end});
         
+    % ---------------------------------------------------------------------
     case 'windsorizevoxels'
-        
+    % ---------------------------------------------------------------------
         whbad = all(obj.dat == 0, 2);
         nok = sum(~whbad);
         
@@ -141,8 +176,12 @@ switch meth
         
         obj.history{end+1} = 'Windsorized data voxel-wise to 3 STD';
         
+    % ---------------------------------------------------------------------
     case 'session_outliers'
-        
+    % ---------------------------------------------------------------------
+    if ~isa(obj, 'fmri_data'), error('method only defined for fmri_data objects.'), end
+    if isempty(obj.images_per_session), error('method only works if images_per_session field is filled.'); end
+    
         nscan = obj.images_per_session;  % num images per session
         I = intercept_model(nscan);
         
@@ -202,8 +241,10 @@ switch meth
         
         disp(obj.history{end});
         
-        
+    % ---------------------------------------------------------------------
     case 'outliers'
+    % ---------------------------------------------------------------------
+
         % regress out outliers
         stdev = 3;
         
@@ -322,7 +363,9 @@ switch meth
         obj.history{end+1} = sprintf('Added %3.0f global/mahal outlier covariates to covariates field.', size(covs, 2));
         disp(obj.history{end});
         
+    % ---------------------------------------------------------------------
     case 'outliers_rmssd'
+    % ---------------------------------------------------------------------
         % outliers from root mean square successive differences across
         % images
         
@@ -373,9 +416,10 @@ switch meth
         obj.history{end} = [obj.history{end} sprintf('\nOutliers in RMSSD images: %3.0f%%, %2.0f imgs.\n', sum(out_rmssd)./length(out_rmssd), sum(out_rmssd))];
         disp(obj.history{end});
         
-        
+    % ---------------------------------------------------------------------
     case 'smooth'
-        
+    % ---------------------------------------------------------------------
+    
         if length(varargin) == 0
             error('Enter smoothing FWHM in mm as 3rd argument.');
         end
@@ -386,9 +430,10 @@ switch meth
         obj.history{end+1} = sprintf('Smoothed images with %3.0f FWHM filter', varargin{1});
         disp(obj.history{end});
         
-        
+    % ---------------------------------------------------------------------
     case 'interp_images'
-        
+    % ---------------------------------------------------------------------
+    
         if length(varargin) == 0
             error('whout argument missing. Must be logical vector of 1s and 0s for images to interpolate.');
         else
@@ -423,6 +468,55 @@ switch meth
         fprintf('Done in %3.0f sec.\n', toc);
         
         obj.history{end + 1} = sprintf('Interpolated %3.0f images with 1-D linear interp.', length(wh));
+        
+    % ---------------------------------------------------------------------
+    case 'remove_white_csf'
+    % ---------------------------------------------------------------------
+        
+        doplot = any(strcmp(varargin, 'plot'));
+        
+        [means, components] = extract_gray_white_csf(obj);
+        
+        x = cat(2, components{2:3});        % predictors: white and csf only
+        
+        wh_gray_white = 1:size(x, 2);
+        
+        meangray = means(:, 1);             % mean gray matter for each image
+        
+        if isa(obj, 'fmri_data') && ~isempty(obj.images_per_session)
+            
+            xi = intercept_model(obj.images_per_session);
+            x = [x xi];                       % model
+            gray_tmp = resid(xi, meangray);   % for partial correlation
+            
+        else
+            gray_tmp = meangray;
+        end
+        
+        % regress out signal explainable by gray/white (fits)
+        % estimate regression coefficients for
+        % gray matter average predicted by white-matter and CSF covariates
+        
+        b = pinv(x) * meangray;
+        
+        fit = x(:, wh_gray_white) * b(wh_gray_white);
+        
+        % get correlation value
+        
+        r = corr(gray_tmp, fit);
+        
+        if doplot
+            create_figure('gray predicted from white/CSF components')
+            plot_correlation_samefig(fit, meangray);
+        end
+        
+        sz = size(obj.dat);
+        to_subtract = repmat(fit', sz(1), 1);
+        
+        obj.dat = obj.dat - to_subtract;
+        
+        obj.history{end + 1} = sprintf('Regressed out white/CSF components image-wise. \nCorrelation between predicted and actual mean gray matter before removal: r = %3.4f', r);
+        
         
     otherwise
         error('Unknown preprocessing method.')
@@ -475,7 +569,7 @@ end
 % find intercept
 wint = all(X == repmat(X(1,:), size(X,1), 1));
 if ~any(wint)
-    X(:,end+1) = 1; 
+    X(:,end+1) = 1;
     wint = zeros(1, size(X, 2));
     wint(end) = 1;
 end
@@ -483,12 +577,12 @@ end
 y = double(y);
 
 % break up for efficiency - otherwise Matlab chokes with large
-    % matrices...(why?)
-    px = pinv(X);
-    pxy = px * y;
-    xpxy = X * pxy;
+% matrices...(why?)
+px = pinv(X);
+pxy = px * y;
+xpxy = X * pxy;
 
-    
+
 r = y - xpxy; % X * pinv(X) * y;
 
 if add_int

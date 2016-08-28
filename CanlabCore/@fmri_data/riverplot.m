@@ -287,7 +287,7 @@ layer2names = format_strings_for_legend(layer2fmri_obj.image_names);
 [n2, n1] = size(sim_matrix);
 
 if length(layer1names) < n1, error('Layer 1: Not enough names entered. Add names in input layer1 fmri_object.image_names'); end
-if length(layer2names) < n2, error('Layer 2: Not enough names entered. Add names in input layer1 fmri_object.image_names'); end
+if length(layer2names) < n2, error('Layer 2: Not enough names entered. Add names in input layer2 fmri_object.image_names'); end
 
 % -------------------------------------------------------------------------
 % Reorder rows and columns if asked for

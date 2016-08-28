@@ -53,7 +53,7 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 % Otherwise, zero is the origin.
 
 
-dofigure = 1;
+dofigure = 0;
 dofill = 1;
 dononneg = 0;
 donumbers = 1;
@@ -70,7 +70,14 @@ hhfill = {};
 if any(strcmp(varargin, 'nofigure'))
     % suppress figure
     dofigure = 0;
-else
+end
+
+if any(strcmp(varargin, 'dofigure'))
+    % include figure [now default]
+    dofigure = 1;
+end
+
+if dofigure
     create_figure('tor_polar', nr, nc)
 end
 

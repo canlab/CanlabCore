@@ -300,7 +300,8 @@ if ~exist('o2', 'var')
             end
             
             brighten(.5)
-            
+            sz = get(0, 'screensize');
+            set(gcf, 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
             
         case 'multirow'
             

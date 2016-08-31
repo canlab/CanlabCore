@@ -274,7 +274,7 @@ else
 end
 
 if dofill
-    fill(x, h, color, 'FaceAlpha', .2);
+    fill([x(1)-eps x x(end)+eps], [0 h 0], color, 'FaceAlpha', .2);
 end
 
 hold on; % still trouble with automatic turn-off

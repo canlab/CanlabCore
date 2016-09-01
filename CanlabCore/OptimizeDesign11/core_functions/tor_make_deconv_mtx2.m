@@ -38,8 +38,8 @@ origsf = sf;
 
 for i = 1:length(sf)
     Snumtrs = length(sf{i}) ./ eres;
-    if Snumtrs ~= round(Snumtrs), warning(['sf{ ' num2str(i) '}: length not evenly divisible by eres.']),end
-    if numtrs ~= Snumtrs, warning(['sf{ ' num2str(i) '}: different length than sf{1}.']),end
+%     if Snumtrs ~= round(Snumtrs), warning(['sf{ ' num2str(i) '}: length not evenly divisible by eres.']),end
+%     if numtrs ~= ceil(Snumtrs), warning(['sf{ ' num2str(i) '}: different length than sf{1}.']),end
 
     inums = find(sf{i} > 0);
     if ~isempty(inums)

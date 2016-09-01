@@ -20,7 +20,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % images as cases.  The basis sets are "NPSplus" (the default), which
 % includes the NPS map from Wager et al. 2013, Romantic Rejection
 % classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
-% pain (Krishnan).  Other sets are "bucknerlab" including 7 cortical [only]
+% pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
 % networks from the Buckner Lab's 1000-person resting-state analyses and
 % "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.  
 %
@@ -57,8 +57,11 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        Default behavior is to plot each individual image.
 %
 %   **bucknerlab**
-%        Use 7 network parcellation from Yeo et al. as basis for
-%        comparisons
+%        Use 7 network parcellation from Yeo et al. as basis for comparisons
+%        Cortex only.  BUT also:
+%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
+%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum
+%        + SPM Anatomy Toolbox regions + brainstem
 %
 %   **kragelemotion**
 %        Use 7 emotion-predictive models from Kragel & LaBar 2015 for
@@ -67,6 +70,11 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **allengenetics**
 %        Five maps from the Allen Brain Project human gene expression maps
 %        from Luke Chang (unpublished)
+%
+%   **bgloops**
+%        5-basal ganglia parcels and 5 associated cortical
+%        networks from Pauli et al. 2016.  Also 'pauli'
+%        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
 %
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
@@ -78,15 +86,34 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **noplot**
 %        Omits plot (print stats only)
 %
+%   **nofigure**
+%       Omit creation of new figure
+%
 %   **cosine_similarity**
 %        Use cosine similarity instead of Pearson's r
+%
+%   **colors** 
+%             followed by cell array of colors, one for each image/image
+%             group
+%               Default colors for multi-line plots
+%                       Color
+%               1		Red
+%               2		Green
+%               3		Dark Blue
+%               4		Yellow
+%               5		Pink
+%               6		Turquoise
+%
+%   **'dofixrange':**
+%        Set min and max of circles numbers (values on polar axis)
+%        Follow by range vector: [min_val max_val]
 %
 %
 % :Outputs:
 %
 %   **stats:**
 %        Structure including:
-%           - .r, Correlations in [7 networks x images in obj] matrix
+%           - .r, Similarity (correlations or cosine sim) in [mask images x images in obj] matrix
 %           - .t, T-test (if 'average' is specified)
 %           - .line_handles Handles to polar plot lines so you can
 %             customize
@@ -98,6 +125,12 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %           - .multcomp_spatial, multiple comparisons of means across
 %             different spatial bases, critical value determined
 %             by Tukey-Kramer method (see multcompare)
+%   **hh:**
+%             Handles to lines
+%
+%   **hhfill:**
+%             Handles to fill areas
+%
 %   **table_group**
 %             multiple one-way ANOVA tables (one for each
 %             spatial basis) with group as column factor (requires
@@ -107,14 +140,6 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %             cell for each spatial basis, critical value determined
 %             by Tukey-Kramer method (see multcompare)
 %
-% Default colors for multi-line plots
-%       Color
-% 1		Red
-% 2		Green
-% 3		Dark Blue
-% 4		Yellow
-% 5		Pink
-% 6		Turquoise
 %
 % :Examples:
 % ::
@@ -126,10 +151,12 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %    % t_diff is a thresholded statistic_image object
 %    stats = image_similarity_plot_bucknermaps(t_diff);
 %
+%    stats = image_similarity_plot(fmri_data(img), 'cosine_similarity', 'bucknerlab', 'colors', color);
+%
 % :See also:
 %
 % tor_polar_plot
-%
+
 % ..
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
@@ -150,14 +177,16 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % ..
 % DEFAULTS AND INPUTS
 % ..
-
+[hh, hhfill] = deal(' ');
 doaverage = 0; % initalize optional variables to default values here.
-mapset = 'npsplus';  % 'bucknerlab'
-table_group={}; %initialize output
-multcomp_group={}; %initialize output
-noplot=false;
+mapset = 'bucknerlab';  % 'bucknerlab'
+table_group = {}; %initialize output
+multcomp_group = {}; %initialize output
+dofigure = true;
+noplot = false;
 doCosine = 0; %do cosine similarity
 groupColors = scn_standard_colors(size(obj.dat, 2));
+dofixRange = 0;
 
 % optional inputs with default values
 % -----------------------------------
@@ -170,19 +199,28 @@ for i = 1:length(varargin)
                 
             case 'cosine_similarity', doCosine = 1;
                     
-            case {'bucknerlab', 'kragelemotion' 'allengenetics'}
+            case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
+                    'kragelemotion' 'allengenetics' ...
+                    'pauli' 'bgloops' 'pauli17' 'bgloops17'}
+                
                 mapset = varargin{i};
                 
             case 'mapset'
-                mapset = 'custom';
-                mask = varargin{i + 1}; varargin{i + 1} = [];
+                %mapset = 'custom';
+                mapset = varargin{i + 1}; varargin{i + 1} = [];
                 
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
             case 'compareGroups'
                 compareGroups = true;
                 group = varargin{i+1};
                 
-            case 'noplot'; noplot=true;
+            case 'noplot'; noplot = true;
+                
+            case 'nofigure', dofigure = false;
+                
+            case 'dofixrange';
+                dofixRange=1;
+                fixedrange = varargin{i+1};
                 
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
@@ -192,31 +230,33 @@ for i = 1:length(varargin)
     end
 end
 
+[mask, networknames, imagenames] = load_image_set(mapset);
 
-switch mapset
-    
-    case 'bucknerlab'
-        [mask, networknames, imagenames] = load_bucknerlab_maps;
-        networknames=networknames';
-        
-    case 'npsplus'
-        [mask, networknames, imagenames] = load_npsplus;
-        
-    case 'kragelemotion'
-        [mask, networknames, imagenames] = load_kragelemotion;
- 
-    case 'allengenetics'
-        [mask, networknames, imagenames] = load_allengenetics;
-        
-    case 'custom'
-        
-    otherwise
-        error('unknown map set');
-        
-end
-
-disp('Using images:');
-fprintf('%s\n', imagenames{:});
+% This functionality replaced by load_image_set.  Tor: July 2016
+% switch mapset
+%     
+%     case 'bucknerlab'
+%         [mask, networknames, imagenames] = load_bucknerlab_maps;
+%         networknames=networknames';
+%         
+%     case 'npsplus'
+%         [mask, networknames, imagenames] = load_npsplus;
+%         
+%     case 'kragelemotion'
+%         [mask, networknames, imagenames] = load_kragelemotion;
+%  
+%     case 'allengenetics'
+%         [mask, networknames, imagenames] = load_allengenetics;
+%         
+%     case 'custom'
+%         
+%     otherwise
+%         error('unknown map set');
+%         
+% end
+% 
+% disp('Using images:');
+% fprintf('%s\n', imagenames{:});
 
 
 % Deal with space and empty voxels so they line up
@@ -249,10 +289,13 @@ if ~doCosine
     r = corr(double(obj.dat), double(mask.dat))';
 
 else
-    for im=1:size(mask.dat,2)
-    a = nansum(obj.dat .^ 2) .^ .5;
-    b = nansum(mask.dat(:,im) .^ 2) .^ .5;
-    r(im,:) = (nansum(bsxfun(@times,obj.dat,mask.dat(:,im))) ./ (a .* b))';
+    % Cosine similarity
+    for im = 1:size(mask.dat, 2)
+        
+        a = nansum(obj.dat .^ 2) .^ .5;
+        b = nansum(mask.dat(:,im) .^ 2) .^ .5;
+        
+        r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
     end
 end
 
@@ -261,16 +304,20 @@ stats.r = r;
 if ~doaverage
         
     if ~noplot
-        % Plot values for each image in obj
-        [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
+        
+        if ~dofixRange
+            % Plot values for each image in obj
+            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
+        else
+            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange); 
+        % Make legend
+        if ~isempty(obj.image_names)
+            han = makelegend(obj.image_names, groupColors);
+        end
+        end
     end
     
     print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
-    
-    % Make legend
-
-    han = makelegend(obj.image_names, groupColors);
-
 
 
 elseif doaverage
@@ -323,7 +370,7 @@ elseif doaverage
         r_group=r(:,group==groupValues(g));
         z_group=z(group==groupValues(g),:);
         
-        stats(g).r=r_group;
+        stats(g).r = r_group;
         
         % Plot mean and se of values
         m(:,g) = nanmean(r_group')';
@@ -358,8 +405,8 @@ elseif doaverage
     
     if ~noplot
         
-        groupColors=repmat(scn_standard_colors(size(m, 2)),3,1);
-        groupColors={groupColors{:}};
+         groupColors=repmat(groupColors(size(m, 2)),3,1);
+         groupColors={groupColors{:}};
         
         toplot=[];
         
@@ -367,7 +414,13 @@ elseif doaverage
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
         
-        [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+        if dofigure, create_figure('tor_polar'); end
+        
+        if ~dofixRange
+            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+        else
+            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
+        end
         
         set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
         set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
@@ -390,7 +443,12 @@ elseif doaverage
     
 end % doaverage
 
-
+% Fill in additional info
+stats.descrip = 'Rows are networks, columns are input images.';
+stats.networknames = networknames;
+stats.network_imagenames = imagenames;
+stats.inputnames = format_strings_for_legend(obj.image_names);
+stats.input_imagenames = obj.image_names;
 
 end % function
 
@@ -404,125 +462,126 @@ end % function
 % -------------------------------------------------------------------------
 % -------------------------------------------------------------------------
 
+% % The functions below replaced by load_image_set.  Tor: July 2016
 
-function [mask, networknames, imagenames] = load_bucknerlab_maps
-
-% Load Bucker Lab 1,000FC masks
-% ------------------------------------------------------------------------
-
-names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
-img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
-
-mask = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
-
-networknames = names.rnames(1:7);
-k = length(networknames);
-
-newmaskdat = zeros(size(mask.dat, 1), k);
-
-for i = 1:k  % breaks up into one map per image/network
-    
-    wh = mask.dat == i;
-    
-    nvox(1, i) = sum(wh);
-    
-    newmaskdat(:, i) = double(wh);
-    
-    
-end
-
-mask.dat = newmaskdat;
-
-imagenames = {img};
-end  % function
-
-
-
-
-function [mask, networknames, imagenames] = load_npsplus
-
-% Load NPS, PINES, Rejection, VPS,
-% ------------------------------------------------------------------------
-
-networknames = {'NPS' 'PINES' 'RomRejPattern' 'VPS'};
-
-imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
-    'Rating_Weights_LOSO_2.nii'  ...  % PINES
-    'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
-    'bmrk4_VPS_unthresholded.nii'};
-
-imagenames = check_image_names_get_full_path(imagenames);
-
-mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-
-end  % function
-
-
-
-
-
-
-
-function [mask, networknames, imagenames] = load_kragelemotion
-
-% Load NPS, PINES, Rejection, VPS,
-% ------------------------------------------------------------------------
-
-networknames = {'Amused' 'Angry' 'Content' 'Fearful' 'Neutral' 'Sad' 'Surprised'};
-
-imagenames = { ...
-    'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_content_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_fearful_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
-
-imagenames = check_image_names_get_full_path(imagenames);
-
-mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-
-end % function
-
-
-function [mask, networknames, imagenames] = load_allengenetics
-
-% Load Allen Brain Atlas project human genetic maps (from Luke Chang)
-% ------------------------------------------------------------------------
-
-networknames = {'5HT' 'Opioid' 'Dopamine' 'NEalpha' 'NEbeta'};
-
-imagenames = { ...
-    'Serotonin.nii' ...
-    'Opioid.nii' ...
-    'Dopamine.nii' ...
-    'AdrenoAlpha.nii' ...
-    'AdrenoBeta.nii' ...
-};
-
-imagenames = check_image_names_get_full_path(imagenames);
-
-mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-
-end % function
-
-
-
-
-function imagenames = check_image_names_get_full_path(imagenames)
-
-for i = 1:length(imagenames)
-    
-    if isempty(which(imagenames{i}))
-        fprintf('CANNOT FIND %s \n', imagenames{i})
-        error('Exiting.');
-    end
-    
-    imagenames{i} = which(imagenames{i});
-end
-end
-
+% function [mask, networknames, imagenames] = load_bucknerlab_maps
+% 
+% % Load Bucker Lab 1,000FC masks
+% % ------------------------------------------------------------------------
+% 
+% names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
+% img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
+% 
+% mask = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
+% 
+% networknames = names.rnames(1:7);
+% k = length(networknames);
+% 
+% newmaskdat = zeros(size(mask.dat, 1), k);
+% 
+% for i = 1:k  % breaks up into one map per image/network
+%     
+%     wh = mask.dat == i;
+%     
+%     nvox(1, i) = sum(wh);
+%     
+%     newmaskdat(:, i) = double(wh);
+%     
+%     
+% end
+% 
+% mask.dat = newmaskdat;
+% 
+% imagenames = {img};
+% end  % function
+% 
+% 
+% 
+% 
+% function [mask, networknames, imagenames] = load_npsplus
+% 
+% % Load NPS, PINES, Rejection, VPS,
+% % ------------------------------------------------------------------------
+% 
+% networknames = {'NPS' 'PINES' 'RomRejPattern' 'VPS'};
+% 
+% imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
+%     'Rating_Weights_LOSO_2.nii'  ...  % PINES
+%     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
+%     'bmrk4_VPS_unthresholded.nii'};
+% 
+% imagenames = check_image_names_get_full_path(imagenames);
+% 
+% mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+% 
+% end  % function
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% function [mask, networknames, imagenames] = load_kragelemotion
+% 
+% % Load NPS, PINES, Rejection, VPS,
+% % ------------------------------------------------------------------------
+% 
+% networknames = {'Amused' 'Angry' 'Content' 'Fearful' 'Neutral' 'Sad' 'Surprised'};
+% 
+% imagenames = { ...
+%     'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_content_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_fearful_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
+%     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
+% 
+% imagenames = check_image_names_get_full_path(imagenames);
+% 
+% mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+% 
+% end % function
+% 
+% 
+% function [mask, networknames, imagenames] = load_allengenetics
+% 
+% % Load Allen Brain Atlas project human genetic maps (from Luke Chang)
+% % ------------------------------------------------------------------------
+% 
+% networknames = {'5HT' 'Opioid' 'Dopamine' 'NEalpha' 'NEbeta'};
+% 
+% imagenames = { ...
+%     'Serotonin.nii' ...
+%     'Opioid.nii' ...
+%     'Dopamine.nii' ...
+%     'AdrenoAlpha.nii' ...
+%     'AdrenoBeta.nii' ...
+% };
+% 
+% imagenames = check_image_names_get_full_path(imagenames);
+% 
+% mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+% 
+% end % function
+% 
+% 
+% 
+% 
+% function imagenames = check_image_names_get_full_path(imagenames)
+% 
+% for i = 1:length(imagenames)
+%     
+%     if isempty(which(imagenames{i}))
+%         fprintf('CANNOT FIND %s \n', imagenames{i})
+%         error('Exiting.');
+%     end
+%     
+%     imagenames{i} = which(imagenames{i});
+% end
+% end
+% 
 
 
 

@@ -11,11 +11,23 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 % (overall), which is not quite the standard error contrasts of interest,
 % but is the standard error for a 1-way repeated measures ANOVA.
 %
-% plots circles around points at z >= 1.96
+% Very flexible control with many options for estimation and display:
+% - Plot type options (line, bar, violin / distribution)
+% - Point plotting, individual lines, and outlier options
+% - Robustness options (IRLS)
+% - Error bar options (within-subject, 95% CIs)
+% - Display axis, title, widths, and color control
+% - Covariate options (option to add)
 %
-% plots individual points, unless you enter 4th argument
+% E.g.:  (and see options below)
+% - default is violin plot (distribution) plus bars
+% - optional: lines, not bars 
+% - optional:  plots circles around points at z >= 1.96
+% - optional: add case numbers or labels instead of points
 %
-% if dat is a cell array, each entry becomes one "bar".  Useful if n
+% Input formats (dat input argument):  
+% - Matrix or cell vector (good for unequal numbers of observations)
+% - if dat is a cell array, each entry becomes one "bar".  Useful if n
 % observations is different for each column.
 %
 % :Examples: Just plot means and SE
@@ -24,36 +36,53 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 %    h = barplot_columns(tmp,'Cluster 1',[],1);
 %
 % :Optional arguments:
-%   1. Title for figure
-%   2. covariates
-%   3. String Arguments
+%
+%   1. 
+%
+%   2-k. String Arguments - in any order
+%
+%   Figure control
 %        - 'nofig' : do not make figure
+%
+%   Plot type options 
+%        - 'line' : Make line plot instead of bar plot
+%        - 'violin': add violin plot to each bar, with data points
+%        - 'noviolin': suppress default violin plot behavior
+%        - 'nobars' : suppress bars (e.g., for violin plots only)
+%
+%   Point plotting, individual lines, and outlier options
+%        - 'dolines' : plot lines showing individual effects
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
+%        - 'number' : plot case numbers instead of points
+%
+%   Robustness options
 %        - 'dorob' : do robust IRLS means and correlations
-%        - 'dolines' : plot lines showing individual effects
+%
+%   Error bar options
 %        - 'within' : within-subjects standard errors, followed by contrast
 %                   matrix
 %        - '95CI'   : error bars are 95% CI instead of SE
-%        - 'line' : Make line plot instead of bar plot
-%        - 'number' : plot case numbers instead of points
+%
+%   Display axis, title, widths, and color control
 %        - 'x' : followed by x-axis values for bars
+%        - 'noxlim' : Suppress automatic setting of x-limit (e.g., when adding to existing plot)
 %        - 'color' : followed by color for bars (text: 'r' or [r g b]) OR
 %               cell array with names of colors cell for each line/bar
-%        - 'violin': add violin plot to each bar, with data points
-%
+%        - 'title' : followed by title for figure (or empty for no title)   
+%        - 'width' : followed by bar width
 %
 % :Examples:
 % ::
 %
-%    barplot_columns(ctmp,'RT effects by Switch Type',overall_sw,'nofig','dorob')
+%    barplot_columns(ctmp, 'title', 'RT effects by Switch Type',overall_sw,'nofig','dorob')
 %
 % Standard Errors ARE NOT Adjusted for covariate, right now.
 %
 % Example: within-subjects std. errors
 % ::
 %
-%    barplot_columns(dat, 'Means', [], 'nofig', 'within', c);
+%    barplot_columns(dat, 'title', 'Means', [], 'nofig', 'within', c);
 %
 % The example below uses color, width, and xposition arguments to make a grouped
 % ::
@@ -61,11 +90,11 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 %    barplot showing effects for two groups:
 %    exp_dat = EXPT.error_rates(EXPT.group==1,:);
 %    control_dat = EXPT.error_rates(EXPT.group==-1,:);
-%    barplot_columns(exp_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'r','width', .4);
-%    barplot_columns(control_dat, 'Error rates', [], 'nofig', 'noind', 'color', 'b','width', .4, 'x', (1:9)+.5);
+%    barplot_columns(exp_dat, 'title', 'Error rates', [], 'nofig', 'noind', 'color', 'r','width', .4);
+%    barplot_columns(control_dat, 'title', 'Error rates', [], 'nofig', 'noind', 'color', 'b','width', .4, 'x', (1:9)+.5);
 %    set(gca, 'XLim', [0 10], 'XTick', 1:9)
 %
-%    barplot_columns(nps_by_study, 'NPS by study', [], 'doind', 'colors', mycolors, 'nofig');
+%    barplot_columns(nps_by_study, 'title', 'NPS by study', [], 'doind', 'colors', mycolors, 'nofig');
 %
 %    create_figure('example_plots', 1, 4);
 %
@@ -103,6 +132,7 @@ plotout = 0;
 dorob = 0;
 xdat = [];
 dolines = 0;
+dobars = 1;
 dowithin = 0;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
@@ -114,6 +144,7 @@ nanwarningflag = 1;
 doviolin = 1;
 mytitle = [];
 covs = [];
+doxlim = 1;
 
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
@@ -129,36 +160,54 @@ xvals = 1:size(dat, 2);
 
 if length(varargin) > 0
     for i = 1:length(varargin)
+        
+        % Figure control
         if strcmp(varargin{i},'nofig'), dofig = 0;  end
-        if strcmp(varargin{i},'noind'), doind = 0;  end
-        if strcmp(varargin{i},'plotout'), plotout = 1;  end
-        if strcmp(varargin{i},'dorob'), dorob = 1;  end
-        if strcmp(varargin{i},'dolines'), dolines = 1;  end
-        if strcmp(varargin{i},'number'), donumber = 1;  end
-        if strcmp(varargin{i}, 'within'), dowithin = 1; end %cons = varargin{i + 1}; end
-        if strcmp(varargin{i}, '95CI'), do95CI = 1; end
+        
+        % Plot type options
         if strcmp(varargin{i},'line'), dolineplot = 1;  end
-        if strcmp(varargin{i}, 'x'), xvals = varargin{i + 1}; end
-        if strcmp(varargin{i}, 'color') || strcmp(varargin{i}, 'colors')
-            mycolor = varargin{i + 1};
-            varargin{i + 1} = [];
-        end
-        if strcmp(varargin{i}, 'width'), barwidth = varargin{i + 1}; end
+        if strcmp(varargin{i},'nobars'), dobars = 0;  end
         if strcmp(varargin{i}, 'violin')
-            doviolin = 1; 
+            doviolin = 1;
             doind = 0;  % ind is already done in violin
         end
         
         if strcmp(varargin{i}, 'noviolin')
             doviolin = 0;
         end
+                
+        % Point plotting, individual lines, and outlier options
+        if strcmp(varargin{i},'noind'), doind = 0;  end
+        if strcmp(varargin{i},'plotout'), plotout = 1;  end
+        if strcmp(varargin{i},'dolines'), dolines = 1;  end
+        if strcmp(varargin{i},'number'), donumber = 1;  end
+
+        % Robustness options
+        if strcmp(varargin{i},'dorob'), dorob = 1;  end
+
+        % Error bar options
+        if strcmp(varargin{i}, 'within'), dowithin = 1; end %cons = varargin{i + 1}; end
+        if strcmp(varargin{i}, '95CI'), do95CI = 1; end
+
+        % Display axis, title, widths, and color control
+        if strcmp(varargin{i}, 'x'), xvals = varargin{i + 1}; end
+        if strcmp(varargin{i}, 'color') || strcmp(varargin{i}, 'colors')
+            mycolor = varargin{i + 1};
+            varargin{i + 1} = [];
+        end
+        if strcmp(varargin{i}, 'width'), barwidth = varargin{i + 1}; end
+        if strcmp(varargin{i}, 'title'), mytitle = varargin{i + 1}; end
+
+        if strcmp(varargin{i}, 'noxlim'), doxlim = 0;  end
+
         
+        
+        % Covariate options
         if strcmp(varargin{i}, 'covs')
             covs = varargin{i + 1};
             if ~isempty(covs), covs = scale(covs,1); end
         end
         
-        if strcmp(varargin{i}, 'title'), mytitle = varargin{i + 1}; end
         
     end % for
 end % varargin
@@ -276,9 +325,11 @@ end
 % ----------------------------------------------------
 
 if dofig
-    f = figure('Color','w'); hout = gca; set(gca,'FontSize',18); %hold on; grid on;
+    f = figure('Color','w'); hout = gca; set(gca, 'FontSize',18); %hold on; grid on;
+
 else
-    f = get(gcf); hout = gca; set(gca,'FontSize',18); hold on;
+    f = get(gcf); hout = gca; set(gca, 'FontSize', 18); hold on;
+
 end
 
 
@@ -287,11 +338,12 @@ end
 % ----------------------------------------------------
 
 if dolineplot
+    
     h = plot(xvals, mymeans, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
     h2 = errorbar(xvals, mymeans, stderr, stderr);
     set(h2, 'LineWidth', 2, 'Color', mycolor);
     
-else
+elseif dobars
     
     h = bar(xvals, mymeans, barwidth);
     if iscell(mycolor)
@@ -304,6 +356,7 @@ else
         end
         
     else %all bars the same color
+        
         set(h,'FaceColor', mycolor); %,'LineWidth',2)
         
         for i = 1:length(xvals)
@@ -320,19 +373,22 @@ end
 if doviolin
     
     if iscell(mycolor)
-    mycolor = cat(1, mycolor{:});
+        mycolor = cat(1, mycolor{:});
     elseif size(mycolor, 1) < ny
         mycolor = repmat(mycolor, ny, 1);
     end
     
     Y = enforce_cell_array(y);
-violinplot(Y, 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', []);
-legend off
-    
+    violinplot(Y, 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', []);
+    legend off
     
 end
 
-set(gca,'XLim',[min(xvals)-.5 max(xvals) + .5], 'XTick', xvals, 'XTickLabel', xvals)
+if doxlim
+    set(gca,'XLim', [min(xvals)-.5 max(xvals) + .5]);
+end
+
+set(gca, 'XTick', xvals, 'XTickLabel', xvals)
 xlabel('Condition'), ylabel('Outcome value')
 title(mytitle, 'FontSize', 24);
 

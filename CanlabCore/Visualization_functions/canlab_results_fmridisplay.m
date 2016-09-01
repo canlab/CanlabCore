@@ -46,13 +46,28 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %   **'montagetype':**
 %        'full' for full montages of axial and sagg slices.
 %
+%        'full hcp' for full montage, but with surfaces and volumes from
+%        HCP data
+%
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
 %        'compact2': like 'compact', but fewer axial slices.
 %
+%        'multirow': followed by number of rows
+%           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
 %
+%   **'overlay':**
+%        specify anatomical image for montage (not surfaces), followed by
+%        image name
+%        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
+%
+%         The default brain for overlays is based on Keuken et al. 2014
+%         For legacy SPM8 single subject, enter as arguments:
+%         'overlay', which('SPM8_colin27T1_seg.img')
+% 
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
 % See help fmridisplay
@@ -61,12 +76,14 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 % You can also input an existing fmridisplay object, and it will use the
 % one you have created rather than setting up the canonical slices.
 %
+% Try "brighten(.4) to make the images brighter.
+%
 % :Example Script:
 % ::
 %
 %    input_activation = 'Pick_Atlas_PAL_large.nii';
 %
-%    % set up the anatomical underlay and display blobs
+%    % set up the anatomical overlay and display blobs
 %    % (see the code of this function and help fmridisplay for more examples)
 %
 %    o2 = canlab_results_fmridisplay(input_activation);
@@ -150,6 +167,11 @@ outlinecolor = [0 0 0];
 splitcolor = {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]};
 montagetype = 'compact';
 doverbose = true;
+%overlay='SPM8_colin27T1_seg.img';
+overlay = 'keuken_2014_enhanced_for_underlay.img';
+
+wh = strcmp(varargin, 'overlay');
+if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin(wh) = []; end
 
 wh = strcmp(varargin, 'noblobs');
 if any(wh), doblobs = false; varargin(wh) = []; end
@@ -172,10 +194,29 @@ if any(wh), doremove = false; varargin(wh) = []; end
 wh = strcmp(varargin, 'full');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'multirow');
+if any(wh), montagetype = varargin{find(wh)};
+    nrows = varargin{find(wh) + 1};
+    varargin{find(wh) + 1} = [];
+        varargin(wh) = [];
+end
+
+wh = strcmp(varargin, 'full hcp');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = strcmp(varargin, 'compact');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'compact2');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'coronal');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'saggital');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'allslices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'noverbose');
@@ -214,11 +255,73 @@ if ~exist('o2', 'var')
         
     end
     
-    o2 = fmridisplay;
+    o2 = fmridisplay('overlay', which(overlay));
     
     % You can customize these and run them from the command line
     
     switch montagetype
+        
+        case 'compact'
+            % The default
+            
+            % saggital
+            axh1 = axes('Position', [-0.02 0.4 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
+            text(50, -50, 'left')
+            drawnow
+            
+            axh2 = axes('Position', [-0.02 0.6 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
+            text(50, -50, 'right')
+            drawnow
+            
+            % sagg center
+            axh3 = axes('Position', [.08 0.5 .17 .17]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
+            drawnow
+            o2.montage{3}.slice_mm_coords
+         
+            % axial bottom
+            axh4 = axes('Position', [.10 0.4 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
+            
+            % axial top
+            axh5 = axes('Position', [.12 0.54 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
+            
+            wh_montages = [1 2 4 5];
+            
+            % Lines
+            axes(o2.montage{3}.axis_handles)
+            locs = [o2.montage{4}.slice_mm_coords; o2.montage{5}.slice_mm_coords];
+            for i = 1:length(locs)
+                %draw_vertical_line(locs(i));
+                hh(i) = plot( [-105 65], [locs(i) locs(i)], 'b', 'LineWidth', 1);
+            end
+            
+            brighten(.5)
+            sz = get(0, 'screensize');
+            set(gcf, 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
+            
+        case 'multirow'
+            
+            shiftvals = [0:.17:nrows]; % more than we need, but works
+            
+            for i = 1:nrows
+                
+                % saggital
+                axh = axes('Position', [-0.02 0.15+shiftvals(i) .17 .17]);
+                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
+                drawnow
+                
+                % axial
+                axh = axes('Position', [.015 0.15+shiftvals(i) .17 .17]);
+                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+                drawnow
+                
+            end
+            
+            
         case 'full'
             % saggital
             o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
@@ -251,12 +354,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
             wh_surfaces = [1 2 3 4];
 
-        case 'compact'
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
-            axh = axes('Position', [0.05 0.4 .1 .5]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-            wh_montages = [1 2];
-            
+
         case 'compact2'
             %subplot(2, 1, 1);
             o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
@@ -279,6 +377,64 @@ if ~exist('o2', 'var')
             %images, makes it too big an overlapping
             wh_montages = [1 2];
             
+            brighten(.4)
+            
+        case 'coronal'
+            % coronal
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
+             wh_montages = 1;
+
+        case  'saggital'
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            
+             wh_montages = 1;
+
+        case 'allslices'
+            
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+            
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            wh_montages = [1 2 3];
+            
+        case 'full hcp'
+            % saggital
+            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+
+            % surface
+            o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'lateral');
+            
+            wh_montages = [1 2 3 4];
+            wh_surfaces = [1:8];
+
         otherwise error('illegal montage type. choose full or compact.');
     end
     

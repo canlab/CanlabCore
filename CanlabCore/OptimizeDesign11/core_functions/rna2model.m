@@ -10,7 +10,7 @@ model = sampleInSeconds(stimList,ISI);
 [model,delta] = getPredictors(model,HRF);
 hires_model = model;
 
-model = resample(model,1,TR*10);
+model = resample(model,10,TR*100);
 
 if ~isempty(nonlinthreshold),model = modelSaturation(model,nonlinthreshold);,end		% saturation (nonlinear responses)
         

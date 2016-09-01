@@ -17,7 +17,8 @@ function cl = orthviews(image_obj, varargin)
 %    Copyright Tor Wager, 2011
 % ..
 
-overlay = which('SPM8_colin27T1_seg.img');
+%overlay = which('SPM8_colin27T1_seg.img');
+overlay = which('keuken_2014_enhanced_for_underlay.img');
 
 doposneg = 0;
 doreg = 0;
@@ -105,8 +106,8 @@ for i = handle_indices
         end
     end
     
-    spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
-    
+    %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
+    spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
 end
 
 % center image

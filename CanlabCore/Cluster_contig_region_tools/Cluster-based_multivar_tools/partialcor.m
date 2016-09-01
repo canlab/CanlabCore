@@ -141,7 +141,7 @@ else
 end
 
 if doprint
-    fprintf(1,'%s %s: %3.2f, b = %3.2f, se = %3.2f, t(%3.0f) = %3.2f, p = %3.4f\n',rstr,pstr,r,b(i),se,stats.dfe,stats.t(i),p);
+    fprintf(1,'%s %s: %3.2f, b = %3.2f, se = %3.2f, t(%3.0f) = %3.2f, p = %3.4f, d = %3.2f\n',rstr,pstr,r,b(i),se,stats.dfe,stats.t(i),p, stats.t(i) ./ (size(X, 1) .^ .5));
 end
 
 

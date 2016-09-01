@@ -54,7 +54,7 @@ end
 
 doplot = 0;
 
-if ~isempty(strcmp('plot', varargin))
+if any(strcmp('plot', varargin))
     doplot = 1;
 end
 

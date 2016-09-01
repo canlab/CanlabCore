@@ -15,7 +15,7 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % :Optional Inputs:
 %
 %   **pattern_expression:**
-%        calculate and return the cross-product of each
+%        calculate and return the dot product of each
 %        image in dat and the values in the mask.  This is useful if comparing
 %        expression values that are comprised of different datasets or differing
 %        number of voxels.

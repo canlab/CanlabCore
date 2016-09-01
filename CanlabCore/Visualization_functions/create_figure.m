@@ -35,13 +35,18 @@ function f1 = create_figure(tagname, varargin)
     else
         % Or create new
         
-        scnsize = get(0,'ScreenSize');
+%         scnsize = get(0,'ScreenSize');
+% 
+%         xdim = min(scnsize(3)./2, 700);
+%         ydim = min(scnsize(4)./2, 700);
+% 
+%         f1 = figure('position',round([50 50 xdim ydim]),'color','white');
 
-        xdim = min(scnsize(3)./2, 700);
-        ydim = min(scnsize(4)./2, 700);
+        f1 = figure; %('color','white');
 
-        f1 = figure('position',round([50 50 xdim ydim]),'color','white');
-        set(f1, 'Tag', tagname, 'Name', tagname);
+        set(f1, 'Tag', tagname, 'Name', tagname, 'color', 'white');
+        hold on
+        
     end
     
     % activate this figure
@@ -62,11 +67,23 @@ function f1 = create_figure(tagname, varargin)
 
         np = max(1, i * j);
 
+        % quit and return if no subplots
+        if np == 1
+            axh = gca;
+            cla
+            set(gca,'FontSize', 18)
+            hold on
+            return
+        end
+        
         for k = 1:np
+            
             axh(k) = subplot(i,j,k);
             cla;
-            set(gca,'FontSize',18),hold on
+            set(gca,'FontSize', 18)
+            hold on
         end
+        
         axes(axh(1));
 
     end

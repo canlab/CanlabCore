@@ -4,6 +4,9 @@ function mov = movie_tools(meth,varargin)
 %
 % Examples:
 %
+% Initialize a movie:
+% mov = movie_tools('still', [], .1);
+%
 % mov = movie_tools('rotate',135,30)
 % mov = movie_tools('rotate',250,30,mov)
 %

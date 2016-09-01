@@ -210,13 +210,9 @@ if(reading_data)
             % spm_defaults is a script
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
 
-        case 'SPM5'
+        case {'SPM5', 'SPM8', 'SPM12'}
             % spm_defaults is a function
             spm_defaults()
-
-        case 'SPM8'
-            % spm_defaults is a function
-            spm('Defaults', 'fmri')
 
         otherwise
             % unknown SPM

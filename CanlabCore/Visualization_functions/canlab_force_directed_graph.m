@@ -263,9 +263,13 @@ axis image
 lh = findobj(gca, 'Type', 'line');
 set(lh, 'Color', [.5 .5 .5])
 
+handles.lh_pos = lh;
+
 gplot(sig<0, Xc, 'b');
 lh = findobj(gca, 'Type', 'line', 'color', 'b');
 set(lh, 'Color', [0 .5 1], 'LineStyle', ':')
+
+handles.lh_neg = lh;
 
 % Dots
 
@@ -286,7 +290,11 @@ switch sizescale
 end
 
 ph = [];
+texth = {};
+
 for k = 1:length(rset)
+    
+    texth{k} = [];
     
     for j = 1:length(rset{k})
         
@@ -294,15 +302,14 @@ for k = 1:length(rset)
         
         if ~isempty(names)
             offset = .02 * range(get(gca, 'XLim'));
-            text(Xc(rset{k}(j), 1)+offset, Xc(rset{k}(j), 2), names{rset{k}(j)}, 'Color', 'k', 'FontSize', 14);
+            texth{k}(end+1) = text(Xc(rset{k}(j), 1)+offset, Xc(rset{k}(j), 2), names{rset{k}(j)}, 'Color', 'k', 'FontSize', 14);
         end
     end
     
 end
 
-handles.lh = lh;
 handles.ph = ph;
-
+handles.texth = texth;
 
 xlim = get(gca, 'XLim');  rg = range(xlim) * [-.05 .05]; xlim = xlim + rg;
 ylim = get(gca, 'YLim'); rg = range(ylim) * [-.05 .05]; ylim = ylim + rg;

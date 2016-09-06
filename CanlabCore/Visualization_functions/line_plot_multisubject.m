@@ -174,7 +174,7 @@ if group_avg_ref_line
     Xs = cat(2,X{:});
     minX = prctile(Xs(1,:),5);
     maxX = prctile(Xs(end,:),95);
-    plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);
+    han.grpline_handle = plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);
 end
 
 end % function

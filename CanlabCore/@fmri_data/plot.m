@@ -113,14 +113,16 @@ switch plotmethod
         % ---------------------------------------------------------------
         % Histogram
         % ---------------------------------------------------------------
-        dattmp = fmridat.dat(:);
+%         dattmp = fmridat.dat(:);
+%         subplot(2, 3, 2);
+%         [h, x] = hist(dattmp, 100);
+%         han = bar(x, h);
+%         set(han, 'FaceColor', [.3 .3 .3], 'EdgeColor', 'none');
+%         axis tight;
+%         xlabel('Values'); ylabel('Frequency');
+%         title('Histogram of values');
         subplot(2, 3, 2);
-        [h, x] = hist(dattmp, 100);
-        han = bar(x, h);
-        set(han, 'FaceColor', [.3 .3 .3], 'EdgeColor', 'none');
-        axis tight;
-        xlabel('Values'); ylabel('Frequency');
-        title('Histogram of values');
+        histogram(fmridat, 'nofigure')
         drawnow
 
         clear dattmp
@@ -156,26 +158,49 @@ switch plotmethod
             for i = 1:nobs
                 plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
             end
+            
+            errorbar(Y, globalmean, globalstd);
+            
             ylabel('Global mean');
             xlabel(Yname);
             title('Globals for each case (size = spatial std)')
             axis tight
             drawnow
 
-            if ~isempty(fmridat.Y) && size(fmridat.Y, 1) == nobs
-
-                subplot(2, 3, 6);
-                Y = fmridat.Y;
-                Yname = 'Y values in fmri data obj';
-                for i = 1:nobs
-                    plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
-                end
-                ylabel('Global mean');
-                xlabel(Yname);
-                title('Globals for each case (size = spatial std)')
-                axis tight
-                drawnow
-            end
+         
+        % ---------------------------------------------------------------
+        % Mahalanobis distance
+        % ---------------------------------------------------------------
+        
+            subplot(2, 3, 6);
+                            
+            [ds, expectedds, p] = mahal(fmridat, 'noplot');
+            
+            Y = ds - expectedds;
+            wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+            
+            plot(Y)
+            plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
+            
+            ylabel('Act-Exp Deviation');
+            title('Mahalanobis distance (outlier status)');
+            xlabel('Case No. (red=outlier after Bonf correction)');
+            
+            
+%             if ~isempty(fmridat.Y) && size(fmridat.Y, 1) == nobs
+% 
+% 
+%                 Y = fmridat.Y;
+%                 Yname = 'Y values in fmri data obj';
+%                 for i = 1:nobs
+%                     plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
+%                 end
+%                 ylabel('Global mean');
+%                 xlabel(Yname);
+%                 title('Globals for each case (size = spatial std)')
+%                 axis tight
+%                 drawnow
+%             end
         end
         
         
@@ -309,7 +334,9 @@ function create_orthviews(vecs_to_reconstruct, fmridat)
 vecs_to_reconstruct = zeroinsert(fmridat.removed_voxels, vecs_to_reconstruct);
 
 n = size(vecs_to_reconstruct, 2);
-overlay = which('SPM8_colin27T1_seg.img');
+%overlay = which('SPM8_colin27T1_seg.img');
+overlay = which('keuken_2014_enhanced_for_underlay.img');
+
 spm_check_registration(repmat(overlay, n, 1));
 
 for i = 1:n
@@ -317,8 +344,8 @@ for i = 1:n
     cl{i} = iimg_indx2clusters(vecs_to_reconstruct(:, i), fmridat.volInfo);
     cluster_orthviews(cl{i}, 'add', 'handle', i);
     
-    spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
-    
+    %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
+    spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
 end
 
 end

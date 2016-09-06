@@ -87,9 +87,9 @@ if dolight
     material dull
 end
 
-%[d f e] = fileparts(P);
-%outP = fullfile(d, filesep,['surf_' f]);
+[d f e] = fileparts(P);
+outP = fullfile(d, filesep,['surf_' f '.mat']);
 %if outP(1) == filesep, outP = outP(2:end);end
-%eval(['save ' outP ' FV'])
+save(outP, 'FV');
 
 return

@@ -4,10 +4,6 @@
 % and activation map(s) for creating montage plots and other types of
 % plots.
 %
-% The default brain for overlays is based on Keuken et al. 2014
-% For legacy SPM8 single subject, enter as arguments:
-% 'overlay', which('SPM8_colin27T1_seg.img')
-%
 % Creating class instances
 % -----------------------------------------------------------------------
 % 
@@ -118,11 +114,8 @@ classdef fmridisplay
             % arguments
             % ---------------------------------
             
-            %obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-            obj.overlay = which('keuken_2014_enhanced_for_underlay.img');
+            obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
 
-%             obj.overlay = which('clean_Q1-Q6_RelatedParcellation210_AverageT1w_restore.nii');  % spm8 seg cleaned up
-  
             if any(strcmp(varargin, 'overlay'))
                 wh = find(strcmp(varargin, 'overlay'));
                 wh = wh(1);
@@ -134,9 +127,6 @@ classdef fmridisplay
             
             if ~isempty(obj.overlay)
                 V = spm_vol(obj.overlay);
-                V = V(1);
-            else
-                error('Cannot find overlay image.');
             end
             
             obj.SPACE = define_sampling_space(V);

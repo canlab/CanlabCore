@@ -16,13 +16,6 @@ function A = sdt_A(H, F)
 %   **F:**
 %        false alarm rate
 %
-% :Outputs:
-%
-%   **A:**
-%        A measure of sensitivity of a detector, essentially the area under
-%        the ROC curve for either "normal" (H>=F) or "reverse skill" (F>H)
-%        case (ranges from 0.5 to 1).
-%
 % Meaning of values where F > H ("reverse skill"): 
 %
 % The meaningful measure of sensitivity in this case is A(F,H) 

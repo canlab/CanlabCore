@@ -57,11 +57,8 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        Default behavior is to plot each individual image.
 %
 %   **bucknerlab**
-%        Use 7 network parcellation from Yeo et al. as basis for comparisons
-%        Cortex only.  BUT also:
-%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
-%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum
-%        + SPM Anatomy Toolbox regions + brainstem
+%        Use 7 network parcellation from Yeo et al. as basis for
+%        comparisons
 %
 %   **kragelemotion**
 %        Use 7 emotion-predictive models from Kragel & LaBar 2015 for
@@ -70,11 +67,6 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **allengenetics**
 %        Five maps from the Allen Brain Project human gene expression maps
 %        from Luke Chang (unpublished)
-%
-%   **bgloops**
-%        5-basal ganglia parcels and 5 associated cortical
-%        networks from Pauli et al. 2016.  Also 'pauli'
-%        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
 %
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
@@ -103,11 +95,6 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %               4		Yellow
 %               5		Pink
 %               6		Turquoise
-%
-%   **'dofixrange':**
-%        Set min and max of circles numbers (values on polar axis)
-%        Follow by range vector: [min_val max_val]
-%
 %
 % :Outputs:
 %
@@ -179,14 +166,12 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % ..
 [hh, hhfill] = deal(' ');
 doaverage = 0; % initalize optional variables to default values here.
-mapset = 'bucknerlab';  % 'bucknerlab'
-table_group = {}; %initialize output
-multcomp_group = {}; %initialize output
-dofigure = true;
-noplot = false;
+mapset = 'npsplus';  % 'bucknerlab'
+table_group={}; %initialize output
+multcomp_group={}; %initialize output
+noplot=false;
 doCosine = 0; %do cosine similarity
 groupColors = scn_standard_colors(size(obj.dat, 2));
-dofixRange = 0;
 
 % optional inputs with default values
 % -----------------------------------
@@ -199,10 +184,7 @@ for i = 1:length(varargin)
                 
             case 'cosine_similarity', doCosine = 1;
                     
-            case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
-                    'kragelemotion' 'allengenetics' ...
-                    'pauli' 'bgloops' 'pauli17' 'bgloops17'}
-                
+            case {'bucknerlab', 'kragelemotion' 'allengenetics'}
                 mapset = varargin{i};
                 
             case 'mapset'
@@ -214,13 +196,7 @@ for i = 1:length(varargin)
                 compareGroups = true;
                 group = varargin{i+1};
                 
-            case 'noplot'; noplot = true;
-                
-            case 'nofigure', dofigure = false;
-                
-            case 'dofixrange';
-                dofixRange=1;
-                fixedrange = varargin{i+1};
+            case 'noplot'; noplot=true;
                 
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
@@ -304,16 +280,11 @@ stats.r = r;
 if ~doaverage
         
     if ~noplot
-        
-        if ~dofixRange
-            % Plot values for each image in obj
-            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
-        else
-            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange); 
+        % Plot values for each image in obj
+        [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
         % Make legend
         if ~isempty(obj.image_names)
             han = makelegend(obj.image_names, groupColors);
-        end
         end
     end
     
@@ -414,13 +385,7 @@ elseif doaverage
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
         
-        if dofigure, create_figure('tor_polar'); end
-        
-        if ~dofixRange
-            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
-        else
-            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
-        end
+        [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', varargin{:});
         
         set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
         set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);

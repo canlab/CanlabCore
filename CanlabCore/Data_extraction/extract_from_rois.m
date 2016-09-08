@@ -39,13 +39,6 @@ function [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, vara
 %    imgs_to_extract_from = filenames('w*.nii','char');
 %    mask_image = which('anat_lbpa_thal.img');
 %    [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image);
-%
-% : Programmer Notes:
-% ::
-%   Marianne corrected a mistaken variable name from dat to regiondat in
-%   line 175. Error would go unnoticed if region dat was not empty (which
-%   is normally the case). June 2016
-%
 
 
     if isempty(mask_image)
@@ -175,8 +168,7 @@ function [cl, imgdat] = extract_from_rois(imgs_to_extract_from, mask_image, vara
 
 
         else
-            regionmean = NaN .* zeros(size(regiondat, 1), 1);
-            disp('WARNING: Empty region dat, check your masks');
+            regionmean = NaN .* zeros(size(dat, 1), 1);
         end
 
         cl(i).average_data = regionmean;

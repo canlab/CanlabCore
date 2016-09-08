@@ -52,7 +52,6 @@ function SPACE = define_sampling_space(V, varargin)
 %    original (o) and new (X, Y) grid space
 %    xcoords, ycoords: mm coords centered on origin
 
-V = V(1);
 voxSize = abs(diag(V.mat(1:3, 1:3))); % in mm
 
 %Zo = vol3(:, :, 32); % x by y mm

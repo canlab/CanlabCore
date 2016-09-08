@@ -4,9 +4,9 @@ Thumbs.db
 .Spotlight
 ._*
 .DS_*
-.\#*
+
 *.m~
-\#*
+
 CanlabCore/OptimizeDesign11/GA3/onsets2efficiency2.m
 classifier_compare.ipynb
 .#.gitignore

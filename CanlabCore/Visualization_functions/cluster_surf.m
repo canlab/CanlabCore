@@ -119,9 +119,9 @@ function [p,str] = cluster_surf(varargin)
 %      - Also changed default surface and colormap
 % ..
 
-% -----------------------------------------------------------------------
+% ..
 %    set up input arguments and defaults
-% -----------------------------------------------------------------------
+% ..
 mmdeep = 10;
 cscale = 0;
 heatm = 0;
@@ -142,9 +142,6 @@ negcm = colormap_tor([0 0 1], [0 1 1]);
 actcolors = [];  % used with heatmap
 donormalize = 0; % used with colorscale
 
-% -----------------------------------------------------------------------
-%    optional inputs
-% -----------------------------------------------------------------------
 clind = 1;
 for i = 1:length(varargin)
     

@@ -137,8 +137,7 @@ spacing = 6; % slice spacing, in mm
 
 % note: ovl is not functional here...set up in fmridisplay constructor 
 %ovl = which('mni_icbm152_t1_tal_nlin_sym_09a_brainonly.img');  % symmetric ICBM 152-brain nonlinear iterative registration
-%ovl= which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
-ovl = which('keuken_2014_enhanced_for_underlay.img');
+ovl= which('SPM8_colin27T1_seg.img');  % which('scalped_avg152T1.img');
 
 textcodes = [];
 texthandles = [];
@@ -229,11 +228,6 @@ end
 
 obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'slice_mm_coords', slice_mm_coords);
 
-% set color map to enhance contrast
-datvec = dat(:);
-datvec(datvec == 0) = [];
-cmap = contrast(datvec);
-colormap(cmap);
 
 % ------------------------------------------------------
 % INLINE FUNCTIONS

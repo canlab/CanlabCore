@@ -96,43 +96,9 @@ elseif strcmp(dir, 'right')
     else
         view(270, 0);
     end
-elseif strcmp(dir, 'flat right')
-    h = addbrain('flat right');
-    
-elseif strcmp(dir, 'flat right')
-    h = addbrain('right');
-    
-elseif strcmp(dir, 'surface left')
-    h = addbrain('surface left');
-        
-    if strcmp(orn, 'medial')
-        view(270, 0);
-    else
-        view(90, 0);
-    end
-    
-elseif strcmp(dir, 'surface right')
-    h = addbrain('surface right');
-    if strcmp(orn, 'medial')
-        view(90, 0);
-    else
-        view(270, 0);
-    end
-   
- 
 end
-
-if strcmp(h(1).FaceColor,'interp')
-    set(h,'FaceAlpha', 1);
-else
-    set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
-end
-
-lightRestoreSingle; 
-axis image;
-axis off; 
-lighting gouraud;
-material dull;
+set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull;
 
 
 % register info in fmridisplay object

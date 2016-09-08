@@ -165,10 +165,9 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
     % equivalent, making it colormap independent.
     % This will allow us to use the existing values and average in new colors
     % for blobs
-    if  ishandle(p) && size(v,1) == size(c, 1) && size(c, 2) == 1
+    if ishandle(p) && size(v,1) == size(c, 1) && size(c, 2) == 1
         cm = get(gcf, 'Colormap');
         c2 = round((c./max(c)) .* length(cm));
-        c2(c2==0)=1;
         c2 = cm(c2, :);
         c = c2;  % this is the true-color equivalent
         clear cm c2

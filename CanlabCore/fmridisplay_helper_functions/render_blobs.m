@@ -144,7 +144,7 @@ vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in ol
 
 % adjust defaults
 if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    cmaprange = double([prctile(mapd(mapd < 0), 20) prctile(mapd(mapd < 0), 80) prctile(mapd(mapd > 0), 20) prctile(mapd(mapd > 0), 80) ]);
+    cmaprange = double([prctile(mapd(mapd < 0), 25) prctile(mapd(mapd < 0), 75) prctile(mapd(mapd > 0), 25) prctile(mapd(mapd > 0), 75) ]);
 end
 
 for i = 1:length(varargin)
@@ -159,17 +159,16 @@ for i = 1:length(varargin)
                 
             case 'onecolor', docolormap = 0; % solid-color blobs
             case 'splitcolor'
-                
                 docolormap = 1; dosplitcolor = 1;
                 splitcolors = varargin{i + 1};
-                
                 if ~iscell(splitcolors) || length(splitcolors) ~= 4
                     error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
                 end
                 color = splitcolors{4}; % max pos
                 mincolor = splitcolors{3}; % min pos
-                maxnegcolor = splitcolors{2}; % max neg
                 minnegcolor = splitcolors{1}; % min neg
+                maxnegcolor = splitcolors{2}; % max neg
+                
                 
                 % do not use other entries for colors
                 %                 varargin{strcmp(varargin, 'color')} = deal(0);

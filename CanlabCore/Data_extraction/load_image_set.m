@@ -34,22 +34,12 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   **image_names_or_keyword:**
 %        A string matrix with images to load, or a keyword:
-%        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
-%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
-%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum
-%        + SPM Anatomy Toolbox regions + brainstem
-%        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
+%        'bucknerlab': 7 network parcellation from Yeo et al. 
+%        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015 
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
 %        'npsplus': Wager lab multivariate patterns:
 %                   NPS, PINES, Romantic Rejection, VPS
-%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager
-%        et al. 2008. Each image is a contrast image for the contrast [reappraise negative vs. look negative]
-%        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
-%        networks from Pauli et al. 2016
-%        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
-%        'bgloops_cortex' : Cortical regions most closely associated with
-%        the Pauli 5-region striatal clusters
 %
 % :Optional inputs:
 %   None yet.
@@ -72,9 +62,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %     'Rating_Weights_LOSO_2.nii'  ...  % PINES
 %     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
 %     'bmrk4_VPS_unthresholded.nii'};
-%
+% 
 % [obj, netnames, imgnames] = load_image_set(imagenames);
-%
+% 
 % The above loads the same images as:
 %
 % [obj, netnames, imgnames] = load_image_set('npsplus');
@@ -104,7 +94,7 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
-            
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -116,13 +106,10 @@ if isa(image_names_or_keyword, 'fmri_data')
     imagenames = image_obj.image_names;
     networknames = format_strings_for_legend(imagenames);
     return
-    
-elseif isa(image_names_or_keyword, 'image_vector')
-    error('Load image set only tested for input fmri_data objects now.');
-    
+
 elseif iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size(image_names_or_keyword, 1) > 1)
     % We have custom image input
-    
+
     docustom = 1;
     
 else
@@ -134,16 +121,6 @@ else
             [image_obj, networknames, imagenames] = load_bucknerlab_maps;
             networknames=networknames';
             
-        case 'bucknerlab_wholebrain'
-            
-            [image_obj, networknames, imagenames] = load_bucknerlab_maps_wholebrain;
-            networknames=networknames';
-            
-        case 'bucknerlab_wholebrain_plus'
-            
-            [image_obj, networknames, imagenames] = load_bucknerlab_wholebrain_plus_subctx;
-            networknames=networknames';
-          
         case 'npsplus'
             [image_obj, networknames, imagenames] = load_npsplus;
             
@@ -153,20 +130,7 @@ else
         case 'allengenetics'
             [image_obj, networknames, imagenames] = load_allengenetics;
             
-        case {'emotionreg' 'emotionregulation'}
-            [image_obj, networknames, imagenames] = load_emotion_reg_sample;
             
-        case {'bgloops17', 'pauli17'}
-            [image_obj, networknames, imagenames] = load_pauli_bg17;
-            
-        case {'bgloops', 'pauli'}
-            [image_obj, networknames, imagenames] = load_pauli_bg;
-
-        case {'bgloops_cortex', 'pauli_cortex'}
-            [image_obj, networknames, imagenames] = load_pauli_bg_cortex;
-            
-            
-           
         otherwise
             error('Unknown mapset keyword.');
             
@@ -175,13 +139,15 @@ else
 end % custom or not
 
 if docustom
-    
+
     [image_obj, networknames, imagenames] = load_custom(image_names_or_keyword);
     
 end
 
 disp('Loaded images:');
 fprintf('%s\n', imagenames{:});
+
+
 
 
 end % function
@@ -197,54 +163,6 @@ end % function
 % -------------------------------------------------------------------------
 
 
-function imagenames = check_image_names_get_full_path(imagenames)
-
-if ~iscell(imagenames), imagenames = cellstr(imagenames); end
-
-for i = 1:length(imagenames)
-    
-    if exist(imagenames{i}, 'file')
-        
-        % do nothing. Sometimes which returns empty even though file
-        % exists. Do not use which if returns empty. Otherwise, do.
-        
-        if ~isempty(which(imagenames{i}))
-            imagenames{i} = which(imagenames{i});
-        end
-        
-    else
-        fprintf('CANNOT FIND %s \n', imagenames{i})
-        error('Exiting.');
-        
-    end
-    
-    
-end
-
-end % function
-
-
-
-function image_obj = integer_coded_image_to_separate_images(image_obj)
-
-u = unique(image_obj.dat);
-u(u == 0) = [];
-k = length(u);
-
-newmaskdat = zeros(size(image_obj.dat, 1), k);
-
-for i = 1:k  % breaks up into one map per image/network
-    
-    wh = image_obj.dat == i;
-    
-    newmaskdat(:, i) = double(wh);
-    
-    
-end
-
-image_obj.dat = newmaskdat;
-
-end % function
 
 function [image_obj, networknames, imagenames] = load_custom(imagenames)
 
@@ -262,11 +180,6 @@ end  % function
 
 
 
-% -------------------------------------------------------------------------
-%
-% Specific, named image sets
-%
-% -------------------------------------------------------------------------
 
 function [image_obj, networknames, imagenames] = load_bucknerlab_maps
 
@@ -278,7 +191,7 @@ img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
 
 image_obj = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
 
-networknames = names.rnames(1:7); % cortex only
+networknames = names.rnames(1:7);
 k = length(networknames);
 
 newmaskdat = zeros(size(image_obj.dat, 1), k);
@@ -287,7 +200,7 @@ for i = 1:k  % breaks up into one map per image/network
     
     wh = image_obj.dat == i;
     
-    %nvox(1, i) = sum(wh);
+    nvox(1, i) = sum(wh);
     
     newmaskdat(:, i) = double(wh);
     
@@ -298,93 +211,6 @@ image_obj.dat = newmaskdat;
 
 imagenames = {img};
 end  % function
-
-
-
-function [image_obj, networknames, imagenames] = load_bucknerlab_maps_wholebrain
-
-% Load Bucker Lab 1,000FC masks
-% ------------------------------------------------------------------------
-
-names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
-img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
-
-image_obj = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
-
-networknames = names.rnames(1:7); 
-
-k = length(networknames);       % cortex, striatum, cerebellum, same names
-
-newmaskdat = zeros(size(image_obj.dat, 1), k);
-
-% Cortex, BG, CBLM
-for i = 1:7  % breaks up into one map per image/network
-    
-    wh = image_obj.dat == i;
-    newmaskdat(:, i) = double(wh);
-  
-    wh = image_obj.dat == i + 7;
-    newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
-    
-    wh = image_obj.dat == i + 14;
-    newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
-end
-
-% ADD OTHER REGIONS
-% *****
-
-
-image_obj.dat = newmaskdat;
-
-imagenames = {img};
-end  % function
-
-
-
-
-function [image_obj, networknames, imagenames] = load_bucknerlab_wholebrain_plus_subctx
-
-% Load Bucker Lab 1,000FC masks
-% ------------------------------------------------------------------------
-
-names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
-img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
-
-image_obj = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
-
-networknames = names.rnames(1:7); 
-
-m = 5;                              % number of other regions
-                                    % Amy, Thal, Hy, Brainstem, Hippocampus
-k = length(networknames) + m;       % cortex, striatum, cerebellum
-
-newmaskdat = zeros(size(image_obj.dat, 1), k);
-
-% Cortex, BG, CBLM
-for i = 1:7  % breaks up into one map per image/network
-    
-    wh = image_obj.dat == i;
-    newmaskdat(:, i) = double(wh);
-  
-    wh = image_obj.dat == i + 7;
-    newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
-    
-    wh = image_obj.dat == i + 14;
-    newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
-end
-
-% ADD OTHER REGIONS
-% *****
-% find hipp:
-ishipp = ~cellfun(@isempty, strfind(names.rnames, 'Hipp'));
-newmaskdat(:, end + 1) = double(any(image_obj.dat(:, ishipp), 2));
-
-
-image_obj.dat = newmaskdat;
-
-imagenames = {img};  % ***add to names
-end  % function
-
 
 
 
@@ -415,7 +241,7 @@ end  % function
 
 function [image_obj, networknames, imagenames] = load_kragelemotion
 
-% Load Kragel 2015 emotion maps
+% Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
 networknames = {'Amused' 'Angry' 'Content' 'Fearful' 'Neutral' 'Sad' 'Surprised'};
@@ -449,7 +275,7 @@ imagenames = { ...
     'Dopamine.nii' ...
     'AdrenoAlpha.nii' ...
     'AdrenoBeta.nii' ...
-    };
+};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -460,73 +286,30 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_emotion_reg_sample
+function imagenames = check_image_names_get_full_path(imagenames)
 
-% Load Wager et al. 2008 Emotion Regulation sample dataset
-% ------------------------------------------------------------------------
+if ~iscell(imagenames), imagenames = cellstr(imagenames); end
 
-myfile = which('con_00810001.img');
-mydir = fileparts(myfile);
+for i = 1:length(imagenames)
+    
+    if exist(imagenames{i}, 'file')
 
-if isempty(mydir)
-    disp('Uh-oh! I can''t find the data.')
-else
-    disp('Data found.')
+        % do nothing. Sometimes which returns empty even though file
+        % exists. Do not use which if returns empty. Otherwise, do.
+        
+        if ~isempty(which(imagenames{i}))
+            imagenames{i} = which(imagenames{i});
+        end
+        
+    else 
+        fprintf('CANNOT FIND %s \n', imagenames{i})
+        error('Exiting.');
+
+    end
+    
+
 end
 
-imagenames = filenames(fullfile(mydir, 'con_008100*img'));
-
-imagenames = check_image_names_get_full_path(imagenames);
-
-image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images
-
-networknames = format_strings_for_legend(image_obj.image_names);
-
 end % function
 
-
-
-
-
-
-function [image_obj, networknames, imagenames] = load_pauli_bg
-
-% Load Pauli et al. 2016 basal ganglia 5-cluster solution
-% ------------------------------------------------------------------------
-
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
-
-imagenames = {'Pauli_bg_cluster_mask_5.nii'};
-imagenames = check_image_names_get_full_path(imagenames);
-
-% load image with integer coding of networks
-image_obj = fmri_data(imagenames, [], 'noverbose');
-
-% Break up into one image per region
-% -------------------------------------------------
-image_obj = integer_coded_image_to_separate_images(image_obj);
-
-
-end % function
-
-
-
-function [image_obj, networknames, imagenames] = load_pauli_bg_cortex
-
-% Load Pauli et al. 2016 basal ganglia 5-cluster solution
-% ------------------------------------------------------------------------
-imagenames = {'Pauli_bg_nb_param_rank_fst_Cp.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Pa.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Ca.nii' ...
-                'Pauli_bg_nb_param_rank_fst_VS.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Pp.nii' ...
-};
-
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
-
-imagenames = check_image_names_get_full_path(imagenames);
-
-image_obj = fmri_data(imagenames, [], 'noverbose');
-
-end % function
 

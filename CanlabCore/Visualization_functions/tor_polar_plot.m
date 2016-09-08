@@ -33,9 +33,6 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 %   **'nonumbers':**
 %        Suppress numbers (values on polar axis)
 %
-%   **'fixedrange':**
-%        Set min and max of circles numbers (values on polar axis)
-%        Follow by range vector: [min_val max_val]
 % :Output:
 %
 %   **hh:**
@@ -53,11 +50,10 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 % Otherwise, zero is the origin.
 
 
-dofigure = 0;
+dofigure = 1;
 dofill = 1;
 dononneg = 0;
 donumbers = 1;
-dofixrange = 0;
 
 p = length(vals); % plots
 
@@ -70,14 +66,7 @@ hhfill = {};
 if any(strcmp(varargin, 'nofigure'))
     % suppress figure
     dofigure = 0;
-end
-
-if any(strcmp(varargin, 'dofigure'))
-    % include figure [now default]
-    dofigure = 1;
-end
-
-if dofigure
+else
     create_figure('tor_polar', nr, nc)
 end
 
@@ -87,11 +76,6 @@ end
 
 if any(strcmp(varargin, 'nofill'))
     dofill = 0;
-end
-
-if any(strcmp(varargin, 'fixedrange'))
-    dofixrange = 1;
-    fixedrange=varargin{find(strcmp(varargin, 'fixedrange'))+1};
 end
 
 if any(strcmp(varargin, 'nonumbers'))
@@ -108,16 +92,13 @@ for s = 1:p
     
     % make non-negative
     % this changes the interpretation of the origin of the plot
-    if dononneg & ~dofixrange
+    if dononneg
         if any(vals{s}(:) < 0)
             origmin(s) = abs(min(vals{s}(:)));  % this is the new zero point
             vals{s} = vals{s} - min(vals{s}(:));
         else
             origmin(s) = 0;
         end
-    elseif dofixrange
-        vals{s} = vals{s} - fixedrange(1);
-        origmin(s) = abs(fixedrange(1));
     end
     
     % Polar plots of values
@@ -146,16 +127,11 @@ for s = 1:p
     % ------------------------------------------------------------
     
     % Circles
-    if dofixrange
-        maxval=fixedrange(2)-fixedrange(1);
-    else
     maxval = max(max(vals{s})) + .1 * (max(max(vals{s})));
-    end
-    
     h = circle([0 0], maxval);
     set(h, 'Color', [.3 .3 .3], 'LineWidth', 2);
     
-    if dononneg| dofixrange
+    if dononneg
         minval = origmin(s);
     else
         minval = 0;

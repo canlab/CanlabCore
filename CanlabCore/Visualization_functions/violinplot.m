@@ -117,24 +117,16 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %    axis([-2 10 -0.5 20])
 %    ylabel('\Delta [yesno^{-2}]','FontSize',14)
 %
-% :Example4 (Give data as cells with different n): 
+% :Example4 (Give data as cells with different n):
+%
+% disp('this example uses the statistical toolbox')
 % ::
 %
-%    disp('this example uses the statistical toolbox')
 %    Y{:,1}=rand(10,1);
 %    Y{:,2}=rand(1000,1);
 %    violinplot(Y,'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none','bw',0.1,'mc','k','medc','r-.')
 %    ylabel('\Delta [yesno^{-2}]','FontSize',14)
 %
-% :Example5 (change x-axis point distribution):
-% ::
-%
-%    disp('this example uses the statistical toolbox')
-%    Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
-%    violinplot(Y,'x',[-1 .7 3.4 8.8],'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none',...
-%               'bw',0.3,'mc','k','xlimitprop',0.5)
-%    axis([-2 10 -0.5 20])
-%    ylabel('\Delta [yesno^{-2}]','FontSize',14)
 % ..
 %    Updates:
 %    v2: extended for accepting also cells of different length
@@ -159,9 +151,6 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %    Updated 3/2016 by Wani Woo
 %    - add pointsize option ('pointsize')
 %    - add weight option ('weights')
-%
-%    Updated 7/2016 by Scott Schafer
-%    - added x limit proportion option ('xlimitprop')
 % ..
 
 
@@ -492,16 +481,10 @@ function [linehandles, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, var
 % lc is line color, will be used as fill
 % fc is fill color, will be used for lines, in a strange twist of fate
 % designed to increase contrast
-%
-% added by Scott Schafer, July 2016
-% xlimitprop is a proportion of the violin fill within which to display
-%  individual points. Default = 1
-%
 
 manual_pointcolor = false;
 manual_pointsize = false;
 doweights = false;
-xlimitprop = 1;
 
 if isempty(find(strcmp(varargin{1},'pointsize')))==0
     pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
@@ -517,10 +500,6 @@ if isempty(find(strcmp(varargin{1},'weights')))==0
     doweights = true;
     w = varargin{1}{find(strcmp(varargin{1},'weights'))+1};
     if iscell(w)==0, w = num2cell(w,1); end
-end
-
-if isempty(find(strcmp(varargin{1},'xlimitprop')))==0
-    xlimitprop = varargin{1}{find(strcmp(varargin{1},'xlimitprop'))+1};
 end
 
 if isempty(F) || isempty(U)
@@ -592,8 +571,8 @@ for i = 1:size(Y, 2)
         whpoints = myY > st(j) & myY <= en(j);
         
         whu = myU > st(j) & myU <= en(j);
-        %%%%%%%%%%%%%%%%%
-        mylimit(j) = mean(myF(whu))*xlimitprop;  % average density for this 'slab' of points
+        
+        mylimit(j) = mean(myF(whu));  % average density for this 'slab' of points
         % this will be the limit on x-values
         
         % interleave points on either side of the midline

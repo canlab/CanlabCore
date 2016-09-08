@@ -48,8 +48,10 @@ function obj = cat(obj, varargin)
 % :Examples:
 % ::
 %
-%    If you have a series of fmri_data objects called DATA_OBJ in a cell array, 
-%    concatenate them using: DATA_CAT = cat(DATA_OBJ{:});
+%    % give examples of code here
+%    param1 = abc();
+%    param2 = xyz();
+%    [out1,out2] = func_call(param1, param2)
 %
 % :References:
 %   CITATION(s) HERE

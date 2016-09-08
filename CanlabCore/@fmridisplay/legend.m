@@ -11,7 +11,6 @@ function obj = legend(obj, varargin)
 %
 % ..
 %    Tor Wager
-%    8/17/2016 - pkragel updated to accomodate split colormap
 % ..
 
 donewfig = 0;
@@ -85,25 +84,20 @@ for c = 1:length(obj.activation_maps)
     
     nsteps = 100;
     
+    legvals = linspace(currentmap.cmaprange(1), currentmap.cmaprange(2), nsteps);
     wvals = linspace(0, 1, nsteps);
     
     % separate plot for split colormap
     issplitmap = size(currentmap.mincolor, 1) - 1; % zero for one row, 1 for 2+
     
-    if issplitmap
-                legvals = linspace(currentmap.cmaprange(1), currentmap.cmaprange(4), nsteps);
-                legvals(legvals==0)=sign(mean([currentmap.cmaprange(1), currentmap.cmaprange(4)])*1E-6);
-    else
-            legvals = linspace(currentmap.cmaprange(1), currentmap.cmaprange(2), nsteps);
-    end
-    
     for i = 2:nsteps
         
         if ~issplitmap || (issplitmap && legvals(i) > 0)
-                            
+            
             fcolor = (1 - wvals(i)) * currentmap.mincolor(1, :) + wvals(i) * currentmap.maxcolor(1, :);
         
         elseif issplitmap && legvals(i) < 0
+            
             fcolor = (1 - wvals(i)) * currentmap.mincolor(2, :) + wvals(i) * currentmap.maxcolor(2, :);
         
         else
@@ -123,34 +117,29 @@ for c = 1:length(obj.activation_maps)
         
     end
     
-    if ~issplitmap
-        ntick=5;
-    myxtick = linspace(scaleanchors(1), scaleanchors(2), ntick);
-    else
-        ntick=7;
-     myxtick = linspace(scaleanchors(1), scaleanchors(4), ntick);       
-    end
+    myxtick = linspace(scaleanchors(1), scaleanchors(2), 5);
+
     % kludgy fix for sig digits
-    for i = 1:ntick
+    for i = 1:5
         mylabels{i} = sprintf('%3.2f', myxtick(i));
     end
     
     if sum(strcmp(mylabels, mylabels{1})) > 1
-        for i = 1:ntick
+        for i = 1:5
             mylabels{i} = sprintf('%3.3f', myxtick(i));
         end
     end
     
     
     if sum(strcmp(mylabels, mylabels{1})) > 1
-        for i = 1:ntick
+        for i = 1:5
             mylabels{i} = sprintf('%3.4f', myxtick(i));
         end
     end
     
 
     set(gca, 'YTickLabel', '', 'YColor', 'w', 'FontSize', myfontsize);
-    set(gca, 'XLim', [min(scaleanchors) max(scaleanchors)], 'XTick', myxtick, 'XTickLabel', mylabels);
+    set(gca, 'XLim', scaleanchors, 'XTick', myxtick, 'XTickLabel', mylabels);
     axis tight
     
 end

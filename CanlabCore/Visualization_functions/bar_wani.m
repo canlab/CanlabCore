@@ -1,4 +1,4 @@
-function handle = bar_wani(y, e, bar_width, varargin)
+function [handle, xdata_all] = bar_wani(y, e, bar_width, varargin)
 % Draw a bar plot with error bars with some additional useful features 
 % (work with up to the 2014a matlab).  
 %
@@ -257,7 +257,7 @@ for i = 1:barnum
         end
         
         if doscatter
-            hold on; scatter(double((xdata(9*(j-1)+1))+.02).*ones(size(sc_data{j,i})), sc_data{j,i}, 30, 'k', 'filled');
+            hold on; scatter(double((xdata(9*(j-1)+1))+.02).*ones(size(sc_data{j,i})), sc_data{j,i}, 50, [.3 .3 .3], 'filled');
             if ymin > min(sc_data{j,i}), ymin = min(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
             if ymax < max(sc_data{j,i}), ymax = max(sc_data{j,i}); set(gca, 'ylim', [ymin ymax]); end
         end
@@ -311,6 +311,8 @@ if dosave
         saveas(handle, savename);
     end 
 end
+
+xdata_all = flipud(xdata_all);
 
 end
 

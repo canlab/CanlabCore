@@ -5,6 +5,15 @@ function [values, components, full_data_objects] = extract_gray_white_csf(obj)
 % - Images must be in standard MNI space for this to apply.
 % - Uses canonical masks in CANlab tools:'gray_matter_mask.img' 'canonical_white_matter.img' 'canonical_ventricles.img' 
 %
+% This currently uses the images
+%       'gray_matter_mask.img' 'canonical_white_matter.img' 'canonical_ventricles.img'
+%       These images are based on the SPM8 a priori tissue probability
+%       maps, but they have been cleaned up and made symmetrical and/or eroded
+%       so that the white and CSF compartments are unlikely to contain very
+%       much gray matter.  The gray compartment is currently more
+%       inclusive. The potential value of this is that signal in the CSF/white
+%       compartments may be removed from images prior to/during analysis
+%
 % :Usage:
 % ::
 %

@@ -94,7 +94,9 @@ function [obj, true_obj, noise_obj] = sim_data(obj, varargin)
 % DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
 
-[v, n] = size(obj.dat);  % voxels x imagess
+rng('shuffle');         % seeds the random number generator 
+
+[v, n] = size(obj.dat); % voxels x imagess
 
 true_region_mask = [];  % to use default mask
 d = 0.5;                % Cohen's d for true regions (true effect size)

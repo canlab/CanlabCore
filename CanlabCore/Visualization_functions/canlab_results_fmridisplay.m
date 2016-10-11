@@ -171,7 +171,7 @@ doverbose = true;
 overlay = 'keuken_2014_enhanced_for_underlay.img';
 
 wh = strcmp(varargin, 'overlay');
-if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin(wh) = []; end
+if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin([wh wh+1]) = []; end
 
 wh = strcmp(varargin, 'noblobs');
 if any(wh), doblobs = false; varargin(wh) = []; end
@@ -273,19 +273,19 @@ if ~exist('o2', 'var')
             % saggital
             axh1 = axes('Position', [-0.02 0.4 .17 .17]);
             o2 = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
-            text(50, -50, 'left')
+            text(50, -50, 'left');
             drawnow
             
             axh2 = axes('Position', [-0.02 0.6 .17 .17]);
             o2 = montage(o2, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
-            text(50, -50, 'right')
+            text(50, -50, 'right');
             drawnow
             
             % sagg center
             axh3 = axes('Position', [.08 0.5 .17 .17]);
             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
-            drawnow
-            o2.montage{3}.slice_mm_coords
+            drawnow;
+            o2.montage{3}.slice_mm_coords;
          
             % axial bottom
             axh4 = axes('Position', [.10 0.4 .17 .17]);

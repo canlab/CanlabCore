@@ -255,12 +255,13 @@ if ~exist('o2', 'var')
         
     end
     
-    if exist(overlay,'file') == 2
-        % complete path specified
-        o2 = fmridisplay('overlay',overlay);
-    else
+    [opath, ofname, oext] = fileparts(overlay);
+    if isempty(opath)
         % check for file in matlab path
         o2 = fmridisplay('overlay', which(overlay));
+    else
+        % complete path specified
+        o2 = fmridisplay('overlay',overlay);
     end
     
     % You can customize these and run them from the command line

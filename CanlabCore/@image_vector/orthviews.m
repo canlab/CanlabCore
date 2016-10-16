@@ -23,6 +23,7 @@ overlay = which('keuken_2014_enhanced_for_underlay.img');
 doposneg = 0;
 doreg = 0;
 input_handle=[];
+dounique = 0;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -36,6 +37,9 @@ for i = 1:length(varargin)
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
                 
             case {'largest_region', 'largest_cluster'}, doreg = 1;
+                
+            case 'unique'
+                dounique = 1;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -80,7 +84,18 @@ for i = handle_indices
     
     cl{i} = iimg_indx2clusters(image_obj.dat(:, min(i, size(image_obj.dat,2))), image_obj.volInfo); %min() is to differentiate between which subplot to plot on and which image to plot.  used when this is called with orthviews_multiple_objs.  Yoni 11/14
     
-    if doposneg
+    if dounique
+        
+        %colors = custom_colors([1 1 0], [0 0 1], length(cl{i}));
+        
+        if ~isempty(cl{i})
+            cluster_orthviews(cl{i}, 'unique', 'add', 'handle', i);
+        else
+            fprintf('Image %3.0f empty\n', i);
+        end
+        
+    
+    elseif doposneg
         warning off
         cl{i} = cluster2region(cl{i});
         warning on % name field warning

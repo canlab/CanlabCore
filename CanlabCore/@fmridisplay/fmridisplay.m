@@ -128,6 +128,10 @@ classdef fmridisplay
                 wh = wh(1);
                 obj.overlay = varargin{wh + 1};
                 varargin([wh:wh+1]) = [];
+                
+                % kludge for weird full path issue 
+                ov2 = which(obj.overlay);
+                if ~isempty(ov2), obj.overlay = ov2; end
             end
             
             obj.SPACE = [];

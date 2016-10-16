@@ -221,7 +221,9 @@ classdef fmri_data < image_vector
             if isa(image_names, 'image_vector')
                 % Map fields of input object into fmri_data structure
                 
-                obj2 = struct(image_names);
+                warning off
+                obj2 = struct(image_names); %image_names;  % tor: struct not needed i think. nope, is needed.
+                warning on 
                 
                 N = fieldnames(obj);
                 for i = 1:length(N)

@@ -201,7 +201,7 @@ function cluster_orthviews(varargin)
 
     if douniquecolors
         % unique colors for each blob
-        colors = scn_standard_colors(50);
+        colors = scn_standard_colors(length(cl));
 
         ind = 1;
         for i = 1:length(cl)

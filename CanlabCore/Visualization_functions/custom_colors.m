@@ -4,7 +4,7 @@ function colors = custom_colors(startrgb, endrgb, k)
 %
 % :Usage:
 % ::
-%
+%     colors = custom_colors(startrgb, endrgb, k [length])
 % ..
 %     Author and copyright information:
 %

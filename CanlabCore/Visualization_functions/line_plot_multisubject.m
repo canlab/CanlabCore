@@ -1,11 +1,11 @@
-function [han, X, Y] = line_plot_multisubject(X, Y, varargin)
+function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 % Plots a scatterplot with multi-subject data, with one line per subject
 % in a unique color.
 %
 % :Usage:
 % ::
 %
-%    [han, X, Y] = line_plot_multisubject(X, Y, varargin)
+%    [han, X, Y, b] = line_plot_multisubject(X, Y, varargin)
 %
 % :Inputs:
 %
@@ -31,7 +31,7 @@ function [han, X, Y] = line_plot_multisubject(X, Y, varargin)
 %
 %   **'colors':**
 %        followed by array size N of desired colors.  if not passed
-%        in, will use scn_standard_colors
+%        in, will use custom_colors
 %
 %   **'MarkerTypes':**
 %        followed by char string.  if not passed in, uses
@@ -48,11 +48,17 @@ function [han, X, Y] = line_plot_multisubject(X, Y, varargin)
 %   **X, Y:**
 %        new variables (binned if bins requested)
 %
+%   **slope_stats** 
+%        slope of linear relationship for each person
+%         
 % :Examples:
 % ::
 %
 %    for i = 1:20, X{i} = randn(4, 1); Y{i} = X{i} + .3*randn(4, 1) + randn(1); end
 %    han = line_plot_multisubject(X, Y)
+%
+%   Custom colors and points:
+%   [han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
 %
 % Center within subjects and bin, then calculate correlation of
 % within-subject variables:
@@ -70,8 +76,8 @@ for i=1:length(varargin)
         switch varargin{i}
             case 'n_bins'
                 n_bins = varargin{i+1};
-                bin_size = length(X{1}) / n_bins;
-                if rem(length(X{1}), n_bins) ~= 0, error('Num trials must be divisible by num bins'), end;
+                %bin_size = length(X{1}) / n_bins;
+                %if rem(length(X{1}), n_bins) ~= 0, error('Num trials must be divisible by num bins'), end;
                 
             case 'subjid'
                 subjid = varargin{i + 1};
@@ -107,7 +113,10 @@ end
 
 N = length(X);
 
-if ~exist('colors', 'var'), colors = scn_standard_colors(N); end
+if ~exist('colors', 'var') %,colors = scn_standard_colors(N); end
+    colors = custom_colors([1 .5 .4], [.8 .8 .4], N);
+end
+
 if ~exist('mtypes', 'var'), mtypes = 'osvd^<>ph'; end
 
 hold on
@@ -136,9 +145,21 @@ for i = 1:N
     if exist('n_bins', 'var')
         if n_bins ~= 0
             points = zeros(n_bins,2);
-            t = sortrows([X{i} Y{i}],1);
+            t = sortrows([X{i} Y{i}],1); % not really even needed
+            
+            x = t(:, 1);
+            bins = prctile(x, linspace(0, 100, n_bins + 1));
+            bins(end) = Inf;
+            
             for j=1:n_bins %make the bins
-                points(j,:) = nanmean(t( bin_size*(j-1)+1 : bin_size*j ,:));
+                
+                wh = x >= bins(j) & x < bins(j+1);
+                
+                points(j,:) = nanmean(t(wh, :));
+                
+                ste_points(j, :) = nanstd(t(wh, :)) ./ sqrt(sum(wh));
+                
+                %points(j,:) = nanmean(t( bin_size*(j-1)+1 : bin_size*j ,:));
             end
             
             X{i} = points(:, 1);
@@ -151,14 +172,33 @@ for i = 1:N
     % plot ref line
     b(i,:) = glmfit(X{i}, Y{i});
     
+    
     han.line_handles(i) = plot([min(X{i}) max(X{i})], [b(i,1)+b(i,2)*min(X{i}) b(i,1)+b(i,2)*max(X{i})], 'Color', colors{i}, 'LineWidth', 1);
     
     % plot all the points
     if doind
-        han.point_handles(i) = plot(X{i}, Y{i}, ['k' mtypes(whm(1))], 'MarkerFaceColor', colors{i}, 'Color', max([0 0 0; colors{i}]));
+        han.point_handles(i) = plot(X{i}, Y{i}, ['k' mtypes(whm(1))], 'MarkerSize', 3, 'MarkerFaceColor', colors{i}, 'Color', max([0 0 0; colors{i}]));
     end
 end % subject loop
 
+% Stats on slope
+% -----------------------------------------------------------------
+slope_stats.b = b;
+[~, slope_stats.p, ~, tmpstat] = ttest(b(:, 2));
+slope_stats.t = tmpstat.tstat;
+slope_stats.df = tmpstat.df;
+    
+Xc = cat(1, X{:});
+Yc = cat(1, Y{:});
+[wasnan, Xc, Yc] = nanremove(Xc, Yc);
+slope_stats.r = corr(Xc, Yc);
+slope_stats.wasnan = wasnan;
+
+fprintf('r = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
+    slope_stats.r, slope_stats.df, slope_stats.t, slope_stats.p, sum(slope_stats.wasnan));
+
+% Individual points
+% -----------------------------------------------------------------
 % get rid of bad handles for missing subjects
 if doind
     han.point_handles = han.point_handles(ishandle(han.point_handles) & han.point_handles ~= 0);
@@ -169,7 +209,31 @@ han.line_handles = han.line_handles(ishandle(han.line_handles) & han.line_handle
 %r=corr(cat(1,detrend(X{:},'constant')), cat(1,detrend(Y{:}, 'constant')), 'rows', 'complete')
 
 % plot the average ref line
+% -----------------------------------------------------------------
 if group_avg_ref_line
+    
+    if exist('n_bins', 'var') && n_bins ~= 0
+        % PLOT GROUP BIN WITH CROSSHAIR STD. ERRORS FOR EACH BIN
+        
+        XX = cat(2, X{:})';
+        YY = cat(2, Y{:})';
+        
+        % means and standard errors
+        mX = nanmean(XX);
+        sX = ste(XX);
+        mY = nanmean(YY);
+        sY = ste(YY);
+        
+        h = sepplot(mX, mY, .7, 'color', [.8 .3 0], 'linewidth', 4);
+        
+        h2 = errorbar_horizontal(mX, mY, sX, 'o', 'color', [.8 .3 0], 'linewidth', 3, 'markersize', 8, 'markerfacecolor', [.5 .1 0]);
+        h1 = errorbar(mX, mY, sY, 'o', 'color', [.8 .3 0], 'linewidth', 3, 'markersize', 8, 'markerfacecolor', [.5 .1 0]);
+        set(h2, 'linewidth', 3, 'color', [.8 .3 0]);
+        
+        han.grpline_handle = h;
+        han.grpline_err_handle = [h1 h2];
+        else
+            
     avg_b = mean(b);
     Xs = cat(2,X{:});
     minX = prctile(Xs(1,:),5);

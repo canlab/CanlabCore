@@ -1,10 +1,12 @@
-function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
+function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 % Get Subject-level or Event-level variable from dataset D and return in
 % rect matrix and cell array. Multiple variables can be requested, but 
 % all data requested must be either numeric or text, and not a combination of the two.
 %
 % :Usage:
 % ::
+%
+%    [dat, datcell, wh_level, descrip] = get_var(D)  % to list variables
 %
 %    [dat, datcell, wh_level, descrip] = get_var(D, varname, [opt inputs])
 %
@@ -57,11 +59,23 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varname, varargin)
 dat = [];
 datcell = {};
 
+if length(varargin) == 0
+    % List variables
+    disp('Subject-level variables:')
+    disp(D.Subj_Level.names)
+    
+    disp('Event-level variables:')
+    disp(D.Event_Level.names)
+
+    return
+else
+    varname = varargin{1};
+end
 
 if iscell(varname)
     [wh_level,textflag] = get_varlevel(D, varname{1});
 else
-    [wh_level,textflag] = get_varlevel(D, varname);
+nps_cslow    [wh_level,textflag] = get_varlevel(D, varname);
 end
 
 %varargin:  wh_keep
@@ -69,7 +83,7 @@ wh_keep = true(size(D.Subj_Level.id));
 do_conditional = 0;
 
 
-for i=1:length(varargin)
+for i = 2:length(varargin)
     if islogical(varargin{i})
         wh_keep = varargin{i};
     end

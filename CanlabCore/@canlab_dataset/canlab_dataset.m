@@ -24,6 +24,12 @@
 % scatterplot   -> standard or multi-line scatterplot of relationship between two variables
 % scattermatrix -> Scatterplot matrix of pairwise event-level variables
 %
+% More methods:
+% add_var             get_var             mediation           scattermatrix       write_text          
+% bars                glm                 plot_var            scatterplot         
+% canlab_dataset      glm_multilevel      print_summary       spm2canlab_dataset  
+% concatenate         histogram           read_from_excel     ttest2  
+%
 % - type methods(canlab_dataset) for a list of all methods
 %
 % Copyright Tor Wager, 2013

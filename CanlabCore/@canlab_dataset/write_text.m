@@ -52,7 +52,7 @@ function [headername, dataname, fid] = write_text(D, varargin)
 
 
 delim = ','; % flesh this out later as needed
-wh_keep = true(size(D.Subj_Level.names));
+wh_keep = true(size(D.Subj_Level.id));
 
 if nargin > 1, delim = varargin{1}; end
 if nargin > 2, wh_keep = varargin{2}; end

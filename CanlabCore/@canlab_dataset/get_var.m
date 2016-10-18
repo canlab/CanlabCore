@@ -75,7 +75,7 @@ end
 if iscell(varname)
     [wh_level,textflag] = get_varlevel(D, varname{1});
 else
-nps_cslow    [wh_level,textflag] = get_varlevel(D, varname);
+	[wh_level,textflag] = get_varlevel(D, varname);
 end
 
 %varargin:  wh_keep

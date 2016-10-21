@@ -147,6 +147,7 @@ if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
     cmaprange = double([prctile(mapd(mapd < 0), 20) prctile(mapd(mapd < 0), 80) prctile(mapd(mapd > 0), 20) prctile(mapd(mapd > 0), 80) ]);
 end
 
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -488,7 +489,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     % If map is constant, scaling will not work; just use original Z
                     maprange = abs(cmaprange(1) - cmaprange(2));
                     if ~isnan(maprange) && ~maprange
-                        Zscaled(Zscaled > 0) = cmaprange(1);  
+                        Zscaled(Zscaled < 0) = cmaprange(1);  
                     end
                     
                     maprange = abs(cmaprange(4) - cmaprange(3));

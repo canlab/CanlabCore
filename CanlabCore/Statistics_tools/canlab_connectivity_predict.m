@@ -38,7 +38,8 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %
 %   **dat:**
 %        concatenated data matrix of time points (t) within subjects x variables (e.g., ROIs)
-%        [subj x time] x [variables]
+%        [subj x time] x [variables]. That is, each row corresponds to a specific subject and
+%        time, and each column corresponds to a variable.
 %
 %  **subject_grouping:**
 %        [subj x time]-length integer vector of which

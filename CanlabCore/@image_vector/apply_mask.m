@@ -148,8 +148,6 @@ if doinvert
         maskdat = double(~maskdat);
         mask = rebuild_volinfo_from_dat(mask, maskdat(:));
         mask = resample_space(mask, dat);
-        %mask.dat = double(~mask.dat);
-        %rebuild_volinfo_from_dat
     end
     
 end

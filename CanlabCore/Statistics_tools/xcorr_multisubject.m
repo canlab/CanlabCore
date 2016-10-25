@@ -162,18 +162,8 @@ for i = 1:numsub            %size(DATA.dat,3);
                     
                     nxl(j,k) = mylat;
                     nxc(j,k) = myxc;
-                    
-                    
-                    %                 else
-                    %                     rr = corrcoef(subjdat(:,j), subjdat(:,k));    %if there's no shift by; fastest
-                    %
-                    %                     nxc(j,k) = rr(1,2);
-                    %                     nxl = [];
-                    
                 end
-                
             end
-            
         elseif dopartialr
             betastr = 'partial_correlation';
             nxc = calc_partial_r(subjdat);
@@ -201,12 +191,9 @@ for i = 1:numsub            %size(DATA.dat,3);
         OUT.shift_by = shift_by;
         OUT.shift_explanation = '0 for no latency est., n for cross-correlations shifting up to n time points forward/back';
         
-        %xc(n,:,:,i)=nxc;
         OUT.pairwise_assoc{n}(:,:,i) = nxc;
         clear nxc;
         
-        
-        %xl(n,:,:,i)=nxl;
         OUT.latency{n}(:,:,i)  = nxl;
         clear nxl;
         
@@ -227,7 +214,6 @@ OUT.stats.fdr_thresholded_tvalues = t;
 fprintf('\n');
 
 end % Main function
-
 
 
 function [b p] = calc_partial_r(X)
@@ -252,15 +238,7 @@ for i = 1:size(X, 2)
 
     %create_figure; plot(b(:, i)); hold on; plot(b1, 'r'); drawnow; pause(.05)
     
-%     [bb, dev, stats] = glmfit(xx, y, 'normal', 'constant', 'off');
-%     
-%     b(:, i) = bb;
-%     p(:, i) = stats.p;
-%     p(i, i) = 1;
-%     b(i, i) = NaN;
-    
 end
-
 
 end % function
 

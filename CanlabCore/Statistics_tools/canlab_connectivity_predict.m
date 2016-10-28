@@ -370,7 +370,6 @@ rsorted = r(wh, wh);
 
 % put spaces in to mark off classes
 %-----------------------------------
-%wh_spaces = [0; diff(parcelindx)];
 rnew = [];
 pinew = [];
 for i = nclasses
@@ -431,7 +430,6 @@ create_figure('graph_metrics', 2, 2);
 x = mean(OUT.connectdata);
 [xsort, wh] = sort(x(sig), 'descend');
 
-%[h,bins] = hist(x(sig), min(10, round(x(sig)/100)));
 plot(xsort, 'LineWidth', 3);
 title('Avg. association for significant associations only')
 
@@ -490,7 +488,6 @@ colorbar; set(gca, 'YDir', 'Reverse');
 axis tight
 axis off
 
-%cm = colormap_tor([0 0 1], [1 1 0], [1 1 1]);
 cm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
 colormap(cm)
 

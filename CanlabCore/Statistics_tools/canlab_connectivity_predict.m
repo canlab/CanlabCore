@@ -123,23 +123,21 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
       end
     end
   end
-
-
-				% Cross-correlation stats
-				% -----------------------------------
+ % Cross-correlation stats
+ % -----------------------------------
   s = unique(subject_grouping)';
   n = length(s);
-				% get time points for each subject
+ % get time points for each subject
   for i = s
     t(i) = sum(subject_grouping == s(i));
   end
-	  % convert to cells for compatibility with xcorr_multisubject
+ % convert to cells for compatibility with xcorr_multisubject
   C = mat2cell(dat, t, size(dat, 2));
-				% stats on pairwise associations
+ % stats on pairwise associations
   OUT = xcorr_multisubject(C, varargin{:});
   plot_individual_subjects(OUT)
-				% Image the correlation matrix
-				%-----------------------------------
+ % Image the correlation matrix
+ %-----------------------------------
   newcm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
   ylim = OUT.stats.mean(:);
   percent_ylim = prctile(abs(ylim), 95);
@@ -170,11 +168,10 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
   axis tight
   title('t-values for significant associations');
   xlabel('(FDR q < .05)');
-				% do clusters, if requested
-				%-----------------------------------
-
+  % do clusters, if requested
+  %-----------------------------------
   if docluster
-		 % Cluster variables based on average intercorrelation
+  % Cluster variables based on average intercorrelation
     parcelindx = clusterdata(OUT.stats.mean,'linkage','ward','savememory','on', 'maxclust', 12);
     subplot(1, 3, 3)
     plot_sorted_correlation_matrix(OUT.stats.mean, parcelindx);
@@ -185,27 +182,25 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
     OUT.parcelindx = parcelindx;
     OUT.parcelcolors = scn_standard_colors(length(unique(parcelindx)'));
   end
-
-				% get data for prediction
-				%-----------------------------------
-
+  % get data for prediction
+  %-----------------------------------
   k = size(OUT.pairwise_assoc{1}, 1);
   for i = 1:n
     OUT.connectdata(i, :) = squareform(OUT.pairwise_assoc{1}(:, :, i) - eye(k));
   end
 
-				% within- and between-clusters
-				% graph-theoretic measures
+ % within- and between-clusters
+ % graph-theoretic measures
   if dograph
     [OUT.betweenness_centrality, OUT.shortestpath, OUT.weighted_degree] = get_graph_metrics(OUT.pairwise_assoc{1}, OUT.stats.fdrsig);
-	% bc : betweenness-centrality for [subjects x variables]
-	% shortestpath : shortest path for [subjects x variable pairs]
-        % wdeg : weighted degree (average correlation) for [subjects x variables]
+ % bc : betweenness-centrality for [subjects x variables]
+ % shortestpath : shortest path for [subjects x variable pairs]
+ % wdeg : weighted degree (average correlation) for [subjects x variables]
     
     plot_graph_metrics(OUT);
   end
-				% predict, if we have outcome
-				%-----------------------------------
+ % predict, if we have outcome
+ %-----------------------------------
   if ~isempty(y)
     if dograph
       create_figure('prediction', 2, 2);

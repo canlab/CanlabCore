@@ -496,21 +496,3 @@ colormap(cm)
 
 end
 
-
-%     disp('Clustering variables based on full time-series data');
-%     disp('This can take a long time...');
-%
-%     % standardize within-subject data to avoid issues of scale
-%     disp('Standardizing subject data');
-%     for i = 1:n
-%         C{i} = zscore(C{i});
-%         cdat = cat(1, C{:});
-%     end
-%
-%     % compress variables if necessary, avoid sparse space
-%     disp('Compressing variable space');
-%
-%     % if many observations, we need to compress observations to make
-%     % computationally tractable.
-%
-%     c = clusterdata(cdat,'linkage','ward','savememory','on', 'maxclust', 4);

@@ -90,94 +90,94 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %          - plotting methods if you input Clusters/regions
 % ..
 
-% ..
-%    DEFAULTS AND INPUTS
-% ..
+				% ..
+				%    DEFAULTS AND INPUTS
+				% ..
 
-docluster = 1; % Defaults
-dograph = 1;
-doplot = 1;
-y = [];             % this is for the outcome data, if any
+  docluster = 1; % Defaults
+  dograph = 1;
+  doplot = 1;
+  y = [];             % this is for the outcome data, if any
 
-spath = which('use_spider.m');
-if isempty(spath)
+  spath = which('use_spider.m');
+  if isempty(spath)
     disp('Warning: spider toolbox not found on path; prediction may break')
-end
+  end
 
-spath = which('all_shortest_paths.m');
-if isempty(spath)
+  spath = which('all_shortest_paths.m');
+  if isempty(spath)
     disp('Warning: matlab_bgl toolbox not found on path; Will not run graph measures')
-end
+  end
 
-% optional inputs with default values
-% -----------------------------------
+				% optional inputs with default values
+				% -----------------------------------
 
-for i = 1:length(varargin)
+  for i = 1:length(varargin)
     if ischar(varargin{i})
-        switch varargin{i}
-            
-            case {'partialr', 'shift_by'}  % do nothing; these are passed in to xcorr_multisubject
-            case 'noplot', doplot = 0;
-            case 'nograph', dograph = 0;
-            case 'outcome', y = varargin{i+1}; varargin{i+1} = [];
-                
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
-        end
+      switch varargin{i}
+             
+        case {'partialr', 'shift_by'}  % do nothing; these are passed in to xcorr_multisubject
+        case 'noplot', doplot = 0;
+        case 'nograph', dograph = 0;
+        case 'outcome', y = varargin{i+1}; varargin{i+1} = [];
+             
+        otherwise, warning(['Unknown input string option:' varargin{i}]);
+      end
     end
-end
+  end
 
 
-% Cross-correlation stats
-% -----------------------------------
-s = unique(subject_grouping)';
-n = length(s);
+				% Cross-correlation stats
+				% -----------------------------------
+  s = unique(subject_grouping)';
+  n = length(s);
 
-% get time points for each subject
-for i = s
+				% get time points for each subject
+  for i = s
     t(i) = sum(subject_grouping == s(i));
-end
+  end
 
-% convert to cells for compatibility with xcorr_multisubject
-C = mat2cell(dat, t, size(dat, 2));
+	  % convert to cells for compatibility with xcorr_multisubject
+  C = mat2cell(dat, t, size(dat, 2));
 
-% stats on pairwise associations
-OUT = xcorr_multisubject(C, varargin{:});
+				% stats on pairwise associations
+  OUT = xcorr_multisubject(C, varargin{:});
 
-plot_individual_subjects(OUT)
+  plot_individual_subjects(OUT)
 
-% Image the correlation matrix
-%-----------------------------------
-newcm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
+				% Image the correlation matrix
+				%-----------------------------------
+  newcm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
 
-ylim = OUT.stats.mean(:);
-ylim = prctile(abs(ylim), 95);
+  ylim = OUT.stats.mean(:);
+  ylim = prctile(abs(ylim), 95);
 
-create_figure('associations', 1, 3);
-imagesc(OUT.stats.mean, [-ylim ylim]);
-colorbar
-set(gca, 'YDir', 'Reverse')
-axis tight
-colormap(newcm)
-title('Group average association matrix');
-xlabel('Variable No.');
+  create_figure('associations', 1, 3);
+  imagesc(OUT.stats.mean, [-ylim ylim]);
+  colorbar
+  set(gca, 'YDir', 'Reverse')
+  axis tight
+  colormap(newcm)
+  title('Group average association matrix');
+  xlabel('Variable No.');
 
-subplot(1, 3, 2)
-tthr = OUT.stats.t .* double(OUT.stats.fdrsig ~= 0);
-tthr(isinf(tthr)) = 0; %max(tthr(~isinf(tthr)));
-ylim = tthr(:);
-ylim = prctile(abs(ylim), 95);
-imagesc(tthr, [-ylim ylim]);
-colorbar
-set(gca, 'YDir', 'Reverse')
-axis tight
-title('t-values for significant associations');
-xlabel('(FDR q < .05)');
+  subplot(1, 3, 2)
+  tthr = OUT.stats.t .* double(OUT.stats.fdrsig ~= 0);
+  tthr(isinf(tthr)) = 0; %max(tthr(~isinf(tthr)));
+  ylim = tthr(:);
+  ylim = prctile(abs(ylim), 95);
+  imagesc(tthr, [-ylim ylim]);
+  colorbar
+  set(gca, 'YDir', 'Reverse')
+  axis tight
+  title('t-values for significant associations');
+  xlabel('(FDR q < .05)');
 
-% do clusters, if requested
-%-----------------------------------
+				% do clusters, if requested
+				%-----------------------------------
 
-if docluster
-    % Cluster variables based on average intercorrelation
+  if docluster
+		 % Cluster variables based on average intercorrelation
     parcelindx = clusterdata(OUT.stats.mean,'linkage','ward','savememory','on', 'maxclust', 12);
     
     subplot(1, 3, 3)
@@ -191,39 +191,39 @@ if docluster
     OUT.parcelindx = parcelindx;
     OUT.parcelcolors = scn_standard_colors(length(unique(parcelindx)'));
 
-end
+  end
 
-% get data for prediction
-%-----------------------------------
+				% get data for prediction
+				%-----------------------------------
 
-k = size(OUT.pairwise_assoc{1}, 1);
-for i = 1:n
+  k = size(OUT.pairwise_assoc{1}, 1);
+  for i = 1:n
     
     OUT.connectdata(i, :) = squareform(OUT.pairwise_assoc{1}(:, :, i) - eye(k));
     
-end
+  end
 
-% within- and between-clusters
+				% within- and between-clusters
 
-% graph-theoretic measures
-if dograph
+				% graph-theoretic measures
+  if dograph
     [OUT.betweenness_centrality, OUT.shortestpath, OUT.weighted_degree] = get_graph_metrics(OUT.pairwise_assoc{1}, OUT.stats.fdrsig);
-    % bc : betweenness-centrality for [subjects x variables]
-    % shortestpath : shortest path for [subjects x variable pairs]
-    % wdeg : weighted degree (average correlation) for [subjects x variables]
+	% bc : betweenness-centrality for [subjects x variables]
+	% shortestpath : shortest path for [subjects x variable pairs]
+        % wdeg : weighted degree (average correlation) for [subjects x variables]
     
     plot_graph_metrics(OUT);
     
-end
+  end
 
 
-% predict, if we have outcome
-%-----------------------------------
-if ~isempty(y)
+				% predict, if we have outcome
+				%-----------------------------------
+  if ~isempty(y)
     if dograph
-        create_figure('prediction', 2, 2);
+      create_figure('prediction', 2, 2);
     else
-        create_figure('prediction');
+      create_figure('prediction');
     end
     
     pdat = fmri_data;
@@ -238,38 +238,38 @@ if ~isempty(y)
     xlabel('Predicted'); ylabel('Observed');
     
     if dograph
-        
-        pdat.dat = OUT.betweenness_centrality';
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
-        OUT.PREDICT.betweenness_centrality = stats;
-        subplot(2, 2, 2);
-        plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
-        title('Prediction from betweenness-centrality');
-        xlabel('Predicted'); ylabel('Observed');
-        
-        pdat.dat = OUT.shortestpath';
-        pdat.dat(isinf(pdat.dat)) = max(pdat.dat(~isinf(pdat.dat(:)))) + 1;
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
-        OUT.PREDICT.shortestpath = stats;
-        subplot(2, 2, 3);
-        plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
-        title('Prediction from shortest path');
-        xlabel('Predicted'); ylabel('Observed');
-        
-        pdat.dat = OUT.weighted_degree';
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
-        OUT.PREDICT.weighted_degree = stats;
-        subplot(2, 2, 4);
-        plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
-        title('Prediction from weighted degree');
-        xlabel('Predicted'); ylabel('Observed');
-        
+      
+      pdat.dat = OUT.betweenness_centrality';
+      [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
+      OUT.PREDICT.betweenness_centrality = stats;
+      subplot(2, 2, 2);
+      plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
+      refline
+      title('Prediction from betweenness-centrality');
+      xlabel('Predicted'); ylabel('Observed');
+      
+      pdat.dat = OUT.shortestpath';
+      pdat.dat(isinf(pdat.dat)) = max(pdat.dat(~isinf(pdat.dat(:)))) + 1;
+      [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
+      OUT.PREDICT.shortestpath = stats;
+      subplot(2, 2, 3);
+      plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
+      refline
+      title('Prediction from shortest path');
+      xlabel('Predicted'); ylabel('Observed');
+      
+      pdat.dat = OUT.weighted_degree';
+      [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
+      OUT.PREDICT.weighted_degree = stats;
+      subplot(2, 2, 4);
+      plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
+      refline
+      title('Prediction from weighted degree');
+      xlabel('Predicted'); ylabel('Observed');
+      
     end
     
-end
+  end
 
 
 end % function
@@ -284,8 +284,8 @@ end % function
 % -------------------------------------------------------------------------
 
 function [bc shortestpath wdeg] = get_graph_metrics(C3d, mask)
-% [bc D deg] = get_graph_metrics(C3d, mask)
-%
+			   % [bc D deg] = get_graph_metrics(C3d, mask)
+			   %
 % given C3d 3-d matrix of associations and mask matrix for significant
 % associations, calculate some graph metrics for each subject
 %
@@ -293,15 +293,15 @@ function [bc shortestpath wdeg] = get_graph_metrics(C3d, mask)
 % shortestpath : shortest path for [subjects x variable pairs]
 % wdeg : weighted degree (average correlation) for [subjects x variables]
 
-n = size(C3d, 3);
-k = size(C3d, 2);
+  n = size(C3d, 3);
+  k = size(C3d, 2);
 
-[bc wdeg] = deal(zeros(n, k));
-shortestpath = zeros(n, k*(k-1)/2);
+  [bc wdeg] = deal(zeros(n, k));
+  shortestpath = zeros(n, k*(k-1)/2);
 
-fprintf('Getting graph metrics...   ');
+  fprintf('Getting graph metrics...   ');
 
-for i = 1:n
+  for i = 1:n
     
     fprintf('\b\b\b%03d', i);
     
@@ -309,23 +309,23 @@ for i = 1:n
     
     C = C .* double(mask ~= 0);
     
-    % Enforce format for graph
+				% Enforce format for graph
     C = (C + C') ./ 2;
     C = sparse(C);
     
-    % Graph Stats
-    % -----------------------------------------------
+		     % Graph Stats
+		     % -----------------------------------------------
     bc(i, :) = betweenness_centrality(abs(C))';  % abs if ignoring neg connections
     
-    % shortest paths: used as estimate of connectivity
+		    % shortest paths: used as estimate of connectivity
     D = get_path_length(C);
     shortestpath(i, :) = squareform(D);
     
     wdeg(i, :) = full(sum(C));  %full(sum(C ~= 0));
     
-end
+  end
 
-fprintf('...done.\n');
+  fprintf('...done.\n');
 
 end
 
@@ -341,16 +341,16 @@ function D = get_path_length(r)
 %
 % e.g., r = region_r{i};
 
-r(isnan(r)) = 0;
-r = (r' + r) ./ 2;  % enforce symmetry, just in case
+  r(isnan(r)) = 0;
+  r = (r' + r) ./ 2;  % enforce symmetry, just in case
 
 
-% shortest paths: used to calculate connectivity
-rtmp = sparse(r);
-rtmp(rtmp < 0) = 0;
+		      % shortest paths: used to calculate connectivity
+  rtmp = sparse(r);
+  rtmp(rtmp < 0) = 0;
 
-% Note: Uses Floyd-Warshall method if 10% non-zero elements or more
-D = all_shortest_paths(rtmp);
+   % Note: Uses Floyd-Warshall method if 10% non-zero elements or more
+  D = all_shortest_paths(rtmp);
 
 end % function
 
@@ -360,58 +360,58 @@ end % function
 
 function plot_sorted_correlation_matrix(r, parcelindx)
 
-nclasses = unique(parcelindx)';
+  nclasses = unique(parcelindx)';
 
-basecolors = scn_standard_colors(length(nclasses));
+  basecolors = scn_standard_colors(length(nclasses));
 
-[classsort, wh] = sort(parcelindx);
+  [classsort, wh] = sort(parcelindx);
 
-rsorted = r(wh, wh);
+  rsorted = r(wh, wh);
 
-% put spaces in to mark off classes
-%-----------------------------------
-rnew = [];
-pinew = [];
-for i = nclasses
+				% put spaces in to mark off classes
+				%-----------------------------------
+  rnew = [];
+  pinew = [];
+  for i = nclasses
     rnew = [rnew; rsorted(classsort == i, :)];
     rnew(end + 1, :) = 0;
     
     pinew = [pinew; classsort(classsort == i)];
     pinew(end + 1, 1) = 0;
     
-end
+  end
 
-rnew2 = [];
-for i = nclasses
+  rnew2 = [];
+  for i = nclasses
     rnew2 = [rnew2 rnew(:, classsort == i)];
     rnew2(:, end + 1) = 0;
-end
-r = rnew2;
+  end
+  r = rnew2;
 
-% Image the correlation matrix
-%-----------------------------------
-imagesc(r); %colorbar
-set(gca,'YDir', 'Reverse')
-axis tight
-title('Correlations sorted by cluster');
-axis off
+				% Image the correlation matrix
+				%-----------------------------------
+  imagesc(r); %colorbar
+  set(gca,'YDir', 'Reverse')
+  axis tight
+  title('Correlations sorted by cluster');
+  axis off
 
-% Color bars for class ID
-%-----------------------------------
-axpos = get(gca, 'Position');
-axh = axes('Position', [axpos(1)-.03 axpos(2) .02 axpos(4)]);
-set(axh, 'YDir', 'Reverse', 'YLim', [1 length(pinew)]);
-hold on;
-for i = nclasses
+				% Color bars for class ID
+				%-----------------------------------
+  axpos = get(gca, 'Position');
+  axh = axes('Position', [axpos(1)-.03 axpos(2) .02 axpos(4)]);
+  set(axh, 'YDir', 'Reverse', 'YLim', [1 length(pinew)]);
+  hold on;
+  for i = nclasses
     
     yy = find(pinew == i);
     plot(.7 * ones(size(yy)), yy, '-', 'Color', basecolors{i}, 'LineWidth', 10);
     
     text(-4, round(median(yy)), num2str(i), 'FontSize', 18, 'Color', 'k');
     
-end
-axis off
-drawnow
+  end
+  axis off
+  drawnow
 
 end
 
@@ -420,43 +420,43 @@ end
 function plot_graph_metrics(OUT)
 
 
-[h, p] = ttest(OUT.connectdata);
-thr = FDR(p, .05);
-sig = p < thr;
-fprintf('FDR q < .05 sig. pairwise connections: %3.0f out of %3.0f connections.\n', sum(sig), length(sig));
+  [h, p] = ttest(OUT.connectdata);
+  thr = FDR(p, .05);
+  sig = p < thr;
+  fprintf('FDR q < .05 sig. pairwise connections: %3.0f out of %3.0f connections.\n', sum(sig), length(sig));
 
-create_figure('graph_metrics', 2, 2);
+  create_figure('graph_metrics', 2, 2);
 
-x = mean(OUT.connectdata);
-[xsort, wh] = sort(x(sig), 'descend');
+  x = mean(OUT.connectdata);
+  [xsort, wh] = sort(x(sig), 'descend');
 
-plot(xsort, 'LineWidth', 3);
-title('Avg. association for significant associations only')
-
-
-subplot(2, 2, 2);
-
-x = mean(OUT.shortestpath);
-[xsort, wh] = sort(x, 'descend');
-plot(xsort, 'LineWidth', 3);
-title('Avg. shortest path connecting all pairs')
+  plot(xsort, 'LineWidth', 3);
+  title('Avg. association for significant associations only')
 
 
-subplot(2, 2, 3);
+  subplot(2, 2, 2);
 
-x = mean(OUT.betweenness_centrality);
-[xsort, wh] = sort(x, 'descend');
-lineplot_columns(OUT.betweenness_centrality(:, wh));
+  x = mean(OUT.shortestpath);
+  [xsort, wh] = sort(x, 'descend');
+  plot(xsort, 'LineWidth', 3);
+  title('Avg. shortest path connecting all pairs')
 
-title('Betweenness-centrality')
 
-subplot(2, 2, 4);
+  subplot(2, 2, 3);
 
-x = mean(OUT.weighted_degree);
-[xsort, wh] = sort(x, 'descend');
-lineplot_columns(OUT.weighted_degree(:, wh));
+  x = mean(OUT.betweenness_centrality);
+  [xsort, wh] = sort(x, 'descend');
+  lineplot_columns(OUT.betweenness_centrality(:, wh));
 
-title('Weighted degree')
+  title('Betweenness-centrality')
+
+  subplot(2, 2, 4);
+
+  x = mean(OUT.weighted_degree);
+  [xsort, wh] = sort(x, 'descend');
+  lineplot_columns(OUT.weighted_degree(:, wh));
+
+  title('Weighted degree')
 
 
 end % function
@@ -469,27 +469,27 @@ end % function
 
 function plot_individual_subjects(OUT)
 
-m = OUT.pairwise_assoc{1};
-m2 = m(:, :, 1);
+  m = OUT.pairwise_assoc{1};
+  m2 = m(:, :, 1);
 
-nc = max(1, floor(size(m2, 2) ./ 5));
-nc = zeros(size(m2, 2), nc);
+  nc = max(1, floor(size(m2, 2) ./ 5));
+  nc = zeros(size(m2, 2), nc);
 
-for i = 2:size(m, 3)
-m2 = [m2 nc m(:, :, i)];
-end
+  for i = 2:size(m, 3)
+    m2 = [m2 nc m(:, :, i)];
+  end
 
-mm = abs(m(:));
-clim = prctile(mm(mm ~= 1 & mm ~= 0), 98);
+  mm = abs(m(:));
+  clim = prctile(mm(mm ~= 1 & mm ~= 0), 98);
 
-create_figure('individual subjects'); 
-imagesc(m2, [-clim clim]); 
-colorbar; set(gca, 'YDir', 'Reverse');
-axis tight
-axis off
+  create_figure('individual subjects'); 
+  imagesc(m2, [-clim clim]); 
+  colorbar; set(gca, 'YDir', 'Reverse');
+  axis tight
+  axis off
 
-cm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
-colormap(cm)
+  cm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
+  colormap(cm)
 
 end
 

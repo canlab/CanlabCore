@@ -57,6 +57,9 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %   **'partialr':**
 %        Use partial correlation instead of raw correlation
 %
+%   **'nograph':**
+%        Don't do graph-theoretic measures.
+%
 % :Outputs:
 %
 %

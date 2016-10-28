@@ -142,7 +142,15 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 				%-----------------------------------
   newcm = colormap_tor([0 0 .7], [1 .5 0], [1 1 1]);
   ylim = OUT.stats.mean(:);
-  ylim = prctile(abs(ylim), 95);
+  percent_ylim = prctile(abs(ylim), 95);
+  % imagesc will crash if ylim is 0. To prevent this, we check for
+  % the value of ylim, and set it to the maximum of the maximum of ylim
+  % and 0.05.
+  if percent_ylim==0
+    ylim=max([ylim 0.05])
+  else
+    ylim=percent_ylim
+  end
   create_figure('associations', 1, 3);
   imagesc(OUT.stats.mean, [-ylim ylim]);
   colorbar

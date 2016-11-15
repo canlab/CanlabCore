@@ -30,8 +30,13 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %        subtract means of each subject before plotting
 %
 %   **'colors':**
-%        followed by array size N of desired colors.  if not passed
-%        in, will use custom_colors
+%        followed by cell array length N of desired colors, rgb specification,
+%        for each line.  if not passed in, will use custom_colors.
+%        Group average lines use color{1} for line and color{2} for fill.
+%
+%   **'gcolors':***
+%        Group average line colors, {[r g b] [r g b]} for line and point
+%        fill, respectively
 %
 %   **'MarkerTypes':**
 %        followed by char string.  if not passed in, uses
@@ -67,8 +72,13 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %    create_figure('lines'); [han, Xbin, Ybin] = line_plot_multisubject(stats.Y, stats.yfit, 'n_bins', 7, 'center');
 %    corr(cat(1, Xbin{:}), cat(1, Ybin{:}))
 
+% -------------------------------------------------------------------------
+% Defaults and inputs
+% -------------------------------------------------------------------------
+
 docenter = 0;
 doind = 1;
+dolines = 1;
 group_avg_ref_line = 0;
 
 for i=1:length(varargin)
@@ -94,14 +104,24 @@ for i=1:length(varargin)
                 
             case 'center'
                 docenter = 1;
+                
             case 'colors'
                 colors = varargin{i+1};
+                
             case 'MarkerTypes'
                 mtypes = varargin{i+1};
+                
             case 'noind'
                 doind=0;
+                
+            case 'nolines'
+                dolines = 0;
+                
             case 'group_avg_ref_line'
                 group_avg_ref_line = 1;
+                
+            case 'gcolors' % Mj added!!
+                gcolors = varargin{i+1};
         end
     end
 end
@@ -110,16 +130,33 @@ if ~iscell(X) || ~iscell(Y)
     error('X and Y should be cell arrays, one cell per line to plot.');
 end
 
-
 N = length(X);
+
+% Set color options and check
+% -------------------------------------------------------------------------
 
 if ~exist('colors', 'var') %,colors = scn_standard_colors(N); end
     colors = custom_colors([1 .5 .4], [.8 .8 .4], N);
 end
+if ~iscell(colors), error('Colors should be cell array of color specifications.'); end
+if length(colors) < N, colors = repmat(colors, 1, N); end
 
 if ~exist('mtypes', 'var'), mtypes = 'osvd^<>ph'; end
 
+if ~exist('gcolors', 'var') 
+    % MJ added.  Line then fill.
+    gcolors = colors(1:2);
+end
+if ~iscell(gcolors), gcolors = {gcolors}; end
+    
+% replicate for fill color if 2nd color is empty
+if length(gcolors) < 2, gcolors{2} = gcolors{1}; end
+
 hold on
+
+% -------------------------------------------------------------------------
+% Plot points and lines
+% -------------------------------------------------------------------------
 
 for i = 1:N
     
@@ -172,8 +209,9 @@ for i = 1:N
     % plot ref line
     b(i,:) = glmfit(X{i}, Y{i});
     
-    
-    han.line_handles(i) = plot([min(X{i}) max(X{i})], [b(i,1)+b(i,2)*min(X{i}) b(i,1)+b(i,2)*max(X{i})], 'Color', colors{i}, 'LineWidth', 1);
+    if dolines
+        han.line_handles(i) = plot([min(X{i}) max(X{i})], [b(i,1)+b(i,2)*min(X{i}) b(i,1)+b(i,2)*max(X{i})], 'Color', colors{i}, 'LineWidth', 1);
+    end
     
     % plot all the points
     if doind
@@ -203,7 +241,10 @@ fprintf('r = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
 if doind
     han.point_handles = han.point_handles(ishandle(han.point_handles) & han.point_handles ~= 0);
 end
-han.line_handles = han.line_handles(ishandle(han.line_handles) & han.line_handles ~= 0);
+
+if dolines
+    han.line_handles = han.line_handles(ishandle(han.line_handles) & han.line_handles ~= 0);
+end
 
 %the correlation
 %r=corr(cat(1,detrend(X{:},'constant')), cat(1,detrend(Y{:}, 'constant')), 'rows', 'complete')
@@ -224,11 +265,11 @@ if group_avg_ref_line
         mY = nanmean(YY);
         sY = ste(YY);
         
-        h = sepplot(mX, mY, .7, 'color', [.8 .3 0], 'linewidth', 4);
+        h = sepplot(mX, mY, .7, 'color', gcolors{1}, 'linewidth', 4);
         
-        h2 = errorbar_horizontal(mX, mY, sX, 'o', 'color', [.8 .3 0], 'linewidth', 3, 'markersize', 8, 'markerfacecolor', [.5 .1 0]);
-        h1 = errorbar(mX, mY, sY, 'o', 'color', [.8 .3 0], 'linewidth', 3, 'markersize', 8, 'markerfacecolor', [.5 .1 0]);
-        set(h2, 'linewidth', 3, 'color', [.8 .3 0]);
+        h2 = errorbar_horizontal(mX, mY, sX, 'o', 'color', gcolors{1}, 'linewidth', 3, 'markersize', 8, 'markerfacecolor', gcolors{2});
+        h1 = errorbar(mX, mY, sY, 'o', 'color', gcolors{1}, 'linewidth', 3, 'markersize', 8, 'markerfacecolor', gcolors{2});
+        set(h2, 'linewidth', 3, 'color', gcolors{1});
         
         han.grpline_handle = h;
         han.grpline_err_handle = [h1 h2];

@@ -82,7 +82,7 @@ for i = wh
     
     if ~hasint && ~totallymc
         warning('Model has no intercept, and model is not mean-centered; VIF is not interpertable');
-        vif = NaN;
+        vif = NaN * zeros(1, length(wh));
         return
     end
     

@@ -101,26 +101,26 @@ drawnow
 % Variance Inflation Factors for regs of interest (iC)
 
 warning off % some nuisance covs could be redundant; we don't care.
-allvifs = getvif(SPM.xX.X(:, SPM.xX.iC), 1);
+allvifs = getvif(SPM.xX.X(:, SPM.xX.iC), 0);
 warning on
 
 subplot(2, 2, 3);
-allvifs = allvifs(wh_cols, 0, 'plot');
+allvifs = allvifs(wh_cols);
 
-% plot(allvifs, 'ko', 'MarkerFaceColor', [1 .5 0]);
-% 
-% ylabel('Variance inflation factor'); xlabel('Predictor number');
-% plot_horizontal_line(1, 'k');
-% plot_horizontal_line(2, 'b--');
-% plot_horizontal_line(4, 'r--');
-% plot_horizontal_line(8, 'r-');
-% disp('Variance inflation: 1 (black line) = minimum possible (best)');
-% disp('Successive lines indicate doublings of variance inflation factor.');
-% title('Var. Inflation (VIFs) in full design');
+plot(allvifs, 'ko', 'MarkerFaceColor', [1 .5 0]);
+
+ylabel('Variance inflation factor'); xlabel('Predictor number');
+plot_horizontal_line(1, 'k');
+plot_horizontal_line(2, 'b--');
+plot_horizontal_line(4, 'r--');
+plot_horizontal_line(8, 'r-');
+disp('Variance inflation: 1 (black line) = minimum possible (best)');
+disp('Successive lines indicate doublings of variance inflation factor.');
+title('Var. Inflation (VIFs) in full design');
 
 % Variance Inflation Factors for ONLY of-interest
 % now we care if nuisance covs are redundant.
-vifs = getvif(SPM.xX.X(:, wh_cols), 1);
+vifs = getvif(SPM.xX.X(:, wh_cols), 0);
 subplot(2, 2, 4);
 plot(vifs, 'ko', 'MarkerFaceColor', [1 .5 0]);
 

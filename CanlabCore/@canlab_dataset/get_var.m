@@ -20,6 +20,7 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 %           - Looks for var name at either level, returns error if exists at both levels
 %           - can be a cell array of multiple var names
 %             in this case, dat is a n x m matrix, where n=subjs and m=variables requested
+%           - If empty, list variable names
 %
 % :Optional inputs:
 %
@@ -55,6 +56,12 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 % ..
 %    Copyright Tor Wager, 2013
 % ..
+%
+% Examples:
+% -----------------------------------------------------------
+% if DAT is a canlab_dataset object:
+% get_var(DAT) to list variable names
+%
 
 dat = [];
 datcell = {};
@@ -62,10 +69,10 @@ datcell = {};
 if length(varargin) == 0
     % List variables
     disp('Subject-level variables:')
-    disp(D.Subj_Level.names)
+    disp(D.Subj_Level.names(:))
     
     disp('Event-level variables:')
-    disp(D.Event_Level.names)
+    disp(D.Event_Level.names(:))
 
     return
 else
@@ -103,7 +110,9 @@ for i = 2:length(varargin)
                 if isempty(conditionalCol), error('Conditional variable does not exist'); end
                 conditionalVal = varargin{i+1}{2};
             otherwise
-                warning('Unknown varargin: %s\n',varargin{i})
+                % suppress warnings because other functions are passing in
+                % many irrelevant args through passing their varargin
+                %warning('Unknown varargin: %s\n',varargin{i})
         end
     end
 end

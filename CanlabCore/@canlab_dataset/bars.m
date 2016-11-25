@@ -6,6 +6,10 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 %
 %    [dat, descrip, colors, h1, s1] = bars(obj, varnames, [optional inputs])
 %
+%    Takes inputs to barplot_columns
+%    e.g., 'noviolin' to suppress violin plot
+%    'colors' followed by colors cell for each bar
+%
 % ..
 %     Author and copyright information:
 %
@@ -65,7 +69,7 @@ function [dat, descrip, colors, h1, s1] = bars(obj, varnames, varargin)
 % ::
 %
 %     create_figure('NPS values - All subjects');
-% 
+%
 %     varnames = {'15' '13' '11' ' 9' '16' '14' '12' '10'};
 %     xvals = [1 2 4 5 8 9 11 12];
 %     colors = {[1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0] [1 0 0] [0 1 0]};
@@ -123,7 +127,7 @@ for i = 1:length(allowable_args)
         switch actions{i}
             case 'assign_next_input'
                 eval([allowable_args{i} ' = varargin{wh(1) + 1};']);
-                varargin{wh(1) + 1} = [];
+                %varargin{wh(1) + 1} = [];
                 
             case 'flag_on'
                 eval([allowable_args{i} ' = 1;']);
@@ -143,22 +147,25 @@ end
 
 [dat, ~, ~, descrip] = get_var(obj, varnames, varargin{:});
 
-descrip = cat(1, descrip{:});
-
-
-colors = cat(1, colors{:});
+%descrip = cat(1, descrip{:});
+%colors = cat(1, colors{:});
 
 xvals = 1:n;
 
 if nofig
+    % Do nothing, use existing figure
 else
-    
-create_figure('bars');
+    create_figure('bars');
 end
 
-[h1, s1] = barplot_colored(dat, varargin{:});
+[h1, s1] = barplot_columns(dat, 'nofig', varargin{:});
 % set(h2, 'BarWidth', .9)
-colormap(colors)
+%colormap(colors)
+
+mynames = strrep(varnames, '_', ' ');
+set(gca, 'XTickLabel', mynames);
+
+% STATS OUTPUT
 
 fprintf('T-tests against zero\n');
 fprintf('Description\tt(%3.0f)\tp\n', size(dat, 1) - 1);

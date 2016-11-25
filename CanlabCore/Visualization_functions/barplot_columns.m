@@ -325,7 +325,7 @@ end
 % ----------------------------------------------------
 
 if dofig
-    f = figure('Color','w'); hout = gca; set(gca, 'FontSize',18); %hold on; grid on;
+    f = figure('Color', 'w'); hout = gca; set(gca, 'FontSize',18); %hold on; grid on;
 
 else
     f = get(gcf); hout = gca; set(gca, 'FontSize', 18); hold on;
@@ -434,12 +434,24 @@ if doind
     for i = 1:ny % i is column
         
         % marker
-        if mod(i,2)==0, mym='^'; myc=[.2 .2 .2]; else mym='o'; myc=[0 0 0]; end
+        mym = 'o';
+        
+        if iscell(mycolor) && ~ischar(mycolor{1})
+        mycolcolor = mycolor{i} ./ 2;
+        
+        elseif ischar(mycolor{1})
+            mycolcolor = [.2 .2 .2];
+        else
+            mycolcolor = mycolor ./ 3;
+        end
+        
+        %if mod(i,2)==0, mym='^'; myc=[.2 .2 .2]; else mym='o'; myc=[0 0 0]; end
         
         for j = 1:size(dat, 1) % j is data point
             
             % color by weight
-            myc = [1 1 1] - ([1 1 1] .* sortedw(j,i));
+            mywt = sortedw(j,i);
+            myc = mywt * mycolcolor + (1-mywt) * ([1 1 1] - mycolcolor);  % (myc .* sortedw(j,i));
             
             if i == 1
                 %xdat(j,:) = x(1,j) + (1:size(dat,2)); % save x values for output (for line plotting)
@@ -461,7 +473,7 @@ if doind
                 
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
                 %plot(x(:,j) + i,[dat(j,i) dat(j,i)]',mym,'Color',[0 0 0],'LineWidth',1,'MarkerFaceColor',myc)
-                plot(xvalues{i}(j), dat(j,i), mym, 'Color', [0 0 0], 'LineWidth', 1, 'MarkerFaceColor', myc);
+                plot(xvalues{i}(j), dat(j,i), mym, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
                 
             end
             
@@ -638,10 +650,12 @@ for i = 1:k
         
         my_xvals = linspace(myx - mylimit(j), myx + mylimit(j), sum(whpoints))';
         
-        if mod(length(my_xvals), 2)
-            % odd number, use the midline point
-            my_xvals = [myx; my_xvals(1:end-1)];
-        end
+        if length(my_xvals) == 1, my_xvals = myx;  end
+        
+%         if mod(length(my_xvals), 2)
+%             % odd number, use the midline point
+%             my_xvals = [myx; my_xvals];  % (1:end-1)];
+%         end
         
         % build coordinates:
         % xlocs is left to right, ylocs is y-values to plot

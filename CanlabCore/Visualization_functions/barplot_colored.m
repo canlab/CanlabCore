@@ -130,7 +130,7 @@ if ~exist('colormapfun','var')
     colormapfun=@hsv;
 end
 
-if ~exist('colors','var')
+if ~exist('colors','var') || isempty(colors)
     colors = colormapfun(k);
 end
 

@@ -1,4 +1,4 @@
-function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
+function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
 % Get Subject-level or Event-level variable from dataset D and return in
 % rect matrix and cell array. Multiple variables can be requested, but 
 % all data requested must be either numeric or text, and not a combination of the two.
@@ -6,9 +6,9 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 % :Usage:
 % ::
 %
-%    [dat, datcell, wh_level, descrip] = get_var(D)  % to list variables
+%    [dat, datcell, wh_level, descrip, wh_indx] = get_var(D)  % to list variables
 %
-%    [dat, datcell, wh_level, descrip] = get_var(D, varname, [opt inputs])
+%    [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varname, [opt inputs])
 %
 % :Inputs:
 %
@@ -53,6 +53,9 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 %   **descrip:**
 %        the description for this variable
 %
+%   **wh_indx:**
+%        indices of which columns/variables in data matrix are returned
+%
 % ..
 %    Copyright Tor Wager, 2013
 % ..
@@ -65,6 +68,7 @@ function [dat, datcell, wh_level, descrip] = get_var(D, varargin)
 
 dat = [];
 datcell = {};
+wh_indx = [];
 
 if length(varargin) == 0
     % List variables
@@ -131,6 +135,8 @@ switch wh_level
             for i=1:length(varname)
                 wh = strmatch(varname{i}, D.Subj_Level.names, 'exact');
                 
+                wh_indx = [wh_indx wh];
+                
                 if textflag
                     dat(:,i) = D.Subj_Level.textdata(:, wh);
                 else
@@ -179,6 +185,8 @@ switch wh_level
             wh = find(strcmp(varname, D.Event_Level.names));
         end %variable selection
         
+        wh_indx = [wh_indx wh];
+
         if do_conditional
             d=conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
         else
@@ -230,6 +238,7 @@ end
 if ~ischar(dat), dat = dat(wh_keep,:,:); end % dat may be a char b/c assign an error msg value to it above
 if ~isempty(datcell), datcell = datcell(wh_keep); end
 
+descrip = [descrip{:}];
 
 end % function
 

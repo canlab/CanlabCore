@@ -10,11 +10,58 @@
 % behavioral experiment) and other fields for sub-event level  data (e.g., 
 % physio or continuous ratings within trials).
 % 
-% See D.Description for some basic info.
-%
 %
 % varargin options: 'fmri'  -  Adds standard fmri variable names to the
 %                               dataset under Event_Level
+%
+% The canlab_dataset object contains data at five potential levels of analysis:
+% 1. Experiment-level
+% 2. Subject_level
+% 3. Event_Level
+% 4. Sub_Event_Level
+% 5. Continuous
+%
+% 1. Experiment-level describes entire dataset 
+%
+% 2. Subject-level data contains one value per person per variable.
+%    It is entered in DAT.Subj_Level.data and DAT.Subj_Level.textdata
+%    In a matrix of N subjects x V variables
+%
+% 3. Event_Level data contains one value per event/trial per subject per variable.
+%    It is entered in DAT.Event_Level.data and DAT.Event_Level.textdata
+%    In a cell array with one cell per subject.
+%    Each cell contains a matrix of T trials/events x V variables
+%
+% 4. Sub_Event_Level data contains one or more values per event/trial per subject per variable.
+%    It is entered in DAT.Sub_Event_Level.data and DAT.Sub_Event_Level.textdata
+%    In a cell array with one cell per subject.
+%    Each cell contains a variable-size matrix of K observations x V variables
+%
+% 5. Continuous data is intended to contain time-series of K samples per subject per variable.
+%    It is entered in DAT.Continuous.data and DAT.Continuous.textdata
+%    In a cell array with one cell per subject.
+%    Each cell contains a variable-size matrix of K samples x V variables
+%
+% The most important levels for many analyses are the Subject_level and
+% Event_level, which provide sufficient data to run multi-level mixed
+% effects models.
+%
+% Documenting meta-data:
+% -----------------------------------------------------------------------
+% All data levels have fields for variable names, stored in cell arrays:
+% DAT.Subj_Level.names
+% DAT.Event_Level.names
+% etc.
+% All data levels also have fields for units of analysis and data type.
+% Data type is either 'numeric' or 'text'
+% All data levels have fields for long-form descriptions of variables,
+% stored in .descrip, in cell arrays with one cell per variable.
+% A complete dataset will make use of these important fields.
+%
+% For more information, see:
+%   help(canlab_dataset)
+%   disp(DAT.Description.Subj_Level)
+%   disp(DAT.Description.Event_Level)
 %
 % Dataset methods include:
 %

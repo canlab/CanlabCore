@@ -71,7 +71,7 @@ function f1 = create_figure(tagname, varargin)
         if np == 1
             axh = gca;
             cla
-            set(gca,'FontSize', 18)
+            set(gca,'FontSize', 14)
             hold on
             return
         end
@@ -80,7 +80,7 @@ function f1 = create_figure(tagname, varargin)
             
             axh(k) = subplot(i,j,k);
             cla;
-            set(gca,'FontSize', 18)
+            set(gca,'FontSize', 14)
             hold on
         end
         

@@ -436,13 +436,13 @@ if doind
         % marker
         mym = 'o';
         
-        if iscell(mycolor) && ~ischar(mycolor{1})
+        if iscell(mycolor) && ~ischar(mycolor)
         mycolcolor = mycolor{i} ./ 2;
         
-        elseif ischar(mycolor{1})
+        elseif ischar(mycolor)
             mycolcolor = [.2 .2 .2];
         else
-            mycolcolor = mycolor ./ 3;
+            mycolcolor = mycolor(i,:) ./ 3;
         end
         
         %if mod(i,2)==0, mym='^'; myc=[.2 .2 .2]; else mym='o'; myc=[0 0 0]; end

@@ -310,7 +310,7 @@ colormap(cmap);
             % was apparently not implemented. now checking for axis
             % handles. SG 2016/10/26
             for k = 1:numel(newax)
-                axcheck(k) = isAxisHandle(newax(k));
+                axcheck(k) = isscalar(newax(k)) && ishandle(newax(k)) && strcmp(get(newax(k), 'type'), 'axes');
             end
             if numel(newax)>1 && sum(axcheck)==numel(newax)
                 axis(newax,'off');

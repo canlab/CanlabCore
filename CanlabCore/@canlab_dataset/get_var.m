@@ -238,7 +238,9 @@ end
 if ~ischar(dat), dat = dat(wh_keep,:,:); end % dat may be a char b/c assign an error msg value to it above
 if ~isempty(datcell), datcell = datcell(wh_keep); end
 
-descrip = [descrip{:}];
+if iscell(descrip)
+    descrip = [descrip{:}];
+end
 
 end % function
 

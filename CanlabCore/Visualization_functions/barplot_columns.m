@@ -439,10 +439,15 @@ if doind
         if iscell(mycolor) && ~ischar(mycolor{1})
         mycolcolor = mycolor{i} ./ 2;
         
-        elseif ischar(mycolor{1})
+        elseif iscell(mycolor) && ischar(mycolor{1})
             mycolcolor = [.2 .2 .2];
         else
             mycolcolor = mycolor ./ 3;
+        end
+        
+        % if matrix
+        if ismatrix(mycolcolor) && size(mycolcolor, 1) == ny
+            mycolcolor = mycolcolor(i, :);
         end
         
         %if mod(i,2)==0, mym='^'; myc=[.2 .2 .2]; else mym='o'; myc=[0 0 0]; end

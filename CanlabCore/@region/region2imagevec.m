@@ -1,7 +1,7 @@
-function ivecobj  = region2imagevec(cl, varargin)
+function [ivecobj, orig_idx_vec]  = region2imagevec(cl, varargin)
 % Convert a region object to an image_vector object, replacing the voxels
 % and reconstructing as much info as possible. Optional: Resample to the
-% space of another image_vector object.
+% space of another image_vector object specified by the first additional input.
 %
 % The .dat field of the new "ivecobj" is made from the cl.all_data field.
 % if this is empty, uses cl.val field, then cl.Z as a backup.
@@ -10,7 +10,7 @@ function ivecobj  = region2imagevec(cl, varargin)
 % :Usage:
 % ::
 %
-%    ivecobj = region2imagevec(cl, [image_vector object to resample space to])
+%    [ivecobj, orig_idx] = region2imagevec(cl, [image_vector object to resample space to])
 %
 
 ivecobj = image_vector;
@@ -22,12 +22,13 @@ ivecobj.volInfo.dim = cl(1).dim;
 
 % Convert to 3-d mask
 % -------------------------------------------------------
-[~, mask] = clusters2mask2011(cl, cl(1).dim); % 2nd output: Z-field values stored in mask elements
+[orig_idx, mask] = clusters2mask2011(cl, cl(1).dim); % 2nd output: Z-field values stored in mask elements
 
 % Vectorize
 % -------------------------------------------------------
 
 maskvec = mask(:);
+orig_idx_vec = orig_idx(:);
 
 valid_vox = maskvec ~= 0 & ~isnan(maskvec);
 wh_valid_vox = find(valid_vox);
@@ -35,6 +36,7 @@ n = sum(valid_vox);
   
 ivecobj.dat = maskvec(valid_vox);
 ivecobj.removed_voxels = ~valid_vox;
+orig_idx_vec = orig_idx_vec(valid_vox);
 
 % Add all_data instead of Z if we have it, or .val or .Z
 % -------------------------------------------------------
@@ -78,7 +80,7 @@ end
 
 % resample, if asked for
 % -------------------------------------------------------
-if length(varargin) > 0
+if ~isempty(varargin)
     
     sampleto = varargin{1};
     
@@ -87,7 +89,11 @@ if length(varargin) > 0
     end
     
     ivecobj = resample_space(ivecobj, sampleto);
-    
+    iveorigidx = ivecobj;
+    % same for orig idx vector
+    iveorigidx.dat = orig_idx_vec;
+    iveorigidx = resample_space(iveorigidx, sampleto);
+    orig_idx_vec = iveorigidx.dat;
 end
 
 end

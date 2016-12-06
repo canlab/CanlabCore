@@ -307,19 +307,27 @@ colormap(cmap);
 
         if ~donewaxes
             % Break and return here if we are using existing axes.
-            axis off;
-            allaxh = findobj(gcf, 'Type', 'axes');
-            if length(allaxh) > 1
-                init_pos = get(newax, 'Position');
-                if num_axes > 1
-                    for i = 1:num_axes
-                        x_pos = init_pos(1) + (i * (0.85 / num_axes));
-                        newax(i) = axes('Position', [x_pos,init_pos(2),init_pos(3),init_pos(4)]);
-                        axis(newax(i), 'image');
-                    end                    
+            % was apparently not implemented. now checking for axis
+            % handles. SG 2016/10/26
+            for k = 1:numel(newax)
+                axcheck(k) = isscalar(newax(k)) && ishandle(newax(k)) && strcmp(get(newax(k), 'type'), 'axes');
+            end
+            if numel(newax)>1 && sum(axcheck)==numel(newax)
+                axis(newax,'off');
+            else
+                axis(newax,'off');
+                allaxh = findobj(gcf, 'Type', 'axes');
+                if length(allaxh) > 1
+                    init_pos = get(newax, 'Position');
+                    if num_axes > 1
+                        for i = 1:num_axes
+                            x_pos = init_pos(1) + (i * (0.85 / num_axes));
+                            newax(i) = axes('Position', [x_pos,init_pos(2),init_pos(3),init_pos(4)]);
+                            axis(newax(i), 'image');
+                        end
+                    end
                 end
             end
-
             slices_fig_h = get(newax(1), 'Parent');
             return
         end

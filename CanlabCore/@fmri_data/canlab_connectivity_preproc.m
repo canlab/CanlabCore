@@ -147,6 +147,7 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 
 additional_R = [];
 remove_vent_wm = false;
+use_canonical_masks = true;
 do_filter = false;
 do_extract_roi = false;
 do_preproc = true;
@@ -226,16 +227,23 @@ if do_preproc
         fprintf('::: removing ventricle & white matter signal ... \n');
         use_pca_comp_vw = true; % default
         if any(strcmp(varargin, 'raw')), use_pca_comp_vw = false; end
-        if any(strcmp(varargin, 'datdir')), subject_dir = varargin{find(strcmp(varargin, 'datdir'))+1}; end
-        
-        if ~exist(fullfile(subject_dir, 'Structural/SPGR/white_matter.img'), 'file')...
-                && ~exist(fullfile(subject_dir, 'Structural/SPGR/ventricles.img'), 'file')
-            wm_mask = filenames(fullfile(subject_dir, 'Structural/SPGR/wc2*.nii'), 'char', 'absolute');
-            gm_mask = filenames(fullfile(subject_dir, 'Structural/SPGR/wc1*.nii'), 'char', 'absolute');
-            canlab_create_wm_ventricle_masks(wm_mask, gm_mask, 'wm_thr', .9, 'vent_thr', .9);
+        if any(strcmp(varargin, 'datdir'))
+            use_canonical_masks = false;
+            subject_dir = varargin{find(strcmp(varargin, 'datdir'))+1}; 
         end
         
-        [wm_nuisance, wm_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(fullfile(subject_dir, 'Structural/SPGR'), dat, 'noplot');
+        if use_canonical_masks 
+            [wm_nuisance, wm_nuisance_comps] = extract_gray_white_csf(dat);
+        else
+            if ~exist(fullfile(subject_dir, 'Structural/SPGR/white_matter.img'), 'file')...
+                    && ~exist(fullfile(subject_dir, 'Structural/SPGR/ventricles.img'), 'file')
+                wm_mask = filenames(fullfile(subject_dir, 'Structural/SPGR/wc2*.nii'), 'char', 'absolute');
+                gm_mask = filenames(fullfile(subject_dir, 'Structural/SPGR/wc1*.nii'), 'char', 'absolute');
+                canlab_create_wm_ventricle_masks(wm_mask, gm_mask, 'wm_thr', .9, 'vent_thr', .9);
+            end
+            
+            [wm_nuisance, wm_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(fullfile(subject_dir, 'Structural/SPGR'), dat, 'noplot');
+        end
         if use_pca_comp_vw
             comb_R = [comb_R scale(wm_nuisance_comps)];
         elseif ~use_pca_comp_vw

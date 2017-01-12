@@ -233,7 +233,9 @@ if do_preproc
         end
         
         if use_canonical_masks 
-            [wm_nuisance, wm_nuisance_comps] = extract_gray_white_csf(dat);
+            [value, components] = extract_gray_white_csf(dat);
+            wm_nuisance = value(:,2:3); % white, CSF
+            wm_nuisance_comps = [components{2} components{3}]; % 5 components for white, CSF
         else
             if ~exist(fullfile(subject_dir, 'Structural/SPGR/white_matter.img'), 'file')...
                     && ~exist(fullfile(subject_dir, 'Structural/SPGR/ventricles.img'), 'file')

@@ -239,7 +239,7 @@ for i = 1:barnum
     end
     
     if ~verLessThan('matlab', '8.4') % HG2
-        error('this function won''t work properly versions later 2014b');
+        error('this function won''t work properly versions later 2014b; please use bar_wani_2016.m instead');
     else
         hh = get(h(i), 'children');
         xdata = get(hh(2), 'xData');

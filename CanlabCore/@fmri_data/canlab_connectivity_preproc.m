@@ -428,7 +428,7 @@ if do_extract_roi
             else
                 % local patterns within each region
                 
-                roi_obj = extract_roi_averages(dat, mask{i}, 'pattern_expression', 'contiguous_regions');
+                roi_obj = extract_roi_averages(dat, maskdat{i}, 'pattern_expression', 'contiguous_regions');
                 
                 %                 for roin = 1:numel(roi_obj)
                 %                     roi_val{i}.dat(:,roin) = roi_obj(roin).dat;

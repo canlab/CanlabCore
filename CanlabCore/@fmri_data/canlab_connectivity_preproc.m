@@ -346,7 +346,7 @@ if do_extract_roi
         end
     end
     
-    if nargout > 2
+    %if nargout > 2
         % copy over apply_mask
         for i = 1:numel(mask)
             maskdat{i} = fmri_data(mask{i});
@@ -361,7 +361,7 @@ if do_extract_roi
                 end
             end
         end
-    end
+    %end
     
     roi_val = cell(numel(mask),1); % preallocation
     
@@ -370,7 +370,7 @@ if do_extract_roi
             % single, whole-brain pattern
             if ~do_pattern
                 
-                roi_obj = apply_mask(dat, mask{i});
+                roi_obj = apply_mask(dat, maskdat{i});
                 roi_obj = remove_empty(roi_obj);
                 roi_val{i}.dat = nanmean(roi_obj.dat)';
                 roi_val{i}.mask_name = mask{i};
@@ -378,7 +378,7 @@ if do_extract_roi
                 
             elseif do_pattern
                 
-                roi_val{i}.dat = apply_mask(dat, mask{i}, 'pattern_expression', 'ignore_missing');
+                roi_val{i}.dat = apply_mask(dat, maskdat{i}, 'pattern_expression', 'ignore_missing');
                 roi_val{i}.mask_name = mask{i};
                 roi_val{i}.methods = 'pattern expression using a whole mask';
                 
@@ -389,7 +389,7 @@ if do_extract_roi
             if ~do_pattern
                 if unique_mask_values
                     
-                    roi_obj = extract_roi_averages(dat, mask{i});
+                    roi_obj = extract_roi_averages(dat, maskdat{i});
                     %                     for roin = 1:numel(roi_obj)
                     %                         roi_val{i}.dat(:,roin) = roi_obj(roin).dat;
                     %                     end
@@ -406,7 +406,7 @@ if do_extract_roi
                     
                 elseif contiguous_regions
                     
-                    roi_obj = extract_roi_averages(dat, mask{i}, 'contiguous_regions');
+                    roi_obj = extract_roi_averages(dat, maskdat{i}, 'contiguous_regions');
                     
                     %                     for roin = 1:numel(roi_obj)
                     %                         roi_val{i}.dat(:,roin) = roi_obj(roin).dat;

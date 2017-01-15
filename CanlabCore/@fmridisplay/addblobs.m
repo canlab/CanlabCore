@@ -83,6 +83,8 @@ function obj = addblobs(obj, cl, varargin)
 %   **'no_surface':**
 %        Do not add blobs to surface handles, if they exist
 %
+%   **'noverbose'** : turn off verbose text reporting
+%
 % CONTROL OF WHICH MONTAGE
 %
 %   **'wh_montages':**

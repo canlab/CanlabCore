@@ -98,6 +98,8 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %   **Orientation:**
 %         'sagittal', 'coronal', 'axial'
 %
+%      **'noverbose'** : turn off verbose text reporting
+%
 % :Outputs:
 %
 %   [blobhan, cmaprange, mincolor, maxcolor]
@@ -118,6 +120,7 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %    value displays in new Matlab graphics
 % ..
 
+doverbose = true;
 myview = mymontage.orientation;
 
 dosmooth = 0;
@@ -203,6 +206,8 @@ for i = 1:length(varargin)
             case 'wh_montages'
                 % not functional, avoid warning
                 
+            case 'noverbose', doverbose = false;
+            
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -283,7 +288,9 @@ end
 k = unique(wh_slice); k(k==0) = [];
 voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
 
-fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
+if doverbose
+    fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
+end
 
 % SETUP smoothing, contours
 % -------------------------------------------------------

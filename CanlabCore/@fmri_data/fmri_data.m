@@ -5,6 +5,17 @@
 % advantages that the fields and methods are standardized and controlled.
 % It also keeps track of the history of what was done to the dataset.
 %
+% Basic usage:
+% obj = fmri_data(image_names, [maskinput], [other optional inputs]) 
+%
+% maskinput     :   Name of mask image to use.  Default: 'brainmask.nii', a
+%                   brain mask that is distributed with SPM software
+%                   Alternative in CANlab tools: which('gray_matter_mask.img')
+% 'noverbose'   :   Suppress verbose output
+% 'sample2mask' :   Sample images to mask space. Default: Sample mask to
+%                   image space, use native image space
+%
+%
 % Creating class instances
 % -----------------------------------------------------------------------
 % You can create an empty object by using:
@@ -57,8 +68,10 @@
 % By default, the mask is resliced to the same space as the first image in the
 % input image name set (not coregistered; just resliced to the same voxel sizes.
 % The images are assumed to be in register.)
-% YOU CAN ALSO map the image data to the space of the mask, by entering
+%
+% Reampling to mask space: YOU CAN ALSO map the image data to the space of the mask, by entering
 % 'sample2mask' as in input argument.
+% For loading images in different spaces together in one object, use the 'sample2mask' option.
 %
 % Attaching additional data
 % -----------------------------------------------------------------------
@@ -108,6 +121,11 @@
 % obj = fmri_data(image_names, maskinput)
 % obj = fmri_data(image_names, [], 'noverbose')
 
+% Programmers' notes:
+% Tor Wager, 1/14/17 : Previously, if you stack names of images in different spaces and load them, 
+% fmri_data did not return an error, but it returned distorted/incorrectly
+% loaded images.  Now, it returns an error. For loading images in different
+% spaces together, use the 'sample2mask' option.
 
 classdef fmri_data < image_vector
     

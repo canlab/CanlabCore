@@ -394,16 +394,19 @@ function [image_obj, networknames, imagenames] = load_npsplus
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'PINES' 'Rejection' 'VPS'};
+networknames = {'NPS' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart'};
 
-imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
-    'Rating_Weights_LOSO_2.nii'  ...  % PINES
-    'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
-    'bmrk4_VPS_unthresholded.nii'};
+imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % NPS   - somatic pain
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % SIIPS - stim-indep pain
+    'Rating_Weights_LOSO_2.nii'  ...                    % PINES - neg emo
+    'dpsp_rejection_vs_others_weights_final.nii' ...    % romantic rejection
+    'bmrk4_VPS_unthresholded.nii' ...                   % Vicarious pain
+    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % autonomic - GSR
+    'ANS_Eisenbarth_JN_2016_HR_pattern.img'};           % autonomic - heart rate (HR)
 
 imagenames = check_image_names_get_full_path(imagenames);
 
-image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
 
 end  % function
 

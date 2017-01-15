@@ -149,13 +149,13 @@ for s = 1:p
     if dofixrange
         maxval=fixedrange(2)-fixedrange(1);
     else
-    maxval = max(max(vals{s})) + .1 * (max(max(vals{s})));
+        maxval = max(max(vals{s})) + .1 * (max(max(vals{s})));
     end
     
     h = circle([0 0], maxval);
     set(h, 'Color', [.3 .3 .3], 'LineWidth', 2);
     
-    if dononneg| dofixrange
+    if dononneg || dofixrange
         minval = origmin(s);
     else
         minval = 0;
@@ -207,8 +207,10 @@ for s = 1:p
             myang = ang(j) * 360 / (2*pi);
             if myang > 90 && myang < 270
                 myang = myang - 180;
-                
-                [newx, newy] = pol2cart(ang(j), maxval + .023*length(names{s}{j}));
+               
+                %[newx, newy] = pol2cart(ang(j), maxval);
+                [newx, newy] = pol2cart(ang(j), maxval + .002*length(names{s}{j}));
+                %[newx, newy] = pol2cart(ang(j), maxval + .023*length(names{s}{j}));
                 set(texth(j), 'Position', [newx newy]);
                 
             end

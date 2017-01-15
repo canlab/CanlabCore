@@ -122,10 +122,13 @@ imgInfo = spm_vol(imageNames);
 
 % Check the dimensions
 % ------------------------------------------------------------
-% only necessary to check the first image, because spm_vol checks the set
+% 1/14/17: Check ALL images, in case we have stacked images in different
+% spaces into the same list
 if docheck
     if verbose, fprintf('\nchecking that dimensions and voxel sizes of volumes are the same. '); end
-    anybad = iimg_check_volinfo(maskInfo, imgInfo(1));
+    % anybad = iimg_check_volinfo(maskInfo, imgInfo(1));
+    anybad = iimg_check_volinfo(maskInfo, imgInfo);
+    
     if anybad
         disp('Reslice images so dimensions and vox sizes match.');
         disp('Try using the function scn_map_image for an easy way to do this.');
@@ -137,7 +140,7 @@ if dosingle
     nvols = length(imgInfo);
     nvox = size(maskInfo.xyzlist, 1);
     if verbose, fprintf('\nPre-allocating data array. Needed: %3.0f bytes\n', 4*nvols*nvox); end
-    dat = zeros(nvols, nvox,'single');
+    dat = zeros(nvols, nvox, 'single');
 
     % load one-at-a-time into single matrix, to save memory
     if verbose, fprintf('Loading image number: %5.0f', 0); end

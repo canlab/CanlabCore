@@ -218,8 +218,8 @@ for i = 1:length(varargin)
                 
             case 'nofigure', dofigure = false;
                 
-            case 'dofixrange';
-                dofixRange=1;
+            case {'fixedrange', 'dofixrange'};
+                dofixRange = 1;
                 fixedrange = varargin{i+1};
                 
             case 'colors'

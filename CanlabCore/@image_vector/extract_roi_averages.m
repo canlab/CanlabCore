@@ -1,5 +1,5 @@
 function cl = extract_roi_averages(obj, mask, varargin)
-% This image_vector method a extracts and averages data stored in an fmri_data object 
+% This image_vector method a extracts and averages data stored in an fmri_data object
 % from a set of ROIs defined in a mask.
 % It is *slightly* different from the fmri_data method, as fmri_data has
 % more fields.
@@ -45,7 +45,14 @@ function cl = extract_roi_averages(obj, mask, varargin)
 %
 % For an non-object-oriented alternative, see extract_image_data.m
 
-fprintf('image_vector.extract_roi_averages: ');
+doverbose = 1;
+if any(strcmp(varargin, 'noverbose'))
+    doverbose = 0;
+end
+
+if doverbose
+    fprintf('image_vector.extract_roi_averages: ');
+end
 
 if ~isa(mask, 'image_vector')
     mask = image_vector('image_names', mask);
@@ -85,8 +92,9 @@ wh_to_keep = is_inmask(obj.volInfo.wh_inmask);
 % eliminate out-of-mask voxels before indexing into them with new mask
 obj.dat = obj.dat(wh_to_keep, :)';
 
-
-fprintf('\n');
+if doverbose
+    fprintf('\n');
+end
 
 % ---------------------------------
 % define region object based on choices
@@ -104,6 +112,8 @@ for varg = 1:length(varargin)
                 
             case 'pattern_expression', error('pattern expression only defined for fmri_data.extract_roi_averages.');
                 
+            case 'noverbose'  % do nothing; already done
+                
             otherwise
                 disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
                 fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
@@ -119,8 +129,9 @@ cl(1).source_images = obj.fullpath;
 % Now get averages by cluster
 % ---------------------------------
 
-
-fprintf('Averaging data. ');
+if doverbose
+    fprintf('Averaging data. ');
+end
 
 switch size(mask.dat, 1)
     case length(mask.volInfo.wh_inmask)
@@ -195,6 +206,8 @@ for i = 1:nregions
     
 end
 
-fprintf('Done.\n');
+if doverbose
+    fprintf('Done.\n');
+end
 
 end % function

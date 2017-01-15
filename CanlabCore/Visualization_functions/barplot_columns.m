@@ -161,6 +161,8 @@ xvals = 1:size(dat, 2);
 if length(varargin) > 0
     for i = 1:length(varargin)
         
+        if iscell(varargin{i}), continue, end
+        
         % Figure control
         if strcmp(varargin{i},'nofig'), dofig = 0;  end
         
@@ -379,7 +381,7 @@ if doviolin
     end
     
     Y = enforce_cell_array(y);
-    violinplot(Y, 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', []);
+    violinplot(Y, 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
     legend off
     
 end

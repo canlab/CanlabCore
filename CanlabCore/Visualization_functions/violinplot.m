@@ -50,7 +50,7 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %   **'x':**
 %        followed by x position for center(s) of plots
 %
-%   **'nopoints':**
+%   **{'nopoints', 'noind'}:**
 %        don't display dots
 %
 %   **'pointsize':**
@@ -204,6 +204,9 @@ if isempty(find(strcmp(varargin,'facealpha')))==0
     alp = varargin{find(strcmp(varargin,'facealpha'))+1};
 end
 if isempty(find(strcmp(varargin,'nopoints')))==0
+    dopoints = false;
+end
+if isempty(find(strcmp(varargin,'noind')))==0
     dopoints = false;
 end
 if isempty(find(strcmp(varargin,'weights')))==0
@@ -425,7 +428,7 @@ if ~setX, x = 1:size(Y, 2); end
 %axis([0.5 size(Y,2)+0.5, min(U(:)) max(U(:))]);
 
 % Set axis limits
-set(gca, 'XLim', [min(x)-.5 max(x)+.5], 'XTick', x, 'YLim', [min(U(:)) max(U(:))]);
+set(gca, 'XLim', [min(x)-.5 max(x)+.5], 'XTick', sort(x), 'YLim', [min(U(:)) max(U(:))]);
 
 
 %-------------------------------------------------------------------------
@@ -447,7 +450,8 @@ end
 
 % WANI ADDED nopoints OPTION (11/12/15)
 if dopoints
-    [~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
+    %[~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
+    plot_violin_points(x, Y, lc, fc);  pointloc = [];
 end
 
 % SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
@@ -480,8 +484,178 @@ end % For each column
 end %of function
 
 
+% % 
+% % function [linehandles, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin)
+% % % x = vector of x positions for each "column"
+% % % Y = cell array of input data, one cell per "column"
+% % % U, F = outputs from ksdensity, normalized, or [] to recalculate
+% % % lc = len(Y) x 3 vector of point fill colors
+% % % fc = len(Y) x 3 vector of point line colors
+% % %
+% % % added by Tor Wager, Sept 2015
+% % % lc is line color, will be used as fill
+% % % fc is fill color, will be used for lines, in a strange twist of fate
+% % % designed to increase contrast
+% % %
+% % % added by Scott Schafer, July 2016
+% % % xlimitprop is a proportion of the violin fill within which to display
+% % %  individual points. Default = 1
+% % %
+% % 
+% % manual_pointcolor = false;
+% % manual_pointsize = false;
+% % doweights = false;
+% % xlimitprop = 1;
+% % 
+% % if isempty(find(strcmp(varargin{1},'pointsize')))==0
+% %     pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
+% %     manual_pointsize = true;
+% % end
+% % 
+% % if isempty(find(strcmp(varargin{1},'pointcolor')))==0
+% %     pointcolor = varargin{1}{find(strcmp(varargin{1},'pointcolor'))+1};
+% %     manual_pointcolor = true;
+% % end
+% % 
+% % if isempty(find(strcmp(varargin{1},'weights')))==0
+% %     doweights = true;
+% %     w = varargin{1}{find(strcmp(varargin{1},'weights'))+1};
+% %     if iscell(w)==0, w = num2cell(w,1); end
+% % end
+% % 
+% % if isempty(find(strcmp(varargin{1},'xlimitprop')))==0
+% %     xlimitprop = varargin{1}{find(strcmp(varargin{1},'xlimitprop'))+1};
+% % end
+% % 
+% % if isempty(F) || isempty(U)
+% %     % recalculate if density values are missing
+% %     % this adds flexibility for use in other functions without modifying code
+% %     
+% %     for i=1:size(Y, 2)
+% %         
+% %         if ~doweights
+% %             if isempty(b)==0
+% %                 [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i));
+% %             elseif isempty(b)
+% %                 [f, u, bb]=ksdensity(Y{i});
+% %             end
+% %         else
+% %             if isempty(b)==0
+% %                 [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i), 'weights', w{i}(~isnan(Y{i})));
+% %             elseif isempty(b)
+% %                 [f, u, bb]=ksdensity(Y{i}(~isnan(Y{i}) & ~isnan(w{i})), ...
+% %                     'weights', w{i}(~isnan(Y{i}) & ~isnan(w{i})));
+% %             end
+% %         end
+% %         
+% %     end
+% %     
+% %     f=f/max(f)*0.3; %normalize
+% %     F(:,i) = f;
+% %     U(:,i) = u;
+% %     
+% % end
+% % 
+% % nbins = 10;
+% % 
+% % linehandles = [];
+% % 
+% % for i = 1:size(Y, 2)
+% %     
+% %     myx = x(i);     % x-value for this bar in plot
+% %     pointloc.x{i} = [];
+% %     pointloc.y{i} = [];
+% %     pointloc.idx{i} = [];
+% %     
+% %     myfillcolor = lc(i, :); % line color for this plot
+% %     mylinecolor = fc(i, :); % line color for this plot
+% %     
+% %     myU = U(:, i);  % x-values of ksdensity output
+% %     myF = F(:, i);  % y-values (density) of ksdensity output
+% %     
+% %     myY = Y{i};     % data points
+% %     if doweights, myw = w{i}; end
+% %     mybins = linspace(min(myY), max(myY), nbins);
+% %     
+% %     % starting and ending values
+% %     st = [-Inf mybins(1:end-1)];
+% %     en = [mybins];
+% %     
+% %     % set point size
+% %     if ~manual_pointsize
+% %         pointsize = 1000 ./ length(myY);
+% %         pointsize(pointsize < 1) = 1;
+% %         pointsize(pointsize > 12) = 12;
+% %     end
+% %     
+% %     clear mylimit my_xvals
+% %     
+% %     for j = 1:nbins
+% %         % define points within a bin or 'slab'
+% %         
+% %         whpoints = myY > st(j) & myY <= en(j);
+% %         
+% %         whu = myU > st(j) & myU <= en(j);
+% %         %%%%%%%%%%%%%%%%%
+% %         mylimit(j) = mean(myF(whu))*xlimitprop;  % average density for this 'slab' of points
+% %         % this will be the limit on x-values
+% %         
+% %         % interleave points on either side of the midline
+% %         % make the first point the actual midline value
+% %         
+% %         my_xvals = linspace(myx - mylimit(j), myx + mylimit(j), sum(whpoints))';
+% %         
+% %         if mod(length(my_xvals), 2)
+% %             % odd number, use the midline point
+% %             my_xvals = [myx; my_xvals(1:end-1)];
+% %         end
+% %         
+% %         % build coordinates:
+% %         % xlocs is left to right, ylocs is y-values to plot
+% %         
+% %         ylocs = myY(whpoints);
+% %         if doweights, myw_points = myw(whpoints); end
+% %         %xlocs = repmat(my_xvals, ceil(length(ylocs) ./ length(my_xvals)), 1);
+% %         
+% %         xlocs = my_xvals(1:length(ylocs));
+% %         
+% %         if ~doweights
+% %             if manual_pointcolor
+% %                 linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', pointcolor);
+% %             else
+% %                 linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
+% %             end
+% %         else
+% %             
+% %             linehandles{i, j} =  scatter(xlocs, ylocs, myw_points.*pointsize, mylinecolor);
+% %         
+% %             if manual_pointcolor
+% %                 set(linehandles{i, j}, 'MarkerFaceColor', pointcolor);
+% %             else
+% %                 set(linehandles{i, j}, 'MarkerFaceColor', myfillcolor);
+% %             end
+% %         end
+% %         
+% %         pointloc.x{i} = [pointloc.x{i}; xlocs];
+% %         pointloc.y{i} = [pointloc.y{i}; ylocs];
+% %         pointloc.idx{i} = [pointloc.idx{i}; find(whpoints)];
+% %         
+% %     end % slab
+% %     
+% % end % column
+% % 
+% % linehandles = linehandles';
+% % for i = 1:size(linehandles, 2)
+% %     lh2{i} = cat(1, linehandles{:, i});
+% % end
+% % linehandles = lh2;
+% % 
+% % end % function
 
-function [linehandles, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin)
+
+
+
+function linehandles = plot_violin_points(x, Y, lc, fc)
 % x = vector of x positions for each "column"
 % Y = cell array of input data, one cell per "column"
 % U, F = outputs from ksdensity, normalized, or [] to recalculate
@@ -492,59 +666,80 @@ function [linehandles, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, var
 % lc is line color, will be used as fill
 % fc is fill color, will be used for lines, in a strange twist of fate
 % designed to increase contrast
-%
-% added by Scott Schafer, July 2016
-% xlimitprop is a proportion of the violin fill within which to display
-%  individual points. Default = 1
-%
 
-manual_pointcolor = false;
-manual_pointsize = false;
-doweights = false;
-xlimitprop = 1;
+% Enforce cell, no NaNs
+% ------------------------------------------------
+Y = enforce_cell_array(Y);
 
-if isempty(find(strcmp(varargin{1},'pointsize')))==0
-    pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
-    manual_pointsize = true;
-end
+xvalues = get_violin_points(x, Y);
 
-if isempty(find(strcmp(varargin{1},'pointcolor')))==0
-    pointcolor = varargin{1}{find(strcmp(varargin{1},'pointcolor'))+1};
-    manual_pointcolor = true;
-end
+linehandles = [];
 
-if isempty(find(strcmp(varargin{1},'weights')))==0
-    doweights = true;
-    w = varargin{1}{find(strcmp(varargin{1},'weights'))+1};
-    if iscell(w)==0, w = num2cell(w,1); end
-end
-
-if isempty(find(strcmp(varargin{1},'xlimitprop')))==0
-    xlimitprop = varargin{1}{find(strcmp(varargin{1},'xlimitprop'))+1};
-end
-
-if isempty(F) || isempty(U)
-    % recalculate if density values are missing
-    % this adds flexibility for use in other functions without modifying code
+for i = 1:size(Y, 2)
     
-    for i=1:size(Y, 2)
+    myfillcolor = lc(i, :); % line color for this plot
+    mylinecolor = fc(i, :); % line color for this plot
+    
+    myY = Y{i};     % data points
+    
+    % set point size
+    pointsize = 1000 ./ length(myY);
+    pointsize(pointsize < 1) = 1;
+    pointsize(pointsize > 12) = 12;
+    
+    linehandles{i} =  plot(xvalues{i}, myY, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
+    
+end % column
+
+end % function
+
+
+
+
+function Y = enforce_cell_array(Y)
+
+k = size(Y, 2);
+
+if ~iscell(Y)
+    
+    for i = 1:k
         
-        if ~doweights
-            if isempty(b)==0
-                [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i));
-            elseif isempty(b)
-                [f, u, bb]=ksdensity(Y{i});
-            end
-        else
-            if isempty(b)==0
-                [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i), 'weights', w{i}(~isnan(Y{i})));
-            elseif isempty(b)
-                [f, u, bb]=ksdensity(Y{i}(~isnan(Y{i}) & ~isnan(w{i})), ...
-                    'weights', w{i}(~isnan(Y{i}) & ~isnan(w{i})));
-            end
-        end
+        Ytmp{i} = Y(:, i);
+        
+        Ytmp{i}(isnan(Ytmp{i})) = [];
         
     end
+    
+    Y = Ytmp;
+    
+end
+end % function
+
+
+
+
+function xvalues = get_violin_points(x, Y)
+% x = vector of x positions for each "column"
+% Y = cell array of input data, one cell per "column"
+%
+% added by Tor Wager, Sept 2015
+
+nbins = 10;
+
+k = size(Y, 2);
+
+xvalues = cell(1, k);
+
+% Enforce cell, no NaNs
+% ------------------------------------------------
+Y = enforce_cell_array(Y);
+
+
+% calculate  density values
+% ------------------------------------------------
+for i = 1:k
+    
+    [f, u, bb]=ksdensity(Y{i});
     
     f=f/max(f)*0.3; %normalize
     F(:,i) = f;
@@ -552,98 +747,74 @@ if isempty(F) || isempty(U)
     
 end
 
-nbins = 10;
 
-linehandles = [];
 
-for i = 1:size(Y, 2)
+% get x positions
+% ------------------------------------------------
+
+for i = 1:k
     
     myx = x(i);     % x-value for this bar in plot
-    pointloc.x{i} = [];
-    pointloc.y{i} = [];
-    pointloc.idx{i} = [];
-    
-    myfillcolor = lc(i, :); % line color for this plot
-    mylinecolor = fc(i, :); % line color for this plot
     
     myU = U(:, i);  % x-values of ksdensity output
     myF = F(:, i);  % y-values (density) of ksdensity output
     
     myY = Y{i};     % data points
-    if doweights, myw = w{i}; end
     mybins = linspace(min(myY), max(myY), nbins);
     
     % starting and ending values
     st = [-Inf mybins(1:end-1)];
     en = [mybins];
     
-    % set point size
-    if ~manual_pointsize
-        pointsize = 1000 ./ length(myY);
-        pointsize(pointsize < 1) = 1;
-        pointsize(pointsize > 12) = 12;
-    end
-    
-    clear mylimit my_xvals
-    
     for j = 1:nbins
         % define points within a bin or 'slab'
         
         whpoints = myY > st(j) & myY <= en(j);
         
+        if sum(whpoints) == 0, continue, end
+        
         whu = myU > st(j) & myU <= en(j);
-        %%%%%%%%%%%%%%%%%
-        mylimit(j) = mean(myF(whu))*xlimitprop;  % average density for this 'slab' of points
+        
+        mylimit(j) = nanmean(myF(whu));  % average density for this 'slab' of points
+        %if isnan(mylimit(j)), mylimit(j) = 0; end % can happen...
+        
         % this will be the limit on x-values
         
+        % re-use nbins here for convenience - now it means bins ACROSS the
+        % graph within the violin shape, though
         % interleave points on either side of the midline
         % make the first point the actual midline value
         
         my_xvals = linspace(myx - mylimit(j), myx + mylimit(j), sum(whpoints))';
         
-        if mod(length(my_xvals), 2)
-            % odd number, use the midline point
-            my_xvals = [myx; my_xvals(1:end-1)];
-        end
+        if length(my_xvals) == 1, my_xvals = myx;  end
+        
+%         if mod(length(my_xvals), 2)
+%             % odd number, use the midline point
+%             my_xvals = [myx; my_xvals];  % (1:end-1)];
+%         end
         
         % build coordinates:
         % xlocs is left to right, ylocs is y-values to plot
         
         ylocs = myY(whpoints);
-        if doweights, myw_points = myw(whpoints); end
         %xlocs = repmat(my_xvals, ceil(length(ylocs) ./ length(my_xvals)), 1);
         
         xlocs = my_xvals(1:length(ylocs));
         
-        if ~doweights
-            if manual_pointcolor
-                linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', pointcolor);
-            else
-                linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
-            end
-        else
-            
-            linehandles{i, j} =  scatter(xlocs, ylocs, myw_points.*pointsize, mylinecolor);
+        % save in original point list
+        xvalues{i}(whpoints, 1) = xlocs;
         
-            if manual_pointcolor
-                set(linehandles{i, j}, 'MarkerFaceColor', pointcolor);
-            else
-                set(linehandles{i, j}, 'MarkerFaceColor', myfillcolor);
-            end
-        end
-        
-        pointloc.x{i} = [pointloc.x{i}; xlocs];
-        pointloc.y{i} = [pointloc.y{i}; ylocs];
-        pointloc.idx{i} = [pointloc.idx{i}; find(whpoints)];
-        
+        %linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
+%         
+%         pointloc.x{i} = [pointloc.x{i}; xlocs];
+%         pointloc.y{i} = [pointloc.y{i}; ylocs];
+%         pointloc.idx{i} = [pointloc.idx{i}; find(whpoints)];
+
+
     end % slab
     
 end % column
 
-linehandles = linehandles';
-for i = 1:size(linehandles, 2)
-    lh2{i} = cat(1, linehandles{:, i});
-end
-linehandles = lh2;
-
 end % function
+

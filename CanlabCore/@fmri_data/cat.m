@@ -1,11 +1,11 @@
-function obj = cat(obj, varargin)
+function [obj, obj_codes] = cat(obj, varargin)
 % Merge two fmri_data objects, appending additional objects to the one
 % entered first.  Resamples to the space of the first object if necessary.
 
 % :Usage:
 % ::
 %
-%     obj = cat(obj, [obj2], [obj3], etc.)
+%     [obj, obj_codes] = cat(obj, [obj2], [obj3], etc.)
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -37,13 +37,18 @@ function obj = cat(obj, varargin)
 %
 %
 % :Optional Inputs:
-%   **obj2:**
-%        A second fmri_data object to merge (concatenate) with the first
-%
+%   **obj2, obj3:**
+%        A second/third/etc. fmri_data object to merge (concatenate) with the first
+%   
 % :Outputs:
 %
 %   **obj:**
 %        The concatenated object
+%
+%   **obj_codes:**
+%        Integer vector with one element for each image in the merged
+%        object.  Integer values reflect which of the original objects the
+%        image came from.
 %
 % :Examples:
 % ::
@@ -51,8 +56,12 @@ function obj = cat(obj, varargin)
 %    If you have a series of fmri_data objects called DATA_OBJ in a cell array, 
 %    concatenate them using: DATA_CAT = cat(DATA_OBJ{:});
 %
+%    Return image condition codes as well:
+%    wh = [1 3];
+%    [cat_obj, condition_codes] = cat(DATA_OBJ{wh});
+%
 % :References:
-%   CITATION(s) HERE
+%   None
 %
 % :See also:
 %   - list other functions related to this one, and alternatives*
@@ -63,20 +72,23 @@ function obj = cat(obj, varargin)
 %    Created July 2016, Tor Wager
 % ..
 
-% BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
-% ARGUMENTS. MANY FUNCTIONS NEED TO PARSE OPTIONAL ARGS, SO THIS MAY BE
-% USEFUL.
 
 if isempty(varargin)
     return
     
 else
     
+    obj_codes{1} = ones(size(obj.dat, 2), 1);
+    
     for i = 1:length(varargin)
+        
+        obj_codes{i + 1} = (i + 1) .* ones(size(varargin{i}.dat, 2), 1);
         
         obj = merge_fcn(obj, varargin{i});
         
     end
+    
+    obj_codes = cat(1, obj_codes{:});
     
 end
 

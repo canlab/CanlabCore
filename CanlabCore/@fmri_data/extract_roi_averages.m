@@ -1,5 +1,5 @@
 function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, varargin)
-% This fmri_data method a extracts and averages data stored in an fmri_data object 
+% This fmri_data method a extracts and averages data stored in an fmri_data object
 % from a set of ROIs defined in a mask.
 %
 % If no mask_image is entered, it uses the mask defined with the fmri_data object as a default.
@@ -40,9 +40,9 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %   **pattern_expression**
 %       Use values in mask images to get weighted average within each
 %       region, rather than simple average.  See also apply_mask with
-%       'pattern_expression' option. 
-%       
-%       Optional outputs (varargout): 
+%       'pattern_expression' option.
+%
+%       Optional outputs (varargout):
 %       [cl, cl_roimean, cl_roipattern] = ...
 %       roimean: pattern expression is average over ROI (unit vector)
 %       roipattern: pattern expression is dot product of activity and mean-centered pattern weights
@@ -65,7 +65,7 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 % ..
 %     Notes:
 %     cl(i).dat gives you the pattern expression values for cluster i.
-% 
+%
 %     This function LOSES removed image data - you must re-remove if you have
 %     removed images!
 %
@@ -73,16 +73,17 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %       - use resample_space instead of resample_to_image_space
 %
 %     Modified Dec 1, 2014 by Wani
-%       - moved up the part of parsing optional inputs because resample_space 
+%       - moved up the part of parsing optional inputs because resample_space
 %         causes a problem for the unique_mask_values option
-%       - For resample_space, the 'nearest' option should be used when the 
-%         "unique_mask_values" option is used. 
+%       - For resample_space, the 'nearest' option should be used when the
+%         "unique_mask_values" option is used.
 %
 %     Modified Oct 2015 by Tor]
 %       - Clarified options, empty cl error check, changed varargout behavior
 % ..
 
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
+doverbose = 1;
 
 % ---------------------------------
 % define region object based on choices
@@ -103,7 +104,10 @@ for varg = 1:length(varargin)
                 % do nothing -- ignore and use later
                 
             case {'nonorm'}
-                pattern_norm = 0; 
+                pattern_norm = 0;
+                
+            case 'noverbose'
+                doverbose = 0;
                 
             otherwise
                 disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
@@ -121,7 +125,9 @@ space_defining_image = obj.mask;
 % define mask object and resample to image space
 % ---------------------------------
 
-fprintf('fmri_data.extract_roi_averages: ');
+if doverbose
+    fprintf('fmri_data.extract_roi_averages: ');
+end
 
 if nargin < 2 || isempty(mask_image)
     
@@ -131,7 +137,9 @@ if nargin < 2 || isempty(mask_image)
     
 else
     
-    fprintf('Defining mask object. ');
+    if doverbose
+        fprintf('Defining mask object. ');
+    end
     
     switch class(mask_image)
         
@@ -141,7 +149,7 @@ else
             
         case 'fmri_mask_image'
             mask = mask_image;
-        
+            
         case {'image_vector', 'fmri_data'}
             mask = replace_empty(mask_image);
             
@@ -160,19 +168,20 @@ else
             
     end
     
-    if size(mask.dat, 2) > 1, fprintf('Mask contains multiple images: Using first one.\n'); end
+    if doverbose && size(mask.dat, 2) > 1, fprintf('Mask contains multiple images: Using first one.\n'); end
     
     isdiff = compare_space(mask, space_defining_image);
     
     if isdiff == 1 || isdiff == 2
         % resample it to the image space
         % * this step cannot be done recursively...could be worked on.
-        fprintf('Resampling mask. ');
+        if doverbose, fprintf('Resampling mask. '); end
+        
         if any(strcmp(average_over, 'unique_mask_values'))
             
             % added by Wani 12/01/2014: "linear" interpolation causes a
-            % problem for the unique_mask_values option. 
-            mask = resample_space(mask, space_defining_image, 'nearest'); 
+            % problem for the unique_mask_values option.
+            mask = resample_space(mask, space_defining_image, 'nearest');
         else
             mask = resample_space(mask, space_defining_image);
         end
@@ -196,12 +205,12 @@ else
     % this mask will have a different set of in-mask voxels
     % get only the subset in BOTH the original fmri dataset mask and
     % the new one we're applying
-
+    
     % --------------------------------------------
     % Redefine elements of new mask to apply
     % to keep only coords in original dataset
     % --------------------------------------------
-
+    
     is_inmask = obj.mask.volInfo.image_indx & mask.volInfo.image_indx;
     mask.volInfo.image_indx = is_inmask;
     
@@ -230,10 +239,12 @@ else
     obj = replace_empty(obj);
     obj.dat = obj.dat(wh_to_keep, :)';
     
-
+    
 end
 
-fprintf('\n');
+if doverbose
+    fprintf('\n');
+end
 
 cl = region(mask, average_over);
 cl(1).source_images = obj.fullpath;
@@ -259,15 +270,15 @@ maskData = mask.dat(logical(mask.volInfo.wh_inmask), :);
 
 if any(strcmp(varargin, 'pattern_expression'))  % for pexp only
     maskvals = maskData;
-    fprintf('Applying mask weights to get pattern expression.\n');
+    if doverbose, fprintf('Applying mask weights to get pattern expression.\n'); end
     
     if pattern_norm
-        fprintf('Normalizing within contiguous region by L1 norm.\n');
+        if doverbose, fprintf('Normalizing within contiguous region by L1 norm.\n'); end
     else
-        fprintf('No normalization of region weights.\n');        
+        if doverbose, fprintf('No normalization of region weights.\n'); end
     end
 else
-    fprintf('Averaging data. ');
+    if doverbose, fprintf('Averaging data. '); end
 end
 
 switch average_over
@@ -278,8 +289,9 @@ switch average_over
         maskData = round(maskData);
         u = unique(maskData)'; u(u == 0) = [];
         nregions = length(u);
-        fprintf('Averaging over unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
-        
+        if doverbose
+            fprintf('Averaging over unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
+        end
         
     case 'contiguous_regions'
         u = unique(mask.volInfo.cluster); u(u == 0) = [];
@@ -312,7 +324,7 @@ for i = 1:nregions
     imgvec = maskData == u(i);
     
     regiondat = obj.dat(:, imgvec);
-     
+    
     if ~isempty(regiondat)
         
         if any(strcmp(varargin, 'pattern_expression'))
@@ -369,7 +381,9 @@ for i = 1:nregions
     
 end
 
-fprintf('Done.\n');
+if doverbose
+    fprintf('Done.\n');
+end
 
 % if nargout > 1
 %     varargout{1} = clroimean;

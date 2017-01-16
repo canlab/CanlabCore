@@ -77,7 +77,7 @@ for i = 1:k
   fit_indexes   = find(cv_assignment~=i);
   y_fit         = y(fit_indexes);
   x_fit         = x(fit_indexes,:);
-  res(i)        = lasso(y_fit, x_fit, options);
+  res(i)        = lasso_rocha(y_fit, x_fit, options);
   switch lower(alignment)
     case 'normalized_penalty'
       max_index = max(max_index, max(res(i).npenalty));
@@ -107,7 +107,7 @@ end;
 
 [min_MSE, best_cv_MSE] = min(mean(MSE));
 best_index             = index_slices(best_cv_MSE);
-result                 = lasso(y, x, options);
+result                 = lasso_rocha(y, x, options);
 
 result.CV                = lasso_coefficients(result, best_index, alignment);
 result.CV.cv_index       = best_cv_MSE;

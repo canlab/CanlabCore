@@ -129,15 +129,15 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        between l1 and l2 regularization, 'Lambda' parameter,
 %        which is amount of LASSO regularization/shrinkage, and
 %        'errorMatrix', which is the amount of error for each
-%        parameter combination.  
+%        parameter combination. Use imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
+%        to view matrix.  Min of this matrix is the best
+%        fitting parameters.
 %        NOTE: To estimate the optimal LASSO Lambda, use the optional 
 %        argument 'cv' followed by the number of crosvalidation folds and 
 %        the argument 'nfolds',1 (e.g. 'cv',5,'nfolds',1). This will utilize the internal 
 %        cross-validataion of the lassoglm function to estimate the optimal
 %        Lambda in terms of minimal model divergence.
-%        Use imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
-%        to view matrix.  Min of this matrix is the best
-%        fitting parameters.
+%        
 %
 %
 %   **cv_svm:**

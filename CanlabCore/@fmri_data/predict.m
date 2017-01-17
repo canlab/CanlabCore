@@ -122,14 +122,20 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        NOTE: Requires Matlab R2012a and higher.
 %        NOTE: Optional input: 'EstimateParams' - this will
 %        use grid search and nested cross validation to
-%        estimate Lambda and Alpha.  Output is saved in
+%        estimate both Lambda and Alpha (independent of your specification 
+%        to estimate Alpha or Lambda). Output is saved in
 %        stats.other_output_cv{:,3}.  Output includes 'Alpha'
 %        parameter which is the elastic net mixture value
 %        between l1 and l2 regularization, 'Lambda' parameter,
 %        which is amount of LASSO regularization/shrinkage, and
 %        'errorMatrix', which is the amount of error for each
-%        parameter combination.  Use
-%        imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
+%        parameter combination.  
+%        NOTE: To estimate the optimal LASSO Lambda, use the optional 
+%        argument 'cv' followed by the number of crosvalidation folds and 
+%        the argument 'nfolds',1 (e.g. 'cv',5,'nfolds',1). This will utilize the internal 
+%        cross-validataion of the lassoglm function to estimate the optimal
+%        Lambda in terms of minimal model divergence.
+%        Use imagesc(obj.stats_other_output_cv{:,3}.errorMatrix)
 %        to view matrix.  Min of this matrix is the best
 %        fitting parameters.
 %
@@ -1198,7 +1204,7 @@ for i = 1:length(varargin)
             case 'Alpha'
                 varargin{i} = [];
                 alpha = varargin{i+1};
-                if isempty(alpha) || ~isnumeric(alpha)
+                if isempty(alpha) || ~isnumeric(alpha) || alpha>1 || alpha<0
                     error('Follow Alpha input with elastic net mixing parameter');
                 end
                 varargin{i+1} = [];
@@ -1340,6 +1346,7 @@ if ~doNestedXval
     intercept = bb(1);  %stats.Intercept(n);  % after OLS re-fitting
     out.alpha = stats.Alpha;
     out.lambda = stats.Lambda(n);
+    out.stats  =  stats; % return all info from lassoglm
     
     switch runmode
         case 'classification'

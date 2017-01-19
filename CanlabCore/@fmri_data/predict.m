@@ -135,10 +135,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        NOTE: To estimate the optimal LASSO Lambda, use the optional 
 %        argument 'cv' followed by the number of crosvalidation folds and 
 %        the argument 'nfolds',1 (e.g. 'cv',5,'nfolds',1). This will utilize the internal 
-%        cross-validataion of the lassoglm function to estimate the optimal
-%        Lambda in terms of minimal model divergence.
-%        
-%
+%        cross-validataion of the lassoglm function to estimate Lambda.    
 %
 %   **cv_svm:**
 %        Cross-val support vector machine using Spider package
@@ -462,6 +459,9 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %    9/4/2015: Tor: Created more functional statistic_image output in
 %    weight_obj when bootstrapping.  Now p-values, etc. are included so you
 %    can threshold.
+% 
+%    1/17/2016: Stephan: added optional stats-output from matlab lassoglm 
+%                 to be returned in out.other_output{3}.stats
 % ..
 
 % ..

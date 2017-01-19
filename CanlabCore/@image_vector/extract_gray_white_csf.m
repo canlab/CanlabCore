@@ -39,11 +39,17 @@ function [values, components, full_data_objects] = extract_gray_white_csf(obj)
 %    Tor Wager, July 21, 2015
 % ..
 
+% Programmers' notes:
+% Jan 2017:  Issue with vector lengths if obj has removed images, fixed (Tor)
+
 numcomps = 5;
 
 masks = {'gray_matter_mask.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
 
-values = NaN * zeros(size(obj.dat, 2), length(masks));
+obj = remove_empty(obj);  % return only non-empty values
+nimgs = size(obj.dat, 2); % - sum(obj.removed_images);
+
+values = NaN * zeros(nimgs, length(masks));
 components = cell(1, length(masks));
 full_data_objects = [];
 
@@ -70,7 +76,14 @@ for i = 1:length(masks)
     % get means
     masked_obj.dat(masked_obj.dat == 0) = NaN;
     
-    values(:, i) = nanmean(masked_obj.dat, 1)';
+    myvalues = nanmean(masked_obj.dat, 1)';
+    
+    % may need to insert omitted - no, return in reduced space
+%     if length(masked_obj.removed_images) > 1
+%         myvalues = naninsert(masked_obj.removed_images, myvalues);
+%     end
+    
+    values(:, i) = myvalues;
     
 
     % get components
@@ -81,6 +94,11 @@ for i = 1:length(masks)
         if any(wasnan), fprintf('Removing %3.0f voxels with one or more NaNs\n', sum(wasnan)); end
         
         [~, components{i}] = pca(dataforpca', 'Economy', true, 'NumComponents', numcomps);
+        
+        % may need to insert omitted
+%         if length(masked_obj.removed_images) > 1
+%             components{i} = naninsert(masked_obj.removed_images, components{i});
+%         end
         
     end
     

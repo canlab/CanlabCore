@@ -541,6 +541,8 @@ switch meth
     case 'remove_csf'
         % ---------------------------------------------------------------------
         
+        obj = remove_empty(obj);
+        
         doplot = any(strcmp(varargin, 'plot'));
         
         [means, components] = extract_gray_white_csf(obj);
@@ -586,6 +588,7 @@ switch meth
         sz = size(obj.dat);
         to_subtract = repmat(fit', sz(1), 1);
         
+%         obj.dat = remove_empty(obj.dat);  % components in reduced space
         obj.dat = obj.dat - to_subtract;
         
         obj.history{end + 1} = sprintf('Regressed out CSF components image-wise. \nCorrelation between predicted and actual mean gray matter before removal: r = %3.4f', r);
@@ -593,6 +596,8 @@ switch meth
         % ---------------------------------------------------------------------
     case 'rescale_by_csf'
         % ---------------------------------------------------------------------
+        
+        obj = remove_empty(obj);
         
         doplot = any(strcmp(varargin, 'plot'));
         

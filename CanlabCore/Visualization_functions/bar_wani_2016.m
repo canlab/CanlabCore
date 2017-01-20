@@ -1,6 +1,7 @@
 function [handle, xdata_all] = bar_wani_2016(y, e, bar_width, varargin)
 % Draw a bar plot with error bars with some additional useful features 
-% (work with up to the 2014a matlab).  
+% (doesn't work with older than matlab 2015. If you're using matlab 2014 
+%  or older, please use bar_wani, not this).  
 %
 % :Usage:
 % ::

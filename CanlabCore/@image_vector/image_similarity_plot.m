@@ -22,7 +22,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
 % pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
 % networks from the Buckner Lab's 1000-person resting-state analyses and
-% "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.  
+% "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.
 %
 % ..
 %     Author and copyright information:
@@ -92,7 +92,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **cosine_similarity**
 %        Use cosine similarity instead of Pearson's r
 %
-%   **colors** 
+%   **colors**
 %             followed by cell array of colors, one for each image/image
 %             group
 %               Default colors for multi-line plots
@@ -170,7 +170,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 % 5/10/2016 (Phil Kragel)
 %   - added option to use cosine similarity instead of Pearson
 %
-% 
+%
 %
 % ..
 
@@ -198,7 +198,7 @@ for i = 1:length(varargin)
             case 'average', doaverage = 1;
                 
             case 'cosine_similarity', doCosine = 1;
-                    
+                
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
                     'pauli' 'bgloops' 'pauli17' 'bgloops17'}
@@ -234,27 +234,27 @@ end
 
 % This functionality replaced by load_image_set.  Tor: July 2016
 % switch mapset
-%     
+%
 %     case 'bucknerlab'
 %         [mask, networknames, imagenames] = load_bucknerlab_maps;
 %         networknames=networknames';
-%         
+%
 %     case 'npsplus'
 %         [mask, networknames, imagenames] = load_npsplus;
-%         
+%
 %     case 'kragelemotion'
 %         [mask, networknames, imagenames] = load_kragelemotion;
-%  
+%
 %     case 'allengenetics'
 %         [mask, networknames, imagenames] = load_allengenetics;
-%         
+%
 %     case 'custom'
-%         
+%
 %     otherwise
 %         error('unknown map set');
-%         
+%
 % end
-% 
+%
 % disp('Using images:');
 % fprintf('%s\n', imagenames{:});
 
@@ -285,9 +285,9 @@ obj = replace_empty(obj);
 r = zeros(size(mask.dat, 2), size(obj.dat, 2));
 
 if ~doCosine
-
+    
     r = corr(double(obj.dat), double(mask.dat))';
-
+    
 else
     % Cosine similarity
     for im = 1:size(mask.dat, 2)
@@ -302,24 +302,24 @@ end
 stats.r = r;
 
 if ~doaverage
-        
+    
     if ~noplot
         
         if ~dofixRange
             % Plot values for each image in obj
             [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
         else
-            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange); 
-        % Make legend
-        if ~isempty(obj.image_names)
-            han = makelegend(obj.image_names, groupColors);
-        end
+            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange);
+            % Make legend
+            if ~isempty(obj.image_names)
+                han = makelegend(obj.image_names, groupColors);
+            end
         end
     end
     
     print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
-
-
+    
+    
 elseif doaverage
     
     z=fisherz(r'); %transform values
@@ -334,7 +334,7 @@ elseif doaverage
         for i=1:size(z,2) %for each spatial basis do an anova across groups
             [p table_group{i} st]=anova1(z(:,i),group,'off'); %get anova table
             [c,~] = multcompare(st,'Display','off'); %perform multiple comparisons
-            multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:6))]; %format table for output
+            multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end))]; %format table for output
             
         end
         
@@ -390,7 +390,7 @@ elseif doaverage
         %row factor
         [~, stats(g).table_spatial, st]=anova2(z_group(~isnan(z_group(:,1)),:),1,'off');
         [c,~] = multcompare(st,'Display','off');
-        stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:6))];
+        stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
         
         
         disp(['Table of correlations Group:' num2str(g)]);
@@ -404,9 +404,9 @@ elseif doaverage
     
     
     if ~noplot
-        
-         groupColors=repmat(groupColors(size(m, 2)),3,1);
-         groupColors={groupColors{:}};
+        groupColors = scn_standard_colors(length(groupValues))';
+        groupColors=repmat(groupColors',3,1);
+        groupColors={groupColors{:}};
         
         toplot=[];
         
@@ -444,12 +444,13 @@ elseif doaverage
 end % doaverage
 
 % Fill in additional info
-stats.descrip = 'Rows are networks, columns are input images.';
-stats.networknames = networknames;
-stats.network_imagenames = imagenames;
-stats.inputnames = format_strings_for_legend(obj.image_names);
-stats.input_imagenames = obj.image_names;
-
+for i=1:length(stats)
+    stats(i).descrip = 'Rows are networks, columns are input images.';
+    stats(i).networknames = networknames;
+    stats(i).network_imagenames = imagenames;
+    stats(i).inputnames = format_strings_for_legend(obj.image_names);
+    stats(i).input_imagenames = obj.image_names;
+end
 end % function
 
 
@@ -465,70 +466,70 @@ end % function
 % % The functions below replaced by load_image_set.  Tor: July 2016
 
 % function [mask, networknames, imagenames] = load_bucknerlab_maps
-% 
+%
 % % Load Bucker Lab 1,000FC masks
 % % ------------------------------------------------------------------------
-% 
+%
 % names = load('Bucknerlab_7clusters_SPMAnat_Other_combined_regionnames.mat');
 % img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
-% 
+%
 % mask = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
-% 
+%
 % networknames = names.rnames(1:7);
 % k = length(networknames);
-% 
+%
 % newmaskdat = zeros(size(mask.dat, 1), k);
-% 
+%
 % for i = 1:k  % breaks up into one map per image/network
-%     
+%
 %     wh = mask.dat == i;
-%     
+%
 %     nvox(1, i) = sum(wh);
-%     
+%
 %     newmaskdat(:, i) = double(wh);
-%     
-%     
+%
+%
 % end
-% 
+%
 % mask.dat = newmaskdat;
-% 
+%
 % imagenames = {img};
 % end  % function
-% 
-% 
-% 
-% 
+%
+%
+%
+%
 % function [mask, networknames, imagenames] = load_npsplus
-% 
+%
 % % Load NPS, PINES, Rejection, VPS,
 % % ------------------------------------------------------------------------
-% 
+%
 % networknames = {'NPS' 'PINES' 'RomRejPattern' 'VPS'};
-% 
+%
 % imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
 %     'Rating_Weights_LOSO_2.nii'  ...  % PINES
 %     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
 %     'bmrk4_VPS_unthresholded.nii'};
-% 
+%
 % imagenames = check_image_names_get_full_path(imagenames);
-% 
+%
 % mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-% 
+%
 % end  % function
-% 
-% 
-% 
-% 
-% 
-% 
-% 
+%
+%
+%
+%
+%
+%
+%
 % function [mask, networknames, imagenames] = load_kragelemotion
-% 
+%
 % % Load NPS, PINES, Rejection, VPS,
 % % ------------------------------------------------------------------------
-% 
+%
 % networknames = {'Amused' 'Angry' 'Content' 'Fearful' 'Neutral' 'Sad' 'Surprised'};
-% 
+%
 % imagenames = { ...
 %     'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...
 %     'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
@@ -537,21 +538,21 @@ end % function
 %     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
 %     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
 %     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
-% 
+%
 % imagenames = check_image_names_get_full_path(imagenames);
-% 
+%
 % mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-% 
+%
 % end % function
-% 
-% 
+%
+%
 % function [mask, networknames, imagenames] = load_allengenetics
-% 
+%
 % % Load Allen Brain Atlas project human genetic maps (from Luke Chang)
 % % ------------------------------------------------------------------------
-% 
+%
 % networknames = {'5HT' 'Opioid' 'Dopamine' 'NEalpha' 'NEbeta'};
-% 
+%
 % imagenames = { ...
 %     'Serotonin.nii' ...
 %     'Opioid.nii' ...
@@ -559,29 +560,29 @@ end % function
 %     'AdrenoAlpha.nii' ...
 %     'AdrenoBeta.nii' ...
 % };
-% 
+%
 % imagenames = check_image_names_get_full_path(imagenames);
-% 
+%
 % mask = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
-% 
+%
 % end % function
-% 
-% 
-% 
-% 
+%
+%
+%
+%
 % function imagenames = check_image_names_get_full_path(imagenames)
-% 
+%
 % for i = 1:length(imagenames)
-%     
+%
 %     if isempty(which(imagenames{i}))
 %         fprintf('CANNOT FIND %s \n', imagenames{i})
 %         error('Exiting.');
 %     end
-%     
+%
 %     imagenames{i} = which(imagenames{i});
 % end
 % end
-% 
+%
 
 
 

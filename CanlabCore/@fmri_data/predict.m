@@ -462,6 +462,10 @@ function [cverr, stats, optout] = predict(obj, varargin)
 % 
 %    1/17/2016: Stephan: added optional stats-output from matlab lassoglm 
 %                 to be returned in out.other_output{3}.stats
+% 
+%    2/6/2017: Stephan replaced 'pc(:,size(xtrain,1)) = [];' with 'pc(:,end) = [];
+%    to accomodate predictor matrices with fewer features (voxels) than
+%    data (trials/images)
 % ..
 
 % ..
@@ -968,7 +972,12 @@ end
 function [yfit, vox_weights, intercept] = cv_pcr(xtrain, ytrain, xtest, cv_assignment, varargin)
 
 [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
-pc(:,size(xtrain,1)) = [];                % remove the last component, which is close to zero.
+pc(:,end) = [];                % remove the last component, which is close to zero.
+                               % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
+                               % end to accomodate predictor matrices with
+                               % fewer features (voxels) than trials. SG
+                               % 2017/2/6
+
 % [pc, sc, eigval] = princomp(xtrain, 'econ');
 
 % Choose number of components to save [optional]
@@ -1036,7 +1045,11 @@ if ~isempty(wh), doNestedXval = 1; end
 if dopcr
     try %catch added 7/2/13 by LC
         [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
-        pc(:,size(xtrain,1)) = [];                % remove the last component, which is close to zero.
+        pc(:,end) = [];        % remove the last component, which is close to zero.
+                               % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
+                               % end to accomodate predictor matrices with
+                               % fewer features (voxels) than trials. SG
+                               % 2017/2/6
         % [pc, sc, eigval] = princomp(xtrain, 'econ');
 
     catch exception
@@ -1262,7 +1275,11 @@ end
 if dopcr
     
     [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
-    pc(:,size(xtrain,1)) = [];                % remove the last component, which is close to zero.
+    pc(:,end) = [];                % remove the last component, which is close to zero
+                                   % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
+                                   % end to accomodate predictor matrices with
+                                   % fewer features (voxels) than trials. SG
+                                   % 2017/2/6.
     % [pc, sc, eigval] = princomp(xtrain, 'econ');  %econ is much faster and should be used when n <= p and returns n-1 components.  additional components are meaningless
 
     % [optional] Choose number of components to save

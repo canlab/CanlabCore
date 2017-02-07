@@ -497,9 +497,33 @@ function [image_obj, networknames, imagenames] = load_pauli_bg
 % Load Pauli et al. 2016 basal ganglia 5-cluster solution
 % ------------------------------------------------------------------------
 
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'}; 
 
 imagenames = {'Pauli_bg_cluster_mask_5.nii'};
+imagenames = check_image_names_get_full_path(imagenames);
+
+% load image with integer coding of networks
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+% Break up into one image per region
+% -------------------------------------------------
+image_obj = integer_coded_image_to_separate_images(image_obj);
+
+
+end % function
+
+
+
+function [image_obj, networknames, imagenames] = load_pauli_bg17
+
+% Load Pauli et al. 2016 basal ganglia 17-cluster solution (no labels
+% given in the paper)
+% ------------------------------------------------------------------------
+networknames = {'cluster 1','cluster 2','cluster 3','cluster 4','cluster 5','cluster 6',...
+    'cluster 7','cluster 8','cluster 9','cluster 10','cluster 11','cluster 12','cluster 13',...
+    'cluster 14','cluster 15','cluster 16','cluster 17',};
+
+imagenames = {'Pauli_bg_cluster_mask_17.nii'};
 imagenames = check_image_names_get_full_path(imagenames);
 
 % load image with integer coding of networks
@@ -525,7 +549,7 @@ imagenames = {'Pauli_bg_nb_param_rank_fst_Cp.nii' ...
                 'Pauli_bg_nb_param_rank_fst_Pp.nii' ...
 };
 
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum/accumbens (VS)' 'Post. Putamen (PP)'}; 
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'}; 
 
 imagenames = check_image_names_get_full_path(imagenames);
 

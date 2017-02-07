@@ -404,7 +404,8 @@ elseif doaverage
     
     
     if ~noplot
-        groupColors = scn_standard_colors(length(groupValues))';
+        % groupColors = scn_standard_colors(length(groupValues))'; %
+        % removed to enable use of user-defined colors. SG 2017/2/7
         groupColors=repmat(groupColors',3,1);
         groupColors={groupColors{:}};
         

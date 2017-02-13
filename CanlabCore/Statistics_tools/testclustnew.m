@@ -229,7 +229,7 @@ where=find(where==1);
             
 
 %generate clustnames;
-if isempty(Xnames)
+if sum(cellfun(@isempty,Xnames)) == numel(Xnames)
     for i = 1:length(bestmyclass)
         Xnames{i} = ['v' num2str(i)];
     end

@@ -83,7 +83,7 @@ if length(varargin)>0,r=varargin{1}; else r = 2; end % inputs
 if length(varargin)>1,nperm=varargin{2}; else nperm = 1000; end
 if length(varargin)>2,names=varargin{3}; else names = cell(1,15); end
 if length(varargin)>3,remove=varargin{4}; else remove='keep'; end
-if length(varargin)>4,linkagetype=varargin{5}; else linkagetype = {'single'}; end
+if length(varargin)>4,linkagetype=varargin{5}; else linkagetype = 'single'; end
 
 
 
@@ -97,7 +97,7 @@ bestc = 0;
 bestnames = [];
 bestmyclass = ones(num, 1);
 
-fprintf(1,'testclustnew.m, linkage type is %s, Permutations: %d\n',linkagetype{1}, nperm);
+fprintf(1,'testclustnew.m, linkage type is %s, Permutations: %d\n',linkagetype, nperm);
 
 for c=clust  %loop through clusters
     fprintf(1,'permuting cluster %3.0f . ',c);

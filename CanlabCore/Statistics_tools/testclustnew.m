@@ -97,7 +97,7 @@ bestc = 0;
 bestnames = [];
 bestmyclass = ones(num, 1);
 
-fprintf(1,'testclustnew.m, linkage type is %s, Permutations: %d\n',linkagetype, nperm);
+fprintf(1,'testclustnew.m, linkage type is %s, Permutations: %d\n',linkagetype{1}, nperm);
 
 for c=clust  %loop through clusters
     fprintf(1,'permuting cluster %3.0f . ',c);

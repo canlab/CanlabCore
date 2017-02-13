@@ -63,18 +63,18 @@ switch plotmethod
         
         create_figure('fmri data matrix', 2, 3);
         imagesc(fmridat.dat');
-        colorbar
+        colorbar;
 
         axis tight; set(gca, 'YDir', 'Reverse')
         title('fmri data .dat Data matrix');
         xlabel('Voxels'); ylabel('Images');
-        drawnow
+        drawnow;
         
         tmp = mean(fmridat.dat(:));
         stmp = nanstd(fmridat.dat(:));
         myrange = [tmp - 3*stmp tmp + 3*stmp];
         set(gca, 'CLim', myrange);
-        drawnow
+        drawnow;
 
         
         if ~isempty(fmridat.Y)
@@ -85,7 +85,7 @@ switch plotmethod
             title('Y');
             axis tight;
         end
-        drawnow
+        drawnow;
 
         % ---------------------------------------------------------------
         % Covariance
@@ -94,10 +94,10 @@ switch plotmethod
         subplot(2, 3, 4);
         covmtx = cov(fmridat.dat);
         imagesc(covmtx);
-        axis tight; set(gca, 'YDir', 'Reverse')
+        axis tight; set(gca, 'YDir', 'Reverse');
         title('cov(images)');
-        colorbar
-        drawnow
+        colorbar;
+        drawnow;
         
         if ~isempty(fmridat.Y)
             p = get(gca, 'Position'); ystart = p(2); ylen = p(4);
@@ -122,7 +122,7 @@ switch plotmethod
 %         xlabel('Values'); ylabel('Frequency');
 %         title('Histogram of values');
         subplot(2, 3, 2);
-        histogram(fmridat, 'nofigure')
+        histogram(fmridat, 'nofigure');
         drawnow
 
         clear dattmp
@@ -163,9 +163,9 @@ switch plotmethod
             
             ylabel('Global mean');
             xlabel(Yname);
-            title('Globals for each case (size = spatial std)')
-            axis tight
-            drawnow
+            title('Globals for each case (size = spatial std)');
+            axis tight;
+            drawnow;
 
          
         % ---------------------------------------------------------------
@@ -179,7 +179,7 @@ switch plotmethod
             Y = ds - expectedds;
             wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
             
-            plot(Y)
+            plot(Y);
             plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
             
             ylabel('Act-Exp Deviation');
@@ -260,8 +260,8 @@ switch plotmethod
         
         create_figure('means by condition (unique Y values)', 2, 1);
         imagesc(means);
-        colorbar
-        axis tight; set(gca, 'YDir', 'Reverse')
+        colorbar;
+        axis tight; set(gca, 'YDir', 'Reverse');
         title('Means by condition');
         xlabel('Voxels');
         if iscell(fmridat.Y_names) && ~isempty(fmridat.Y_names)
@@ -270,12 +270,12 @@ switch plotmethod
             ylabel('Unique Y values');
         end
         
-        drawnow
+        drawnow;
         
         subplot(2, 1, 2)
         imagesc(stds);
-        colorbar
-        axis tight; set(gca, 'YDir', 'Reverse')
+        colorbar;
+        axis tight; set(gca, 'YDir', 'Reverse');
         title('Standard deviations by condition');
         xlabel('Voxels');
         if iscell(fmridat.Y_names) && ~isempty(fmridat.Y_names)
@@ -316,7 +316,7 @@ switch plotmethod
             vecs_to_reconstruct = std(means)' ./ mean(means)';
             vecs_to_reconstruct(vecs_to_reconstruct < prctile(vecs_to_reconstruct, 70)) = 0;
             fig_handle = create_montage(vecs_to_reconstruct, fmridat);
-            set(fig_handle, 'Name', 'Montage_coeff_of_var_across_conditions')
+            set(fig_handle, 'Name', 'Montage_coeff_of_var_across_conditions');
             
 
         end
@@ -366,7 +366,7 @@ for i = 1:n
     
     fig_handle(i) = montage_clusters(overlay, cl{i}, [2 2]);
     
-    set(fig_handle, 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i))
+    set(fig_handle, 'Name', sprintf('Montage %3.0f', i), 'Tag', sprintf('Montage %3.0f', i));
     
 end
 

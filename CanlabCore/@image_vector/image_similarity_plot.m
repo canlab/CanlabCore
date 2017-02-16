@@ -76,6 +76,10 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        networks from Pauli et al. 2016.  Also 'pauli'
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
 %
+%   **fibromyalgia**
+%        3 neural classifiers used to predict FM in Lopez-Sola et al 2017 
+%        also 'fm','fibro'
+%
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
 %        each spatial basis); requires group as subsequent input
@@ -201,7 +205,7 @@ for i = 1:length(varargin)
                 
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
-                    'pauli' 'bgloops' 'pauli17' 'bgloops17'}
+                    'pauli' 'bgloops' 'pauli17' 'bgloops17' 'fm' 'fibro' 'fibromyalgia'}
                 
                 mapset = varargin{i};
                 

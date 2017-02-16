@@ -50,6 +50,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %        the Pauli 5-region striatal clusters
+%        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
+%                   NPSp, FM-pain, FM-multisensory
 %
 % :Optional inputs:
 %   None yet.
@@ -165,8 +167,9 @@ else
         case {'bgloops_cortex', 'pauli_cortex'}
             [image_obj, networknames, imagenames] = load_pauli_bg_cortex;
             
-            
-           
+        case {'fibromyalgia','fibro','fm'}    
+            [image_obj, networknames, imagenames] = load_fibromyalgia;
+       
         otherwise
             error('Unknown mapset keyword.');
             
@@ -561,3 +564,21 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
 
+
+
+function [image_obj, networknames, imagenames] = load_fibromyalgia
+  
+
+% Load Lopez Sola et al. 2017 neural classifier maps
+% ------------------------------------------------------------------------
+imagenames = {'FM_pain_wholebrain.nii' ...
+                'FM_Multisensory_wholebrain.nii' ...
+                'rNPS_fdr_pospeaks_smoothed.img' };
+
+networknames = {'FM-pain' 'FM-multisensory' 'NPSp'}; 
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function

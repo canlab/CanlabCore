@@ -10,6 +10,11 @@ function cl = orthviews(image_obj, varargin)
 %
 %    cl = orthviews(image_object, handle_number of existing orthviews)
 %
+% :Features:
+% - Uses cluster_orthviews.m
+% - Will take inputs to cluster_orthviews
+% - e.g., orthviews(pstat, 'unique', 'solid');
+%
 % Output is clusters structure (see also region.m)
 %
 % Pass in 'largest_region' to center the orthviews on the largest region in the  image
@@ -43,6 +48,7 @@ function cl = orthviews(image_obj, varargin)
 input_handle = [];
 cl = [];
 doreg=0;
+%dounique = 0; uniquestr = 'nounique';
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -50,6 +56,8 @@ for i = 1:length(varargin)
             
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
             case 'largest_region', doreg = 1;  
+                
+            %case 'unique', dounique = 1; uniquestr = 'unique';
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -110,7 +118,7 @@ for i = handle_indices
             fprintf('Displaying image %3.0f, %3.0f voxels: %s\n', i, sum(cat(1, cl{i}.numVox)), image_obj.image_names(image_indx, :));
         end
         
-        cluster_orthviews(cl{i}, 'add', 'handle', i);
+        cluster_orthviews(cl{i}, 'add', 'handle', i, varargin{:});
                 
     elseif size(image_obj.image_names, 1) >= image_indx
         fprintf('Image %3.0f empty: %s\n', i, image_obj.image_names(image_indx, :));
@@ -121,8 +129,10 @@ for i = handle_indices
     image_indx = image_indx + 1;
 end
 
-spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
-    
+%if ~dounique
+    spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
+%end
+
 % set crosshairs
 if doreg
     [~,wh] = max(cat(1,cl{1}.numVox));

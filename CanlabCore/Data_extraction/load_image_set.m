@@ -394,15 +394,19 @@ function [image_obj, networknames, imagenames] = load_npsplus
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % NPS   - somatic pain
+    'NPS_fdr_pospeaks_smoothed.img' ...                 % 2017 Lopez-Sola positive NPS regions only
+    'NPS_fdr_negpeaks_SelfRef_smoothed.img' ...          % 2017 Lopez-Sola negative NPS regions only
     'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % SIIPS - stim-indep pain
     'Rating_Weights_LOSO_2.nii'  ...                    % PINES - neg emo
     'dpsp_rejection_vs_others_weights_final.nii' ...    % romantic rejection
     'bmrk4_VPS_unthresholded.nii' ...                   % Vicarious pain
     'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % autonomic - GSR
-    'ANS_Eisenbarth_JN_2016_HR_pattern.img'};           % autonomic - heart rate (HR)
+    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % autonomic - heart rate (HR)
+    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
+    'FM_pain_wholebrain.nii'};                          % 2017 Lopez-Sola fibromyalgia 
 
 imagenames = check_image_names_get_full_path(imagenames);
 

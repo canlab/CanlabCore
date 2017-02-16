@@ -327,7 +327,7 @@ end
 % ----------------------------------------------------
 
 if dofig
-    f = figure('Color', 'w'); hout = gca; set(gca, 'FontSize',18); %hold on; grid on;
+    f = create_figure('barplot'); hout = gca; set(gca, 'FontSize',18); %hold on; grid on;
 
 else
     f = get(gcf); hout = gca; set(gca, 'FontSize', 18); hold on;

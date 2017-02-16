@@ -58,6 +58,11 @@
 % load an existing image, which will automatically read in the space along 
 % with other info:
 %
+% Read in a p-value image as a p-value object type:
+% p = which('nonnoc_v11_4_137subjmap_weighted_pvalue.nii');
+% pstat = statistic_image(p, 'type', 'p');
+% pstat = threshold(pstat, .05, 'fdr');
+%
 % Start with the name of a statistic image we're interested in, with arbitrary values
 % name = 'salientmap.nii';   
 % 
@@ -178,7 +183,18 @@ classdef statistic_image < image_vector
                         end
                         
                     else
-                        warning('inputargs:BadInput', sprintf('Unknown field: %s', varargin{i}));
+                        % Assume is char array of image to load
+                        % could also use obj = read_from_file(obj);
+                        fprintf('Reading from file: %s\n', varargin{i});
+                        tmp = fmri_data(varargin{i});
+                        
+                        obj.dat = tmp.dat;
+                        obj.volInfo = tmp.volInfo;
+                        obj.image_names = tmp.image_names;
+                        obj.fullpath = tmp.fullpath;
+                        obj.files_exist = tmp.files_exist;
+                        obj.history = tmp.history;
+                        %warning('inputargs:BadInput', sprintf('Unknown field: %s', varargin{i}));
                         
                     end
                 end % string input

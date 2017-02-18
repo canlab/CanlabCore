@@ -397,8 +397,8 @@ function [image_obj, networknames, imagenames] = load_npsplus
 networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % NPS   - somatic pain
-    'NPS_fdr_pospeaks_smoothed.img' ...                 % 2017 Lopez-Sola positive NPS regions only
-    'NPS_fdr_negpeaks_SelfRef_smoothed.img' ...          % 2017 Lopez-Sola negative NPS regions only
+    'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
+    'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
     'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % SIIPS - stim-indep pain
     'Rating_Weights_LOSO_2.nii'  ...                    % PINES - neg emo
     'dpsp_rejection_vs_others_weights_final.nii' ...    % romantic rejection

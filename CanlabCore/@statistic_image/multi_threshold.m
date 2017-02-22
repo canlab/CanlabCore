@@ -55,6 +55,11 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %        followed by an existing fmridisplay object
 %           - will remove blobs and re-use montages
 %
+%   **writestats**
+%        write out thresholded images
+%
+%   **noplot**
+%        don't plot anything (for writing stats out)
 %
 % :Outputs:
 %
@@ -102,6 +107,7 @@ negcolors = {[0 0 1] [0 .5 1] [.4 0 .7]};
 thresh = [.001 .005 .05];
 sizethresh = [10 1 1];
 
+
 % optional inputs with default values
 % -----------------------------------
 % - allowable_args is a cell array of argument names
@@ -109,6 +115,19 @@ sizethresh = [10 1 1];
 % - variables will be assigned based on these names
 %   i.e., if you use an arg named 'cl', a variable called cl will be
 %   created in the workspace
+
+if ~isempty(strfind(varargin,'writestats'))
+    doWrite=1;
+else
+    doWrite=0;
+end
+
+
+if ~isempty(strfind(varargin,'noplot'))
+    doPlot=0;
+else
+    doPlot=1;
+end
 
 allowable_args = {'poscolors', 'negcolors', 'thresh', 'sizethresh', ...
     'nodisplay', 'existingfig', 'o2'};
@@ -180,12 +199,19 @@ for i = 1:length(thresh)
     end
 end
 
+
+
 % prune
 for j = 1:nimgs
     for i = 2:length(thresh)
+        
         sig{j}(:, i) = iimg_cluster_prune(sig{j}(:, i), sig{j}(:, i-1), dat.volInfo);
     end
 end
+
+
+
+
 
 
 % regions
@@ -209,24 +235,24 @@ end
 
 % set up fmridisplay
 % -------------------------------------------------------------------------
-
-if isempty(o2)
-    % create new o2 if we don't have one yet.
-    
-    useexisting = false;
-    o2 = fmridisplay;
-    xyz = [-20 -10 -6 -2 0 2 6 10 20]';
-    xyz(:, 2:3) = 0;
-    
-elseif isa(o2, 'fmridisplay')
-    
-    useexisting = true;
-    
-else
-    error('o2 was passed in but is not an fmridisplay object.');
-    
+if doPlot
+    if isempty(o2)
+        % create new o2 if we don't have one yet.
+        
+        useexisting = false;
+        o2 = fmridisplay;
+        xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+        xyz(:, 2:3) = 0;
+        
+    elseif isa(o2, 'fmridisplay')
+        
+        useexisting = true;
+        
+    else
+        error('o2 was passed in but is not an fmridisplay object.');
+        
+    end
 end
-
 % plot each image
 % -------------------------------------------------------------------------
 
@@ -234,50 +260,60 @@ indx = 1;
 
 for j = 1:nimgs
     
+    if doPlot
     fprintf('\nMontage %d of %d\n_____________________________________\n', j, nimgs);
-    
+    end
     datplot = dat;
     datplot.dat = dat.dat(:, j);
-    datplot.p = dat.p(:, j);    
+    datplot.p = dat.p(:, j);
     if ~isempty(dat.ste), datplot.ste = dat.ste(:, j); end
     
-    if useexisting
-        % Re-plot each result on all existing montage(s)
-        o2 = removeblobs(o2);
-        
-    else
-        % Create a new montage set (sagg/ax) and plot this image on it only
-        
-        o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
-        axh = axes('Position', [0.05 0.4 .1 .5]);
-        o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-        
+    if doPlot
+        if useexisting
+            % Re-plot each result on all existing montage(s)
+            o2 = removeblobs(o2);
+            
+        else
+            % Create a new montage set (sagg/ax) and plot this image on it only
+            
+            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
+            axh = axes('Position', [0.05 0.4 .1 .5]);
+            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            
+        end
     end
-    
     
     for i = length(thresh):-1:1
         
         datplot.sig = sig{j}(:, i);
         
-        mycolors = [negcolors(i) negcolors(i) poscolors(i) poscolors(i)];
-        
-        if useexisting
-            
-            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors);
-            
-        else
-            
-            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx);
-            o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx+1);
-            
+        if doWrite
+            out=datplot;
+            out.dat(out.sig==0)=0;
+            out.fullpath=[pwd '\Image' num2str(j) '_MultiThresh_' out.type '_P' num2str(thresh(i)) '_k' num2str(sizethresh(i)) '.nii'];
+            write(out);
         end
         
+        mycolors = [negcolors(i) negcolors(i) poscolors(i) poscolors(i)];
+        
+        if doPlot
+            if useexisting
+                
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors);
+                
+            else
+                
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx);
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx+1);
+                
+            end
+        end
     end % thresholds
     
     indx = indx + 2;
-    
-    drawnow, snapnow % for publish, etc.
-    
+    if doPlot
+        drawnow, snapnow % for publish, etc.
+    end
 end
 
 end % function

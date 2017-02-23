@@ -23,7 +23,8 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 %         (default 1000)
 %
 %   **names:**
-%        specifies the names of each region
+%        specifies the names of each region (object to be clustered)
+%        if empty cell {}, will assign names
 %
 %   **remove:**
 %        specifies what to do about elements which fit the cluster
@@ -236,7 +237,7 @@ if sum(cellfun(@isempty,Xnames)) == numel(Xnames)
 end
 
 clustnames=cell(1,max(bestmyclass));
-for n=1:max(bestmyclass);
+for n=1:max(bestmyclass)
     clustnames{n}=Xnames(bestmyclass==n);
 end
 

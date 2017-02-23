@@ -107,6 +107,28 @@ negcolors = {[0 0 1] [0 .5 1] [.4 0 .7]};
 thresh = [.001 .005 .05];
 sizethresh = [10 1 1];
 
+c=0;str_args={};
+for a=1:length(varargin)
+    if isstr(varargin{a})
+        c=c+1;
+        str_args{c}=varargin{a};
+    end
+end
+
+if ~isempty(strfind(str_args,'writestats'))
+    doWrite=1;
+else
+    doWrite=0;
+end
+
+
+if ~isempty(strfind(str_args,'noplot'))
+    doPlot=0;
+else
+    doPlot=1;
+end
+
+
 
 % optional inputs with default values
 % -----------------------------------
@@ -115,19 +137,6 @@ sizethresh = [10 1 1];
 % - variables will be assigned based on these names
 %   i.e., if you use an arg named 'cl', a variable called cl will be
 %   created in the workspace
-
-if ~isempty(strfind(varargin,'writestats'))
-    doWrite=1;
-else
-    doWrite=0;
-end
-
-
-if ~isempty(strfind(varargin,'noplot'))
-    doPlot=0;
-else
-    doPlot=1;
-end
 
 allowable_args = {'poscolors', 'negcolors', 'thresh', 'sizethresh', ...
     'nodisplay', 'existingfig', 'o2'};

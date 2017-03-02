@@ -72,6 +72,8 @@ switch plotmethod
         
         tmp = mean(fmridat.dat(:));
         stmp = nanstd(fmridat.dat(:));
+        % if std == 0, won't work...
+        if stmp < 1000*eps, stmp = 1000*eps; end
         myrange = [tmp - 3*stmp tmp + 3*stmp];
         set(gca, 'CLim', myrange);
         drawnow;

@@ -1077,8 +1077,7 @@ function line_handles = drawlines(pc,sigmat,varargin)
     % legmat is not used now (for legend stuff)
     %
     % Example:
-    % [hh3,hh4] = drawlines(pc,wh,sigcol(i),legmat,[.5 .5 .5; 0 1 1],[{':'}
-    % {':'}]);
+    % [hh3,hh4] = drawlines(pc,wh,sigcol(i),legmat,[.5 .5 .5; 0 1 1],[{':'} {':'}]);
 
     % sigcol is a scalar between zero and one, lower is 'more salient'
     sigcol = 0;

@@ -236,9 +236,14 @@ if dopatternexpression
             else
                 a = nansum(dat.dat' .^ 2) .^ .5;
                 b = nansum(weights .^ 2) .^ .5;
-                dat = (nansum(bsxfun(@times,dat.dat',weights)) ./ (a .* b))';                              
                 
-                
+                try
+                    dat = (nansum(bsxfun(@times,dat.dat',weights)) ./ (a .* b))';                              
+                catch
+                    error('bsxfun error?')
+                    %dat = (nansum(bsxfun(@times,dat.dat',weights')) ./ (a .* b))';       
+                end
+
             end
             
         else

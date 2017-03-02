@@ -108,7 +108,9 @@ for varg = 1:length(varargin)
                 
             case 'noverbose'
                 doverbose = 0;
-                
+              
+            case 'verbose' % do nothing
+
             otherwise
                 disp('fmri_data.extract_roi_averages: Illegal string value for average_over.');
                 fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');

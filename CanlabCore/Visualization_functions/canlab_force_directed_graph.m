@@ -51,7 +51,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %   **'sizescale':**
 %        Followed by values to use in sizing of nodes on graph
 %        'linear' 'sigmoidal' [default] or 'custom'
-%  
+%
 %   ** 'sizes' **
 %       Followed by vector of point sizes for all points - works ONLY if sizescale
 %       is set to 'custom'
@@ -66,8 +66,18 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %        from clusterdata
 %
 %   **'names':**
+%       followed by cell array of names for each region/object
 %
 %   **'namesfield':**
+%       followed by name of field to extract region/object names from in
+%       clusters structure
+%
+%   **'linewidth':**
+%       followed by line width
+%
+%   **'linestyle':**
+%       followed by line style. Default is 'curved', anything else is
+%       'straight'
 %
 % :Output:
 %
@@ -97,6 +107,7 @@ threshtype = 'bonf';
 connectmetric = 'corr';  % or partial_corr
 sizescale = 'sigmoid';
 sizes = ones(size(activationdata, 1));
+linestyle = 'curved';
 
 setcolors = [];         % control of color subgroups
 rset = [];
@@ -104,6 +115,7 @@ rset = [];
 ptsizetype = 'bc';
 names = [];
 namesfield = [];        % enter field name, e.g., 'shorttitle'
+linewidth = 1;
 
 % Variable arg inputs
 % -----------------------------------
@@ -117,6 +129,10 @@ for i = 1:length(varargin)
                 
                 % functional commands
             case 'cl', cl = varargin{i + 1}; varargin{i + 1} = [];
+                
+            case 'linewidth', linewidth = varargin{i + 1}; varargin{i + 1} = [];
+                
+            case 'linestyle', linestyle = varargin{i + 1}; varargin{i + 1} = [];
                 
             case {'threshtype' 'connectmetric' 'sizescale' 'setcolors' 'rset' 'names' 'namesfield' 'sizes'}
                 eval([varargin{i} ' = varargin{i + 1}; varargin{i + 1} = [];'])
@@ -189,24 +205,24 @@ else
     signeg = sparse(-double(p < thr & b < 0));
     sig = sig + signeg;
     
-
-% Threshold based on significant partial regression effects
-% C is connectivity matrix for graph
-
-switch connectmetric
-    case 'partial_corr'
-        
-        C = b;
-        C(~sig) = 0;
-        
-    case 'corr' % default
-        C = r;
-        C(~sig) = 0;
-        
-    otherwise error('Unknown connectmetric');
-end
-
-% end if issymmetric
+    
+    % Threshold based on significant partial regression effects
+    % C is connectivity matrix for graph
+    
+    switch connectmetric
+        case 'partial_corr'
+            
+            C = b;
+            C(~sig) = 0;
+            
+        case 'corr' % default
+            C = r;
+            C(~sig) = 0;
+            
+        otherwise error('Unknown connectmetric');
+    end
+    
+    % end if issymmetric
 end
 
 % Enforce format for graph
@@ -258,20 +274,32 @@ else
     create_figure('graph');
 end
 
-gplot(sig>0, Xc, 'k');
-axis image
-lh = findobj(gca, 'Type', 'line');
-set(lh, 'Color', [.5 .5 .5])
+switch linestyle
+    
+    case 'curved'
+        
+        han = nmdsfig_tools('drawlines',Xc, sig, [.5 .5 .5; 0 1 1],[{'-'} {':'}], .1);
+        handles.lh_pos = han.hhp;
+        handles.lh_neg = han.hhn;% Dots
+        %set(handles.lh_pos, 'Color', [.5 .5 .5])
+        set(handles.lh_neg, 'Color', [0 .5 1], 'LineStyle', ':')
 
-handles.lh_pos = lh;
-
-gplot(sig<0, Xc, 'b');
-lh = findobj(gca, 'Type', 'line', 'color', 'b');
-set(lh, 'Color', [0 .5 1], 'LineStyle', ':')
-
-handles.lh_neg = lh;
-
-% Dots
+    otherwise
+        
+        gplot(sig>0, Xc, 'k');
+        axis image
+        lh = findobj(gca, 'Type', 'line');
+        set(lh, 'Color', [.5 .5 .5])
+        
+        handles.lh_pos = lh;
+        
+        gplot(sig<0, Xc, 'b');
+        lh = findobj(gca, 'Type', 'line', 'color', 'b');
+        set(lh, 'Color', [0 .5 1], 'LineStyle', ':')
+        
+        handles.lh_neg = lh;
+        
+end
 
 switch sizescale
     case 'linear'
@@ -298,11 +326,11 @@ for k = 1:length(rset)
     
     for j = 1:length(rset{k})
         
-        ph(end+1) = plot(Xc(rset{k}(j), 1), Xc(rset{k}(j), 2), 'o', 'Color', setcolors{k}, 'MarkerSize', sizes(rset{k}(j)), 'MarkerFaceColor', setcolors{k});
+        ph(end+1) = plot(Xc(rset{k}(j), 1), Xc(rset{k}(j), 2), 'o', 'Color', setcolors{k} ./ 2, 'MarkerSize', sizes(rset{k}(j)), 'MarkerFaceColor', setcolors{k}, 'LineWidth', linewidth);
         
         if ~isempty(names)
             offset = .02 * range(get(gca, 'XLim'));
-            texth{k}(end+1) = text(Xc(rset{k}(j), 1)+offset, Xc(rset{k}(j), 2), names{rset{k}(j)}, 'Color', 'k', 'FontSize', 14);
+            texth{k}(end+1) = text(Xc(rset{k}(j), 1)+offset, Xc(rset{k}(j), 2), strrep(names{rset{k}(j)}, '_', ' '), 'Color', 'k', 'FontSize', 14);
         end
     end
     
@@ -321,6 +349,8 @@ stats.Xc = Xc;
 stats.sizes = sizes;
 
 
+
+
 if isempty(cl), return, end
 
 % -------------------------------------------------------------------------
@@ -336,7 +366,8 @@ xyz = cat(1, cl.mm_center);
 
 DB = struct('xyz', xyz, 'x', xyz(:, 1), 'y', xyz(:, 2), 'z', xyz(:, 3));
 
-sizes = sigmoidscale(ptsizemetric, 2, 6);
+% sizes = sigmoidscale(ptsizemetric, 2, 6);
+sizes = sizes ./ 2.5; % rescale to avoid huge ones
 
 % Make Brain with Spheres
 % ------------------------------------------------------------
@@ -346,7 +377,7 @@ sizes = sigmoidscale(ptsizemetric, 2, 6);
 % Add lines
 % ------------------------------------------------------------
 
-[~, linehandles] = cluster_nmdsfig_glassbrain(cl,ones(length(cl), 1), {'k'}, sig, [], 'samefig', 'nobrain', 'noblobs', 'straight');
+[~, linehandles] = cluster_nmdsfig_glassbrain(cl,ones(length(cl), 1), {[.5 .5 .5]}, sig, [], 'samefig', 'nobrain', 'noblobs', linestyle);
 set(linehandles, 'LineWidth', 2)
 
 drawnow

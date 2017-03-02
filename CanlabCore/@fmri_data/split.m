@@ -90,6 +90,8 @@ end
 
 obj = replace_empty(obj);  % to replace removed images
 
+if ~isrow(imgs_per_obj), imgs_per_obj = imgs_per_obj'; end
+
 en = cumsum(imgs_per_obj);
 st = [0 en(1:end-1)] + 1;
 
@@ -126,6 +128,17 @@ for i = 1:k
     
     obj_cell{i} = check_image_filenames(obj_cell{i}, 'noverbose');
     
+
+    if ~isempty(obj_cell{i}.removed_images) && size(obj_cell{i}.removed_images, 1) > en(i)
+        
+        obj_cell{i}.removed_images = obj_cell{i}.removed_images(wh, :);
+        
+    else
+
+        obj_cell{i}.removed_images = 0; % add in case
+
+    end
+
 end
 
 end % function

@@ -75,7 +75,6 @@ function p = addbrain(varargin)
 %   - {'cm','centromedian'}
 %   - 'pbn'
 %   - 'rvm'
-%   - 'rvm_brooks'
 %   - 'nts'
 %   - 'lc'
 %   - {'sn', 'substantia nigra'}
@@ -100,6 +99,12 @@ function p = addbrain(varargin)
 %  - Only works for changing to gray background right now. 
 %
 % See also: cluster_surf, img2surf.m, surface() methods for objects, cluster_cutaways
+
+%%% Programmer's notes:
+%
+% 2017/03/03 added Jon Brooks' RVM and moved call to old RVM rendering to
+% 'rvm_old'. Stephan
+
 
 p = [];
 meth = 'transparent_surface';
@@ -409,12 +414,12 @@ switch meth
         load pbn_cl
         p = imageCluster('cluster',pbn,'color',[1 .5 0],'alpha',1);
 
-    case 'rvm'
+    case 'rvm_old' % legacy RVM mask
         load rvm_cl
         p = imageCluster('cluster',rvm,'color',[1 .2 .1],'alpha',1);
 
-    case 'rvm_brooks'    
-        load RVMmask_symm_2mm_cluster
+    case {'rvm','rvm_brooks'} % RVM mask from Jon Brooks
+        load RVMmask_symm_2mm_Brooks
         p = imageCluster('cluster',rvm_brooks,'color',[1 .7 .1],'alpha',1);
         
     case 'nts'

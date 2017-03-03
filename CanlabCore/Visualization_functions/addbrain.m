@@ -75,6 +75,7 @@ function p = addbrain(varargin)
 %   - {'cm','centromedian'}
 %   - 'pbn'
 %   - 'rvm'
+%   - 'rvm_brooks'
 %   - 'nts'
 %   - 'lc'
 %   - {'sn', 'substantia nigra'}
@@ -412,6 +413,10 @@ switch meth
         load rvm_cl
         p = imageCluster('cluster',rvm,'color',[1 .2 .1],'alpha',1);
 
+    case 'rvm_brooks'    
+        load RVMmask_symm_2mm_cluster
+        p = imageCluster('cluster',rvm_brooks,'color',[1 .7 .1],'alpha',1);
+        
     case 'nts'
         load nts_cl
         p = imageCluster('cluster',nts,'color',[0 0 1],'alpha',1);

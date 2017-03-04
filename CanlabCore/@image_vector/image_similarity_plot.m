@@ -294,9 +294,11 @@ if ~doCosine
     
 else
     % Cosine similarity
+    
+
     for im = 1:size(mask.dat, 2)
-        
-        a = nansum(obj.dat .^ 2) .^ .5;
+        inmask = mask.dat(:,im) ~= 0 & ~isnan(mask.dat(:,im)); %PK find out of mask voxels
+        a = nansum(obj.dat(inmask,:) .^ 2) .^ .5; %PK exlude out of mask for norm
         b = nansum(mask.dat(:,im) .^ 2) .^ .5;
         
         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';

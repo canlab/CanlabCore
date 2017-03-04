@@ -234,7 +234,7 @@ if dopatternexpression
             if ~docosine
                 dat = dat.dat' * weights; %dot-product
             else
-                a = nansum(dat.dat' .^ 2) .^ .5;
+                a = nansum(dat.dat(inmask)' .^ 2) .^ .5; %PK exclude out of mask in norm
                 b = nansum(weights .^ 2) .^ .5;
                 
                 try
@@ -260,7 +260,7 @@ if dopatternexpression
                 if ~docosine
                     mypeval(i, 1) = mydat' * myweights;  %dot product
                 else
-                a = nansum(mydat' .^ 2) .^ .5;
+                a = nansum(mydat(inmask)' .^ 2) .^ .5; %PK exclude out of mask voxels for norm
                 b = nansum(myweights .^ 2) .^ .5;
                 mypeval(i, 1) = (nansum(bsxfun(@times,mydat,myweights)) ./ (a .* b))';                              
                
@@ -290,7 +290,7 @@ if dopatternexpression
                 
                 dat = dat.dat' * weights;  %Dot product
             else
-                a = nansum(dat.dat .^ 2) .^ .5;
+                a = nansum(dat.dat(inmask,:) .^ 2) .^ .5; %PK exclude out of mask voxels for norm
                 b = nansum(weights .^ 2) .^ .5;
                 dat = (nansum(bsxfun(@times,dat.dat,weights)) ./ (a .* b))';                              
                

@@ -270,6 +270,10 @@ mask = replace_empty(mask); % add zeros back in
 
 mask = resample_space(mask, obj);
 
+
+obj = remove_empty(obj);
+nonemptydat = ~obj.removed_voxels; % remove these
+
 obj = replace_empty(obj);
 
 % Correlation
@@ -299,7 +303,7 @@ else
     for im = 1:size(mask.dat, 2)
         inmask = mask.dat(:,im) ~= 0 & ~isnan(mask.dat(:,im)); %PK find out of mask voxels
         a = nansum(obj.dat(inmask,:) .^ 2) .^ .5; %PK exlude out of mask for norm
-        b = nansum(mask.dat(:,im) .^ 2) .^ .5;
+        b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
         
         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
     end

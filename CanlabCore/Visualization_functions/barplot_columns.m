@@ -145,6 +145,7 @@ doviolin = 1;
 mytitle = [];
 covs = [];
 doxlim = 1;
+names = {};
 
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
@@ -202,7 +203,8 @@ if length(varargin) > 0
 
         if strcmp(varargin{i}, 'noxlim'), doxlim = 0;  end
 
-        
+        % Labels
+         if strcmp(varargin{i}, 'names'), names = varargin{i + 1}; varargin{i + 1} = []; end
         
         % Covariate options
         if strcmp(varargin{i}, 'covs')
@@ -255,17 +257,21 @@ wh_intercept = k+1;
 % covariates, if there are any.
 % ----------------------------------------------------
 
-stderr = [];
+Std_Error = [];
 
 % key vars are :
-% mymeans, stderr, mycor
+% Mean_Value, Std_Error, mycor
 
 wh_reg = 1; % regressor of interest
 
 for i = 1:ny
     
-    fprintf(1,'\nColumn %3.0f:\t',i);
-    
+    if ~isempty(names) && length(names) >= i
+        fprintf(1,'Col %3.0f: %s\t', i, names{i});
+    else
+        fprintf(1,'Column %3.0f:\t', i);
+    end
+
     % ----------------------------------------------------
     % > Get [robust or non-robust] mean and standard error
     %   Return y, data from column, with nans in
@@ -283,14 +289,17 @@ for i = 1:ny
     % get mean and standard error of intercept (robust or OLS)
     % y is adjusted for all non-intercept covs
     % stats has weights, stats.w, which are all 1 for OLS
-    [x, newy, r, p, stderr(i), mymeans(i), stats] = partialcor(tmpx, tmpy, wh_intercept, 1, dorob);
+    [x, newy, r, p, Std_Error(i, 1), Mean_Value(i, 1), stats] = partialcor(tmpx, tmpy, wh_intercept, 0, dorob);
+    T(i, 1) = stats.t;
+    P(i, 1) = stats.p;
+    Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     %95% CI?
-    if do95CI, stderr(i) = stderr(i) * 1.96; end
+    if do95CI, Std_Error(i) = Std_Error(i) * 1.96; end
     
     y(:,i) = naninsert(wasnan, newy);
     
-    %%%not needed y(:,i) = y(:,i) + mymeans(i);   % add mean
+    %%%not needed y(:,i) = y(:,i) + Mean_Value(i);   % add mean
     myweights(:,i) = naninsert(wasnan, stats.w);
     
     % ----------------------------------------------------
@@ -303,13 +312,10 @@ for i = 1:ny
         
         % if we have covs, leave in cov. of interest (cov1)
         % y is adjusted for all non-intercept covs
-        [x,y(:,i),mycor(i),mycorrp(i)] = partialcor(tmpx,tmpy,wh_reg,1,dorob);
-        
-        %not needed %%% y(:,i) = y(:,i) + mymeans(i);   % add mean
-        
+        [x,y(:,i),mycor(i),mycorrp(i)] = partialcor(tmpx, tmpy, wh_reg, 0, dorob);
+                
     end
     
-    %fprintf(1,'\n');
 end
 
 dat = y;  % adjusted data, for plot
@@ -318,9 +324,21 @@ if dowithin
     
     within_ste = barplot_get_within_ste(dat);
     
-    stderr = repmat(within_ste, 1, size(dat, 2));
+    Std_Error = repmat(within_ste, 1, size(dat, 2));
     
 end
+
+% ----------------------------------------------------
+% > Print Table
+% ----------------------------------------------------
+dashes = '---------------------------------------------';
+fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
+
+Name = names';
+if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
+
+statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
+disp(statstable)
 
 % ----------------------------------------------------
 % > Make figure
@@ -341,19 +359,19 @@ end
 
 if dolineplot
     
-    h = plot(xvals, mymeans, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
-    h2 = errorbar(xvals, mymeans, stderr, stderr);
+    h = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
+    h2 = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
     set(h2, 'LineWidth', 2, 'Color', mycolor);
     
 elseif dobars
     
-    h = bar(xvals, mymeans, barwidth);
+    h = bar(xvals, Mean_Value, barwidth);
     if iscell(mycolor)
         % each bar a different color
         for i = 1:length(xvals)
-            bar(xvals(i), mymeans(i), 'FaceColor', mycolor{i});
+            bar(xvals(i), Mean_Value(i), 'FaceColor', mycolor{i});
             
-            h2 = errorbar(xvals(i), mymeans(i), stderr(i), 'Color', mycolor{i} ./ 2, 'LineWidth', 3);
+            h2 = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor{i} ./ 2, 'LineWidth', 3);
             
         end
         
@@ -362,12 +380,12 @@ elseif dobars
         set(h,'FaceColor', mycolor); %,'LineWidth',2)
         
         for i = 1:length(xvals)
-        h2 = errorbar(xvals(i), mymeans(i), stderr(i), 'Color', mycolor ./ 2, 'LineWidth', 3);
+        h2 = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor ./ 2, 'LineWidth', 3);
         end
         
     end
     
-    %tor_bar_steplot(mymeans,stderr, {'k'}, xvals);
+    %tor_bar_steplot(Mean_Value,Std_Error, {'k'}, xvals);
 
 end
 
@@ -394,6 +412,9 @@ set(gca, 'XTick', xvals, 'XTickLabel', xvals)
 xlabel('Condition'), ylabel('Outcome value')
 title(mytitle, 'FontSize', 24);
 
+if ~isempty(names)
+    set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+end
 
 if doind
     

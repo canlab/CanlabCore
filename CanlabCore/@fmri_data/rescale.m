@@ -12,14 +12,23 @@ function fmridat = rescale(fmridat, meth, varargin)
 % :Inputs:
 %
 %   **Methods:**
-%     - centervoxels
-%     - zscorevoxels
-%     - centerimages
-%     - zscoreimages
-%     - rankvoxels
+%     Rescaling of voxels
+%     - centervoxels        subtract voxel means
+%     - zscorevoxels        subtract voxel means, divide by voxel std. dev
+%     - rankvoxels          replace values in each voxel with rank across images
+%
+%     Rescaling of images
+%     - centerimages        subtract image means
+%     - zscoreimages        subtract image means, divide by image std. dev
+%
+%     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)        
+%     - divide_by_csf_l2norm  divide each image by CSF l2 norm. requires MNI space images for ok results!
+%
+%     Other procedures
 %     - windsorizevoxels
 %     - percentchange
 %     - tanh
+%     - 
 %
 % Appropriate for multi-session (time series) only:
 %     - session_global_percent_change
@@ -65,6 +74,43 @@ switch meth
         
         fmridat.history{end+1} = 'Z-scored imagesc(columns) across voxels';
         
+        
+    case 'l2norm_images'
+        
+        % Vector L2 norm / sqrt(length) of vector
+        % divide by this value to normalize image
+        
+        normfun = @(x) sum(x .^ 2) .^ .5;
+        
+        x = fmridat.dat;
+        
+        for i = 1:size(x, 2)
+            
+            % remove nans, 0s
+            xx = x(:, i);
+            isbad = xx == 0 | isnan(xx);
+            xx(isbad) = [];
+            
+            % divide by sqrt(length) so number of elements will not change scaling
+            n(i) = normfun(xx) ./ sqrt(length(xx));
+            
+            xx = xx ./ n(i);
+            
+            x(:, i) = zeroinsert(isbad, xx);
+            
+        end
+        
+        fmridat.dat = x;
+        
+
+    case 'divide_by_csf_l2norm'
+        
+        [~, ~, ~, l2norms] = extract_gray_white_csf(fmridat);
+        
+        % divide each column image by its respective ventricle l2norm  
+        fmridat.dat = bsxfun(@rdivide, fmridat.dat, l2norms(:, 3)') ;
+
+
     case 'session_global_percent_change'
         
         nscan = fmridat.images_per_session;  % num images per session

@@ -550,13 +550,23 @@ switch meth
         x = cat(2, components{3});
         % predictors: csf only. This is because work, e.g., that of John Gore, suggests there may be real signal in WM
         
-        wh_gray_white = 1:size(x, 2);
+        wh_gray_white = 1:size(x, 2);       % here, CSF, not really gray.white
         
         meangray = means(:, 1);             % mean gray matter for each image
         
         if isa(obj, 'fmri_data') && ~isempty(obj.images_per_session)
             
+            % create orthogonal contrast set with session/set intercepts
+            % doesn't actually need to be orthogonalized if we are not
+            % removing the session intercepts
+
             xi = intercept_model(obj.images_per_session);
+
+            c = create_orthogonal_contrast_set(size(xi, 2));
+
+            xi = xi * c';                     % orthogonal set of nsessions - 1
+            xi(:, end) = 1;                   % now we can add the intercept
+
             x = [x xi];                       % model
             gray_tmp = resid(xi, meangray);   % for partial correlation
             
@@ -570,6 +580,7 @@ switch meth
         
         b = pinv(x) * meangray;
         
+        % partial fit of nuisance
         fit = x(:, wh_gray_white) * b(wh_gray_white);
         
         % get correlation value
@@ -585,6 +596,7 @@ switch meth
         
         % Subtract fitted value for overall GM as predicted from CSF for
         % each image.
+        % Then add back in the intercept (overall mean)
         sz = size(obj.dat);
         to_subtract = repmat(fit', sz(1), 1);
         

@@ -301,11 +301,12 @@ else
     
 
     for im = 1:size(mask.dat, 2)
-        inmask = mask.dat(:,im) ~= 0 & ~isnan(mask.dat(:,im)); %PK find out of mask voxels
-        a = nansum(obj.dat(inmask,:) .^ 2) .^ .5; %PK exlude out of mask for norm
-        b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
-        
-        r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
+%         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
+%         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
+%         
+%         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
+%         
+        similarity_output = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
     end
 end
 

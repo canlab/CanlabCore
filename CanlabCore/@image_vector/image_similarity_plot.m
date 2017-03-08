@@ -306,7 +306,7 @@ else
 %         
 %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
 %         
-        similarity_output = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
+        r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
     end
 end
 

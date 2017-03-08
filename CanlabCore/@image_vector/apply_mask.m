@@ -225,84 +225,139 @@ if dopatternexpression
     
     % CHECK and weight
     % ---------------------------------------------------------
-    inmask = weights ~= 0 & ~isnan(weights);
-    badvals = sum(dat.dat(inmask, :) == 0);
     
-    if ~any(badvals)
-        %weights(to_remove_mask) = [];
-        if ~docorr
-            if ~docosine
-                dat = dat.dat' * weights; %dot-product
-            else
-                a = nansum(dat.dat(inmask)' .^ 2) .^ .5; %PK exclude out of mask in norm
-                b = nansum(weights .^ 2) .^ .5;
-                
-                try
-                    dat = (nansum(bsxfun(@times,dat.dat',weights)) ./ (a .* b))';                              
-                catch
-                    error('bsxfun error?')
-                    %dat = (nansum(bsxfun(@times,dat.dat',weights')) ./ (a .* b))';       
-                end
-
-            end
-            
-        else
-            dat = corr(dat.dat,weights); %correlation
-        end
+    % Pattern weights can have zeros, which may be valid values in voxels,
+    % i.e., with binary masks
+    % Images with values of zero or NaN are considered out-of-mask, as they
+    % are not valid values. These should be excluded from both image and
+    % mask when calculating similarity.
+    % Thus, there is an asymmetry between pattern mask and image data
+    % in considering which voxels to use.
+    % Otherwise, all dot product and similarity metrics are standard.
+    
+    % We also need to calculate bad values on an image-by-image basis, not
+    % relying on remove_empty to exclude voxels with ineligible values
+    % across the entire set of images.
+    %
+    % Tor - 3/7/17
+    
+    badvals = dat.dat == 0 | isnan(dat.dat);  % Matrix
+    %dat.dat(badvals) = NaN;                   % Make it easy to use vector notation excluding these later
+    
+    % Define functions
+    % dotproduct = @(X, w) X'*w;      % e.g., dotproduct(dat.dat, weights)
+    % if ~any(badvals)
+    % But otherwise exclude image-wise.
+       
+    if docorr
         
-    elseif doignoremissing
+        dat = image_correlation(dat.dat, weights, badvals);
         
-        for i = 1:size(dat.dat, 2)
-            mydat = dat.dat(:, i);
-            myweights = weights;
-            myweights(mydat == 0 | isnan(mydat)) = 0;
-            if ~docorr
-                if ~docosine
-                    mypeval(i, 1) = mydat' * myweights;  %dot product
-                else
-                a = nansum(mydat(inmask)' .^ 2) .^ .5; %PK exclude out of mask voxels for norm
-                b = nansum(myweights .^ 2) .^ .5;
-                mypeval(i, 1) = (nansum(bsxfun(@times,mydat,myweights)) ./ (a .* b))';                              
-               
-                end
-            else
-                mypeval(i,1) = corr(mydat, myweights);  %correlation
-            end
-        end
+    elseif docosine
         
-        dat = mypeval;
+        dat = cosine_similarity(dat.dat, weights, badvals);
         
     else
         
-        disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN WEIGHT MASK.');
-        disp('This could artifactually influence their scores if these 0 values are out of test data image.');
+        dat = dotproduct(dat.dat, weights, badvals);
         
-        wh = find(badvals);
+    end
+    
+    if any(badvals(:)) && ~doignoremissing
+        
+        disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
+        disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
+        disp('They will be excluded from similarity analysis image-wise.');
+        
+        wh = find(any(badvals)); % which images
+        
+        inmask = ~(weights == 0 | isnan(weights));
         
         fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
         disp('Test images with bad values:');
         for i = 1:length(wh)
-            fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), badvals(:, wh(i)));
+            fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
         end
         
-        if ~docorr
-            if ~docosine
-                
-                dat = dat.dat' * weights;  %Dot product
-            else
-                a = nansum(dat.dat(inmask,:) .^ 2) .^ .5; %PK exclude out of mask voxels for norm
-                b = nansum(weights .^ 2) .^ .5;
-                dat = (nansum(bsxfun(@times,dat.dat,weights)) ./ (a .* b))';                              
-               
-            end
-            
-        else
-            dat = corr(dat.dat,weights);  %correlation
-        end
     end
+
+        
     % End check and weight ---------------------------------------------------------
     
     
+end % Pattern expression
+
+end  % Main function
+
+
+% FUNCTIONS for dot product, cosine_similarity, correlation with missing
+% values (voxels) that may vary on a data image-by-image basis.
+
+function pexp = dotproduct(X, weights, badvals)
+
+% X = voxels x images data matrix, e.g., dat.dat
+% weights is voxels x 1 weight data
+% badvals is voxels x images logical matrix of voxels to exclude image-wise
+
+for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
+    
+    inmask = ~badvals(:, i);
+    
+    pexp(i, 1) = X(inmask, i)' * weights(inmask, 1);
+    
 end
 
+end % function
+
+
+function [ab, a, b] = image_norms(X, weights, badvals)
+% [a, b] = image_norms(X, weights, badvals)
+% X = voxels x images data matrix, e.g., dat.dat
+% weights is voxels x 1 weight data
+% badvals is voxels x images logical matrix of voxels to exclude image-wise
+
+% Norm for image data.
+% All non-zero, non-NaN values valid. zero/nan have no
+% effect implictly.
+
+a = nansum(X .^ 2)' .^ .5;
+
+for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
+    
+    inmask = ~badvals(:, i);
+    
+    b(i, 1) = nansum(weights(inmask) .^ 2) .^ .5;  % Norm for weights, excluding out-of-image weights image-wise
+    
 end
+
+ab = a .* b;
+
+end
+
+
+function cossim = cosine_similarity(X, weights, badvals)
+
+pexp = dotproduct(X, weights, badvals);
+
+ab = image_norms(X, weights, badvals);
+
+cossim = pexp ./ ab;
+
+
+end % function
+
+
+function r = image_correlation(X, weights, badvals)
+
+for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
+    
+    inmask = ~badvals(:, i);
+    
+    r(i, 1) = corr(weights(inmask), X(inmask, i));  % Correlation, excluding out-of-image weights image-wise
+    
+end
+
+
+end
+
+

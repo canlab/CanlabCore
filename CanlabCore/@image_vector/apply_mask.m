@@ -69,26 +69,29 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 
 dopatternexpression = 0; % set options
 donorm = 0;
-doignoremissing = 0;
-docorr = 0; %run correlation instead of dot-product for pattern expression
 doinvert = 0;
-docosine = 0;
+
+% Now handled by canlab_pattern_similarity
+% doignoremissing = 0;
+% docorr = 0; %run correlation instead of dot-product for pattern expression
+% docosine = 0;
 
 if any(strcmp(varargin, 'pattern_expression'))
     dopatternexpression = 1;
     
-    if any(strcmp(varargin, 'ignore_missing'))
-        doignoremissing = 1;
-    end
-    
-    if any(strcmp(varargin, 'cosine_similarity'))
-        docosine = 1;
-    end
-    
-    
-    if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
-        docorr = 1;
-    end
+    % Now handled by canlab_pattern_similarity
+    %     if any(strcmp(varargin, 'ignore_missing'))
+    %         doignoremissing = 1;
+    %     end
+    %
+    %     if any(strcmp(varargin, 'cosine_similarity'))
+    %         docosine = 1;
+    %     end
+    %
+    %
+    %     if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
+    %         docorr = 1;
+    %     end
     
 end
 
@@ -118,6 +121,7 @@ if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
     %mask.removed_voxels = mask.removed_voxels(mask.volInfo.wh_inmask);
     % resample_space is not *always* returning legal sizes for removed
     % vox? maybe this was updated to be legal
+    
     if length(mask.removed_voxels) == mask.volInfo.nvox
         disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');
         mask.removed_voxels = mask.removed_voxels(mask.volInfo.wh_inmask);
@@ -218,10 +222,14 @@ if dopatternexpression
     %mask = replace_empty(mask); % need for weights to match
     
     weights = double(mask.dat); % force double b/c of matlab instabilities
-    
     dat.dat = double(dat.dat); % force double b/c of matlab instabilities
     
     if donorm, weights = weights ./ norm(weights); end
+    
+    % Pass similarity metric in to canlab_pattern_similarity
+    similarity_output = canlab_pattern_similarity(dat.dat, weights, varargin{:});
+    
+    dat = similarity_output;
     
     % CHECK and weight
     % ---------------------------------------------------------
@@ -238,49 +246,7 @@ if dopatternexpression
     % We also need to calculate bad values on an image-by-image basis, not
     % relying on remove_empty to exclude voxels with ineligible values
     % across the entire set of images.
-    %
-    % Tor - 3/7/17
-    
-    badvals = dat.dat == 0 | isnan(dat.dat);  % Matrix
-    %dat.dat(badvals) = NaN;                   % Make it easy to use vector notation excluding these later
-    
-    % Define functions
-    % dotproduct = @(X, w) X'*w;      % e.g., dotproduct(dat.dat, weights)
-    % if ~any(badvals)
-    % But otherwise exclude image-wise.
-       
-    if docorr
-        
-        dat = image_correlation(dat.dat, weights, badvals);
-        
-    elseif docosine
-        
-        dat = cosine_similarity(dat.dat, weights, badvals);
-        
-    else
-        
-        dat = dotproduct(dat.dat, weights, badvals);
-        
-    end
-    
-    if any(badvals(:)) && ~doignoremissing
-        
-        disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
-        disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
-        disp('They will be excluded from similarity analysis image-wise.');
-        
-        wh = find(any(badvals)); % which images
-        
-        inmask = ~(weights == 0 | isnan(weights));
-        
-        fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
-        disp('Test images with bad values:');
-        for i = 1:length(wh)
-            fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
-        end
-        
-    end
-
+  
         
     % End check and weight ---------------------------------------------------------
     
@@ -288,76 +254,5 @@ if dopatternexpression
 end % Pattern expression
 
 end  % Main function
-
-
-% FUNCTIONS for dot product, cosine_similarity, correlation with missing
-% values (voxels) that may vary on a data image-by-image basis.
-
-function pexp = dotproduct(X, weights, badvals)
-
-% X = voxels x images data matrix, e.g., dat.dat
-% weights is voxels x 1 weight data
-% badvals is voxels x images logical matrix of voxels to exclude image-wise
-
-for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
-    
-    inmask = ~badvals(:, i);
-    
-    pexp(i, 1) = X(inmask, i)' * weights(inmask, 1);
-    
-end
-
-end % function
-
-
-function [ab, a, b] = image_norms(X, weights, badvals)
-% [a, b] = image_norms(X, weights, badvals)
-% X = voxels x images data matrix, e.g., dat.dat
-% weights is voxels x 1 weight data
-% badvals is voxels x images logical matrix of voxels to exclude image-wise
-
-% Norm for image data.
-% All non-zero, non-NaN values valid. zero/nan have no
-% effect implictly.
-
-a = nansum(X .^ 2)' .^ .5;
-
-for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
-    
-    inmask = ~badvals(:, i);
-    
-    b(i, 1) = nansum(weights(inmask) .^ 2) .^ .5;  % Norm for weights, excluding out-of-image weights image-wise
-    
-end
-
-ab = a .* b;
-
-end
-
-
-function cossim = cosine_similarity(X, weights, badvals)
-
-pexp = dotproduct(X, weights, badvals);
-
-ab = image_norms(X, weights, badvals);
-
-cossim = pexp ./ ab;
-
-
-end % function
-
-
-function r = image_correlation(X, weights, badvals)
-
-for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
-    
-    inmask = ~badvals(:, i);
-    
-    r(i, 1) = corr(weights(inmask), X(inmask, i));  % Correlation, excluding out-of-image weights image-wise
-    
-end
-
-
-end
 
 

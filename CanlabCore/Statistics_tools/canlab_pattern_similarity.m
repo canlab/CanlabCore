@@ -21,6 +21,14 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **correlation**
 %       Use correlation metric for pattern expression instead of dot product
 %
+%   **ignore_missing**
+%       Do not remove voxels with missing values (zeros/NaN). See notes
+%       below.
+% 
+%   **no_warnings**
+%       Suppress output on missing values.
+%
+%
 % :Examples:
 % ::
 % dat = rand(100, 5);  % 100 voxels, 5 images
@@ -44,12 +52,19 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % Thus, there is an asymmetry between pattern mask and image data
 % in considering which voxels to use.
 % Otherwise, all dot product and similarity metrics are standard.
+%
+% When comparing two sets of binary images (e.g. k-means clusters) and the
+% cluster of the input solution does not overlap with any of the target
+% patterns/clusters, cosine similarity is attempting division by 0. Instead
+% of returning NaN, we set those cosine values to 0.
+
 
 % We also need to calculate bad values on an image-by-image basis, not
 % relying on remove_empty to exclude voxels with ineligible values
 % across the entire set of images.
 %
 %  Created by Tor Wager - 3/7/17
+
 
 
 % ---------------------------------
@@ -59,9 +74,14 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 docorr = false;     % run correlation instead of dot-product for pattern expression
 docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
+doprintwarnings = true;  % print warnings regarding missing voxels, etc.
 
 if any(strcmp(varargin, 'ignore_missing'))
     doignoremissing = true;
+end
+
+if any(strcmp(varargin, 'no_warnings'))
+    doprintwarnings = false;
 end
 
 if any(strcmp(varargin, 'cosine_similarity'))
@@ -119,18 +139,19 @@ for i = 1:npatt
     
     if any(badvals(:)) && ~doignoremissing
         
-        disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
-        disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
-        disp('They will be excluded from similarity analysis image-wise.');
-        
         wh = find(any(badvals)); % which images
         
         inmask = ~(pattern_weights(:, i) == 0 | isnan(pattern_weights(:, i)));
         
-        fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
-        disp('Test images with bad values:');
-        for i = 1:length(wh)
-            fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
+        if doprintwarnings
+            disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
+            disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
+            disp('They will be excluded from similarity analysis image-wise.');
+            fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
+            disp('Test images with bad values:');
+            for i = 1:length(wh)
+                fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
+            end
         end
         
     end
@@ -203,6 +224,11 @@ ab = image_norms(dat, pattern_weights, badvals);
 
 cossim = pexp ./ ab;
 
+% when division by zero (e.g. non-overlapping binary masks) return 0.
+% Stephan 2017/3/8
+if any(ab==0)
+    cossim(isnan(cossim)) = 0;
+end
 
 end % function
 

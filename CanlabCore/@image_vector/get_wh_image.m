@@ -55,6 +55,8 @@ otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 
 for f = otherfields
     field = char(f);
     
+    if ~isprop(out, field), continue; end
+    
     sz = size(out.(field));
     
     if ~isempty(out.(field)) && sz(1) == datsz(2)

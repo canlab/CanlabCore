@@ -41,6 +41,12 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 %
 %   2-k. String Arguments - in any order
 %
+%   Covariates
+%        - 'covs' : Followed by matrix of covariates to remove by regression
+%                   Note: covs are mean-centered
+%        - 'wh_reg' : Which regressor to leave in and sort data points by
+%                     OR enter 0 to remove all covariates before plotting.
+%
 %   Figure control
 %        - 'nofig' : do not make figure
 %
@@ -120,6 +126,12 @@ function [hout,dat,xdat, h] = barplot_columns(dat,varargin)
 %    barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
 %    title('barplot\_columns.m parallel coords', 'FontSize', 16)
 %
+% Covariate(s): Renove regressors (covs) "group":
+% barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 0);
+%
+% Covariate(s): Leave in regressor (cov) # 1 "group" and sort points by its values:
+% barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 1);
+%
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
 
 % ..
@@ -146,6 +158,7 @@ mytitle = [];
 covs = [];
 doxlim = 1;
 names = {};
+wh_reg = 1; % regressor of interest - 0 for "no regressor of interest", remove all
 
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
@@ -212,6 +225,9 @@ if length(varargin) > 0
             if ~isempty(covs), covs = scale(covs,1); end
         end
         
+        if strcmp(varargin{i}, 'wh_reg')
+            wh_reg = varargin{i + 1};
+        end
         
     end % for
 end % varargin
@@ -262,8 +278,6 @@ Std_Error = [];
 % key vars are :
 % Mean_Value, Std_Error, mycor
 
-wh_reg = 1; % regressor of interest
-
 for i = 1:ny
     
     if ~isempty(names) && length(names) >= i
@@ -290,8 +304,8 @@ for i = 1:ny
     % y is adjusted for all non-intercept covs
     % stats has weights, stats.w, which are all 1 for OLS
     [x, newy, r, p, Std_Error(i, 1), Mean_Value(i, 1), stats] = partialcor(tmpx, tmpy, wh_intercept, 0, dorob);
-    T(i, 1) = stats.t;
-    P(i, 1) = stats.p;
+    T(i, 1) = stats.t(wh_intercept);
+    P(i, 1) = stats.p(wh_intercept);
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     %95% CI?
@@ -302,12 +316,14 @@ for i = 1:ny
     %%%not needed y(:,i) = y(:,i) + Mean_Value(i);   % add mean
     myweights(:,i) = naninsert(wasnan, stats.w);
     
+    % wh_reg should be 0 for all covs removed, or a number to select which
+    % regressor to leave in and sort by
     % ----------------------------------------------------
     % > Use partialcor to remove covariates if requested
     %   Return y, adjusted y-values
     % ----------------------------------------------------
     
-    if ~isempty(covs)
+    if ~isempty(covs) && wh_reg
         % cov of interest here is fixed at 1 (see above)
         
         % if we have covs, leave in cov. of interest (cov1)
@@ -438,7 +454,7 @@ if doind
     % > Sort individual scores by covariate if entered, for point plot
     % ----------------------------------------------------
     % sort individual scores by covariate, if covs
-    if ~isempty(covs)
+    if ~isempty(covs) && wh_reg
         
         [sortedcov,indx] = sort(covs(:,wh_reg));
         dat = dat(indx,:);

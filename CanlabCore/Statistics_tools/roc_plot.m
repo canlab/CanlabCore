@@ -48,6 +48,8 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %
 %   **'balanced':**
 %        Balanced accuracy for single interval classification
+%        THIS IS NOT COMPLETELY IMPLEMENTED BECAUSE IT AFFECTS ACCURACY
+%        ESTIMATES, BUT NOT P-VALUES OR THRESHOLD AT WHICH TO EVALUATE SENS/SPEC
 %
 %   **'dependent':**
 %        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
@@ -188,6 +190,7 @@ for i = 1:length(varargin)
                 
             case 'balanced'
                 dobalanced = 1;
+                error('THIS OPTION IS NOT IMPLEMENTED CORRECTLY; SEE CODE. CONSIDER USING ''Optimal balanced error rate'' OPTION');
                 
             case 'noplot'
                 doplot = 0;

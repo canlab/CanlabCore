@@ -1,4 +1,4 @@
-function f1 = create_figure(tagname, varargin)
+function [f1, axh] = create_figure(tagname, varargin)
 % :Usage:
 % ::
 %
@@ -9,6 +9,8 @@ function f1 = create_figure(tagname, varargin)
 
 % Edit: 1/2017 by Tor Wager - set figure aspect ratio in proportion to data
 % plots, when creating new figure
+
+axh = [];
 
 if nargin < 1 || isempty(tagname)
     tagname = 'nmdsfig';

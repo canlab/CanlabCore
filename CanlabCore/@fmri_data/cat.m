@@ -74,6 +74,9 @@ function [obj, obj_codes] = cat(obj, varargin)
 
 
 if isempty(varargin)
+    
+    obj_codes = ones(size(obj.dat, 2), 1);
+    
     return
     
 else

@@ -155,6 +155,8 @@ est = [];
 t = [];
 p = [];
 
+[wasnan, x, y] = nanremove(x, y);
+
 switch lower(meth)
 
     case {'irls','robust'}

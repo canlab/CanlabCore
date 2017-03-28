@@ -283,7 +283,7 @@ switch varlevel
 end
 
 switch lower(type)
-    case {'numeric', 'Continuous'}
+    case {'numeric', 'Continuous', 'continuous'}
         textflag = 0;
     case 'text'
         textflag = 1;

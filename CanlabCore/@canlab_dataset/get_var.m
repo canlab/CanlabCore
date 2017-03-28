@@ -156,6 +156,8 @@ switch wh_level
             if textflag
                 dat(:,i) = D.Subj_Level.textdata(:, wh);
             else
+                if iscell(D.Subj_Level.data(:, wh)), error('Subj_Level data should not be in cells.'); end
+                
                 dat(:,i) = D.Subj_Level.data(:, wh);
             end
             if wh > length(D.Subj_Level.descrip)

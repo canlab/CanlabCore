@@ -93,16 +93,25 @@ end % main function
 
 function [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count, text_vals] = get_descriptives_var(D, vname)
 
-var = get_var(D, vname);
-numeric_vals = NaN * ones(1, 6);
+[Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count] = deal(NaN);
+
+[var, varcell, ~, descrip] = get_var(D, vname);
+
+if ischar(var)
+    % This happens for event-level variables with different numbers of
+    % observations for different cells
+    var = double(cat(1, varcell{:}));
+end
+
 text_vals = [];
 
 if iscell(var)  % SHOULD BE DEPRECATED - need to handle text differently
     % istext
     fprintf('%s (%s): Text. Unique values: %d\t\n', ...
         vname, descrip, length(unique(var)));
-    
-else
+     
+else 
+    % Standard Subj-level and Event-level vars with same no. of obs.
     % isnumeric
     Min_value = min(var);
     Max_value = max(var);

@@ -1,3 +1,19 @@
+function [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, varargin)
+% Given a region object and optional colorfun, generate a list of colors
+% for each region, assigning the same color to symmetric regions in left
+% and right hemispheres.
+%
+% [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, varargin)
+%
+% - input custom color function
+% [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, @(n) custom_colors([1 0 .5], [.5 0 1], n));
+
+colorfun = @scn_standard_colors;
+
+if length(varargin) > 0, colorfun = varargin{1}; end
+
+% Get left, right, midline
+% -------------------------------------------------------------------------
 
 xyz = cat(1, r.mm_center);
 
@@ -13,6 +29,10 @@ isright = lr >= 1;
 right = r(isright);
 
 whleft = find(isleft);  % index into full list
+whright = find(isright);  % index into full list
+
+% Match regions
+% -------------------------------------------------------------------------
 
 for i = 1:length(whleft)
     
@@ -61,7 +81,7 @@ index_rightunmatched = whright(find(z));
 nmatch = length(index_leftmatch);
 nextra = length(index_midline) + length(index_leftunmatched) + length(index_rightunmatched);
 
-c = scn_standard_colors(nextra + nmatch);
+c = colorfun(nextra + nmatch);
 
 all_colors(index_leftmatch) = c(1:nmatch);
 all_colors(index_rightmatch) = c(1:nmatch);
@@ -78,6 +98,8 @@ c(1:n) = [];
 n = length(index_rightunmatched);
 all_colors(index_rightunmatched) = c(1:n);
 c(1:n) = [];
+
+end % function
 
 
 %%

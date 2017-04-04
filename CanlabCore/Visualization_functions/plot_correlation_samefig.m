@@ -228,10 +228,10 @@ if isempty(mycol), mycol = 'ko'; end
         % ROBUST
         w = varargin{1};
         for i = 1:length(xvec)
-            h = plot(xvec(i),yvec(i),[mycol 'o'],'LineWidth',.5,'MarkerSize',8, ...
+            h(i) = plot(xvec(i),yvec(i),[mycol(1) 'o'],'LineWidth',.5,'MarkerSize',8, ...
                 'MarkerFaceColor',mycol(1));
-            set(h,'MarkerFaceColor',[repmat(1-w(i),1,3)] )
-            set(h, 'Color', [.2 .2 .2], 'LineWidth',1)
+            set(h(i),'MarkerFaceColor',[repmat(1-w(i),1,3)] )
+            set(h(i), 'Color', [.2 .2 .2], 'LineWidth',1)
         end
         
         % set axis

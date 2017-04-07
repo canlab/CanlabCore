@@ -36,7 +36,7 @@ function [values, components, full_data_objects, l2norms] = extract_gray_white_c
 %        Masked data objects for {gray white CSF}
 %
 % %   **l2norms:**
-%        Length-adjusted L2 norms (divided by sqrt(nvox)
+%        Length-adjusted L2 norms (divided by sqrt(nvox))
 % ..
 %    Tor Wager, July 21, 2015
 % ..
@@ -96,7 +96,7 @@ for i = 1:length(masks)
         [wasnan, dataforpca] = nanremove(masked_obj.dat);
         if any(wasnan), fprintf('Removing %3.0f voxels with one or more NaNs\n', sum(wasnan)); end
         
-        [~, component{i}] = pca(dataforpca', 'Economy', true, 'NumComponents', numcomps);
+        [~, components{i}] = pca(dataforpca', 'Economy', true, 'NumComponents', numcomps);
         
         % may need to insert omitted
 %         if length(masked_obj.removed_images) > 1

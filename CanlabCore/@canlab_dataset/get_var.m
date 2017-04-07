@@ -40,7 +40,9 @@ function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
 %   **dat:**
 %        rect matrix of subjects X events (X variables)
 %       - good for plotting individuals, means/std. errors across subjects
-%       - is actually a cell matrix if textual data is requested.
+%       - returns a cell matrix if textual data is requested.
+%       - if there are different numbers of events for each subject, this
+%       will return a matrix padded with NaNs to make a rectangular matrix.
 %
 %   **datcell:**
 %        1 x subjects cell array, each cell containing event data for one subject
@@ -109,6 +111,11 @@ for i = 2:length(varargin)
                         conditionalCol = strmatch(varargin{i+1}{1}, D.Subj_Level.names, 'exact');
                     case 2
                         conditionalCol = strmatch(varargin{i+1}{1}, D.Event_Level.names, 'exact');
+                end
+                
+                if length(conditionalCol) > 1
+                    warning('Multiple variables match!!! Using first one.');
+                    conditionalCol = conditionalCol(1);
                 end
                 
                 if isempty(conditionalCol), error('Conditional variable does not exist'); end
@@ -216,8 +223,20 @@ switch wh_level
                     dat(subidx,:,:) = d{subidx};
                 end
             end
-        else % can't concat
-            dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
+        else % PAD with NaNs to concatenate
+            
+            slen = max(cellfun(@length, d)); % max length for any subject
+            
+            refvec = ones(slen, 1);
+            
+            for i = 1:length(d)
+                d{i} = padwithnan(d{i}, refvec, 1);
+            end
+            
+            dat = cat(2, d{:});  
+            dat = dat';  % Subj x Events
+                
+            %dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
         end
         
         if wh > length(D.Event_Level.descrip)

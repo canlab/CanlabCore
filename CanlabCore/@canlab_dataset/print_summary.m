@@ -44,6 +44,8 @@ function print_summary(D, varargin)
 
     fprintf('\n\n --------- DATASET VARS -------- \n\n');
   
+    fprintf('Experiment name:\n%s\n\n', D.Description.Experiment_Name);
+    
     fprintf('%d subjects, %d subject-level vars, %d event-level vars\n', ...
         length(D.Subj_Level.id), length(D.Subj_Level.names), length(D.Event_Level.names));
     

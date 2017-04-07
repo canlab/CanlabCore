@@ -146,6 +146,8 @@ function obj = addblobs(obj, cl, varargin)
 %    Add the volume to activation maps in fmridisplay object
 % ..
 
+if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
+    
 if ~isa(cl, 'region')
     error('cl input must be a region object. Try region() constructor method.');
 end

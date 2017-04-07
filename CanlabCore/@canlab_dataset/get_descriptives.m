@@ -41,15 +41,38 @@ function [subj_descriptives, event_descriptives] = get_descriptives(D, varargin)
 %
 %   if either varargin is unspecified, all variables will be printed
 %
+% Examples:
+%
+% % Get descriptive stats in tables all variables in canalab_dataset object D
+% [subj_descriptives, event_descriptives] = get_descriptives(D, 'event', 'temp')
+%
+% Get descriptive stats in tables for the Event_Level variable 'temp'
+% [subj_descriptives, event_descriptives] = get_descriptives(D, 'event', 'temp')
+%
+% Get descriptive stats in tables for the Event_Level variables 'temp' and 'ratings'
+%[subj_descriptives, event_descriptives] = get_descriptives(D, 'event', {'temp' 'ratings'})
 
 subj_descriptives = table;
 event_descriptives = table;
 
+% Default: All variables
+subj_varnames = D.Subj_Level.names;
+event_varnames = D.Event_Level.names;
+
+svars = find(strcmp('subj', varargin));
+evars = find(strcmp('event', varargin));
+
+if ~isempty(svars) || ~isempty(evars)
+    % Replace default lists with input variables only
+    [subj_varnames, event_varnames] = deal({}); 
+end
+
+    
 % Subject level
 % -------------------------------------------------------------------------
-subj_varnames = D.Subj_Level.names;
-svars = find(strcmp('subj', varargin));
+
 if ~isempty(svars), subj_varnames = varargin{svars+1}; end
+if ~iscell(subj_varnames), subj_varnames = {subj_varnames}; end
 
 Var_name = subj_varnames';
 clear Min_value Max_value Mean_value St_Dev IQR NaN_count
@@ -68,9 +91,8 @@ end
 
 % Event level
 % -------------------------------------------------------------------------
-event_varnames = D.Event_Level.names;
-evars = find(strcmp('event', varargin));
 if ~isempty(evars), event_varnames = varargin{evars+1}; end
+if ~iscell(event_varnames), event_varnames = {event_varnames}; end
 
 Var_name = event_varnames';
 clear Min_value Max_value Mean_value St_Dev IQR NaN_count
@@ -97,10 +119,26 @@ function [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count, text_vals]
 
 [var, varcell, ~, descrip] = get_var(D, vname);
 
+if ismatrix(var)
+    % Happens when this is Event_Level var with same number of events for
+    % all subjects; or padded with NaNs.
+    var = var(:);
+end
+
 if ischar(var)
     % This happens for event-level variables with different numbers of
-    % observations for different cells
-    var = double(cat(1, varcell{:}));
+    % observations for different cells. This issue may be removed in the
+    % future, however.  
+    
+    if iscell(varcell{1})
+        fprintf('%s (%s): Cell array. Length of first cell: %d\t\n', ...
+        vname, descrip, length(varcell{1}));
+    
+    else
+    
+        var = double(cat(1, varcell{:}));
+        
+    end
 end
 
 text_vals = [];

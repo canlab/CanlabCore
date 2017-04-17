@@ -210,6 +210,7 @@ switch wh_level
         datcell = d; % Events X Vars within subject cells
           
         if var(cellfun(@numel,d)) == 0 % same number of items in every cell, can concat
+            
             if ~iscell(varname)
                 dat = cat(2, d{:});  
                 dat = dat';  % Subj x Events
@@ -223,6 +224,12 @@ switch wh_level
                     dat(subidx,:,:) = d{subidx};
                 end
             end
+            
+        elseif any(cellfun(@iscell, d))
+            % Entries are a cell array
+            
+            dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
+            
         else % PAD with NaNs to concatenate
             
             slen = max(cellfun(@length, d)); % max length for any subject
@@ -235,8 +242,7 @@ switch wh_level
             
             dat = cat(2, d{:});  
             dat = dat';  % Subj x Events
-                
-            %dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
+
         end
         
         if wh > length(D.Event_Level.descrip)

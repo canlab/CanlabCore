@@ -29,10 +29,15 @@ switch wh_level
         
         for i = 1:n
             
-            wh = function_handle(datcell{i}); % select observations to replace, logical
-            datcell{i}(wh) = replace_with;
+            % Do not use datcell because NaNs are removed there
             
-            D.Event_Level.data{i}(:, wh_indx) = datcell{i};
+            mydat = D.Event_Level.data{i}(:, wh_indx);
+            
+            wh = function_handle(mydat); % select observations to replace, logical
+            
+            mydat(wh) = replace_with;
+            
+            D.Event_Level.data{i}(:, wh_indx) = mydat;
             
         end % subject
         

@@ -1,8 +1,8 @@
 function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 %
-% Add a matrix, table (table object), or Excel file of variables to a canlab_dataset object
+% Add data in one or more variables to a canlab_dataset object
 %
-% - Enter matrix data, data in table object format, or Excel file name in dat_to_add
+% - Enter matrix data, cell data, data in table object format, or Excel file name in dat_to_add
 % - Replace existing variables with same names, or add new variables if names are new
 % - text data not supported yet.
 %
@@ -17,10 +17,14 @@ function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 %        Must be 'Subj_Level' or 'Event_Level'
 %
 %   **dat_to_add:**
-%        Matrix or table
-%        Num observations must match existing number in CLDAT, unless CLDAT is empty.
-%        For tables, variable names are used as names to add unless these
+%        Matrix, table object, cell vector, or Excel file name
+%        - Num observations must match existing number in CLDAT, unless CLDAT is empty.
+%        - For tables, variable names are used as names to add unless these
 %        are overwritten by a manual entry of names.
+%        - For Excel file, enter full path name of file. In file, variable names are in first row.
+%        - For cell data, enter one variable only.  Number of cells should
+%        equal number of subjects, and number of observations for each
+%        subject must match existing structure.
 %
 % :Optional Inputs:
 %
@@ -50,12 +54,24 @@ function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 % Notes:
 % You can add variables manually
 %
-% Example:
+% Examples:
+% -------------------------------------------------------------------
+% % Load from a file into a new canlab_dataset object:
 % DesignFile = which('Sample_subject_level_data_to_add.xlsx');
 % dat = canlab_dataset();
 % dat = add_vars(dat, DesignFile, 'Subj_Level');
 % print_summary(dat)
 %
+% % Add variable from a structure into a new canlab_dataset object:
+% a=load('/Users/tor/Google_Drive/Wagerlab_Single_Trial_Pain_Datasets/Data/placebo_value_stephan/placebo_value_metadata_early_pain.mat')
+% dat = canlab_dataset();
+% dat = add_vars(dat, a.meta.day, 'Event_Level', 'names', {'day'});
+% print_summary(dat)
+% day = get_var(dat, 'day');
+%
+% % Add another variable:
+% dat = add_vars(dat, a.meta.painrating, 'Event_Level', 'names', {'ratings'});
+% print_summary(dat)
 
 %     Author and copyright information:
 %
@@ -97,40 +113,13 @@ for i = 1:length(varargin)
     end
 end
 
-if exist(dat_to_add, 'file')
+if ~iscell(dat_to_add) && ischar(dat_to_add) && exist(dat_to_add, 'file')
     
     myfile = dat_to_add;
     dat_to_add = [];
     
-    fprintf('Importing from file: %s\n', myfile);
-    
-    [~,~,Xdata] = xlsread(myfile); %raw eXperimentdata
-
-    names_to_add = Xdata(1,:);
-
-    filedata = Xdata(2:end,:);
-    dat_to_add = NaN .* ones(size(filedata));
-    
-    for i = 1:length(names_to_add)
+    [names_to_add, dat_to_add, descrip_to_add] = import_from_file_subfcn(myfile);
         
-        mydat = filedata(:, i);
-        
-        if all(cellfun(@isnumeric, mydat))
-            
-            mydat = cat(1, mydat{:});
-            
-            dat_to_add(:, i) = mydat;
-            
-        else
-            % text - add text data import later...
-            dat_to_add(:, i) = NaN;
-        end
-        
-        descrip_to_add{i} = ['Imported from ' myfile];
-        
-    end % names
-
-    
 end % file
 
     
@@ -138,6 +127,8 @@ if ~isempty(names_to_add)
     names_to_add = enforce_var_names(names_to_add);
 end
 
+% Allow in case one description only is entered
+if ~iscell(descrip_to_add), descrip_to_add = {descrip_to_add}; end
 
 % -------------------------------------------------------------------------
 % Convert from table if needed
@@ -159,7 +150,7 @@ n = length(names_to_add);
 % Error checking
 % -------------------------------------------------------------------------
 
-if length(names_to_add) ~= size(dat_to_add, 2)
+if length(names_to_add) ~= size(dat_to_add, 2) && ~iscell(dat_to_add)
     error('Names missing/wrong length? Enter ''names'' followed by cell array of names for each column to add');
 end
 
@@ -191,15 +182,42 @@ switch wh_level
             wh_subj = subject_id == cat(1, CLDAT.Subj_Level.id{:});
         end
         
-        if ~any(wh_subj)
-            error('For Event_Level data, enter ''subjectid'' followed by string of a subject id in CLDAT.Subj_Level.id');
+        if ~any(wh_subj) && ~iscell(dat_to_add)
+            disp('For Event_Level data, enter ''subjectid'' followed by string of a subject id in CLDAT.Subj_Level.id');
+            disp('OR cell array with one cell per subject');
+            error('Exiting');
         end
         
-        if ~isempty(CLDAT.(wh_level).data{wh_subj}) && size(dat_to_add, 1) ~= size(CLDAT.(wh_level).data{wh_subj}, 1)
+        if ~iscell(dat_to_add) && ~isempty(CLDAT.(wh_level).data{wh_subj}) && size(dat_to_add, 1) ~= size(CLDAT.(wh_level).data{wh_subj}, 1)
             error(sprintf('Num observations in %s.data field does not match input dat_to_add.'), wh_level)
         end
         
+        if iscell(dat_to_add) && n > 1
+            error('With cell dat_to_add input, enter only one variable to add at a time.');
+        end
         
+        % Check size of data to add and existing event-level data
+        nexisting = length(CLDAT.(wh_level).data);
+        
+        if iscell(dat_to_add)  % cell
+            
+            nadd = length(dat_to_add);
+
+            if nexisting ~= 0 && nadd ~= nexisting
+                error('For cell dat_to_add input, num cells must equal num subjects in existing dataset');
+            end
+            
+        else  % matrix
+            
+            nobs = size(dat_to_add, 1);
+            nobs_existing = size(CLDAT.(wh_level).data{wh_subj}, 1);
+            
+            if nobs_existing ~= 0 && nobs ~= nobs_existing
+                error('For event-level dat_to_add input, num observations must match existing num obs in subject''s event-level data cell');
+            end
+            
+        end
+                
     otherwise
         error('wh_level input not valid. Must be ''Subj_Level'' or ''Event_Level''');
 end
@@ -226,7 +244,7 @@ end
 % Add variables
 % -------------------------------------------------------------------------
 
-for i = 1:n
+for i = 1:n % for each variable
     
     wh = strcmp(names_to_add{i}, CLDAT.(wh_level).names);
     
@@ -251,13 +269,63 @@ for i = 1:n
             
         case 'Event_Level'
             
-            if any(wh)
-                CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
+            if any(wh) % Replace existing variable
                 
-            else
+                if iscell(dat_to_add)  % cell
+                    
+                    for j = 1:length(dat_to_add)
+                        
+                        if ~iscolumn(dat_to_add{j})
+                            dat_to_add{j} = dat_to_add{j}';
+                        end
+                        
+                        % one more check on each subject we haven't done yet
+                        nobs = size(dat_to_add{j}, 1);
+                        nobs_existing = size(CLDAT.(wh_level).data{j}, 1);
+                        
+                        if nobs_existing ~= 0 && nobs ~= nobs_existing
+                            error(sprintf('Subject %d: num observations does not match existing num obs in subject''s event-level data cell', j));
+                        end
+                        
+                        CLDAT.(wh_level).data{j}(:, wh_var) = dat_to_add{j};
+                        
+                    end
+                    
+                else  % matrix
+                    
+                    CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
+                    
+                end
                 
-                CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
+            else % New variable
+                
+                if iscell(dat_to_add)  % cell
+                    
+                    for j = 1:length(dat_to_add)
+                        
+                        if ~iscolumn(dat_to_add{j})
+                            dat_to_add{j} = dat_to_add{j}';
+                        end
+                        
+                        % one more check on each subject we haven't done yet
+                        nobs = size(dat_to_add{j}, 1);
+                        nobs_existing = size(CLDAT.(wh_level).data{j}, 1);
+                        
+                        if nobs_existing ~= 0 && nobs ~= nobs_existing
+                            error(sprintf('Subject %d: num observations does not match existing num obs in subject''s event-level data cell', j));
+                        end
+                        
+                        CLDAT.(wh_level).data{j}(:, wh_var) = dat_to_add{j};
+                        
+                    end
+                    
+                else % matrix
+                    CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
+                end
+                
+                % add name
                 CLDAT.(wh_level).names(wh_var) = names_to_add(i);
+                
             end
             
             
@@ -287,6 +355,11 @@ end % function
 function names_to_add = enforce_var_names(names_to_add)
 % Enforce valid names - these will become variable names
 
+% allow non-cell input in case we are entering one variable
+if ~iscell(names_to_add)
+    names_to_add = {names_to_add};
+end
+
 wh_nan = cellfun(@(x) any(isnan(x)), names_to_add);
 names_to_add(wh_nan) = {'Noname'};
 
@@ -299,3 +372,38 @@ names_to_add = cellfun(@(x) strrep(x, ';', '_'), names_to_add, 'UniformOutput', 
 names_to_add = cellfun(@(x) strrep(x, '=', '_'), names_to_add, 'UniformOutput', false);
 
 end
+
+
+
+ function [names_to_add, dat_to_add, descrip_to_add] = import_from_file_subfcn(myfile)
+    
+    fprintf('Importing from file: %s\n', myfile);
+    
+    [~,~,Xdata] = xlsread(myfile); %raw eXperimentdata
+
+    names_to_add = Xdata(1,:);
+
+    filedata = Xdata(2:end,:);
+    dat_to_add = NaN .* ones(size(filedata));
+    
+    for i = 1:length(names_to_add)
+        
+        mydat = filedata(:, i);
+        
+        if all(cellfun(@isnumeric, mydat))
+            
+            mydat = cat(1, mydat{:});
+            
+            dat_to_add(:, i) = mydat;
+            
+        else
+            % text - add text data import later...
+            dat_to_add(:, i) = NaN;
+        end
+        
+        descrip_to_add{i} = ['Imported from ' myfile];
+        
+    end % names
+
+ end
+ 

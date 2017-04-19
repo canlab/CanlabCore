@@ -46,6 +46,8 @@ subj_descriptions = table;
 event_descriptions = table;
 
 subj_varnames = D.Subj_Level.names;
+if iscolumn(subj_varnames), subj_varnames = subj_varnames'; end % need row
+
 svars = find(strcmp('subj', varargin));
 if ~isempty(svars), subj_varnames = varargin{svars+1}; end
 
@@ -73,6 +75,8 @@ disp(subj_descriptions);
 % Names and descriptions - Event level
 % --------------------------------------------------------------------
 event_varnames = D.Event_Level.names;
+if iscolumn(event_varnames), event_varnames = event_varnames'; end % need row
+
 evars = find(strcmp('event', varargin));
 if ~isempty(evars), event_varnames = varargin{evars+1}; end
 

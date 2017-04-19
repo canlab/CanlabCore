@@ -1,8 +1,8 @@
 function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 %
-% Add a matrix or table (table object) of variables to a canlab_dataset object
+% Add a matrix, table (table object), or Excel file of variables to a canlab_dataset object
 %
-% - Enter matrix data or data in table object format in dat_to_add
+% - Enter matrix data, data in table object format, or Excel file name in dat_to_add
 % - Replace existing variables with same names, or add new variables if names are new
 % - text data not supported yet.
 %
@@ -14,7 +14,7 @@ function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 % :Inputs:
 %
 %   **wh_level:**
-%        Must be 'Subject_Level' or 'Event_Level'
+%        Must be 'Subj_Level' or 'Event_Level'
 %
 %   **dat_to_add:**
 %        Matrix or table
@@ -49,6 +49,13 @@ function CLDAT = add_vars(CLDAT, dat_to_add, wh_level, varargin)
 %
 % Notes:
 % You can add variables manually
+%
+% Example:
+% DesignFile = which('Sample_subject_level_data_to_add.xlsx');
+% dat = canlab_dataset();
+% dat = add_vars(dat, DesignFile, 'Subj_Level');
+% print_summary(dat)
+%
 
 %     Author and copyright information:
 %
@@ -79,7 +86,7 @@ subject_id = '';
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-
+            
             case 'names', names_to_add = varargin{i+1}; varargin{i+1} = [];
             case 'descrip', descrip_to_add = varargin{i+1}; varargin{i+1} = [];
                 
@@ -90,18 +97,60 @@ for i = 1:length(varargin)
     end
 end
 
+if exist(dat_to_add, 'file')
+    
+    myfile = dat_to_add;
+    dat_to_add = [];
+    
+    fprintf('Importing from file: %s\n', myfile);
+    
+    [~,~,Xdata] = xlsread(myfile); %raw eXperimentdata
+
+    names_to_add = Xdata(1,:);
+
+    filedata = Xdata(2:end,:);
+    dat_to_add = NaN .* ones(size(filedata));
+    
+    for i = 1:length(names_to_add)
+        
+        mydat = filedata(:, i);
+        
+        if all(cellfun(@isnumeric, mydat))
+            
+            mydat = cat(1, mydat{:});
+            
+            dat_to_add(:, i) = mydat;
+            
+        else
+            % text - add text data import later...
+            dat_to_add(:, i) = NaN;
+        end
+        
+        descrip_to_add{i} = ['Imported from ' myfile];
+        
+    end % names
+
+    
+end % file
+
+    
+if ~isempty(names_to_add)
+    names_to_add = enforce_var_names(names_to_add);
+end
+
+
 % -------------------------------------------------------------------------
 % Convert from table if needed
 % -------------------------------------------------------------------------
 
 if istable(dat_to_add)
-
+    
     names_to_add = dat_to_add.Properties.VariableNames;
     descrip_to_add = dat_to_add.Properties.VariableDescriptions;
     dat_to_add = table2array(dat_to_add);
     
     %units_to_add = dat_to_add.Properties.VariableUnits;
-
+    
 end
 
 n = length(names_to_add);
@@ -114,15 +163,28 @@ if length(names_to_add) ~= size(dat_to_add, 2)
     error('Names missing/wrong length? Enter ''names'' followed by cell array of names for each column to add');
 end
 
+% Check for ID - and create if needed
+if isempty(CLDAT.Subj_Level.id)
+    
+    CLDAT.Subj_Level.id = {};
+    
+    nsubj = size(dat_to_add, 1);
+    
+    for i = 1:nsubj
+        CLDAT.Subj_Level.id{i, 1} = sprintf('TEMPORARY Subj %d - ENTER dat.Subj_Level.id in cells!', i);
+    end
+    
+end
+
 switch wh_level
-    case 'Subject_Level'
+    case 'Subj_Level'
         
         if ~isempty(CLDAT.(wh_level).data) && size(dat_to_add, 1) ~= size(CLDAT.(wh_level).data, 1)
             error(sprintf('Num observations in %s.data field does not match input dat_to_add.'), wh_level)
         end
         
     case 'Event_Level'
-                
+        
         if ischar(subject_id) % this should really be char according to format, but accept numbers here too for convenience
             wh_subj = strcmp(subject_id, CLDAT.Subj_Level.id);
         else
@@ -130,21 +192,21 @@ switch wh_level
         end
         
         if ~any(wh_subj)
-            error('For Event_Level data, enter ''subjectid'' followed by string of a subject id in CLDAT.Subject_Level.id'); 
+            error('For Event_Level data, enter ''subjectid'' followed by string of a subject id in CLDAT.Subj_Level.id');
         end
         
         if ~isempty(CLDAT.(wh_level).data{wh_subj}) && size(dat_to_add, 1) ~= size(CLDAT.(wh_level).data{wh_subj}, 1)
             error(sprintf('Num observations in %s.data field does not match input dat_to_add.'), wh_level)
         end
-
+        
         
     otherwise
-        error('wh_level input not valid. Must be ''Subject_Level'' or ''Event_Level''');     
+        error('wh_level input not valid. Must be ''Subj_Level'' or ''Event_Level''');
 end
 
 % check for existing names
 
-if strcmp(wh_level, 'Subject_Level')
+if strcmp(wh_level, 'Subj_Level')
     % Don't print for event_level as we'll often replace
     for i = 1:n
         
@@ -163,7 +225,7 @@ end
 % -------------------------------------------------------------------------
 % Add variables
 % -------------------------------------------------------------------------
-    
+
 for i = 1:n
     
     wh = strcmp(names_to_add{i}, CLDAT.(wh_level).names);
@@ -173,16 +235,16 @@ for i = 1:n
     else
         wh_var = length(CLDAT.(wh_level).names) + 1; % Empty var names may be entered. Keep track this way.
     end
-                
+    
     switch wh_level
-        case 'Subject_Level'
-
+        case 'Subj_Level'
+            
             if any(wh)
                 CLDAT.(wh_level).data(:, wh_var) = dat_to_add(:, i);
                 
             else
                 wh_var = length(CLDAT.(wh_level).names) + 1; % Empty var names may be entered. Keep track this way.
-
+                
                 CLDAT.(wh_level).data(:, wh_var) = dat_to_add(:, i);
                 CLDAT.(wh_level).names(wh_var) = names_to_add(i);
             end
@@ -193,14 +255,14 @@ for i = 1:n
                 CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
                 
             else
-
+                
                 CLDAT.(wh_level).data{wh_subj}(:, wh_var) = dat_to_add(:, i);
                 CLDAT.(wh_level).names(wh_var) = names_to_add(i);
             end
             
-
+            
         otherwise
-            error('wh_level input not valid. Must be ''Subject_Level'' or ''Event_Level''');
+            error('wh_level input not valid. Must be ''Subj_Level'' or ''Event_Level''');
     end
     
     % Description, if entered
@@ -210,7 +272,7 @@ for i = 1:n
         CLDAT.(wh_level).descrip{wh_var, 1} = descrip_to_add{i};
         
     end
-        
+    
     % Var type
     CLDAT.(wh_level).type{wh_var} = 'numeric';
     
@@ -220,3 +282,20 @@ end % variable to add
 
 end % function
 
+
+
+function names_to_add = enforce_var_names(names_to_add)
+% Enforce valid names - these will become variable names
+
+wh_nan = cellfun(@(x) any(isnan(x)), names_to_add);
+names_to_add(wh_nan) = {'Noname'};
+
+names_to_add = cellfun(@(x) strrep(x, ' ', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, ',', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, ':', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, '!', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, '?', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, ';', '_'), names_to_add, 'UniformOutput', false);
+names_to_add = cellfun(@(x) strrep(x, '=', '_'), names_to_add, 'UniformOutput', false);
+
+end

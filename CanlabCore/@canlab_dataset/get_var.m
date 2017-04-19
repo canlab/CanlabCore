@@ -71,6 +71,8 @@ function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
 dat = [];
 datcell = {};
 wh_indx = [];
+wh_level = [];
+descrip = {};
 
 if length(varargin) == 0
     % List variables
@@ -135,20 +137,39 @@ else
     dat = [];
 end
 
+nsubj = length(D.Subj_Level.id);  % for empty cells
+
 switch wh_level
     
     case 1 % Subject-level
         if iscell(varname) %Multiple vars to collect
+            
             for i=1:length(varname)
+                
                 wh = strmatch(varname{i}, D.Subj_Level.names, 'exact');
                 
                 wh_indx = [wh_indx wh];
                 
                 if textflag
-                    dat(:,i) = D.Subj_Level.textdata(:, wh);
-                else
-                    dat(:,i) = D.Subj_Level.data(:, wh);
+                    % Text data
+                    if isempty(D.Subj_Level.textdata)
+                        
+                        dat(:, i) = repmat({''}, nsubj, 1);
+                        
+                    else
+                        dat(:,i) = D.Subj_Level.textdata(:, wh);
+                    end
+                    
+                else % Numeric data
+                    if isempty(D.Subj_Level.data)
+                        
+                        dat(:, i) = NaN * ones(nsubj, 1); 
+                        
+                    else
+                        dat(:,i) = D.Subj_Level.data(:, wh);
+                    end
                 end
+                
                 if wh > length(D.Subj_Level.descrip)
                     descrip{i} = varname{i}; %'No description.';
                 else
@@ -160,13 +181,29 @@ switch wh_level
             
             i=1; %only 1 variable
             wh = strmatch(varname, D.Subj_Level.names, 'exact');
+            
             if textflag
-                dat(:,i) = D.Subj_Level.textdata(:, wh);
-            else
-                if iscell(D.Subj_Level.data(:, wh)), error('Subj_Level data should not be in cells.'); end
+                % Text data
+                if isempty(D.Subj_Level.textdata)
+                    
+                    dat(:, i) = repmat({''}, nsubj, 1);
+                        
+                else
+                    dat(:, i) = D.Subj_Level.textdata(:, wh);
+                end
                 
-                dat(:,i) = D.Subj_Level.data(:, wh);
+            else % Numeric data
+                if isempty(D.Subj_Level.data)
+                    
+                    dat(:, i) = NaN * ones(nsubj, 1); 
+                    
+                else
+                    if iscell(D.Subj_Level.data(:, wh)), error('Subj_Level data should not be in cells.'); end
+                
+                    dat(:, i) = D.Subj_Level.data(:, wh);
+                end
             end
+            
             if wh > length(D.Subj_Level.descrip)
                 descrip = varname; %'No description.';
             else
@@ -185,19 +222,28 @@ switch wh_level
         end %conditional if-statement
         
     case 2 %Event-Level
+        
         if iscell(varname)
             wh=[];
             for k=1:length(varname)
                 wh(end+1)= find(strcmp(varname{k}, D.Event_Level.names));
             end
         else
+            
             wh = find(strcmp(varname, D.Event_Level.names));
+            
         end %variable selection
         
         wh_indx = [wh_indx wh];
 
         if do_conditional
+            
             d=conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
+            
+        elseif ~iscell(D.Event_Level.data) || isempty(D.Event_Level.data)
+            % no data
+            d = {};
+            
         else
             my_col = @(x) x(:, wh);
             if ~textflag
@@ -205,6 +251,7 @@ switch wh_level
             else
                 d = cellfun(my_col, D.Event_Level.textdata, 'UniformOutput', 0);
             end
+            
         end %conditional if-statement
         
         datcell = d; % Events X Vars within subject cells
@@ -257,17 +304,24 @@ end
 %     disp(['WARNING: ' varname ' is not a valid variable name because it does not exist in this dataset.']);
 % end
 
+if iscell(descrip)
+    descrip = [descrip{:}];
+end
+
+if isempty(dat)
+    return
+end
+
 %wh_keep
-if length(wh_keep) ~= size(dat, 1) && length(wh_keep) ~= size(datcell, 2)
+if isempty(wh_keep)
+    wh_keep = ones(size(dat, 1));
+    
+elseif length(wh_keep) ~= size(dat, 1) && length(wh_keep) ~= size(datcell, 2)
     error('wh_keep is the wrong length. Check input.');
 end
 
 if ~ischar(dat), dat = dat(wh_keep,:,:); end % dat may be a char b/c assign an error msg value to it above
 if ~isempty(datcell), datcell = datcell(wh_keep); end
-
-if iscell(descrip)
-    descrip = [descrip{:}];
-end
 
 end % function
 

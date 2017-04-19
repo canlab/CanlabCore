@@ -3,7 +3,7 @@
 % Constructs a new, empty instance of a canlab_dataset object.
 % The fields of this object can subsequently be assigned data.
 %
-% The dataset (D) The dataset (D) is a way of collecting behavioral data 
+% The dataset (D) is a way of collecting behavioral data 
 % and/or meta-data about fMRI (and other) studies in a standardized format.
 % It has entries for experiment description, Subject-level
 % variables, Event-level variables (e.g., for fMRI events or trials in a
@@ -93,6 +93,24 @@
 %     variable is a numeric variable
 % 5. If you have fMRI onsets and durations, etc., use the 'fmri' option to
 %    create standardized variable names.
+%
+% fmri-type object
+% --------------------------------------------------------------------------------------
+% This has standard variable names, which enable the creation of first-level fMRI designs
+% from canlab_dataset objects.
+% These are the variables you need at minimum for an fmri-type object:
+%
+%         Var_name                                      Description                               
+%     ________________    ________________________________________________________________________
+% 
+%     'SessionNumber'     'Within-study session number (e.g. 1,2,3)'                              
+%     'RunName'           'A descriptive name of the fMRI run (e.g. PreRevealPlacebo)'            
+%     'RunNumber'         'Within-session run number (e.g. 1,2,3)'                                
+%     'TaskName'          'The name of the task being performed during this event (e.g. Compassi?'
+%     'TrialNumber'       'The trial number within the task for this event (e.g. 1,2,3)'          
+%     'EventName'         'The name of this event (e.g. HighPain, Cue, Fixation)'                 
+%     'EventOnsetTime'    'The start time for each event in sec from start of the run'            
+%     'EventDuration'     'The length of time this event lasts in sec'  
 
 classdef canlab_dataset
     
@@ -164,6 +182,17 @@ classdef canlab_dataset
                 if ischar(varargin{i})
                     switch(varargin{i})
                         case 'fmri'
+                            
+                            obj.Subj_Level.names = {'Sex' 'Age' 'Race' 'Hispanic' 'Handedness'};
+                            obj.Subj_Level.type = {'text' 'numeric' 'text' 'numeric' 'text' 'text'};
+                            obj.Subj_Level.descrip = {'M or F, male/female'
+                                                       'Participant age'
+                                                       'Af_Am/White/Native_Am/Asian/PacificIslander/Other'
+                                                       'Hispanic: 1 = yes or 0 = no'
+                                                       'L or R, left or right-handed'}';
+                            obj.Subj_Level.units = {'text' 'years' 'text' 'binary' 'text'};
+                                                   
+                                                   
                             obj.Event_Level.names = {'SessionNumber' 'RunName' 'RunNumber' 'TaskName' 'TrialNumber' 'EventName' 'EventOnsetTime' 'EventDuration'};
                             obj.Event_Level.type = {'numeric' 'text' 'numeric' 'text' 'numeric' 'text' 'numeric' 'numeric'};
                             obj.Event_Level.units = {'count' 'text' 'count' 'text' 'count' 'text' 'seconds' 'seconds'};
@@ -173,8 +202,8 @@ classdef canlab_dataset
                                                        'The name of the task being performed during this event (e.g. Compassion)'
                                                        'The trial number within the task for this event (e.g. 1,2,3)'
                                                        'The name of this event (e.g. HighPain, Cue, Fixation)'
-                                                       'The run time when this event starts'
-                                                       'The length of time this event lasts'}';
+                                                       'The start time for each event in sec from start of the run'
+                                                       'The length of time this event lasts in sec'}';
                             varargin{i} = [];
                         otherwise, warning(['Unknown input string operation:' varargin{i}])
                     end

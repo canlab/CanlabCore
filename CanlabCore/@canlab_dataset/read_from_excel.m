@@ -102,9 +102,17 @@ nsubj = numel(dat.Subj_Level.id);
 
 % choose rows that are not NaNs and the column identified by 'names'.
 % Similar behavior for other vars.
-dat.Subj_Level.names = data(~cellfun(@nanremove,data(:,strcmp(colheaders,'names'))),strcmp(colheaders,'names'));
-dat.Subj_Level.units = data(~cellfun(@nanremove,data(:,strcmp(colheaders,'units'))),strcmp(colheaders,'units'));
+wh_col = strcmp(colheaders,'names');
+mydat = data(~cellfun(@nanremove,data(:, wh_col)), wh_col);
+if iscolumn(mydat), mydat = mydat'; end % enforce row
+dat.Subj_Level.names = mydat;
+
+mydat = data(~cellfun(@nanremove,data(:,strcmp(colheaders,'units'))),strcmp(colheaders,'units'));
+if iscolumn(mydat), mydat = mydat'; end % enforce row
+dat.Subj_Level.units = mydat;
+
 dat.Subj_Level.descrip = data(~cellfun(@nanremove,data(:,strcmp(colheaders,'descrip'))),strcmp(colheaders,'descrip'));
+
 
 %loop over names and import data into canlab_dataset object
 blankdata = nan(nsubj,1);
@@ -138,24 +146,31 @@ end
 
 % Loop over subject files and import Event Level data
 for subjidx = 1:length(SubjectFileList)
+    
     [~,~,subdata] = xlsread(SubjectFileList{subjidx});
     subcolheaders = subdata(1,:);
     subdata = subdata(2:end,:);
+    
     if fmri
         eventidx = numel(dat.Event_Level.names)+1; %used for non-standard entries into dataset
         for i = 1:numel(subcolheaders)
             switch subcolheaders{i}
                 case {'SessionNumber' 'RunName' 'RunNumber' 'TaskName' 'TrialNumber' 'EventName' 'EventOnsetTime' 'EventDuration'}
                     dat = update_field(dat,subdata,i,subjidx, subcolheaders);
+                    
                 otherwise
                     [dat,warnflag,eventidx, newvars] = write_new_field(dat,subdata,warnflag,i,eventidx,subjidx, newvars, subcolheaders);
+            
             end %switch
         end
+        
     elseif subjidx == 1 %not a standard fmri canlab_dataset object & first subject run
+        
         eventidx = numel(dat.Event_Level.names)+1; 
         for i = 1:numel(subcolheaders)
             [dat,warnflag,eventidx, newvars] = write_new_field(dat,subdata,warnflag,i,eventidx,subjidx, newvars, subcolheaders);
         end 
+        
     else %a different subject - column names have already been initialized. 
         eventidx = numel(dat.Event_Level.names)+1; %used for non-standard entries into dataset - these should not exist at this point and function will correctly error if used.
         warnflag = 0; %If it were a problem it would already trigger at subjidx == 1. This is set in case building a new canlab_dataset object, at which point warnflag would be silly.

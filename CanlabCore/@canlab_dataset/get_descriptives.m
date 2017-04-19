@@ -57,7 +57,10 @@ event_descriptives = table;
 
 % Default: All variables
 subj_varnames = D.Subj_Level.names;
+if iscolumn(subj_varnames), subj_varnames = subj_varnames'; end % need row
+
 event_varnames = D.Event_Level.names;
+if iscolumn(event_varnames), event_varnames = event_varnames'; end % need row
 
 svars = find(strcmp('subj', varargin));
 evars = find(strcmp('event', varargin));
@@ -72,7 +75,7 @@ end
 % -------------------------------------------------------------------------
 
 if ~isempty(svars), subj_varnames = varargin{svars+1}; end
-if ~iscell(subj_varnames), subj_varnames = {subj_varnames}; end
+if ~isempty(svars) && ~iscell(subj_varnames), subj_varnames = {subj_varnames}; end
 
 Var_name = subj_varnames';
 clear Min_value Max_value Mean_value St_Dev IQR NaN_count
@@ -92,7 +95,7 @@ end
 % Event level
 % -------------------------------------------------------------------------
 if ~isempty(evars), event_varnames = varargin{evars+1}; end
-if ~iscell(event_varnames), event_varnames = {event_varnames}; end
+if ~isempty(evars) && ~iscell(event_varnames), event_varnames = {event_varnames}; end
 
 Var_name = event_varnames';
 clear Min_value Max_value Mean_value St_Dev IQR NaN_count
@@ -115,9 +118,15 @@ end % main function
 
 function [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count, text_vals] = get_descriptives_var(D, vname)
 
+% intialize
 [Min_value, Max_value, Mean_value, St_Dev, myIQR, NaN_count] = deal(NaN);
+text_vals = [];
 
 [var, varcell, ~, descrip] = get_var(D, vname);
+
+if isempty(var)
+    return
+end
 
 if ismatrix(var)
     % Happens when this is Event_Level var with same number of events for
@@ -140,8 +149,6 @@ if ischar(var)
         
     end
 end
-
-text_vals = [];
 
 if iscell(var)  % SHOULD BE DEPRECATED - need to handle text differently
     % istext

@@ -46,6 +46,11 @@ function myribbon = riverplot_ribbon(rect1, rect2, varargin)
 %        each value is between 0 and 1 and specifies the percentage of the
 %        plot the ribbon will cover.
 %
+%   **y_offset:**
+%        'y_offset' followed by one or 2-element vector for [offset1 offset2], where
+%        each value is between 0 and 1 and specifies the percentage of the
+%        square for layer 1 and layer 2 to shift down before plotting ribbon.
+%
 %   **color:**
 %        followed by [r g b] color spec for ribbon
 %
@@ -110,9 +115,9 @@ for i = 1:length(varargin)
                 
             % Just pass these vars on
                 
-            case 'position', %myposition = varargin{i+1}; varargin{i+1} = [];
-            case {'color', 'colors'}, %mycolor = varargin{i+1}; %varargin{i+1} = [];
-            case 'steepness', % just pass it on
+            case 'position' %myposition = varargin{i+1}; varargin{i+1} = [];
+            case {'color', 'colors'} %mycolor = varargin{i+1}; %varargin{i+1} = [];
+            case 'steepness' % just pass it on
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -122,8 +127,8 @@ end
 axes(ax)
 
 % left is rect 1, right is rect 2
-tl = rect1.topright;    % start point for line 1
-tr = rect2.topleft;     % start point for line 1
+tl = rect1.topright;    % start point for line 1 - this is the x,y pair for left-hand rectangle, top right corner
+tr = rect2.topleft;     % start point for line 1 - this is the x,y pair for right-hand rectangle
 bl = rect1.bottomright; % start point for line 2
 br = rect2.bottomleft;  % start point for line 2
 
@@ -133,8 +138,10 @@ ylen2 = rect2.topright(2) - rect2.bottomright(2);  % total y distance, right rec
 % y offset: shift down if specified and we don't have full coverage
 % based on percentage of total rect y length
 % If we are covering the whole interval then ignore.
-if coverage(1) < 1, offset1 = y_offset .* ylen1; else offset1 = 0; end
-if coverage(2) < 1, offset2 = y_offset .* ylen2; else offset2 = 0; end
+if length(y_offset) == 1, y_offset = [y_offset y_offset]; end
+
+if coverage(1) < 1, offset1 = y_offset(1) .* ylen1; else offset1 = 0; end
+if coverage(2) < 1, offset2 = y_offset(2) .* ylen2; else offset2 = 0; end
 
 % adjust distance for coverage
 ylen1 = coverage(1) * ylen1;
@@ -143,20 +150,24 @@ ylen2 = coverage(2) * ylen2;
 if from_bottom
     
     % adjust start point
-    if y_offset 
+     % tl(1) and tr(1) are ok, they define x for first line
+    % tl(2) and tr(2) need y coords adjusted by offset values 
+    if any(y_offset) 
         
-        bl(2) = bl(2) + offset1;
+        tl(2) = tl(2) - offset1;
         
-        br(2) = br(2) + offset2;
+        tr(2) = tr(2) - offset2;
         
     end
     
     % Adjust end point based on coverage
+    % tl and tr are ok, they define first line
+    % bl and br need to have y (2) adjusted,but not x (1)
     % rect 1 adjust y
-    tl(2) = bl(2) + ylen1;
+    bl(2) = tl(2) - ylen1; % start with tl, tr line. adjust y coord for bl relative to tl
     
     % rect 2 adjust y
-    tr(2) = br(2) + ylen2;
+    br(2) = tr(2) - ylen2; % start with tl, tr line. adjust y coord for br relative to tr
     
 else
     
@@ -181,6 +192,7 @@ else
 
 end
 
+% will draw two lines: from [x,y] pair tl to [x,y] pair tr, and same for bl, br
 myribbon = riverplot_draw_ribbon(tl, tr, bl, br, varargin{:});
 
 

@@ -114,6 +114,9 @@ end
 
 axes(ax)
 
+% each line coordinate is an [x,y] pair, e.g., topleft = [x,y] for top left
+% point in absolute plot coordinates
+
 line1 = riverplot_line(topleft, topright, 'w', 1, steepness);
 
 line2 = riverplot_line(bottomleft, bottomright, 'w', 1, steepness);

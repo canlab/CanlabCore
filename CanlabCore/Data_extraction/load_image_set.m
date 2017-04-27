@@ -117,6 +117,8 @@ if isa(image_names_or_keyword, 'fmri_data')
     image_obj = image_names_or_keyword;
     imagenames = image_obj.image_names;
     networknames = format_strings_for_legend(imagenames);
+    if iscolumn(networknames), networknames = networknames'; end
+
     return
     
 elseif isa(image_names_or_keyword, 'image_vector')
@@ -249,6 +251,8 @@ image_obj.dat = newmaskdat;
 
 end % function
 
+
+
 function [image_obj, networknames, imagenames] = load_custom(imagenames)
 
 % Load images, whatever they are
@@ -260,6 +264,8 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
 
 networknames = format_strings_for_legend(image_obj.image_names);
+
+if iscolumn(networknames), networknames = networknames'; end
 
 end  % function
 

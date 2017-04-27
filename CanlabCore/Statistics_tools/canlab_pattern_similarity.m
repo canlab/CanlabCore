@@ -139,19 +139,29 @@ for i = 1:npatt
     
     if any(badvals(:)) && ~doignoremissing
         
-        wh = find(any(badvals)); % which images
-        
         inmask = ~(pattern_weights(:, i) == 0 | isnan(pattern_weights(:, i)));
         
+        bad_in_mask = bsxfun(@times, badvals, inmask);
+        bad_in_mask = sum(bad_in_mask);  % how many bad values are in mask
+        
+        %wh = find(any(badvals)); % which images
+
         if doprintwarnings
             disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
             disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
             disp('They will be excluded from similarity analysis image-wise.');
             fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
-            disp('Test images with bad values:');
-            for i = 1:length(wh)
-                fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
+            disp('Number of zero or NaN values within image mask, by input image:');
+            
+            for i = 1:length(bad_in_mask)
+                fprintf('%3.0f ', bad_in_mask(i));
             end
+            fprintf('\n');
+            
+            % Tor edited 4/27/17 to make output more compact
+%             for i = 1:length(wh)
+%                 fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
+%             end
         end
         
     end

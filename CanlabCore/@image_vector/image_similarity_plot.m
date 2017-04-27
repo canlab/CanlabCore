@@ -56,6 +56,13 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
 %
+%   **mapset** 
+%       Followed by one of the keywords below, or by an fmri_data object
+%       containing maps you want to apply to (compare similarity with) input image objects
+%       If you enter a custom image object, also enter 'networknames'
+%       followed by cell array of names for each images in mapset, OR enter
+%       names in mask image obj.image_names (these are used by default)
+%
 %   **bucknerlab**
 %        Use 7 network parcellation from Yeo et al. as basis for comparisons
 %        Cortex only.  BUT also:
@@ -222,45 +229,36 @@ for i = 1:length(varargin)
                 
             case 'nofigure', dofigure = false;
                 
-            case {'fixedrange', 'dofixrange'};
+            case {'fixedrange', 'dofixrange'}
                 dofixRange = 1;
                 fixedrange = varargin{i+1};
                 
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
                 
+            case 'networknames' % do nothing, handle later
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
 
+% Load image set: Most of the hard work
+% ------------------------------------------------------------------------
+
 [mask, networknames, imagenames] = load_image_set(mapset);
 
-% This functionality replaced by load_image_set.  Tor: July 2016
-% switch mapset
-%
-%     case 'bucknerlab'
-%         [mask, networknames, imagenames] = load_bucknerlab_maps;
-%         networknames=networknames';
-%
-%     case 'npsplus'
-%         [mask, networknames, imagenames] = load_npsplus;
-%
-%     case 'kragelemotion'
-%         [mask, networknames, imagenames] = load_kragelemotion;
-%
-%     case 'allengenetics'
-%         [mask, networknames, imagenames] = load_allengenetics;
-%
-%     case 'custom'
-%
-%     otherwise
-%         error('unknown map set');
-%
-% end
-%
-% disp('Using images:');
-% fprintf('%s\n', imagenames{:});
+% Re-load names if entered. 
+% ------------------------------------------------------------------------
+wh = strcmp(varargin, 'networknames');
+if any(wh)
+    wh_names = find(wh) + 1;
+    networknames = varargin{wh_names(1)};
+    
+    % Must be row vector of cells
+    if iscolumn(networknames), networknames = networknames'; end
+end
+
 
 
 % Deal with space and empty voxels so they line up
@@ -343,8 +341,9 @@ elseif doaverage
         
         
         for i=1:size(z,2) %for each spatial basis do an anova across groups
-            [p table_group{i} st]=anova1(z(:,i),group,'off'); %get anova table
-            [c,~] = multcompare(st,'Display','off'); %perform multiple comparisons
+            
+            [p table_group{i} st]=anova1(z(:,i), group, 'off'); %get anova table
+            [c,~] = multcompare(st, 'Display', 'off'); %perform multiple comparisons
             multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end))]; %format table for output
             
         end

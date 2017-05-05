@@ -209,9 +209,9 @@ if iscell(layer1fmri_obj)
     nlayer2 = length(layer1fmri_obj);
     
     % re-define layer 2 to be averages, not cells with individuals
-    layer2fmri_obj = mean(layer1fmri_obj{1});
+    layer2fmri_obj = replace_empty(mean(layer1fmri_obj{1}));
     for i = 2:nlayer2
-        tmp = mean(layer1fmri_obj{i});
+        tmp = replace_empty(mean(layer1fmri_obj{i}));
         layer2fmri_obj.dat(:, i) = tmp.dat(:, 1);
     end
 else
@@ -319,9 +319,9 @@ if iscell(layer1fmri_obj)
     namefun = @(x) x.image_names;
     mynames = cellfun(namefun, layer1fmri_obj, 'UniformOutput', false);
 
-    new_obj = mean(layer1fmri_obj{1});
+    new_obj = replace_empty(mean(layer1fmri_obj{1}));
     for i = 1:nlayer1
-        tmp = mean(layer1fmri_obj{i});
+        tmp = replace_empty(mean(layer1fmri_obj{i}));
         new_obj.dat(:, i) = tmp.dat(:, 1);
     end
     new_obj.image_names = strvcat(mynames{:});

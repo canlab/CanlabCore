@@ -1,4 +1,4 @@
-function riverplot(layer1fmri_obj, varargin)
+function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 % Make a riverplot of relationships among images, stored in an fmri_data object,
 % or two sets of images, stored in two fmri_data objects.
 %
@@ -9,7 +9,7 @@ function riverplot(layer1fmri_obj, varargin)
 % :Usage:
 % ::
 %
-%     [list outputs here] = function_name(list inputs here, [optional inputs])
+%     [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, [optional inputs])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -168,6 +168,13 @@ function riverplot(layer1fmri_obj, varargin)
 % object with n images for n subjects in each cell, and obj.image_names a
 % string for each condition name. Then:
 % riverplot(DATA_OBJ_CON, 'layer2', npsplus, 'pos', 'significant_only', 'layer1colors', DAT.contrastcolors, 'layer2colors', seaborn_colors(length(netnames)), 'thin');
+%
+% To edit objects afterwards:
+% % Turn off lines
+% riverplot_toggle_lines(ribbons);
+% 
+% % Increase opacity
+% riverplot_set_ribbon_property(ribbons, 'FaceAlpha', .6);
 
 % :References:
 %   Based off of concept in River Plot R package.
@@ -201,6 +208,9 @@ sim_metric = 'cosine_sim';
 threshold = 'none';
 sig_only = false;
 
+dashes = '______________________________________';
+printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
+ 
 if iscell(layer1fmri_obj)
     % Deal with cell input, cell vector of objects with multiple
     % replications (images) per object, for statistical significance
@@ -294,10 +304,17 @@ if iscell(layer1fmri_obj)
     % contrast 2 in cell {2}, etc.
     for i = 1:length(layer1fmri_obj)
         
+        myname = layer1fmri_obj{i}.image_names(1, :);
+        if iscell(myname), myname = myname{1}; end
+       
+        printhdr(myname)
+        
         switch sim_metric
             
             case 'cosine_sim' % default
+                
                 stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity', 'average');
+            
             case {'r', 'corr', 'correlation'}
                 
                 stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');

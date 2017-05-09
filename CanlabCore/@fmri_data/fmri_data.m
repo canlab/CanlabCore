@@ -236,12 +236,13 @@ classdef fmri_data < image_vector
             % ---------------------------------
             if iscell(image_names), image_names = char(image_names{:}); end
             
+            
             if isa(image_names, 'image_vector')
                 % Map fields of input object into fmri_data structure
                 
                 warning off
                 obj2 = struct(image_names); %image_names;  % tor: struct not needed i think. nope, is needed.
-                warning on 
+                warning on
                 
                 N = fieldnames(obj);
                 for i = 1:length(N)
@@ -252,6 +253,11 @@ classdef fmri_data < image_vector
                 
                 obj.mask.volInfo = obj2.volInfo;
                 return
+                
+            else
+                
+                % Handle .gz by unzipping if needed
+                image_names = gunzip_image_names_if_gz(image_names);
                 
             end
             

@@ -147,11 +147,11 @@ for i = 1:npatt
         %wh = find(any(badvals)); % which images
 
         if doprintwarnings
-            disp('WARNING!!! SOME SUBJECTS HAVE ZERO VALUES WITHIN IMAGE MASK.');
-            disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
-            disp('They will be excluded from similarity analysis image-wise.');
-            fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
-            disp('Number of zero or NaN values within image mask, by input image:');
+            fprintf('Warning: Some images have zero values in some of the %3.0f voxels in weight mask. These will be excluded from similarity analysis image-wise.\n', sum(inmask));
+%             %disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
+%             disp('They will be excluded from similarity analysis image-wise.');
+            % fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
+            disp('Number of zero or NaN values within weight mask, by input image:');
             
             for i = 1:length(bad_in_mask)
                 fprintf('%3.0f ', bad_in_mask(i));

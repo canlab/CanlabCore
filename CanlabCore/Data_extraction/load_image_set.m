@@ -410,7 +410,7 @@ function [image_obj, networknames, imagenames] = load_npsplus
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -418,7 +418,8 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % Woo 2017 SIIPS - stim-indep pain
     'Rating_Weights_LOSO_2.nii'  ...                    % Chang 2015 PINES - neg emo
     'dpsp_rejection_vs_others_weights_final.nii' ...    % Woo 2014 romantic rejection
-    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain
+    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain VPS
+    'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
     'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
     'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
     'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 

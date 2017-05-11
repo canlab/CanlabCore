@@ -198,7 +198,7 @@ if docluster
     Z = linkage(OUT.stats.mean,'ward');
     parcelindx = cluster(Z,'maxclust', maxclust);
     
-    subplot(1, 3, 3)
+    subplot(1, 3, 3);
     plot_sorted_correlation_matrix(OUT.stats.mean, parcelindx, clustercolors);
     ylim = OUT.stats.mean(:);
     ylim = prctile(abs(ylim), 95);
@@ -238,7 +238,7 @@ if ~isempty(y)
     [cverr, stats, optout] = predict(pdat, 'algorithm_name', 'cv_lassopcr', 'nfolds', 5, 'error_type', 'mse');
     OUT.PREDICT.pairwise_association = stats;
     plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-    refline
+    refline;
     title('Prediction from pairwise associations');
     xlabel('Predicted'); ylabel('Observed');
     if dograph

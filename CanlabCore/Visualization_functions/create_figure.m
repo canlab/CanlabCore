@@ -107,7 +107,7 @@ end % function
 
 function  set_figure_position(i, j)
 figaspect = j / i;  % aspect ratio, width / height
-pos = get(gcf, 'Position')
+pos = get(gcf, 'Position');
 w = pos(3);
 h = pos(4);
 w = w .* figaspect;

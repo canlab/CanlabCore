@@ -47,6 +47,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %        followed by threshold type; 'bonf' is option now
 %
 %   **'connectmetric':**
+%        followed by node connection metric 'corr' or 'partial_corr'
 %
 %   **'sizescale':**
 %        Followed by values to use in sizing of nodes on graph
@@ -122,7 +123,7 @@ linewidth = 1;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
-        switch varargin{i}
+        switch lower(varargin{i})
             % reserved keywords
             case 'degree', ptsizetype = 'degree';
                 %case 'design'
@@ -144,8 +145,10 @@ end
 
 % Check vars, etc.
 % ---------------------------------------------------------------------
-g = genpath('/Users/tor/Documents/matlab_code_external/matlab_bgl');
-addpath(g);
+if isdir('/Users/tor/Documents/matlab_code_external/matlab_bgl')
+    g = genpath('/Users/tor/Documents/matlab_code_external/matlab_bgl');
+    addpath(g);
+end
 
 if ~exist('fruchterman_reingold_force_directed_layout.m', 'file')
     error('Must have Matlab BGL toolbox on path (external toolbox)');
@@ -249,7 +252,6 @@ stats.path_length_distance = D;
 stats.degree = deg;
 stats.mean_path_by_rset = S;
 
-fprintf('Node size reflects %s\n', ptsizetype);
 
 switch ptsizetype
     case 'bc'
@@ -260,7 +262,11 @@ switch ptsizetype
         ptsizemetric = ones(size(bc));
     otherwise error('Unknown ptsizetype');
 end
-
+if strcmp(sizescale,'custom')
+   fprintf('Node size reflects custom scaling\n');
+else
+    fprintf('Node size reflects %s\n', ptsizetype);
+end
 % -------------------------------------------------------------------------
 % Force-directed graph
 % -------------------------------------------------------------------------
@@ -274,7 +280,7 @@ else
     create_figure('graph');
 end
 
-switch linestyle
+switch lower(linestyle)
     
     case 'curved'
         
@@ -548,9 +554,9 @@ set(shan(1:end-2), 'FaceColor', [.5 .5 .5], 'FaceAlpha', .3);
 set(shan(end), 'FaceColor', [.5 .5 .5], 'FaceAlpha', .3);
 
 view(89, 1);
-lightRestoreSingle
+lightRestoreSingle;
 
-lighting gouraud
+lighting gouraud;
 
 % Spheres
 % ----------------------------------------------------------

@@ -41,6 +41,8 @@ function r = extract_data(r, data_obj)
 %   **data_obj:**
 %         an image_vector or fmri_data object to extract data from
 %         does not have to be in the same space, uses mm coordinates
+%         NOTE: resampling the image first will give slightly different
+%         results, due to interpolation
 %
 % :Outputs:
 %
@@ -50,9 +52,13 @@ function r = extract_data(r, data_obj)
 % ..
 %     Programmers' notes:
 %     8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region
+%     5/15/2017 Tor Wager : Added replace_empty to avoid voxel list
+%     mismatch when empty vox were removed
 % ..
 
 xyzlist = data_obj.volInfo.xyzlist;
+
+data_obj = replace_empty(data_obj); % tor added - May 2017
 
 k = size(data_obj.dat, 2);  % images to extract from
 

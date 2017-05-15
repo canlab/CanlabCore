@@ -265,7 +265,7 @@ classdef fmri_data < image_vector
             % define mask object
             % ---------------------------------
             
-            if nargin < 2 || isempty(maskinput)
+            if nargin < 2 || isempty(varargin) || isempty(maskinput) % if all keywords, like 'noverbose', then varargin will be empty
                 maskinput = which('brainmask.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end

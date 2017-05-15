@@ -91,7 +91,7 @@ function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, par
 % ..
 %    Notes:
 %    Created: 5/12/17 Phil Kragel - bits of code taken from apply_mask
-%
+%             5/13/17 Phil and Tor revise; minor edits by Tor Wager    
 %
 % ..
 
@@ -131,7 +131,13 @@ end
 
 % Turn integer vector into 1s and 0s - matrix of binary masks
 parcels = remove_empty(parcels);
-[parcels.dat, index_values] = condf2indic(parcels.dat);
+[parcels.dat, parcels_we_have] = condf2indic(parcels.dat);
+
+% if codes are 1...n, parcels_we_have is index values...but if there are
+% missing integers, need to re-map them into indices
+index_values = 1:length(u);
+[~, wh] = intersect(u, parcels_we_have);
+index_values = index_values(wh);
 
 % Insert NaNs for any missing parcels.  Happens rarely, but could happen.
 missing_parcels = true(size(u));
@@ -177,6 +183,9 @@ if dopatternexpression
         parcel_pattern_expression(:, i) = apply_mask(dat, temp_mask, varargin{:}, 'ignore_missing');
         
     end
+    
+    % Pass similarity metric in to canlab_pattern_similarity
+    % similarity_output = canlab_pattern_similarity(dat.dat, weights, 'ignore_missing', varargin{:});
     
     %tried doing this all at once, but apply_mask has issues where it
     %excludes voxels (it also loops over patterns as well when it calls

@@ -126,6 +126,10 @@
 % fmri_data did not return an error, but it returned distorted/incorrectly
 % loaded images.  Now, it returns an error. For loading images in different
 % spaces together, use the 'sample2mask' option.
+% 
+% Stephan Geuter, 5/16/17: Processing of masks in line 270 had been
+% changed, masks were ignored. modified check in line 270 to include
+% masking again
 
 classdef fmri_data < image_vector
     
@@ -265,7 +269,10 @@ classdef fmri_data < image_vector
             % define mask object
             % ---------------------------------
             
-            if nargin < 2 || isempty(varargin) || isempty(maskinput) % if all keywords, like 'noverbose', then varargin will be empty
+            % if all keywords, like 'noverbose', then varargin will be empty
+            % SG changed check, maskinput can be defined and varargin empty. 
+            % maskinput is not part of varargin. 5/16/17                                                           
+            if (nargin < 2 || isempty(maskinput)) && isempty(varargin)  
                 maskinput = which('brainmask.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end

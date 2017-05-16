@@ -126,7 +126,7 @@ function command = shellCommand(pattern, isPCandIsRelative, sortField, sortField
             if(isPCandIsRelative)
                 command = sprintf('dir /B %s', escapeForShell(pattern));
             else
-                command = sprintf('dir /B /S %s', escapeForShell(pattern));
+                command = sprintf('dir /B /S %s', ['"' pattern '"']);
             end
         end
     else

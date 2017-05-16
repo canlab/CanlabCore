@@ -167,22 +167,30 @@ if dopatternexpression
     parcel_pattern_expression = NaN .* zeros(size(parcel_means));
     
     % for each parcel...
+   
+    
     for i = 1:size(parcels.dat, 2)
-        %expanded_mask(:,i) = pattern_image.dat(:,1).*parcels.dat(:,i); %clunky loop for now, likely a faster way to code this
         
         % skip if this parcel is empty
         if all(isnan(parcel_means(:, i)))
             continue
         end
             
+        % **** initialize dat matrix first, then fill in values for all
+        % parcels ******
         temp_mask = pattern_image;
-        temp_mask.dat = pattern_image.dat(:, 1) .* parcels.dat(:, i); % zero out-of-parcel voxels
+        temp_mask.dat(:, i) = pattern_image.dat(:, 1) .* parcels.dat(:, i); % zero out-of-parcel voxels
         
         % Note: 'pattern_expression' is passed in here, so is entered...ok.
         
+        % **** comment this out/remove ****
         parcel_pattern_expression(:, i) = apply_mask(dat, temp_mask, varargin{:}, 'ignore_missing');
         
     end
+    
+        % *****call canlab_pattern_similarity once, which loops through pattern
+    % masks and datasets and considers non-empty values in data images
+    % image-by-image
     
     % Pass similarity metric in to canlab_pattern_similarity
     % similarity_output = canlab_pattern_similarity(dat.dat, weights, 'ignore_missing', varargin{:});

@@ -12,6 +12,10 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % similarity_output = canlab_pattern_similarity(dat, pattern_weights)
 %
+% :Inputs:
+%   **dat**  voxels x images matrix of data to compare to patterns
+%
+%   **pattern_weights** voxels x images matrix of patterns to compare to data
 %
 % :Optional Inputs:
 %
@@ -22,9 +26,12 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %       Use correlation metric for pattern expression instead of dot product
 %
 %   **ignore_missing**
-%       Do not remove voxels with missing values (zeros/NaN). See notes
-%       below.
-% 
+%       Suppress printing of warnings when thre are missing values
+%       (zeros/NaN) in data images. This function always removes voxels
+%       from analysis with missing data values. This does not affect the
+%       dot product metric, but does affect cosine similarity and
+%       correlation.
+%
 %   **no_warnings**
 %       Suppress output on missing values.
 %
@@ -34,7 +41,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % dat = rand(100, 5);  % 100 voxels, 5 images
 % weights = rand(100, 2); % 100 voxels, 2 patterns
 % similarity_output = canlab_pattern_similarity(dat, weights, 'cosine_similarity');
-%     
+%
 % :See also:
 %
 % apply_mask
@@ -46,7 +53,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %    Notes:
 % Pattern pattern_weights can have zeros, which may be valid values in voxels,
 % i.e., with binary masks
-% Images with values of zero or NaN are considered out-of-mask, as they
+% Data images with values of zero or NaN are considered out-of-mask, as they
 % are not valid values. These should be excluded from both image and
 % mask when calculating similarity.
 % Thus, there is an asymmetry between pattern mask and image data
@@ -57,8 +64,23 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % cluster of the input solution does not overlap with any of the target
 % patterns/clusters, cosine similarity is attempting division by 0. Instead
 % of returning NaN, we set those cosine values to 0.
-
-
+%
+% Dealing with missing data and partial coverage
+% ---------------------------------------------------
+% Dot product is affected by voxel size, coverage in image and mask, scale
+% in general.
+% Cosine similarity is affected by coverage in image
+% If we remove voxels from analysis that are not in image (NaN or zero) first,
+% then cosine similarity is unaffected by coverage, in the sense that the
+% upper bound is 1.
+% Correlation is affected by coverage in image and mean level in image. If
+% there are zeros in image, mean-centering will be affected.
+% If we remove NaN/zero values from analysis on an image-by-image basis, we
+% are computing partial similarity for the areas of the image that exist.
+% This is good in terms of preserving scale and analyzing the data we have,
+% but changes the measurement properties of the pattern measures, because
+% we're looking only at a subset of the model.
+%
 % We also need to calculate bad values on an image-by-image basis, not
 % relying on remove_empty to exclude voxels with ineligible values
 % across the entire set of images.
@@ -117,58 +139,63 @@ badvals = dat == 0 | isnan(dat);  % Matrix
 % Main similarity calculation
 % ---------------------------------
 
-for i = 1:npatt
+if ~docorr && ~docosine
+    % dot product. No need to remove missing voxels because dotproduct is
+    % the same either way.
     
-    if docorr
+    similarity_output = dotproduct(dat, pattern_weights);
+    
+else
+    
+    for i = 1:npatt
         
-        similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
-        
-    elseif docosine
-        
-        similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
-        
-    else
-        
-        similarity_output(:, i) = dotproduct(dat, pattern_weights(:, i), badvals);
+        if docorr
+            
+            similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
+            
+        elseif docosine
+            
+            similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
+            
+            %     else
+            %
+            %         similarity_output(:, i) = dotproduct(dat, pattern_weights(:, i), badvals);
+            
+        else
+            error('Invalid similarity metric.');
+        end
         
     end
     
-    % ---------------------------------
-    % Warnings
-    % ---------------------------------
+end % pattern sim calculation
+
+% ---------------------------------
+% Warnings
+% ---------------------------------
+
+if any(badvals(:)) && ~doignoremissing
     
-    if any(badvals(:)) && ~doignoremissing
+    
+    for i = 1:npatt
         
         inmask = ~(pattern_weights(:, i) == 0 | isnan(pattern_weights(:, i)));
         
         bad_in_mask = bsxfun(@times, badvals, inmask);
         bad_in_mask = sum(bad_in_mask);  % how many bad values are in mask
         
-        %wh = find(any(badvals)); % which images
-
-        if doprintwarnings
-            fprintf('Warning: Some images have zero values in some of the %3.0f voxels in weight mask. These will be excluded from similarity analysis image-wise.\n', sum(inmask));
-%             %disp('This could artifactually influence their scores if these 0 values are in the weight mask. ');
-%             disp('They will be excluded from similarity analysis image-wise.');
-            % fprintf('Total voxels in weight mask: %3.0f\n', sum(inmask));
-            disp('Number of zero or NaN values within weight mask, by input image:');
-            
-            for i = 1:length(bad_in_mask)
-                fprintf('%3.0f ', bad_in_mask(i));
-            end
-            fprintf('\n');
-            
-            % Tor edited 4/27/17 to make output more compact
-%             for i = 1:length(wh)
-%                 fprintf('Test image %3.0f: %3.0f zero values\n', wh(i), sum(badvals(:, wh(i))));
-%             end
-        end
+        fprintf('Warning: Some images have zero values in some of the %3.0f voxels in weight mask. These will be excluded from similarity analysis image-wise.\n', sum(inmask));
+        disp('Number of zero or NaN values within weight mask, by input image:');
         
-    end
+        for i = 1:length(bad_in_mask)
+            fprintf('%3.0f ', bad_in_mask(i));
+        end
+        fprintf('\n');
+        
+        % Tor edited 4/27/17 to make output more compact
+        
+    end  % pattern index
     
-    
-end  % pattern index
-
+end % bad val warnings
 
 end % main function
 
@@ -185,21 +212,17 @@ end % main function
 % FUNCTIONS for dot product, cosine_similarity, correlation with missing
 % values (voxels) that may vary on a data image-by-image basis.
 
-function pexp = dotproduct(X, weights, badvals)
+function pexp = dotproduct(X, weights)
 
 % X = voxels x images data matrix, e.g., dat.dat
 % weights is voxels x 1 weight data
 % badvals is voxels x images logical matrix of voxels to exclude image-wise
 
-for i = 1:size(X, 2)    % Loop because we may have different voxel exclusions in each image
-    
-    inmask = ~badvals(:, i);
-    
-    pexp(i, 1) = X(inmask, i)' * weights(inmask, 1);
-    
-end
+% badvals do not matter
+pexp = (weights' * X)';
 
 end % function
+
 
 function [ab, a, b] = image_norms(dat, pattern_weights, badvals)
 % [a, b] = image_norms(dat, pattern_weights, badvals)
@@ -228,7 +251,7 @@ end
 
 function cossim = cosine_similarity(dat, pattern_weights, badvals)
 
-pexp = dotproduct(dat, pattern_weights, badvals);
+pexp = dotproduct(dat, pattern_weights);
 
 ab = image_norms(dat, pattern_weights, badvals);
 

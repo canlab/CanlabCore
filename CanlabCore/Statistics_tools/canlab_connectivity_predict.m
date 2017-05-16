@@ -52,17 +52,20 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %               values and graph metrics are used to predict outcome data.
 %
 %   **'algo':**
-%        followed by the type of classification algoritm you want to use IF
+%        FOR PREDICTIONS. followed by the type of classification algoritm you want to use IF
 %        you entered outcome data. Options 'cv_lassopcr' or 'cv_svm'or 'cv_svr' or 
 %        'cv_multregress' or 'cv_univregress' or 'cv_pcr' or 'cv_multilevel_glm'
 %           Default is LASSO PCR.
 %           Recommended: LASSO PCR or SVR for continuous data. SVM for binary
 %           (Y must be in 1 / -1 format for binary predictions)
 %
-%
 %   **'folds':**
-%       followed by the number of cross-validation folds you want to use in
+%       FOR PREDICTIONS. followed by the number of cross-validation folds you want to use in
 %       your prediction IF you entered outcome data. Default 5.
+%
+%   **'error_type':**
+%       FOR PREDICTIONS. followed by 'mcr' or 'mse' - misclassification
+%       rate or mean sq. error. Default 'mcr'
 %
 %   **'shift_by':**
 %        Followed by integer value for max number of time points to shift
@@ -121,6 +124,7 @@ doplot = 1;
 y = [];             % this is for the outcome data, if any
 algo = 'cv_lassopcr';
 folds = 5;
+error_type='mcr';
 maxclust = 4;
 clustercolors = [];
 
@@ -146,6 +150,7 @@ for i = 1:length(varargin)
             case 'outcome', y = varargin{i+1}; varargin{i+1} = [];
             case 'algo', algo=varargin{i+1};
             case 'folds', folds=varargin{i+1};
+            case 'error_type', error_type=varargin{i+1};
             case 'maxclust', maxclust = varargin{i+1}; varargin{i+1} = [];
             case 'clustercolors', clustercolors = varargin{i+1}; varargin{i+1} = [];
 
@@ -256,36 +261,40 @@ if ~isempty(y)
     pdat = fmri_data;
     pdat.dat = OUT.connectdata';
     pdat.Y = y;
-    [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', 'mse');
+    [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', error_type);
+    fprintf('Pairwise Association Classification Accuracy: %f \n',1-cverr);
     OUT.PREDICT.pairwise_association = stats;
     plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-    refline
+    refline;
     title('Prediction from pairwise associations');
     xlabel('Predicted'); ylabel('Observed');
     if dograph
         pdat.dat = OUT.betweenness_centrality';
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', 'mse');
+        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', error_type);
+        fprintf('Betweenness Centrality Classification Accuracy: %f \n',1-cverr);
         OUT.PREDICT.betweenness_centrality = stats;
         subplot(2, 2, 2);
         plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
+        refline;
         title('Prediction from betweenness-centrality');
         xlabel('Predicted'); ylabel('Observed');
         pdat.dat = OUT.shortestpath';
         pdat.dat(isinf(pdat.dat)) = max(pdat.dat(~isinf(pdat.dat(:)))) + 1;
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', 'mse');
+        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', error_type);
+        fprintf('Shortest Path Classification Accuracy: %f \n',1-cverr);
         OUT.PREDICT.shortestpath = stats;
         subplot(2, 2, 3);
         plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
+        refline;
         title('Prediction from shortest path');
         xlabel('Predicted'); ylabel('Observed');
         pdat.dat = OUT.weighted_degree';
-        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', 'mse');
+        [cverr, stats, optout] = predict(pdat, 'algorithm_name', algo, 'nfolds', folds, 'error_type', error_type);
+        fprintf('Weighted Degree Classification Accuracy: %f \n',1-cverr);
         OUT.PREDICT.weighted_degree = stats;
         subplot(2, 2, 4);
         plot(stats.yfit, stats.Y, 'ko', 'MarkerFaceColor', [.7 .3 0]);
-        refline
+        refline;
         title('Prediction from weighted degree');
         xlabel('Predicted'); ylabel('Observed');
     end

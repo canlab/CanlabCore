@@ -1,4 +1,4 @@
-function [group_metrics individual_metrics gwcsf gwcsfmean] = qc_metrics_second_level(obj, varargin)
+function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] = qc_metrics_second_level(obj, varargin)
 %
 % Quality metrics for a 2nd-level analysis (set of images from different subjects)
 % The goal is to obtain measures that are simple and scale invariant, and
@@ -56,8 +56,18 @@ function [group_metrics individual_metrics gwcsf gwcsfmean] = qc_metrics_second_
 %        These can be used to identify individuals with problematic images
 %        or as covariates in analyses.
 %
+%   **values:**
+%        Grand Mean Gray, white, and CSF values - one number per metric per
+%        image
+%
 %   **gwcsf:**
 %        Gray, white, and CSF image objects with values for all images
+%
+%   **gwcsfmean:**
+%        Gray, white, and CSF image objects mean values across images
+%
+%   **gwcsfl2norm:**
+%        L2 norm of Gray, white, and CSF components for each image
 %
 % :References:
 %   None.
@@ -166,7 +176,7 @@ for i = 1:length(varargin)
 end
 
 
-[values, components, gwcsf] = extract_gray_white_csf(obj);
+[values, components, gwcsf, gwcsf_l2norm] = extract_gray_white_csf(obj);
 
 % Get mean signal in each tissue compartment for visualization, if desired
 % -------------------------------------------------------------------------
@@ -228,6 +238,14 @@ group_metrics.global_logp_wm = -log(p) ./ (-log(.05));
 group_metrics.gm_explained_by_csf_pvalue = p;
 group_metrics.r2_explained_by_csf = r .^ 2;
 
+% Gray-matter scale (l2 norm) explained by CSF scale
+% -------------------------------------------------------------------------
+
+[r, p] = corr(gwcsf_l2norm(:, 1), gwcsf_l2norm(:, 3));
+
+group_metrics.gm_l2norm_explained_by_csf_pvalue = p;
+group_metrics.r2_l2norm_explained_by_csf = r .^ 2;
+
 % Signal in ventricles
 % -------------------------------------------------------------------------
 
@@ -264,6 +282,10 @@ end
 
 if group_metrics.gm_explained_by_csf_pvalue < .05
     group_metrics.warnings{end + 1} = sprintf('Warning: Gray-matter individual diffs significantly correlated with mean CSF value.\n   - Var explained (r^2) = %3.2f%%', group_metrics.r2_explained_by_csf .* 100);
+end
+
+if group_metrics.gm_l2norm_explained_by_csf_pvalue < .05
+    group_metrics.warnings{end + 1} = sprintf('Warning: Gray-matter scale (L2 norm) significantly correlated with mean CSF L2 norm.\n   - Var explained (r^2) = %3.2f%%', group_metrics.r2_l2norm_explained_by_csf .* 100);
 end
 
 if group_metrics.csf_to_gm_signal_ratio > 1

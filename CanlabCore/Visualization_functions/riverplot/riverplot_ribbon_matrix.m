@@ -51,10 +51,19 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 %
 %
 % :Optional Inputs:
-%   **coverage:**
-%        'coverage' followed by 2-element vector for [rect1 rect2], where
-%        each value is between 0 and 1 and specifies the percentage of the
-%        plot the ribbon will cover.
+%   **coveragetype:**
+%        'coveragetype' followed by 'relative' 'absolute' or 'normalized'
+%
+%       Relative: cover 100% of each rectangle, in proportion to relative associations.
+%       Thickness of ribbon is proportional to input similarity only within
+%       each element, not across them
+
+%       absolute coverage: Ribbon width is proportional to similarity on 0-1
+%       scale, with no normalization
+
+%       normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1
+%       so that each layer is fully covered, but on layer2 is proportional to
+%       similarity across all elements, normalized by max across all
 %
 %   **color, colors:**
 %        followed by cell array of {[r g b] [r g b]...} color spec for
@@ -100,7 +109,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 ax = gca;
 [n2, n1] = size(sim_matrix);
 mycolor = scn_standard_colors(n1);
-layer1fullcoverage = false;
+coveragetype = 'normalized';
 steepness = .05;
 
 % arguments passed on to subfunctions:
@@ -115,13 +124,18 @@ for i = 1:length(varargin)
             %case 'position', myposition = varargin{i+1}; varargin{i+1} = [];
             case {'color', 'colors'}, mycolor = varargin{i+1}; varargin{i+1} = [];
                 
+            case 'coveragetype', coveragetype = varargin{i+1}; varargin{i+1} = [];
+                    
             % arguments passed on to subfunctions: Do nothing, but these
             % are used.
             case 'from_bottom'
 
-            case 'layer1fullcoverage', layer1fullcoverage = true;
+            case 'coverage', coverage = varargin{i+1}; varargin{i+1} = [];
                 
             case 'steepness', steepness = varargin{i+1}; varargin{i+1} = [];
+                
+            case ' ' 
+                % do nothing, avoid warning from calling function
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -135,19 +149,78 @@ ribbons = cell(n2, n1);
 if length(layer2) ~= size(sim_matrix, 1), error('layer2 size does not match sim matrix column size'); end
 if length(layer1) ~= size(sim_matrix, 2), error('layer1 size does not match sim matrix row size'); end
 
+% For determining offset and position: 
+my_total_layer1 = sum(abs(sim_matrix));
+my_total_layer2 = sum(abs(sim_matrix'))';
+
+my_total_layer1(my_total_layer1 == 0) = 1;  % prevent dividing by zero
+my_total_layer2(my_total_layer2 == 0) = 1;  % prevent dividing by zero
+
+% for both offsets and coverages. offsets are starting points, coverages
+% are the thickness of each ribbon
+fullcoverages_layer1 = bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer1);
+fullcoverages_layer2 = bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer2);
+
+        
+switch coveragetype
+    
+    case 'relative'
+        % Relative: cover 100% of each rectangle, in proportion to relative associations.
+        % Thickness of ribbon is proportional to input similarity only within
+        % each element, not across them
+        
+        coverages_layer1 = fullcoverages_layer1;
+        coverages_layer2 = fullcoverages_layer2;
+        
+    case 'absolute'
+        % absolute coverage: Ribbon width is proportional to similarity on 0-1
+        % scale, with no normalization
+        coverages_layer1 = sim_matrix;
+        coverages_layer2 = sim_matrix;
+        
+    case 'normalized'
+ % normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1 
+        % so that each layer is fully covered, but on layer2 is proportional to
+        % similarity across all elements, normalized by max across all
+        
+        mymax = max(sim_matrix(:));
+        if mymax <=0, mymax = 1; end % in case empty
+        
+        %mymax = max(my_total_layer2); 
+        
+        coverages_layer1 = sim_matrix ./ mymax;
+        coverages_layer1 = fullcoverages_layer1;
+        
+        coverages_layer2 = sim_matrix ./ mymax;
+        
+    otherwise
+        error('Illegal string entered for coveragetype');
+        
+end
+
+offsets_layer1 = [zeros(1, n1); cumsum(fullcoverages_layer1)];
+offsets_layer2 = [zeros(1, n2); cumsum(fullcoverages_layer2')]';
+
+% where there is only one target, center offsets
+wh = sum(coverages_layer2 ~= 0, 2) == 1;
+mycov = sum(coverages_layer2, 2) ./ 2; % half the coverage
+mycov = 0.5 - mycov;  % midpoint 0.5 - half the coverage interval
+offsets_layer2(wh, :) = repmat(mycov(wh), 1, size(offsets_layer2, 2));
+
+
+
 for i = 1:n1
   
-    myoffset = i .* (1 ./ (1.5*n1));  % adjust based on number of sources to reduce overlap in ribbon endings
-
+    %myoffset = i .* (1 ./ (1.5*n1));  % adjust based on number of sources to reduce overlap in ribbon endings
+    
     for j = 1:n2
         
-        if layer1fullcoverage
-            
-            mycoverage = [1 sim_matrix(j, i)];
-        else
-            
-            mycoverage = [sim_matrix(j, i) sim_matrix(j, i)];   
-        end
+        myoffset = [offsets_layer1(j, i) offsets_layer2(j, i)]; 
+
+        mycoverage = [coverages_layer1(j, i) coverages_layer2(j, i)];
+        
+        % this would be the relative coverage way
+        %mycoverage = [sim_matrix(j, i) ./ my_total_layer1(i) sim_matrix(j, i) ./ my_total_layer2(j)]; 
         
 %         myoffset = j .* (1 ./ (2*n2));  % adjust based on number of targets to reduce overlap in ribbon endings
         
@@ -155,7 +228,9 @@ for i = 1:n1
             
             ribbons{j, i} = riverplot_ribbon(layer1{i}, layer2{j}, 'coverage', mycoverage, ...
                 'y_offset', myoffset, 'color', mycolor{i}, 'from_bottom', 'steepness', steepness);
+
         
+            % riverplot_remove_ribbons(ribbons)  % for debugging.
         end
         
     end

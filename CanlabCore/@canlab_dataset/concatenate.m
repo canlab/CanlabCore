@@ -6,25 +6,6 @@ function [names, ids, dat, descrips] = concatenate(D, varargin)
 %
 %    [names ids dat] = concatenate(D, [optional inputs])
 %
-% ..
-%     Author and copyright information:
-%
-%     Copyright (C) 2013 Tor Wager
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
-%
 % :Inputs:
 %
 %   **D:**
@@ -61,6 +42,26 @@ function [names, ids, dat, descrips] = concatenate(D, varargin)
 %    wh_subjs = true(size(D.Subj_Level.id));
 %    wh_subjs([13 18 19]) = false;
 %    [names, ids, dat] = concatenate(D, wh_subjs);
+%
+
+% ..
+%     Author and copyright information:
+%
+%     Copyright (C) 2013 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 %
 
 wh_ids = true(length(D.Subj_Level.id), 1); % select subjects

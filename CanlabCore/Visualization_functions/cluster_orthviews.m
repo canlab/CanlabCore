@@ -14,7 +14,9 @@ function cluster_orthviews(varargin)
 %   clusters structures
 %
 %   colors cell array, e.g., {[0 0 1] [1 0 0] [0 1 0]}
-%   if no colors cell array, uses Z- or t-scores to color map
+%   - if no colors cell array, uses Z- or t-scores to color map
+%   - if colors cell is same length as clusters structure, uses these
+%   colors as fixed colors for each region
 %
 % :Optional Inputs:
 %
@@ -54,10 +56,18 @@ function cluster_orthviews(varargin)
 %   **'handle':**
 %        followed by integer for which orthviews window to use (default = 1)
 %
+% :Options for matching colors across left/right hemispheres (region objects only):
+% all_colors = match_colors_left_right(r);
+% orthviews(r, all_colors);
+
+
+% Programmers' notes
+%
 % ..
 %    By Tor Wager
-%    Last update: April 2007 by TW : add hot/cool colormap to bivalent option
+%    April 2007 by TW : add hot/cool colormap to bivalent option
 %               Add handles option
+%    April 2014 by TW : add custom colors option for unique colors
 % ..
 
 
@@ -83,10 +93,16 @@ function cluster_orthviews(varargin)
     cols = [];
 
     for i = 1:length(varargin)
-        if iscell(varargin{i}), cols = varargin{i};
+        if iscell(varargin{i})
+            
+            cols = varargin{i}; % colors
+            
         elseif isstruct(varargin{i}) || strcmp(class(varargin{i}), 'region') 
+            
             cl{end+1} = varargin{i};
+            
         elseif ischar(varargin{i})
+            
             switch(varargin{i})
                 case 'add'
                     donew = 0;
@@ -199,9 +215,18 @@ function cluster_orthviews(varargin)
 
     if donew, warning off, spm_check_registration(overlay), set(gcf, 'Resize', 'on'); warning on, end %spm_image('init', overlay), end
 
+    if length(cols) == length(cl{1})
+        douniquecolors = 1;
+    end
+    
     if douniquecolors
         % unique colors for each blob
-        colors = scn_standard_colors(length(cl));
+        
+        if length(cols) == length(cl{1}) % use input colors
+            colors = cols; 
+        else
+            colors = scn_standard_colors(length(cl{1})); % generate colors
+        end
 
         ind = 1;
         for i = 1:length(cl)

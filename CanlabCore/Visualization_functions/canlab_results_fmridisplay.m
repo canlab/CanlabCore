@@ -142,10 +142,11 @@ if nargin == 0
 end
 
 if ischar(input_activation)
-    cl = mask2clusters(input_activation);
+    cl = region(fmri_data(input_activation));  % mask2clusters(input_activation);
     
 elseif isstruct(input_activation) || isa(input_activation, 'region')
     cl = input_activation;
+    if ~isa(input_activation, 'region'), cl = cluster2region(cl); end
     
 elseif isa(input_activation, 'image_vector')
     cl = region(input_activation);

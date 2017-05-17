@@ -224,7 +224,7 @@ if docluster
     Z = linkage(OUT.stats.mean,'ward');
     parcelindx = cluster(Z,'maxclust', maxclust);
     
-    subplot(1, 3, 3)
+    subplot(1, 3, 3);
     plot_sorted_correlation_matrix(OUT.stats.mean, parcelindx, clustercolors);
     ylim = OUT.stats.mean(:);
     ylim = prctile(abs(ylim), 95);

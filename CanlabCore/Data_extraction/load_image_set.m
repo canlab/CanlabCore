@@ -34,6 +34,7 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   **image_names_or_keyword:**
 %        A string matrix with images to load, or a keyword:
+%
 %        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
 %        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
 %        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum
@@ -41,8 +42,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
-%        'npsplus': Wager lab multivariate patterns:
-%                   NPS, PINES, Romantic Rejection, VPS
+%        'npsplus': Wager lab published multivariate patterns:
+%                   NPS, PINES, Romantic Rejection, VPS, more
 %        'emotionreg' : N = 30 emotion regulation sample dataset from Wager
 %        et al. 2008. Each image is a contrast image for the contrast [reappraise negative vs. look negative]
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
@@ -52,6 +53,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        the Pauli 5-region striatal clusters
 %        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
 %                   NPSp, FM-pain, FM-multisensory
+%        {'neurosynth', 'neurosynth_featureset1'}
+%               525 "Reverse inference" z-score maps from Tal Yarkoni's
+%               Neurosynth, unthresholded, 2013 
 %
 % :Optional inputs:
 %   None yet.
@@ -117,6 +121,8 @@ if isa(image_names_or_keyword, 'fmri_data')
     image_obj = image_names_or_keyword;
     imagenames = image_obj.image_names;
     networknames = format_strings_for_legend(imagenames);
+    if iscolumn(networknames), networknames = networknames'; end
+
     return
     
 elseif isa(image_names_or_keyword, 'image_vector')
@@ -170,6 +176,9 @@ else
         case {'fibromyalgia','fibro','fm'}    
             [image_obj, networknames, imagenames] = load_fibromyalgia;
        
+        case {'neurosynth', 'neurosynth_featureset1'}
+            [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
+            
         otherwise
             error('Unknown mapset keyword.');
             
@@ -249,6 +258,8 @@ image_obj.dat = newmaskdat;
 
 end % function
 
+
+
 function [image_obj, networknames, imagenames] = load_custom(imagenames)
 
 % Load images, whatever they are
@@ -260,6 +271,8 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
 
 networknames = format_strings_for_legend(image_obj.image_names);
+
+if iscolumn(networknames), networknames = networknames'; end
 
 end  % function
 
@@ -397,19 +410,22 @@ function [image_obj, networknames, imagenames] = load_npsplus
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
 
-imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % NPS   - somatic pain
+imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
     'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
-    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % SIIPS - stim-indep pain
-    'Rating_Weights_LOSO_2.nii'  ...                    % PINES - neg emo
-    'dpsp_rejection_vs_others_weights_final.nii' ...    % romantic rejection
-    'bmrk4_VPS_unthresholded.nii' ...                   % Vicarious pain
-    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % autonomic - GSR
-    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % autonomic - heart rate (HR)
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % Woo 2017 SIIPS - stim-indep pain
+    'Rating_Weights_LOSO_2.nii'  ...                    % Chang 2015 PINES - neg emo
+    'dpsp_rejection_vs_others_weights_final.nii' ...    % Woo 2014 romantic rejection
+    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain VPS
+    'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
+    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
+    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
     'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
-    'FM_pain_wholebrain.nii'};                          % 2017 Lopez-Sola fibromyalgia 
+    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia 
+    'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
+    'Ashar_2017_empathic_distress_marker.nii'};         
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -580,5 +596,43 @@ networknames = {'FM-pain' 'FM-multisensory' 'NPSp'};
 imagenames = check_image_names_get_full_path(imagenames);
 
 image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
+  
+% Load Yarkoni_2013_Neurosynth_featureset1
+% ------------------------------------------------------------------------
+
+datfilename = 'Yarkoni_2013_Neurosynth_featureset1.mat';
+fullfilename = which('Yarkoni_2013_Neurosynth_featureset1.mat');
+
+if isempty(fullfilename)
+    disp('Cannot find required data image file.')
+    fprintf('Find and add the file %s to your Matlab path.', datfilename);
+    error('Exiting');
+end
+
+% Generic load fmri_data object with error checking
+image_obj = [];
+tmpstruct = load(fullfilename);
+
+N = fieldnames(tmpstruct);
+
+for i = 1:length(N)
+   if isa(tmpstruct.(N{i}), 'fmri_data')
+       image_obj = tmpstruct.(N{i});
+   end
+end
+if isempty(image_obj)
+        fprintf('File %s does not contain any fmri_data objects.', datfilename);
+    error('Exiting');
+end
+
+imagenames = cellstr(image_obj.image_names);
+
+networknames = imagenames';
+networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'UniformOutput', false);
 
 end % function

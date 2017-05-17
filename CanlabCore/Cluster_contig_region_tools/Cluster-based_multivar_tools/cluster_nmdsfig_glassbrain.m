@@ -72,7 +72,7 @@ function [mov, phan, phan2] = cluster_nmdsfig_glassbrain(cl,classes,colors,sigma
                     
                 case 'movie', makemovie = 1;
                 case 'straight', bendperc = 0;
-                    
+                case 'curved', bendperc = .2;    
                 otherwise, warning(['Unknown input string option:' varargin{i}]);
             end
         end

@@ -126,6 +126,10 @@
 % fmri_data did not return an error, but it returned distorted/incorrectly
 % loaded images.  Now, it returns an error. For loading images in different
 % spaces together, use the 'sample2mask' option.
+% 
+% Stephan Geuter, 5/16/17: Processing of masks in line 270 had been
+% changed, masks were ignored. modified check in line 270 to include
+% masking again
 
 classdef fmri_data < image_vector
     
@@ -236,12 +240,13 @@ classdef fmri_data < image_vector
             % ---------------------------------
             if iscell(image_names), image_names = char(image_names{:}); end
             
+            
             if isa(image_names, 'image_vector')
                 % Map fields of input object into fmri_data structure
                 
                 warning off
                 obj2 = struct(image_names); %image_names;  % tor: struct not needed i think. nope, is needed.
-                warning on 
+                warning on
                 
                 N = fieldnames(obj);
                 for i = 1:length(N)
@@ -253,16 +258,45 @@ classdef fmri_data < image_vector
                 obj.mask.volInfo = obj2.volInfo;
                 return
                 
+            else
+                
+                % Handle .gz by unzipping if needed
+                image_names = gunzip_image_names_if_gz(image_names);
+                
             end
             
             % ---------------------------------
             % define mask object
             % ---------------------------------
             
-            if nargin < 2 || isempty(maskinput)
+            % if all keywords, like 'noverbose', then varargin will be empty
+            % SG changed check, maskinput can be defined and varargin empty. 
+            % maskinput is not part of varargin. 5/16/17                                                           
+  
+            % 5/16/17 Tor: if all varargin cells are empty, varargin may not
+            % be... also, deal with special case where 2nd input is not
+            % mask, but keyword.
+            
+            % Special case: 2nd argument is keyword, not mask.  This is
+            % improper usage, but allow it for legacy reasons and
+            % usability.
+            if ischar(maskinput)
+                
+                switch maskinput
+                    
+                    case 'verbose', maskinput = []; % nothing else needed
+                    case 'noverbose', verbose = 0; verbosestr = 'noverbose'; maskinput = [];
+                    case 'sample2mask', sample2mask = 1; maskinput = [];
+                end
+            end
+            
+            % Empty mask: use default
+            if (nargin < 2 || isempty(maskinput)) % && isempty(varargin)  
+                
                 maskinput = which('brainmask.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end
+                
             end
             
             switch class(maskinput)

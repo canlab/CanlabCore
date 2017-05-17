@@ -4,6 +4,10 @@ function riverplot_set_ribbon_property(ribbons, propertyname, propertyval)
 %
 % e.g., riverplot_set_ribbon_property(ribbons, 'LineStyle', 'none')
 
+if ~iscell(ribbons) || isempty(ribbons) || all(all(cellfun(@isempty, ribbons)))
+    return % nothing to do
+end
+
 allribbons = cat(1, ribbons{:});
 
 % all ribbon patches

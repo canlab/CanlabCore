@@ -34,9 +34,10 @@ else
     fprintf(1,'u1 = %3.2f, u2 = %3.2f, udiff = %3.2f, t(%3.1f) = %3.2f, p = %3.4f\n',nanmean(sc1),nanmean(sc2),nanmean(sc1) - nanmean(sc2),stats.df,stats.tstat, p);
 end
 
+means = [nanmean(sc1) nanmean(sc2)];
+stats.means = means;
 
 if length(varargin) > 0 && varargin{1}
-    means = [nanmean(sc1) nanmean(sc2)];
     
     hh = bar(means);
     set(hh,'FaceColor',[.7 .7 .7]);
@@ -47,7 +48,7 @@ if length(varargin) > 0 && varargin{1}
     tor_bar_steplot(means,se,{'k'});
     
     set(gca,'XTick',[1 2],'XTickLabel',{'High' 'Low'});
-    
+        
 end
 
 

@@ -37,6 +37,9 @@ function obj = resample_space(obj, sampleto, varargin)
 
 n_imgs = size(obj.dat, 2);
 
+if ischar(sampleto)
+    sampleto = fmri_data(sampleto);
+end
 
 Vto = sampleto.volInfo;
 SPACEto = define_sampling_space(Vto, 1);

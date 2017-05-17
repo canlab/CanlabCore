@@ -115,19 +115,24 @@ for a=1:length(varargin)
     end
 end
 
-if ~isempty(strfind(str_args,'writestats'))
-    doWrite=1;
-else
-    doWrite=0;
+        doWrite=0;
+        doPlot=1;
+
+for s=1:length(str_args)
+ 
+    if ~isempty(strfind(str_args{s},'writestats'))
+        doWrite=doWrite+1;
+    else
+%         doWrite=0;
+    end
+    
+    
+    if ~isempty(strfind(str_args{s},'noplot'))
+        doPlot=doPlot-1;
+    else
+%         doPlot=1;
+    end
 end
-
-
-if ~isempty(strfind(str_args,'noplot'))
-    doPlot=0;
-else
-    doPlot=1;
-end
-
 
 
 % optional inputs with default values

@@ -107,6 +107,9 @@ function [hout,dat,xdat, h] = barplot_columns2(dat,plottitle,varargin)
 % ..
 %    Set up input arguments
 % ..
+
+disp('WARNING: DEPRECATED -- BARPLOT_COLUMNS.M IS RECOMMENDED.')
+
 DO_fig = 1;
 DO_ind = 0;
 DO_plotout = 0;

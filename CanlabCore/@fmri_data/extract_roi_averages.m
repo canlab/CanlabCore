@@ -50,6 +50,14 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %   **nonorm**
 %       Turn off L1 norm in pattern expression.
 %
+%   **cosine_similarity**
+%       Use cosine similarity metric for pattern expression instead of dot product
+%       Passed in to canlab_pattern_similarity
+%
+%   **correlation**
+%       Use correlation metric for pattern expression instead of dot product
+%       Passed in to canlab_pattern_similarity
+%
 % :Examples:
 % ::
 %
@@ -85,6 +93,9 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
 doverbose = 1;
 
+% Now handled by canlab_pattern_similarity
+%similarity_metric = 'dotproduct';
+
 % ---------------------------------
 % define region object based on choices
 % also define optional inputs
@@ -105,6 +116,14 @@ for varg = 1:length(varargin)
                 
             case {'nonorm'}
                 pattern_norm = 0;
+                
+                case {'cosine_similarity', 'correlation'}
+                    % Do nothing
+                % Now handled by canlab_pattern_similarity
+
+            case {'notables'}
+                % Do nothing
+                % Inputs passed from other functions, not needed
                 
             case 'noverbose'
                 doverbose = 0;
@@ -344,7 +363,11 @@ for i = 1:nregions
                 cl(i).val_descrip = 'Mask weights, no normalization';
             end
             
-            regionmean = regiondat * w;
+            % Calculate similarity, pass in optional inputs for sim metrics
+            regionmean = canlab_pattern_similarity(regiondat', w, 'ignore_missing', varargin{:});
+            
+            %regionmean = regiondat * w;
+            
             cl(i).val = w;
             
             if nargout > 1
@@ -352,14 +375,13 @@ for i = 1:nregions
                 % separate pexp for mean across region (unit vector) and
                 % mean-centered pattern
                 z = ones(size(w));
-                w2 = [z w - mean(w)];
-                partialpexp = regiondat * w2;
-                
+                w2 = w - mean(w);
+        
                 clroimean(i).val = z;
-                clroimean(i).dat = partialpexp(:, 1);
+                clroimean(i).dat = regiondat * z;
                 
                 clpattern(i).val = w - mean(w);
-                clpattern(i).dat = partialpexp(:, 2);
+                clpattern(i).dat = canlab_pattern_similarity(regiondat', w2, 'ignore_missing', varargin{:});
                 
             end
             

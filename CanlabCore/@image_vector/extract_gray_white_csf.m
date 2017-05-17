@@ -1,4 +1,4 @@
-function [values, components, full_data_objects] = extract_gray_white_csf(obj)
+function [values, components, full_data_objects, l2norms] = extract_gray_white_csf(obj)
 % Extracts mean values (values) and top 5 component scores (components)
 % from each of gray, white, and CSF masks.
 %
@@ -35,16 +35,19 @@ function [values, components, full_data_objects] = extract_gray_white_csf(obj)
 %   **full_data_objects:**
 %        Masked data objects for {gray white CSF}
 %
+% %   **l2norms:**
+%        Length-adjusted L2 norms (divided by sqrt(nvox))
 % ..
 %    Tor Wager, July 21, 2015
 % ..
 
 % Programmers' notes:
 % Jan 2017:  Issue with vector lengths if obj has removed images, fixed (Tor)
-
+%
+% Feb 2017: change to mask. Gray matter is now sparse, old gray_matter_mask.img thresholded at .5.
 numcomps = 5;
 
-masks = {'gray_matter_mask.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
+masks = {'gray_matter_mask_sparse.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
 
 obj = remove_empty(obj);  % return only non-empty values
 nimgs = size(obj.dat, 2); % - sum(obj.removed_images);
@@ -102,10 +105,48 @@ for i = 1:length(masks)
         
     end
     
-    
+    if nargout > 3
+
+        l2norms(:, i) = getnorms(masked_obj);
+
+    end
     
 end % end masks
 
 
 end % function
+
+
+
+function n = getnorms(masked_obj)
+
+% Vector L2 norm / sqrt(length) of vector
+
+% divide by this value to normalize image
+
+normfun = @(x) sum(x .^ 2) .^ .5;
+
+%masked_obj = remove_empty(masked_obj);
+
+x = masked_obj.dat;
+
+%nv = size(x, 1); 
+
+for i = 1:size(x, 2)
+
+    % remove nans, 0s
+    xx = x(:, i);
+    xx(xx == 0) = [];
+    xx(isnan(xx)) = [];
+
+    % divide by sqrt(length) so number of elements will not change scaling
+
+    n(i) = normfun(xx) ./ sqrt(length(xx)); 
+
+
+end
+
+
+end % function
+
 

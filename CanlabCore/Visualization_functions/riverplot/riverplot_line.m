@@ -1,5 +1,10 @@
 function out = riverplot_line(x, y, color, thickness, steepness, varargin)
-
+% out = riverplot_line(x, y, color, thickness, steepness, varargin)
+%
+% Draw sigmoidal line from 2-coord point x to 2-coord point y
+% x = [xcoord ycoord] for left-hand point
+% y = [xcoord ycoord] for right-hand point
+%
 % x = rect1.topright
 % y = rect2.topleft
 

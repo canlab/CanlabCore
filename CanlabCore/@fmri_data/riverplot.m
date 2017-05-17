@@ -1,4 +1,4 @@
-function riverplot(layer1fmri_obj, varargin)
+function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 % Make a riverplot of relationships among images, stored in an fmri_data object,
 % or two sets of images, stored in two fmri_data objects.
 %
@@ -9,7 +9,7 @@ function riverplot(layer1fmri_obj, varargin)
 % :Usage:
 % ::
 %
-%     [list outputs here] = function_name(list inputs here, [optional inputs])
+%     [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, [optional inputs])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -37,8 +37,19 @@ function riverplot(layer1fmri_obj, varargin)
 % :Inputs:
 %
 %   **layer1fmri_obj:**
-%        An fmri_data object.  Default is to plot associations between
-%        images in this object.
+%        An fmri_data object.  Default is to plot associations among
+%        images in this object with themselves.
+%
+%        This input can also be a cell vector of fmri_data objects, with
+%        multiple images per cell. In this case, images in each cell are
+%        treated as replicates of the same condition (i.e., different
+%        subjects for the same contrast), and statistical associations are
+%        estimated between each cell in layer 1 and each image in layer 2.
+%        This allows for thresholding of the similarity matrix based on
+%        statistical significance.  If you want to threshold in this way,
+%        enter 'significant_only' as a keyword.
+%        Note: To use this feature, enter a single name string in 
+%       {obj.image_names} for each cell, or you will get errors.
 %
 % :Optional Inputs:
 %   **layer2:**
@@ -52,6 +63,20 @@ function riverplot(layer1fmri_obj, varargin)
 %   **dice:**
 %        Change similarity metric to dice coefficient.  Default is cosine
 %        similarity.
+%
+%   **coveragetype:**
+%        'coveragetype' followed by 'relative' 'absolute' or 'normalized'
+%
+%       Relative: cover 100% of each rectangle, in proportion to relative associations.
+%       Thickness of ribbon is proportional to input similarity only within
+%       each element, not across them
+%
+%       absolute coverage: Ribbon width is proportional to similarity on 0-1
+%       scale, with no normalization
+%
+%       normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1
+%       so that each layer is fully covered, but on layer2 is proportional to
+%       similarity across all elements, normalized by max across all
 %
 %   **pos:**
 %        Change similarity matrix thresholding to positive values only.
@@ -128,6 +153,7 @@ function riverplot(layer1fmri_obj, varargin)
 % riverplot(layer1fmri_obj, 'layer2', layer2fmri_obj, 'layer1colors', layer1colors, 'layer2colors', layer2colors);
 %
 % Example: Plot Buckner lab network maps with themselves:
+% ----------------------------------------------
 % [bucknermaps, networknames] = load_image_set('bucknerlab');
 % bucknermaps.image_names = char(networknames{:});
 % 
@@ -136,7 +162,20 @@ function riverplot(layer1fmri_obj, varargin)
 % 
 % riverplot(bucknermaps, 'pos', 'layer1colors', layer1colors, 'layer2colors', layer1colors);
 % 
+% With statistical thresholding of associations:
+% ----------------------------------------------
+% Define DATA_OBJ_CON as a cell vector of k contrasts, with an fmri_data
+% object with n images for n subjects in each cell, and obj.image_names a
+% string for each condition name. Then:
+% riverplot(DATA_OBJ_CON, 'layer2', npsplus, 'pos', 'significant_only', 'layer1colors', DAT.contrastcolors, 'layer2colors', seaborn_colors(length(netnames)), 'thin');
 %
+% To edit objects afterwards:
+% % Turn off lines
+% riverplot_toggle_lines(ribbons);
+% 
+% % Increase opacity
+% riverplot_set_ribbon_property(ribbons, 'FaceAlpha', .6);
+
 % :References:
 %   Based off of concept in River Plot R package.
 %
@@ -148,6 +187,7 @@ function riverplot(layer1fmri_obj, varargin)
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
 %    Created July 2016 by Tor Wager
+%    Added statistical thresholding, April 2017, Tor Wager
 % ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
@@ -166,9 +206,29 @@ function riverplot(layer1fmri_obj, varargin)
 layer2fmri_obj = layer1fmri_obj;  % Default: Plot object with itself
 sim_metric = 'cosine_sim';
 threshold = 'none';
+sig_only = false;
 
-nlayer1 = size(layer1fmri_obj.dat, 2);
-nlayer2 = size(layer2fmri_obj.dat, 2);
+dashes = '______________________________________';
+printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
+ 
+if iscell(layer1fmri_obj)
+    % Deal with cell input, cell vector of objects with multiple
+    % replications (images) per object, for statistical significance
+    % These are defaults, layer2 will be updated later
+    nlayer1 = length(layer1fmri_obj);
+    nlayer2 = length(layer1fmri_obj);
+    
+    % re-define layer 2 to be averages, not cells with individuals
+    layer2fmri_obj = replace_empty(mean(layer1fmri_obj{1}));
+    for i = 2:nlayer2
+        tmp = replace_empty(mean(layer1fmri_obj{i}));
+        layer2fmri_obj.dat(:, i) = tmp.dat(:, 1);
+    end
+else
+    % Not a cell input, just object(s) with maps
+    nlayer1 = size(layer1fmri_obj.dat, 2);
+    nlayer2 = size(layer2fmri_obj.dat, 2);
+end
 
 layer1colors = custom_colors([.2 .8 .2], [.8 .8 .2], nlayer1);
 layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
@@ -176,7 +236,7 @@ layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
 doreorder = 0;
 recolor = 0;
 
-layer1coveragestr = 'layer1fullcoverage';
+coveragetype = 'normalized';
 
 layer1order = [];
 
@@ -186,13 +246,19 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
-            case {'layer2', 'layer2fmri_obj'},
+            case {'layer2', 'layer2fmri_obj'}
                 layer2fmri_obj = varargin{i+1}; varargin{i+1} = [];
                 nlayer2 = size(layer2fmri_obj.dat, 2);
                 layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
                 
             case 'sim_metric', sim_metric = varargin{i+1}; varargin{i+1} = [];
             case 'threshold', threshold = varargin{i+1}; varargin{i+1} = [];
+             
+            case 'coveragetype', coveragetype = varargin{i+1}; varargin{i+1} = [];
+                    
+            case {'sig_only', 'significant_only'} 
+                sig_only = true;
+                if ~iscell(layer1fmri_obj), error('layer1fmri_obj must be cell vector of objects with multiple images per object for stats.'); end
                 
             case {'colors1', 'layer1colors'}, layer1colors = varargin{i+1}; varargin{i+1} = [];
             case {'colors2', 'layer2colors'}, layer2colors = varargin{i+1}; varargin{i+1} = [];
@@ -214,9 +280,9 @@ for i = 1:length(varargin)
                 
             case 'abs'
                 threshold = 'abs';
-                
-            case 'thin'
-                layer1coveragestr = ' ';
+                 
+%             case 'thin' % replaced by 'coveragetype'
+%                 layer1coveragestr = ' ';
 
             case 'layer1order', layer1order = varargin{i+1}; varargin{i+1} = [];
             case 'layer2order', layer2order = varargin{i+1}; varargin{i+1} = [];
@@ -227,33 +293,93 @@ for i = 1:length(varargin)
 end
 
 % -------------------------------------------------------------------------
-% Get similarity matrix
+% Get similarity matrix for cell input, with stats
 % -------------------------------------------------------------------------
 
-switch sim_metric
+if iscell(layer1fmri_obj)
+    % deal with cell input
+    % similarity and stats for each cell
+    % stats across images (treated as replicates) within cell
+    % i.e., enter n subjects for contrast 1 in cell {1}, n subjects for
+    % contrast 2 in cell {2}, etc.
+    for i = 1:length(layer1fmri_obj)
+        
+        myname = layer1fmri_obj{i}.image_names(1, :);
+        if iscell(myname), myname = myname{1}; end
+       
+        printhdr(myname)
+        
+        switch sim_metric
+            
+            case 'cosine_sim' % default
+                
+                stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity', 'average');
+            
+            case {'r', 'corr', 'correlation'}
+                
+                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
+                
+            case 'dice'
+                error('Cannot use dice metric with cell input and stats...for now. Enter cosine_sim or correlation');
+        end
+        
+        mysim = nanmean(stats.r')';
+        
+        if sig_only, mysim(~stats.sig) = 0; end
+        
+        sim_matrix(:, i) = mysim;
+        
+    end
     
-    case 'cosine_sim' % default
+    % Now collapse layer1fmri_obj to averages so we can proceed later
+    % First collect names, assume one name per object
+    namefun = @(x) x.image_names;
+    mynames = cellfun(namefun, layer1fmri_obj, 'UniformOutput', false);
+
+    new_obj = replace_empty(mean(layer1fmri_obj{1}));
+    for i = 1:nlayer1
+        tmp = replace_empty(mean(layer1fmri_obj{i}));
+        new_obj.dat(:, i) = tmp.dat(:, 1);
+    end
+    new_obj.image_names = strvcat(mynames{:});
+    layer1fmri_obj = new_obj;
+    
+
+    
+% -------------------------------------------------------------------------
+% Get similarity matrix for image input (non-cell input)
+% -------------------------------------------------------------------------
+
+else % Was not cell input
+    
+    switch sim_metric
         
-        stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity');
-        sim_matrix = stats.r;
-        
-    case {'r', 'corr', 'correlation'}
-        
-        stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
-        sim_matrix = stats.r;
-        
-    case 'dice'
-        
-        dice_coeff = dice_coeff_image(cat(layer1fmri_obj, layer2fmri_obj));
-        
-        sim_matrix = dice_coeff(1:nlayer1, nlayer1+1:end)';
-        
-    otherwise
-        error('Unknown sim_metric. Choose r, cosine_sim, or dice');
-end
+        case 'cosine_sim' % default
+            
+            stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity');
+            sim_matrix = stats.r;
+            
+        case {'r', 'corr', 'correlation'}
+            
+            stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
+            sim_matrix = stats.r;
+            
+        case 'dice'
+            
+            dice_coeff = dice_coeff_image(cat(layer1fmri_obj, layer2fmri_obj));
+            
+            sim_matrix = dice_coeff(1:nlayer1, nlayer1+1:end)';
+            
+        otherwise
+            error('Unknown sim_metric. Choose r, cosine_sim, or dice');
+    end
+    
+end  % cell or no cell
+
+
 
 % -------------------------------------------------------------------------
-% Threshold
+% Threshold positive or negative, or abs
 % -------------------------------------------------------------------------
 
 switch threshold
@@ -341,7 +467,7 @@ set(gca, 'YDir', 'reverse');
 layer1 = riverplot_draw_layer(0, n1, 'colors', layer1colors, 'y_loc', y_loc);
 layer2 = riverplot_draw_layer(layer2x, n2, 'colors', layer2colors);
 
-ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors, layer1coveragestr, 'steepness', 0);
+ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors, 'coveragetype', coveragetype, 'steepness', 0);
 
 % Turn off lines
 riverplot_toggle_lines(ribbons);

@@ -272,10 +272,31 @@ classdef fmri_data < image_vector
             % if all keywords, like 'noverbose', then varargin will be empty
             % SG changed check, maskinput can be defined and varargin empty. 
             % maskinput is not part of varargin. 5/16/17                                                           
-           if nargin < 2 || isempty(varargin) || isempty(maskinput) 
+  
+            % 5/16/17 Tor: if all varargin cells are empty, varargin may not
+            % be... also, deal with special case where 2nd input is not
+            % mask, but keyword.
+            
+            % Special case: 2nd argument is keyword, not mask.  This is
+            % improper usage, but allow it for legacy reasons and
+            % usability.
+            if ischar(maskinput)
+                
+                switch maskinput
+                    
+                    case 'verbose', maskinput = []; % nothing else needed
+                    case 'noverbose', verbose = 0; verbosestr = 'noverbose'; maskinput = [];
+                    case 'sample2mask', sample2mask = 1; maskinput = [];
+                end
+            end
+            
+            % Empty mask: use default
+            if (nargin < 2 || isempty(maskinput)) % && isempty(varargin)  
+                
                 maskinput = which('brainmask.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end
+                
             end
             
             switch class(maskinput)

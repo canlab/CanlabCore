@@ -166,8 +166,12 @@ if dopatternexpression
     %expand pattern_image.dat to provide output for each parcel
     parcel_pattern_expression = NaN .* zeros(size(parcel_means));
     
+           % **** initialize dat matrix first, then fill in values for all
+        % parcels ******
+    
     % for each parcel...
    
+    mask_by_parcels=nan(size(pattern_image.dat,1),size(parcels.dat,2));
     
     for i = 1:size(parcels.dat, 2)
         
@@ -176,23 +180,18 @@ if dopatternexpression
             continue
         end
             
-        % **** initialize dat matrix first, then fill in values for all
-        % parcels ******
-        temp_mask = pattern_image;
-        temp_mask.dat(:, i) = pattern_image.dat(:, 1) .* parcels.dat(:, i); % zero out-of-parcel voxels
-        
-        % Note: 'pattern_expression' is passed in here, so is entered...ok.
-        
-        % **** comment this out/remove ****
-        parcel_pattern_expression(:, i) = apply_mask(dat, temp_mask, varargin{:}, 'ignore_missing');
-        
+ 
+        mask_by_parcels(:, i) = pattern_image.dat(:, 1) .* parcels.dat(:, i); % zero out-of-parcel voxels
+           
     end
     
         % *****call canlab_pattern_similarity once, which loops through pattern
     % masks and datasets and considers non-empty values in data images
-    % image-by-image
     
     % Pass similarity metric in to canlab_pattern_similarity
+    dat=replace_empty(dat);
+    parcel_pattern_expression = canlab_pattern_similarity(dat.dat, mask_by_parcels, 'ignore_missing', varargin{:});
+
     % similarity_output = canlab_pattern_similarity(dat.dat, weights, 'ignore_missing', varargin{:});
     
     %tried doing this all at once, but apply_mask has issues where it

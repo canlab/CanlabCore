@@ -272,7 +272,7 @@ classdef fmri_data < image_vector
             % if all keywords, like 'noverbose', then varargin will be empty
             % SG changed check, maskinput can be defined and varargin empty. 
             % maskinput is not part of varargin. 5/16/17                                                           
-            if (nargin < 2 || isempty(maskinput)) && isempty(varargin)  
+           if nargin < 2 || isempty(varargin) || isempty(maskinput) 
                 maskinput = which('brainmask.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end

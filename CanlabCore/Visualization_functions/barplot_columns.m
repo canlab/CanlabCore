@@ -355,6 +355,8 @@ dashes = '---------------------------------------------';
 fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
 
 Name = names';
+if ~iscolumn(Name), Name = Name'; end
+
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);

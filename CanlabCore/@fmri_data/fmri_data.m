@@ -280,7 +280,7 @@ classdef fmri_data < image_vector
             % Special case: 2nd argument is keyword, not mask.  This is
             % improper usage, but allow it for legacy reasons and
             % usability.
-            if ischar(maskinput)
+            if exist('maskinput', 'var') && ~isempty(maskinput) && ischar(maskinput)
                 
                 switch maskinput
                     

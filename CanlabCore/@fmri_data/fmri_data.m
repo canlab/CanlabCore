@@ -231,6 +231,10 @@ classdef fmri_data < image_vector
                 verbose = 0; 
                 verbosestr = 'noverbose';
                 
+            elseif isempty(image_names)
+               % We must have image names to run
+               error('fmridata: image_names is empty. Invalid input image names.');
+               
             end
             
             

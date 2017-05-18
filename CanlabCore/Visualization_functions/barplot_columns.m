@@ -355,6 +355,8 @@ dashes = '---------------------------------------------';
 fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
 
 Name = names';
+if ~iscolumn(Name), Name = Name'; end
+
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
@@ -768,10 +770,9 @@ yval = my_ylim(2) - .05 * range(my_ylim);
 
 for i = 1:length(P)
  
-    if P(i) < .0015, mystr = '***';      
-    elseif P(i) < .015, mystr = '**';    
-    elseif P(i) < .055, mystr = '*';    
-    elseif P(i) < .105, mystr = '+';    
+    if P(i) < FDR(P,.05), mystr = '***';
+    elseif P(i) < .01, mystr = '**';
+    elseif P(i) < .05, mystr = '*';
     else mystr = ''; xadj = 0;
     end
     
@@ -797,9 +798,9 @@ textWidth = textExt(3);
 
 % If using a proportional font, shrink text width by a fudge factor to
 % account for kerning.
-ax = gca;
+% ax = gca; -kragel changed to be compatible with older versions of matlab
 
-if ~strcmpi(ax.FontName,'FixedWidth')
+if ~strcmpi(get(gca,'FontName'),'FixedWidth')
     textWidth = textWidth*0.8;
 end
 

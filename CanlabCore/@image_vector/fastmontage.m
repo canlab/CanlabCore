@@ -1,5 +1,14 @@
-function fastmontage(dat, varargin)
+function whsl = fastmontage(dat, varargin)
 % Creates 3 separate montage views - ax, cor, sagg in a special figure window
+% 
+% - By default, a figure with axial, coronal, and saggital montages are
+% created.  But it's also easy to create nicer-looking separate figures with
+% only one view.
+% - Also easy to select slices, in voxel coodinates
+% - This function is good for getting a quick view of the contents of an
+% image, e.g., for structural images.
+% - The montage.m method and fmridisplay are good for displaying blobs on
+% standard brains, and are much slower.
 %
 % :Usage:
 % ::
@@ -14,6 +23,13 @@ function fastmontage(dat, varargin)
 %     fastmontage(dat, 'saggital', 'spacing', 10);
 %     fastmontage(dat, 'saggital', 'spacing', 10, 'vertical');
 %     fastmontage(dat, 'saggital', 'slices_per_row', 12);
+%     fastmontage(t1, 'axial', 'slices_per_row', 20, 'spacing', 2, 'startslice', 50, 'endslice', 200)
+%
+% Make a montage of a subset of slices and make it fill the figure: 
+% create_figure('sagg')
+% fastmontage(t1, 'saggital', 'slices_per_row', 10, 'spacing', 3, 'startslice', 50, 'endslice', 190)
+% set(gca, 'Position', [.05 .05 .9 1]);
+% colormap gray
 %
 % ..
 %    Tor Wager, Aug 2012
@@ -26,6 +42,8 @@ dovertical = 0;
 stackorient = 2;  % 2 for horiz, 1 for vertical
 dotight = 1;      % tight: show only non-zero slices
 s = 12;           % slices per row
+startslice = 1;   % first slice to show
+endslice = [];    % last slice to show (empty = all)
 
 % Process inputs - single case
 % in current axes
@@ -40,6 +58,8 @@ for i = 1:length(varargin)
             case 'spacing', spacing = varargin{i + 1};
             case 'vertical', stackorient = 1;
             case 'slices_per_row', s = varargin{i + 1};
+            case 'startslice', startslice = varargin{i + 1};
+            case 'endslice', endslice = varargin{i + 1};
                 
             otherwise
                 disp('Warning: Unknown input.')
@@ -98,16 +118,23 @@ if dotight
 end
 
 % Spacing and which slices
-switch myview
-    case 'axial'
-        z = size(vdat, 3);
-    case 'saggital'
-        z = size(vdat, 1);
-    case 'coronal'
-        z = size(vdat, 2);
-    otherwise error('unknown slice view.')
+if ~isempty(endslice)
+    z = endslice;
+else
+    
+    switch myview
+        case 'axial'
+            z = size(vdat, 3);
+        case 'saggital'
+            z = size(vdat, 1);
+        case 'coronal'
+            z = size(vdat, 2);
+        otherwise error('unknown slice view.')
+    end
+    
 end
-whsl = 1:spacing:z;
+
+whsl = startslice:spacing:z;
 
 nrows = ceil(length(whsl) ./ s);
 

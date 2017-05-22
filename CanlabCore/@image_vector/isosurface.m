@@ -113,12 +113,10 @@ p = patch('Faces',Fvoldata.faces,'Vertices',Fvoldata.vertices,'FaceColor', mycol
 drawnow
 
 % Isocaps, if needed
-% ***DAN WEFLEN ADD THIS***
-%vsub = subvolume(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata, [nan nan nan nan -Inf 10]);
 
-pp = [];
-isocap = isocaps(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata, mythresh);
-pp(end + 1) = patch(isocap, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
+% pp = [];
+isocap = isocaps(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, V, mythresh);
+p(end + 1) = patch(isocap, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
 
 
 % ------------------------------------------------------

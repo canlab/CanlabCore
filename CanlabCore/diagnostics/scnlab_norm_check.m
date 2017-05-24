@@ -139,7 +139,7 @@ plot_results(NORM_CHECK, template, wanat_files, mean_func_files, subjects);
 
     function parse_inputs()
         switch(spm('Ver'))
-            case {'SPM5' 'SPM8'}
+            case {'SPM5' 'SPM8' 'SPM12'}
                 mask = which('avg152T1.nii');
                 if isempty(mask)
                     mask = spm_select(1, 'image', 'Cannot find brain mask: please select', [], pwd());

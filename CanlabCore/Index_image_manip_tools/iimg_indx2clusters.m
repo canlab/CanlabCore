@@ -62,7 +62,7 @@ function [cl, dat] = iimg_indx2clusters(dat, volInfo, u, k)
         end
     end
     
-    xyz = volInfo.xyzlist';
+    xyz = double(volInfo.xyzlist)';  % enforce_variable_types compatibility: enforce double.  5/24/17
     XYZmm = voxel2mm(xyz, volInfo.mat);
 
 
@@ -79,7 +79,7 @@ function [cl, dat] = iimg_indx2clusters(dat, volInfo, u, k)
     elseif isfield(volInfo, 'clusters')
         clusters = volInfo.cluster;
     else
-        clusters = spm_clusters(volInfo.xyzlist')';
+        clusters = spm_clusters(double(volInfo.xyzlist)')'; % enforce_variable_types compatibility: enforce double.  5/24/17
     end
 
     sig_regions = ~wh;

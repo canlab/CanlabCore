@@ -78,6 +78,9 @@
 %
 % 8/3/2015 : Tor Wager: Fixed bug when applying region to thresholded
 % statistic_image object.  Did not consider thresholding.
+%
+% 5/24/2017: Tor and Phil Kragel: first attempt to make compatible with
+% use of enforce_variable_types method.
 
 classdef region
     
@@ -349,11 +352,13 @@ classdef region
             
             for i = 1:nregions
                 imgvec = maskData == u(i);
-                
+
                 obj(i).title = sprintf('Region %3.0f', i);
                 obj(i).shorttitle = sprintf('Region%03d', i);
-                obj(i).XYZ = mask.volInfo.xyzlist(imgvec,:)';
-                obj(i).XYZmm = voxel2mm(obj(i).XYZ,mask.volInfo.mat);
+                obj(i).XYZ = double(mask.volInfo.xyzlist(imgvec,:))';
+                
+                myXYZ = double(obj(i).XYZ);                         % 5/24/17 tor&phil: recast as double. future: could recast XYZmm as int16
+                obj(i).XYZmm = voxel2mm(myXYZ, mask.volInfo.mat); 
                 
                 obj(i).val = maskValues(imgvec); %ones(1,size(obj(i).XYZ,2));
                 obj(i).Z = maskValues(imgvec)'; %ones(1,size(obj(i).XYZ,2));
@@ -363,7 +368,7 @@ classdef region
                 obj(i).dim = mask.volInfo.dim;
                 obj(i).numVox = size(obj(i).XYZ, 2);
                 
-                obj(i).center = center_of_mass(obj(i).XYZ, obj(i).Z);
+                obj(i).center = center_of_mass(myXYZ, obj(i).Z);
                 obj(i).mm_center = center_of_mass(obj(i).XYZmm, obj(i).Z);
                 
                 [dd, ff, ee] = fileparts(mask.volInfo.fname);

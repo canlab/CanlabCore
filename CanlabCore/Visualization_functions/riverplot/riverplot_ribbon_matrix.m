@@ -188,7 +188,7 @@ switch coveragetype
         
         %mymax = max(my_total_layer2); 
         
-        coverages_layer1 = sim_matrix ./ mymax;
+%         coverages_layer1 = sim_matrix ./ mymax;
         coverages_layer1 = fullcoverages_layer1;
         
         coverages_layer2 = sim_matrix ./ mymax;
@@ -218,6 +218,12 @@ for i = 1:n1
         myoffset = [offsets_layer1(j, i) offsets_layer2(j, i)]; 
 
         mycoverage = [coverages_layer1(j, i) coverages_layer2(j, i)];
+        
+        for k=1:2 %cludgey fix for riverplots that extend beyond layer 2 rectangle - this should be fixed better above
+           if myoffset(k)+mycoverage(k)>1 %we dont want ribbons extending beyond range.. scoot down a bit
+              myoffset(k)=myoffset(k)-(1-myoffset(k)+mycoverage(k));
+           end
+        end
         
         % this would be the relative coverage way
         %mycoverage = [sim_matrix(j, i) ./ my_total_layer1(i) sim_matrix(j, i) ./ my_total_layer2(j)]; 

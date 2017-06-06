@@ -221,7 +221,7 @@ for i = 1:n1
         
         for k=1:2 %cludgey fix for riverplots that extend beyond layer 2 rectangle - this should be fixed better above
            if myoffset(k)+mycoverage(k)>1 %we dont want ribbons extending beyond range.. scoot down a bit
-              myoffset(k)=myoffset(k)-(1-myoffset(k)+mycoverage(k));
+              myoffset(k)=max(0,myoffset(k)-(1-myoffset(k)+mycoverage(k)));
            end
         end
         

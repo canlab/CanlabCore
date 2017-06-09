@@ -64,6 +64,7 @@ function obj_cell = split(obj, varargin)
 %    List dates and changes here, and author of changes
 % ..
 % Tor Wager, Aug 2016
+% Added  >= en(i) to some lines - bug fix. Seemed to have little effect on most cases. Tor, June 2017
 
 % ..
 %    DEFAULTS AND INPUTS
@@ -108,19 +109,19 @@ for i = 1:k
     
     obj_cell{i}.images_per_session = en(i) - st(i) + 1;
     
-    if ~isempty(obj_cell{i}.image_names) && size(obj_cell{i}.image_names, 1) > en(i)
+    if ~isempty(obj_cell{i}.image_names) && size(obj_cell{i}.image_names, 1) >= en(i)
         
         obj_cell{i}.image_names = obj_cell{i}.image_names(wh, :);
         
     end
     
-    if ~isempty(obj_cell{i}.fullpath) && size(obj_cell{i}.fullpath, 1) > en(i)
+    if ~isempty(obj_cell{i}.fullpath) && size(obj_cell{i}.fullpath, 1) >= en(i)
         
         obj_cell{i}.fullpath = obj_cell{i}.fullpath(wh, :);
         
     end
     
-    if ~isempty(obj_cell{i}.files_exist) && size(obj_cell{i}.files_exist, 1) > en(i)
+    if ~isempty(obj_cell{i}.files_exist) && size(obj_cell{i}.files_exist, 1) >= en(i)
         
         obj_cell{i}.files_exist = obj_cell{i}.files_exist(wh, :);
         
@@ -129,7 +130,7 @@ for i = 1:k
     obj_cell{i} = check_image_filenames(obj_cell{i}, 'noverbose');
     
 
-    if ~isempty(obj_cell{i}.removed_images) && size(obj_cell{i}.removed_images, 1) > en(i)
+    if ~isempty(obj_cell{i}.removed_images) && size(obj_cell{i}.removed_images, 1) >= en(i)
         
         obj_cell{i}.removed_images = obj_cell{i}.removed_images(wh, :);
         

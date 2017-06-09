@@ -211,6 +211,8 @@ classdef fmri_data < image_vector
                         case 'noverbose', verbose = 0; verbosestr = 'noverbose'; varargin{i} = [];
                         case 'sample2mask', sample2mask = 1; varargin{i} = [];
                             
+                        case 'native_image_space' % do nothing, for convenience in calling scripts
+                            
                         otherwise, warning(['Unknown input string option:' varargin{i}]);
                     end
                 end

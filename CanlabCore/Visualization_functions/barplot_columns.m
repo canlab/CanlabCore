@@ -308,6 +308,10 @@ for i = 1:ny
     [x, newy, r, p, Std_Error(i, 1), Mean_Value(i, 1), stats] = partialcor(tmpx, tmpy, wh_intercept, 0, dorob);
     T(i, 1) = stats.t(wh_intercept);
     P(i, 1) = stats.p(wh_intercept);
+    
+    % very low P-values: do not use exactly zero, because of problems
+    P(i, 1) = max(P(i, 1), 10 * eps);
+
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     % Convert to 95% CI, if requested

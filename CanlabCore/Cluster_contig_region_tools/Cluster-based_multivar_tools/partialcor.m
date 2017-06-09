@@ -128,6 +128,8 @@ t = stats.t(i);
 p = stats.p(i);
 se = stats.se(i);
 
+% very low P-values: do not use exactly zero, because of problems
+p = max(p, 10 * eps);
 
 if wh_intercept == i  %all(x - mean(x) < eps)
     % x is an intercept; weighted mean

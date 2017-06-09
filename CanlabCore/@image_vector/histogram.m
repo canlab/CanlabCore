@@ -168,21 +168,27 @@ if by_tissue_type
         stdevs(:, i) = nanstd(full_data_objects{i}.dat);
         
     end
-    
-    fprintf('Gray = gray, red = white, blue = CSF\n');
-    
+        
     
     % Plot locations of each and relationships
      
     create_figure('relationships', 1, 3);
-    barplot_columns(values, 'nofig', 'colors', colors);
-    set(gca, 'XTickLabel', {'gray' 'white' 'CSF'});
-    title('Means');
+    disp('------------------------------------------------------------')
+    disp('Plotting mean values by tissue type')
+    fprintf('Gray = gray, red = white, blue = CSF\n');
+
+    barplot_columns(values, 'nofig', 'colors', colors, 'names', {'gray' 'white' 'CSF'});
+    %set(gca, 'XTickLabel', {'gray' 'white' 'CSF'});
+    title('Mean values by tissue type');
     
     subplot(1, 3, 2);
-    barplot_columns(stdevs, 'nofig', 'colors', colors);
-    set(gca, 'XTickLabel', {'gray' 'white' 'CSF'});
-    title('Std. Dev.');
+    disp('------------------------------------------------------------')
+    disp('Plotting spatial standard deviations across voxels by tissue type')
+    fprintf('Gray = gray, red = white, blue = CSF\n');
+    
+    barplot_columns(stdevs, 'nofig', 'colors', colors, 'names', {'gray' 'white' 'CSF'});
+    %set(gca, 'XTickLabel', {'gray' 'white' 'CSF'});
+    title('Std. Dev. by tissue type');
     
     subplot(1, 3, 3);
     plotmatrix([values stdevs]);

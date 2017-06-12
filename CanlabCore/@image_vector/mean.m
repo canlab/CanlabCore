@@ -9,6 +9,9 @@ function m = mean(obj, varargin)
 %
 % m is an image_vector object whose data contains the mean values.
 %
+% - Average available valid data in each voxel. Some images may have
+% missing data for some voxels.
+% 
 % :Optional Inputs:
 %   - 'write', followed by file name
 %   - 'path', followed by location for file (default = current directory)
@@ -22,6 +25,9 @@ function m = mean(obj, varargin)
 %    % If sdat is an fmri_data object with multiple images,
 %    m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
 %
+
+% Programmers' notes:
+% - Tor: Average available valid data in each voxel (June 2017)
 
 fname = [];
 fpath = pwd;
@@ -45,15 +51,21 @@ for i = 1:length(varargin)
     end
 end
 
+
+% get missing values and replace with NaNs, so we average only valid data in each
+% voxel
+wh = obj.dat == 0; % NaNs are already OK | isnan(obj.dat);
+obj.dat(wh) = NaN;
+
 % return output in the same format as input object
 
 if isa(obj, 'fmri_data')
-    m = image_vector('dat', mean(obj.dat', 1)', 'volInfo', obj.mask.volInfo);
+    m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.mask.volInfo);
     m = fmri_data(m);
     m.mask = obj.mask;
     
 else
-    m = image_vector('dat', mean(obj.dat', 1)', 'volInfo', obj.volInfo);
+    m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.volInfo);
 end
 
 % Not completed for statistic_image

@@ -466,6 +466,9 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %    2/6/2017: Stephan replaced 'pc(:,size(xtrain,1)) = [];' with 'pc(:,end) = [];
 %    to accomodate predictor matrices with fewer features (voxels) than
 %    data (trials/images)
+%
+%    6/2017: Tor and Phil Kragel: update parallel processing for
+%    bootstrapping. Default is to use parallel.
 % ..
 
 % ..
@@ -479,7 +482,7 @@ tsxval_hvblock = 0;
 tsxval_rolling = 0;
 %error_type = 'mcr';            % mcr, mse: misclassification rate or mean sq. error
 algorithm_name = 'cv_pcr';      % name of m-file defining training/test function
-useparallel = 'always';         % Use parallel processing, if available
+useparallel = 'always';         % Use parallel processing, if available, for bootstrapping. Currently no parallel for xval. always = do it, anything else, don't use parallel
 bootweights = 0;                % bootstrap voxel weights
 verbose = 1;
 doMultiClass = 0;               % option to run multiclass SVM
@@ -522,6 +525,10 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             % functional commands
+            
+            case {'noparallel'}
+                useparallel = 'never';
+                
             case {'nfolds', 'error_type', 'algorithm_name', 'useparallel', 'verbose'}
                 str = [varargin{i} ' = varargin{i + 1};'];
                 eval(str)
@@ -579,8 +586,17 @@ for i = 1:length(varargin)
     end
 end
 
-opt = statset('crossval');
-opt.UseParallel = useparallel;
+% Set up parallel processing input to bootstrap function
+switch useparallel
+    case 'always'
+       bootfun_inputs{end+1} = 'parallel';
+    otherwise
+        % no parallel
+end
+
+% This is not used.
+% opt = statset('crossval');
+% opt.UseParallel = useparallel;
 
 % ---------------------------------------------------------------------
 % stratified partition, or custom holdout set
@@ -746,6 +762,7 @@ if nfolds ~= 1 %skip if using nfolds 1, added 7/2/13 by LC
         
         % 9/8/13 Yoni Ashar added to pass correct subjIDs to each fold
         if any(strcmp('subjIDs', predfun_inputs))
+            
             subjIDs_index =  1 + find(strcmp('subjIDs', predfun_inputs));
             if ~exist('subjIDsFull', 'var') %first time through, save the full array
                 subjIDsFull = predfun_inputs{subjIDs_index};
@@ -1833,8 +1850,7 @@ end % function
 function WTS = boot_weights(funhan, obj, cv_assignment,doMultiClass, varargin)
 
 %default options
-opt = statset('UseParallel','never');
-doParallel = 0;
+opt = statset('UseParallel', 'never');
 doSaveWeights = 0;
 bootsamples = 100;
 
@@ -1845,14 +1861,20 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'parallel'
-                doParallel = 1; %run in parallel
+                % doParallel = 1; %run in parallel
                 varargin{i} = [];
-                opt = statset('UseParallel','always');
+                
                 try
-                    if ~matlabpool('size'), matlabpool open, end
+                    
+                    pool = gcp;
+                    opt = statset('UseParallel', 'always');
+                    
                 catch
+                    
                     disp('Problem starting matlab pool - JAVA issue?');
+                
                 end
+                
             case 'bootsamples'
                 bootsamples = varargin{i + 1};
                 varargin{i} = [];

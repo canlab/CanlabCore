@@ -68,7 +68,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %
 % Estimation Defaults
 %  - case 'robust', robust_option = 'yes';
-%  - case {'weight', 'weighted', 'var', 's2'}, weight_option = 'weighted';
+%  - case {'weight', 'weighted', 'var', 's2'}, weight_option = 'unweighted';
 %
 % Inference defaults
 %  - case {'boot1', 'boot', 'bootstrap'}, inference_option = 'bootstrap';

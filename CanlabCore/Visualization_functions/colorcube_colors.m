@@ -6,7 +6,7 @@ nofigs = isempty(findobj(0, 'Type', 'Figure'));
 
 cm = colormap('colorcube');
 cm = [cm(wh, :); cm];
-cm = mat2cell(cm, ones(size(cm, 1)), 3)';
+cm = mat2cell(cm, ones(size(cm, 1),1), [3])';
 
 colors = cm;
 

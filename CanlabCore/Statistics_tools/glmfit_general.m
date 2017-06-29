@@ -161,11 +161,6 @@ switch weight_option
         statsx.Y_star_descrip = 'Empirical Bayes estimates of data after re-weighting';
         
 end
-
-
-
-
-
 % Main estimation, with whatever weights we have
 % Whether analysis is 'weighted' depends on contents of W
 % (equal W for unweighted, variable W for weighted.)

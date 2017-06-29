@@ -60,7 +60,7 @@ obj.dat(wh) = NaN;
 % return output in the same format as input object
 
 if isa(obj, 'fmri_data')
-    m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.mask.volInfo);
+    m = image_vector('dat', nanmean(obj.dat', 1)', 'volInfo', obj.mask.volInfo);
     m = fmri_data(m);
     m.mask = obj.mask;
     

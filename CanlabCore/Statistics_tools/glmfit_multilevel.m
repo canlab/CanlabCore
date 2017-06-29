@@ -227,7 +227,7 @@ switch weight_option
             'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
 
     otherwise
-        error('uh-oh')
+        error('Problem with weight_option. Please select either weighted or unweighted.')
 end
 
 stats.first_level = first_level;

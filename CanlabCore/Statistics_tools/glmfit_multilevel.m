@@ -1,20 +1,20 @@
 function stats = glmfit_multilevel(Y, X1, X2, varargin)
-	  % :Usage:
-	  % ::
-	  %
-	  %     stats = glmfit_multilevel(Y, X1, X2, varargin)
-	  %
-	  % :Inputs:
-	  %
-	  %   **Y:**
-	  %        is data in cell array, one cell per subject.
-	  %        Column vector of subject outcome data in each cell.
-	  %    
-	  %
-	  %   **X1 and X2:**
-	  %        are first and 2nd level design matrices
-	  %          - X1 in cell array, one cell per subject
-	  %            design matrix for each subject in each cell.  
+  % :Usage:
+  % ::
+  %
+  %     stats = glmfit_multilevel(Y, X1, X2, varargin)
+  %
+  % :Inputs:
+  %
+  %   **Y:**
+  %        is data in cell array, one cell per subject.
+  %        Column vector of subject outcome data in each cell.
+  %    
+  %
+  %   **X1 and X2:**
+  %        are first and 2nd level design matrices
+  %          - X1 in cell array, one cell per subject
+  %            design matrix for each subject in each cell.  
 %            *columns must code for the same variable for all subjects*
 %
 %         - X2 in rect. matrix
@@ -170,13 +170,13 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
   t = zeros(k, N);
   p = zeros(k, N);
   dfe = zeros(1, N);
-				%phi = zeros(arorder, N);
+%phi = zeros(arorder, N);
 
  % first level: ESTIMATE
  % -------------------------------------------------------------------
   for i = 1:N
     [beta(:, i), sterr(:, i), t(:, i), p(:, i), dfe(:, i), phi(:,i), V{i}] = first_level_model(Y{i}, X1{i}, varargin{:});
-			       % V{i} is var/cov matrix (xtxi)*sigmasq
+       % V{i} is var/cov matrix (xtxi)*sigmasq
   end
 
   varnames = {'beta' 't' 'p' 'dfe' 'phi'};
@@ -188,7 +188,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
  % set up second-level X matrix: intercept first
   X2 = setup_X_matrix(X2, beta(1,:)');
 
-				% set up second-level options
+% set up second-level options
 % names of outcomes become beta_names here b/c second level test on 1st
 % level betas
   [beta_names1, analysisname, beta_names2, robust_option, weight_option, inference_option, ...
@@ -199,25 +199,25 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
   setup_inputs(beta', X2, varargin{:});
   switch weight_option
     case 'weighted'
-			  % Note: R & B-style : replaced sterr' with V
+  % Note: R & B-style : replaced sterr' with V
 
       stats = glmfit_general( ...
-			      beta', X2, ...
-			      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
-			      verbstr, savestr, plotstr, ...
-			      weight_option, V, inference_option, 'dfwithin', dfe', ...
-			      'targetu', targetu, 'nresample', nresample, ...
-			      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
+	      beta', X2, ...
+	      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
+	      verbstr, savestr, plotstr, ...
+	      weight_option, V, inference_option, 'dfwithin', dfe', ...
+	      'targetu', targetu, 'nresample', nresample, ...
+	      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
 
     case 'unweighted'
 
       stats = glmfit_general( ...
-			      beta', X2, ...
-			      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
-			      verbstr, savestr, plotstr, ...
-			      weight_option, inference_option, ...
-			      'targetu', targetu, 'nresample', nresample, ...
-			      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
+	      beta', X2, ...
+	      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
+	      verbstr, savestr, plotstr, ...
+	      weight_option, inference_option, ...
+	      'targetu', targetu, 'nresample', nresample, ...
+	      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
 
     otherwise
       error('Problem with weight_option. Please select either weighted or unweighted.')

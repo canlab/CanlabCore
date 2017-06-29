@@ -330,46 +330,27 @@ else
     V = inv(X' * X) * stats.var;                           % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
 end
 
-
-
 end
-
-
-
-
 
 function X = setup_X_matrix(X, y)
-
-% set up X matrix: intercept first
-[n, k] = size(X);
-
-if n == 0, n = size(y, 1); end
-    
-equal_x = false(1, k);
-
-for i = 1:k
-
+  % set up X matrix: intercept first
+  [n, k] = size(X);
+  if n == 0
+    n = size(y, 1);
+  end
+  equal_x = false(1, k);
+  for i = 1:k
     if all(X(:, i) == X(1, i))
-        % weights are equal
-        equal_x(i) = 1;
-
+    % weights are equal
+      equal_x(i) = 1;
     end
-
-end
-
-if any(equal_x)
+  end
+  if any(equal_x)
     disp('Warning: some columns of X have no variance.  Do not enter intercept in X; it will be added automatically as the first predictor.');
     X(:, equal_x) = [];
+  end
+  X = [ones(n, 1) X];
 end
-
-X = [ones(n, 1) X];
-
-end
-
-
-
-
-
 
 % -------------------------------------------------------------------------
 % Setup inputs, print info to screen if verbose

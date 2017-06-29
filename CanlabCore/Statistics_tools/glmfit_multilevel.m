@@ -1,20 +1,20 @@
 function stats = glmfit_multilevel(Y, X1, X2, varargin)
-% :Usage:
-% ::
-%
-%     stats = glmfit_multilevel(Y, X1, X2, varargin)
-%
-% :Inputs:
-%
-%   **Y:**
-%        is data in cell array, one cell per subject.
-%        Column vector of subject outcome data in each cell.
-%    
-%
-%   **X1 and X2:**
-%        are first and 2nd level design matrices
-%          - X1 in cell array, one cell per subject
-%            design matrix for each subject in each cell.  
+	  % :Usage:
+	  % ::
+	  %
+	  %     stats = glmfit_multilevel(Y, X1, X2, varargin)
+	  %
+	  % :Inputs:
+	  %
+	  %   **Y:**
+	  %        is data in cell array, one cell per subject.
+	  %        Column vector of subject outcome data in each cell.
+	  %    
+	  %
+	  %   **X1 and X2:**
+	  %        are first and 2nd level design matrices
+	  %          - X1 in cell array, one cell per subject
+	  %            design matrix for each subject in each cell.  
 %            *columns must code for the same variable for all subjects*
 %
 %         - X2 in rect. matrix
@@ -102,140 +102,133 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %    subject only if there are too few observations to estimate.
 % ..
 
-if ~iscell(Y)
+  if ~iscell(Y)
     N = size(Y, 2);
     for i = 1:N
-        YY{i} = Y(:, i); 
+      YY{i} = Y(:, i); 
     end
     Y = YY;
     clear YY
-end
+  end
 
-if ~iscell(X1)
+  if ~iscell(X1)
     N2 = size(X1, 2);
     if N ~= N2, error('Sizes of X and Y do not match'); end
     for i = 1:N
-        XX{i} = X1(:, i); 
+      XX{i} = X1(:, i); 
     end
     X1 = XX;
     clear XX
-end
-        
-N = length(Y);
-if N ~= length(X1)
+  end
+  
+  N = length(Y);
+  if N ~= length(X1)
     error('Enter one cell per subject for each of X and Y');
-end
+  end
 
 
 
 
-% first level: SETUP
-% -------------------------------------------------------------------
-% set up first-level X matrix (sample)
-if any(strcmp(varargin, 'noint')) % no-intercept version
+ % first level: SETUP
+ % -------------------------------------------------------------------
+ % set up first-level X matrix (sample)
+  if any(strcmp(varargin, 'noint')) % no-intercept version
     X1tmp = X1{1};
-else
+  else
     X1tmp = setup_X_matrix(X1{1}); % intercept first
-end
+  end
 
-k = size(X1tmp, 2);             % num predictors; assumed to be the same!!
+  k = size(X1tmp, 2);             % num predictors; assumed to be the same!!
 
 
-% Second level: SETUP
-% Need to remove 2nd-level units with NaN data at first level
-% -------------------------------------------------------------------
-wh_omit = false(1, N);
-for i = 1:N
-    %if any(isnan(Y{i})) || any(isnan(X1{i}(:))), wh_omit(i) = 1; end
+ % Second level: SETUP
+ % Need to remove 2nd-level units with NaN data at first level
+ % -------------------------------------------------------------------
+  wh_omit = false(1, N);
+  for i = 1:N
+     %if any(isnan(Y{i})) || any(isnan(X1{i}(:))), wh_omit(i) = 1; end
     
     can_be_nans = length(Y{i}) - k - 1;  % up to this many can be NaN, still leaving 1 degree of freedom
     if can_be_nans < 0, warning('Warning: you might be overparameterized!  Seems like you have more predictors than observations'); end
     if sum(isnan(Y{i}) | any(isnan(X1{i}), 2)) > can_be_nans
-         wh_omit(i) = 1; 
+      wh_omit(i) = 1; 
     end
-end
+  end
 
-if any(wh_omit)
+  if any(wh_omit)
     if isempty(X2), X2 = ones(N, 1); end
     
     Y(wh_omit) = [];
     X1(wh_omit) = [];
     X2(wh_omit, :) = [];
     N = length(Y);
-end
+  end
 
 
-beta = zeros(k, N);
-sterr = zeros(k, N);
-t = zeros(k, N);
-p = zeros(k, N);
-dfe = zeros(1, N);
-%phi = zeros(arorder, N);
+  beta = zeros(k, N);
+  sterr = zeros(k, N);
+  t = zeros(k, N);
+  p = zeros(k, N);
+  dfe = zeros(1, N);
+				%phi = zeros(arorder, N);
 
-% first level: ESTIMATE
-% -------------------------------------------------------------------
-for i = 1:N
-
+ % first level: ESTIMATE
+ % -------------------------------------------------------------------
+  for i = 1:N
     [beta(:, i), sterr(:, i), t(:, i), p(:, i), dfe(:, i), phi(:,i), V{i}] = first_level_model(Y{i}, X1{i}, varargin{:});
-    
-    % V{i} is var/cov matrix (xtxi)*sigmasq
-end
+			       % V{i} is var/cov matrix (xtxi)*sigmasq
+  end
 
-varnames = {'beta' 't' 'p' 'dfe' 'phi'};
-first_level = create_struct(varnames);
-first_level.ste = sterr;
+  varnames = {'beta' 't' 'p' 'dfe' 'phi'};
+  first_level = create_struct(varnames);
+  first_level.ste = sterr;
 
+ % second level: Finish SETUP and ESTIMATE
+ % -------------------------------------------------------------------
+ % set up second-level X matrix: intercept first
+  X2 = setup_X_matrix(X2, beta(1,:)');
 
-
-% second level: Finish SETUP and ESTIMATE
-% -------------------------------------------------------------------
-% set up second-level X matrix: intercept first
-X2 = setup_X_matrix(X2, beta(1,:)');
-
-% set up second-level options
+				% set up second-level options
 % names of outcomes become beta_names here b/c second level test on 1st
 % level betas
-[beta_names1, analysisname, beta_names2, robust_option, weight_option, inference_option, ...
-    verbose, dosave, doplots, ...
-    verbstr, savestr, plotstr, ...
-    targetu, nresample, whpvals_for_boot, ...
-    permsign] = ...
-    setup_inputs(beta', X2, varargin{:});
-
-
-
-switch weight_option
+  [beta_names1, analysisname, beta_names2, robust_option, weight_option, inference_option, ...
+   verbose, dosave, doplots, ...
+   verbstr, savestr, plotstr, ...
+   targetu, nresample, whpvals_for_boot, ...
+   permsign] = ...
+  setup_inputs(beta', X2, varargin{:});
+  switch weight_option
     case 'weighted'
-        % Note: R & B-style : replaced sterr' with V
+			  % Note: R & B-style : replaced sterr' with V
 
-        stats = glmfit_general( ...
-            beta', X2, ...
-            'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
-            verbstr, savestr, plotstr, ...
-            weight_option, V, inference_option, 'dfwithin', dfe', ...
-            'targetu', targetu, 'nresample', nresample, ...
-            'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
+      stats = glmfit_general( ...
+			      beta', X2, ...
+			      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
+			      verbstr, savestr, plotstr, ...
+			      weight_option, V, inference_option, 'dfwithin', dfe', ...
+			      'targetu', targetu, 'nresample', nresample, ...
+			      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
 
     case 'unweighted'
 
-        stats = glmfit_general( ...
-            beta', X2, ...
-            'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
-            verbstr, savestr, plotstr, ...
-            weight_option, inference_option, ...
-            'targetu', targetu, 'nresample', nresample, ...
-            'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
+      stats = glmfit_general( ...
+			      beta', X2, ...
+			      'analysisname', analysisname, 'names', beta_names1, 'beta_names', beta_names2, ...
+			      verbstr, savestr, plotstr, ...
+			      weight_option, inference_option, ...
+			      'targetu', targetu, 'nresample', nresample, ...
+			      'whpvals_for_boot', whpvals_for_boot, 'permsign', permsign);
 
     otherwise
-        error('Problem with weight_option. Please select either weighted or unweighted.')
-end
+      error('Problem with weight_option. Please select either weighted or unweighted.')
+  end
 
-stats.first_level = first_level;
+  stats.first_level = first_level;
 
-if doplots
+  if doplots
     scn_stats_helper_functions('xyplot', X1, Y, weight_option, 'names', beta_names1, 'nostats');
     xlabel('X'); ylabel('Y');
-end
+  end
 
 % _________________________________________________________________________
 %
@@ -247,23 +240,14 @@ end
 %
 %__________________________________________________________________________
 
-
-    function newstruct = create_struct(varnames)
-
-        newstruct = struct();
-
-        for i = 1:length(varnames)
-            eval(['newstruct.(varnames{i}) = ' varnames{i} ';']);
-        end
-
+  function newstruct = create_struct(varnames)
+    newstruct = struct();
+    for i = 1:length(varnames)
+      eval(['newstruct.(varnames{i}) = ' varnames{i} ';']);
     end
+  end
 
-
-end  % END MAIN FUNCTION
-
-
-
-
+end %End of glmfit_multilevel 
 
 function [b, sterr, t, p, dfe, phi, V] = first_level_model(y, X, varargin)
 

@@ -109,22 +109,15 @@ for i = 1:k
     
     obj_cell{i}.images_per_session = en(i) - st(i) + 1;
     
-    if ~isempty(obj_cell{i}.image_names) && size(obj_cell{i}.image_names, 1) >= en(i)
-        
-        obj_cell{i}.image_names = obj_cell{i}.image_names(wh, :);
-        
-    end
+    fnames = {'image_names', 'fullpath', 'files_exist', 'X', 'Y'};
     
-    if ~isempty(obj_cell{i}.fullpath) && size(obj_cell{i}.fullpath, 1) >= en(i)
-        
-        obj_cell{i}.fullpath = obj_cell{i}.fullpath(wh, :);
-        
-    end
-    
-    if ~isempty(obj_cell{i}.files_exist) && size(obj_cell{i}.files_exist, 1) >= en(i)
-        
-        obj_cell{i}.files_exist = obj_cell{i}.files_exist(wh, :);
-        
+    for j=1:length(fnames)
+
+        if ~isempty(obj_cell{i}.(fnames{j})) && size(obj_cell{i}.(fnames{j}), 1) >= en(i)
+
+            obj_cell{i}.(fnames{j}) = obj_cell{i}.(fnames{j})(wh, :);
+
+        end
     end
     
     obj_cell{i} = check_image_filenames(obj_cell{i}, 'noverbose');

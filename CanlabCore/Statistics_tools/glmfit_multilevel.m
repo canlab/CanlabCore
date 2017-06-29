@@ -1,20 +1,23 @@
 function stats = glmfit_multilevel(Y, X1, X2, varargin)
-  % :Usage:
-  % ::
-  %
-  %     stats = glmfit_multilevel(Y, X1, X2, varargin)
-  %
-  % :Inputs:
-  %
-  %   **Y:**
-  %        is data in cell array, one cell per subject.
-  %        Column vector of subject outcome data in each cell.
-  %    
-  %
-  %   **X1 and X2:**
-  %        are first and 2nd level design matrices
-  %          - X1 in cell array, one cell per subject
-  %            design matrix for each subject in each cell.  
+% :Usage:
+% ::
+%
+%     stats = glmfit_multilevel(Y, X1, X2, varargin)
+%
+% :Inputs:
+%
+%   **Y:**
+%        Is data in either:
+%           -cell array, one cell per subject.
+%            Column vector of subject outcome data in each cell.
+%           -Matrix
+%            One column per subject, with vector of subject outcome
+%            data in that column
+%
+%   **X1 and X2:**
+%        are first and 2nd level design matrices
+%          - X1 in cell array, one cell per subject
+%            design matrix for each subject in each cell.  
 %            *columns must code for the same variable for all subjects*
 %
 %         - X2 in rect. matrix
@@ -93,10 +96,6 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 % Sign perm defaults
 %  - case {'permsign'}, permsign = varargin{i+1};
 %
-% ..
-%    tor wager, sept. 2007
-%    Modified Oct 31, 2008 -- add matrix input format as well as cell
-%
 %    Programmer's notes:
 %    9/2/09: Tor and Lauren: Edited to drop NaNs within-subject, and drop
 %    subject only if there are too few observations to estimate.
@@ -108,7 +107,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
       YY{i} = Y(:, i); 
     end
     Y = YY;
-    clear YY
+    clear YY;
   end
 
   if ~iscell(X1)
@@ -311,7 +310,7 @@ if arorder
     [t, dfe, b, phi, sigma, sterr] = fit_gls(y, X, [], arorder);
     p = 2 * (1 - tcdf(abs(t), dfe));  % two-tailed
 
-    V = inv(X' * X) * sigma .^ 2;                           % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
+    V = inv(X' * X) * sigma .^ 2; % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
     
 else
     % if we have missing observations or redundant columns, let's

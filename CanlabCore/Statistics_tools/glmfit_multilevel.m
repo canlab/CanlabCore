@@ -326,7 +326,7 @@ else
     stats = glmfit_general(y, X, verbstr, interceptstr);
     t = stats.t; dfe = stats.dfe; b = stats.beta; phi = NaN; sterr = stats.ste; p = stats.p;
 
-    V = inv(X' * X) * stats.var;                           % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
+    V = inv(X' * X) * stats.var; % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
 end
 
 end

@@ -112,7 +112,7 @@ obj2 = replace_empty(obj2);
 obj2 = resample_space(obj2, obj);
 
 % hcat these attributes
-fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'X' 'Y' 'covariates' 'additional_info' 'dat'};
+fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'covariates' 'additional_info' 'dat'};
 
 for i = 1:length(fnames)
     
@@ -131,7 +131,7 @@ end
 
 
 % vcat these attributes
-fnames = {'files_exist'};
+fnames = {'files_exist' 'X' 'Y'};
 
 for i = 1:length(fnames)
     

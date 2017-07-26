@@ -131,14 +131,13 @@ end
 
 
 % vcat these attributes
-fnames = {'files_exist' 'X' 'Y'};
+fnames = {'files_exist' 'X' 'Y' 'removed_images'};
 
 for i = 1:length(fnames)
     
     obj.(fnames{i}) = [obj.(fnames{i}); obj2.(fnames{i})];
     
 end
-
 
 obj.history{end+1} = 'Concatenated another object with this one.';
 

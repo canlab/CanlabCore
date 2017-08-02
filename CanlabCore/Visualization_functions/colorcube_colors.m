@@ -6,7 +6,14 @@ nofigs = isempty(findobj(0, 'Type', 'Figure'));
 
 cm = colormap('colorcube');
 cm = [cm(wh, :); cm];
-cm = mat2cell(cm, ones(size(cm, 1),1), [3])';
+
+% Maybe different versions of mat2cell? Not so stable...
+nc = ones(size(cm, 1), 1);
+try
+    cm = mat2cell(cm, nc, 3)';
+catch
+    cm = mat2cell(cm, ones(nc, 1))';
+end
 
 colors = cm;
 

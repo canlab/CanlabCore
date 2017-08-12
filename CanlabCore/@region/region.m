@@ -233,7 +233,7 @@ classdef region
                         % Note: If you have manipulated an image_vector (e.g., fmri_data,
                         % statistic_image) object and eliminated some voxels, in order to create
                         % regions, contiguous voxels are automatically reparsed into regions using
-                        % fmri_data.reparse_contiguous
+                        % fmri_data.reparse_contiguous below.
                         
                         dataobj = reparse_contiguous(dataobj, 'nonempty');
                     end
@@ -284,6 +284,10 @@ classdef region
                 dataobj = replace_empty(dataobj); % may need to do this to get voxels to line up
                 
                 cs = compare_space(dataobj, mask);
+                
+                % may need to reparse contiguous voxels in the mask.
+                mask = reparse_contiguous(mask, 'nonempty');
+                
                 if cs == 3
                     disp('Spaces for data object and mask object line up, but voxel numbers do not. Check.');
                     disp('> Resampling to mask space first.');
@@ -293,7 +297,12 @@ classdef region
                     dataobj = resample_space(dataobj, mask); % resample data to mask space
                 end
                 
-                obj = extract_roi_averages(dataobj, mask, average_over);
+                if doverbose
+                    obj = extract_roi_averages(dataobj, mask, average_over);
+                else
+                    obj = extract_roi_averages(dataobj, mask, average_over, 'noverbose');
+                end
+                
                 return
             end
             

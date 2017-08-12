@@ -7,23 +7,46 @@ function cl = orthviews(image_obj, varargin)
 %    orthviews(image_obj, varargin)
 %
 % :Optional Inputs:
-%   **posneg:**
-%        input generates orthviews using solid colors.
+%   **'posneg':**
+%        input generates orthviews using solid colors, separated for positive- and negative-valued voxels.
 %
-%   **largest_region:**
+%   **'largest_region':**
 %        to center the orthviews on the largest region in the image
+%
+%   **'overlay':**
+%        followed by name of anatomical image to use as underlay
+%
+%   **'unique':**
+%        plot groups of contiguous voxels in different, unique colors
+%
+%   **'parcels':**
+%        plot voxels with each unique value in a different color
+%        useful for images in which values indicate parcel or network
+%        membership
+%        Default is 'unique' for <300 values, 'continuous' for more.  Use
+%        'unique' to force unique-valued colors.
+%
+%   **'continuous':**
+%        Plot voxels color-mapped according to their values.
+%        Default is 'unique' for <300 values, 'continuous' for more.  Use
+%        'unique' to force unique-valued colors.
 %
 % ..
 %    Copyright Tor Wager, 2011
 % ..
 
+% Aug 2017: Tor Wager edited to allow flexibility in colors; unique,
+% parcel, continuous. and autodetect.
+
 %overlay = which('SPM8_colin27T1_seg.img');
 overlay = which('keuken_2014_enhanced_for_underlay.img');
 
-doposneg = 0;
-doreg = 0;
+doposneg = false;
+doreg = false;
 input_handle=[];
-dounique = 0;
+dounique = false;
+doparcels = false;
+force_continuous = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -39,7 +62,13 @@ for i = 1:length(varargin)
             case {'largest_region', 'largest_cluster'}, doreg = 1;
                 
             case 'unique'
-                dounique = 1;
+                dounique = true;
+                
+            case 'continuous'
+                force_continuous = true;
+                
+            case 'parcels'
+                doparcels = true; dounique = true;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -79,10 +108,29 @@ end
 % replace missing voxels if necessary
 image_obj = replace_empty(image_obj);
 
+% autodetect parcels and turn on 'unique' for maps with few values 
+% (default = do this)
+if ~doparcels && ~force_continuous
+    nvalues = length(unique(image_obj.dat(:)));
+    
+    if nvalues < 300, dounique = true; doparcels = true; end
+end
 
 for i = handle_indices
     
-    cl{i} = iimg_indx2clusters(image_obj.dat(:, min(i, size(image_obj.dat,2))), image_obj.volInfo); %min() is to differentiate between which subplot to plot on and which image to plot.  used when this is called with orthviews_multiple_objs.  Yoni 11/14
+    wh_image = min(i, size(image_obj.dat,2));  %min() is to differentiate between which subplot to plot on and which image to plot.  used when this is called with orthviews_multiple_objs.  Yoni 11/14
+    
+    if doparcels
+        
+        cl{i} = region(get_wh_image(image_obj, wh_image), 'unique_mask_values');
+    
+    else
+        cl{i} = region(get_wh_image(image_obj, wh_image), 'contiguous_regions');
+        
+    end
+    
+    % old:
+    %cl{i} = iimg_indx2clusters(image_obj.dat(:, wh_image), image_obj.volInfo); 
     
     if dounique
         

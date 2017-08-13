@@ -326,7 +326,7 @@ else
     stats = glmfit_general(y, X, verbstr, interceptstr);
     t = stats.t; dfe = stats.dfe; b = stats.beta; phi = NaN; sterr = stats.ste; p = stats.p;
 
-    V = inv(X' * X) * stats.var;                           % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
+    V = inv(X' * X) * stats.var; % Var/Cov mtx, Precision^-1, used in weighted est. and empirical bayes
 end
 
 end
@@ -345,7 +345,7 @@ function X = setup_X_matrix(X, y)
     end
   end
   if any(equal_x)
-    disp('Warning: some columns of X have no variance.  Do not enter intercept in X; it will be added automatically as the first predictor.');
+    error('Warning: some columns of X have no variance.  Do not enter intercept in X; it will be added automatically as the first predictor.');
     X(:, equal_x) = [];
   end
   X = [ones(n, 1) X];

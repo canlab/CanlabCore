@@ -1,4 +1,20 @@
 function [D2, D2_expected, pval] = mahal(obj, varargin)
+% [D2, D2_expected, pval] = mahal(obj, varargin)
+%
+% Mahalanobis distance for each image in a set compared to others in the set
+% Lower p-values reflect higher outlier status for an image.
+%
+% Examples:
+% ----------------------------------------------------------------------
+% [ds, expectedds, p] = mahal(fmridat, 'noplot');
+% 
+% Y = ds - expectedds;
+% wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+% 
+% plot(Y);
+% plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
+%
+% Tor Wager
 
 doplot = true;
 if any(strcmp(varargin, 'noplot')), doplot = false; end

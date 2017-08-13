@@ -28,6 +28,11 @@ function obj = reparse_contiguous(obj, varargin)
 %
 % .cluster and .xyzlist should both always be length v in-mask voxels
 % if 'nonempty' is entered, then .dat should be length v in-mask voxels too
+%
+% NOTES: this will only work if xyzlist in volInfo has only voxels for
+% contiguous clusters. If the mask in volInfo contains the whole brain,
+% use 'nonempty' to exclude empty data values when
+% redefining clusters.
 
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 

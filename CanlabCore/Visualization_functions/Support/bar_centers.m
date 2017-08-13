@@ -7,9 +7,17 @@
 %       centers - a list of centers, one row per group
 
 function centers = bar_centers(handles)
-    hPatches = findobj(handles, 'Type', 'patch');
+
+    hPatches = findobj(handles, 'Type', 'patch'); % old Matlab, pre-2015
+    
+    if isempty(hPatches)
+       % new matlab?
+       hPatches = findobj(handles, 'Type', 'bar');
+    end
+    
     for i=1:length(hPatches)
         centers(i,:) = mean(get(hPatches(i), 'XData'));
     end
     centers = flipud(centers);
+    
 end

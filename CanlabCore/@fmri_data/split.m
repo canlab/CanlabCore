@@ -99,6 +99,23 @@ st = [0 en(1:end-1)] + 1;
 k = length(imgs_per_obj);
 obj_cell = cell(1, k);
 
+% warn user about fields that aren't handled but appear like they should be
+% split. Some of these (e.g. additional_info) are handled by
+% fmri_data.cat(), so it may surprise the user that split doesn't invert
+% the process.
+%
+% criteria for warning: if length of field is equal to number of splits
+fnames = {'image_names', 'fullpath', 'files_exist', 'X', 'Y'};
+supportedFields = {fnames{:}, 'dat', 'images_per_session', 'removed_images'};
+allFields = fieldnames(obj);
+for i = 1:length(allFields)
+    if sum(strcmp(allFields{i},supportedFields)) == 0
+        if length(obj.(allFields{i})) == k
+            warning(['Object''s ''', allFields{i}, ''' field length matches number of splits, but ''', allFields{i}, ''' field will not be split'])
+        end
+    end
+end
+    
 for i = 1:k
     
     obj_cell{i} = obj;
@@ -109,7 +126,6 @@ for i = 1:k
     
     obj_cell{i}.images_per_session = en(i) - st(i) + 1;
     
-    fnames = {'image_names', 'fullpath', 'files_exist', 'X', 'Y'};
     
     for j=1:length(fnames)
 
@@ -131,7 +147,7 @@ for i = 1:k
 
         obj_cell{i}.removed_images = 0; % add in case
 
-    end
+    end    
 
 end
 

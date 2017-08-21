@@ -180,6 +180,8 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   - added option to omit plotting
 % 5/10/2016 (Phil Kragel)
 %   - added option to use cosine similarity instead of Pearson
+% 8/21/2017 (Stephan Geuter)
+%   - fixed header for printing similarity table
 %
 %
 %
@@ -326,8 +328,13 @@ if ~doaverage
         end
     end
     
-    print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
-    
+    % print similarity matrix
+    fprintf('\n');
+    if doCosine
+        print_matrix(r, {'Name' 'Cosine Similarity'}, networknames)
+    else
+        print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
+    end
     
 elseif doaverage
     

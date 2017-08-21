@@ -61,6 +61,9 @@ function layerstruct = riverplot_layer_names(layerstruct, layernames, varargin)
 % ..
 %    Programmers' notes:
 %    Created by Tor Wager, July 2, 2016
+%
+%    8/21/2017 Stephan Geuter
+%       - updated text alignment
 % ..
 
 % ..
@@ -102,25 +105,33 @@ end
 for i = 1:n_rects
     
     % Get y position: midpoint of layer
-    yval = layerstruct{i}.topleft(2) - .4 * (layerstruct{i}.topleft(2) - layerstruct{i}.bottomleft(2));
+    yval = layerstruct{i}.topleft(2) - .5 * (layerstruct{i}.topleft(2) - layerstruct{i}.bottomleft(2));
     
     % Get x position: 
     switch leftright_string
         case 'left'
             
             xval = layerstruct{i}.topleft(1) - .3;
+    
+            hh = text(xval, yval, layernames{i}, 'Color', colors{i}, 'FontSize', 16,...
+                      'HorizontalAlignment','right');
             
         case 'right'
        
             xval = layerstruct{i}.topright(1) + .3;
+            
+            hh = text(xval, yval, layernames{i}, 'Color', colors{i}, 'FontSize', 16,...
+                      'HorizontalAlignment','left');
     end
-    
-    hh = text(xval, yval, layernames{i}, 'Color', colors{i}, 'FontSize', 16);
-    
-    switch leftright_string
-        case 'left'
-            hh = shift_text(hh);
-    end
+
+% removed because text property 'HorizontalAlignment' is better and adjusts 
+% after re-sizing the figure. SG 8/21/2017    
+%     hh = text(xval, yval, layernames{i}, 'Color', colors{i}, 'FontSize', 16);
+%     
+%     switch leftright_string
+%         case 'left'
+%             hh = shift_text(hh);
+%     end
     
     layerstruct{i}.name_handles(i) = hh;
     layerstruct{i}.names(i) = layernames(i);
@@ -132,25 +143,25 @@ end % function
 
 
 
-function text_handle = shift_text(text_handle)
-% Center text - Adjust for width of text string
-% Given text handle, subtract 1/2 the width of text string from x and y positions
-% Borrowed/adapted from John Barber, http://www.mathworks.com/matlabcentral/fileexchange/30671-calcticks
-
-textExt = get(text_handle, 'Extent');
-textHeight = textExt(4);
-textWidth = textExt(3);
-
-% If using a proportional font, shrink text width by a fudge factor to
-% account for kerning.
-% ax = gca;
+% function text_handle = shift_text(text_handle)
+% % Center text - Adjust for width of text string
+% % Given text handle, subtract 1/2 the width of text string from x and y positions
+% % Borrowed/adapted from John Barber, http://www.mathworks.com/matlabcentral/fileexchange/30671-calcticks
 % 
-% if ~strcmpi(ax.FontName,'FixedWidth')
-%     textWidth = textWidth*0.8;
+% textExt = get(text_handle, 'Extent');
+% textHeight = textExt(4);
+% textWidth = textExt(3);
+% 
+% % If using a proportional font, shrink text width by a fudge factor to
+% % account for kerning.
+% % ax = gca;
+% % 
+% % if ~strcmpi(ax.FontName,'FixedWidth')
+% %     textWidth = textWidth*0.8;
+% % end
+% 
+% mypos = get(text_handle, 'Position');
+% mypos(1) = mypos(1) - textWidth;
+% set(text_handle, 'Position', mypos);
+% 
 % end
-
-mypos = get(text_handle, 'Position');
-mypos(1) = mypos(1) - textWidth;
-set(text_handle, 'Position', mypos);
-
-end

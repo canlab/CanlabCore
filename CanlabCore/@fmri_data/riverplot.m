@@ -188,6 +188,9 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 %    List dates and changes here, and author of changes
 %    Created July 2016 by Tor Wager
 %    Added statistical thresholding, April 2017, Tor Wager
+%
+%    8/21/2017 Stephan Geuter
+%    changed defaults steepness to conform with changes in riverplot_line.m
 % ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
@@ -207,6 +210,7 @@ layer2fmri_obj = layer1fmri_obj;  % Default: Plot object with itself
 sim_metric = 'cosine_sim';
 threshold = 'none';
 sig_only = false;
+steepness_coeff = 0.15; 
 
 dashes = '______________________________________';
 printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
@@ -264,7 +268,8 @@ for i = 1:length(varargin)
             case {'colors2', 'layer2colors'}, layer2colors = varargin{i+1}; varargin{i+1} = [];
                 
             case 'reorder', doreorder = 1;
-              case 'recolor', recolor = 1;
+            
+            case 'recolor', recolor = 1;
                   
             case {'r', 'corr', 'correlation'}
                 sim_metric = 'r';
@@ -287,6 +292,8 @@ for i = 1:length(varargin)
             case 'layer1order', layer1order = varargin{i+1}; varargin{i+1} = [];
             case 'layer2order', layer2order = varargin{i+1}; varargin{i+1} = [];
 
+            case 'steepness', steepness_coeff = varargin{i+1}; varargin{i+1} = [];
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -443,8 +450,10 @@ if ~isempty(layer2order)
 end
 
 if recolor
+    % recolor layer 2 according to similarity matrix 
     layer2colors=riverplot_recolor_layer2(sim_matrix,layer1colors);
 end
+
 
 % -------------------------------------------------------------------------
 % Find start coordinate points for layers
@@ -467,7 +476,7 @@ set(gca, 'YDir', 'reverse');
 layer1 = riverplot_draw_layer(0, n1, 'colors', layer1colors, 'y_loc', y_loc);
 layer2 = riverplot_draw_layer(layer2x, n2, 'colors', layer2colors);
 
-ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors, 'coveragetype', coveragetype, 'steepness', 0);
+ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors, 'coveragetype', coveragetype, 'steepness', steepness_coeff);
 
 % Turn off lines
 riverplot_toggle_lines(ribbons);

@@ -36,7 +36,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 %   **layer1:**
 %        Cell array of structures with handles and decription of imrect class objects,
 %        created with riverplot_draw_layer.m.  Each object is a rectangular
-%        graphic that denotes a spatial brain pattern or mask created with riverplot_rect.m.  This is always the LEFTMOST
+%        graphic that denotes a spatial brain pattern or mask created with riverplot_rect.m.  
 %        layer1 is the LEFTMOST layer in the plot.
 %
 %   **layer2:**
@@ -57,17 +57,25 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 %       Relative: cover 100% of each rectangle, in proportion to relative associations.
 %       Thickness of ribbon is proportional to input similarity only within
 %       each element, not across them
-
+%
 %       absolute coverage: Ribbon width is proportional to similarity on 0-1
 %       scale, with no normalization
-
+%
 %       normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1
 %       so that each layer is fully covered, but on layer2 is proportional to
 %       similarity across all elements, normalized by max across all
 %
+%       sum-normalized coverage: Ribbon width for layer 1 is relative to layer 1 
+%       so that each layer is fully covered, but on layer2 is proportional to
+%       summed similarity across all elements, that is normalized by max 
+%       of the summ across all similarities for each layer2 item.
+%
 %   **color, colors:**
 %        followed by cell array of {[r g b] [r g b]...} color spec for
 %        ribbons. Colors are specified for each element of layer1.
+%
+%   **steepness**
+%        followed by value for sigmoid steepness, on [0 1] inteval
 %
 %   **ax:**
 %        followed by axis handle to plot
@@ -100,6 +108,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 % ..
 %    Programmers' notes:
 %    Created by Tor Wager, July 2, 2016
+%    8/21/2017 Stephan Geuter - added sum-normalization
 % ..
 
 % ..
@@ -158,8 +167,9 @@ my_total_layer2(my_total_layer2 == 0) = 1;  % prevent dividing by zero
 
 % for both offsets and coverages. offsets are starting points, coverages
 % are the thickness of each ribbon
-fullcoverages_layer1 = bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer1);
-fullcoverages_layer2 = bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer2);
+% coverages should always be positive - take absolute values (SG 8/21/2017)
+fullcoverages_layer1 = abs(bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer1));
+fullcoverages_layer2 = abs(bsxfun(@(x,y) x ./ y, sim_matrix, my_total_layer2));
 
         
 switch coveragetype
@@ -175,15 +185,15 @@ switch coveragetype
     case 'absolute'
         % absolute coverage: Ribbon width is proportional to similarity on 0-1
         % scale, with no normalization
-        coverages_layer1 = sim_matrix;
-        coverages_layer2 = sim_matrix;
+        coverages_layer1 = abs(sim_matrix);
+        coverages_layer2 = abs(sim_matrix);
         
     case 'normalized'
- % normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1 
+        % normalized coverage [default]: Ribbon width for layer 1 is relative to layer 1 
         % so that each layer is fully covered, but on layer2 is proportional to
         % similarity across all elements, normalized by max across all
         
-        mymax = max(sim_matrix(:));
+        mymax = max(abs(sim_matrix(:)));
         if mymax <=0, mymax = 1; end % in case empty
         
         %mymax = max(my_total_layer2); 
@@ -191,15 +201,30 @@ switch coveragetype
 %         coverages_layer1 = sim_matrix ./ mymax;
         coverages_layer1 = fullcoverages_layer1;
         
-        coverages_layer2 = sim_matrix ./ mymax;
+        coverages_layer2 = abs(sim_matrix) ./ mymax;
+        
+    case 'sumnormalized'    
+        % sum-normalized coverage: Ribbon width for layer 1 is relative to layer 1 
+        % so that each layer is fully covered, but on layer2 is proportional to
+        % summed similarity across all elements, that is normalized by max 
+        % of the summ across all similarities for each layer2 item.
+        
+        mymax = max(sum(abs(sim_matrix)));
+        if mymax <=0, mymax = 1; end % in case empty
+        
+        coverages_layer1 = fullcoverages_layer1;
+        coverages_layer2 = abs(sim_matrix) ./ mymax;
         
     otherwise
         error('Illegal string entered for coveragetype');
         
 end
 
-offsets_layer1 = [zeros(1, n1); cumsum(fullcoverages_layer1)];
-offsets_layer2 = [zeros(1, n2); cumsum(fullcoverages_layer2')]';
+% offsets are in one direction, take abs(coverages). SG 8/21/2017
+offsets_layer1 = [zeros(1, n1); cumsum(abs(fullcoverages_layer1))];
+offsets_layer2 = [zeros(1, n2); cumsum(abs(fullcoverages_layer2'))]';
+
+
 
 % where there is only one target, center offsets
 wh = sum(coverages_layer2 ~= 0, 2) == 1;

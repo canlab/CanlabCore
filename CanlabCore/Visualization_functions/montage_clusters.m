@@ -36,6 +36,10 @@ function mch = montage_clusters(ovl, clusters, varargin)
 %
 %    Edited: Jan 2010, to add functionality to display underlay image only if
 %    no clusters are entered (with 9 mm slice spacing)
+%
+%    8/21/2017 Stephan Geuter
+%    Updated to also plot region objects and not only the old
+%    cluster/structure objects.
 % ..
 
 
@@ -100,7 +104,7 @@ function mch = montage_clusters(ovl, clusters, varargin)
         for i = 1:length(varargin)
             if isempty(varargin{i})
                 % ignore it
-            elseif isstruct(varargin{i}) || isa(varargin{i},'region')
+            elseif isstruct(varargin{i}) || isa(varargin{i},'region') % added 'region' objects (SG 8/21/2017)
                 % struct inputs interpreted as clusters variables
                 cl{clindx} = varargin{i};
                 clXYZmm = cat(2, cl{clindx}.XYZmm);

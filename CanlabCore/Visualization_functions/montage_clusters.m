@@ -100,7 +100,7 @@ function mch = montage_clusters(ovl, clusters, varargin)
         for i = 1:length(varargin)
             if isempty(varargin{i})
                 % ignore it
-            elseif isstruct(varargin{i})
+            elseif isstruct(varargin{i}) || isa(varargin{i},'region')
                 % struct inputs interpreted as clusters variables
                 cl{clindx} = varargin{i};
                 clXYZmm = cat(2, cl{clindx}.XYZmm);

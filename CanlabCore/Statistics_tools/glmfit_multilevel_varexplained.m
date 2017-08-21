@@ -151,7 +151,7 @@ vardecomp.varshared = vardecomp.varexpfixed - sum(vardecomp.varbeta);
 % Percentage of total variance (excluding participant-level intercept) attributable to each I.V., and shared variance
 
 vardecomp.tot_varbeta_percent = 100 .* ([vardecomp.varbeta vardecomp.varshared vardecomp.varresid] ./ vardecomp.vary);
-vardecomp.tot_varbeta_names = {'1 to n-1 columns = variance for each I.V.' 'last column = shared variance'};
+vardecomp.tot_varbeta_names = {'1 to n-2 columns = variance for each I.V.' '2nd to last column = shared variance' 'last column = residual variance'};
 
 % Percentage of explained variance (excluding participant-level intercept) attributable to each component
 
@@ -169,15 +169,15 @@ if doplots
 subplot(1, 2, 1);
 
 % Pie chart of total variance excluding participant-level intercepts
-h = wani_pie(vardecomp.tot_varbeta_percent, 'hole', varargin{:});
-title('% of total variance')
+h = wani_pie(double(vardecomp.tot_varbeta_percent), 'hole', varargin{:});
+title('% of total variance');
 
 subplot(1, 2, 2);
 
 % Pie chart of all explained variance excluding participant-level intercepts
-h = wani_pie(vardecomp.exp_varbeta_percent, 'hole', varargin{:});
+h = wani_pie(double(vardecomp.exp_varbeta_percent), 'hole', varargin{:});
 
-title('% of explained variance')
+title('% of explained variance');
 
 end
 

@@ -16,7 +16,7 @@
     <div class="wrapper">
       <header>
         <h1>Canlabcore</h1>
-        <p>Core tools required for running Canlab Matlab toolboxes.</p>
+        <p>Core tools required for running Canlab neuroimaging analysis toolboxes for Matlab.</p>
 
         <p class="view"><a href="https://github.com/canlab/CanlabCore">View the Project on GitHub <small>canlab/CanlabCore</small></a></p>
 
@@ -26,17 +26,30 @@
           <li><a href="https://github.com/canlab/CanlabCore/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/canlab/CanlabCore">View On <strong>GitHub</strong></a></li>
         </ul>
+
+        <p>Documentation</p>
+        <a href="http://canlabcore.readthedocs.io/en/latest/">Documentation on ReadTheDocs: Function definitions and explanations</a><p></p>
+        <a href="https://github.com/canlab/CANlab_help_examples">Examples and walkthroughs for how to use CANlab Core tools</a><p></p>
+        <a href="https://canlabweb.colorado.edu/wiki/doku.php/help/fmri_tools_documentation">WIKI with documentation of neuroimaging toolboxes</a><p></p>
+        <a href="https://canlabreposguide.hackpad.com/CANLab-Repository-Guide-aGTiWJr0zbt">Hackpad with fMRI data walkthrough</a><p></p>
+
+
+
       </header>
+
+      
+      
+
       <section>
-        <p>The CANlab Core Tools package is a set of Matlab functions that are designed to serve miscellaneous purposes. Many of them have stand-alone command line function, but the toolbox also contains functions that are used in other CANlab toolboxes, and so this package should be downloaded and put on the Matlab path when using any of the toolboxes.</p>
+        <p>The CANlab Core Tools package is a set of Matlab functions for analyzing neuroimaging data. Many of them have stand-alone command line function, but the toolbox also contains functions that are used in other CANlab toolboxes, and so this package should be downloaded and put on the Matlab path when using any of the toolboxes.</p>
 
 <p>Some functions are experimental/in development, and the toolbox is provided on an as-is basis, with no claims about quality or correctness expressed or implied.</p>
 
-<p>Our vision is that the package will be developed into an extensible package that will allow developers and statisticians to create new tools and make them available to the community without rew-writing basic image manipulation and visualization code. We call this framework "statistical plug-in for neuroimaging analysis" (SPINN).</p>
+<p>The toolbox contains several object classes useful for analyzing neuroimaging data with easy commands (methods). These provide an extensible library for interactive data analysis and visualization.</p>
 
 <p>There are several general ways to use these tools stand-alone:</p>
 
-<p>1) A new set of object-oriented tools offers a command-line interface for working with fMRI data and other data types interactively. </p>
+<p>1) A set of object-oriented tools offers a command-line interface for working with fMRI data and other data types interactively. </p>
 
 <p>2) Many of the functions work by turning a brain image (.img or .nii) into a "clusters" structure, a vector of structures that stores information about a continuous activation 'blob'. You can turn a thresholded image (some values are zero or NaN) into a clusters structure using mask2clusters.m.  Once you have done this, you can visualize, extract data, perform analyses, etc. on the clusters.</p>
 

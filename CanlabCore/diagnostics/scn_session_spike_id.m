@@ -355,7 +355,10 @@ end
 
 
     function plot_session_figure()
-        create_figure('scn_session_spike_id', 4, 1);
+        fht = create_figure('scn_session_spike_id', 4, 1);
+        % adjust figure size to proper width (SG. 8/25/2017);
+        screensz = get(0, 'screensize');
+        set(fht,'Position',[30 30 screensz(3:4)*.85]);
         
         if isempty(gslice)
             warning('scn_session_spike_id:emptyData', 'Global slice data is empty!! No voxels in mask??');
@@ -388,11 +391,12 @@ end
         
         % this *may* be needed for publishing to html
         try
-            snapnow
+            drawnow;
+            snapnow;
         catch
         end
         
-        drawnow
+        drawnow;
         orient(gcf, 'portrait')
         %%print('-dpsc2', '-append', 'qc_report');
         scn_export_papersetup(800);

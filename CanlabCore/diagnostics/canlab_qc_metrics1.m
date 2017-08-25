@@ -144,11 +144,15 @@ end
 
 if iscell(epi_names), epi_names = strvcat(epi_names{:}); end
 
-idstr = epi_names';
-idstr = idstr(:);
-if length(idstr) > 100, idstr = idstr(1:100); end
+% idstr = epi_names';
+% idstr = idstr(:);
+% if length(idstr) > 100, idstr = idstr(1:100); end
+idstr = epi_names;
+if size(idstr,2) > 50, idstr = spm_file(idstr(1,:),'short25'); end
 
-QC = struct('filenames', epi_names(:)', 'idstr', idstr);
+
+
+QC = struct('filenames', epi_names(:), 'idstr', idstr);
 %all_outputs = {'filenames'};
 all_outputs = {};
 

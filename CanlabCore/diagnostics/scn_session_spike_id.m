@@ -358,7 +358,7 @@ end
         fht = create_figure('scn_session_spike_id', 4, 1);
         % adjust figure size to proper width (SG. 8/25/2017);
         screensz = get(0, 'screensize');
-        set(fht,'Position',[30 30 screensz(3:4)*.85]);
+        set(fht,'Position',[30 5 screensz(3)*.85 screensz(4)*.95]);
         
         if isempty(gslice)
             warning('scn_session_spike_id:emptyData', 'Global slice data is empty!! No voxels in mask??');

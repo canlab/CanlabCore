@@ -114,6 +114,8 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 %   **thin:**
 %        Turn off thick/full-rectangle ribbon width coming from Layer 1 
 %
+%   **steepness:**
+%        followed by a steepness coefficient between 0 and 1 for ribbons  
 %
 % :Outputs:
 %
@@ -131,7 +133,7 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 %
 %   **layer2colors:**
 %        cell array specifying layer2 colors if recolor option is used
-%        
+%
 %
 % :Examples:
 % ::
@@ -476,7 +478,8 @@ set(gca, 'YDir', 'reverse');
 layer1 = riverplot_draw_layer(0, n1, 'colors', layer1colors, 'y_loc', y_loc);
 layer2 = riverplot_draw_layer(layer2x, n2, 'colors', layer2colors);
 
-ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors, 'coveragetype', coveragetype, 'steepness', steepness_coeff);
+ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, 'colors', layer1colors,...
+    'coveragetype', coveragetype, 'steepness', steepness_coeff);
 
 % Turn off lines
 riverplot_toggle_lines(ribbons);

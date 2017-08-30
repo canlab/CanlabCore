@@ -246,9 +246,15 @@ for i = 1:n1
         
         for k=1:2 %cludgey fix for riverplots that extend beyond layer 2 rectangle - this should be fixed better above
            if myoffset(k)+mycoverage(k)>1 %we dont want ribbons extending beyond range.. scoot down a bit
-              myoffset(k)=max(0,myoffset(k)-(1-myoffset(k)+mycoverage(k)));
+              myoffset(k)=max(0,myoffset(k)- (myoffset(k)+mycoverage(k)-1) ); % 8/30/17 SG scoot only down to match the max of box (=1)
            end
         end
+        
+        % 8/30/17 Stephan Geuter
+        % reverse offsets in order to reduce the number of ribbon
+        % crossings.
+        myoffset = 1-myoffset-mycoverage;
+        
         
         % this would be the relative coverage way
         %mycoverage = [sim_matrix(j, i) ./ my_total_layer1(i) sim_matrix(j, i) ./ my_total_layer2(j)]; 

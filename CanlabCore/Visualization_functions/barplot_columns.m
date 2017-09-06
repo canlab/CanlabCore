@@ -448,6 +448,12 @@ end
 
 if doind
     
+    if iscell(mycolor)
+        mycolor = cat(1, mycolor{:});
+    elseif size(mycolor, 1) < ny
+        mycolor = repmat(mycolor, ny, 1);
+    end
+    
     % ----------------------------------------------------
     % > Plot individual points and lines
     % ----------------------------------------------------
@@ -506,7 +512,7 @@ if doind
         % get color
         % ----------------------------------------------------
         if iscell(mycolor) && ~ischar(mycolor)
-        mycolcolor = mycolor{i} ./ 2;
+            mycolcolor = mycolor{i} ./ 2;
         
         elseif iscell(mycolor) && ischar(mycolor{1})
             mycolcolor = [.2 .2 .2];

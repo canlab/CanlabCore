@@ -82,8 +82,12 @@ disp(['Dimensions: ' num2str(k)]);
 
 plot_vertical_line(k);
 
-nrand = 200;
-maxiter = 3000;
+if k>5
+    nrand = 500;
+else 
+    nrand = 100;
+end
+maxiter = 5000;
 disp(['Running mdscale with ' num2str(nrand) ' starting configurations, max iter = ' num2str(maxiter)]);
 [Y,s,err] = mdscale(obs,k,'Replicates', nrand,'Options',statset('MaxIter',maxiter),'Criterion',criterion);
 

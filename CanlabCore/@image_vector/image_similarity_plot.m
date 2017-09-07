@@ -99,6 +99,9 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %
 %   **nofigure**
 %       Omit creation of new figure
+% 
+%   **notable**
+%       Omit printing of similarity table
 %
 %   **cosine_similarity**
 %        Use cosine similarity instead of Pearson's r
@@ -182,7 +185,10 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   - added option to use cosine similarity instead of Pearson
 % 8/21/2017 (Stephan Geuter)
 %   - fixed header for printing similarity table
-%
+% 2017/09/07 Stephan Geuter
+%   - added option for percent overlap of binary masks (see also
+%   canlab_pattern_similarity.m and riverplot.m
+%   Changed metric selection to string format.
 %
 %
 % ..
@@ -197,9 +203,14 @@ table_group = {}; %initialize output
 multcomp_group = {}; %initialize output
 dofigure = true;
 noplot = false;
-doCosine = 0; %do cosine similarity
 groupColors = scn_standard_colors(size(obj.dat, 2));
 dofixRange = 0;
+printTable = true;
+% changed metric selection to string format (SG 2017/09/07)
+sim_metric = 'corr'; % default: correlation
+% doCorr = 1; 
+% doCosine = 0; %do cosine similarity
+
 
 % optional inputs with default values
 % -----------------------------------
@@ -210,7 +221,9 @@ for i = 1:length(varargin)
             
             case 'average', doaverage = 1;
                 
-            case 'cosine_similarity', doCosine = 1;
+            case 'cosine_similarity', sim_metric = 'cosine';
+            
+            case 'binary_overlap', sim_metric = 'overlap';    
                 
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
@@ -239,6 +252,9 @@ for i = 1:length(varargin)
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
                 
             case 'networknames' % do nothing, handle later
+                
+            case 'notable'
+                printTable = false;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -292,25 +308,33 @@ obj = replace_empty(obj);
 % This is done for n images in obj
 r = zeros(size(mask.dat, 2), size(obj.dat, 2));
 
-if ~doCosine
-    
+switch sim_metric
+    case 'corr'
+    % Correlation
     r = corr(double(obj.dat), double(mask.dat))';
     
-else
+    case 'cosine'
     % Cosine similarity
-    
-
+   
     for im = 1:size(mask.dat, 2)
-%         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
-%         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
-%         
-%         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
-%         
+        %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
+        %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
+        %
+        %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
+        %
         r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
     end
+    
+    case 'overlap'
+    % binary overlap
+    for im = 1:size(mask.dat, 2)
+        r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'binary_overlap');
+    end
+    
 end
 
 stats.r = r;
+
 
 if ~doaverage
     
@@ -329,23 +353,31 @@ if ~doaverage
     end
     
     % print similarity matrix
-    fprintf('\n');
-    if doCosine
-        print_matrix(r, {'Name' 'Cosine Similarity'}, networknames)
-    else
-        print_matrix(r, {'Name' 'Pearson''s r'}, networknames)
+    if printTable
+        fprintf('\n');
+        switch sim_metric
+            case 'corr'
+                print_matrix(r, {'Name' 'Pearson''s r'}, networknames);
+            case 'cosine'
+                print_matrix(r, {'Name' 'Cosine Similarity'}, networknames);
+            case 'overlap'
+                print_matrix(r, {'Name' 'Percent Overlap'}, networknames);
+        end
     end
     
 elseif doaverage
     
-    z=fisherz(r'); %transform values
-    
+    if strcmp(sim_metric,'corr') 
+        z=fisherz(r'); %transform values
+    else 
+        z=r'; % may need other transformations for other metrics here (SG 2017/09/07)
+    end
     
     if exist('compareGroups','var') %if we want to do analysis for multiple groups
         
         groupValues=unique(group);
         g=num2cell(groupValues); %create cell array of group numbers
-        
+
         
         for i=1:size(z,2) %for each spatial basis do an anova across groups
             
@@ -396,7 +428,11 @@ elseif doaverage
         
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);
-        stats(g).descrip = 'T-test on Fisher''s r to Z transformed point-biserial correlations';
+        if strcmp(sim_metric,'corr') 
+            stats(g).descrip = 'T-test on Fisher''s r to Z transformed point-biserial correlations';
+        else
+            stats(g).descrip = ['T-test on raw similarity measured by ' sim_metric];  % added SG. See Fisher-Z transformation above. 
+        end
         stats(g).networknames = networknames;
         stats(g).p = p';
         stats(g).sig = h';

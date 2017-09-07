@@ -19,11 +19,18 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % :Optional Inputs:
 %
+%   **dot_product**
+%       [Default] Use dot product
+%
 %   **cosine_similarity**
 %       Use cosine similarity metric for pattern expression instead of dot product
 %
 %   **correlation**
 %       Use correlation metric for pattern expression instead of dot product
+%
+%   **binary_overlap**
+%       Use percent overlap of binary masks instead of dot product. needs
+%       binary masks and pattern weights.
 %
 %   **ignore_missing**
 %       Suppress printing of warnings when thre are missing values
@@ -35,7 +42,11 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **no_warnings**
 %       Suppress output on missing values.
 %
-%
+% :Outputs:
+%   **similarity_output**
+%       Matrix of similarity measures.
+%          
+% 
 % :Examples:
 % ::
 % dat = rand(100, 5);  % 100 voxels, 5 images
@@ -87,14 +98,20 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 %  Created by Tor Wager - 3/7/17
 
-
+% Programmer's Notes:
+%
+% 2017/09/07 Stephan Geuter
+%   - added option for percent overlap of binary masks (see also
+%   image_similarity_plot.m and riverplot.m
+%   - Changed metric selection to string format.
+%
 
 % ---------------------------------
 % Defaults and optional inputs
 % ---------------------------------
 
-docorr = false;     % run correlation instead of dot-product for pattern expression
-docosine = false;   % run cosine sim instead
+% docorr = false;     % run correlation instead of dot-product for pattern expression
+sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
 
@@ -106,15 +123,24 @@ if any(strcmp(varargin, 'no_warnings'))
     doprintwarnings = false;
 end
 
-if any(strcmp(varargin, 'cosine_similarity'))
-    docosine = true;
+if any(strcmp(varargin, 'cosine_similarity')) % run cosine instead of dot-product
+    sim_metric = 'cosine';
 end
 
 if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
-    docorr = true;
+    sim_metric = 'corr';
 end
 
-if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
+if any(strcmp(varargin, 'binary_overlap')) % run overlap instead of dot-product
+    sim_metric = 'overlap';
+end
+
+if any(strcmp(varargin, 'dotproduct')) % default. overwrites previous selections
+    sim_metric = 'dotproduct';
+end
+
+
+% if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
 
 % ---------------------------------
 % Variable types and sizes
@@ -133,13 +159,14 @@ similarity_output = NaN .* zeros(k, npatt);
 % Missing/excluded values image-wise
 % ---------------------------------
 
-badvals = dat == 0 | isnan(dat);  % Matrix
+badvals = dat == 0 | isnan(dat);  % Matrix. not used for binary overlap (SG).
 
 % ---------------------------------
 % Main similarity calculation
 % ---------------------------------
 
-if ~docorr && ~docosine
+% if ~docorr && ~docosine
+if strcmp(sim_metric,'dotproduct')
     % dot product. No need to remove missing voxels because dotproduct is
     % the same either way.
     
@@ -147,22 +174,24 @@ if ~docorr && ~docosine
     
 else
     
+    % all other metrics
     for i = 1:npatt
         
-        if docorr
+        switch sim_metric
+            case 'corr'
             
-            similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
+                similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
+                 
+            case 'cosine'
+        
+                similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
             
-        elseif docosine
-            
-            similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
-            
-            %     else
-            %
-            %         similarity_output(:, i) = dotproduct(dat, pattern_weights(:, i), badvals);
-            
-        else
-            error('Invalid similarity metric.');
+            case 'overlap'
+                
+                similarity_output(:, i) = overlap_similarity(dat, pattern_weights(:, i));
+                
+            otherwise
+                error('Invalid similarity metric.');
         end
         
     end
@@ -173,7 +202,7 @@ end % pattern sim calculation
 % Warnings
 % ---------------------------------
 
-if any(badvals(:)) && ~doignoremissing
+if any(badvals(:)) && ~doignoremissing && ~strcmp(sim_metric,'overlap')
     
     
     for i = 1:npatt
@@ -246,7 +275,7 @@ end
 
 ab = a .* b;
 
-end
+end % function
 
 
 function cossim = cosine_similarity(dat, pattern_weights, badvals)
@@ -276,7 +305,30 @@ for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions 
     
 end
 
+end % function
 
+
+function r = overlap_similarity(dat, pattern_weights)
+
+% check for binary data
+if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0 1])~=0 ...
+        || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0 1])~=0
+    error('Binary overlap similarity needs binary data [0 1] input.');
 end
+
+% compute overlap
+for i = 1:size(dat, 2)
+    
+    inmask = isfinite(dat(:,i)) && isfinite(pattern_weights);
+    nVox = sum(inmask);
+    
+    r(i,1) = (dat(inmask,i)==1 & pattern_weights(inmask)==1) / nVox; % overlap excluding NaNs
+    
+end
+
+end % function
+
+
+
 
 

@@ -64,6 +64,11 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 %        Change similarity metric to dice coefficient.  Default is cosine
 %        similarity.
 %
+%   %%similarity_matrix:**
+%       Followed by a similarity matrix for layer1 and layer2 objects. If
+%       entered no similarity is estimated and 'r' or 'dice' commands
+%       will be ignored. Dimensions are n_layer2 x n_layer1.
+%
 %   **coveragetype:**
 %        'coveragetype' followed by 'relative' 'absolute' or 'normalized'
 %
@@ -192,7 +197,12 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 %    Added statistical thresholding, April 2017, Tor Wager
 %
 %    8/21/2017 Stephan Geuter
-%    changed defaults steepness to conform with changes in riverplot_line.m
+%       - changed defaults steepness to conform with changes in riverplot_line.m
+%
+%    09/07/2017 Stephan Geuter
+%       - added percent overlap for binary masks. see
+%       canlab_pattern_similarity.m and image_similarity_plot.m
+%       - added option to input an existing similarity metric.
 % ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
@@ -210,9 +220,10 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 
 layer2fmri_obj = layer1fmri_obj;  % Default: Plot object with itself
 sim_metric = 'cosine_sim';
+estimateSimilarity = true; % false if similarity matrix entered as input (SG)
 threshold = 'none';
 sig_only = false;
-steepness_coeff = 0.15; 
+steepness_coeff = 0.2; 
 
 dashes = '______________________________________';
 printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
@@ -258,6 +269,11 @@ for i = 1:length(varargin)
                 layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
                 
             case 'sim_metric', sim_metric = varargin{i+1}; varargin{i+1} = [];
+                
+            case {'sim_matrix','similarity_matrix'}
+                sim_matrix = varargin{i+1}; varargin{i+1} = [];
+                estimateSimilarity = false;
+                
             case 'threshold', threshold = varargin{i+1}; varargin{i+1} = [];
              
             case 'coveragetype', coveragetype = varargin{i+1}; varargin{i+1} = [];
@@ -300,117 +316,172 @@ for i = 1:length(varargin)
         end
     end
 end
+% -------------------------------------------------------------------------
+% end input parsing
+% -------------------------------------------------------------------------
+
+
 
 % -------------------------------------------------------------------------
-% Get similarity matrix for cell input, with stats
+% Default: No similarity matrix entered, so estimate it below
 % -------------------------------------------------------------------------
 
-if iscell(layer1fmri_obj)
-    % deal with cell input
-    % similarity and stats for each cell
-    % stats across images (treated as replicates) within cell
-    % i.e., enter n subjects for contrast 1 in cell {1}, n subjects for
-    % contrast 2 in cell {2}, etc.
-    for i = 1:length(layer1fmri_obj)
+if estimateSimilarity
+
+    % -------------------------------------------------------------------------
+    % Get similarity matrix for cell input, with stats
+    % -------------------------------------------------------------------------
+    
+    
+    if iscell(layer1fmri_obj)
+        % deal with cell input
+        % similarity and stats for each cell
+        % stats across images (treated as replicates) within cell
+        % i.e., enter n subjects for contrast 1 in cell {1}, n subjects for
+        % contrast 2 in cell {2}, etc.
+        for i = 1:length(layer1fmri_obj)
+            
+            myname = layer1fmri_obj{i}.image_names(1, :);
+            if iscell(myname), myname = myname{1}; end
+            
+            printhdr(myname);
+            
+            switch sim_metric
+                
+                case 'cosine_sim' % default
+                    
+                    stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity', 'average');
+                    
+                case {'r', 'corr', 'correlation'}
+                    
+                    stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
+                    
+                case 'binary_overlap'
+                    
+                    stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'binary_overlap','average');
+                    
+                case 'dice'
+                    error('Cannot use dice metric with cell input and stats...for now. Enter cosine_sim or correlation');
+            end
+            
+            mysim = nanmean(stats.r')';
+            
+            if sig_only, mysim(~stats.sig) = 0; end
+            
+            sim_matrix(:, i) = mysim;
+            
+        end
         
-        myname = layer1fmri_obj{i}.image_names(1, :);
-        if iscell(myname), myname = myname{1}; end
-       
-        printhdr(myname)
+        % Now collapse layer1fmri_obj to averages so we can proceed later
+        % First collect names, assume one name per object
+        namefun = @(x) x.image_names;
+        mynames = cellfun(namefun, layer1fmri_obj, 'UniformOutput', false);
+        
+        new_obj = replace_empty(mean(layer1fmri_obj{1}));
+        for i = 1:nlayer1
+            tmp = replace_empty(mean(layer1fmri_obj{i}));
+            new_obj.dat(:, i) = tmp.dat(:, 1);
+        end
+        new_obj.image_names = strvcat(mynames{:});
+        layer1fmri_obj = new_obj;
+        
+        
+        
+        
+    % -------------------------------------------------------------------------
+    % Get similarity matrix for image input (non-cell input)
+    % -------------------------------------------------------------------------
+        
+    else % Was not cell input
         
         switch sim_metric
             
             case 'cosine_sim' % default
                 
-                stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity', 'average');
-            
+                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity');
+                sim_matrix = stats.r;
+                
             case {'r', 'corr', 'correlation'}
                 
                 stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
+                sim_matrix = stats.r;
+                
+            case 'binary_overlap'
+                
+                stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'binary_overlap');
+                sim_matrix = stats.r;
                 
             case 'dice'
-                error('Cannot use dice metric with cell input and stats...for now. Enter cosine_sim or correlation');
+                
+                dice_coeff = dice_coeff_image(cat(layer1fmri_obj, layer2fmri_obj));
+                
+                sim_matrix = dice_coeff(1:nlayer1, nlayer1+1:end)';
+                
+            otherwise
+                error('Unknown sim_metric. Choose r, cosine_sim, dice, or binary_overlap');
         end
         
-        mysim = nanmean(stats.r')';
-        
-        if sig_only, mysim(~stats.sig) = 0; end
-        
-        sim_matrix(:, i) = mysim;
-        
-    end
+    end  % cell or no cell
     
-    % Now collapse layer1fmri_obj to averages so we can proceed later
-    % First collect names, assume one name per object
-    namefun = @(x) x.image_names;
-    mynames = cellfun(namefun, layer1fmri_obj, 'UniformOutput', false);
-
-    new_obj = replace_empty(mean(layer1fmri_obj{1}));
-    for i = 1:nlayer1
-        tmp = replace_empty(mean(layer1fmri_obj{i}));
-        new_obj.dat(:, i) = tmp.dat(:, 1);
-    end
-    new_obj.image_names = strvcat(mynames{:});
-    layer1fmri_obj = new_obj;
     
-
     
-% -------------------------------------------------------------------------
-% Get similarity matrix for image input (non-cell input)
-% -------------------------------------------------------------------------
-
-else % Was not cell input
+    % -------------------------------------------------------------------------
+    % Threshold positive or negative, or abs
+    % -------------------------------------------------------------------------
     
-    switch sim_metric
+    switch threshold
         
-        case 'cosine_sim' % default
+        case 'none'
+            % do nothing - default
             
-            stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity');
-            sim_matrix = stats.r;
+        case {'pos', 'positive'}
             
-        case {'r', 'corr', 'correlation'}
+            % Threshold to look at positive associations
+            sim_matrix(sim_matrix < 0) = 0;
             
-            stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
-            sim_matrix = stats.r;
+        case {'neg', 'negative'}
+            sim_matrix = -sim_matrix;
+            sim_matrix(sim_matrix < 0) = 0;
             
-        case 'dice'
-            
-            dice_coeff = dice_coeff_image(cat(layer1fmri_obj, layer2fmri_obj));
-            
-            sim_matrix = dice_coeff(1:nlayer1, nlayer1+1:end)';
+        case 'abs'
+            sim_matrix = abs(sim_matrix);
             
         otherwise
-            error('Unknown sim_metric. Choose r, cosine_sim, or dice');
+            error('Unknown threshold type. Choose pos, neg, or abs');
+    end
+
+    
+    
+    
+else % similarity matrix entered as input
+
+    disp('RiverPlot: Using input similarity matrix'); 
+    
+    % -------------------------------------------------------------------------
+    % check input and get layer objects
+    % -------------------------------------------------------------------------
+    if iscell(layer1fmri_obj)
+        error('matrix input not supported for layer1 cell objects');
     end
     
-end  % cell or no cell
-
-
-
-% -------------------------------------------------------------------------
-% Threshold positive or negative, or abs
-% -------------------------------------------------------------------------
-
-switch threshold
+    % check sim_matrix orientation
+    [n2, n1] = size(sim_matrix);
+    nl1 = size(layer1fmri_obj.image_names,1);
+    nl2 = size(layer2fmri_obj.image_names,1);
+     
+    if n1==nl2 && n2==nl1
+        disp('Matrix orientation seems wrong. Transposing similarity matrix.');
+        disp('Check your matrix and layer dimensions');
+        sim_matrix = sim_matrix';
+        [n2, n1] = size(sim_matrix);
+    end
     
-    case 'none'
-        % do nothing - default
-        
-    case {'pos', 'positive'}
-        
-        % Threshold to look at positive associations
-        sim_matrix(sim_matrix < 0) = 0;
-        
-    case {'neg', 'negative'}
-        sim_matrix = -sim_matrix;
-        sim_matrix(sim_matrix < 0) = 0;
-        
-    case 'abs'
-        sim_matrix = abs(sim_matrix);
-        
-    otherwise
-        error('Unknown threshold type. Choose pos, neg, or abs');
-end
+    if n1~=nl1, error('check similarity matrix and layer1 dimensionality'); end
+    if n2~=nl2, error('check similarity matrix and layer2 dimensionality'); end
+    
+end % end estimate similarity matrix (estimateSimilarity)
+
+
 
 % -------------------------------------------------------------------------
 % Names and sizes

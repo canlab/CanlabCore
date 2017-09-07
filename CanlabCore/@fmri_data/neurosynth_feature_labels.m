@@ -51,6 +51,10 @@ function [image_by_feature_correlations, top_feature_tables] = neurosynth_featur
 %        to save in summary table(s).  e.g., topk = 5 saves 5 most negative
 %        and 5 most positive associations.
 %
+%   **noverbose:**      
+%       Suppress printing of all loaded image names. Default is to print
+%       all image names.
+%
 % :Outputs:
 %
 %   **image_by_feature_correlations:**
@@ -81,6 +85,20 @@ function [image_by_feature_correlations, top_feature_tables] = neurosynth_featur
 % p = genpath(pwd)
 % addpath(p)
 
+
+% ..
+%    Programmers' notes:
+%    List dates and changes here, and author of changes
+%
+%   Tor, Mustafa Salman, and Eswar Damaraju: created 2017
+%
+%   2017/09/07 Stephan
+%       - added (no)verbose option
+%       - adapted to allow for binary mask input. results were all NaN before.
+% ..
+
+
+
 %%
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
@@ -89,6 +107,7 @@ function [image_by_feature_correlations, top_feature_tables] = neurosynth_featur
 display_output = true;
 images_are_replicates = false;               % images in test_dat are replicates of same underlying task for, e.g., diff subjects
 topk = 10;                                   % take top and bottom k for each test image
+verbosestr = 'verbose';                      % print loaded neurosynth image names (long list)
 
 
 % optional inputs with default values
@@ -97,8 +116,12 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case 'display_output', display_output = varargin{i+1}; varargin{i+1} = [];
+                
             case 'images_are_replicates', images_are_replicates = varargin{i+1}; varargin{i+1} = [];
+                
             case 'topk', topk = varargin{i+1}; varargin{i+1} = [];
+                
+            case 'noverbose', verbosestr = 'noverbose'; 
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -114,7 +137,7 @@ end
 % feature_dat = feature_dat.dat;
 % words = feature_dat.Y_names;
 
-[feature_dat, words] = load_image_set('neurosynth');
+[feature_dat, words] = load_image_set('neurosynth',verbosestr);
 words = words';
 
 
@@ -124,8 +147,12 @@ test_dat = resample_space(test_dat, feature_dat);
 %% Get matrix of correlations between images and features
 % -------------------------------------------------------------------------
 % r = images x features matrix of correlations
-image_by_feature_correlations = canlab_pattern_similarity(test_dat.dat, feature_dat.dat, 'correlation', 'ignore_missing');
-
+if numel(unique(test_dat.dat(:)))==2 && sum(unique(test_dat.dat(:))-[0; 1])==0 % binary masks
+    image_by_feature_correlations = canlab_pattern_similarity(feature_dat.dat, test_dat.dat, 'correlation');
+    image_by_feature_correlations = image_by_feature_correlations';
+else % other images
+    image_by_feature_correlations = canlab_pattern_similarity(test_dat.dat, feature_dat.dat, 'correlation', 'ignore_missing');
+end
 
 %% If replicates, do t-test across images
 
@@ -193,7 +220,12 @@ if display_output
     
     for i = 1:ntest
         
-        fprintf('Input image %i\n%s\n%s\n', i, test_dat.fullpath(i, :), ustr);
+        if length( test_dat.fullpath(i, :))<70
+            imgPrintName = test_dat.fullpath(i, :);
+        else
+            imgPrintName = spm_file(test_dat.fullpath(i, :),'short70');
+        end
+        fprintf('Input image %i\n%s\n%s\n', i, imgPrintName, ustr);
         
         disp(top_feature_tables{i})
         

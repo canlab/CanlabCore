@@ -311,8 +311,8 @@ end % function
 function r = overlap_similarity(dat, pattern_weights)
 
 % check for binary data
-if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0 1])~=0 ...
-        || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0 1])~=0
+if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0; 1])~=0 ...
+        || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0; 1])~=0
     error('Binary overlap similarity needs binary data [0 1] input.');
 end
 

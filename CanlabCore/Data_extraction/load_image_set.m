@@ -58,7 +58,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %               Neurosynth, unthresholded, 2013 
 %
 % :Optional inputs:
-%   None yet.
+%
+%   **noverbose:**
+%       Suppress printing of all loaded image names. Default is to print
+%       all image names.
 %
 % :Outputs:
 %
@@ -95,6 +98,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   Tor: created, July 2016
 %
+%   2017/09/07 Stephan
+%       - added (no)verbose option
 % ..
 
 % ..
@@ -102,6 +107,7 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % ..
 
 docustom = 0;
+verbose = 1;
 
 % optional inputs with default values
 % -----------------------------------
@@ -110,7 +116,10 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
+            case 'noverbose', verbose = 0;
             
+            case 'verbose', verbose = 1;
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -192,9 +201,10 @@ if docustom
     
 end
 
-disp('Loaded images:');
-fprintf('%s\n', imagenames{:});
-
+if verbose
+    disp('Loaded images:');
+    fprintf('%s\n', imagenames{:});
+end
 
 end % function
 

@@ -1,4 +1,4 @@
-function [values, components, full_data_objects, l2norms] = extract_gray_white_csf(obj)
+function [values, components, full_data_objects, l2norms] = extract_gray_white_csf(obj,varargin)
 % Extracts mean values (values) and top 5 component scores (components)
 % from each of gray, white, and CSF masks.
 %
@@ -17,17 +17,25 @@ function [values, components, full_data_objects, l2norms] = extract_gray_white_c
 % :Usage:
 % ::
 %
-%     [values, components] = extract_gray_white_csf(obj)
+%     [values, components] = extract_gray_white_csf(obj,options)
 %
 % :Inputs:
 %
 %   **obj:**
 %        an image_vector (e.g., fmri_data) object
 %
-% : Outputs:
+% :Options:
+%
+%   **'eval':**
+%       A function handle to use for computing summary statistics of each
+%       tissue class. Must accept exactly 1 argument and handle 'nan' 
+%       gracefully. e.g. '@(x1)(nanvar(x1))'
+%
+% :Outputs:
 % 
 %   **values:**
-%        mean gray matter, white, CSF
+%        mean gray matter, white, CSF. If 'eval' option is passed,
+%        specified function will be used in place of mean.
 %
 %   **components:**
 %        first 5 components from each tissue class, observation x 5
@@ -45,6 +53,20 @@ function [values, components, full_data_objects, l2norms] = extract_gray_white_c
 % Jan 2017:  Issue with vector lengths if obj has removed images, fixed (Tor)
 %
 % Feb 2017: change to mask. Gray matter is now sparse, old gray_matter_mask.img thresholded at .5.
+%
+% Sept 2017: added option for custom function evaluation in place of mean.
+
+fxn = @(x1)(nanmean(x1,1));
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'eval'
+                fxn = varargin{i+1};
+        end
+    end
+end
+
 numcomps = 5;
 
 masks = {'gray_matter_mask_sparse.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
@@ -79,7 +101,8 @@ for i = 1:length(masks)
     % get means
     masked_obj.dat(masked_obj.dat == 0) = NaN;
     
-    myvalues = nanmean(masked_obj.dat, 1)';
+    myvalues = fxn(masked_obj.dat);
+    myvalues = myvalues(:);
     
     % may need to insert omitted - no, return in reduced space
 %     if length(masked_obj.removed_images) > 1

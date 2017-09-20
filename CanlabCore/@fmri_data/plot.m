@@ -70,7 +70,7 @@ switch plotmethod
         xlabel('Voxels'); ylabel('Images');
         drawnow;
         
-        tmp = mean(fmridat.dat(:));
+        tmp = nanmean(fmridat.dat(:));
         stmp = nanstd(fmridat.dat(:));
         % if std == 0, won't work...
         if stmp < 1000*eps, stmp = 1000*eps; end

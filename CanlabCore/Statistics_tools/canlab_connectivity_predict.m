@@ -53,7 +53,7 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %
 %   **'algo':**
 %        FOR PREDICTIONS. followed by the type of classification algoritm you want to use IF
-%        you entered outcome data. Options 'cv_lassopcr' or 'cv_svm'or 'cv_svr' or 
+%        you entered outcome data. Options 'cv_lassopcr' or 'cv_svm' or 'cv_svr' or 
 %        'cv_multregress' or 'cv_univregress' or 'cv_pcr' or 'cv_multilevel_glm'
 %           Default is LASSO PCR.
 %           Recommended: LASSO PCR or SVR for continuous data. SVM for binary
@@ -148,7 +148,7 @@ for i = 1:length(varargin)
             case 'noplot', doplot = 0;
             case 'nograph', dograph = 0;
             case 'outcome', y = varargin{i+1}; varargin{i+1} = [];
-            case 'algo', algo=varargin{i+1};
+            case 'algo', algo=varargin{i+1}; varargin{i+1} = [];
             case 'folds', folds=varargin{i+1};
             case 'error_type', error_type=varargin{i+1};
             case 'maxclust', maxclust = varargin{i+1}; varargin{i+1} = [];

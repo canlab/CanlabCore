@@ -60,9 +60,30 @@ function parcel_images(image_names, extract_mask, nuisance_covs)
 %    Tor Wager, v. June 2010
 % ..
 
+%%%
+% Notes:
+% 06/19/2017 - SG implemented a check whether lansvd.m (sparse 
+% SVD) is on the path. Download lansvd from https://github.com/areslp/matlab/tree/master/PROPACK
+% lansvd is memory efficient, but estimation is not very stable. can result
+% in NAN-estimations and the code will fail. If lansvd is not on the path,
+% MATLAB's svd.m is called.
+% Fixed voxel data extraction. Line 240 had set the current cluster data to zero,
+% but then all the extracted data in the saved cluster structure were zero,
+% too. commented out that line, as memory shouldn't be a problem nowadays.
+% SG moved NMDS clustering block back into the main function
+% to be run after the initial parcelation (Section 'Multivariate networks: cluster
+% regions into networks'). This is a two-step clustering as in Kober et al
+% 2008.
+
+
 spm_defaults
 
 docorrmtx = 0;  % 0 to work on cov matrix for PCA (good for meta-analysis), or 1 to work on correlation matrix (maybe better for other cases?)
+
+if isempty(which('lansvd.m'))
+    % can be downloaded from https://github.com/areslp/matlab/tree/master/PROPACK
+    warning('lansvd.m not found on path. will use svd.m instead');
+end
 
 % Go to directory: output images will be written here
 % ============================================================
@@ -218,8 +239,9 @@ for i = 1:length(all_labels)
         vox_dat = dat(:, wh_in_region);
         
         % memory saver: zero out dat for these voxels in sparse matrix;
-        % re-load later
-        dat(:, wh_in_region) = 0;
+        % re-load later - % removed, because parcel data are then all-zero,
+        % too. SG. 06/19/2017
+%         dat(:, wh_in_region) = 0;
 
         [pc, score, latent] = run_pca(vox_dat, docorrmtx);  %[pc, score, latent] = run_pca
         clear vox_dat score
@@ -333,18 +355,82 @@ disp('Saved parcel_cl_flat in parcel_clusters_file.mat');
 
 clear dat
 
-% view all the parcels in unique colors
-if isbigmatrix
-    cluster_orthviews(parcel_cl_flat(1), {rand(1, 3)});
-    for i = 2:length(parcel_cl_flat)
-        cluster_orthviews(parcel_cl_flat(i), {rand(1, 3)});
-    end
-else
+%% view all the parcels in unique colors - commented out to save time, SG
+% if isbigmatrix
+%      % loop clusters and display each cluster separately
+%     cluster_orthviews(parcel_cl_flat(1), {rand(1, 3)});
+%     for i = 2:length(parcel_cl_flat)
+%         cluster_orthviews(parcel_cl_flat(i), {rand(1, 3)});
+%     end
+% else
+    % just show all the clusters at once in different colors.
     cluster_orthviews(parcel_cl_flat, 'unique');
-end
+% end
 
 sizes = cat(1, parcel_cl_flat.numVox);
 create_figure('Voxels per parcel'); hist(sizes, 100);
+
+
+%% 
+% ============================================================
+% Multivariate networks: cluster regions into networks
+% ============================================================
+c = [];
+doranks = 1;
+c = nmdsfig_tools('get_data_matrix',c, parcel_cl_flat,'timeseries',1,[],doranks);
+c = nmdsfig_tools('get_correlations',c);
+[c.GroupSpace,c.obs,c.implied_dissim] = shepardplot(c.D,[]);
+
+disp('saving key info in c variable in nmds_c_structure.mat');
+save nmds_c_structure c
+% at least n parcels/2, and if n parcels/2 > 5, then at least 5 but up to
+% nparcels/10
+max_cl_to_test = min(max(5, round(length(parcel_cl_flat) ./ 10)), round(length(parcel_cl_flat)./2));
+max_cl_to_test = round(length(parcel_cl_flat)./2);
+c = nmdsfig_tools('cluster_solution',c, c.GroupSpace, 2:max_cl_to_test, 5000, {});
+scn_export_papersetup(550);
+saveas(gcf,'clusterPermutationTesting','png');
+
+%
+c.colors = cluster_orthviews_classes(parcel_cl_flat,c.ClusterSolution.classes, [], [], 1);
+set(gcf,'position',[1 1 1680 1000]);
+saveas(gcf,'network_montage','fig');
+scn_export_papersetup(550);
+saveas(gcf,'network_montage','png');
+%%
+% apply and make network plot
+c = nmdsfig_tools('apply_clusters',c);
+
+saveas(gcf,'network_nmds_fig','fig');
+scn_export_papersetup(450);
+saveas(gcf,'network_nmds_fig','png');
+
+%nmdsfig_tools('nmdsfig_plot',c, 0, 0, 'fill');
+
+disp('saving updated key info in nmds_c_structure.mat');
+save nmds_c_structure c
+
+
+% name networks
+c.APPLY_CLUSTER.names = cell(1, length(c.APPLY_CLUSTER.classes));
+for i = 1:length(c.APPLY_CLUSTER.classes)
+    wh = find(c.ClusterSolution.classes == i);
+    cluster_orthviews(parcel_cl_flat(wh), c.colors(i), 'solid');
+    c.APPLY_CLUSTER.names{i} = input(sprintf('Name network %3.0f: ', i), 's');
+end
+
+disp('saving updated key info in nmds_c_structure.mat');
+save nmds_c_structure c
+
+% re-make to leave open for display
+cluster_orthviews_classes(parcel_cl_flat,c.ClusterSolution.classes, [], [], 1);
+scn_export_papersetup(700); saveas(gcf, 'cluster_montage_networks.png');
+
+cd('..');
+
+%%
+
+
 
 end % main function
 
@@ -359,6 +445,7 @@ function [dat, maskInfo] = extract_image_data(extract_mask, image_names)
     else
         % struct
         maskindex = logical(iimg_get_data(image_names.V.fname, extract_mask, 2, 'noexpand')); % 1/0 for in-mask/not
+%         [~,maskInfo]  = iimg_get_data(extract_mask,extract_mask,'noverbose', 'single', 'noexpand'); % read maskInfo too. SG 6/19/2017
         if issparse(image_names.data)
             dat = image_names.data(:, maskindex); % single(full(image_names.data(:, maskindex))); %image_names.data(:, maskindex);
         else
@@ -383,7 +470,11 @@ function  [pc, score, latent] = run_pca(dat, docorrmtx)
     
 %     if nvars > 4000
         warning off % lots of "slow matlab code" warnings
-        [U, sigma, pc] = lansvd(dat, ncomponents, 'L');
+        if isempty(which('lansvd.m')) % check for lansvd.m in path (SG)
+            [U, sigma, pc] = svd(dat,0);
+        else
+            [U, sigma, pc] = lansvd(dat, ncomponents, 'L');
+        end
         sigma = diag(sigma);
         score = U .* repmat(sigma', nobs, 1); % == x0*coeff
         sigma = sigma ./ sqrt(nobs-1);
@@ -407,58 +498,4 @@ function  [pc, score, latent] = run_pca(dat, docorrmtx)
 
 end % run_pca
 
-% %%
-% % ============================================================
-% % Multivariate networks: cluster regions into networks
-% % ============================================================
-% c = [];
-% doranks = 1;
-% c = nmdsfig_tools('get_data_matrix',c, parcel_cl_flat,'timeseries',1,[],doranks);
-% c = nmdsfig_tools('get_correlations',c);
-% [c.GroupSpace,c.obs,c.implied_dissim] = shepardplot(c.D,[]);
-% 
-% disp('saving key info in c variable in nmds_c_structure.mat');
-% save nmds_c_structure c
-% % at least n parcels/2, and if n parcels/2 > 5, then at least 5 but up to
-% % nparcels/10
-% max_cl_to_test = min(max(5, round(length(parcel_cl_flat) ./ 10)), round(length(parcel_cl_flat)./2));
-% 
-% c = nmdsfig_tools('cluster_solution',c, c.GroupSpace, 2:max_cl_to_test, 1000, []);
-% 
-% 
-% c.colors = cluster_orthviews_classes(parcel_cl_flat,c.ClusterSolution.classes, [], [], 1);
-% saveas(gcf,'network_montage','fig');
-% scn_export_papersetup(550);
-% saveas(gcf,'network_montage','png');
-% 
-% % apply and make network plot
-% c = nmdsfig_tools('apply_clusters',c);
-% 
-% saveas(gcf,'network_nmds_fig','fig');
-% scn_export_papersetup(450);
-% saveas(gcf,'network_nmds_fig','png');
-% 
-% %nmdsfig_tools('nmdsfig_plot',c, 0, 0, 'fill');
-% 
-% disp('saving updated key info in nmds_c_structure.mat');
-% save nmds_c_structure c
-% 
-% 
-% % name networks
-% c.APPLY_CLUSTER.names = cell(1, length(c.APPLY_CLUSTER.classes));
-% for i = 1:length(c.APPLY_CLUSTER.classes)
-%     wh = find(c.ClusterSolution.classes == i);
-%     cluster_orthviews(parcel_cl_flat(wh), c.colors(i), 'solid');
-%     c.APPLY_CLUSTER.names{i} = input(sprintf('Name network %3.0f: ', i), 's');
-% end
-% 
-% disp('saving updated key info in nmds_c_structure.mat');
-% save nmds_c_structure c
-% 
-% % re-make to leave open for display
-% cluster_orthviews_classes(parcel_cl_flat,c.ClusterSolution.classes, [], [], 1);
-% scn_export_papersetup(700); saveas(gcf, 'cluster_montage_networks.png');
-% 
-% cd('..');
-% %%
-% end  % end function
+%%

@@ -36,6 +36,12 @@ function h = wani_pie(X, varargin)
 %
 %   **'outlinewidth'**
 %
+%   **'outlinewidth'**
+%
+%   **'labels':**
+%       followed by a cell array with string labels for each slice. Can be
+%       empty.
+%
 % :Output:
 %
 %   **h:**
@@ -63,6 +69,13 @@ function h = wani_pie(X, varargin)
 % ..
 
 
+% Programmers notes:
+% 8/21/2017 - Stephan
+% Added option to specify labels for each slice. Varargin 'labels' followed
+% by a cell array with labels for each slice. See matlab's pie.m help for
+% more info on labels.
+
+
 cols = [0.0902 0.2157 0.3686 
     0.2157 0.3765 0.5725
     0.5843 0.2157 0.2078
@@ -85,6 +98,8 @@ dohole = 0;
 doout = 0;
 outlinecol = [0 0 0];
 outlinewidth = 1.2;
+dolabels = 0;
+labels = {};
 
 % Optional inputs
 % -------------------------------------------------------------------------
@@ -109,6 +124,9 @@ for i = 1:length(varargin)
                 outlinecol = varargin{i+1};
             case {'outlinewidth'}
                 outlinewidth = varargin{i+1};
+            case {'labels'}
+                dolabels = 1;
+                labels = varargin{i+1};
         end
     end
 end
@@ -125,7 +143,11 @@ X(X <= 0) = abs(min(X(X ~= 0) ./ 1000));
 % Create pie
 % -------------------------------------------------------------------------
 
-h = pie(X);
+if dolabels
+    h = pie(X,zeros(size(X)),labels);
+else
+    h = pie(X);
+end
 %set(gcf, 'color', 'w', 'position', [360 393 389 305]);
 
 for i = 1:n

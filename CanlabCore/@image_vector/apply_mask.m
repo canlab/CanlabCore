@@ -129,8 +129,10 @@ if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
     
 end
 
-dat = remove_empty(dat);
-nonemptydat = ~dat.removed_voxels; % remove these
+% dat = remove_empty(dat); Tor edited 9/10/17 for computational efficiency
+
+% nonemptydat: Logical index of voxels with valid data, in in-mask space
+nonemptydat = get_nonempty_voxels(dat);
 
 dat = replace_empty(dat);
 
@@ -255,4 +257,26 @@ end % Pattern expression
 
 end  % Main function
 
+
+
+
+function nonemptydat = get_nonempty_voxels(dat)
+empty_voxels = all(dat.dat' == 0 | isnan(dat.dat'), 1)';
+
+if size(empty_voxels, 1) == dat.volInfo.n_inmask
+    % .dat is full in-mask length, we have not called remove_voxels or there are none to remove
+    nonemptydat = ~empty_voxels;
+    
+elseif length(dat.removed_voxels) == dat.volInfo.n_inmask
+    % .dat is not in-mask length, and we have .removed_voxels defined
+    nonemptydat = false(dat.volInfo.n_inmask, 1);
+    nonemptydat(~dat.removed_voxels) = true;
+    
+    % additional: we could have invalid voxels that have been changed/added since
+    % remove_empty was last called.
+    %     dat.removed_voxels(dat.removed_voxels) =
+    %     nonemptydat(empty_voxels
+end
+
+end
 

@@ -8,6 +8,15 @@ function out = riverplot_line(x, y, color, thickness, steepness, varargin)
 % x = rect1.topright
 % y = rect2.topleft
 
+% Programmers' notes:
+% 8/21/2017 Stephan Geuter
+% changed steepnes treatment computation. Steepness coefficient is now used
+% in sigmoid function to control steepnes and curvature at tangets (box
+% edges). shift in xstartpoints is removed. Makes ribbons smoother.
+%
+%
+
+
 % x, y inputs can be [x,y,z] coordinate triplets or clusters.
 if isstruct(x), x = x.mm_center(1:2); end
 if isstruct(y), y = y.mm_center(1:2); end
@@ -17,15 +26,18 @@ if isstruct(y), y = y.mm_center(1:2); end
 xdiff = y(1) - x(1);  % difference in x position
 ydiff = y(2) - x(2);
 
-xstartpoints = [x(1) + xdiff * steepness(1) y(1) - xdiff * steepness(1)]';
+% xstartpoints = [x(1) + xdiff * steepness(1) y(1) - xdiff * steepness(1)]';
+xstartpoints = [x(1) y(1)]';
 
 
 % sigmoid reference curve
-sigmoid = inline('p(1) .* ( 1 ./ (1 + p(2)*exp(-p(3)*x)) )','p','x');
+% sigmoid = inline('p(1) .* ( 1 ./ (1 + p(2)*exp(-p(3)*x)) )','p','x');
+sigmoid = @(p,x) (p(1) .* ( 1 ./ (1 + p(2)*exp(-p(3)*x)) ));
 xx = linspace(-5, 5, 50); % generate 50 points with standard sigmoid  
 %                         % Range determines steepness bounds, larger range
 %                         = more steep
-yy = sigmoid([1 1 1], xx)';
+yy = sigmoid([1 1 1+steepness(1)], xx)'; % add steepness coefficient to have ribbons meet the box edges
+
 
 xmidpoints = linspace(xstartpoints(1), xstartpoints(end), 50)';
 ymidpoints = x(2) + yy * ydiff;

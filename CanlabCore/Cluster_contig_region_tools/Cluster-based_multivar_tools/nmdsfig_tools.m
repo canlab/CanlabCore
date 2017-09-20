@@ -565,7 +565,7 @@ function c_complete = nmdsfig_plot_withcovs(c, cl, doranks)
     c_complete.dat = [extravars c_complete.dat];
 
     c_complete = nmdsfig_tools('get_correlations',c_complete);
-    [c_complete.GroupSpace,c_complete.obs,c_complete.implied_dissim] = shepardplot(c_complete.D,[]);
+    [c_complete.GroupSpace,c_complete.obs,c_complete.implied_dissim,c_complete.stress] = shepardplot(c_complete.D,[]);
 
     c_complete.ClusterSolution = c.ClusterSolution;
 
@@ -721,7 +721,7 @@ function [pthr,sig] = fdr_correct_pvals(p,r)
     % -----------------------------------------------------------------------
     % -----------------------------------------------------------------------
 
-    % Find clusuter solution
+    % Find cluster solution
 
     % -----------------------------------------------------------------------
     % -----------------------------------------------------------------------
@@ -865,7 +865,7 @@ function c = apply_clusters(c, varargin)
     c.APPLY_CLUSTER.names = classnames;
 
     % matrix plot is not meaningful here; close
-    close
+    close;
     %save_figure('cluster_nmdsfig_rmatrix',400);
 
     % standardize variables?  No, let's let low variance vars contribute less

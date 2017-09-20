@@ -120,7 +120,7 @@ nbin=100;
 [freq, mask]=hist(datin, nbin);
 
 if plotfigs
-    create_figure('Implicit Mask')
+    create_figure('Implicit Mask');
     plot(mask, freq, 'k', 'LineWidth', 2); hold on;
 end  
 

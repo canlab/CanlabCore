@@ -38,12 +38,12 @@ if isscalar(ntest), ntest = 1:ntest; end
 
 obs = squareform(D);
 
-str = sprintf('Testing dim %02d',0); fprintf(1,str);
+str = sprintf('Testing dim %03d',0); fprintf(1,str);
 warning off
 stress = zeros(1, max(ntest));
 
 for i = ntest
-    fprintf(1,'\b\b%02d',i);
+    fprintf(1,'\b\b\b%03d',i);
     [Y,stress(i)] = mdscale(obs,i,'Criterion',criterion);
 end
 warning on
@@ -76,15 +76,20 @@ else
 end
 
 while isempty(k)
-    k = input('Choose n dims: ');
+    k = input('Choose n NDMS dims: ');
 end
 disp(['Dimensions: ' num2str(k)]);
 
 plot_vertical_line(k);
 
-nrand = 10;
-disp(['Running mdscale with ' num2str(nrand) ' starting configurations, max iter = 500']);
-[Y,s,err] = mdscale(obs,k,'Replicates', nrand,'Options',statset('MaxIter',500),'Criterion',criterion);
+if k>5
+    nrand = 500;
+else 
+    nrand = 100;
+end
+maxiter = 5000;
+disp(['Running mdscale with ' num2str(nrand) ' starting configurations, max iter = ' num2str(maxiter)]);
+[Y,s,err] = mdscale(obs,k,'Replicates', nrand,'Options',statset('MaxIter',maxiter),'Criterion',criterion);
 
 % implied distances are the Euclidean distances between stimulus
 % coordinates (sc).  Stim coordinates are the rows of eigenvectors (V).

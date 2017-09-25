@@ -83,7 +83,7 @@ if exist('bestmcq', 'var')
 end
 
 %set(gca,'XLim',min(h) - .1
-title(['Permuted distribution for ',num2str(clust(bestc)-1),' clusters'])
+title(['Permuted distribution for ',num2str(bestc),' clusters'])
 ylabel('Mean silhouette value')
 ylabel('Frequency')
 %%%------------------------- panel 3 ---------------------------------%%%

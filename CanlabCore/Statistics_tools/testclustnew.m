@@ -253,7 +253,7 @@ stats.perm05 = perm05;
 stats.permstd = std_pcq;
 stats.pval = cpval;
 stats.stdval = stdval;
-stats.numclusters = clust(bestc);
+stats.numclusters = bestc;
 stats.classes = bestmyclass;
 
 

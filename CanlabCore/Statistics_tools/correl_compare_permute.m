@@ -58,20 +58,11 @@ function OUT = correl_compare_permute(meth,dat,nperms,condition)
   cdiffprm = zeros(m,m,nperms);
   cdiffmaxp = zeros(nperms,1);
   cdiff_matrix = zeros(nperms,m*(m-1)/2);
-
-  fprintf(1,'Permuting: %05d',0);
-
-  for i = 1:nperms
-
-    if mod(i,10) == 0
-      fprintf(1,'\b\b\b\b\b%05d',i);
-    end
-
-		 % permute rows to shuffle condition assignment labels
+  fprintf(1,'Permuting:\n');
+  parfor i = 1:nperms
+    % permute rows to shuffle condition assignment labels
     datp = dat(permindx(i,:),:);
-
     [cdiffprm(:,:,i), cdiffmaxp(i),null,null,cdiff_matrix(i,:)] = get_corrmat(meth,datp,condition);
-
   end
 
   fprintf(1,' Done.\n');

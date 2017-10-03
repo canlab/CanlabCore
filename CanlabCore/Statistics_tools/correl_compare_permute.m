@@ -43,14 +43,14 @@ function OUT = correl_compare_permute(meth,dat,nperms,condition)
   if isempty(meth), meth = 'taub'; end
 
 				% set up permutations
-  fprintf(1,'Setting up permutations. ');
+  fprintf(1,'Setting up permutations. \n');
   [n,m] = size(dat);
 
   permindx = permute_setupperms(n,nperms);
 
 
 				% correct permutation
-  fprintf(1,'Correct perm. ');
+  fprintf(1,'Correct perm. \n');
   [cdiff, cdiffmax,c1,c2] = get_corrmat(meth,dat,condition);
 
 
@@ -104,17 +104,13 @@ function [cdiff, cdiffmax,c1,c2,cdiff_matrix] = get_corrmat(meth,dat,condition)
 
   c1 = correlation('taub',dat(condition == 1,:));
   c2 = correlation('taub',dat(condition == 2,:));
-
   cdiff = c1 - c2;
-
-		      % works for any diff between correls, two tailed
+  % works for any diff between correls, two tailed
   cdiff_matrix = squareform(cdiff);
   cdiffmax = max(abs(cdiff_matrix));
-
-		 % works for any correlation with ones on the diagonal
-		 % two-tailed
-		 %cdiffmax = max(abs(squareform(cdiff - 1) + 1));
-
+  % works for any correlation with ones on the diagonal
+  % two-tailed
+  %cdiffmax = max(abs(squareform(cdiff - 1) + 1));
 end
 
 

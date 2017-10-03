@@ -63,7 +63,7 @@ function OUT = correl_compare_permute(meth,dat,nperms,condition)
 
   for i = 1:nperms
 
-    if mod(i,10g) == 0
+    if mod(i,10) == 0
       fprintf(1,'\b\b\b\b\b%05d',i);
     end
 

@@ -40,60 +40,60 @@ function OUT = correl_compare_permute(meth,dat,nperms,condition)
 %    tor wager, Jan 15, 2007
 % ..
 
-if isempty(meth), meth = 'taub'; end
+  if isempty(meth), meth = 'taub'; end
 
-% set up permutations
-fprintf(1,'Setting up permutations. ');
-[n,m] = size(dat);
+				% set up permutations
+  fprintf(1,'Setting up permutations. ');
+  [n,m] = size(dat);
 
-permindx = permute_setupperms(n,nperms);
-
-
-% correct permutation
-fprintf(1,'Correct perm. ');
-[cdiff, cdiffmax,c1,c2] = get_corrmat(meth,dat,condition);
+  permindx = permute_setupperms(n,nperms);
 
 
-% init perms
-cdiffprm = zeros(m,m,nperms);
-cdiffmaxp = zeros(nperms,1);
-cdiff_matrix = zeros(nperms,m*(m-1)/2);
+				% correct permutation
+  fprintf(1,'Correct perm. ');
+  [cdiff, cdiffmax,c1,c2] = get_corrmat(meth,dat,condition);
 
-fprintf(1,'Permuting: %05d',0);
 
-for i = 1:nperms
+				% init perms
+  cdiffprm = zeros(m,m,nperms);
+  cdiffmaxp = zeros(nperms,1);
+  cdiff_matrix = zeros(nperms,m*(m-1)/2);
 
-    if mod(i,10) == 0
-        fprintf(1,'\b\b\b\b\b%05d',i);
+  fprintf(1,'Permuting: %05d',0);
+
+  for i = 1:nperms
+
+    if mod(i,10g) == 0
+      fprintf(1,'\b\b\b\b\b%05d',i);
     end
 
-    % permute rows to shuffle condition assignment labels
+		 % permute rows to shuffle condition assignment labels
     datp = dat(permindx(i,:),:);
 
     [cdiffprm(:,:,i), cdiffmaxp(i),null,null,cdiff_matrix(i,:)] = get_corrmat(meth,datp,condition);
 
-end
+  end
 
-fprintf(1,' Done.\n');
+  fprintf(1,' Done.\n');
 
-OUT = struct('meth',meth,'c1',c1,'c2',c2,'cdiff',cdiff,'cdiffprm',cdiffprm,'cdiff_matrix',cdiff_matrix,'cdiffmaxp',cdiffmaxp);
+  OUT = struct('meth',meth,'c1',c1,'c2',c2,'cdiff',cdiff,'cdiffprm',cdiffprm,'cdiff_matrix',cdiff_matrix,'cdiffmaxp',cdiffmaxp);
 
-% Results and thresholding
-OUT.diff_corrected05thr = prctile(OUT.cdiffmaxp,95);
+				% Results and thresholding
+  OUT.diff_corrected05thr = prctile(OUT.cdiffmaxp,95);
 
-[rows,cols,ncorr] = corrcoef_indices(m);
-for cc = 1:ncorr
+  [rows,cols,ncorr] = corrcoef_indices(m);
+  for cc = 1:ncorr
     
-    % do threshold on each pair separately
+				% do threshold on each pair separately
     this_cor = squeeze(OUT.cdiffprm(rows(cc),cols(cc),:)); % null-hypothesis
-    % one-tailed
+				% one-tailed
     pv = sum(this_cor <= OUT.cdiff(rows(cc),cols(cc))) ./ nperms;
     pval(cc) = min(pv,1-pv);
     
-end
+  end
 
-OUT.pdiff = reconstruct(pval,m,ncorr,rows,cols);
-OUT.pdiff = OUT.pdiff + eye(m);
+  OUT.pdiff = reconstruct(pval,m,ncorr,rows,cols);
+  OUT.pdiff = OUT.pdiff + eye(m);
 
 end
 
@@ -102,18 +102,18 @@ end
 
 function [cdiff, cdiffmax,c1,c2,cdiff_matrix] = get_corrmat(meth,dat,condition)
 
-c1 = correlation('taub',dat(condition == 1,:));
-c2 = correlation('taub',dat(condition == 2,:));
+  c1 = correlation('taub',dat(condition == 1,:));
+  c2 = correlation('taub',dat(condition == 2,:));
 
-cdiff = c1 - c2;
+  cdiff = c1 - c2;
 
-% works for any diff between correls, two tailed
-cdiff_matrix = squareform(cdiff);
-cdiffmax = max(abs(cdiff_matrix));
+		      % works for any diff between correls, two tailed
+  cdiff_matrix = squareform(cdiff);
+  cdiffmax = max(abs(cdiff_matrix));
 
-% works for any correlation with ones on the diagonal
-% two-tailed
-%cdiffmax = max(abs(squareform(cdiff - 1) + 1));
+		 % works for any correlation with ones on the diagonal
+		 % two-tailed
+		 %cdiffmax = max(abs(squareform(cdiff - 1) + 1));
 
 end
 

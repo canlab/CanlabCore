@@ -85,6 +85,8 @@ function obj = addblobs(obj, cl, varargin)
 %
 %   **'noverbose'** : turn off verbose text reporting
 %
+%   **'depth'** : followed by number (mm) changes search depth (default=2)
+%
 % CONTROL OF WHICH MONTAGE
 %
 %   **'wh_montages':**
@@ -201,6 +203,8 @@ add_splitcolor_to_varargin = 0; % internal control, not input option
 % pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 % neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
+depth=2;
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -247,6 +251,9 @@ for i = 1:length(varargin)
                     add_splitcolor_to_varargin = 1;
                     
                 end
+                
+             case 'depth'
+                depth = varargin{i + 1};
                 
             case 'no_surface'
                 addsurfaceblobs = 0;
@@ -346,7 +353,7 @@ if addsurfaceblobs
             pos_colormap = colormap_tor(minposcolor, maxposcolor);
             neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
         end
-        cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+        cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
         
     end
 end

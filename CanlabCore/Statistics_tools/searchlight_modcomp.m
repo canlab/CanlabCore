@@ -99,11 +99,12 @@ p_corr = NaN(n,1);
 sl_size = zeros(n,1);
 
 fprintf('\n Calculating corrleation for voxel                 ');
+xyzlist=dat1.volInfo.xyzlist(~dat1.removed_voxels,:);
+dat=dat1.dat;
 for i = 1:n %(1):vox_to_run(10)
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%07d/%07d', i, n);
-    eval(['searchlight_indx = searchlight_sphere_prep(dat' num2str(1) ...
-        '.volInfo.xyzlist(~dat' num2str(1) '.removed_voxels,:), i, r);']);
-    [r_corr(i), p_corr(i)] = corr(pdist(dat1.dat(searchlight_indx,:)','correlation')',rdm', 'type', corr_type);
+    searchlight_indx = searchlight_sphere_prep(xyzlist, i, r);
+    [r_corr(i), p_corr(i)] = corr(pdist(dat(searchlight_indx,:)','correlation')',rdm', 'type', corr_type);
     sl_size(i) = sum(searchlight_indx);
 end
 

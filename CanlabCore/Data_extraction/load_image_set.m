@@ -43,7 +43,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
 %        'npsplus': Wager lab published multivariate patterns:
-%                   NPS, PINES, Romantic Rejection, VPS, more
+%                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
+%        'painsig': NPS (incl NPSpos & NPSpos) and SIIPS only
 %        'emotionreg' : N = 30 emotion regulation sample dataset from Wager
 %        et al. 2008. Each image is a contrast image for the contrast [reappraise negative vs. look negative]
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
@@ -163,6 +164,9 @@ else
           
         case 'npsplus'
             [image_obj, networknames, imagenames] = load_npsplus;
+            
+        case 'painsig'
+            [image_obj, networknames, imagenames] = load_painsig;
             
         case 'kragelemotion'
             [image_obj, networknames, imagenames] = load_kragelemotion;
@@ -444,7 +448,23 @@ image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads imag
 end  % function
 
 
+function [image_obj, networknames, imagenames] = load_painsig
 
+% Load pain signatures 
+% ------------------------------------------------------------------------
+
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS'};
+
+imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
+    'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
+    'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii'};    % Woo 2017 SIIPS - stim-indep pain         
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
+
+end  % function
 
 
 

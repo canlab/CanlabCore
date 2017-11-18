@@ -129,6 +129,7 @@ color = [1 0 0];
 % contour and outline options
 docontour = 0;
 dotrans = 0;
+dofill = 0;
 transvalue = []; % default: map with clim
 contourmin = 100*eps;
 outline = 0;
@@ -196,6 +197,8 @@ for i = 1:length(varargin)
                 % contour options
             case 'contour', docontour = 1;
             case 'outline', docontour = 1; outline = 1;
+            case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this. 
+            case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time.
             case 'linewidth', mylinewidth = varargin{i + 1};
                 
                 % orientation options
@@ -213,7 +216,7 @@ for i = 1:length(varargin)
     end
 end
 
-
+if ~exist('edgecolor', 'var'), edgecolor = color; end
 
 blobhan = [];
 
@@ -390,6 +393,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % contour outline or plot
                 % -----------------------------------------------------------
                 
+                Z(isnan(Z)) = 0;
                 [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
                 
                 if str2double(vstr(1:3))<8.4  % pre R2014b
@@ -432,8 +436,10 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         %set(colorh, 'FaceAlpha', 0, 'LineWidth', mylinewidth, 'EdgeColor', color);
                     else
                         %set(h, 'FaceAlpha', 0, 'LineWidth', mylinewidth, 'EdgeColor', color);
-                        set(h, 'LineWidth', mylinewidth, 'EdgeColor', color);
-                        set(h, 'Fill', 'off')
+                        set(h, 'LineWidth', mylinewidth, 'EdgeColor', edgecolor);
+                        if ~dofill
+                            set(h, 'Fill', 'off')
+                        end
                     end
                     
                 end

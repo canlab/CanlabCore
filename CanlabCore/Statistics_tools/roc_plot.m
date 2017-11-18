@@ -274,6 +274,7 @@ switch threshold_type
         avg = mean([tpr; 1-fpr]);
         [dummy, wh] = max(avg);
         class_thr = thr(wh);
+        dobalanced = 1;
         
     case 'A priori threshold'
         

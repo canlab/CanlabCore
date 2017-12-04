@@ -94,6 +94,9 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   **group**
 %        Indicates group membership for each image
 %
+%   **plotstyle:**
+%            'wedge' [default] or 'polar'
+%  
 %   **noplot**
 %        Omits plot (print stats only)
 %
@@ -120,8 +123,9 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %
 %   **'dofixrange':**
 %        Set min and max of circles numbers (values on polar axis)
-%        Follow by range vector: [min_val max_val]
-%
+%        Follow by range vector: [min_val max_val] OR
+%        one radius value for wedge
+%          
 %
 % :Outputs:
 %
@@ -149,6 +153,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %             multiple one-way ANOVA tables (one for each
 %             spatial basis) with group as column factor (requires
 %             'average' to be specified)
+%
 %   **multcomp_group**
 %             mutiple comparisons of means across groups, one output
 %             cell for each spatial basis, critical value determined
@@ -210,7 +215,7 @@ printTable = true;
 sim_metric = 'corr'; % default: correlation
 % doCorr = 1; 
 % doCosine = 0; %do cosine similarity
-
+plotstyle = 'wedge';
 
 % optional inputs with default values
 % -----------------------------------
@@ -255,6 +260,9 @@ for i = 1:length(varargin)
                 
             case 'notable'
                 printTable = false;
+                
+            case 'plotstyle'
+                plotstyle = varargin{i + 1}; varargin{i + 1} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -340,17 +348,41 @@ if ~doaverage
     
     if ~noplot
         
-        if ~dofixRange
-            % Plot values for each image in obj
-            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
-        else
-            [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange);
-            % Make legend
-            if ~isempty(obj.image_names)
-                han = makelegend(obj.image_names, groupColors);
-            end
-        end
-    end
+        switch plotstyle
+            case 'wedge'
+                % --------------------------------------------------
+                mycolors = repmat(groupColors, 1, length(networknames));
+                wh = r < 0;
+                
+                % plot negative values in the complementary color
+                mycolors(wh) = repmat({[1 1 1] - groupColors{1}}, 1, sum(wh));
+                r_to_plot = abs(r); 
+                
+                if ~dofixRange
+                    outercircleradius = min(1, max(r_to_plot) + .1*max(r_to_plot));
+                else
+                    outercircleradius = fixedrange;
+                end
+                
+                hh = tor_wedge_plot(r_to_plot, networknames, 'outer_circle_radius', outercircleradius, 'colors', mycolors, 'nofigure');
+                
+                
+            case 'polar'
+                % --------------------------------------------------
+                
+                if ~dofixRange
+                    % Plot values for each image in obj
+                    [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
+                else
+                    [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange);
+                    % Make legend
+                    if ~isempty(obj.image_names)
+                        han = makelegend(obj.image_names, groupColors);
+                    end
+                end
+                
+        end % plotstyle
+    end % doplot
     
     % print similarity matrix
     if printTable
@@ -366,6 +398,7 @@ if ~doaverage
     end
     
 elseif doaverage
+    % Defaults to polar plot only for now!!!
     
     if strcmp(sim_metric,'corr') 
         z=fisherz(r'); %transform values

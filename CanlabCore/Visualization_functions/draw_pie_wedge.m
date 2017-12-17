@@ -46,6 +46,12 @@ function [handles, key_points] = draw_pie_wedge(T1, T2, myradius, varargin)
 %   **'linewidth':**
 %       Followed by line width
 %
+%   **'stripes':**
+%       Turn on radial striping; can be followed by value true or false
+%
+%   **'stripedensity':**
+%       Number of stripes/lines to draw in wedge
+%
 % :Outputs:
 %
 %   **handles:**
@@ -70,6 +76,9 @@ function [handles, key_points] = draw_pie_wedge(T1, T2, myradius, varargin)
 %
 % Now draw a wedge on top of that:
 % handles = draw_pie_wedge(1, 1.5, 2.5, 'linecolor', [.7 .7 0], 'fillcolor', [.3 .7 .7]);
+%
+% Draw with dense striping pattern:
+% handles = draw_pie_wedge(1, 1.5, 2.5, 'linecolor', [.7 .7 0], 'fillcolor', [.3 .7 .7], 'stripes', 'stripedensity', 40);
 %
 % Draw a series of wedges in different colors:
 % n_categories = 7;
@@ -99,6 +108,8 @@ linecolor = [1 0 0];
 fillcolor = [.7 .3 .7];
 linewidth = 2;
 outside_radius_offset = .04; % Value to offset by when calculating outside-wedge midpoint for labels
+dostripes = false;
+stripedensity = 12;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -109,6 +120,15 @@ for i = 1:length(varargin)
                 
             case 'linewidth', linewidth = varargin{i+1}; varargin{i+1} = [];
                     
+            case 'stripes' 
+                dostripes = true; 
+                % Optional argument true or false following keyword
+                if length(varargin) > i && ~ischar(varargin{i+1}) % param value entered in next arg
+                    dostripes = varargin{i+1}; varargin{i+1} = [];
+                end
+                
+            case 'stripedensity', stripedensity = varargin{i+1}; varargin{i+1} = [];
+                
             case 'outside_radius_offset', outside_radius_offset = varargin{i+1}; varargin{i+1} = [];
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -124,14 +144,7 @@ end
 % ------------------------------------------
 %h = drawCircleArc(0, 0, myradius, T1, T2);
 
-% key bits
-t = T1:.01:T2;          % Arc
-xt = 0 + myradius*cos(t);
-yt = 0 + myradius*sin(t);
-xt = [xt 0+myradius*cos(T2)];
-yt = [yt 0+myradius*sin(T2)];
-
-h = line(xt, yt);
+[h xt yt] = drawArc(T1, T2, myradius);
 
 % get midpoint of arc
 % ------------------------------------------
@@ -179,5 +192,47 @@ end
 
 handles = struct('line_han', h, 'fill_han', hfill);
 
+% Striping
+% ------------------------------------------
+if dostripes
+    
+    handles.stripe_han = drawStripes(T1, T2, myradius, stripedensity);
+    set(handles.stripe_han, 'Color', linecolor, 'LineWidth', linewidth)
+    
+else
+    
+    handles.stripe_han = [];
+    
+end
+    
+
+
 end % main function
+
+
+function [h xt yt] = drawArc(T1, T2, myradius)
+
+% key bits
+t = T1:.01:T2;          % Arc
+xt = 0 + myradius*cos(t);
+yt = 0 + myradius*sin(t);
+xt = [xt 0+myradius*cos(T2)];
+yt = [yt 0+myradius*sin(T2)];
+
+h = line(xt, yt);
+
+end
+
+
+function h = drawStripes(T1, T2, myradius, stripedensity)
+
+r = linspace(0, myradius, stripedensity);
+
+for i = 1:length(r)
+    
+    h(i) = drawArc(T1, T2, r(i));
+    
+end
+
+end
 

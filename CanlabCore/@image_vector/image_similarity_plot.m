@@ -56,7 +56,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
 %
-%   **mapset** 
+%   **mapset**
 %       Followed by one of the keywords below, or by an fmri_data object
 %       containing maps you want to apply to (compare similarity with) input image objects
 %       If you enter a custom image object, also enter 'networknames'
@@ -84,7 +84,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
 %
 %   **fibromyalgia**
-%        3 neural classifiers used to predict FM in Lopez-Sola et al 2017 
+%        3 neural classifiers used to predict FM in Lopez-Sola et al 2017
 %        also 'fm','fibro'
 %
 % 	**compareGroups**
@@ -96,13 +96,13 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %
 %   **plotstyle:**
 %            'wedge' [default] or 'polar'
-%  
+%
 %   **noplot**
 %        Omits plot (print stats only)
 %
 %   **nofigure**
 %       Omit creation of new figure
-% 
+%
 %   **notable**
 %       Omit printing of similarity table
 %
@@ -121,11 +121,16 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %               5		Pink
 %               6		Turquoise
 %
+%   **bicolor**
+%        For wedge plot only, plot positive entries in groupColors{1} and
+%        negative entries in groupColors{2}. Otherwise, will plot negative
+%        entries with stripes on wedges [default].
+%
 %   **'dofixrange':**
 %        Set min and max of circles numbers (values on polar axis)
 %        Follow by range vector: [min_val max_val] OR
 %        one radius value for wedge
-%          
+%
 %
 % :Outputs:
 %
@@ -174,7 +179,7 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %
 % :See also:
 %
-% tor_polar_plot
+% tor_polar_plot, tor_wedge_plot
 
 % ..
 %    Programmers' notes:
@@ -213,9 +218,10 @@ dofixRange = 0;
 printTable = true;
 % changed metric selection to string format (SG 2017/09/07)
 sim_metric = 'corr'; % default: correlation
-% doCorr = 1; 
+% doCorr = 1;
 % doCosine = 0; %do cosine similarity
-plotstyle = 'wedge';
+plotstyle = 'wedge'; % or 'polar'
+bicolor = false;
 
 % optional inputs with default values
 % -----------------------------------
@@ -227,8 +233,8 @@ for i = 1:length(varargin)
             case 'average', doaverage = 1;
                 
             case 'cosine_similarity', sim_metric = 'cosine';
-            
-            case 'binary_overlap', sim_metric = 'overlap';    
+                
+            case 'binary_overlap', sim_metric = 'overlap';
                 
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
@@ -256,6 +262,9 @@ for i = 1:length(varargin)
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
                 
+            case 'bicolor'
+                bicolor = true;
+                
             case 'networknames' % do nothing, handle later
                 
             case 'notable'
@@ -274,7 +283,7 @@ end
 
 [mask, networknames, imagenames] = load_image_set(mapset);
 
-% Re-load names if entered. 
+% Re-load names if entered.
 % ------------------------------------------------------------------------
 wh = strcmp(varargin, 'networknames');
 if any(wh)
@@ -318,27 +327,27 @@ r = zeros(size(mask.dat, 2), size(obj.dat, 2));
 
 switch sim_metric
     case 'corr'
-    % Correlation
-    r = corr(double(obj.dat), double(mask.dat))';
-    
+        % Correlation
+        r = corr(double(obj.dat), double(mask.dat))';
+        
     case 'cosine'
-    % Cosine similarity
-   
-    for im = 1:size(mask.dat, 2)
-        %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
-        %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
-        %
-        %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
-        %
-        r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
-    end
-    
+        % Cosine similarity
+        
+        for im = 1:size(mask.dat, 2)
+            %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
+            %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
+            %
+            %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
+            %
+            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
+        end
+        
     case 'overlap'
-    % binary overlap
-    for im = 1:size(mask.dat, 2)
-        r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'binary_overlap');
-    end
-    
+        % binary overlap
+        for im = 1:size(mask.dat, 2)
+            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'binary_overlap');
+        end
+        
 end
 
 stats.r = r;
@@ -351,21 +360,21 @@ if ~doaverage
         switch plotstyle
             case 'wedge'
                 % --------------------------------------------------
-                mycolors = repmat(groupColors, 1, length(networknames));
-                wh = r < 0;
-                
-                % plot negative values in the complementary color
-                mycolors(wh) = repmat({[1 1 1] - groupColors{1}}, 1, sum(wh));
-                r_to_plot = abs(r); 
-                
                 if ~dofixRange
-                    outercircleradius = min(1, max(r_to_plot) + .1*max(r_to_plot));
+                    outercircleradius = min(1, max(r) + .1*max(r));
                 else
                     outercircleradius = fixedrange;
                 end
                 
-                hh = tor_wedge_plot(r_to_plot, networknames, 'outer_circle_radius', outercircleradius, 'colors', mycolors, 'nofigure');
-                
+                if bicolor
+                    % plot negative values in the complementary color
+                    %groupColors(2) = {[1 1 1] - groupColors{1}};
+                    hh = tor_wedge_plot(r, networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
+                    
+                else
+                    
+                    hh = tor_wedge_plot(r, networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure');
+                end
                 
             case 'polar'
                 % --------------------------------------------------
@@ -397,12 +406,16 @@ if ~doaverage
         end
     end
     
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
 elseif doaverage
-    % Defaults to polar plot only for now!!!
+    % Average across replicates (usually participants) and plot means with
+    % error regions (shading)
     
-    if strcmp(sim_metric,'corr') 
+    if strcmp(sim_metric,'corr')
         z=fisherz(r'); %transform values
-    else 
+    else
         z=r'; % may need other transformations for other metrics here (SG 2017/09/07)
     end
     
@@ -410,7 +423,7 @@ elseif doaverage
         
         groupValues=unique(group);
         g=num2cell(groupValues); %create cell array of group numbers
-
+        
         
         for i=1:size(z,2) %for each spatial basis do an anova across groups
             
@@ -440,13 +453,12 @@ elseif doaverage
         g=num2cell(groupValues); %creat cell array of group numbers
         
         
-    end
+    end % Compare groups
     
     
-    
-    
-    %perform test of uniformity for each group
-    
+    % Perform test of uniformity for each group
+    % ------------------------------------------------------------
+
     for g=1:length(groupValues)
         
         r_group=r(:,group==groupValues(g));
@@ -461,10 +473,10 @@ elseif doaverage
         
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);
-        if strcmp(sim_metric,'corr') 
+        if strcmp(sim_metric,'corr')
             stats(g).descrip = 'T-test on Fisher''s r to Z transformed point-biserial correlations';
         else
-            stats(g).descrip = ['T-test on raw similarity measured by ' sim_metric];  % added SG. See Fisher-Z transformation above. 
+            stats(g).descrip = ['T-test on raw similarity measured by ' sim_metric];  % added SG. See Fisher-Z transformation above.
         end
         stats(g).networknames = networknames;
         stats(g).p = p';
@@ -488,7 +500,8 @@ elseif doaverage
         
     end %groups
     
-    
+    % Plot (average + error bars)
+    % ------------------------------------------------------------
     if ~noplot
         % groupColors = scn_standard_colors(length(groupValues))'; %
         % removed to enable use of user-defined colors. SG 2017/2/7
@@ -503,29 +516,49 @@ elseif doaverage
         
         if dofigure, create_figure('tor_polar'); end
         
-        if ~dofixRange
-            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
-        else
-            [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
-        end
-        
-        set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
-        set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
-        
-        set(hh{1}(2:3:end), 'LineWidth', 4);
-        set(hhfill{1}([3:3:end]), 'FaceAlpha', 1, 'FaceColor', 'w');
-        set(hhfill{1}([2:3:end]), 'FaceAlpha', 0);
-        set(hhfill{1}([1:3:end]), 'FaceAlpha', .3);
-        
-        handle_inds=1:3:length(hh{1});
-        for g=1:length(groupValues)
-            stats(g).line_handles = hh{1}(handle_inds(g):handle_inds(g)+2);
-            stats(g).fill_handles = hhfill{1}(handle_inds(g):handle_inds(g)+2);
-        end
-        
-        % doaverage
-        
-        hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', 20);
+        switch plotstyle
+            case 'wedge'
+                % --------------------------------------------------
+                if ~dofixRange
+                    outercircleradius = min(1, max(toplot(:)) + .1*max(toplot(:)));
+                else
+                    outercircleradius = fixedrange;
+                end
+                
+                hh = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure');
+                
+          
+            case 'polar'
+                % --------------------------------------------------
+                
+                if ~dofixRange
+                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+                else
+                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
+                end
+                
+                set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
+                set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
+                
+                set(hh{1}(2:3:end), 'LineWidth', 4);
+                set(hhfill{1}([3:3:end]), 'FaceAlpha', 1, 'FaceColor', 'w');
+                set(hhfill{1}([2:3:end]), 'FaceAlpha', 0);
+                set(hhfill{1}([1:3:end]), 'FaceAlpha', .3);
+                
+                handle_inds=1:3:length(hh{1});
+                for g=1:length(groupValues)
+                    stats(g).line_handles = hh{1}(handle_inds(g):handle_inds(g)+2);
+                    stats(g).fill_handles = hhfill{1}(handle_inds(g):handle_inds(g)+2);
+                end
+                
+                % doaverage
+                
+                hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', 20);
+                
+            otherwise
+                error('Unknown plottype');
+                
+        end % switch plotstyle
     end
     
 end % doaverage

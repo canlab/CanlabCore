@@ -1,6 +1,10 @@
 function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, varargin)
 % Make polar wedge plot
-% - Will not show negative relationships; zeroes them out
+% - Single column of k radius_values makes plot with k wedges
+% - Matrix of n obs x k variables creates plot with mean +/- se for k wedges
+% - Negative values: Default is to plot stripes for neg values
+% - Option to make them a different color
+% - Option to not show negative relationships by setting negative radius values to zero
 % - image_similarity_plot.m uses tor_wedge_plot to plot pos and neg associations in different colors
 %   (see example below)
 %
@@ -31,14 +35,34 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 %   **'nospokes':**
 %        suppress reference spokes
 %
+%   **'ignorenegative':**
+%        true or false [default]. Ignore negative values by setting them to
+%        zero
+%
+%   **'bicolor':**
+%        two-color plot; with positive-valued entries in one color and 
+%        negative-valued ones in another. Enter 2 colors in colors cell (see below). 
+%        Will plot positive values in color{1} and negative values in color{2}
+%
 %   **'colors':**
 %        Followed by cell array, one cell per wedge, with [r g b] color triplets
+%        OR
+%        [{pos_color_triplet} {neg_color_triplet}] when using 'bicolor' option
 %
 %   **'linewidth':**
 %       Followed by line width
 %
 %   **'outer_circle_radius':**
 %       Followed by radius for outer guide circle
+%
+%   **'nofill':**
+%       Turn off color fill in wedges
+%
+%   **'errorbars'**
+%       True or false; Default for matrix input
+%       Plot wedges for mean +/- standard error
+%       Treats columns as variables for wedges, rows as replicates
+%       Similar function as 'average' in image_similarity_plot.m
 %
 % :Output:
 %
@@ -77,17 +101,26 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 
 
 
-% Defaults and inputs
+% Default values for options
+% -------------------------------------------------------------------------
+input_args = varargin;                  % save for later to pass in recursively
+ignorenegative = false;                 % ignore negative-valued elements by zeroing them out
+bicolor = false;                        % two-color plot, with positive-valued entries in one color and negative-valued ones in another (enter 2 colors in colors cell)
 dofigure = true;
 docircle = true;
 dospokes = true;
 labelstyle = 'equal';  % or 'close'
-n_categories = length(radius_values);
 linewidth = 1;
 outer_circle_radius = 1;
+nofill = false;
 
-% Will not show negative relationships; zero them out
-radius_values(radius_values < 0) = 0;
+if min(size(radius_values)) > 1
+    n_categories = size(radius_values, 2);
+else
+    n_categories = length(radius_values);
+end
+
+dostripes = false(1, n_categories);     % striping/shading, default for negative values
 
 colors = seaborn_colors(n_categories + 1); % add one to make colors more diff
 
@@ -95,12 +128,18 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
+            case 'ignorenegative', ignorenegative = true;
+                
+            case 'bicolor', bicolor = true;
+                
             case 'nofigure', dofigure = false;
                 
             case 'nocircle', docircle = false;
                 
             case 'nospokes', dospokes = false;
                 
+            case 'nofill', nofill = true;
+                    
             case 'labelstyle', labelstyle = varargin{i+1}; varargin{i+1} = [];
                 
             case 'colors', colors = varargin{i+1}; varargin{i+1} = [];
@@ -114,6 +153,71 @@ for i = 1:length(varargin)
     end
 end
 
+% Handle matrix input (replicates = rows) by calling this function
+% recursively. Makes plot of mean + error zones
+% --------------------------------------------------------------------------
+
+if min(size(radius_values)) > 1  % is matrix
+    
+    clear handles key_points
+
+    m = nanmean(radius_values)';
+    se = ste(radius_values)';
+
+    % outer wedge + se
+    [handles.outer, key_points.outer] = tor_wedge_plot(m+se, text_labels, input_args{:});
+    
+    % inner bound, - se
+    [handles.inner, key_points.inner] = tor_wedge_plot(m-se, text_labels, 'nocircle', 'nofigure', input_args{:}, 'colors', {[1 1 1]}); % override varargin with later inputs
+    set([handles.inner(:).fill_han], 'FaceAlpha', .7);
+    
+    % Mean line, no fill
+    [handles.meanline, key_points.meanline] = tor_wedge_plot(m, text_labels, 'nofigure', input_args{:}, 'linewidth', 3, 'nocircle', 'nofill');
+    
+    % delete redundant text
+    delete([handles(:).inner.texth])
+    [handles(:).inner.texth] = deal([]);
+    delete([handles(:).meanline.texth])
+    [handles(:).meanline.texth] = deal([]);
+    
+    return
+end
+
+
+% Handle color, stripes, and neg entry options
+% --------------------------------------------------------------------------
+
+if bicolor
+    % plot positive values in color{1} and negative values in color{2}
+    
+    mycolors = repmat(colors(1), 1, n_categories);
+    wh = radius_values < 0;
+    
+    % plot negative values in the complementary color
+    mycolors(wh) = colors(2);  % repmat({[1 1 1] - groupColors{1}}, 1, sum(wh));
+    
+    colors = mycolors;
+else
+    
+    % Put stripes on negative-valued entries
+    dostripes(radius_values < 0) = true; 
+end
+
+if ignorenegative
+    
+    % Will not show negative relationships; zero them out
+    radius_values(radius_values < 0) = 0;
+    
+else
+    % Make all values positive, because we have either color- or
+    % stripe-coded them
+    
+    radius_values = abs(radius_values); 
+end
+
+if length(colors) < n_categories
+    colors = repmat(colors(1), 1, n_categories);
+end
 
 % Calculations
 
@@ -160,8 +264,19 @@ end
 
 for i = 1:n_categories
     
-    [handles(i) key_points(i)] = draw_pie_wedge(st(i), en(i), radius_values(i), 'linecolor', colors{i} ./ 2, 'fillcolor', colors{i}, 'linewidth', linewidth);
-    
+    if nofill
+        
+        [handles(i), key_points(i)] = draw_pie_wedge(st(i), en(i), radius_values(i), ...
+            'linecolor', colors{i} ./ 2, 'fillcolor', 'none', 'linewidth', linewidth, ...
+            'stripes', dostripes(i), 'stripedensity', 30);
+        
+    else
+        
+        [handles(i), key_points(i)] = draw_pie_wedge(st(i), en(i), radius_values(i), ...
+            'linecolor', colors{i} ./ 2, 'fillcolor', colors{i}, 'linewidth', linewidth, ...
+            'stripes', dostripes(i), 'stripedensity', 30);
+        
+    end
 end
 
 axis equal

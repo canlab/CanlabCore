@@ -23,7 +23,7 @@ sens_spec_ppv = bootstrp(1000, bootfun, input_vals, binary_outcome);
 
 % 95% CIs
 for i = 1:3
-    ci{i} = [prctile(sens_spec_ppv(:, i), 5)  prctile(sens_spec_ppv(:, i), 95)];
+    ci{i} = [prctile(sens_spec_ppv(:, i), 2.5)  prctile(sens_spec_ppv(:, i), 97.5)];
 end
 
 names = {'95% CI for sensitivity' '95% CI for specificity' '95% CI for PPV'};

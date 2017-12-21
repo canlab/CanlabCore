@@ -242,7 +242,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
   function newstruct = create_struct(varnames)
     newstruct = struct();
     for i = 1:length(varnames)
-      eval(['newstruct.(varnames{i}) = ' ''' varnames{i} ''' ';']);
+      eval(['newstruct.' varnames{i} ' = ' varnames{i} ';']);
     end
   end
 

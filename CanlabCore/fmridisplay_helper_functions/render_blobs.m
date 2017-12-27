@@ -198,7 +198,7 @@ for i = 1:length(varargin)
             case 'contour', docontour = 1;
             case 'outline', docontour = 1; outline = 1;
             case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this. 
-            case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time.
+            case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time. This doesn't work with 'splitcolor', though.
             case 'linewidth', mylinewidth = varargin{i + 1};
                 
                 % orientation options

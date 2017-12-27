@@ -68,6 +68,10 @@ function obj = montage(obj, varargin)
 %   **'spacing':**
 %        followed by inter-slice spacing in mm
 %
+%   **'brighten':**
+%        followed by a brighten_factor. The maps become brighter 
+%        if 0 < brighten_factor <= 1 and darker if -1 <= brighten_factor < 0.
+%
 % :Outputs:
 %
 %   **obj:**
@@ -146,6 +150,7 @@ slice_range = 'auto';
 custom_coords = 0;
 color = 'k';
 doverbose = true;
+brighten_factor = 0;
 
 % ------------------------------------------------------
 % parse inputs
@@ -185,6 +190,8 @@ for i = 1:length(varargin)
                 
             case 'noverbose'
                 doverbose = false;
+                
+            case {'brighten'}, brighten_factor = varargin{i+1};
                 
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -233,7 +240,7 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
 datvec = dat(:);
 datvec(datvec == 0) = [];
 cmap = contrast(datvec);
-colormap(cmap);
+colormap(brighten(cmap, brighten_factor));
 
 % ------------------------------------------------------
 % INLINE FUNCTIONS

@@ -49,16 +49,16 @@ switch myview
         set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', myAlphaData)
         set(gca, 'Color', 'none')
         
-         case 'coronal'
+    case 'coronal'
         Zo = squeeze(dat(:, wh_slice, :));
         
         yo = squeeze(SPACE.Yo(:, wh_slice, :));
         zo = squeeze(SPACE.Zo(:, wh_slice, :));
-        yi = squeeze(SPACE.Y(:, wh_slice, :)); 
+        yi = squeeze(SPACE.Y(:, wh_slice, :));
         zi = squeeze(SPACE.Z(:, wh_slice, :));
         
         Z = interp2(yo', zo', Zo', yi', zi');
-
+        
         % set transparent value for clear axes
         myAlphaData = double(abs(Z) > 0);
         
@@ -66,7 +66,7 @@ switch myview
         Z = lighten_underlay_edges(Z, 32);
         
         h = imagesc(SPACE.xcoords', SPACE.zcoords', Z); % Wani modified ycoords -> xcoords
-
+        
         % If we set alphadata to clear for BG and axis color to none, we get clear
         % axes
         set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', myAlphaData)
@@ -77,11 +77,11 @@ switch myview
         
         xo = squeeze(SPACE.Xo(wh_slice, :, :));
         zo = squeeze(SPACE.Zo(wh_slice, :, :));
-        xi = squeeze(SPACE.X(wh_slice, :, :)); 
+        xi = squeeze(SPACE.X(wh_slice, :, :));
         zi = squeeze(SPACE.Z(wh_slice, :, :));
         
         Z = interp2(xo', zo', Zo', xi', zi');
-
+        
         % set transparent value for clear axes
         myAlphaData = double(abs(Z) > 0);
         
@@ -89,7 +89,7 @@ switch myview
         Z = lighten_underlay_edges(Z, 32);
         
         h = imagesc(SPACE.ycoords', SPACE.zcoords', Z);
-
+        
         % If we set alphadata to clear for BG and axis color to none, we get clear
         % axes
         set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', myAlphaData)

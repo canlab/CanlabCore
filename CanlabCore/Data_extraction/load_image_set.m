@@ -192,6 +192,9 @@ else
         case {'neurosynth', 'neurosynth_featureset1'}
             [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
             
+        case {'pain_cog_emo'}
+             [image_obj, networknames, imagenames] = load_kragel18;
+
         otherwise
             error('Unknown mapset keyword.');
             
@@ -466,6 +469,31 @@ image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads imag
 
 end  % function
 
+
+function [image_obj, networknames, imagenames] = load_kragel18
+% Load NPS, PINES, Rejection, VPS,
+% ------------------------------------------------------------------------
+
+domains = {'Pain' 'Cognitive Control' 'Negative Emotion'};
+rois = {'pMCC' 'aMCC' 'pACC' 'sgACC' 'vmPFC' 'MFC' 'Wholebrain'};
+
+networknames = {'Pain pMCC' 'Pain aMCC' 'Pain pACC' 'Pain sgACC' 'Pain vmPFC' 'Pain dMFC' 'Pain MFC' 'Pain Wholebrain' ,...
+    'Cog Control pMCC' 'Cog Control aMCC' 'Cog Control pACC' 'Cog Control sgACC' 'Cog Control vmPFC' 'Cog Control dMFC' 'Cog Control MFC' 'Cog Control Wholebrain',...
+    'NegEmo pMCC' 'NegEmo aMCC' 'NegEmo pACC' 'NegEmo sgACC' 'NegEmo vmPFC' 'NegEmo dMFC' 'NegEmo MFC' 'NegEmo Wholebrain'};
+imagenames=cell(21,1);
+cs=0;
+for d=1:length(domains)
+    for r=1:length(rois)
+        cs=cs+1;
+        imagenames{cs} = ['bPLS_' rois{r} '_' domains{d} '.nii'];
+    end
+end
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
+
+end  % function
 
 
 

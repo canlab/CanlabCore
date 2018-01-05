@@ -475,11 +475,11 @@ function [image_obj, networknames, imagenames] = load_kragel18
 % ------------------------------------------------------------------------
 
 domains = {'Pain' 'Cognitive Control' 'Negative Emotion'};
-rois = {'pMCC' 'aMCC' 'pACC' 'sgACC' 'vmPFC' 'MFC' 'Wholebrain'};
+rois = {'pMCC' 'aMCC' 'pACC' 'sgACC' 'vmPFC' 'dMFC' 'MFC' 'Wholebrain'};
 
 networknames = {'Pain pMCC' 'Pain aMCC' 'Pain pACC' 'Pain sgACC' 'Pain vmPFC' 'Pain dMFC' 'Pain MFC' 'Pain Wholebrain' ,...
-    'Cog Control pMCC' 'Cog Control aMCC' 'Cog Control pACC' 'Cog Control sgACC' 'Cog Control vmPFC' 'Cog Control dMFC' 'Cog Control MFC' 'Cog Control Wholebrain',...
-    'NegEmo pMCC' 'NegEmo aMCC' 'NegEmo pACC' 'NegEmo sgACC' 'NegEmo vmPFC' 'NegEmo dMFC' 'NegEmo MFC' 'NegEmo Wholebrain'};
+    'Cog pMCC' 'Cog aMCC' 'Cog pACC' 'Cog sgACC' 'Cog vmPFC' 'Cog dMFC' 'Cog MFC' 'Cog Wholebrain',...
+    'Emo pMCC' 'Emo aMCC' 'Emo pACC' 'Emo sgACC' 'Emo vmPFC' 'Emo dMFC' 'Emo MFC' 'Emo Wholebrain'};
 imagenames=cell(21,1);
 cs=0;
 for d=1:length(domains)
@@ -489,7 +489,9 @@ for d=1:length(domains)
     end
 end
 
-imagenames = check_image_names_get_full_path(imagenames);
+for i=1:length(imagenames) %preserve order..
+imagenames{i} = which(imagenames{i});
+end
 
 image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
 

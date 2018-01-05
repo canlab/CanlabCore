@@ -122,7 +122,11 @@ end
 
 dostripes = false(1, n_categories);     % striping/shading, default for negative values
 
+try
 colors = seaborn_colors(n_categories + 1); % add one to make colors more diff
+catch %in case we have many maps
+colors = hsv(n_categories + 1); % add one to make colors more diff 
+end
 
 for i = 1:length(varargin)
     if ischar(varargin{i})

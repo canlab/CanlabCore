@@ -83,7 +83,7 @@ disp(['Dimensions: ' num2str(k)]);
 plot_vertical_line(k);
 
 if k>5
-    nrand = 500;
+    nrand = 250;
 else 
     nrand = 100;
 end

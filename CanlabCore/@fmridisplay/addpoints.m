@@ -123,7 +123,7 @@ for i = 1:length(varargin)
                 
             case 'close_enough', close_enough = varargin{i + 1};
                 
-            case 'color' % do not pass on...
+            case {'Color','color'} % do not pass on...
                 color = varargin{i+1};
                 varargin{i+1} = [];
                 varargin{i} = [];

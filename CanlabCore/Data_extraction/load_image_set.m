@@ -185,6 +185,10 @@ else
 
         case {'bgloops_cortex', 'pauli_cortex'}
             [image_obj, networknames, imagenames] = load_pauli_bg_cortex;
+          
+           case {'pauli_subcortical'}
+            [image_obj, networknames, imagenames] = load_pauli_subcortical;
+           
             
         case {'fibromyalgia','fibro','fm'}    
             [image_obj, networknames, imagenames] = load_fibromyalgia;
@@ -615,6 +619,26 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 % Break up into one image per region
 % -------------------------------------------------
 image_obj = integer_coded_image_to_separate_images(image_obj);
+
+
+end % function
+
+
+function [image_obj, networknames, imagenames] = load_pauli_subcortical
+
+% Load Pauli et al. 2016 basal ganglia 17-cluster solution (no labels
+% given in the paper)
+% ------------------------------------------------------------------------
+networknames = {'Pu' 'Ca' 'NAC' 'EXA' 'GPe' 'GPi' 'VeP' 'VTA' 'SNc' 'SNr' 'PBP' 'RN' 'HTH' 'STH' 'HN' 'MN'};
+
+imagenames = {'pauli_subcortical.nii'};
+imagenames = check_image_names_get_full_path(imagenames);
+
+% load image with integer coding of networks
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+% Break up into one image per region
+% -------------------------------------------------
 
 
 end % function

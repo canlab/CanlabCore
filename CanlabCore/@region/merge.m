@@ -29,7 +29,8 @@ for j = 2:length(wh_merge)
                     cl(wh_merge(1)).(N{i}) = [cl(wh_merge(1)).(N{i}) ' MERGED WITH ' cl(wh_merge(j)).(N{i})];
                     
                     % Merge by concatenating vertically
-                    
+                case {'val'}
+                    cl(wh_merge(1)).(N{i}) = [cl(wh_merge(1)).(N{i}); cl(wh_merge(j)).(N{i})];
                     
                     % Merge by concatenating horizontally
                 case {'XYZ' 'XYZmm' 'Z' 'threshold' 'all_data'}
@@ -56,6 +57,7 @@ for j = 2:length(wh_merge)
                         fprintf('WARNING! Field %s does not match for regions %3.0f and %3.0f.  Combined values may be meaningless.\n', N{i}, 1, j);
                     end
                     
+                    
             end % case
             
         catch
@@ -72,6 +74,7 @@ for j = 2:length(wh_merge)
     
 end % cluster j
 
+cl(wh_merge(1)).numVox = sum(vertcat(cl(wh_merge).numVox));
 cl(wh_merge(2:end)) = [];
 
 end % function

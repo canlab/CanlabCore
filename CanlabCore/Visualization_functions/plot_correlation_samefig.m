@@ -165,14 +165,16 @@ else
     end
     
     r = corrcoef(y,X(:,1)); r= r(1,2);
-    
+    pr = partialcorr(y,X(:,1),X(:,2:end));
+
     try
         [rci,sig,rZ,rp] = r2z(r,length(y),.05);
     catch
         disp('Error in or missing r2z.m: No stats toolbox?')
     end
     
-    text(min(X(:,1)),max(y),sprintf('r = %3.2f',r),'FontSize',20)
+    ht=text(min(X(:,1)),max(y),sprintf('r = %3.2f',pr),'FontSize',20);
+    ploth = [ploth ht];
     
     try
         str = sprintf('Sig. of B0: u=%3.2f, t=%3.2f, p=%3.4f\n C: u=%3.2f, t=%3.2f, p=%3.4f   R: r=%3.2f, Z=%3.2f, p=%3.4f', ...
@@ -228,10 +230,12 @@ if length(varargin) > 0
     % ROBUST
     w = varargin{1};
     for i = 1:length(xvec)
-        h(i) = plot(xvec(i),yvec(i),[mycol(1) 'o'],'LineWidth',.5,'MarkerSize',8, ...
-            'MarkerFaceColor',mycol(1));
-        set(h(i),'MarkerFaceColor',[repmat(1-w(i),1,3)] )
-        set(h(i), 'Color', [.2 .2 .2], 'LineWidth',1)
+%         h(i) = plot(xvec(i),yvec(i),[mycol(1) 'o'],'LineWidth',.5,'MarkerSize',8, ...
+%             'MarkerFaceColor',mycol(1));
+          h(i) = scatter(xvec(i),yvec(i),50,mycol(1),'o','filled');
+%         set(h(i),'MarkerFaceColor',[repmat(1-w(i),1,3)] )
+%         set(h(i), 'Color', [.2 .2 .2], 'LineWidth',1)
+          
     end
     
     % set axis
@@ -247,8 +251,9 @@ if length(varargin) > 0
 else
     % not robust
     
-    h = plot(xvec,yvec,mycol,'LineWidth',3,'MarkerSize',6,'MarkerFaceColor',mycol(1));
-    set(h, 'Color', [.2 .2 .2], 'LineWidth',1)
+%     h = plot(xvec,yvec,mycol,'LineWidth',3,'MarkerSize',6,'MarkerFaceColor',mycol(1));
+    h = scatter(xvec,yvec,50,mycol,'o','filled');
+%     set(h, 'Color', [.2 .2 .2], 'LineWidth',1)
     
     if doquad
         %refcurve(doquad)
@@ -276,7 +281,8 @@ drawnow
 
 if ~isempty(mylabels)
     for j = 1:length(xvec)
-        text(xvec(j),yvec(j),mylabels{j},'FontWeight','b')
+        ht = text(xvec(j),yvec(j),mylabels{j},'FontWeight','b');
+        h = [h ht];
     end
 end
 

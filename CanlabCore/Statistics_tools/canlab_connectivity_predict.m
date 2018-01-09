@@ -149,8 +149,8 @@ for i = 1:length(varargin)
             case 'nograph', dograph = 0;
             case 'outcome', y = varargin{i+1}; varargin{i+1} = [];
             case 'algo', algo=varargin{i+1}; varargin{i+1} = [];
-            case 'folds', folds=varargin{i+1};
-            case 'error_type', error_type=varargin{i+1};
+            case 'folds', folds=varargin{i+1}; varargin{i+1} = [];
+            case 'error_type', error_type=varargin{i+1}; varargin{i+1}=[];
             case 'maxclust', maxclust = varargin{i+1}; varargin{i+1} = [];
             case 'clustercolors', clustercolors = varargin{i+1}; varargin{i+1} = [];
 

@@ -123,9 +123,9 @@ end
 dostripes = false(1, n_categories);     % striping/shading, default for negative values
 
 try
-colors = seaborn_colors(n_categories + 1); % add one to make colors more diff
+    colors = seaborn_colors(n_categories + 1); % add one to make colors more diff
 catch %in case we have many maps
-colors = hsv(n_categories + 1); % add one to make colors more diff 
+    colors = hsv(n_categories + 1); % add one to make colors more diff
 end
 
 for i = 1:length(varargin)
@@ -157,6 +157,17 @@ for i = 1:length(varargin)
     end
 end
 
+% Error checks
+
+if any(size(outer_circle_radius)) > 1, error('''outer_circle_radius'' input should be followed by a scalar value.'); end
+
+
+% --------------------------------------------------------------------------
+% --------------------------------------------------------------------------
+% Recursive function callback
+% --------------------------------------------------------------------------
+% --------------------------------------------------------------------------
+
 % Handle matrix input (replicates = rows) by calling this function
 % recursively. Makes plot of mean + error zones
 % --------------------------------------------------------------------------
@@ -165,18 +176,34 @@ if min(size(radius_values)) > 1  % is matrix
     
     clear handles key_points
 
+    % transpose if only the number of rows == num labels.  Columns should match with labels. 
+    mysz = size(radius_values);
+    
+    if mysz(1) == length(text_labels) && mysz(2) ~= length(text_labels)
+        % could be transposed; try transposing
+        radius_values = radius_values';
+    end
+    
     m = nanmean(radius_values)';
     se = ste(radius_values)';
 
+    % manually build colors to handle both pos and neg values
+    isneg = m < 0;
+    mycolors = repmat(colors(1), 1, n_categories);
+    mycolors(isneg) = colors(2);
+    
+    % get rid of bicolor input because we've manually specified colors
+    wh = strcmp(input_args, 'bicolor'); input_args(wh) = [];
+    
     % outer wedge + se
-    [handles.outer, key_points.outer] = tor_wedge_plot(m+se, text_labels, input_args{:});
+    [handles.outer, key_points.outer] = tor_wedge_plot(abs(m)+se, text_labels, input_args{:}, 'colors', mycolors);
     
     % inner bound, - se
-    [handles.inner, key_points.inner] = tor_wedge_plot(m-se, text_labels, 'nocircle', 'nofigure', input_args{:}, 'colors', {[1 1 1]}); % override varargin with later inputs
-    set([handles.inner(:).fill_han], 'FaceAlpha', .7);
+    [handles.inner, key_points.inner] = tor_wedge_plot(abs(m)-se, text_labels, 'nocircle', 'nofigure', input_args{:}, 'colors', {[1 1 1] [1 1 1]}, 'ignorenegative'); % override varargin with later inputs; need 2 colors for wedge
+    set([handles.inner(:).fill_han], 'FaceAlpha', .8);
     
     % Mean line, no fill
-    [handles.meanline, key_points.meanline] = tor_wedge_plot(m, text_labels, 'nofigure', input_args{:}, 'linewidth', 3, 'nocircle', 'nofill');
+    [handles.meanline, key_points.meanline] = tor_wedge_plot(abs(m), text_labels, 'nofigure', input_args{:}, 'linewidth', 3, 'nocircle', 'nofill', 'colors', mycolors);
     
     % delete redundant text
     delete([handles(:).inner.texth])
@@ -184,9 +211,19 @@ if min(size(radius_values)) > 1  % is matrix
     delete([handles(:).meanline.texth])
     [handles(:).meanline.texth] = deal([]);
     
+    mymeanlines = cat(1, handles.meanline.line_han);
+    delete(mymeanlines(:, 2)')
+    delete(mymeanlines(:, 3)')
+    for i = 1:length(handles.meanline), handles.meanline(i).line_han(2:3) = []; end
+    
     return
 end
 
+% --------------------------------------------------------------------------
+% --------------------------------------------------------------------------
+% End recursive function callback - Main function below
+% --------------------------------------------------------------------------
+% --------------------------------------------------------------------------
 
 % Handle color, stripes, and neg entry options
 % --------------------------------------------------------------------------
@@ -201,8 +238,13 @@ if bicolor
     mycolors(wh) = colors(2);  % repmat({[1 1 1] - groupColors{1}}, 1, sum(wh));
     
     colors = mycolors;
-else
     
+else  % stripes for negative relationships    
+    
+    if length(colors) < n_categories
+        colors = repmat(colors(1), 1, n_categories);
+    end
+
     % Put stripes on negative-valued entries
     dostripes(radius_values < 0) = true; 
 end
@@ -217,10 +259,6 @@ else
     % stripe-coded them
     
     radius_values = abs(radius_values); 
-end
-
-if length(colors) < n_categories
-    colors = repmat(colors(1), 1, n_categories);
 end
 
 % Calculations

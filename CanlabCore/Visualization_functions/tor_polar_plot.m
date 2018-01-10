@@ -176,7 +176,7 @@ for s = 1:p
     % Spokes, and set angles
     % ------------------------------------------------------------
     
-    for i = 1:k
+    %for i = 1:k
         
         ang = linspace(0, 2*pi, k + 1);
         
@@ -185,7 +185,7 @@ for s = 1:p
         lineh = line([z; X], [z; Y]);
         set(lineh, 'Color', 'k', 'LineStyle', ':');
         
-    end
+    %end
     
     % Axis label names
     % ------------------------------------------------------------
@@ -193,6 +193,18 @@ for s = 1:p
     xlim = get(gca, 'XLim');
     ylim = get(gca, 'YLim');
     
+    myang = ang(1:end-1) * 360 / (2*pi); % Radians to degrees
+    
+    % adjust angles so text on left will not be upside down
+    wh = myang > 90 & myang < 270;
+    myang(wh) = myang(wh) - 180;
+    
+    clear myextent
+
+    % set font size now - harmonize with image_similarity_plot - so extent
+    % calc will be correct
+    mytextsize = 30 ./ (k.^.3);
+                
     if ~isempty(names) && ~isempty(names{s})
         
         for j = 1:length(names{s})
@@ -202,22 +214,54 @@ for s = 1:p
             y = Y(j);
             %y = y + sign(y) * range(ylim)* .04;
             
-            texth(j) = text(x, y, names{s}{j}, 'FontSize', 14);
+            texth(j) = text(x, y, names{s}{j}, 'FontSize', mytextsize);
             
-            myang = ang(j) * 360 / (2*pi);
-            if myang > 90 && myang < 270
-                myang = myang - 180;
-               
-                %[newx, newy] = pol2cart(ang(j), maxval);
-                [newx, newy] = pol2cart(ang(j), maxval + .002*length(names{s}{j}));
-                %[newx, newy] = pol2cart(ang(j), maxval + .023*length(names{s}{j}));
-                set(texth(j), 'Position', [newx newy]);
-                
-            end
-            set(texth(j), 'Rotation', myang)
+        end
+        
+        % adjust axis to make room for text labels
+        % Must be done before text is shifted to account for extent
+        axis equal
+        
+        for j = 1:length(names{s})
+            myextent_j = get(texth(j), 'Extent');
+            myextent(1, j) = myextent_j(3) + .02 * maxval; %.1 * myextent_j(3); %maxval;
+        end
+        mylim = get(gca, 'XLim');
+        mylim = mylim + [-max(myextent) max(myextent)];
+        set(gca, 'XLim', mylim);
+        
+    % Final calculation of extent and rotation setting
+        for j = 1:length(names{s})
+            % For text shifting, get extent before rotating.
+            % axis equal/scaling and size matters when getting extent, too, so make sure correct
+            % size ahead of doing this!!
+            myextent_j = get(texth(j), 'Extent');
+            myextent(1, j) = myextent_j(3) + .02 * maxval; %.1 * myextent_j(3); %maxval;
+            
+            set(texth(j), 'Rotation', myang(j))
             
         end
     end
+    
+    % adjust max position so text will end at outer circle
+    % for inverted text (needs to be shifted)
+    textstart = repmat(maxval, 1, k);
+    textstart(wh) = textstart(wh) + myextent(wh);
+    textstart(~wh) = textstart(~wh) + .02 * maxval;
+    
+    % Re-calculate X and Y position accounting for shifted text
+    for j = 1:k
+        
+        [X(j), Y(j)] = pol2cart(ang(j), textstart(j));
+        
+        mypos = get(texth(j), 'Position');
+        
+        mypos(1:2) = [X(j) Y(j)];
+        
+        set(texth(j), 'Position', mypos);
+        
+    end
+    
     
     
     % Value labels (text) for polar guide lines
@@ -232,7 +276,7 @@ for s = 1:p
         
     end
     
-    axis equal
+    %axis equal
     axis off
     
     

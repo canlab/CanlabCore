@@ -68,6 +68,10 @@ end
 
 % convert from cell of names of needed
 if iscell(names)
+    
+    myvars = get_var(D, names);
+    
+elseif iscell(names)
     wh = zeros(size(names));
     for i = 1:length(wh_vars)
         wh = wh + strcmp(wh_vars{i}, names);

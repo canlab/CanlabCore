@@ -199,7 +199,8 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   - added option for percent overlap of binary masks (see also
 %   canlab_pattern_similarity.m and riverplot.m
 %   Changed metric selection to string format.
-%
+% 2018/1/9  tor: changed default colors for compat with wedge plot,
+% debugged wedge plot with average option.
 %
 % ..
 
@@ -213,7 +214,12 @@ table_group = {}; %initialize output
 multcomp_group = {}; %initialize output
 dofigure = true;
 noplot = false;
-groupColors = scn_standard_colors(size(obj.dat, 2));
+
+groupColors = [{[1 .9 0] [0 0 1]}];  % for bicolor wedge defaults: yellow pos, blue neg  scn_standard_colors(size(obj.dat, 2));
+k = size(obj.dat, 2);
+morecolors = scn_standard_colors(k + 2);
+groupColors = [groupColors morecolors(5:end)];  % avoid redundancy
+
 dofixRange = 0;
 printTable = true;
 % changed metric selection to string format (SG 2017/09/07)
@@ -230,7 +236,9 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
-            case 'average', doaverage = 1;
+            case 'average'
+                doaverage = 1;
+                bicolor = true;  % if wedge, bicolor only, no lines.
                 
             case 'cosine_similarity', sim_metric = 'cosine';
                 
@@ -276,6 +284,34 @@ for i = 1:length(varargin)
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
+end
+
+% ADJUSTMENTS to default behavior
+% ------------------------------------------------------------------------
+
+% Wedge handles inputs a bit differently from 'polar'.  The
+% default input is regions x n observations to make a
+% series of n polar line plots. but here we want averages,
+% because it doesn't make sense to have a series of wedge
+% plots. So we transpose r and average across observations
+% by default.
+n_obs = size(obj.dat, 2); % number of images to test + plot
+
+if n_obs > 1 && strcmp(plotstyle, 'wedge')
+    % We have a wedge plot with multiple obs/images. Default to 'average'
+    % mode, not multi-line-plot. For polar plots, do multi line plot.
+    
+    doaverage = 1;
+    bicolor = true;  % if wedge, bicolor only, no lines.
+end
+
+% Colors look pretty funny with 'average' and 'polar', so adjust defaults
+% if colors are not entered
+
+if doaverage && strcmp(plotstyle, 'polar') && ~any(strcmp(varargin, 'colors'))
+   
+    groupColors = {[1 0 0]};  % unicolor. can change line and err with 2nd color entry.
+    
 end
 
 % Load image set: Most of the hard work
@@ -360,8 +396,9 @@ if ~doaverage
         switch plotstyle
             case 'wedge'
                 % --------------------------------------------------
+               
                 if ~dofixRange
-                    outercircleradius = min(1, max(r) + .1*max(r));
+                    outercircleradius = min(1, max(abs(r)) + .1*max(abs(r)));
                 else
                     outercircleradius = fixedrange;
                 end
@@ -423,8 +460,7 @@ elseif doaverage
         
         groupValues=unique(group);
         g=num2cell(groupValues); %create cell array of group numbers
-        
-        
+          
         for i=1:size(z,2) %for each spatial basis do an anova across groups
             
             [p table_group{i} st]=anova1(z(:,i), group, 'off'); %get anova table
@@ -432,7 +468,6 @@ elseif doaverage
             multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end))]; %format table for output
             
         end
-        
         
         for i=1:size(z,2)
             disp(['Between-group comparisons for ' networknames{i} ':']);
@@ -444,9 +479,7 @@ elseif doaverage
             print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
             disp(' ');
         end
-        
-        
-        
+          
     else
         group=ones(size(r,2),1); %otherwise all data is from same group
         groupValues=unique(group);
@@ -519,15 +552,25 @@ elseif doaverage
         switch plotstyle
             case 'wedge'
                 % --------------------------------------------------
+
                 if ~dofixRange
-                    outercircleradius = min(1, max(toplot(:)) + .1*max(toplot(:)));
+                    outercircleradius = min(1, max(m) + .1*max(m));
                 else
                     outercircleradius = fixedrange;
                 end
                 
-                hh = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure');
+                if ~dofixRange
+                    outercircleradius = min(1, max(abs(toplot(:))) + .1*max(abs(toplot(:))));
+                else
+                    outercircleradius = fixedrange;
+                end
                 
-          
+                if bicolor
+                    hh = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
+                else
+                    error('bicolor is set to 1 by default - this should not happen. debug me.');
+                end
+                
             case 'polar'
                 % --------------------------------------------------
                 
@@ -553,7 +596,9 @@ elseif doaverage
                 
                 % doaverage
                 
-                hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', 20);
+                kk = size(toplot, 1);
+                mytextsize = 30 ./ (kk.^.3);
+                hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', mytextsize);
                 
             otherwise
                 error('Unknown plottype');

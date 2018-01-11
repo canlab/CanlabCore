@@ -332,13 +332,16 @@ myrotation(wh) = myrotation(wh) - 180;
 
 handles(i).texth = [];
 
+%mytextsize = 16 * 6/n_categories;
+mytextsize = 30 ./ (n_categories.^.3);
+
 switch labelstyle
     
     case 'close'
         
         for i = 1:n_categories
             handles(i).texth = text(key_points(i).xmid_outside, key_points(i).ymid_outside, text_labels{i}, ...
-                'Rotation', myrotation(i), 'FontSize', 16 * 6/n_categories,...
+                'Rotation', myrotation(i), 'FontSize', mytextsize,...
                 'HorizontalAlignment','center','parent',gca, 'Layer','front');
         end
         
@@ -352,7 +355,7 @@ switch labelstyle
             ymid_outside = 0 + (outer_circle_radius + .04*outer_circle_radius) * sin(tmid);
             
             handles(i).texth = text(xmid_outside, ymid_outside, text_labels{i}, ...
-                'Rotation', myrotation(i), 'FontSize', 16 * 6/n_categories,...
+                'Rotation', myrotation(i), 'FontSize', mytextsize,...
                 'HorizontalAlignment','center','parent',gca, 'Layer','front');
             
         end

@@ -33,12 +33,14 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % :Inputs:
 %
 %   **image_names_or_keyword:**
-%        A string matrix with images to load, or a keyword:
+%        A string matrix with images to load, or a keyword.
+%        keywords load pre-defined image sets, as indicated below.
+%        NOTE: you will need to have these images on your Matlab path!
+%        Some are in the CANlab Neuroimaging_Pattern_Masks repository, some in Masks_Private repository 
 %
 %        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
 %        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
-%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum
-%        + SPM Anatomy Toolbox regions + brainstem
+%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
 %        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
@@ -57,6 +59,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        {'neurosynth', 'neurosynth_featureset1'}
 %               525 "Reverse inference" z-score maps from Tal Yarkoni's
 %               Neurosynth, unthresholded, 2013 
+%
+%          'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
 %
 % :Optional inputs:
 %
@@ -78,6 +82,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % :Examples:
 % ::
 %
+%  % Example 1: Load NPS (private) and several other signatures
+% % ------------------------------------------------------------------------- 
 % imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
 %     'Rating_Weights_LOSO_2.nii'  ...  % PINES
 %     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
@@ -85,9 +91,29 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 % [obj, netnames, imgnames] = load_image_set(imagenames);
 %
-% The above loads the same images as:
+% The above loads a subset of the same images as:
 %
 % [obj, netnames, imgnames] = load_image_set('npsplus');
+%
+% % Example 2: Apply the PLS signatures from Kragel et al. 2018 to the emotion regulation dataset
+% % -------------------------------------------------------------------------
+% % Load PLS signatures from Kragel et al. 2018
+% [obj, names] = load_image_set('pain_cog_emo');
+% bpls_wholebrain = get_wh_image(obj, [8 16 24]);
+% names_wholebrain = names([8 16 24]);
+% bpls_subregions = get_wh_image(obj, [1:6 9:14 17:22]);
+% names_subregions = names([1:6 9:14 17:22]);
+% 
+% % Load test data: Emotion regulation from Wager et al. 2008
+% test_data_obj = load_image_set('emotionreg');
+% 
+% %  Make plots
+% % Yellow: positive associations. Blue: Negative associations.  Plot shows mean +- std. error for each pattern of interest
+%   
+% create_figure('Kragel Pain-Cog-Emo maps', 1, 2);
+% stats = image_similarity_plot(test_data_obj, 'average', 'mapset', bpls_wholebrain, 'networknames', names_wholebrain, 'nofigure');
+% subplot(1, 2, 2)
+% stats = image_similarity_plot(test_data_obj, 'average', 'mapset', bpls_subregions, 'networknames', names_subregions, 'nofigure');
 %
 % :See also:
 %
@@ -196,7 +222,7 @@ else
         case {'neurosynth', 'neurosynth_featureset1'}
             [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
             
-        case {'pain_cog_emo'}
+        case {'pain_cog_emo', 'kragel18'}
              [image_obj, networknames, imagenames] = load_kragel18;
 
         otherwise
@@ -493,9 +519,11 @@ for d=1:length(domains)
     end
 end
 
-for i=1:length(imagenames) %preserve order..
-imagenames{i} = which(imagenames{i});
-end
+% for i=1:length(imagenames) %preserve order..
+% imagenames{i} = which(imagenames{i});
+% end
+
+imagenames = check_image_names_get_full_path(imagenames);
 
 image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
 

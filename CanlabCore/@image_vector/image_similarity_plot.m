@@ -246,7 +246,8 @@ for i = 1:length(varargin)
                 
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
-                    'pauli' 'bgloops' 'pauli17' 'bgloops17' 'fm' 'fibro' 'fibromyalgia'}
+                    'pauli' 'bgloops' 'pauli17' 'bgloops17' 'fm' 'fibro' 'fibromyalgia' ...
+                    'bgloops_cortex' 'painsig' }
                 
                 mapset = varargin{i};
                 

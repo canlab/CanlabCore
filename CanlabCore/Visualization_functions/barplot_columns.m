@@ -184,7 +184,7 @@ if length(varargin) > 0
         if iscell(varargin{i}), continue, end
         
         % Figure control
-        if strcmp(varargin{i},'nofig'), dofig = 0;  end
+        if strcmp(varargin{i},'nofig') || strcmp(varargin{i},'nofigure'), dofig = 0;  end
         
         % Plot type options
         if strcmp(varargin{i},'line'), dolineplot = 1;  end
@@ -360,6 +360,8 @@ fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
 
 Name = names';
 if ~iscolumn(Name), Name = Name'; end
+
+if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-subject err
 
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 

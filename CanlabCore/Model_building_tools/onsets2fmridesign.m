@@ -172,6 +172,8 @@ for i = 3:length(varargin)
                 
             case 'nonlinsaturation', dononlinsaturation = 1;
                 
+            case 'nononlin',  dononlinsaturation = false;
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end

@@ -74,8 +74,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % 
 %        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
 % 
-%        'pain_pdm', 'pdm': High-dimensional joint mediator of pain (Joint
-%                           PDM). From Geuter et al. (in prep)
+%        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10 individual PDM maps and a joint
+%                           PDM, which is a weighted combination of the 10. From Geuter et al. (in prep)
 %           
 % 
 %
@@ -738,9 +738,9 @@ function [image_obj, networknames, imagenames] = load_pain_pdm
 
 % Load Geuter et al. 2018 high-dimensional pain mediator map (PDM)
 % ------------------------------------------------------------------------
-imagenames = {'JointPDM_unthresholded.nii'};
+imagenames = {'JointPDM_unthresholded.nii' 'All_PDM10_unthresholded.nii'};
 
-networknames = {'JointPDM'}; 
+networknames = {'JointPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
 
 imagenames = check_image_names_get_full_path(imagenames);
 

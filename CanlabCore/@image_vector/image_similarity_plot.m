@@ -1,4 +1,5 @@
-function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(obj, varargin)
+function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
+
 % Point-biserial correlations between images in fmri_data obj and set of
 % 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
 %
@@ -87,6 +88,14 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %        3 neural classifiers used to predict FM in Lopez-Sola et al 2017
 %        also 'fm','fibro'
 %
+%   **pain_pdm**
+%          11 high-dimensional pain mediator maps. PDM1-10 are individual, 
+%          orthogonal maps. The Joint PDM is a weighted combination of the 
+%          other 10 PDMs.
+% 
+%
+%   **End of mapset options**
+%   
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
 %        each spatial basis); requires group as subsequent input
@@ -201,7 +210,8 @@ function [stats hh hhfill table_group multcomp_group] = image_similarity_plot(ob
 %   Changed metric selection to string format.
 % 2018/1/9  tor: changed default colors for compat with wedge plot,
 % debugged wedge plot with average option.
-%
+% 2018/1/16 Stephan: added pain PDM mediators as mapsets
+% 
 % ..
 
 % ..
@@ -247,7 +257,7 @@ for i = 1:length(varargin)
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
                     'pauli' 'bgloops' 'pauli17' 'bgloops17' 'fm' 'fibro' 'fibromyalgia' ...
-                    'bgloops_cortex' 'painsig' }
+                    'bgloops_cortex' 'painsig' 'pain_pdm' 'pdm' }
                 
                 mapset = varargin{i};
                 

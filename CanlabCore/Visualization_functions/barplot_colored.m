@@ -12,7 +12,7 @@ function [h, axh]=barplot_colored(data,varargin)
 % ::
 %
 %    [bar_handles, axis_handle]=barplot_colored(data,varargin)
-% 
+%
 % :Input arguments: Optional
 %
 %   **'within':**
@@ -98,31 +98,41 @@ for k=1:length(varargin)
     if strcmp(varargin{k},'colormap')
         
         eval(['colormapfun=@' varargin{k+1} ';'])
-        
-    elseif ischar(varargin{k}) && strcmp(varargin{k},'title')
+    end
+    if ischar(varargin{k}) && strcmp(varargin{k},'title')
         mytitle=varargin{k+1};
-    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'fontsize')
+    end
+    if ischar(varargin{k}) && strcmp(lower(varargin{k}),'fontsize')
         myfontsize=varargin{k+1};
-    elseif ischar(varargin{k}) && (strcmp(lower(varargin{k}),'xticklabel') || strcmp(lower(varargin{k}),'xticklabels'))
+    end
+    if ischar(varargin{k}) && (strcmp(lower(varargin{k}),'xticklabel') || strcmp(lower(varargin{k}),'xticklabels'))
         XTickLabel=varargin{k+1};
-    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'ylabel')
+    end
+    if ischar(varargin{k}) && strcmp(lower(varargin{k}),'ylabel')
         Ylabel=varargin{k+1};
-    elseif ischar(varargin{k}) && strcmp(lower(varargin{k}),'xlabel')
+    end
+    if ischar(varargin{k}) && strcmp(lower(varargin{k}),'xlabel')
         Xlabel=varargin{k+1};
-
-    elseif ischar(varargin{k}) && strcmp(varargin{k},'x')
+        
+    end
+    if ischar(varargin{k}) && strcmp(varargin{k},'x')
         x=varargin{k+1};
-     elseif ischar(varargin{k}) && strcmp(varargin{k},'colors')
-         
+    end
+    if ischar(varargin{k}) && strcmp(varargin{k},'colors')
+        
         colors=varargin{k+1};
         
-    elseif ischar(varargin{k}) && strcmp(varargin{k},'within')
+    end
+    
+    if ischar(varargin{k}) && strcmp(varargin{k},'within')
         if iscell(data), error('Within error bars not implemented for cell input data'); end
         
-        stderr = barplot_get_within_ste(data);
-        stderr = repmat(stderr, 1, length(means));
+                stderr = barplot_get_within_ste(data);
+                stderr = repmat(stderr, 1, length(means));
+        
     end
 end
+
 
 k = size(x, 2);
 
@@ -154,7 +164,7 @@ end
 % This is old code, Matlab has changed...2014/5 update
 % h=bar(x, means);
 % s=get(h,'Children');
-% 
+%
 % colormap(colormapfun(length(means)));
 % set(s,'CData',1:length(means));
 

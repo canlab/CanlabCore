@@ -36,31 +36,48 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        A string matrix with images to load, or a keyword.
 %        keywords load pre-defined image sets, as indicated below.
 %        NOTE: you will need to have these images on your Matlab path!
-%        Some are in the CANlab Neuroimaging_Pattern_Masks repository, some in Masks_Private repository 
-%
+%        Some are in the CANlab Neuroimaging_Pattern_Masks repository, 
+%        some in Masks_Private repository 
+% 
 %        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
+% 
 %        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
+% 
 %        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
+% 
 %        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
+% 
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
+% 
 %        'npsplus': Wager lab published multivariate patterns:
 %                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
+% 
 %        'painsig': NPS (incl NPSpos & NPSpos) and SIIPS only
-%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager
-%        et al. 2008. Each image is a contrast image for the contrast [reappraise negative vs. look negative]
+% 
+%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008. 
+%                       Each image is a contrast image for the contrast [reappraise negative vs. look negative]
+% 
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
-%        networks from Pauli et al. 2016
+%                             networks from Pauli et al. 2016
+% 
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
+% 
 %        'bgloops_cortex' : Cortical regions most closely associated with
-%        the Pauli 5-region striatal clusters
+%                           the Pauli 5-region striatal clusters
+% 
 %        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
-%                   NPSp, FM-pain, FM-multisensory
-%        {'neurosynth', 'neurosynth_featureset1'}
-%               525 "Reverse inference" z-score maps from Tal Yarkoni's
-%               Neurosynth, unthresholded, 2013 
-%
-%          'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
+%                         NPSp, FM-pain, FM-multisensory
+% 
+%        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
+%                                                Neurosynth, unthresholded, 2013 
+% 
+%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
+% 
+%        'pain_pdm', 'pdm': High-dimensional joint mediator of pain (Joint
+%                           PDM). From Geuter et al. (in prep)
+%           
+% 
 %
 % :Optional inputs:
 %
@@ -172,7 +189,7 @@ elseif iscell(image_names_or_keyword) || (ischar(image_names_or_keyword) && size
 else
     % we have a standard named map set
     
-    switch image_names_or_keyword
+    switch lower(image_names_or_keyword)
         
         case 'bucknerlab'
             [image_obj, networknames, imagenames] = load_bucknerlab_maps;
@@ -214,8 +231,7 @@ else
           
            case {'pauli_subcortical'}
             [image_obj, networknames, imagenames] = load_pauli_subcortical;
-           
-            
+                   
         case {'fibromyalgia','fibro','fm'}    
             [image_obj, networknames, imagenames] = load_fibromyalgia;
        
@@ -224,6 +240,9 @@ else
             
         case {'pain_cog_emo', 'kragel18'}
              [image_obj, networknames, imagenames] = load_kragel18;
+             
+        case {'pdm','pain_pdm'}
+             [image_obj, networknames, imagenames] = load_pain_pdm;
 
         otherwise
             error('Unknown mapset keyword.');
@@ -710,6 +729,25 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
+
+
+
+
+function [image_obj, networknames, imagenames] = load_pain_pdm
+  
+
+% Load Geuter et al. 2018 high-dimensional pain mediator map (PDM)
+% ------------------------------------------------------------------------
+imagenames = {'JointPDM_unthresholded.nii'};
+
+networknames = {'JointPDM'}; 
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
 
 
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1

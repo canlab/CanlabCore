@@ -394,6 +394,9 @@ switch meth
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
 
 
+                % --------------------------------------
+
+                
     case 'pag'
         load pag_cl
         p = imageCluster('cluster',pag,'color',[1 0 0],'alpha',1);
@@ -410,6 +413,7 @@ switch meth
         load thal_brainstem_approx_working CM
         p = imageCluster('cluster',CM,'color',[1 .7 0],'alpha',1);
 
+        
     case 'pbn'
         load pbn_cl
         p = imageCluster('cluster',pbn,'color',[1 .5 0],'alpha',1);
@@ -427,8 +431,13 @@ switch meth
         p = imageCluster('cluster',nts,'color',[0 0 1],'alpha',1);
     
     case {'lc'} %******
-        P = which('ROI_LC.img');
-        [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 .5 0]);
+        %P = which('ROI_LC.img');
+        %[p,outP,FV, cl, myLight] = mask2surface(P,0,[1 .5 0]);
+         
+        r = load('Keren_2009_LC_2SD_regions.mat'); r = r.r;  
+        % too small, smooth...coming later...
+        p = imageCluster('cluster',r,'color',[1 1 0],'alpha',1);
+       
 
     case {'sn', 'substantia nigra'}
 %         P = which('ROI_SN.img');
@@ -464,6 +473,10 @@ switch meth
         P = which('VMPFC_display_mask.img');
          [p,outP,FV, cl, myLight] = mask2surface(P, 0, [.7 .3 0]);
 
+         
+         
+         % ---------------------------------
+         
     case 'foursurfaces'
         P = run_foursurfaces;
         

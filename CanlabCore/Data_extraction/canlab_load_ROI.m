@@ -1,37 +1,52 @@
 function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(region_name, varargin)
 % Load a region by name (hand-picked from various atlases), for display or use as ROI in analysis
 %
+% - Easy to add regions from region objects or binary masks (.nii/.img)
+% - Some regions best for display only; some good as ROIs as well
+% - Inter-operates with addbrain.m to load regions for display
+%
 % :Usage:
 % ::
 %
 %    handle = canlab_load_ROI(region_name,[optional arguments])
 
-%   **'vmpfc':**
+% Cortex -----------------------------------------------------------
+% 'vmpfc'   Ventromedial prefrontal + posterior cing, midline; hand-drawn (Tor Wager)
 %
+% Forebrain (non-basal ganglia)
+% -----------------------------------------------------------
+% 'nacc'    Nucleus accumbens   % Drawn by Tor around Knutson coords I think (provenance uncertain). Best for region display only.
+% hipp'     Hippocampus         % MISSING/NEEDS UPDATE
 %
-% :SUBCORTICAL SURFACES: ** NEED DOCUMENTATION UPDATE **
-%   - 'brainstem'
-%   - 'amygdala'
-%   - 'thalamus'
-%   - 'hippocampus'
-%   - 'midbrain'
-%   - 'caudate'
-%   - 'globus pallidus'
-%   - 'putamen'
-%   - 'nucleus accumbens'
-%   - 'hypothalamus'
-%   - 'cerebellum'
-%   - {'md','mediodorsal'}
-%   - {'cm','centromedian'}
-%   - 'pbn'
-%   - 'rvm'
-%   - 'nts'
-%   - 'lc'
-%   - {'sn', 'substantia nigra'}
-%   - {'stn', 'subthalamic nucleus'}
-%   - {'rn', 'red nucleus'}
-%   - {'olive', 'inferior olive'}
-%   - {'nrm', 'raphe magnus'}
+% Basal ganglia
+% -----------------------------------------------------------
+% 'caudate'  Caudate nucleus
+% 'put'      Putamen            % MISSING
+% 'GP'       Globus pallidus; Keuken 2014
+% 'GPe'       Globus pallidus internal; Keuken 2014
+% 'GPi'       Globus pallidus external; Keuken 2014
+%
+%  Thalamus and Diencephalon
+% -----------------------------------------------------------
+% 'thalamus'
+% 'cm'      Centromedian thalamus   Hand-drawn by Tor; Best for region display only.
+% 'md'      Mediodorsal thalamus    Hand-drawn by Tor; Best for region display only.
+% 'stn'     subthalamic nucleus     Keuken 2014
+%
+% Brainstem
+% -----------------------------------------------------------
+% 'brainstem'  Segmented and cleaned (Tor Wager) from SPM8 tissue probability maps
+% 'midbrain'   Overall midbrain, from Carmack 2004
+% 'pag'        Periaqueductal gray, hand-drawn (Tor Wager)
+% 'sn'         Substantia Nigra; Keuken 2014
+% 'rn'         Red nucleus; Keuken 2014
+% 'pbn'        Parabrachial complex; very rough, hand-drawn for rough display (Tor)
+% 'lc'         Locus coeruleus; Keren 2009, 2SD image
+% 'rvm_old'    Hand-drawn rostral ventral medulla (Tor) in anatomical rvm
+% 'rvm'        Rostral ventral medulla from Brooks et al. 2016(??)
+% 'nts'        Nuc. tractus solitarius (rough; hand-drawn, Tor)
+% 'olive'      Inferior olive; MISSING
+% 'nrm'        Nuc. raphe magnus; MISSING
 %
 %
 % Examples:
@@ -99,8 +114,8 @@ end
 if ~has_image && has_region  % empty image
     
     try
-    obj = region2fmri_data(r, obj);
-    
+        obj = region2fmri_data(r, obj);
+        
     catch
         % cannot create obj if not in same space.  skip.
         
@@ -121,7 +136,7 @@ switch region_name
     % -----------------------------------------------------------
     
     case {'vmpfc', 'vmPFC', 'VMPFC'}
-        region_file = [];                                   % File with region object/clusters struct
+        region_file = [];                               % File with region object/clusters struct
         var_name = '';                                  % Variable name(s) of interest in file
         image_file = which('VMPFC_display_mask.img');   % Image file name with binary mask
         default_color = [.7 .3 0];                      % default color for display
@@ -150,6 +165,8 @@ switch region_name
         image_file = [];                           % Image file name with binary mask
         default_color = [.5 .6 .6];
         
+      % Basal ganglia
+        % -----------------------------------------------------------   
         
     case 'caudate' % ***************
         %P = which('Tal_Cau.img'); %which('ICBM_caudate.img');   %('Tal_Cau.img'); %
@@ -162,6 +179,23 @@ switch region_name
         %
         %         p = add_surface(pname);
         %         set(p,'FaceColor',[.5 .6 .6]);
+        
+                
+    case {'putamen', 'put'} % ***********************
+        %P = which('Tal_Put.img');
+        %[p,outP,FV, cl, myLight] = mask2surface(P,0,[.9 .4 0]);
+        %if findstr(P,'Tal_Put.img'), str(49:58) = '[.5 .5 .6]'; , end
+        %P = which('carmack_more_clusters.mat'); load(P)]
+        
+        %         fbase = 'LBPA40_spm5_label_clusters.mat';
+        %         fname = which(fbase); if isempty(fname), error(['Looking for ' fbase]); end
+        %         load(fname)
+        %         put = cat(2, cl{51:52});
+        %         p = imageCluster('cluster',put,'color',[.5 .5 .6],'alpha',.5);
+        %
+        %         pname = 'spm_surf_putamen_luke.mat';
+        %          p = add_surface(pname);
+        %         set(p,'FaceColor',[.3 .7 .5]);
         
     case {'globus pallidus', 'gp'}
         
@@ -183,23 +217,6 @@ switch region_name
         var_name = 'GPi';                                   % Variable name(s) of interest in file
         image_file = [];                                    % Image file name with binary mask
         default_color = [.5 .75 .5];
-        
-        
-    case {'putamen', 'put'} % ***********************
-        %P = which('Tal_Put.img');
-        %[p,outP,FV, cl, myLight] = mask2surface(P,0,[.9 .4 0]);
-        %if findstr(P,'Tal_Put.img'), str(49:58) = '[.5 .5 .6]'; , end
-        %P = which('carmack_more_clusters.mat'); load(P)]
-        
-        %         fbase = 'LBPA40_spm5_label_clusters.mat';
-        %         fname = which(fbase); if isempty(fname), error(['Looking for ' fbase]); end
-        %         load(fname)
-        %         put = cat(2, cl{51:52});
-        %         p = imageCluster('cluster',put,'color',[.5 .5 .6],'alpha',.5);
-        %
-        %         pname = 'spm_surf_putamen_luke.mat';
-        %          p = add_surface(pname);
-        %         set(p,'FaceColor',[.3 .7 .5]);
         
         
         % Diencephalon
@@ -254,8 +271,7 @@ switch region_name
         
         % Midbrain
         % -----------------------------------------------------------
-        
-        
+
     case 'midbrain'
         region_file = which('carmack_thal_bstem.mat');  % File with region object/clusters struct
         var_name = 'midbrain';                          % Variable name(s) of interest in file

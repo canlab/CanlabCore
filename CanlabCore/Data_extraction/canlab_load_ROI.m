@@ -9,14 +9,23 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 % ::
 %
 %    handle = canlab_load_ROI(region_name,[optional arguments])
-
+%
+% Working options:
+% -----------------------------------------------------------
+% {'vmpfc' 'nacc' 'BST' ...
+%     'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
+%     'thalamus' 'thal' 'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
+%     'brainstem' 'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
+%     'pbn' 'lc' 'rvm' 'rvm_old' 'nts'}
+%     
 % Cortex -----------------------------------------------------------
 % 'vmpfc'   Ventromedial prefrontal + posterior cing, midline; hand-drawn (Tor Wager)
 %
 % Forebrain (non-basal ganglia)
 % -----------------------------------------------------------
-% 'nacc'    Nucleus accumbens   % Drawn by Tor around Knutson coords I think (provenance uncertain). Best for region display only.
-% hipp'     Hippocampus         % MISSING/NEEDS UPDATE
+% 'nacc'    Nucleus accumbens               % Pauli 2017 BioArxiv subcortical atlas
+% 'hipp'    Hippocampus                     % MISSING/NEEDS UPDATE
+% 'BST'     Bed nuc. of stria term/SLEA     % Pauli 2017 BioArxiv subcortical atlas
 %
 % Basal ganglia
 % -----------------------------------------------------------
@@ -25,20 +34,27 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 % 'GP'       Globus pallidus; Keuken 2014
 % 'GPe'       Globus pallidus internal; Keuken 2014
 % 'GPi'       Globus pallidus external; Keuken 2014
+% 'VeP'        Ventral pallidum           % Pauli 2017 BioArxiv subcortical atlas
 %
-%  Thalamus and Diencephalon
+%  Thalamus, Diencephalon, Epithalamus
 % -----------------------------------------------------------
 % 'thalamus'
 % 'cm'      Centromedian thalamus   Hand-drawn by Tor; Best for region display only.
 % 'md'      Mediodorsal thalamus    Hand-drawn by Tor; Best for region display only.
 % 'stn'     subthalamic nucleus     Keuken 2014
+% 'habenula'     Habenula           Pauli 2017 BioArxiv subcortical atlas
+% 'mammillary'   Mammillary bodies  Pauli 2017 BioArxiv subcortical atlas
 %
 % Brainstem
 % -----------------------------------------------------------
 % 'brainstem'  Segmented and cleaned (Tor Wager) from SPM8 tissue probability maps
 % 'midbrain'   Overall midbrain, from Carmack 2004
 % 'pag'        Periaqueductal gray, hand-drawn (Tor Wager)
+% 'PBP'        Parabrachial pigmented nuc.      % Pauli 2017 BioArxiv subcortical atlas
 % 'sn'         Substantia Nigra; Keuken 2014
+% 'SNc'        Substantia Nigra compacta        % Pauli 2017 BioArxiv subcortical atlas
+% 'SNr'        Substantia Nigra reticularis     % Pauli 2017 BioArxiv subcortical atlas
+% 'VTA'        Ventral tegmental area           % Pauli 2017 BioArxiv subcortical atlas
 % 'rn'         Red nucleus; Keuken 2014
 % 'pbn'        Parabrachial complex; very rough, hand-drawn for rough display (Tor)
 % 'lc'         Locus coeruleus; Keren 2009, 2SD image
@@ -69,6 +85,10 @@ if has_region
         myregion = load(region_file, var_name{:});
     else
         myregion = load(region_file, var_name);
+    end
+    
+    if ~isfield(myregion, var_name)
+        error(sprintf('Region file does not contain variable %s', var_name));
     end
     
     r = myregion.(var_name);
@@ -146,8 +166,10 @@ switch region_name
         % -----------------------------------------------------------
         
     case {'nucleus accumbens','nacc','nac'}
-        region_file = which('NucAccumb_clusters.mat');  % File with region object/clusters struct
-        var_name = 'cl';                                % Variable name(s) of interest in file
+        %region_file = which('NucAccumb_clusters.mat');  % File with region object/clusters struct
+        
+        region_file = which('CIT168_atlas_regions.mat');  
+        var_name = 'NAC';                                % Variable name(s) of interest in file
         image_file = [];                                % Image file name with binary mask
         default_color = [0 .5 0];                       % default color for display
         
@@ -164,38 +186,30 @@ switch region_name
         var_name = '';                             % Variable name(s) of interest in file
         image_file = [];                           % Image file name with binary mask
         default_color = [.5 .6 .6];
-        
+                   
+    case {'BST','BNST','SLEA'}
+
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'BST_SLEA';                          % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [0 .5 1];                       % default color for display
+      
       % Basal ganglia
         % -----------------------------------------------------------   
         
-    case 'caudate' % ***************
-        %P = which('Tal_Cau.img'); %which('ICBM_caudate.img');   %('Tal_Cau.img'); %
-        %[p,outP,FV, cl, myLight] = mask2surface(P,0,[0 0 .5]);
-        %if findstr(P,'Tal_Cau.img'), str(49:58) = '[.5 .6 .6]'; delete(p(1)); p = p(2);,eval(str),end
-        %         P = which('carmack_more_clusters.mat'); load(P)
-        %         p = imageCluster('cluster',cau,'color',[.5 .6 .6],'alpha',.5);
+    case {'Cau', 'cau', 'caudate'}
         
-        %         pname = 'surf_spm2_caudate.mat';
-        %
-        %         p = add_surface(pname);
-        %         set(p,'FaceColor',[.5 .6 .6]);
+        region_file = which('CIT168_atlas_regions.mat');  
+        var_name = 'Cau';                                   % Variable name(s) of interest in file
+        image_file = [];                                    % Image file name with binary mask
+        default_color = [.5 .6 .6];
+       
+    case {'putamen', 'put'} 
         
-                
-    case {'putamen', 'put'} % ***********************
-        %P = which('Tal_Put.img');
-        %[p,outP,FV, cl, myLight] = mask2surface(P,0,[.9 .4 0]);
-        %if findstr(P,'Tal_Put.img'), str(49:58) = '[.5 .5 .6]'; , end
-        %P = which('carmack_more_clusters.mat'); load(P)]
-        
-        %         fbase = 'LBPA40_spm5_label_clusters.mat';
-        %         fname = which(fbase); if isempty(fname), error(['Looking for ' fbase]); end
-        %         load(fname)
-        %         put = cat(2, cl{51:52});
-        %         p = imageCluster('cluster',put,'color',[.5 .5 .6],'alpha',.5);
-        %
-        %         pname = 'spm_surf_putamen_luke.mat';
-        %          p = add_surface(pname);
-        %         set(p,'FaceColor',[.3 .7 .5]);
+        region_file = which('CIT168_atlas_regions.mat');  
+        var_name = 'Put';                                   % Variable name(s) of interest in file
+        image_file = [];                                    % Image file name with binary mask
+        default_color = [.3 .7 .5];
         
     case {'globus pallidus', 'gp'}
         
@@ -219,14 +233,32 @@ switch region_name
         default_color = [.5 .75 .5];
         
         
-        % Diencephalon
+        % Diencephalon and epithalamus
         % -----------------------------------------------------------
     case {'hypothalamus','hy','hythal'}
+
+        %region_file = which('hy_clusters.mat');         % File with region object/clusters struct
+        %var_name = 'hy';  
         
-        region_file = which('hy_clusters.mat');         % File with region object/clusters struct
-        var_name = 'hy';                                % Variable name(s) of interest in file
+        region_file = which('CIT168_atlas_regions.mat');          
+        var_name = 'Hythal';                                % Variable name(s) of interest in file
         image_file = [];                                % Image file name with binary mask
         default_color = [1 1 0];                        % default color for display
+        
+    case {'HN', 'habenula'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'Haben';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .5 1];                       % default color for display
+        
+    case {'mamm', 'mammillary'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'Mamm_Nuc';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .5 1];                       % default color for display
+        
         
         % Thalamus
         % -----------------------------------------------------------
@@ -284,6 +316,13 @@ switch region_name
         var_name = 'pag';                               % Variable name(s) of interest in file
         image_file = which('spm5_pag.img');             % Image file name with binary mask
         default_color = [1 0 0];                        % default color for display
+           
+        case {'PBP'}
+
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'PBP';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .5 1];                       % default color for display
         
     case {'sn', 'substantia nigra'}
         region_file = which('Keuken_2014_7T_regions.mat');
@@ -298,11 +337,41 @@ switch region_name
         image_file = [];
         default_color = [1 1 0];
         
+        case {'SNc', 'snc'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'SNc';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .7 .3];                       % default color for display
+        
+        case {'SNr', 'snr'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'SNr';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .7 .5];                      % default color for display
+        
+        case {'VTA', 'vta'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'VTA';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .7 .2];                       % default color for display
+        
+        case {'vep', 'VeP', 'vpall'}
+        
+        region_file = which('CIT168_atlas_regions.mat');
+        var_name = 'VeP';                               % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .5 1];                       % default color for display
+        
+        
         % Pons
         % -----------------------------------------------------------
         
     case 'pbn'
         region_file = which('pbn_cl.mat');
+        var_name = 'pbn';                     % Variable name(s) of interest in file
         image_file = [];
         default_color = [1 .5 0];
         
@@ -329,7 +398,7 @@ switch region_name
         
     case 'nts'
         region_file = which('nts_cl.mat');
-        var_name = 'r';                     % Variable name(s) of interest in file
+        var_name = 'nts';                     % Variable name(s) of interest in file
         image_file = [];
         default_color = [0 0 1];
         

@@ -740,7 +740,7 @@ function [image_obj, networknames, imagenames] = load_pain_pdm
 % ------------------------------------------------------------------------
 imagenames = {'JointPDM_unthresholded.nii' 'All_PDM10_unthresholded.nii'};
 
-networknames = {'JointPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
+networknames = {'GeuterJointPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
 
 imagenames = check_image_names_get_full_path(imagenames);
 

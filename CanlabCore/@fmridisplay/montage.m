@@ -133,7 +133,7 @@ if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
 end
 
 donewaxes = true;  % default - new figure/axes
-lightenstr = 'lighten';
+lightenstr = 'nolighten';
 myview = 'axial';
 disptype = 'solid';  % or contour
 doonerow = 0;
@@ -238,7 +238,10 @@ obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'sli
 
 % set color map to enhance contrast
 datvec = dat(:);
-datvec(datvec == 0) = [];
+wh = datvec == 0;
+datvec = datvec(~wh);
+
+%datvec(datvec == 0) = [];  % speed up!!
 cmap = contrast(datvec);
 colormap(brighten(cmap, brighten_factor));
 

@@ -69,7 +69,7 @@ nz = V.dim(3);
 if length(varargin) > 0 && ~isempty(varargin{1})
     usfactor = varargin{1};
 else
-    usfactor = ceil(max(voxSize) ./ .5);  % upsample factor for 0.5 mm res
+    usfactor = ceil(max(voxSize) ./ 1);  % upsample factor for 1 mm res
 end
 
 new_voxSize = voxSize ./ usfactor;

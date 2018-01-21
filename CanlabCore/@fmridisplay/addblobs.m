@@ -209,7 +209,7 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'color'
-            case {'onecolor', 'solid'};
+            case {'onecolor', 'solid'}
                 dosplitcolor = 0;
                 doonecolor = 1;
                 onecolor = varargin{i + 1};

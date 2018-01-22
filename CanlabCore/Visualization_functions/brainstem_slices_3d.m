@@ -65,7 +65,8 @@ view(129, 14)
 
 %% brainstem surface
 
-[p(end+1), mesh_struct] = isosurface(dat, 80);
+[p_tmp, mesh_struct] = isosurface(dat, 80);
+p = [p p_tmp];
 
 set(gca, 'ZLim', [-50 0])
 

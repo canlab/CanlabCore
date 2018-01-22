@@ -1,6 +1,21 @@
 function [p, mesh_struct] = isosurface(obj, varargin)
+% Create and visualize an isosurface created from the boundaries in an
+% image object.
 %
-%
+% Options:
+% case 'thresh',  mythresh = varargin{i + 1}; varargin{i + 1} = [];
+% 
+% case 'nosmooth', dosmooth = false;
+% case 'smoothbox', mysmoothbox = varargin{i + 1}; varargin{i + 1} = [];
+% case 'sd', mygaussstd = varargin{i + 1}; varargin{i + 1} = [];
+% 
+% case 'color', mycolor = varargin{i + 1}; varargin{i + 1} = [];
+% 
+% 
+% case 'xlim', xlim = varargin{i + 1}; varargin{i + 1} = [];
+% case 'ylim', ylim = varargin{i + 1}; varargin{i + 1} = [];
+% case 'zlim', zlim = varargin{i + 1}; varargin{i + 1} = [];
+% 
 % Examples:
 % % ------------------------------------------------------
 %

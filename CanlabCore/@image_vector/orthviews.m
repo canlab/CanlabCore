@@ -113,7 +113,7 @@ image_obj = replace_empty(image_obj);
 if ~doparcels && ~force_continuous
     nvalues = length(unique(image_obj.dat(:)));
     
-    if nvalues < 300, dounique = true; doparcels = true; end
+    if nvalues > 2 && nvalues < 300, dounique = true; doparcels = true; end
 end
 
 for i = handle_indices

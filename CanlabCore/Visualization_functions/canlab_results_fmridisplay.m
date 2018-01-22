@@ -311,20 +311,33 @@ if ~exist('o2', 'var')
             sz = get(0, 'screensize');
             set(gcf, 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
             
-        case 'multirow'
+        case 'multirow' 
             
-            shiftvals = [0:.17:nrows]; % more than we need, but works
+            % Notes: for some reason, at least in Matlab 2017a, when you
+            % use the existing figure the slices scale with the fig
+            % position in size. When using montage to create a new figure,
+            % they don't seem to do this. could be enlarge_axes, or ???
+            
+            slices_fig_h = figure('Color', 'w'); 
+            ss = get(0, 'ScreenSize');
+            myheightdivisor = 1.5; % 3/nrows;  % controls figure aspect ratio
+            set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/myheightdivisor) ])
+            
+            %shiftvals = [0:.17:nrows]; % more than we need, but works
+            shiftvals = [0:.24:nrows]; % more than we need, but works
             
             for i = 1:nrows
                 
                 % saggital
-                axh = axes('Position', [-0.02 0.15+shiftvals(i) .17 .17]);
-                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
+                axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
+                axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);
+                %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
+                o2 = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
                 drawnow
                 
                 % axial
-                axh = axes('Position', [.015 0.15+shiftvals(i) .17 .17]);
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+                axh = axes('Position', [.022 0.8-shiftvals(i) .17 .17]);   % [.015 0.15+shiftvals(i) .17 .17]);
+                o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
                 drawnow
                 
             end
@@ -363,22 +376,30 @@ if ~exist('o2', 'var')
             wh_surfaces = [1 2 3 4];
 
 
-        case 'compact2'
+        case 'compact2'  % creates a new figure
             %subplot(2, 1, 1);
             o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
-
-             % shift all axes down and right
+            
+            % shift all axes down and right
             allaxh = o2.montage{1}.axis_handles;
             for i = 1:length(allaxh)
                 pos1 = get(allaxh(i), 'Position');
                 pos1(2) = pos1(2) - 0.08;
                 pos1(1) = pos1(1) + 0.03;
+                
+                % enlarge a bit
+                pos1(3:4) = pos1(3:4) + .02;
+                
                 set(allaxh(i), 'Position', pos1);
             end
             
             enlarge_axes(gcf, 1);
-            axh = axes('Position', [0.0 0.08 .15 1]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            %axh = axes('Position', [0.0 0.08 .15 1]);
+            axh = axes('Position', [-0.02 .75-.3 .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
+            axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
+            
+            %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            o2 = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the

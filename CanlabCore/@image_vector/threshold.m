@@ -144,7 +144,7 @@ obj.dat(~wh) = 0;
 % Apply size threshold
 % --------------------------------------
 if k > 1
-    if doverbose, fprintf('Applying cluster extent threshold\n'); end
+    if doverbose, fprintf('Applying cluster extent threshold of %3.0f contiguous voxels\n', k); end
     for i = 1:size(obj.dat, 2)
         
         whkeep = logical(iimg_cluster_extent(double(obj.dat(:, i) ~= 0), obj.volInfo, k));

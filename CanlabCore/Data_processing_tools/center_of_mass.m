@@ -24,7 +24,8 @@ function com = center_of_mass(XYZ,Z)
 %   Now scales weights by abs value, instead of original value (Z)
 % ..
 
-if size(Z,1) > size(Z,2), Z = Z'; end
+% Z should be row vector
+if size(Z, 1) > size(Z, 2), Z = Z'; end
 
 if all(Z) < 10*eps
     disp('Center_of_mass warning: All Z values are zero');
@@ -33,7 +34,7 @@ end
 
 % Z = Z ./ sum(Z);
 
-Z = repmat(Z,3,1);
+Z = repmat(Z, 3, 1);
 
 if any(isnan(Z(:)) | isinf(Z(:))), Z = 1; end
 

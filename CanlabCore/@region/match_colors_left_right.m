@@ -31,6 +31,16 @@ right = r(isright);
 whleft = find(isleft);  % index into full list
 whright = find(isright);  % index into full list
 
+% -------------------------------------------------------------------------
+
+if ~any(whleft) | ~any(whright)
+    % cannot match regions
+    
+    all_colors = colorfun(length(r));
+    return
+    
+end
+
 % Match regions
 % -------------------------------------------------------------------------
 

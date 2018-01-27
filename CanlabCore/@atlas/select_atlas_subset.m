@@ -6,6 +6,11 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 %
 % obj_subset = select_atlas_subset(obj, varargin)
 %
+% Options:
+% 'flatten' : Flatten integer vector in .dat to a single 1/0 mask. Good for
+% creating masks from combinations of regions, or adding a set to another
+% atlas as a single atlas region.
+%
 % Examples:
 % 
 % atlasfile = which('Morel_thalamus_atlas_object.mat');
@@ -26,6 +31,11 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'LGN'});             % LGN
 % [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'MGN'});             % MGN
 %
+% Create a mask from a set of regions:
+% obj_subset = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf'}, 'flatten');  % Intralaminar
+% r = atlas2region(obj_subset);
+% orthviews(r)
+%
 % see also: image_vector.select_voxels_by_value
 
 % -------------------------------------------------------------------------
@@ -34,6 +44,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 
 strings_to_find = [];
 integers_to_find = [];
+doflatten = false;
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -47,9 +58,9 @@ for i = 1:length(varargin)
     elseif ischar(varargin{i})
         switch varargin{i}
 
-%             case 'rows', rowsz = varargin{i+1}; varargin{i+1} = [];
-%             case 'plot', doplot = 1; 
-%             case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
+             case 'flatten', doflatten = true;
+
+                 %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
                 
             otherwise , warning(['Unknown input string option:' varargin{i}]);
         end
@@ -121,6 +132,12 @@ else % must use .dat vector with integers
     end
     
     obj_subset.dat = dat;
+    
+end
+
+if doflatten
+    
+    obj_subset.dat = single(obj_subset.dat > 0);
     
 end
 

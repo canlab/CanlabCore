@@ -86,10 +86,17 @@ end
     
 % Get rid of leading and trailing non-chars, including _
 %
-not_letter = ~isstrprop(str_array, 'alpha');  % get rid of numbers always.
+not_letter = ~isstrprop(str_array, 'alpha');  % get rid of leading/trailing numbers always.
 
+% remove trailing
 try not_letter(2:end-1) = false; catch, end  % try because may be too short
 
-str_array(not_letter) = [];
+% remove leading by appending
+if not_letter(1)
+    str_array = ['X_' str_array];
+end
+
+% replace leading char with letter if not letter
+
 
 end % function

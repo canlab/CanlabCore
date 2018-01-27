@@ -64,6 +64,9 @@ function p = addbrain(varargin)
 %   **'brainstem_group'**
 %        Midbrain and pons/medulla structures
 %
+%   **'thalamus_group'**
+%        Midbrain and pons/medulla structures
+%
 % :SUBCORTICAL SURFACES: see canlab_load_ROI.m 
 %   - 'brainstem'
 %   - 'suit brainstem'
@@ -104,7 +107,14 @@ function p = addbrain(varargin)
 %  - han: Input handles with patch object
 %  - Only works for changing to gray background right now. 
 %
-% See also: cluster_surf, img2surf.m, surface() methods for objects, cluster_cutaways
+% Examples:
+% figure; addbrain('midbrain_group');
+% addbrain('lc'); addbrain('rvm'); addbrain('VPL'); addbrain('thalamus');
+% addbrain('bg');
+% addbrain('hires left');
+% view(135, 10); lightRestoreSingle;
+%
+% See also: canlab_load_ROI, cluster_surf, img2surf.m, surface() methods for objects, cluster_cutaways
 
 %%% Programmer's notes:
 %
@@ -154,7 +164,8 @@ switch meth
     'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
     'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
-    'pbn' 'lc' 'rvm' 'rvm_old' 'nts'}
+    'pbn' 'lc' 'rvm' 'rvm_old' 'nts' ...
+    'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal'}
         
     [r, ~, default_color] = canlab_load_ROI(meth);
     
@@ -382,7 +393,26 @@ switch meth
         end
         
         set(gca, 'ZLim', [-90 20])
-
+        
+    case {'thalamus_group'}
+        
+        names = {'lgn' 'mgn' 'VPthal', 'intralaminar_thal'};
+        p = [];
+        
+        for i = 1:length(names)
+            
+            p = [p addbrain(names{i})];
+            set(p(end), 'Tag', 'names');
+            
+        end
+        
+        view(140, 30)
+        p = [p addbrain('brainstem')];
+        p = [p addbrain('thalamus')];
+        set(p(end), 'FaceAlpha', .15);
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        set(gca, 'ZLim', [-30 10])
+        
                 % --------------------------------------
 % 
 %                 

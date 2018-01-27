@@ -39,11 +39,15 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 %  Thalamus, Diencephalon, Epithalamus
 % -----------------------------------------------------------
 % 'thalamus'
-% 'cm'      Centromedian thalamus   Hand-drawn by Tor; Best for region display only.
-% 'md'      Mediodorsal thalamus    Hand-drawn by Tor; Best for region display only.
-% 'stn'     subthalamic nucleus     Keuken 2014
-% 'habenula'     Habenula           Pauli 2017 BioArxiv subcortical atlas
+% 'cm'      Centromedian thalamus   Morel thalamus atlas, Krauth 2010
+% 'md'      Mediodorsal thalamus    Morel thalamus atlas, Krauth 2010
+% 'stn'     subthalamic nucleus     Keuken 2014 (also options in Pauli, Morel)
+% 'habenula'     Habenula           Pauli 2017 BioArxiv subcortical atlas (also in Morel)
 % 'mammillary'   Mammillary bodies  Pauli 2017 BioArxiv subcortical atlas
+% 'lgn'     Lateral geniculate nuc  Morel thalamus atlas, Krauth 2010
+% 'mgn'     Medial geniculate nuc   Morel thalamus atlas, Krauth 2010
+% 'VPthal'  Ventral posterior thal  Morel thalamus atlas, Krauth 2010
+% 'intralaminar_thal' Intralaminar  Morel thalamus atlas, Krauth 2010
 %
 % Brainstem
 % -----------------------------------------------------------
@@ -83,16 +87,30 @@ if has_region
     
     if iscell(var_name)
         myregion = load(region_file, var_name{:});
-    else
+        
+        if isempty(myregion)
+            disp('Cannot find region the variables you named in the file.');
+            return
+        end
+        
+        r = [];
+        for i = 1:length(var_name)
+            r = [r myregion.(var_name{i})];
+        end
+        
+    else % not a cell
+        
         myregion = load(region_file, var_name);
+        
+        if isempty(myregion)
+            disp('Cannot find region the variables you named in the file.');
+            return
+        end
+        
+        r = myregion.(var_name);
+        
     end
-    
-    if ~isfield(myregion, var_name)
-        error(sprintf('Region file does not contain variable %s', var_name));
-    end
-    
-    r = myregion.(var_name);
-    
+
     if ~isa(r, 'region')
         r = cluster2region(r);
     end
@@ -272,15 +290,15 @@ switch region_name
         
     case {'md','mediodorsal'}
         
-        region_file = which('thal_brainstem_approx_working.mat');              % File with region object/clusters struct
-        var_name = 'MD';                               % Variable name(s) of interest in file
-        image_file = [];             % Image file name with binary mask
-        default_color = [1 0 0];                        % default color for display
+        region_file = which('Morel_thalamus_atlas_regions.mat');              % File with region object/clusters struct
+        var_name = {'MD_group'};                                    % Variable name(s) of interest in file
+        image_file = [];                                            % Image file name with binary mask
+        default_color = [1 0 0];                                    % default color for display
         
     case {'cm','centromedian'}
         
-        region_file = which('thal_brainstem_approx_working.mat');              % File with region object/clusters struct
-        var_name = 'CM';                               % Variable name(s) of interest in file
+        region_file = which('Morel_thalamus_atlas_regions.mat');              % File with region object/clusters struct
+        var_name = {'L_CM', 'R_CM'};                               % Variable name(s) of interest in file
         image_file = [];             % Image file name with binary mask
         default_color = [1 0 0];                        % default color for display
         
@@ -289,6 +307,36 @@ switch region_name
         var_name = 'STN';                     % Variable name(s) of interest in file
         image_file = [];
         default_color = [1 0 .5];
+        
+    case {'LGN', 'lgn'}
+        
+        region_file = which('Morel_thalamus_atlas_regions.mat');    % File with region object/clusters struct
+        var_name = {'LGN_group'};                                   % Variable name(s) of interest in file
+        image_file = [];                                            % Image file name with binary mask
+        default_color = [.5 0 1];                                   % default color for display
+        
+    case {'MGN', 'mgn'}
+        
+        region_file = which('Morel_thalamus_atlas_regions.mat');              % File with region object/clusters struct
+        var_name = {'L_MGN' 'R_MGN'};                               % Variable name(s) of interest in file
+        image_file = [];                                            % Image file name with binary mask
+        default_color = [1 0 .5];                                   % default color for display
+        
+      case {'VPthal', 'VPLthal', 'VPL'}
+        
+        region_file = which('Morel_thalamus_atlas_regions.mat');    % File with region object/clusters struct
+        var_name = {'VPL_group'};                                   % Variable name(s) of interest in file
+        image_file = [];                                            % Image file name with binary mask
+        default_color = [.3 .7 .3];                                   % default color for display      
+        
+       case {'intralaminar_thal'}
+        
+        region_file = which('Morel_thalamus_atlas_regions.mat');    % File with region object/clusters struct
+        var_name = {'intralaminar_midline_group'};                                   % Variable name(s) of interest in file
+        image_file = [];                                            % Image file name with binary mask
+        default_color = [.8 .8 0];                                   % default color for display      
+        
+        
         
         
         % General brainstem

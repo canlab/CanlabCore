@@ -62,12 +62,14 @@ function [out,cl] = imageCluster(varargin)
 %    view(135, 30); lighting gouraud; lightRestoreSingle; axis image; camlight right;
 %
 % ..
-%    By Tor Wager, 10/3/2001, last edit 7/2012
+%    By Tor Wager, 10/3/2001, edited 7/2012.  1/18: removed verbose
+%    printout
 % ..
 
 % ..
 %    Set up arguments and default values
 % ..
+out = [];
 clusters = [];
 mycolor = 'y';
 myalpha = 1;
@@ -96,15 +98,17 @@ end
 % If you chose to get clusters, no imaging done - just returns all clusters.
 if ~isempty(clusters), out = clusters; return, end
  
+if ~exist('cl', 'var'), cl = []; disp('No clusters entered. Enter ''cluster'' followed by clusters.'); return, end
 
 % do not do this [X,Y,Z] = meshgrid(x,y,z);
 
 %------------------------------------------------------------------------------
 % Prepare volume data and create isosurface patch object
 %------------------------------------------------------------------------------
+if isa(cl, 'region'), cl = region2struct(cl); end
+
 % if a vector of clusters, concatenate
 if length(cl) > 1
-    if isa(cl, 'region'), cl = region2struct(cl); end
     cl = clusters2CLU(cl); 
 end
     
@@ -115,7 +119,7 @@ end
 
     catch
 	% no vTal field, make it here.
-	disp(['No vTal field for cluster, attempting to create it.'])
+	% disp(['No vTal field for cluster, attempting to create it.'])
 	cl = get_cluster_volume(cl);
     %V = smooth3(cl.vTal);
 	% V = smooth3(cl.vTal,'box',5);
@@ -136,7 +140,7 @@ end
     height_threshold = height_threshold(1);
 %height_threshold = 3
 
-    disp(['Range of cl is: ' num2str(min(cl.Z)) ',' num2str(max(cl.Z)) '. Threshold is :' num2str(height_threshold)])
+    % disp(['Range of cl is: ' num2str(min(cl.Z)) ',' num2str(max(cl.Z)) '. Threshold is :' num2str(height_threshold)])
     
  	set(0,'CurrentFigure', gcf)
 	%set(gcf, 'CurrentAxes', gca);
@@ -154,5 +158,5 @@ end
     set(gcf, 'Visible', 'on');
     out = hPatch;
     
-return
+end % function
     

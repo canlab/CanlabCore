@@ -150,7 +150,7 @@ classdef atlas < image_vector
             % arguments
             % ---------------------------------
             
-            obj.probability_maps = single([]);
+            obj.probability_maps = sparse([]); % sparse, or single
             obj.dat = int32(0);
             [obj.labels obj.labels_2 obj.labels_3 obj.labels_4 obj.labels_5] = deal({''});
             obj.history = {''};

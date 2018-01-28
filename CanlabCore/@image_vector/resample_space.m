@@ -68,6 +68,31 @@ end
 % in case of NaN values
 obj_out.dat(isnan(obj_out.dat)) = 0;
 
+
+% Special object subtypes
+% -----------------------------------------------------------------------
+
+if isa(obj, 'atlas')
+    
+    n_prob_imgs = size(obj.probability_maps, 2);
+    
+    obj_out.probability_maps = [];
+    
+    for i = 1:n_prob_imgs
+        
+        voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
+        
+        resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        
+        resampled_dat = resampled_dat(:);
+        
+        obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
+        
+    end
+    
+end
+    
+    
 if isa(obj_out, 'statistic_image')
    % Rebuild fields specific to statistic_images
    
@@ -102,6 +127,8 @@ if isa(obj_out, 'statistic_image')
    
 end
 
+% End special object subtypes
+% -----------------------------------------------------------------------
 
 if size(obj_out.dat, 1) == sum(obj_out.volInfo.image_indx)
     % this should always/almost always be true - assign missing/removed vox
@@ -132,6 +159,11 @@ obj = obj_out;
 % re-parse clusters
 obj = reparse_contiguous(obj, 'nonempty');
 
+obj.history{end+1} = sprintf('Resampled data to space of %s', sampleto.volInfo.fname);
+
+% Special object subtypes
+% -----------------------------------------------------------------------
+
 if isa(obj, 'fmri_data')
     % fmri_data has this field, but other image_vector objects do not.
     obj.mask = resample_space(obj.mask, sampleto);
@@ -143,7 +175,24 @@ end
 %     disp('.sig field reset. Re-threshold if necessary.');
 % end
 
-obj.history{end+1} = sprintf('Resampled data to space of %s', sampleto.volInfo.fname);
+if isa(obj, 'atlas')
+    % Rebuild index so we have integers only. Rebuild if we have prob maps,
+    % or round .dat if not.
+    n_regions = max([size(obj.probability_maps, 2) length(obj.labels)]); % edit from num_regions method to exclude using .dat, as we are trying to adjust dat for interpolation
+
+    has_pmaps = ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == n_regions;
+    
+    if has_pmaps
+        obj = probability_maps_to_region_index(obj);
+    else
+        obj.dat = round(obj.dat);
+    end
+    
+end
+
+% End special object subtypes
+% -----------------------------------------------------------------------
+
 
 
 end

@@ -28,8 +28,8 @@ end
 % Enforce variable types
 % ----------------------------------------------------------------------------
 
-obj.probability_maps = single(obj.probability_maps);
-obj.dat = int32(round(obj.dat));
+obj.probability_maps = sparse(double(obj.probability_maps));
+obj.dat = int32(full(round(obj.dat)));
 
 myfields = {'labels' 'labels_2' 'labels_3' 'labels_4' 'labels_5' 'property_descriptions', 'label_descriptions'};
 

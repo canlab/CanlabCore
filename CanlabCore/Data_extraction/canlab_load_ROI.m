@@ -70,14 +70,21 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % 'SNr'        Substantia Nigra reticularis     % Pauli 2017 BioArxiv subcortical atlas
 % 'VTA'        Ventral tegmental area           % Pauli 2017 BioArxiv subcortical atlas
 % 'rn'         Red nucleus; Keuken 2014
-% 'pbn'        Parabrachial complex; very rough, hand-drawn for rough display (Tor)
+% 'pbn'        Parabrachial complex; Fairhurst, Merle, Katja Wiech, Paul Dunckley, and Irene Tracey. 2007. ?Anticipatory Brainstem Activity Predicts Neural Processing of Pain in Humans.? Pain 128 (1-2):101?10.
 % 'lc'         Locus coeruleus; Keren 2009, 2SD image
 % 'rvm_old'    Hand-drawn rostral ventral medulla (Tor) in anatomical rvm
 % 'rvm'        Rostral ventral medulla from Brooks et al. 2016(??)
 % 'nts'        Nuc. tractus solitarius (rough; hand-drawn, Tor)
 % 'olive'      Inferior olive; MISSING
-% 'nrm'        Nuc. raphe magnus; MISSING
-%
+% 'nrm'        Nuc. raphe magnus; % Bär, Karl-Jürgen, Feliberto de la Cruz, Andy Schumann, Stefanie Koehler, Heinrich Sauer, Hugo Critchley, and Gerd Wagner. 2016. ?Functional Connectivity and Network Analysis of Midbrain and Brainstem Nuclei.? NeuroImage 134 (July):53?63.
+% 'ncf'        Nuc. cuneiformis; Zambreanu, L., R. G. Wise, J. C. W. Brooks, G. D. Iannetti, and I. Tracey. 2005. ?A Role for the Brainstem in Central Sensitisation in Humans. Evidence from Functional Magnetic Resonance Imaging.? Pain 114 (3):397?407.
+% 'ncs_B6_B8'  Bär, Karl-Jürgen, Feliberto de la Cruz, Andy Schumann, Stefanie Koehler, Heinrich Sauer, Hugo Critchley, and Gerd Wagner. 2016. ?Functional Connectivity and Network Analysis of Midbrain and Brainstem Nuclei.? NeuroImage 134 (July):53?63.
+% 'nrp_B5'     Bär, Karl-Jürgen, Feliberto de la Cruz, Andy Schumann, Stefanie Koehler, Heinrich Sauer, Hugo Critchley, and Gerd Wagner. 2016. ?Functional Connectivity and Network Analysis of Midbrain and Brainstem Nuclei.? NeuroImage 134 (July):53?63.
+% 'nuc_ambiguus' Sclocco, Roberta, Florian Beissner, Gaelle Desbordes, Jonathan R. Polimeni, Lawrence L. Wald, Norman W. Kettner, Jieun Kim, et al. 2016. ?Neuroimaging Brainstem Circuitry Supporting Cardiovagal Response to Pain: A Combined Heart Rate Variability/ultrahigh-Field (7 T) Functional Magnetic Resonance Imaging Study.? Philosophical Transactions. Series A, Mathematical, Physical, and Engineering Sciences 374 (2067). rsta.royalsocietypublishing.org. https://doi.org/10.1098/rsta.2015.0189.
+% 'dmnx_nts'    Sclocco, Roberta, Florian Beissner, Gaelle Desbordes, Jonathan R. Polimeni, Lawrence L. Wald, Norman W. Kettner, Jieun Kim, et al. 2016. ?Neuroimaging Brainstem Circuitry Supporting Cardiovagal Response to Pain: A Combined Heart Rate Variability/ultrahigh-Field (7 T) Functional Magnetic Resonance Imaging Study.? Philosophical Transactions. Series A, Mathematical, Physical, and Engineering Sciences 374 (2067). rsta.royalsocietypublishing.org. https://doi.org/10.1098/rsta.2015.0189.
+% 'vep'          % Pauli 2017 BioArxiv CIT168 subcortical atlas 
+% 'medullary_raphe' Nash, Paul G., Vaughan G. Macefield, Iven J. Klineberg, Greg M. Murray, and Luke A. Henderson. 2009. ?Differential Activation of the Human Trigeminal Nuclear Complex by Noxious and Non-Noxious Orofacial Stimulation.? Human Brain Mapping 30 (11):3772?82.
+% 'spinal_trigeminal' Nash, Paul G., Vaughan G. Macefield, Iven J. Klineberg, Greg M. Murray, and Luke A. Henderson. 2009. ?Differential Activation of the Human Trigeminal Nuclear Complex by Noxious and Non-Noxious Orofacial Stimulation.? Human Brain Mapping 30 (11):3772?82.
 %
 % Examples:
 %
@@ -423,6 +430,12 @@ switch region_name
         image_file = [];                                % Image file name with binary mask
         default_color = [.4 .7 .2];                      % default color for display
         
+    case 'ncf'
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat'); % old region_file = which('pbn_cl.mat');
+        var_name = 'ncf_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [1 .5 0];
+        
     case 'drn'
         region_file = which('dorsal_median_raphe_roi_2018_tor.mat');  % File with region object/clusters struct
         var_name = 'drn_regions';                          % Variable name(s) of interest in file
@@ -483,14 +496,15 @@ switch region_name
         image_file = [];                                % Image file name with binary mask
         default_color = [.3 .5 1];                       % default color for display
         
+
         
         % Pons
         % -----------------------------------------------------------
         
     case 'pbn'
-        region_file = which('pbn_cl.mat');
-        var_name = 'pbn';                     % Variable name(s) of interest in file
-        image_file = [];
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat'); % old region_file = which('pbn_cl.mat');
+        var_name = 'pbn_regions';                     % Variable name(s) of interest in file
+         image_file = [];
         default_color = [1 .5 0];
         
     case {'lc', 'locus_coeruleus'}
@@ -498,6 +512,12 @@ switch region_name
         var_name = 'r';                     % Variable name(s) of interest in file
         image_file = [];
         default_color = [1 1 0];
+        
+    case {'nrp_B5'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'nrp_B5_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [.3 .3 1];
         
         % Medulla
         % -----------------------------------------------------------
@@ -514,11 +534,11 @@ switch region_name
         image_file = which('RVMmask_symm_2mm.nii');
         default_color = [1 .7 1];
         
-    case 'nts'
-        region_file = which('nts_cl.mat');
-        var_name = 'nts';                     % Variable name(s) of interest in file
-        image_file = [];
-        default_color = [0 0 1];
+%     case 'nts'
+%         region_file = which('coordinate_brainstem_rois_2018_tor.mat');  % old which('nts_cl.mat');
+%         var_name = 'dmnx_nts_regions';                     % Variable name(s) of interest in file
+%         image_file = [];
+%         default_color = [0 0 1];
         
     case {'olive', 'inferior olive'}
         region_file = [];
@@ -529,8 +549,45 @@ switch region_name
     case {'nrm', 'raphe magnus'}
         region_file = [];
         var_name = '';                     % Variable name(s) of interest in file
-        image_file = 'ROI_raphe_magnus.img';
-        default_color = [.3 0 1];
+        image_file = [];                    % old: 'ROI_raphe_magnus.img';
+        default_color = [.3 .3 1];
+   
+    case {'nrm', 'raphe magnus'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'nrm_regions';                     % Variable name(s) of interest in file
+        image_file = [];                    % old: 'ROI_raphe_magnus.img';
+        default_color = [.3 .3 1];
+        
+    case {'medullary_raphe'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'medullary_raphe_regions';                     % Variable name(s) of interest in file
+        image_file = [];                    
+        default_color = [.3 .3 1];
+    
+    case {'ncs_B6_B8'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'ncs_B6_B8_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [.3 .3 1];
+        
+    case {'spinal_trigeminal'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'spinal_trigeminal_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [.7 .3 .4];
+        
+    case {'nuc_ambiguus'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'nuc_ambiguus_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [.8 .2 .2];
+        
+    case {'nts', 'dmnx_nts'}
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat');
+        var_name = 'dmnx_nts_regions';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [1 .1 1];
+        
         
     otherwise
         error('Unknown region name.');

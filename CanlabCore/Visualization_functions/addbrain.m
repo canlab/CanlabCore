@@ -165,7 +165,8 @@ switch meth
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
     'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
     'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
-    'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal'}
+    'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal', ...
+    'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP'}
         
     [r, ~, default_color] = canlab_load_ROI(meth, 'noatlas');  % noatlas speeds things up! we don't need atlas 
     
@@ -382,7 +383,8 @@ switch meth
 
     case 'brainstem_group'
         
-        names = {'mrn' 'pbn' 'lc' 'rvm' 'nts'}; % medulla only, midbrain separate
+        names = {'mrn' 'pbn' 'lc' 'rvm' 'nts' 'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' }; % medulla only, midbrain separate
+        % 'vep' 'PBP'
         p = addbrain('midbrain_group');
         
         for i = 1:length(names)

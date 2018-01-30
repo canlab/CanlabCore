@@ -380,9 +380,14 @@ classdef region
                 obj(i).center = center_of_mass(myXYZ, double(obj(i).Z));
                 obj(i).mm_center = center_of_mass(obj(i).XYZmm, double(obj(i).Z));
                 
-                [dd, ff, ee] = fileparts(mask.volInfo.fname);
-                obj(i).custom_info1 = [ff ee];
-                obj(i).custom_info1_descrip = 'Mask image name for region definition';
+                if ~isempty(mask.volInfo.fname)
+                    [dd, ff, ee] = fileparts(mask.volInfo.fname);
+                    obj(i).custom_info1 = [ff ee];
+                    obj(i).custom_info1_descrip = 'Mask image name for region definition';
+                else
+                    obj(i).custom_info1 = 'No filename to associate';
+                    obj(i).custom_info1_descrip = '';
+                end
                 
             end
             

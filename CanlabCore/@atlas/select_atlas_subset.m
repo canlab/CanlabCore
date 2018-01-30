@@ -9,7 +9,8 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Options:
 % 'flatten' : Flatten integer vector in .dat to a single 1/0 mask. Good for
 % creating masks from combinations of regions, or adding a set to another
-% atlas as a single atlas region.
+% atlas as a single atlas region. .probability_maps reduced to single max
+% map
 %
 % Examples:
 % 
@@ -136,10 +137,37 @@ else % must use .dat vector with integers
 end
 
 if doflatten
-    
+    % Flatten into mask
+    % -------------------------------------------------------------------
     obj_subset.dat = single(obj_subset.dat > 0);
     
-end
+    obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
+    
+    % Add labels for combined mask
+    
+    mylabels = [];
+    if iscell(strings_to_find)
+        mylabels = cat(2, strings_to_find{:});
+    end
+    
+    if ~isempty(integers_to_find)
+        morelabels = cat(2, obj.labels{integers_to_find});
+        mylabels = [mylabels morelabels];
+    end
+    
+    obj_subset.labels = {mylabels};
+    
+    obj_subset.label_descriptions = {sprintf('Combined subset: %s', mylabels)};
+    
+        % Make sure they are length of prob maps, to conform to standard atlas
+    % object
+%     np = size(obj_subset.probability_maps, 2);
+%     if np
+%         obj_subset.labels = repmat(obj_subset.labels, 1, np);
+%         obj_subset.label_descriptions = repmat(obj_subset.label_descriptions, np, 1);
+%     end
+    
+end % flatten
 
 end % function
 

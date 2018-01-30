@@ -1,9 +1,15 @@
-function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(region_name, varargin)
+function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_ROI(region_name, varargin)
 % Load a region by name (hand-picked from various atlases), for display or use as ROI in analysis
+%
+% - r is a region object, useful for display (e.g., addbrain.m and any region object method)
+% - atlas_obj is an atlas object containing regions, mapped to a standard reference space (1 mm res)
+%   this can be slow for some objects and is not needed for region display
+%   (e.g., addblobs.m), so 'noatlas' will return an empty atlas_obj instead
 %
 % - Easy to add regions from region objects or binary masks (.nii/.img)
 % - Some regions best for display only; some good as ROIs as well
 % - Inter-operates with addbrain.m to load regions for display
+%
 %
 % :Usage:
 % ::
@@ -16,7 +22,7 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 %     'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
 %     'thalamus' 'thal' 'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
 %     'brainstem' 'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
-%     'pbn' 'lc' 'rvm' 'rvm_old' 'nts'}
+%     'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'drn' 'mrn' 'sc' 'ic'}
 %     
 % Cortex -----------------------------------------------------------
 % 'vmpfc'   Ventromedial prefrontal + posterior cing, midline; hand-drawn (Tor Wager)
@@ -38,7 +44,7 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 %
 %  Thalamus, Diencephalon, Epithalamus
 % -----------------------------------------------------------
-% 'thalamus'
+% 'thalamus'                        Morel thalamus main body, Krauth 2010
 % 'cm'      Centromedian thalamus   Morel thalamus atlas, Krauth 2010
 % 'md'      Mediodorsal thalamus    Morel thalamus atlas, Krauth 2010
 % 'stn'     subthalamic nucleus     Keuken 2014 (also options in Pauli, Morel)
@@ -53,7 +59,11 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 % -----------------------------------------------------------
 % 'brainstem'  Segmented and cleaned (Tor Wager) from SPM8 tissue probability maps
 % 'midbrain'   Overall midbrain, from Carmack 2004
-% 'pag'        Periaqueductal gray, hand-drawn (Tor Wager)
+% 'pag'        Periaqueductal gray, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
+% 'sc'         Superior colliculus, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
+% 'ic'         Inferior colliculus, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
+% 'drn'        Dorsal raphe nucleus, coords from Beliveau, 2015. mask out aqueduct/Keuken2014 ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August). Elsevier:187?95.
+% 'mrn'        Median raphe nucleus, coords from Beliveau, 2015. mask out aqueduct/Keuken2014 ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August). Elsevier:187?95.
 % 'PBP'        Parabrachial pigmented nuc.      % Pauli 2017 BioArxiv subcortical atlas
 % 'sn'         Substantia Nigra; Keuken 2014
 % 'SNc'        Substantia Nigra compacta        % Pauli 2017 BioArxiv subcortical atlas
@@ -74,7 +84,18 @@ function [r, obj, default_color, region_file, image_file] = canlab_load_ROI(regi
 % [r, obj, default_color, region_file, image_file] = canlab_load_ROI('vmpfc');
 % orthviews(r, 'color', {default_color});
 %
+% [r, myatlas] = canlab_load_ROI('habenula'); num_regions(myatlas); orthviews(myatlas)
+% r = canlab_load_ROI('habenula', 'noatlas'); orthviews(r)
 
+% Defaults and inputs
+% -----------------------------------------------------------------------
+
+doatlas = true;
+reference_space_image = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
+
+if any(strcmp(varargin, 'noatlas')) || nargout < 2, doatlas = false; end
+
+% Get names and info only first
 [region_file, image_file, var_name, default_color] = get_region_info_from_registry(region_name);
 
 has_region = ~isempty(region_file);
@@ -115,6 +136,17 @@ if has_region
         r = cluster2region(r);
     end
     
+    % Region names
+    if strcmp(r(1).shorttitle, 'Region001')
+        for i = 1:length(r)
+            if iscell(var_name)
+                r(i).shorttitle = var_name{1};
+            else
+                r(i).shorttitle = var_name;
+            end
+        end
+    end
+    
 else
     
     r = region();
@@ -126,7 +158,7 @@ end
 
 if has_image
     
-    % Load image file as obj, an fmri_data object
+    % Load image file as obj, an fmri_data object, to convert to region
     
     obj = fmri_data(image_file);
     
@@ -160,6 +192,20 @@ if ~has_image && has_region  % empty image
     end
 end
 
+% Re-map regions into standard reference space, 1 mm.  Needs image on path.
+% -----------------------------------------------------------------------
+atlas_obj = [];
+
+if doatlas
+    
+    if isempty(reference_space_image)
+        sprintf('To return atlas object, you need %s on your Matlab path. Skipping.\n',reference_space_image);
+        return
+    end
+    
+    atlas_obj = region2atlas(r, reference_space_image);
+    
+end
 
 end % main function
 
@@ -281,10 +327,10 @@ switch region_name
         % Thalamus
         % -----------------------------------------------------------
         
-    case 'thalamus'
-        region_file = [];                                   % File with region object/clusters struct
-        var_name = '';                                  % Variable name(s) of interest in file
-        image_file = which('spm2_thal.img');   % Image file name with binary mask
+    case {'thalamus', 'thal'}
+        region_file = 'Morel_Thalamus_main_body_region_and_atlas_obj';  % File with region object/clusters struct
+        var_name = 'thal_region';                                  % Variable name(s) of interest in file
+        image_file = [];   % Image file name with binary mask.  old: which('spm2_thal.img');
         default_color = [.9 .65 .5];
         
         
@@ -360,13 +406,37 @@ switch region_name
         
     case 'pag'
         % 'ROI_pag.img' alternate
-        region_file = which('pag_cl.mat');              % File with region object/clusters struct
-        var_name = 'pag';                               % Variable name(s) of interest in file
-        image_file = which('spm5_pag.img');             % Image file name with binary mask
+        region_file = which('pag_roi_2018_tor.mat');    % File with region object/clusters struct % old: 'pag_cl.mat'
+        var_name = 'pag_regions';                       % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
         default_color = [1 0 0];                        % default color for display
-           
-        case {'PBP'}
-
+        
+    case 'sc'
+        region_file = which('sup_inf_colliculus_roi_2018_tor.mat');  % File with region object/clusters struct
+        var_name = 'sc_regions';                          % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.7 .5 .2];                      % default color for display
+        
+    case 'ic'
+        region_file = which('sup_inf_colliculus_roi_2018_tor.mat');  % File with region object/clusters struct
+        var_name = 'ic_regions';                          % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.4 .7 .2];                      % default color for display
+        
+    case 'drn'
+        region_file = which('dorsal_median_raphe_roi_2018_tor.mat');  % File with region object/clusters struct
+        var_name = 'drn_regions';                          % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .3 1];                      % default color for display
+        
+    case 'mrn'
+        region_file = which('dorsal_median_raphe_roi_2018_tor.mat');  % File with region object/clusters struct
+        var_name = 'mrn_regions';                          % Variable name(s) of interest in file
+        image_file = [];                                % Image file name with binary mask
+        default_color = [.3 .3 1];                      % default color for display
+        
+    case {'PBP'}
+        
         region_file = which('CIT168_atlas_regions.mat');
         var_name = 'PBP';                               % Variable name(s) of interest in file
         image_file = [];                                % Image file name with binary mask

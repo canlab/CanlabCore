@@ -68,6 +68,9 @@ if use_probabilities_if_available && has_pmaps
         
         atlasregion = select_atlas_subset(atlas_obj, i);
         
+        % recast variable types: avoid conflicts, e.g., in spm orthviews
+        atlasregion.dat = double(atlasregion.dat);
+        
         % parse into contiguous or index based, depending on inputs
         r{i} = region(atlasregion, region_parse_method, 'noverbose');
         
@@ -85,7 +88,7 @@ else
     % Use region labels in atlas_obj.dat
     % --------------------------------------------------------------------
     
-    atlas_obj.dat = single(atlas_obj.dat); % int32 doesn't work, don't know why.
+    atlas_obj.dat = double(atlas_obj.dat); % int32 doesn't work - conflict when adding vars to orthviews of diff types
     
     r = region(atlas_obj, 'unique_mask_values', 'noverbose');
     

@@ -90,7 +90,34 @@ if isa(obj, 'atlas')
         
     end
     
-end
+    % if no prob images, need to be careful about how to resample integer vector data
+    
+    if ~n_prob_imgs
+        integer_vec = zeros(size(obj_out.dat, 1), 1);
+        
+        n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
+        
+        for i = 1:n_index_vals
+            
+            myintegervec = i * double(obj.dat(:, 1) == i);
+            
+            voldata = iimg_reconstruct_vols(myintegervec, obj.volInfo);
+            
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            
+            resampled_dat = resampled_dat(:);
+            resampled_dat = resampled_dat(Vto.wh_inmask);    % take relevant voxels only
+            resampled_dat(~(round(resampled_dat) == i)) = 0; % take only values that round to integer
+            
+            integer_vec = integer_vec + round(resampled_dat);
+            
+        end
+        
+        obj_out.dat = integer_vec; % will be rounded later, but should be rounded already here...
+        
+    end % rebuild integers
+    
+end % atlas object
     
     
 if isa(obj_out, 'statistic_image')
@@ -185,7 +212,7 @@ if isa(obj, 'atlas')
     if has_pmaps
         obj = probability_maps_to_region_index(obj);
     else
-        obj.dat = round(obj.dat);
+        obj.dat = int32(round(obj.dat));
     end
     
 end

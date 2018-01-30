@@ -67,7 +67,7 @@ function p = addbrain(varargin)
 %   **'thalamus_group'**
 %        Midbrain and pons/medulla structures
 %
-% :SUBCORTICAL SURFACES: see canlab_load_ROI.m 
+% :SUBCORTICAL SURFACES: see canlab_load_ROI.m for complete list
 %   - 'brainstem'
 %   - 'suit brainstem'
 %   - 'amygdala'
@@ -164,10 +164,10 @@ switch meth
     'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
     'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
-    'pbn' 'lc' 'rvm' 'rvm_old' 'nts' ...
-    'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal'}
+    'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
+    'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal'}
         
-    [r, ~, default_color] = canlab_load_ROI(meth);
+    [r, ~, default_color] = canlab_load_ROI(meth, 'noatlas');  % noatlas speeds things up! we don't need atlas 
     
     p = imageCluster('cluster',region2struct(r),'color',default_color,'alpha',.5);
     
@@ -350,7 +350,7 @@ switch meth
      
     case {'midbrain_group'}
         
-        names = {'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn'};
+        names = {'pag' 'sc' 'ic' 'drn' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn'};
         p = [];
         
         for i = 1:length(names)
@@ -382,7 +382,7 @@ switch meth
 
     case 'brainstem_group'
         
-        names = {'pbn' 'lc' 'rvm' 'nts'};
+        names = {'mrn' 'pbn' 'lc' 'rvm' 'nts'}; % medulla only, midbrain separate
         p = addbrain('midbrain_group');
         
         for i = 1:length(names)

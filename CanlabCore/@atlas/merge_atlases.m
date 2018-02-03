@@ -60,9 +60,21 @@ end
 % -------------------------------------------------------------------------
 if doverbose, disp('Resampling space of atlas to add'); end
 
-atlas_obj_to_add = resample_space(atlas_obj_to_add, atlas_obj);
+isdiff = compare_space(atlas_obj, atlas_obj_to_add);
+if isdiff
+    
+    atlas_obj_to_add = resample_space(atlas_obj_to_add, atlas_obj);
+    
+end
 
+% Make sure we have same voxel list
+isdiff = compare_space(atlas_obj, atlas_obj_to_add);
+if isdiff == 3
+    atlas_obj = replace_empty(atlas_obj);
+    atlas_obj_to_add = replace_empty(atlas_obj_to_add);
+end
 
+    
 % -------------------------------------------------------------------------
 % Add to atlas
 % -------------------------------------------------------------------------
@@ -83,8 +95,6 @@ has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probability_m
 toadd_n_regions = num_regions(atlas_obj_to_add);
 
 toadd_has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probability_maps, 2) == toadd_n_regions;
-
-% % % doreplacevoxels = false would be integrated here...
 
 if has_pmaps && toadd_has_pmaps
     % We have probability maps for both

@@ -112,20 +112,29 @@ else
     return
 end
 
-% Remove special statistic_image fields
+% Remove  voxels from special statistic_image fields
+
 if isa(dat, 'statistic_image')
+    
     for myfields = {'p' 'ste' 'sig'}
+        
         if ~isempty(dat.(myfields{1}))
             dat.(myfields{1})(empty_voxels, :) = [];
         end
+        
     end
+    
 end
 
-% Remove special atlas fields
+% Remove voxels from special atlas fields
 
 if isa(dat, 'atlas')
     
-    dat.probability_maps(empty_voxels, :) = [];
+    has_pmaps = ~isempty(dat.probability_maps) && size(dat.probability_maps, 2) == num_regions(dat);
+    
+    if has_pmaps
+        dat.probability_maps(empty_voxels, :) = [];
+    end
     
 end
 

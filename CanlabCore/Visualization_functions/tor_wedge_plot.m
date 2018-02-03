@@ -114,6 +114,8 @@ linewidth = 1;
 outer_circle_radius = 1;
 nofill = false;
 
+radius_values = double(radius_values);
+
 if min(size(radius_values)) > 1
     n_categories = size(radius_values, 2);
 else

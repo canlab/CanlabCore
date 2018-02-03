@@ -133,7 +133,7 @@ if any(strcmp(varargin, 'pattern_expression'))
     
 end
 
-[dat,parcels] = match_spaces(dat, parcels);  % keeps only in-image parcels
+[dat,parcels] = match_spaces(dat, parcels); % keeps only in-image parcels
 
 % Turn integer vector into 1s and 0s - matrix of binary masks
 parcels = remove_empty(parcels);

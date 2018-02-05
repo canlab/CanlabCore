@@ -88,6 +88,10 @@ for i = 1:length(strings_to_find)
     
 end
 
+if ~any(to_extract)
+    error('No regions identified to extract.');
+end
+
 % -------------------------------------------------------------------------
 % FIND BY NUMBERS
 % -------------------------------------------------------------------------

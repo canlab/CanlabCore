@@ -32,24 +32,38 @@ end
     switch lower(atlas_file_name_or_keyword)
         
         case {'thalamus'}
-            savefile = which('Thalamus_atlas_combined_Morel.mat');
+            savefile = which('Thalamus_combined_atlas_object.mat');
             varname = 'thalamus_atlas';
     
         case {'thalamus_detail', 'morel'}
-            savefile = which('Thalamus_atlas_combined_Morel.mat');
+            savefile = which('Morel_thalamus_atlas_object.mat');
             varname = 'atlas_obj';
             
         case {'cortex', 'glasser'}
             savefile = which('Glasser2016HCP_atlas_object.mat');
             varname = 'atlas_obj';
             
+        case {'basal_ganglia', 'bg'}
+            savefile = which('Basal_ganglia_combined_atlas_object.mat');
+            varname = 'atlas_obj';
+ 
         case {'striatum', 'pauli_bg'}
             savefile = which('Pauli2016_striatum_atlas_object.mat');
             varname = 'atlas_obj';
             
-        case {'subcortical_rl', 'CIT168'}
+        case {'subcortical_rl', 'CIT168', 'cit168'}
             savefile = which('CIT168_MNI_subcortical_atlas_object.mat');
             varname = 'atlas_obj';
+            
+        case {'brainnetome'}
+            savefile = which('Brainnetome_atlas_object.mat');
+            varname = 'atlas_obj';
+            
+        case {'keuken'}
+            savefile = which('Keuken_7T_atlas_object.mat');
+            varname = 'atlas_obj';
+            
+            
             
             
         otherwise % assume it's a file name

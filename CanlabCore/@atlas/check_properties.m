@@ -1,4 +1,4 @@
-function obj = check_properties(obj)
+function [obj, has_pmaps, has_index] = check_properties(obj)
 % Check properties and enforce some variable types
 %
 % obj = check_properties(obj)
@@ -8,6 +8,13 @@ n_regions = num_regions(obj);
 % Data
 has_pmaps = ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == n_regions;
 has_index = ~isempty(obj.dat);
+
+% enforce sparse double prob maps
+if has_pmaps
+    
+    obj.probability_maps = sparse(double(obj.probability_maps));
+    
+end
 
 % Create index if needed
 if has_pmaps && ~has_index

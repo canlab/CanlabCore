@@ -16,6 +16,7 @@ function atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, varargin)
 %  e.g., [1 3], {'VPL' 'IFG'}
 %
 % 'noreplace' : Do not replace voxels in original atlas; see above.
+% 'always_replace' : always replace voxels in original atlas; see above.
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
@@ -23,6 +24,7 @@ function atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, varargin)
 
 doreplacevoxels = true;
 doverbose = true;
+always_replace = false;
 
 % Find optional text strings and replace
 for i = 1:length(varargin)
@@ -36,6 +38,7 @@ for i = 1:length(varargin)
     elseif ischar(varargin{i})
         switch varargin{i}
             
+            case 'always_replace', always_replace = true; varargin{i} = [];
             case 'noreplace', doreplacevoxels = false; varargin{i} = [];
                 
             otherwise , warning(['Unknown input string option:' varargin{i}]);
@@ -99,7 +102,15 @@ toadd_has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probabi
 if has_pmaps && toadd_has_pmaps
     % We have probability maps for both
     
+    if always_replace    % eliminate voxels in new atlas to add
+        
+        wh = any(atlas_obj_to_add.probability_maps, 2); 
+        atlas_obj.probability_maps(wh, :) = 0;
+        
+    end
+    
     if ~doreplacevoxels  % eliminate voxels already in atlas
+        
         wh = any(atlas_obj.probability_maps, 2);
         atlas_obj_to_add.probability_maps(wh, :) = 0;
     end
@@ -111,16 +122,25 @@ if has_pmaps && toadd_has_pmaps
 elseif has_pmaps && ~toadd_has_pmaps
     % Probability maps for first atlas only. Use these, preserving p maps
     
-    % Reconstruct prob maps from index
+    if always_replace    % eliminate voxels in new atlas to add
+        
+        wh = any(atlas_obj_to_add.dat, 2);
+        atlas_obj.probability_maps(wh, :) = 0;
+        
+    end
+    
+    % Reconstruct prob maps to add from index
     [p_recon, region_values] = condf2indic(atlas_obj_to_add.dat);
     if region_values(1) == 0, p_recon = p_recon(:, 2:end); end      % remove leading col for zeroes if there is one
     
     if ~doreplacevoxels  % eliminate voxels already in atlas
+        
         wh = any(atlas_obj.probability_maps, 2);
         p_recon(wh, :) = 0;
+        
     end
     
-    atlas_obj.probability_maps = [atlas_obj.probability_maps p_recon];
+    atlas_obj.probability_maps = [atlas_obj.probability_maps double(p_recon)];
     
     atlas_obj = probability_maps_to_region_index(atlas_obj);
     
@@ -129,6 +149,12 @@ else  % if ~has_pmaps && ~toadd_has_pmaps
     % Or Probability maps for to-add only; use index values in .dat either way
     
     wh = logical(atlas_obj_to_add.dat);  % voxels to replace
+    
+    if always_replace    % eliminate voxels in new atlas to add
+        
+        atlas_obj.dat(wh, :) = 0;
+        
+    end
     
     if ~doreplacevoxels  % eliminate voxels already in atlas
         wh(logical(atlas_obj.dat)) = false;

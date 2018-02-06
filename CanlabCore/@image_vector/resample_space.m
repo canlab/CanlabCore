@@ -33,6 +33,8 @@ function obj = resample_space(obj, sampleto, varargin)
 %    statistic_image.  Was causing errors otherwise...
 %           Also changed automatic behavior to reparse contig voxels with
 %           'nonempty' in output obj
+%
+%   2/5/2018    Tor added support for atlas objects - special handling
 % ..
 
 n_imgs = size(obj.dat, 2);

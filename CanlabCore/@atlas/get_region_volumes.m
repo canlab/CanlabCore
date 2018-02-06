@@ -5,11 +5,9 @@ function [vol_in_cubic_mm, voxcount] = get_region_volumes(atlas_obj)
 %
 
 
-[imtx, ivals] = condf2indic(atlas_obj.dat);
-
-wh = find(ivals == 0);
-ivals(wh) = [];
-imtx(wh, :) = [];
+dat = double(atlas_obj.dat);
+[imtx, parcels_we_have] = condf2indic(dat, 'integers');
+imtx(isnan(imtx)) = 0;
 
 voxcount = double(sum(imtx));
 

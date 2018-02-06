@@ -26,11 +26,21 @@ end
 valid_pmaps = all(obj.probability_maps(:) >= 0) && all(obj.probability_maps(:) <= 1);
 valid_index = size(obj.dat, 2) == 1 && all(abs(obj.dat(:) - round(obj.dat(:))) < 100 * eps);
 
-n_regions_from_indx = length(unique(obj.dat(obj.dat ~= 0)));
 
-if ~(max(obj.dat) == n_regions) || n_regions_from_indx ~= n_regions
-    warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
+% Check integers
+u = unique(double(obj.dat(obj.dat ~= 0)));
+
+if ~all(u == round(u))
+    warning('Some region values on obj.dat are not integers. Adjusting.');
+    obj.dat = round(obj.dat);
 end
+
+n_regions_from_indx = length(u);
+
+% Ok to have some missing integers. Can happen if resampling spaces.
+% if ~(max(obj.dat) == n_regions) || n_regions_from_indx ~= n_regions
+%     warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
+% end
 
 % Enforce variable types
 % ----------------------------------------------------------------------------

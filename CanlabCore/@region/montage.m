@@ -77,6 +77,16 @@ function o2 = montage(obj, varargin)
 % o2 = montage(r, o2);      % symmetric colors left/right
 % o2 = removeblobs(o2);
 % o2 = montage(r, o2, 'map');
+% 
+% create_figure('slices'); axis off
+% o2 = canlab_results_fmridisplay([], 'multirow', 2);
+% brighten(.6)
+% hcp152t1 = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
+% r = region(fmri_data(hcp152t1), 'unique_mask_values');
+% o2 = montage(r, o2, 'wh_montages', 3:4);
+% o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
+
+% edited: Tor, 1/2018, unique color option/default
 
 % Initialize display if needed
 
@@ -96,22 +106,46 @@ if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
 end
 
 methodtype = 'symmetric';
+colortype = 'unique';
 
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'old')), methodtype = 'old'; end
- 
-switch methodtype
-    case 'map'
+if any(strcmp(varargin, 'solid')), colortype = 'solid'; end
+if any(strcmp(varargin, 'color')), colortype = 'solid'; end
+
+% Define colors for 'unique' option
+% And render blobs
+% -------------------------------------------------------------------------
+switch colortype
+    
+    case 'unique' % different color for each blob (some reuse)
         
-        o2 = addblobs(o2, obj, varargin{:});
-        
-    case 'symmetric'
-        
-        all_colors = match_colors_left_right(obj);
-        
-        for i = 1:length(obj)
-            o2 = addblobs(o2, obj(i), 'color', all_colors{i}, 'noverbose');
+        switch methodtype
+            
+            case 'map'
+                
+                colors = scn_standard_colors(length(obj));
+                
+            case 'symmetric'
+                
+                colors = match_colors_left_right(obj);
+                
         end
+        
+        % Redefine blob groups based on color categories, to reduce number of regions, combining those with same color too many function calls are bad news!! overloads handle graphics system?
+        [region_groups, colors] = redefine_colors_based_on_groups(obj, colors);
+        
+        for i = 1:length(region_groups)
+            
+            o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
+            drawnow
+            
+        end
+        
+    case 'solid' % solid color, user-entered
+        
+        % Just render blobs
+        o2 = addblobs(o2, obj, varargin{:});
         
     case 'old'
         
@@ -119,4 +153,35 @@ switch methodtype
         
 end
 
+
 end % function
+
+
+function [region_groups, color_groups] = redefine_colors_based_on_groups(r, colors)
+
+% regroup to reduce number of regions, combining those with same color
+% too many function calls are bad news!! overloads handle graphics system?
+
+catcolors = cat(1, colors{:});
+uniquecolors = unique(catcolors, 'rows');
+ncolors = size(uniquecolors, 1);
+
+region_groups = {};
+color_groups = {};
+
+for i = 1:ncolors
+    
+    mycolor = uniquecolors(i, :);
+    cmatchfun = @(x) ~any(x - mycolor);
+    
+    wh_regions = cellfun(cmatchfun, colors);
+    
+    region_groups{i} = r(wh_regions);
+    
+    color_groups{i} = mycolor;
+    
+    % o2 = addblobs(o2, r(wh_regions), 'maxcolor', mycolor, 'mincolor', mycolor, 'wh_montages', 1:2);
+    
+end
+
+end

@@ -9,6 +9,10 @@
 
 [npsplus_obj, layer1names, imgnames] = load_image_set('npsplus');
 
+wh = 1:4;
+npsplus_obj = get_wh_image(npsplus_obj, wh);
+layer1names = layer1names(wh);
+
 layer1names
 
 %% Get rectangular similarity matrix
@@ -29,7 +33,7 @@ layer2names = stats.networknames;
 
 layer1colors = {[1 .4 .2] [.3 .3 1] [.7 .3 1] [.3 .7 .5]};
 
-layer2colors = bucknerlab_colors(n2);
+layer2colors = seaborn_colors(n2);
 
 %% Reorder rows and columns for display, as needed
 

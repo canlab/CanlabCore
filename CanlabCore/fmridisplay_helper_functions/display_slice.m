@@ -85,7 +85,7 @@ switch myview
         % set transparent value for clear axes
         myAlphaData = double(abs(Z) > 0);
         
-        % done at slice level now
+        % done at slice level now (slow!)
         Z = lighten_underlay_edges(Z, 32);
         
         h = imagesc(SPACE.ycoords', SPACE.zcoords', Z);

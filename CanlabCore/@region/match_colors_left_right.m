@@ -31,6 +31,16 @@ right = r(isright);
 whleft = find(isleft);  % index into full list
 whright = find(isright);  % index into full list
 
+% -------------------------------------------------------------------------
+
+if ~any(whleft) | ~any(whright)
+    % cannot match regions
+    
+    all_colors = colorfun(length(r));
+    return
+    
+end
+
 % Match regions
 % -------------------------------------------------------------------------
 
@@ -38,13 +48,15 @@ for i = 1:length(whleft)
     
     rr = r(whleft(i));
     
-    d = dist(rr.mm_center(2:3), xyz(isright, 2:3)')';  % index into right regions
+    %d = dist(rr.mm_center(2:3), xyz(isright, 2:3)')';  % index into rightregions; neural network toolbox now!
+    d = distance_euclid(rr.mm_center(2:3), xyz(isright, 2:3));  % index into right regions
     
     [mind, whmin] = min(d); % closest one on right
     rmatch = right(whmin);
     
     % rr must be closest one to right-hand match too
-    d = dist(rmatch.mm_center(2:3), xyz(isleft, 2:3)')';  % index into right regions
+    %d = dist(rmatch.mm_center(2:3), xyz(isleft, 2:3)')';  % index into right regions
+    d = distance_euclid(rmatch.mm_center(2:3), xyz(isleft, 2:3));  % index into right regions
 
     [mind2, whmin2] = min(d); % closest one on left
 

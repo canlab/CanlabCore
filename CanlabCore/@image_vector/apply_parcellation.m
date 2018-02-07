@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, parcels, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parcellation(dat, parcels, varargin)
 % Computes the mean value / pattern expression for each parcels specified in a data object
 %
 % Usage:
@@ -38,6 +38,8 @@ function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, par
 %   **parcels:**
 %        fmri_data object with parcellation image, with parcel ID coded
 %        with unique integer values in the image
+%        This can (and ideally is) an atlas object type.
+%        Atlas objects handle resampling integer vectors better, so use atlas object if available
 %
 % :Optional Inputs:
 %
@@ -62,22 +64,43 @@ function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, par
 %        used with pattern expression only. scales expression by product of
 %        l2 norms (norm(mask)*norm(dat))
 %
+% :Outputs:
+%
+%   **parcel_means:**
+%       Matrix of mean data values for each parcel, data images x parcels
+%
+%   **parcel_pattern_expression:**
+%        If linear multivariate pattern entered, calculates pattern
+%        expression (dot product) in each region
+%
+%   **parcel_valence:**
+%        Define pattern valence as similarity with unit vector (all positive,
+%        identical weights)
+%
+%        If x is a vector of pattern weights,
+%        The cosine similarity with the unit vector is a measure of how uniform
+%        the weights are, on a scale of 1 to -1.  1 indicates that the pattern
+%        computes the region average (all weights identical and positive). -1
+%        indicates that the pattern computes the negative region average (all
+%        weights identical and negative).
+%
+%
 % :Examples:
 % ::
 %
-% % Load the Shen 2013 NIMG parcellation and a sample dataset, and get the 
-%   means for each parcel in each image in the dataset. 
+% % Load the Shen 2013 NIMG parcellation and a sample dataset, and get the
+%   means for each parcel in each image in the dataset.
 %
 %     parcel_image = which('shen_2mm_268_parcellation.nii');
 %     parcel_obj = fmri_data(parcel_image);
 %     dat = load_image_set('emotionreg');
-%     parcel_means = apply_parcellation(dat, parcel_obj);  
+%     parcel_means = apply_parcellation(dat, parcel_obj);
 %
 % % Calculate the local NPS pattern response in each region within the Shen
 %   atlas. This requires the pattern images to be on your path!
 %    nps = load_image_set('npsplus');
 %    nps = get_wh_image(nps, 1);
-%    [parcel_means, local_pattern_response] = apply_parcellation(dat, parcel_obj, 'pattern_expression', nps); 
+%    [parcel_means, local_pattern_response] = apply_parcellation(dat, parcel_obj, 'pattern_expression', nps);
 %
 %    Parcels without pattern values will be NaN.  Visualize in-pattern
 %    parcels:
@@ -91,13 +114,19 @@ function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, par
 % ..
 %    Notes:
 %    Created: 5/12/17 Phil Kragel - bits of code taken from apply_mask
-%             5/13/17 Phil and Tor revise; minor edits by Tor Wager    
-%
+%             5/13/17 Phil and Tor revise; minor edits by Tor Wager
+%             2/5/18  Tor added support for atlas object, pattern valence
 % ..
 
-[parcel_means, parcel_pattern_expression] = deal([]);
+[parcel_means, parcel_pattern_expression, parcel_valence] = deal([]);
 
 dopatternexpression = 0;
+
+if isa(parcels, 'atlas')
+    
+    parcels.probability_maps = []; % speed up resampling dramatically. not needed here.
+    
+end
 
 % Check parcels
 % Get integer vector of unique parcel IDs, before any resampling.
@@ -106,13 +135,15 @@ if size(parcels.dat, 2) > 1
     error('Sorry, this function currently only works for one parcel image at a time!')
 end
 
-u = unique(parcels.dat);
-u(u == 0) = [];
-if ~all(u == round(u))
-    warning('Some parcel values are not integers.');
-end
+% u = unique(double(parcels.dat));
+% u(u == 0) = [];
+% if ~all(u == round(u))
+%     warning('Some parcel values are not integers.');
+% end
 
 % get pattern_image data object if specified
+% -------------------------------------------------------------------------
+
 if any(strcmp(varargin, 'pattern_expression'))
     
     pattern_image = varargin{find(strcmp(varargin, 'pattern_expression')) + 1};
@@ -127,30 +158,76 @@ if any(strcmp(varargin, 'pattern_expression'))
     
 end
 
-[dat,parcels] = match_spaces(dat, parcels);
+% Resample parcels to data space
+% -------------------------------------------------------------------------
 
-% Turn integer vector into 1s and 0s - matrix of binary masks
-parcels = remove_empty(parcels);
-[parcels.dat, parcels_we_have] = condf2indic(parcels.dat);
+[dat,parcels] = match_spaces(dat, parcels);  % keeps only in-image parcels
 
-% if codes are 1...n, parcels_we_have is index values...but if there are
-% missing integers, need to re-map them into indices
-index_values = 1:length(u);
-[~, wh] = intersect(u, parcels_we_have);
-index_values = index_values(wh);
 
-% Insert NaNs for any missing parcels.  Happens rarely, but could happen.
-missing_parcels = true(size(u));
-missing_parcels(index_values) = false;
+% Get indicator vectors from integers in parcels.dat
+% -------------------------------------------------------------------------
 
-parcels.dat = naninsert(missing_parcels, parcels.dat')';
+parcels.dat = condf2indic(parcels.dat, 'integers');
 
-%for computing means, scale each column of parcels to sum to 1
-parcels.dat = bsxfun(@rdivide, parcels.dat, sum(parcels.dat));
+% 
+% % Turn integer vector into 1s and 0s - matrix of binary masks
+% % some may be missing after resampling
+% 
+% parcels = remove_empty(parcels);
+% [parcels.dat, parcels_we_have] = condf2indic(parcels.dat);
+% 
+% % if codes are 1...n, parcels_we_have is index values...but if there are
+% % missing integers, need to re-map them into indices
+% index_values = 1:length(u);
+% [~, wh] = intersect(u, parcels_we_have);
+% index_values = index_values(wh);
+% 
+% % Insert NaNs for any missing parcels.  Happens rarely, but could happen.
+% missing_parcels = true(size(u));
+% missing_parcels(index_values) = false;
+% 
+% parcels.dat = naninsert(missing_parcels, parcels.dat')';
+% 
+% %for computing means, scale each column of parcels to sum to 1
+% parcels.dat = bsxfun(@rdivide, parcels.dat, nansum(parcels.dat));
 
 %matrix products will give us the mean now...
 parcel_means = dat.dat' * parcels.dat;
 
+
+% Parcel valence
+% -------------------------------------------------------------------------
+
+parcel_valence = NaN * ones(size(parcel_means));
+
+% voxel counts in each parcel
+nvox_by_parcel = sum(parcels.dat ~= 0 & ~isnan(parcels.dat))';
+
+% Get cosine similarity of each data image with unit vector within each parcel
+% cosine_sim = @(x, y) (x'* y) / (norm(x) .* norm(y));
+% % for similarity with unit vector: Simplifies to:
+% n = length(x);
+% cosine_sim_with_unit = @(x) sum(x) ./ sqrt(x' * x * n);
+% vector version:
+cosine_sim_with_unit = @(x) (sum(x)') ./ sqrt(diag(x' * x) .* size(x, 1));
+
+for i = 1:size(parcels.dat, 2)
+    
+    % skip if this parcel is empty
+    if all(isnan(parcel_means(:, i)))
+        continue
+    end
+    
+    x = double(dat.dat(parcels.dat(:, i) ~= 0, :));
+    pv = cosine_sim_with_unit(x);
+    
+    parcel_valence(:, i) = pv;
+    
+end % parcel_valence
+
+
+% Pattern expression
+% -------------------------------------------------------------------------
 
 if dopatternexpression
     
@@ -166,43 +243,34 @@ if dopatternexpression
     %expand pattern_image.dat to provide output for each parcel
     parcel_pattern_expression = NaN .* zeros(size(parcel_means));
     
-           % **** initialize dat matrix first, then fill in values for all
-        % parcels ******
+    % Create matrix mask_by_parcels, in which each column is a local pattern within a parcel
+    % ---------------------------------------------------------------------
+    % Init 
+    mask_by_parcels = nan(size(pattern_image.dat, 1), size(parcels.dat, 2));
     
-    % for each parcel...
-   
-    mask_by_parcels=nan(size(pattern_image.dat,1),size(parcels.dat,2));
-    
+    % Expand into series of patterns
     for i = 1:size(parcels.dat, 2)
         
         % skip if this parcel is empty
         if all(isnan(parcel_means(:, i)))
             continue
         end
-            
- 
+        
         mask_by_parcels(:, i) = pattern_image.dat(:, 1) .* parcels.dat(:, i); % zero out-of-parcel voxels
-           
+        
     end
     
-        % *****call canlab_pattern_similarity once, which loops through pattern
-    % masks and datasets and considers non-empty values in data images
-    
     % Pass similarity metric in to canlab_pattern_similarity
-    dat=replace_empty(dat);
+    dat = replace_empty(dat);
     parcel_pattern_expression = canlab_pattern_similarity(dat.dat, mask_by_parcels, 'ignore_missing', varargin{:});
-
-    % similarity_output = canlab_pattern_similarity(dat.dat, weights, 'ignore_missing', varargin{:});
     
     %tried doing this all at once, but apply_mask has issues where it
     %excludes voxels (it also loops over patterns as well when it calls
     %canlab_pattern_similarity - so not any slower to do this loop here)
     
-    %        mask.dat = expanded_mask;
-    %        parcel_pattern_expression = apply_mask(dat, mask, varargin{:},'ignore_missing');
-    
-    
 end % Pattern expression
+
+
 
 end  % Main function
 
@@ -219,6 +287,10 @@ if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
     % Both work, but resample_space does not require going back to original
     % images on disk.
     %mask = resample_to_image_space(mask, dat);
+    
+    % Atlas objects handle resampling better, so use atlas object if available
+    % Same method resample_space, with support for atlas
+    
     parcels = resample_space(parcels, dat, 'nearest');
     
     if length(parcels.removed_voxels) == parcels.volInfo.nvox
@@ -291,7 +363,7 @@ elseif size(parcels.dat, 1) == size(dat.volInfo.wh_inmask, 1)
     to_remove_parcels = ~inboth;
     
 else
-    fprintf('Sizes do not match!  Likely bug in resample_to_image_space.\n')
+    fprintf('Sizes do not match!  Likely bug in match_spaces.\n')
     fprintf('Vox in mask: %3.0f\n', size(mask.dat, 1))
     fprintf('Vox in dat - image volume: %3.0f\n', size(dat.volInfo.image_indx, 1));
     fprintf('Vox in dat - image in-mask area: %3.0f\n', size(dat.volInfo.wh_inmask, 1));
@@ -302,4 +374,4 @@ end
 dat = remove_empty(dat, to_remove);
 parcels = remove_empty(parcels, to_remove_parcels);
 
-end
+end % match_spaces

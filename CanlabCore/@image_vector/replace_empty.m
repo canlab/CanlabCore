@@ -62,6 +62,18 @@ if dovoxels && any(obj.removed_voxels)
         if ~isempty(obj.sig), obj.sig = zeroinsert(obj.removed_voxels, obj.sig); end
     end
     
+    if isa(obj, 'atlas')
+        
+        has_pmaps = ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == num_regions(obj);
+        
+        if has_pmaps
+            
+            obj.probability_maps = zeroinsert(obj.removed_voxels, obj.probability_maps);
+            
+        end
+        
+    end
+    
     obj.removed_voxels = false(size(obj.removed_voxels));
     
 end

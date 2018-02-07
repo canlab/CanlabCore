@@ -1,6 +1,7 @@
 function [p, caphandle, mesh_struct] = brainstem_slices_3d()
 
-mask = which('spm8_brainstem_pag.img');
+%mask = which('spm8_brainstem_pag.img');
+mask = which('canlab_brainstem.img');
 overlay = which('SPM8_colin27T1_seg.img');
 
 dat = fmri_data(overlay);
@@ -65,7 +66,8 @@ view(129, 14)
 
 %% brainstem surface
 
-[p(end+1), mesh_struct] = isosurface(dat, 80);
+[p_tmp, mesh_struct] = isosurface(dat,'sd', 2, 'thresh', .1);
+p = [p p_tmp];
 
 set(gca, 'ZLim', [-50 0])
 

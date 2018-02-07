@@ -93,15 +93,15 @@ end
 prevvox = dat.removed_voxels;
 previmgs = dat.removed_images;
 
-    % keep overall list 
-    dat.removed_voxels = dat.removed_voxels | empty_voxels;    
-    dat.removed_images = dat.removed_images | empty_images;
+% keep overall list
+dat.removed_voxels = dat.removed_voxels | empty_voxels;
+dat.removed_images = dat.removed_images | empty_images;
 
-    % remove new voxels. make indices current with current .dat field.
-    if any(prevvox)
+% remove new voxels. make indices current with current .dat field.
+if any(prevvox)
     empty_voxels(prevvox) = [];
     empty_images(previmgs) = [];
-    end
+end
 
 % remove data
 % -----------------------------------------------------------------------------------
@@ -112,13 +112,30 @@ else
     return
 end
 
-% Remove special statistic_image fields
+% Remove  voxels from special statistic_image fields
+
 if isa(dat, 'statistic_image')
+    
     for myfields = {'p' 'ste' 'sig'}
+        
         if ~isempty(dat.(myfields{1}))
             dat.(myfields{1})(empty_voxels, :) = [];
         end
+        
     end
+    
+end
+
+% Remove voxels from special atlas fields
+
+if isa(dat, 'atlas')
+    
+    has_pmaps = ~isempty(dat.probability_maps) && size(dat.probability_maps, 2) == num_regions(dat);
+    
+    if has_pmaps
+        dat.probability_maps(empty_voxels, :) = [];
+    end
+    
 end
 
 % error checking

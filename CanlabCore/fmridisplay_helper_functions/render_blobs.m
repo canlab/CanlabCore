@@ -255,7 +255,9 @@ for j = 1:n
             
             % if dummy > max(abs(currentmap.V.mat(:,1)))/2, wh_slice(j) = 0; end % Wani added this line 8/11/12, then see the next line.
             if (dummy - (range(currentmap.SPACE.zcoords)/(length(currentmap.SPACE.zcoords)-1))/2) > .01, wh_slice(j) = 0; end % wani modified this line to fix a weird bug 3/5/13
-            numvox = cat(1, squeeze(sum(sum(abs(currentmap.mapdata) > 0))));
+            
+            mymapdata = abs(currentmap.mapdata) > 0;
+            numvox = cat(1, squeeze(sum(sum(mymapdata))));
             
         case 'sagittal'
             my_slice_coord = mymontage.slice_mm_coords(j);
@@ -338,7 +340,9 @@ end % end if docontour
 % -----------------------------------------------------------
 
 for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
+    
     if wh_slice(j) ~= 0 % Wani added this if and end 8/11/12
+        
         switch myview
             case 'axial'
                 slicedat = currentmap.mapdata(:, :, wh_slice(j));
@@ -444,7 +448,8 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     
                 end
                 
-            else
+            else % no contour
+                
                 % surface map method
                 % -----------------------------------------------------------
                 
@@ -595,9 +600,9 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
             
             blobhan{j} = h;
             
-        end
-    end
-end
+        end % any slicedat(:)
+    end % if wh_slice is true
+end % slices
 
 if ~isempty(blobhan)
     blobhan = cat(1, blobhan{:});

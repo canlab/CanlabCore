@@ -1,5 +1,6 @@
 function fig_handle = montage(image_obj, varargin)
-% Create a montage of an image_vector (or statistic_image or fmri_data) object
+% Create a montage of an image_vector (or statistic_image or fmri_data)
+% object, on top of a standard anatomical underlay.
 %
 % *Usage:
 % ::

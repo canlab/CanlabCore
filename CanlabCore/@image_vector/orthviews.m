@@ -108,12 +108,15 @@ end
 % replace missing voxels if necessary
 image_obj = replace_empty(image_obj);
 
+% enforce double, same var types across all objects
+image_obj.dat = double(image_obj.dat);
+
 % autodetect parcels and turn on 'unique' for maps with few values 
 % (default = do this)
 if ~doparcels && ~force_continuous
     nvalues = length(unique(image_obj.dat(:)));
     
-    if nvalues < 300, dounique = true; doparcels = true; end
+    if nvalues > 2 && nvalues < 300, dounique = true; doparcels = true; end
 end
 
 for i = handle_indices

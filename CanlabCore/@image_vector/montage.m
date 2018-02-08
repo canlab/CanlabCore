@@ -21,9 +21,10 @@ function fig_handle = montage(image_obj, varargin)
 
 meth = 'fmridisplay';
 
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
-        switch vararagin{i}
+        switch varargin{i}
             case 'scnmontage', meth = 'scnmontage';
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -34,6 +35,8 @@ end
 
 % number of images (cols)
 n = size(image_obj.dat, 2);
+
+
 
 switch meth
     case 'fmridisplay'
@@ -56,23 +59,24 @@ switch meth
                 obj.sig = obj.sig(:, i);
                 obj.dat = obj.dat .* obj.sig;
             end
-                
-            if i == 1
-            o2 = canlab_results_fmridisplay(region(obj), o2, 'nooutline');
             
-            else
-                o2 = canlab_results_fmridisplay(region(obj), o2, 'nooutline', 'addmontages');
-            end
+            
+                if i == 1
+                    o2 = canlab_results_fmridisplay(region(obj), o2, 'nooutline');
+                    
+                else
+                    o2 = canlab_results_fmridisplay(region(obj), o2, 'nooutline', 'addmontages');
+                end
             
             drawnow
-
+            
             %o2 = addblobs(o2, region(obj), 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]});
-   
+            
         end
         
         fig_handle = o2;
         clear o2
-            
+        
     case 'scnmontage'
         
         overlay = which('SPM8_colin27T1_seg.img');

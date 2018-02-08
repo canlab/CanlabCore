@@ -187,7 +187,7 @@ if ischar(fillcolor) && strcmp(fillcolor, 'none')
     % skip it
     hfill = [];
 else
-    hfill = fill([xt 0], [yt 0], fillcolor, 'FaceAlpha', .5);
+    hfill = fill([xt 0], [yt 0], fillcolor, 'FaceAlpha', .65);
 end
 
 handles = struct('line_han', h, 'fill_han', hfill);

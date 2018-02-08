@@ -40,8 +40,8 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 %        zero
 %
 %   **'bicolor':**
-%        two-color plot; with positive-valued entries in one color and 
-%        negative-valued ones in another. Enter 2 colors in colors cell (see below). 
+%        two-color plot; with positive-valued entries in one color and
+%        negative-valued ones in another. Enter 2 colors in colors cell (see below).
 %        Will plot positive values in color{1} and negative values in color{2}
 %
 %   **'colors':**
@@ -90,13 +90,13 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 % --------------------------------------------------------------
 % mycolors = repmat({[1 .7 0]}, 1, length(networknames));
 % wh = r < 0;
-% 
+%
 % % plot negative values in the complementary color
 % mycolors(wh) = repmat({[1 1 1] - groupColors{1}}, 1, sum(wh));
 % r_to_plot = abs(r);
-% 
+%
 % outercircleradius = .3;
-% 
+%
 % hh = tor_wedge_plot(r_to_plot, networknames, 'outer_circle_radius', outercircleradius, 'colors', mycolors, 'nofigure');
 
 
@@ -113,6 +113,7 @@ labelstyle = 'equal';  % or 'close'
 linewidth = 1;
 outer_circle_radius = 1;
 nofill = false;
+docolorband=false;
 
 radius_values = double(radius_values);
 
@@ -145,7 +146,9 @@ for i = 1:length(varargin)
             case 'nospokes', dospokes = false;
                 
             case 'nofill', nofill = true;
-                    
+                
+            case 'colorband', docolorband = true;
+                
             case 'labelstyle', labelstyle = varargin{i+1}; varargin{i+1} = [];
                 
             case 'colors', colors = varargin{i+1}; varargin{i+1} = [];
@@ -177,8 +180,8 @@ if any(size(outer_circle_radius)) > 1, error('''outer_circle_radius'' input shou
 if min(size(radius_values)) > 1  % is matrix
     
     clear handles key_points
-
-    % transpose if only the number of rows == num labels.  Columns should match with labels. 
+    
+    % transpose if only the number of rows == num labels.  Columns should match with labels.
     mysz = size(radius_values);
     
     if mysz(1) == length(text_labels) && mysz(2) ~= length(text_labels)
@@ -188,7 +191,7 @@ if min(size(radius_values)) > 1  % is matrix
     
     m = nanmean(radius_values)';
     se = ste(radius_values)';
-
+    
     % manually build colors to handle both pos and neg values
     isneg = m < 0;
     mycolors = repmat(colors(1), 1, n_categories);
@@ -241,14 +244,14 @@ if bicolor
     
     colors = mycolors;
     
-else  % stripes for negative relationships    
+else  % stripes for negative relationships
     
     if length(colors) < n_categories
         colors = repmat(colors(1), 1, n_categories);
     end
-
+    
     % Put stripes on negative-valued entries
-    dostripes(radius_values < 0) = true; 
+    dostripes(radius_values < 0) = true;
 end
 
 if ignorenegative
@@ -260,7 +263,7 @@ else
     % Make all values positive, because we have either color- or
     % stripe-coded them
     
-    radius_values = abs(radius_values); 
+    radius_values = abs(radius_values);
 end
 
 % Calculations
@@ -362,11 +365,59 @@ switch labelstyle
             
         end
         
+    case 'curvy'
+        breakpoints=0:2*pi/n_categories:2*pi;
+
+        for i = 1:n_categories
+            
+            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .28*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
+            delete(text_location_handles{i}.line_han(2:3))
+            
+            xy=fliplr([text_location_handles{i}.line_han(1).XData;
+                text_location_handles{i}.line_han(1).YData]);
+            if size(xy,1)>2; xy=xy'; end;
+            
+            m = length(text_labels{i});
+            xy=xy(:,floor(max(1,(size(xy,2)/2-4*m))):floor(min((size(xy,2)/2+4*m),size(xy,2)))); %squeeze together a bit
+            
+            n = size(xy,2);
+            
+            XY = spline(1:n,xy,linspace(1,n,m+1));
+            dXY = XY(:,2:end)-XY(:,1:end-1);
+            theta = (arrayfun(@(y,x) atan2(y,x),dXY(2,:),dXY(1,:)))/2/pi*360;
+            
+            XY = (XY(:,1:end-1)+XY(:,2:end))/2;
+            hold on;
+            for ii=1:m
+                handles(i).texth(ii)=text(XY(1,ii),XY(2,ii),text_labels{i}(ii),'rotation',theta(ii),...
+                    'horizontalalignment','center','verticalalignment','bottom');
+            end
+        
+        end
+        
+        
+        
     otherwise
         error('Unknown labelstyle');
         
 end % labelstyle
 
 axis off
+
+% Add colorband
+% -------------------------------------------------------------------------
+
+if docolorband
+    colorband_colors = scn_standard_colors(n_categories);
+    % for each wedge
+    breakpoints=0:2*pi/n_categories:2*pi;
+    for i=1:n_categories
+        colorband_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .2*outer_circle_radius, 'linecolor', colorband_colors{i}, 'fillcolor', 'none');
+        
+        delete(colorband_handles{i}.line_han(2:3))
+        colorband_handles{i}.line_han = colorband_handles{i}.line_han(1);
+        set(colorband_handles{i}.line_han, 'LineWidth', 10);
+    end
+end
 
 end % main function

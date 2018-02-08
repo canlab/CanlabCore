@@ -188,8 +188,9 @@ parcels.dat = condf2indic(parcels.dat, 'integers');
 % 
 % parcels.dat = naninsert(missing_parcels, parcels.dat')';
 % 
-% %for computing means, scale each column of parcels to sum to 1
-% parcels.dat = bsxfun(@rdivide, parcels.dat, nansum(parcels.dat));
+
+%for computing means, scale each column of parcels to sum to 1
+parcels.dat = bsxfun(@rdivide, parcels.dat, nansum(parcels.dat));
 
 %matrix products will give us the mean now...
 parcel_means = dat.dat' * parcels.dat;
@@ -204,7 +205,7 @@ parcel_valence = NaN * ones(size(parcel_means));
 nvox_by_parcel = sum(parcels.dat ~= 0 & ~isnan(parcels.dat))';
 
 % Get cosine similarity of each data image with unit vector within each parcel
-% cosine_sim = @(x, y) (x'* y) / (norm(x) .* norm(y));
+cosine_sim = @(x, y) (x'* y) / (norm(x) .* norm(y));
 % % for similarity with unit vector: Simplifies to:
 % n = length(x);
 % cosine_sim_with_unit = @(x) sum(x) ./ sqrt(x' * x * n);

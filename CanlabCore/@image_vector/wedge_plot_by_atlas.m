@@ -170,7 +170,7 @@ for i = 1:k
     end
     mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
     
-    
+    % to-do:  colorband_colors is optional input. pass out colorband_colors
     hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', max(abs(data_to_plot)), 'nofigure','colorband','labelstyle','curvy'); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     drawnow
@@ -190,29 +190,12 @@ end
 if any(strcmp(varargin,'montage'))
     
     for i = 1:k
-        fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
+        %fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
         
-        
-        obj=atlas_obj{i};
-        n_parcel=max(obj.dat);
-        colors = scn_standard_colors(n_parcel);
-        o2 = canlab_results_fmridisplay();
-        
-        for p=1:n_parcel
-            tv=obj;
-            tv.dat(tv.dat~=p)=nan;
-            if p==1
-                o2 = canlab_results_fmridisplay(region(tv),o2, 'nooutline','color',colors{p},'montage type','full');
-                
-            else
-                o2 = addblobs(o2,region(tv), 'color',colors{p});
-            end
-            
-            
-        end
-        
-        h=findobj(gcf,'type','axes');
-        set(h,'visible','off')
+        % To-do: use colorband_colors from output above instead....***
+        colors = scn_standard_colors(num_regions(atlas_obj{i})); 
+        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors', colors);
+
     end
 end
 

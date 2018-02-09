@@ -18,9 +18,21 @@ function o2 = montage(obj, varargin)
 %   **o2***
 %        An existing fmridisplay object, with no keyword strings
 %
-%   **symmetric**
+%   **'solid' or 'color'**
+%        Followed by a single [r g b] triplet to define color for all regions. Passed
+%        through to addblobs.
+%
+%   **'colors'**
+%        Followed by a cell array of [r g b] triplets, one color for each
+%        region. Note: If 'symmetric' option is on, will reorganize color
+%        to region assignments.
+%
+%   **symmetric** [default]
 %       Mirror left/right blobs with same colors
 %       See match_colors_left_right
+%
+%   **nosymmetric**
+%       Standard color map, no L/R color-matching for symmetry 
 %
 %   **'noblobs':**
 %        do not display blobs
@@ -85,10 +97,37 @@ function o2 = montage(obj, varargin)
 % r = region(fmri_data(hcp152t1), 'unique_mask_values');
 % o2 = montage(r, o2, 'wh_montages', 3:4);
 % o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
+%
+% Use a different montage type in canlab_results_fmridisplay:
+% o2 = montage(r, 'compact2', 'nosymmetric');
+%
+% Plot one region blob per slice on a series of montages.  
+% o2 = montage(r, 'regioncenters', 'nosymmetric');
 
 % edited: Tor, 1/2018, unique color option/default
 
+% Defaults and inputs
+% -----------------------------------------------------------------------
+
+methodtype = 'symmetric';
+colortype = 'unique';
+one_blob_per_slice = false; 
+colors = scn_standard_colors(length(obj));
+
+if any(strcmp(varargin, 'map')), methodtype = 'map'; end
+if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
+if any(strcmp(varargin, 'old')), methodtype = 'old'; end
+if any(strcmp(varargin, 'solid')), colortype = 'solid'; end
+if any(strcmp(varargin, 'color')), colortype = 'solid'; end
+if any(strcmp(varargin, 'colors'))
+    wh = find(strcmp(varargin, 'colors'));
+    colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = [];  
+end
+if any(strcmp(varargin, 'regioncenters')), one_blob_per_slice = true; end
+
+
 % Initialize display if needed
+% -----------------------------------------------------------------------
 
 funhan = @(x) isa(x, 'fmridisplay');
 whfmridisplay = cellfun(funhan, varargin);
@@ -102,16 +141,13 @@ end
 
 if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
     create_figure('fmridisplay'); axis off
-    o2 = canlab_results_fmridisplay([], 'noverbose', varargin{:});
+
+        % some inputs control which slices are shown: standard slices, or specific locations for these blobs
+        % regioncenters is passed through, so it determines the type of montage to create: 
+        o2 = canlab_results_fmridisplay(obj, 'noverbose', varargin{:}, 'noblobs', 'nooutline');
+
 end
 
-methodtype = 'symmetric';
-colortype = 'unique';
-
-if any(strcmp(varargin, 'map')), methodtype = 'map'; end
-if any(strcmp(varargin, 'old')), methodtype = 'old'; end
-if any(strcmp(varargin, 'solid')), colortype = 'solid'; end
-if any(strcmp(varargin, 'color')), colortype = 'solid'; end
 
 % Define colors for 'unique' option
 % And render blobs
@@ -121,31 +157,53 @@ switch colortype
     case 'unique' % different color for each blob (some reuse)
         
         switch methodtype
-            
-            case 'map'
-                
-                colors = scn_standard_colors(length(obj));
-                
             case 'symmetric'
-                
                 colors = match_colors_left_right(obj);
-                
         end
         
-        % Redefine blob groups based on color categories, to reduce number of regions, combining those with same color too many function calls are bad news!! overloads handle graphics system?
-        [region_groups, colors] = redefine_colors_based_on_groups(obj, colors);
-        
-        for i = 1:length(region_groups)
+        if one_blob_per_slice
+            % One blob on each slice
             
-            o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
-            drawnow
+            for i = 1:length(obj)
+                
+                o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', varargin{:}, 'wh_montages', i);
+                drawnow
+                
+            end
+            
+            zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+            
+        else
+            % All visible blobs on each slice
+            
+            % Redefine blob groups based on color categories, to reduce number of regions, combining those with same color too many function calls are bad news!! overloads handle graphics system?
+            [region_groups, colors] = redefine_colors_based_on_groups(obj, colors);
+            
+            for i = 1:length(region_groups)
+                
+                o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
+                drawnow
+                
+            end
             
         end
         
     case 'solid' % solid color, user-entered
         
-        % Just render blobs
-        o2 = addblobs(o2, obj, varargin{:});
+        if one_blob_per_slice
+            
+            for i = 1:length(obj)
+                
+                o2 = addblobs(o2, obj(i), varargin{:}, 'wh_montages', i);
+                drawnow
+                
+            end
+            
+        else
+            
+            % Just render blobs
+            o2 = addblobs(o2, obj, varargin{:});
+        end
         
     case 'old'
         

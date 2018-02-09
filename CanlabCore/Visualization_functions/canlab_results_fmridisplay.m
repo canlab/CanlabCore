@@ -56,6 +56,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'multirow': followed by number of rows
 %           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
 %
+%        {'blobcenters', 'regioncenters'}: Slices for the center of each
+%        blob/region
+%        
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
 %
@@ -202,6 +205,12 @@ if any(wh), montagetype = varargin{find(wh)};
         varargin(wh) = [];
 end
 
+wh = strcmp(varargin, 'blobcenters');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'regioncenters');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
@@ -269,6 +278,28 @@ if ~exist('o2', 'var')
     
     switch montagetype
         
+        case {'blobcenters', 'regioncenters'}
+            %Make a series of montages at center of each region and add blobs to that:
+            
+            if ~exist('cl', 'var'), error('Must enter region object to use blobcenters option.'); end
+            
+            xyz = cat(1, cl.mm_center);
+            
+            %           onerowstr = [];
+            %           if length(cl) < 20, onerowstr = 'onerow'; end
+            
+            orientation = 'axial';
+            
+            
+            for i = 1:length(cl)
+                
+                axh(i) = subplot(1, length(cl), i);
+                
+                o2 = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure');
+                
+            end
+            wh_montages = 1:length(cl);
+            
         case 'compact'
             % The default
             

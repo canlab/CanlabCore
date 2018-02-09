@@ -14,6 +14,10 @@ function obj = montage(obj, varargin)
 %
 % :Optional Inputs:
 %
+%  'existing_axes': use existing axes and figure, don't create new ones
+%  
+% {'nofigure', 'nofig', 'existing_figure'}
+% 
 %   **{'noslice', 'nodraw'}:**
 %        drawslice = 0;
 %
@@ -132,7 +136,8 @@ if isempty(obj.SPACE) || ~isstruct(obj.SPACE.V)
     
 end
 
-donewaxes = true;  % default - new figure/axes
+donewfigure = true; % default - new figure and axes. even if donewaxes is on, this can be turned off to use existing figure
+donewaxes = true;  % default - new axes
 lightenstr = 'nolighten';
 myview = 'axial';
 disptype = 'solid';  % or contour
@@ -187,11 +192,23 @@ for i = 1:length(varargin)
             case 'existing_axes'
                 donewaxes = 0;
                 newax = varargin{i + 1};
+                varargin{i} = [];
+                
+            case {'nofigure', 'nofig', 'existing_figure'}
+                donewfigure = false;
+                varargin{i} = [];
                 
             case 'noverbose'
                 doverbose = false;
                 
             case {'brighten'}, brighten_factor = varargin{i+1};
+                
+            % Remove these because they are not relevant here.    
+            case 'nosymmetric'
+                varargin{i} = [];
+                
+            case 'regioncenters'
+                varargin{i} = [];
                 
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -342,7 +359,12 @@ colormap(brighten(cmap, brighten_factor));
             return
         end
         
-        slices_fig_h = figure; %create_figure(myview);
+        if donewfigure
+            slices_fig_h = figure; %create_figure(myview);
+        else
+            slices_fig_h = gcf;
+        end
+        
         set(slices_fig_h, 'Color', 'w');
         
         if doonerow

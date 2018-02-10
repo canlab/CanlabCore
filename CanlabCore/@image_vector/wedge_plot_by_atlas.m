@@ -9,7 +9,7 @@ function hh = wedge_plot_by_atlas(obj_to_plot, varargin)
 % 'atlases' : followed by atlas names as in a cell array defined in load_atlas.m
 % 'colors'  : followed by 2-element cell with colors for negative and positive values, respectively
 % 'montage' : create montage figure for each atlas
-%
+% 'colorband_colors' : followed by cell array (length = number of atlases) with arrays of colors for each region
 %
 % 'Signature mode':
 % Size of wedges: Pattern energy, root mean squared weights in each region, a measure of
@@ -84,8 +84,6 @@ end
 value_limits = [-1 1];
 % end
 
-
-
 %% initialize cell arrays
 mean_weights = {};
 sum_sq_weights = {};
@@ -139,6 +137,19 @@ end
 
 fprintf('Done\n');
 
+%% get colorban colors for wedge plot
+% 
+if ~any(strcmp(varargin,'colorband_colors'))
+    
+    for i=1:length(atlases)
+        colorband_colors{i} = scn_standard_colors(num_regions(atlas_obj{i}));
+    end
+    
+else
+    colorband_colors = varargin{find(strcmp(varargin,'colorband_colors'))+1};
+
+end
+
 
 
 
@@ -171,7 +182,7 @@ for i = 1:k
     mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
     
     % to-do:  colorband_colors is optional input. pass out colorband_colors
-    hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', max(abs(data_to_plot)), 'nofigure','colorband','labelstyle','curvy'); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+    hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', max(abs(data_to_plot)), 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     drawnow
     
@@ -184,7 +195,6 @@ if any(strcmp(varargin,'signature'))
     disp('So importance is regularized by adding 1 cm^3 to all region volumes.');
 end
 
-
 %% display regions in separate figure
 
 if any(strcmp(varargin,'montage'))
@@ -192,12 +202,15 @@ if any(strcmp(varargin,'montage'))
     for i = 1:k
         %fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
         
-        % To-do: use colorband_colors from output above instead....***
-        colors = scn_standard_colors(num_regions(atlas_obj{i})); 
-        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors', colors);
-
+        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors{i});
+% 
+%         for r=1:length(o2.activation_maps)
+%         colorband_colors{i}{r}=o2.activation_maps{r}.color(1:3);
+%         end
+        
     end
 end
+
 
 
 %% todo add legends

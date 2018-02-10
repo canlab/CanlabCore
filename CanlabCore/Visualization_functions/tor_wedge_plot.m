@@ -49,6 +49,11 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 %        OR
 %        [{pos_color_triplet} {neg_color_triplet}] when using 'bicolor' option
 %
+%
+%   **'colorband_colors':**
+%        Followed by cell array with one nested cell per wedge, with [r g b] color triplets
+%
+%
 %   **'linewidth':**
 %       Followed by line width
 %
@@ -157,11 +162,17 @@ for i = 1:length(varargin)
                 
             case 'outer_circle_radius', outer_circle_radius = varargin{i+1}; varargin{i+1} = [];
                 
+            case 'colorband_colors', colorband_colors = varargin{i+1}; varargin{i+1} = [];
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
 
+if ~docolorband
+    colorband_colors = scn_standard_colors(n_categories);
+end
+    
 % Error checks
 
 if any(size(outer_circle_radius)) > 1, error('''outer_circle_radius'' input should be followed by a scalar value.'); end
@@ -408,7 +419,6 @@ axis off
 % -------------------------------------------------------------------------
 
 if docolorband
-    colorband_colors = scn_standard_colors(n_categories);
     % for each wedge
     breakpoints=0:2*pi/n_categories:2*pi;
     for i=1:n_categories

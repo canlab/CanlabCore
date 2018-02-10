@@ -577,7 +577,7 @@ if ~isempty(stats1)
 end
 
 
-Z = abs(norminv(stats.p)) .* sign(stats.beta);
+Z = abs(norminv(stats.p./2)) .* sign(stats.beta);
 n_predictors = size(stats.beta, 1);
 
 if isfield(stats.inputOptions, 'beta_names')
@@ -613,7 +613,7 @@ for i = 1:n_predictors
     
     print_line('Z', Z(i,:))
     
-    print_line('p', stats.p(i,:), 4)
+    print_line('p', stats.p(i,:), 5)
     fprintf('\n')
     
 end

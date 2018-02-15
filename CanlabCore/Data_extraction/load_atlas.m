@@ -67,6 +67,10 @@ end
             savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');
             varname = 'atlas_obj';
             
+        case 'shen'
+            savefile = which('Shen_atlas_object.mat');
+            varname = 'atlas_obj';
+            
         otherwise % assume it's a file name
             savefile = which(atlas_file_name_or_keyword);
             varname = [];

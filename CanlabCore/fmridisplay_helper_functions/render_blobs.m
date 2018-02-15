@@ -124,7 +124,7 @@ doverbose = true;
 myview = mymontage.orientation;
 
 dosmooth = 0;
-color = [1 0 0];
+color = [1 1 0];
 
 % contour and outline options
 docontour = 0;
@@ -138,9 +138,9 @@ mylinewidth = 2;
 % color-mapped blobs options
 docolormap = 1;
 mincolor = [0 0 1];
-maxcolor = [1 1 0];
+maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
-%cmaprange = [min(currentmap.mapdata(:)) max(currentmap.mapdata(:))];
+
 mapd = currentmap.mapdata(:); mapd = mapd(mapd ~= 0 & ~isnan(mapd));
 cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
 
@@ -159,7 +159,9 @@ for i = 1:length(varargin)
                 
             case 'color', docolormap = 0; color = varargin{i + 1}; % single color, turn off color mapping
                 
-            case {'maxcolor'}, color = varargin{i + 1}; % color for single-color solid or value-mapped
+            case 'maxcolor', color = varargin{i + 1}; % color for single-color solid or value-mapped
+                             maxcolor = color;        % for output (affects legend)
+                             
             case 'mincolor', mincolor = varargin{i + 1}; % minimum color for value-mapped colors
                 
             case 'onecolor', docolormap = 0; % solid-color blobs
@@ -206,7 +208,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline'}
                 % not functional, avoid warning
                 
             case 'noverbose', doverbose = false;

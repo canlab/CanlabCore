@@ -25,7 +25,7 @@ function obj = addblobs(obj, cl, varargin)
 %   **COLOR:**
 %
 %   **'color':**
-%        followed by color vector, e.g., [0 1 1]
+%        followed by color vector, e.g., [0 1 1], for solid-color blobs
 %
 %   **'maxcolor':**
 %        followed by color vector for max color range, e.g., [0 1 1]
@@ -148,11 +148,16 @@ function obj = addblobs(obj, cl, varargin)
 %    Add the volume to activation maps in fmridisplay object
 % ..
 
+% Check and convert to region
+% -------------------------------------------------------------------
 if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
     
 if ~isa(cl, 'region')
     error('cl input must be a region object. Try region() constructor method.');
 end
+
+% Map to volume space and interpolate
+% -------------------------------------------------------------------
 
 [dummy, mask] = clusters2mask2011(cl); % turn clusters into mask and volume info
 
@@ -168,6 +173,9 @@ SPACE = map_to_world_space(V);
 
 obj.activation_maps{end + 1} = struct('mapdata', mask, 'V', V, 'SPACE', SPACE, 'blobhandles', [], 'cmaprange', [], ...
     'mincolor', [0 0 1], 'maxcolor', [1 0 0], 'color', []);
+
+% Montage selection and options
+% -------------------------------------------------------------------
 
 % select which montages; default = all
 wh_montage = 1:length(obj.montage);
@@ -188,6 +196,9 @@ if any(whs)
     wh_surface = varargin{whs(1) + 1};
 end
 
+% Default color values
+% -------------------------------------------------------------------
+
 % default values
 dosplitcolor = 1;
 doonecolor = 0;
@@ -199,7 +210,7 @@ minposcolor = [1 0 .5]; % min pos
 maxnegcolor = [0 1 1]; % max neg
 minnegcolor = [0 0 1]; % min neg, most extreme values
 
-add_splitcolor_to_varargin = 0; % internal control, not input option
+%add_splitcolor_to_varargin = 0; % internal control, not input option
 % pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 % neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
@@ -208,31 +219,23 @@ depth=2;
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-            case 'color'
-            case {'onecolor', 'solid'}
+
+            case {'color', 'onecolor', 'solid'} % many are passed into render_blobs - don't need to do anything
                 dosplitcolor = 0;
-                doonecolor = 1;
-                onecolor = varargin{i + 1};
-                maxposcolor = onecolor;
-                minposcolor = onecolor;
-                maxnegcolor = onecolor;
-                minnegcolor = onecolor;
+                 doonecolor = 1;
                 
             case 'maxcolor'
-                domaxcolor = 1;
-                maxcolors = varargin{i + 1};
-                maxposcolor = maxcolors;
-                minposcolor = maxcolors;
+                dosplitcolor = 0;
+                 domaxcolor = 1;
+                 maxcolor = varargin{i + 1};
                 
             case 'mincolor'
-                domincolor = 1;
-                mincolors = varargin{i + 1};
-                maxnegcolor = mincolors;
-                minnegcolor = mincolors;
+                dosplitcolor = 0;
+                 domincolor = 1;
+                 mincolor = varargin{i + 1};
                 
             case 'splitcolor'
-                dosplitcolor = 1;
-                
+
                 if length(varargin) > i && iscell(varargin{i + 1})
                     % we have entered colors
                     
@@ -248,7 +251,7 @@ for i = 1:length(varargin)
                 else
                     % use defaults - but add the default colors to varargin
                     % because these are passed on to render_blobs
-                    add_splitcolor_to_varargin = 1;
+                    % this will be done below
                     
                 end
                 
@@ -263,14 +266,45 @@ for i = 1:length(varargin)
     end
 end
 
-if add_splitcolor_to_varargin
+% Add relevant colors and args to varargin, because we may have passed in
+% keywords without following args, intending to use defaults specified above
+% These are passed to render_blobs and also used to update legend registry
+% in fmridisplay obj
+
+if dosplitcolor  
+    
     mysplitcolors = {minnegcolor maxnegcolor minposcolor maxposcolor};
     
     wh = strcmp(varargin, 'splitcolor');
     varargin(wh) = [];  % remove, add to end
     varargin{end + 1} = 'splitcolor';
     varargin{end + 1} = mysplitcolors;
+    
+elseif doonecolor
+    % do not edit var args, just pass through 
+    
+else  % add maxcolor/mincolor to varargin
+    
+    if domaxcolor
+        
+        wh = strcmp(varargin, 'maxcolor');
+        varargin(wh) = [];  % remove, add to end
+        varargin{end + 1} = 'maxcolor';
+        varargin{end + 1} = maxcolor;
+        
+    end
+    
+    if domincolor
+        
+        wh = strcmp(varargin, 'mincolor');
+        varargin(wh) = [];  % remove, add to end
+        varargin{end + 1} = 'mincolor';
+        varargin{end + 1} = mincolor;
+        
+    end
+    
 end
+    
 
 % Resampling whole map seems to be too slow: do this in render slice...
 % fprintf('Resampling map data to underlay space.');

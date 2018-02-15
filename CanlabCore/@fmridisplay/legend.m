@@ -38,10 +38,10 @@ if donewfig
     myfontsize = 18;
     
 else
-    mypositions = {[0.100    0.1200    0.20    0.04] ...
-        [0.100    0.2800    0.20    0.04] ...
-        [0.400    0.1200    0.20    0.04] ...
-        [0.400    0.2800    0.20    0.04] ...
+    mypositions = {[0.05    0.1200    0.20    0.04] ...
+        [0.350    0.1200    0.20    0.04] ...
+        [0.650    0.1200    0.20    0.04] ...
+        [0.05    0.2800    0.20    0.04] ...
         };
     myfontsize = 14;
     
@@ -52,6 +52,9 @@ for c = 1:length(obj.activation_maps)
     currentmap = obj.activation_maps{c};
     
     scaleanchors = currentmap.cmaprange; %for text labels
+    
+    % adjuts in case there are no values on one end
+    scaleanchors(isnan(scaleanchors)) = 0;
     
     if ~diff(scaleanchors)
         disp('No variability in mapped values. Not plotting legend.');
@@ -91,10 +94,10 @@ for c = 1:length(obj.activation_maps)
     issplitmap = size(currentmap.mincolor, 1) - 1; % zero for one row, 1 for 2+
     
     if issplitmap
-                legvals = linspace(currentmap.cmaprange(1), currentmap.cmaprange(4), nsteps);
-                legvals(legvals==0)=sign(mean([currentmap.cmaprange(1), currentmap.cmaprange(4)])*1E-6);
+                legvals = linspace(scaleanchors(1), scaleanchors(4), nsteps);
+                legvals(legvals==0)=sign(mean([scaleanchors(1), scaleanchors(4)])*1E-6);
     else
-            legvals = linspace(currentmap.cmaprange(1), currentmap.cmaprange(2), nsteps);
+            legvals = linspace(scaleanchors(1), scaleanchors(2), nsteps);
     end
     
     for i = 2:nsteps

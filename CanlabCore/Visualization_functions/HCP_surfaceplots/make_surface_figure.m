@@ -1,8 +1,8 @@
 function han = make_surface_figure(varargin)
 
 % This is a function to create a figure with surface-brain plots from 
-% gifti (.gii) as available from HCP. The returned handles are passed to
-% the function plot_surface_map, which overlays functional data on the
+% gifti-files (.gii) as available from HCP. The returned handles are passed 
+% to the function plot_surface_map, which overlays functional data on the
 % brain surfaces. plot_surface_map calls this function, so you don't need
 % to call it directly.
 %

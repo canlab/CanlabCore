@@ -38,7 +38,11 @@ function h = plot_surface_map(dat,varargin)
 % :Inputs:
 %
 %   **dat:**
-%        an cifti-data object from ft_read_cifti
+%        an cifti-data object from ft_read_cifti with fields 'dscalar'
+%        holding the functional information and 'brainstructure' coding the
+%        respective brainstructure for each functional datapoint in
+%        'dscalar'. 'brainstructure' assumes HCP grayordinate conventions 
+%        with 1=left hemisphere and 2=right hemisphere.
 %
 %
 % :Optional inputs:
@@ -259,8 +263,13 @@ end
 
 % add title
 if ischar(figtitle)
-   h.titleax = axes('position',[0 0.9 1 0.1],'visible','off','xlim',[0 1],'ylim',[0 1]); 
-   h.title = text(0.5,0.5,figtitle,'FontName','Helvetica Neue','FontSize',12,'FontWeight','b','HorizontalALignment','center','VerticalAlignment','middle');
+    % title exists, just replace text
+    if isfield(h,'title')
+        h.title.String = figtitle; drawnow;
+    else
+        h.titleax = axes('position',[0 0.9 1 0.1],'visible','off','xlim',[0 1],'ylim',[0 1]);
+        h.title = text(0.5,0.5,figtitle,'FontName','Helvetica Neue','FontSize',12,'FontWeight','b','HorizontalALignment','center','VerticalAlignment','middle');
+    end
 end
 
 

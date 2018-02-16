@@ -26,9 +26,14 @@ for i = 1:length(r)
     
     ivec_tmp = region2imagevec(r(i));
     
-    ivec_tmp = replace_empty(ivec_tmp);
+    %ivec_tmp = replace_empty(ivec_tmp);
     
-    ivec.dat = ivec.dat + i * double(ivec_tmp.dat ~= 0); % code with region number
+    whvox = ivec.volInfo.image_indx(ivec.volInfo.wh_inmask) & ivec_tmp.volInfo.image_indx(ivec.volInfo.wh_inmask);
+    
+    %ivec.dat(whvox) = ivec.dat(whvox) + i * double(ivec_tmp.dat ~= 0); % code with region number
+    
+    ivec.dat(whvox) = i; % code with region number
+    
     
 end
 

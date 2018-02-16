@@ -102,7 +102,7 @@ toadd_has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probabi
 if has_pmaps && toadd_has_pmaps
     % We have probability maps for both
     
-    if always_replace    % eliminate voxels in new atlas to add
+    if always_replace    % eliminate voxels in original atlas that exist in new atlas to add
         
         wh = any(atlas_obj_to_add.probability_maps, 2); 
         atlas_obj.probability_maps(wh, :) = 0;
@@ -122,7 +122,7 @@ if has_pmaps && toadd_has_pmaps
 elseif has_pmaps && ~toadd_has_pmaps
     % Probability maps for first atlas only. Use these, preserving p maps
     
-    if always_replace    % eliminate voxels in new atlas to add
+    if always_replace    % eliminate voxels in original atlas that exist in new atlas to add
         
         wh = any(atlas_obj_to_add.dat, 2);
         atlas_obj.probability_maps(wh, :) = 0;
@@ -150,7 +150,7 @@ else  % if ~has_pmaps && ~toadd_has_pmaps
     
     wh = logical(atlas_obj_to_add.dat);  % voxels to replace
     
-    if always_replace    % eliminate voxels in new atlas to add
+    if always_replace   % eliminate voxels in original atlas that exist in new atlas to add
         
         atlas_obj.dat(wh, :) = 0;
         

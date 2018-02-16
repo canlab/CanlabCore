@@ -47,6 +47,10 @@ end
             savefile = which('Basal_ganglia_combined_atlas_object.mat');
             varname = 'atlas_obj';
  
+        case {'brainstem'}
+            savefile = which('brainstem_combined_atlas_object.mat');
+            varname = 'atlas_obj';
+            
         case {'striatum', 'pauli_bg'}
             savefile = which('Pauli2016_striatum_atlas_object.mat');
             varname = 'atlas_obj';

@@ -1,7 +1,23 @@
-function [obj, has_pmaps, has_index] = check_properties(obj)
+function [obj, has_pmaps, has_index] = check_properties(obj, varargin)
 % Check properties and enforce some variable types
 %
 % obj = check_properties(obj)
+%
+% Optional arguments:
+% 'compress_index' : if index numbers are not consecutive integers, some functions,
+%                    like select_atlas_subset and num_regions, will not work
+%                    This rebuilds the index.  This could happen after resampling or masking.
+%                    If you have probability maps entered, probability_maps_to_region_index will do
+%                    this. But if not, you may want to do this.
+
+% Defaults
+
+compress_index = false;
+
+% Optional inputs
+
+if any(strcmp(varargin, 'compress_index')), compress_index = true; end
+
 
 n_regions = num_regions(obj);
 
@@ -37,10 +53,6 @@ end
 
 n_regions_from_indx = length(u);
 
-% Ok to have some missing integers. Can happen if resampling spaces.
-% if ~(max(obj.dat) == n_regions) || n_regions_from_indx ~= n_regions
-%     warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
-% end
 
 % Enforce variable types
 % ----------------------------------------------------------------------------
@@ -56,6 +68,7 @@ for i = 1:length(myfields)
     
 end
 
+
 % Check for names/labels and create placeholders if missing
 % ----------------------------------------------------------------------------
 
@@ -66,7 +79,7 @@ end
 if isempty(obj.labels)
     obj.labels = cell(1, n_regions);
 end
-    
+
 for i = 1:n_regions
     
     if length(obj.labels) < i || isempty(obj.labels{i})
@@ -88,7 +101,50 @@ end
 if iscolumn(obj.labels), obj.labels = obj.labels'; end
 
 if ~iscolumn(obj.label_descriptions), obj.label_descriptions = obj.label_descriptions'; end
-    
-    
 
+
+
+% Deal with missing integers
+% -------------------------------------------------------------------------
+% Ok to have some missing integers. Can happen if resampling spaces.
+% but some functions, like select_atlas_subset and num_regions, will not work if index
+% values are off!
+% if ~(max(obj.dat) == n_regions) || n_regions_from_indx ~= n_regions
+%     warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
+% end
+if max(obj.dat) ~= n_regions_from_indx
+    
+    if compress_index
+        % disp('Fixing');
+        
+        newdat = obj.dat;
+        
+        for i = 1:length(u)
+            
+            newdat(obj.dat == u(i)) = i;
+            
+        end
+        
+        obj.dat = newdat;
+        
+        % Trim labels
+        for i = 1:length(myfields)
+            
+            if length(obj.(myfields{i})) == max(u)  % labels exist but need trimming
+                obj.(myfields{i}) = obj.(myfields{i})(u);
+            end
+            
+        end
+        
+    else
+        % Just print warning, we are not compressing
+        
+        warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
+        
+    end
+    
 end
+
+
+end % function
+

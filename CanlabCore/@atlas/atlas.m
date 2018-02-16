@@ -384,7 +384,7 @@ classdef atlas < image_vector
             
             % Check properties and enforce variable types
             % --------------------------------------------------------------------------------  
-            obj = check_properties(obj);
+            obj = check_properties(obj, 'compress_index'); % compress index in case parcel indices are missing for some parcels
             
         end % constructor function
         

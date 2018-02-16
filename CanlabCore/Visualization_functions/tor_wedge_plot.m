@@ -384,12 +384,14 @@ switch labelstyle
             text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .28*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
             delete(text_location_handles{i}.line_han(2:3))
             
-            xy=fliplr([text_location_handles{i}.line_han(1).XData;
+            xy = fliplr([text_location_handles{i}.line_han(1).XData;
                 text_location_handles{i}.line_han(1).YData]);
-            if size(xy,1)>2; xy=xy'; end;
+            if size(xy,1)>2; xy=xy'; end
+            
+            xy = double(xy); % tor: added to avoid errors in text()
             
             m = length(text_labels{i});
-            xy=xy(:,floor(max(1,(size(xy,2)/2-4*m))):floor(min((size(xy,2)/2+4*m),size(xy,2)))); %squeeze together a bit
+            xy = xy(:,floor(max(1,(size(xy,2)/2-4*m))):floor(min((size(xy,2)/2+4*m),size(xy,2)))); %squeeze together a bit
             
             n = size(xy,2);
             

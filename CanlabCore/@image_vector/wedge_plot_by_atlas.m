@@ -41,6 +41,10 @@ function hh = wedge_plot_by_atlas(obj_to_plot, varargin)
 % sig_to_plot = get_wh_image(sigs, 7); signames{7}
 % hh = wedge_plot_by_atlas(sig_to_plot, 'signature')
 %  hh = wedge_plot_by_atlas(sig_to_plot,'signature','colors',{[0 0 1],[1 0 0]},'montage')
+%
+% Try some data:
+% imgs = load_image_set('emotionreg');
+% hh = wedge_plot_by_atlas(imgs, 'atlases', {'cit168' 'brainstem'});
 
 
 % Notes on pattern valence
@@ -62,7 +66,11 @@ function hh = wedge_plot_by_atlas(obj_to_plot, varargin)
 %
 %% defaults
 
-%atlases
+% Signature mode
+do_sig_mode = false;
+if any(strcmp(varargin, 'signature')), do_sig_mode = true; end
+
+% atlases
 if ~any(strcmp(varargin,'atlases'))
     atlases = {'basal_ganglia' 'thalamus' }; % 'cerebellum'   'cortex'
 else
@@ -70,7 +78,7 @@ else
 end
 k = length(atlases);
 
-%colors
+% colors
 if ~any(strcmp(varargin,'colors'))
     startcolor = [0 .2 1];
     endcolor = [1 .2 0];
@@ -120,6 +128,8 @@ for i = 1:k
     
     labels{i} = format_strings_for_legend(atlas_obj{i}.labels);
     
+    if do_sig_mode
+        
     [mean_weights{i}, sum_sq_weights{i}, pattern_valence{i}] = apply_parcellation(obj_to_plot, atlas_obj{i}, 'pattern_expression', obj_to_plot);
     
     signed_msq_weight{i} = sign(mean_weights{i}) .* sum_sq_weights{i} .^ .5;
@@ -132,6 +142,14 @@ for i = 1:k
     % to regularize for small regions
     signed_msq_weight{i} = signed_msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
     msq_weight{i} = msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
+    
+    else 
+        % Data mode
+       
+        mean_weights{i} = apply_parcellation(obj_to_plot, atlas_obj{i});
+        
+    end
+    
     
 end
 
@@ -170,20 +188,29 @@ for i = 1:k
     
     subplot(1, k, i);
     
-    if any(strcmp(varargin,'signature'))
+    if do_sig_mode
+        
         data_to_plot = double(msq_weight{i});
         myvalues = pattern_valence{i}'; % get colors
+        myouterradius = max(abs(data_to_plot));
         
-    else
-        data_to_plot = abs(double(mean_weights{i}));
-        myvalues = sign(mean_weights{i}); % get colors
+        mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
+        
+        % to-do:  colorband_colors is optional input. pass out colorband_colors
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+    
+    else % data mode
+        
+        data_to_plot = double(mean_weights{i});   % mean weights really average values, not mean weights
+        mymean = mean(data_to_plot, 1);
+        myste = ste(data_to_plot);
+        myouterradius = max(abs(mymean) + myste);
+        
+        mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}, 'bicolor', 'colors', mycolors);
         
     end
-    mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
-    
-    % to-do:  colorband_colors is optional input. pass out colorband_colors
-    hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', max(abs(data_to_plot)), 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
-    
+
     drawnow
     
 end

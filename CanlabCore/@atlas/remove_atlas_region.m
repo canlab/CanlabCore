@@ -1,4 +1,10 @@
 function atlas_obj = remove_atlas_region(atlas_obj, varargin)
+% Removes region(s) from atlas, by names or index values
+% See select_atlas_subset for input format for region names/values
+%
+% atlas_obj = remove_atlas_region(atlas_obj, [region names cell or index values vector])
+% 
+
 
 [atlas_obj, has_pmaps] = check_properties(atlas_obj);
 
@@ -23,7 +29,7 @@ else
     
     for i = 1:length(to_subtract)
         
-        wh = atlas_obj.dat == to_subtract(i);
+        wh = atlas_obj.dat == i;
         
         atlas_obj.dat(wh) = atlas_obj.dat(wh) - to_subtract(i);
         

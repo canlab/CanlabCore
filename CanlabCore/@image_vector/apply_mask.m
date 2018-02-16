@@ -255,6 +255,16 @@ if dopatternexpression
     
 end % Pattern expression
 
+
+% Handle special types
+% So far, atlas
+
+if isa(dat, 'atlas')
+   
+    dat = check_properties(dat, 'compress_index');
+    
+end
+
 end  % Main function
 
 

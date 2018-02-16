@@ -146,10 +146,13 @@ if has_region
     % Region names
     if strcmp(r(1).shorttitle, 'Region001')
         for i = 1:length(r)
+            r(i).shorttitle = region_name;
             if iscell(var_name)
                 r(i).shorttitle = var_name{1};
             else
-                r(i).shorttitle = var_name;
+                % r(i).shorttitle = var_name;
+                r(i).shorttitle = region_name; % sometimes better...
+                
             end
         end
     end

@@ -179,8 +179,10 @@ if isempty(drange)
     % colormap
     if isempty(onecolor)
         drange = [nanmin([ldat;rdat]) nanmax([ldat;rdat])];
-        drange = [-max(abs(drange)),max(abs(drange))];
-        
+        if min(drange)<0
+            drange = [-max(abs(drange)),max(abs(drange))];
+        end
+            
     else
         % flat color
         drange = [0 nanmax(abs([ldat;rdat]))];
@@ -256,7 +258,19 @@ if docolorbar
    h.legendax = axes('position',[0.03 0.1 0.15 0.1],'visible','off','xlim',[0 1],'ylim',[0 1]);
    colormap(h.legendax,colmap);
    caxis(drange);
-   h.colorbar=colorbar(h.legendax,'Location','South','AxisLocation','out','Ticks',[drange(1) 0 drange(2)],'Ticklabels',{num2str(drange(1),3),'0',num2str(drange(2),3)});
+   % colorbar ticks
+   if min(drange)<0
+       cticks=[drange(1) 0 drange(2)];
+       cticklabel = {num2str(drange(1),3),'0',num2str(drange(2),3)};
+   elseif size(colmap,1)>6
+       cticks = linspace(drange(1),drange(2),4);
+       cticklabel = split(num2str(cticks))';
+   else
+       cticks=linspace(drange(1),drange(2),size(colmap,1));
+       cticklabel = split(num2str(cticks))';
+   end
+   
+   h.colorbar=colorbar(h.legendax,'Location','South','AxisLocation','out','Ticks',cticks,'Ticklabels',cticklabel);
    h.colorbar.FontName = 'Helvetica Neue';
    drawnow;
 end

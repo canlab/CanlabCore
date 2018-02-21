@@ -116,26 +116,31 @@ function h = plot_surface_map(dat,varargin)
 % :Examples:
 % ::
 %
-%  % Example 1: plot the first effect size map from HCP S1200
-%  % ------------------------------------------------------------------------- 
-%  d = ft_read_cifti(which('HCP_S1200_997_tfMRI_ALLTASKS_level2_cohensd_hp200_s4_MSMSulc.dscalar.nii'),'mapname','array');
-%  h = plot_surface_map(d,'facealpha',0.8);
+% % Example 1: plot the first effect size map from HCP S1200
+% % ------------------------------------------------------------------------- 
+% d = ft_read_cifti(which('HCP_S1200_997_tfMRI_ALLTASKS_level2_cohensd_hp200_s4_MSMSulc.dscalar.nii'),'mapname','array');
+% h = plot_surface_map(d,'facealpha',0.8);
 %
 %
-%  % Example 2: plot two binary masks on top of each other
-%  % ------------------------------------------------------------------------- 
-%  d1 = ft_read_cifti('mask1.dscalar.nii');
-%  d2 = ft_read_cifti('mask2.dscalar.nii');
-%  h = plot_surface_map(d1,'color',[1 .5 0],'facealpha',0.8);
-%  h = plot_surface_map(d2,'figure',h,'title','mask 1 and mask 2','color',[0 .5 1],'facealpha',0.5);
+% % Example 2: plot two binary masks on top of each other
+% % ------------------------------------------------------------------------- 
+% d1 = ft_read_cifti('mask1.dscalar.nii');
+% d2 = ft_read_cifti('mask2.dscalar.nii');
+% h = plot_surface_map(d1,'color',[1 .5 0],'facealpha',0.8);
+% h = plot_surface_map(d2,'figure',h,'title','mask 1 and mask 2','color',[0 .5 1],'facealpha',0.5);
 %
 %
-%  % Example 3: plot the Glasser et al (2016) Nature atlas parcellation
-%  % ------------------------------------------------------------------------- 
-%  h = plot_surface_map(which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel'));
+% % Example 3: plot the Glasser et al (2016) Nature atlas parcellation
+% % ------------------------------------------------------------------------- 
+% h = plot_surface_map(which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel'));
 %
 %
-
+% Example 4: plot the Glasser atlas on the pial surface instead of inflated
+% ------------------------------------------------------------------------- 
+% fname =which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii');
+% h = plot_surface_map(fname,'surface','pial');
+% 
+% 
 
 %
 % ..

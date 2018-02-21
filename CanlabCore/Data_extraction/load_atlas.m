@@ -67,6 +67,10 @@ end
             savefile = which('Keuken_7T_atlas_object.mat');
             varname = 'atlas_obj';
             
+        case {'buckner'}
+            savefile = 'buckner_networks_atlas_object.mat';
+            varname = 'buckner_atlas';
+            
         case {'cerebellum', 'suit'}
             savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');
             varname = 'atlas_obj';

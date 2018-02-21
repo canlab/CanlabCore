@@ -1279,7 +1279,11 @@ if length(unique(ytrain)) == 2 %run in classification mode
     
     % enforce logical in case of [1, -1] inputs
     ytrain = ytrain > 0;
-    
+elseif any(strcmp(lower(varargin),'poisson'))
+    runmode = 'poisson regression';
+    fprintf(1,'Regression mode (Poisson) ');
+    distribution = 'poisson';
+    varargin={};
 else %Run in prediction mode
     runmode = 'regression';
     fprintf(1,'Regression mode (Gaussian) ');
@@ -1368,7 +1372,12 @@ if ~doNestedXval
     
     % re-fit using OLS for non-zero components
     wh = beta ~= 0;
+    
+    if ~strcmp(runmode,'poisson regression')
     bb = pinv([ones(size(ytrain)) sc(:, wh)]) * ytrain;
+    else
+    bb = glmfit(sc(:, wh), ytrain,distribution); %pinv has problems, and isn't flexible maybe check binomial case..
+    end
     beta(wh) = bb(2:end);
     
     if dopcr
@@ -1388,6 +1397,9 @@ if ~doNestedXval
             yfit = exp(yfit)./(1+exp(yfit)); %convert to probabilities
         case 'regression'
             yfit = intercept + xtest * vox_weights;
+
+        case 'poisson regression'
+            yfit = glmval([intercept; vox_weights], xtest, 'log');
         otherwise error('this should never happen.')
     end
     

@@ -8,7 +8,14 @@ function h = plot_surface_map(dat,varargin)
 % :Usage:
 % ::
 %     d = ft_read_cifti('yourdata.dscalar.nii');
+%               -OR-
+%     d = 'path_to_your_data.dscalar.nii';
+%               -OR-
+%     d = {lh_data,rh_data};
+%
+%
 %     h = plot_surface_map(d, varargin);
+%
 %
 % See make_surface_figure for the underlaying rendering of the brain surfaces.
 %
@@ -44,12 +51,37 @@ function h = plot_surface_map(dat,varargin)
 %        'dscalar'. 'brainstructure' assumes HCP grayordinate conventions 
 %        with 1=left hemisphere and 2=right hemisphere.
 %
+%           -OR-
+%
+%        a string with the full path to a cifti-file (*.dscalar.nii)
+%
+%           -OR-
+%
+%        a 1x2 cell array with the functional data to plot for left and
+%        right hemispheres in each cell, respectively. Here, dat{1} 
+%        contains functional information for the left hemisphere, and 
+%        dat{2} contains functional information for the right hemisphere. 
+%        Data for each hemispere are v x 1 vectors with one
+%        datapoint for each surface vertex. Default for HCP standard space
+%        is 32,492 vertices per hemisphere. If you provide individual
+%        hemisphere surface files via the 'surfacefiles' option, the number
+%        of vertices can differ.
+%
 %
 % :Optional inputs:
 %
 %   **'surface'**
-%       followed by the name of the HCP surface type to use. options are: inflated [default], 
-%       midthickness, pial, very_inflated
+%       followed by the name of the HCP surface type to use. options are: 
+%       inflated [default], midthickness, pial, very_inflated
+%       This option will be ignored if you specify 'surfacefiles'
+%       explicitly.
+%
+%   **'surfacefiles'**
+%       followed by 2x1 cell array with the fullpath to your individually
+%       selected surface files, e.g. {path_to_left_hem; path_to_right_hem}.
+%       If specified, the 'surface' option above will be ignored. If not 
+%       specified, the function looks for the HCP files specified with the 
+%       'surface' option on the matlab path.
 %
 %   **'colmap'**
 %       followed by a colormap matrix to use for the data (m x 3) or a 
@@ -84,12 +116,23 @@ function h = plot_surface_map(dat,varargin)
 % :Examples:
 % ::
 %
-%  % Example 1: plot two binary masks on top of each other
+%  % Example 1: plot the first effect size map from HCP S1200
+%  % ------------------------------------------------------------------------- 
+%  d = ft_read_cifti(which('HCP_S1200_997_tfMRI_ALLTASKS_level2_cohensd_hp200_s4_MSMSulc.dscalar.nii'),'mapname','array');
+%  h = plot_surface_map(d,'facealpha',0.8);
+%
+%
+%  % Example 2: plot two binary masks on top of each other
 %  % ------------------------------------------------------------------------- 
 %  d1 = ft_read_cifti('mask1.dscalar.nii');
 %  d2 = ft_read_cifti('mask2.dscalar.nii');
 %  h = plot_surface_map(d1,'color',[1 .5 0],'facealpha',0.8);
 %  h = plot_surface_map(d2,'figure',h,'title','mask 1 and mask 2','color',[0 .5 1],'facealpha',0.5);
+%
+%
+%  % Example 3: plot the Glasser et al (2016) Nature atlas parcellation
+%  % ------------------------------------------------------------------------- 
+%  h = plot_surface_map(which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel'));
 %
 %
 
@@ -102,7 +145,11 @@ function h = plot_surface_map(dat,varargin)
 %   1/15/2018 - created
 %   Stephan Geuter, sgeuter@jhmi.edu
 %
+%   2/21/2018 - updated surface file options, added dlabel.nii option
+%   Fred J Barret & Stephan Geuter
 %
+%
+
 
 
 %%% defaults %%%
@@ -113,6 +160,8 @@ drange = []; % limits for colormap/colorbar
 onecolor = []; % plot a mask in a single color
 facealpha = 0.7; % face alpha value for data
 figtitle = []; % title for figure to pring
+% isdlabel = 0; % default is a dscalar file, not a dlabel file
+datafield = 'dscalar'; % default fieldname of dscalar-structure
 colmap = [[113 220 247]; % default colormap
            [113 220 247];
            [0 150 255];
@@ -121,7 +170,6 @@ colmap = [[113 220 247]; % default colormap
            [0 99 255];
            [0 50 255];
            [0 50 255];
-%           [153 153 153];
            [255 50 0];
            [255 50 0];
            [255 105 0];
@@ -141,6 +189,12 @@ if numel(varargin)>0
         switch lower(varargin{j})
             case {'surface'}, surftype = varargin{j+1}; varargin{j+1} = '';
             % valid arguments: inflated [default], midthickness, pial, very_inflated
+            
+            case {'surfacefile','surfacefiles'}
+                 fileL = varargin{j+1}{1};
+                 fileR = varargin{j+1}{2}; 
+                 varargin{j+1} = '';
+            % if not provided, will default to S1200.[L/R].[surface]_MSMAll.32k_fs_LR.surf.gii
             
             case {'colmap','colormap'}, colmap = varargin{j+1}; varargin{j+1} = '';
                              if ischar(colmap), colmap = eval(colmap); end
@@ -165,15 +219,58 @@ if numel(varargin)>0
     end
 end
 
+% get surface files
+if ~exist('fileL','var'), fileL = which(sprintf('S1200.L.%s_MSMAll.32k_fs_LR.surf.gii',surftype)); end
+if ~exist('fileR','var'), fileR = which(sprintf('S1200.R.%s_MSMAll.32k_fs_LR.surf.gii',surftype)); end
+surffiles = {fileL; fileR};
 
 
 %%% get to work
 % process input data
-ldat = single(dat.dscalar(dat.brainstructure==1,:));
-ldat(ldat==0) = NaN;
-rdat = single(dat.dscalar(dat.brainstructure==2,:));
-rdat(rdat==0) = NaN;
+if iscell(dat) % data in cell array
+  ldat = dat{1};
+  rdat = dat{2};
+  
+else % data in cifti-struct or string with filepath
+    
+    if ischar(dat)  % read from file
+    
+        if contains(dat,'dscalar.nii')
+           
+            % dscalar file
+            dat = ft_read_cifti(dat,'mapname','array');
+            datafield = 'dscalar';
+            
+            
+        elseif contains(dat,'dlabel.nii')
+            
+            % dlabel file
+            d1 = ft_read_cifti(dat);
+            d2 = read_dlabel_cifti(dat);
+            dat= d1;
+            dat.label = d2.label;
+            dat.ID    = d2.ID;
+            dat.color = d2.color;
+            dat.alpha = d2.alpha;
+            clear d1 d2;
+            
+            datafield = 'indexmax';
+            
+            % use the colors specified in the dlabel file, no colorbar here
+            colmap = dat.color;
+            docolorbar = 0;
+        end
+    end
+    
+    % separate left and right hem data
+    ldat = single(dat.(datafield)(dat.brainstructure==1,1));
+    ldat(ldat==0) = NaN;
+    rdat = single(dat.(datafield)(dat.brainstructure==2,1));
+    rdat(rdat==0) = NaN;
+end
 
+
+% colormap specs and colorbar info
 % no color map limits entered
 if isempty(drange)
     % colormap
@@ -193,20 +290,10 @@ if any(isnan(drange))
     drange = [0 1];
 end
 
-% ldat = rescale(ldat,drange(1),drange(2));
-% rdat = rescale(rdat,drange(1),drange(2));
-% % number of colors in colmap is odd, remove data for the mid/neutral color
-% if mod(size(colmap,1),2)==1
-%     drmv = size(colmap,1) * 2;
-% else
-%     drmv = 64;
-% end
-% ldat(ldat>(drange(1)/drmv) & ldat<(drange(2)/drmv)) = NaN;
-% rdat(rdat>(drange(1)/drmv) & rdat<(drange(2)/drmv)) = NaN;
-    
+   
 % make background surface figure
 if newfig == 1
-    h = make_surface_figure('surface',surftype);
+    h = make_surface_figure('surfacefiles',surffiles);
 end
 h.n_maps = numel(h.map);
 
@@ -217,6 +304,7 @@ if isempty(onecolor)
 else
     docolorbar = 0; % no colorbar for masks
 end
+
 
 % plot data on top of the surface
 for j=1:length(h.obj)
@@ -274,6 +362,7 @@ if docolorbar
    h.colorbar.FontName = 'Helvetica Neue';
    drawnow;
 end
+
 
 % add title
 if ischar(figtitle)

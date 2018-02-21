@@ -10,8 +10,11 @@ function han = make_surface_figure(varargin)
 % (http://www.artefact.tk/software/matlab/gifti/) and HCP S1200 release
 % surface files on your MATLAB path 
 % (e.g., S1200.L.inflated_MSMAll.32k_fs_LR.surf.gii, 
-% S1200.R.inflated_MSMAll.32k_fs_LR.surf.gii).
+%        S1200.R.inflated_MSMAll.32k_fs_LR.surf.gii), unless you specify 
+%  your own surface files (see 'surfacefile' input options below).
 % 
+%
+%
 % :Usage:
 % ::
 %     h = make_surface_figure(varargin);
@@ -44,8 +47,16 @@ function han = make_surface_figure(varargin)
 % :Optional inputs:
 %
 %   **'surface'**
-%       followed by the name of the HCP surface type to use. options are: inflated [default], 
-%       midthickness, pial, very_inflated
+%       followed by the name of the HCP surface type to use. Will be 
+%       ignored if you specify 'surfacefile' (see below).
+%       options are: inflated [default], midthickness, pial, very_inflated
+%
+%   **'surfacefiles'**
+%       followed by 2x1 cell array with the fullpath to your individually
+%       selected surface files, e.g. {path_to_left_hem; path_to_right_hem}.
+%       If specified, the 'surface' option above will be ignored. If not 
+%       specified, the function looks for the HCP files specified with the 
+%       'surface' option on the matlab path.
 %
 %   **'facecol'**
 %       followed by a [1 x 3] RGB vector specifying the color of the brain 
@@ -63,6 +74,8 @@ function han = make_surface_figure(varargin)
 %   1/15/2018 - created
 %   Stephan Geuter, sgeuter@jhmi.edu
 %
+%   2/21/2018 - updated surface file options
+%   Fred J Barret & Stephan Geuter
 %
 
 
@@ -79,6 +92,12 @@ if numel(varargin)>0
         switch varargin{j}
             case {'surface'}, surftype = varargin{j+1}; varargin{j+1} = '';
             % valid arguments: inflated [default], midthickness, pial, very_inflated
+            
+             case {'surfacefile','surfacefiles'}
+                 fileL = varargin{j+1}{1};
+                 fileR = varargin{j+1}{2}; 
+                 varargin{j+1} = '';
+            % if not provided, will default to S1200.[L/R].[surface]_MSMAll.32k_fs_LR.surf.gii
             
             case {'facecol'}, facecol = varargin{j+1}; varargin{j+1} = '';
             % color for surfaces. default = [0.6 0.6 0.6]
@@ -97,8 +116,8 @@ if exist('gifti','file')==0
 end
 
 % check for surface files
-fileL = which(sprintf('S1200.L.%s_MSMAll.32k_fs_LR.surf.gii',surftype));
-fileR = which(sprintf('S1200.R.%s_MSMAll.32k_fs_LR.surf.gii',surftype));
+if ~exist('fileL','var'), fileL = which(sprintf('S1200.L.%s_MSMAll.32k_fs_LR.surf.gii',surftype)); end
+if ~exist('fileR','var'), fileR = which(sprintf('S1200.R.%s_MSMAll.32k_fs_LR.surf.gii',surftype)); end
 
 if isempty(fileL) || isempty(fileR)
     error('Surface files not found on MATLAB path. Check for: \n%s\n%s',...
@@ -109,7 +128,9 @@ else
     hemL = gifti(fileL);
     hemR = gifti(fileR);
 end
-%%
+
+
+%% start drawing 
 
 f=figure(1); clf; set(f,'color','w','position',[1 600 780 350]);
 

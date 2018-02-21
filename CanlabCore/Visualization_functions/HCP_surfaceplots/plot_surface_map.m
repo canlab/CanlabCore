@@ -151,7 +151,7 @@ function h = plot_surface_map(dat,varargin)
 %   Stephan Geuter, sgeuter@jhmi.edu
 %
 %   2/21/2018 - updated surface file options, added dlabel.nii option
-%   Fred J Barret & Stephan Geuter
+%   Fred S Barrett & Stephan Geuter
 %
 %
 

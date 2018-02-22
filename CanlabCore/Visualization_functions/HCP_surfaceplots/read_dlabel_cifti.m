@@ -25,6 +25,9 @@ if any(regexp(fname,'\.dlabel\.nii$'))
  
     delete(tmpfile);
     
+    % read vertex dat
+    out = ft_read_cifti(fname);
+    
     % format
     out.label = draw{1};
     out.ID    = single(draw{2});

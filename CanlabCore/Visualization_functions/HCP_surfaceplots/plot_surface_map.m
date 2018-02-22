@@ -83,6 +83,10 @@ function h = plot_surface_map(dat,varargin)
 %       specified, the function looks for the HCP files specified with the 
 %       'surface' option on the matlab path.
 %
+%   **'wh_map'**
+%       followed by a scalar value with the map index to plot for
+%       dscalar.nii-files with multiple maps. default=1.
+%
 %   **'colmap'**
 %       followed by a colormap matrix to use for the data (m x 3) or a 
 %       string with name of a MATLAB build-in colormap (eg. 'parula'). If
@@ -165,7 +169,7 @@ drange = []; % limits for colormap/colorbar
 onecolor = []; % plot a mask in a single color
 facealpha = 0.7; % face alpha value for data
 figtitle = []; % title for figure to pring
-% isdlabel = 0; % default is a dscalar file, not a dlabel file
+wh_map = 1;
 datafield = 'dscalar'; % default fieldname of dscalar-structure
 colmap = [[113 220 247]; % default colormap
            [113 220 247];
@@ -200,6 +204,8 @@ if numel(varargin)>0
                  fileR = varargin{j+1}{2}; 
                  varargin{j+1} = '';
             % if not provided, will default to S1200.[L/R].[surface]_MSMAll.32k_fs_LR.surf.gii
+            
+            case {'wh_map','wh'}, wh_map = varargin{j+1}; varargin{j+1} = '';
             
             case {'colmap','colormap'}, colmap = varargin{j+1}; varargin{j+1} = '';
                              if ischar(colmap), colmap = eval(colmap); end
@@ -244,33 +250,29 @@ else % data in cifti-struct or string with filepath
            
             % dscalar file
             dat = ft_read_cifti(dat,'mapname','array');
-            datafield = 'dscalar';
-            
             
         elseif contains(dat,'dlabel.nii')
             
             % dlabel file
-            d1 = ft_read_cifti(dat);
-            d2 = read_dlabel_cifti(dat);
-            dat= d1;
-            dat.label = d2.label;
-            dat.ID    = d2.ID;
-            dat.color = d2.color;
-            dat.alpha = d2.alpha;
-            clear d1 d2;
-            
-            datafield = 'indexmax';
-            
-            % use the colors specified in the dlabel file, no colorbar here
-            colmap = dat.color;
-            docolorbar = 0;
+            dat = read_dlabel_cifti(dat);
         end
     end
     
+    % dcheck if is dscalar or dlabel
+    if isstruct(dat) && ~isfield(dat,'dscalar')
+        
+        % dlabel data
+        datafield = 'indexmax';
+        
+        % use the colors specified in the dlabel file, no colorbar here
+        colmap = dat.color;
+        docolorbar = 0;
+    end
+    
     % separate left and right hem data
-    ldat = single(dat.(datafield)(dat.brainstructure==1,1));
+    ldat = single(dat.(datafield)(dat.brainstructure==1,wh_map));
     ldat(ldat==0) = NaN;
-    rdat = single(dat.(datafield)(dat.brainstructure==2,1));
+    rdat = single(dat.(datafield)(dat.brainstructure==2,wh_map));
     rdat(rdat==0) = NaN;
 end
 

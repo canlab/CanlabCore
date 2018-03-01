@@ -66,6 +66,10 @@ function han = make_surface_figure(varargin)
 %       followed by a scalar value for the datamap facealpha value
 %       (default=1).
 %
+%   **'newfig'**
+%       will create a new figure instead of overwriting any existing
+%       surface figure (default).
+%       
 %
 % ..
 %    Programmers' notes:
@@ -79,7 +83,7 @@ function han = make_surface_figure(varargin)
 %
 
 
-
+newfig = 0;
 surftype = 'inflated';
 facecol  = [0.6 0.6 0.6];
 facealpha = 1;
@@ -104,6 +108,9 @@ if numel(varargin)>0
             
             case {'facealpha'}, facealpha = varargin{j+1}; varargin{j+1} = '';    
             % facealpha, default = 1
+            
+            case {'newfig','newfigure'}, newfig = 1;
+            % make a new figure to plot, default = 0
             
             otherwise
         end
@@ -132,7 +139,12 @@ end
 
 %% start drawing 
 
-f=figure(1); clf; set(f,'color','w','position',[1 600 780 350]);
+if ~newfig
+    f = findobj('Tag','SurfaceFig');
+else
+    f = figure; set(f,'Tag','SurfaceFig');
+end
+figure(f); clf; set(f,'color','w','position',[1 600 780 350]);
 
 %%% left lateral
 ax(1)=axes('position',[.025 .31 .39 .66]);

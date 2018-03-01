@@ -139,12 +139,11 @@ end
 
 %% start drawing 
 
-if ~newfig
-    f = findobj('Tag','SurfaceFig');
-else
+f = findobj('Type','figure','-and','Tag','SurfaceFig');
+if newfig || isempty(f)
     f = figure; set(f,'Tag','SurfaceFig');
 end
-figure(f); clf; set(f,'color','w','position',[1 600 780 350]);
+figure(f(1)); clf; set(f,'color','w','position',[1 600 780 350]);
 
 %%% left lateral
 ax(1)=axes('position',[.025 .31 .39 .66]);

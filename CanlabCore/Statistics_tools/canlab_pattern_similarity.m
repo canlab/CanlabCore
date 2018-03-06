@@ -313,16 +313,20 @@ function r = overlap_similarity(dat, pattern_weights)
 % check for binary data
 if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0; 1])~=0 ...
         || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0; 1])~=0
-    error('Binary overlap similarity needs binary data [0 1] input.');
+    if numel(unique(round(pattern_weights))) == 2
+        pattern_weights = round(pattern_weights); % an easy (but maybe not optimal) solution for the resampled binary mask
+    else
+        error('Binary overlap similarity needs binary data [0 1] input.');
+    end
 end
 
 % compute overlap
 for i = 1:size(dat, 2)
     
-    inmask = isfinite(dat(:,i)) && isfinite(pattern_weights);
+    inmask = isfinite(dat(:,i)) & isfinite(pattern_weights);
     nVox = sum(inmask);
     
-    r(i,1) = (dat(inmask,i)==1 & pattern_weights(inmask)==1) / nVox; % overlap excluding NaNs
+    r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1) / nVox; % overlap excluding NaNs
     
 end
 

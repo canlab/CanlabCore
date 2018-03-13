@@ -1,6 +1,8 @@
+function canlab_toolbox_setup
 % Help:
 % In matlab, change to the directory with the CANlab tools repository
-% Then run this script.
+% Then run canlab_toolbox_setup
+% This assumes you have all CANlab repositories in the same master folder
 %
 % CanlabCore
 % CANlab_help_examples
@@ -12,10 +14,13 @@
 
 main_repository_dir = pwd;
 
+% Assume main dir is 2 levels above this, in master dir
+main_repository_dir = fileparts(fileparts(main_repository_dir));
+
 % Find these files, which will tell us where toolbox folders are:
 key_files_to_find = {'fmri_data.m' 'a2_second_level_toolbox_check_dependencies.m' ...
-                     'i_density.m' 'power_figure3_num_comparisons.m' 'apply_nps.m' ...
-                     'mediation_brain.m' 'apply_all_signatures.m' 'robust_results_batch.m'};
+    'i_density.m' 'power_figure3_num_comparisons.m' 'apply_nps.m' ...
+    'mediation_brain.m' 'apply_all_signatures.m' 'robust_results_batch.m'};
 
 % Find each file
 % Get enclosing folder
@@ -23,9 +28,10 @@ key_files_to_find = {'fmri_data.m' 'a2_second_level_toolbox_check_dependencies.m
 
 for i = 1:length(key_files_to_find)
     
-    if ~status
-        
-        [status,result] = system(['find ' main_repository_dir ' -name "' key_files_to_find{i} '"']);
+    
+    [status,result] = system(['find ' main_repository_dir ' -name "' key_files_to_find{i} '"']);
+    
+    if ~status && ~isempty(result)
         
         % Get enclosing folder
         mydir = fileparts(fileparts(result(1, :)));

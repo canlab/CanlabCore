@@ -48,6 +48,7 @@ function cl = orthviews(image_obj, varargin)
 input_handle = [];
 cl = [];
 doreg=0;
+overlay = which('keuken_2014_enhanced_for_underlay.img');
 %dounique = 0; uniquestr = 'nounique';
 
 for i = 1:length(varargin)
@@ -56,7 +57,7 @@ for i = 1:length(varargin)
             
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
             case 'largest_region', doreg = 1;  
-                
+            case 'overlay', overlay = varargin{i + 1}; varargin{i + 1} = [];    
             %case 'unique', dounique = 1; uniquestr = 'unique';
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -68,8 +69,6 @@ if isempty(input_handle)
     % re-initialize new orthviews
     
     n = size(image_obj.dat, 2);
-
-    overlay = which('SPM8_colin27T1_seg.img');
 
     spm_check_registration(repmat(overlay, n, 1));
     

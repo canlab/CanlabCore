@@ -35,6 +35,8 @@ function obj = resample_space(obj, sampleto, varargin)
 %           'nonempty' in output obj
 %
 %   2/5/2018    Tor added support for atlas objects - special handling
+% 
+%   2/23/2018   Stephan changed replace_empty(obj) into replace_empty(obj,'voxels') to prevent adding removed images back in  
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -53,7 +55,8 @@ obj_out = obj;
 obj_out.dat = [];
 obj_out.volInfo = Vto;
 
-obj = replace_empty(obj);  % to make sure vox line up
+obj = replace_empty(obj,'voxels');  % to make sure vox line up
+                                    % changed to 'voxels' only. SG 2/23/18
 
 for i = 1:n_imgs
     

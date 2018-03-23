@@ -106,8 +106,8 @@ end % function
 
 function obj = merge_fcn(obj, obj2)
 
-obj = replace_empty(obj);
-obj2 = replace_empty(obj2);
+obj = replace_empty(obj,'voxels');   % changed to 'voxels' only. SG 2/23/18
+obj2 = replace_empty(obj2,'voxels'); % changed to 'voxels' only. SG 2/23/18
 
 obj2 = resample_space(obj2, obj);
 

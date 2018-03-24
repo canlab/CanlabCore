@@ -145,7 +145,21 @@ if nargin == 0
 end
 
 if ischar(input_activation)
-    cl = region(fmri_data(input_activation));  % mask2clusters(input_activation);
+    
+    if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
+            || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal')
+        
+        % Entered no data map; intention is not to plot blobs, just create underlay
+        varargin{end + 1} = 'noblobs'; 
+        varargin{end + 1} = 'nooutline';
+        % do nothing else for now - this is not an input image
+        
+    else
+        % assume it is an input image
+        
+        cl = region(fmri_data(input_activation));  % mask2clusters(input_activation);
+        
+    end
     
 elseif isstruct(input_activation) || isa(input_activation, 'region')
     cl = input_activation;

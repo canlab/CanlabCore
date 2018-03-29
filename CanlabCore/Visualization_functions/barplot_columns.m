@@ -165,6 +165,7 @@ wh_reg = 1; % regressor of interest - 0 for "no regressor of interest", remove a
 mymarkersize = 6;
 dostars = true;
 handles = [];
+doprinttable = 1;
 
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
@@ -237,6 +238,10 @@ if length(varargin) > 0
             if ~isempty(covs), covs = scale(covs,1); end
         end
         
+        % verbose options
+        if strcmpi(varargin{i}, 'notable'), doprinttable = 0; end
+            
+        
         if strcmp(varargin{i}, 'wh_reg')
             wh_reg = varargin{i + 1};
         end
@@ -281,10 +286,12 @@ Std_Error = [];
 
 for i = 1:ny
     
-    if ~isempty(names) && length(names) >= i
-        fprintf(1,'Col %3.0f: %s\t', i, names{i});
-    else
-        fprintf(1,'Column %3.0f:\t', i);
+    if doprinttable
+        if ~isempty(names) && length(names) >= i
+            fprintf(1,'Col %3.0f: %s\t', i, names{i});
+        else
+            fprintf(1,'Column %3.0f:\t', i);
+        end
     end
 
     % ----------------------------------------------------
@@ -356,8 +363,9 @@ end
 % > Print Table
 % ----------------------------------------------------
 dashes = '---------------------------------------------';
-fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
-
+if doprinttable
+    fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
+end
 Name = names';
 if ~iscolumn(Name), Name = Name'; end
 
@@ -366,7 +374,9 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
-disp(statstable)
+if doprinttable
+    disp(statstable)
+end
 
 % ----------------------------------------------------
 % > Make figure

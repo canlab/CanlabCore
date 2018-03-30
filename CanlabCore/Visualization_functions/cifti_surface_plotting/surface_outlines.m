@@ -98,20 +98,22 @@ for hem=1:2
         % find the vertices that belong to the current ROI
         idx = atlasDat .* single(ismember(atlasDat,hemRegions(r)));
         
-        % compute the new Faces
-        Fclasses = idx(F);
-        roiFace  = F(any(diff(Fclasses,1,2),2) , :);
-        
-        % get color for current ROI outline
-        if size(colmap,1) == 1
-            roiCol   = repmat(colmap,size(roiFace,1),1);
-        else
-            roiCol   = repmat(colmap(r,:),size(roiFace,1),1);
+        if numel(unique(idx))>1 && any(unique(idx)~=0)
+            % compute the new Faces
+            Fclasses = idx(F);
+            roiFace  = F(any(diff(Fclasses,1,2),2) , :);
+            
+            % get color for current ROI outline
+            if size(colmap,1) == 1
+                roiCol   = repmat(colmap,size(roiFace,1),1);
+            else
+                roiCol   = repmat(colmap(hemRegions(r),:),size(roiFace,1),1);
+            end
+            
+            % cat data across ROIs
+            newF{hem} = vertcat(newF{hem},roiFace);
+            cData{hem}= vertcat(cData{hem},roiCol);
         end
-        
-        % cat data across ROIs
-        newF{hem} = vertcat(newF{hem},roiFace);
-        cData{hem}= vertcat(cData{hem},roiCol);
     end
     
     

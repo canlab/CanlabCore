@@ -121,13 +121,14 @@ function h = plot_surface_map(dat,varargin)
 %
 % % Example 3: plot the Glasser et al (2016) Nature atlas parcellation
 % % ------------------------------------------------------------------------- 
-% h = plot_surface_map(which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel'));
+% glassermap = which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel');
+% h = plot_surface_map(glassermap);
 %
 %
-% Example 4: plot the Glasser atlas on the pial surface instead of inflated
+% Example 4: plot only the borders of the Glasser atlas regions on pial surface 
 % ------------------------------------------------------------------------- 
-% fname =which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel.nii');
-% h = plot_surface_map(fname,'surface','pial');
+% glassermap = which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel');
+% h = plot_surface_map(glassermap,'surface','pial','outline');
 % 
 % 
 % ..

@@ -18,28 +18,6 @@ function h = plot_surface_map(dat,varargin)
 %
 %
 % See make_surface_figure for the underlaying rendering of the brain surfaces.
-%
-% 
-% 
-% ..
-%     Author and copyright information:
-%     -------------------------------------------------------------------------
-%     Copyright (C) 2018 Stephan Geuter
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
-% 
 % 
 % 
 % :Inputs:
@@ -65,7 +43,8 @@ function h = plot_surface_map(dat,varargin)
 %        datapoint for each surface vertex. Default for HCP standard space
 %        is 32,492 vertices per hemisphere. If you provide individual
 %        hemisphere surface files via the 'surfacefiles' option, the number
-%        of vertices can differ.
+%        of vertices may differ. In this case, the number of data points in
+%        data{1:2} must match the vertices of the 'surfacefiles'
 %
 %
 % :Optional inputs:
@@ -97,6 +76,12 @@ function h = plot_surface_map(dat,varargin)
 %       followed by a [1 x 3] RGB vector for a single color to use, eg.
 %       when plotting a mask. if 'color' is entered, 'colmap' is ignored.
 %       Colorbar plotting is also suppressed.
+%
+%   **outline**
+%       will only draw the borders of clusters or ROIs. Recommended for
+%       marking ROIs from an atlas with an .dlabel-cifti. E.g., create a
+%       cifti with a few regions of interest, each coded by a different
+%       integer value and plot using the 'outline' option.
 %
 %   **'nocolorbar'**
 %       do not plot a colorbar in the lower left corner
@@ -145,6 +130,25 @@ function h = plot_surface_map(dat,varargin)
 % h = plot_surface_map(fname,'surface','pial');
 % 
 % 
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
+%     Copyright (C) 2018 Stephan Geuter
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+% 
 
 %
 % ..
@@ -169,6 +173,7 @@ drange = []; % limits for colormap/colorbar
 onecolor = []; % plot a mask in a single color
 facealpha = 0.7; % face alpha value for data
 figtitle = []; % title for figure to pring
+dooutline = 0; % only plot the outlines of clusters 
 wh_map = 1;
 datafield = 'dscalar'; % default fieldname of dscalar-structure
 colmap = [[113 220 247]; % default colormap
@@ -206,6 +211,8 @@ if numel(varargin)>0
             % if not provided, will default to S1200.[L/R].[surface]_MSMAll.32k_fs_LR.surf.gii
             
             case {'wh_map','wh'}, wh_map = varargin{j+1}; varargin{j+1} = '';
+                
+            case {'outline'}, dooutline = 1;    
             
             case {'colmap','colormap'}, colmap = varargin{j+1}; varargin{j+1} = '';
                              if ischar(colmap), colmap = eval(colmap); end
@@ -277,6 +284,9 @@ else % data in cifti-struct or string with filepath
 end
 
 
+
+
+
 % colormap specs and colorbar info
 % no color map limits entered
 if isempty(drange)
@@ -313,31 +323,63 @@ else
 end
 
 
-% plot data on top of the surface
+% convert to outlines
+if dooutline
+    if any(onecolor)
+        outlinecol = onecolor;
+    else
+        outlinecol = colmap;
+    end
+    [outlineF, outlineCData] = surface_outlines({ldat,rdat},{h.obj(1),h.obj(2)},outlinecol);
+    ldat = outlineCData{1};
+    rdat = outlineCData{2};
+end
+
+
+
+% plot data on top of the brain surfaces
 for j=1:length(h.obj)
-    if strfind(h.label{j},'left')
+    
+    % get hemisphere data
+    if any(strfind(h.label{j},'left'))
         plotdat = ldat;
-    elseif strfind(h.label{j},'right')
+    elseif any(strfind(h.label{j},'right'))
         plotdat = rdat;
     end
-
+    
+    % get faces from hemisphere patch or outline faces
+    if dooutline && any(strfind(h.label{j},'left'))
+        F = outlineF{1};
+    elseif dooutline && any(strfind(h.label{j},'right'))
+        F = outlineF{2};
+    else
+       F = h.obj(j).Faces;
+    end
+    
+    if dooutline || any(onecolor)
+        fcolormode = 'flat';
+    else
+        fcolormode = 'interp';
+    end
+ 
+    
     % map onto colors
     if isempty(onecolor)
         % draw the map using a colormap
         set(h.fig,'colormap',colmap);
-        h.map{h.n_maps+1}(j) = patch(h.ax(j),'Faces',h.obj(j).Faces,'Vertices',h.obj(j).Vertices,'FaceVertexCData',plotdat,...,
-        'FaceColor','interp','EdgeColor','none','SpecularStrength',.2,'FaceAlpha',facealpha,'SpecularExponent',200);
+        h.map{h.n_maps+1}(j) = patch(h.ax(j),'Faces',F,'Vertices',h.obj(j).Vertices,'FaceVertexCData',plotdat,...,
+        'FaceColor',fcolormode,'EdgeColor','none','SpecularStrength',.2,'FaceAlpha',facealpha,'SpecularExponent',200);
     
     else
         % one color
-        pidx = isfinite(plotdat);
+        pidx = isfinite(plotdat(:,1));
         cDatCol = (pidx * onecolor);
         cDatCol(~pidx,:) = NaN;
         
         % draw the map
-        h.map{h.n_maps+1}(j) = patch(h.ax(j),'Faces',h.obj(j).Faces,'Vertices',h.obj(j).Vertices,...
+        h.map{h.n_maps+1}(j) = patch(h.ax(j),'Faces',F,'Vertices',h.obj(j).Vertices,...
             'CData',plotdat,'FaceVertexCData',cDatCol,'FaceVertexAlphaData',pidx*facealpha,'FaceAlpha','flat',...
-            'FaceColor','flat','EdgeColor','none','SpecularStrength',.2,'SpecularExponent',200);
+            'FaceColor',fcolormode,'EdgeColor','none','SpecularStrength',.2,'SpecularExponent',200);
     end
     
     material(h.map{h.n_maps+1}(j),'dull');

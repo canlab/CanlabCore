@@ -162,8 +162,9 @@ function h = plot_surface_map(dat,varargin)
 %   2/21/2018 - updated surface file options, added dlabel.nii option
 %   Fred S Barrett & Stephan Geuter
 %
+%   3/30/2018 - added outline and background color options
+%   Stephan Geuter
 %
-
 
 
 %%% defaults %%%
@@ -173,6 +174,8 @@ newfig = 1; % make a new figure
 drange = []; % limits for colormap/colorbar
 onecolor = []; % plot a mask in a single color
 facealpha = 0.7; % face alpha value for data
+bgcol = [1 1 1]; % background color
+txtcol= [0 0 0]; % text color
 figtitle = []; % title for figure to pring
 dooutline = 0; % only plot the outlines of clusters 
 wh_map = 1;
@@ -227,6 +230,9 @@ if numel(varargin)>0
             case {'color'}, onecolor = varargin{j+1}; varargin{j+1} = '';
              
             case {'facealpha'}, facealpha = varargin{j+1}; varargin{j+1} = '';
+            
+            case {'bgcolor'}, bgcol = varargin{j+1}; varargin{j+1} = '';
+                            if mean(bgcol)<0.5, txtcol = [1 1 1]; end
                 
             case {'title'}, figtitle = varargin{j+1}; varargin{j+1} = '';
                 
@@ -311,7 +317,7 @@ end
    
 % make background surface figure
 if newfig == 1
-    h = make_surface_figure('surfacefiles',surffiles);
+    h = make_surface_figure('surfacefiles',surffiles,'bgcolor',bgcol);
 end
 h.n_maps = numel(h.map);
 
@@ -322,6 +328,7 @@ if isempty(onecolor)
 else
     docolorbar = 0; % no colorbar for masks
 end
+set(h.fig,'color',bgcol);
 
 
 % convert to outlines
@@ -408,8 +415,10 @@ if docolorbar
        cticklabel = split(num2str(cticks))';
    end
    
-   h.colorbar=colorbar(h.legendax,'Location','South','AxisLocation','out','Ticks',cticks,'Ticklabels',cticklabel);
+   h.colorbar=colorbar(h.legendax,'Location','South','AxisLocation','out',...
+        'Ticks',cticks,'Ticklabels',cticklabel);
    h.colorbar.FontName = 'Helvetica Neue';
+   h.colorbar.Color = txtcol;
    drawnow;
 end
 
@@ -418,11 +427,13 @@ end
 if ischar(figtitle)
     % title exists, just replace text
     if isfield(h,'title')
-        h.title.String = figtitle; drawnow;
+        h.title.String = figtitle;
     else
         h.titleax = axes('position',[0 0.9 1 0.1],'visible','off','xlim',[0 1],'ylim',[0 1]);
         h.title = text(0.5,0.5,figtitle,'FontName','Helvetica Neue','FontSize',12,'FontWeight','b','HorizontalALignment','center','VerticalAlignment','middle');
     end
+    h.title.Color = txtcol;
+    drawnow;
 end
 
 

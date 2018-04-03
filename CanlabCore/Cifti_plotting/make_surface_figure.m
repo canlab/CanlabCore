@@ -44,6 +44,9 @@ function han = make_surface_figure(varargin)
 %   **'facealpha'**
 %       followed by a scalar value for the datamap facealpha value
 %       (default=1).
+% 
+%   **'bgcolor'**
+%       followed by a [1 x 3] RGB vector setting the figure background color
 %
 %   **'newfig'**
 %       will create a new figure instead of overwriting any existing
@@ -87,6 +90,8 @@ function han = make_surface_figure(varargin)
 newfig = 0;
 surftype = 'inflated';
 facecol  = [0.6 0.6 0.6];
+bgcol    = [1 1 1];
+txtcol   = [0 0 0];
 facealpha = 1;
 
 if numel(varargin)>0
@@ -109,6 +114,9 @@ if numel(varargin)>0
             
             case {'facealpha'}, facealpha = varargin{j+1}; varargin{j+1} = '';    
             % facealpha, default = 1
+            
+            case {'bgcolor'}, bgcol = varargin{j+1}; varargin{j+1} = '';
+                            if mean(bgcol)<0.5, txtcol = [1 1 1]; end
             
             case {'newfig','newfigure'}, newfig = 1;
             % make a new figure to plot, default = 0
@@ -144,7 +152,7 @@ f = findobj('Type','figure','-and','Tag','SurfaceFig');
 if newfig || isempty(f)
     f = figure('Tag','SurfaceFig');
 end
-figure(f(1)); clf; set(f,'color','w','position',[1 600 780 350]);
+figure(f(1)); clf; set(f,'color',bgcol,'DefaultTextColor',txtcol,'position',[1 600 780 350]);
 
 
 

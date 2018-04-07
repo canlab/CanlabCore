@@ -61,7 +61,7 @@ CIs95 = 0;                      % 95% CI's.  Does not work with within subj erro
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
-        switch varargin{i}
+        switch lower(varargin{i})
             % functional commands
             case {'w', 'color', 'x', 'marker', 'linestyle', 'markersize', 'markerfacecolor', 'wh'}
                 str = [varargin{i} ' = varargin{i + 1};'];

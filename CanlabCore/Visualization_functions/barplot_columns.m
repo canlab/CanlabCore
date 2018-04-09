@@ -790,7 +790,7 @@ function star_han = star_plot(P, xvals, mymarkersize)
 
 star_han = [];
 %starwid = .06;
-starsize = round(mymarkersize .* 3);
+starsize = round(mymarkersize);
 
 % Get y position for all stars
 my_ylim = get(gca, 'YLim');

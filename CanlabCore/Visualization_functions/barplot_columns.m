@@ -61,7 +61,8 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
 %        - 'number' : plot case numbers instead of points
-%        - 'MarkerSize' : followed by marker size  
+%        - 'MarkerSize' : followed by marker size 
+%        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %        - 'nostars' : do not plot stars
 %
@@ -152,6 +153,7 @@ dowithin = 0;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
+myalpha = 1;
 barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
@@ -162,7 +164,7 @@ covs = [];
 doxlim = 1;
 names = {};
 wh_reg = 1; % regressor of interest - 0 for "no regressor of interest", remove all
-mymarkersize = 6;
+mymarkersize = 20;
 dostars = true;
 handles = [];
 doprinttable = 1;
@@ -207,7 +209,10 @@ if length(varargin) > 0
         if strcmp(varargin{i},'MarkerSize') || strcmp(varargin{i},'markersize')
             mymarkersize = varargin{i + 1}; varargin{i + 1} = [];  
         end
-        
+        if strcmpi(varargin{i},'MarkerAlpha') || strcmpi(varargin{i},'MarkerFaceAlpha')
+            myalpha = varargin{i + 1}; varargin{i + 1} = [];  
+        end
+            
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
 
@@ -560,8 +565,9 @@ if doind
                 
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
 
-                handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                
+%                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                                
             end
             
         end % j data points

@@ -9,7 +9,12 @@ if any(regexp(fname,'\.dlabel\.nii$'))
         % add workbench to Matlab Path - only tested on MacOS so far
         if ~ispc
             [~,wbpath] = system('which wb_command');
-            setenv('PATH', [PATH ':' strtrim(wbpath)]);    
+            if isempty(wbpath) 
+                % try default
+                setenv('PATH', [PATH ':/Applications/workbench/bin_macosx64']);
+            else
+                setenv('PATH', [PATH ':' strtrim(wbpath)]);
+            end
         end
     end
     

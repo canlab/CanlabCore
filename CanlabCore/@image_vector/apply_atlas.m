@@ -1,10 +1,10 @@
-function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, parcels, varargin)
-% Computes the mean value / pattern expression for each parcels specified in a data object
+function [parcel_means, parcel_pattern_expression] = apply_atlas(dat, parcels, varargin)
+% Computes the mean value / pattern expression for each parcels specified in a atlas object
 %
 % Usage:
 % ::
 %
-%    [parcel_means, parcel_pattern_expression] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
+%    [parcel_means, parcel_pattern_expression] = apply_atlas(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
 %
 % This is a method for an fmri_data object that computes the mean value and
 % optionally, pattern expression within parcels. This can be used to
@@ -36,7 +36,7 @@ function [parcel_means, parcel_pattern_expression] = apply_parcellation(dat, par
 %       fmri_data object with data to analyze
 %
 %   **parcels:**
-%        fmri_data object with parcellation image, with parcel ID coded
+%        fmri_data atlas object with parcellation image, with parcel ID coded
 %        with unique integer values in the image
 %
 % :Optional Inputs:

@@ -11,7 +11,7 @@
 % work without these.
 %
 % Basic usage for creating a new atlas image:
-% obj = atlas(image_names, [maskinput], [other optional inputs]) 
+% obj = atlas(image_names, ['mask',maskinput], [other optional inputs]) 
 %
 % maskinput     :   Name of mask image to use.  Default: 'brainmask.nii', a
 %                   brain mask that is distributed with SPM software

@@ -208,7 +208,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface'}
                 % not functional, avoid warning
                 
             case 'noverbose', doverbose = false;

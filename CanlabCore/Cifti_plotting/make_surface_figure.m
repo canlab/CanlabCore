@@ -23,27 +23,6 @@ function han = make_surface_figure(varargin)
 %
 % 
 % 
-% ..
-%     Author and copyright information:
-%     -------------------------------------------------------------------------
-%     Copyright (C) 2018 Stephan Geuter
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
-% 
-% 
-% 
 % :Optional inputs:
 %
 %   **'surface'**
@@ -65,11 +44,36 @@ function han = make_surface_figure(varargin)
 %   **'facealpha'**
 %       followed by a scalar value for the datamap facealpha value
 %       (default=1).
+% 
+%   **'bgcolor'**
+%       followed by a [1 x 3] RGB vector setting the figure background color
 %
 %   **'newfig'**
 %       will create a new figure instead of overwriting any existing
 %       surface figure (default).
-%       
+%
+% 
+% 
+% ..
+%     Author and copyright information:
+%     -------------------------------------------------------------------------
+%     Copyright (C) 2018 Stephan Geuter
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+% 
+
 %
 % ..
 %    Programmers' notes:
@@ -86,6 +90,8 @@ function han = make_surface_figure(varargin)
 newfig = 0;
 surftype = 'inflated';
 facecol  = [0.6 0.6 0.6];
+bgcol    = [1 1 1];
+txtcol   = [0 0 0];
 facealpha = 1;
 
 if numel(varargin)>0
@@ -108,6 +114,9 @@ if numel(varargin)>0
             
             case {'facealpha'}, facealpha = varargin{j+1}; varargin{j+1} = '';    
             % facealpha, default = 1
+            
+            case {'bgcolor'}, bgcol = varargin{j+1}; varargin{j+1} = '';
+                            if mean(bgcol)<0.5, txtcol = [1 1 1]; end
             
             case {'newfig','newfigure'}, newfig = 1;
             % make a new figure to plot, default = 0
@@ -143,7 +152,7 @@ f = findobj('Type','figure','-and','Tag','SurfaceFig');
 if newfig || isempty(f)
     f = figure('Tag','SurfaceFig');
 end
-figure(f(1)); clf; set(f,'color','w','position',[1 600 780 350]);
+figure(f(1)); clf; set(f,'color',bgcol,'DefaultTextColor',txtcol,'position',[1 600 780 350]);
 
 
 

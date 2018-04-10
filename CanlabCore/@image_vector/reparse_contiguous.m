@@ -39,7 +39,7 @@ wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 % restrict to voxels with actual data if desired
 if any(strcmp(varargin, 'nonempty'))
     
-    obj = replace_empty(obj);
+    obj = replace_empty(obj,'voxels');  % changed to 'voxels' only. SG 2/23/18
     wh = all(obj.dat ~= 0, 2) & all(~isnan(obj.dat), 2); % this will expand wh to full in-mask dataset, .nvox
     
 end

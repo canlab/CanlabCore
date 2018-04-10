@@ -61,7 +61,8 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
 %        - 'number' : plot case numbers instead of points
-%        - 'MarkerSize' : followed by marker size  
+%        - 'MarkerSize' : followed by marker size 
+%        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %        - 'nostars' : do not plot stars
 %
@@ -152,6 +153,7 @@ dowithin = 0;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
+myalpha = 1;
 barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
@@ -162,9 +164,10 @@ covs = [];
 doxlim = 1;
 names = {};
 wh_reg = 1; % regressor of interest - 0 for "no regressor of interest", remove all
-mymarkersize = 6;
+mymarkersize = 20;
 dostars = true;
 handles = [];
+doprinttable = 1;
 
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
@@ -206,7 +209,10 @@ if length(varargin) > 0
         if strcmp(varargin{i},'MarkerSize') || strcmp(varargin{i},'markersize')
             mymarkersize = varargin{i + 1}; varargin{i + 1} = [];  
         end
-        
+        if strcmpi(varargin{i},'MarkerAlpha') || strcmpi(varargin{i},'MarkerFaceAlpha')
+            myalpha = varargin{i + 1}; varargin{i + 1} = [];  
+        end
+            
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
 
@@ -236,6 +242,10 @@ if length(varargin) > 0
             covs = varargin{i + 1};
             if ~isempty(covs), covs = scale(covs,1); end
         end
+        
+        % verbose options
+        if strcmpi(varargin{i}, 'notable'), doprinttable = 0; end
+            
         
         if strcmp(varargin{i}, 'wh_reg')
             wh_reg = varargin{i + 1};
@@ -281,10 +291,12 @@ Std_Error = [];
 
 for i = 1:ny
     
-    if ~isempty(names) && length(names) >= i
-        fprintf(1,'Col %3.0f: %s\t', i, names{i});
-    else
-        fprintf(1,'Column %3.0f:\t', i);
+    if doprinttable
+        if ~isempty(names) && length(names) >= i
+            fprintf(1,'Col %3.0f: %s\t', i, names{i});
+        else
+            fprintf(1,'Column %3.0f:\t', i);
+        end
     end
 
     % ----------------------------------------------------
@@ -356,8 +368,9 @@ end
 % > Print Table
 % ----------------------------------------------------
 dashes = '---------------------------------------------';
-fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
-
+if doprinttable
+    fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
+end
 Name = names';
 if ~iscolumn(Name), Name = Name'; end
 
@@ -366,7 +379,9 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
-disp(statstable)
+if doprinttable
+    disp(statstable)
+end
 
 % ----------------------------------------------------
 % > Make figure
@@ -550,8 +565,9 @@ if doind
                 
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
 
-                handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                
+%                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                                
             end
             
         end % j data points
@@ -774,7 +790,7 @@ function star_han = star_plot(P, xvals, mymarkersize)
 
 star_han = [];
 %starwid = .06;
-starsize = round(mymarkersize .* 3);
+starsize = round(mymarkersize);
 
 % Get y position for all stars
 my_ylim = get(gca, 'YLim');

@@ -147,9 +147,11 @@ test_dat = resample_space(test_dat, feature_dat);
 %% Get matrix of correlations between images and features
 % -------------------------------------------------------------------------
 % r = images x features matrix of correlations
-if numel(unique(test_dat.dat(:)))==2 && sum(unique(test_dat.dat(:))-[0; 1])==0 % binary masks
+if numel(unique(test_dat.dat(:)))==2 && sum(unique(test_dat.dat(:))-[0; 1]) == 0 % binary masks
+    
     image_by_feature_correlations = canlab_pattern_similarity(feature_dat.dat, test_dat.dat, 'correlation');
     image_by_feature_correlations = image_by_feature_correlations';
+    
 else % other images
     image_by_feature_correlations = canlab_pattern_similarity(test_dat.dat, feature_dat.dat, 'correlation', 'ignore_missing');
 end
@@ -177,7 +179,7 @@ ntest = size(image_by_feature_correlations, 1);
 
 top_feature_tables = cell(1, ntest);
 
-for i = 1:ntest                             % note: nest always == 1 if images_are_replicates
+for i = 1:ntest                             % note: ntest always == 1 if images_are_replicates
     
     testr = image_by_feature_correlations(i, :);
     [testr_sorted, indx] = sort(testr, 'ascend');
@@ -218,9 +220,11 @@ ustr = '_____________________________________________________________________';
 
 if display_output
     
+    if isempty(test_dat.fullpath), test_dat.fullpath = 'fullpath_was_empty'; end
+    
     for i = 1:ntest
         
-        if length( test_dat.fullpath(i, :))<70
+        if length(test_dat.fullpath(i, :)) < 70
             imgPrintName = test_dat.fullpath(i, :);
         else
             imgPrintName = spm_file(test_dat.fullpath(i, :),'short70');

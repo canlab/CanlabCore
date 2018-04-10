@@ -103,7 +103,7 @@ function [ds, S, p] = multivar_dist(X, varargin)
     if doplot
         
         figure('color', 'w');
-        subplot(1, 2, 1); hold on; grid on
+        subplot(1, 3, 1); hold on; grid on
         plot([1:size(d, 1); 1:size(d, 1)], [zeros(size(d, 1), 1) d(:,1)]', 'b', 'LineWidth', 1.5);
         xlabel('Case number');
         ylabel('Squared stat. distance from origin');
@@ -113,7 +113,7 @@ function [ds, S, p] = multivar_dist(X, varargin)
         plot([0 size(d, 1)], [t t], 'k');
         set(gca, 'YLim', [0 max(t+.5, max(d(:,1)))]);
         
-        subplot(1, 2, 2); hold on; grid on
+        subplot(1, 3, 2); hold on; grid on
         plot(ds(:,3), ds(:,1), 'MarkerSize', 0.01, 'Color', 'w');
         for i = 1:size(ds, 1)
             text(ds(i,3), ds(i, 1), num2str(ds(i, 2)), 'Color', 'k');
@@ -121,6 +121,10 @@ function [ds, S, p] = multivar_dist(X, varargin)
         xlabel('Expected chi2 value'), ylabel('Squared distance');
         plot([0 max([ds(:,3);ds(:,1)])], [0 max([ds(:,3);ds(:,1)])], 'k', 'LineWidth', 1.5);
         title('Line with slope = 1 is normal');
+        
+        subplot(1, 3, 3);
+        imagesc(cov(X'));
+        colorbar
         
     end
     

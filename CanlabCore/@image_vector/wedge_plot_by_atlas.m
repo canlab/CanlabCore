@@ -1,8 +1,8 @@
-function hh = wedge_plot_by_atlas(obj_to_plot, varargin)
+function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(obj_to_plot, varargin)
 % Plot a data object or 'signature' pattern divided into local regions
 % based on atlas objects.
 %
-% hh = wedge_plot_by_atlas(obj, varargin)
+% [hh, output_values_by_region, labels] = wedge_plot_by_atlas(obj, varargin)
 %
 %
 % 'signature' : signature mode; changes the statistic that is plotted
@@ -23,6 +23,18 @@ function hh = wedge_plot_by_atlas(obj_to_plot, varargin)
 % 'Data mode':
 % Size of wedges: absolute value of the pattern mean within a parcel
 % Color of wedges: sign of the pattern mean within a parcel
+%
+% Outputs:
+% ------------------------------------------------------------------------
+% output_values_by_region: Cell array, one cell per atlas, with a matrix of
+% images x regions in atlas. Values depend on whether you use 'signature
+% mode' or 'data mode'.
+%
+% labels: region names for each atlas
+%
+% atlas_obj: cell array of atlas objects
+%
+% colorband_colors: cell array of colors for each atlas
 %
 % Examples:
 %
@@ -130,24 +142,27 @@ for i = 1:k
     
     if do_sig_mode
         
-    [mean_weights{i}, sum_sq_weights{i}, pattern_valence{i}] = apply_parcellation(obj_to_plot, atlas_obj{i}, 'pattern_expression', obj_to_plot);
-    
-    signed_msq_weight{i} = sign(mean_weights{i}) .* sum_sq_weights{i} .^ .5;
-    
-    msq_weight{i} = sum_sq_weights{i} .^ .5;
-    
-    [vol_in_cubic_mm{i}, voxel_count{i}] = get_region_volumes(atlas_obj{i});
-    
-    % divide msq by volume, to get importance per unit volume, add constant
-    % to regularize for small regions
-    signed_msq_weight{i} = signed_msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
-    msq_weight{i} = msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
-    
-    else 
+        [mean_weights{i}, sum_sq_weights{i}, pattern_valence{i}] = apply_parcellation(obj_to_plot, atlas_obj{i}, 'pattern_expression', obj_to_plot);
+        
+        signed_msq_weight{i} = sign(mean_weights{i}) .* sum_sq_weights{i} .^ .5;
+        
+        msq_weight{i} = sum_sq_weights{i} .^ .5;
+        
+        [vol_in_cubic_mm{i}, voxel_count{i}] = get_region_volumes(atlas_obj{i});
+        
+        % divide msq by volume, to get importance per unit volume, add constant
+        % to regularize for small regions
+        signed_msq_weight{i} = signed_msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
+        msq_weight{i} = msq_weight{i} ./ (vol_in_cubic_mm{i} + 1000);
+        
+        output_values_by_region = msq_weight;
+        
+    else
         % Data mode
-       
+        
         mean_weights{i} = apply_parcellation(obj_to_plot, atlas_obj{i});
         
+        output_values_by_region = mean_weights;
     end
     
     
@@ -241,3 +256,6 @@ end
 
 
 %% todo add legends
+
+
+end % function

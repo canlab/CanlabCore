@@ -1,4 +1,4 @@
-function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
+function [hh, hhfill, ang] = tor_polar_plot(vals, colors, names, varargin)
 % Make polar line plot(s)
 %
 % :Usage:
@@ -33,6 +33,9 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 %   **'nonumbers':**
 %        Suppress numbers (values on polar axis)
 %
+%   **'linesonly':**
+%        Suppress all plots but lines; useful for adding to existing plots
+%
 %   **'fixedrange':**
 %        Set min and max of circles numbers (values on polar axis)
 %        Follow by range vector: [min_val max_val]
@@ -42,7 +45,11 @@ function [hh, hhfill] = tor_polar_plot(vals, colors, names, varargin)
 %        Handles to line objects
 %
 %   **hhfill:**
-%        Handles to fill objecta
+%        Handles to fill objects
+%
+%   **ang:**
+%        Angles for polar plot.  
+%        If v is a data vector, plot new lines with polar(ang, [v v(1)]);
 %
 % :Examples:
 % ::
@@ -58,6 +65,7 @@ dofill = 1;
 dononneg = 0;
 donumbers = 1;
 dofixrange = 0;
+dolinesonly = false;
 
 p = length(vals); % plots
 
@@ -98,7 +106,11 @@ if any(strcmp(varargin, 'nonumbers'))
     donumbers = 0;
 end
 
-for s = 1:p
+if any(strcmp(varargin, 'linesonly'))
+    dolinesonly = true;
+end
+
+for s = 1:p % s indexes plot series
     
     if dofigure, subplot(nr, nc, s); end
     
@@ -108,7 +120,7 @@ for s = 1:p
     
     % make non-negative
     % this changes the interpretation of the origin of the plot
-    if dononneg & ~dofixrange
+    if dononneg && ~dofixrange
         if any(vals{s}(:) < 0)
             origmin(s) = abs(min(vals{s}(:)));  % this is the new zero point
             vals{s} = vals{s} - min(vals{s}(:));
@@ -124,12 +136,16 @@ for s = 1:p
     % ------------------------------------------------------------
     
     for i = 1:numvars
+        
         if i == 1, hold on, end % must turn off to get polar text automatically. we now do our own.
         
         v = vals{s}(:, i)';
         ang = linspace(0, 2*pi, k + 1);
         
         hh{s}(i) = polar(ang, [v v(1)]);
+        
+        % extend colors by replicating if needed, i.e., if we want them all the same color and only entered one 
+        if i > length(colors), colors{end + 1} = colors{end}; end
         
         set(hh{s}(i), 'LineWidth', 2, 'Color', colors{i})
         hold on
@@ -141,6 +157,8 @@ for s = 1:p
         end
         
     end
+    
+    if dolinesonly, return, end
     
     % lines and text
     % ------------------------------------------------------------
@@ -207,6 +225,10 @@ for s = 1:p
                 
     if ~isempty(names) && ~isempty(names{s})
         
+        if k ~= length(names{s})
+            error('Length of names cell does not match data. Check inputs!'); 
+        end
+            
         for j = 1:length(names{s})
             x = X(j);
             %if x < 0, x = x - range(xlim)*.01*length(names{s}{j}); end

@@ -20,7 +20,7 @@ main_repository_dir = fileparts(fileparts(main_repository_dir));
 % Find these files, which will tell us where toolbox folders are:
 key_files_to_find = {'fmri_data.m' 'a2_second_level_toolbox_check_dependencies.m' ...
     'i_density.m' 'power_figure3_num_comparisons.m' 'apply_nps.m' ...
-    'mediation_brain.m' 'apply_all_signatures.m' 'robust_results_batch.m'};
+    'mediation_brain.m' 'apply_all_signatures.m' 'robust_results_batch.m' 'power_calc.m'};
 
 % Find each file
 % Get enclosing folder

@@ -239,7 +239,30 @@ classdef atlas < image_vector
                     end
                 end
                 
-                obj.mask.volInfo = obj2.volInfo;
+                obj.volInfo = obj2.volInfo;
+                
+                % append data, depending on what it looks like
+                % --------------------------------------------------------------------------------
+                imgdat = obj2.dat;
+                
+                is_prob_image = size(imgdat, 2) >= 1 && all(imgdat(:) >=0) && all(imgdat(:) <=1);
+                is_parcel_index = size(imgdat, 2) == 1 && all(abs(imgdat(:) - round(imgdat(:))) < 100 * eps);
+                
+                if is_prob_image
+                    
+                    obj.probability_maps = imgdat;
+                    
+                    obj = probability_maps_to_region_index(obj);
+                    
+                elseif is_parcel_index
+                    
+                    obj.dat = int32(round(imgdat));
+                    
+                else
+                    error('I don''t recognize this type of image. Enter probability maps, component weights, or parcel index');
+                    
+                end
+                
                 return
                 
             else

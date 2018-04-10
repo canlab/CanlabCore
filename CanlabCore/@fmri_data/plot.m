@@ -1,4 +1,4 @@
-function plot(fmridat, plotmethod)
+function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, plotmethod)
 % Plot means by condition
 % plot(fmri_data_object, 'means_for_unique_Y')
 %
@@ -45,6 +45,14 @@ function plot(fmridat, plotmethod)
 %         voxel, but in the plots above they are calculated by image.
 %         Images also include out-of-brain areas.
 %
+
+% Programmers' notes: tor - 4/6/2018, changed mahalanobis distance method
+% to 'corr', using correlation matrix, and changing how many/how prin comps
+% are retained before mahal.  Added wh_outlier_uncorr, wh_outlier_corr
+% output.
+% 
+
+[wh_outlier_uncorr, wh_outlier_corr] = deal([]);
 
 if nargin < 2
     plotmethod = 'data';
@@ -176,17 +184,27 @@ switch plotmethod
         
             subplot(2, 3, 6);
                             
-            [ds, expectedds, p] = mahal(fmridat, 'noplot');
+            [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot', 'corr');
             
             Y = ds - expectedds;
-            wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+%             wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+%             
+%             wh_outlier_uncorr = p < .05;
+%             wh_outlier_corr = wh;
+            fprintf('Outliers:\n')
+            fprintf('Cases after p-value correction:')
+            fprintf('%d ', find(wh_outlier_corr))
+            fprintf('\nCases, uncorrected:')
+            fprintf('%d ', find(wh_outlier_uncorr))
+            fprintf('\n');
             
             plot(Y);
-            plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
+            plot(find(wh_outlier_uncorr), Y(wh_outlier_uncorr), 'o', 'color', [1 .3 .3], 'MarkerSize', 4);
+            plot(find(wh_outlier_corr), Y(wh_outlier_corr), 'ro', 'MarkerSize', 6);
             
             ylabel('Act-Exp Deviation');
             title('Mahalanobis distance (outlier status)');
-            xlabel('Case No. (red=outlier after Bonf correction)');
+            xlabel('Case No. (red=outliers, uncor and with Bonf corr)');
             
             
 %             if ~isempty(fmridat.Y) && size(fmridat.Y, 1) == nobs

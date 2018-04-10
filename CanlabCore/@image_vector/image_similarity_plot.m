@@ -177,6 +177,12 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % :Examples:
 % ::
 %
+% testimgs = load_image_set('emotionreg');
+% stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab');
+% stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'polar');
+% stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'plotstyle', 'polar', 'average');
+% stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'plotstyle', 'polar', 'average', 'colors', {[1 .5 0]});
+% 
 %    % corrdat is an fmri_data object with 18 images from searchlight
 %    % correlation in it.  Then:
 %    stats = image_similarity_plot_bucknermaps(corrdat, 'average');

@@ -4,7 +4,7 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 % Usage:
 % ::
 %
-%    [parcel_means, parcel_pattern_expression] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
+%    [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
 %
 % This is a method for an fmri_data object that computes the mean value and
 % optionally, pattern expression within parcels. This can be used to

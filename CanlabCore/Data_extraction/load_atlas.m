@@ -3,8 +3,23 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % atlas_obj = load_atlas(varargin)
 %
+% List of keywords/atlases available:
+% -------------------------------------------------------------------------
+% 'thalamus'                      'Thalamus_combined_atlas_object.mat'
+% 'thalamus_detail', 'morel'      'Morel_thalamus_atlas_object.mat'
+% 'cortex', 'glasser'             'Glasser2016HCP_atlas_object.mat'
+% 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
+% 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
+% 'brainstem'                     'brainstem_combined_atlas_object.mat'
+% 'subcortical_rl', 'cit168'      'CIT168_MNI_subcortical_atlas_object.mat'
+% 'brainnetome'                   'Brainnetome_atlas_object.mat'
+% 'keuken'                        'Keuken_7T_atlas_object.mat'
+% 'buckner'                       'buckner_networks_atlas_object.mat'
+% 'cerebellum', 'suit'            'SUIT_Cerebellum_MNI_atlas_object.mat'
+% 'shen'                          'Shen_atlas_object.mat'
 %
 % Examples:
+% -------------------------------------------------------------------------
 % atlas_obj = load_atlas('thalamus');
 % atlas_obj = load_atlas('Thalamus_atlas_combined_Morel.mat');
 %
@@ -68,8 +83,8 @@ end
             varname = 'atlas_obj';
             
         case {'buckner'}
-            savefile = 'buckner_networks_atlas_object.mat';
-            varname = 'buckner_atlas';
+            savefile = 'Buckner1000FC_2011_cortex_atlas_object.mat';
+            varname = 'atlas_obj';
             
         case {'cerebellum', 'suit'}
             savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');

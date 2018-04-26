@@ -169,7 +169,15 @@ switch plotmethod
                 plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
             end
             
-            errorbar(Y, globalmean, globalstd);
+            if nobs <= 500
+                errorbar(Y, globalmean, globalstd);
+            else
+                upperline = globalmean + globalstd;
+                lowerline = globalmean - globalstd;
+                xdata = [Y fliplr(Y) Y(1)];
+                ydata = [upperline fliplr(lowerline) upperline(1)];
+                patch(xdata,ydata,'y','linestyle', 'none', 'FaceColor', 'r', 'faceAlpha', .3);
+            end
             
             ylabel('Global mean');
             xlabel(Yname);

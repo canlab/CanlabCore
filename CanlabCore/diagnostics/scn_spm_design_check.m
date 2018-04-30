@@ -1,4 +1,4 @@
-function scn_spm_design_check(spm_results_dir, varargin)
+function out = scn_spm_design_check(spm_results_dir, varargin)
 % Run in a single-subject (first-level) SPM directory to check 
 % design matrix variance inflation factors and high-pass filtering.
 % Prints out table of regressors and their above-threshold VIFs (see options).
@@ -32,6 +32,7 @@ function scn_spm_design_check(spm_results_dir, varargin)
 % ..
 %    Updated: Tor Wager, Aug 2010; Oct 2011: Add 'events_only'; July 2012:
 %    fixed for parametric modulators. Luka Ruzic, Sept 2012: added VIF tables.
+%    Wani Woo, Apr, 2018: added an output (out) to return vif values 
 % ..
 
 
@@ -168,5 +169,8 @@ catch
 end
 saveas(gcf, 'High_pass_filter_analysis', 'png');
 disp('Saved High_pass_filter_analysis.png in SPM directory');
+
+out.allvifs = allvifs;
+out.name = SPM.xX.name(wh_cols);
 
 end

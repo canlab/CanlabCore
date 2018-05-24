@@ -141,6 +141,7 @@ negcm = colormap_tor([0 0 1], [0 1 1]);
 
 actcolors = [];  % used with heatmap
 donormalize = 0; % used with colorscale
+adjust_var = [];
 
 % -----------------------------------------------------------------------
 %    optional inputs
@@ -183,7 +184,16 @@ for i = 1:length(varargin)
         elseif  strcmp(varargin{i},'hires right')
             P = which('surf_spm2_brain_right.mat'); %which('surf_single_subj_grayR.mat');
             viewdeg = [270 0];
-            
+        elseif strcmp(varargin{i},'fsavg_right') % uses freesurfer inflated brain
+                                                 % with Thomas Yeo group's RF_ANTs mapping
+                                                 % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+            P = which('surf_freesurf_inflated_Right.mat');
+            viewdeg = [270 0];
+            adjust_var = 'fsavg_right'; % varargin for getVertexColors
+        elseif strcmp(varargin{i},'fsavg_left') % uses freesurfer inflated brain
+            P = which('surf_freesurf_inflated_Left.mat');
+            viewdeg = [90 0];
+            adjust_var = 'fsavg_left'; % varargin for getVertexColors
         else P = varargin{i};
         end
     
@@ -390,6 +400,9 @@ for i = 2:length(cl)
     end
 end
 
+if ~isempty(adjust_var)
+    str = [str ',''' adjust_var ''''];
+end
 str = [str ');'];
 
 %p = P(end);

@@ -149,9 +149,16 @@ for i = 1:nconditions
     rois_tmp = extract_data(region_obj, DATA_OBJ{i});
     
     % cat within regions to return data in region_obj object
+    clear mydat
     for j = 1:nrois
         
-        region_obj(j).dat(:, i) = rois_tmp(j).dat(:, 1);
+        mydat = rois_tmp(j).dat(:, 1);
+        
+        % pad with longer of two
+        [Anew Bnew] = padwithnan(region_obj(j).dat, mydat, 1);
+        
+        % region_obj(j).dat(:, i)
+        region_obj(j).dat = [Anew Bnew];
         
     end
     

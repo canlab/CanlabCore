@@ -75,6 +75,8 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
 % ..
 
 
+    global do_fsavg_right do_fsavg_left ras
+    
     mind = 3;
     basecolor = [.5 .5 .5];
     alld = [];
@@ -85,6 +87,8 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
     doalph = 0; 
     cscale = [];
     alphascale = {};
+    do_fsavg_left = false;
+    do_fsavg_right = false;
     
     % -----------------------------------------------------------------------
     % * set up input arguments
@@ -128,7 +132,14 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
             %                 cscale{end} = cscale{end} ./ max(cscale{end});
             %             end
             if any(cscale{end} < 0), error('Some color scale values are less than zero.'), end
-
+        elseif strcmp(varargin{i}, 'fsavg_left')
+            ras = load(which('lh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat'));
+            do_fsavg_left = true;
+        elseif strcmp(varargin{i}, 'fsavg_right')
+            % uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping
+            % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+            ras = load(which('rh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat'));
+            do_fsavg_right = true;
         end
     end
 
@@ -287,6 +298,7 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
 
 % c is list of colors. by default, usually [.5 .5 .5] for all colors
 % (basecolor)
+    global do_fsavg_left do_fsavg_right ras
 
     if isempty(coords), disp('Coords is empty. Nothing to plot.'), return, end
 
@@ -304,7 +316,11 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
     % list vertices to test and possibly change color
     whverts = (1:size(v, 1))';
     whverts(wh | wh2) = [];     % indices of smallv in big (original) list
-    smallv = v;
+    if do_fsavg_left || do_fsavg_right
+        smallv = ras.ras';
+    else
+        smallv = v;
+    end
     smallv(wh | wh2,:) = [];     % vertices--restricted list
 
     fprintf('%3.0f\n', size(whverts, 1));

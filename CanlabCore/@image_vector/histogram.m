@@ -115,7 +115,7 @@ doline = 1;
 dofill = 1;
 dofigure = 1;
 do_by_image = 0;
-nbins = 100;
+nbins = [];
 color = [.3 .3 .3];
 mask = [];
 by_tissue_type = 0;
@@ -225,6 +225,9 @@ if do_by_image
     Xtmp(Xtmp == 0 | isnan(Xtmp)) = [];
     mylim = prctile(Xtmp, [1 99]);
     
+    % Set n bins if auto-select
+    if isempty(nbins), nbins = ceil(size(obj.dat, 1) ./ 500); end
+    
     % Set up subplots
     nimgs = size(obj.dat, 2);
     [rows, cols] = deal(floor(nimgs .^ .5));
@@ -255,6 +258,9 @@ else
     % Overall: one histogram
     % -----------------------------------------------------
     
+    % Set n bins if auto-select
+    if isempty(nbins), nbins = ceil(size(obj.dat, 1) ./ 500); end
+    
     if dofigure
         create_figure('histogram');
     end
@@ -262,6 +268,10 @@ else
     Xtmp = obj.dat(:);
     hist_han = create_hist(Xtmp, nbins, doline, dofill, color);
     
+    % Line at 0
+    hh = plot_vertical_line(0);
+    set(hh, 'LineStyle', '--');
+
     xlabel('Values'); ylabel('Frequency');
     title('Histogram of values');
     

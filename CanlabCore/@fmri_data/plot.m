@@ -123,14 +123,7 @@ switch plotmethod
         % ---------------------------------------------------------------
         % Histogram
         % ---------------------------------------------------------------
-%         dattmp = fmridat.dat(:);
-%         subplot(2, 3, 2);
-%         [h, x] = hist(dattmp, 100);
-%         han = bar(x, h);
-%         set(han, 'FaceColor', [.3 .3 .3], 'EdgeColor', 'none');
-%         axis tight;
-%         xlabel('Values'); ylabel('Frequency');
-%         title('Histogram of values');
+
         subplot(2, 3, 2);
         histogram(fmridat, 'nofigure');
         drawnow

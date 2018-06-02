@@ -84,5 +84,16 @@ wh_outlier_uncorr = pval < .05;
 
 wh_outlier_corr = pval < (.05 ./ length(pval));  % Outliers after Bonferroni correction
 
+
+fprintf('\n')
+fprintf('Potential outliers based on mahalanobis distance:\n')
+fprintf('Bonferroni corrected: %d images\t\tCases ', sum(wh_outlier_corr));
+fprintf('%d ', find(wh_outlier_corr))
+fprintf('\n')
+fprintf('Uncorrected: %d images\t\tCases ', sum(wh_outlier_uncorr));
+fprintf('%d ', find(wh_outlier_uncorr))
+fprintf('\n')
+fprintf('\n')
+
 end
 

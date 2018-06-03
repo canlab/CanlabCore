@@ -53,6 +53,9 @@ function [se_within, stats] = barplot_get_within_ste(dat,varargin)
 %    datv = dat(:);
 %    MS_total = scale(datv, 1)' * scale(datv, 1);
 
+% notes: 6/3/2018 - tor added wh_omit line to omit all-NaN cases and
+% row-wise replacement to make error bars robust to presence of NaNs in
+% data.  Previously returned NaN/zero error bars in presence of NaNs
 
 if nargin > 1 && ~isempty(varargin{1})
     
@@ -64,6 +67,17 @@ if nargin > 1 && ~isempty(varargin{1})
     
 end
 
+% remove cases with all NaN values
+% otherwise, these cases could influence calculations and interfere with
+% scaling below.
+wh_omit = all(isnan(dat), 2); dat(wh_omit, :) = []; 
+
+% Replace remaining NaNs with row means 
+m = nanmean(dat')';
+m = repmat(m, 1, size(dat, 2));
+wh = isnan(dat);
+dat(wh) = m(wh);
+
 % number of subjects and conditions
 [n, k] = size(dat); 
 
@@ -71,7 +85,7 @@ df_s = n - 1;  % degrees of freedom for subjects
 df_c = k - 1;  % degrees of freedom for conditions
 df_sxc = df_s * df_c;  % degrees of freedom for subj x condition
 
-% within-subject errors
+% within-subject, within-condition errors
 errs = scale(scale(dat, 1)', 1)';
 
 % Sums of squared errors

@@ -1,4 +1,4 @@
-function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
+function [dat, datcell, wh_level, descrip, wh_indx, textflag] = get_var(D, varargin)
 % Get Subject-level or Event-level variable from dataset D and return in
 % rect matrix and cell array. Multiple variables can be requested, but 
 % all data requested must be either numeric or text, and not a combination of the two.
@@ -6,9 +6,9 @@ function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
 % :Usage:
 % ::
 %
-%    [dat, datcell, wh_level, descrip, wh_indx] = get_var(D)  % to list variables
+%    [dat, datcell, wh_level, descrip, wh_indx, textflag] = get_var(D)  % to list variables
 %
-%    [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varname, [opt inputs])
+%    [dat, datcell, wh_level, descrip, wh_indx, textflag] = get_var(D, varname, [opt inputs])
 %
 % :Inputs:
 %
@@ -57,6 +57,9 @@ function [dat, datcell, wh_level, descrip, wh_indx] = get_var(D, varargin)
 %
 %   **wh_indx:**
 %        indices of which columns/variables in data matrix are returned
+%
+%   **textflag:**
+%        logical indicator of whether variable is text or numeric
 %
 % ..
 %    Copyright Tor Wager, 2013
@@ -221,7 +224,7 @@ switch wh_level
             wh_keep = wh_keep(whrows);
         end %conditional if-statement
         
-    case 2 %Event-Level
+    case 2 % Event-Level
         
         if iscell(varname)
             wh=[];
@@ -238,7 +241,7 @@ switch wh_level
 
         if do_conditional
             
-            d=conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
+            d = conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
             
         elseif ~iscell(D.Event_Level.data) || isempty(D.Event_Level.data)
             % no data
@@ -252,45 +255,61 @@ switch wh_level
                 d = cellfun(my_col, D.Event_Level.textdata, 'UniformOutput', 0);
             end
             
-        end %conditional if-statement
+        end % conditional if-statement
+        
+        % Pad cell array if needed
+        % ----------------------------------------------------------
+        if ~var(cellfun(@numel, d)) == 0
+            % cells in d are different length; pad with NaN to make equal
+            
+             d = pad_cells_with_nan(d, textflag);
+             
+        end
         
         datcell = d; % Events X Vars within subject cells
-          
-        if var(cellfun(@numel,d)) == 0 % same number of items in every cell, can concat
+        
+        % Concatenate
+        % ----------------------------------------------------------
+        %if var(cellfun(@numel, d)) == 0 % same number of items in every cell, can concat
             
             if ~iscell(varname)
                 dat = cat(2, d{:});  
                 dat = dat';  % Subj x Events
+                
             else %Subj X Events X Vars
+                
                 if textflag
-                    dat = cell(numel(d),length(d{1}(:,1)),numel(varname));
+                    dat = cell(numel(d),length(d{1}(:, 1)),numel(varname));
                 else
-                    dat = nan(numel(d),length(d{1}(:,1)),numel(varname));
+                    dat = nan(numel(d),length(d{1}(:, 1)),numel(varname));
                 end
+                
                 for subidx = 1:numel(d)
                     dat(subidx,:,:) = d{subidx};
                 end
+                
             end
             
-        elseif any(cellfun(@iscell, d))
-            % Entries are a cell array
-            
-            dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
-            
-        else % PAD with NaNs to concatenate
-            
-            slen = max(cellfun(@length, d)); % max length for any subject
-            
-            refvec = ones(slen, 1);
-            
-            for i = 1:length(d)
-                d{i} = padwithnan(d{i}, refvec, 1);
-            end
-            
-            dat = cat(2, d{:});  
-            dat = dat';  % Subj x Events
-
-        end
+            % Should not be needed
+            %         elseif any(cellfun(@iscell, d))
+            %             % Entries are a cell array
+            %
+            %             dat = 'cannot concat, look at datcell (2nd parameter returned from get_var)';
+            %
+            %         else % PAD with NaNs to concatenate
+            %
+            %             slen = max(cellfun(@length, d)); % max length for any subject
+            %
+            %             refvec = ones(slen, 1);
+            %
+            %             for i = 1:length(d)
+            %                 d{i} = padwithnan(d{i}, refvec, 1);
+            %             end
+            %
+            %             dat = cat(2, d{:});
+            %             dat = dat';  % Subj x Events
+            %
+            %         end
         
         if wh > length(D.Event_Level.descrip)
             descrip = 'No description.';
@@ -408,4 +427,29 @@ else %text data
 end
 
 end %conditionalData function
+
+
+
+
+function d = pad_cells_with_nan(d, textflag)
+
+slen = max(cellfun(@length, d)); % max length for any subject
+
+refvec = ones(slen, 1);
+
+for i = 1:length(d)
+    
+    if textflag % text var
+        reftext = cell(1, abs(length(d{i}) - length(refvec)))';
+        [reftext{:}] = deal('');
+        
+        d{i} = [d{i}; reftext];
+        
+    else % numeric
+        d{i} = padwithnan(d{i}, refvec, 1);
+    end
+    
+end
+
+end
 

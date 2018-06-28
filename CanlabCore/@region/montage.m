@@ -65,6 +65,9 @@ function o2 = montage(obj, varargin)
 %        'multirow': followed by number of rows
 %           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
 %
+%        'regioncenters': Show one slice per region, centered on region center
+%               Note: 'nozoom' option omits zooming-in on regions
+%
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
 %
@@ -112,6 +115,7 @@ function o2 = montage(obj, varargin)
 methodtype = 'symmetric';
 colortype = 'unique';
 one_blob_per_slice = false; 
+dozoom = true;
 colors = scn_standard_colors(length(obj));
 
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
@@ -124,7 +128,7 @@ if any(strcmp(varargin, 'colors'))
     colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = [];  
 end
 if any(strcmp(varargin, 'regioncenters')), one_blob_per_slice = true; end
-
+if any(strcmp(varargin, 'nozoom')), dozoom = false; end
 
 % Initialize display if needed
 % -----------------------------------------------------------------------
@@ -171,7 +175,9 @@ switch colortype
                 
             end
             
-            zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+            if dozoom
+                zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+            end
             
         else
             % All visible blobs on each slice

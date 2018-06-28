@@ -224,8 +224,9 @@ if is_single_trial
     cd(extracted_from_dir)
     
     % Unzip
-    !gunzip *.img.gz
-    !gunzip *.nii.gz
+    !gunzip -f *.img.gz
+    !gunzip -f *.hdr.gz
+    !gunzip -f *.nii.gz
     
     dat = fmri_data(single_trial_info_table.image_names);
     dat = enforce_variable_types(dat);
@@ -233,8 +234,9 @@ if is_single_trial
     % Store meta-data with object in additional_info field:
     dat.additional_info = single_trial_info_table;
     
-    !gzip *.img
-    !gzip *.nii
+    % zip - do later outside this fcn
+%     !gzip *.img
+%     !gzip *.nii
     
     
 end % if is single trial model

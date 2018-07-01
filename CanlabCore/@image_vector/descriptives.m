@@ -95,12 +95,15 @@ desc.complete_images = ~any(desc.wh_zero(desc.nonempty_voxels, :) & desc.wh_nan(
 desc.n_complete_images = sum(desc.complete_images);
 
 datavec = dat.dat(desc.nonempty_voxels, desc.nonempty_images);
-datacat = datavec(:);
+datacat = double(datavec(:));
 datacat(datacat == 0 | isnan(datacat)) = [];  % still need to remove invalid voxels
 
 desc.min = min(datacat);
 desc.max = max(datacat);
 %desc.quartiles_25_50_75 = prctile(datacat, [25 50 75]);
+
+desc.unique_vals = unique(datacat);
+desc.num_unique_vals = length(desc.unique_vals);
 
 desc.prctiles = [.1 .5 1 5 25 50 75 95 99 99.5 99.9];
 desc.prctile_vals = prctile(datacat, desc.prctiles);
@@ -122,6 +125,8 @@ if doverbose
     
     fprintf('Voxels: %3.0f\tNonempty: %3.0f\tComplete: %3.0f\n', desc.n_vox, desc.n_nonempty_vox, desc.n_complete_vox);
 
+    fprintf('Unique data values: %3.0f\n', desc.num_unique_vals);
+    
     disp(' ')
     
     fprintf('Min: %3.3f\tMax: %3.3f\tMean: %3.3f\tStd: %3.3f\n', desc.min, desc.max, desc.mean, desc.std);

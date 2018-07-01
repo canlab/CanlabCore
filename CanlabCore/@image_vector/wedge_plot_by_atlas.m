@@ -57,7 +57,15 @@ function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = we
 % Try some data:
 % imgs = load_image_set('emotionreg');
 % hh = wedge_plot_by_atlas(imgs, 'atlases', {'cit168' 'brainstem'});
-
+%
+% Try custom colors, mirroring clusters across L/R hem networks:
+% [colors1, colors2] = deal(scn_standard_colors(16));
+% colors = {};
+% indx = 1;
+% for i = 1:length(colors1)
+%     colors{indx} = colors1{i}; colors{indx + 1} = colors2{i}; indx = indx + 2;
+% end
+% [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(imgs, 'atlases', {'yeo17networks'}, 'montage', 'colorband_colors', colors);
 
 % Notes on pattern valence
 % ------------------------------------------------------------------
@@ -212,7 +220,7 @@ for i = 1:k
         mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     else % data mode
         
@@ -222,7 +230,7 @@ for i = 1:k
         myouterradius = max(abs(mymean) + myste);
         
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors{i}, 'bicolor', 'colors', mycolors);
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors, 'bicolor', 'colors', mycolors);
         
     end
 
@@ -244,7 +252,7 @@ if any(strcmp(varargin,'montage'))
     for i = 1:k
         %fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
         
-        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors{i});
+        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors);
 % 
 %         for r=1:length(o2.activation_maps)
 %         colorband_colors{i}{r}=o2.activation_maps{r}.color(1:3);

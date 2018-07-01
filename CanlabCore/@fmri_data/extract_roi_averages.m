@@ -69,6 +69,7 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %
 % :Related functions:
 %    For an non-object-oriented alternative, see extract_image_data.m
+%    apply_parcellation.m
 %
 % ..
 %     Notes:
@@ -89,6 +90,13 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %     Modified Oct 2015 by Tor]
 %       - Clarified options, empty cl error check, changed varargout behavior
 % ..
+% Programmers' notes:
+% This function is different from fmri_data.extract_roi_averages
+% Better to have only one function of record in the future...
+% Note: 
+% cl = extract_roi_averages(imgs, atlas_obj{1});
+% accomplishes the same task as apply_parcellation, returns slightly different values due to interpolation.  
+% Also to-do: Uniform code with match_spaces in apply_parcellation.
 
 pattern_norm = 1; % for pattern expression -- default is norm pattern weights
 doverbose = 1;
@@ -171,7 +179,7 @@ else
         case 'fmri_mask_image'
             mask = mask_image;
             
-        case {'image_vector', 'fmri_data'}
+        case {'image_vector', 'fmri_data', 'atlas'}
             mask = replace_empty(mask_image);
             
         case 'statistic_image'
@@ -198,7 +206,10 @@ else
         % * this step cannot be done recursively...could be worked on.
         if doverbose, fprintf('Resampling mask. '); end
         
-        if any(strcmp(average_over, 'unique_mask_values'))
+        if isa(mask, 'atlas')
+            mask = resample_space(mask, space_defining_image); % resample_space can handle atlas objects appropriately
+            
+        elseif any(strcmp(average_over, 'unique_mask_values'))
             
             % added by Wani 12/01/2014: "linear" interpolation causes a
             % problem for the unique_mask_values option.

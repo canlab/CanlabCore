@@ -109,7 +109,7 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %    orthviews(r(wh_parcels));
 %
 % :See also:
-%
+% image_vector.extract_roi_averages, fmri_data.extract_roi_averages
 %
 % ..
 %    Notes:

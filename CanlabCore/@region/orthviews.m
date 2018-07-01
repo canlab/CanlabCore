@@ -1,6 +1,9 @@
 function orthviews(obj, varargin)
-% 
-% 
+% orthviews(obj, varargin)
+%
+% Uses cluster_orthviews.m
+% Takes all inputs to cluster_orthviews.m
+%
 % Examples:
 %
 % - match colors left/right

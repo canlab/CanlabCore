@@ -17,6 +17,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'buckner'                       'buckner_networks_atlas_object.mat'
 % 'cerebellum', 'suit'            'SUIT_Cerebellum_MNI_atlas_object.mat'
 % 'shen'                          'Shen_atlas_object.mat'
+% 'schaefer400'                   'Schaefer2018Cortex_atlas_regions.mat'
+% 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
+
 %
 % Examples:
 % -------------------------------------------------------------------------
@@ -94,6 +97,14 @@ end
             savefile = which('Shen_atlas_object.mat');
             varname = 'atlas_obj';
             
+         case 'schaefer400'                   
+             savefile = which('Schaefer2018Cortex_atlas_regions.mat');
+             varname = 'atlas_obj';
+             
+        case 'yeo17networks'                 
+            savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');
+            varname = 'atlas_obj';
+
         otherwise % assume it's a file name
             savefile = which(atlas_file_name_or_keyword);
             varname = [];

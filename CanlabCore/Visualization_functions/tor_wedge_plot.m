@@ -421,6 +421,7 @@ axis off
 % -------------------------------------------------------------------------
 
 if docolorband
+    
     % for each wedge
     breakpoints=0:2*pi/n_categories:2*pi;
     for i=1:n_categories
@@ -430,6 +431,7 @@ if docolorband
         colorband_handles{i}.line_han = colorband_handles{i}.line_han(1);
         set(colorband_handles{i}.line_han, 'LineWidth', 10);
     end
+    
 end
 
 end % main function

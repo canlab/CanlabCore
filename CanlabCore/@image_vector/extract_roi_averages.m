@@ -4,7 +4,7 @@ function cl = extract_roi_averages(obj, mask, varargin)
 % It is *slightly* different from the fmri_data method, as fmri_data has
 % more fields.
 %
-% This version requires the mask_image to be in the same space as the obj.
+% This version resamples the mask_image to be in the same space as the obj if needed.
 %
 % Regions to average over can be either regions of contiguous voxels
 % bounded by voxels with values of 0 or NaN, which are considered non-data
@@ -44,6 +44,15 @@ function cl = extract_roi_averages(obj, mask, varargin)
 % :See also:
 %
 % For an non-object-oriented alternative, see extract_image_data.m
+% fmri_data.extract_roi_averages, apply_parcellation.m
+
+% Programmers' notes:
+% This function is different from fmri_data.extract_roi_averages
+% Better to have only one function of record in the future...
+% Note: 
+% cl = extract_roi_averages(imgs, atlas_obj{1});
+% accomplishes the same task as apply_parcellation, returns slightly different values due to interpolation.  
+
 
 doverbose = 1;
 if any(strcmp(varargin, 'noverbose'))
@@ -60,6 +69,20 @@ end
 
 obj = replace_empty(obj);
 mask = replace_empty(mask);
+
+% --------------------------------------------
+% Resample space if needed
+% --------------------------------------------
+
+isdiff = compare_space(obj, mask);
+
+if isdiff == 0 || isdiff == 3 % Same space, diff voxels
+   % do nothing
+elseif isdiff == 2
+    error('Invalid object: volInfo structure missing for one or more objects');
+else
+    mask = resample_space(mask, obj);
+end
 
 % --------------------------------------------
 % Redefine elements of new mask to apply
@@ -122,7 +145,12 @@ for varg = 1:length(varargin)
     end
 end
 
-cl = region(mask, average_over);
+if isa(mask, 'atlas') % If atlas object
+    cl = atlas2region(mask);                % handles a few things better
+else
+    cl = region(mask, average_over);
+end
+
 cl(1).source_images = obj.fullpath;
 
 % ---------------------------------

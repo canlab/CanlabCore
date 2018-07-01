@@ -298,7 +298,7 @@ bonf_sig = p < bonf_thr;
 % Stars for each region
 for j = 1:length(p)
     
-    if bonf_sig(i), mystr = '****';
+    if bonf_sig(j), mystr = '****';
     elseif p(j) < .0015, mystr = '***';
     elseif p(j) < .015, mystr = '**';
     elseif p(j) < .055, mystr = '*';

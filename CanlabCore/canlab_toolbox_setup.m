@@ -26,8 +26,20 @@ function canlab_toolbox_setup
 
 main_repository_dir = pwd;
 
-% NO LONGER: Assume main dir is 2 levels above this, in master dir
-% main_repository_dir = fileparts(fileparts(main_repository_dir));
+% If you drag and drop the script in, Matlab changes to the folder with the script automatically,
+% then changes back.  If so, assume main dir is 2 levels above this.
+% If you have it on your path and run it by typing the script name only, it
+% will not change directories.  
+[dd, ff] = fileparts(main_repository_dir);
+if strcmp(ff, 'CanlabCore') && exist(fullfile(pwd, 'canlab_toolbox_setup.m'), 'file')
+    % We are in CanlabCore subdirectory
+    
+    main_repository_dir = fileparts(fileparts(main_repository_dir));
+end
+
+dashes = '-----------------------------------------';
+fprintf('\n%s\nChecking and/or installing CANlab tools in:\n%s\n%s\n', dashes, main_repository_dir, dashes);
+
 
 repo_descrip = {'CANlab core tools - Object-oriented interactive analysis and tools used in other functions' ...
     'CANlab help examples - Example scripts and html output, second-level analysis batch scripts' ...
@@ -78,6 +90,8 @@ for i = 1:n_repos
     
 end
 
+fprintf('\n%s\n', dashes);
+
 % ------------------------------------------------------------------------
 % Find each file
 % Get enclosing folder
@@ -88,11 +102,13 @@ was_missing = true(1, n_repos);
 
 for i = 1:n_repos
     
+    fprintf('\n%s\n', dashes);
+
     fprintf('\nRepository: %s\nSite:%s\n', repo_descrip{i}, repo_names{i});
     
     myrepodir = fullfile(main_repository_dir, repo_names{i});
     
-    disp('Finding repo: Running')
+    disp('Finding repo: Running command:')
     disp(['find ' myrepodir ' -name "' key_files_to_find{i} '"']);
     
     [status,result] = system(['find ' myrepodir ' -name "' key_files_to_find{i} '"']);
@@ -118,12 +134,14 @@ for i = 1:n_repos
     
 end % for
 
+fprintf('\n%s\n', dashes);
+
 % ------------------------------------------------------------------------
 % Possibly get repositories that are missing
 % ------------------------------------------------------------------------
 
 if ~any(was_missing)
-    disp('\nAll CANlab repositories installed. Saving path\n');
+    fprintf('\nAll CANlab repositories previously installed. Saving path\n');
     savepath
 else
     fprintf('\nMissing repositories:\n');
@@ -137,6 +155,8 @@ else
             
             if was_missing(i)
                 
+                fprintf('\n%s\n', dashes);
+
                 canlab_clone_github_repository('repo', repo_names{i}, 'noverbose');
                 
             end
@@ -145,11 +165,15 @@ else
         
     end % doinstall
     
+    disp('Finished install. Saving path.');
+    savepath
+
 end % any missing
 
-disp('Saving path.');
+% remove .git dirs
+strip_git_dirs;
 
-savepath
+
 
 end % function
 %%

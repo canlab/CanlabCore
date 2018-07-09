@@ -64,7 +64,7 @@ for i = 1:size(P,1)
     end
 end % list of images
 
-if varargin{1} == 2
+if ~isempty(varargin) && varargin{1} == 2
     fprintf('%3.0f OK images, %3.0f bad/missing images\n', sum(~wasbad), sum(wasbad));
     if any(wasbad)
         fprintf('Missing images:\n');

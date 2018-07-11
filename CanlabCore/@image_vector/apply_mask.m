@@ -111,6 +111,7 @@ end
 isdiff = compare_space(dat, mask);
 
 if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
+    % == 3 is ok, diff non-empty voxels
     
     % Both work, but resample_space does not require going back to original
     % images on disk.
@@ -167,7 +168,7 @@ inmaskdat = logical(mask.dat);
 % ---------------------------------------------------
 
 % mask.dat has full list of voxels
-% need vox in both mask and original data mask
+% need to find vox in both mask and original data mask
 
 if size(mask.volInfo.image_indx, 1) == size(dat.volInfo.image_indx, 1)
     n = size(mask.volInfo.image_indx, 1);

@@ -108,6 +108,25 @@ for i = 1:n_repos
     
     myrepodir = fullfile(main_repository_dir, repo_names{i});
     
+    % Future update: 
+    % Check if already on path. If so, add with subfolders to be sure all
+    % are added. <could use regexp to find base dir and use that>
+    % ------------------------------------------------------------------------
+    %
+    %     checkfile = which([repo_names{i} filesep '@fmri_data' filesep 'fmri_data.m']);
+    %     toolboxdir = fileparts(fileparts(checkfile));
+    %
+    %     if ~exist(toolboxdir, 'dir')
+    %
+    %         disp('Cannot find CANlabCore toolbox');
+    %         disp('You need the CANlab CanlabCore Github repository on your path, with subfolders, to run these scripts.')
+    %
+    %     else
+    %         disp('Found CANlabCore toolbox');
+    %         g = genpath(toolboxdir);
+    %         addpath(g);
+    %     end
+
     disp('Finding repo: Running command:')
     disp(['find ' myrepodir ' -name "' key_files_to_find{i} '"']);
     

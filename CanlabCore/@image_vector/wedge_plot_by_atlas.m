@@ -165,18 +165,26 @@ for i = 1:k
         
         output_values_by_region = msq_weight;
         
+        legendtext = sprintf('Wedge plots depict normalized local pattern expression (sqrt(w''*w)/(vol_in_mm+1000) based on the signature pattern visualized. ');
+        legendtext = [legendtext 'The color of each wedge indicates the pattern valence, whether values are positive (red) or negative (blue) on average. '];
+        legendtext = [legendtext 'A region may have high pattern importance (large weights, indicated by a large wedge) and either net positive weights (red), negative weights (blue), or mixed weights (purple). If weights are homogenous (bright red or blue), the region average is a good summary of the pattern. But if weights are mixed, the region average is not a good summary of the pattern. '];
+        
+        legendtext = [legendtext '\nNote: Importance is defined as mean squared weight per cubic mm of tissue, regularized by adding a constant (1 cm^3). This is not absolute importance across all voxels (which would favor large regions and favors small regions with large weights over large regions with local ''hot-spots''. Therefore, importance is regularized by adding 1 cm^3 to all region volumes'];
+
     else
         % Data mode
         
         mean_weights{i} = apply_parcellation(obj_to_plot, atlas_obj{i});
         
         output_values_by_region = mean_weights;
+        
+        legendtext = sprintf('Wedge plots depict mean images values across voxels. Red indicates positive values and blue negative values. If multiple images were entered, the darker shaded area indicates the standard error of the mean (SEM) across individuals.');
+
     end
     
     
 end
 
-fprintf('Done\n');
 
 %% get colorban colors for wedge plot
 % 
@@ -202,7 +210,7 @@ disp('Note: Mean weights reflect homogeneity in sign and magnitude across region
 disp('not high spatial frequency/pattern information.');
 
 
-create_figure('wedge overall importance', 1, k)
+create_figure('wedge overall importance', 1, k);
 % overall importance of region is proportional to geometric mean of weights
 
 clear hh
@@ -218,9 +226,10 @@ for i = 1:k
         myouterradius = max(abs(data_to_plot));
         
         mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
+        mycolorband_colors = colorband_colors{i};
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', mycolorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     else % data mode
         
@@ -230,7 +239,9 @@ for i = 1:k
         myouterradius = max(abs(mymean) + myste);
         
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors',colorband_colors, 'bicolor', 'colors', mycolors);
+        mycolorband_colors = colorband_colors{i};
+        
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', mycolorband_colors, 'bicolor', 'colors', mycolors);
         
     end
 
@@ -238,12 +249,10 @@ for i = 1:k
     
 end
 
-if any(strcmp(varargin,'signature'))
-    disp('Note: Importance is defined as mean squared weight per cubic mm of tissue, regularized by adding a constant (1 cm^3).');
-    disp('This is not absolute importance across all voxels (which would favor large regions)')
-    disp('And favors small regions with large weights over large regions with local ''hot-spots''.');
-    disp('So importance is regularized by adding 1 cm^3 to all region volumes.');
-end
+% Descriptive legend text - enter a series of cell arrays with text
+% --------------------------------------------------------------
+headerstr = 'Wedge plot: ';
+canlab_print_legend_text(headerstr, legendtext);
 
 %% display regions in separate figure
 

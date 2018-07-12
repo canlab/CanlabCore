@@ -1,0 +1,8 @@
+title: Canlabcore
+description: Core tools required for running Canlab Matlab toolboxes.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-tactile
+
+gems:
+  - jekyll-mentions

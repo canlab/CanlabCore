@@ -25,11 +25,17 @@ The CANlab website is https://canlabweb.colorado.edu/, and we also maintain a WI
 Dependencies: These should be installed to use this toolbox
 ------------------------------------------------------------
 Matlab www.mathworks.com
+
 Matlab statistics toolbox
+
 Matlab signal processing toolbox
+
 Statistical Parametric Mapping (SPM) software https://www.fil.ion.ucl.ac.uk/spm/
+
 <recommended> matlab_bgl (graph theory) and spider (machine learning) toolboxes; these are included in this distribution
+  
 <recommended> the CANlab Neuroimaging_Pattern_Masks repository https://github.com/canlab/Neuroimaging_Pattern_Masks
+  
 <recommended> the canlab_help_examples repository  https://github.com/canlab/CANlab_help_examples
   
   

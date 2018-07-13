@@ -1,0 +1,7 @@
+# main links links
+main:
+  - title: "Setup and System Requirements"
+    url: /setup/
+
+  - title: "Second-Level Analysis"
+    url: /second/

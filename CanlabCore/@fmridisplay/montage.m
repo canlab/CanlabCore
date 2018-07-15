@@ -156,6 +156,8 @@ custom_coords = 0;
 color = 'k';
 doverbose = true;
 brighten_factor = 0;
+slice_mm_coords = [];
+slices_fig_h = [];
 
 % ------------------------------------------------------
 % parse inputs

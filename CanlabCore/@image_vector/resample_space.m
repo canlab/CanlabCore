@@ -220,6 +220,13 @@ if isa(obj, 'atlas')
         obj.dat = int32(round(obj.dat));
     end
     
+    [obj, ~, ~, missing_regions] = check_properties(obj, 'compress_index');  % check. adjust indices and print warning if we have lost regions
+    
+    if any(missing_regions)
+        disp('Some atlas regions lost in resampling:');
+        disp(missing_regions');
+    end
+    
 end
 
 % End special object subtypes

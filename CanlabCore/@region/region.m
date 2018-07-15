@@ -81,11 +81,13 @@
 %
 % 5/24/2017: Tor and Phil Kragel: first attempt to make compatible with
 % use of enforce_variable_types method.
+%
+% 7/2018 : Tor - check for empty mask and skip data extraction if so
 
 classdef region
     
     properties
-        title = 'Untitled';
+        title = 'Untitled';     % Title of region object
         shorttitle = 'region';
         descrip1 = 'Region: a group of voxels.'
         descrip2 ='Some methods: orthviews, montage, surface, extract_data, table';
@@ -287,6 +289,13 @@ classdef region
                 
                 % may need to reparse contiguous voxels in the mask.
                 mask = reparse_contiguous(mask, 'nonempty');
+                
+                % if empty, skip
+                isemptymask = isempty(mask.dat) || all(mask.dat(:) == 0);
+                if isemptymask
+                    disp('No in-region voxels from which to extract data.');
+                    return
+                end
                 
                 if cs == 3
                     disp('Spaces for data object and mask object line up, but voxel numbers do not. Check.');

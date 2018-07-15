@@ -1,4 +1,4 @@
-function [obj, has_pmaps, has_index] = check_properties(obj, varargin)
+function [obj, has_pmaps, has_index, missing_regions] = check_properties(obj, varargin)
 % Check properties and enforce some variable types
 %
 % obj = check_properties(obj)
@@ -18,8 +18,8 @@ compress_index = false;
 
 if any(strcmp(varargin, 'compress_index')), compress_index = true; end
 
-
-n_regions = num_regions(obj);
+% Count regions
+[n_regions, n_regions_with_data, missing_regions] = num_regions(obj);
 
 % Data
 has_pmaps = ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == n_regions;
@@ -51,7 +51,7 @@ if ~all(u == round(u))
     obj.dat = round(obj.dat);
 end
 
-n_regions_from_indx = length(u);
+% n_regions_from_indx = length(u);
 
 
 % Enforce variable types
@@ -112,7 +112,8 @@ if ~iscolumn(obj.label_descriptions), obj.label_descriptions = obj.label_descrip
 % if ~(max(obj.dat) == n_regions) || n_regions_from_indx ~= n_regions
 %     warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
 % end
-if max(obj.dat) ~= n_regions_from_indx
+
+if n_regions ~= n_regions_with_data || any(missing_regions)
     
     if compress_index
         % disp('Fixing');
@@ -127,10 +128,17 @@ if max(obj.dat) ~= n_regions_from_indx
         
         obj.dat = newdat;
         
+        if n_regions == n_regions_with_data
+            % We have missing regions but a complete set of labels
+            % do not adjust labels
+            return
+        end
+        
         % Trim labels
+        
         for i = 1:length(myfields)
             
-            if length(obj.(myfields{i})) == max(u)  % labels exist but need trimming
+            if length(obj.(myfields{i})) == n_regions  % labels exist but need trimming
                 obj.(myfields{i}) = obj.(myfields{i})(u);
             end
             
@@ -140,6 +148,8 @@ if max(obj.dat) ~= n_regions_from_indx
         % Just print warning, we are not compressing
         
         warning('Integer index in obj.dat should have one integer value per label, without skipping any integers!!');
+        disp(missing_regions')
+        disp('Run check_properties with ''compress_index'' option to fix.');
         
     end
     

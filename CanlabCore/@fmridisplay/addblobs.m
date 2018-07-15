@@ -156,6 +156,8 @@ if ~isa(cl, 'region')
     error('cl input must be a region object. Try region() constructor method.');
 end
 
+if isempty(cl), return, end
+
 % Map to volume space and interpolate
 % -------------------------------------------------------------------
 

@@ -6,7 +6,7 @@ function yout = naninsert(nanvec, y)
 %
 %     yout = naninsert(nanvec, y)
 %
-% nanvec is indicator for NaNs, of size size(yout).  y is data.
+% nanvec is logical indicator for NaNs, of size size(yout).  y is data.
 %
 % If y is a matrix, length(nanvec) should equal number of rows in y.
 % NaNs are inserted for true values in nanvec in all columns of y.

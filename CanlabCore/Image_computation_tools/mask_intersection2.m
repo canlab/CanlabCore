@@ -34,6 +34,9 @@ function [clusters,vol,V,XYZ,Q] = mask_intersection2(clsize,outname,P,calcstr)
 %    by Tor Wager
 % ..
 
+% Programmers' Notes:
+% 7/2018: tor fixed now-defunct call to spm_imcalc_ui --> now spm_imcalc
+
 % ..
 %    get file names and calcstr to evaluate
 % ..
@@ -53,7 +56,7 @@ disp(P);
 
 % make the intersection
 % ------------------------------------------------
-Q = spm_imcalc_ui(P,outname,calcstr);
+Q = spm_imcalc(P,outname,calcstr);
 
 
 % load the intersection mask file

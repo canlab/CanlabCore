@@ -29,9 +29,10 @@ function obj = reparse_contiguous(obj, varargin)
 %
 % ..
 %    Copyright tor wager, 2011
-%
+
 %    Programmers' notes:
 %    6/22/14: Tor changed behavior to use .sig field
+% %  7/2018 - tor - fixed bug with statistic_image handling in some cases
 % ..
 
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;

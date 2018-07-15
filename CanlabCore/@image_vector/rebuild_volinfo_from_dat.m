@@ -26,28 +26,31 @@ end
 wh_new = newdat ~=0 & ~isnan(newdat);
 
 if isa(dat, 'statistic_image')
-   % Rebuild fields specific to statistic_images
-   
-   dat = replace_empty(dat);
-   k = size(dat.dat, 2);
-   
-   for i = 1:k
-       
-   p = ones(dat.volInfo.nvox, k);
-   p(dat.volInfo.wh_inmask, i) = dat.p(:, i);
-   
-   ste = Inf .* ones(dat.volInfo.nvox, k);
-   ste(dat.volInfo.wh_inmask, i) = dat.ste(:, i);
-   
-   sig = zeros(dat.volInfo.nvox, k);
-   sig(dat.volInfo.wh_inmask, i) = dat.sig(:, i);
-   
-   end
-   
-   dat.p = p(wh_new, :);
-   dat.ste = ste(wh_new, :);
-   dat.sig = sig(wh_new, :);
-   
+    % Rebuild fields specific to statistic_images
+    
+    dat = replace_empty(dat);
+    k = size(dat.dat, 2);
+    
+    if isempty(dat.ste), dat.ste = single(zeros(size(dat.dat))); end
+    if isempty(dat.sig), dat.sig = single(zeros(size(dat.dat))); end
+    
+    for i = 1:k
+        
+        p = ones(dat.volInfo.nvox, k);
+        p(dat.volInfo.wh_inmask, i) = dat.p(:, i);
+        
+        ste = Inf .* ones(dat.volInfo.nvox, k);
+        ste(dat.volInfo.wh_inmask, i) = dat.ste(:, i);
+        
+        sig = zeros(dat.volInfo.nvox, k);
+        sig(dat.volInfo.wh_inmask, i) = dat.sig(:, i);
+        
+    end
+    
+    dat.p = p(wh_new, :);
+    dat.ste = ste(wh_new, :);
+    dat.sig = sig(wh_new, :);
+    
 end
 
 % rebuild volInfo from newdat

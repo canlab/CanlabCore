@@ -1,13 +1,21 @@
-function [vol_in_cubic_mm, voxcount] = get_region_volumes(atlas_obj)
+function [vol_in_cubic_mm, voxcount, imtx, parcel_index_values] = get_region_volumes(atlas_obj)
 % Get the volume (and raw voxel count) of each region in an atlas object
 %
-% [vol_in_cubic_mm, voxcount] = get_region_volumes(atlas_obj)
+% [vol_in_cubic_mm, voxcount, imtx, parcel_index_values] = get_region_volumes(atlas_obj)
 %
+% imtx : indicator matrix, 1/0, for each region
 
+[n_regions, n_regions_with_data, missing_regions] = num_regions(atlas_obj);
 
 dat = double(atlas_obj.dat);
-[imtx, parcels_we_have] = condf2indic(dat, 'integers');
+[imtx, parcel_index_values] = condf2indic(dat, 'integers');
 imtx(isnan(imtx)) = 0;
+
+% if last region is missing, condf2indic will be missing last entry
+if any(missing_regions == n_regions)
+    imtx(:, end + 1) = 0;
+    parcel_index_values = [parcel_index_values; n_regions];
+end
 
 voxcount = double(sum(imtx));
 

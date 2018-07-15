@@ -5,6 +5,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
+% 'canlab2018'                    'Combined atlas from other published atlases, whole brain. 
+% 'canlab2018_2mm'                'Combined atlas resampled at 2 mm resolution'
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel'      'Morel_thalamus_atlas_object.mat'
 % 'cortex', 'glasser'             'Glasser2016HCP_atlas_object.mat'
@@ -19,7 +21,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'shen'                          'Shen_atlas_object.mat'
 % 'schaefer400'                   'Schaefer2018Cortex_atlas_regions.mat'
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
-
+% 
+%
 %
 % Examples:
 % -------------------------------------------------------------------------
@@ -105,6 +108,14 @@ end
             savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');
             varname = 'atlas_obj';
 
+        case 'canlab2018'
+            savefile = 'CANlab_combined_atlas_object_2018.mat';
+            varname = 'atlas_obj';
+            
+        case 'canlab2018_2mm'
+            savefile = 'CANlab_combined_atlas_object_2018_2mm.mat';
+            varname = 'atlas_obj';
+            
         otherwise % assume it's a file name
             savefile = which(atlas_file_name_or_keyword);
             varname = [];

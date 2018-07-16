@@ -1,5 +1,14 @@
 function [n_regions, n_regions_with_data, missing_regions] = num_regions(obj)
 % Count number of regions in atlas object, even with incomplete data
+%
+% [n_regions, n_regions_with_data, missing_regions] = num_regions(obj)
+%
+% n_regions = number of total regions
+% n_regions_with_data = number of regions with some assigned voxels
+% missing_regions = index values of regions with no assigned voxels
+%
+% missing regions can cause problems for some atlas functions!
+% see atlas.check_properties
 
 n1 = size(obj.probability_maps, 2);
 n2 = length(obj.labels);

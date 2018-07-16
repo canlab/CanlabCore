@@ -2,7 +2,7 @@ function atlas_obj = region2atlas(r, reference_image_name)
 % Transform region object r into atlas object atlas_obj, given reference
 % image name in the space to resample to
 %
-% objout = region2fmri_data(r, [reference_image_name to sample to])
+% objout = region2atlas(r, [reference_image_name to sample to])
 %
 % Examples:
 % see parcellate_pain_predictive_regions.m
@@ -10,6 +10,8 @@ function atlas_obj = region2atlas(r, reference_image_name)
 % back to regions to test:
 % rtest = region(lindquist2015_pos_region_obj, 'unique_mask_values');
 % orthviews(rtest, 'unique')
+
+% Tor Wager: edited July 16, 2018
 
 has_reference_image = nargin > 1;
 
@@ -52,9 +54,17 @@ atlas_obj.label_descriptions = {r.title}';
 
 if has_reference_image
     
-    reference_image_name = check_valid_imagename(reference_image_name, 1);
-    
-    reference_obj = fmri_data(reference_image_name, 'noverbose');
+    if ischar(reference_image_name)
+        
+        reference_image_name = check_valid_imagename(reference_image_name, 1);
+        
+        reference_obj = fmri_data(reference_image_name, 'noverbose');
+        
+    elseif isa(reference_image_name, 'image_vector')
+        
+        reference_obj = reference_image_name; % it's already an object
+        
+    end
     
     atlas_obj = resample_space(atlas_obj, reference_obj);
     atlas_obj.dat = int32(round(atlas_obj.dat));

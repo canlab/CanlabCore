@@ -1,6 +1,8 @@
 function obj = resample_space(obj, sampleto, varargin)
 % Resample the images in an fmri_data object (obj) to the space of another
 % image (sampleto; e.g., a mask image). Works for all image_vector objects.
+% The object includes only voxels in the in-mask region in the target
+% (sampleto) image.
 %
 % :Usage:
 % ::
@@ -35,8 +37,8 @@ function obj = resample_space(obj, sampleto, varargin)
 %           'nonempty' in output obj
 %
 %   2/5/2018    Tor added support for atlas objects - special handling
-% 
-%   2/23/2018   Stephan changed replace_empty(obj) into replace_empty(obj,'voxels') to prevent adding removed images back in  
+%
+%   2/23/2018   Stephan changed replace_empty(obj) into replace_empty(obj,'voxels') to prevent adding removed images back in
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -56,28 +58,33 @@ obj_out.dat = [];
 obj_out.volInfo = Vto;
 
 obj = replace_empty(obj,'voxels');  % to make sure vox line up
-                                    % changed to 'voxels' only. SG 2/23/18
+% changed to 'voxels' only. SG 2/23/18
 
-for i = 1:n_imgs
+if ~isa(obj, 'atlas')
     
-    voldata = iimg_reconstruct_vols(obj.dat(:, i), obj.volInfo);
+    % Standard image_vector objects
+    % -----------------------------------------------------------------------
     
-    resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+    for i = 1:n_imgs
+        
+        voldata = iimg_reconstruct_vols(obj.dat(:, i), obj.volInfo);
+        
+        resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        
+        resampled_dat = resampled_dat(:);
+        
+        obj_out.dat(:, i) = resampled_dat(Vto.wh_inmask);
+        
+    end
     
-    resampled_dat = resampled_dat(:);
+    % in case of NaN values
+    obj_out.dat(isnan(obj_out.dat)) = 0;
     
-    obj_out.dat(:, i) = resampled_dat(Vto.wh_inmask);
     
-end
-
-% in case of NaN values
-obj_out.dat(isnan(obj_out.dat)) = 0;
-
-
-% Special object subtypes
-% -----------------------------------------------------------------------
-
-if isa(obj, 'atlas')
+    % Special object subtypes
+    % -----------------------------------------------------------------------
+    
+else % if  isa(obj, 'atlas')
     
     n_prob_imgs = size(obj.probability_maps, 2);
     
@@ -98,13 +105,21 @@ if isa(obj, 'atlas')
     % if no prob images, need to be careful about how to resample integer vector data
     
     if ~n_prob_imgs
-        integer_vec = zeros(size(obj_out.dat, 1), 1);
+        
+        integer_vec = zeros(Vto.n_inmask, 1);
         
         n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
         
+        % create a set of pseudo-"probabilities" for each region, resampled. Then
+        % we can take the max prob, so that each voxel gets assigned to the best-matching parcel.
+        
+        pseudo_prob = zeros(Vto.n_inmask, n_index_vals);
+        
         for i = 1:n_index_vals
             
-            myintegervec = i * double(obj.dat(:, 1) == i);
+            %myintegervec = i * double(obj.dat(:, 1) == i);
+            
+            myintegervec = double(obj.dat(:, 1) == i); % 1/0 "pseudo-probability"
             
             voldata = iimg_reconstruct_vols(myintegervec, obj.volInfo);
             
@@ -112,51 +127,56 @@ if isa(obj, 'atlas')
             
             resampled_dat = resampled_dat(:);
             resampled_dat = resampled_dat(Vto.wh_inmask);    % take relevant voxels only
-            resampled_dat(~(round(resampled_dat) == i)) = 0; % take only values that round to integer
+            % resampled_dat(~(round(resampled_dat) == i)) = 0; % take only values that round to integer
             
-            integer_vec = integer_vec + round(resampled_dat);
+            pseudo_prob(:, i) = resampled_dat;
+            %integer_vec = integer_vec + round(resampled_dat);
             
         end
         
-        obj_out.dat = integer_vec; % will be rounded later, but should be rounded already here...
+        obj_out.probability_maps = pseudo_prob;
+        
+        obj_out = probability_maps_to_region_index(obj_out);
+        
+        % obj_out.dat = integer_vec; % will be rounded later, but should be rounded already here...
         
     end % rebuild integers
     
 end % atlas object
-    
-    
+
+
 if isa(obj_out, 'statistic_image')
-   % Rebuild fields specific to statistic_images
-   
-   obj_out = replace_empty(obj_out);
-   k = size(obj_out.dat, 2);
-   
-   for i = 1:k
-       % this may break if nvox (total in image) is different for 2
-       % images...
-       
-       % Wani: in some cases, obj could have empty p, ste, and sig
-       if ~isempty(obj.p)
-           p = ones(obj.volInfo.nvox, k);
-           p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
-       end
-       
-       if ~isempty(obj.ste)
-           ste = Inf .* ones(obj.volInfo.nvox, k);
-           ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
-       end
-       
-       if ~isempty(obj.sig)
-           sig = zeros(obj.volInfo.nvox, k);
-           sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
-       end
-       
-   end
-   
-   if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
-   if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
-   if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
-   
+    % Rebuild fields specific to statistic_images
+    
+    obj_out = replace_empty(obj_out);
+    k = size(obj_out.dat, 2);
+    
+    for i = 1:k
+        % this may break if nvox (total in image) is different for 2
+        % images...
+        
+        % Wani: in some cases, obj could have empty p, ste, and sig
+        if ~isempty(obj.p)
+            p = ones(obj.volInfo.nvox, k);
+            p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
+        end
+        
+        if ~isempty(obj.ste)
+            ste = Inf .* ones(obj.volInfo.nvox, k);
+            ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
+        end
+        
+        if ~isempty(obj.sig)
+            sig = zeros(obj.volInfo.nvox, k);
+            sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
+        end
+        
+    end
+    
+    if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
+    if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
+    if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
+    
 end
 
 % End special object subtypes
@@ -211,7 +231,7 @@ if isa(obj, 'atlas')
     % Rebuild index so we have integers only. Rebuild if we have prob maps,
     % or round .dat if not.
     n_regions = max([size(obj.probability_maps, 2) length(obj.labels)]); % edit from num_regions method to exclude using .dat, as we are trying to adjust dat for interpolation
-
+    
     has_pmaps = ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == n_regions;
     
     if has_pmaps

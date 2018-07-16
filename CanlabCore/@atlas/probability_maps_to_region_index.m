@@ -7,9 +7,9 @@ function dat = probability_maps_to_region_index(dat)
 % Start: dat has one image per region, with probability values
 % convert to integer vector
 
-[~, condf] = max(double(full(dat.probability_maps)),[], 2);   % double is safer
+[maxval, condf] = max(double(full(dat.probability_maps)),[], 2);   % double is safer
 
-allempty = all(dat.probability_maps == 0, 2);
+allempty = all(dat.probability_maps == 0, 2) | isnan(maxval);  % some out-of-mask values may get NaNs
 
 condf(allempty) = 0;
 

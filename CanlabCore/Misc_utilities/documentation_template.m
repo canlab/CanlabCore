@@ -82,6 +82,16 @@
 %    DEFAULTS AND INPUTS
 % ..
 
+% Some useful things
+n_cols = 80;
+sep_str = repmat('_', 1, n_cols);  % see textwrap
+
+% SEE:
+%  validateattributes Check validity of array.
+%     validateattributes(A,CLASSES,ATTRIBUTES) validates that array A belongs
+%     to at least one of the specified CLASSES and has all of the specified
+%     ATTRIBUTES. 
+
 
 rowsz = [];
 doplot = 0;

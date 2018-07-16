@@ -1,8 +1,8 @@
-function [region_table, coverage50_labels, coverage50_index, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
+function [region_table, table_legend_text, coverage5_labels, coverage5_index, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
 % Take regions in an atlas object (atlas_to_parse) and annotate them with labels and quantitative
 % coverage stats from another atlas (ref_atlas_obj)
 %
-% [region_table, coverage50_labels, coverage50_index, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
+% [region_table, table_legend_text, coverage5_labels, coverage5_index, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
 %
 % Dice: Compute similarities (cross-counts and Dice coeffs) between parcels in two atlases
 % matrix of [atlas1] x [atlas2]
@@ -20,13 +20,69 @@ function [region_table, coverage50_labels, coverage50_index, x_counts, x_dice, x
 % - modal_atlas_coverage is the proportion of reference atlas voxels
 % covered by the best-matching region
 %
-% Labels:
+% See table_legend_text output for description of table entries.
+% to print legend: canlab_print_legend_text(table_legend_text{:})
+%
+% Tor Wager, July 2018
+
+
+
+% Notes:
 
 % Percent of voxels in each atlas region covered by the blob
 % Intersection / size of atlas region
 
 % note: vox counts can be zero if regions are (1) outside mask, or (2)
 % empty after reslicing to the atlas space
+
+% "coverage" : which atlas regions are covered by the blob? (up to specified % of voxels
+% in the atlas region). Large atlas regions/networks will not have high
+% coverage unless the blob(s) activate most of the atlas region/network. 
+% 
+%
+% "mode" : what single atlas region best encloses the target blob?
+% if blob covers 2 regions completely, the larger is the best match 
+%
+% "similarity" : jaccard/dice: prioritizes complete coverage of atlas region.
+% larger regions will tend to not show up unless the blob
+% covers them completely.
+%
+% could do multi-resolution match with jaccard. small regions would be
+% selected if they match, but larger/more general regions would be selected
+% if the blob description matches them best.
+% e.g., a big region that covers the whole basal ganglia would be labeled
+% "BG".  "Mode" would pick the largest subregion. "Coverage" would identify
+% multiple subregions. 
+
+%   Notes - from Matlab
+%   -----
+%   [1]  The Dice similarity coefficient of two sets A and B is
+%   expressed as
+%
+%      dice(A,B) = 2 * |intersection(A,B)| / (|A| + |B|)
+%
+%   where |A| represents the cardinal of set A. It can also be expressed in
+%   terms of true positives (TP), false positives (FP) and false negatives
+%   (FN) as
+%
+%      dice(A,B) = 2 * TP / (2 * TP + FP + FN)
+%
+%   [2]  The Dice index is related to the Jaccard index according to
+%
+%      dice(A,B) = 2 * jaccard(A,B) / (1 + jaccard(A,B))
+%
+%   [1]  The Jaccard similarity coefficient of two sets A and B (also known
+%     as intersection over union or IoU) is expressed as
+% 
+%      jaccard(A,B) = |intersection(A,B)| / |union(A,B)|
+% 
+%     where |A| represents the cardinal of set A. It can also be expressed in
+%     terms of true positives (TP), false positives (FP) and false negatives
+%     (FN) as
+% 
+%        jaccard(A,B) = TP / (TP + FP + FN)
+
+
 
 % note: omits 0
 [~, voxcount_atlas, imtx_atlas] = get_region_volumes(ref_atlas_obj);
@@ -53,6 +109,7 @@ x_dice = x_counts ./ (sum_for_region + sum_for_atlas);
 
 x_atlas_coverage = x_counts ./ sum_for_atlas;
 
+x_region_coverage = x_counts ./ sum_for_region;
 
 % Modal atlas region for each input region
 % ------------------------------------------------------
@@ -66,19 +123,26 @@ modal_atlas_index(wh_no_atlas_region) = 0;  % because max returns 1 where empty 
 % Modal labels
 wh_labels = modal_atlas_index > 0;
 
-modal_label = repmat({'No region identified.'}, nr, 1);
+modal_label = repmat({'No label'}, nr, 1);
 modal_label(wh_labels) = ref_atlas_obj.labels(modal_atlas_index(wh_labels));
 
 % modal_atlas_coverage: Percent of best reference region covered
 %
+[modal_atlas_coverage, modal_region_coverage] = deal(zeros(nr, 1));
+
 for i = 1:nr
    
     if wh_no_atlas_region(i) 
         % Missing - no atlas regions match
         modal_atlas_coverage(i, 1) = 0;
+        modal_region_coverage(i, 1) = 0;
+        
     else
         mycoverage = x_atlas_coverage(i, :);
         modal_atlas_coverage(i, 1) = mycoverage(modal_atlas_index(i));
+        
+        mycoverage = x_region_coverage(i, :);
+        modal_region_coverage(i, 1) = mycoverage(modal_atlas_index(i));
     end
     
 end
@@ -90,10 +154,10 @@ end
 % ---------------------------------------------------
 for i = 1:nr
    
-    wh = x_atlas_coverage(i, :) > .5;
-    coverage50_index(:, i) = wh';
+    wh = x_atlas_coverage(i, :) > .05;
+    coverage5_index(:, i) = wh';
     
-    coverage50_labels{i} = ref_atlas_obj.labels(wh);
+    coverage5_labels{i} = ref_atlas_obj.labels(wh);
     
 end
 
@@ -103,10 +167,45 @@ end
 Region = atlas_to_parse.labels';
 Region_Vol_mm = vol_regions';
 Voxels = voxcount_regions';
-Ref_region_coverage = round(100 * double(modal_atlas_coverage)); % Percentage of reference atlas regions covered
-Atlas_regions_covered = sum(coverage50_index)';
+Ref_region_perc = round(100 * double(modal_atlas_coverage)); % Percentage of reference atlas regions covered
+Perc_covered_by_label = round(100 * double(modal_region_coverage)); % Percentage of reference atlas regions covered
 
-region_table = table(Region, Voxels, Region_Vol_mm, Atlas_regions_covered, modal_label, Ref_region_coverage, modal_atlas_index);
+Atlas_regions_covered = sum(coverage5_index)';
+
+region_table = table(Region, Voxels, Region_Vol_mm, Atlas_regions_covered, modal_label, Perc_covered_by_label, Ref_region_perc, modal_atlas_index);
+
+% Table properties and legend
+% ---------------------------------------------------
+myvoxsize = sprintf('%d x %d x %d', abs(diag(atlas_to_parse.volInfo.mat(1:3, 1:3))'));
+
+
+region_table.Properties.Description = sprintf('Regions labeled by reference atlas %s\n', ref_atlas_obj.atlas_name);
+
+region_table.Properties.VariableDescriptions{1} = 'Region: Original region shorttitle';
+region_table.Properties.VariableDescriptions{2} = ['Voxels: Number of contiguous ' myvoxsize ' voxels'];
+region_table.Properties.VariableDescriptions{3} = 'Region_Vol_mm: Volume of contiguous region in cubic mm.';
+region_table.Properties.VariableDescriptions{4} = 'Atlas_regions_covered: Number of reference atlas regions covered at least 5%% by the region. This relates to whether the region covers multiple reference atlas regions';
+region_table.Properties.VariableDescriptions{5} = 'Modal_label: Best reference atlas label, defined as reference region with highest number of in-region voxels.';
+region_table.Properties.VariableDescriptions{6} = 'Perc_covered_by_label: Percentage of the region covered by the label.';
+region_table.Properties.VariableDescriptions{7} = 'Ref_region_perc: Percentage of the label region within the target region.';
+region_table.Properties.VariableDescriptions{8} = 'modal_atlas_index: Index number of label region in reference atlas';
+
+% %%%% for compatibility with canlab_print_legend_text
+coverage_descrip = {sprintf('For example, if a region is labeled ''TE1a'' and Perc_covered_by_label = 8, Ref_region_perc = 38, and Atlas_regions_covered = 17, this means that 8%%%% of the region''s voxels are labeled TE1a, which is the highest percentage among reference label regions. 38%%%% of the region TE1a is covered by the region. However, the region covers at least 5%%%% of 17 distinct labeled reference regions.\n')};
+
+myrefs = {sprintf('References for atlases:\n')};
+
+myrefs = [myrefs cellstr(unique(ref_atlas_obj.references, 'rows'))'];
+
+% Char array. Now return cells for more flexibility later.
+% mystr = unique(ref_atlas_obj.references, 'rows');
+% mystr = strvcat(region_table.Properties.Description, mystr);
+% mystr = strvcat(mystr, char(region_table.Properties.VariableDescriptions{:}));
+% table_legend_text = mystr;
+
+table_legend_text = [region_table.Properties.Description region_table.Properties.VariableDescriptions coverage_descrip myrefs];
+
+% to print: canlab_print_legend_text(table_legend_text{:})
 
 end % function
 

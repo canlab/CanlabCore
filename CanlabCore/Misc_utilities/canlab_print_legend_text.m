@@ -8,6 +8,9 @@ function canlab_print_legend_text(varargin)
 % Example:
 % legendtext = sprintf('Wedge plots depict normalized local pattern expression (using the signature weights in the local region), with red indicating positive values and blue negative values. The darker shaded area indicates the standard error of the mean (SEM) across individuals.');
 % canlab_print_legend_text('Wedge plot:', legendtext);
+%
+% Note: If multi-line text is entered and it is split into nonsense letters, try passing 
+% in transposed text block
 
 legendtext = varargin; % a series of cells. each cell contains a string
 

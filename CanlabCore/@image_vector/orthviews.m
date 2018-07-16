@@ -31,6 +31,20 @@ function cl = orthviews(image_obj, varargin)
 %        Default is 'unique' for <300 values, 'continuous' for more.  Use
 %        'unique' to force unique-valued colors.
 %
+%   **'input_handle':**
+%        followd by integer for which orthviews display to add to.
+%        spm_orthviews can display multiple linked orthviews sections. If
+%        you have initialized a display with multiple images, Enter 1 to
+%        add to the first one, 2 for the second, and so forth.
+%      
+%   **'add':**
+%        Add to the first orthviews display (e.g., 'input_handle', 1)
+%
+%   **'color':**
+%       Followed by cell with 3-element rgb vector, 
+%       e.g., 'color', {[1 0 1]}
+%       This is superseded by 'unique' and 'posneg' options.
+%
 % ..
 %    Copyright Tor Wager, 2011
 % ..
@@ -47,6 +61,7 @@ input_handle=[];
 dounique = false;
 doparcels = false;
 force_continuous = false;
+additional_inputs = {};
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -59,6 +74,8 @@ for i = 1:length(varargin)
                 
             case {'han', 'handle', 'input_handle'}, input_handle = varargin{i+1};
                 
+            case 'add', input_handle = 1;
+                
             case {'largest_region', 'largest_cluster'}, doreg = 1;
                 
             case 'unique'
@@ -69,6 +86,9 @@ for i = 1:length(varargin)
                 
             case 'parcels'
                 doparcels = true; dounique = true;
+                
+            case 'color'
+                additional_inputs{end + 1} = varargin{i + 1};
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -166,7 +186,7 @@ for i = handle_indices
         
     else
         if ~isempty(cl{i})
-            cluster_orthviews(cl{i}, 'add', 'handle', i);
+            cluster_orthviews(cl{i}, additional_inputs{:}, 'add', 'handle', i);
         else
             fprintf('Image %3.0f empty\n', i);
         end

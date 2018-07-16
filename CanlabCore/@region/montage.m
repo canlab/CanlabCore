@@ -86,28 +86,60 @@ function o2 = montage(obj, varargin)
 % e.g., 'color', [1 0 0]
 %
 %
-% Examples:
+% :Examples:
+% -------------------------------------------------------------------------
+% ::
+% Example 1: 
+% % Complete group analysis of a standard dataset
+% % Do analysis and prep results region object:
 %
-% o2 = canlab_results_fmridisplay([], 'noverbose');
-% o2 = montage(r, o2);      % symmetric colors left/right
-% o2 = removeblobs(o2);
-% o2 = montage(r, o2, 'map');
+%   img_obj = load_image_set('emotionreg');         % Load a dataset
+%   t = ttest(img_obj, .005, 'unc');                % Do a group t-test
+%   t = threshold(t, .005, 'unc', 'k', 10);         % Re-threshold with extent threshold of 10 contiguous voxels
+%   r = region(t);                                  % Turn t-map into a region object with one element per contig region
+%
+%   Label regions and print a table:
+%   [r, region_table, table_legend_text] =
+%   autolabel_regions_using_atlas(r);               % Label regions. Can be skipped because 'table' below attempts to do this automatically
+%   table(r);                                       % Print a table of results using new region names
+%
+%   Display montages in several styles:
+%
+%   montage(r)
+%   montage(r, 'solid')
+%   montage(r, 'color', [1 0 0])
+%   montage(r, 'solid', 'montagetype', 'full')
+%   montage(r, 'solid', 'montagetype', 'regioncenters')
+%
+% Example 2: 
+% % Extend previous results by creating custom fmridisplay object
+% % and adding blobs to that.
+%
+%   o2 = canlab_results_fmridisplay([], 'noverbose');
+%   o2 = montage(r, o2);      % symmetric colors left/right
+%   o2 = removeblobs(o2);
+%   o2 = montage(r, o2, 'map');
 % 
-% create_figure('slices'); axis off
-% o2 = canlab_results_fmridisplay([], 'multirow', 2);
-% brighten(.6)
-% hcp152t1 = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
-% r = region(fmri_data(hcp152t1), 'unique_mask_values');
-% o2 = montage(r, o2, 'wh_montages', 3:4);
-% o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
+% Example 3: 
+% % create a custom fmridisplay object and display regions from a standard
+% parcellation (Glasser 2016 Nature cortical parcellation)
+% 
+%   create_figure('slices'); axis off
+%   o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%   brighten(.6)
+%   hcp152t1 = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
+%   r = region(fmri_data(hcp152t1), 'unique_mask_values');
+%   o2 = montage(r, o2, 'wh_montages', 3:4);
+%   o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
 %
-% Use a different montage type in canlab_results_fmridisplay:
-% o2 = montage(r, 'compact2', 'nosymmetric');
+%   % Use a different montage type in canlab_results_fmridisplay:
+%   o2 = montage(r, 'compact2', 'nosymmetric');
 %
-% Plot one region blob per slice on a series of montages.  
-% o2 = montage(r, 'regioncenters', 'nosymmetric');
+% % Plot one region blob per slice on a series of montages.  
+%   o2 = montage(r, 'regioncenters', 'nosymmetric');
 
 % edited: Tor, 1/2018, unique color option/default
+%         Tor  7/2018 .added documentation
 
 % Defaults and inputs
 % -----------------------------------------------------------------------

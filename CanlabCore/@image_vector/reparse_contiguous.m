@@ -36,6 +36,26 @@ function obj = reparse_contiguous(obj, varargin)
 
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 
+if isempty(wh)
+    
+    disp('Warning: image_vector.reparse_contiguous: obj.volInfo.cluster is empty. Bad object...rebuilding.');
+
+    % No clusters - rebuild cluster index
+    obj.volInfo.cluster = spm_clusters(obj.volInfo.xyzlist')';
+    
+    
+end
+
+if isempty(obj.dat)
+    
+    disp('Warning: image_vector.reparse_contiguous: obj.dat is empty. Bad object...');
+    disp('Stopping in debugger so you can check object.');
+    keyboard
+    
+end
+
+
+
 % restrict to voxels with actual data if desired
 if any(strcmp(varargin, 'nonempty'))
     

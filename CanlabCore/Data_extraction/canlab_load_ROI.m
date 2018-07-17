@@ -62,10 +62,10 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % 'pag'        Periaqueductal gray, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
 % 'sc'         Superior colliculus, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
 % 'ic'         Inferior colliculus, hand-drawn (Tor Wager 2018, mask out aqueduct/Keuken2014)
-% 'drn'        Dorsal raphe nucleus, coords from Beliveau, 2015. mask out aqueduct/Keuken2014 ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August). Elsevier:187?95.
-% 'mrn'        Median raphe nucleus, coords from Beliveau, 2015. mask out aqueduct/Keuken2014 ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August). Elsevier:187?95.
+% 'drn'        Dorsal raphe nucleus, coords from Beliveau, 2015. Beliveau, Vincent, Claus Svarer, Vibe G. Frokjaer, Gitte M. Knudsen, Douglas N. Greve, and Patrick M. Fisher. 2015. ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August): 187?95.
+% 'mrn'        Median raphe nucleus, coords from Beliveau, 2015. Beliveau, Vincent, Claus Svarer, Vibe G. Frokjaer, Gitte M. Knudsen, Douglas N. Greve, and Patrick M. Fisher. 2015. ?Functional Connectivity of the Dorsal and Median Raphe Nuclei at Rest.? NeuroImage 116 (August): 187?95.
 % 'PBP'        Parabrachial pigmented nuc.      % Pauli 2017 BioArxiv subcortical atlas
-% 'sn'         Substantia Nigra; Keuken 2014
+% 'sn'         Substantia Nigra; Keuken 2014   % Keuken, M. C., P-L Bazin, L. Crown, J. Hootsmans, A. Laufer, C. Müller-Axt, R. Sier, et al. 2014. ?Quantifying Inter-Individual Anatomical Variability in the Subcortex Using 7 T Structural MRI.? NeuroImage 94 (July): 40?46.
 % 'SNc'        Substantia Nigra compacta        % Pauli 2017 BioArxiv subcortical atlas
 % 'SNr'        Substantia Nigra reticularis     % Pauli 2017 BioArxiv subcortical atlas
 % 'VTA'        Ventral tegmental area           % Pauli 2017 BioArxiv subcortical atlas
@@ -548,12 +548,6 @@ switch region_name
         var_name = '';                     % Variable name(s) of interest in file
         image_file = 'ROI_inf_olive.img';
         default_color = [.5 1 .5];
-        
-    case {'nrm', 'raphe magnus'}
-        region_file = [];
-        var_name = '';                     % Variable name(s) of interest in file
-        image_file = [];                    % old: 'ROI_raphe_magnus.img';
-        default_color = [.3 .3 1];
    
     case {'nrm', 'raphe magnus'}
         region_file = which('coordinate_brainstem_rois_2018_tor.mat');

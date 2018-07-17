@@ -18,6 +18,8 @@ function cl = orthviews(image_obj, varargin)
 %
 %   **'unique':**
 %        plot groups of contiguous voxels in different, unique colors
+%        - autodetect feature turns this on when there are <300 unique
+%        values, or for 'atlas' objects. See 'continuous' below to force continuous.
 %
 %   **'parcels':**
 %        plot voxels with each unique value in a different color
@@ -132,7 +134,12 @@ image_obj = replace_empty(image_obj);
 image_obj.dat = double(image_obj.dat);
 
 % autodetect parcels and turn on 'unique' for maps with few values 
+% or atlas objects.
 % (default = do this)
+if isa(image_obj, 'atlas') && ~force_continuous
+    dounique = true; doparcels = true; 
+end
+    
 if ~doparcels && ~force_continuous
     nvalues = length(unique(image_obj.dat(:)));
     

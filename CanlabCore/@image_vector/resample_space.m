@@ -90,6 +90,8 @@ else % if  isa(obj, 'atlas')
     
     obj_out.probability_maps = [];
     
+    % Use probability images if available
+    
     for i = 1:n_prob_imgs
         
         voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
@@ -101,6 +103,11 @@ else % if  isa(obj, 'atlas')
         obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
         
     end
+    
+    % rebuild .dat from probability images - done below
+    %     if n_prob_imgs
+    %         obj_out = probability_maps_to_region_index(obj_out);
+    %     end
     
     % if no prob images, need to be careful about how to resample integer vector data
     
@@ -136,11 +143,12 @@ else % if  isa(obj, 'atlas')
         
         obj_out.probability_maps = pseudo_prob;
         
-        obj_out = probability_maps_to_region_index(obj_out);
-        
         % obj_out.dat = integer_vec; % will be rounded later, but should be rounded already here...
         
     end % rebuild integers
+    
+    % rebuild .dat from probability images
+    obj_out = probability_maps_to_region_index(obj_out);
     
 end % atlas object
 

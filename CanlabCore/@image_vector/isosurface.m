@@ -1,6 +1,5 @@
 function [p, mesh_struct] = isosurface(obj, varargin)
-% Create and visualize an isosurface created from the boundaries in an
-% image object.
+% Create and visualize an isosurface created from the boundaries in an image object.
 %
 % Options:
 % case 'thresh',  mythresh = varargin{i + 1}; varargin{i + 1} = [];

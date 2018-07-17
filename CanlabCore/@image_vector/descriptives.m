@@ -76,6 +76,12 @@ desc.n_vox = size(dat.dat, 1);
 desc.wh_zero = dat.dat == 0;
 desc.wh_nan = isnan(dat.dat);
 
+% Object with summary of coverage - how many images have non-zero, non-NaN
+% values in each voxel
+m = mean(dat);
+m.dat = sum(~isnan(dat.dat) & dat.dat ~= 0, 2);
+desc.coverage_obj = m;
+
 % By convention, zero indicates missing (empty) data and is not a valid value.
 
 desc.nonempty_vox_descrip = 'Voxels with non-zero, non-NaN data values for at least one image';

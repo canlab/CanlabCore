@@ -1,5 +1,5 @@
 function obj = preprocess(obj, meth, varargin)
-% Preprocesses data in an fmri_data object
+% Preprocesses data in an image_vector (e.g., fmri_data) object; many options for filtering and outlier id
 %
 % Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
 % images, and operating on the rows operates on voxels (or variables more

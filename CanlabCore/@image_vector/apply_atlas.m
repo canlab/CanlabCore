@@ -1,5 +1,5 @@
 function [parcel_means, parcel_pattern_expression] = apply_atlas(dat, parcels, varargin)
-% Computes the mean value / pattern expression for each parcels specified in a atlas object
+% Computes the mean value or pattern expression for each reference region specified in an atlas object
 %
 % Usage:
 % ::

@@ -1,5 +1,7 @@
 function [all_surf_handles, pcl, ncl] = surface(r, varargin)
-% Surface method for region object - renders blobs on multiple types of 3-D surface
+% Render image data on brain surfaces; options for cutaways and canonical surfaces
+% Surface method for region object - renders blobs on multiple types of 3-D
+% surfaces
 %
 % :Usage:
 % ::

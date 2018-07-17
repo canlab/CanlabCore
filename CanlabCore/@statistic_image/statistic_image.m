@@ -1,8 +1,17 @@
-% First line: One-line summary description of function
+% statistic_image: An object that allows for storage and manipulation of
+% images containing t-values, p-values, and thresholded results
+% - multiple images can be stored in a single object
+% - this is a subclass of image_vector and inherits all its methods
+% - easy thresholding without changing underlying image (threshold method)
+% - easy visualization (orthviews, surface, and montage methods)
 %
 % Usage:
 % -------------------------------------------------------------------------
-% function obj = statistic_image(varargin)
+%  object constructor: this function creates an object and populates it
+%  with data.  Entering image name(s) loads in the data.
+% 
+%  obj = statistic_image(varargin)
+%  obj = statistic_image(nifti/img filename, or allowed fields followed by values)
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -10,7 +19,7 @@
 %
 % Author and copyright information:
 % -------------------------------------------------------------------------
-%     Copyright (C) <year>  <name of author>
+%     Copyright (C) 2010 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -27,22 +36,20 @@
 %
 % Inputs:
 % -------------------------------------------------------------------------
-% xxx           xxx
+% :properties: any valid attribute/property of statistic_image, followed by
+% data values to store
+%   - see properties(statistic_image)
+%
+% :image names: a character array with one or more filenames for
+% Analyze/NIFTI images (.img/nii).  
+%
 %
 % Outputs:
 % -------------------------------------------------------------------------
-% xxx           xxx
+% obj           A statistic_image object
 %
 % Examples:
 % -------------------------------------------------------------------------
-%
-% give examples here
-%
-% See also:
-% * list other functions related to this one, and alternatives*
-%
-% Here is a short example of some things you can do with this object:
-% 
 % As with any object class in this toolbox, you can create an object by
 % specifying names of fields paired with values. You can also enter
 % filenames when you call statistic_image and create an image by loading a
@@ -99,30 +106,27 @@
 % robust_p_000X.img as the p values.  X is assumed = 1, but can be
 % overloaded by passing in a dat_descrip field. i.e.
 % deltadon=statistic_image('dat_descrip', 4, 'type', 'robreg')
-
+%
+%
+% See also:
+% image_vector.m
+% fmri_data.m
+% region.m
+% fmridisplay.m
+%
 classdef statistic_image < image_vector
 
-
     properties
-        % properties of parent class are also inherited
-        
-        type
-        
-        p
-        
-        p_type
-        
-        ste
-        
-        threshold
-        
-        thr_type
-        
-        sig
-        
-        N
-        
-        dfe
+
+        type        % String with image type: 'generic', 't', 'p', 'robreg'
+        p           % Matrix of p-values for images, [voxels x images]
+        p_type      % String with source info for p-values
+        ste         % Matrix of standard error values for images, [voxels x images]
+        threshold   % Latest statistical threshold applied
+        thr_type    % Information about statistical threshold applied
+        sig         % Logical matrix of which voxels are significant, [voxels x images]
+        N           % Sample size
+        dfe         % Error degrees of freedom for test
         
     end
     
@@ -148,6 +152,11 @@ classdef statistic_image < image_vector
             obj.sig = [];
             obj.dfe = [];
             obj.N = [];
+            
+            doverbose = false;
+            
+            wh = strcmp(varargin, 'verbose');
+            if any(wh), doverbose = true; varargin(wh) = []; end
             
             % The code below can be generic to any class definition
             % It parses 'fieldname', value pairs of inputs
@@ -185,8 +194,13 @@ classdef statistic_image < image_vector
                     else
                         % Assume is char array of image to load
                         % could also use obj = read_from_file(obj);
-                        fprintf('Reading from file: %s\n', varargin{i});
-                        tmp = fmri_data(varargin{i});
+                        
+                        if doverbose
+                            fprintf('Reading from file: %s\n', varargin{i});
+                            tmp = fmri_data(varargin{i});
+                        else
+                            tmp = fmri_data(varargin{i}, 'noverbose');
+                        end
                         
                         obj.dat = tmp.dat;
                         obj.volInfo = tmp.volInfo;

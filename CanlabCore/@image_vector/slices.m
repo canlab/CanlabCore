@@ -1,6 +1,5 @@
 function o = slices(obj, varargin)
-% Create a montage of single-slice results for every image in an
-% image_vector object
+% Create a montage of single-slice results for every image in an image_vector object
 %
 % :Usage:
 % ::

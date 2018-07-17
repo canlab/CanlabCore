@@ -1,7 +1,6 @@
 function obj = threshold(obj, input_threshold, thresh_type, varargin)
-% Threshold image_vector (or fmri_data or fmri_obj_image) object based on
-% raw threshold values. For statistical thresholding, convert to a
-% statistic_image object and see the threshold method for that object.
+% Threshold image_vector (or fmri_data or fmri_obj_image) object based on raw threshold values. 
+% For statistical thresholding, convert to a statistic_image object and see the threshold method for that object.
 %
 % :Usage:
 % ::

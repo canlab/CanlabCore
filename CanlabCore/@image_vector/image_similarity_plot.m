@@ -1,7 +1,6 @@
 function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
-
-% Point-biserial correlations between images in fmri_data obj and set of
-% 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
+% Associations between images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
+% - Similarity metric is point-biserial correlations or cosine-similarity
 %
 % Usage:
 % ::

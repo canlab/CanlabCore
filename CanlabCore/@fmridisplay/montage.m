@@ -158,6 +158,7 @@ doverbose = true;
 brighten_factor = 0;
 slice_mm_coords = [];
 slices_fig_h = [];
+slice_vox_coords = [];
 
 % ------------------------------------------------------
 % parse inputs

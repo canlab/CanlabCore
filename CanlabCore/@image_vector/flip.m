@@ -1,5 +1,5 @@
 function dat = flip(dat, varargin)
-% Flips an image_vector object left to right
+% Flips images stored in an object left-to-right
 %
 % :Optional Inputs:
 %

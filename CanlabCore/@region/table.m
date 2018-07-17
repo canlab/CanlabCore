@@ -72,8 +72,8 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %    July 2018:  Autolabel update and "new 2018 version", Tor Wager. Also added legend text.
 
 
-n_cols = 80;
-sep_str = repmat('_', 1, n_cols);  % see textwrap
+n_cols = 140;                       % 140 good for HTML reports
+sep_str = repmat('_', 1, n_cols);   % see textwrap
 
 k = 0;
 dosep = true;
@@ -159,6 +159,18 @@ end
 % -------------------------------------------------------------------------
 if dolegacy
     print_legacy_table(cl, ispos, table_legend_text);
+    
+elseif isempty(region_table)
+    
+    disp('No regions to display');
+    
+    fprintf('\nNegative Effects\n')
+    
+    disp('No regions to display');
+    
+    disp(sep_str);
+    
+    return
     
 else
     % build table we want in table format and rename. Reformat a bit.

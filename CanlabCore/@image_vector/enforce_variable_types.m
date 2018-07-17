@@ -1,7 +1,6 @@
 function obj = enforce_variable_types(obj)
-% Re-casts variables in objects into standard data types, which can save
-% lots of memory space.  Also removes empty voxels as a space-saving
-% device.
+% Re-casts variables in objects into standard data types, which can save space
+% in memory.  Also removes empty voxels as a space-saving device.
 %
 % obj = enforce_variable_types(obj)
 %

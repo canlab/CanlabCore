@@ -1,6 +1,7 @@
 function m = mean(obj, varargin)
-% Create an image_vector object with mean values for each voxel (cols)
-% across images (rows) of an fmri_data object.
+% Mean across a set of images. Returns a new image_vector object.
+% Creates an image_vector object with mean values for each voxel (cols)
+% across images (rows) of an image_vector (e.g., fmri_data) object.
 %
 % :Usage:
 % ::

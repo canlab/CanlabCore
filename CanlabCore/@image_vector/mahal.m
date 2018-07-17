@@ -1,8 +1,8 @@
 function [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
-% [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
-%
 % Mahalanobis distance for each image in a set compared to others in the set
 % Lower p-values reflect higher outlier status for an image.
+%
+% [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
 %
 % Optional inputs:
 % 'corr' : use correlation matrix of images instead of covariance. 

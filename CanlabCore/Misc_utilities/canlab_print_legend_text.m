@@ -16,7 +16,7 @@ legendtext = varargin; % a series of cells. each cell contains a string
 
 if nargin == 0, return, end  % nothing to display
 
-n_cols = 80;
+n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);
 
 for i = 1:length(legendtext)

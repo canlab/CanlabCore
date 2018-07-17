@@ -1,8 +1,9 @@
 function [all_surf_handles, pcl, ncl] = surface(obj, varargin)
-% [all_surf_handles, pcl, ncl] = surface(obj)
+% Render image data on brain surfaces; options for cutaways and canonical surfaces
 %
 % *Usage:*
-%   - [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
+%   [all_surf_handles, pcl, ncl] = surface(obj)
+%   [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
 % 
 % This function uses region.surface to create surface figures.
 % See help region.surface for options.

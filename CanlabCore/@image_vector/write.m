@@ -1,5 +1,5 @@
 function write(obj, varargin)
-% Write an image_vector object to an Analyze image.
+% Write an image_vector object to hard drive as an Analyze image (uses .fullpath field for image names)    
 % Option to write thresholded image, for statistic_image objects.
 %
 % obj.dat should contain data, with one COLUMN for each 3-D frame in the
@@ -47,34 +47,46 @@ function write(obj, varargin)
 % ..
 
 if any(strcmp(varargin, 'fname')) % fname option -- added by Luke
+    
     obj.fullpath = varargin{find(strcmp(varargin, 'fname')) + 1}; %check if this works.
+    
 elseif isempty(obj.fullpath)
+    
     error('Define fullpath field with name and path before writing an image_vector object to disk');
+
 end
 
 % Replace empty vox/images
 obj = replace_empty(obj);
 
 if any(strcmp(varargin, 'thresh'))
+    
     if ~isa(obj, 'statistic_image')
         disp('Warning: Thresholding only works with statistic_image objects.');
     else
         disp('Writing thresholded statistic image.');
         obj.dat(~obj.sig) = 0;
     end
+    
 end
 
 % mni option -- added Luk[ea]
+
 if any(strcmp(varargin, 'mni'))
+    
     evalc('mni = fmri_data(which(''brainmask.nii''));'); % evalc() used to silence output of fmri_data
+    
     if isa(obj, 'statistic_image') % if obj is statistic_image, convert it to fmri_data first. 
         obj = fmri_data(obj);
         obj.mask = fmri_mask_image(obj);
     end
-    obj = resample_space(obj,mni);
+    
+    obj = resample_space(obj, mni);
+    
 end
 
 % Keep original dt option -- added Luk[ea]
+
 if any(strcmp(varargin,'keepdt'))
     iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath, 'keepdt');
 else

@@ -1,11 +1,24 @@
 classdef image_vector
-% image_vector: An object that allows for storage and manipulation of
-% neuroimaging data. A few examples are below. 
-% - multiple images can be stored in a single object
-% - easy visualization (plot, orthviews, surface, montage, histogram, isosurface methods)
-% - easy image manipulation (apply_mask, get_wh_image, resample_space, compare_space, flip, threshold methods)
-% - easy data extraction (apply_atlas, apply_parcellation, extract_gray_white_csf, extract_roi_averages)
-% - easy analysis (ica, mahal, image_math, and many more in the fmri_data subclass)
+% image_vector: An object that allows for storage and manipulation of neuroimaging data
+%
+% -------------------------------------------------------------------------
+% Features and philosophy:
+% -------------------------------------------------------------------------
+%
+% - Store image data in a flat (2-d), space-efficient voxels x images matrix 
+% - Save space: Tools to remove out-of-image voxels and empty (zero/NaN) voxels, store data in single-precision format 
+% - Analysis-friendly: 2-d matrices can be read and analyzed in multiple packages/algorithms
+% - Meta-data included to convert back to 3-d image volume space, 
+%   with easy tools (methods) to reconstruct and visualize images
+%   Built-in resampling makes it easy to compare/combine datasets with different voxel sizes and image bounding boxes
+%   Reduces overhead for statisticians/data scientists unfamiliar with neuroimaging to apply their algorithms.
+% - Multiple images can be stored in a single object
+% - Methods have short, intuitive names, and perform high-level functions specialized for neuroimaging:
+% - Visualization (plot, orthviews, surface, montage, histogram, isosurface methods)
+% - Image manipulation (apply_mask, get_wh_image, resample_space, compare_space, flip, threshold methods)
+% - Data extraction (apply_atlas, apply_parcellation, extract_gray_white_csf, extract_roi_averages)
+% - Analysis (ica, mahal, image_math, and many more in the fmri_data subclass)
+% - Provenance: Ability to track and update history of changes to objects
 %
 % image_vector is a superclass of several other object types: 
 % fmri_data
@@ -16,12 +29,42 @@ classdef image_vector
 % are most often used. You will rarely create an image_vector object
 % directly. Typically you would create instances of one of the classes above.
 %
-% As with any object class in this toolbox, you can create an object by
-% specifying names of fields paired with values. You can also enter
-% filenames when you call statistic_image and create an image by loading a
-% file.
+% -------------------------------------------------------------------------
+% To construct/create a new instance of an object:
+% -------------------------------------------------------------------------
 %
-% Key properties and methods (a partial list):
+% As with any neuroimaging-data object class in this toolbox 
+% (image_vector, fmri_data, statistic_image, atlas), you can create an object by
+% specifying the names of a set of images you want to load in and passing them into the
+% function with the same name as the object class (e.g., fmri_data). This
+% will create an object with image data and image space information attached.
+%
+% Use fmri_data instead of image_vector to load image data:
+% data_obj = fmri_data(image_names);
+%
+% ...where image_names is a character array or 1 x n cell array of strings
+%
+%
+% -------------------------------------------------------------------------
+% Properties and methods
+% -----------------------------------------------------------------------
+% Properties are data fields associated with an object.
+% Type the name of an object (class instance) you create to see its
+% properties, and a link to its methods (things you can run specifically
+% with this object type). For example: After creating an fmri_data object 
+% called fmri_dat, as above, type fmri_dat to see its properties.
+%
+% There are many other methods that you can apply to fmri_data objects to
+% do different things.
+% - Try typing methods(fmri_data) for a list.
+% - You always pass in an fmri_data object as the first argument.
+% - Methods include utilities for many functions - e.g.,:
+% - resample_space(fmri_dat) resamples the voxels
+% - write(fmri_dat) writes an image file to disk (careful not to overwrite by accident!)
+% - regress(fmri_dat) runs multiple regression
+% - predict(fmri_dat) runs cross-validated machine learning/prediction algorithms
+%
+% Key properties and methods (a partial list; type doc image_vector for more):
 % -------------------------------------------------------------------------
 % image_vector Properties:
 %   dat                     - Image data, a [voxels x images] matrix, single-format
@@ -79,17 +122,51 @@ classdef image_vector
 %       threshold           - Threshold image_vector (or fmri_data or fmri_obj_image) object based on raw threshold values
 %       union               - ...and intersection masks for two image_vector objects 
 %   
+% -------------------------------------------------------------------------
 % Examples and help:
 % -------------------------------------------------------------------------
-
 %
-% canlab_help_1_load_a_sample_dataset
-
-% For more help, type:
+% To list properties and methods for this object, type:
 % doc image_vector, methods(image_vector)
 %
-% License: GNU General Public License; see Programmers' Notes in code for more info
+% Example 1: 
+% Load a sample dataset into an fmri_data object (subclass of image_vector)
+% This loads one of a set of named image collections used in demos/help:
+% data_obj = load_image_set('emotionreg');
 %
+% You can load the same images manually, by locating the files, listing
+% their names in a character array (or 1 x n cell array of strings), and
+% then passing those into fmri_data:
+%
+% filedir = what(fullfile('CanlabCore', 'Sample_datasets', 'Wager_et_al_2008_Neuron_EmotionReg'));
+% image_names = filenames(fullfile(filedir.path, '*img'));
+% data_obj = fmri_data(image_names);
+%
+% Now you can interact with the object.  Try, e.g.,:
+% methods(data_obj)                               % List methods for object type
+% plot(data_obj)                                  % Custom fmri_data specific plots
+% t = ttest(data_obj);                            % Perform a voxel-wise one-sample t-test across images
+% t = threshold(t, .005, 'unc', 'k', 10);         % Re-threshold with extent threshold of 10 contiguous voxels
+% r = region(t);                                  % Turn t-map into a region object with one element per contig region
+%
+% For more examples and walkthroughs, see the CANlab_help_examples
+% repository at https://github.com/canlab/CANlab_help_examples
+%
+% Some example tutorials:
+% canlab_help_1_installing_tools
+% canlab_help_2_load_a_sample_dataset
+% canlab_help_3_voxelwise_t_test_walkthrough
+% canlab_help_4_write_data_to_image_file_format
+% canlab_help_5_regression_walkthrough
+%
+% License and authors: 
+% -------------------------------------------------------------------------
+% By Tor Wager and CANlab members and collaborators
+% GNU General Public License; see http://www.gnu.org/licenses/ 
+% See Programmers' Notes in code for more info
+% 
+%
+% -------------------------------------------------------------------------
 % See also: 
 % fmri_data
 % statistic_image

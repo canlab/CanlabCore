@@ -1,5 +1,14 @@
-function stats = test_generalizability(obj,design,study)
-% RSA-based analysis of generalizability. This method tests whether
+function stats = rsa_regression(obj,design,study)
+% Representational similarity analysis (RSA)-based analysis, including inferences about a stimulus/task model 
+% Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
+% Takes a stimulus/experimental design (design), which is a set of binary
+% regressors specifying groups of images. Include a second grouping
+% variable (study) of integers coding for blocks of images to resample
+% within.
+% The function regresses the RSA matrix on the design and returns bootstrapped 
+% statistics on each design regressor.  
+% This method can be used to analyze generalizability across constructs and studies. 
+% e.g., see reference to Kragel et al. 2018 below. In this case, this method tests whether
 % patterns of activity in an fmri data object are generalizable across
 % different groupings specified in the matrix 'design'. 'study' is an integer
 % valued vector grouping images according to study. This script does not
@@ -9,7 +18,7 @@ function stats = test_generalizability(obj,design,study)
 % Usage:
 % ::
 %
-%    stats = test_generalizability(obj,design);
+%    stats = rsa_regression(obj,design);
 %
 % ..
 %     Author and copyright information:
@@ -52,8 +61,16 @@ function stats = test_generalizability(obj,design,study)
 %      sig - significance test at FDR q < .05
 %
 % :Examples:
-% ::
+% 
+% Example 1:
+% ----------------------------------------------------------------------
+% Download images from Kragel et al. 2018 Nature Neuroscience
+% Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
+% 270 subject-level images systematically sampled from 18 studies across 3 domains
+% [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
+% data_obj = fmri_data(files_on_disk)
 %
+% *** run analysis - to-be-added... ***
 %
 % ..
 %    Programmers' notes:
@@ -95,15 +112,17 @@ stats.sig=b_P<FDR(b_P,.05);
 stats.ste=b_ste;
 stats.bs_gen_index=bs_gen_index;
 
-end
+end % main function
 
 function beta = random_resample_within_study(modelRDM,obj,study)
 
 bs_inds=zeros(size(obj.dat,2),1); %initialize
 
 for i=1:max(study) %for each study
+    
     study_inds=find(study==i); %find images that belong to this study
     bs_inds(study_inds)=study_inds(randi([1,length(study_inds)],1,length(study_inds))); %randomly resample with replacement
+
 end
 
 resampled_data=obj.dat(:,bs_inds)'; %random subsample and transpose for correlation

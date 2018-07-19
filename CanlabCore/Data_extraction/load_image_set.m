@@ -279,6 +279,10 @@ function imagenames = check_image_names_get_full_path(imagenames)
 
 if ~iscell(imagenames), imagenames = cellstr(imagenames); end
 
+% remove trailing commas indexing volume number from any 4-d image names
+pat = ',\w*';
+imagenames = regexprep(imagenames, pat, '');
+
 for i = 1:length(imagenames)
     
     if exist(imagenames{i}, 'file')
@@ -291,7 +295,19 @@ for i = 1:length(imagenames)
         end
         
     else
-        fprintf('CANNOT FIND %s \n', imagenames{i})
+        
+        % check for .gz version; we entered .img/.nii but have .gz
+        myimg = which(deblank([imagenames{i} '.gz']));
+        
+        if ~isempty(myimg)
+            imagenames{i} = myimg;
+        end
+            
+    end
+    
+    if ~exist(imagenames{i}, 'file')
+        
+        fprintf('CANNOT FIND IMAGES %s \n', imagenames{i})
         error('Exiting.');
         
     end
@@ -534,7 +550,7 @@ cs=0;
 for d=1:length(domains)
     for r=1:length(rois)
         cs=cs+1;
-        imagenames{cs} = ['bPLS_' rois{r} '_' domains{d} '.nii'];
+        imagenames{cs} = ['bPLS_' rois{r} '_' strrep(domains{d}, ' ', '_') '.nii'];
     end
 end
 
@@ -602,23 +618,38 @@ function [image_obj, networknames, imagenames] = load_emotion_reg_sample
 % Load Wager et al. 2008 Emotion Regulation sample dataset
 % ------------------------------------------------------------------------
 
-myfile = which('con_00810001.img');
-mydir = fileparts(myfile);
+% myfile = which('con_00810001.img');
+% mydir = fileparts(myfile);
 
-if isempty(mydir)
-    disp('Uh-oh! I can''t find the data.')
-else
-    disp('Data found.')
+myfile = which('Wager_2008_emo_reg_vs_look_neg_contrast_images.nii.gz');
+
+if isempty(myfile)
+    myfile = which('Wager_2008_emo_reg_vs_look_neg_contrast_images.nii');
 end
 
-imagenames = filenames(fullfile(mydir, 'con_008100*img'));
+if isempty(myfile)
+    disp('Uh-oh! I can''t find the data.')
+else
+    % found data ok
+end
 
+% imagenames = filenames(fullfile(mydir, 'con_008100*img'));
+% 
+% imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(myfile, [], 'noverbose');  % loads images
+
+imagenames = image_obj.fullpath;
 imagenames = check_image_names_get_full_path(imagenames);
-
-image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images
 
 networknames = format_strings_for_legend(image_obj.image_names);
 
+if length(networknames) == 1 % 4-d, expand
+   
+    networknames = repmat(networknames, size(image_obj.dat, 2), 1);
+    
+end
+    
 end % function
 
 

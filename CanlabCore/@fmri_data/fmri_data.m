@@ -375,6 +375,7 @@ classdef fmri_data < image_vector
                 return
                 
             else
+                % It's a file. Unzip if needed and check that image_names exist
                 
                 % Handle .gz by unzipping if needed
                 [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names);
@@ -419,7 +420,8 @@ classdef fmri_data < image_vector
                 case 'char' % string file name
                     maskobj = fmri_mask_image(maskinput);
                     
-                case 'fmri_mask_image'
+                case {'fmri_mask_image'} % , 'fmri_data', 'statistic_image'} % others will not work with resample_to_space_defining... below
+                        
                     maskobj = maskinput;
                     
                 otherwise
@@ -434,6 +436,7 @@ classdef fmri_data < image_vector
             if sample2mask
                 % Read data in mask space; map images to mask
                 % ------------------------------------------------
+                
                 if verbose, fprintf('Expanding image filenames if necessary\n'); end
                 
                 for i = 1:size(image_names, 1)
@@ -467,7 +470,8 @@ classdef fmri_data < image_vector
                 
                 obj.volInfo = maskobj.volInfo;
                 
-            else
+            else % Not sample2mask, so resample mask to data image space
+                
                 % Read data in image space; map mask to images
                 % ------------------------------------------------
                 

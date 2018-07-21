@@ -94,23 +94,32 @@ if first_vol, num_imgs = 1; end
 
 switch imgtype
     case 'name'
-        % --------------------------------------
-        % * String matrix of filenames
-        % --------------------------------------
-
+        % ---------------------------------------------------------------
+        % * String matrix of filenames: Load first volume, then all data
+        % ---------------------------------------------------------------
+        % use iimg_read_from_file
+        
         space_defining_image = inputimgs(1, :);
-        if first_vol
-            whcomma = find(space_defining_image == ',');
-            if ~isempty(whcomma)
-                space_defining_image = space_defining_image(1:whcomma-1);
-            end
-            space_defining_image = [space_defining_image ',1'];
-        end
+        
+%         if first_vol
+%             whcomma = find(space_defining_image == ',');
+%             if ~isempty(whcomma)
+%                 space_defining_image = space_defining_image(1:whcomma-1);
+%             end
+%             
+%             space_defining_image = [space_defining_image ',1'];
+%             
+%         end
      
-        [volInfo, dat] = iimg_read_from_file(space_defining_image, extended_output_flag, reading_data);
+        % Read first image, or first set of volumes in 4-d file:
+        % If firstvol, the ",1" will be added to space defining image after
+        % (possible) unzipping and checks on whether it exists.
+        
+        [volInfo, dat] = iimg_read_from_file(space_defining_image, extended_output_flag, reading_data, first_vol);
 
         if(reading_data && num_imgs > 1)
-            %% load other images; check to make sure they're in same dims as first
+            % load other images; check to make sure they're in same dims as first
+            
             dat = [dat zeros(volInfo.nvox, num_imgs-1)];
 
             for i = 2:num_imgs
@@ -179,11 +188,17 @@ end
 end
 
 
+% iimg_read_from_file
+% -------------------------------------------------------------------------
 
+function [volInfo, dat] = iimg_read_from_file(imname, extended_output_flag, reading_data, dofirstvolonly)
+% Read image data from file using spm_vol and spm_read_vols.  
+% Call vol_file_check, which checks zipped and unzipped versions and
+% gunzips if needed
 
-function [volInfo, dat] = iimg_read_from_file(imname, extended_output_flag, reading_data)
-
-imname = vol_file_check(imname);
+% Returns filename for unzipped image with formatting ,# to read first vol
+% only if requested
+imname = vol_file_check(imname, dofirstvolonly);
 
 % %  tor: oct 2010: speed up by adding ,1 to get only first vol in spm
 % [pth, nam, ext] = fileparts(imname);
@@ -194,7 +209,7 @@ imname = vol_file_check(imname);
 
 volInfo = spm_vol(imname);
 
-% Changed Feb 2008 to deal with 4-D image reading in SPM5
+% Changed Feb 2008 to deal with 4-D image reading in SPM5 and above
 nimgs = length(volInfo);
 
 for i = 1:nimgs
@@ -225,10 +240,12 @@ if(reading_data)
     dat = zeros(volInfo(1).nvox, nimgs);
 
     for i = 1:nimgs
+        
         dat_vol = spm_read_vols(volInfo(i));
         dat(:, i) = dat_vol(:);
 
         volInfo(i).image_indx = dat(:) ~= 0; % locate all voxels in-mask
+        
     end
 
     if extended_output_flag
@@ -260,30 +277,59 @@ volInfo = volInfo(1);
 
 end
 
-function imname = vol_file_check(imname)
+
+
+function [imname, waszipped] = vol_file_check(imname, varargin)
+% Check that filename exists, in either gz (zipped) or unzipped format, and
+% return file name of file with full path name. 
+% If both zipped and unzipped exist, prefer unzipped.
+% Return flag waszipped so file can be re-zipped after loading.
+
+waszipped = false;
+
+if length(varargin) > 0 
+    dofirstvolonly = varargin{1};
+end
+
 if(~ischar(imname) || isempty(imname))
     error('Image name is not string or is empty.');
 end
 
 imname = deblank(imname);
-[pth, nam, ext] = fileparts(imname);
-wh_comma = find(ext == ',');
-if(~isempty(wh_comma))
-    wh_comma = wh_comma(1);
-    no_comma_ext = ext(1:(wh_comma-1));
-    test_imname = fullfile(pth, [nam no_comma_ext]);
+
+% strip ,# volume numbers sometimes added by SPM
+imname = regexprep(imname, ',\w*', '');
+
+% strip .gz version for now and create .gz and non-.gz version. check for both.
+imname = regexprep(imname, '.gz', '');
+
+gzipexists = exist([imname '.gz'], 'file');
+nozipexists = exist(imname, 'file');
+
+if nozipexists
+    % use imname
+    
+elseif gzipexists
+    % use .gz - unzip and use previous value of imname
+    % flag for re-gzipping later.
+    waszipped = true;
+    system(['gunzip ' imname '.gz']);
+    
 else
-    test_imname = imname;
+    error('Image "%s" does not exist or cannot be found on path (unzipped or .gz versions)!', imname);
 end
 
-% make sure it exists
-if(~exist(test_imname, 'file'))
-    which_imname = which(test_imname); % try to find on path
-    if(~exist(which_imname, 'file'))
-        error('Image "%s" does not exist or cannot be found on path!', test_imname);
-    else
-        imname = [which_imname ext(wh_comma:end)];
-    end
+full_imname = which(imname); % sometimes ok, sometimes empty if full path already included
+
+if exist(full_imname, 'file') % if not empty and ok, else default to previous value of imname
+    imname = full_imname;
+end
+
+% Add volume number if first vol only
+if dofirstvolonly
+
+    imname = [imname ',1'];
+    
 end
 
 end

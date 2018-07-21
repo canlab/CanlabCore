@@ -77,7 +77,7 @@ for i = 1:length(varargin)
             % functional commands
             case 'nocheck', docheck = 0;
             case 'verbose', verbose = 1;
-            case 'noverbose', % nothing more to do
+            case 'noverbose'             % nothing more to do
             case 'single', dosingle = 1; % varargin{i+1};
             case 'noexpand', doexpand = 0;
                 

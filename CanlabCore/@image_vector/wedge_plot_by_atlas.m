@@ -226,10 +226,10 @@ for i = 1:k
         myouterradius = max(abs(data_to_plot));
         
         mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
-        mycolorband_colors = colorband_colors{i};
+        %mycolorband_colors = colorband_colors{i};
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', mycolorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     else % data mode
         
@@ -239,9 +239,9 @@ for i = 1:k
         myouterradius = max(abs(mymean) + myste);
         
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
-        mycolorband_colors = colorband_colors{i};
+        %mycolorband_colors = colorband_colors{i};
         
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', mycolorband_colors, 'bicolor', 'colors', mycolors);
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors, 'bicolor', 'colors', mycolors);
         
     end
 

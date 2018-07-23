@@ -123,7 +123,7 @@ switch imgtype
             dat = [dat zeros(volInfo.nvox, num_imgs-1)];
 
             for i = 2:num_imgs
-                [indx data] = iimg_read_from_file(inputimgs(i, :), 0, reading_data);
+                [indx data] = iimg_read_from_file(inputimgs(i, :), 0, reading_data, 0); % read all, not just first vol
 
                 if length(data) ~= volInfo.nvox
                     fprintf('Warning: img dims for %s do not match 1st image. Resampling.\n', inputimgs(i, :));

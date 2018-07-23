@@ -237,6 +237,10 @@ switch colortype
                 
             end
             
+            if dozoom
+                zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+            end
+            
         else
             
             % Just render blobs

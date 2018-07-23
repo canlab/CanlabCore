@@ -56,6 +56,8 @@ function r = extract_data(r, data_obj)
 %     mismatch when empty vox were removed
 % ..
 
+if isempty(r), return, end
+
 xyzlist = data_obj.volInfo.xyzlist;
 
 data_obj = replace_empty(data_obj); % tor added - May 2017

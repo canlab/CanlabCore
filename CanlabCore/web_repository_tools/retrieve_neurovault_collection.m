@@ -14,8 +14,10 @@ function [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_n
 
 collstr = num2str(collection_number); 
 
+options=weboptions;
+options.CertificateFilename=('');
 % Get info structure for a collection from Neurovault
-mycollection = webread(['http://neurovault.org/api/collections/' collstr]);
+mycollection = webread(['http://neurovault.org/api/collections/' collstr],options);
 
 % Print
 fprintf('Downloading: %s\nOwner: %s, Images: %d\n%s\n', ...
@@ -25,7 +27,7 @@ mycollection.number_of_images, ...
 mycollection.url);
 
 % Get images
-myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr));
+myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr),options);
 
 % Get save location
 saveroot = fullfile(pwd, num2str(mycollection.id));
@@ -51,7 +53,7 @@ for i = 1:nimgs
     
     url_on_neurovault{i} = myimages.results(i).file;
     
-    files_on_disk{i, 1} = websave(file_to_save{i}, url_on_neurovault{i});
+    files_on_disk{i, 1} = websave(file_to_save{i}, url_on_neurovault{i},options);
     
 end
 

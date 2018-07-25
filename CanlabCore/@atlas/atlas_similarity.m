@@ -125,6 +125,8 @@ wh_labels = modal_atlas_index > 0;
 
 modal_label = repmat({'No label'}, nr, 1);
 modal_label(wh_labels) = ref_atlas_obj.labels(modal_atlas_index(wh_labels));
+modal_label_descriptions(wh_labels) = ref_atlas_obj.label_descriptions(modal_atlas_index(wh_labels))';
+modal_label_descriptions = modal_label_descriptions';
 
 % modal_atlas_coverage: Percent of best reference region covered
 %
@@ -172,7 +174,7 @@ Perc_covered_by_label = round(100 * double(modal_region_coverage)); % Percentage
 
 Atlas_regions_covered = sum(coverage5_index)';
 
-region_table = table(Region, Voxels, Region_Vol_mm, Atlas_regions_covered, modal_label, Perc_covered_by_label, Ref_region_perc, modal_atlas_index);
+region_table = table(Region, Voxels, Region_Vol_mm, Atlas_regions_covered, modal_label, modal_label_descriptions, Perc_covered_by_label, Ref_region_perc, modal_atlas_index);
 
 % Table properties and legend
 % ---------------------------------------------------

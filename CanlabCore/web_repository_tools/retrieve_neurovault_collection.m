@@ -16,6 +16,7 @@ collstr = num2str(collection_number);
 
 options=weboptions;
 options.CertificateFilename=('');
+options.Timeout = 10;
 % Get info structure for a collection from Neurovault
 mycollection = webread(['http://neurovault.org/api/collections/' collstr],options);
 
@@ -29,6 +30,17 @@ mycollection.url);
 % Get images
 myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr),options);
 
+while length(myimages.results)~=myimages.count
+    if ~exist('moreimages','var')
+    moreimages = webread(myimages.next,options);
+    else
+    moreimages = webread(moreimages.next,options);        
+    end
+    myimages.results=[myimages.results; moreimages.results];
+end
+
+clear moreimages;
+
 % Get save location
 saveroot = fullfile(pwd, num2str(mycollection.id));
 if ~exist(saveroot, 'dir')
@@ -36,6 +48,8 @@ if ~exist(saveroot, 'dir')
     mkdir(saveroot)
     
 end
+
+
 
 % Pull and save all images
 nimgs = length(myimages.results);

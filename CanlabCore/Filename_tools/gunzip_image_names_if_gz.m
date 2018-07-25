@@ -56,17 +56,18 @@ for i = 1:size(image_names, 1)
             % Unzip. Use system to remove .gz after unzipping.
             
             % Will wait for input, and not overwrite, if images exist
-            [status, result] = system(['gunzip ' my_image]);
-            
-            if status == 0 && isempty(result)
+%             [status, result] = system(['gunzip ' my_image]);
+            gunzip(my_image);
+
+%             if status == 0 && isempty(result)
                 % ok - success, and no error/text returned from system
                 
                 image_names_cell{i, 1} = unzipped_file;
                 
-            else
-                disp('Image unzipping error.')
-                disp(result)
-            end
+%             else
+%                 disp('Image unzipping error.')
+%                 disp(result)
+%             end
             
         else
             

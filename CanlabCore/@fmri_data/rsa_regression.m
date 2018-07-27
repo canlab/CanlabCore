@@ -1,13 +1,11 @@
 function stats = rsa_regression(obj,design,study)
-% Representational similarity analysis (RSA)-based analysis, including inferences about a stimulus/task model 
+% Representational similarity-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
-% Takes a stimulus/experimental design (design), which is a set of binary
-% regressors specifying groups of images. Include a second grouping
-% variable (study) of integers coding for blocks of images to resample
-% within.
+% Takes a stimulus/experimental design (design), which is a set of binary regressors specifying groups of images. 
+% Include a second grouping variable (study) of integers coding for blocks of images to resample within.
 % The function regresses the RSA matrix on the design and returns bootstrapped 
 % statistics on each design regressor.  
-% This method can be used to analyze generalizability across constructs and studies. 
+%   This method can be used to analyze generalizability across constructs and studies. 
 % e.g., see reference to Kragel et al. 2018 below. In this case, this method tests whether
 % patterns of activity in an fmri data object are generalizable across
 % different groupings specified in the matrix 'design'. 'study' is an integer
@@ -70,7 +68,9 @@ function stats = rsa_regression(obj,design,study)
 % [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
 % data_obj = fmri_data(files_on_disk)
 %
-% *** run analysis - to-be-added... ***
+% 
+%
+%
 %
 % ..
 %    Programmers' notes:
@@ -86,12 +86,14 @@ for i=1:size(design,2) %for each specified grouping
    modelRDM(:,i)=1000*modelRDM(:,i)/sum(modelRDM(:,i)); %normalize and scale
 end
 
+%supress distance warning - 0 value distances get removed...
+warning('off','stats:pdist:ConstantPoints')
 
 brainRDM=pdist(obj.dat','correlation');
 brainRDM(brainRDM<.00001)=NaN;
 gen_index= glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
 
-num_it=100;
+num_it=1000;
 bs_gen_index=zeros(num_it,size(gen_index,1));
 parfor it=1:num_it
 bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study);
@@ -111,6 +113,7 @@ stats.p=b_P;
 stats.sig=b_P<FDR(b_P,.05);
 stats.ste=b_ste;
 stats.bs_gen_index=bs_gen_index;
+stats.RDM=squareform(brainRDM);
 
 end % main function
 
@@ -124,6 +127,8 @@ for i=1:max(study) %for each study
     bs_inds(study_inds)=study_inds(randi([1,length(study_inds)],1,length(study_inds))); %randomly resample with replacement
 
 end
+%supress distance warning - 0 value distances get removed...
+warning('off','stats:pdist:ConstantPoints')
 
 resampled_data=obj.dat(:,bs_inds)'; %random subsample and transpose for correlation
 brainRDM=pdist(resampled_data,'correlation'); %1 - pearson correlation

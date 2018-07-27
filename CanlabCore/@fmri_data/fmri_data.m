@@ -546,8 +546,8 @@ for i = 1:size(image_names, 1)
         
        % Use system to remove unzipped version after zipping.
        % Will wait for input, and not overwrite, if images exist
-        [status, result] = system(['gzip ' image_names(i, :)]);
-        
+%         [status, result] = system(['gzip ' image_names(i, :)]);
+        gzip(image_names(i, :));
         image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
         
     end

@@ -277,7 +277,7 @@ else
     if isfield(clusters, 'corr_range'), fprintf(fid, 'mincorr\tmaxcorr\t'); end
     if isfield(clusters, 'snr_avgts'), fprintf(fid, 'snr_avgts(d)\t'); end
     if isfield(clusters, 'snr'), fprintf(fid, 'minsnr\tmaxsnr\t'); end
-    if isfield(clusters, 'numpos') && isfield(clusters, 'power80'), 
+    if isfield(clusters, 'numpos') && isfield(clusters, 'power80') 
         fprintf(fid, 'numpos\tpower80\t');
     end
     if exist('v') == 1
@@ -311,7 +311,7 @@ else
         if isfield(clusters, 'corr_range'), fprintf(fid, '%3.2f\t%3.2f\t', cmatx(i, 8), cmatx(i, 9)); end
         if isfield(clusters, 'snr_avgts'), fprintf(fid, '%3.2f\t', cmatx(i, 10)); end
         if isfield(clusters, 'snr'), fprintf(fid, '%3.2f\t%3.2f\t', cmatx(i, 11), cmatx(i, 12)); end
-        if isfield(clusters, 'numpos') && isfield(clusters, 'power80'), 
+        if isfield(clusters, 'numpos') && isfield(clusters, 'power80') 
             fprintf(fid, '%3.0f\t%3.0f\t', cmatx(i, 13), cmatx(i, 14));
         end
         if exist('v', 'var') == 1
@@ -333,8 +333,12 @@ else
         % print additional fields
         for j = 1:length(printfields)
             if ~isfield(clusters, printfields{j})
-                warning([printfields{j} ' is not a field in clusters.']);
+                
+                myval = NaN;
+                
+                %warning([printfields{j} ' is not a field in clusters.']);
             else
+                
                 myval = clusters(i).(printfields{j});
                 if isempty(myval), myval = NaN; end
                 
@@ -389,25 +393,25 @@ end
 cmatx(i, 2) = clusters(1).numVox;
 cmatx(i, 3) = get_maxstat(clusters(1));
 
-if isfield(clusters, 'corr_range'), 
+if isfield(clusters, 'corr_range') 
     cmatx(i, 8) = clusters(1).corr_range(1);
     cmatx(i, 9) = clusters(1).corr_range(end);
-elseif isfield(bigcl, 'corr_range'), 
+elseif isfield(bigcl, 'corr_range') 
     cmatx(i, 8) = NaN;
     cmatx(i, 9) = NaN;
 end
 
-if isfield(clusters, 'snr_avgts'), 
+if isfield(clusters, 'snr_avgts') 
     cmatx(i, 10) = clusters(1).snr_avgts;
-elseif isfield(bigcl, 'snr_avgts'), 
+elseif isfield(bigcl, 'snr_avgts') 
     cmatx(i, 10) = NaN;
     cmatx(i, 10) = NaN;
 end
 
-if isfield(clusters, 'snr'), 
+if isfield(clusters, 'snr') 
     cmatx(i, 11) = min(clusters(1).snr);
     cmatx(i, 12) = max(clusters(1).snr);
-elseif isfield(bigcl, 'snr'), 
+elseif isfield(bigcl, 'snr') 
     cmatx(i, 11) = NaN;
     cmatx(i, 12) = NaN;
 end
@@ -435,7 +439,7 @@ fprintf(fid,'\t');   % skip numpeaks - makes no sense for subcluster
 if isfield(bigcl, 'corr_range'), fprintf(fid, '%3.2f\t%3.2f\t', cmatx(i, 8), cmatx(i, 9)); end
 if isfield(bigcl, 'snr_avgts'), fprintf(fid, '%3.2f\t', cmatx(i, 10)); end
 if isfield(bigcl, 'snr'), fprintf(fid, '%3.2f\t%3.2f\t', cmatx(i, 11), cmatx(i, 12)); end
-if isfield(bigcl, 'numpos') & isfield(bigcl, 'power80'), 
+if isfield(bigcl, 'numpos') && isfield(bigcl, 'power80') 
     fprintf(fid, '%3.0f\t%3.0f\t', cmatx(i, 13), cmatx(i, 14));
 end
 

@@ -20,8 +20,14 @@ rgb = [120  18 134
 
 colormap = rgb ./ 255;
 
-colorcell = mat2cell(colormap,ones(length(rgb)), 3);
- 
+try % diff versions of matlab are different?
+    
+    colorcell = mat2cell(colormap, ones(length(rgb), 1), 3);
+    
+catch
+    
+    colorcell = mat2cell(colormap, ones(length(rgb), 1));
 end
 
- 
+end
+

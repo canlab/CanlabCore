@@ -50,7 +50,7 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 % :Examples:
 % -------------------------------------------------------------------------
 % ::
-% Example 1: 
+% Example 1:
 % % Complete group analysis of a standard dataset
 % % Do analysis and prep results region object:
 %
@@ -113,16 +113,16 @@ if dosep
     % separate pos and neg
     [poscl, negcl] = posneg_separate(cl);
     
-    cl = [poscl negcl]; 
+    cl = [poscl negcl];
     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
     
     clear poscl negcl
     
     fprintf('\n%s\nPositive Effects\n', sep_str)
 else
-%     % just return cl in poscl
-%     poscl = cl;
-%     negcl = [];
+    %     % just return cl in poscl
+    %     poscl = cl;
+    %     negcl = [];
     fprintf('\n%s\nTable of all regions\n', sep_str)
 end
 
@@ -131,7 +131,7 @@ end
 % Neuroimaging_Pattern_Masks repository
 % Used in both legacy and 2018+ version
 % If empty, skips and returns empty table vars.
-% Must do after separating pos and neg clusters because some regions may be split. 
+% Must do after separating pos and neg clusters because some regions may be split.
 % -------------------------------------------------------------------------
 
 [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
@@ -177,7 +177,7 @@ else
     % note for beta testing: table will break if regions are missing from
     % region_table.
     
-    %T2 = movevars(T1, VARS, 'Before', LOCATION) 
+    %T2 = movevars(T1, VARS, 'Before', LOCATION)
     
     % Good idea, but Matlab 2018a does not move descriptions with moves anyway
     %     results_table = region_table;
@@ -208,18 +208,25 @@ else
     else
         disp('No regions to display');
     end
-
+    
 end
 
 %canlab_print_legend_text(table_legend_text'); % if text block.  % could use disp() here, but canlab function is more flexible
 
+if isempty(table_legend_text)
+    return
+end
+
 % clean up text
-table_legend_text(2:3) = [];
+if length(table_legend_text) > 2
+    table_legend_text(2:3) = [];
+end
+
 table_legend_text = strrep(table_legend_text, 'Modal_label', 'Region');
 table_legend_text = strrep(table_legend_text, 'Region_Vol_mm', 'Volume');
 
 % print
-canlab_print_legend_text(table_legend_text{:}); 
+canlab_print_legend_text(table_legend_text{:});
 
 
 end % main function

@@ -31,8 +31,10 @@ function obj = reparse_contiguous(obj, varargin)
 %    Copyright tor wager, 2011
 
 %    Programmers' notes:
-%    6/22/14: Tor changed behavior to use .sig field
+%    6/22/14: Tor changed behavior to use .sig field. Returns clusters of
+%    in-mask, significant (.sig) voxels only.
 % %  7/2018 - tor - fixed bug with statistic_image handling in some cases
+%             tor - clusters not in .sig were not zeroed out - now they are
 % ..
 
 wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
@@ -60,12 +62,18 @@ if size(obj.volInfo(1).cluster, 1) == size(obj.volInfo(1).xyzlist, 1)
     wh = logical(obj.sig(:, 1));
     
     newcl = spm_clusters(obj.volInfo(1).xyzlist(wh, :)')'; % 6/22/14 tor changed to use .sig
+    
     obj.volInfo(1).cluster(wh) = newcl;                     % tor changed to use .sig
     
+    obj.volInfo(1).cluster(~wh) = 0;                        % zero to clusters outside .sig mask
+    
 else % full in-mask -- assign to correct voxels
+    
     wh = wh & logical(obj.sig(:, 1));
 
     obj.volInfo(1).cluster(wh) = spm_clusters(obj.volInfo(1).xyzlist(wh, :)')';
+    
+     obj.volInfo(1).cluster(~wh) = 0;                       % zero to clusters with no data or outside .sig mask
 end
 
 obj = remove_empty(obj);

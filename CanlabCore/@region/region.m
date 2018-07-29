@@ -178,29 +178,11 @@ classdef region
             % define mask object
             % ---------------------------------
             
-            if isa(maskinput, 'char') % string file name
-                mask = fmri_mask_image(maskinput);
-                
-            elseif isa(maskinput, 'image_vector')
-                % case {'fmri_data', 'fmri_mask_image', 'statistic_image', 'image_vector'}
-                
-                % special for thresholded stats images: use threshold
-                
-                % if sig field exists, use sig voxels only
-                if isa(maskinput, 'statistic_image') && ~isempty(maskinput.sig)
-                    
-                    for img = 1:size(maskinput.dat, 2)
-                        maskinput.dat(~maskinput.sig(:, img), img) = 0;
-                    end
-                    
-                end
-                
-                mask = maskinput;
-                
-            else
-                error('region class constructor: unknown mask input type.')
-            end
-            clear maskinput
+            % Load mask into object if needed, apply .sig field for
+            % statistic_image objects
+            
+            [mask, maskData] = prep_mask_object(maskinput);
+            
             
             % ---------------------------------
             % define what to average over
@@ -219,7 +201,7 @@ classdef region
                             
                         case 'noverbose'
                             doverbose = false;
-                           
+                            
                         otherwise
                             disp('region class constructor: Illegal string value for average_over.');
                             fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
@@ -242,38 +224,7 @@ classdef region
                 end
             end
             
-            % Mask data can already be reduced to those indexed by
-            % wh_inmask or not.
-            % In addition, voxels/images with empty values may be removed.
-            % So insert those first.
-            % Note: .dat can sometimes have 2+ cols, so use only first one
-            mask = replace_empty(mask);
             
-            if size(mask.dat, 2) > 1
-                disp('Warning: Mask has multiple images, will use first only.');
-            end
-            
-            if size(mask.dat, 1) == mask.volInfo.n_inmask
-                maskData = mask.dat(:, 1);
-                
-            elseif size(mask.dat, 1) == mask.volInfo.nvox
-                % We have a full-length vector
-                maskData = mask.dat(mask.volInfo.wh_inmask(:, 1));
-            else
-                error('Illegal size for mask.dat, because it does not match its volInfo structure.')
-            end
-           
-            % If statistic_image, we need to consider thresholding
-            % so apply .sig field
-            if isa(mask, 'statistic_image')
-                
-                if size(mask.dat, 1) == mask.volInfo.nvox
-                    error('statistic_image objects should not have data vector (.dat) the length of full image space.')
-                end
-                    
-                maskData = maskData .* mask.sig(:, 1);
-                
-            end
             
             % If extracting data, we'll recreate the regions in
             % extract_roi_averages, so do that here and then exit.
@@ -286,9 +237,6 @@ classdef region
                 dataobj = replace_empty(dataobj); % may need to do this to get voxels to line up
                 
                 cs = compare_space(dataobj, mask);
-                
-                % may need to reparse contiguous voxels in the mask.
-                mask = reparse_contiguous(mask, 'nonempty');
                 
                 % if empty, skip
                 isemptymask = isempty(mask.dat) || all(mask.dat(:) == 0);
@@ -316,9 +264,32 @@ classdef region
             end
             
             % ---------------------------------
+            % get which values to save later
+            % ---------------------------------
+            
+            maskValues = maskData;  % values to save in .val field 
+            maskZ = maskData;       % values to save in .Z field later
+            
+            val_descrip = 'Input mask image values for each voxel.';
+            Z_descrip = 'Input mask image values for each voxel.';
+             
+            if isa(mask, 'statistic_image')
+                
+                 val_descrip = 'Statistic effect value (.dat) for each voxel.';
+
+                 if ~isempty(mask.p)
+                     
+                     mask = replace_empty(mask);            % after this p now has all in-mask voxels
+                     Z_descrip = 'Z-score for each voxel.';
+                     maskZ = sign(mask.dat) .* norminv(1 - mask.p ./ 2); % Z-score based on p-value, assuming two-tailed p-vals.
+                     
+                 end     
+                
+            end
+            
+            % ---------------------------------
             % get unique values for voxel grouping code
             % ---------------------------------
-            maskValues = maskData; % values to save
             
             switch average_over
                 
@@ -331,7 +302,7 @@ classdef region
                     nregions = length(u);
                     
                     if doverbose
-                    fprintf('Grouping voxels with unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
+                        fprintf('Grouping voxels with unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
                     end
                     
                 case 'contiguous_regions'
@@ -340,7 +311,7 @@ classdef region
                     
                     % re-make cluster ID for in-mask voxels
                     mask.volInfo.cluster(isinmask) = spm_clusters(mask.volInfo.xyzlist(isinmask, :)')';
-                
+                    
                     % Old, no longer needed with newer SPM
                     %                     if sum(isinmask) < 50000
                     %                         mask.volInfo.cluster(isinmask) = spm_clusters(mask.volInfo.xyzlist(isinmask, :)')';
@@ -355,7 +326,7 @@ classdef region
                     nregions = length(u);
                     
                     if doverbose
-                    fprintf('Grouping contiguous voxels: %3.0f regions\n', nregions);
+                        fprintf('Grouping contiguous voxels: %3.0f regions\n', nregions);
                     end
                     
                 otherwise
@@ -370,16 +341,19 @@ classdef region
             
             for i = 1:nregions
                 imgvec = maskData == u(i);
-
+                
                 obj(i).title = sprintf('Region %3.0f', i);
                 obj(i).shorttitle = sprintf('Region%03d', i);
                 obj(i).XYZ = double(mask.volInfo.xyzlist(imgvec,:))';
                 
                 myXYZ = double(obj(i).XYZ);                         % 5/24/17 tor&phil: recast as double. future: could recast XYZmm as int16
-                obj(i).XYZmm = voxel2mm(myXYZ, mask.volInfo.mat); 
+                obj(i).XYZmm = voxel2mm(myXYZ, mask.volInfo.mat);
                 
                 obj(i).val = maskValues(imgvec); %ones(1,size(obj(i).XYZ,2));
-                obj(i).Z = maskValues(imgvec)'; %ones(1,size(obj(i).XYZ,2));
+                obj(i).Z = maskZ(imgvec)'; %ones(1,size(obj(i).XYZ,2));
+                
+                obj(i).val_descrip = val_descrip;
+                obj(i).Z_descrip = Z_descrip;
                 
                 obj(i).voxSize = abs(diag(mask.volInfo.mat(1:3, 1:3)));
                 obj(i).M = mask.volInfo.mat;
@@ -405,6 +379,10 @@ classdef region
                 obj(1).voxSize = abs(diag(mask.volInfo.mat(1:3, 1:3)));
                 obj(1).M = mask.volInfo.mat;
                 obj(1).dim = mask.volInfo.dim;
+                
+                obj(1).val_descrip = val_descrip;
+                obj(1).Z_descrip = Z_descrip;
+                
             end
             
         end % class constructor function
@@ -412,4 +390,84 @@ classdef region
     end % methods
     
     
+end % classdef
+
+
+
+
+% Load mask into object if needed, apply .sig field for
+% statistic_image objects
+% * NOTE: some functionality may be redundant here; to-do is to refactor
+% and run unit test
+
+function  [mask, maskData] = prep_mask_object(maskinput)
+
+
+if isa(maskinput, 'char') % string file name
+    mask = fmri_mask_image(maskinput);
+    
+elseif isa(maskinput, 'image_vector')
+    % case {'fmri_data', 'fmri_mask_image', 'statistic_image', 'image_vector'}
+    
+    % special for thresholded stats images: use threshold
+    
+    % if sig field exists, use sig voxels only
+    if isa(maskinput, 'statistic_image') && ~isempty(maskinput.sig)
+        
+        for img = 1:size(maskinput.dat, 2)
+            
+            maskinput.dat(~maskinput.sig(:, img), img) = 0;
+            
+        end
+        
+    end
+    
+    mask = maskinput;
+    
+else
+    error('region class constructor: unknown mask input type.')
 end
+
+
+% Mask data can already be reduced to those indexed by
+% wh_inmask or not.
+% In addition, voxels/images with empty values may be removed.
+% So insert those first.
+% Note: .dat can sometimes have 2+ cols, so use only first one
+mask = replace_empty(mask);
+
+if size(mask.dat, 2) > 1
+    disp('Warning: Mask has multiple images, will use first only.');
+end
+
+if size(mask.dat, 1) == mask.volInfo.n_inmask
+    maskData = mask.dat(:, 1);
+    
+elseif size(mask.dat, 1) == mask.volInfo.nvox
+    % We have a full-length vector
+    maskData = mask.dat(mask.volInfo.wh_inmask(:, 1));
+else
+    error('Illegal size for mask.dat, because it does not match its volInfo structure.')
+end
+
+% If statistic_image, we need to consider thresholding
+% so apply .sig field
+if isa(mask, 'statistic_image')
+    
+    if size(mask.dat, 1) == mask.volInfo.nvox
+        error('statistic_image objects should not have data vector (.dat) the length of full image space.')
+    end
+    
+    maskData = maskData .* mask.sig(:, 1);
+    
+end
+
+
+
+% may need to reparse contiguous voxels in the mask.
+mask = reparse_contiguous(mask, 'nonempty');
+
+
+end % function
+
+

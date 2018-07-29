@@ -213,13 +213,34 @@ for i = 1:n
             % Apply size threshold
             % --------------------------------------
             stats_image_obj = replace_empty(stats_image_obj);
+            
             if k > 1
-                stats_image_obj.sig(:, i) = logical(iimg_cluster_extent(double(stats_image_obj.sig(:, i)), stats_image_obj.volInfo, k));
+                
+                % reparse contig vox to consider only those above threshold
+
+                % stats_image_obj = reparse_contiguous(stats_image_obj);
+%                 stats_image_obj = replace_empty(stats_image_obj);
+                % iimg_cluster_extent not always working right - 7/27/2018
+                % - under some strange cases i can't quite understand (tor)
+                
+                %stats_image_obj.sig(:, i) = logical(iimg_cluster_extent(double(stats_image_obj.sig(:, i)), stats_image_obj.volInfo, k));
+            
+                % apply the .sig field, re-derive cluster indices in sig
+                % voxels, and include only clusters with enough voxels.
+                stats_image_obj = alternate_cluster_extent_in_sig_field(stats_image_obj, i, k);
+                
             end
             
             if doverbose
                 
-                fprintf('\nImage %3.0f\nPositive effect: %3.0f voxels, min p-value: %3.8f\n', i, ...
+                [n_vox_in_cluster, indic, cluster_indx_vals] = get_cluster_sizes(stats_image_obj);
+                wh = n_vox_in_cluster > 0;
+                
+                fprintf('\nImage %3.0f\n%3.0f contig. clusters, sizes %3.0f to %3.0f\n', ...
+                    i, sum(wh), ...
+                    min(n_vox_in_cluster(wh)), max(n_vox_in_cluster(wh)));
+                
+                fprintf('Positive effect: %3.0f voxels, min p-value: %3.8f\n', ...
                     sum(stats_image_obj.dat(:, i) > 0 & stats_image_obj.sig(:, i)), ...
                     min(stats_image_obj.p(stats_image_obj.dat(:, i) > 0, i)));
                 
@@ -286,4 +307,69 @@ end
 end % function
 
 
+
+
+function stats_image_obj = alternate_cluster_extent_in_sig_field(stats_image_obj, i, k)
+
+stats_image_obj = reparse_contiguous(stats_image_obj);  % clusters only for significant vox in .sig, or 0.
+
+stats_image_obj = replace_empty(stats_image_obj);       % sig is now all in-mask. also reparse_contiguous may remove empties...
+
+% mysig = logical(stats_image_obj.sig(:, i));             % significant vox vector to prune (remove vox where clusters too small)
+new_sig = false(size(stats_image_obj.sig(:, i)));
+
+new_cluster = zeros(size(stats_image_obj.volInfo.cluster)); 
+
+[n_vox_in_cluster, indic, cluster_indx_vals] = get_cluster_sizes(stats_image_obj);
+
+wh_include = n_vox_in_cluster >= k;
+
+% build up new sig, including only voxels where cluster index is not 0
+% after masking with original mask in .sig 
+for j = 1:length(wh_include)
+    
+    if wh_include(j)
+        
+        new_sig(indic(:, j), 1) = true;
+        
+        new_cluster(indic(:, j), 1) = cluster_indx_vals(j); % this does not renumber clusters. leaves them intact.
+    end
+    
+end
+
+stats_image_obj.sig(:, i) = new_sig;
+stats_image_obj.volInfo.cluster = new_cluster;
+
+end % function
+
+
+
+
+function [n_vox_in_cluster, indic, cluster_indx_vals] = get_cluster_sizes(stats_image_obj)
+%
+%
+% n_vox_in_cluster: Counts of voxels in each contiguous cluster indexed 1 to k, as indexed by stats_image_obj.volInfo.cluster
+%                   If index values are missing, counts can be zero.
+% 
+% indic:            Voxels x index values logical matrix showing which voxels belong to which cluster
+%
+% cluster_indx_vals: Vector of integers with index values for clusters. May not be consecutive if some indices are missing (empty clusters)
+ 
+% Count contiguous clusters
+% ---------------------------------------------------------------
+stats_image_obj = reparse_contiguous(stats_image_obj);            % clusters only for significant vox in .sig, or 0.
+                                                                  % re-do because this may be called as a stand-alone function
+
+cindx = stats_image_obj.volInfo.cluster;                          % contig cluster index, all in-mask, zero for not-.sig
+
+[indic, cluster_indx_vals] = condf2indic(cindx, 'integers');      % omit 0, list of all integers for cluster IDs
+
+indic(isnan(indic)) = 0;
+
+indic = logical(indic);
+
+n_vox_in_cluster = double(sum(indic));
+% ---------------------------------------------------------------
+
+end
 

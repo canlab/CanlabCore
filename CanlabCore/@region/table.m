@@ -225,6 +225,16 @@ end
 table_legend_text = strrep(table_legend_text, 'Modal_label', 'Region');
 table_legend_text = strrep(table_legend_text, 'Region_Vol_mm', 'Volume');
 
+if isempty(cl(1).Z_descrip)
+    myzdescrip = 'MaxZ: Unknown quantity; label in .Z_descrip field in region object.';
+    
+else
+    myzdescrip = ['MaxZ: Signed max over ' cl(1).Z_descrip];
+
+end
+
+table_legend_text = [table_legend_text(1:2) myzdescrip table_legend_text(3:end)];
+
 % print
 canlab_print_legend_text(table_legend_text{:});
 

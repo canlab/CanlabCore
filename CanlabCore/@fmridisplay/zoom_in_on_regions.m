@@ -14,7 +14,7 @@ function zoom_in_on_regions(o2, cl, orientation)
 
 % Zoom in on regions!
 
-border_prop = .4;  % proportion border
+border_prop = 1.1;  % proportion border
 
 for i = 1:length(cl)
     

@@ -18,9 +18,12 @@ function o2 = montage(obj, varargin)
 %   **o2***
 %        An existing fmridisplay object, with no keyword strings
 %
-%   **'solid' or 'color'**
+%   **'color'**
 %        Followed by a single [r g b] triplet to define color for all regions. Passed
 %        through to addblobs.
+%
+%   **'colormap'**
+%        Map color according to statistic values/data entered in .Z field
 %
 %   **'colors'**
 %        Followed by a cell array of [r g b] triplets, one color for each
@@ -105,12 +108,19 @@ function o2 = montage(obj, varargin)
 %
 %   Display montages in several styles:
 %
-%   montage(r)
-%   montage(r, 'solid')
-%   montage(r, 'color', [1 0 0])
-%   montage(r, 'solid', 'montagetype', 'full')
-%   montage(r, 'solid', 'montagetype', 'regioncenters')
+%   montage(r)                                      % A unique color per blob (the default)
+%   montage(r, 'colormap')                          % A color-map voxels according to statistic values/intensity
+%   montage(r, 'color', [1 0 0])                    % All blobs in red
+%   montage(r, 'colormap', 'full')                     % montage type is 'full', with surfaces
+%   montage(r, 'colormap', 'regioncenters')          % montage type is 'regioncenters', with slices located at the center of each blob (zooms in on blobs)
 %
+%  Pass out "o2", an fmridisplay object that has blobs registered, so you
+%  can remove them and reuse them:
+%
+%  o2 = montage(r, 'regioncenters', 'colormap');
+%  o2 = removeblobs(o2);
+%  o2 = montage(r, o2, 'regioncenters', 'color', [1 0 0]);
+
 % Example 2: 
 % % Extend previous results by creating custom fmridisplay object
 % % and adding blobs to that.
@@ -153,12 +163,26 @@ colors = scn_standard_colors(length(obj));
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'old')), methodtype = 'old'; end
-if any(strcmp(varargin, 'solid')), colortype = 'solid'; end
-if any(strcmp(varargin, 'color')), colortype = 'solid'; end
+
+if any(strcmp(varargin, 'color'))
+    colortype = 'solid'; 
+    % No need to pass in color here, because varargin{:} is passed forward,
+    % and interpreted by addblobs   
+end
+
+if any(strcmp(varargin, 'colormap')) 
+    % Without any other arguments, this uses a colormap by default in
+    % subfunctions, since no 'color' arg is passed forward
+    
+    colortype = 'solid'; 
+
+end
+
 if any(strcmp(varargin, 'colors'))
     wh = find(strcmp(varargin, 'colors'));
     colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = [];  
 end
+
 if any(strcmp(varargin, 'regioncenters')), one_blob_per_slice = true; end
 if any(strcmp(varargin, 'nozoom')), dozoom = false; end
 
@@ -203,13 +227,16 @@ switch colortype
             for i = 1:length(obj)
                 
                 o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', varargin{:}, 'wh_montages', i);
-                drawnow
-                
+               
+                o2 = title_montage(o2, i, obj(i).shorttitle);
+
             end
             
             if dozoom
                 zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
             end
+            
+            drawnow
             
         else
             % All visible blobs on each slice
@@ -226,20 +253,22 @@ switch colortype
             
         end
         
-    case 'solid' % solid color, user-entered
+    case 'solid' % solid color, user-entered, or use colormap
         
         if one_blob_per_slice
             
             for i = 1:length(obj)
                 
-                o2 = addblobs(o2, obj(i), varargin{:}, 'wh_montages', i);
-                drawnow
+                o2 = addblobs(o2, obj(i), varargin{:}, 'wh_montages', i, 'noverbose');
+                o2 = title_montage(o2, i, obj(i).shorttitle);
                 
             end
             
             if dozoom
                 zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
             end
+            
+            drawnow
             
         else
             

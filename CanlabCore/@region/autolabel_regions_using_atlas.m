@@ -1,11 +1,11 @@
-function [region_obj, region_table, table_legend_text] = autolabel_regions_using_atlas(region_obj)
+function [region_obj, region_table, table_legend_text] = autolabel_regions_using_atlas(region_obj, varargin)
 % Load an atlas object (i.e., defined brain parcels with labels)  and use it to 
 % label regions in a region object (e.g., 'blobs' or regions from an analysis)
 %
 % :Usage:
 % ::
 %
-%     [region_obj, region_table] = autolabel_regions_using_atlas(region_obj)
+%     [region_obj, region_table] = autolabel_regions_using_atlas(region_obj, [atlas object with labels])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -35,8 +35,9 @@ function [region_obj, region_table, table_legend_text] = autolabel_regions_using
 %        A region object
 %
 % :Optional Inputs:
-%   **<none yet>:**
-%        description of param1
+%   **atlas object with labels:**
+%        An atlas-class object with labels to add. See @atlas, and
+%        load_atlas
 %
 % :Outputs:
 %
@@ -104,8 +105,16 @@ function [region_obj, region_table, table_legend_text] = autolabel_regions_using
 % Load atlas
 % ------------------------------
 
+if nargin < 2
+    
  % 2 mm loads MUCH faster than 1 mm
 atlas_obj = load_atlas('canlab2018_2mm', 'noverbose'); 
+
+else
+    
+    atlas_obj = varargin{1};
+    
+end
 
 % Prep atlases and match spaces
 % ------------------------------

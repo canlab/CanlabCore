@@ -60,8 +60,8 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %   r = region(t);                                  % Turn t-map into a region object with one element per contig region
 %
 %   Label regions and print a table:
-%   [r, region_table, table_legend_text] =
-%   autolabel_regions_using_atlas(r);               % Label regions. Can be skipped because 'table' below attempts to do this automatically
+%   [r, region_table, table_legend_text] = autolabel_regions_using_atlas(r);  
+%                                                   % Label regions. Can be skipped because 'table' below attempts to do this automatically
 %   table(r);                                       % Print a table of results using new region names
 %
 
@@ -80,7 +80,7 @@ dosep = true;
 donames = false;        % name clusters before printing to table and output; saves in .shorttitle field (legacy only)
 forcenames = false;     % force naming of cl by removing existing names in .shorttitle field (legacy only)
 dolegacy = false;
-
+dosortrows = true;          % sort rows by area
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -91,6 +91,8 @@ for i = 1:length(varargin)
             case 'nosep', dosep = 0;
             case {'names', 'name', 'donames'}, donames = true;
             case 'forcenames', forcenames = true;
+                
+            case {'nosort', 'nosortrows'}, dosortrows = false;
                 
             case {'legacy', 'dolegacy'}, dolegacy = true;
                 
@@ -108,7 +110,6 @@ end
 
 % Separate subregions with positive and negative values if requested
 % -------------------------------------------------------------------------
-
 if dosep
     % separate pos and neg
     [poscl, negcl] = posneg_separate(cl);
@@ -134,9 +135,30 @@ end
 % Must do after separating pos and neg clusters because some regions may be split.
 % -------------------------------------------------------------------------
 
+% do this with concatenated pos and neg cl because it's faster.
 [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
 
-%[clneg, neg_table, table_legend_text, dolegacy] = autolabel_regions(clneg, dolegacy);
+% separate again so we return clusters with region names added.
+
+if dosep
+    % re-separate for output
+    if any(ispos)
+        poscl = cl(ispos);
+    else
+        poscl = [];
+    end
+    
+    if any(~ispos)
+        negcl = cl(~ispos);
+    else
+        negcl = [];
+    end
+    
+else
+    % not separating
+    poscl = cl;
+    negcl = [];
+end
 
 
 % Manual labeling of names
@@ -194,17 +216,46 @@ else
     Z = get_signed_max(cl, 'Z', 'maxZ');  % use function because may be empty, handle if so
     
     results_table = [Region Volume XYZ Z Atlas_coverage];
+    results_table.region_index = (1:size(region_table, 1))';
+    
+    results_table_pos = results_table(ispos, :);
+    results_table_neg = results_table(~ispos, :);
+    
+    % Sort, if asked for (default = yes)
+    if dosortrows
+    
+        % Replace empty strings so sort will work
+        whempty = cellfun(@isempty, results_table_pos.modal_label_descriptions);
+        results_table_pos.modal_label_descriptions(whempty) = {'X_No_label'};
+        
+        whempty = cellfun(@isempty, results_table_neg.modal_label_descriptions);
+        results_table_neg.modal_label_descriptions(whempty) = {'X_No_label'};
+        
+        results_table_pos = sortrows(results_table_pos, 'modal_label_descriptions');
+        results_table_neg = sortrows(results_table_neg, 'modal_label_descriptions');
+        
+        % Manual - not as good because Matlab's table methods handle this well.
+        %             % Replace empty and get unique labels to sort by
+        %             whempty = cellfun(@isempty, results_table_pos.modal_label_descriptions);
+        %             results_table_pos.modal_label_descriptions(whempty) = {'No_label'};
+        %             u = unique(results_table_pos.modal_label_descriptions);
+        % 
+        %             [~, ~, condf] = string2indicator(results_table_pos.modal_label_descriptions)
+        % 
+
+    end
+    
     
     % Now split into positive and neg sub-tables
     if any(ispos)
-        disp(results_table(ispos, :))
+        disp(results_table_pos)
     else
         disp('No regions to display');
     end
     
     fprintf('\nNegative Effects\n')
     if any(~ispos)
-        disp(results_table(~ispos, :))
+        disp(results_table_neg)
     else
         disp('No regions to display');
     end
@@ -280,7 +331,14 @@ for i = 1:length(cl)
         myZ(i, 1) = NaN;
     end
     
+    %if isinf(smax(i)), keyboard, end
+    
 end
+
+% Fix infinite vals - only for .Z . so this is not generalizable beyond
+% this function without modifications:
+maxZ = norminv(1 - 1E-12);
+myZ(myZ > maxZ) = maxZ;
 
 if all(isnan(myZ))
     val_table = [];

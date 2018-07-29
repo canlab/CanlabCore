@@ -161,7 +161,7 @@ if isempty(cl), return, end
 % Map to volume space and interpolate
 % -------------------------------------------------------------------
 
-[dummy, mask] = clusters2mask2011(cl); % turn clusters into mask and volume info
+[~, mask] = clusters2mask2011(cl); % turn clusters into mask and volume info
 
 if sum(mask(:)) == 0, warning('No voxels in cl! Empty/zero cl.Z field? Bad cl? No results?'); return, end
 

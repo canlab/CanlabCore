@@ -1,4 +1,4 @@
-function obj = montage(obj, varargin)
+function [obj, dat] = montage(obj, varargin)
 % Creates montage of slices
 %  - Solid brain slices or contour outlines
 %  - Points or text labels or both
@@ -16,6 +16,9 @@ function obj = montage(obj, varargin)
 %
 %  'existing_axes': use existing axes and figure, don't create new ones
 %  
+%  **'volume_data', dat**: 
+%  Keyword 'volume_data' followed by loaded volume data for underlay, passed out in a previous call to fmridisplay.montage 
+%
 % {'nofigure', 'nofig', 'existing_figure'}
 % 
 %   **{'noslice', 'nodraw'}:**
@@ -80,6 +83,10 @@ function obj = montage(obj, varargin)
 %
 %   **obj:**
 %        an fmridisplay object
+%
+%   **dat:**
+%        loaded volume data (3-D) for underlay image, so can be reused of
+%        making many montages using the same underlay
 %
 % :Properties:
 %
@@ -159,6 +166,7 @@ brighten_factor = 0;
 slice_mm_coords = [];
 slices_fig_h = [];
 slice_vox_coords = [];
+load_volume_data = true;
 
 % ------------------------------------------------------
 % parse inputs
@@ -174,6 +182,12 @@ for i = 1:length(varargin)
             case 'slice_range', slice_range = varargin{i + 1};
                 
             case {'spacing'}, spacing = varargin{i+1};
+                
+            case {'dat', 'volume_data'}
+                dat = varargin{i + 1};
+                varargin{i+1} = [];
+                varargin{i} = [];
+                load_volume_data = false;
                 
             case {'text', 'textcodes'} % do not pass on to slice plot...
                 textcodes = varargin{i + 1};
@@ -222,8 +236,12 @@ end
 % -----------------------------------------------
 % Volume-level: Set up underlay
 
-if doverbose, fprintf('Load underlay. '), end
-dat = spm_read_vols(obj.SPACE.V);
+if load_volume_data
+    
+    if doverbose, fprintf('Load underlay. '), end
+    dat = spm_read_vols(obj.SPACE.V);
+    
+end
 
 if doverbose, fprintf('Define axes. '), end
 setup_axes();
@@ -256,14 +274,15 @@ end
 
 obj.montage{end + 1} = struct('axis_handles', newax, 'orientation', myview, 'slice_mm_coords', slice_mm_coords);
 
-% set color map to enhance contrast
-datvec = dat(:);
-wh = datvec == 0;
-datvec = datvec(~wh);
-
-%datvec(datvec == 0) = [];  % speed up!!
-cmap = contrast(datvec);
-colormap(brighten(cmap, brighten_factor));
+if brighten_factor  % if we are brightening - this is a bit slower...
+    % set color map to enhance contrast
+    datvec = dat(:);
+    wh = datvec == 0;
+    datvec = datvec(~wh);
+    
+    cmap = contrast(datvec);
+    colormap(brighten(cmap, brighten_factor));
+end
 
 % ------------------------------------------------------
 % INLINE FUNCTIONS

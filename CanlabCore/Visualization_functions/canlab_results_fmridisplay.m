@@ -304,12 +304,19 @@ if ~exist('o2', 'var')
             
             orientation = 'axial';
             
+            % Make a grid - determine subplots
+            nr = floor(sqrt(length(cl)));
+            nc = ceil(length(cl) ./ nr);
             
             for i = 1:length(cl)
                 
-                axh(i) = subplot(1, length(cl), i);
+                axh(i) = subplot(nr, nc, i);
                 
-                o2 = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure');
+                if i == 1
+                    [o2, dat] = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
+                else
+                    o2 = montage(o2, 'volume_data', dat, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
+                end
                 
             end
             wh_montages = 1:length(cl);
@@ -319,28 +326,28 @@ if ~exist('o2', 'var')
             
             % saggital
             axh1 = axes('Position', [-0.02 0.4 .17 .17]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
             text(50, -50, 'left');
             drawnow
             
             axh2 = axes('Position', [-0.02 0.6 .17 .17]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
+            o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
             text(50, -50, 'right');
             drawnow
             
             % sagg center
             axh3 = axes('Position', [.08 0.5 .17 .17]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
+            o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
             drawnow;
             o2.montage{3}.slice_mm_coords;
          
             % axial bottom
             axh4 = axes('Position', [.10 0.4 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh4);
             
             % axial top
             axh5 = axes('Position', [.12 0.54 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
             
             wh_montages = [1 2 4 5];
             
@@ -352,9 +359,9 @@ if ~exist('o2', 'var')
                 hh(i) = plot( [-105 65], [locs(i) locs(i)], 'b', 'LineWidth', 1);
             end
             
-            brighten(.5)
+            % brighten(.5)
             sz = get(0, 'screensize');
-            set(gcf, 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
+            set(gcf, 'Color', 'w', 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
             
         case 'multirow' 
             
@@ -376,13 +383,19 @@ if ~exist('o2', 'var')
                 % saggital
                 axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
                 axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);
-                %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
-                o2 = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+                
+                if i == 1
+                    [o2, dat] = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+                    
+                else
+                    o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+                    
+                end
                 drawnow
                 
                 % axial
                 axh = axes('Position', [.022 0.8-shiftvals(i) .17 .17]);   % [.015 0.15+shiftvals(i) .17 .17]);
-                o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+                o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
                 drawnow
                 
             end
@@ -390,19 +403,20 @@ if ~exist('o2', 'var')
             
         case 'full'
             % saggital
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
             % coronal
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
             % axial
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
             axh = axes('Position', [-0.02 0.01 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
             allaxh = findobj(gcf, 'Type', 'axes');
             disp(length(allaxh));
             for i = 1:(length(allaxh)-36)
@@ -423,7 +437,7 @@ if ~exist('o2', 'var')
 
         case 'compact2'  % creates a new figure
             %subplot(2, 1, 1);
-            o2 = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
+            [o2, dat] = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
             
             % shift all axes down and right
             allaxh = o2.montage{1}.axis_handles;
@@ -444,7 +458,7 @@ if ~exist('o2', 'var')
             axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
             
             %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-            o2 = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
@@ -465,33 +479,34 @@ if ~exist('o2', 'var')
 
         case 'allslices'
             
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
             
             % axial
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
             
             wh_montages = [1 2 3];
             
         case 'full hcp'
             % saggital
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
             % coronal
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
             
             % axial
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
             
             axh = axes('Position', [-0.02 0.01 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
             allaxh = findobj(gcf, 'Type', 'axes');
             disp(length(allaxh));
             for i = 1:(length(allaxh)-36)
@@ -526,19 +541,20 @@ else
         switch montagetype
             case 'full'
             % saggital
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
             % coronal
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
             % axial
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
             axh = axes('Position', [-0.02 0.01 .17 .17]);
-            o2 = montage(o2, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
             allaxh = findobj(gcf, 'Type', 'axes');
             disp(length(allaxh));
             for i = 1:(length(allaxh)-36)
@@ -556,15 +572,15 @@ else
             wh_surfaces = existingsurs + [1 2 3 4];
 
             case 'compact'
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
+                [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
-                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
                 
             case 'compact2'
-                o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
+                [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
                 enlarge_axes(gcf, 1);
                 axh = axes('Position', [-0.03 0.15 .2 1]);
-                o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
 
                 % shift all axes down and right
                 shift_axes(+0.03, -0.10);
@@ -573,7 +589,7 @@ else
                 %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
                 
                 
-            otherwise error('illegal montage type. choose full or compact.')
+            otherwise error('illegal montage type. choose full or compact when adding to existing montage set.')
         end
         
         wh_montages = existingmons + [1 2];

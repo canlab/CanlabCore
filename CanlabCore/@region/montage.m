@@ -108,11 +108,14 @@ function o2 = montage(obj, varargin)
 %
 %   Display montages in several styles:
 %
-%   montage(r)                                      % A unique color per blob (the default)
-%   montage(r, 'colormap')                          % A color-map voxels according to statistic values/intensity
-%   montage(r, 'color', [1 0 0])                    % All blobs in red
-%   montage(r, 'colormap', 'full')                     % montage type is 'full', with surfaces
-%   montage(r, 'colormap', 'regioncenters')          % montage type is 'regioncenters', with slices located at the center of each blob (zooms in on blobs)
+%   montage(r)                                          % A unique color per blob (the default)
+%   montage(r, 'colormap')                              % A color-map voxels according to statistic values/intensity
+%   montage(r, 'color', [1 0 0])                        % All blobs in red
+%   montage(r, 'colormap', 'full')                      % montage type is 'full', with surfaces
+%   montage(r, 'colormap', 'regioncenters')             % montage type is 'regioncenters', with slices located at the center of each blob (zooms in on blobs)
+%   
+%   Use colormap, but with blue colors. see addblobs for more options:
+%    montage(r, 'colormap', 'maxcolor', [0 0 1], 'mincolor', [.6 .5 .8], 'regioncenters');   
 %
 %  Pass out "o2", an fmridisplay object that has blobs registered, so you
 %  can remove them and reuse them:
@@ -120,7 +123,7 @@ function o2 = montage(obj, varargin)
 %  o2 = montage(r, 'regioncenters', 'colormap');
 %  o2 = removeblobs(o2);
 %  o2 = montage(r, o2, 'regioncenters', 'color', [1 0 0]);
-
+%
 % Example 2: 
 % % Extend previous results by creating custom fmridisplay object
 % % and adding blobs to that.

@@ -311,6 +311,7 @@ end % function
 
 function stats_image_obj = alternate_cluster_extent_in_sig_field(stats_image_obj, i, k)
 
+
 stats_image_obj = reparse_contiguous(stats_image_obj);  % clusters only for significant vox in .sig, or 0.
 
 stats_image_obj = replace_empty(stats_image_obj);       % sig is now all in-mask. also reparse_contiguous may remove empties...
@@ -320,7 +321,8 @@ new_sig = false(size(stats_image_obj.sig(:, i)));
 
 new_cluster = zeros(size(stats_image_obj.volInfo.cluster)); 
 
-[n_vox_in_cluster, indic, cluster_indx_vals] = get_cluster_sizes(stats_image_obj);
+obj_tmp = get_wh_image(stats_image_obj, i);             % Use sig vox for this region only in reparsing contig and counting...
+[n_vox_in_cluster, indic, cluster_indx_vals] = get_cluster_sizes(obj_tmp);
 
 wh_include = n_vox_in_cluster >= k;
 

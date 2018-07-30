@@ -138,6 +138,22 @@ end
 % do this with concatenated pos and neg cl because it's faster.
 [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
 
+
+% Manual labeling of names
+% -------------------------------------------------------------------------
+
+if donames
+    
+    if forcenames
+        for i = 1:length(cl)
+            cl(i).shorttitle = [];
+        end
+    end
+    
+    cl = cluster_names(cl);
+end
+
+
 % separate again so we return clusters with region names added.
 
 if dosep
@@ -160,21 +176,8 @@ else
     negcl = [];
 end
 
-
-% Manual labeling of names
-% -------------------------------------------------------------------------
-
-if donames
-    
-    if forcenames
-        for i = 1:length(cl)
-            cl(i).shorttitle = [];
-        end
-    end
-    
-    cl = cluster_names(cl);
-end
-
+% poscl and negcl are done here, so we have values to be returned.
+% the code below uses overall cl and prints the table.
 
 % Legacy table
 % - uses cluster_table
@@ -246,7 +249,8 @@ else
     end
     
     
-    % Now split into positive and neg sub-tables
+    % Now split into positive and neg sub-tables and display
+    
     if any(ispos)
         disp(results_table_pos)
     else
@@ -261,8 +265,6 @@ else
     end
     
 end
-
-%canlab_print_legend_text(table_legend_text'); % if text block.  % could use disp() here, but canlab function is more flexible
 
 if isempty(table_legend_text)
     return

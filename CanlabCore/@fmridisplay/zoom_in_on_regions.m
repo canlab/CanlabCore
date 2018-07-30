@@ -14,7 +14,7 @@ function zoom_in_on_regions(o2, cl, orientation)
 
 % Zoom in on regions!
 
-border_prop = 1.1;  % proportion border
+border_prop = .9;  % proportion border
 
 for i = 1:length(cl)
     
@@ -35,11 +35,13 @@ for i = 1:length(cl)
             
     end
     
-    myborder = border_prop * range(xl);
+    myborder = border_prop * range(xl);     % multiple of range from min to max coordinate
+    myborder = max([myborder 20]);          % border at least 10 mm
     xl(1) = xl(1) - myborder;
     xl(2) = xl(2) + myborder;
     
     myborder = border_prop * range(yl);
+    myborder = max([myborder 20]);          % border at least 10 mm
     yl(1) = yl(1) - myborder;
     yl(2) = yl(2) + myborder;
     
@@ -47,8 +49,9 @@ for i = 1:length(cl)
     my_handle = o2.montage{i}.axis_handles;
     
     % fix in case lower and upper are the same
-    if ~diff(xl), xl = [xl(1) - 5 xl(1) + 5]; end 
-    if ~diff(yl), yl = [yl(1) - 5 yl(1) + 5]; end 
+    % this should no longer happen with min border of x mm
+%     if ~diff(xl), xl = [xl(1) - 5 xl(1) + 5]; end 
+%     if ~diff(yl), yl = [yl(1) - 5 yl(1) + 5]; end 
     
     set(my_handle, 'XLim', xl, 'YLim', yl);     % which of the 3 vals should be chosen depends on slice orientation (sagg, cor, ax)
     

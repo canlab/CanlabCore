@@ -83,8 +83,24 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %
 % :Examples:
 % ::
+% % Example 1: A complete analysis of a sample dataset
+% % ----------------------------------------------------------------------
+% % Load a sample dataset and do a group t-test
+% img_obj = load_image_set('emotionreg');         % Load a dataset
+% t = ttest(img_obj, .005, 'unc');                % Do a group t-test
+% 
+% [o2, sig, poscl, negcl] = multi_threshold(t);
+% 
+% % Make a table of the regions at the highest threshold
+% r = table(poscl{1});                            % r is a region object, now with labels for regions attached
+% 
+% % Show each individual region significant at the highest threshold
+% montage(r, 'colormap', 'regioncenters');
 %
-%    [o2, sig, poscl, negcl] = multi_threshold(hr_intercept, 'nodisplay');
+% % Multi-threshold with a custom threshold.  Do not display immediately,
+% % but use mediation_brain_surface_figs to display results on surfaces instead:
+%
+%    [o2, sig, poscl, negcl] = multi_threshold(t, 'nodisplay', 'thresh', [.001 .005 .01], 'k', [10 1 1]);
 %    mediation_brain_surface_figs(poscl, negcl);
 %
 %    % Create empty montage set and (re)use it:
@@ -92,11 +108,15 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %    o2 = multi_threshold(out.t, 'o2', o2);
 %
 % :See also:
-% mediation_brain_surface_figs, iimg_multi_threshold, mediation_brain_results
-%
+% mediation_brain_surface_figs, iimg_multi_threshold,
+% mediation_brain_results, statistic_image.threshold
+
+
 % ..
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
+%    Tor Wager - 2018 July - update to take advantage of new object display
+%    code, and add documentation
 % ..
 
 poscolors = {[1 1 0] [1 .5 0] [.7 0 0]};
@@ -115,22 +135,22 @@ for a=1:length(varargin)
     end
 end
 
-        doWrite=0;
-        doPlot=1;
+doWrite=0;
+doPlot=1;
 
 for s=1:length(str_args)
- 
+    
     if ~isempty(strfind(str_args{s},'writestats'))
         doWrite=doWrite+1;
     else
-%         doWrite=0;
+        %         doWrite=0;
     end
     
     
     if ~isempty(strfind(str_args{s},'noplot'))
         doPlot=doPlot-1;
     else
-%         doPlot=1;
+        %         doPlot=1;
     end
 end
 
@@ -204,42 +224,79 @@ nimgs = size(dat.dat, 2); % <- number of 3-D images in dataset
 
 % get significant vectors sig, where sig is cell, one cell per image
 % -------------------------------------------------------------------------
+fprintf('\nMulti-threshold\n_____________________________________________\n');
+fprintf('Retaining clusters contiguous with a significant cluster at p < %3.8f and k >= %3.0f\n\n', thresh(1), sizethresh(1));
 
 for i = 1:length(thresh)
+    
     dat = threshold(dat, thresh(i), 'unc', 'k', sizethresh(i), 'noverbose');
     dat = replace_empty(dat);
+    
     for j = 1:nimgs
+        
         sig{j}(:, i) = dat.sig(:, j);
+        
     end
+    
+    
 end
 
+% prune - eliminate blobs not contiguous with significant blob at higher threshold
 
-
-% prune
 for j = 1:nimgs
+    
     for i = 2:length(thresh)
         
         sig{j}(:, i) = iimg_cluster_prune(sig{j}(:, i), sig{j}(:, i-1), dat.volInfo);
+        
     end
+    
 end
 
 
+% display
+for j = 1:nimgs
+    
+    fprintf('Image %3.0f of %3.0f\n_____________________________________________\n', j, nimgs);
+    
+    for i = 1:length(thresh)
+        
+        fprintf('Threshold p < %3.8f and k >= %3.0f\t%3.0f significant voxels', thresh(i), sizethresh(i), sum(sig{j}(:, i)));
+        if i == 1
+            fprintf(' defining blobs\n');
+        else
+            fprintf(' contiguous with a significant blob at a higher threshold\n');
+        end
+        
+    end
+    
+    fprintf('\n');
+    
+end
+
+fprintf('\n');
 
 
 
 
-% regions
+
+
+% create regions
 % -------------------------------------------------------------------------
 
 %r = cell(1, nimgs);
 r = cell(1, length(thresh));
 
 for i = 1:length(thresh)
-    for j = 1 %:nimgs  % only does first in region anyway
+    for j = 1 %:nimgs  % only handles first image in region.m anyway
+        
         dat.sig(:, j) = sig{j}(:, i);
         r{i} = region(dat, 'noverbose');
+        
     end
+    
     [pcl{i}, ncl{i}] = posneg_separate(reparse_continguous(r{i}));
+    
 end
 
 if nodisplay
@@ -249,33 +306,34 @@ end
 
 % set up fmridisplay
 % -------------------------------------------------------------------------
-if doPlot
-    if isempty(o2)
-        % create new o2 if we don't have one yet.
-        
-        useexisting = false;
-        o2 = fmridisplay;
-        xyz = [-20 -10 -6 -2 0 2 6 10 20]';
-        xyz(:, 2:3) = 0;
-        
-    elseif isa(o2, 'fmridisplay')
+useexisting = false;
+
+if doPlot && ~isempty(o2) && isa(o2, 'fmridisplay')
         
         useexisting = true;
         
-    else
+elseif doPlot && ~isempty(o2) && ~isa(o2, 'fmridisplay')
         error('o2 was passed in but is not an fmridisplay object.');
-        
-    end
+
 end
+
+if doPlot && ~useexisting
+    % Create one figure with multiple rows, for each image:
+    
+    o2 = canlab_results_fmridisplay([], 'multirow', nimgs);
+    
+end
+
 % plot each image
 % -------------------------------------------------------------------------
 
 indx = 1;
 
+
 for j = 1:nimgs
     
     if doPlot
-    fprintf('\nMontage %d of %d\n_____________________________________\n', j, nimgs);
+        fprintf('\nMontage %d of %d\n_____________________________________\n', j, nimgs);
     end
     datplot = dat;
     datplot.dat = dat.dat(:, j);
@@ -290,9 +348,12 @@ for j = 1:nimgs
         else
             % Create a new montage set (sagg/ax) and plot this image on it only
             
-            o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
-            axh = axes('Position', [0.05 0.4 .1 .5]);
-            o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+%             figure;
+%             o2 = canlab_results_fmridisplay([], 'multirow', nimgs);
+%             
+            %             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
+            %             axh = axes('Position', [0.05 0.4 .1 .5]);
+            %             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             
         end
     end
@@ -304,7 +365,7 @@ for j = 1:nimgs
         if doWrite
             out=datplot;
             out.dat(out.sig==0)=0;
-            out.fullpath=[pwd '\Image' num2str(j) '_MultiThresh_' out.type '_P' num2str(thresh(i)) '_k' num2str(sizethresh(i)) '.nii'];
+            out.fullpath=[pwd filesep 'Image' num2str(j) '_MultiThresh_' out.type '_P' num2str(thresh(i)) '_k' num2str(sizethresh(i)) '.nii'];
             write(out);
         end
         
@@ -313,12 +374,14 @@ for j = 1:nimgs
         if doPlot
             if useexisting
                 
-                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors);
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'noverbose');
                 
             else
                 
-                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx);
-                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx+1);
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'noverbose', 'wh_montages', [indx indx+1]);
+                
+                %                 o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx);
+                %                 o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'wh_montages', indx+1);
                 
             end
         end

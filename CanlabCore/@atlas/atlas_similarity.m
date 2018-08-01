@@ -126,6 +126,7 @@ wh_labels = modal_atlas_index > 0;
 modal_label = repmat({'No label'}, nr, 1);
 modal_label(wh_labels) = ref_atlas_obj.labels(modal_atlas_index(wh_labels));
 modal_label_descriptions(wh_labels) = ref_atlas_obj.label_descriptions(modal_atlas_index(wh_labels))';
+modal_label_descriptions(wh_labels==0) = {'--'};     % replace empty cells with placeholder (LK, 8/1/2018)
 modal_label_descriptions = modal_label_descriptions';
 
 % modal_atlas_coverage: Percent of best reference region covered

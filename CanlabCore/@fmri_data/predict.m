@@ -300,12 +300,12 @@ function [cverr, stats, optout] = predict(obj, varargin)
 % :See also:
 %    predict_test_suite method for fmri_data, which runs predict with multiple
 %    options and summarizes output.
-%
 %    xval_regression_multisubject, xval_lasso_brain
 %
 % ..
 %    Original version: Copyright Tor Wager, Dec 2010
-%
+
+
 %    Programmers' notes:
 %    Dec 2011: Changed to input double format to algorithms; some have
 %    problems with single format

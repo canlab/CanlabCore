@@ -203,11 +203,12 @@ if any(whfmridisplay)
 end
 
 if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
+    
     create_figure('fmridisplay'); axis off
-
-        % some inputs control which slices are shown: standard slices, or specific locations for these blobs
-        % regioncenters is passed through, so it determines the type of montage to create: 
-        o2 = canlab_results_fmridisplay(obj, 'noverbose', varargin{:}, 'noblobs', 'nooutline');
+    
+    % some inputs control which slices are shown: standard slices, or specific locations for these blobs
+    % regioncenters is passed through, so it determines the type of montage to create:
+    o2 = canlab_results_fmridisplay(obj, 'noverbose', varargin{:}, 'noblobs', 'nooutline');
 
 end
 

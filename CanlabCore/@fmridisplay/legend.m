@@ -57,6 +57,8 @@ for c = 1:length(obj.activation_maps)
     
     scaleanchors = currentmap.cmaprange; %for text labels
     
+    if isempty(scaleanchors), continue, end
+    
     % adjuts in case there are no values on one end
     scaleanchors(isnan(scaleanchors)) = 0;
     

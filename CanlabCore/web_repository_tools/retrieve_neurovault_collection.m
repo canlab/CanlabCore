@@ -2,14 +2,27 @@ function [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_n
 % [files_on_disk, url_on_neurovault, mycollection] = retrieve_neurovault_collection(collection_number)
 %
 % Downloads and saves neuroimages from the Neurovault website for a
-% specified collection number
+% specified collection number. This uses the Neurovault.org API from Chris
+% Gorgolewski.  
+%
+% Gorgolewski KJ, Varoquaux G, Rivera G, Schwartz Y, Ghosh SS, Maumet C, Sochat VV, Nichols TE, Poldrack RA,
+% Poline J-B, Yarkoni T and Margulies DS (2015) NeuroVault.org: a web-based repository for collecting and 
+% sharing unthresholded statistical maps of the brain.Front. Neuroinform. 9:8. doi: 10.3389/fninf.2015.00008
 %
 % Example: 
 % -------------------------------------------------------------------------
 % Download images from Kragel et al. 2018 Nature Neuroscience
-% Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
+% Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). 
+% Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. 
+% Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
+% 
 % 270 subject-level images systematically sampled from 18 studies across 3 domains
 % [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
+% data_obj = fmri_data(files_on_disk)
+%
+% Single-subject pain data contributed by CANlab (PI, Tor Wager), from
+% Chang, Krishnan et al. 2015 PLoS Biology (BMRK4 study)
+% [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(504);
 % data_obj = fmri_data(files_on_disk)
 
 collstr = num2str(collection_number); 

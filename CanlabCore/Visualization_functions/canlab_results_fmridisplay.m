@@ -182,7 +182,7 @@ dooutline = true;
 doaddmontages = false;
 doremove = true;
 outlinecolor = [0 0 0];
-splitcolor = {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]};
+splitcolor = {[0 0 1] [0 .8 .8] [1 .4 .5] [1 1 0]}; % {[0 0 1] [.3 .6 .9] [.8 .3 0] [1 1 0]};  % more straight orange to yellow: {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}
 montagetype = 'compact';
 doverbose = true;
 %overlay='SPM8_colin27T1_seg.img';
@@ -308,17 +308,25 @@ if ~exist('o2', 'var')
             nr = floor(sqrt(length(cl)));
             nc = ceil(length(cl) ./ nr);
             
+            [~, axh] = create_figure('fmridisplay', nr, nc, false, true); 
+            
+            set(axh,'Visible','off'); % turn off axis grid for all axes
+             
             for i = 1:length(cl)
                 
-                axh(i) = subplot(nr, nc, i);
+                %axh(i) = subplot(nr, nc, i);
+                %axes(axh(i))
                 
                 if i == 1
                     [o2, dat] = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
                 else
                     o2 = montage(o2, 'volume_data', dat, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
                 end
-                
+
             end
+            
+           
+            
             wh_montages = 1:length(cl);
             
         case 'compact'

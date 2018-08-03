@@ -208,9 +208,12 @@ domaxcolor = 0;
 domincolor = 0;
 
 maxposcolor = [1 1 0]; % max pos, most extreme values
-minposcolor = [1 0 .5]; % min pos
-maxnegcolor = [0 1 1]; % max neg
+minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
+maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
 minnegcolor = [0 0 1]; % min neg, most extreme values
+
+% More purply orange and deeper blue:  {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
+% more straight orange to yellow, cyan: {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}
 
 %add_splitcolor_to_varargin = 0; % internal control, not input option
 % pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow

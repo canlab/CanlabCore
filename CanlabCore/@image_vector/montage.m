@@ -26,11 +26,17 @@ function fig_handle = montage(image_obj, varargin)
 %    o2 = montage(dat, 'trans', 'color', [1 0 0], 'transvalue', .4);
 %    o2 = montage(dat, 'trans', 'maxcolor', [1 .3 0], 'mincolor', [.5 0 1]);
 %    o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .5);
-%
+%    
+%    Options for canlab_results_fmridisplay are also passed forward, so that 
+%    different named montage types can be used.  E.g.,:
+% 
+%    o2 = montage(t, 'trans', 'full');
+% 
 % Set all color maps to the same range:
 % o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .7, 'cmaprange', [0 3]);
 
 meth = 'fmridisplay';
+% montagetype = 'compact2';  % default. This is passed into canlab_results_fmridisplay
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -61,15 +67,30 @@ switch meth
         
         % r = region(image_obj);
         
-        o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', 'multirow', n);
-
+        if n > 1
+            do_multirow = true;
+            o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', 'multirow', n);
+            
+        else
+            do_multirow = false;
+            o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', varargin{:}); % pass forward args.
+        end
+        
         montage_indx = 1:2:2*n;
         
         for i = 1:n
             
-            obj = get_wh_image(image_obj, i);
+            obj = get_wh_image(image_obj, i); 
             
-            o2 = addblobs(o2, region(obj), 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+            if do_multirow % plot only on montages for this image
+                
+                o2 = addblobs(o2, region(obj), 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+                
+            else % just one image, plot on all montages
+                
+                o2 = addblobs(o2, region(obj), 'nooutline', varargin{:});
+                
+            end
             
             drawnow
             

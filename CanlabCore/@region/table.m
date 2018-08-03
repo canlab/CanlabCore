@@ -64,6 +64,7 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %                                                   % Label regions. Can be skipped because 'table' below attempts to do this automatically
 %   table(r);                                       % Print a table of results using new region names
 %
+%   [rpos, rneg] = table(r);                        % Print and table and return region object separated into regions with positive vs. negative statistic values (from .Z field)
 
 % ..
 %    Programmers' notes:
@@ -288,6 +289,8 @@ end
 
 table_legend_text = [table_legend_text(1:2) myzdescrip table_legend_text(3:end)];
 
+table_legend_text(end+1) = {'\nNote: Region object r(i).title contains full list of reference atlas regions covered by each cluster.'};
+
 % print
 canlab_print_legend_text(table_legend_text{:});
 
@@ -381,6 +384,7 @@ try
         dolegacy = true;
     end
     
+    % Add description of all regions to legend
 catch
     
     disp('Region autolabel did not work; add Neuroimaging_Pattern_Masks repository (see canlab_toolbox_setup.m)');

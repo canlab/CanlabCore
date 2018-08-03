@@ -2,13 +2,20 @@ function [f1, axh] = create_figure(tagname, varargin)
 % :Usage:
 % ::
 %
-%    f1 = create_figure(['tagname'], [subplotrows], [subplotcols], [do not clear flag])
+%    f1 = create_figure(['tagname'], [subplotrows], [subplotcols], [do not clear existing fig], [force resize existing figure flag])
 %
 % checks for old figure with tag of tagname,
 % clears it if it exists, or creates new one if it doesn't
+%
+% Defaults:
+% doclear = true;    % clear if new or if old and existing
+% createnew = false; % force creation of new figure (otherwise uses existing)
+% doresize = true;   % force resize of figure based on how many axes it contains
+
 
 % Edit: 1/2017 by Tor Wager - set figure aspect ratio in proportion to data
 % plots, when creating new figure
+% 8/1/2018 Tor Wager, add [resize existing figure flag]
 
 axh = [];
 
@@ -16,12 +23,18 @@ if nargin < 1 || isempty(tagname)
     tagname = 'nmdsfig';
 end
 
-doclear = 1;    % clear if new or if old and existing
-createnew = 0;
+doclear = true;    % clear if new or if old and existing
+createnew = false; % force creation of new figure (otherwise uses existing)
+doresize = true;   % force resize of figure based on how many axes it contains
 
-if length(varargin) > 2 && varargin{3}
+if length(varargin) > 2 
+    % if true, use same figure; do not clear
+    doclear = ~varargin{3};
+end
+
+if length(varargin) > 3 
     % use same figure; do not clear
-    doclear = 0;
+    doresize = varargin{4};
 end
 
 old = findobj('Tag', tagname);
@@ -96,7 +109,7 @@ if doclear % true for new figs or cleared ones
     
 end % if doclear
 
-if createnew
+if createnew || doresize
     
     set_figure_position(i, j);
     

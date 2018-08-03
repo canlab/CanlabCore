@@ -315,7 +315,7 @@ if ~exist('o2', 'var')
             for i = 1:length(cl)
                 
                 %axh(i) = subplot(nr, nc, i);
-                axes(axh(i))
+                %axes(axh(i))
                 
                 if i == 1
                     [o2, dat] = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');

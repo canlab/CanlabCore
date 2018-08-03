@@ -255,7 +255,7 @@ if doverbose, fprintf('Ready. \n'), end
 % Do the work for each slice
 % -----------------------------------------------
 
-figure(slices_fig_h)
+figure(slices_fig_h) % note: this is slow for repeated calls...
 
 for i = 1:length(slice_vox_coords)
 

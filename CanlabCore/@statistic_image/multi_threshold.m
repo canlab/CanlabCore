@@ -1,10 +1,10 @@
-function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
+function [o2, dat, sig, pcl, ncl] = multi_threshold(dat, varargin)
 % Multiple threshold function for statistic_image object for visualization
 %
 % :Usage:
 % ::
 %
-%    [o2, sig, pcl, ncl] = multi_threshold(dat, [optional inputs])
+%    [o2, dat, sig, pcl, ncl] = multi_threshold(dat, [optional inputs])
 %
 % ..
 %     Author and copyright information:
@@ -52,14 +52,18 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %        suppress fmridisplay
 %
 %   **o2:**
-%        followed by an existing fmridisplay object
+%       followed by an existing fmridisplay object
 %           - will remove blobs and re-use montages
+%       Or enter any fmridisplay object, and it will be detected.
 %
 %   **writestats**
 %        write out thresholded images
 %
 %   **noplot**
 %        don't plot anything (for writing stats out)
+%
+%   **wh_montages** Which existing montages in o2 fmridisplay object to
+%   plot on. Optional. Keyword followed by vector of integers for which.
 %
 % :Outputs:
 %
@@ -70,6 +74,9 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %        vector of significant voxels at each thresh, for each region
 %               - cell array of images in object with matrix of values
 %               for each threshold
+%
+%   **dat:** 
+%        thresholded statistic_image object
 %
 %   **pcl:**
 %        positive valued clusters cell, one cell per threshold
@@ -117,6 +124,8 @@ function [o2, sig, pcl, ncl] = multi_threshold(dat, varargin)
 %    List dates and changes here, and author of changes
 %    Tor Wager - 2018 July - update to take advantage of new object display
 %    code, and add documentation
+%    Tor - Aug 2018 - can now pass in wh_montages and other optional args
+%    to use existing montages. Pass out dat as well.
 % ..
 
 poscolors = {[1 1 0] [1 .5 0] [.7 0 0]};
@@ -211,6 +220,12 @@ for i = 1:length(allowable_args)
         
     end % argument is input
 end
+
+% special for o2 : detect
+
+wh = cellfun(@(x) isa(x, 'fmridisplay'), varargin);
+if any(wh), o2 = varargin{wh(1)}; end
+
 
 % END DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
@@ -343,7 +358,8 @@ for j = 1:nimgs
     if doPlot
         if useexisting
             % Re-plot each result on all existing montage(s)
-            o2 = removeblobs(o2);
+            % o2 = removeblobs(o2); do not remove because we may want to
+            % add to selected montages or over other blobs
             
         else
             % Create a new montage set (sagg/ax) and plot this image on it only
@@ -374,7 +390,7 @@ for j = 1:nimgs
         if doPlot
             if useexisting
                 
-                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'noverbose');
+                o2 = addblobs(o2, region(datplot, 'noverbose'), 'splitcolor', mycolors, 'noverbose', varargin{:});
                 
             else
                 

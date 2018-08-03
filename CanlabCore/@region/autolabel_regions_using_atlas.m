@@ -140,7 +140,7 @@ end
 
 % Main work done here, on atlases
 % ------------------------------
-[region_table, table_legend_text, coverage5_labels] = atlas_similarity(r, atlas_obj);
+[region_table, table_legend_text, coverage25_labels] = atlas_similarity(r, atlas_obj);
 
 % Add region labels
 % ------------------------------
@@ -149,6 +149,6 @@ for i = 1:length(region_obj)
     
     region_obj(i).shorttitle = region_table.modal_label{i};
     
-    region_obj(i).title = char(coverage5_labels{i});
+    region_obj(i).title = char(coverage25_labels{i});
     
 end % function

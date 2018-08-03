@@ -208,7 +208,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'colormap', 'solid'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'colormap', 'solid', 'thresh', 'k'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
                 % other related functions, including calling functions, and can be ignored here.

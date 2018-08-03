@@ -128,9 +128,9 @@ function out = regress(dat, varargin)
 %    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 %    DEALINGS IN THE SOFTWARE.
 % ..
-%
+
 % ..
-%    Notes:
+%    Programmers' Notes:
 %    c Tor Wager, Dec 2010
 %    Edited by Luke Chang, 9/27/2012 to add optional input to reverse X & Y (i.e., create a map of voxels that predict the behavioral variable)
 %    Edited by Luke Chang, 9/28/2012 to add optional input to run robust regression for brainony

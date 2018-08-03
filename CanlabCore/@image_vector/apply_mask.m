@@ -63,7 +63,7 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %    Last modified: 10/30/11 to add support for masks that are weight maps
 %    12/15/13:  Luke Chang - added correlation option for pattern-expression
 %    5/10/2016: Phil Kragel - added cosine similarity
-%
+%    8/2/2018: Tor Wager - if mask is a statistic_image object, apply .sig field
 %
 % ..
 
@@ -142,6 +142,13 @@ mask.dat(isnan(mask.dat)) = 0;
 
 % Replace if necessary
 mask = replace_empty(mask);
+
+% if mask is a statistic_image object, apply .sig field
+if isa(mask, 'statistic_image')
+    
+    mask.dat(~mask.sig) = 0;  % for masking purposes
+    
+end
 
 if doinvert
     

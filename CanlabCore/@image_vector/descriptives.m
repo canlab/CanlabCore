@@ -62,9 +62,9 @@ doverbose = true;
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-
-            case 'noverbose', doverbose = false;
             
+            case 'noverbose', doverbose = false;
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -123,6 +123,45 @@ desc.std = std(datacat);
 
 if doverbose
     
+    try
+        % try...catch here because these fields may not contain expected
+        % data types.
+        
+        disp(' ')
+        
+        if ~isempty(dat.source_notes)
+            
+            fprintf('Source: %s\n', dat.source_notes);
+            
+        end
+        
+        if ~isempty(dat.dat_descrip)
+            
+            fprintf('Data: %s\n', dat.dat_descrip);
+            
+        end
+        
+        disp(' ')
+        % References (ad hoc, not obligatory field in fmri_data
+        
+        if isstruct(dat.additional_info) && isfield(dat.additional_info, 'references')
+            myrefs = dat.additional_info.references;
+            if isempty(myrefs)
+                % do nothing
+            else
+                if iscell(myrefs)
+                    canlab_print_legend_text(dat.additional_info.references{:})
+                else
+                    canlab_print_legend_text(dat.additional_info.references);
+                end
+            end
+        end
+        
+    catch
+        disp('Source and dat_info fields do not have expected char arrays; skipping printout')
+        
+    end
+    
     disp(' ')
     disp('Summary of dataset')
     disp('______________________________________________________')
@@ -130,19 +169,19 @@ if doverbose
     fprintf('Images: %3.0f\tNonempty: %3.0f\tComplete: %3.0f\n', desc.n_images, desc.n_nonempty_images, desc.n_complete_images);
     
     fprintf('Voxels: %3.0f\tNonempty: %3.0f\tComplete: %3.0f\n', desc.n_vox, desc.n_nonempty_vox, desc.n_complete_vox);
-
+    
     fprintf('Unique data values: %3.0f\n', desc.num_unique_vals);
     
     disp(' ')
     
     fprintf('Min: %3.3f\tMax: %3.3f\tMean: %3.3f\tStd: %3.3f\n', desc.min, desc.max, desc.mean, desc.std);
-
+    
     disp(' ');
     
     disp(desc.prctile_table);
     
     disp(' ');
-        
+    
 end
 
 

@@ -5,7 +5,7 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 % :Usage:
 % ::
 %
-%    [han, X, Y, b] = line_plot_multisubject(X, Y, varargin)
+%    [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %
 % :Inputs:
 %
@@ -232,7 +232,7 @@ Yc = cat(1, Y{:});
 slope_stats.r = corr(Xc, Yc);
 slope_stats.wasnan = wasnan;
 
-fprintf('r = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
+fprintf('average within-person r = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
     slope_stats.r, slope_stats.df, slope_stats.t, slope_stats.p, sum(slope_stats.wasnan));
 
 % Individual points

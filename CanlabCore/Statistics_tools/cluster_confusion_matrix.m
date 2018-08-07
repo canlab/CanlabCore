@@ -36,16 +36,19 @@ function [K, stats] = cluster_confusion_matrix(pred_label,true_label,varargin)
 %   **'labels'** - followed by a cell array of strings specifying labels for each category
 %   **'method'** - followed by a string specifying method for linkage; see
 %   documentation for the linkage function
-%   **'bootstrap'** - compute bootstrap confidence interval for the number of 
+%   **'bootstrap'** - compute bootstrap confidence interval for the number of
 %   clusters using ward method
 %   for linkage with 5000 samples
 %   **'perm'** - permute labels to estimate p-value (two-sided) that the
 %   optimal number of clusters is less than the full number of clusters
+%   **'pairwise'** - instead of optimizing one-vs-all accuracy for each 
+%   cluster, optimize on most confusable pair
+%
 %
 % :Outputs:
 % **k** - optimal number of clusters
 % **stats** - structure with information about performance
-%	Fields that contain performance metrics for different clustering solutions:  
+%	Fields that contain performance metrics for different clustering solutions:
 %       multi_way_accuracy - overall accuracy for N-way classification
 %       accuracy_mean - vector of average accuracy for each clustering
 %       ste_mean - vectore of average standard error for each clustering
@@ -131,6 +134,14 @@ else
     doboot = false;
 end
 
+
+pair_input = strcmp(varargin,'pairwise');
+if any(pair_input)
+    dopairs = true;
+else
+    dopairs = false;
+end
+
 %% Compute confusion matrix, distance matrix, and related stats
 
 % generate confusion matrix for clustering
@@ -158,7 +169,22 @@ for nc=2:size(cm,2)
     % do a binomial test based on each row of confusion matrix
     clear RES;
     for k=1:size(clustered_cm,2)
-        RES(k) = binotest([zeros(sum(clustered_cm(k,:))-clustered_cm(k,k),1); ones(clustered_cm(k,k),1)],sum(clustered_true_label==k)/length(clustered_true_label)); %#ok<AGROW>
+        
+        if ~dopairs
+            %overall accuracy
+            RES(k) = binotest([zeros(sum(clustered_cm(k,:))-clustered_cm(k,k),1); ones(clustered_cm(k,k),1)],sum(clustered_true_label==k)/length(clustered_true_label)); %#ok<AGROW>
+            stats.accuracy_null{nc-1}(k)=sum(clustered_true_label==k)/length(clustered_true_label);
+
+        else
+            %accuracy relative to the most confused cluster
+            tv=clustered_cm(k,:);
+            tv(k)=nan;
+            [maxval,ind]=max(tv);
+            RES(k) = binotest([zeros(maxval,1); ones(clustered_cm(k,k),1)],sum(clustered_true_label==k)/sum(clustered_true_label==k|clustered_true_label==ind)); %#ok<AGROW>
+            stats.accuracy_null{nc-1}(k)=sum(clustered_true_label==k)/sum(clustered_true_label==k|clustered_true_label==ind);
+
+        
+        end 
     end
     
     % compute mean, ste, and p-value for each cluster
@@ -169,8 +195,8 @@ for nc=2:size(cm,2)
     % compute overall accuracy
     stats.clustered_multi_way_accuracy(nc-1) = sum(diag(clustered_cm))/sum(sum(clustered_cm));
     
-    % identify the number of significant categories (.05 uncorrected)
-    stats.sig{nc-1} = stats.p_vals{nc-1} < .05;
+    % identify the number of significant categories (.05 uncorrected) - also test direction 
+    stats.sig{nc-1} = stats.p_vals{nc-1} < .05 & [RES(:).prop]-stats.accuracy_null{nc-1} >0;
     stats.num_sig(nc-1) = sum(stats.sig{nc-1});
     
 end
@@ -181,11 +207,16 @@ stats.num_clusters = 2:size(cm,2);
 
 % find the cluster solution that maximizes the proportion of significant
 % clusters (largest number of clusters will be selected for ties)
+
+if ~dopairs
 [~,ind] = max(fliplr([stats(1).num_sig]./stats(1).num_clusters));
-
-% store optimal K in output
 stats.optimalK = 1+nc-ind;
-
+else
+% find the cluster solution where all clusters are significant
+ind=max(find(stats.num_sig==stats.num_clusters )); %#ok<MXFND>
+% store optimal K in output
+stats.optimalK = 1+ind;
+end
 % create variable foor bootstrapping calls (first output of this function)
 K=stats.optimalK;
 
@@ -214,15 +245,15 @@ end
 
 if doboot
     
-     p = gcp(); % If we can make a parallel pool, use it!
-        if isempty(p)
-            poolsize = 0;
-        else
-            poolsize = p.NumWorkers;
-        end
-
-    if poolsize>1
-         opts=statset('useparallel',true);
+    p = gcp();  %check if we can do things in parallel
+    if isempty(p)
+        poolsize = 0;
+    else
+        poolsize = p.NumWorkers;
+    end
+    
+    if poolsize>1 % If we have a parallel pool, use it!
+        opts=statset('useparallel',true);
         stats.K_bootci=bootci(5000,{@cluster_confusion_matrix,pred_label,true_label},'type','norm','Options',opts);
         
     else
@@ -304,7 +335,7 @@ parfor it=1:nit
     tl=randi(max(test_label),num_samples,1); %create ground truth labels
     pl=tl; %create perfect match predictions
     randvec=randperm(num_samples); %create a random ordering of predictions
-  toscramble=pl(randvec(1:num_scrambled));
+    toscramble=pl(randvec(1:num_scrambled));
     pl(randvec(1:num_scrambled))=toscramble(randperm(length(toscramble))); %permute to get random values
     [~,sim_stats(it)]=cluster_confusion_matrix(pl,tl);
 end

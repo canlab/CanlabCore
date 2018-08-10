@@ -224,6 +224,15 @@ classdef canlab_dataset
             obj.Description.Event_Level{10, 1} = '      Each row is one event, each column a variable, with names in .names';
             obj.Description.Event_Level{11, 1} = '      Text .type data only, numeric .type data is assigned as ''''';
             
+            % Enforce cells, which we could not assign before
+            [obj.Subj_Level.id, obj.Subj_Level.names, obj.Subj_Level.type, obj.Subj_Level.units, obj.Subj_Level.descrip, obj.Subj_Level.textdata] = deal({});
+
+            [obj.Event_Level.names, obj.Event_Level.type, obj.Event_Level.units, obj.Event_Level.descrip, obj.Event_Level.data, obj.Event_Level.textdata] = deal({});
+            
+            [obj.Sub_Event_Level.names, obj.Sub_Event_Level.type, obj.Sub_Event_Level.units, obj.Sub_Event_Level.descrip, obj.Sub_Event_Level.data, obj.Sub_Event_Level.textdata] = deal({});
+
+            [obj.Continuous.names, obj.Continuous.type, obj.Continuous.units, obj.Continuous.descrip, obj.Continuous.data, obj.Continuous.textdata] = deal({});
+
             for i = 1:length(varargin)
                 if ischar(varargin{i})
                     switch(varargin{i})
@@ -256,15 +265,6 @@ classdef canlab_dataset
                 end
             end
             
-            % Enforce cells, which we could not assign before
-            [obj.Subj_Level.id, obj.Subj_Level.names, obj.Subj_Level.type, obj.Subj_Level.units, obj.Subj_Level.descrip, obj.Subj_Level.textdata] = deal({});
-
-            [obj.Event_Level.names, obj.Event_Level.type, obj.Event_Level.units, obj.Event_Level.descrip, obj.Event_Level.data, obj.Event_Level.textdata] = deal({});
-            
-            [obj.Sub_Event_Level.names, obj.Sub_Event_Level.type, obj.Sub_Event_Level.units, obj.Sub_Event_Level.descrip, obj.Sub_Event_Level.data, obj.Sub_Event_Level.textdata] = deal({});
-
-            [obj.Continuous.names, obj.Continuous.type, obj.Continuous.units, obj.Continuous.descrip, obj.Continuous.data, obj.Continuous.textdata] = deal({});
-
         end % constructor function
         
     end % methods

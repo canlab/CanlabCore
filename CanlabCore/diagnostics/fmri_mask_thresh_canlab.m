@@ -108,7 +108,7 @@ else
     %else
     %    fname = V{1}.fname % passed in 3D images
     %end
-    volInfo = iimg_read_img(fname, 2);
+    volInfo = iimg_read_img(fname, 2, [], 1);
     
 end
 

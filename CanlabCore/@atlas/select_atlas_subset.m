@@ -1,4 +1,6 @@
 function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
+% Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
+%
 % Select a subset of regions in an atlas using:
 % - a cell array of one or more strings to search for in labels
 % - a vector of one or more integers indexing regions

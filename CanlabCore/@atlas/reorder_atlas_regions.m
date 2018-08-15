@@ -1,4 +1,6 @@
 function obj = reorder_atlas_regions(obj, wh_order)
+% Reorder a set of regions in an atlas object
+%
 % Reorder a set of regions in an atlas object according to an integer
 % vector, wh_order, that specifies the original region numbers that should
 % become regions 1...n.  e.g., if wh_order is [3 1], region 3 becomes

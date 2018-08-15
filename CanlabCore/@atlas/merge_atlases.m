@@ -1,5 +1,5 @@
 function atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, varargin)
-% Add all or some regions from an atlas object to another atlas object
+% Add all or some regions from an atlas object to another atlas object (with/without replacing existing labeled voxels)
 %
 %  atlas_obj = add_to_atlas(atlas_obj, atlas_obj_to_add, [optional arguments])
 %

@@ -1,7 +1,8 @@
 function atlas_out = split_atlas_into_contiguous_regions(atlas_obj)
-% Take an atlas object whose labeled regions are bilateral and divide each
-% region with a left- and right-hemisphere portion into separate labeled
-% regions.
+% Divide regions with multiple contiguous blobs into separate labeled regions for each blob
+%
+% Take an atlas object whose labeled regions contain multiple contiguous blobs and divide each
+% contiguous blob into a separate labeled region.
 % - Note: This version eliminates probability maps - handling them not implemented yet
 %
 % July 2018, Tor Wager

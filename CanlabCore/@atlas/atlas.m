@@ -1,9 +1,28 @@
-% atlas: Subclass of image_vector that stores information about brain atlases and parcellations
+% atlas: Subclass of image_vector designed for brain atlases and parcellations
 %
 % 'atlas' is a data class containing information about brain atlases and parcellations
 % stored in a structure-like object.  It inherits the properties and
 % methods of fmri_data and image_vector objects.
 %
+% 'atlas' objects are a class of objects specially designed for brain
+% atlases. They have properties (fields) for probabilistic maps and a data
+% field (.dat) that contains integer codes for thresholded/maximum
+% probability labels. There is also a "labels" property with the text
+% labels for each region, and additional description and label fields for
+% additional annotation. These can hold, e.g., hierarchical labels at different 
+% levels of spatial resolution. A "reference" property holds information
+% about associated publications.
+%
+% Atlas objects have specialized methods for selecting regions by name or
+% number (including groups of regions with similar names). Because it is a 
+% subclass of the image_vector object, it inherits all of its  methods as 
+% well (montage, surface, apply_mask, write, descriptives, flip,
+% image_similarity_plot, image_math, etc.
+%
+% The function load_atlas in the CANlab toolbox loads a number of named
+% atlases included with the toolbox.  Type >> help load_atlas for a list of
+% named atlases.
+% 
 % Creating an atlas object requires either images with probability maps (a 4-d image) 
 % Or an integer-valued image with one integer per atlas region. 
 % For full functionality, the atlas also requires both probability maps and 
@@ -66,29 +85,45 @@
 % - regress runs multiple regression
 % - predict runs cross-validated machine learning/prediction algorithms
 %
-% Defining the space of the extracted data
-% -----------------------------------------------------------------------
-% Note: There are two options for defining the space (i.e., coordinates/voxels)
-% that the data is mapped to.
-% By default, the mask is resliced to the same space as the first image in the
-% input image name set (not coregistered; just resliced to the same voxel sizes.
-% The images are assumed to be in register.)
-%
-% Reampling to mask space: YOU CAN ALSO map the image data to the space of the mask, by entering
-% 'sample2mask' as in input argument.
-% For loading images in different spaces together in one object, use the 'sample2mask' option.
+% Specialized methods unique to atlas objects include:
+% atlas                               Construct a new atlas object given Analyze/Nifti image(s)
+% 
+% Utilities for manipulating atlases:
+% merge_atlases                       Add all or some regions from an atlas object to another atlas object (with/without replacing existing labeled voxels)
+% probability_maps_to_region_index    Use dat.probability_maps to rebuild integer vector of index labels (dat.dat)
+% remove_atlas_region                 Removes region(s) from atlas, by names or index values 
+% reorder_atlas_regions               Reorder a set of regions in an atlas object
+% select_atlas_subset                 Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
+% split_atlas_by_hemisphere           Divide regions that are bilateral into separate left- and right-hemisphere regions
+% split_atlas_into_contiguous_regions Divide regions with multiple contiguous blobs into separate labeled regions for each blob
+% threshold                           Threshold atlas object based on values in obj.probability_maps property
+% 
+% % Extracting information and converting to other object types:
+% atlas2region                        Convert an atlas object to a region object 
+% check_properties                    Check properties and enforce some variable types 
+% get_region_volumes                  Get the volume (and raw voxel count) of each region in an atlas object
+% num_regions                         Count number of regions in atlas object, even with incomplete data 
+% 
+% Manipulating labels for atlas regions:
+% atlas_add_L_R_to_labels             Removes some strings indicating lateralization from atlas labels and adds new _L and _R suffixes for lateralized regions
+% atlas_similarity                    Annotate regions in an atlas object with labels from another atlas object
+% 
+% Visualization:
+% isosurface                          Create a series of surfaces in different colors, one for each region
+% montage                             Display an atlas object on a standard slice montage 
 %
 % Attaching additional data
 % -----------------------------------------------------------------------
 % The atlas object has a number of fields for appending specific types of data.
 %
-% - You can replace or append data to the fmri_dat.dat field.
+% - You can replace data in the atlas.dat field. However, should always contain one column vector of integers. 
 % - Attach custom descriptions in several fields to document your object.
 % - The "history" field stores a cell array of strings with the processing
 % history of the object. Some methods add to this history automatically.
 %
 %
 % Examples:
+% -----------------------------------------------------------------------
 % parcellation_file = 'CIT168toMNI152_prob_atlas_bilat_1mm.nii';  %'prob_atlas_bilateral.nii';
 % labels = {'Put' 'Cau' 'NAC' 'BST_SLEA' 'GPe' 'GPi' 'SNc' 'RN' 'SNr' 'PBP' 'VTA' 'VeP' 'Haben' 'Hythal' 'Mamm_Nuc' 'STN'};
 % dat = atlas(which(parcellation_file), 'labels', labels, ...

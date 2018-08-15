@@ -1,5 +1,5 @@
 function dat = probability_maps_to_region_index(dat)
-% Convert dat.probability_maps to dat.dat integer vector or region index values
+% Use dat.probability_maps to rebuild integer vector of index labels (dat.dat)
 %
 % dat = probability_maps_to_region_index(dat)
 %

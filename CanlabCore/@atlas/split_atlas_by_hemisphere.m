@@ -1,4 +1,6 @@
 function atlas_out = split_atlas_by_hemisphere(atlas_obj)
+% Divide regions that are bilateral into separate left- and right-hemisphere regions
+%
 % Take an atlas object whose labeled regions are bilateral and divide each
 % region into separate left- and right-hemisphere regions.
 % - Uses x-coordinates. x-coords exactly zero will be included in R hem regions

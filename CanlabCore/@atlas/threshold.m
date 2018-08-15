@@ -1,6 +1,10 @@
 function obj = threshold(obj, input_threshold, varargin)
-% Threshold atlas object based on raw threshold values. See
-% image_vector.threshold and statistic_image.threshold for comparable
+% Threshold atlas object based on values in obj.probability_maps property
+%
+% - probability_maps property should contain values between 0 and 1.
+% - This method will not work for empty probability_maps
+%
+% See image_vector.threshold and statistic_image.threshold for comparable
 % methods for other object types. These do slightly different things,
 % depending on object type.
 %

@@ -1,4 +1,5 @@
 function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
+% Annotate regions in an atlas object with labels from another atlas object
 % Take regions in an atlas object (atlas_to_parse) and annotate them with labels and quantitative
 % coverage stats from another atlas (ref_atlas_obj)
 %

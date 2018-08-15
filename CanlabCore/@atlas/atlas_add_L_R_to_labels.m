@@ -1,6 +1,5 @@
 function atlas_obj = atlas_add_L_R_to_labels(atlas_obj)
-% Removes some strings indicating lateralization from atlas labels and adds
-% new _L and _R suffixes for lateralized regions.
+% Removes some strings indicating lateralization from atlas labels and adds new _L and _R suffixes for lateralized regions.
 % - strings replaced are L_ R_ Left_ Right_ _L _R _Left _Right
 
 labels = atlas_obj.labels;

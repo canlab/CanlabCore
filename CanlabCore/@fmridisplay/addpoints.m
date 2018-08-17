@@ -128,11 +128,11 @@ for i = 1:length(varargin)
                 varargin{i+1} = [];
                 varargin{i} = [];
                 
-            case {'marker', 'MarkerStyle'}, marker = varargin{i+1};
+            case {'marker', 'Marker', 'MarkerStyle'}, marker = varargin{i+1}; varargin{i+1} = [];
                 
-            case {'MarkerSize', 'markersize'}, markersize = varargin{i+1};
+            case {'MarkerSize', 'markersize'}, markersize = varargin{i+1}; varargin{i+1} = [];
                 
-            case {'MarkerFaceColor', 'markerfacecolor'}, markerfacecolor = varargin{i+1};
+            case {'MarkerFaceColor', 'markerfacecolor'}, markerfacecolor = varargin{i+1}; varargin{i+1} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

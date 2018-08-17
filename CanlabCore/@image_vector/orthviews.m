@@ -140,8 +140,11 @@ if isa(image_obj, 'atlas') && ~force_continuous
     dounique = true; doparcels = true; 
 end
     
-if ~doparcels && ~force_continuous
-    nvalues = length(unique(image_obj.dat(:)));
+u = unique(image_obj.dat(:));
+
+if ~doparcels && ~force_continuous && all(u == round(u))
+    % auto-select parcel unique color plot if there are few unique values and values are integers
+    nvalues = length(u);
     
     if nvalues > 2 && nvalues < 300, dounique = true; doparcels = true; end
 end
@@ -174,9 +177,11 @@ for i = handle_indices
         
     
     elseif doposneg
+        
         warning off
         cl{i} = cluster2region(cl{i});
         warning on % name field warning
+        
         [clpos{i}, clneg{i}] = posneg_separate(cl{i}, 'Z');
         
         if ~isempty(clpos{i})

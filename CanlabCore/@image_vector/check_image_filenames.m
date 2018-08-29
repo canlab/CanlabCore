@@ -32,6 +32,12 @@ function obj = check_image_filenames(obj, varargin)
 
 verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin)))); % if 'noverbose' is entered, suppress output
 
+% Make char array if needed
+if ~isempty(obj.image_names) && iscell(obj.image_names)
+    
+    obj.image_names = char(obj.image_names{:});
+    
+end
 
 if isempty(obj.fullpath) && ~isempty(obj.image_names)
     % get full path

@@ -44,6 +44,18 @@ classdef image_vector
 %
 % ...where image_names is a character array or 1 x n cell array of strings
 %
+% You can also manually construct an object by entering its constituent
+% fields. For the object to be valid, these much match one another in size/space/etc, and you
+% may get errors later if they do not match. 
+%
+% For example, this code first loads a sample atlas object and then creates an image_vector object
+% from its fields. Then, we re-cast it as an fmri_data object, which is
+% generally more useful and has more associated methods.
+%
+% obj = load_atlas('cerebellum');  
+% obj_with_region_indices = image_vector('dat', single(obj.dat), 'volInfo', obj.volInfo, 'removed_voxels', obj.removed_voxels, 'removed_images', obj.removed_images, 'image_names', obj.image_names, 'noverbose');
+% obj_with_region_indices = fmri_data(obj_with_region_indices);
+% orthviews(obj_with_region_indices)
 %
 % -------------------------------------------------------------------------
 % Properties and methods
@@ -251,8 +263,17 @@ classdef image_vector
             % all valid fieldnames
             valid_names = fieldnames(obj);
             
+            control_args = {};
+            
             for i = 1:length(varargin)
                 if ischar(varargin{i})
+                    
+                    % known control strings (ignore but pass in)
+                    if strcmp(varargin{i}, 'noverbose')
+                        control_args{end + 1} = varargin{i};
+                        
+                        continue % skip the rest in this loop
+                    end
                     
                     % Look for a field (attribute) with the input name
                     wh = strmatch(varargin{i}, valid_names, 'exact');
@@ -284,7 +305,7 @@ classdef image_vector
             % But we do have valid image names.
             % ----------------------------------------
             
-            obj = check_image_filenames(obj);
+            obj = check_image_filenames(obj, control_args{:});
             
             if isempty(obj.dat) && any(obj.files_exist)
                 obj = read_from_file(obj);

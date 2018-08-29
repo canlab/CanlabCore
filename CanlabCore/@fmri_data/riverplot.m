@@ -218,6 +218,12 @@ function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
 
 % optional inputs with default values
 
+% If we've entered an atlas object, convert to fmri_data object containing the probability_map data
+if isa(layer1fmri_obj, 'atlas')
+    layer1fmri_obj = atlas_get_probability_maps(layer1fmri_obj);
+end
+
+
 layer2fmri_obj = layer1fmri_obj;  % Default: Plot object with itself
 sim_metric = 'cosine_sim';
 estimateSimilarity = true; % false if similarity matrix entered as input (SG)
@@ -265,6 +271,12 @@ for i = 1:length(varargin)
             
             case {'layer2', 'layer2fmri_obj'}
                 layer2fmri_obj = varargin{i+1}; varargin{i+1} = [];
+                
+                % If we've entered an atlas object, convert to fmri_data object containing the probability_map data
+                if isa(layer2fmri_obj, 'atlas')
+                    layer2fmri_obj = atlas_get_probability_maps(layer2fmri_obj);
+                end
+
                 nlayer2 = size(layer2fmri_obj.dat, 2);
                 layer2colors = custom_colors([.2 .2 .8], [.2 .8 .8], nlayer2);
                 
@@ -398,17 +410,17 @@ if estimateSimilarity
             
             case 'cosine_sim' % default
                 
-                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity');
+                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'cosine_similarity', 'noaverage');
                 sim_matrix = stats.r;
                 
             case {'r', 'corr', 'correlation'}
                 
-                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot');
+                stats = image_similarity_plot(layer1fmri_obj, 'mapset', layer2fmri_obj, 'noplot', 'noaverage');
                 sim_matrix = stats.r;
                 
             case 'binary_overlap'
                 
-                stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'binary_overlap');
+                stats = image_similarity_plot(layer1fmri_obj{i}, 'mapset', layer2fmri_obj, 'noplot', 'binary_overlap', 'noaverage');
                 sim_matrix = stats.r;
                 
             case 'dice'
@@ -524,7 +536,7 @@ end
 
 if recolor
     % recolor layer 2 according to similarity matrix 
-    layer2colors=riverplot_recolor_layer2(sim_matrix,layer1colors);
+    layer2colors = riverplot_recolor_layer2(sim_matrix,layer1colors);
 end
 
 

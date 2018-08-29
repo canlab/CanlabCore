@@ -214,6 +214,12 @@ end
 
 obj = obj_out;
 
+
+if isempty(obj_out)
+    % return - nothing more to do
+    return   
+end
+
 % This stuff below added 1/27/13 by tor
 
 % re-parse clusters

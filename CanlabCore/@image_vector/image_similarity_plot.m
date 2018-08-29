@@ -219,20 +219,37 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % 
 % ..
 
-% ..
+
+% PRELIMINARIES
+% ------------------------------------------------------------------------
+
+
+% If mask is an atlas object, convert to fmri_data object containing the
+% probability_map data
+
+if isa(obj, 'atlas')
+    obj = atlas_get_probability_maps(obj);
+end
+
+n_obs = size(obj.dat, 2); % number of images to test + plot
+
+
 % DEFAULTS AND INPUTS
-% ..
+% ------------------------------------------------------------------------
+
 [hh, hhfill] = deal(' ');
-doaverage = 0; % initalize optional variables to default values here.
+doaverage = false;       % initalize optional variables to default values here.
+force_noaverage = false; % averaging mode determined by plot style below, which is problematic for some
+                         % functions, e.g., riverplot
+
 mapset = 'bucknerlab';  % 'bucknerlab'
 table_group = {}; %initialize output
 multcomp_group = {}; %initialize output
 dofigure = true;
 noplot = false;
 
-groupColors = [{[1 .9 0] [0 0 1]}];  % for bicolor wedge defaults: yellow pos, blue neg  scn_standard_colors(size(obj.dat, 2));
-k = size(obj.dat, 2);
-morecolors = scn_standard_colors(k + 2);
+groupColors = [{[1 .9 0] [0 0 1]}];  % for bicolor wedge defaults: yellow pos, blue neg  scn_standard_colors(n_obs);
+morecolors = scn_standard_colors(n_obs + 2);
 groupColors = [groupColors morecolors(5:end)];  % avoid redundancy
 
 dofixRange = 0;
@@ -252,8 +269,11 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case 'average'
-                doaverage = 1;
+                doaverage = true;
                 bicolor = true;  % if wedge, bicolor only, no lines.
+               
+            case 'noaverage'
+                force_noaverage = true;
                 
             case 'cosine_similarity', sim_metric = 'cosine';
                 
@@ -311,9 +331,11 @@ end
 % because it doesn't make sense to have a series of wedge
 % plots. So we transpose r and average across observations
 % by default.
-n_obs = size(obj.dat, 2); % number of images to test + plot
 
-if n_obs > 1 && strcmp(plotstyle, 'wedge')
+% This change in default behavior is problematic for some applications,
+% e.g., riverplots. 
+if n_obs > 1 && strcmp(plotstyle, 'wedge') && ~force_noaverage
+    
     % We have a wedge plot with multiple obs/images. Default to 'average'
     % mode, not multi-line-plot. For polar plots, do multi line plot.
     
@@ -361,7 +383,7 @@ nonemptydat = ~obj.removed_voxels; % remove these
 
 obj = replace_empty(obj);
 
-% Correlation
+% Correlation or other similarity metric
 % ------------------------------------------------------------------------
 
 % Point-biserial correlation is same as Pearson's r.
@@ -374,8 +396,17 @@ obj = replace_empty(obj);
 
 % if map or series of maps, point-biserial is better.
 
+% If mask is an atlas object, convert to fmri_data object containing the
+% probability_map data
+
+if isa(mask, 'atlas')
+    mask = atlas_get_probability_maps(mask);
+end
+
+n_obs2 = size(mask.dat, 2);
+
 % This is done for n images in obj
-r = zeros(size(mask.dat, 2), size(obj.dat, 2));
+r = zeros(n_obs2, n_obs);
 
 switch sim_metric
     case 'corr'
@@ -385,7 +416,7 @@ switch sim_metric
     case 'cosine'
         % Cosine similarity
         
-        for im = 1:size(mask.dat, 2)
+        for im = 1:n_obs2
             %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
             %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
             %
@@ -396,7 +427,7 @@ switch sim_metric
         
     case 'overlap'
         % binary overlap
-        for im = 1:size(mask.dat, 2)
+        for im = 1:n_obs2
             r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'binary_overlap');
         end
         

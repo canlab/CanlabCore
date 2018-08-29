@@ -53,6 +53,9 @@
 % - Data is stored in fmri_dat.dat, in a [voxels x images] matrix
 % - You can replace or append data to the fmri_dat.dat field.
 %
+% You can create an object by assembling an image_vector object from parts
+% (entering fields) and converting using fmri_obj = fmri_data(image_vec_obj)
+%
 % You can create an fmri_data object with extacted image data.
 % - Let "imgs" be a string array or cell array of image names
 % - This command creates an object with your (4-D) image data:
@@ -282,8 +285,7 @@ classdef fmri_data < image_vector
             % Create empty fmri_data object, and return if no additional
             % arguments
             % ---------------------------------
-            
-            
+
             obj.source_notes = 'Info about image source here';
             obj.mask = fmri_mask_image;
             obj.mask_descrip = 'Volume and in-area mask info from iimg_read_img';
@@ -372,6 +374,9 @@ classdef fmri_data < image_vector
                 end
                 
                 obj.mask.volInfo = obj2.volInfo;
+                
+                obj = run_checks_and_fixes(obj, verbosestr);
+                
                 return
                 
             else
@@ -499,7 +504,7 @@ classdef fmri_data < image_vector
             end % read data, depending on mask sampling
             
             % re-zip images if they were originally zipped
-            % add .gz backt to file names.
+            % add .gz back to file names.
             if any(was_gzipped)
                 
                 image_names = re_zip_images(image_names, was_gzipped);
@@ -514,8 +519,9 @@ classdef fmri_data < image_vector
             clear imgdat
             
             % append description info
-            [dd, ff, ee] = fileparts(maskobj.volInfo.fname);
+            [~, ff, ee] = fileparts(maskobj.volInfo.fname);
             mask_image_name = [ff ee];
+            
             %obj = create(obj, 'dat_descrip', sprintf('Data from %s: %s', mask_image_name, obj.dat_descrip));
             obj = create(obj, 'mask_descrip', mask_image_name, verbosestr);
             
@@ -524,8 +530,12 @@ classdef fmri_data < image_vector
             obj.history(end+1) = {sprintf('Sampled to space of %s', maskobj.space_defining_image_name)};
             obj.history(end+1) = {['Masked with ' mask_image_name]};
             
-            obj = check_image_filenames(obj, verbosestr);
-
+            % Checks and fixes
+            % -------------------------------------------------------------
+            
+            obj = run_checks_and_fixes(obj, verbosestr);
+            
+            
         end % constructor function
         
     end % methods
@@ -533,7 +543,30 @@ classdef fmri_data < image_vector
     
 end
 
+% -------------------------------------------------------------
+% -------------------------------------------------------------
 
+% Sub-functions
+
+% -------------------------------------------------------------
+% -------------------------------------------------------------
+
+function obj = run_checks_and_fixes(obj, verbosestr)
+
+obj = check_image_filenames(obj, verbosestr);
+
+if isempty(obj.mask) && ~isempty(obj)  % isempty is an object method here
+    % fix/create mask
+    
+    obj.mask.dat = any(obj.dat, 2);
+    obj.mask.removed_voxels = obj.removed_voxels;
+    obj.mask.volInfo_descrip = 'Generic mask built from .dat. Any voxel with a value in .dat is in-mask';
+    
+end
+
+end % function
+
+% -------------------------------------------------------------
 
 function image_names_out = re_zip_images(image_names, was_gzipped)
 % in : char, out: char

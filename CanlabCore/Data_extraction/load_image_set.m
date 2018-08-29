@@ -169,7 +169,7 @@ for i = 1:length(varargin)
     end
 end
 
-if isa(image_names_or_keyword, 'fmri_data')
+if isa(image_names_or_keyword, 'fmri_data') || isa(image_names_or_keyword, 'atlas')
     % We already have images loaded - just get the names
     image_obj = image_names_or_keyword;
     imagenames = image_obj.image_names;

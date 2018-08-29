@@ -46,6 +46,10 @@ function p = addbrain(varargin)
 % :CUTAWAY SURFACES:
 %
 %   **'brainbottom':**
+%       Bottom of brain and head
+%
+%   **'cutaway':**
+%       A canonical surface cutaway, using surface_cutaway.m
 %
 % :COMPOSITES:
 %
@@ -274,6 +278,10 @@ switch meth
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
 
+    case 'cutaway'
+        
+        p = surface_cutaway('ycut_mm', -30);
+        
     % -------------------------------------------------------------------
     % Other subcortical regions 
     % Some do not work well for display in canlab_load_ROI 

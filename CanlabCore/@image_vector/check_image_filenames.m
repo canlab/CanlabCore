@@ -86,7 +86,7 @@ if ~isempty(obj.fullpath) && size(obj.fullpath, 1) ~= size(obj.dat, 2)
         disp('Attempting to expand image filenames in case image list is unexpanded 4-D images');
     end
 
-    if any(strfind(obj.fullpath, '.gz'))
+    if any(strfind(obj.fullpath(1,:), '.gz'))
         % skip expand_4d_filenames, cause of spm_vol (returns a warning, but works...)
         % instead, list filenames manually.
         obj.fullpath = repmat(obj.fullpath, size(obj.dat, 2), 1);

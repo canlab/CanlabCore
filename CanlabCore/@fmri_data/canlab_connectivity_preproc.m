@@ -1,4 +1,5 @@
 function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat, varargin)
+
 % This function prepares data for connectivity analysis by removing nuisance
 % variables and temporal filtering (high, low, or bandpass filter). This also
 % can extract values from given masks and return averaged activity or pattern
@@ -22,9 +23,10 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 % *Steps in order [with defaults]:*
 %   1. Remove nuisance covariates (and linear trend if requested)
 %   2. Remove ventricle and white matter - needs structural images
-%   3. Windsorize based on distribution of full data matrix
-%   4. High/low/bandpass filter
-%   5. Extract region-by-region average ROI or pattern expression data
+%   3. High/low/bandpass filter on BOTH data and covs before regression (plot)
+%   4. Residualization using regression (plot)
+%   5. Windsorize based on distribution of full data matrix (plot)
+%   6. Extract region-by-region average ROI or pattern expression data
 %
 % ..
 %     Author and copyright information:
@@ -143,6 +145,7 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 % ..
 %    PROGRAMMER'S NOTE
 %    05/19/15 fixed a bug related to conn_filter
+%    08/24/18 implemented simultaneous pass filter + regression
 % ..
 
 additional_R = [];
@@ -195,7 +198,7 @@ for i = 1:length(varargin)
             case {'no_preproc'}
                 do_preproc = false;
                 
-            case {'no_plots'};
+            case {'no_plots'}
                 do_plots = false;
         end
     end
@@ -252,7 +255,7 @@ if do_preproc
             comb_R = [comb_R scale(wm_nuisance)];
         end
         
-        dat.history{end+1} = 'Regressed out white matter and ventricle signals';
+        dat.history{end+1} = 'Extracting white matter and ventricle signals';
         
     end
     
@@ -273,7 +276,42 @@ if do_preproc
             error('Nuisance covariates and data matrix have different nunmbers of cases.');
         end
         
+        %% temporal filter (low and high): low pass, high pass, bandpass
+        % Simultaneous temporal filtering and regression
+        
+        if do_filter
+            
+            fprintf('::: temporal filtering ... \n');
+            % conn_filter does mean-center by default.
+            % We need mean back in
+            
+            % pass-filter brain data
+            dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
+                + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
+            
+            % pass-filter covs (without outlier indices)
+            outlier_idx = sum(comb_R==1)==1;
+            outliers = comb_R(:,outlier_idx);
+            comb_R(:,outlier_idx) = [];
+            
+            comb_R = conn_filter(TR, filter, comb_R, 'full') ...
+                + repmat(mean(comb_R), size(comb_R,1), 1); 
+            
+            % add outlier indices back in
+            comb_R = [comb_R outliers];
+            
+            dat.history{end+1} = 'Done temporal filtering';
+            
+            if do_plots
+                plot_qc(dat,2,1,[]); drawnow;
+            end
+            
+        end
+        
+        % add intercept
         X = [comb_R ones(nobs,1)];
+        
+        % regression
         
         px = pinv(X);
         pxy = px * dat.dat';
@@ -282,39 +320,19 @@ if do_preproc
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
         if do_plots
-            clim = plot_qc(dat,2,1,[]); drawnow;
+            clim = plot_qc(dat,3,1,[]); drawnow;
         end
         
-    else  % no filtering
+    else  % no regression
         
     end
-    
-   
     
     %% Windsorize entire data matrix to k STD
     if do_windsorize
-        dat = windsorize(dat, k_std);
-        
-        if do_plots
-            plot_qc(dat,3,0,clim); drawnow;
-            %done below dat.history{end+1} = sprintf('Windsorized data matrix to %3.0f st. dev.', k_std);
-        end
-        
-    end
-    
-    %% temporal filter (low and high): low pass, high pass, bandpass
-    
-    if do_filter
-        fprintf('::: temporal filtering ... \n');
-        dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
-            + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); % conn_filter does mean-center by default. 
-                                                           % So need mean back in
-        dat.history{end+1} = 'Done temporal filtering';
-        
+        dat = windsorize(dat, k_std); % history added within the function
         if do_plots
             plot_qc(dat,4,0,clim); drawnow;
         end
-        
     end
     
     t = toc;
@@ -524,7 +542,7 @@ function clim = plot_qc(dat, n, use7sd, clim)
 % use7sd: use -6sd~+6sd as a range
 % clim: specify color limit
 
-titles = {'RAW:before Conn preproc', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize', 'Pass filter'};
+titles = {'RAW:before Conn preproc', 'Pass filter', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize'};
 
 subplot(2, 4, n);
 plot(mean(dat.dat)); 

@@ -49,8 +49,7 @@ end
 
 % region2imagevec creates illegal list of removed_voxels (doesn't match
 % .volInfo.wh_inmask).  Fix...
-ivec.removed_voxels = ivec.removed_voxels(ivec.volInfo.wh_inmask);
-
+% ivec.removed_voxels = ivec.removed_voxels(ivec.volInfo.wh_inmask);
 
 label_mask = fmri_data(atlasname);
 

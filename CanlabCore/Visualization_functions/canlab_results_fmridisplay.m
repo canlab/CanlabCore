@@ -37,6 +37,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %   **'noremove':**
 %        do not remove current blobs when adding new ones
 %
+%   **'nofigure':**
+%        do not create a new figure (for selected montage sets only)
+%
 %   **'outlinecolor:**
 %        followed by new outline color
 %
@@ -187,6 +190,7 @@ montagetype = 'compact';
 doverbose = true;
 %overlay='SPM8_colin27T1_seg.img';
 overlay = 'keuken_2014_enhanced_for_underlay.img';
+dofigure = true;
 
 wh = strcmp(varargin, 'overlay');
 if any(wh), wh = find(wh); overlay = varargin{wh(1) + 1};  varargin([wh wh+1]) = []; end
@@ -245,6 +249,9 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'noverbose');
 if any(wh), doverbose = false; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'nofigure');
+if any(wh), dofigure = false; varargin(wh) = []; end
 
 wh = false(1, length(varargin));
 for i = 1:length(varargin)
@@ -378,7 +385,10 @@ if ~exist('o2', 'var')
             % position in size. When using montage to create a new figure,
             % they don't seem to do this. could be enlarge_axes, or ???
             
-            slices_fig_h = figure('Color', 'w'); 
+            if dofigure
+                slices_fig_h = figure('Color', 'w');
+            end
+            
             ss = get(0, 'ScreenSize');
             myheightdivisor = 1.5; % 3/nrows;  % controls figure aspect ratio
             set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/myheightdivisor) ])

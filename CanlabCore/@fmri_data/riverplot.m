@@ -1,4 +1,4 @@
-function [layer1, layer2, ribbons] = riverplot(layer1fmri_obj, varargin)
+function [layer1, layer2, ribbons, sim_matrix] = riverplot(layer1fmri_obj, varargin)
 % Make a riverplot of relationships among images, stored in an fmri_data object,
 % or two sets of images, stored in two fmri_data objects.
 %

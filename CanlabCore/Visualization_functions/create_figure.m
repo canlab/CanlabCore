@@ -10,12 +10,14 @@ function [f1, axh] = create_figure(tagname, varargin)
 % Defaults:
 % doclear = true;    % clear if new or if old and existing
 % createnew = false; % force creation of new figure (otherwise uses existing)
-% doresize = true;   % force resize of figure based on how many axes it contains
+% doresize = false;  % force resize of figure based on how many axes it
+%                      contains. Will resize anyway when creating new.
 
 
 % Edit: 1/2017 by Tor Wager - set figure aspect ratio in proportion to data
 % plots, when creating new figure
 % 8/1/2018 Tor Wager, add [resize existing figure flag]
+% 9/1/2018 doresize = false by default
 
 axh = [];
 
@@ -25,7 +27,7 @@ end
 
 doclear = true;    % clear if new or if old and existing
 createnew = false; % force creation of new figure (otherwise uses existing)
-doresize = true;   % force resize of figure based on how many axes it contains
+doresize = false;  % force resize of figure based on how many axes it contains
 
 if length(varargin) > 2 
     % if true, use same figure; do not clear
@@ -33,7 +35,6 @@ if length(varargin) > 2
 end
 
 if length(varargin) > 3 
-    % use same figure; do not clear
     doresize = varargin{4};
 end
 
@@ -41,6 +42,7 @@ old = findobj('Tag', tagname);
 old = old( strcmp( get(old, 'Type'), 'figure' ) );
 
 if ~isempty(old)
+    % Found existing figure window with this tag
     
     if length(old) > 1
         % multiple figures with same tag!
@@ -54,16 +56,10 @@ if ~isempty(old)
     
 else
     % Or create new
+    
     createnew = true;
-    
-    %         scnsize = get(0,'ScreenSize');
-    %
-    %         xdim = min(scnsize(3)./2, 700);
-    %         ydim = min(scnsize(4)./2, 700);
-    %
-    %         f1 = figure('position',round([50 50 xdim ydim]),'color','white');
-    
-    f1 = figure; %('color','white');
+
+    f1 = figure; 
     
     set(f1, 'Tag', tagname, 'Name', tagname, 'color', 'white');
     hold on

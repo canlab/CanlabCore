@@ -80,9 +80,9 @@ D2_expected = ds(:, 3);
 
 %figure; plot(ds(:, 3), ds(:, 1), 'ro');
 
-wh_outlier_uncorr = pval < .05;
+wh_outlier_uncorr = pval < .05 & D2 > median(D2);
 
-wh_outlier_corr = pval < (.05 ./ length(pval));  % Outliers after Bonferroni correction
+wh_outlier_corr = pval < (.05 ./ length(pval)) & D2 > median(D2);  % Outliers after Bonferroni correction
 
 
 fprintf('\n')

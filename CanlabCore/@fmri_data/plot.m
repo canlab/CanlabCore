@@ -14,7 +14,7 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, plotmethod)
 %
 % :Outputs:
 %
-% 5 plots and an SPM orthviews presentation of the data.  In the below 
+% 5 plots and an SPM orthviews presentation of the data.  In the below
 % and elsewhere, "image" connotes a 3D brain volume captured every TR.
 %
 %   **subplot 1:**
@@ -50,7 +50,7 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, plotmethod)
 % to 'corr', using correlation matrix, and changing how many/how prin comps
 % are retained before mahal.  Added wh_outlier_uncorr, wh_outlier_corr
 % output.
-% 
+%
 
 [wh_outlier_uncorr, wh_outlier_corr] = deal([]);
 
@@ -72,7 +72,7 @@ switch plotmethod
         create_figure('fmri data matrix', 2, 3);
         imagesc(fmridat.dat');
         colorbar;
-
+        
         axis tight; set(gca, 'YDir', 'Reverse')
         title('fmri data .dat Data matrix');
         xlabel('Voxels'); ylabel('Images');
@@ -85,7 +85,7 @@ switch plotmethod
         myrange = [tmp - 3*stmp tmp + 3*stmp];
         set(gca, 'CLim', myrange);
         drawnow;
-
+        
         
         if ~isempty(fmridat.Y)
             p = get(gca, 'Position'); ystart = p(2); ylen = p(4);
@@ -96,16 +96,16 @@ switch plotmethod
             axis tight;
         end
         drawnow;
-
+        
         % ---------------------------------------------------------------
         % Covariance
         % ---------------------------------------------------------------
         
-        subplot(2, 3, 4);
+        subplot(2, 3, 2);
         covmtx = cov(fmridat.dat);
         imagesc(covmtx);
         axis tight; set(gca, 'YDir', 'Reverse');
-        title('cov(images)');
+        title('Spatial covariance across images');
         colorbar;
         drawnow;
         
@@ -119,15 +119,15 @@ switch plotmethod
             
         end
         drawnow
-         
+        
         % ---------------------------------------------------------------
         % Histogram
         % ---------------------------------------------------------------
-
-        subplot(2, 3, 2);
+        
+        subplot(2, 3, 4);
         histogram(fmridat, 'nofigure');
         drawnow
-
+        
         clear dattmp
         
         globalmean = nanmean(fmridat.dat);  % global mean of each obs
@@ -136,28 +136,66 @@ switch plotmethod
         sz = rescale_range(globalstd, [1 6]); % marker size related to global std
         sz(sz == 0) = 1;
         %sz(sz < .5) = .5;
-
-        % ---------------------------------------------------------------
+        
+        %         % ---------------------------------------------------------------
+        %         % Global mean vs. std
+        %         % ---------------------------------------------------------------
+        %         subplot(2, 3, 3); hold on;
+        %         plot(globalmean, globalstd, 'k.');
+        %         title('Image mean vs. std across voxels');
+        %         xlabel('Image mean');
+        %         ylabel('Image std');
+        
         % Global mean vs. std
         % ---------------------------------------------------------------
+        
+        if size(fmridat.dat,2) > 1
+            
+            r = corr(double(globalmean'), double(globalstd'));
+            
+            mystr = sprintf('Corr between image mean and spatial std: %3.2f', r);
+            subplot(2, 3, 2);
+            xlabel(mystr)
+            
+        end
+        
+        % ---------------------------------------------------------------
+        % Correlation matrix
+        % ---------------------------------------------------------------
         subplot(2, 3, 3); hold on;
-        plot(globalmean, globalstd, 'k.');
-        title('Image mean vs. std across voxels'); 
-        xlabel('Image mean'); 
-        ylabel('Image std');
-
+        covmtx = corr(fmridat.dat);
+        imagesc(covmtx);
+        axis tight; set(gca, 'YDir', 'Reverse');
+        title('Spatial correlation across images');
+        colorbar;
+        drawnow;
+        
+        if ~isempty(fmridat.Y)
+            p = get(gca, 'Position'); ystart = p(2); ylen = p(4);
+            
+            axh = axes('Position', [.05 ystart .03 ylen]);
+            imagesc(fmridat.Y);
+            title('Y');
+            axis tight;
+            
+        end
+        drawnow
+        
         % ---------------------------------------------------------------
         % Global mean vs. time
         % ---------------------------------------------------------------
         if size(fmridat.dat,2) > 1
+            
             subplot(2, 3, 5);  hold on;
-
+            
             plot(globalmean, '-');
             axis tight
-
+            
             Y = 1:nobs;
             Yname = 'Case number';
-
+            
+            plot_horizontal_line(mean(globalmean), 'k--');
+            
             for i = 1:nobs
                 plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
             end
@@ -173,56 +211,66 @@ switch plotmethod
             end
             
             ylabel('Global mean');
-            xlabel(Yname);
-            title('Globals for each case (size = spatial std)');
+            xlabel([Yname ' (err bars = 1 sd)']);
+            title('Global mean values (size = spatial std)');
             axis tight;
             drawnow;
-
-         
-        % ---------------------------------------------------------------
-        % Mahalanobis distance
-        % ---------------------------------------------------------------
-        
+            
+            
+            % ---------------------------------------------------------------
+            % Mahalanobis distance
+            % ---------------------------------------------------------------
+            
             subplot(2, 3, 6);
-                            
+            
             [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot', 'corr');
             
-            Y = ds - expectedds;
-%             wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
-%             
-%             wh_outlier_uncorr = p < .05;
-%             wh_outlier_corr = wh;
+            Y = ds; % - expectedds;
+            %             wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+            %
+            %             wh_outlier_uncorr = p < .05;
+            %             wh_outlier_corr = wh;
+            
             fprintf('Outliers:\n')
-            fprintf('Cases after p-value correction:')
+            fprintf('Outliers after p-value correction:\nImage numbers: ')
             fprintf('%d ', find(wh_outlier_corr))
-            fprintf('\nCases, uncorrected:')
+            fprintf('\n')
+            fprintf('\nImage numbers, uncorrected: ')
             fprintf('%d ', find(wh_outlier_uncorr))
             fprintf('\n');
             
-            plot(Y);
-            plot(find(wh_outlier_uncorr), Y(wh_outlier_uncorr), 'o', 'color', [1 .3 .3], 'MarkerSize', 4);
-            plot(find(wh_outlier_corr), Y(wh_outlier_corr), 'ro', 'MarkerSize', 6);
+            hold on;
+            plot(Y, 'ko-', 'MarkerFaceColor', [.5 .5 .5], 'MarkerSize', 4);
+            plot(expectedds, 'ko:', 'MarkerFaceColor', [1 1 1], 'MarkerSize', 2);
+                        
+            plot(find(wh_outlier_uncorr), Y(wh_outlier_uncorr), 'o', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
+            plot(find(wh_outlier_corr), Y(wh_outlier_corr), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
             
-            ylabel('Act-Exp Deviation');
-            title('Mahalanobis distance (outlier status)');
-            xlabel('Case No. (red=outliers, uncor and with Bonf corr)');
+            legend({'Observed' 'Expected' 'Outliers (uncor)' 'Outliers (cor)'});
+
+            ylabel('Mahalanobis Dist')
+            %ylabel('Act-Exp Deviation');
+            title('Multivar dist (outlier status)');
+            xlabel('Case No. Correlation-based, red=outliers');
             
             
-%             if ~isempty(fmridat.Y) && size(fmridat.Y, 1) == nobs
-% 
-% 
-%                 Y = fmridat.Y;
-%                 Yname = 'Y values in fmri data obj';
-%                 for i = 1:nobs
-%                     plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
-%                 end
-%                 ylabel('Global mean');
-%                 xlabel(Yname);
-%                 title('Globals for each case (size = spatial std)')
-%                 axis tight
-%                 drawnow
-%             end
-        end
+            %             if ~isempty(fmridat.Y) && size(fmridat.Y, 1) == nobs
+            %
+            %
+            %                 Y = fmridat.Y;
+            %                 Yname = 'Y values in fmri data obj';
+            %                 for i = 1:nobs
+            %                     plot(Y(i), globalmean(i), 'ko', 'MarkerSize', sz(i), 'LineWidth', 1);
+            %                 end
+            %                 ylabel('Global mean');
+            %                 xlabel(Yname);
+            %                 title('Globals for each case (size = spatial std)')
+            %                 axis tight
+            %                 drawnow
+            %             end
+            
+        end % of > 1 image
+        
         
         
         % [coeff, score, latent] = princomp(fmridat.dat, 'econ');
@@ -240,7 +288,7 @@ switch plotmethod
         s = std(fmridat.dat',1)'; %std of each voxel
         d = m./s;
         d(m == 0 | s == 0) = 0;
-
+        
         if size(fmridat.dat,2) > 1 % if there is more than one image, show std and snr too
             vecs_to_reconstruct = [m s d];
         else
@@ -258,6 +306,12 @@ switch plotmethod
             end
             set(gcf, 'Name', 'Orthviews_fmri_data_mean_and_std');
         end
+        
+        % ---------------------------------------------------------------
+        % Montages
+        % ---------------------------------------------------------------
+
+        % ***
         
         %  ==============================================================
     case 'means_for_unique_Y'
@@ -316,7 +370,7 @@ switch plotmethod
             
             if iscell(fmridat.Y_names) && ~isempty(fmridat.Y_names) && length(fmridat.Y_names) == n
                 axnames = fmridat.Y_names;
-            else 
+            else
                 for i = 1:n, axnames{i} = sprintf('Y = %3.3f', i); end
             end
             
@@ -339,10 +393,10 @@ switch plotmethod
             fig_handle = create_montage(vecs_to_reconstruct, fmridat);
             set(fig_handle, 'Name', 'Montage_coeff_of_var_across_conditions');
             
-
+            
         end
         
-        
+       
     otherwise
         error('Unknown plot method');
 end

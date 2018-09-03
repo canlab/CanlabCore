@@ -68,10 +68,15 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %
 %   **parcel_means:**
 %       Matrix of mean data values for each parcel, data images x parcels
+%       This will always be the parcel means, even if pattern expression is
+%       requested. Pattern expression will be returned in a separate
+%       output.
 %
 %   **parcel_pattern_expression:**
-%        If linear multivariate pattern entered, calculates pattern
-%        expression (dot product) in each region
+%        If 'pattern_expression' is entered followed by a linear
+%        multivariate pattern object, parcel_pattern_expression returns the 
+%        local expression (dot product) of the pattern for each data image
+%        (row), in each parcel region (column)
 %
 %   **parcel_valence:**
 %        Define pattern valence as similarity with unit vector (all positive,
@@ -92,12 +97,12 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %   means for each parcel in each image in the dataset.
 %
 %     parcel_image = which('shen_2mm_268_parcellation.nii');
-%     parcel_obj = fmri_data(parcel_image);
+%     parcel_obj = atlas(parcel_image, 'noverbose');
 %     dat = load_image_set('emotionreg');
 %     parcel_means = apply_parcellation(dat, parcel_obj);
 %
 % % Calculate the local NPS pattern response in each region within the Shen
-%   atlas. This requires the pattern images to be on your path!
+% % atlas. This requires the (Private) pattern images containing the NPS map to be on your path!
 %    nps = load_image_set('npsplus');
 %    nps = get_wh_image(nps, 1);
 %    [parcel_means, local_pattern_response] = apply_parcellation(dat, parcel_obj, 'pattern_expression', nps);
@@ -116,6 +121,7 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %    Created: 5/12/17 Phil Kragel - bits of code taken from apply_mask
 %             5/13/17 Phil and Tor revise; minor edits by Tor Wager
 %             2/5/18  Tor added support for atlas object, pattern valence
+%             8/18    Tor adjusted condf2indic to avoid bug with empty parcels at end of list returning wrong size output
 % ..
 
 [parcel_means, parcel_pattern_expression, parcel_valence] = deal([]);
@@ -161,13 +167,20 @@ end
 % Resample parcels to data space
 % -------------------------------------------------------------------------
 
+% save num of original parcels, to make sure matrix contains a column for each original parcel
+if isa(parcels, 'atlas')
+    n_orig_parcels = num_regions(parcels);
+else
+    n_orig_parcels = max(parcels.dat);  % fmri_data. max, not length(unique), because if there are missing integers we want empty cols for these
+end
+
 [dat,parcels] = match_spaces(dat, parcels);  % keeps only in-image parcels
 
 
 % Get indicator vectors from integers in parcels.dat
 % -------------------------------------------------------------------------
 
-parcels.dat = condf2indic(parcels.dat, 'integers');
+parcels.dat = condf2indic(parcels.dat, 'integers', n_orig_parcels);
 
 % 
 % % Turn integer vector into 1s and 0s - matrix of binary masks
@@ -202,10 +215,11 @@ parcel_means = dat.dat' * parcels.dat;
 parcel_valence = NaN * ones(size(parcel_means));
 
 % voxel counts in each parcel
-nvox_by_parcel = sum(parcels.dat ~= 0 & ~isnan(parcels.dat))';
+% nvox_by_parcel = sum(parcels.dat ~= 0 & ~isnan(parcels.dat))';
 
 % Get cosine similarity of each data image with unit vector within each parcel
-cosine_sim = @(x, y) (x'* y) / (norm(x) .* norm(y));
+% cosine_sim = @(x, y) (x'* y) / (norm(x) .* norm(y));
+
 % % for similarity with unit vector: Simplifies to:
 % n = length(x);
 % cosine_sim_with_unit = @(x) sum(x) ./ sqrt(x' * x * n);

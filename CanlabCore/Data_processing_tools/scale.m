@@ -25,6 +25,10 @@ if isempty(x_no_nan)
     return
 end
 
+if std(x_no_nan) < 1e14 % basically equal to zero, or close to it due to rounding error
+    varargin{1} = 1; % just center. cannot divide by the std
+end
+
 x_no_nan = x_no_nan - repmat(mean(x_no_nan),size(x_no_nan,1),1); %remove mean
 
 if isempty(varargin) || varargin{1} == 0

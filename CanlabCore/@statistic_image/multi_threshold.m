@@ -224,7 +224,7 @@ end
 % special for o2 : detect
 
 wh = cellfun(@(x) isa(x, 'fmridisplay'), varargin);
-if any(wh), o2 = varargin{wh(1)}; end
+if any(wh), o2 = varargin{wh}; end
 
 
 % END DEFAULTS AND INPUTS

@@ -9,9 +9,19 @@ function [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj
 % Insensitive to differences in scale and mean of data, and thus more
 % sensitive to changes in pattern across image.
 % 
+% Outputs:
+%
+% wh_outlier_uncorr
+%   Logical vectors of which images have mahalanobis distances with p < .05
+%   and values greater than the median
+%
+% wh_outlier_corr
+%   Logical vectors of which images have mahalanobis distances with p < .05
+%   corrected (Bonferroni), and values greater than the median
+%
 % Examples:
 % ----------------------------------------------------------------------
-% [ds, expectedds, p] = mahal(fmridat, 'noplot');
+% [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot');
 % 
 % Y = ds - expectedds;
 % wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction

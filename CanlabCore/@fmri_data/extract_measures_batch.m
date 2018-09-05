@@ -1,4 +1,9 @@
 function DAT = extract_measures_batch(data_obj)
+% Extracts a set of measures relevant for pattern-based and network-based analyses
+%
+% DAT = extract_measures_batch(data_obj)
+% 
+% Tor Wager, August 2018
 
 t1 = clock;
 dashes = '----------------------------------------------';
@@ -22,6 +27,17 @@ printhdr('Mahalanobis distance for each image, based on correlation');
 [mahal_dist, expected_dist, p_val, wh_outlier_uncorr, wh_outlier_corr] = mahal(data_obj, 'noplot');
 
 DAT.mahalanobis = table(mahal_dist, expected_dist, p_val, wh_outlier_uncorr, wh_outlier_corr);
+
+%% RMSSD / dVARS
+
+% root mean square successive differences (dvars)
+% mydiffs = mean(diff(data_obj.dat') .^ 2, 2) .^ .5;
+% DAT.rmssd = [0; mydiffs];
+
+DAT.rmssd.descrip = 'Root mean square successive diffs in images. Outliers IDd at 3 sd above mean';
+
+[~, DAT.rmssd.rmssd, DAT.rmssd.wh_outliers_rmssd] = preprocess(data_obj, 'outliers_rmssd');
+
 
 %% Extract global gray, white, CSF
 
@@ -109,15 +125,15 @@ for pn = 1:length(parcellation_names)
     tic
     printhdr('Extracting parcel mean values');
     
-    DAT.PARCELS.(parcellation_name).conditions = DAT.conditions;
+    %DAT.PARCELS.(parcellation_name).conditions = DAT.conditions;
     
-    k = length(DAT.conditions);
+    k = 1; %length(DAT.conditions);
     
     for i = 1:k
         
         % Extract mean values
         
-        parcel_means = apply_parcellation(DATA_OBJ{i}, parcel_obj);
+        parcel_means = apply_parcellation(data_obj, parcel_obj);
         
         DAT.PARCELS.(parcellation_name).means.dat{i} = parcel_means;
         
@@ -156,13 +172,13 @@ for pn = 1:length(parcellation_names)
         signame = strrep(signame, '-', '_');
         signame = strrep(signame, ' ', '_');
         
-        printstr(signame)
+        disp(signame)
         
         for i = 1:k
             
             % Extract mean values
             
-            local_pattern = apply_parcellation(DATA_OBJ{i}, parcel_obj, 'pattern_expression', sig_obj);
+            local_pattern = apply_parcellation(data_obj, parcel_obj, 'pattern_expression', sig_obj);
             
             DAT.PARCELS.(parcellation_name).(signame).dat{i} = local_pattern;
             

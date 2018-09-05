@@ -1,4 +1,4 @@
-function obj = preprocess(obj, meth, varargin)
+function [obj, varargout] = preprocess(obj, meth, varargin)
 % Preprocesses data in an image_vector (e.g., fmri_data) object; many options for filtering and outlier id
 %
 % Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
@@ -41,7 +41,9 @@ function obj = preprocess(obj, meth, varargin)
 %        Identify outlier time points for each session based on
 %        root-mean-square successive differences between images (across voxels.)
 %        this is the std (across voxels) of the successive diffs across images.
-%        Outliers at 3.5 SD based on timeseries added to obj.covariates.
+%        Outliers at 3 SD based on timeseries added to obj.covariates.
+%
+%        [obj, rmssd, wh_outliers_rmssd] = preprocess(obj, 'outliers_rmssd');
 %
 %   **smooth:**
 %         Smoothed images with Gaussian filter
@@ -391,13 +393,18 @@ switch meth
         
         % remove intercepts first...
         nscan = obj.images_per_session;
-        if isempty(nscan), error('Enter obj.images_per_session to use this method.'); end
-        
-        I = intercept_model(nscan);
-        datadj = (pinv(I) * obj.dat')';
+        if ~isempty(nscan) %, error('Enter obj.images_per_session to use this method.'); end
+            
+            I = intercept_model(nscan);
+            datadj = (pinv(I) * obj.dat')';
+            
+        else
+            % skip intercept model
+            datadj = obj.dat;
+        end
         
         sdlim = 3;
-        sdiffs = diff(obj.dat')'; % successive differences
+        sdiffs = diff(datadj')'; % successive differences
         sdiffs = [mean(sdiffs, 2) sdiffs]; % keep in image order; shift over one
         mysd = std(sdiffs(:));
         
@@ -435,6 +442,9 @@ switch meth
         
         obj.history{end} = [obj.history{end} sprintf('\nOutliers in RMSSD images: %3.0f%%, %2.0f imgs.\n', sum(out_rmssd)./length(out_rmssd), sum(out_rmssd))];
         disp(obj.history{end});
+        
+        varargout{1} = rmssd';
+        varargout{2} = out_rmssd';
         
         % ---------------------------------------------------------------------
     case 'smooth'

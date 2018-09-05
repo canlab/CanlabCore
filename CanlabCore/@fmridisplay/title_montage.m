@@ -24,4 +24,6 @@ end
 % Display it
 title_handle = title(axis_han, title_str);
 
+set(title_handle, 'FontSize', 18);
+
 end % function 

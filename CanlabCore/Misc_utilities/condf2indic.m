@@ -80,7 +80,7 @@ if dointegers
     
     % Check integers
     u = unique(X);
-    if ~all(u == round(u))
+    if ~all(u == round(u)) || any(u < 0)
         warning('Some condition function values are not integers.');
     end
     
@@ -88,23 +88,18 @@ if dointegers
     wh = find(xlevels == 0);
     xlevels(wh) = [];
     indic(:, wh) = [];
+    if ~isempty(wh)
+        indx(wh) = 0; 
+        indx(indx >= wh) = indx(indx >= wh) - 1; % if there was a zero, then subtract 1 from each indx value for conditions greater than the one dropped
+    end
+    %if ~isempty(wh), indx = indx - 1; end  % if there was a zero, then assume 0 is first indx value 
     
     for i = 1:length(xlevels)
         indic(indx == i, xlevels(i)) = 1;
     end
     
     xlevels = (1:max_integers)';
-% 
-%     % if codes are 1...n, xlevels is index values...but if there are
-%     % missing integers, need to insert into indic
-%     
-%     is_missing = true(max(X), 1);
-%     is_missing(xlevels) = false;
-%     
-%     % Insert NaNs for any missing index values.
-%     
-%     indic = naninsert(is_missing, indic')';
-    
+
 else
     % no integers, do not preserve empty columns
     

@@ -41,6 +41,18 @@ function [indic, xlevels] = condf2indic(X, varargin)
 %    Aug 2018: fixed some inconsistencies in 'integers' option.
 % ..
 
+% Programmers' notes:  test set
+% 
+% [indic, xlevels] = condf2indic([0 1 2 0 0 2 2], 'integers')
+% [indic, xlevels] = condf2indic([0 1 2 0 0 2 2])
+% [indic, xlevels] = condf2indic([3 1 2 3 3 2 2])
+% [indic, xlevels] = condf2indic([3 1 2 3 3 2 2], 'integers')
+% [indic, xlevels] = condf2indic([0 1 4 0 0 4 4], 'integers')
+% [indic, xlevels] = condf2indic([0 1 4 0 0 4 4])
+% [indic, xlevels] = condf2indic([0 -1 4 0 0 4 4])
+% [indic, xlevels] = condf2indic([0 -1 4 0 0 4 4], 'integers') % returns
+% warning
+
 % PRELIM CALCULATIONS
 
 X = double(X); % for objects/special types
@@ -49,6 +61,7 @@ X = double(X); % for objects/special types
 
 max_integers = length(xlevels);
 
+indic = [];
 
 % INPUTS
 
@@ -68,6 +81,10 @@ if any(strcmp(varargin, 'integers'))
         
         max_integers = max(xlevels);
         
+    end
+    
+    if max_integers == 0
+        return
     end
     
 end

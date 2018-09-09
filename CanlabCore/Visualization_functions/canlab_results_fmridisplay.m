@@ -394,10 +394,20 @@ if ~exist('o2', 'var')
             set(gcf, 'Position', [round(ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/myheightdivisor) ])
             
             %shiftvals = [0:.17:nrows]; % more than we need, but works
-            shiftvals = [0:.24:nrows]; % more than we need, but works
+            %shiftvals = [0:.24:nrows]; % more than we need, but works
+            shiftvals = repmat([0:.24:.75], 1, ceil(nrows/4));  % repeat positions every 4, for adding new figures
             
             for i = 1:nrows
                 
+                % Can only put 4 on one figure, so create additional
+                % figures as needed
+                if i > 4 && rem(i, 4) == 1
+                    
+                    figure('Color', 'w');
+                    set(gcf, 'Position', [round(i*ss(3)/20) round(ss(4)*.5) round(ss(3)*.9) round(ss(4)/myheightdivisor) ])
+                    
+                end
+                    
                 % saggital
                 axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
                 axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);

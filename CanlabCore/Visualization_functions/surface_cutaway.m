@@ -173,17 +173,23 @@ end
 % -------------------------------------------------------------------------
 
 if ~existingfig
+    
     create_figure('brain surface');
+    
 end
 
 if isempty(surface_handles)
+    
     surface_handles = build_brain_surface(ycut_mm);
+    
 else
+    
     whbad = ~ishandle(surface_handles);
     if any(whbad)
         warning('Some handles are not valid. Using those that are.');
         surface_handles(whbad) = [];
     end
+    
 end
 
 if isempty(surface_handles)
@@ -284,9 +290,11 @@ set(surface_handles(wh), 'FaceAlpha', .6);
 overlay = which('SPM8_colin27T1_seg.img');
 ovlname = 'SPM8_colin27T1_seg';
 
-if ~isempty(ycut_mm);
+if ~isempty(ycut_mm)
+    
     [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 70);
     set(p2(1),'FaceColor',[.5 .5 .5]);
+    
 end
 
 [D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[-4 0 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 60, 'bottommm', -75);

@@ -425,13 +425,22 @@ if docolorband
     % for each wedge
     breakpoints=0:2*pi/n_categories:2*pi;
     
-    for i=1:n_categories
+    if length(colorband_colors) ~= n_categories
+    
+        disp('Warning: tor_wedge_plot: Number of colorband_colors does not equal number of categories to plot.');
+        fprintf('Length colorband_colors = %3.0f, n_categories = %3.0f\nSkipping color band. Check inputs or code.\n', length(colorband_colors), n_categories);
         
-        colorband_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .2 * outer_circle_radius, 'linecolor', colorband_colors{i}, 'fillcolor', 'none');
+    else 
         
-        delete(colorband_handles{i}.line_han(2:3))
-        colorband_handles{i}.line_han = colorband_handles{i}.line_han(1);
-        set(colorband_handles{i}.line_han, 'LineWidth', 10);
+        for i=1:n_categories
+            
+            colorband_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .2 * outer_circle_radius, 'linecolor', colorband_colors{i}, 'fillcolor', 'none');
+            
+            delete(colorband_handles{i}.line_han(2:3))
+            colorband_handles{i}.line_han = colorband_handles{i}.line_han(1);
+            set(colorband_handles{i}.line_han, 'LineWidth', 10);
+            
+        end
         
     end
     

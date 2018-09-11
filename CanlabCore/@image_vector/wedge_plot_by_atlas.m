@@ -186,7 +186,7 @@ for i = 1:k
 end
 
 
-%% get colorban colors for wedge plot
+%% get colorband colors for wedge plot
 % 
 if ~any(strcmp(varargin,'colorband_colors'))
     
@@ -195,10 +195,12 @@ if ~any(strcmp(varargin,'colorband_colors'))
     end
     
 else
+    
     colorband_colors = varargin{find(strcmp(varargin,'colorband_colors'))+1};
 
-end
+    if ~iscell(colorband_colors), colorband_colors = {colorband_colors}; end
 
+end
 
 
 
@@ -229,7 +231,7 @@ for i = 1:k
         %mycolorband_colors = colorband_colors{i};
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     else % data mode
         
@@ -241,7 +243,7 @@ for i = 1:k
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
         %mycolorband_colors = colorband_colors{i};
         
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors, 'bicolor', 'colors', mycolors);
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}, 'bicolor', 'colors', mycolors);
         
     end
 
@@ -261,7 +263,17 @@ if any(strcmp(varargin,'montage'))
     for i = 1:k
         %fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
         
-        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors);
+        o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors{i});
+        
+        drawnow, snapnow
+        
+        % Individual regions
+        
+         montage(atlas_obj{i}, 'nosymmetric', 'regioncenters', 'colors',  colorband_colors{i});
+         
+         set(gcf, 'Tag', 'Individual regions'); % change tag to avoid figure resizing on repeated calls
+         drawnow, snapnow
+         
 % 
 %         for r=1:length(o2.activation_maps)
 %         colorband_colors{i}{r}=o2.activation_maps{r}.color(1:3);

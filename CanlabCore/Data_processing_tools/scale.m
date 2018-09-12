@@ -12,12 +12,14 @@ function xout = scale(x,varargin)
 %                   Still removes nans like original function
 %    6/13/14 - Wani: after Luke's edit, mean-centering didn't work right.
 %                   Fixed it.
+%    9/12/18 - Wani: bugfix: changed 1e14 into 1e-14 in the line29. 1e14
+%                   forced this function does meancentering only.
 % ..
 
 
 xout = NaN .* zeros(size(x));
 
-[nanvec x_no_nan] = nanremove(x);  %removes an entire row if any nan
+[nanvec, x_no_nan] = nanremove(x);  %removes an entire row if any nan
 
 % no data.  return original input.
 if isempty(x_no_nan)
@@ -25,7 +27,7 @@ if isempty(x_no_nan)
     return
 end
 
-if std(x_no_nan) < 1e14 % basically equal to zero, or close to it due to rounding error
+if std(x_no_nan) < 1e-14 % basically equal to zero, or close to it due to rounding error
     varargin{1} = 1; % just center. cannot divide by the std
 end
 

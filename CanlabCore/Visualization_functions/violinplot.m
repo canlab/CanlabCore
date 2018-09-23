@@ -451,7 +451,7 @@ end
 % WANI ADDED nopoints OPTION (11/12/15)
 if dopoints
     %[~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
-    plot_violin_points(x, Y, lc, fc);  pointloc = [];
+    plot_violin_points(x, Y, lc, fc, varargin);  pointloc = [];
 end
 
 % SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
@@ -655,7 +655,7 @@ end %of function
 
 
 
-function linehandles = plot_violin_points(x, Y, lc, fc)
+function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
 % x = vector of x positions for each "column"
 % Y = cell array of input data, one cell per "column"
 % U, F = outputs from ksdensity, normalized, or [] to recalculate

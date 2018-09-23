@@ -673,6 +673,12 @@ Y = enforce_cell_array(Y);
 
 xvalues = get_violin_points(x, Y);
 
+manual_pointsize = false;
+if isempty(find(strcmp(varargin{1},'pointsize')))==0
+    pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
+    manual_pointsize = true;
+end
+
 linehandles = [];
 
 for i = 1:size(Y, 2)
@@ -681,11 +687,12 @@ for i = 1:size(Y, 2)
     mylinecolor = fc(i, :); % line color for this plot
     
     myY = Y{i};     % data points
-    
-    % set point size
-    pointsize = 1000 ./ length(myY);
-    pointsize(pointsize < 1) = 1;
-    pointsize(pointsize > 12) = 12;
+    if ~manual_pointsize 
+        % set point size
+        pointsize = 1000 ./ length(myY);
+        pointsize(pointsize < 1) = 1;
+        pointsize(pointsize > 12) = 12;
+    end
     
     linehandles{i} =  plot(xvalues{i}, myY, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
     

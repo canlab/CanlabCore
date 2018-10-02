@@ -5,7 +5,9 @@ function obj = addthreshblobs(obj, statimg, varargin)
 %     obj = addthreshblobs(obj, statimg, varargin)
 %
 % Add blobs from a statistical image object at multiple thresholds to
-% montage and other surface plots. 
+% montage and other surface plots.  All super-threshold blobs are plotted
+% in the same color.  See `statistic_image.multi_threshold` to plot blobs of
+% different significance levels in different colors.
 %
 % It passes options specified in varargin onto addblobs, see help addblobs
 % for options. In addition it has the parameters 'thresh' and

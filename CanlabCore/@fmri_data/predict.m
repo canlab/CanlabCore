@@ -1012,7 +1012,11 @@ end
 
 sc = xtrain * pc;
 
-numcomps = rank(sc);
+if rank(sc) == size(sc,2)
+    numcomps = rank(sc); 
+elseif rank(sc) < size(sc,2)
+    numcomps = rank(sc)-1;
+end
 
 % 3/8/13: TW:  edited to use numcomps, because sc is not always full rank during bootstrapping
 X = [ones(size(sc, 1), 1) sc(:, 1:numcomps)];
@@ -1099,8 +1103,13 @@ end
 
 % 3/14/13: tor changed because full rank was still returning unstable
 % matrices (non-invertible) sometimes.
-numcomps = rank(sc);
-numcomps = rank(sc, .001);
+if rank(sc) == size(sc,2)
+    numcomps = rank(sc); 
+elseif rank(sc) < size(sc,2)
+    numcomps = rank(sc)-1;
+end
+
+% numcomps = rank(sc, .001)-1;
 %numcomps = rank(sc, mean(abs(sc(:))) ./ 10000);
 
 %X = [ones(size(sc, 1), 1) sc(:, 1:numcomps)];

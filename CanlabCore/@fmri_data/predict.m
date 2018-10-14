@@ -248,6 +248,47 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **weight_obj:**
 %        for some algorithms, an fmri_data object with the predictive weights (from full sample)
 %
+% Here are the fields in the main output structure, with explanations:
+%   struct with fields:
+% 
+%                             Y: Actual (obs) outcome - should be 1, -1 for SVM analysis
+%                algorithm_name: Algorithm used (string, name)
+%                 function_call: Actual function call string used (for tracking what was run)
+%               function_handle: Actual function handle used (for tracking what was run)
+%                          yfit: Predicted outcome - should be 1, -1 for SVM analysis
+%                                Cross-validated, so can be used as series
+%                                of predicted values based on brain
+%                                measures (very useful!)
+%                           err: Errors. For SVM, 0 = correct, 1 = error
+%                    error_type: Type of error metric.  'mcr' = misclassification rate, for SVM
+%                         cverr: Cross-validated mean error 
+%                        nfolds: Holdout set type 'nfolds'
+%                   cvpartition: Object with information about training/test sets
+%                         teIdx: Testing IDs for each fold (holdout set)
+%                         trIdx: Training IDs for each fold (holdout set)
+%                  other_output: {[328798×1 double]  [39×1 double]  [4.7134]  [1×1 struct]}
+%                                {1} : Weight map trained on all data
+%                                {2} : ?
+%                                {3} :Intercept trained on all data
+%                                {4} : Training model specifications              
+%          other_output_descrip: 'Other output from algorithm - trained on all data (these depend on algorithm)'
+%               other_output_cv: Same as other output above, but for each holdout set separately
+%                                Useful if you want to re-apply models from
+%                                training subsets, re-creating
+%                                cross-validated output
+%       other_output_cv_descrip: 'Other output from algorithm - for each CV fold'
+%                           phi: ??
+%     dist_from_hyperplane_xval: Cross-validated distance perpendicular to class boundary
+%                                   higher =
+%                                   stronger prediction in favor of Class 1, lower = in favor of class 2.
+%                                   Useful! use as continuous measure of
+%                                   observation scores. Can calculate
+%                                   effect sizes from this, for example. 
+%                    weight_obj: statistic_image object with weight map.
+%                    Use object methods to plot, etc. If we want to apply
+%                    the weight map to new data, this is all we need. 
+%                           WTS: More info, plus bootstrap statistics if
+%                           bootstrapping was run.
 %
 % :Examples:
 % ::

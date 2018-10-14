@@ -293,9 +293,22 @@ end % function
 function [region_groups, color_groups] = redefine_colors_based_on_groups(r, colors)
 
 % regroup to reduce number of regions, combining those with same color
-% too many function calls are bad news!! overloads handle graphics system?
+% Why? too many function calls are bad news!! overloads handle graphics system.
 
-catcolors = cat(1, colors{:});
+if iscell(colors)
+    catcolors = cat(1, colors{:});
+    
+elseif size(colors, 2) ~= 3
+    % Maybe wrong orientation
+    catcolors = colors';
+    disp('Bad input: colors is not cell. check code.')
+    keyboard
+    colors = {colors'};     % this will not work
+else
+    catcolors = colors;
+    colors = {colors};
+end
+
 uniquecolors = unique(catcolors, 'rows');
 ncolors = size(uniquecolors, 1);
 

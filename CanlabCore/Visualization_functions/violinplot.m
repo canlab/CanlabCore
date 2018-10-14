@@ -451,7 +451,7 @@ end
 % WANI ADDED nopoints OPTION (11/12/15)
 if dopoints
     %[~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
-    plot_violin_points(x, Y, lc, fc);  pointloc = [];
+    plot_violin_points(x, Y, lc, fc, varargin);  pointloc = [];
 end
 
 % SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
@@ -655,7 +655,7 @@ end %of function
 
 
 
-function linehandles = plot_violin_points(x, Y, lc, fc)
+function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
 % x = vector of x positions for each "column"
 % Y = cell array of input data, one cell per "column"
 % U, F = outputs from ksdensity, normalized, or [] to recalculate
@@ -673,6 +673,12 @@ Y = enforce_cell_array(Y);
 
 xvalues = get_violin_points(x, Y);
 
+manual_pointsize = false;
+if isempty(find(strcmp(varargin{1},'pointsize')))==0
+    pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
+    manual_pointsize = true;
+end
+
 linehandles = [];
 
 for i = 1:size(Y, 2)
@@ -681,11 +687,12 @@ for i = 1:size(Y, 2)
     mylinecolor = fc(i, :); % line color for this plot
     
     myY = Y{i};     % data points
-    
-    % set point size
-    pointsize = 1000 ./ length(myY);
-    pointsize(pointsize < 1) = 1;
-    pointsize(pointsize > 12) = 12;
+    if ~manual_pointsize 
+        % set point size
+        pointsize = 1000 ./ length(myY);
+        pointsize(pointsize < 1) = 1;
+        pointsize(pointsize > 12) = 12;
+    end
     
     linehandles{i} =  plot(xvalues{i}, myY, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
     

@@ -196,8 +196,10 @@ if ~any(strcmp(varargin,'colorband_colors'))
     
 else
     
-    colorband_colors = varargin{find(strcmp(varargin,'colorband_colors'))+1};
-
+    for i=1:length(atlases)
+        colorband_colors{i} = varargin{find(strcmp(varargin,'colorband_colors'))+1};
+    end
+    
     if ~iscell(colorband_colors), colorband_colors = {colorband_colors}; end
 
 end
@@ -217,10 +219,17 @@ create_figure('wedge overall importance', 1, k);
 
 clear hh
 
-for i = 1:k
+for i = 1:k % k indexes atlases. so do this for each atlas.
     
     subplot(1, k, i);
     
+    if length(colorband_colors{i}) ~= size(mean_weights{i}, 2)
+        disp('Number of colorband colors must equal number of regions displayed.')
+        disp('Create one cell containing a cell array of colors for each atlas.')
+        disp('Pausing so you can check:');
+        keyboard
+    end
+        
     if do_sig_mode
         
         data_to_plot = double(msq_weight{i});
@@ -228,7 +237,6 @@ for i = 1:k
         myouterradius = max(abs(data_to_plot));
         
         mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
-        %mycolorband_colors = colorband_colors{i};
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
         hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
@@ -241,7 +249,6 @@ for i = 1:k
         myouterradius = max(abs(mymean) + myste);
         
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
-        %mycolorband_colors = colorband_colors{i};
         
         hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}, 'bicolor', 'colors', mycolors);
         
@@ -250,6 +257,9 @@ for i = 1:k
     drawnow
     
 end
+
+% Make the figure big
+set(gcf, 'Units', 'Normalized', 'Position', [.05 .3 .5 .6])
 
 % Descriptive legend text - enter a series of cell arrays with text
 % --------------------------------------------------------------
@@ -263,8 +273,10 @@ if any(strcmp(varargin,'montage'))
     for i = 1:k
         %fh=create_figure(['Montage of parcellation: ' atlas_obj{i}.atlas_name],1, 1);
         
+        % colorband_colors specifies colors for each region. Each cell
+        % should contain a cell array with colors  length(num regions in atlas_obj{i})
+
         o2 = montage(atlas_obj{i}, 'compact2', 'nosymmetric', 'colors',  colorband_colors{i});
-        
         drawnow, snapnow
         
         % Individual regions
@@ -274,11 +286,6 @@ if any(strcmp(varargin,'montage'))
          set(gcf, 'Tag', 'Individual regions'); % change tag to avoid figure resizing on repeated calls
          drawnow, snapnow
          
-% 
-%         for r=1:length(o2.activation_maps)
-%         colorband_colors{i}{r}=o2.activation_maps{r}.color(1:3);
-%         end
-        
     end
 end
 

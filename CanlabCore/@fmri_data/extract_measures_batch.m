@@ -3,7 +3,144 @@ function DAT = extract_measures_batch(data_obj)
 %
 % DAT = extract_measures_batch(data_obj)
 % 
+% This is a method called extract_measures_batch for fmri_objects.  
+% It Extracts a set of measures relevant for pattern-based and network-based analyses. 
+% The idea is to aggregate these across studies, and pull relevant measures from the set 
+% for particular analyses.  It returns the following structure:
+%
 % Tor Wager, August 2018
+%
+% 
+% DAT = 
+% 
+%   struct with fields:
+% 
+%        extracted_on_date: '05-Sep-2018_02_49? 	Date information was extracted
+%              image_names: 'wrrest_mb8_r1.nii? 	Original image names (no paths)
+%                 fullpath: [914×119 char]          Full path names for all volumes (for provenance)
+%              mahalanobis: [914×5 table]           Mahalanobis distances (for weighting/nuisance)and outlier ID logical
+%                    rmssd: [1×1 struct] 			Root mean square successive differences and outlier ID logical
+%     gray_white_csf_table: [914×5 table]           Global avg gray, white, CSF, and 5 principal components	 for each; for nuisance
+%                  npsplus: [1×1 struct] 			Multivariate pattern responses for CANlab measures (NPS, more)
+%            kragelemotion: [1×1 struct]            Multivariate pattern responses for Kragel 2015 emotion classification
+%                 kragel18: [1×1 struct] 			Multivariate PLS pattern responses for Kragel 2018 Nat Neurosci and subregions
+%                 pain_pdm: [1×1 struct] 			Multivariate pattern responses for Geuter et al.?s Prin. Dirs of Medation (10 patterns, and combined)
+%                  PARCELS: [1×1 struct] 			Parcellations: Averages for each parcel, and local pattern responses (selected)
+%
+% Tables:
+% Some variables are in Matlab table objects, e.g., DAT.mahalanobis. 
+% 
+% Access names like this:
+% DAT.mahalanobis.Properties.VariableNames
+% See methods(table) for more operations.  table2array() is useful for extracting data matrices.
+% outliers = DAT.mahalanobis.wh_outlier_uncorr;  % returns a logical vector of outlier images id'd as having high Mahalanobis distances
+%
+% OUTLIERS
+% To get a reasonable set of outlier image indicators (indicator vector):
+% outliers = DAT.mahalanobis.wh_outlier_uncorr | DAT.rmssd.wh_outliers_rmssd;  % returns a logical vector of outlier images id'd as having high Mahalanobis distances
+%
+% EXTRACTED GLOBAL TISSUE COMPARTMENTS
+% DAT.gray_white_csf_table.Properties.VariableNames
+% 
+% {'gwcsf'       }      % n_images x 3, global mean gray, white, CSF (assumes MNI space; group template)
+% {'gray5'       }      % n_images x 5, first 5 principal components across gray matter
+% {'white5'      }      % n_images x 5, first 5 principal components across white matter
+% {'csf5'        }      % n_images x 5, first 5 principal components across CSF
+% {'gwcsf_l2norm'}      % n_images x 3, L2 norms for each image x [gray white CSF]
+%
+% 
+% NUISANCE COVARIATES:
+% -------------------------------------------------------------------------
+% Here is a reasonable set of nuisance covariates. If you are contenating
+% across runs (when scaner starts and stops), add indicator vectors for
+% run, plus movement covariates (e.g., 24 per run, not included.)
+%
+% First, turn outlier vector into a set of separate  dummy regressors for each outlier point
+% outliers = DAT.mahalanobis.wh_outlier_uncorr | DAT.rmssd.wh_outliers_rmssd;  % returns a logical vector of outlier images id'd as having high Mahalanobis distances
+% outliers = double(outliers);
+% outliers(outliers > 0) = find(outliers);
+% [outlier_indic, outlier_levels] = condf2indic(outliers);
+% outlier_indic(:, outlier_levels == 0) = [];
+% outlier_names = {};
+% for i = 1:size(outlier_indic, 2)
+%     outlier_names{i} = sprintf('Spike%3.0f', i);
+% end
+%
+% Second, pull out other covariates and concatenate them into a matrix:
+% cov_matrix = [DAT.gray_white_csf_table.csf5 DAT.gray_white_csf_table.gwcsf_l2norm(:, 3) zscore(DAT.rmssd.rmssd) outlier_indic];
+% cov_names = [{'CSF_comp1' 'CSF_comp1' 'CSF_comp1' 'CSF_comp1' 'CSF_comp1' 'CSF_l2norm' 'rmssd'} outlier_names];
+%
+% SIGNATURES
+% -------------------------------------------------------------------------
+% A number of "signature patterns" are extracted, with fields indicating
+% whether the data were scaled first or "raw" (preprocessed), and for
+% different similarity metrics. 
+% 
+% DAT.npsplus.raw .     % raw means we have not scaled the images, e.g., divided by L2 norm
+% 
+% ans = 
+% 
+%   struct with fields:
+% 
+%      dotproduct: [1×1 struct] % These are different similarity metrics
+%      cosine_sim: [1×1 struct]
+%     correlation: [1×1 struct]
+%
+%     similarity_metric: 'dotproduct'
+%         image_scaling: 'none'
+%        signaturenames: {1×14 cell}
+%        conditionnames: {'C__1'}
+%                   NPS: [914×1 table]  % Each of these is a table object with a different signature
+%                NPSpos: [914×1 table]
+%                NPSneg: [914×1 table]
+%                 SIIPS: [914×1 table]
+%                 PINES: [914×1 table]
+%             Rejection: [914×1 table]
+%                   VPS: [914×1 table]
+%           VPS_nooccip: [914×1 table]
+%                   GSR: [914×1 table]
+%                 Heart: [914×1 table]
+%          FM_Multisens: [914×1 table]
+%               FM_pain: [914×1 table]
+%         Empathic_Dist: [914×1 table]
+%         Empathic_Care: [914×1 table]
+%         
+% Access them and build a matrix like this:
+% 
+% mynames = DAT.npsplus.raw.dotproduct.signaturenames;
+% my_signature_data = [];
+% for i = 1:length(mynames)
+%     my_signature_data(:, i) = table2array(DAT.npsplus.raw.dotproduct.(mynames{i}));
+% end
+%
+% PARCELS
+% -------------------------------------------------------------------------
+%
+% DAT.PARCELS . contains extracted data for two different parcellations.
+% For both, it extracts both region averages from each parcel and local
+% pattern expression from selected parcels * patterns.
+% 
+% ans = 
+% 
+%   struct with fields:
+% 
+%     canlab2018_2mm: [1×1 struct]  % ~500-region atlas composite from multiple published atlases and named ROIs
+%      yeo17networks: [1×1 struct]  % 16 unique rsfMRI networks, separated into left and right hemispheres
+%      
+% DAT.PARCELS.yeo17networks
+% 
+% ans = 
+% 
+%   struct with fields:
+% 
+%        parcel_obj: [1×1 atlas]    % Original atlas object, with region labels, etc.
+%             means: [1×1 struct]   % .dat has a time x parcels matrix of mean data from each parcel
+%               NPS: [1×1 struct]   % Local pattern expression for the NPS in each parcel
+%             SIIPS: [1×1 struct]
+%             PINES: [1×1 struct]
+%               VPS: [1×1 struct]
+%     Empathic_Care: [1×1 struct]     
+%
 
 t1 = clock;
 dashes = '----------------------------------------------';

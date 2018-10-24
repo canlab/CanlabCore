@@ -32,10 +32,18 @@ if size(obj.dat, 2) > 1
     obj = mean(obj);
 end
 
-r = region(obj);
+if isa(obj, 'atlas')
+    
+    r = atlas2region(obj);
+    
+    
+else
+    
+    r = region(obj);
+    [all_surf_handles, pcl, ncl] = surface(r, varargin{:});
 
+end
 
-[all_surf_handles, pcl, ncl] = surface(r, varargin{:});
 
 end
 

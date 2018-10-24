@@ -313,13 +313,13 @@ switch meth
         p = add_surface(pname);
         set(p,'FaceColor',[0 0 .5]);
 
-    case 'thalamus'
-        %         P = which('carmack_thal_bstem.mat'); load(P)
-        %         p = imageCluster('cluster',thal,'color',[0 .8 .3],'alpha',.5);
-        pname = 'surf_spm2_thal.mat';
-
-        p = add_surface(pname);
-        set(p,'FaceColor',[.9 .65 .5]);
+%     case 'thalamus'
+%         %         P = which('carmack_thal_bstem.mat'); load(P)
+%         %         p = imageCluster('cluster',thal,'color',[0 .8 .3],'alpha',.5);
+%         pname = 'surf_spm2_thal.mat';
+% 
+%         p = add_surface(pname);
+%         set(p,'FaceColor',[.9 .65 .5]);
 
     case {'hippocampus', 'hipp'}
 
@@ -353,7 +353,7 @@ switch meth
         for i = 1:length(names)
             
             p = [p addbrain(names{i})];
-            set(p(end), 'Tag', 'names');
+            set(p(end), 'Tag', names{i});
             
         end
      
@@ -539,7 +539,7 @@ end  % method
 
 switch meth
     
-    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia'}
+    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway'}
         % do nothing; multi-region
         
     otherwise

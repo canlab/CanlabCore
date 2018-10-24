@@ -289,7 +289,10 @@ function han = create_hist(Xtmp, nbins, doline, dofill, color)
 % remove zeros
 Xtmp(Xtmp == 0 | isnan(Xtmp)) = [];
 
-[h, x] = hist(Xtmp, nbins);
+% Get bins
+x = linspace(prctile(Xtmp, .01), prctile(Xtmp, 99.9), nbins);
+
+[h, x] = hist(Xtmp, x);
 
 % convert to PDF
 h = h ./ sum(h);
@@ -310,6 +313,12 @@ end
 hold on; % still trouble with automatic turn-off
  
 axis tight
+
+% set x-axis
+% should not need to do this if we've chosen bins carefully above
+% wh = find(h > .0001);
+% xlims = [x(min(wh)) x(max(wh))];
+% set(gca, 'XLim', xlims);
 
 drawnow
 

@@ -396,7 +396,7 @@ switch meth
         if ~isempty(nscan) %, error('Enter obj.images_per_session to use this method.'); end
             
             I = intercept_model(nscan);
-            datadj = (pinv(I) * obj.dat')';
+            datadj = obj.dat - (I* (pinv(I) * obj.dat'))';
             
         else
             % skip intercept model

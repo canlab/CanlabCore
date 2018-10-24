@@ -7,7 +7,7 @@ function surface_handles = isosurface(r, varargin)
 % optional arguments: 
 % - Any optional inputs to imageCluster, e.g., 'alpha'
 % - 'colors', followed by single color in { } or cell array of multiple colors
-% - 'nomatchleftright', do not match colors across hemispheres (left/right)
+% - 'nomatchleftright' or 'nosymmetric', do not match colors across hemispheres (left/right)
 %               Note: The default matches, and may override your colors.
 %
 % Examples:
@@ -51,7 +51,7 @@ for i = 1:length(varargin)
                 
             case {'color', 'colors'}, colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
                 
-            case 'nomatchleftright', matchcolorsleftright = false; varargin{i} = [];
+            case {'nomatchleftright', 'nosymmetric'}, matchcolorsleftright = false; varargin{i} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

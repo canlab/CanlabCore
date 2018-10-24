@@ -86,8 +86,13 @@ if dointegers
     
     % Remove zero-valued integer
     wh = find(xlevels == 0);
-    xlevels(wh) = [];
-    indic(:, wh) = [];
+    if ~isempty(wh)
+        xlevels(wh) = [];
+        indic(:, wh) = [];
+        badIndx = indx(find(indx == wh, 1, 'first'));
+        indx(indx == wh) = 0;
+        indx(indx > badIndx) = indx(indx > badIndx) - 1;
+    end
     
     for i = 1:length(xlevels)
         indic(indx == i, xlevels(i)) = 1;

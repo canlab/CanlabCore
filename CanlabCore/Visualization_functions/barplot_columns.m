@@ -327,7 +327,9 @@ for i = 1:ny
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     % Convert to 95% CI, if requested
-    if do95CI, Std_Error(i) = Std_Error(i) * 1.96; end
+    if do95CI
+        Std_Error(i) = Std_Error(i) * tinv(.975, nn-1); 
+    end
     
     y(:, i) = naninsert(wasnan, newy);
     
@@ -379,6 +381,7 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
+if do95CI, statstable.Properties.VariableNames{3} = 'half_CI_95perc'; end
 if doprinttable
     disp(statstable)
 end

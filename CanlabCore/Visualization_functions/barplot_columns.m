@@ -328,7 +328,7 @@ for i = 1:ny
     
     % Convert to 95% CI, if requested
     if do95CI
-        Std_Error(i) = Std_Error(i) * tinv(.025, nn-1); 
+        Std_Error(i) = Std_Error(i) * tinv(.975, nn-1); 
     end
     
     y(:, i) = naninsert(wasnan, newy);

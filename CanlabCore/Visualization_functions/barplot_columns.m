@@ -327,7 +327,9 @@ for i = 1:ny
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     % Convert to 95% CI, if requested
-    if do95CI, Std_Error(i) = Std_Error(i) * 1.96; end
+    if do95CI
+        Std_Error(i) = Std_Error(i) * tinv(.025, nn-1); 
+    end
     
     y(:, i) = naninsert(wasnan, newy);
     

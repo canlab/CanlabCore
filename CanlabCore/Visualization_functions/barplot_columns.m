@@ -381,6 +381,7 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
+if do95CI, statstable.Properties.VariableNames{3} = 'half_CI_95perc'; end
 if doprinttable
     disp(statstable)
 end

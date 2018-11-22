@@ -16,7 +16,7 @@ function out = lineplot_columns(dat_matrix, varargin)
 %   - dowithinste = 0;                % enter 'within' to get within-ss ste
 %   - atleast = 1;                    % 'atleast' followed by n for at least n valid obs to plot 
 %   - doshading = 0;                  % shaded vs. error-bar plots
-%   - CIs95 = 0;                      % 95% CI's.  Does not work with within subj error
+%   - CIs95 = 0;                      % 'CIs', '95CIs', or 'CIs95' for error bars to show 95% CIs. Not supported for within subj error
 %
 % :Inputs:
 %
@@ -78,7 +78,7 @@ for i = 1:length(varargin)
             case 'shade'
                 doshading = 1;
                 
-            case 'CIs'
+            case {'cis', '95cis', 'cis95'}
                 CIs95 = 1;
                 
             otherwise

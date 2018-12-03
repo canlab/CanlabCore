@@ -6,7 +6,7 @@ function bf10 = binombf(k,n,p)
 % This is based on the Bayes Factor example on Wikipedia (http://en.wikipedia.org/wiki/Bayes_factor).
 % It is the same as the default prior assumed by Rouder's web applet (http://pcl.missouri.edu/bf-binomial).
 %
-
+warning off     'MATLAB:nchoosek:LargeCoefficient'
 % Function to be integrated - updated after personal communication from EJW (old one didn't work with large N)
 F = @(q,k,n,p) nchoosek(n,k) .* q.^k .* (1-q).^(n-k);
 

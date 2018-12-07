@@ -1,4 +1,4 @@
-function BF = estimateBF(statistic_image,varargin)
+function BF = estimateBayesFactor(stat_image,varargin)
 % Compute voxel-wise Bayes Factors from a statistic image object.
 % This code is a wrapper function for code from Sam Schwarzkopf at UCL
 % (see https://figshare.com/articles/Bayes_Factors_Matlab_functions/1357917),
@@ -8,7 +8,7 @@ function BF = estimateBF(statistic_image,varargin)
 % Usage:
 % ::
 %
-%    BF = estimateBF(statistic_image,varargin)
+%    BF = estimateBayesFactor(stat_image,varargin)
 %
 % ..
 %     Author and copyright information:
@@ -31,7 +31,7 @@ function BF = estimateBF(statistic_image,varargin)
 %
 % :Inputs:
 %
-%   **statistic_image:**
+%   **stat_image:**
 %        A statistic image that either contains 1) a t-map, 2) a
 %        correlation map, or 3) a map of counts for testing proportions
 %
@@ -72,7 +72,7 @@ function BF = estimateBF(statistic_image,varargin)
 %
 % :See also:
 %
-% statistic_image, fmri_data
+% stat_image, fmri_data
 
 % ..
 %    Programmers' notes:
@@ -96,22 +96,22 @@ end
 
 if strcmp(input_type,'t')
     
-    parfor i=1:length(statistic_image.N)
-        bf10(i,1) = t1smpbf(statistic_image.dat(i),statistic_image.N(i));
+    parfor i=1:length(stat_image.N)
+        bf10(i,1) = t1smpbf(stat_image.dat(i),stat_image.N(i));
     end
     
 elseif strcmp(input_type,'r')
     
     
-    parfor i=1:length(statistic_image.N)
-        bf10(i,1) = corrbf(statistic_image.dat(i),statistic_image.N(i));
+    parfor i=1:length(stat_image.N)
+        bf10(i,1) = corrbf(stat_image.dat(i),stat_image.N(i));
     end
     
 elseif strcmp(input_type,'prop')
     
     
-    parfor i=1:length(statistic_image.N)
-        bf10(i,1) = binombf(statistic_image.dat(i),statistic_image.N(i),.5); %assume baserate of .5
+    parfor i=1:length(stat_image.N)
+        bf10(i,1) = binombf(stat_image.dat(i),stat_image.N(i),.5); %assume baserate of .5
     end
     
 else
@@ -120,7 +120,7 @@ else
     
 end
 
-BF=statistic_image;
+BF=stat_image;
 BF.dat=2*log(bf10); % scale according to kass and raftery 1995
 BF.type='BF';
 BF.p=[];

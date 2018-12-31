@@ -86,6 +86,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 % -------------------------------------------------------------------------
 
 p_thr = .05;
+dospearman = false;
 dofigure = true;
 doimage = false;
 docircles = true;
@@ -107,7 +108,7 @@ text_sig_color = [0 0 0];
 % OPTIONAL INPUTS
 % -------------------------------------------------------------------------
 
-allowable_inputs = {'var_names' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color'};
+allowable_inputs = {'var_names' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color'};
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -135,7 +136,11 @@ end
 % Correlation stats
 % --------------------------------------------------
 
-[r, p] = corr(X);
+if dospearman
+    [r, p] = corr(X, 'Type', 'Spearman');
+else
+    [r, p] = corr(X);
+end
 k = size(r, 1);
 
 is_sig = p < p_thr;
@@ -144,10 +149,13 @@ OUT.r = r;
 OUT.p = p;
 OUT.is_sig = is_sig;
 OUT.p_thr = p_thr;
+OUT.dospearman = dospearman;
 
 % Names
 % --------------------------------------------------
-var_names = strrep(var_names, '_', '');
+if ~isempty(var_names)
+    var_names = strrep(var_names, '_', '');
+end
 
 OUT.var_names = var_names;
 

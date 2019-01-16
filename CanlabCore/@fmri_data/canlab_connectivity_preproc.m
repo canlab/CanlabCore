@@ -19,6 +19,12 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %     filtering (it uses conn_filter.m from conn toolbox; see subfunction below)
 %   - can extract data from given ROIs, and return averaged value or pattern
 %     expression value (dot-product).
+%   - Subsequent nuisance regression step is orthogonalized with respect to
+%     pass-filter, consistent with principles in Lindquist 2019
+%   - It is possible to extract ROI averages or linear patterns, save them,
+%      and run this function afterwards. This will give the same result as
+%      filtering each  voxel and then calculating the ROI average/pattern
+%      response.
 %
 % *Steps in order [with defaults]:*
 %   1. Remove nuisance covariates (and linear trend if requested)
@@ -146,6 +152,9 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %    PROGRAMMER'S NOTE
 %    05/19/15 fixed a bug related to conn_filter
 %    08/24/18 implemented simultaneous pass filter + regression
+%    /15/2019: Tor and Marianne: Pass filter all covariates (even
+            % spikes., Consistent with principles in Lindquist 2019
+            % "sequential filtering" paper. See more notes below.
 % ..
 
 additional_R = [];
@@ -184,7 +193,6 @@ for i = 1:length(varargin)
             case {'windsorize'}
                 do_windsorize = true;
                 k_std = varargin{i+1};
-                
                 
                 % detrend
             case {'linear_trend'}
@@ -229,17 +237,22 @@ if do_preproc
         
         fprintf('::: removing ventricle & white matter signal ... \n');
         use_pca_comp_vw = true; % default
+        
         if any(strcmp(varargin, 'raw')), use_pca_comp_vw = false; end
+        
         if any(strcmp(varargin, 'datdir'))
             use_canonical_masks = false;
             subject_dir = varargin{find(strcmp(varargin, 'datdir'))+1}; 
         end
         
         if use_canonical_masks 
+            
             [value, components] = extract_gray_white_csf(dat);
             wm_nuisance = value(:,2:3); % white, CSF
             wm_nuisance_comps = [components{2} components{3}]; % 5 components for white, CSF
+        
         else
+            
             if ~exist(fullfile(subject_dir, 'Structural/SPGR/white_matter.img'), 'file')...
                     && ~exist(fullfile(subject_dir, 'Structural/SPGR/ventricles.img'), 'file')
                 wm_mask = filenames(fullfile(subject_dir, 'Structural/SPGR/wc2*.nii'), 'char', 'absolute');
@@ -248,11 +261,17 @@ if do_preproc
             end
             
             [wm_nuisance, wm_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(fullfile(subject_dir, 'Structural/SPGR'), dat, 'noplot');
+        
         end
+        
         if use_pca_comp_vw
+            
             comb_R = [comb_R scale(wm_nuisance_comps)];
+            
         elseif ~use_pca_comp_vw
+            
             comb_R = [comb_R scale(wm_nuisance)];
+            
         end
         
         dat.history{end+1} = 'Extracting white matter and ventricle signals';
@@ -261,8 +280,10 @@ if do_preproc
     
     %% linear trend
     if do_linear
+        
         comb_R(:,end+1) = scale((1:nobs)');
         dat.history{end+1} = '(added linear detrending to nuisance covs)';
+        
     end
     
     % (optional) global signal % not implemented
@@ -285,20 +306,30 @@ if do_preproc
             % conn_filter does mean-center by default.
             % We need mean back in
             
-            % pass-filter brain data
+            % Pass-filter brain data
+            % -------------------------------------------
             dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
                 + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
             
+            % Filter the covariates
+            % Eliminate bias from sequential filtering operations
+            % -------------------------------------------
+            % 1/15/2019: Tor and Marianne: Pass filter all covariates (even
+            % spikes), because filter transforms data in a way that matches
+            % what is done to spike regressors. So even if spike regressors
+            % "look funny", they adjust for the effects of "spikes" on the
+            % time series data appropriately, accounting for filtering.
+            
             % pass-filter covs (without outlier indices)
-            outlier_idx = sum(comb_R==1)==1;
-            outliers = comb_R(:,outlier_idx);
-            comb_R(:,outlier_idx) = [];
+            %             outlier_idx = sum(comb_R==1)==1;
+            %             outliers = comb_R(:,outlier_idx);
+            %             comb_R(:,outlier_idx) = [];
             
             comb_R = conn_filter(TR, filter, comb_R, 'full') ...
-                + repmat(mean(comb_R), size(comb_R,1), 1); 
+                + repmat(mean(comb_R), size(comb_R,1), 1);
             
             % add outlier indices back in
-            comb_R = [comb_R outliers];
+            %             comb_R = [comb_R outliers];
             
             dat.history{end+1} = 'Done temporal filtering';
             

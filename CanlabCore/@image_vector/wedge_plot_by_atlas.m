@@ -245,9 +245,13 @@ for i = 1:k % k indexes atlases. so do this for each atlas.
         
         data_to_plot = double(mean_weights{i});   % mean weights really average values, not mean weights
         mymean = mean(data_to_plot, 1);
-        myste = ste(data_to_plot);
-        myouterradius = max(abs(mymean) + myste);
+        if size(data_to_plot,1) > 1
+            myste = ste(data_to_plot);
+        else
+            myste = 0;
+        end
         
+        myouterradius = max(abs(mymean) + myste);
         mycolors = {[1 0 .2] [.2 0 1]}; % {[1 1 0] [.7 .3 1]}
         
         hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}, 'bicolor', 'colors', mycolors);
@@ -259,7 +263,7 @@ for i = 1:k % k indexes atlases. so do this for each atlas.
 end
 
 % Make the figure big
-set(gcf, 'Units', 'Normalized', 'Position', [.05 .3 .5 .6])
+%set(gcf, 'Units', 'Normalized', 'Position', [.05 .3 .5 .6])
 
 % Descriptive legend text - enter a series of cell arrays with text
 % --------------------------------------------------------------

@@ -1,4 +1,5 @@
 function similarity_output = canlab_pattern_similarity(dat, pattern_weights, varargin)
+
 % Calculate similarity between each column in a data matrix dat and a vector of pattern weights
 %
 % - Similarity options: dot product, cosine similarity, and correlation
@@ -31,6 +32,11 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **binary_overlap**
 %       Use percent overlap of binary masks instead of dot product. needs
 %       binary masks and pattern weights.
+%
+%   **posterior_overlap**
+%       Using percent overlap of binary masks, this option calculates the
+%       posterior probability of observing non-zero pattern weights (binary) 
+%       given binary masks
 %
 %   **ignore_missing**
 %       Suppress printing of warnings when thre are missing values
@@ -113,6 +119,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % docorr = false;     % run correlation instead of dot-product for pattern expression
 sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
+denominator = 'dat';
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
 
 if any(strcmp(varargin, 'ignore_missing'))
@@ -139,6 +146,9 @@ if any(strcmp(varargin, 'dotproduct')) % default. overwrites previous selections
     sim_metric = 'dotproduct';
 end
 
+if any(strcmp(varargin, 'posterior_overlap')) % run overlap instead of dot-product
+    sim_metric = 'posterior_overlap';
+end
 
 % if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
 
@@ -189,6 +199,10 @@ else
             case 'overlap'
                 
                 similarity_output(:, i) = overlap_similarity(dat, pattern_weights(:, i));
+                
+            case 'posterior_overlap'
+                
+                similarity_output(:, i) = posterior_overlap_similarity(dat, pattern_weights(:, i));
                 
             otherwise
                 error('Invalid similarity metric.');
@@ -327,6 +341,36 @@ for i = 1:size(dat, 2)
     nVox = sum(inmask);
     
     r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1) / nVox; % overlap excluding NaNs
+    
+end
+
+end % function
+
+
+function r = posterior_overlap_similarity(dat, pattern_weights)
+
+% check for binary data
+if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0; 1])~=0 ...
+        || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0; 1])~=0
+    if numel(unique(round(pattern_weights))) == 2
+        pattern_weights = round(pattern_weights); % an easy (but maybe not optimal) solution for the resampled binary mask
+    else
+        error('Binary overlap similarity needs binary data [0 1] input.');
+    end
+end
+
+% compute posterior overlap
+for i = 1:size(dat, 2)
+    
+    % calculate the space
+    inmask = sum(dat,2)~=0;
+    p_dat_pat = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(pattern_weights(inmask)==1);
+    p_pat = sum(pattern_weights(inmask)==1)./sum(inmask);
+    p_dat = sum(dat(inmask,i)==1)./sum(inmask);
+    
+    p_pat_dat = p_dat_pat * p_pat ./ p_dat;
+    
+    r(i,1) = p_pat_dat;
     
 end
 

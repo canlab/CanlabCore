@@ -119,7 +119,6 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % docorr = false;     % run correlation instead of dot-product for pattern expression
 sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
-denominator = 'dat';
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
 
 if any(strcmp(varargin, 'ignore_missing'))

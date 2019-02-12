@@ -363,13 +363,8 @@ for i = 1:size(dat, 2)
     
     % calculate the space
     inmask = sum(dat,2)~=0;
-    p_dat_pat = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(pattern_weights(inmask)==1);
-    p_pat = sum(pattern_weights(inmask)==1)./sum(inmask);
-    p_dat = sum(dat(inmask,i)==1)./sum(inmask);
-    
-    p_pat_dat = p_dat_pat * p_pat ./ p_dat;
-    
-    r(i,1) = p_pat_dat;
+    % calculate P(pattern | data) using overlaps
+    r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(dat(inmask,i)==1); 
     
 end
 

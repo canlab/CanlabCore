@@ -1,5 +1,4 @@
 function similarity_output = canlab_pattern_similarity(dat, pattern_weights, varargin)
-
 % Calculate similarity between each column in a data matrix dat and a vector of pattern weights
 %
 % - Similarity options: dot product, cosine similarity, and correlation
@@ -26,7 +25,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **cosine_similarity**
 %       Use cosine similarity metric for pattern expression instead of dot product
 %
-%   **correlation**
+%   **correlation, corr**
 %       Use correlation metric for pattern expression instead of dot product
 %
 %   **binary_overlap**
@@ -68,21 +67,27 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % ..
 %    Notes:
+% 
+% Dealing with missing data and partial coverage
+% ---------------------------------------------------
 % Pattern pattern_weights can have zeros, which may be valid values in voxels,
 % i.e., with binary masks
 % Data images with values of zero or NaN are considered out-of-mask, as they
-% are not valid values. These should be excluded from both image and
+% are not valid values. That is, 0 is often treated as a missing data value in images,
+% with the exception of "signatures" and binary pattern masks.
+% Thus, this function treats values of 0 in DATA images, not pattern masks,
+% as missing values, and excludes these voxels from both image and
 % mask when calculating similarity.
 % Thus, there is an asymmetry between pattern mask and image data
 % in considering which voxels to use.
-% Otherwise, all dot product and similarity metrics are standard.
+% Otherwise, all dot product, correlation, and other similarity metrics are standard.
 %
 % When comparing two sets of binary images (e.g. k-means clusters) and the
 % cluster of the input solution does not overlap with any of the target
 % patterns/clusters, cosine similarity is attempting division by 0. Instead
 % of returning NaN, we set those cosine values to 0.
 %
-% Dealing with missing data and partial coverage
+% Effects of zeros/missing values on similarity metrics
 % ---------------------------------------------------
 % Dot product is affected by voxel size, coverage in image and mask, scale
 % in general.
@@ -133,7 +138,7 @@ if any(strcmp(varargin, 'cosine_similarity')) % run cosine instead of dot-produc
     sim_metric = 'cosine';
 end
 
-if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
+if any(strcmp(varargin, 'correlation')) || any(strcmp(varargin, 'corr')) % run correlation instead of dot-product
     sim_metric = 'corr';
 end
 

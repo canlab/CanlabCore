@@ -258,6 +258,9 @@ classdef statistic_image < image_vector
                     obj.type = 'p';
                     obj.p = obj.dat;
                 
+                case 'r'
+                    obj.type = 'r';
+                    
                 case 'robreg'
                     obj.type = 'robust regression:  .dat is beta values, .p is robust p values';
                     

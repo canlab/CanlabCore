@@ -4,7 +4,7 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 % :Usage:
 % ::
 %
-%    stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, ['k', extent_thresh])
+%    stats_image_obj = threshold(stats_image_obj, pvalthreshold or other thresh, thresh_type, ['k', extent_thresh OR other optional inputs])
 %
 % This is a method for an statistic_image object.
 % Thresholding is reversible.
@@ -50,6 +50,8 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %          - 'fwe' : FWE-correct; not implemented
 %          - 'bfr' : Bonferroni correction (FWE).
 %          - 'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
+%          - 'extent', 'cluster_extent' : Cluster extent correction with GRF at p < .05 corrected, 
+%                   primary threshold determined by input_threshold
 %          - 'raw-between' : threshold raw image values; save those > input_threshold(1) and < input_threshold(2)
 %          - 'raw-outside' : threshold raw image values; save those < input_threshold(1) or > input_threshold(2)
 %
@@ -85,6 +87,19 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', which('scalped_avg152T1_graymatter_smoothed.img'));
 %    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', maskobj);
 %
+% Here is a complete example using simulated data.  First, we load a
+% canonical network and generate true-signal areas. Second, do a t-test on the simulated images.
+% Then, load two different masks and perform cluster extent correction within one of
+% the masks.
+% imgs = load_image_set('bucknerlab');
+% true_mask = get_wh_image(imgs, 2); % select a network for true signal
+% patient_obj = sim_data(fmri_data, 'n', N, 'd', 1, 'smoothness', 10, 'true_region_mask', true_mask);
+% mask1 = fmri_data(which('gray_matter_mask.img'), 'noverbose');
+% mask2 = fmri_data(which('brainmask.nii'), 'noverbose');
+% patient_t = ttest(patient_obj);
+% patient_t = threshold(patient_t, .01, 'cluster_extent', patient_obj, 'mask', mask2);
+% 
+% 
 % :See also:
 % image_vector.threshold, statistic_image.multi_threshold
 %
@@ -116,9 +131,10 @@ for i = 1:length(varargin)
                 maskinput = varargin{i + 1}; varargin{i + 1} = 0;
                 switch class(maskinput)
                     case 'char' % string file name
-                        maskobj = fmri_mask_image(maskinput);
+                        % maskobj = fmri_mask_image(maskinput);
+                        maskobj = fmri_data(maskinput, 'noverbose');
                         
-                    case 'fmri_mask_image'
+                    case {'fmri_mask_image', 'fmri_data', 'image_vector'}
                         maskobj = maskinput;
                         
                     otherwise
@@ -126,6 +142,13 @@ for i = 1:length(varargin)
                 end
                 clear maskinput
                 
+                % Tor added: check and/or perform resampling if needed
+                maskobj = resample_space(maskobj, stats_image_obj);
+                
+                maskobj = replace_empty(maskobj);
+                stats_image_obj = replace_empty(stats_image_obj);
+                
+                % Check
                 if length(maskobj.dat) ~= length(stats_image_obj.dat)
                     if sum(sum(maskobj.volInfo.mat ~= stats_image_obj.volInfo.mat))
                         mask_mapdat = scn_map_image(maskobj, stats_image_obj);
@@ -141,21 +164,36 @@ for i = 1:length(varargin)
                     end
                 end
                 
-                stats_image_obj = replace_empty(stats_image_obj);
-                stats_image_obj.p = stats_image_obj.p(maskdat);
-                stats_image_obj.dat = stats_image_obj.dat(maskdat);
-                if ~isempty(stats_image_obj.sig)
-                    stats_image_obj.sig = stats_image_obj.sig(maskdat);
-                end
-                stats_image_obj.removed_voxels = ~maskdat;
+                stats_image_obj = apply_mask(stats_image_obj, maskobj);
+                
+%                 stats_image_obj = replace_empty(stats_image_obj);
+%                 stats_image_obj.p = stats_image_obj.p(maskdat);
+%                 stats_image_obj.dat = stats_image_obj.dat(maskdat);
+%                 if ~isempty(stats_image_obj.sig)
+%                     stats_image_obj.sig = stats_image_obj.sig(maskdat);
+%                 end
+%                 stats_image_obj.removed_voxels = ~maskdat;
                 
             case 'noverbose'
                 doverbose = 0;
+              
+                %             case {'extent', 'cluster_extent'}
+                %
+                %                 resid_image_obj = varargin{i + 1}; varargin{i + 1} = [];
                 
             otherwise
                 error('Illegal argument keyword.');
         end
     end
+end
+
+% Extent thresholding
+switch thresh_type
+    case {'extent', 'cluster_extent'}
+        
+        resid_image_obj = varargin{1};
+        
+    otherwise
 end
 
 
@@ -196,6 +234,51 @@ for i = 1:n
         case {'raw-between', 'raw-outside'}
             thresh = input_threshold;
             
+        case {'extent', 'cluster_extent'}
+            
+            % Cluster extent thresholding with SPM's GRF
+            % At primary threshold  = input_threshold, p < .05 corrected
+            % Recommended mask: which('gray_matter_mask.img')
+            
+            % cl_ext_spm_grf takes image file names as inputs, so create
+            % files.
+            % Temporary mask - if mask was entered, we have already masked
+            % this object above, so use all voxels here as mask (NOT just
+            % ones above previous threshold)
+           
+            extent_mask = stats_image_obj;
+%             n_in_mask = size(extent_mask.dat, 1);
+%             extent_mask.dat = ones(n_in_mask, 1);
+%             extent_mask.sig = true(n_in_mask, 1);
+%             extent_mask.ste = ones(n_in_mask, 1);
+%             extent_mask.N = ones(n_in_mask, 1);
+%             extent_mask.removed_voxels = [];
+            extent_mask.fullpath = fullfile(pwd, 'tmp_mask_img_remove_me.nii');
+            write(extent_mask);
+
+            % Write images to disk - we will remove after thresholddetermination
+            resid_image_obj.image_names = 'tmp_resid_imgs_remove_me.nii';
+            resid_image_obj.fullpath = fullfile(pwd, resid_image_obj.image_names);
+            write(resid_image_obj);
+
+            % Get extent threshold
+            [k, fwhm] = cl_ext_spm_grf(.05, input_threshold, resid_image_obj.fullpath, extent_mask.fullpath);
+            
+            thresh(i) = input_threshold; % for later
+            
+            if doverbose
+                fprintf('Cluster extent correction: Estimated smoothness FWHM is %3.2f x %3.2f x %3.2f\nExtent threshold k = %3.0f\n', fwhm, k);
+            end
+            
+            if n > 1
+                disp('***Warning!!! Cluster extent correction requires a set of residual images for each specific effect.')
+                disp('You are thresholding multiple images with one set of residual images, which may be invalid.')
+                disp('Separating images in the object you are thresholding and entering separate resid_image_objects is a solution.');
+            end
+            
+            delete(resid_image_obj.fullpath);
+            delete(extent_mask.fullpath);
+
         otherwise
             error('Unknown threshold type. Enter fdr, fwe, or uncorrected, or raw-between or raw-outside')
     end
@@ -207,7 +290,7 @@ for i = 1:n
     
     switch lower(thresh_type)
         
-        case {'fdr', 'fwe', 'unc', 'uncorrected', 'bfr', 'bonferroni'}
+        case {'fdr', 'fwe', 'unc', 'uncorrected', 'bfr', 'bonferroni', 'extent', 'cluster_extent'}
             stats_image_obj.sig(:, i) = stats_image_obj.p(:, i) < thresh(i);
             
             % Apply size threshold

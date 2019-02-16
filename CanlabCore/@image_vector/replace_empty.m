@@ -60,6 +60,7 @@ if dovoxels && any(obj.removed_voxels)
         if ~isempty(obj.p), obj.p = oneinsert(obj.removed_voxels, obj.p); end  % Wani added this line, Aug 2012 - because the threshold.m function recognizes zeros for p values as significant voxels. 
         if ~isempty(obj.ste), obj.ste = zeroinsert(obj.removed_voxels, obj.ste); end
         if ~isempty(obj.sig), obj.sig = zeroinsert(obj.removed_voxels, obj.sig); end
+        if ~isempty(obj.N), obj.N = zeroinsert(obj.removed_voxels, obj.N); end
     end
     
     if isa(obj, 'atlas')

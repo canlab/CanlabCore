@@ -38,6 +38,7 @@ err = ste(fmridat.dat')';
 t = nanmean(fmridat.dat')' ./ err;
 
 N = single(sum(~(isnan(fmridat.dat') | fmridat.dat' == 0) , 1));
+N = N'; % make column
 
 df = size(fmridat.dat, 2) - 1;
 

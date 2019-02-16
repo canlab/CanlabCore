@@ -120,7 +120,10 @@ end
 
 if isa(dat, 'statistic_image')
     
-    for myfields = {'p' 'ste' 'sig'}
+    for myfields = {'p' 'ste' 'sig' 'N'}
+        
+        % check orientation
+        if isrow(dat.(myfields{1})), dat.(myfields{1}) = dat.(myfields{1})'; end
         
         if ~isempty(dat.(myfields{1}))
             dat.(myfields{1})(empty_voxels, :) = [];

@@ -465,7 +465,7 @@ title(mytitle, 'FontSize', 24);
 if ~isempty(names)
     if verLessThan('matlab','8.4')
         set(gca, 'XTickLabel', names); 
-    else
+    else % not sure if this works with 8.4, but doesn't work with 8.3. Update conditional if needed
         set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
     end
 end
@@ -575,7 +575,7 @@ if doind
 %                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
                 if verLessThan('matlab','8.4')
                     handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                else
+                else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
                     handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
                 end
                 

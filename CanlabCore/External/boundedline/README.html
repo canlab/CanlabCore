@@ -1,0 +1,377 @@
+
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+--><title>boundedline.m: line with shaded error/confidence bounds</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-08-08"><meta name="DC.source" content="./readmeExtras/README.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+</style></head><body><div class="content"><h1><tt>boundedline.m</tt>: line with shaded error/confidence bounds</h1><!--introduction--><p>Author: Kelly Kearney</p><p>This repository includes the code for the <tt>boundedline.m</tt> Matlab function and the accompanying <tt>outlinebounds.m</tt> function, along with all dependent functions required to run them.</p><p>The <tt>boundedline</tt> function allows a user to easily plot and line with a shaded patch around it.  Ths sort of plot is often used to indicate uncertainty intervals or error bounds around a line.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Getting started</a></li><li><a href="#2">Syntax</a></li><li><a href="#3">Example 1: Plotting lines using various syntax options</a></li><li><a href="#7">Example 2: Filling gaps</a></li><li><a href="#12">Contributions</a></li></ul></div><h2 id="1">Getting started</h2><p><b>Prerequisites</b></p><p>This function requires Matlab R14 or later.</p><p><b>Downloading and installation</b></p><p>This code can be downloaded from <a href="https://github.com/kakearney/boundedline-pkg/">Github</a> or the <a href="http://www.mathworks.com/matlabcentral/fileexchange/27485-boundedline-m">MatlabCentral File Exchange</a>.  The File Exchange entry is updated daily from the GitHub repository.</p><p><b>Matlab Search Path</b></p><p>The following folders need to be added to your Matlab Search path (via <tt>addpath</tt>, <tt>pathtool</tt>, etc.):</p><pre class="language-matlab">boundedline-pkg/Inpaint_nans
+boundedline-pkg/boundedline
+boundedline-pkg/catuneven
+boundedline-pkg/singlepatch
+</pre><h2 id="2">Syntax</h2><p><tt>boundedline(x, y, b)</tt> plots a line with coordinates given by <tt>x</tt> and <tt>y</tt>, surrounded by a patch extending a certain distance <tt>b</tt> above/below that line.  The dimensions of the <tt>x</tt>, <tt>y</tt>, and <tt>b</tt> arrays can vary to allow for multiple lines to be plotted at once, and for patch bounds to be either constant or varying along the length of the line.  See function header help for full details of these variations.</p><p><tt>boundedline(..., 'alpha')</tt> renders the bounded area patch using a partially-transparent patch the same color as the corresponding line(s). If not included, the bounded area will use a fully-opaque patch in a lighter shade of the corresponding line color.</p><p><tt>boundedline(..., 'transparency', transp)</tt> indicates the tranparency or intensity of the bounds patch, using a scalar between 0 and 1.  Default is 0.2.</p><p><tt>boundedline(..., 'orientation', orient)</tt> indicates the orientation of the bounds.  Orientation can be either <tt>'vert'</tt> for vertical (y-direction) bounds, or <tt>'horiz'</tt> for horizontal (x-direction) bounds.  Default is <tt>'vert'</tt>.</p><p><tt>boundedline(..., 'nan', nanflag)</tt> indicates how the bounds patch should handle NaNs in the line coordinates or bounds values.  Options are <tt>'fill'</tt>, to smooth over the gap using neighboring values, <tt>'gap'</tt> to leave a blank space in the patch at those points, or <tt>'remove'</tt> to drop the NaN-points entirely, leading to linear interpolation of the gap in the patch.  See examples below for more details on these options.</p><p><tt>boundedline(..., 'cmap', cmap)</tt> colors the lines (in order of plotting) acording to the colors in this n x 3 colormap array, overriding any linespec or default colors.</p><p><tt>boundedline(..., ax)</tt> plots the bounded line to the axis indicated by handle <tt>ax</tt>.  If not included, the current axis is used.</p><p><tt>[hl, hp] = boundedline(...)</tt> returns the handles the resulting line and patch object(s).</p><p><tt>hout = outlinebounds(hl, hp)</tt> adds an outline to the bounds patch generated by <tt>boundedline</tt>, returning the handle of the resulting line object in <tt>hout</tt>.</p><p>Full details of all input and output variables for both functions can be accessed via the <tt>help</tt> function.</p><h2 id="3">Example 1: Plotting lines using various syntax options</h2><p>This example builds the 4-panel example image used on the MatlabCentral File Exchange, which shows several different methods for supplying line coordinates, bounds coordinates, and shading options.</p><p>The first axis plots two lines using the LineSpec option for input, which allows yoy to set line color, line color, and marker type for each line. The bounds on the first line vary over x, while the bounds on the second line are constant for all x. An outline is added to the bounds so the overlapping region can be seen more clearly.</p><pre class="codeinput">x = linspace(0, 2*pi, 50);
+y1 = sin(x);
+y2 = cos(x);
+e1 = rand(size(y1))*.5+.5;
+e2 = [.25 .5];
+
+ax(1) = subplot(2,2,1);
+[l,p] = boundedline(x, y1, e1, <span class="string">'-b*'</span>, x, y2, e2, <span class="string">'--ro'</span>);
+outlinebounds(l,p);
+title(<span class="string">'Opaque bounds, with outline'</span>);
+axis <span class="string">tight</span>;
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_01.png" alt=""> <p>For our second axis, we use the same 2 lines, and this time assign x-varying bounds to both lines.  Rather than using the LineSpec syntax, this  example uses the default color order to assign the colors of the lines and patches.  I also turn on the <tt>'alpha'</tt> option, which renders the patch wit partial transparency.</p><pre class="codeinput">ax(2) = subplot(2,2,2);
+boundedline(x, [y1;y2], rand(length(y1),2,2)*.5+.5, <span class="string">'alpha'</span>);
+title(<span class="string">'Transparent bounds'</span>);
+axis <span class="string">tight</span>;
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_02.png" alt=""> <p>The bounds can also be assigned to a horizontal orientation, for a case where the x-axis represents the dependent variable.  In this case, the scalar error bound value applies to both lines and both sides of the lines.</p><pre class="codeinput">ax(3) = subplot(2,2,3);
+boundedline([y1;y2], x, e1(1), <span class="string">'orientation'</span>, <span class="string">'horiz'</span>)
+title(<span class="string">'Horizontal bounds'</span>);
+axis <span class="string">tight</span>;
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_03.png" alt=""> <p>Rather than use a LineSpec or the default color order, a colormap array can be used to assign colors.  In this case, increasingly-narrower bounds are added on top of the same line.</p><pre class="codeinput">ax(4) = subplot(2,2,4);
+boundedline(x, repmat(y1, 4,1), permute(0.5:-0.1:0.2, [3 1 2]), <span class="keyword">...</span>
+<span class="string">'cmap'</span>, cool(4), <span class="keyword">...</span>
+<span class="string">'transparency'</span>, 0.5);
+title(<span class="string">'Multiple bounds using colormap'</span>);
+
+set(ax([1 2 4]), <span class="string">'xlim'</span>, [0 2*pi]);
+set(ax(3), <span class="string">'ylim'</span>, [0 2*pi]);
+axis <span class="string">tight</span>;
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_04.png" alt=""> <h2 id="7">Example 2: Filling gaps</h2><p>If you plot a line with one or more NaNs in either the <tt>x</tt> or <tt>y</tt> vector, the NaN location is rendered as a missing marker with a gap in the line. However, the <tt>patch</tt> command does not handle NaNs gracefully; it simply fails to show the patch at all if any of the coordinates include NaNs.</p><p>Because of this, the expected behavior of the patch part of boundedline when confronted with a NaN in either the bounds array (<tt>b</tt>) or the x/y-coordinates of the line (which are used to calculate the patch coordinates) is ambiguous.  I offer a few options.</p><p>Before I demonstrate the options, I'll create a dataset that has a few different types of gaps:</p><pre class="codeinput">x = linspace(0, 2*pi, 50);
+y = sin(x);
+b = [ones(size(y))*0.2; rand(size(y))*.5+.5]';
+
+y(10)   = NaN;  <span class="comment">% NaN in the line but not bounds</span>
+b(20,1) = NaN;  <span class="comment">% NaN in lower bound but not line</span>
+b(30,2) = NaN;  <span class="comment">% NaN in upper bound but not line</span>
+b(40,:) = NaN;  <span class="comment">% NaN in both sides of bound but not line</span>
+</pre><p>Here's what that looks like in an errorbar plot.</p><pre class="codeinput">figure;
+he = errorbar(x,y,b(:,1), b(:,2), <span class="string">'-bo'</span>);
+
+
+line([x([10 20 30 40]); x([10 20 30 40])], [ones(1,4)*-2;ones(1,4)*2], <span class="keyword">...</span>
+<span class="string">'color'</span>, ones(1,3)*0.5, <span class="string">'linestyle'</span>, <span class="string">':'</span>);
+text(x(10), sin(x(10))-0.2, {<span class="string">'\uparrow'</span>,<span class="string">'Line'</span>,<span class="string">'gap'</span>}, <span class="string">'vert'</span>, <span class="string">'top'</span>, <span class="string">'horiz'</span>, <span class="string">'center'</span>);
+text(x(20), sin(x(20))-0.2, {<span class="string">'\uparrow'</span>,<span class="string">'Lower'</span>,<span class="string">'bound'</span>,<span class="string">'gap'</span>}, <span class="string">'vert'</span>, <span class="string">'top'</span>, <span class="string">'horiz'</span>, <span class="string">'center'</span>);
+text(x(30), sin(x(30))-0.2, {<span class="string">'\uparrow'</span>,<span class="string">'Upper'</span>,<span class="string">'bound'</span>,<span class="string">'gap'</span>}, <span class="string">'vert'</span>, <span class="string">'top'</span>, <span class="string">'horiz'</span>, <span class="string">'center'</span>);
+text(x(40), sin(x(40))-0.2, {<span class="string">'\uparrow'</span>,<span class="string">'Two-sided'</span>,<span class="string">'bound'</span>,<span class="string">'gap'</span>}, <span class="string">'vert'</span>, <span class="string">'top'</span>, <span class="string">'horiz'</span>, <span class="string">'center'</span>);
+
+axis <span class="string">tight</span> <span class="string">equal</span>;
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_05.png" alt=""> <p>The default method for dealing with NaNs in boundedline is to leave the gap in the line, but smooth over the gap in the bounds based on the neighboring points.  This option can be nice if you only have one or two missing points, and you're not interested in emphasizing those gaps in your plot:</p><pre class="codeinput">delete(he);
+[hl,hp] = boundedline(x,y,b,<span class="string">'-bo'</span>, <span class="string">'nan'</span>, <span class="string">'fill'</span>);
+ho = outlinebounds(hl,hp);
+set(ho, <span class="string">'linestyle'</span>, <span class="string">':'</span>, <span class="string">'color'</span>, <span class="string">'r'</span>, <span class="string">'marker'</span>, <span class="string">'.'</span>);
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_06.png" alt=""> <p>I've added bounds outlines in a contrasting color so you can see how I'm handling individual points.</p><p>The second option leaves a full gap in the patch for any NaN.  I considered allowing one-sided gaps, but couldn't think of a good way to distinguish a gap from a zero-valued bound.  I'm open to suggestions if you have any (email me).</p><pre class="codeinput">delete([hl hp ho]);
+[hl,hp] = boundedline(x,y,b,<span class="string">'-bo'</span>, <span class="string">'nan'</span>, <span class="string">'gap'</span>);
+ho = outlinebounds(hl,hp);
+set(ho, <span class="string">'linestyle'</span>, <span class="string">':'</span>, <span class="string">'color'</span>, <span class="string">'r'</span>, <span class="string">'marker'</span>, <span class="string">'.'</span>);
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_07.png" alt=""> <p>The final option removes points from the patch that are NaNs.  The visual result is very similar to the fill option, but the missing points are apparent if you plot the bounds outlines.</p><pre class="codeinput">delete([hl hp ho]);
+[hl,hp] = boundedline(x,y,b,<span class="string">'-bo'</span>, <span class="string">'nan'</span>, <span class="string">'remove'</span>);
+ho = outlinebounds(hl,hp);
+set(ho, <span class="string">'linestyle'</span>, <span class="string">':'</span>, <span class="string">'color'</span>, <span class="string">'r'</span>, <span class="string">'marker'</span>, <span class="string">'.'</span>);
+</pre><img vspace="5" hspace="5" src="./readmeExtras/README_08.png" alt=""> <h2 id="12">Contributions</h2><p>Community contributions to this package are welcome!</p><p>To report bugs, please submit <a href="https://github.com/kakearney/boundedline-pkg/issues">an issue</a> on GitHub and include:</p><div><ul><li>your operating system</li><li>your version of Matlab and all relevant toolboxes (type <tt>ver</tt> at the Matlab command line to get this info)</li><li>code/data to reproduce the error or buggy behavior, and the full text of any error messages received</li></ul></div><p>Please also feel free to submit enhancement requests, or to send pull requests (via GitHub) for bug fixes or new features.</p><p>I do monitor the MatlabCentral FileExchange entry for any issues raised in the comments, but would prefer to track issues on GitHub.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% |boundedline.m|: line with shaded error/confidence bounds
+% Author: Kelly Kearney
+%
+% This repository includes the code for the |boundedline.m| Matlab function
+% and the accompanying |outlinebounds.m| function, along with all dependent
+% functions required to run them.
+%
+% The |boundedline| function allows a user to easily plot and line with a
+% shaded patch around it.  Ths sort of plot is often used to indicate
+% uncertainty intervals or error bounds around a line.
+%
+%% Getting started
+%
+% *Prerequisites*
+%
+% This function requires Matlab R14 or later.
+%
+% *Downloading and installation*
+%
+% This code can be downloaded from <https://github.com/kakearney/boundedline-pkg/ Github>
+% or the
+% <http://www.mathworks.com/matlabcentral/fileexchange/27485-boundedline-m
+% MatlabCentral File Exchange>.  The File Exchange entry is updated daily
+% from the GitHub repository.   
+%
+% *Matlab Search Path*
+%
+% The following folders need to be added to your Matlab Search path (via
+% |addpath|, |pathtool|, etc.):
+%
+%   boundedline-pkg/Inpaint_nans
+%   boundedline-pkg/boundedline
+%   boundedline-pkg/catuneven
+%   boundedline-pkg/singlepatch
+
+%% Syntax
+%
+% |boundedline(x, y, b)| plots a line with coordinates given by
+% |x| and |y|, surrounded by a patch extending a certain distance |b|
+% above/below that line.  The dimensions of the |x|, |y|, and |b| arrays
+% can vary to allow for multiple lines to be plotted at once, and for
+% patch bounds to be either constant or varying along the length of the
+% line.  See function header help for full details of these variations.
+%  
+% |boundedline(..., 'alpha')| renders the bounded area patch using a
+% partially-transparent patch the same color as the corresponding line(s).
+% If not included, the bounded area will use a fully-opaque patch in a
+% lighter shade of the corresponding line color.
+%
+% |boundedline(..., 'transparency', transp)| indicates the
+% tranparency or intensity of the bounds patch, using a scalar between 0
+% and 1.  Default is 0.2.
+%
+% |boundedline(..., 'orientation', orient)| indicates the orientation of
+% the bounds.  Orientation can be either |'vert'| for vertical (y-direction)
+% bounds, or |'horiz'| for horizontal (x-direction) bounds.  Default is
+% |'vert'|.
+%
+% |boundedline(..., 'nan', nanflag)| indicates how the bounds patch should
+% handle NaNs in the line coordinates or bounds values.  Options are
+% |'fill'|, to smooth over the gap using neighboring values, |'gap'| to
+% leave a blank space in the patch at those points, or |'remove'| to drop
+% the NaN-points entirely, leading to linear interpolation of the gap in
+% the patch.  See examples below for more details on these options.
+%
+% |boundedline(..., 'cmap', cmap)| colors the lines (in order of plotting)
+% acording to the colors in this n x 3 colormap array, overriding any
+% linespec or default colors.
+%
+% |boundedline(..., ax)| plots the bounded line to the axis indicated by
+% handle |ax|.  If not included, the current axis is used.
+%
+% |[hl, hp] = boundedline(...)| returns the handles the resulting line
+% and patch object(s).
+%
+% |hout = outlinebounds(hl, hp)| adds an outline to the bounds patch
+% generated by |boundedline|, returning the handle of the resulting line
+% object in |hout|.
+%
+% Full details of all input and output variables for both functions can be
+% accessed via the |help| function.
+
+%% Example 1: Plotting lines using various syntax options
+%
+% This example builds the 4-panel example image used on the MatlabCentral
+% File Exchange, which shows several different methods for supplying line
+% coordinates, bounds coordinates, and shading options.
+%
+% The first axis plots two lines using the LineSpec option for input, which
+% allows yoy to set line color, line color, and marker type for each line.
+% The bounds on the first line vary over x, while the bounds on the second
+% line are constant for all x. An outline is added to the bounds so the
+% overlapping region can be seen more clearly. 
+
+x = linspace(0, 2*pi, 50);
+y1 = sin(x);
+y2 = cos(x);
+e1 = rand(size(y1))*.5+.5;
+e2 = [.25 .5];
+
+ax(1) = subplot(2,2,1);
+[l,p] = boundedline(x, y1, e1, '-b*', x, y2, e2, 'REPLACE_WITH_DASH_DASHro');
+outlinebounds(l,p);
+title('Opaque bounds, with outline');
+axis tight;
+
+%%
+% For our second axis, we use the same 2 lines, and this time assign
+% x-varying bounds to both lines.  Rather than using the LineSpec syntax,
+% this  example uses the default color order to assign the colors of the
+% lines and patches.  I also turn on the |'alpha'| option, which renders
+% the patch wit partial transparency.
+
+ax(2) = subplot(2,2,2);
+boundedline(x, [y1;y2], rand(length(y1),2,2)*.5+.5, 'alpha');
+title('Transparent bounds');
+axis tight;
+
+%%
+% The bounds can also be assigned to a horizontal orientation, for a case
+% where the x-axis represents the dependent variable.  In this case, the
+% scalar error bound value applies to both lines and both sides of the
+% lines.
+
+ax(3) = subplot(2,2,3);
+boundedline([y1;y2], x, e1(1), 'orientation', 'horiz')
+title('Horizontal bounds');
+axis tight;
+
+%%
+% Rather than use a LineSpec or the default color order, a colormap array
+% can be used to assign colors.  In this case, increasingly-narrower bounds
+% are added on top of the same line.
+
+ax(4) = subplot(2,2,4);
+boundedline(x, repmat(y1, 4,1), permute(0.5:-0.1:0.2, [3 1 2]), ...
+'cmap', cool(4), ...
+'transparency', 0.5);
+title('Multiple bounds using colormap');
+
+set(ax([1 2 4]), 'xlim', [0 2*pi]);
+set(ax(3), 'ylim', [0 2*pi]);
+axis tight;
+
+%% Example 2: Filling gaps
+%
+% If you plot a line with one or more NaNs in either the |x| or |y| vector,
+% the NaN location is rendered as a missing marker with a gap in the line.
+% However, the |patch| command does not handle NaNs gracefully; it simply
+% fails to show the patch at all if any of the coordinates include NaNs.
+%
+% Because of this, the expected behavior of the patch part of boundedline
+% when confronted with a NaN in either the bounds array (|b|) or the
+% x/y-coordinates of the line (which are used to calculate the patch
+% coordinates) is ambiguous.  I offer a few options.  
+%
+% Before I demonstrate the options, I'll create a dataset that has a few
+% different types of gaps:
+
+x = linspace(0, 2*pi, 50);
+y = sin(x);
+b = [ones(size(y))*0.2; rand(size(y))*.5+.5]';
+
+y(10)   = NaN;  % NaN in the line but not bounds
+b(20,1) = NaN;  % NaN in lower bound but not line
+b(30,2) = NaN;  % NaN in upper bound but not line
+b(40,:) = NaN;  % NaN in both sides of bound but not line
+
+%%
+% Here's what that looks like in an errorbar plot.
+
+figure;
+he = errorbar(x,y,b(:,1), b(:,2), '-bo');
+
+
+line([x([10 20 30 40]); x([10 20 30 40])], [ones(1,4)*-2;ones(1,4)*2], ...
+'color', ones(1,3)*0.5, 'linestyle', ':');
+text(x(10), sin(x(10))-0.2, {'\uparrow','Line','gap'}, 'vert', 'top', 'horiz', 'center');
+text(x(20), sin(x(20))-0.2, {'\uparrow','Lower','bound','gap'}, 'vert', 'top', 'horiz', 'center');
+text(x(30), sin(x(30))-0.2, {'\uparrow','Upper','bound','gap'}, 'vert', 'top', 'horiz', 'center');
+text(x(40), sin(x(40))-0.2, {'\uparrow','Two-sided','bound','gap'}, 'vert', 'top', 'horiz', 'center');
+
+axis tight equal;
+
+%% 
+% The default method for dealing with NaNs in boundedline is to leave the
+% gap in the line, but smooth over the gap in the bounds based on the
+% neighboring points.  This option can be nice if you only have one or two
+% missing points, and you're not interested in emphasizing those gaps in
+% your plot:
+
+delete(he);
+[hl,hp] = boundedline(x,y,b,'-bo', 'nan', 'fill');
+ho = outlinebounds(hl,hp);
+set(ho, 'linestyle', ':', 'color', 'r', 'marker', '.');
+
+%%
+% I've added bounds outlines in a contrasting color so you can see how I'm
+% handling individual points.
+%
+% The second option leaves a full gap in the patch for any NaN.  I
+% considered allowing one-sided gaps, but couldn't think of a good way to
+% distinguish a gap from a zero-valued bound.  I'm open to suggestions if
+% you have any (email me).
+
+delete([hl hp ho]);
+[hl,hp] = boundedline(x,y,b,'-bo', 'nan', 'gap');
+ho = outlinebounds(hl,hp);
+set(ho, 'linestyle', ':', 'color', 'r', 'marker', '.');
+
+%%
+% The final option removes points from the patch that are NaNs.  The visual
+% result is very similar to the fill option, but the missing points are
+% apparent if you plot the bounds outlines.
+
+delete([hl hp ho]);
+[hl,hp] = boundedline(x,y,b,'-bo', 'nan', 'remove');
+ho = outlinebounds(hl,hp);
+set(ho, 'linestyle', ':', 'color', 'r', 'marker', '.');
+
+
+%% Contributions
+%
+% Community contributions to this package are welcome!
+% 
+% To report bugs, please submit
+% <https://github.com/kakearney/boundedline-pkg/issues an issue> on GitHub and
+% include:  
+% 
+% * your operating system
+% * your version of Matlab and all relevant toolboxes (type |ver| at the Matlab command line to get this info)  
+% * code/data to reproduce the error or buggy behavior, and the full text of any error messages received 
+% 
+% Please also feel free to submit enhancement requests, or to send pull
+% requests (via GitHub) for bug fixes or new features. 
+% 
+% I do monitor the MatlabCentral FileExchange entry for any issues raised
+% in the comments, but would prefer to track issues on GitHub. 
+% 
+
+
+##### SOURCE END #####
+--></body></html>

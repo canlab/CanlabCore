@@ -281,6 +281,7 @@ classdef region
                      
                      mask = replace_empty(mask);            % after this p now has all in-mask voxels
                      Z_descrip = 'Z-score for each voxel.';
+                     mask.p(mask.p==0) = eps;               % not to have Inf values in Z field
                      maskZ = sign(mask.dat) .* norminv(1 - mask.p ./ 2); % Z-score based on p-value, assuming two-tailed p-vals.
                      
                  end     
@@ -454,9 +455,10 @@ end
 % so apply .sig field
 if isa(mask, 'statistic_image')
     
-    if size(mask.dat, 1) == mask.volInfo.nvox
-        error('statistic_image objects should not have data vector (.dat) the length of full image space.')
-    end
+    % old... we could delete these.. but just in case, I just comment them out for now (Wani).
+    % if size(mask.dat, 1) == mask.volInfo.nvox
+    %    error('statistic_image objects should not have data vector (.dat) the length of full image space.')
+    % end
     
     maskData = maskData .* mask.sig(:, 1);
     

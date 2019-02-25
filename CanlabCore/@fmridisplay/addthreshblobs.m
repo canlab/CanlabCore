@@ -5,7 +5,9 @@ function obj = addthreshblobs(obj, statimg, varargin)
 %     obj = addthreshblobs(obj, statimg, varargin)
 %
 % Add blobs from a statistical image object at multiple thresholds to
-% montage and other surface plots. 
+% montage and other surface plots.  All super-threshold blobs are plotted
+% in the same color.  See `statistic_image.multi_threshold` to plot blobs of
+% different significance levels in different colors.
 %
 % It passes options specified in varargin onto addblobs, see help addblobs
 % for options. In addition it has the parameters 'thresh' and
@@ -28,6 +30,9 @@ function obj = addthreshblobs(obj, statimg, varargin)
 %   **'pruneclusters', [0 or 1]:**
 %        Prune clusters that do not have at least one voxel
 %        surving at the most stringent threshold. Defaults to 1.
+%
+%   **'k', [integer]:**
+%        Threshold by cluster size (voxel extent).  By default k=1
 %
 % :Examples:
 %
@@ -58,6 +63,7 @@ function obj = addthreshblobs(obj, statimg, varargin)
 % set defaults for thresholds and cluster pruning
 cl_prune       = 1;
 thresh         = {'fdr',0.001,0.01};
+k              = 1;
 
 % parse varargin
 cmapset        = 0;
@@ -73,6 +79,7 @@ for i = 1:length(varargin)
             case 'splitcolor', splitcolset = 1;
             case 'pruneclusters', cl_prune = varargin{i+1}; rmIdx = [rmIdx i i+1]; 
             case 'thresh', thresh = varargin{i+1}; rmIdx = [rmIdx i i+1];
+            case 'k', k = varargin{i+1}; rmIdx = [rmIdx i i+1];
         end
     end
 end
@@ -93,12 +100,12 @@ end
 
 % loop given thresholds and code significance levels into plotdat
 plotdat = 0;
-for k = 1:length(thresh)
+for thr = 1:length(thresh)
     
-    if ischar(thresh{k})
-        tdat = threshold(statimg, 0.05, lower(thresh{k}));
-    elseif isnumeric(thresh{k})
-        tdat = threshold(statimg, thresh{k}, 'unc');
+    if ischar(thresh{thr})
+        tdat = threshold(statimg, 0.05, lower(thresh{thr}), 'k', k);
+    elseif isnumeric(thresh{thr})
+        tdat = threshold(statimg, thresh{thr}, 'unc', 'k', k);
     end
     plotdat = plotdat + tdat.sig .* sign(tdat.dat);
     
@@ -111,13 +118,13 @@ r         = region(tdat);
 % if prune clusters, keep only clusters with 1 vx surviving the highest
 % threshold
 if cl_prune
-    k = zeros(size(r));
+    kk = zeros(size(r));
     for i = 1:numel(r)
         if sum(abs(r(i).val) == length(thresh)) == 0
-            k(i) = true;
+            kk(i) = true;
         end
     end  
-    r(logical(k)) = [];
+    r(logical(kk)) = [];
 end
 
 obj = addblobs(obj, r, opts{:});

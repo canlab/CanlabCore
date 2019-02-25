@@ -28,10 +28,13 @@ function fmridat = rescale(fmridat, meth, varargin)
 %                               maps where CSF mean and var should be 0).
 %
 %     Other procedures
-%     - windsorizevoxels
-%     - percentchange
-%     - tanh
-%     - 
+%     - windsorizevoxels    Winsorize extreme values to 3 SD for each image (separately) using trimts
+%     - percentchange       Scale each voxel (column) to percent signal change with a mean of 100
+%                           based on smoothed mean values across space (cols), using iimg_smooth_3d
+%     - tanh                Rescale variables by hyperbolic tangent function
+%                           this will shrink the tails (and outliers) towards the mean,
+%                           making subsequent algorithms more robust to
+%                           outliers. Affects normality of distribution.
 %
 % Appropriate for multi-session (time series) only:
 %     - session_global_percent_change
@@ -88,6 +91,20 @@ switch meth
         fmridat.history{end+1} = 'Z-scored imagesc(columns) across voxels';
         
         
+    case 'doublecenter'
+              
+        imagemeans = mean(fmridat.dat);
+        [v, n] = size(fmridat.dat);
+        imagemeanmatrix = repmat(imagemeans, v, 1);
+        dat_doublecent = fmridat.dat - imagemeanmatrix;
+        
+        voxelmeans = nanmean(dat_doublecent, 2);
+        voxelmeanmatrix = repmat(voxelmeans, 1, n);
+        dat_doublecent = dat_doublecent - voxelmeanmatrix;
+        fmridat.dat = dat_doublecent;
+        
+        fmridat.history{end+1} = 'Double-centered data matrix across images and voxels';
+
     case 'l2norm_images'
         
         % Vector L2 norm / sqrt(length) of vector
@@ -273,9 +290,8 @@ switch meth
         fmridat.dat = tanh(zscore(fmridat.dat'))';
         
     case 'percentchange'
-        % scale each voxel (column) to percent signal change
-        % with a mean of 100
-        % based on smoothed mean values across space (cols)
+        % scale each voxel (column) to percent signal change with a mean of 100
+        % based on smoothed mean values across space (cols), using iimg_smooth_3d
         
         m = mean(fmridat.dat')'; % mean at each voxel, voxels x 1
         

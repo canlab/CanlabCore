@@ -276,7 +276,7 @@ end
 m = mean(X);
 wh_int = intercept(X, 'which');
 m(wh_int) = [];
-non_centered = any(abs(m)) > 100 * eps;
+non_centered = abs(m) > 100 * eps;
 
 % For effects-coded values [-1 1], ok, we want the intercept to reflect stats at average of 2 groups
 iseffectcode = all(abs(X) == 1); % for each column

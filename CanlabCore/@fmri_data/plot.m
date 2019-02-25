@@ -62,7 +62,7 @@ end
 switch plotmethod
     %  ==============================================================
     case 'data'
-        %  ==============================================================
+    %  ==============================================================
         
         if isempty(fmridat.dat)
             warning('No data in .dat field.');
@@ -70,16 +70,27 @@ switch plotmethod
         end
         
         create_figure('fmri data matrix', 2, 3);
-        imagesc(fmridat.dat');
+        
+        % center voxels - 9/9/18 Tor
+        [nv, nimg] = size(fmridat.dat);
+        mm = nanmean(fmridat.dat, 2);
+        dat_vox_centered = fmridat.dat - repmat(mm, 1, nimg);
+        imagesc(dat_vox_centered');
         colorbar;
         
         axis tight; set(gca, 'YDir', 'Reverse')
         title('fmri data .dat Data matrix');
         xlabel('Voxels'); ylabel('Images');
         drawnow;
+      
+        % with centered vox
+%                 tmp = nanmean(fmridat.dat(:));
+%         stmp = nanstd(fmridat.dat(:));
+%         
         
-        tmp = nanmean(fmridat.dat(:));
-        stmp = nanstd(fmridat.dat(:));
+        tmp = nanmean(dat_vox_centered(:));
+        stmp = nanstd(dat_vox_centered(:));
+        
         % if std == 0, won't work...
         if stmp < 1000*eps, stmp = 1000*eps; end
         myrange = [tmp - 3*stmp tmp + 3*stmp];

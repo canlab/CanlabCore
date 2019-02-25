@@ -187,9 +187,10 @@ switch keyword
         obj_out.history{end+1} = 'Image-wise concatenation operation by image_math';
         obj_out.image_names = char(obj1.image_names, obj2.image_names);
         obj_out.fullpath = char(obj1.fullpath, obj2.fullpath);
-        obj_out.Y = [y1; -y2];
-        obj_out.Y_descrip = 'Effects codes for image set A (1) and B (-1) added by image_math';
-        
+        if isfield(obj_out, 'Y')
+            obj_out.Y = [y1; -y2];
+            obj_out.Y_descrip = 'Effects codes for image set A (1) and B (-1) added by image_math';
+        end
     case 'power'
         obj_out = obj1;
         obj_out.dat = obj_out.dat .^ my_exponent;

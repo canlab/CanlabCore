@@ -125,8 +125,12 @@ else
     error('Could not retrieve repository info.');
 end
 
-queryoutput = jsondecode(queryoutput);
-
+try
+    queryoutput = jsondecode(queryoutput);
+catch
+    disp('curl did not find repo in Github - missing or private?');
+    return
+end
 
 if isfield(queryoutput, 'clone_url') % only for public repos, without authenticating
     

@@ -116,6 +116,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %
 %   **cosine_similarity**
 %        Use cosine similarity instead of Pearson's r
+%        Pearson's r is the default similarity metric.
 %
 %   **colors**
 %             followed by cell array of colors, one for each image/image
@@ -355,7 +356,7 @@ end
 % Load image set: Most of the hard work
 % ------------------------------------------------------------------------
 
-[mask, networknames, imagenames] = load_image_set(mapset);
+[mask, networknames, imagenames] = load_image_set(mapset); % Patterns/regions to apply.
 
 % Re-load names if entered.
 % ------------------------------------------------------------------------
@@ -376,7 +377,6 @@ end
 mask = replace_empty(mask); % add zeros back in
 
 mask = resample_space(mask, obj);
-
 
 obj = remove_empty(obj);
 nonemptydat = ~obj.removed_voxels; % remove these
@@ -411,7 +411,29 @@ r = zeros(n_obs2, n_obs);
 switch sim_metric
     case 'corr'
         % Correlation
-        r = corr(double(obj.dat), double(mask.dat))';
+        % Note: There have been some problems with different versions of
+        % Matlab having different behaviors for corr.m when they are
+        % matrices. The call to corr.m below is replaced with a custom correlation
+        % function.
+        % r = corr(double(obj.dat), double(mask.dat))';
+        
+        % vector to matrix correlation formula - anonymous function.
+        % a is an N x 1 vector, b is an N x k matrix
+        % corr_matrix = @(a, b) ((a-mean(a))' * (b-mean(b)) ./ (length(a) - 1))' ./ (std(a)*std(b)');
+
+        % In practice, the function above would work, but canlab_pattern_similarity
+        % excludes missing values (0 or NaN) in data images, which are
+        % assumed to be missing. This is a special case for image data, as
+        % 0 is assumed to be a missing value.
+        % See help canlab_pattern_similarity for more detail.
+        
+        for im = 1:n_obs2
+            
+            % r(im, :) = corr_matrix(double(mask.dat(:,im)), double(obj.dat));
+            
+            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');
+            
+        end
         
     case 'cosine'
         % Cosine similarity
@@ -422,13 +444,13 @@ switch sim_metric
             %
             %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
             %
-            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'cosine_similarity');
+            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity');
         end
         
     case 'overlap'
         % binary overlap
         for im = 1:n_obs2
-            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:,im), 'binary_overlap');
+            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
         end
         
 end

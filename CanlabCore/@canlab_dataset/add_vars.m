@@ -193,6 +193,9 @@ switch wh_level
             error('Num observations in %s.data field does not match input dat_to_add.', wh_level)
         end
         
+        [nobs_to_add, n_vars_to_add] = size(dat_to_add);  % n_vars is either variables (non-cell mode) or 1 (cell mode)
+            
+        
     case 'Event_Level'
         
         if ischar(subject_id) % this should really be char according to format, but accept numbers here too for convenience
@@ -436,18 +439,22 @@ end % variable to add
 
 %  Add final dataset mydata back to data structure
 
-if data_is_cell
-    
-    CLDAT.(wh_level).data = mydata;
-    
-elseif data_is_matrix
-    
-    CLDAT.(wh_level).data{wh_subj} = mydata;
-    
-elseif data_is_text
-    
-    CLDAT.(wh_level).textdata{wh_subj} = mydata;
-    
+
+if strcmp(wh_level, 'Event_Level') % subj level vars are already added above
+
+    if data_is_cell
+
+        CLDAT.(wh_level).data = mydata;
+
+    elseif data_is_matrix
+
+        CLDAT.(wh_level).data{wh_subj} = mydata;
+
+    elseif data_is_text
+
+        CLDAT.(wh_level).textdata{wh_subj} = mydata;
+
+    end
 end
 
 end % function

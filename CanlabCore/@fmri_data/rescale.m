@@ -23,6 +23,9 @@ function fmridat = rescale(fmridat, meth, varargin)
 %
 %     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)        
 %     - divide_by_csf_l2norm  divide each image by CSF l2 norm. requires MNI space images for ok results!
+%     - rankimages          rank voxels within image;
+%     - csf_mean_var        Subtract mean CSF signal from image and divide by CSF variance. (Useful for PE 
+%                               maps where CSF mean and var should be 0).
 %
 %     Other procedures
 %     - windsorizevoxels
@@ -60,6 +63,16 @@ switch meth
             end
             
         end
+        
+    case 'rankimages'
+        dat = zeros(size(fmridat.dat));
+        parfor i = 1:size(fmridat.dat,2)
+            d = fmridat.dat(:,i);
+            if ~all(d == 0)
+                dat(:,i) = rankdata(d);
+            end 
+        end 
+        fmridat.dat = dat;
         
     case 'centerimages'
         
@@ -279,6 +292,21 @@ switch meth
         % correl with y
         % provides implicit feature selection when using algorithms that
         % are scale-dependent (e.g., SVM, PCA)
+        
+    case 'csf_mean_var'
+        
+        [~,~,tissues] = extract_gray_white_csf(fmridat);
+        csfStd = nanstd(tissues{3}.dat);
+        csfMean = nanmean(tissues{3}.dat);
+
+        fmridat = fmridat.remove_empty;
+        dat = fmridat.dat;
+
+        dat = bsxfun(@minus,dat,csfMean);
+        dat = bsxfun(@rdivide,dat,csfStd);
+
+       	fmridat.dat = dat;
+        fmridat = fmridat.replace_empty;
         
     otherwise
         error('Unknown scaling method.')

@@ -460,7 +460,11 @@ xlabel('Condition'), ylabel('Outcome value')
 title(mytitle, 'FontSize', 24);
 
 if ~isempty(names)
-    set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+    if verLessThan('matlab','8.4')
+        set(gca, 'XTickLabel', names); 
+    else
+        set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+    end
 end
 
 if doind
@@ -566,7 +570,12 @@ if doind
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
 
 %                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                if verLessThan('matlab','8.4')
+                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                else
+                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                end
+                
                                 
             end
             

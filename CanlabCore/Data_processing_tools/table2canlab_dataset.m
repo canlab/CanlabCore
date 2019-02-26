@@ -1,9 +1,41 @@
-function DAT = table2canlab_dataset(StudyTable)
 % Create a canlab_dataset object from a Matlab Table object
 %
 % The canlab_dataset object provides a standard data format, and allows the use of more methods,
 % such as writing the data object to text for backup/export to other
 % software, plotting, analysis tools, and more.
+%
+% Input ::
+%
+%   StudyTable          - n x d table object of text and numeric data to 
+%                           store in dataset object.
+%
+%   'labels'            - (optional arg) followed by a n x 1 vector of 
+%                           subject labels. If provided DAT.Event_Level 
+%                           will be populated with data from StudyTable as 
+%                           well, with one cell per subject.
+%
+% Output ::
+% 
+%   DAT                 - canlab_dataset object
+%
+function DAT = table2canlab_dataset(StudyTable, varargin)
+
+labels = [];
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'labels'
+                if length(varargin{i+1}) ~= size(StudyTable,1);
+                    error('''labels'' length does not match StudyTable rows.');
+                else
+                    labels = varargin{i+1};
+                end
+            otherwise
+                warning('Did not understand argument %s. Ignoring.',varargin{i});
+        end
+    end
+end
 
 % Create canlab_dataset object
 % -------------------------------------------------------------------------
@@ -65,6 +97,26 @@ nobs = size(DAT.Subj_Level.data, 1);
 
 for i = 1:nobs
     DAT.Subj_Level.id{i} = sprintf('Obs%3.0f', i);
+end
+
+%% populate Event_Level property
+if ~isempty(labels)
+    DAT.Event_Level.names = DAT.Subj_Level.names;
+    DAT.Event_Level.descrip = 'Imported from table.';
+    DAT.Event_Level.units = repmat({'Imported from table.'},1,length(DAT.Event_Level.names));
+    DAT.Event_Level.type = cell(1,length(numeric));
+    DAT.Event_Level.type(logical(numeric)) = repmat({class(DAT.Subj_Level.data)},1,sum(numeric));
+    DAT.Event_Level.type(logical(character)) = repmat({'char'},1,sum(character));
+    uniq_lbls = unique(labels);
+    n = length(uniq_lbls);
+    for i = 1:n
+        this_lbl = uniq_lbls(i);
+        lbl_idx = find(labels == this_lbl); 
+        DAT.Event_Level.data{end+1} = DAT.Subj_Level.data(lbl_idx,:);
+        if ~isempty(DAT.Subj_Level.textdata)
+            DAT.Event_Level.textdata{end+1} = DAT.Subj_Level.textdata(lbl_idx,:);
+        end
+    end
 end
     
 end % function

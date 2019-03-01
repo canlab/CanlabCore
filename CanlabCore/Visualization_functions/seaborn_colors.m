@@ -52,7 +52,10 @@ if length(varargin) > 0
     end
 end
 
-wh = round(linspace(1, 24, n));
+% choose from middle if low n, so we don't duplicate colors
+wh = round(linspace(1, 24 * (1 + 1/24 - 1/n), n));
+
+%wh = round(linspace(1, 24, n));
 
 rgb = rgb(wh, :);
 

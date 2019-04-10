@@ -120,7 +120,17 @@ end
 
 if isa(dat, 'statistic_image')
     
-    for myfields = {'p' 'ste' 'sig' 'N'}
+    % 'N' field can be a scalar, indicating number of observations
+    % (images), or can be a obs by vox matrix, indicating number of
+    % observations at each each voxel. Only do the "remove empty" operation
+    % if 'N' is a matrix; don't do it if N is a scalar.
+    if isscalar(dat.N)
+        myfield = {'p' 'ste' 'sig'};
+    else
+        myfield = {'p' 'ste' 'sig' 'N'};
+    end
+    
+    for myfields = myfield
         
         % check orientation
         if isrow(dat.(myfields{1})), dat.(myfields{1}) = dat.(myfields{1})'; end

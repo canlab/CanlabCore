@@ -60,7 +60,14 @@ if dovoxels && any(obj.removed_voxels)
         if ~isempty(obj.p), obj.p = oneinsert(obj.removed_voxels, obj.p); end  % Wani added this line, Aug 2012 - because the threshold.m function recognizes zeros for p values as significant voxels. 
         if ~isempty(obj.ste), obj.ste = zeroinsert(obj.removed_voxels, obj.ste); end
         if ~isempty(obj.sig), obj.sig = zeroinsert(obj.removed_voxels, obj.sig); end
-        if ~isempty(obj.N), obj.N = zeroinsert(obj.removed_voxels, obj.N); end
+        
+        % 'N' field can be a scalar, indicating number of observations
+        % (images), or can be a obs by vox matrix, indicating number of
+        % observations at each each voxel. Only do the "remove empty" operation
+        % if 'N' is a matrix; don't do it if N is a scalar.
+        if ~isscalar(obj.N)
+            if ~isempty(obj.N), obj.N = zeroinsert(obj.removed_voxels, obj.N); end
+        end
     end
     
     if isa(obj, 'atlas')

@@ -65,7 +65,9 @@ for i = 1:length(varargin)
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
                 
-            otherwise , warning(['Unknown input string option:' varargin{i}]);
+            otherwise
+                warning(['Unknown input string option:' varargin{i} '. Assuming it might be an atlas label. Place atlas labels in a cell array']);
+                strings_to_find{1} = varargin{i};
         end
     end
 end

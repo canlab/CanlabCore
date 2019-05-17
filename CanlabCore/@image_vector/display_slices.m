@@ -58,7 +58,7 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             % reserved keywords
-            case {'axial', 'saggital', 'coronal'}, myview = varargin{i};
+            case {'axial', 'saggital', 'sagittal', 'coronal'}, myview = varargin{i};
             case 'spacing', spacing = varargin{i + 1};
             case 'vertical', stackorient = 1;
             case 'slices_per_row', s = varargin{i + 1};
@@ -116,7 +116,7 @@ end
 switch myview
     case 'axial'
         wh_col = 3;
-    case 'saggital'
+    case {'saggital', 'sagittal'}
         wh_col = 1;
     case 'coronal'
         wh_col = 2;
@@ -171,7 +171,7 @@ if dotight
         subvol = abs(vdat(:, :, whsl));
         sumabsval = sum(sum(subvol, 1), 2);
         
-    case 'saggital'
+    case {'saggital', 'sagittal'}
         subvol = abs(vdat(whsl, :, :));
         sumabsval = sum(sum(subvol, 2), 3);
         
@@ -215,7 +215,7 @@ for j = 1:nrows
             case 'axial'
                 stacked{i} = vdat(:, :, i);
                 stacked{i} = rot90(stacked{i});
-            case 'saggital'
+            case {'saggital', 'sagittal'}
                 stacked{i} = squeeze(vdat(i, :, :));
                 stacked{i} = rot90(stacked{i});
             case 'coronal'
@@ -286,7 +286,7 @@ function vdat = eliminate_empty_areas(vdat, myview)
     nullvox = vdat == 0 | isnan(vdat);
     bottom = all(nullvox, 3);
     
-    if strcmp(myview, 'saggital')
+    if strcmp(myview, 'saggital') | strcmp(myview, 'sagittal')
         % skip
     else
         nullx = squeeze(all(bottom, 2));

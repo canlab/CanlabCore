@@ -1,7 +1,7 @@
 CanlabCore
 ==========
 
-This repository contains core tools for MRI/fMRI/PET analysis from the Cognitive and Affective Neuorscience Lab (Tor Wager, PI) and our collaborators.  Many of these functions are needed to run other toolboxes, e.g., the CAN lab’s multilevel mediation and Martin Lindquist’s hemodynamic response estimation toolboxes. A brief introduction to the toolbox can be found <a href = "http://canlab.github.io/CanlabCore">here</a>. 
+This repository contains core tools for MRI/fMRI/PET analysis from the Cognitive and Affective Neuorscience Lab (Tor Wager, PI) and our collaborators.  Many of these functions are needed to run other toolboxes, e.g., the CAN lab’s multilevel mediation and Martin Lindquist’s hemodynamic response estimation toolboxes. A brief introduction to the toolbox can be found <a href = "http://canlab.github.io">here</a>. 
 
 The tools include object-oriented tools for doing neuroimaging analysis with simple commands and scripts that provide high-level functionality for neuroimaging analysis.  For example, there is an "fmri_data" object type that contains neuroimaging datasets (both PET and fMRI data are ok, despite the name). If you have created and object called my_fmri_data_obj, then plot(my_fmri_data_obj) will generate a series of plots specific to neuroimaging data, including an interactive brain viewer (courtesy of SPM software).  predict(my_fmri_data_obj) will perform cross-validated multivariate prediction of outcomes based on brain data.  ica(my_fmri_data_obj) will perform independent components analysis on the data, and so forth.
 

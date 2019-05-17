@@ -327,7 +327,9 @@ for i = 1:ny
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
     
     % Convert to 95% CI, if requested
-    if do95CI, Std_Error(i) = Std_Error(i) * 1.96; end
+    if do95CI
+        Std_Error(i) = Std_Error(i) * tinv(.975, nn-1); 
+    end
     
     y(:, i) = naninsert(wasnan, newy);
     
@@ -379,6 +381,7 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
+if do95CI, statstable.Properties.VariableNames{3} = 'half_CI_95perc'; end
 if doprinttable
     disp(statstable)
 end
@@ -460,7 +463,11 @@ xlabel('Condition'), ylabel('Outcome value')
 title(mytitle, 'FontSize', 24);
 
 if ~isempty(names)
-    set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+    if verLessThan('matlab','8.4')
+        set(gca, 'XTickLabel', names); 
+    else % not sure if this works with 8.4, but doesn't work with 8.3. Update conditional if needed
+        set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+    end
 end
 
 if doind
@@ -566,7 +573,12 @@ if doind
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
 
 %                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                if verLessThan('matlab','8.4')
+                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
+                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                end
+                
                                 
             end
             

@@ -403,7 +403,7 @@ switch labelstyle
             hold on;
             for ii=1:m
                 handles(i).texth(ii)=text(XY(1,ii),XY(2,ii),text_labels{i}(ii),'rotation',theta(ii),...
-                    'horizontalalignment','center','verticalalignment','bottom');
+                    'horizontalalignment','center','verticalalignment','bottom', 'FontSize', mytextsize);
             end
         
         end

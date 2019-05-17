@@ -25,12 +25,17 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **cosine_similarity**
 %       Use cosine similarity metric for pattern expression instead of dot product
 %
-%   **correlation**
+%   **correlation, corr**
 %       Use correlation metric for pattern expression instead of dot product
 %
 %   **binary_overlap**
 %       Use percent overlap of binary masks instead of dot product. needs
 %       binary masks and pattern weights.
+%
+%   **posterior_overlap**
+%       Using percent overlap of binary masks, this option calculates the
+%       posterior probability of observing non-zero pattern weights (binary) 
+%       given binary masks
 %
 %   **ignore_missing**
 %       Suppress printing of warnings when thre are missing values
@@ -62,21 +67,27 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % ..
 %    Notes:
+% 
+% Dealing with missing data and partial coverage
+% ---------------------------------------------------
 % Pattern pattern_weights can have zeros, which may be valid values in voxels,
 % i.e., with binary masks
 % Data images with values of zero or NaN are considered out-of-mask, as they
-% are not valid values. These should be excluded from both image and
+% are not valid values. That is, 0 is often treated as a missing data value in images,
+% with the exception of "signatures" and binary pattern masks.
+% Thus, this function treats values of 0 in DATA images, not pattern masks,
+% as missing values, and excludes these voxels from both image and
 % mask when calculating similarity.
 % Thus, there is an asymmetry between pattern mask and image data
 % in considering which voxels to use.
-% Otherwise, all dot product and similarity metrics are standard.
+% Otherwise, all dot product, correlation, and other similarity metrics are standard.
 %
 % When comparing two sets of binary images (e.g. k-means clusters) and the
 % cluster of the input solution does not overlap with any of the target
 % patterns/clusters, cosine similarity is attempting division by 0. Instead
 % of returning NaN, we set those cosine values to 0.
 %
-% Dealing with missing data and partial coverage
+% Effects of zeros/missing values on similarity metrics
 % ---------------------------------------------------
 % Dot product is affected by voxel size, coverage in image and mask, scale
 % in general.
@@ -127,7 +138,7 @@ if any(strcmp(varargin, 'cosine_similarity')) % run cosine instead of dot-produc
     sim_metric = 'cosine';
 end
 
-if any(strcmp(varargin, 'correlation')) % run correlation instead of dot-product
+if any(strcmp(varargin, 'correlation')) || any(strcmp(varargin, 'corr')) % run correlation instead of dot-product
     sim_metric = 'corr';
 end
 
@@ -139,6 +150,9 @@ if any(strcmp(varargin, 'dotproduct')) % default. overwrites previous selections
     sim_metric = 'dotproduct';
 end
 
+if any(strcmp(varargin, 'posterior_overlap')) % run overlap instead of dot-product
+    sim_metric = 'posterior_overlap';
+end
 
 % if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
 
@@ -189,6 +203,10 @@ else
             case 'overlap'
                 
                 similarity_output(:, i) = overlap_similarity(dat, pattern_weights(:, i));
+                
+            case 'posterior_overlap'
+                
+                similarity_output(:, i) = posterior_overlap_similarity(dat, pattern_weights(:, i));
                 
             otherwise
                 error('Invalid similarity metric.');
@@ -327,6 +345,31 @@ for i = 1:size(dat, 2)
     nVox = sum(inmask);
     
     r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1) / nVox; % overlap excluding NaNs
+    
+end
+
+end % function
+
+
+function r = posterior_overlap_similarity(dat, pattern_weights)
+
+% check for binary data
+if numel(unique(dat(:)))>2 || sum(unique(dat(:))-[0; 1])~=0 ...
+        || numel(unique(pattern_weights(:)))>2 || sum(unique(pattern_weights(:))-[0; 1])~=0
+    if numel(unique(round(pattern_weights))) == 2
+        pattern_weights = round(pattern_weights); % an easy (but maybe not optimal) solution for the resampled binary mask
+    else
+        error('Binary overlap similarity needs binary data [0 1] input.');
+    end
+end
+
+% compute posterior overlap
+for i = 1:size(dat, 2)
+    
+    % calculate the space
+    inmask = sum(dat,2)~=0;
+    % calculate P(pattern | data) using overlaps
+    r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(dat(inmask,i)==1); 
     
 end
 

@@ -1,4 +1,4 @@
-function m = mean(obj, varargin)
+function [m, varargout] = mean(obj, varargin)
 % Mean across a set of images. Returns a new image_vector object.
 % Creates an image_vector object with mean values for each voxel (cols)
 % across images (rows) of an image_vector (e.g., fmri_data) object.
@@ -6,7 +6,7 @@ function m = mean(obj, varargin)
 % :Usage:
 % ::
 %
-%    function m = mean(obj, [optional args])
+%    function [m, imagemeans, voxelmeans]  = mean(obj, [optional args])
 %
 % m is an image_vector object whose data contains the mean values.
 %
@@ -95,5 +95,19 @@ if ~isempty(fname)
     write(m);
 end
 
+% Optional outputs:
+% Row means, Column means, double-centered object
+
+if nargout > 1
+    
+    imagemeans = mean(obj.dat);
+    varargout{1} = imagemeans;
+    
+end
+
+if nargout > 2
+    voxelmeans = nanmean(obj.dat, 2);
+    varargout{2} = voxelmeans;
+end
 
 end % function

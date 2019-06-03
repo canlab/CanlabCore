@@ -29,6 +29,7 @@ function vardecomp = glmfit_multilevel_varexplained(X, Y, b, varargin)
 %
 %   **b:**
 %        is a column vector of beta weights for fixed effects (i.e., returned by glmfit_multilevel: stats.beta')
+%        MUST be [intercept followed by beta weights]
 %
 %   **X:**
 %        is a cell vector containing the design matrix for each subject, each subject in a cell. 
@@ -106,6 +107,10 @@ Xcat = [ones(nobs, 1) Xcat];
 
 % Compute the model fit with betas obtained from glmfit_multilevel
 modelfit = Xcat * b;
+
+% ***SHOULD PROBABLY MEAN-CENTER PREDICTED VALUES, BECAUSE WE MEAN-CENTERED
+% Y***
+% E.G., modelfit = cellfun(@(x) scale(x, 1), Y, 'UniformOutput', false);
 
  
 %% -------------------------------------------------------------------------

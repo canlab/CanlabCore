@@ -19,6 +19,7 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |   cell array of subject directories (absolute paths)				 |
 |   EX: DSGN.subjects = filenames('../ilcp[0-9]*','absolute');			 |
 |   EX: DSGN.subjects = importdata('good_subs.txt');				 |
+| Note: Trailing '/' will break spm implementation.				 |
 |________________________________________________________________________________|
 
  ________________________________________________________________________________
@@ -161,7 +162,8 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
  ________________________________________________________________________________
 | DSGN.multireg  (DEFAULT: no multiple regressors file)				 |
 |   give the name of an SPM-style "multiple regressors" MAT-file containing	 |
-|     a single TRs x regressors matrix names "R"				 |
+|     a single TRs x regressors matrix names "R" (matrix must be named R or spm  |
+|     implementation will break)						 |
 |   ('.mat' will be appended to the file name)					 |
 |   location of MAT-file: DSGN.modelingfilesdir (see above)			 |
 |   EX: DSGN.multireg = 'noise_model1';	       	    				 |

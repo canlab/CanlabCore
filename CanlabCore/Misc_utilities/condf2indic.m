@@ -41,18 +41,6 @@ function [indic, xlevels] = condf2indic(X, varargin)
 %    Aug 2018: fixed some inconsistencies in 'integers' option.
 % ..
 
-% Programmers' notes:  test set
-% 
-% [indic, xlevels] = condf2indic([0 1 2 0 0 2 2], 'integers')
-% [indic, xlevels] = condf2indic([0 1 2 0 0 2 2])
-% [indic, xlevels] = condf2indic([3 1 2 3 3 2 2])
-% [indic, xlevels] = condf2indic([3 1 2 3 3 2 2], 'integers')
-% [indic, xlevels] = condf2indic([0 1 4 0 0 4 4], 'integers')
-% [indic, xlevels] = condf2indic([0 1 4 0 0 4 4])
-% [indic, xlevels] = condf2indic([0 -1 4 0 0 4 4])
-% [indic, xlevels] = condf2indic([0 -1 4 0 0 4 4], 'integers') % returns
-% warning
-
 % PRELIM CALCULATIONS
 
 X = double(X); % for objects/special types
@@ -61,7 +49,6 @@ X = double(X); % for objects/special types
 
 max_integers = length(xlevels);
 
-indic = [];
 
 % INPUTS
 
@@ -83,10 +70,6 @@ if any(strcmp(varargin, 'integers'))
         
     end
     
-    if max_integers == 0
-        return
-    end
-    
 end
 
 % INITIALIZE - cols equal to num unique entries, or all integers
@@ -97,26 +80,36 @@ if dointegers
     
     % Check integers
     u = unique(X);
-    if ~all(u == round(u)) || any(u < 0)
+    if ~all(u == round(u))
         warning('Some condition function values are not integers.');
     end
     
     % Remove zero-valued integer
     wh = find(xlevels == 0);
-    xlevels(wh) = [];
-    indic(:, wh) = [];
     if ~isempty(wh)
-        indx(wh) = 0; 
-        indx(indx >= wh) = indx(indx >= wh) - 1; % if there was a zero, then subtract 1 from each indx value for conditions greater than the one dropped
+        xlevels(wh) = [];
+        indic(:, wh) = [];
+        badIndx = indx(find(indx == wh, 1, 'first'));
+        indx(indx == wh) = 0;
+        indx(indx > badIndx) = indx(indx > badIndx) - 1;
     end
-    %if ~isempty(wh), indx = indx - 1; end  % if there was a zero, then assume 0 is first indx value 
     
     for i = 1:length(xlevels)
         indic(indx == i, xlevels(i)) = 1;
     end
     
     xlevels = (1:max_integers)';
-
+% 
+%     % if codes are 1...n, xlevels is index values...but if there are
+%     % missing integers, need to insert into indic
+%     
+%     is_missing = true(max(X), 1);
+%     is_missing(xlevels) = false;
+%     
+%     % Insert NaNs for any missing index values.
+%     
+%     indic = naninsert(is_missing, indic')';
+    
 else
     % no integers, do not preserve empty columns
     

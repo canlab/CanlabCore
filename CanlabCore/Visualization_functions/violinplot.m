@@ -669,15 +669,16 @@ function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
 
 % Enforce cell, no NaNs
 % ------------------------------------------------
-Y = enforce_cell_array(Y);
-
-xvalues = get_violin_points(x, Y);
 
 manual_pointsize = false;
 if isempty(find(strcmp(varargin{1},'pointsize')))==0
     pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
     manual_pointsize = true;
 end
+
+Y = enforce_cell_array(Y);
+
+xvalues = get_violin_points(x, Y);
 
 linehandles = [];
 
@@ -687,7 +688,8 @@ for i = 1:size(Y, 2)
     mylinecolor = fc(i, :); % line color for this plot
     
     myY = Y{i};     % data points
-    if ~manual_pointsize 
+    
+    if ~manual_pointsize
         % set point size
         pointsize = 1000 ./ length(myY);
         pointsize(pointsize < 1) = 1;

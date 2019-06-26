@@ -11,7 +11,7 @@ function orthviews_multiple_objs(imgs)
 
     n=length(imgs);
 
-    overlay = which('SPM8_colin27T1_seg.img');
+    overlay = which('keuken_2014_enhanced_for_underlay.img');
 
     spm_check_registration(repmat(overlay, n, 1));
 

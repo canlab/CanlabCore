@@ -49,6 +49,11 @@ X = double(X); % for objects/special types
 
 max_integers = length(xlevels);
 
+% if X contains only zero values, return
+if ~any(X)
+    indic=[]; 
+    return;
+end
 
 % INPUTS
 

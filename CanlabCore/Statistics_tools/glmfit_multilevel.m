@@ -4,6 +4,33 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %
 %     stats = glmfit_multilevel(Y, X1, X2, varargin)
 %
+% Mixed-effects models differ in their assumptions and implementation
+% details. glmfit_multilevel fits regressions for individual 2nd-level
+% units (e.g., participants), and then uses a precision-weighted least
+% squares approach to model group effects, treating 1st-level units as a
+% random effect. This is appropriate when 2st-level units are participants
+% and 1st-level units are observations (e.g., trials) within participants. 
+% glmfit_multilevel was designed with this use case in mind.
+% 
+% In addition, glmfit_multilevel:
+% - Requires enough 1st-level units to fit a separate model for each
+% 2nd-level unit (participant). If this is not the case, other models
+% (igls.m, LMER, etc.) are preferred.
+%
+% - glmfit_multilevel  is conservative in the sense that the degrees of 
+% freedom in the group statistical test is always based on the number of 
+% subjects - 2nd-level parameters. 
+% The df is never higher than the sample size, which you would have with 
+% mixed effects models that estimate the df from the data. This causes
+% problems in many other packages, particularly when there are many 1st-level
+% observations and they are uncorrelated, resulting in large and undesirable 
+% estimated df. 
+%
+% - The correlations across 1st-level observations are not measured, and 
+% 1st-level obs are assumed to be IID. This is valid when generalizing across 
+% 2nd-level units, but may not be fully efficient (powerful) if 1st-level 
+% units are correlated.
+%
 % :Inputs:
 %
 %   **Y:**
@@ -92,10 +119,12 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %  - case 'nresample', nresample = varargin{i+1};
 %  - case {'pvals', 'whpvals_for_boot'}, whpvals_for_boot = varargin{i+1};
 %
-%
 % Sign perm defaults
 %  - case {'permsign'}, permsign = varargin{i+1};
 %
+
+
+
 %    Programmer's notes:
 %    9/2/09: Tor and Lauren: Edited to drop NaNs within-subject, and drop
 %    subject only if there are too few observations to estimate.

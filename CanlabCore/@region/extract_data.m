@@ -53,11 +53,28 @@ function [r, local_pattern_response] = extract_data(r, data_obj)
 %         local linear combinations of voxels in each region, computed
 %         using r(i).vals as weights.
 %
+% :Examples:
+%
+% ---------------------------------------------------------------
+% Apply local patterns (stored in .vals) to a test dataset
+% % Load test dataset
+% test_dat = load_image_set('pain');  % bmrk3 data
+%
+% % Load regions with local patterns stored in them
+% % Contains pain_regions_nps pain_regions_siips pain_regions_pdm1
+% load pain_pathways_region_obj_with_local_patterns % in Neuroimaging_Pattern_Masks
+% 
+% % Extract local region averages and pattern responses
+% [regions_with_testdata_averages, local_pattern_responses] = extract_data(pain_regions_nps, test_dat);
+% ---------------------------------------------------------------
+
 % ..
 %     Programmers' notes:
 %     8/3/2015 Tor Wager: Fixed bug in averaging when only 1 voxel in region
 %     5/15/2017 Tor Wager : Added replace_empty to avoid voxel list
 %     mismatch when empty vox were removed
+%     7/22/2019 Tor Wager: Now option to apply local patterns with weights
+%     stored in .vals
 % ..
 
 if isempty(r), return, end

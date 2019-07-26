@@ -77,7 +77,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10 individual PDM maps and a joint
 %                           PDM, which is a weighted combination of the 10. From Geuter et al. (in prep)
 %           
-% 
+%        'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat (non-painful and painful).
+%                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
+%                  on figshare (see canlab.github.io/walkthroughs)
+%                  
 %
 % :Optional inputs:
 %
@@ -244,6 +247,9 @@ else
         case {'pdm','pain_pdm'}
              [image_obj, networknames, imagenames] = load_pain_pdm;
 
+        case {'bmrk3', 'pain'}
+            [image_obj, networknames, imagenames] = load_bmrk3;
+            
         otherwise
             error('Unknown mapset keyword.');
             
@@ -817,3 +823,36 @@ networknames = imagenames';
 networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'UniformOutput', false);
 
 end % function
+
+
+function [image_obj, networknames, imagenames] = load_bmrk3
+
+% This code loads a dataset object saved in a mat file, and attempts to
+% download it if it cannot be found.
+
+fmri_data_file = which('bmrk3_6levels_pain_dataset.mat');
+
+if isempty(fmri_data_file)
+
+    % attempt to download
+    disp('Did not find data locally...downloading data file from figshare.com')
+
+    fmri_data_file = websave('bmrk3_6levels_pain_dataset.mat', 'https://ndownloader.figshare.com/files/12708989');
+
+end
+
+sprintf('Loading: %s\n', fmri_data_file);
+
+load(fmri_data_file);
+
+for i = 1:size(image_obj.dat, 2)
+    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i));
+end
+
+imagenames = networknames';
+
+descriptives(image_obj);
+disp('Temperature data in image_obj.additional_info.temperatures');
+disp('Pain ratings in image_obj.Y');
+
+end

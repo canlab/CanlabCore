@@ -451,7 +451,7 @@ if ~isempty(OPTS.parallel_dream)
     [ignore ignore] = system(sprintf('grep ''^> '' %s | sed ''s|^> ||'' >> %s',fulldiaryname,diaryname)); %#ok
 else
     for s = 1:numel(DSGN.subjects)
-        save(fullfile(wd,sprintf('env_%04d',s)),'DSGN','OPTS','STARTINGDIR');
+        parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
         [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
     end
     
@@ -635,4 +635,8 @@ if ~isempty(i)
     wrapstr = wrapstr(1:k);
 end
 
+end
+
+function parsave(path,DSGN,OPTS,STARTINGDIR)
+    save(path,'DSGN','OPTS','STARTINGDIR');
 end

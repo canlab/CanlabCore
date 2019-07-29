@@ -6,6 +6,9 @@ function OUT = plot_correlation_matrix(X, varargin)
 %
 %     OUT = plot_correlation_matrix(X, [optional inputs])
 %
+% - Can do full or partial correlations, Spearman or Pearson's
+% - FDR correction across pairwise tests if desired.
+%
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
 %              methods.
@@ -43,9 +46,13 @@ function OUT = plot_correlation_matrix(X, varargin)
 %
 %   **[OTHERS]:**
 %       See code for other optional inputs controlling display
+%       Enter a keyword followed by a value (e.g., true / false)
 %       These include:
-%       dofigure, doimage, docircles, dotext, colorlimit, text_x_offset, text_y_offset,  
+%       dofigure, dospearman, doimage, docircles, dotext, colorlimit, text_x_offset, text_y_offset,  
 %       text_fsize, text_nonsig_color, text_sig_color
+%       'dopartitions', followed by k-length integer vector defining partitions of variables  [optional] 
+%       'partitioncolors', m-length cell vector defining rgb color triplets for each partition [optional] 
+%       'p_thr', followed by p-value threshold
 %
 % :Outputs:
 %
@@ -63,8 +70,15 @@ function OUT = plot_correlation_matrix(X, varargin)
 % % Also, e.g.:
 %   OUT = plot_correlation_matrix(X, 'var_names', var_names, 'colorlimit', [-.5 .5]);
 %
+% % For larger matrices, do not plot circles:
+% OUT = plot_correlation_matrix(X, 'doimage', true, 'docircles', false);
+%
+% % Can do full or partial correlations, Spearman or Pearson's
+% % FDR correction across pairwise tests if desired.
+% OUT = plot_correlation_matrix(X, 'doimage', true, 'docircles', false, 'dospearman', true, 'dopartial', true, 'dofdr', true);
+%
 % :References:
-%   CITATION(s) HERE
+%   None - basic stats functions.
 %
 % :See also:
 %   - list other functions related to this one, and alternatives*
@@ -86,6 +100,9 @@ function OUT = plot_correlation_matrix(X, varargin)
 % -------------------------------------------------------------------------
 
 p_thr = .05;
+dofdr = false;
+
+dopartial = false;
 dospearman = false;
 dofigure = true;
 doimage = false;
@@ -93,6 +110,10 @@ docircles = true;
 dotext = true;
 colorlimit = [-1 1]; % for correlations
 max_radius = [];     % set by default to range(colorlimit)/4 or 0.5 if empty
+
+partitions = [];
+partitioncolors = {};
+partitionlabels = {};
 
 % names
 var_names = [];
@@ -104,11 +125,13 @@ text_fsize = 16;
 text_nonsig_color = [.3 .3 .3];
 text_sig_color = [0 0 0];
 
+[n, k] = size(X);
+
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
 % -------------------------------------------------------------------------
 
-allowable_inputs = {'var_names' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color'};
+allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -130,18 +153,50 @@ if isempty(max_radius)
     
 end
 
-% X = [D.LongShort D.PA_exp_pre D.PA_exp_post D.PA_beh_pre D.PA_beh_post];
-% var_names = {'LongShort' 'PA_exp_pre' 'PA_exp_post' 'PA_beh_pre' 'PA_beh_post'};
+if ~isempty(partitions)
+    npartitions = length(unique(partitions));
+    
+    if isempty(partitioncolors)
+        partitioncolors = scn_standard_colors(npartitions + 2);
+        partitioncolors([1 3]) = [];  % remove red and blue (confusing)
+    end
+end
+
 
 % Correlation stats
 % --------------------------------------------------
 
-if dospearman
-    [r, p] = corr(X, 'Type', 'Spearman');
-else
-    [r, p] = corr(X);
+if k > 30 && docircles
+    disp('Warning: plotting correlations as circles will be slow with large number of variables');
 end
-k = size(r, 1);
+
+if dopartial
+    if dospearman
+        [r, p] = partialcorr(double(X), 'type', 'Spearman');
+    else
+        [r, p] = partialcorr(double(X));
+    end
+    
+elseif dospearman
+    % Full pairwise, Spearman
+    [r, p] = corr(double(X), 'Type', 'Spearman');
+else
+    % Full pairwise
+    [r, p] = corr(double(X));
+end
+
+if dofdr
+    % FDR-correct p-values across unique elements of the matrix
+    
+    trilp = tril(p, -1);
+    wh = logical(tril(ones(size(p)), -1)); % Select off-diagonal values (lower triangle)
+    trilp = double(trilp(wh));             % Vectorize and enforce double
+    trilp(trilp < 10*eps) = 10*eps;        % Avoid exactly zero values
+    p_thr = FDR(trilp, 0.05);
+    
+    if isempty(p_thr), p_thr = -Inf; end
+    
+end
 
 is_sig = p < p_thr;
 
@@ -182,6 +237,41 @@ r_ref_indx = linspace(-1, 1, size(cm, 1));
 if ~doimage
     delete(im_handle)
 end
+
+% Partition colors
+% --------------------------------------------------
+if ~isempty(partitions)
+    
+    u = unique(partitions);
+    if ~iscolumn(partitions), partitions = partitions'; end
+    
+    st = find(diff([0; partitions])) - 0.5;           % starting and ending values for each partition
+    en = find(diff([partitions; npartitions + 1])) + 0.5;
+    
+    for i = 1:npartitions
+        
+        h1 = drawbox(st(i), en(i) - st(i), st(i), en(i) - st(i), 'k');
+        set(h1, 'FaceColor', 'none', 'EdgeColor', 'k', 'lineWidth', 2);
+        
+        OUT.partition_handles(i) = h1;
+        
+        % partition color bars
+        h1 = drawbox(st(i), en(i) - st(i), -0.75, 0.5, 'k');
+        set(h1, 'EdgeColor', 'none', 'FaceColor', partitioncolors{i});
+        OUT.partition_handles_hbars(i) = h1;
+        
+        h1 = drawbox(-0.75, 0.5, st(i), en(i) - st(i), 'k');
+        set(h1, 'EdgeColor', 'none', 'FaceColor', partitioncolors{i});
+        OUT.partition_handles_vbars(i) = h1;
+        
+        if ~isempty(partitionlabels)
+            OUT.partition_handles_labels(i) = text(st(i), -0.55, partitionlabels{i}, 'FontSize', 14);
+        end
+        
+    end
+    
+end
+
 
 %% Draw circles
 % --------------------------------------------------

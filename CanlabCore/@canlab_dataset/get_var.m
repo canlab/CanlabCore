@@ -241,7 +241,7 @@ switch wh_level
 
         if do_conditional
             
-            d = conditionalData(D, conditionalCol, conditionalVal, wh,textflag);
+            d = conditionalData(D, conditionalCol, conditionalVal, wh, textflag, wh_keep);
             
         elseif ~iscell(D.Event_Level.data) || isempty(D.Event_Level.data)
             % no data
@@ -394,7 +394,7 @@ end
 
 end %get_varlevel function
 
-function arr2 = conditionalData(D, conditionalCol, conditionalVal, outCol, textflag)
+function arr2 = conditionalData(D, conditionalCol, conditionalVal, outCol, textflag, wh_keep)
 
 if textflag
     arr = D.Event_Level.textdata;
@@ -407,21 +407,37 @@ arr2 = cell(size(arr));
 if ~iscell(arr{1}) %numeric data
     if ~ischar(conditionalVal) %numeric conditional
         for i=1:length(arr) %iterate over subjects
-            arr2{i} = arr{i}(arr{i}(:,conditionalCol)==conditionalVal, outCol);
+            if wh_keep(i)
+                arr2{i} = arr{i}(arr{i}(:,conditionalCol)==conditionalVal, outCol);
+            else
+                arr2{i} = NaN;
+            end
         end
     else %text conditional
         for i=1:length(arr) %iterate over subjects
-            arr2{i} = arr{i}(strcmp(D.Event_Level.textdata{i}(:,conditionalCol),conditionalVal), outCol);
+            if wh_keep(i)
+                arr2{i} = arr{i}(strcmp(D.Event_Level.textdata{i}(:,conditionalCol),conditionalVal), outCol);
+            else
+                arr2{i} = NaN;
+            end
         end
     end
 else %text data
     if ~ischar(conditionalVal) %numeric conditional
         for i=1:length(arr) %iterate over subjects
-            arr2{i} = arr{i}(D.Event_Level.data{i}(:,conditionalCol)==conditionalVal, outCol);
+            if wh_keep(i)
+                arr2{i} = arr{i}(D.Event_Level.data{i}(:,conditionalCol)==conditionalVal, outCol);
+            else
+                arr2{i} = NaN;
+            end
         end
     else %text conditional
         for i=1:length(arr) %iterate over subjects
-            arr2{i} = arr{i}(strcmp(arr{i}(:,conditionalCol),conditionalVal), outCol);
+            if wh_keep(i)
+                arr2{i} = arr{i}(strcmp(arr{i}(:,conditionalCol),conditionalVal), outCol);
+            else
+                arr2{i} = NaN;
+            end
         end
     end
 end

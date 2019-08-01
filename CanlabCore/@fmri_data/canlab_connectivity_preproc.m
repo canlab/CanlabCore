@@ -1,4 +1,4 @@
-function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat, varargin)
+function [dat, roi_val, maskdat, beta] = canlab_connectivity_preproc(dat, varargin)
 
 % This function prepares data for connectivity analysis by removing nuisance
 % variables and temporal filtering (high, low, or bandpass filter). This also
@@ -166,6 +166,9 @@ do_preproc = true;
 do_windsorize = false;
 do_linear = false;
 do_plots = true;
+regressors = [];
+beta = [];
+do_additional_regress = false;
 
 z = '===============================================================';
 zz = '---------------------------------------------------------------';
@@ -208,6 +211,12 @@ for i = 1:length(varargin)
                 
             case {'no_plots'}
                 do_plots = false;
+                
+            case {'regressors'}
+                regressors = varargin{i+1};
+                do_additional_regress = true;
+                regressors(:,all(regressors==1)) = []; % remove an intercept if any
+                nreg = size(regressors,2);
         end
     end
 end
@@ -218,7 +227,12 @@ if do_preproc
     
     tic;
     fprintf('Canlab_connectivity_preproc: starting preprocessing ... \n');
-    comb_R = [dat.covariates additional_R];
+    comb_R = [regressors dat.covariates additional_R]; % if all these are empty, comb_R should still be empty
+    
+    if do_additional_regress
+        beta_dat = dat;
+        beta_dat.dat = [];
+    end
     
     dat.dat = double(dat.dat);  % enforce double to avoid data format problems
     dat.history{end+1} = 'Processed with canlab_connectivity_preproc';
@@ -288,6 +302,24 @@ if do_preproc
     
     % (optional) global signal % not implemented
     
+    if do_filter
+
+            fprintf('::: temporal filtering brain data... \n');
+            % conn_filter does mean-center by default.
+            % We need mean back in
+            
+            % Pass-filter brain data
+            % -------------------------------------------
+            dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
+                + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
+            
+            dat.history{end+1} = 'Done temporal filtering brain data';
+            
+            if do_plots
+                plot_qc(dat,2,1,[]); drawnow;
+            end
+    end
+    
     %% get residuals
     
     if ~isempty(comb_R)
@@ -302,57 +334,35 @@ if do_preproc
         
         if do_filter
             
-            fprintf('::: temporal filtering ... \n');
+            fprintf('::: temporal filtering covariates ... \n');
             % conn_filter does mean-center by default.
             % We need mean back in
             
-            % Pass-filter brain data
-            % -------------------------------------------
-            dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
-                + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
+            comb_R = filter_cov_wo_spikes(comb_R, TR, filter);
             
-            % Filter the covariates
-            % Eliminate bias from sequential filtering operations
-            % -------------------------------------------
-            % 1/15/2019: Tor and Marianne: Pass filter all covariates (even
-            % spikes), because filter transforms data in a way that matches
-            % what is done to spike regressors. So even if spike regressors
-            % "look funny", they adjust for the effects of "spikes" on the
-            % time series data appropriately, accounting for filtering.
-            
-            % pass-filter covs (without outlier indices)
-            %             outlier_idx = sum(comb_R==1)==1;
-            %             outliers = comb_R(:,outlier_idx);
-            %             comb_R(:,outlier_idx) = [];
-            
-            comb_R = conn_filter(TR, filter, comb_R, 'full') ...
-                + repmat(mean(comb_R), size(comb_R,1), 1);
-            
-            % add outlier indices back in
-            %             comb_R = [comb_R outliers];
-            
-            dat.history{end+1} = 'Done temporal filtering';
-            
-            if do_plots
-                plot_qc(dat,2,1,[]); drawnow;
-            end
+            dat.history{end+1} = 'Done temporal filtering covariates';
             
         end
         
-        % add intercept
-        X = [comb_R ones(nobs,1)];
+        if do_additional_regress
+            
+            % add intercept
+            X = [comb_R ones(nobs,1)];
+            
+            % regression
+            beta_dat.dat = pinv(X) * data.dat';
+            beta_dat.covariates = X;
+            X(:,1:nreg) = [];
+        end
         
-        % regression
-        
-        px = pinv(X);
-        pxy = px * dat.dat';
-        xpxy = X * pxy;
-        dat.dat = (dat.dat' - xpxy)';
+        % residualize
+        dat.dat = (dat.dat' - X * pinv(X) * dat.dat')';
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
         if do_plots
             clim = plot_qc(dat,3,1,[]); drawnow;
         end
+        
         
     else  % no regression
         
@@ -508,8 +518,6 @@ else
     roi_val = {};
 end
 
-preprocessed_dat = dat;
-
 end
 
 
@@ -573,7 +581,7 @@ function clim = plot_qc(dat, n, use7sd, clim)
 % use7sd: use -6sd~+6sd as a range
 % clim: specify color limit
 
-titles = {'RAW:before Conn preproc', 'Pass filter', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize'};
+titles = {'RAW:before Conn preproc', 'Pass filter', 'Residualize (Nuisance, VentWM, linear trend, if selected)', 'Windsorize'};
 
 subplot(2, 4, n);
 plot(mean(dat.dat)); 
@@ -601,5 +609,34 @@ set(gca, 'xlim', [0 size(dat.dat,2)]);
 xlabel('timeseries');
 ylabel('voxels');
 colorbar('southoutside');
+
+end
+
+function R = filter_cov_wo_spikes(R, TR, filter)
+
+% Filter the covariates
+% Eliminate bias from sequential filtering operations
+% -------------------------------------------
+% 1/15/2019: Tor and Marianne: Pass filter all covariates (even
+% spikes), because filter transforms data in a way that matches
+% what is done to spike regressors. So even if spike regressors
+% "look funny", they adjust for the effects of "spikes" on the
+% time series data appropriately, accounting for filtering.
+%
+% 8/1/2019: Wani reversed this to the previous version after
+% dicussion with Tor and others. Spikes should be removed
+% before "low-pass filtering" the nuisance covariates, and
+% added to the covariates later (see Ciric et al., 2018)
+
+% pass-filter covs (without outlier indices)
+outlier_idx = sum(R==1)==1;
+outliers = R(:,outlier_idx);
+R(:,outlier_idx) = [];
+
+R = conn_filter(TR, filter, R, 'full') ...
+    + repmat(mean(R), size(R,1), 1);
+
+% add outlier indices back in
+R = [R outliers];
 
 end

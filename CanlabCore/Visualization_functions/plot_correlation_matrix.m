@@ -37,6 +37,15 @@ function OUT = plot_correlation_matrix(X, varargin)
 %   **X:**
 %        n_observations x k_variables data matrix
 %
+%        Correlation matrix will be calculated, as per options specified
+%        UNLESS:
+%           X can be a structure compatible with output of ttest3d. 
+%           It must have the fields 'r', 'p', and 'sig', each with a k x k matrix
+%           r = correlation values
+%           p = p-values
+%           sig = signficance matrix (logical)
+%        In this case, plot_correlation_matrix will ignore all calculation-related inputs
+%
 % :Optional Inputs:
 %   **var_names:**
 %        Followed by cell array of variable names
@@ -45,6 +54,17 @@ function OUT = plot_correlation_matrix(X, varargin)
 %        Followed by P-value threshold for significant correlations
 %
 %   **[OTHERS]:**
+%
+%   'spearman', 'Spearman', 'rank', 'dorank'   dospearman = true; 
+%   'partial', 'Partial', 'partialcorr'        dopartial = true; 
+%   'image'                                    doimage = true; docircles = false; 
+%   'circles'                                  docircles = true; doimage = false;    
+%   'notext'                                   dotext = false;
+%   'fdr' 'FDR'                                dofdr = true; 
+%   'nocalc' 'input_rmatrix'                   docalc = false; 
+                
+% 'names', 'labels'   var_names = varargin{i+1}; varargin{i+1} = [];
+                
 %       See code for other optional inputs controlling display
 %       Enter a keyword followed by a value (e.g., true / false)
 %       These include:
@@ -53,6 +73,10 @@ function OUT = plot_correlation_matrix(X, varargin)
 %       'dopartitions', followed by k-length integer vector defining partitions of variables  [optional] 
 %       'partitioncolors', m-length cell vector defining rgb color triplets for each partition [optional] 
 %       'p_thr', followed by p-value threshold
+%
+%       The default behavior is to plot circles with text values, UNLESS
+%       your matrix is larger than 20 x 20, in which case it defaults to
+%       image format with no labels.
 %
 % :Outputs:
 %
@@ -86,7 +110,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 
 % ..
 %    Programmers' notes:
-%    List dates and changes here, and author of changes
+%    Tor Wager: Aug 2019: Note: some options harmonize output with output structure of ttest3d
 % ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
@@ -98,6 +122,8 @@ function OUT = plot_correlation_matrix(X, varargin)
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
+
+skip_calculation = false;  % not a valid input option. Used if structure with .r .sig .p entered instead of X
 
 p_thr = .05;
 dofdr = false;
@@ -116,7 +142,7 @@ partitioncolors = {};
 partitionlabels = {};
 
 % names
-var_names = [];
+var_names = {};
 
 % text options
 text_x_offset = .15;
@@ -127,13 +153,21 @@ text_sig_color = [0 0 0];
 
 [n, k] = size(X);
 
+% adjust defaults if needed (these will be overridden by inputs below)
+if k > 20
+    docircles = false;
+    doimage = true;
+    dotext = false;
+end
+
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
 % -------------------------------------------------------------------------
 
+% optional inputs with default values - each keyword entered will create a variable of the same name
+
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
-% optional inputs with default values
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -147,6 +181,51 @@ for i = 1:length(varargin)
     end
 end
 
+% Allow for mapping of additional keywords. This harmonizes allowable
+% inputs with other functions and makes entry of some options more
+% intuitive.
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+
+            case {'spearman', 'Spearman', 'rank', 'dorank'}, dospearman = true; 
+            case {'partial', 'Partial', 'partialcorr'},      dopartial = true; 
+            case {'image'},                                  doimage = true; docircles = false; 
+            case {'circles'},                                docircles = true; doimage = false;    
+            case {'notext'},                                 dotext = false;
+            case {'fdr' 'FDR'},                              dofdr = true; 
+            case {'nocalc' 'input_rmatrix'},                 docalc = false; 
+            case {'nofigure'},                               dofigure = false; hold on;
+                
+            case {'names', 'labels'}, var_names = varargin{i+1}; varargin{i+1} = [];
+                
+            case allowable_inputs   % do nothing
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
+
+% Process variables that depend on values optional inputs: 
+
+if isstruct(X)
+    % X can be a structure compatible with output of ttest3d. 
+    % It must have the fields 'r', 'p', and 'sig', each with a k x k matrix
+    % r = correlation values
+    % p = p-values
+    % sig = signficance matrix (logical)
+    
+    r = X.r;
+    p = X.p;
+    sig = X.sig;
+    k = size(r, 2);
+    
+    X = X.r;        % placeholder for attribute validation
+    
+    skip_calculation = true;
+end
+    
 if isempty(max_radius)
     
     max_radius = range(colorlimit)/4;
@@ -162,6 +241,37 @@ if ~isempty(partitions)
     end
 end
 
+% -------------------------------------------------------------------------
+% VALIDATE ATTRIBUTES OF INPUTS
+% -------------------------------------------------------------------------
+
+validateattributes(X,{'numeric'},{'2d'},'plot_correlation_matrix','X', 1);
+
+logical_args = {'dofdr' 'false' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext'};
+for i = 1:length(logical_args)
+    
+    my_arg = eval([logical_args{i} ';']);
+    validateattributes(my_arg,{'logical'},{'scalar'},'plot_correlation_matrix',logical_args{i});
+
+end
+
+cell_args = {'partitioncolors' 'partitionlabels' 'var_names'};
+for i = 1:length(cell_args)
+    
+    my_arg = eval([cell_args{i} ';']);
+    validateattributes(my_arg,{'cell'},{},'plot_correlation_matrix',cell_args{i});
+
+end
+
+vector_args = {'text_sig_color' 'text_nonsig_color'};
+for i = 1:length(vector_args)
+    
+    my_arg = eval([vector_args{i} ';']);
+    validateattributes(my_arg,{'numeric' 'vector' 'nonnegative' 'nonnan'},{},'plot_correlation_matrix',vector_args{i});
+
+end
+
+
 
 % Correlation stats
 % --------------------------------------------------
@@ -170,7 +280,10 @@ if k > 30 && docircles
     disp('Warning: plotting correlations as circles will be slow with large number of variables');
 end
 
-if dopartial
+if skip_calculation
+% Do nothing - we already have r, p, sig
+
+elseif dopartial
     if dospearman
         [r, p] = partialcorr(double(X), 'type', 'Spearman');
     else
@@ -185,26 +298,44 @@ else
     [r, p] = corr(double(X));
 end
 
-if dofdr
+if ~skip_calculation && dofdr
     % FDR-correct p-values across unique elements of the matrix
     
     trilp = tril(p, -1);
     wh = logical(tril(ones(size(p)), -1)); % Select off-diagonal values (lower triangle)
     trilp = double(trilp(wh));             % Vectorize and enforce double
     trilp(trilp < 10*eps) = 10*eps;        % Avoid exactly zero values
-    p_thr = FDR(trilp, 0.05);
+    fdrthr = FDR(trilp, 0.05);
     
-    if isempty(p_thr), p_thr = -Inf; end
+    if isempty(fdrthr), fdrthr = -Inf; end
     
+    sig = p < fdrthr;
+    
+    % FDR-corrected - add output
+
+    OUT.fdrsig = sig;
+    OUT.fdrthr = fdrthr;
+    
+elseif ~skip_calculation
+    % Uncorrected - add output
+    
+    sig = p < p_thr; 
+    OUT.p_thr = p_thr;
+    OUT.sigu = sig;
+
 end
 
-is_sig = p < p_thr;
-
+% Note: some options harmonize output with output structure of ttest3d
 OUT.r = r;
 OUT.p = p;
-OUT.is_sig = is_sig;
-OUT.p_thr = p_thr;
-OUT.dospearman = dospearman;
+OUT.sig = sig;
+
+if ~skip_calculation
+    
+    OUT.dospearman = dospearman;
+    OUT.dopartial = dopartial;
+    
+end
 
 % Names
 % --------------------------------------------------
@@ -216,6 +347,8 @@ OUT.var_names = var_names;
 
 if dofigure
     create_figure('plotmatrix');
+else
+    hold on;
 end
 
 im_handle = imagesc(r, colorlimit);
@@ -294,7 +427,7 @@ if docircles
             set(fhan, 'EdgeColor', 'none');
             
             % if significant, draw thicker border
-            if rr == cc || is_sig(rr, cc)
+            if rr == cc || sig(rr, cc)
                 
                 han = circle([rr cc], max_radius * abs(myr));
                 set(han, 'LineWidth', 2, 'Color', mycolor ./ 1.5);
@@ -321,7 +454,7 @@ if dotext
             myr = r(rr, cc);
             
             % if significant, bold weight
-            if rr == cc || is_sig(rr, cc)
+            if rr == cc || sig(rr, cc)
                 
                 text_han(rr, cc) = text(rr - text_x_offset, cc - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'FontWeight', 'b', 'Color', text_sig_color);
                 

@@ -75,9 +75,15 @@
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
 % ARGUMENTS. MANY FUNCTIONS NEED TO PARSE OPTIONAL ARGS, SO THIS MAY BE
-% USEFUL.
+% USEFUL. I (TOR) RECOMMEND COPYING AND PASTING THE DOCUMENTATION ABOVE AND
+% ALL THE STUFF THROUGH ARGUMENT VALIDATION, BELOW, AND MODIFYING IT FOR
+% YOUR FUNCTION.
 
-% SEE BELOW FOR TEMPLATE FOR OBJECT CONSTRUCTORS
+% SEE BELOW FOR TEMPLATE FOR OBJECT CONSTRUCTORS. THIS HAS STRUCTURED
+% DOCUMENTATION WITH SOME TEXT FORMATTING RULES THAT WILL MAKE IT
+% COMPATIBLE WITH MATLAB'S DOC COMMAND, WHICH WILL THEN CREATE AN HTML PAGE
+% LISTING METHODS AND ATTRIBUTES. I (TOR) RECOMMEND COPYING AND PASTING THE 
+% DOCUMENTATION BELOW AND MODIFYING IT FOR YOUR FUNCTION.
 
 % ..
 %    DEFAULTS AND INPUTS
@@ -87,25 +93,50 @@
 n_cols = 80;
 sep_str = repmat('_', 1, n_cols);  % see textwrap
 
-% SEE:
-%  validateattributes Check validity of array.
-%     validateattributes(A,CLASSES,ATTRIBUTES) validates that array A belongs
-%     to at least one of the specified CLASSES and has all of the specified
-%     ATTRIBUTES. 
-
+% -------------------------------------------------------------------------
+% DEFAULT ARGUMENT VALUES
+% -------------------------------------------------------------------------
 
 rowsz = [];
 doplot = 0;
 basistype = 'spm+disp';
 % initalize optional variables to default values here.
 
+% -------------------------------------------------------------------------
+% OPTIONAL INPUTS
+% -------------------------------------------------------------------------
+
+% This is a compact way to assign multiple variables. The input argument
+% names and variable names must match, however:
+
+allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
+
+% optional inputs with default values - each keyword entered will create a variable of the same name
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+
+            case allowable_inputs
+                
+                eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
+
+
+% This pattern will flexibly assign arguments based on keywords. 
+% The names of the input keyword and variable created do not need to match.
+% Multiple input keywords can be mapped to the same variable.
 
 % optional inputs with default values
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
 
-            case 'rows', rowsz = varargin{i+1}; varargin{i+1} = [];
+            case {'rows', 'rowsz'}, rowsz = varargin{i+1}; varargin{i+1} = [];
             case 'plot', doplot = 1; 
             case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
                 
@@ -113,6 +144,47 @@ for i = 1:length(varargin)
         end
     end
 end
+
+% -------------------------------------------------------------------------
+% VALIDATE ATTRIBUTES OF INPUTS
+% -------------------------------------------------------------------------
+
+validateattributes(X,{'numeric'},{'2d'},'plot_correlation_matrix','X', 1);
+
+logical_args = {'dofdr' 'false' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext'};
+for i = 1:length(logical_args)
+    
+    my_arg = eval([logical_args{i} ';']);
+    validateattributes(my_arg,{'logical'},{'scalar'},'plot_correlation_matrix',logical_args{i});
+
+end
+
+cell_args = {'partitioncolors' 'partitionlabels' 'var_names'};
+for i = 1:length(cell_args)
+    
+    my_arg = eval([cell_args{i} ';']);
+    validateattributes(my_arg,{'cell'},{},'plot_correlation_matrix',cell_args{i});
+
+end
+
+vector_args = {'text_sig_color' 'text_nonsig_color'};
+for i = 1:length(vector_args)
+    
+    my_arg = eval([vector_args{i} ';']);
+    validateattributes(my_arg,{'numeric' 'vector' 'nonnegative' 'nonnan'},{},'plot_correlation_matrix',vector_args{i});
+
+end
+
+
+% SEE:
+%  validateattributes Check validity of array.
+%     validateattributes(A,CLASSES,ATTRIBUTES) validates that array A belongs
+%     to at least one of the specified CLASSES and has all of the specified
+%     ATTRIBUTES. 
+%
+% See also inputParser.m
+
+
 
 
 % THIS IS ANOTHER WAY THAT IS MORE STREAMLINED, BUT ACTUALLY LESS INTUITIVE

@@ -387,14 +387,14 @@ if do_preproc
         if do_additional_regress
             
             % regression
-            beta_dat.dat = pinv(X) * data.dat';
+            beta_dat.dat = data.dat * pinv(X)';
             beta_dat.dat = beta_dat.dat(:,1:nreg);
             beta_dat.covariates = X;
             X(:,1:nreg) = [];
         end
         
         % residualize
-        dat.dat = (dat.dat' - X * pinv(X) * dat.dat')';
+        dat.dat = dat.dat - dat.dat * pinv(X)' * X'; % this is more efficient than (dat.dat' - X*pinv(X)*dat.dat')'
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
         if do_plots

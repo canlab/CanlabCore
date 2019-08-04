@@ -90,11 +90,11 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %
 %    X = onsets2fmridesign(ons, TR, size(imgs, 1) .* TR, 'hrf (with time derivative)');
 %
-%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1.5, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 2, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
-%    X = onsets2fmridesign({[0 30 60]' [15 45 90']}, 1, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90]'}, 1.5, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90]'}, 1, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90]'}, 2, 180, spm_hrf(1), 'parametric_standard', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90]'}, 2, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
+%    X = onsets2fmridesign({[0 30 60]' [15 45 90]'}, 1, 180, spm_hrf(1), 'parametric_singleregressor', {[2 .5 1]' [1 2 2.5]'}); figure; plot(X)
 %
 %    % Here, spm_hrf(1) is for the canonical HRF in spm.
 %
@@ -209,6 +209,8 @@ if dosingletrial
     end % original onset conditions
     
     ons = cat(2, sonsets{:}); % flatten to simply model trials within event type.
+    n_conditions = sum(n_events);
+    n_events = ones(n_conditions, 1);
 
 end  % end single trial
 
@@ -487,7 +489,7 @@ function [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(on
     sz = cat(1, sz{:});
     
     % Check for empty cells / no events
-    if size(sz, 1) < length(ons) | any(sz(:, 1) == 0)
+    if size(sz, 1) < length(ons) || any(sz(:, 1) == 0)
         error('Some onsets are empty. Check inputs.');
     end
     

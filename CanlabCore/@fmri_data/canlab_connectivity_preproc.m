@@ -1,4 +1,4 @@
-function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat, varargin)
+function [dat, roi_val, maskdat, beta_dat, beta_roi_val] = canlab_connectivity_preproc(dat, varargin)
 
 % This function prepares data for connectivity analysis by removing nuisance
 % variables and temporal filtering (high, low, or bandpass filter). This also
@@ -8,31 +8,38 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 % :Usage:
 % ::
 %
-%    [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, varargin)
+%    [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat, varargin)
+%    [preprocessed_dat, roi_val, maskdat, (optional) beta_dat, beta_roi_val] = canlab_connectivity_preproc(dat, varargin)
 %
 % :Features:
 %
 %   - can regress out nuisance variables with any additional nuisance matrix
-%   - can remove signal from ventricle and white matter (calls
-%     canlab_extract_ventricle_wm_timeseries.m and canlab_create_wm_ventricle_masks.m)
+%   - can remove signal from ventricle and white matter (default: use
+%     canonical ventricle and white matter masks)
 %   - can do temporal filtering, including high-pass, low-pass, or bandpass
-%     filtering (it uses conn_filter.m from conn toolbox; see subfunction below)
+%     filtering (it uses conn_filter.m from conn toolbox, which is using
+%     fast fourier transform; see subfunction below)
 %   - can extract data from given ROIs, and return averaged value or pattern
 %     expression value (dot-product).
 %   - Subsequent nuisance regression step is orthogonalized with respect to
 %     pass-filter, consistent with principles in Lindquist 2019
 %   - It is possible to extract ROI averages or linear patterns, save them,
-%      and run this function afterwards. This will give the same result as
-%      filtering each  voxel and then calculating the ROI average/pattern
-%      response.
+%     and run this function afterwards. This will give the same result as
+%     filtering each  voxel and then calculating the ROI average/pattern
+%     response.
+%   - (optional) can run additional GLM model with additional regressors if they are 
+%     specified. This runs the GLM *additionally*, therefore do not change
+%     residualized image data or roi_vals. This GLM uses the same nuisance
+%     matrix from above. output: beta_dat  
 %
 % *Steps in order [with defaults]:*
 %   1. Remove nuisance covariates (and linear trend if requested)
-%   2. Remove ventricle and white matter - needs structural images
+%   2. Remove ventricle and white matter - default: uses canonical images
 %   3. High/low/bandpass filter on BOTH data and covs before regression (plot)
 %   4. Residualization using regression (plot)
-%   5. Windsorize based on distribution of full data matrix (plot)
-%   6. Extract region-by-region average ROI or pattern expression data
+%   5. (optional) Run additional GLM using the same additional preprocessing
+%   6. Windsorize based on distribution of full data matrix (plot)
+%   7. Extract region-by-region average ROI or pattern expression data
 %
 % ..
 %     Author and copyright information:
@@ -72,10 +79,8 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %
 %   **vw**
 %        When you want to regress out signals from ventricle and
-%        white matter, you can use this option. To use this option,
-%        You should provide the directory where the subjects' data
-%        are saved using the 'datdir' (for example, see below).
-%        Requires specific subdirectory structure (CANlab) - see code.
+%        white matter, you can use this option. Default is using canonical
+%        white matter and ventricle images (but eroded versions). 
 %
 %        You can also choose what to use to remove ventricle and
 %        white matter signal between raw data or top 5 PCA
@@ -83,7 +88,7 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %        use raw signal than PCA compoenents.
 %        also see: canlab_extract_ventricle_wm_timeseries.m
 %        canlab_create_wm_ventricle_masks.m)
-%        - *Example:* 'vw', 'datdir', subject_dir, 'raw'
+%        - *Example:* 'vw','raw'
 %
 %   **windsorize:**
 %        Windsorizing entire data matrix to k x STD.
@@ -104,6 +109,16 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %                 In all cases, after the frequency value, you need to provide TR in sec.
 %        - *Example:* 'hpf', .01, TR
 %                     'bpf', [.01 .25], TR
+%
+%   **regressors:**
+%        - This option will run additional GLM with the regressors specified
+%          by the experimenter. The number of rows should be the number of
+%          images, and the number of columns are the number of regressors. 
+%        - with extract_roi, the function will extract roi values from beta
+%          images as well.
+%        - Example: 'regressors', X (you can build your own design matrix,
+%                                   e.g., hrf convolution using onset and 
+%                                   duration, using onsets2fmridesign.m)
 %
 %   **extract_roi:**
 %        This option will extract data from ROIs specified. This
@@ -140,21 +155,36 @@ function [preprocessed_dat, roi_val, maskdat] = canlab_connectivity_preproc(dat,
 %        returns values extracted from ROIs in cell arrays (if there are many different ROIs).
 %        Each cell will have roi_val.dat, roi_val.mask_name, and roi_val.methods.
 %
+%  **maskdat:**
+%        returns resampled roi (or pattern) masks 
+%
+%  **beta_dat:**
+%        returns beta images from the additional GLM (see 'regressors' option)
+%
 %
 % :Examples:
 % ::
 %
 %     roi_masks = which('weights_NSF_grouppred_cvpcr.img');
-%     [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, 'vw', 'datdir',
-%            subject_dir, 'bpf', [.008 .25], TR, 'extract_roi', roi_masks, 'pattern_expression');
-%
+%     [preprocessed_dat, roi_val] = canlab_connectivity_preproc(dat, 'vw', 
+%               'bpf', [.008 .25], TR, 'extract_roi', roi_masks, 'pattern_expression');
+
+
 % ..
 %    PROGRAMMER'S NOTE
 %    05/19/15 fixed a bug related to conn_filter
 %    08/24/18 implemented simultaneous pass filter + regression
-%    /15/2019: Tor and Marianne: Pass filter all covariates (even
-            % spikes., Consistent with principles in Lindquist 2019
-            % "sequential filtering" paper. See more notes below.
+%    01/05/19: Tor and Marianne: Pass filter all covariates (even
+%               spikes., Consistent with principles in Lindquist 2019
+%               "sequential filtering" paper. See more notes below.
+%    08/01/19: Wani reversed Tor and Marianne's revision above 
+%               after dicussion with Tor and others. Spikes should be removed
+%               before "low-pass filtering" the nuisance covariates, and
+%               added to the covariates later (see Ciric et al., 2018)
+%               Lindquist et al., 2019 did not address the issue related to 
+%               the use of spike regressors combined with low pass
+%               filtering. This issue should be further examined later. 
+%    08/01/19: Wani added an option for additional GLM
 % ..
 
 additional_R = [];
@@ -166,6 +196,8 @@ do_preproc = true;
 do_windsorize = false;
 do_linear = false;
 do_plots = true;
+regressors = [];
+do_additional_regress = false;
 
 z = '===============================================================';
 zz = '---------------------------------------------------------------';
@@ -208,6 +240,12 @@ for i = 1:length(varargin)
                 
             case {'no_plots'}
                 do_plots = false;
+                
+            case {'regressors'}
+                regressors = varargin{i+1};
+                do_additional_regress = true;
+                regressors(:,all(regressors==1)) = []; % remove an intercept if any
+                nreg = size(regressors,2);
         end
     end
 end
@@ -217,13 +255,24 @@ end
 if do_preproc
     
     tic;
+    
+    nobs = size(dat.dat, 2);
+    if do_additional_regress
+        if size(regressors,1) ~= nobs
+            error('The number of rows of regressors is different from the number of images from dat. Please check.');
+        end
+    end
+    
     fprintf('Canlab_connectivity_preproc: starting preprocessing ... \n');
-    comb_R = [dat.covariates additional_R];
+    comb_R = [regressors dat.covariates additional_R]; % if all these are empty, comb_R should still be empty
+    
+    if do_additional_regress
+        beta_dat = dat;
+        beta_dat.dat = [];
+    end
     
     dat.dat = double(dat.dat);  % enforce double to avoid data format problems
     dat.history{end+1} = 'Processed with canlab_connectivity_preproc';
-    
-    nobs = size(dat.dat, 2);
     
     %% white matter, ventricle
     
@@ -247,7 +296,9 @@ if do_preproc
         
         if use_canonical_masks 
             
-            [value, components] = extract_gray_white_csf(dat);
+            [value, components] = extract_gray_white_csf(dat, 'masks', ...
+                {'gray_matter_mask.nii', 'canonical_white_matter_thrp5_ero1.nii', ...
+                'canonical_ventricles_thrp5_ero1.nii'});
             wm_nuisance = value(:,2:3); % white, CSF
             wm_nuisance_comps = [components{2} components{3}]; % 5 components for white, CSF
         
@@ -288,6 +339,24 @@ if do_preproc
     
     % (optional) global signal % not implemented
     
+    if do_filter
+
+            fprintf('::: temporal filtering brain data... \n');
+            % conn_filter does mean-center by default.
+            % We need mean back in
+            
+            % Pass-filter brain data
+            % -------------------------------------------
+            dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
+                + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
+            
+            dat.history{end+1} = 'Done temporal filtering brain data';
+            
+            if do_plots
+                plot_qc(dat,2,1,[]); drawnow;
+            end
+    end
+    
     %% get residuals
     
     if ~isempty(comb_R)
@@ -302,57 +371,36 @@ if do_preproc
         
         if do_filter
             
-            fprintf('::: temporal filtering ... \n');
+            fprintf('::: temporal filtering covariates ... \n');
             % conn_filter does mean-center by default.
             % We need mean back in
             
-            % Pass-filter brain data
-            % -------------------------------------------
-            dat.dat = conn_filter(TR, filter, dat.dat', 'full')' ...
-                + repmat(mean(dat.dat,2), 1, size(dat.dat,2)); 
+            comb_R = filter_cov_wo_spikes(comb_R, TR, filter);
             
-            % Filter the covariates
-            % Eliminate bias from sequential filtering operations
-            % -------------------------------------------
-            % 1/15/2019: Tor and Marianne: Pass filter all covariates (even
-            % spikes), because filter transforms data in a way that matches
-            % what is done to spike regressors. So even if spike regressors
-            % "look funny", they adjust for the effects of "spikes" on the
-            % time series data appropriately, accounting for filtering.
-            
-            % pass-filter covs (without outlier indices)
-            %             outlier_idx = sum(comb_R==1)==1;
-            %             outliers = comb_R(:,outlier_idx);
-            %             comb_R(:,outlier_idx) = [];
-            
-            comb_R = conn_filter(TR, filter, comb_R, 'full') ...
-                + repmat(mean(comb_R), size(comb_R,1), 1);
-            
-            % add outlier indices back in
-            %             comb_R = [comb_R outliers];
-            
-            dat.history{end+1} = 'Done temporal filtering';
-            
-            if do_plots
-                plot_qc(dat,2,1,[]); drawnow;
-            end
+            dat.history{end+1} = 'Done temporal filtering covariates';
             
         end
         
         % add intercept
         X = [comb_R ones(nobs,1)];
         
-        % regression
+        if do_additional_regress
+            
+            % regression
+            beta_dat.dat = data.dat * pinv(X)';
+            beta_dat.dat = beta_dat.dat(:,1:nreg);
+            beta_dat.covariates = X;
+            X(:,1:nreg) = [];
+        end
         
-        px = pinv(X);
-        pxy = px * dat.dat';
-        xpxy = X * pxy;
-        dat.dat = (dat.dat' - xpxy)';
+        % residualize
+        dat.dat = dat.dat - dat.dat * pinv(X)' * X'; % this is more efficient than (dat.dat' - X*pinv(X)*dat.dat')'
         dat.history{end+1} = 'Regressed out nuisance covariates';
         
         if do_plots
             clim = plot_qc(dat,3,1,[]); drawnow;
         end
+        
         
     else  % no regression
         
@@ -395,106 +443,15 @@ if do_extract_roi
         end
     end
     
-    %if nargout > 2
-        % copy over apply_mask
-        for i = 1:numel(mask)
-            maskdat{i} = fmri_data(mask{i});
-            isdiff = compare_space(dat, maskdat{i});
-            
-            if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
-                maskdat{i} = resample_space(maskdat{i}, dat, 'nearest');
-                
-                if length(maskdat{i}.removed_voxels) == maskdat{i}.volInfo.nvox
-                    disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');
-                    maskdat{i}.removed_voxels = maskdat{i}.removed_voxels(maskdat{i}.volInfo.wh_inmask);
-                end
-            end
-        end
-    %end
+    [roi_val, maskdat] = extract_roi_sub(dat, mask, do_pattern, do_whole, unique_mask_values, contiguous_regions);
     
-    roi_val = cell(numel(mask),1); % preallocation
-    
-    for i = 1:numel(mask)
-        if do_whole
-            % single, whole-brain pattern
-            if ~do_pattern
-                
-                roi_obj = apply_mask(dat, maskdat{i});
-                roi_obj = remove_empty(roi_obj);
-                roi_val{i}.dat = nanmean(roi_obj.dat)';
-                roi_val{i}.mask_name = mask{i};
-                roi_val{i}.methods = 'averaged_over using a whole mask';
-                
-            elseif do_pattern
-                
-                roi_val{i}.dat = apply_mask(dat, maskdat{i}, 'pattern_expression', 'ignore_missing');
-                roi_val{i}.mask_name = mask{i};
-                roi_val{i}.methods = 'pattern expression using a whole mask';
-                
-            end
-        else
-            % separate patterns for local regions
-            
-            if ~do_pattern
-                if unique_mask_values
-                    
-                    roi_obj = extract_roi_averages(dat, maskdat{i});
-                    %                     for roin = 1:numel(roi_obj)
-                    %                         roi_val{i}.dat(:,roin) = roi_obj(roin).dat;
-                    %                     end
-                    
-                    roi_val{i}.dat = cat(2, roi_obj(:).dat);
-                    
-                    % extract_roi_averages does not preserve missing cases: remove
-                    if any(dat.removed_images)
-                        roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
-                    end
-                    
-                    roi_val{i}.mask_name = mask{i};
-                    roi_val{i}.methods = 'averaged_over using unique_mask_values';
-                    
-                elseif contiguous_regions
-                    
-                    roi_obj = extract_roi_averages(dat, maskdat{i}, 'contiguous_regions');
-                    
-                    %                     for roin = 1:numel(roi_obj)
-                    %                         roi_val{i}.dat(:,roin) = roi_obj(roin).dat;
-                    %                     end
-                    
-                    roi_val{i}.dat = cat(2, roi_obj(:).dat);
-                    
-                    % extract_roi_averages does not preserve missing cases: remove
-                    if any(dat.removed_images)
-                        roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
-                    end
-                    
-                    roi_val{i}.mask_name = mask{i};
-                    roi_val{i}.methods = 'averaged_over using contiguous_regions';
-                    
-                else
-                    warning('Unknown ROI extraction option. Not extracting ROI data...');
-                end
-            else
-                % local patterns within each region
-                
-                roi_obj = extract_roi_averages(dat, maskdat{i}, 'pattern_expression', 'contiguous_regions');
-                
-                %                 for roin = 1:numel(roi_obj)
-                %                     roi_val{i}.dat(:,roin) = roi_obj(roin).dat;
-                %                 end
-                
-                roi_val{i}.dat = cat(2, roi_obj(:).dat);
-                
-                % extract_roi_averages does not preserve missing cases: remove
-                if any(dat.removed_images)
-                    roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
-                end
-                
-                roi_val{i}.mask_name = mask{i};
-                roi_val{i}.methods = 'pattern expression using contiguous_regions';
-            end
-        end
+    if do_additional_regress
+        beta_roi_val = extract_roi_sub(beta_dat, mask, do_pattern, do_whole, unique_mask_values, contiguous_regions);
     end
+    
+    
+    % output: roi_val, maskdat
+    % input: mask, dat, do_pattern, do_whole, unique_mask_values, contiguous_regions
     
     t2 = toc;
     fprintf('Done in %4.1d sec.\n', t2);
@@ -507,8 +464,6 @@ if do_extract_roi
 else
     roi_val = {};
 end
-
-preprocessed_dat = dat;
 
 end
 
@@ -573,7 +528,7 @@ function clim = plot_qc(dat, n, use7sd, clim)
 % use7sd: use -6sd~+6sd as a range
 % clim: specify color limit
 
-titles = {'RAW:before Conn preproc', 'Pass filter', 'Nuisance, VentWM, linear trend (if selected)', 'Windsorize'};
+titles = {'RAW:before Conn preproc', 'Pass filter', 'Residualize (Nuisance, VentWM, linear trend, if selected)', 'Windsorize'};
 
 subplot(2, 4, n);
 plot(mean(dat.dat)); 
@@ -601,5 +556,126 @@ set(gca, 'xlim', [0 size(dat.dat,2)]);
 xlabel('timeseries');
 ylabel('voxels');
 colorbar('southoutside');
+
+end
+
+function R = filter_cov_wo_spikes(R, TR, filter)
+
+% Filter the covariates
+% Eliminate bias from sequential filtering operations
+% -------------------------------------------
+% 1/15/2019: Tor and Marianne: Pass filter all covariates (even
+% spikes), because filter transforms data in a way that matches
+% what is done to spike regressors. So even if spike regressors
+% "look funny", they adjust for the effects of "spikes" on the
+% time series data appropriately, accounting for filtering.
+%
+% 8/1/2019: Wani reversed this to the previous version after
+% dicussion with Tor and others. Spikes should be removed
+% before "low-pass filtering" the nuisance covariates, and
+% added to the covariates later (see Ciric et al., 2018)
+
+% pass-filter covs (without outlier indices)
+outlier_idx = sum(R==1)==1;
+outliers = R(:,outlier_idx);
+R(:,outlier_idx) = [];
+
+R = conn_filter(TR, filter, R, 'full') ...
+    + repmat(mean(R), size(R,1), 1);
+
+% add outlier indices back in
+R = [R outliers];
+
+end
+
+function [roi_val, maskdat] = extract_roi_sub(dat, mask, do_pattern, do_whole, unique_mask_values, contiguous_regions)
+
+% subfunction for extract rois
+
+% copy over apply_mask
+maskdat = cell(numel(mask),1);
+for i = 1:numel(mask)
+    maskdat{i} = fmri_data(mask{i});
+    isdiff = compare_space(dat, maskdat{i});
+    
+    if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
+        maskdat{i} = resample_space(maskdat{i}, dat, 'nearest');
+        
+        if length(maskdat{i}.removed_voxels) == maskdat{i}.volInfo.nvox
+            disp('Warning: resample_space returned illegal length for removed voxels. Fixing...');
+            maskdat{i}.removed_voxels = maskdat{i}.removed_voxels(maskdat{i}.volInfo.wh_inmask);
+        end
+    end
+end
+
+roi_val = cell(numel(mask),1); % preallocation
+
+for i = 1:numel(mask)
+    if do_whole
+        % single, whole-brain pattern
+        if ~do_pattern
+            
+            roi_obj = apply_mask(dat, maskdat{i});
+            roi_obj = remove_empty(roi_obj);
+            roi_val{i}.dat = nanmean(roi_obj.dat)';
+            roi_val{i}.mask_name = mask{i};
+            roi_val{i}.methods = 'averaged_over using a whole mask';
+            
+        elseif do_pattern
+            
+            roi_val{i}.dat = apply_mask(dat, maskdat{i}, 'pattern_expression', 'ignore_missing');
+            roi_val{i}.mask_name = mask{i};
+            roi_val{i}.methods = 'pattern expression using a whole mask';
+            
+        end
+    else
+        % separate patterns for local regions
+        
+        if ~do_pattern
+            if unique_mask_values
+                
+                roi_obj = extract_roi_averages(dat, maskdat{i});
+                roi_val{i}.dat = cat(2, roi_obj(:).dat);
+                
+                % extract_roi_averages does not preserve missing cases: remove
+                if any(dat.removed_images)
+                    roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+                end
+                
+                roi_val{i}.mask_name = mask{i};
+                roi_val{i}.methods = 'averaged_over using unique_mask_values';
+                
+            elseif contiguous_regions
+                
+                roi_obj = extract_roi_averages(dat, maskdat{i}, 'contiguous_regions');
+                roi_val{i}.dat = cat(2, roi_obj(:).dat);
+                
+                % extract_roi_averages does not preserve missing cases: remove
+                if any(dat.removed_images)
+                    roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+                end
+                
+                roi_val{i}.mask_name = mask{i};
+                roi_val{i}.methods = 'averaged_over using contiguous_regions';
+                
+            else
+                warning('Unknown ROI extraction option. Not extracting ROI data...');
+            end
+        else
+            % local patterns within each region
+            
+            roi_obj = extract_roi_averages(dat, maskdat{i}, 'pattern_expression', 'contiguous_regions');
+            roi_val{i}.dat = cat(2, roi_obj(:).dat);
+            
+            % extract_roi_averages does not preserve missing cases: remove
+            if any(dat.removed_images)
+                roi_val{i}.dat = roi_val{i}.dat(~dat.removed_images, :);
+            end
+            
+            roi_val{i}.mask_name = mask{i};
+            roi_val{i}.methods = 'pattern expression using contiguous_regions';
+        end
+    end
+end
 
 end

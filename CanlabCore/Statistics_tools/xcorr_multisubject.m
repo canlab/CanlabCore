@@ -91,6 +91,11 @@ function OUT = xcorr_multisubject(data, varargin)
 %    % data is cell, one cell per subject
 %    [OUT.stats_mds.GroupSpace,OUT.stats_mds.obs,OUT.stats_mds.implied_dissim] = shepardplot(OUT.stats.D,[]);
 %    OUT.stats_mds = nmdsfig_tools('cluster_solution',OUT.stats_mds, OUT.stats_mds.GroupSpace, 2:5, 1000, []);
+%
+% See also: 
+% ttest3d, plot_correlation_matrix -- for more compact ways of estimating
+% and plotting correlation matrices. See also cellfun and canlab_mat2cell
+% for conversion options. 
 
 % ..
 %    Defaults

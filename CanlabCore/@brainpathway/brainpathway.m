@@ -178,22 +178,22 @@
 %
 % fmri_data Methods (a partial list; type doc fmri_data for more):
 %   	xxx                 - xxxx
-
+%
 %   Data extraction:
 %   	xxx                 - xxxx
-
+%
 %
 %   Handling brain space and image selection:
 %   	xxx                 - xxxx
-
+%
 %
 %   Display and visualization:
 %   	xxx                 - xxxx
-
+%
 %
 %   Data processing and analysis:
 %   	xxx                 - xxxx
-
+%
 %
 % -------------------------------------------------------------------------
 % Examples and help:
@@ -202,14 +202,20 @@
 % To list properties and methods for this object, type:
 % doc fmri_data, methods(fmri_data)
 %
-% b = brainpathway(pain_pathways);
+% b = brainpathway(pain_pathways);  % Construct a brainpathway object from an atlas object, here "pain_pathways"
+% b.region_atlas = pain_pathways;   % Alternate way of assigning a region atlas, or changing the atlas
 % b.voxel_dat = randn(352328, 20);
-% b.voxel_dat = [];
-% b.region_atlas = pain_pathways;
+% b.voxel_dat = [];                 % Remove original data, leave calculated derivatives intact
+%
+% b = brainpathway(pain_pathways); % Construct a brainpathway object from an atlas object
 % b.region_dat = ST_cleaned.big_regions;
 % plot_connectivity(b, 'notext')
 %
-% Could do (but not needed): 
+% Add clusters:
+% b = cluster_regions(b);
+% plot_connectivity(b, 'notext', 'partitions', b.node_clusters, 'partition_labels', {'Thal', 'Bstem/Amy' 'S2/insula', 'S1');
+%
+% Could do (but not needed - will be done automatically when voxel data or node weights are assigned): 
 % b.update_node_data(b);
 % b.update_node_connectivity(b);
 %
@@ -234,7 +240,9 @@ classdef brainpathway < handle
         network_dat (:, :) single;
         partition_dat (:, :) single;
         
-        node_weights (1, :) cell;           %  A series of k cells, one per region. Each cell contains a  .       . fmri_data = []; % A series of n fmri_data objects, one per network, whose data field defines pattern weights
+        node_weights (1, :) cell;           %  A series of n cells, one per node. Each cell contains a vector of pattern weights across voxels
+        node_labels (1, :) cell;           %  A series of n cells, one per node. Each cell contains a char array name for the node.
+        node_clusters (1, :) int32;         % n integers indicating cluster membership (see cluster_regions)
         
         region_indx_for_nodes (1, :) int32 = []; 
         
@@ -433,6 +441,8 @@ classdef brainpathway < handle
         
         
         function obj = intialize_nodes(obj)
+            % Initialize nodes with 1 node per region
+            % (It is possible to assign multiple nodes per region)
             
             k = num_regions(obj.region_atlas);
             
@@ -448,6 +458,8 @@ classdef brainpathway < handle
             for i = 1:k
                 
                 obj.node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
+                
+                obj.node_labels{i} = obj.region_atlas.labels{i};
                 
             end
             
@@ -467,14 +479,33 @@ classdef brainpathway < handle
         % end
         % k = length(pain_regions_pdm1);
         
-        function plot_connectivity(obj, varargin)
+        
+        function obj = cluster_regions(obj, varargin)
             
+            n_clusters = max(8, num_regions(obj.region_atlas));
+            
+            if length(varargin) > 0
+                n_clusters = varargin{1};
+            end
+            
+            obj.node_clusters = (clusterdata(obj.region_dat', 'linkage', 'ward', 'maxclust', n_clusters))';
+            
+        end
+        
+        function plot_connectivity(obj, varargin)
+        % Takes any optional input arguments to plot_correlation_matrix
+        
             S = struct('r', obj.connectivity.regions.r, 'p', obj.connectivity.regions.p, 'sig', obj.connectivity.regions.p < 0.05);
             
             Xlabels = format_strings_for_legend(obj.region_atlas.labels);
                     
             figtitle = 'brainpathway_connectivity_view';
-            create_figure(figtitle, 1, 2);
+            
+            if isempty(obj.connectivity.nodes)
+                create_figure(figtitle);
+            else
+                create_figure(figtitle, 1, 2);
+            end
             
             OUT = plot_correlation_matrix(S, 'nofigure', ...
                 'var_names', Xlabels, varargin{:});
@@ -485,6 +516,10 @@ classdef brainpathway < handle
                 node_labels = Xlabels;
                 
             else node_labels = [];
+            end
+            
+            if isempty(obj.connectivity.nodes)
+                return
             end
             
             subplot(1, 2, 2);

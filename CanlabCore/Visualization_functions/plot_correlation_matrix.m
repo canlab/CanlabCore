@@ -168,6 +168,8 @@ end
 
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
+special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels'};
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -175,6 +177,9 @@ for i = 1:length(varargin)
             case allowable_inputs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                
+            case special_commands
+                % do nothing; used later
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

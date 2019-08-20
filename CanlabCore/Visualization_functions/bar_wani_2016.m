@@ -136,6 +136,7 @@ ast_adj_x = 0;
 text_adj_y = 0;
 bar_edgewidth = 1.8;
 doyline = 0;
+use_samefig = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -175,12 +176,16 @@ for i = 1:length(varargin)
                 bar_edgecol = flipud(varargin{i+1});
             case {'bar_edgewidth'}
                 bar_edgewidth = varargin{i+1};
+            case {'use_samefig'}
+                use_samefig = true;
         end
     end
 end
 
-handle.main = create_figure('Bar plot');
-set(gcf, 'Position', [1   450   300.*size(y,1)   250]);
+if ~use_samefig
+    handle.main = create_figure('Bar plot');
+    set(gcf, 'Position', [1   450   300.*size(y,1)   250]);
+end
 
 barnum = size(y,2);
 grnum = size(y,1);
@@ -239,10 +244,10 @@ for i = 1:barnum
         errwidth = 8;
     end
     
-    handle.bar.errors(i).CapSize = errwidth ;
+    handle.bar.errors(i).CapSize = errwidth;
     xdata_all(:,i) = handle.bar.errors(i).XData';
     
-    for j = 1:numel(handle.bar.errors(i).XData)
+    for j = 1:grnum %numel(handle.bar.errors(i).XData)
         if doast
             text(double(handle.bar.errors(i).XData(j)+ast_adj_x), double(ast_loc(j,i)), ast{j,i}, 'fontsize', 18, 'HorizontalAlignment','center'); % **ADJUST** font size
             if dotext

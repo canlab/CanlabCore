@@ -155,7 +155,7 @@ D = 1 - (squareform(tril(cm,-1)) + squareform(triu(cm,1)'))/2; %distances
 Z = linkage(D,method); % tree
 
 leafOrder = optimalleaforder(Z,D); %reorder for plotting if necessary
-
+stats.leafOrder=leafOrder;
 %% Search possible clustering solutions and compute stats
 
 for nc=2:size(cm,2)

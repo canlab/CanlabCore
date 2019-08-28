@@ -354,20 +354,38 @@ classdef brainpathway < handle
             % -------------------------------------------------------------------------
             
             isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
-            if ~any(isatlas) % load a default atlas if no atlas was passed in
+            if ~any(isatlas) 
+                % load a default atlas if no atlas was passed in
+                % This normally also triggers the static method initialize_nodes: 
+                % Initialize nodes for each region, with weights of 1 if no other information is available
+                % But perhaps it doesn't if it's called within the
+                % constructor. So we replicate it here.
                 
                 obj.region_atlas = load_atlas('canlab2018_2mm');
                 
             end
             
-            
             % initialize_nodes: Initialize nodes for each region, with weights of 1 if no other information is available
-            if isempty(obj.node_weights)
-                
-                obj = intialize_nodes(obj);
-                
+            disp('Initializing nodes to match regions.');
+            k = num_regions(obj.region_atlas);
+            obj.node_weights = cell(1, k);       
+            nvox = count_vox_per_region(obj);           % Get number of voxels for each region
+
+            % initialize
+            for i = 1:k
+                obj.node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
+                obj.node_labels{i} = obj.region_atlas.labels{i};
             end
             
+            obj.region_indx_for_nodes = get_node_info(obj);
+            validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+            
+%             if isempty(obj.node_weights)
+%                 
+%                 obj = intialize_nodes(obj);
+%                 
+%             end
+%             
             % update_region_dat : Take voxel-level data and get region averages
             
             % update_node_dat : Take voxel-level data and get node activity
@@ -384,7 +402,7 @@ classdef brainpathway < handle
             
             validateattributes(obj.region_atlas,{'atlas'},{},'brainpathway','.region_atlas');
             
-            validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+%             validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
             
             % node weights must be voxels x nodes, so rows == region vox, for each region
             
@@ -433,40 +451,13 @@ classdef brainpathway < handle
             obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.update_region_data(obj, src, evt));
             
             % initialize nodes
-            %obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
                         
             
         end % class constructor
         
         
-        
-        function obj = intialize_nodes(obj)
-            % Initialize nodes with 1 node per region
-            % (It is possible to assign multiple nodes per region)
-            
-            k = num_regions(obj.region_atlas);
-            
-            obj.node_weights = cell(1, k);
-            
-            % Get number of voxels for each region
-            nvox = count_vox_per_region(obj);
-            
-            %obj = brainpathway.update_node_data(obj);
-            
-            
-            % initialize
-            for i = 1:k
-                
-                obj.node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
-                
-                obj.node_labels{i} = obj.region_atlas.labels{i};
-                
-            end
-            
-            obj.region_indx_for_nodes = get_node_info(obj);
-            
-        end % function
-        
+
         
         % % Extracts local patterns from an image_vector
         % % ---------------------------------------------------------
@@ -492,9 +483,47 @@ classdef brainpathway < handle
             
         end
         
+        function [rr, clusters] = cluster_voxels(obj, varargin)
+            % Returns a matrix of correlations between each voxel and each
+            % region average (rr). This is a set of regions used for
+            % clustering
+            
+            n_clusters = max(20, num_regions(obj.region_atlas));
+            
+            if length(varargin) > 0
+                n_clusters = varargin{1};
+            end
+            
+             if obj.verbose, fprintf('Running correlations.\n'); end
+             
+            % This function takes and N x p matrix a and an N x v matrix b and returns
+            % a p x v matrix of correlations across the pairs.
+            corr_matrix = @(a, b) ((a-mean(a))' * (b-mean(b)) ./ (size(a, 1) - 1)) ./ (std(b)' * std(a))'; % Correlation of a with each column of b
+
+            a = double(obj.region_dat);
+            b = double(obj.voxel_dat');
+            rr = corr_matrix(a, b)';    % Voxels x regions
+            
+            if obj.verbose, fprintf('Clustering voxels.\n'); end
+            
+            clusters = (clusterdata(rr, 'linkage', 'ward', 'savememory','on', 'maxclust', n_clusters))';
+            
+            % T and P-values
+
+            r2t = @(r, n) r .* sqrt((n - 2) ./ (1 - r.^2));
+            t2p = @(t, n) 2 .* (1 - tcdf(abs(t), n - 2));
+            t = r2t(r, size(a, 1));
+            pp = t2p(t, size(a, 1));
+
+        end
+
+
+        
         function plot_connectivity(obj, varargin)
         % Takes any optional input arguments to plot_correlation_matrix
         
+            input_args = varargin;
+            
             S = struct('r', obj.connectivity.regions.r, 'p', obj.connectivity.regions.p, 'sig', obj.connectivity.regions.p < 0.05);
             
             Xlabels = format_strings_for_legend(obj.region_atlas.labels);
@@ -507,16 +536,30 @@ classdef brainpathway < handle
                 create_figure(figtitle, 1, 2);
             end
             
-            OUT = plot_correlation_matrix(S, 'nofigure', ...
-                'var_names', Xlabels, varargin{:});
-
+            k = size(S.r, 1);
+            % Circle-plot display and text are automatically suppressed for
+            % k > 50 and 15, respectively, in plot_correlation_matrix
+            
+            if k > 50
+                % Plot without text labels
+                OUT = plot_correlation_matrix(S, 'nofigure', varargin{:});
+                
+            else
+                
+                OUT = plot_correlation_matrix(S, 'nofigure', ...
+                    'var_names', Xlabels, varargin{:});
+                
+            end
+            
             num_nodes = length(obj.region_indx_for_nodes);
             if num_nodes == num_regions(obj.region_atlas)
                 
                 node_labels = Xlabels;
                 
-            else node_labels = [];
+            else node_labels = {};
             end
+            
+            title('Region connectivity')
             
             if isempty(obj.connectivity.nodes)
                 return
@@ -526,10 +569,19 @@ classdef brainpathway < handle
             
             S = struct('r', obj.connectivity.nodes.r, 'p', obj.connectivity.nodes.p, 'sig', obj.connectivity.nodes.p < 0.05);
             
-            OUT = plot_correlation_matrix(S, 'nofigure', ...
-                'var_names', node_labels, varargin{:});
+            if k > 50
+                % Plot without text labels
+                OUT = plot_correlation_matrix(S, 'nofigure', varargin{:});
+                
+            else
+                
+                OUT = plot_correlation_matrix(S, 'nofigure', ...
+                    'var_names', node_labels, varargin{:});
+                
+            end
             
-            
+            title('Node connectivity')
+
             %             Xpartitions = ones(size(S.r, 2), 1);
 %             partitionlabels = {'Regions'};
     
@@ -542,6 +594,41 @@ classdef brainpathway < handle
     end % methods
     
     methods (Static)
+        
+        
+        function obj = intialize_nodes(obj, src, evt)
+            % Initialize nodes with 1 node per region
+            % (It is possible to assign multiple nodes per region)
+            
+            if obj.verbose, fprintf('Initializing nodes to match regions.\n'); end
+            
+            k = num_regions(obj.region_atlas);
+            
+            node_weights = cell(1, k);
+            
+            % Get number of voxels for each region
+            nvox = count_vox_per_region(obj);
+            
+            %obj = brainpathway.update_node_data(obj); 
+            
+            % initialize
+            for i = 1:k
+                
+                node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
+                
+                node_labels{i} = obj.region_atlas.labels{i};
+                
+            end
+            
+            obj.node_weights = node_weights; % Do not update iteratively; will trigger listener to update node data
+            obj.node_labels = node_labels;
+            
+            obj.region_indx_for_nodes = get_node_info(obj);
+            
+            validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+            
+        end % function
+        
         
         function obj = update_region_data(obj, src, evt)
             % Update region average data by extracting from obj.voxel_dat

@@ -153,11 +153,18 @@ text_sig_color = [0 0 0];
 
 [n, k] = size(X);
 
+if isstruct(X)  % Adjust if struct input
+    [n, k] = size(X.r);
+end
+
 % adjust defaults if needed (these will be overridden by inputs below)
-if k > 20
+if k > 15
+    dotext = false;
+end
+
+if k > 50
     docircles = false;
     doimage = true;
-    dotext = false;
 end
 
 % -------------------------------------------------------------------------
@@ -281,7 +288,7 @@ end
 % Correlation stats
 % --------------------------------------------------
 
-if k > 30 && docircles
+if k > 50 && docircles
     disp('Warning: plotting correlations as circles will be slow with large number of variables');
 end
 
@@ -448,6 +455,8 @@ end
 
 %% Draw text
 % --------------------------------------------------
+
+text_han = [];
 
 if dotext
     

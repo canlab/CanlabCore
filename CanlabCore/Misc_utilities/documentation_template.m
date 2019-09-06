@@ -175,6 +175,10 @@ for i = 1:length(vector_args)
 
 end
 
+supportedImageClasses    = {'int8','uint8','int16','uint16','int32','uint32','single','double','logical'};
+supportedImageAttributes = {'real','nonsparse','nonempty'};
+validateattributes(V,supportedImageClasses,supportedImageAttributes,mfilename,'V');
+
 
 % SEE:
 %  validateattributes Check validity of array.

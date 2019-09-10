@@ -78,6 +78,11 @@
 %                       x 1. Can expand to k x number of clustering solutions. Used to compute
 %                       average within cluster/between cluster connectivity (see connectivity field)
 %
+%
+% OTHER FIELDS:
+% - data_quality:       A struct containing various data quality metrics
+%                       for each region
+%
 % -------------------------------------------------------------------------
 % To construct/create a new instance of an object:
 % -------------------------------------------------------------------------
@@ -246,6 +251,8 @@ classdef brainpathway < handle
         listeners = [];         % listeners
         
         verbose = true;
+        
+        data_quality (1, 1) struct = struct(''); % A flexible structure defining data quality metrics
         
     end % properties
     
@@ -630,6 +637,10 @@ classdef brainpathway < handle
             
             %matrix products will give us the mean now...
             obj.region_dat = obj.voxel_dat' * mydat;
+            
+            % update data quality metrics
+            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat); % if data is mean-centered, will be meaningless
+            obj.data_quality.tSTD = std(obj.region_dat); % if data is mean-centered, will be meaningless
             
         end
         

@@ -29,6 +29,7 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 % - Matrix or cell vector (good for unequal numbers of observations)
 % - if dat is a cell array, each entry becomes one "bar".  Useful if n
 % observations is different for each column.
+% - table object can be entered. This function will use Variable Names in table.
 %
 % :Examples: Just plot means and SE
 % ::
@@ -64,6 +65,7 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 %        - 'MarkerSize' : followed by marker size 
 %        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
+%           Sig. levels are coded as * = p<.05, ** = p<.01, *** = q<.05 FDR across variables tested in this plot
 %        - 'nostars' : do not plot stars
 %
 %   Robustness options
@@ -172,6 +174,14 @@ dostars = true;
 handles = [];
 doprinttable = 1;
 
+% ----------------------------------------------------
+% > handle table input - save names
+% ----------------------------------------------------
+if isa(dat, 'table')
+    names = format_strings_for_legend(dat.Properties.VariableNames);
+    dat = table2array(dat);
+end
+    
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
 % ----------------------------------------------------

@@ -1,4 +1,4 @@
-% brainpathway: Data class for storing and analyzing brain connections and pathways
+% brainpathway: Data class for storing and analyzing brain connectivity and pathways
 %
 % -------------------------------------------------------------------------
 % Features and philosophy:
@@ -20,23 +20,68 @@
 % voxel data in a region. e.g., a region may have two nodes defined by
 % different multivariate patterns across the region's voxels.
 %
-% A brainpathway object has these parts:
-% - region_atlas:                An atlas-class object defining k regions
-% - WEIGHTS object ->  n fmri_data objects, one per network,
-% - connections:            A series of matrices specifying [k x k] bivariate connections
-% - connections.apriori:    [1/0] logical matrices specifying existing connections, k x k x n for n networks
-% k x n latent variable weights - voxel weights. {1....k} cell k has {v x n}, v voxels x n networks
-% OR: weights could be in n fmri_data objects, one per network, with
-% - connections.est:        Estimated connectivity strengths
-% - connections.se:         Standard error of estimated connectivity strengths
-% - connections.metric      Metric type [r, cos_sim, tau, partial_r]
-% - graph_properties:
-% - timeseries_data:        Level-1 (time series, t) cell array with one cell per subject, [t x k] data matrix in each cell, NaN is missing
-% - person_data:            Level-2 (person-level, s) data for each region, [s x k] padded matrix, NaN is missing
-% - data_properties:        Provenance for what has been done to data
+% Brainpathway is a handle class, which means...
+% It includes listeners, which automatically recalculate derivative data
+% values if you attach new data. For example, if you update voxel_dat,
+% region averages, node data, connectivity, etc. will all be recalculated.
 %
-% - partitions:             An integer vector of partition labels for each
-%                           node, which define blocks of nodes. This can be used to, say, identify nodes in Block A maximally connected to those in Block B.
+%
+%
+% - DATA STORAGE:
+%   brainpathway objects can store data at several spatial scales, and
+%   also represent the multi-level (hierarchical) nature of data typical
+%   for neuroimaging experiments. Spatial scales include, in approximate order from fine to coarse:
+%   - voxel_level:      Stored in .voxel_dat, voxels x images/observations
+%   - node_level:       Stored in .node_dat, images/observations x nodes
+%                       There are 1 or more nodes per brain region
+%                       Nodes are often patterns/linear combinations across
+%                       voxels within regions, e.g., from a multivariate
+%                       pattern (NPS, etc.). 
+%                       Region-to-node mappings are stored in a cell array,
+%                       1 cell per region, in a [voxels x nodes] matrix
+%                       within each cell. A private attribute (not
+%                       accessible by users) maps regions to nodes in a
+%                       [nodes x 1] integer vector, with every node coded
+%                       as a unique integer.
+%   - region_level:     Stored in .region_dat, images/observations x regions
+%                       Stores averages across in-region voxels by default
+%                       Mappings from voxels to regions are stored in region_atlas.dat [integer vector]
+%   - network_level:    Stored in .network_dat, images/observations x networks
+%                       Networks are generalized 'pathways', each
+%                       consisting of connections among k nodes.
+%                       .network_dat stores the averages across in-pathway
+%                       node-level data
+%                       Mappings from voxels to regions are stored in region_atlas.dat [integer vector]
+% 	- partition_level:  Stored in .partition_dat, images/observations x partitions.
+%                       Stores averages across in-partition voxels by
+%                       default. This can be used to, say, identify nodes in Block A maximally connected to those in Block B.
+%
+%
+% HOW CONNECTIVITY GETS DEFINED AND ESTIMATED:
+% - region_atlas:       An atlas-class object defining k regions. This
+%                       is the basic parcellation that all connectivity analyses will use.
+% - connectivity:       A struct containing connectivity matrices specifying
+%                       [k x k] bivariate region-to-region connections and node-to-node
+%                       connections. Also specifies average connectivity between/within clusters
+%                       of regions/nodes; see below.
+% - connections.apriori: [1/0] logical matrices specifying existing
+%                       connections, k x k x n for n networks, to specify how certain connections
+%                       belong together in one "network".  k x n latent variable weights - voxel weights. 
+%                       {1....k} cell k has {v x n}, v voxels x n networks
+%                       OR: weights could be in n fmri_data objects, one per network, with
+% - connectivity_properties: Define function for estimating connection, e.g., @corr
+% - node_weights:       define a pattern (weight map) for the voxels in
+%                       each region. This gets initialized to 1/nvox in that region, which will
+%                       estimate the region average (i.e., a "flat" pattern). Results are stored
+%                       in node_dat.
+% - node_clusters:      defines clusters of regions and nodes. At the moment, k
+%                       x 1. Can expand to k x number of clustering solutions. Used to compute
+%                       average within cluster/between cluster connectivity (see connectivity field)
+%
+%
+% OTHER FIELDS:
+% - data_quality:       A struct containing various data quality metrics
+%                       for each region
 %
 % -------------------------------------------------------------------------
 % To construct/create a new instance of an object:
@@ -96,174 +141,103 @@
 % 'sample2mask' as in input argument.
 % For loading images in different spaces together in one object, use the 'sample2mask' option.
 %
-% Attaching additional data
-% -----------------------------------------------------------------------
-% The fmri_data object has a number of fields for appending specific types of data.
-%
-% - You can replace or append data to the fmri_dat.dat field.
-% - The fmri_data object will also store predictor data (.X) also outcome data (.Y)
-% - There are many fields for descriptions, notes, etc., like "dat_descrip" and "source_notes"
-% - Attach custom descriptions in these fields to document your object.
-% - The "history" field stores a cell array of strings with the processing
-% history of the object. Some methods add to this history automatically.
-%
-% -----------------------------------------------------------------------
-% Properties and methods
-% -----------------------------------------------------------------------
-% Properties are data fields associated with an object.
-% Type the name of an object (class instance) you create to see its
-% properties, and a link to its methods (things you can run specifically
-% with this object type). For example: After creating an fmri_data object
-% called fmri_dat, as above, type fmri_dat to see its properties.
-%
-% There are many other methods that you can apply to fmri_data objects to
-% do different things.
-% - Try typing methods(fmri_data) for a list.
-% - You always pass in an fmri_data object as the first argument.
-% - Methods include utilities for many functions - e.g.,:
-% - resample_space(fmri_dat) resamples the voxels
-% - write(fmri_dat) writes an image file to disk (careful not to overwrite by accident!)
-% - regress(fmri_dat) runs multiple regression
-% - predict(fmri_dat) runs cross-validated machine learning/prediction algorithms
 %
 % Key properties and methods (a partial list; type doc fmri_data for more):
 % -------------------------------------------------------------------------
-% fmri_data Properties (a partial list; type doc fmri_data for more):
-%   dat                     - Image data, a [voxels x images] matrix, single-format
-%   fullpath                - List of image names loaded into object with full paths
-%   history                 - History of object processing, for provenance
-%   image_names             - List of image names loaded into object, no paths
-%   removed_images          - Vector of images that have been removed (saves space; see remove_empty.m, replace_empty.m)
-%   removed_voxels          - Vector of empty in-mask voxels that have been removed (saves space; see remove_empty.m, replace_empty.m)
-%   volInfo                 - Structure with info on brain mask (saves space) and mapping voxels to brain space
+% brainpathway Properties (a partial list; type doc brainpathway for more):
+%   xxx                     - xxxxxxxx
 %
 % fmri_data Methods (a partial list; type doc fmri_data for more):
-%   General:
-% . 	descriptives        -  Get descriptives for an fmri_data or other image_vector object
-%       enforce_variable_types	-  Re-casts variables in objects into standard data types, which can save
-%       flip                - Flips images stored in an object left-to-right
-%     	history             - Display history for image_vector object
-%       write               - Write an image_vector object to hard drive as an Analyze image (uses .fullpath field for image names)
+%   	xxx                 - xxxx
+%
 %   Data extraction:
-%       apply_atlas         - Computes the mean value or pattern expression for each reference region specified in an atlas object
-%       apply_mask          - Apply a mask image (image filename or fmri_mask_image object) to an image_vector object
-%       apply_parcellation  - Computes the mean value or pattern expression for each parcel specified in a data object
-%       extract_gray_white_csf	- Extracts mean values (values) and top 5 component scores (components)
-%       extract_roi_averages	- This image_vector method a extracts and averages data stored in an fmri_data object
+%   	xxx                 - xxxx
+%
 %
 %   Handling brain space and image selection:
-%       compare_space           - Compare spaces of two image_vector objects
-%       get_wh_image            - For an image_vector with multiple images (cases, contrasts, etc.), select a subset.
-%       reconstruct_image       - Reconstruct a 3-D or 4-D image from image_vector object obj
-%       remove_empty            - remove vox: logical vector of custom voxels to remove, VOX x 1
-%       reparse_contiguous      - Re-construct list of contiguous voxels in an image based on in-image
-%       replace_empty           - Replace empty/missing values in an image data object
-%       resample_space          - Resample the images in an fmri_data object (obj) to the space of another
+%   	xxx                 - xxxx
+%
 %
 %   Display and visualization:
-%   	display_slices      - Creates 3 separate montage views - ax, cor, sagg in a special figure window
-%       histogram           - Create a histogram of image values or a series of histograms for each
-%       image_similarity_plot - Associations between images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
-%       isosurface          - Create and visualize an isosurface created from the boundaries in an image object.
-%       montage             - Create a montage of an image_vector (or statistic_image or fmri_data)
-%       orthviews               - display SPM orthviews for CANlab image_vector (or fmri_data, statistic_image) object
-%       pattern_surf_plot_mip	- axial maximum intensity projection pattern surface plot
-%   	sagg_slice_movie	- Movie of successive differences (sagittal slice)
-%       slices              - Create a montage of single-slice results for every image in an image_vector object
-%       surface             - Render image data on brain surfaces; options for cutaways and canonical surfaces
-%       wedge_plot_by_atlas	- Plot a data object or 'signature' pattern divided into local regions
+%   	xxx                 - xxxx
+%
 %
 %   Data processing and analysis:
-%   	ica                 - Spatial ICA of an fmri_data object
-%       image_math          - Perform simple mathematical and boolean operations on image objects (see also plus, minus, power)
-%       mahal               - Mahalanobis distance for each image in a set compared to others in the set
-%       mean                - Mean across a set of images. Returns a new image_vector object.
-%       preprocess          - Preprocesses data in an image_vector (e.g., fmri_data) object; many options for filtering and outlier id
-%       qc_metrics_second_level	- Quality metrics for a 2nd-level analysis (set of images from different subjects)
-%       searchlight         - Run searchlight multivariate prediction/classification on an image_vector
-%       threshold           - Threshold image_vector (or fmri_data or fmri_obj_image) object based on raw threshold values
-%       union               - ...and intersection masks for two image_vector objects
+%   	xxx                 - xxxx
+%
 %
 % -------------------------------------------------------------------------
 % Examples and help:
 % -------------------------------------------------------------------------
 %
 % To list properties and methods for this object, type:
-% doc fmri_data, methods(fmri_data)
+% doc brainpathway, methods(brainpathway)
 %
-% Example 1: Load images (and run a simple analysis)
+% b = brainpathway(pain_pathways);  % Construct a brainpathway object from an atlas object, here "pain_pathways"
+% b.region_atlas = pain_pathways;   % Alternate way of assigning a region atlas, or changing the atlas
+% b.voxel_dat = randn(352328, 20);
+% b.voxel_dat = [];                 % Remove original data, leave calculated derivatives intact
 %
-% Load a sample dataset into an fmri_data object (subclass of image_vector)
-% This loads one of a set of named image collections used in demos/help:
-% data_obj = load_image_set('emotionreg');
+% b = brainpathway(pain_pathways); % Construct a brainpathway object from an atlas object
+% b.region_dat = ST_cleaned.big_regions;
+% plot_connectivity(b, 'notext')
 %
-% You can load the same images manually, by locating the files, listing
-% their names in a character array (or 1 x n cell array of strings), and
-% then passing those into fmri_data:
+% Add clusters:
+% b = cluster_regions(b);
+% plot_connectivity(b, 'notext', 'partitions', b.node_clusters, 'partition_labels', {'Thal', 'Bstem/Amy' 'S2/insula', 'S1');
 %
-% data_obj = fmri_data(which('Wager_2008_emo_reg_vs_look_neg_contrast_images.nii.gz'));
+% Could do (but not needed - will be done automatically when voxel data or node weights are assigned): 
+% b.update_node_data(b);
+% b.update_node_connectivity(b);
 %
-% filedir = what(fullfile('CanlabCore', 'Sample_datasets', 'Wager_et_al_2008_Neuron_EmotionReg'));
-% image_names = filenames(fullfile(filedir.path, '*img'));
-% data_obj = fmri_data(image_names);
-%
-% Now you can interact with the object.  Try, e.g.,:
-% methods(data_obj)                               % List methods for object type
-% descriptives(data_obj);                         % Print summary of descriptive statistics for the dataset
-% plot(data_obj)                                  % Custom fmri_data specific plots
-% t = ttest(data_obj);                            % Perform a voxel-wise one-sample t-test across images
-% t = threshold(t, .005, 'unc', 'k', 10);         % Re-threshold with extent threshold of 10 contiguous voxels
-% r = region(t);                                  % Turn t-map into a region object with one element per contig region
-%
-% Example 2: Extract data averaged over regions of interest:
-%
-% First run Example 1.  Now you have a thresholded t-statistic map.
-% Extract averages (across voxels) for each subject in each contiguous
-% region by typing:
-%
-% r = extract_roi_averages(data_obj, t);
-%
-% This returns r, which is another object--a "region"-class object.
-% Region objects contain vectors, one element per pre-defined region in the
-% image (in this case, significant blobs from our analysis).
-% Each element contains info that describes the region, including the voxels included,
-% and average and voxel-by-voxel data if extracted from images and attached.
-% Type "doc region" for more info.
-% r has properties that hold multiple types of data:
-% - .dat holds generic extracted data
-% - .all_data holds voxel-by-voxel extracted data
-%
-% For more examples and walkthroughs, see the CANlab_help_examples
-% repository at https://github.com/canlab/CANlab_help_examples
-%
-% Some example tutorials:
-% canlab_help_1_installing_tools
-% canlab_help_2_load_a_sample_dataset
-% canlab_help_3_voxelwise_t_test_walkthrough
-% canlab_help_4_write_data_to_image_file_format
-% canlab_help_5_regression_walkthrough
-
+% b.node_dat = ST_cleaned.cPDM;
+% plot_connectivity(b, 'notext')
+% 
+% *** to-do : add external variables (e.g., temp, pain)
+% *** partitions
 
 % Programmers' notes:
 % Tor Wager, 7/25/2019 : initial creation
 
-classdef brainpathway
+classdef brainpathway < handle
     
-    properties
-        % also inherits the properties of image_vector.
+    properties (SetObservable = true)
         
-        region_atlas (1, 1) atlas; % An atlas-class object defining k regions
-        weights fmri_data = []; % A series of n fmri_data objects, one per network, whose data field defines pattern weights
+        region_atlas (1, 1) atlas;          % An atlas-class object defining k regions
         
-        connections (1, 1) struct = struct(''); % A series of matrices specifying [k x k] bivariate connections
+        voxel_dat (:, :) single;            % A [voxels x images/observations] matrix of data
+        node_dat  (:, :) single;
+        region_dat (:, :) single;
+        network_dat (:, :) single;
+        partition_dat (:, :) single;
         
-        connections_apriori (:, :, :) logical = false(1, 1, 1);    % [1/0] logical matrices specifying existing connections, k x k x n for n networks
+        node_weights (1, :) cell;           %  A series of n cells, one per node. Each cell contains a vector of pattern weights across voxels
+        node_labels (1, :) cell;           %  A series of n cells, one per node. Each cell contains a char array name for the node.
+        node_clusters (1, :) int32;         % n integers indicating cluster membership (see cluster_regions)
+        
+        region_indx_for_nodes (1, :) int32 = []; 
+        
+        connectivity (1, 1) struct = struct('regions', [], 'nodes', []); % A series of matrices specifying [k x k] bivariate connections
+        
+        %       Specify a function handle and optional arguments to the
+        %       function (in addition to data). This allows connectivity_properties to be defined in a very flexible way, using multiple functions and inputs.
+        %       For example, the default is:
+        %       obj.connectivity_properties = struct('c_fun_han', @corr, 'c_fun_arguments', {})
+        %           ...which uses Pearson's correlations
+        %       An alternative using Spearman's correlations (rank) would be:
+        %       obj.connectivity_properties = struct('c_fun_han', @corr, 'c_fun_arguments', {'type', 'Spearman'})
+        %       Or, for partial correlations:
+        %       obj.connectivity_properties = struct('c_fun_han', @partialcorr, 'c_fun_arguments', {'type', 'Spearman'})
+        
+        connectivity_properties (1, 1) struct = struct('c_fun_han', @corr, 'c_fun_arguments', {{}});  % 'metric', 'r', 'rank', false, 'robust', false, 'partialcorr', false);
+        
+        connections_apriori (:, :, :) logical = logical([]);    % [1/0] logical matrices specifying existing connections, k x k x n for n networks
         
         % k x n latent variable weights - voxel weights. {1....k} cell k has {v x n}, v voxels x n networks
         % OR: weights could be in n fmri_data objects, one per network, with
-        % - connections.est:        Estimated connectivity strengths
-        % - connections.se:         Standard error of estimated connectivity strengths
-        % - connections.metric      Metric type [r, cos_sim, tau, partial_r]
+        % - connectivity.est:        Estimated connectivity strengths
+        % - connectivity.se:         Standard error of estimated connectivity strengths
+        % - connectivity.metric      Metric type [r, cos_sim, tau, partial_r]
         % - graph_properties:
         % - timeseries_data:        Level-1 (time series, t) cell array with one cell per subject, [t x k] data matrix in each cell, NaN is missing
         % - person_data:            Level-2 (person-level, s) data for each region, [s x k] padded matrix, NaN is missing
@@ -274,20 +248,61 @@ classdef brainpathway
         
         additional_info (1, 1) struct = struct(''); % A flexible structure defining user-specified additional information.
         
+        listeners = [];         % listeners
+        
+        verbose = true;
+        
+        data_quality (1, 1) struct = struct(''); % A flexible structure defining data quality metrics
+        
     end % properties
+    
+    events
+        % Set events for listeners here
+        
+    end % events
+    
     
     methods
         
         % Class constructor
         function obj = brainpathway(varargin)
             
-            input_atlas = false;
+            % -------------------------------------------------------------------------
+            % OPTIONAL INPUTS
+            % -------------------------------------------------------------------------
+            
+            % Assign argument following ANY valid property name
+            % allowable_inputs = properties(brainpathway)';       % should
+            % be row cell vector of property names. This is recursive if we
+            % do this though...
+            allowable_inputs = {'region_atlas'    'voxel_dat'    'node_dat'    'region_dat'    'network_dat'    'partition_dat' 'node_weights'    'connectivity'    'connections_apriori'    'additional_info'};
+            
+            % optional inputs with default values - each keyword entered will create a variable of the same name
+            
+            for i = 1:length(varargin)
+                if ischar(varargin{i})
+                    switch varargin{i}
+                        
+                        case allowable_inputs
+                            
+                            eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                            
+                        case 'noverbose'
+                            % Other special inputs/control strings
+                            
+                        otherwise, warning(['Unknown input string option:' varargin{i}]);
+                    end
+                end
+            end
+            
+            
+            %             input_atlas = false;
             
             for i = 1:length(varargin)
                 
-                switch class(varargin)
+                switch class(varargin{i})
                     
-                    case 'atlas', obj.region_atlas = varargin{i}; input_atlas = true;
+                    case 'atlas', obj.region_atlas = varargin{i}; % input_atlas = true;
                         
                     case 'char'
                         switch varargin{i}
@@ -305,31 +320,533 @@ classdef brainpathway
                 
             end % process varargin
             
-            if ~input_atlas % load a default atlas if no atlas was passed in
+            
+            
+            % -------------------------------------------------------------------------
+            % SPECIAL COMMANDS/PROCESSES
+            % -------------------------------------------------------------------------
+            
+            isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
+            if ~any(isatlas) 
+                % load a default atlas if no atlas was passed in
+                % This normally also triggers the static method initialize_nodes: 
+                % Initialize nodes for each region, with weights of 1 if no other information is available
+                % But perhaps it doesn't if it's called within the
+                % constructor. So we replicate it here.
                 
                 obj.region_atlas = load_atlas('canlab2018_2mm');
                 
             end
             
+            % initialize_nodes: Initialize nodes for each region, with weights of 1 if no other information is available
+            disp('Initializing nodes to match regions.');
+            k = num_regions(obj.region_atlas);
+            obj.node_weights = cell(1, k);       
+            nvox = count_vox_per_region(obj);           % Get number of voxels for each region
+
+            % initialize
+            for i = 1:k
+                obj.node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
+                obj.node_labels{i} = obj.region_atlas.labels{i};
+            end
+            
+            obj.region_indx_for_nodes = get_node_info(obj);
+            validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+            
+%             if isempty(obj.node_weights)
+%                 
+%                 obj = intialize_nodes(obj);
+%                 
+%             end
+%             
+            % update_region_dat : Take voxel-level data and get region averages
+            
+            % update_node_dat : Take voxel-level data and get node activity
+            
+            % need listeners:
+            % when vox data is assigned (if not empty), re-calculate region averages.
+            % when node weights are assigned, re-calculate node response
+            % and connectivity
+            
+            % -------------------------------------------------------------------------
+            % VALIDATE ATTRIBUTES OF INPUTS
+            % -------------------------------------------------------------------------
             k = num_regions(obj.region_atlas);
             
+            validateattributes(obj.region_atlas,{'atlas'},{},'brainpathway','.region_atlas');
+            
+%             validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+            
+            % node weights must be voxels x nodes, so rows == region vox, for each region
+            
+            % -------------------------------------------------------------------------
+            % LISTENERS: Check properties and recalculate/update data fields
+            % -------------------------------------------------------------------------
+            
+
+            
+            % When voxel_dat is set/updated, ...
+            % ------------------------------------------------------------
+            
+            % resample space if needed
+            % obj.listeners = addlistener(obj,'voxel_dat', 'PreSet',  @(src, evt) resample_space(obj, src, evt));
+            
+            % update region_dat
+            obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) brainpathway.update_region_data(obj, src, evt));
+
+            % update node_dat
+            obj.listeners(end+1) = addlistener(obj,'voxel_dat', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            
+            
+            % When region_dat is set/updated...
+            % ------------------------------------------------------------
+            % update region connectivity
+            obj.listeners(end+1) = addlistener(obj,'region_dat', 'PostSet',  @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+  
+            % When node_weights are set/updated...
+            % ------------------------------------------------------------
+            % update node_dat
+            obj.listeners(end+1) = addlistener(obj,'node_weights', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            
+            
+            % When node_dat is set/updated...
+            % ------------------------------------------------------------
+            % update node connectivity
+            obj.listeners(end+1) = addlistener(obj,'node_dat', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            
+            % When connectivity_properties are set/updated...
+            % ------------------------------------------------------------
+            % update node connectivity
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            
+            % update region connectivity
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+            
+            % ------------------------------------------------------------
+            % When region_atlas is set/updated ....
+            % update region_dat
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.update_region_data(obj, src, evt));
+            
+            % initialize nodes
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
+                        
             
         end % class constructor
         
         
+
+        
+        % % Extracts local patterns from an image_vector
+        % % ---------------------------------------------------------
+        % pain_regions_pdm1 = extract_data(pain_regions, pdm1);
+        % % pain_regions_pdm1(1).all_data -> weights are stored in in all_data
+        % % save in .val field, which extract_data will use to extract
+        % for i = 1:length(pain_regions_pdm1)
+        %     pain_regions_pdm1(i).val = pain_regions_pdm1(i).all_data';
+        %     pain_regions_pdm1(i).Z = pain_regions_pdm1(i).all_data;
+        % end
+        % k = length(pain_regions_pdm1);
+        
+        
+        function obj = cluster_regions(obj, varargin)
+            
+            n_clusters = max(8, num_regions(obj.region_atlas));
+            
+            if length(varargin) > 0
+                n_clusters = varargin{1};
+            end
+            
+            obj.node_clusters = (clusterdata(obj.region_dat', 'linkage', 'ward', 'maxclust', n_clusters))';
+            
+        end
+        
+        function [rr, clusters] = cluster_voxels(obj, varargin)
+            % Returns a matrix of correlations between each voxel and each
+            % region average (rr). This is a set of regions used for
+            % clustering
+            
+            n_clusters = max(20, num_regions(obj.region_atlas));
+            
+            if length(varargin) > 0
+                n_clusters = varargin{1};
+            end
+            
+             if obj.verbose, fprintf('Running correlations.\n'); end
+             
+            % This function takes and N x p matrix a and an N x v matrix b and returns
+            % a p x v matrix of correlations across the pairs.
+            corr_matrix = @(a, b) ((a-mean(a))' * (b-mean(b)) ./ (size(a, 1) - 1)) ./ (std(b)' * std(a))'; % Correlation of a with each column of b
+
+            a = double(obj.region_dat);
+            b = double(obj.voxel_dat');
+            rr = corr_matrix(a, b)';    % Voxels x regions
+            
+            if obj.verbose, fprintf('Clustering voxels.\n'); end
+            
+            clusters = (clusterdata(rr, 'linkage', 'ward', 'savememory','on', 'maxclust', n_clusters))';
+            
+            % T and P-values
+
+            r2t = @(r, n) r .* sqrt((n - 2) ./ (1 - r.^2));
+            t2p = @(t, n) 2 .* (1 - tcdf(abs(t), n - 2));
+            t = r2t(r, size(a, 1));
+            pp = t2p(t, size(a, 1));
+
+        end
+
+
+        
+        function plot_connectivity(obj, varargin)
+        % Takes any optional input arguments to plot_correlation_matrix
+        
+            input_args = varargin;
+            
+            S = struct('r', obj.connectivity.regions.r, 'p', obj.connectivity.regions.p, 'sig', obj.connectivity.regions.p < 0.05);
+            
+            Xlabels = format_strings_for_legend(obj.region_atlas.labels);
+                    
+            figtitle = 'brainpathway_connectivity_view';
+            
+            if isempty(obj.connectivity.nodes)
+                create_figure(figtitle);
+            else
+                create_figure(figtitle, 1, 2);
+            end
+            
+            k = size(S.r, 1);
+            % Circle-plot display and text are automatically suppressed for
+            % k > 50 and 15, respectively, in plot_correlation_matrix
+            
+            if k > 50
+                % Plot without text labels
+                OUT = plot_correlation_matrix(S, 'nofigure', varargin{:});
+                
+            else
+                
+                OUT = plot_correlation_matrix(S, 'nofigure', ...
+                    'var_names', Xlabels, varargin{:});
+                
+            end
+            
+            num_nodes = length(obj.region_indx_for_nodes);
+            if num_nodes == num_regions(obj.region_atlas)
+                
+                node_labels = Xlabels;
+                
+            else node_labels = {};
+            end
+            
+            title('Region connectivity')
+            
+            if isempty(obj.connectivity.nodes)
+                return
+            end
+            
+            subplot(1, 2, 2);
+            
+            S = struct('r', obj.connectivity.nodes.r, 'p', obj.connectivity.nodes.p, 'sig', obj.connectivity.nodes.p < 0.05);
+            
+            if k > 50
+                % Plot without text labels
+                OUT = plot_correlation_matrix(S, 'nofigure', varargin{:});
+                
+            else
+                
+                OUT = plot_correlation_matrix(S, 'nofigure', ...
+                    'var_names', node_labels, varargin{:});
+                
+            end
+            
+            title('Node connectivity')
+
+            %             Xpartitions = ones(size(S.r, 2), 1);
+%             partitionlabels = {'Regions'};
+    
+
+%             OUT = plot_correlation_matrix(S, 'nofigure', ...
+%                 'var_names', Xlabels, 'partitions', Xpartitions, 'partitionlabels', partitionlabels);
+
+        end
+        
     end % methods
+    
+    methods (Static)
+        
+        
+        function obj = intialize_nodes(obj, src, evt)
+            % Initialize nodes with 1 node per region
+            % (It is possible to assign multiple nodes per region)
+            
+            if obj.verbose, fprintf('Initializing nodes to match regions.\n'); end
+            
+            k = num_regions(obj.region_atlas);
+            
+            node_weights = cell(1, k);
+            
+            % Get number of voxels for each region
+            nvox = count_vox_per_region(obj);
+            
+            %obj = brainpathway.update_node_data(obj); 
+            
+            % initialize
+            for i = 1:k
+                
+                node_weights{i} = ones(nvox(i), 1) ./ nvox(i);
+                
+                node_labels{i} = obj.region_atlas.labels{i};
+                
+            end
+            
+            obj.node_weights = node_weights; % Do not update iteratively; will trigger listener to update node data
+            obj.node_labels = node_labels;
+            
+            obj.region_indx_for_nodes = get_node_info(obj);
+            
+            validateattributes(obj.node_weights,{'cell'},{'size', [1 k]},'brainpathway','.node_weights');
+            
+        end % function
+        
+        
+        function obj = update_region_data(obj, src, evt)
+            % Update region average data by extracting from obj.voxel_dat
+            
+            % Notes: this will not do anything fancy with zero voxels or
+            % NaNs. Input is validated to be non-NaN.
+            % An alternative would be atlas.apply_parcellation
+            
+            v = size(obj.region_atlas.dat, 1); % num vox
+            k = num_regions(obj.region_atlas);
+            
+            if isempty(obj.voxel_dat)
+                
+                % Special case: leave existing region_dat alone
+                %obj.region_dat = [];
+                return
+            end
+            
+            if obj.verbose, fprintf('Updating region averages.\n'); end
+            
+            validateattributes(obj.voxel_dat,{'numeric'},{'nrows', v, '2d', 'nonnan'}, 'brainpathway.update_region_data','.voxel_dat');
+            
+            % nvox = count_vox_per_region(obj);
+            
+            parcel_indic = condf2indic(obj.region_atlas.dat, 'integers', k);
+            
+            %for computing means, scale each column of parcels to sum to 1
+            mydat = bsxfun(@rdivide, parcel_indic, nansum(parcel_indic));
+            
+            %matrix products will give us the mean now...
+            obj.region_dat = obj.voxel_dat' * mydat;
+            
+            % update data quality metrics
+            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat); % if data is mean-centered, will be meaningless
+            obj.data_quality.tSTD = std(obj.region_dat); % if data is mean-centered, will be meaningless
+            
+        end
+        
+        
+        function obj = update_node_data(obj, src, evt)
+            % Update node response data by applying node weights for each region
+            
+            % Notes: this will not do anything fancy with zero voxels or
+            % NaNs. Input is validated to be non-NaN.
+            % An alternative would be atlas.apply_parcellation
+            
+            %             1 cell per region, in a [voxels x nodes] matrix
+            % %                       within each cell. A private attribute (not
+            % %                       accessible by users) maps regions to nodes in a
+            % %                       [nodes x 1] integer vector, with every node coded
+            % %                       as a unique integer.
+            
+            %simfun = @dot;
+
+            v = size(obj.region_atlas.dat, 1); % num vox
+            k = num_regions(obj.region_atlas);
+            
+            if isempty(obj.voxel_dat)
+                % Special case: leave existing node_dat alone
+                
+                return
+            end
+            
+            if obj.verbose, fprintf('Updating node response data.\n'); end
+            
+            validateattributes(obj.voxel_dat,{'numeric'},{'nrows', v, '2d', 'nonnan'}, 'brainpathway.update_region_data','.voxel_dat');
+            validateattributes(obj.node_weights,{'cell'},{}, 'brainpathway.update_node_data','.node_weights');
+            
+            % nvox = count_vox_per_region(obj);
+            
+            [obj.region_indx_for_nodes, ~, node_start, node_end] = get_node_info(obj);
+            
+            % index into voxels in region
+            parcel_indic = logical(condf2indic(obj.region_atlas.dat, 'integers', k));
+            
+            for i = 1:k
+                
+                mydat = obj.voxel_dat(parcel_indic(:, i), :);
+                
+                myvals = (obj.node_weights{i}' * mydat)' ;  % obs x nodes for this region
+                
+                allnodedat(:, [node_start(i):node_end(i)]) = myvals;
+                
+            end
+            
+            obj.node_dat = allnodedat;
+        end
+        
+        
+        function obj = update_region_connectivity(obj, src, evt)
+            
+            
+            dat = obj.region_dat;
+            outputfield = 'regions';
+            
+            if obj.verbose, fprintf('Updating obj.connectivity.%s.\n', outputfield); end
+            
+            fhan = obj.connectivity_properties.c_fun_han;
+            in_args = obj.connectivity_properties.c_fun_arguments;
+            
+            if isempty(dat)
+                [obj.connectivity.(outputfield).r,  obj.connectivity.(outputfield).p] = deal([]);
+              
+                return
+            end
+            
+            % note: will work for corr, partialcorr now, not other methods,
+            % e.g., multilevel methods like ttest3d.
+            [r, p] = fhan(dat, in_args{:});
+            
+            obj.connectivity.(outputfield).r = r;
+            obj.connectivity.(outputfield).p = p;
+            
+            %% compute avg within/between connectivity, using labels in node_clusters if available
+            
+            % if no labels are in node_clusters, but this is the Yeo 17
+            % networks, manually assign the clusters in a sensible way            
+            if isempty(obj.node_clusters) & strcmp(obj.region_atlas.atlas_name, 'Schaefer2018Cortex_17networks')    
+                if obj.verbose, fprintf('Detected using Yeo 17, automatically assigning standard clustering of regions.\n'); end
+                obj.node_clusters = [1 1 1 1 1 1 2 2 2 2 2 2 3 3 3 3 4 4 5 5 5 5 6 6 6 6 6 6 7 7 7 7];                
+            end
+            
+            if ~isempty(obj.node_clusters)
+                if obj.verbose, fprintf('Updating avg within/between cluster connectivity for regions.\n'); end
+                
+                for i=1:length(obj.node_weights) % how many regions we have
+                    
+                    % mean correlation with regions that have same cluster
+                    % label as this region, for each row for connectivity
+                    % matrix
+                    obj.connectivity.regions.within(i) = mean(obj.connectivity.regions.r(i, obj.node_clusters==obj.node_clusters(i)));
+                    
+                    % same as line above, but for regions w/ different
+                    % cluster label
+                    obj.connectivity.regions.between(i) = mean(obj.connectivity.regions.r(i, obj.node_clusters~=obj.node_clusters(i)));
+                    
+                end
+                
+                obj.connectivity.regions.avg_between_over_within = mean( obj.connectivity.regions.within) / mean( obj.connectivity.regions.between);
+            end
+                
+            
+        end
+        
+        
+        function obj = update_node_connectivity(obj, src, evt)
+            
+            dat = obj.node_dat;
+            outputfield = 'nodes';
+            
+            if obj.verbose, fprintf('Updating obj.connectivity.%s.\n', outputfield); end
+            
+            fhan = obj.connectivity_properties.c_fun_han;
+            in_args = obj.connectivity_properties.c_fun_arguments;
+            
+            if isempty(dat)
+                [obj.connectivity.(outputfield).r,  obj.connectivity.(outputfield).p] = deal([]);
+                
+                return
+            end
+            
+            % note: will work for corr, partialcorr now, not other methods,
+            % e.g., multilevel methods like ttest3d.
+            [r, p] = fhan(dat, in_args{:});
+            
+            obj.connectivity.(outputfield).r = r;
+            obj.connectivity.(outputfield).p = p;
+            
+             %% compute avg within/between connectivity, using labels in node_clusters if available
+            
+            % if no labels are in node_clusters, but this is the Yeo 17
+            % networks, manually assign the clusters in a sensible way            
+            if isempty(obj.node_clusters) & strcmp(obj.region_atlas.atlas_name, 'Schaefer2018Cortex_17networks')    
+                if obj.verbose, fprintf('Detected using Yeo 17, automatically assigning standard clustering of regions.\n'); end
+                obj.node_clusters = [1 1 1 1 1 1 2 2 2 2 2 2 3 3 3 3 4 4 5 5 5 5 6 6 6 6 6 6 7 7 7 7];                
+            end
+            
+            if ~isempty(obj.node_clusters)
+                if obj.verbose, fprintf('Updating avg within/between cluster connectivity for nodes.\n'); end
+                
+                for i=1:length(obj.node_weights) % how many regions we have
+                    
+                    % mean correlation with regions that have same cluster
+                    % label as this region, for each row for connectivity
+                    % matrix
+                    obj.connectivity.nodes.within(i) = mean(obj.connectivity.nodes.r(i, obj.node_clusters==obj.node_clusters(i)));
+                    
+                    % same as line above, but for regions w/ different
+                    % cluster label
+                    obj.connectivity.nodes.between(i) = mean(obj.connectivity.nodes.r(i, obj.node_clusters~=obj.node_clusters(i)));
+                    
+                end
+                
+                obj.connectivity.nodes.avg_between_over_within = mean( obj.connectivity.nodes.within) / mean( obj.connectivity.nodes.between);
+            end
+                
+            
+        end
+        
+        
+    end % static methods
     
 end % classdef
 
-% % Extracts local patterns from an image_vector
-% % ---------------------------------------------------------
-% pain_regions_pdm1 = extract_data(pain_regions, pdm1);
-% % pain_regions_pdm1(1).all_data -> weights are stored in in all_data
-% % save in .val field, which extract_data will use to extract
-% for i = 1:length(pain_regions_pdm1)
-%     pain_regions_pdm1(i).val = pain_regions_pdm1(i).all_data';
-%     pain_regions_pdm1(i).Z = pain_regions_pdm1(i).all_data;
-% end
-% k = length(pain_regions_pdm1);
+
+% Get number of voxels for each region
+function nvox = count_vox_per_region(obj)
+
+k = num_regions(obj.region_atlas);
+
+region_idx = obj.region_atlas.dat;
+u = unique(region_idx);
+nvox = zeros(1, k);
+
+for i = 1:k
+    nvox(i) = sum(region_idx == i);
+end
+
+end
+
+
+function [region_indx_for_nodes, sz, node_start, node_end] = get_node_info(obj)
+
+% Count nodes per region
+sz = cellfun(@size, obj.node_weights, 'UniformOutput', false);
+sz = cat(1, sz{:});
+sz = sz(:, 2);
+
+% Index into starting and ending nodes for each region
+node_start = cumsum(sz);
+node_end = [node_start(2:end) - 1 ; sum(sz)];
+
+k = num_regions(obj.region_atlas);
+region_indx_for_nodes = cell(1, k);
+
+for i = 1:k
+    region_indx_for_nodes{i} = i * ones(1, sz(i));
+end
+
+region_indx_for_nodes = cat(2, region_indx_for_nodes{:});
+
+end
 
 

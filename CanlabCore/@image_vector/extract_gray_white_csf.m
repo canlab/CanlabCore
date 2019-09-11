@@ -43,8 +43,12 @@ function [values, components, full_data_objects, l2norms] = extract_gray_white_c
 %   **full_data_objects:**
 %        Masked data objects for {gray white CSF}
 %
-% %   **l2norms:**
+%   **l2norms:**
 %        Length-adjusted L2 norms (divided by sqrt(nvox))
+%
+%   **masks:**
+%        optional input for using different masks; it should provide gray,
+%        white and ventricle images in order. 
 % ..
 %    Tor Wager, July 21, 2015
 % ..
@@ -57,19 +61,20 @@ function [values, components, full_data_objects, l2norms] = extract_gray_white_c
 % Sept 2017: added option for custom function evaluation in place of mean.
 
 fxn = @(x1)(nanmean(x1,1));
+masks = {'gray_matter_mask_sparse.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'eval'
                 fxn = varargin{i+1};
+            case 'masks'
+                masks = varargin{i+1};
         end
     end
 end
 
 numcomps = 5;
-
-masks = {'gray_matter_mask_sparse.img' 'canonical_white_matter.img' 'canonical_ventricles.img'};
 
 obj = remove_empty(obj);  % return only non-empty values
 nimgs = size(obj.dat, 2); % - sum(obj.removed_images);

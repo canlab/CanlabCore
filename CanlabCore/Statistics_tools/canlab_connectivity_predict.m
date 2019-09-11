@@ -119,7 +119,7 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 % ..
 
 docluster = 1; % Defaults
-dograph = 1;
+dograph = 1; % Graph properties with matlab_bgl
 doplot = 1;
 y = [];             % this is for the outcome data, if any
 algo = 'cv_lassopcr';

@@ -360,6 +360,15 @@ if heatm
     end 
 end
 
+% rearrange Z to map the negative peak later
+if exist('Z', 'var')
+    for i = 1:numel(Z)
+        neg_idx = Z{i}<0;
+        xyz{i}(neg_idx,:)=flipud(xyz{i}(neg_idx,:));
+        Z{i}(neg_idx)=flipud(Z{i}(neg_idx));
+        actcolors{i}(neg_idx,:)=flipud(actcolors{i}(neg_idx,:));
+    end
+end
 
 % -------------------------------------------------------------------------
 % * build function call

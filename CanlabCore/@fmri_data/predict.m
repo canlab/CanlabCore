@@ -32,7 +32,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **error_type** = mcr
 %        mcr, mse: misclassification rate or mean sq. error
 %
-%   **algorithm_name** = 'cv_regress'
+%   **algorithm_name** = 'cv_pcr'
 %        name of m-file defining training/test function
 %
 %   **useparallel** = 1
@@ -87,7 +87,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   Built-in algorithm choices include:
 %
 %   **cv_multregress:**
-%        [default] multiple regression
+%        multiple regression
 %
 %   **cv_univregress:**
 %        Average predictions from separate univariate regression of outcome on each feature
@@ -96,7 +96,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        Support vector regression with Spider package; requires spider
 %
 %   **cv_pcr:**
-%        Cross-validated principal components regression
+%        [default] Cross-validated principal components regression
 %
 %   **cv_lassopcr:**
 %        Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
@@ -266,7 +266,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %                   cvpartition: Object with information about training/test sets
 %                         teIdx: Testing IDs for each fold (holdout set)
 %                         trIdx: Training IDs for each fold (holdout set)
-%                  other_output: {[328798×1 double]  [39×1 double]  [4.7134]  [1×1 struct]}
+%                  other_output: {[328798?1 double]  [39?1 double]  [4.7134]  [1?1 struct]}
 %                                {1} : Weight map trained on all data
 %                                {2} : ?
 %                                {3} :Intercept trained on all data

@@ -73,6 +73,8 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 %        - 'within' : within-subjects standard errors, followed by contrast
 %                   matrix
 %        - '95CI'   : error bars are 95% CI instead of SE
+%        - 'custom_se': followed by a singleton vector of errors to use,
+%               one per bar
 %
 %   Display axis, title, widths, and color control
 %        - 'x' : followed by x-axis values for bars
@@ -150,6 +152,7 @@ xdat = [];
 dolines = 0;
 dobars = 1;
 dowithin = 0;
+custom_se = false;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
@@ -221,6 +224,7 @@ if length(varargin) > 0
 
         % Error bar options
         if strcmp(varargin{i}, 'within'), dowithin = 1; end %cons = varargin{i + 1}; end
+        if strcmp(varargin{i}, 'custom_se'), within_ste = varargin{i+1}; custom_se = true; end
         if strcmp(varargin{i}, '95CI'), do95CI = 1; end
 
         % Display axis, title, widths, and color control
@@ -358,11 +362,15 @@ end
 
 dat = y;  % adjusted data, for plot
 
-if dowithin
+if dowithin && ~custom_se
     
     within_ste = barplot_get_within_ste(dat);
     
     Std_Error = repmat(within_ste, 1, size(dat, 2));
+    
+elseif custom_se
+    
+    Std_Error = within_ste;
     
 end
 

@@ -642,6 +642,7 @@ classdef brainpathway < handle
             obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat); % if data is mean-centered, will be meaningless
             obj.data_quality.tSTD = std(obj.region_dat); % if data is mean-centered, will be meaningless
             
+            obj = obj.update_region_connectivity(obj,src,evt);
         end
         
         
@@ -692,6 +693,8 @@ classdef brainpathway < handle
             end
             
             obj.node_dat = allnodedat;
+            
+            obj = obj.update_node_connectivity(obj,src,evt);
         end
         
         

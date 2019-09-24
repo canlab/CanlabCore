@@ -142,10 +142,17 @@ classdef brainpathway_multisubject < brainpathway
             ylabel(char(obj.connectivity_properties.c_fun_han))
          end
        
-         % covs should be named fields in subject_metadata. If cell array,
+         % Computes pearson correlation for each edge between connectivity
+         % and given covariates, across subjects. Covariates can include
+         % subject-level measures of motion (e.g., mean FD), in which case
+         % correlations between motion and edge strength indicate that
+         % motion artifacts are present in the data -- higher motion
+         % subjects typically exhibit stronger connectivity (e.g., see
+         % Parkes et al 2018 for one example).
+         %
+         % Input:  covs is a char array or cell array containing fields in subject_metadata. If cell array,
          % first field is of interest, and following fields are covariates
-         % of no interest, for computing partial correlations (TODO: not
-         % implemented yet)
+         % of no interest, and partial correlations are computed.
          function plot_qcfc(obj, covs)
              
              % for convenience
@@ -157,7 +164,12 @@ classdef brainpathway_multisubject < brainpathway
             % for each edge, 
             for i=1:length(row)
                 % compute compute QC FC
-                qcfc(i) = corr(squeeze(r(row(i),col(i),:)), obj.subject_metadata.(covs));
+                
+                if iscell(covs)
+                    qcfc(i) = partialcorr(squeeze(r(row(i),col(i),:)), obj.subject_metadata.(covs{1}), obj.subject_metadata{:,covs{2:end}}, 'Rows', 'pairwise');
+                else
+                    qcfc(i) = corr(squeeze(r(row(i),col(i),:)), obj.subject_metadata.(covs), 'Rows', 'pairwise');
+                end
             end
 
             figure; histogram(qcfc)

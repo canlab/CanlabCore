@@ -251,7 +251,7 @@ else
             [image_obj, networknames, imagenames] = load_bmrk3;
             
         otherwise
-            error('Unknown mapset keyword.');
+            error('Unknown mapset keyword. If entering image names, use a cell array.');
             
     end % switch
     

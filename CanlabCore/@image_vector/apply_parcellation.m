@@ -1,10 +1,10 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parcellation(dat, parcels, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat, parcels, varargin)
 % Computes the mean value / pattern expression for each parcels specified in a data object
 %
 % Usage:
 % ::
 %
-%    [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
+%    [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
 %
 % This is a method for an fmri_data object that computes the mean value and
 % optionally, pattern expression within parcels. This can be used to
@@ -79,9 +79,9 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %        (row), in each parcel region (column)
 %
 %   **parcel_valence:**
+%        A measure of overall activation/deactivation, relative to the region average
 %        Define pattern valence as similarity with unit vector (all positive,
 %        identical weights)
-%
 %        If x is a vector of pattern weights,
 %        The cosine similarity with the unit vector is a measure of how uniform
 %        the weights are, on a scale of 1 to -1.  1 indicates that the pattern
@@ -89,12 +89,25 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %        indicates that the pattern computes the negative region average (all
 %        weights identical and negative).
 %
+%   **rmsv_pos, rmsv_neg:**
+%         Root-mean-square values
+%         Signed root mean square values for each image (rows) in each parcel
+%         (columns), for positively-valued and negatively-valued voxels,
+%         respectively. This is useful for visualizing and assessing pattern
+%         weights, i.e., when the input data image is a weight pattern map.
+%         It can tell you how strong the contribution of each region is to
+%         prediction (high weight values) and how homogenous it is (pos vs.
+%         negative energy/rmsvs). 
+%         RMSVs are expressed in weights / cm^3 of brain tissue, and volume is
+%         regularized by adding 1 cm^3 to avoid unstable results with small
+%         regions.
 %
 % :Examples:
 % ::
 %
 % % Load the Shen 2013 NIMG parcellation and a sample dataset, and get the
 %   means for each parcel in each image in the dataset.
+% --------------------------------------------------------------------------
 %
 %     parcel_image = which('shen_2mm_268_parcellation.nii');
 %     parcel_obj = atlas(parcel_image, 'noverbose');
@@ -103,6 +116,7 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %
 % % Calculate the local NPS pattern response in each region within the Shen
 % % atlas. This requires the (Private) pattern images containing the NPS map to be on your path!
+% --------------------------------------------------------------------------
 %    nps = load_image_set('npsplus');
 %    nps = get_wh_image(nps, 1);
 %    [parcel_means, local_pattern_response] = apply_parcellation(dat, parcel_obj, 'pattern_expression', nps);
@@ -112,6 +126,18 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = apply_parce
 %    r = region(parcel_obj, 'unique_mask_values');
 %    wh_parcels = ~all(isnan(parcel_means));
 %    orthviews(r(wh_parcels));
+%
+% Load the cPDM (private CANlab file) and plot rmsv_pos and rmsv_neg per
+% region in the painpathways atlas:
+% --------------------------------------------------------------------------
+%     cpdmfile = which('cPDM.mat');
+%     load(cpdmfile, 'cPDM');
+% 
+%     [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = extract_data(painpathways, cPDM, 'pattern_expression', cPDM, 'cosine_similarity');
+% 
+%     create_figure('bars'); hh = bar(rmsv_pos, 'FaceColor', [.9 .5 .2]); hold on;
+%     hh2 = bar(rmsv_neg, 'FaceColor', [.4 .3 1]); hold on;
+%     set(gca, 'XTick', 1:size(parcel_means, 2), 'XTickLabel', format_strings_for_legend(painpathways.labels), 'XTickLabelRotation', 90);
 %
 % :See also:
 % image_vector.extract_roi_averages, fmri_data.extract_roi_averages
@@ -147,23 +173,6 @@ end
 %     warning('Some parcel values are not integers.');
 % end
 
-% get pattern_image data object if specified
-% -------------------------------------------------------------------------
-
-if any(strcmp(varargin, 'pattern_expression'))
-    
-    pattern_image = varargin{find(strcmp(varargin, 'pattern_expression')) + 1};
-    dopatternexpression = true;
-    
-    % resample pattern_image to data space
-    [dat, pattern_image] = match_spaces(dat, pattern_image);
-    
-    if size(pattern_image.dat, 2) > 1
-        error('Sorry, this function currently only works for one pattern at a time!')
-    end
-    
-end
-
 % Resample parcels to data space
 % -------------------------------------------------------------------------
 
@@ -176,9 +185,30 @@ end
 
 [dat,parcels] = match_spaces(dat, parcels);  % keeps only in-image parcels
 
+% get pattern_image data object if specified
+% -------------------------------------------------------------------------
+
+if any(strcmp(varargin, 'pattern_expression'))
+    
+    pattern_image = varargin{find(strcmp(varargin, 'pattern_expression')) + 1};
+    dopatternexpression = true;
+    
+    % resample pattern_image to data space
+    %[dat, pattern_image] = match_spaces(dat, pattern_image);
+    % 9/30/2019 : Tor changed to match dat to parcels first, then patterns
+    % to dat, because pattern_expression + parcels was not working
+    % otherwise (space mismatch).
+    [pattern_image, dat] = match_spaces(pattern_image, dat);
+    
+    if size(pattern_image.dat, 2) > 1
+        error('Sorry, this function currently only works for one pattern at a time!')
+    end
+    
+end
 
 % Get indicator vectors from integers in parcels.dat
 % -------------------------------------------------------------------------
+orig_parcels_dat = parcels.dat; % for RMSVs later
 
 parcels.dat = condf2indic(parcels.dat, 'integers', n_orig_parcels);
 
@@ -241,6 +271,42 @@ for i = 1:size(parcels.dat, 2)
 end % parcel_valence
 
 
+% Root-mean-square values
+% -------------------------------------------------------------------------
+% Signed root mean square values for each image (rows) in each parcel
+% (columns), for positively-valued and negatively-valued voxels,
+% respectively. This is useful for visualizing and assessing pattern
+% weights, i.e., when the input data image is a weight pattern map.
+% It can tell you how strong the contribution of each region is to
+% prediction (high weight values) and how homogenous it is (pos vs.
+% negative energy/rmsvs). 
+% RMSVs are expressed in weights / cm^3 of brain tissue, and volume is
+% regularized by adding 1 cm^3 to avoid unstable results with small
+% regions.
+
+[rmsv_pos, rmsv_neg] = deal([]);
+
+try
+    mydat = dat.dat;
+    mydat(mydat < 0) = 0;
+    rmsv_pos = (mydat' * parcels.dat) .^ .5; % Root-mean-square data values, pos values only
+    
+    mydat = dat.dat;
+    mydat(mydat > 0) = 0;
+    rmsv_neg = -(abs((mydat' * parcels.dat)) .^ .5); % Root-mean-square data values, pos values only
+    
+    parcels2 = parcels;
+    parcels2.dat = orig_parcels_dat;
+    [vol_in_cubic_mm, voxel_count] = get_region_volumes(parcels2);
+    
+    % Divide by volume (cm^3) + 1 = divide by (mm^3 + 1000) * 1000 
+    rmsv_pos = 1000 .* rmsv_pos ./ (vol_in_cubic_mm + 1000);
+    rmsv_neg = 1000 .* rmsv_neg ./ (vol_in_cubic_mm + 1000);
+    
+catch
+    disp('Error calculating rmsv_pos and rmsv_neg ... debug me.');
+end
+
 % Pattern expression
 % -------------------------------------------------------------------------
 
@@ -297,7 +363,7 @@ function [dat,parcels] = match_spaces(dat,parcels)
 
 isdiff = compare_space(dat, parcels);
 
-if isdiff == 1 || isdiff == 2 % diff space, not just diff voxels
+if isdiff % == 1 || isdiff == 2 % diff space, not just diff voxels % 9/30/19 Tor changed - voxel lists were not matching after replace_empty used
     
     % Both work, but resample_space does not require going back to original
     % images on disk.

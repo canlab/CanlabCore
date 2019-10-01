@@ -22,6 +22,15 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %   **forcenames:**
 %        force manual naming of cl by removing existing names in .shorttitle field
 %
+%   **nosort:**
+%        Do not sort rows by network/brain lobe [default is to sort]
+%
+%   **legacy:**
+%        force manual naming of cl by removing existing names in .shorttitle field
+%
+%   **nolegend:**
+%        omit table legend
+%
 % :Outputs:
 %
 %   Returns region objects for cl with pos and neg effects
@@ -82,6 +91,7 @@ donames = false;        % name clusters before printing to table and output; sav
 forcenames = false;     % force naming of cl by removing existing names in .shorttitle field (legacy only)
 dolegacy = false;
 dosortrows = true;          % sort rows by area
+dolegend = true;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -96,6 +106,8 @@ for i = 1:length(varargin)
             case {'nosort', 'nosortrows'}, dosortrows = false;
                 
             case {'legacy', 'dolegacy'}, dolegacy = true;
+                
+            case 'nolegend', dolegend = false;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -267,7 +279,7 @@ else
     
 end
 
-if isempty(table_legend_text)
+if dolegend == false || isempty(table_legend_text)
     return
 end
 

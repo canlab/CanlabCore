@@ -306,7 +306,7 @@ else
 
     for i = 1:size(cmatx, 1)
         if isfield(clusters, 'shorttitle'), fprintf(fid, '%s\t', clusters(i).shorttitle);end
-        fprintf(fid, '%3.0f\t%3.0f\t%3.0f\t%3.0f\t%3.2f\t%3.0f\t%3.0f\t%3.2f\t', i, x(i), y(i), z(i), cmatx(i, 1), cmatx(i, 2), cmatx(i, 2).*prod(clusters(i).voxSize), cmatx(i, 3));
+        fprintf(fid, '%3.0f\t%3.0f\t%3.0f\t%3.0f\t%3.2f\t%3.0f\t%3.0f\t%3.2f\t', i, x(i), y(i), z(i), cmatx(i, 1), cmatx(i, 2), cmatx(i, 2).*prod(abs(clusters(i).voxSize)), cmatx(i, 3));
         if isfield(clusters, 'numpeaks'), fprintf(fid, '%3.0f\t', cmatx(i, 15)); end
         if isfield(clusters, 'corr_range'), fprintf(fid, '%3.2f\t%3.2f\t', cmatx(i, 8), cmatx(i, 9)); end
         if isfield(clusters, 'snr_avgts'), fprintf(fid, '%3.2f\t', cmatx(i, 10)); end

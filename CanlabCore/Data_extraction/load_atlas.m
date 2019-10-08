@@ -22,6 +22,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'schaefer400'                   'Schaefer2018Cortex_atlas_regions.mat'
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
 % 'insula'                        'Faillenot_insular_atlas.mat'
+% 'painpathways'                  'pain_pathways_atlas_obj.mat'
+% 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
 %
 %
 % Examples:
@@ -119,6 +121,15 @@ end
         case 'insula'
             savefile = 'Faillenot_insular_atlas.mat';
             varname = 'atlas_obj';
+            
+        case 'painpathways'
+            savefile = 'pain_pathways_atlas_obj.mat';
+            varname = 'pain_pathways';
+            
+        case 'painpathways_finegrained'
+            savefile = 'pain_pathways_atlas_obj.mat';
+            varname = 'pain_pathways_finegrained';
+            
             
         otherwise % assume it's a file name
             savefile = which(atlas_file_name_or_keyword);

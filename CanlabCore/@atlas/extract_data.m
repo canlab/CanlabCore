@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence] = extract_data(obj, data_obj, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = extract_data(obj, data_obj, varargin)
 % Atlas object-class method that extracts and averages data stored in an
 % fmri_data object [data_obj] basd on atlas regions.
 %
@@ -44,6 +44,43 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = extract_dat
 %        used with pattern expression only. scales expression by product of
 %        l2 norms (norm(mask)*norm(dat))
 %
+% :Outputs:
+%
+%   **parcel_means:**
+%       Matrix of mean data values for each parcel, data images x parcels
+%       This will always be the parcel means, even if pattern expression is
+%       requested. Pattern expression will be returned in a separate
+%       output.
+%
+%   **parcel_pattern_expression:**
+%        If 'pattern_expression' is entered followed by a linear
+%        multivariate pattern object, parcel_pattern_expression returns the 
+%        local expression (dot product) of the pattern for each data image
+%        (row), in each parcel region (column)
+%
+%   **parcel_valence:**
+%        A measure of overall activation/deactivation, relative to the region average
+%        Define pattern valence as similarity with unit vector (all positive,
+%        identical weights)
+%        If x is a vector of pattern weights,
+%        The cosine similarity with the unit vector is a measure of how uniform
+%        the weights are, on a scale of 1 to -1.  1 indicates that the pattern
+%        computes the region average (all weights identical and positive). -1
+%        indicates that the pattern computes the negative region average (all
+%        weights identical and negative).
+%
+%   **rmsv_pos, rmsv_neg:**
+%         Root-mean-square values
+%         Signed root mean square values for each image (rows) in each parcel
+%         (columns), for positively-valued and negatively-valued voxels,
+%         respectively. This is useful for visualizing and assessing pattern
+%         weights, i.e., when the input data image is a weight pattern map.
+%         It can tell you how strong the contribution of each region is to
+%         prediction (high weight values) and how homogenous it is (pos vs.
+%         negative energy/rmsvs). 
+%         RMSVs are expressed in weights / cm^3 of brain tissue, and volume is
+%         regularized by adding 1 cm^3 to avoid unstable results with small
+%         regions.
 %
 % :Examples:
 % ::
@@ -69,9 +106,9 @@ function [parcel_means, parcel_pattern_expression, parcel_valence] = extract_dat
 % cl = extract_roi_averages(imgs, atlas_obj{1});
 % accomplishes the same task as apply_parcellation, returns slightly different values due to interpolation.  
 
-[parcel_means, parcel_pattern_expression, parcel_valence] = deal([]);
+[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = deal([]);
 
-[parcel_means, parcel_pattern_expression, parcel_valence] = apply_parcellation(data_obj, obj, varargin{:});
+[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(data_obj, obj, varargin{:});
 
 end % function
 

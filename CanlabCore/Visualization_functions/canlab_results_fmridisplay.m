@@ -61,6 +61,8 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 %        {'blobcenters', 'regioncenters'}: Slices for the center of each
 %        blob/region
+%        Note: this creates a new figure, tagged
+%        'fmridisplay_regioncenters', and is not compatible with 'nofigure'
 %        
 %   **'noverbose':**
 %        suppress verbose output, good for scripts/publish to html, etc.
@@ -315,7 +317,7 @@ if ~exist('o2', 'var')
             nr = floor(sqrt(length(cl)));
             nc = ceil(length(cl) ./ nr);
             
-            [~, axh] = create_figure('fmridisplay', nr, nc, false, true); 
+            [~, axh] = create_figure('fmridisplay_regioncenters', nr, nc, false, true); 
             
             set(axh,'Visible','off'); % turn off axis grid for all axes
              

@@ -43,6 +43,9 @@ function o2 = montage(obj, varargin)
 %   **'nooutline':**
 %        do not display blob outlines
 %
+%   **'nofigure':**
+%        Create slices on existing figure; do not clear 'fmridisplay'-tagged figure
+%
 %   **'addmontages':**
 %        when entering existing fmridisplay obj, add new montages
 %
@@ -162,10 +165,12 @@ colortype = 'unique';
 one_blob_per_slice = false; 
 dozoom = true;
 colors = scn_standard_colors(length(obj));
+dofigure = true;
 
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'old')), methodtype = 'old'; end
+if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 
 if any(strcmp(varargin, 'color'))
     colortype = 'solid'; 
@@ -204,7 +209,12 @@ end
 
 if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
     
-    create_figure('fmridisplay'); axis off
+    if dofigure
+        create_figure('fmridisplay'); axis off
+    end
+    % TW: I think the above is unnecessary because canlab_results_fmridisplay
+    % will create a figure anyway if needed. and w/o this can pass in
+    % nofigure control string. but needs refactoring to work better.
     
     % some inputs control which slices are shown: standard slices, or specific locations for these blobs
     % regioncenters is passed through, so it determines the type of montage to create:

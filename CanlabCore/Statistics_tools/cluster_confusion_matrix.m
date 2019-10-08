@@ -37,8 +37,7 @@ function [K, stats] = cluster_confusion_matrix(pred_label,true_label,varargin)
 %   **'method'** - followed by a string specifying method for linkage; see
 %   documentation for the linkage function
 %   **'bootstrap'** - compute bootstrap confidence interval for the number of
-%   clusters using ward method
-%   for linkage with 5000 samples
+%   clusters using ward method for linkage with 5000 samples
 %   **'perm'** - permute labels to estimate p-value (two-sided) that the
 %   optimal number of clusters is less than the full number of clusters
 %   **'pairwise'** - instead of optimizing one-vs-all accuracy for each 
@@ -154,8 +153,10 @@ cm = bsxfun(@rdivide,cm,sum(cm,2)); %normalize confusion matrix
 D = 1 - (squareform(tril(cm,-1)) + squareform(triu(cm,1)'))/2; %distances
 Z = linkage(D,method); % tree
 
+if dofig
 leafOrder = optimalleaforder(Z,D); %reorder for plotting if necessary
 stats.leafOrder=leafOrder;
+end
 %% Search possible clustering solutions and compute stats
 
 for nc=2:size(cm,2)

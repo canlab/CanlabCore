@@ -213,6 +213,17 @@ switch meth
         %         lightRestoreSingle(gca);
         material dull;
         p=[p1 p2];
+    
+    case 'hires surface left'
+        pname = 'BigBrainSurfaceLeft.mat'; 
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5]);
+     
+        view(90,0);
+        axis off;
+        axis image;
+        %         lightRestoreSingle(gca);
+        material dull;
         
     case 'right'
 
@@ -247,6 +258,19 @@ switch meth
         %         lightRestoreSingle(gca);
         material dull;
         p=[p1 p2];
+
+
+    case 'hires surface right'
+        pname = 'BigBrainSurfaceRight.mat'; % from Glasser_et_al_2016_HCP
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5]);
+     
+        view(90,0);
+        axis off;
+        axis image;
+        %         lightRestoreSingle(gca);
+        material dull;
+        
         
     case 'transparent_surface'
 

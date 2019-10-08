@@ -588,7 +588,7 @@ elseif doaverage
         
         %perform repeated measures anova  (two way anova with subject as the
         %row factor
-        [~, stats(g).table_spatial, st]=anova2(z_group(~isnan(z_group(:,1)),:),1,'off');
+        [~, stats(g).table_spatial, st]=anova2(z_group(~any(isnan(z_group')),:),1,'off');
         [c,~] = multcompare(st,'Display','off');
         stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
         

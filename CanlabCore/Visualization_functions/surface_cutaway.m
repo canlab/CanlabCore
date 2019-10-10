@@ -266,7 +266,7 @@ surface_handles = [];
 p2 = [];
 p3 = [];
 
-surface_handles = addbrain('limbic');
+surface_handles = addbrain('limbic hires');
 delete(surface_handles(end)); surface_handles(end) = [];
 
 set(surface_handles, 'FaceAlpha', .7)
@@ -281,26 +281,30 @@ hh = findobj(gcf, 'Tag', 'thalamus');
 set(hh, 'FaceAlpha', .8);
 
 hh = get(surface_handles, 'Tag');
-wh = strcmp(hh, 'hippocampus');
+% wh = strcmp(hh, 'hippocampus');
+wh = strcmp(hh, 'HC');
+
 set(surface_handles(wh), 'FaceAlpha', .6);
 
 wh = strcmp(hh, 'caudate');
 set(surface_handles(wh), 'FaceAlpha', .6);
 
-overlay = which('SPM8_colin27T1_seg.img');
-ovlname = 'SPM8_colin27T1_seg';
+% overlay = which('SPM8_colin27T1_seg.img');
+% ovlname = 'SPM8_colin27T1_seg';
+overlay = which('BigBrain_processed.nii'); %underlay...
+ovlname = 'BigBrain_processed';
 
 if ~isempty(ycut_mm)
     
-    [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 70);
+    [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 81);
     set(p2(1),'FaceColor',[.5 .5 .5]);
     
 end
 
-[D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[-4 0 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 60, 'bottommm', -75);
+[D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[-4 0 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 85, 'bottommm', -75);
 set(p3(1),'FaceColor',[.5 .5 .5]);
 
-colormap gray;
+    colormap(flipud(gray));
 material dull;
 axis off
 

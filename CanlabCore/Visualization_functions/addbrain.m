@@ -336,7 +336,12 @@ switch meth
 
         p = add_surface(pname);
         set(p,'FaceColor',[0 0 .5]);
+ case 'amygdala hires'
 
+        pname = 'AMY.mat'; %anatomy toolbox
+
+        p = add_surface(pname);
+        set(p,'FaceColor',[0 0 .5]);
 %     case 'thalamus'
 %         %         P = which('carmack_thal_bstem.mat'); load(P)
 %         %         p = imageCluster('cluster',thal,'color',[0 .8 .3],'alpha',.5);
@@ -351,7 +356,13 @@ switch meth
 
         p = add_surface(pname);
         set(p,'FaceColor',[.7 .4 .4]);
+ 
+    case {'hippocampus hires'}
 
+        pname = 'HC.mat'; %anatomy toolbox
+
+        p = add_surface(pname);
+        set(p,'FaceColor',[.7 .4 .4]);
 %     case 'midbrain'
 %         P = which('carmack_thal_bstem.mat');
 %         load(P)
@@ -362,7 +373,12 @@ switch meth
         pname = 'surf_spm2_cblm.mat';
         p = add_surface(pname);
         set(p,'FaceColor',[.8 .65 .8]);
-        
+     
+    case {'CIT168'}
+        pname ='CIT168.mat';
+        p=add_surface(pname);
+        set(p,'FaceColor',[.8 .65 .8]);
+           
                
             
     % -------------------------------------------------------------------
@@ -380,7 +396,8 @@ switch meth
             set(p(end), 'Tag', names{i});
             
         end
-     
+    
+        
     case {'midbrain_group'}
         
         names = {'pag' 'sc' 'ic' 'drn' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn'};
@@ -406,13 +423,25 @@ switch meth
         myp = addbrain('hippocampus');p = [p myp];
         myp = addbrain('thalamus');p = [p myp];
         myp = addbrain('nacc');p = [p myp];
-        myp = addbrain('hires left');p = [p myp];
+        myp = addbrain('hires surface left');p = [p myp];
          myp = addbrain('BG');p = [p myp];
          myp = addbrain('brainstem'); p = [p myp];
         set(p,'FaceAlpha',1);
 
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        
+ case 'limbic hires'
+        p = [];
+        myp = addbrain('amygdala');p = [p myp];
+        myp = addbrain('hippocampus');p = [p myp];
+        myp = addbrain('hires left');p = [p myp];
+        myp = addbrain('CIT168'); p = [p myp];
+        myp = addbrain('brainstem'); p = [p myp];
+        set(p,'FaceAlpha',1);
 
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+
+        
     case 'brainstem_group'
         
         names = {'mrn' 'pbn' 'lc' 'rvm' 'nts' 'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' }; % medulla only, midbrain separate

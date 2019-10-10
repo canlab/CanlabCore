@@ -130,6 +130,9 @@ end
             savefile = 'pain_pathways_atlas_obj.mat';
             varname = 'pain_pathways_finegrained';
             
+        case 'kragel2019pag'
+            savefile ='Kragel2019PAG_atlas_object.mat';
+            varname = 'atlas_obj';
             
         otherwise % assume it's a file name
             savefile = which(atlas_file_name_or_keyword);

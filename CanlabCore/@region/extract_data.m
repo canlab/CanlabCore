@@ -1,4 +1,4 @@
-function [r, local_pattern_response] = extract_data(r, data_obj)
+function [r, local_pattern_response] = extract_data(r, data_obj, varargin)
 % Extract data and apply local patterns from image_vector object (data_obj) for voxels specified by a region object (r). Returns extracted data and averages.
 %
 % :Usage:
@@ -44,10 +44,23 @@ function [r, local_pattern_response] = extract_data(r, data_obj)
 %         NOTE: resampling the image first will give slightly different
 %         results, due to interpolation
 %
+% :Optional Inputs:
+%   **'cosine_similarity':**
+%        Calculate cosine sim for local pattern responses instead of dot product
+%        Note:  Using cosine_similarity will not behave the same with local regions as it does
+%               with whole-brain patterns.  Normalizes data in local regions by overall intensity
+%
+%   **'correlation':**
+%        Calculate cosine sim for local pattern responses instead of dot product
+%        Note:  Using cosine_similarity will not behave the same with local regions as it does
+%               with whole-brain patterns.  Subtracts the mean activity from each local region.
+%
 % :Outputs:
 %
 %   **r:**
 %         a region object, with data attached
+%         r(i).dat contains the region-average data for region i
+%         r(i).all_data contains the voxelwise data for region i
 %
 %   **local_pattern_response:**
 %         local linear combinations of voxels in each region, computed
@@ -66,6 +79,10 @@ function [r, local_pattern_response] = extract_data(r, data_obj)
 % 
 % % Extract local region averages and pattern responses
 % [regions_with_testdata_averages, local_pattern_responses] = extract_data(pain_regions_nps, test_dat);
+%
+% % Extract cosine similarity metric instead
+% [regions_with_testdata_averages, local_pattern_response_cos] = extract_data(pain_regions_nps, test_dat, 'cosine_similarity');
+%
 % ---------------------------------------------------------------
 
 % ..
@@ -75,6 +92,7 @@ function [r, local_pattern_response] = extract_data(r, data_obj)
 %     mismatch when empty vox were removed
 %     7/22/2019 Tor Wager: Now option to apply local patterns with weights
 %     stored in .vals
+%     10/7/2019 Tor Wager: Added cosine sim and correlation options
 % ..
 
 if isempty(r), return, end
@@ -129,7 +147,9 @@ for i = 1:length(r)
         end
         
         if go_ok
-            local_pattern_response{i} = double(dat) * weight_vals;
+            %local_pattern_response{i} = double(dat) * weight_vals;
+            local_pattern_response{i} = canlab_pattern_similarity(double(dat)', weight_vals, varargin{:}, 'no_warnings');
+            
         end
         
     end

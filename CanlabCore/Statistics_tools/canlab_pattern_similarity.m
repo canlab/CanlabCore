@@ -220,7 +220,7 @@ end % pattern sim calculation
 % Warnings
 % ---------------------------------
 
-if any(badvals(:)) && ~doignoremissing && ~strcmp(sim_metric,'overlap')
+if doprintwarnings && any(badvals(:)) && ~doignoremissing && ~strcmp(sim_metric,'overlap')
     
     
     for i = 1:npatt
@@ -234,8 +234,8 @@ if any(badvals(:)) && ~doignoremissing && ~strcmp(sim_metric,'overlap')
             fprintf('Warning: Some images have zero values in some of the %3.0f voxels in weight mask. These will be excluded from similarity analysis image-wise.\n', sum(inmask));
             disp('Number of zero or NaN values within weight mask, by input image:');
             
-            for i = 1:length(bad_in_mask)
-                fprintf('%3.0f ', bad_in_mask(i));
+            for j = 1:length(bad_in_mask)
+                fprintf('%3.0f ', bad_in_mask(j));
             end
             fprintf('\n');
         end

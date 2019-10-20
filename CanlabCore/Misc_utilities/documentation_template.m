@@ -93,6 +93,59 @@
 n_cols = 80;
 sep_str = repmat('_', 1, n_cols);  % see textwrap
 
+
+% ----------------------------------------------------------------------
+% Parse inputs
+% ----------------------------------------------------------------------
+% This 2019 version uses the inputParser object. Older schemes are below.
+
+p = inputParser;
+
+% Validation functions - customized for each type of input
+% ----------------------------------------------------------------------
+
+valfcn_scalar = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar'});
+
+valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
+
+% Validation: Region object, structure, or [x1 x2 x3] triplet 
+valfcn_custom = @(x) isstruct(x) || isa(x, 'region') || (~isempty(x) && all(size(x) - [1 3] == 0) && all(isnumeric(x)));
+
+% Validation: [x1 x2 x3] triplet 
+valfcn_xyz = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'size', [1 3]});
+
+% Required inputs 
+% ----------------------------------------------------------------------
+p.addRequired('x', valfcn_custom);
+p.addRequired('y', valfcn_custom);
+
+% Optional inputs 
+% ----------------------------------------------------------------------
+% Pattern: keyword, value, validation function handle
+
+p.addParameter('color', [.9 .2 0], valfcn_xyz);
+p.addParameter('bendpercent', .15, valfcn_number); % can be scalar or vector
+p.addParameter('thickness', .1, valfcn_scalar);
+p.addParameter('nstreamlines', 30, valfcn_scalar);
+
+% Parse inputs and distribute out to variable names in workspace
+% ----------------------------------------------------------------------
+% e.g., p.parse([30 1 0], [-40 0 10], 'bendpercent', .1);
+p.parse(varargin{:});
+
+IN = p.Results;
+fn = fieldnames(IN);
+
+for i = 1:length(fn)
+    str = sprintf('%s = IN.(''%s'');', fn{i}, fn{i});
+    eval(str)
+end
+
+
+
+% Next is the previously used scheme for CANlab tools for several years
+
+
 % -------------------------------------------------------------------------
 % DEFAULT ARGUMENT VALUES
 % -------------------------------------------------------------------------

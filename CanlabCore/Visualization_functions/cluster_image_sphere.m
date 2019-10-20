@@ -126,6 +126,8 @@ for i = 1:size(xyz, 1)
     cl(i).XYZmm = my_mm_coord';
     cl(i).mm_center = my_mm_coord;
     cl(i).M = V.mat;
+    
+    cl(i).voxSize = diag(cl(i).M(1:3, 1:3))';
 end
 
 end
@@ -139,7 +141,7 @@ function cl = convert_cl_xyz_to_sphere(cl, myradius)
     cl(1).XYZmm = newXYZmm;
     cl(1).XYZ = mm2voxel(cl(1).XYZmm, cl(1).M, 1)';
     cl(1).numVox = size(cl(1).XYZ, 2);
-
+    
 end
 
 

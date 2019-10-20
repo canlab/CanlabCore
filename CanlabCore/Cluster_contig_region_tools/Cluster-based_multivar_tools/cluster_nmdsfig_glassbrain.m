@@ -197,11 +197,11 @@ function [mov, phan, phan2] = cluster_nmdsfig_glassbrain(cl,classes,colors,sigma
                 if issig
 
                     if sign(issig) < 0
-                        out = nmdsfig_tools('connect3d',cl(i),cl(j), 'b', 3, bendperc);
+                        out = nmdsfig_tools('connect3d',cl(i),cl(j), 'color', [0 0 1], 'bendpercent', bendperc);
                     else
-                        out = nmdsfig_tools('connect3d',cl(i),cl(j), 'k', 3, bendperc);
+                        out = nmdsfig_tools('connect3d',cl(i),cl(j), 'color', [0 0 0], 'bendpercent', bendperc);
                     end
-                    phan(end+1) = out.h;
+                    phan = [phan out.h];
 
                 end
             end
@@ -240,6 +240,12 @@ function [mov, phan, phan2] = cluster_nmdsfig_glassbrain(cl,classes,colors,sigma
         mov = movie_tools('rotate',90,15,mov,4);
         mov = movie_tools('rotate',0,90,mov,4);
         %mov = close(mov);
-        movie2avi(mov,'cluster_nmdsfig_glass_movie.avi')
+        
+        vidObj = VideoWriter('cluster_nmdsfig_glass_movie.avi');
+        open(vidObj);
+        writeVideo(vidObj,mov);
+        close(vidObj);
+        
+        % movie2avi(mov,'cluster_nmdsfig_glass_movie.avi')
     
     end

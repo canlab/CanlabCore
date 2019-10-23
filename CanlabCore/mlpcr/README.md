@@ -1,6 +1,6 @@
 # Multilevel Principle Component Regression (MLPCR) Toolbox
 ## Created by Bogdan Petre, 2019
-## Bogdan.Petre.GR@dartmouth.edu
+### Bogdan.Petre.GR@dartmouth.edu
 
 mlpcr.m
 The top level script. This script has hyperparameters which need to be fit 

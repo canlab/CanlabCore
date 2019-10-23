@@ -8,7 +8,9 @@ somehow. User must decide which objective function to optimize and how to
 optimize it to obtain hyperparameter fits. Bayesian hyperparameter optimization 
 works well for this (see bayesopt() documentation in Matlab r2016b or later). 
 mlpcr_full() implements hyperparameter optimization and MLPCR model fitting 
-using some sensible default choices.
+using some sensible default choices. See help documentation for example use.
+Usage is the same for mlpcr_full, except you prefix a couple extra arguments
+related to hyperparameter optimization.
 
 mlpcr_full.m 
 Fits an MLPCR model using bayesian hyperparameter optimization with 

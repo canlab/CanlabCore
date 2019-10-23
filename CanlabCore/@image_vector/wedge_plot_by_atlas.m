@@ -239,7 +239,7 @@ for i = 1:k % k indexes atlases. so do this for each atlas.
         mycolors = values_to_colors(myvalues, value_limits, startcolor, endcolor);
         
         % to-do:  colorband_colors is optional input. pass out colorband_colors
-        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','radial','colorband_colors', colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
+        hh{i} = tor_wedge_plot(data_to_plot, labels{i}, 'colors', mycolors, 'outer_circle_radius', myouterradius, 'nofigure','colorband','labelstyle','curvy','colorband_colors', colorband_colors{i}); %'bicolor', 'colors', {[1 1 0] [.7 .3 1]},
     
     else % data mode
         

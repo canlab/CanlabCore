@@ -80,6 +80,10 @@ function obj = addblobs(obj, cl, varargin)
 %
 %   **'contour':**
 %
+%   **'interp':**
+%      Options to pass to interp2 when rendering blobs on standard
+%      brain. See help interp2 for valid interpolation methods
+%
 %   **'no_surface':**
 %        Do not add blobs to surface handles, if they exist
 %

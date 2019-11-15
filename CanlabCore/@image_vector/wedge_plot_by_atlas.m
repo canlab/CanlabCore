@@ -12,8 +12,8 @@ function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = we
 % 'colorband_colors' : followed by cell array (length = number of atlases) with arrays of colors for each region
 %
 % 'Signature mode':
-% Size of wedges: Pattern energy, root mean squared weights in each region, a measure of
-% overall importance/contribution to the overall pattern response (assuming that the data the model is applied to is uniform)
+% Size of wedges: Pattern energy, related to root mean squared weights in each region
+%                 Normalized local pattern expression (sqrt(w''*w)/(vol_in_mm+1000)
 %
 % Color of wedges: Proportional to valence, cosine similarity to unit
 % vector. A measure of whether weights are uniformly positive (red),

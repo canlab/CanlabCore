@@ -3,16 +3,17 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 % fmri_data object [data_obj] basd on atlas regions.
 %
 % - Runs image_vector.apply_parcellation
-%
 % - Mask/Atlas image does not have to be in the same space as the images to extract from.
-%   Resamples the data_obj to be in the same space as the atlas obj if needed.
+%   Resamples the atlas object to be in the same space as the data object if needed.
+% - For low-resolution data images, some parcels may be lost. This will be reported as output
+% - For speed (large N), you may want to pre-resample the atlas obj to match the functional data space
 %
 % - If optional weight_map obj is entered, will apply local pattern weights.
 %
 % :Usage:
 % ::
 %
-%    data_table = extract_data(extract_data, data_obj, [weight_map_obj])
+%    data_table = extract_data(atlas_obj, data_obj, [weight_map_obj])
 %
 % :Inputs:
 %
@@ -85,6 +86,20 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 % :Examples:
 % ::
 %
+% Extract region averages from an atlas of <500 regions spanning the brain
+% ------------------------------------------------------------------------------
+% help load_atlas                                       % get a list of atlases readily available
+% atlas_obj = load_atlas('canlab2018_2mm');             % Load combined atlas
+% test_images = load_image_set('emotionreg');           % Load some test images
+% parcel_means = extract_data(atlas_obj, test_images);  % Extract region average data
+%
+% Also consider:
+% DAT = extract_measures_batch(test_images);            % Extract a broad set of data measures, including the regions above
+%
+%
+% Apply local NPS pattern weights to each of a series of atlas regions to
+% get local pattern response
+% ------------------------------------------------------------------------------
 %   [nps, npsnames] = load_image_set('npsplus');
 %   siips = get_wh_image(nps, 4);
 %   nps = get_wh_image(nps, 1);
@@ -105,6 +120,22 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 % Note: 
 % cl = extract_roi_averages(imgs, atlas_obj{1});
 % accomplishes the same task as apply_parcellation, returns slightly different values due to interpolation.  
+
+% --------------------------------------------
+% Resample data to the atlas space if needed
+% --------------------------------------------
+
+isdiff = compare_space(data_obj, obj);
+
+if isdiff == 0 || isdiff == 3 % Same space, diff voxels
+   % do nothing
+elseif isdiff == 2
+    error('Invalid object: volInfo structure missing for one or more objects');
+else
+    % Resample to atlas. 
+    disp('Resampling data object to space defined by atlas object.');
+    data_obj = resample_space(data_obj, obj);
+end
 
 [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = deal([]);
 

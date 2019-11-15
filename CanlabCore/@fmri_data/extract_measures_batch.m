@@ -141,6 +141,22 @@ function DAT = extract_measures_batch(data_obj)
 %               VPS: [1×1 struct]
 %     Empathic_Care: [1×1 struct]     
 %
+% EXAMPLE
+% -------------------------------------------------------------------------
+% % Load a sample set of test images
+% test_images = load_image_set('emotionreg');           % Load some test images
+%
+% % Extract parcel data, signature responses, etc.
+% DAT = extract_measures_batch(test_images);
+%
+% % Visualize parcels and the data in the whole-brain parcel matrix
+% orthviews(DAT.PARCELS.canlab2018_2mm.parcel_obj);
+% disp(DAT.PARCELS.canlab2018_2mm.parcel_obj.labels);
+%
+% create_figure('parcel_data'); 
+% imagesc(DAT.PARCELS.canlab2018_2mm.means.dat{1});
+% axis tight; ylabel('Image'); xlabel('Parcel number'); colorbar;
+
 
 t1 = clock;
 dashes = '----------------------------------------------';
@@ -153,6 +169,7 @@ printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
 % Save some meta-data about the images
 
 DAT = [];
+DAT.extracted_with = 'Extracted parcels, signatures, and local signatures with fmri_data.extract_measures_batch()';
 DAT.extracted_on_date = scn_get_datetime;
 DAT.image_names = data_obj.image_names;
 DAT.fullpath = data_obj.fullpath;
@@ -236,6 +253,32 @@ signames = signames(wh_sigs);
 signature_obj = get_wh_image(signature_obj, wh_sigs);
 
 
+% --------------------------------------------
+% Resample data to standard space 
+% for compat. with atlases or sigs 
+% Can save time later with resampling...
+% --------------------------------------------
+
+disp('Resampling data to space of signatures')
+data_obj_sig_space = resample_space(data_obj, signature_obj);
+
+ref_atlas_obj = load_atlas(parcellation_names{1});
+
+disp('Resampling data to space of atlas object')
+data_obj_atlas_space = resample_space(data_obj, ref_atlas_obj);
+
+clear ref_atlas_obj
+
+% isdiff = compare_space(data_obj, signature_obj);
+% 
+% if isdiff == 0 || isdiff == 3 % Same space, diff voxels
+%    % do nothing
+% elseif isdiff == 2
+%     error('Invalid object: volInfo structure missing for one or more objects');
+% else
+%     data_obj_sig_space = resample_space(data_obj, signature_obj);
+% end
+
 
 for pn = 1:length(parcellation_names)
     
@@ -270,7 +313,7 @@ for pn = 1:length(parcellation_names)
         
         % Extract mean values
         
-        parcel_means = apply_parcellation(data_obj, parcel_obj);
+        parcel_means = apply_parcellation(data_obj_atlas_space, parcel_obj);
         
         DAT.PARCELS.(parcellation_name).means.dat{i} = parcel_means;
         
@@ -315,7 +358,7 @@ for pn = 1:length(parcellation_names)
             
             % Extract mean values
             
-            local_pattern = apply_parcellation(data_obj, parcel_obj, 'pattern_expression', sig_obj);
+            local_pattern = apply_parcellation(data_obj_atlas_space, parcel_obj, 'pattern_expression', sig_obj);
             
             DAT.PARCELS.(parcellation_name).(signame).dat{i} = local_pattern;
             

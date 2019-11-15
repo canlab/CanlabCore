@@ -99,6 +99,7 @@
 % threshold                           Threshold atlas object based on values in obj.probability_maps property
 % 
 % % Extracting information and converting to other object types:
+% extract_data                        Extract atlas parcel means and local pattern responses from a set of data images
 % atlas2region                        Convert an atlas object to a region object 
 % check_properties                    Check properties and enforce some variable types 
 % get_region_volumes                  Get the volume (and raw voxel count) of each region in an atlas object

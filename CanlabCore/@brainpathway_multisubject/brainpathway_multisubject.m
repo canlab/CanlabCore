@@ -75,11 +75,7 @@ classdef brainpathway_multisubject < brainpathway
                     
             figtitle = 'brainpathway_connectivity_view_multisubject';
             
-            if isempty(obj.connectivity.nodes)
-                create_figure(figtitle, 1, 2);
-            else
-                create_figure(figtitle, 1, 3);
-            end
+            create_figure(figtitle, 2, 2);
             
             k = size(S.r, 1);
             % Circle-plot display and text are automatically suppressed for
@@ -108,7 +104,7 @@ classdef brainpathway_multisubject < brainpathway
             
             if ~isempty(obj.connectivity.nodes)
           
-                subplot(1, 2, 2);
+                subplot(2, 2, 2);
 
                 % mean in 3rd dimension to avg over Ss
                 S = struct('r', mean(obj.connectivity.nodes.r, 3), 'p', mean(obj.connectivity.nodes.p, 3), 'sig', mean(obj.connectivity.nodes.p < 0.05, 3));
@@ -129,17 +125,24 @@ classdef brainpathway_multisubject < brainpathway
             end
             
             % add histogram of avg within/between
-            whplot = 2;
-            if ~isempty(obj.connectivity.nodes), whplot = 3; end
+            if isfield(obj.connectivity.regions, 'within')
+                whplot = 4;
+                if ~isempty(obj.connectivity.nodes), whplot = 3; end
+
+                subplot(2, 2, whplot);
+                title('Ratio of within to between cluster connectivity across Ss');
+
+                plot([1 2], [mean(obj.connectivity.regions.within, 2), mean(obj.connectivity.regions.between, 2)])
+                hold on
+                violinplot({mean(obj.connectivity.regions.within, 2), mean(obj.connectivity.regions.between, 2)}, 'xlabel', {'Within cluster' 'Between cluster'});  
+                legend off
+                ylabel(char(obj.connectivity_properties.c_fun_han))
+            end
             
-            subplot(1, whplot, whplot);
-            title('Ratio of within to between cluster connectivity across Ss');
-            
-            plot([1 2], [mean(obj.connectivity.regions.within, 2), mean(obj.connectivity.regions.between, 2)])
-            hold on
-            violinplot({mean(obj.connectivity.regions.within, 2), mean(obj.connectivity.regions.between, 2)}, 'xlabel', {'Within cluster' 'Between cluster'});  
-            legend off
-            ylabel(char(obj.connectivity_properties.c_fun_han))
+            % plot median connectivity value for each S
+            subplot(2,2,3)
+            histogram(median(obj.connectivity.regions.r, [1 2]));
+            title('median connectivity values across Ss')
          end
        
          % Computes pearson correlation for each edge between connectivity
@@ -153,18 +156,17 @@ classdef brainpathway_multisubject < brainpathway
          % Input:  covs is a char array or cell array containing fields in subject_metadata. If cell array,
          % first field is of interest, and following fields are covariates
          % of no interest, and partial correlations are computed.
-         function plot_qcfc(obj, covs)
+         function qcfc = plot_qcfc(obj, covs)
              
              % for convenience
             r = obj.connectivity.regions.r;
 
             % get indices for the lower triangle, excluding diagonal
             [row, col] = find(triu(r(:,:,1), 1));
-
+            fprintf('Computing %d correlations, this might take a minute...\n', length(row))
             % for each edge, 
             for i=1:length(row)
-                % compute compute QC FC
-                
+                % compute compute QC FC                
                 if iscell(covs)
                     qcfc(i) = partialcorr(squeeze(r(row(i),col(i),:)), obj.subject_metadata.(covs{1}), obj.subject_metadata{:,covs{2:end}}, 'Rows', 'pairwise');
                 else
@@ -172,9 +174,15 @@ classdef brainpathway_multisubject < brainpathway
                 end
             end
 
-            figure; histogram(qcfc)
-            title(covs)
+            create_figure('qcfc'); histogram(qcfc)
             
+            if iscell(covs)
+                title(sprintf('Partial corrs. between edge connectivity and %s, across Ss', covs{1}))
+            else
+                title(sprintf('Corrs. between edge connectivity and %s, across Ss', covs))
+            end
+            
+            fprintf('Mean: %3.2f\tMedian: %3.2f\tSD: %3.2f\n', mean(qcfc), median(qcfc), std(qcfc));
          end          	
     end
     

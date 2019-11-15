@@ -407,8 +407,45 @@ switch labelstyle
             end
         
         end
+    case 'radial'
+       breakpoints=0:2*pi/n_categories:2*pi;
+
+        for i = 1:n_categories
+            
+            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .28*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
+            delete(text_location_handles{i}.line_han(2:3))
+            
+            xy = fliplr([text_location_handles{i}.line_han(1).XData;
+                text_location_handles{i}.line_han(1).YData]);
+            if size(xy,1)>2; xy=xy'; end
+            
+            xy = double(xy); % tor: added to avoid errors in text()
+            
+            m = length(text_labels{i});
+            xy = xy(:,floor(max(1,(size(xy,2)/2-4*m))):floor(min((size(xy,2)/2+4*m),size(xy,2)))); %squeeze together a bit
+            
+            n = size(xy,2);
+            
+            XY = spline(1:n,xy,linspace(1,n,m+1));
+            dXY = XY(:,2:end)-XY(:,1:end-1);
+            theta = (arrayfun(@(y,x) atan2(y,x),dXY(2,:),dXY(1,:)))/2/pi*360 + 90;
+            
+            XY = (XY(:,1:end-1)+XY(:,2:end))/2;
+            hold on;
+            
+            nn = length(XY);
+            midpoint = round(nn/2);
+            if theta(midpoint) > 90
+                theta = theta(midpoint) - 180;
+                alignment = 'right';
+            else
+                theta = theta(midpoint);
+                alignment = 'left';
+            end
+            handels(i).texth(1) = text(XY(1,midpoint),XY(2,midpoint),text_labels{i},'rotation',theta,...
+                'horizontalalignment',alignment,'verticalalignment','bottom', 'FontSize', mytextsize);
         
-        
+        end         
         
     otherwise
         error('Unknown labelstyle');

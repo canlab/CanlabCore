@@ -173,12 +173,14 @@
 % To list properties and methods for this object, type:
 % doc brainpathway, methods(brainpathway)
 %
-% b = brainpathway(pain_pathways);  % Construct a brainpathway object from an atlas object, here "pain_pathways"
-% b.region_atlas = pain_pathways;   % Alternate way of assigning a region atlas, or changing the atlas
-% b.voxel_dat = randn(352328, 20);
+% atlas_obj = load_atlas('canlab2018_2mm');
+%
+% b = brainpathway(atlas_obj);      % Construct a brainpathway object from an atlas object, here "pain_pathways"
+% b.region_atlas = atlas_obj;       % Alternate way of assigning a region atlas, or changing the atlas
+% b.voxel_dat = randn(352328, 20);  % This calculates connectivity matrix and more when data are assigned
 % b.voxel_dat = [];                 % Remove original data, leave calculated derivatives intact
 %
-% b = brainpathway(pain_pathways); % Construct a brainpathway object from an atlas object
+% b = brainpathway(atlas_obj);      % Construct a brainpathway object from an atlas object
 % b.region_dat = ST_cleaned.big_regions;
 % plot_connectivity(b, 'notext')
 %

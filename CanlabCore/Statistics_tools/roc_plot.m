@@ -54,7 +54,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %   **'dependent':**
 %        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
 %
-%        This will perform multilevel version of binomial test for single interval classifation.
+%        This will perform multilevel version of binomial test for single interval classification.
 %
 %   **'noplot':**
 %        Skip generating plots
@@ -98,13 +98,14 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %    Tor Wager, Feb 2012
 %    See Notes in text for more programming details.
 %
+
 %    Notes:
-%    Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
+%    Tor Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
 %    effect size estimates based on Gaussian equal variance model
 %
-%    Edited 3/20/2012 to fix AUC estimate and add/change output.
+%    Tor Edited 3/20/2012 to fix AUC estimate and add/change output.
 %
-%    Tested 3/20/12 against RScorePlus.  There are some consequences of
+%    Tor Tested 3/20/12 against RScorePlus.  There are some consequences of
 %    binning for input to RScorePlus, inclding that the "response" criteria are inferred
 %    in RScorePlus, but they are given if we are selecting arbitrary criteria based on
 %    continuous measures (e.g., brain activity). This influences the actual

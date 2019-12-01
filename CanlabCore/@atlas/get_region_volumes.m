@@ -14,7 +14,7 @@ imtx(isnan(imtx)) = 0;
 % if last regions are missing, condf2indic will be missing last entries
 if any(missing_regions == n_regions)
     [~,f] = size(imtx);
-    imtx(:, f:n_regions) = 0;
+    imtx(:, (f+1):n_regions) = 0;
     parcel_index_values = [parcel_index_values; n_regions];
 end
 

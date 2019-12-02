@@ -74,6 +74,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % 
 %        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
 % 
+%        'kragel18_alldata' : 270 subject maps from Kragel 2018; if not
+%                             found, will attempt to download from Neurovault using
+%                             retrieve_neurovault_collection(). 
+%
 %        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10 individual PDM maps and a joint
 %                           PDM, which is a weighted combination of the 10. From Geuter et al. (in prep)
 %           
@@ -249,6 +253,10 @@ else
 
         case {'bmrk3', 'pain'}
             [image_obj, networknames, imagenames] = load_bmrk3;
+            
+        case {'kragel18_alldata' 'kragel18_testdata'}
+            
+            [image_obj, networknames, imagenames] = load_kragel18_alldata;
             
         otherwise
             error('Unknown mapset keyword. If entering image names, use a cell array.');
@@ -856,3 +864,98 @@ disp('Temperature data in image_obj.additional_info.temperatures');
 disp('Pain ratings in image_obj.Y');
 
 end
+
+
+function [image_obj, networknames, imagenames] = load_kragel18_alldata
+
+myfile = which('kragel_2018_nat_neurosci_270_subjects_test_images.mat');
+if exist(myfile, 'file')
+    
+    fprintf('Loading %s\n', myfile);
+    load(myfile)
+    
+    image_obj = data_obj;
+    networknames = data_obj.additional_info;
+    imagenames = data_obj.dat_descrip.imagenames;
+    
+else
+    % Load the files from disk, and clean up downloaded files
+
+    fprintf('Did not find %s\nUsing retrieve_neurovault_collection() to download collection 3324\n', myfile);
+    
+    files_on_disk = retrieve_neurovault_collection(3324);
+    data_obj = fmri_data(files_on_disk);
+    data_obj = enforce_variable_types(data_obj);
+
+    % clean up
+    try
+        for i = 1:length(files_on_disk), delete(files_on_disk{i}); end
+        % remove non-gzipped files just in case
+        for i = 1:length(files_on_disk), delete(files_on_disk{i}(1:end-3)); end
+    catch
+    end
+    
+    rmdir('3324');
+    
+    % resort files/images in order
+    labels=regexp(files_on_disk,'Study\d+', 'match');
+    labels = cat(1, labels{:});
+    labels = strrep(labels, 'Study' ,'');
+    for i = 1:length(labels), labels{i} = str2num(labels{i}); end % extract numbers from text
+    labels = cat(1, labels{:});
+    Studynumber = labels;
+    
+    subj=regexp(files_on_disk,'Subject\d+', 'match');
+    subj = cat(1, subj{:});
+    subj = strrep(subj, 'Subject' ,'');
+    for i = 1:length(subj), subj{i} = str2num(subj{i}); end % extract numbers from text
+    subj = cat(1, subj{:});
+    
+    nums = 1000 * labels + subj;
+    [~, wh_sort] = sort(nums, 'ascend');
+    
+    files_on_disk = files_on_disk(wh_sort);
+    
+    data_obj.dat = data_obj.dat(:, wh_sort);
+    data_obj.image_names = data_obj.image_names(wh_sort, :);
+    data_obj.fullpath = data_obj.fullpath(wh_sort, :);
+    
+    % label the images
+    sorted_study_labels = labels(wh_sort);
+    
+    % imagenames will become text labels
+    [imagenames, Domain, Subdomain] = deal(cell(size(labels)));
+    
+    networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
+        'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
+        'Emotion_Aversiveimages1' 'Emotion_Aversiveimages2' 'Emotion_Rejection1' 'Emotion_VicariousPain2' 'Emotion_AversiveSound1' 'Emotion_AversiveSound2'};
+    
+    domains = {'Pain' 'Pain' 'Pain' 'Pain' 'Pain' 'Pain' ...
+        'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' ...
+        'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion'};
+    
+    subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
+        'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
+        'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
+     
+    for i = 1:18
+        
+        Domain(sorted_study_labels == i) = domains(i);
+        Subdomain(sorted_study_labels == i) = subdomains(i);
+        imagenames(sorted_study_labels == i) = networknames(i);
+        
+    end
+
+    data_obj.dat_descrip = table(Domain, Subdomain, imagenames, Studynumber);
+    data_obj.additional_info = networknames;
+    
+    % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
+    
+    image_obj = data_obj;
+    
+end
+
+end % load kragel18_alldata
+
+
+            

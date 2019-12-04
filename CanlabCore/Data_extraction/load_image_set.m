@@ -39,6 +39,21 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        Some are in the CANlab Neuroimaging_Pattern_Masks repository, 
 %        some in Masks_Private repository 
 % 
+% Sample test datasets - one image per subject
+% ------------------------------------------------------------------------
+%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008. 
+%                       Each image is a contrast image for the contrast [reappraise negative vs. look negative]
+%          
+%        'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat (non-painful and painful).
+%                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
+%                  on figshare (see canlab.github.io/walkthroughs)
+% 
+%        'kragel18_alldata' : 270 subject maps from Kragel 2018; if not
+%                             found, will attempt to download from Neurovault using
+%                             retrieve_neurovault_collection(). 
+%
+% Parcellations and large-scale networks/patterns
+% ------------------------------------------------------------------------
 %        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
 % 
 %        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
@@ -49,15 +64,7 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % 
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
-% 
-%        'npsplus': Wager lab published multivariate patterns:
-%                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
-% 
-%        'painsig': NPS (incl NPSpos & NPSpos) and SIIPS only
-% 
-%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008. 
-%                       Each image is a contrast image for the contrast [reappraise negative vs. look negative]
-% 
+%
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
 %                             networks from Pauli et al. 2016
 % 
@@ -66,25 +73,30 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 % 
+% 
+% 'Signature' patterns and predictive models 
+% ------------------------------------------------------------------------
+%        'npsplus': Wager lab published multivariate patterns:
+%                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
+% 
+%        'painsig': NPS (incl NPSpos & NPSpos) and SIIPS only
+% 
 %        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
 %                         NPSp, FM-pain, FM-multisensory
 % 
+%        'guilt':   a multivariate fMRI pattern related to guilt behavior
+%                   Yu, Koban et al. 2019, Cerebral Cortex
+%                   Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii.gz
+%
 %        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
 %                                                Neurosynth, unthresholded, 2013 
 % 
 %        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
 % 
-%        'kragel18_alldata' : 270 subject maps from Kragel 2018; if not
-%                             found, will attempt to download from Neurovault using
-%                             retrieve_neurovault_collection(). 
 %
 %        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10 individual PDM maps and a joint
 %                           PDM, which is a weighted combination of the 10. From Geuter et al. (in prep)
-%           
-%        'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat (non-painful and painful).
-%                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
-%                  on figshare (see canlab.github.io/walkthroughs)
-%                  
+%
 %
 % :Optional inputs:
 %
@@ -257,6 +269,10 @@ else
         case {'kragel18_alldata' 'kragel18_testdata'}
             
             [image_obj, networknames, imagenames] = load_kragel18_alldata;
+            
+        case {'guilt', 'guilt_behavior'}
+            
+            [image_obj, networknames, imagenames] = load_guilt;
             
         otherwise
             error('Unknown mapset keyword. If entering image names, use a cell array.');
@@ -595,6 +611,22 @@ imagenames = { ...
     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+
+end % function
+
+
+function [image_obj, networknames, imagenames] = load_guilt
+
+% Load Yu 2019 CerCtx map
+% ------------------------------------------------------------------------
+
+networknames = {'Guilt_behavior'};
+
+imagenames = {'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 

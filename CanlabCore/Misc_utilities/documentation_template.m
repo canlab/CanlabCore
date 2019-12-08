@@ -141,6 +141,13 @@ for i = 1:length(fn)
     eval(str)
 end
 
+% Logical flags
+% ----------------------------------------------------------------------
+if any(strcmp(varargin, 'noverbose')), doverbose = false; end
+if any(strcmp(varargin, 'noplots')), doplots = false; end
+
+
+% ==================== end pattern =====================================
 
 
 % Next is the previously used scheme for CANlab tools for several years
@@ -178,7 +185,6 @@ for i = 1:length(varargin)
         end
     end
 end
-
 
 % This pattern will flexibly assign arguments based on keywords. 
 % The names of the input keyword and variable created do not need to match.
@@ -241,6 +247,8 @@ validateattributes(V,supportedImageClasses,supportedImageAttributes,mfilename,'V
 %
 % See also inputParser.m
 
+
+% ==================== end pattern =====================================
 
 
 

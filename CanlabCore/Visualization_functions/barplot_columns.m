@@ -50,6 +50,7 @@ function [handles, dat, xdat] = barplot_columns(dat, varargin)
 %
 %   Figure control
 %        - 'nofig' : do not make figure
+%        - 'skipallplots': skip making figure and all plots; table only
 %
 %   Plot type options 
 %        - 'line' : Make line plot instead of bar plot
@@ -173,6 +174,7 @@ mymarkersize = 20;
 dostars = true;
 handles = [];
 doprinttable = 1;
+skipallplots = false;
 
 % ----------------------------------------------------
 % > handle table input - save names
@@ -201,6 +203,9 @@ if length(varargin) > 0
         
         % Figure control
         if strcmp(varargin{i},'nofig') || strcmp(varargin{i},'nofigure'), dofig = 0;  end
+        
+        if strcmp(varargin{i},'skipallplots'), skipallplots = true;  end
+        
         
         % Plot type options
         if strcmp(varargin{i},'line'), dolineplot = 1;  end
@@ -407,6 +412,10 @@ end
 % ----------------------------------------------------
 % > Make figure
 % ----------------------------------------------------
+if skipallplots
+    return
+end
+
 if dofig
     handles.fig_han = create_figure('barplot'); 
 else

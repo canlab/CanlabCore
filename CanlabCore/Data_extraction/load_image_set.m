@@ -48,9 +48,11 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
 %                  on figshare (see canlab.github.io/walkthroughs)
 % 
-%        'kragel18_alldata' : 270 subject maps from Kragel 2018; if not
-%                             found, will attempt to download from Neurovault using
+%        'kragel18_alldata' : 270 subject maps from Kragel 2018; 
+%                             These are saved in kragel_2018_nat_neurosci_270_subjects_test_images.mat
+%                             if not found, will attempt to download from Neurovault using
 %                             retrieve_neurovault_collection(). 
+%                               
 %
 % Parcellations and large-scale networks/patterns
 % ------------------------------------------------------------------------
@@ -76,6 +78,12 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % 
 % 'Signature' patterns and predictive models 
 % ------------------------------------------------------------------------
+%        'nps': Wager et al. 2013 Neurologic Pain Signature
+%        'vps': Krishnan et et al. 2016 Vicarious Pain Signature
+%        'rejection': Woo et et al. 2014 Romantic Rejection
+%        'siips': Woo et et al. 2017 Stimulus intensity-independent pain Signature
+%        'pines' : Chang et et al. 2015 Picture-induced negative emotion Signature
+%
 %        'npsplus': Wager lab published multivariate patterns:
 %                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
 % 
@@ -224,6 +232,10 @@ else
             [image_obj, networknames, imagenames] = load_bucknerlab_wholebrain_plus_subctx;
             networknames=networknames';
           
+        case {'nps', 'pines' 'vps', 'rejection'}
+            
+            [image_obj, networknames, imagenames] = load_signature(image_names_or_keyword);
+            
         case 'npsplus'
             [image_obj, networknames, imagenames] = load_npsplus;
             
@@ -514,6 +526,50 @@ imagenames = {img};  % ***add to names
 end  % function
 
 
+
+function [image_obj, networknames, imagenames] = load_signature(keyword)
+
+% Load NPS, PINES, Rejection, VPS,
+% ------------------------------------------------------------------------
+
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
+
+imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
+    'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
+    'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % Woo 2017 SIIPS - stim-indep pain
+    'Rating_Weights_LOSO_2.nii'  ...                    % Chang 2015 PINES - neg emo
+    'dpsp_rejection_vs_others_weights_final.nii' ...    % Woo 2014 romantic rejection
+    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain VPS
+    'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
+    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
+    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
+    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
+    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia 
+    'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
+    'Ashar_2017_empathic_distress_marker.nii'};         
+
+switch keyword
+    case 'nps'
+        wh = 1;
+    case 'siips'
+        wh = 4;
+    case 'pines'
+        wh = 5;
+    case 'rejection'
+        wh = 6;
+    case 'vps'
+        wh = 7;
+    otherwise error('Only some signature keywords are implemented in load_image_set, and the one you entered is invalid. Try ''npsplus''');
+end
+
+imagenames = check_image_names_get_full_path(imagenames(wh));
+
+image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
+
+networknames = networknames(wh);
+
+end  % function
 
 
 

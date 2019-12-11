@@ -62,9 +62,13 @@ function OUT = plot_correlation_matrix(X, varargin)
 %   'notext'                                   dotext = false;
 %   'fdr' 'FDR'                                dofdr = true; 
 %   'nocalc' 'input_rmatrix'                   docalc = false; 
-                
-% 'names', 'labels'   var_names = varargin{i+1}; varargin{i+1} = [];
-                
+%                
+%   'names', 'labels'   var_names = varargin{i+1}; varargin{i+1} = [];
+%   Partitions: Note: partition labels MUST be sorted (ascending sequential) for this to work right.
+%   'partitions'                                followed by partitions to plot with color bar
+%   'partitioncolors'                           followed by cell array of strings for colors
+%   'partitionlabels'                           followed by cell array of labels for each partition
+%                
 %       See code for other optional inputs controlling display
 %       Enter a keyword followed by a value (e.g., true / false)
 %       These include:
@@ -393,6 +397,10 @@ if ~isempty(partitions)
     st = find(diff([0; partitions])) - 0.5;           % starting and ending values for each partition
     en = find(diff([partitions; npartitions + 1])) + 0.5;
     
+    boxwid = k/30;
+    boxstart  = 0 - boxwid - .25;
+    textstart = boxstart + .3 * boxwid;
+    
     for i = 1:npartitions
         
         h1 = drawbox(st(i), en(i) - st(i), st(i), en(i) - st(i), 'k');
@@ -401,16 +409,16 @@ if ~isempty(partitions)
         OUT.partition_handles(i) = h1;
         
         % partition color bars
-        h1 = drawbox(st(i), en(i) - st(i), -0.75, 0.5, 'k');
+        h1 = drawbox(st(i), en(i) - st(i), boxstart, boxwid, 'k');
         set(h1, 'EdgeColor', 'none', 'FaceColor', partitioncolors{i});
         OUT.partition_handles_hbars(i) = h1;
         
-        h1 = drawbox(-0.75, 0.5, st(i), en(i) - st(i), 'k');
+        h1 = drawbox(boxstart, boxwid, st(i), en(i) - st(i), 'k');
         set(h1, 'EdgeColor', 'none', 'FaceColor', partitioncolors{i});
         OUT.partition_handles_vbars(i) = h1;
         
         if ~isempty(partitionlabels)
-            OUT.partition_handles_labels(i) = text(st(i), -0.55, partitionlabels{i}, 'FontSize', 14);
+            OUT.partition_handles_labels(i) = text(st(i), textstart, format_strings_for_legend(partitionlabels{i}), 'FontSize', 14);
         end
         
     end

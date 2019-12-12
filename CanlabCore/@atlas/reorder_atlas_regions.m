@@ -8,6 +8,11 @@ function obj = reorder_atlas_regions(obj, wh_order)
 %
 % obj = reorder_atlas_regions(obj, wh_order)
 
+% Programmers' notes:
+% Created by Tor Wager
+% 12/2019: Tor fixed bug in reordering; probability_maps field was not
+% preivously being considered, which resulted in wrong ordering when
+% present. .dat is rebuilt from probability_maps if available.
 
 n = num_regions(obj);
 
@@ -25,6 +30,17 @@ for i = 1:length(wh_order)
 end
 
 obj.dat = newdat;
+
+% Reorder probability maps
+if ~isempty(obj.probability_maps)
+    
+    if ~size(obj.probability_maps, 2) == n
+        error('obj.probabilty_maps is not empty, but is the wrong size! illegal object.');
+    end
+    
+    obj.probability_maps = obj.probability_maps(:, wh_order);
+    
+end
 
 % Reorder labels
 myfields = {'labels' 'labels_2' 'labels_3' 'labels_4' 'labels_5' 'property_descriptions', 'label_descriptions'};

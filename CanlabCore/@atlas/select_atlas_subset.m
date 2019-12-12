@@ -14,6 +14,9 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % atlas as a single atlas region. .probability_maps reduced to single max
 % map
 %
+% 'labels_2' : If you enter any field name in the object, e.g., labels_2,
+% the function will search for keyword matches here instead of in obj.labels.
+%
 % Examples:
 % 
 % atlasfile = which('Morel_thalamus_atlas_object.mat');
@@ -39,7 +42,20 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % r = atlas2region(obj_subset);
 % orthviews(r)
 %
+% Load a canonical atlas and select only the default mode, limbic, and brainstem regions
+% based on the .labels_2 property
+% -------------------------------------------------------
+% atlas_obj = load_atlas('canlab2018_2mm');
+% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Cerebellum', 'Def'}, 'labels_2');
+% montage(obj_subset);
+%
 % see also: image_vector.select_voxels_by_value
+
+% Programmers' notes:
+% Created by tor wager
+% Edited by tor, 12/2019, to use any field to select labels; and update
+% auxiliary label fields too.
+%
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
@@ -48,6 +64,10 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 strings_to_find = [];
 integers_to_find = [];
 doflatten = false;
+
+% for entry of optional field to search for keywords
+myfields = fieldnames(obj);
+mylabelsfield = 'labels';
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -66,8 +86,16 @@ for i = 1:length(varargin)
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
                 
             otherwise
-                warning(['Unknown input string option:' varargin{i} '. Assuming it might be an atlas label. Place atlas labels in a cell array']);
-                strings_to_find{1} = varargin{i};
+                
+                if any(strcmp(varargin{i}, myfields))
+                    mylabelsfield = varargin{i};
+                    
+                else
+                    
+                    warning(['Unknown input string option:' varargin{i} '. Assuming it might be an atlas label. Place atlas labels in a cell array']);
+                    strings_to_find{1} = varargin{i};
+                    
+                end
         end
     end
 end
@@ -86,7 +114,7 @@ to_extract = false(1, k);
 for i = 1:length(strings_to_find)
     
     % Find which names match
-    wh = ~cellfun(@isempty, strfind(obj.labels, strings_to_find{i}));
+    wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
     
     to_extract = to_extract | wh;
     
@@ -111,13 +139,33 @@ obj_subset = obj;
 % labels and names
 
 obj_subset.labels = obj_subset.labels(to_extract);
-obj_subset.label_descriptions = obj_subset.label_descriptions(to_extract);
 
-if ~isempty(obj_subset.image_names) && size(obj_subset.image_names, 1) == k
-    obj_subset.image_names = obj_subset.image_names(to_extract, :);
+% obj_subset.label_descriptions = obj_subset.label_descriptions(to_extract);
+
+% if ~isempty(obj_subset.image_names) && size(obj_subset.image_names, 1) == k
+%     obj_subset.image_names = obj_subset.image_names(to_extract, :);
+% end
+
+my_strings = {'image_names' 'fullpath'};
+
+for i = 1:length(my_strings)
+    
+    if  ~isempty(obj_subset.(my_strings{i})) && size(obj_subset.(my_strings{i}), 1) == k
+        obj_subset.(my_strings{i}) = obj_subset.(my_strings{i})(to_extract, :);
+    end
+    
 end
 
+my_strings = {'label_descriptions' 'image_names' 'fullpath' 'labels_2' 'labels_3' 'labels_4' 'labels_5'};
+
+for i = 1:length(my_strings)
     
+    if  ~isempty(obj_subset.(my_strings{i})) && length(obj_subset.(my_strings{i})) == k
+        obj_subset.(my_strings{i}) = obj_subset.(my_strings{i})(to_extract);
+    end
+    
+end
+
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid p maps
 
     obj_subset.probability_maps(:, ~to_extract) = [];

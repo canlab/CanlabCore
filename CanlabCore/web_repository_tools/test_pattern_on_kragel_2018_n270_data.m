@@ -261,11 +261,11 @@ end % plot
         valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
         valfcn_cell = @(x) validateattributes(x, {'cell'}, {'nonempty'}, {'numel'}, num_cols);
         
-        valfcn_fmri_data = @(x) isa(x, 'fmri_data');
+        valfcn_image_vector = @(x) isa(x, 'image_vector');
         
         % Required inputs
         % ----------------------------------------------------------------------
-        p.addRequired('obj', valfcn_fmri_data);
+        p.addRequired('obj', valfcn_image_vector);
         
         % Optional inputs - key-value pairs
         % ----------------------------------------------------------------------

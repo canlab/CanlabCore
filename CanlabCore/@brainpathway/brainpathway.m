@@ -222,6 +222,11 @@ classdef brainpathway < handle
         
         connectivity (1, 1) struct = struct('regions', [], 'nodes', []); % A series of matrices specifying [k x k] bivariate connections
         
+        graphstruct = struct('within_network_degree', [], 'between_network_degree', []);
+        
+        graph_properties(1, 1) struct = struct('regions', struct('within_network_degree', [], 'between_network_degree', []), ...
+            'nodes', struct('within_network_degree', [], 'between_network_degree', []));
+        
         %       Specify a function handle and optional arguments to the
         %       function (in addition to data). This allows connectivity_properties to be defined in a very flexible way, using multiple functions and inputs.
         %       For example, the default is:
@@ -452,6 +457,8 @@ classdef brainpathway < handle
         
         
         function obj = cluster_regions(obj, varargin)
+            % Clusters regions based on obj.region_dat and updates
+            % obj.node_clusters
             
             n_clusters = max(8, num_regions(obj.region_atlas));
             
@@ -462,6 +469,66 @@ classdef brainpathway < handle
             obj.node_clusters = (clusterdata(obj.region_dat', 'linkage', 'ward', 'maxclust', n_clusters))';
             
         end
+        
+        
+         function [obj_subset, region_objects, region_indices] = cluster_region_subset_by_connectivity(obj, varargin)
+            % [obj_subset, region_objects, region_indices] = cluster_region_subset_by_connectivity(obj, Group#, [# clusters])
+            %
+            % Takes a subset of parcels idenfied based on obj.node_clusters 
+            % and clusters them based on profiles
+            % of pairwise connectivity with other regions. Returns a new
+            % object based on the target subset.
+            %
+            % Enter an object and a single integer for which value in
+            % node_clusters you want to use as the target.
+            %
+            % region_objects: A cell array of region objects, one cell per
+            % cluster, for visualizing the results
+            
+            % Inputs
+            wh_group = varargin{1};
+            
+            if ischar(wh_group)
+                % Find the corresponding number
+                wh_group = find(strcmp(obj.node_cluster_labels, wh_group));
+                wh_group = wh_group(1);
+            end
+
+            % Get connections
+            wh_nodes = obj.node_clusters == wh_group;
+            cross_connections = (obj.connectivity.regions.r(wh_nodes, ~wh_nodes))';
+            
+            % create new object subset, assign data
+            obj_subset = select_atlas_subset(obj, find(wh_nodes));
+            obj_subset.region_dat = cross_connections;
+            
+            % Cluster
+            n_clusters = max(8, num_regions(obj_subset.region_atlas));
+            
+            if length(varargin) > 1
+                n_clusters = varargin{2};
+            end
+            
+            fprintf('Clustering data with max %3.0f clusters.\n', n_clusters);
+            
+            obj_subset.node_clusters = (clusterdata(obj_subset.region_dat', 'linkage', 'ward', 'maxclust', n_clusters))';
+            
+            n_clusters_found = length(unique(obj_subset.node_clusters));
+            
+            for i = 1:n_clusters_found
+                obj_subset.node_cluster_labels{i} = sprintf('Conn_cluster_%d', i);
+                
+                wh_regions = find(obj_subset.node_clusters == i);
+                
+                region_objects{i} = atlas2region(select_atlas_subset(obj_subset.region_atlas, wh_regions));
+                
+                region_indices{i} = wh_regions;
+            end
+            
+            fprintf('Grouped data into %3.0f distinct clusters. Check obj_subset.node_clusters for results\n', n_clusters_found);
+         
+         end
+         
         
         function [rr, clusters] = cluster_voxels(obj, varargin)
             % Returns a matrix of correlations between each voxel and each
@@ -551,7 +618,7 @@ classdef brainpathway < handle
             
             title('Region connectivity')
             
-            if isempty(obj.connectivity.nodes)
+            if isempty(obj.connectivity.nodes) || isempty(obj.connectivity.nodes.r)
                 return
             end
             
@@ -653,7 +720,27 @@ classdef brainpathway < handle
                 
             end
             
-
+        % groups: compress node clusters and labels
+        if ~isempty(obj.node_cluster_labels)
+            
+            wh = unique(b.node_clusters(to_extract));       % pared down
+            
+            obj.node_cluster_labels = obj.node_cluster_labels(wh);
+            
+            % compress index of node_clusters
+            newdat = zeros(size(obj.node_clusters));
+            u = unique(obj.node_clusters);
+            
+            for i = 1:length(u)
+                
+                newdat(obj.node_clusters == u(i)) = i;
+                
+            end
+            
+            obj.node_clusters = newdat;
+            
+        end
+        
         end % select_atlas_subset
 
     end % methods
@@ -814,7 +901,7 @@ classdef brainpathway < handle
             
             % if no labels are in node_clusters, but this is the Yeo 17
             % networks, manually assign the clusters in a sensible way            
-            if isempty(obj.node_clusters) & strcmp(obj.region_atlas.atlas_name, 'Schaefer2018Cortex_17networks')    
+            if isempty(obj.node_clusters) && strcmp(obj.region_atlas.atlas_name, 'Schaefer2018Cortex_17networks')    
                 if obj.verbose, fprintf('Detected using Yeo 17, automatically assigning standard clustering of regions.\n'); end
                 obj.node_clusters = [1 1 1 1 1 1 2 2 2 2 2 2 3 3 3 3 4 4 5 5 5 5 6 6 6 6 6 6 7 7 7 7];                
             end
@@ -865,7 +952,7 @@ classdef brainpathway < handle
             obj.connectivity.(outputfield).r = r;
             obj.connectivity.(outputfield).p = p;
             
-             %% compute avg within/between connectivity, using labels in node_clusters if available
+            % compute avg within/between connectivity, using labels in node_clusters if available
             
             % if no labels are in node_clusters, but this is the Yeo 17
             % networks, manually assign the clusters in a sensible way            
@@ -894,7 +981,7 @@ classdef brainpathway < handle
             end
                 
             
-        end
+        end % update_node_connectivity
         
         
     end % static methods

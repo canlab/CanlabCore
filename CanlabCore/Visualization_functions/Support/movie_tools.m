@@ -153,7 +153,7 @@ switch meth
 end
 
 
-return
+end % method
 
 
 
@@ -193,7 +193,8 @@ end
 
 mov = add_a_frame(mov,axh);
 
-return
+end % rotation
+
 
 
 
@@ -209,7 +210,7 @@ if nargin < 2, movlength = 3; end  % in s
 for i = 1:nframes
     mov = add_a_frame(mov,axh);
 end
-return
+end % still
 
 % ------------------------------------------------------------
 % color
@@ -233,7 +234,7 @@ end
 
 mov = add_a_frame(mov,axh);
 
-return
+end % colorchange
 
 % ------------------------------------------------------------
 % transparency
@@ -257,7 +258,7 @@ end
 
 mov = add_a_frame(mov,axh);
 
-return
+end % trans
 
 
 % ------------------------------------------------------------
@@ -282,7 +283,7 @@ end
 
 mov = add_a_frame(mov,axh);
 
-return
+end % movie zoom
 
 
 
@@ -313,13 +314,25 @@ end
 
 % set up lines
 % ---------------------------------
-if isempty(color), color = 'k'; end
+if isempty(color), color = [0 0 0]; end
 
 
 % get entire path
 for i = 1:size(startcoords,1)   % coords are one triplet per row.  each row is a graphic line
 
-    out{i} = nmdsfig_tools('connect3d',startcoords(i,:),endcoords(i,:),color,4,bendval,nframes);
+    %h = nmdsfig_tools('connect3d',x,y,color,thickness,bendpercent,[nsamples])
+%     p.addParameter('color', [.9 .2 0], valfcn_xyz);
+%     p.addParameter('bendpercent', .15, valfcn_number); % can be scalar or vector
+%     p.addParameter('thickness', .1, valfcn_scalar);
+%     p.addParameter('nstreamlines', 30, valfcn_scalar);
+%     p.addParameter('streamlineshift', 10, valfcn_scalar);
+%     p.addParameter('nsamples', [], valfcn_scalar);
+
+    out{i} = nmdsfig_tools('connect3d',startcoords(i,:),endcoords(i,:),'color', color, 'nstreamlines', 30, 'bendpercent', bendval, 'nsamples', nframes);
+    
+    M = drawDynamicLines(out{i}.h, 'pause', .1);
+    
+    %**** 
     delete(out{i}.h);  % we will draw this piece by piece later
 end
 
@@ -354,7 +367,7 @@ end
 mov = add_a_frame(mov,axh);
 
 
-return
+end % movie_lines
 
 
 
@@ -390,7 +403,7 @@ end
 
 [az,el]=view;
 
-return
+end % setup 
 
 
 
@@ -431,4 +444,85 @@ switch(FRAMESTYLE)
         error('Unknown FRAMESTYLE in movie_tools.m');
 end
 
-return
+end % add a frame
+
+
+
+function M = drawDynamicLines(h, varargin)
+
+M = getframe(gca); % Movie, if requested
+mypos = get(gca, 'Position');
+myxlim = get(gca, 'XLim');
+myylim = get(gca, 'XLim');
+
+% ---------------------------------------------------------------------- 
+% Parse inputs
+% ----------------------------------------------------------------------
+
+p = inputParser;
+
+% Validation functions - customized for each type of input
+% ----------------------------------------------------------------------
+valfcn_scalar = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar'});
+valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
+
+% Optional inputs 
+% ----------------------------------------------------------------------
+% Pattern: keyword, value, validation function handle
+p.addParameter('pause', .1, valfcn_number); % can be scalar or vector
+p.addParameter('movie', true, @islogical);
+
+% Parse inputs and distribute out to variable names in workspace
+% ----------------------------------------------------------------------
+p.parse(varargin{:});
+
+IN = p.Results;
+% fn = fieldnames(IN);
+% 
+% for i = 1:length(fn)
+%     str = sprintf('%s = IN.(''%s'');', fn{i}, fn{i});
+%     eval(str)
+% end
+
+% ---------------------------------------------------------------------- 
+% Main function
+% ----------------------------------------------------------------------
+
+nedges = length(h);
+[X, Y] = deal({});
+
+for i = 1:nedges
+    
+    % Save original data
+    X{i} = get(h(i), 'XData');
+    Y{i} = get(h(i), 'YData');
+    Z{i} = get(h(i), 'ZData');
+    
+end
+
+ntimepoints = length(X{1});
+
+set(h, 'Visible', 'on');
+
+for t = 1:ntimepoints
+    
+    for i = 1:nedges
+        
+        % Set data to reveal only 1:t time points
+        set(h(i), 'XData', X{i}(1:t), 'YData', Y{i}(1:t), 'ZData', Z{i}(1:t))
+        
+    end
+ 
+    set(gca, 'Position', mypos, 'XLim', myxlim, 'YLim', myylim); % enforce same position and limits
+    
+    drawnow
+    
+    M(end+1) = getframe(gca);
+    
+    pause(IN.pause);
+    
+end
+
+end % subfunction
+
+

@@ -254,13 +254,13 @@ classdef brainpathway < handle
         % - partitions:             An integer vector of partition labels for each
         %
         
-        additional_info (1, 1) struct = struct(''); % A flexible structure defining user-specified additional information.
+        additional_info struct = struct(''); % A flexible structure defining user-specified additional information.
         
         listeners = [];         % listeners
         
         verbose = true;
         
-        data_quality (1, 1) struct = struct(''); % A flexible structure defining data quality metrics
+        data_quality struct = struct(''); % A flexible structure defining data quality metrics
         
     end % properties
     

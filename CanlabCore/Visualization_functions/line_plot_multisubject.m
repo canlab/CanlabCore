@@ -67,26 +67,26 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %
 %    % Plot the results three ways, with different data transformations:
 %     create_figure('Line plot multisubject', 1, 3);
-%     han = line_plot_multisubject_UPDATING(X, Y);
+%     han = line_plot_multisubject(X, Y);
 %     title('Raw data (no transformation');
 %     subplot(1, 3, 2);
-%     han = line_plot_multisubject_UPDATING(X, Y, 'center');
+%     han = line_plot_multisubject(X, Y, 'center');
 %     title('Centered within-person');
 %     subplot(1, 3, 3);
-%     han = line_plot_multisubject_UPDATING(X, Y, 'zscore');
+%     han = line_plot_multisubject(X, Y, 'zscore');
 %     title('Z-scored within-person');
 %
 %
 %   % -----------------------------------------------------------
-%   % Example creating bins of data within-person, useful for many within-person observations
-% 
+  % Example creating bins of data within-person, useful for many within-person observations
+
 %   % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
 %    for i = 1:5, expect{i} = randn(100, 1); pain{i} = rand(1) * expect{i} + .3 * randn(100, 1) + randn(1); end
-%
+% 
 %   % Plot with bins, custom colors and points:
 %   create_figure('Line plot multisubject with bins');
 %   [han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
-%
+
 %   % -----------------------------------------------------------
 %
 % Center within subjects and bin, then calculate correlation of

@@ -99,6 +99,9 @@ function [model,delta] = getPredictors(stimList, HRF, varargin)
 %    when one condition has two or more parametric modulators. 2) to fix an
 %    error due to RT with decimal points. For 2), make two options for downsampling
 %   'dsrate' and 'dslen'.
+%
+%    1/2020: Tor modified to increase tolerance/flexibilty for fractional
+%    TRs, add better error reporting for length mismatch
 % ..
 
 model = [];
@@ -195,7 +198,10 @@ if use_downsample_rate || use_downsample_length % Wani modified this
     if use_downsample_length, nt = length_downsample; rate_downsample = n/length_downsample; end % Wani added this line
     t = (1:n)';             % minor change to save time, tor: 10/12/10
     
-    if nt-round(nt)>.000001, error('Length of stimList is not evenly divisible by downsampling factor.'); end
+    if abs(nt-round(nt)) > .1 % Tor increased tolerance to 0.1 units (usually TR/16)
+        fprintf('X samples: %3.0f, Xout (image) samples: %3.2f, DSrate: %3.2f\n', n, nt, rate_downsample);
+        error('Length of stimList is not evenly divisible by downsampling factor.'); 
+    end
     
     modeli = zeros(round(nt) , k);
     

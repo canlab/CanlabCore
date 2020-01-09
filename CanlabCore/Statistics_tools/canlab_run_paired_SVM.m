@@ -50,6 +50,12 @@ function [paired_d, stats, optout, cat_obj] = canlab_run_paired_SVM(varargin)
 %   **parallelstr:**
 %        Followed by string 'parallel' to use parallel processing in fmri_data.predict.m
 %
+%   **dol2norm:**
+%        Normalize each image by the L2-norm
+%
+%   **dozscoreimages:**
+%        Normalize each image by replacing values with z-scores across voxels
+%
 % :Outputs:
 %
 %   **paired_d:**
@@ -70,10 +76,20 @@ function [paired_d, stats, optout, cat_obj] = canlab_run_paired_SVM(varargin)
 % :Examples:
 % ::
 %
-%    [paired_d, stats, optout, cat_obj] = canlab_run_paired_SVM(pos_images, neg_images);
-%       
-%    Plot Receiver Operating Characteristic (ROC):
+%    [paired_d, stats] = canlab_run_paired_SVM(pos_images, neg_images);
+%    paired_d
+%
+%    % Plot Receiver Operating Characteristic (ROC):
 %    ROC = roc_plot(stats.dist_from_hyperplane_xval, stats.Y > 0, 'twochoice');
+%
+%    % Plot individual participants
+%    create_figure('subjects'); 
+%    plot(stats.paired_hyperplane_dist_scores, 'o');
+%    plot_horizontal_line(0); 
+%    xlabel('Participant'); ylabel('Classifier score');
+%
+%    % Re-run with z-scored images:
+%    [paired_d, stats] = canlab_run_paired_SVM(pos_images, neg_images, 'dozscoreimages', true);
 %
 % :References:
 %   Vapnik 1995 (SVM)
@@ -132,7 +148,17 @@ holdout_set = [holdout_set; holdout_set]; % Replicate to leave out both conditio
 
 % Optional scaling, masking, transformations
 % --------------------------------------------------------------------
+if ARGS.dol2norm
+    
+    cat_obj = rescale(cat_obj, 'l2norm_images');
+    
+end
 
+if ARGS.dozscoreimages
+    
+    cat_obj = rescale(cat_obj, 'zscoreimages');
+    
+end
 
 
 % Run SVM prediction model
@@ -178,7 +204,7 @@ p = inputParser;
 valfcn_fmridata = @(x) validateattributes(x, {'fmri_data'}, {'nonempty'});
 
 valfcn_scalar = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar'});
-valfcn_logical = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
+valfcn_logical = @(x) validateattributes(x, {'logical' 'numeric'}, {'nonempty', 'scalar'}); % could enter numeric 0,1 or logical
 
 % Required inputs
 % ----------------------------------------------------------------------
@@ -194,6 +220,8 @@ p.addParameter('dobootstrap', false, valfcn_logical);
 p.addParameter('boot_n', 100, valfcn_scalar);
 % p.addParameter('parallelstr', 'parallel', @(x) validateattributes(x, {'char'}));
 p.addParameter('parallelstr', 'parallel');
+p.addParameter('dol2norm', false, valfcn_logical);
+p.addParameter('dozscoreimages', false, valfcn_logical);
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------

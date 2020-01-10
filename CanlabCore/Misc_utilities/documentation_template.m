@@ -98,6 +98,30 @@ sep_str = repmat('_', 1, n_cols);  % see textwrap
 % Parse inputs
 % ----------------------------------------------------------------------
 % This 2019 version uses the inputParser object. Older schemes are below.
+% Note: With this, you can pass in EITHER keyword, value pairs OR a
+% structure with fields that define keywords.
+% Note: You can also make this a subfunction at the end of your function,
+% e.g., function ARGS = parse_inputs(varargin)...end, and call it using:
+
+ARGS = parse_inputs(varargin{:});
+
+% If you want to distribute arguments back out to variables, use this:
+
+IN = p.Results;
+fn = fieldnames(IN);
+
+for i = 1:length(fn)
+    str = sprintf('%s = IN.(''%s'');', fn{i}, fn{i});
+    eval(str)
+end
+
+% Logical flags
+% ----------------------------------------------------------------------
+if any(strcmp(varargin, 'noverbose')), doverbose = false; end
+if any(strcmp(varargin, 'noplots')), doplots = false; end
+
+% ======== This goes at the end of the file / after the main function ========
+function ARGS = parse_inputs(varargin)
 
 p = inputParser;
 
@@ -113,6 +137,9 @@ valfcn_custom = @(x) isstruct(x) || isa(x, 'region') || (~isempty(x) && all(size
 
 % Validation: [x1 x2 x3] triplet 
 valfcn_xyz = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'size', [1 3]});
+
+valfcn_logical = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
+
 
 % Required inputs 
 % ----------------------------------------------------------------------
@@ -133,18 +160,10 @@ p.addParameter('nstreamlines', 30, valfcn_scalar);
 % e.g., p.parse([30 1 0], [-40 0 10], 'bendpercent', .1);
 p.parse(varargin{:});
 
-IN = p.Results;
-fn = fieldnames(IN);
+ARGS = p.Results;
 
-for i = 1:length(fn)
-    str = sprintf('%s = IN.(''%s'');', fn{i}, fn{i});
-    eval(str)
-end
+end % parse_inputs
 
-% Logical flags
-% ----------------------------------------------------------------------
-if any(strcmp(varargin, 'noverbose')), doverbose = false; end
-if any(strcmp(varargin, 'noplots')), doplots = false; end
 
 
 % ==================== end pattern =====================================

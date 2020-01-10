@@ -23,18 +23,18 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 % :Inputs:
 %
 %   **onsets:**
-%        - 1st column is onsets for events,
+%        - 1st column is onsets for events in seconds,
 %        - 2nd column is optional durations for each event
 %        - Enter single condition or cell vector with cells for each condition (each event type).
 %
 %   **TR:**
-%        RT in seconds
+%        Repetition time (RT) in seconds
 %
 % :Optional Inputs: First two are fixed, then keywords:
 %
 %   **len:**
-%        optional length in s for model, or [] to skip if using additional. 
-%        "len" is usually the number of images multiplied by TR.
+%        optional length in sec for model, or [] to skip if using additional. 
+%        "len" is usually the number of images multiplied by TR, n_images * TR
 %
 %   **HRF name:**
 %        string or actual values
@@ -120,6 +120,7 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 % If event durations are not entered, then events will have unit amplitude by default.
 %
 % :See Also: tor_make_deconv_mtx3, [or 2], plotDesign
+
 %
 % ..
 %    Programmers' notes:
@@ -133,6 +134,8 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %    using TR with some decimal points (e.g., TR = 1.3)
 %    Modified 8/2015 by Tor to clean up documentation and change scaling of
 %    regressors overall in better range
+%    1/2020: Tor modified to increase tolerance/flexibilty for fractional
+%    TRs, add better error reporting for length mismatch
 % ..
 
 % ..
@@ -219,20 +222,13 @@ end  % end single trial
 % - - - - - - - - - - - - - - - - - - - -
 
 if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
+    % Entering session len, and using len_original here, will downsample using pre-specified length
     
     len_original = varargin{1}; % this line is added by Wani to make this work for TR = 1.3
     len = varargin{1}; % this line is modified by Wani from the next line
     % len = ceil(varargin{1});
     for i = 1:length(ons)
-        
-%         if docheckorientation
-%             % make column vectors if needed
-%             if length(ons{i}) > size(ons{i}, 1)
-%                 disp('Warning! onsets2fmridesign thinks you''ve entered row vectors for onsets and is transposing.  Enter col vectors!');
-%                 ons{i} = ons{i}';
-%             end
-%         end
-        
+
         % make sure nothing goes past end of session
         past_end = round(ons{i}(:,1)) > len;
         if any(past_end)
@@ -249,6 +245,7 @@ else
     len = ceil(ceil(len/(res*TR)) * res * TR); % modified by Wani to make this work for TR = 1.3
     len = len(1);
     
+    len_original = []; % Use 'dsrate' to downsample
 end
 
 % len was in sec, now in sec*res
@@ -288,6 +285,7 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         hrf = hrf ./ sum(hrf);
     end
 else
+    
     hrf = spm_hrf(1/res, hrfparams);   % canonical hrf
     
     if doampscale
@@ -425,7 +423,13 @@ delta_hires = cf2;
 
 % convolve and downsample. this now does parametric modulators as well.
 % ------------------------------------------------------------------------
-X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
+if ~isempty(len_original)
+    % Downsample using 'dslen' input
+    X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
+else
+    % Downsample using 'dsrate'
+    X = getPredictors(delta_hires, hrf, 'dsrate', res*TR, 'force_delta', varargin{:}); % added len_original by Wani
+end
 
 if dononlinsaturation
     X = hrf_saturation(X);
@@ -455,7 +459,13 @@ delta = cf2;
 if ~isempty(varargin)
     for i = 1:length(ons)
         
-        delta{i} = pad(delta{i}, ceil(len./res./TR - length(delta{i})));
+        try
+            % 2019 internal matlab function
+            delta{i} = padarray(delta{i}, ceil(len./res./TR - length(delta{i})));
+        catch
+            % This is in CanlabCore/Misc_utilities
+            delta{i} = pad(delta{i}, ceil(len./res./TR - length(delta{i})));
+        end
         
     end
 end

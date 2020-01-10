@@ -86,9 +86,11 @@ function cm = spm_orthviews_hotcool_colormap(t, thr)
 
     cm = [gray(64) ; newcm];
 
-    for i = 1:length(axishandles)
-        colormap(axishandles(i), cm);
-    end
+    spm_figure_canlab('Colormap',cm)
+    
+%     for i = 1:length(axishandles)
+%         colormap(axishandles(i), cm);
+%     end
 
 end
 

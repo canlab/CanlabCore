@@ -218,6 +218,9 @@ if doreg
 end 
 drawnow;
 
+% Set colormap
+spm_orthviews_hotcool_colormap(image_obj.dat(:), 0);
+
 end % function
 
 

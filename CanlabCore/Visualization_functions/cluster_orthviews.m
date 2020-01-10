@@ -284,7 +284,6 @@ function cluster_orthviews(varargin)
     if isempty(mypos), mypos = [0 0 0]'; end
     spm_orthviews('Reposition', mypos);
 
-
     % try to set the window button up function to show x, y, z position
     % coordinates
     fh = findobj('Tag', 'Graphics');

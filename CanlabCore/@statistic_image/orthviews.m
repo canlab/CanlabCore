@@ -88,7 +88,6 @@ if isempty(image_obj.sig), image_obj.sig = true(size(image_obj.dat)); end
 image_obj.sig = zeroinsert(image_obj.removed_voxels, image_obj.sig);
 image_obj.dat = zeroinsert(image_obj.removed_voxels, image_obj.dat);
 
-
 % do not do this, because it may replace deliberately removed imgs
 % image_obj = replace_empty(image_obj);
 
@@ -141,6 +140,8 @@ else
 end
 drawnow
 
+% Set colormap
+spm_orthviews_hotcool_colormap(image_obj.dat(:), 0);
 
 end % function
 

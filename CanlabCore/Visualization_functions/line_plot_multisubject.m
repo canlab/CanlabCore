@@ -64,7 +64,7 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %    % Create data for 5 simulated subjects, 10 observations each, random intercept, random positive slope:
 %    for i = 1:5, X{i} = randn(10, 1); Y{i} = rand(1) * X{i} + .3 * randn(10, 1) + randn(1); end
 %    han = line_plot_multisubject(X, Y)
-%
+% %
 %    % Plot the results three ways, with different data transformations:
 %     create_figure('Line plot multisubject', 1, 3);
 %     han = line_plot_multisubject(X, Y);
@@ -80,12 +80,12 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %   % -----------------------------------------------------------
   % Example creating bins of data within-person, useful for many within-person observations
 
-%   % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
+  % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
 %    for i = 1:5, expect{i} = randn(100, 1); pain{i} = rand(1) * expect{i} + .3 * randn(100, 1) + randn(1); end
-% 
+
 %   % Plot with bins, custom colors and points:
 %   create_figure('Line plot multisubject with bins');
-%   [han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
+   %[han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
 
 %   % -----------------------------------------------------------
 %
@@ -99,7 +99,8 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %    Programmer's notes:
 %    12/22/19 - Marta: added z-scoring option, added and clarified
 %    different flavors of r (overall r, within-subject r, between-subject r)
-% ..
+%    01/05/20 - Marta: added NaN handling for r_within for case when all input
+%    values of a subject are 0)
 
 
 % -------------------------------------------------------------------------
@@ -198,12 +199,12 @@ hold on
 X_between=cellfun(@nanmean, X);
 Y_between=cellfun(@nanmean, Y);
 
-X_std=cellfun(@nanmean, X);
-Y_std=cellfun(@nanmean, Y);
+X_std=cellfun(@nanstd, X); % 01/05/2020 Marta corrected nanmean to nanstd
+Y_std=cellfun(@nanstd, Y); 
 
 % Save some text for a report to be printed later
 
-X_is_centered = all(abs(X_between)) < 1e-10;
+X_is_centered = all(abs(X_between)) < 1e-10; % fix this to be valid for 0s too
 Y_is_centered = all(abs(Y_between)) < 1e-10;
 X_is_zscored = X_is_centered && all(abs(X_std - 1)) < 1e-10;
 Y_is_zscored = Y_is_centered && all(abs(Y_std - 1)) < 1e-10;
@@ -229,7 +230,7 @@ elseif docenter
     report_str{5} = 'X and Y centered (forced mean-zero) before plot';
 
 else
-   report_str{5} = 'No data transormations before plot';
+   report_str{5} = 'No data transformations before plot';
 end
 
 
@@ -250,7 +251,6 @@ for i = 1:N
         error(['Subject ' num2str(i) ' has unequal elements in X{i} and Y{i}. Check data.'])
     end
 
-    
     % plot points in bins
     if exist('n_bins', 'var')
         if n_bins ~= 0
@@ -321,9 +321,17 @@ end
 
 % Within-person r (each subject's X and Y correlated, then the r values averaged across subjects) 
 % -----------------------------------------------------------------
-[wasnan, X]= cellfun(@nanremove, X, 'UniformOutput', false);
-[wasnan, Y]= cellfun(@nanremove, Y, 'UniformOutput', false);
-r_within = cellfun(@corr, X, Y);
+[wasnan, Xr]= cellfun(@nanremove, X, 'UniformOutput', false); % Marta 1/7/20 unique name for nan-removed cell arrays 
+[wasnan, Yr]= cellfun(@nanremove, Y, 'UniformOutput', false);
+r_within = cellfun(@corr, Xr,Yr);
+
+% Marta 01/05/2020
+if (nnz(isnan(r_within)))>0;
+    sprintf('%3.0f subject(s) have an r value of NaN, will remove remove NaNs', ...
+       nnz(isnan(r_within)))
+    r_within=r_within(~isnan(r_within));
+end
+    
 slope_stats.r_within = mean(r_within);
 slope_stats.r_within_std = std(r_within);
 
@@ -338,7 +346,7 @@ elseif docenter
 
 else
     report_str{9} = '';
-end
+end 
 
 % Between-person r
 % -----------------------------------------------------------------

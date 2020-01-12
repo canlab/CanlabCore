@@ -14,37 +14,110 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, plotmethod)
 %
 % :Outputs:
 %
-% 5 plots and an SPM orthviews presentation of the data.  In the below
+% 6 plots and an SPM orthviews presentation of the data.  In the below
 % and elsewhere, "image" connotes a 3D brain volume captured every TR.
 %
 %   **subplot 1:**
-%         the fMRI data itself. Color is intensity of signal.
+%         Data matrix (top left). Also called a "carpet plot" in neuroimaging.
+%         The color reflects the intensity of signal in each voxel (column)
+%         for each image (row). 
+%         Here you can look for images that are bright or dark across 
+%         the image, which would indicate a global shift in values or difference
+%         in scale across the images (rows).  
+%         These can be produced by artifacts that are broadly spatially distributed,
+%         or by scanner drift. Most datasets have some of these. 
+%         This plot can also show that the pattern across voxels in one row (image)
+%         may be different than another, highlighting a difference in the spatial pattern.
+%         If you are plotting a time series dataset from one participant, unusual images
+%         could result from physiological noise, head movement, or other
+%         scanner artifacts. They could reflect after-effects of non-linear
+%         interactions across these, or a change in the images after a
+%         participant has moved their head to a new position.
+%         If you are plotting a group dataset with one contrast image per
+%         participant (i.e., what you would subject to a group analysis),
+%         standard statistical assumptions include that observations
+%         (participants) are all on the same scale, with the same variance.
+%         It is common for these assumptions to be violated, and you can
+%         sometimes see these violations here.
+%         Lastly, the range shown in the color bar on the right side of this plot 
+%         will be quite large if there are large outliers in the data. 
+%         The units are in contrast unit values, but it is important to check if a 
+%         few extreme values are forcing all other values to be in the middle of the scale. 
+%         In this case, there will be very little color variation in the plot, which is a 
+%         "red flag" indicating outliers or extreme values.
+%         Other plots show you different representations of this dataset,
+%         in ways that make it easier to see some of its properties.
 %
-%   **subplot 2:**
-%         presented as a histogram of values for every voxel collected.
-%         The low values are typically out-of-brain voxels, as there is
-%         no signal there.
+%   **subplots 2 and 3:**
+%         Covariance and Correlation Matrices (Top Middle/Top Left): 
+%         These plots both show similarity across images. Both should show bright main 
+%         diagonals and off-diagonals that are non zero or generally positive, depending 
+%         on the dataset.
+%       
+%         Covariance Matrix:   $\frac{{X}'X}{n-1}$, X is mean-centered, n is number of rows in X
+%         The diagonal reflects the image variance, shows whether the variances 
+%         of each image are equal. If the variances are all of approximately the same scale, 
+%         the diagonal will be a single color. 
 %
-%   **subplot 3:**
+%        Correlation Matrix $\frac{{X}'X}{n-1}$, colums of X are Z-scored, n is number of rows in X
+%        This plot shows the correlation between each image and the others. 
+%        Now, the main diagonal will always be one because each image is 
+%        perfectly correlated with itself. The off-diagonals should be positive 
+%        if the images are similar to one another.
+%
+%   **subplot 4:**
+%         Histogram (Bottom Left): A histogram of values across all images and voxels. 
+%         Depending on your input images, low values could reflect out-of-brain voxels, 
+%         as there is no signal there. Values of exactly 0 are excluded as missing data
+%         in all image operations.
+%         For a group dataset (e.g., contrast images), it is expected that 
+%         the distribution of contrast values will have roughly mean 0. 
+%         There are other tools for looking at this distribution for each individual
+%         image in the dataset, and each image x tissue type (assuming
+%         MNI-space images). See help fmri_data.histogram.
+%
+%   **subplot 5:**
+%         The Global Mean Values (Bottom Middle) for each image. 
+%         The means ought to be similar to one another. Ideally, these means 
+%         will all be in a similar range. The error bars show one standard deviation.
 %         each point is an image.  The point's X value is the mean
 %         intensity of every voxel in that image, and the Y value is the
 %         stdev of intensities for all voxels in that image.
 %
-%   **subplot 4:**
-%         covariance between images
+%   **subplot 6:**
+%         Mahalanobis Distance (Bottom Right) is a measure of how far away each 
+%         image is from the rest in the sample. This a standard measure of multivariate
+%         distance for each of a set of multivariate observations (here, images).
+%         The larger the distance, the more dissimilar it is from other images. 
+%         High values generally indicate extreme values/potential outliers, but 
+%         in any normally distributed dataset, there are going to be some values 
+%         that lie farther out. Also note that what to do about extreme values
+%         can be complex, and there is much discussion about how to handle
+%         them.
 %
-%   **subplot 5:**
-%         each point is an image (case = image).  X value is image
-%         number in the run, Y is image mean intensity, and the size of
-%         the circular marker represents stdev for that image
+%         Potential outliers are identified using fmri_data.mahal.
+%         To identify outliers, we assume that the points are distributed according 
+%         to a chi-square distribution. The expected distance is based on multivariate 
+%         normally distributed data for the percentile of the dataset that corresponds 
+%         to each image. even the most extreme values may not be greater than what 
+%         one expects by chance. The analysis produces p-values at uncorrected and 
+%         Bonferroni-corrected levels, and any image that is marked as an outlier 
+%         is one that exceeds the expected value with a p-value of less than 0.05. 
+%         Those will be marked in darker red. Anything considered to be an outlier with 
+%         p < 0.05 Bonferroni corrected will be marked with an even darker red. 
+%         The outliers from this plot are returned to the workspace as output.
+%         Note: Outlier identification here does not use global values, only Mahalanobis distance.   
 %
 %   **Orthviews:**
-%         mean and STD for a given voxel averaged over time.  Note that
-%         the values for mean and STD here are higher than in the plots
-%         above. That is because mean and STD are calculated here by
-%         voxel, but in the plots above they are calculated by image.
-%         Images also include out-of-brain areas.
-%
+%        SPM Orthviews: These use the spm_orthviews function from SPM software.  
+%        The X,Y, and Z coordinates correspond to the distance in millimeters 
+%        from the set origin. Three images are shown:
+%        - The mean image is the voxel-wise average across images in the dataset
+%        - The STD image is the voxel-wise standard deviation across images in the dataset
+%        - The mean/STD image is a simple estimate of effect size (Cohen's D) for every voxel. 
+%          If a contrast with one image per person is passed to plot(), this plot gives you 
+%          the effect size in a simple group analysis (e.g., one-sample t-test) across 
+%          the brain. It is reasonable to use this plot to look for distortions such as high values for means and mean/STDs in the ventricles.
 
 % Programmers' notes: tor - 4/6/2018, changed mahalanobis distance method
 % to 'corr', using correlation matrix, and changing how many/how prin comps
@@ -234,6 +307,8 @@ switch plotmethod
             
             subplot(2, 3, 6);
             
+            fprintf('Calculating mahalanobis distances to identify extreme-valued images\n')
+            
             [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot', 'corr');
             
             Y = ds; % - expectedds;
@@ -306,10 +381,15 @@ switch plotmethod
             vecs_to_reconstruct = [m];% else just show mean image
         end
         
+        m = fmridat;
+        m.dat = vecs_to_reconstruct;
+        
         if isempty(fmridat.volInfo)
             disp('.volInfo is empty. Skipping orthviews and other brain plots.');
         else
-            create_orthviews(vecs_to_reconstruct, fmridat);
+            %create_orthviews(vecs_to_reconstruct, fmridat);
+            orthviews(m);
+            
             spm_orthviews_name_axis('Mean data', 1);
             if size(fmridat.dat,2) > 1
                 spm_orthviews_name_axis('STD of data', 2);
@@ -375,8 +455,13 @@ switch plotmethod
         % Orthviews
         % ---------------------------------------------------------------
         if ~isempty(fmridat.volInfo)
+            
             vecs_to_reconstruct = means';
-            create_orthviews(vecs_to_reconstruct, fmridat);
+            m = fmridat;
+            m.dat = vecs_to_reconstruct;
+            orthviews(m);
+            
+            %create_orthviews(vecs_to_reconstruct, fmridat);
             n = size(vecs_to_reconstruct, 2);
             
             if iscell(fmridat.Y_names) && ~isempty(fmridat.Y_names) && length(fmridat.Y_names) == n
@@ -415,26 +500,27 @@ end
 end
 
 
-function create_orthviews(vecs_to_reconstruct, fmridat)
-
-vecs_to_reconstruct = zeroinsert(fmridat.removed_voxels, vecs_to_reconstruct);
-
-n = size(vecs_to_reconstruct, 2);
-%overlay = which('SPM8_colin27T1_seg.img');
-overlay = which('keuken_2014_enhanced_for_underlay.img');
-
-spm_check_registration(repmat(overlay, n, 1));
-
-for i = 1:n
-    
-    cl{i} = iimg_indx2clusters(vecs_to_reconstruct(:, i), fmridat.volInfo);
-    cluster_orthviews(cl{i}, 'add', 'handle', i);
-    
-    %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
-    spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
-end
-
-end
+% function create_orthviews(vecs_to_reconstruct, fmridat)
+% % No longer necessary with orthviews() method.
+%
+% vecs_to_reconstruct = zeroinsert(fmridat.removed_voxels, vecs_to_reconstruct);
+% 
+% n = size(vecs_to_reconstruct, 2);
+% %overlay = which('SPM8_colin27T1_seg.img');
+% overlay = which('keuken_2014_enhanced_for_underlay.img');
+% 
+% spm_check_registration(repmat(overlay, n, 1));
+% 
+% for i = 1:n
+%     
+%     cl{i} = iimg_indx2clusters(vecs_to_reconstruct(:, i), fmridat.volInfo);
+%     cluster_orthviews(cl{i}, 'add', 'handle', i);
+%     
+%     %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
+%     spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
+% end
+% 
+% end
 
 
 function fig_handle = create_montage(vecs_to_reconstruct, fmridat)

@@ -6,6 +6,16 @@ function test_pattern_on_kragel_2018_n270_data(varargin)
 %     if not found, will attempt to download from Neurovault using
 %     retrieve_neurovault_collection(). See load_image_set('kragel18_alldata')
 %
+% -   Dataset is from Kragel et al. 2018, Nature Neuroscience. 
+%     Uses load_image_set to load it:
+%     test_images = load_image_set('kragel18_alldata', 'noverbose');
+%
+% -   If not found, load_image_set uses the utility retrieve_neurovault_collection 
+%     to pull the images from Neurovault.org if you don't have them.
+%     [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(504);
+%     image_obj = fmri_data(files_on_disk);
+%     It also adds meta-data to label the images.
+%
 % :Usage:
 % ::
 %

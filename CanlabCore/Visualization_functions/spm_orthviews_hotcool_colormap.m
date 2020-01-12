@@ -14,6 +14,8 @@ function cm = spm_orthviews_hotcool_colormap(t, thr)
 %
 %   **t:**
 %        range of input statistic values (doesn't have to be t-values)
+%        *NOTE: in the 2020 update, this is no longer used, so you can
+%        enter []
 %
 %   **tthr:**
 %        threshold more extreme than which (+/-) colors should be used
@@ -32,54 +34,67 @@ function cm = spm_orthviews_hotcool_colormap(t, thr)
 %
 % ..
 %    Tor Wager, April 2007
+%    Updated color map Jan 2020 - set zero point based on range shown in
+%    SPM st
+% 
 % ..
 
-
-    myfig = findobj('Tag','Graphics');
-    axishandles = findobj(myfig, 'Type', 'Axes');
-    %cm = get(myfig,'Colormap');
-
+    global st
+    if isempty(st), reset_st; end
+    
+    %myfig = findobj('Tag','Graphics');
+    axishandles = findobj(st.fig, 'Type', 'Axes');
 
     % range of input statistic values (called 't' here, but doesn't have to be)
     mx = max([eps max(t)]);
     mn = min([0 min(t)]);
 
+    % We need to find the zero-point of the data range displayed
+    % ----------------------------------------------------------
     % indices in color map for range of data (specified in spm_orthviews)
     cvals = [1:64]' + 64;
 
+    % data range shown (specified in spm_orthviews)
+    % If not defined, exit - we may have a different kind of image, e.g.,
+    % colored blobs with no colormap
+    if ~isfield(st.vols{1}.blobs{1}, 'cbar') || isempty(st.vols{1}.blobs{1}.cbar)
+        return
+    end
+    
+    interval = st.vols{1}.blobs{1}.cbar.YLim;
+    vec = linspace(interval(1), interval(2), 64);
+    
     % t-vals corresponding to c-vals
-    tvals = linspace(mn, mx, length(cvals));
-
+    %tvals = linspace(mn, mx, length(cvals));
 
     % make new split colormap: hot colors for pos, cool colors for neg
 
     newcm = NaN .* zeros(64, 3);  %initialize
 
-
-    pos = find(tvals > thr);
+    %pos = find(tvals > thr);       % Changed Jan 2020
+    pos = find(vec > thr);
+    
     n = length(pos);
 
     if n > 0
         hotcm = hotmap(n);
-
-        % gray-yellow
-        %hotcm = [linspace(0.5, 1, n)' linspace(0.5, 1, n)' linspace(.5, 0, n)' ];
-
-
         newcm(end - n + 1 : end,:) = hotcm;
     end
 
-    neg = find(tvals < -thr);
+    % neg = find(tvals < -thr);
+    neg = find(vec < -thr);
     n = length(neg);
 
     %coolcm = cool(n);
 
     if n > 0
-        coolcm = [linspace(0, 0.5, n)' linspace(0, 0.7, n)' linspace(1, .5, n)' ];
-
+        
+        %coolcm = [linspace(0, 0.5, n)' linspace(0, 0.7, n)' linspace(1, .5, n)' ];
+        % replaced Jan 2020
+        coolcm = colormap_tor([0 0 1], [.4 .3 .4], 'n', n);
+        
         newcm(1:n,:) = coolcm;
     end
-
 
     % specify split color-map of 128 values; first 64 are gray, last 64 have
     % colors for activations; this is specified by spm_orthviews
@@ -92,19 +107,31 @@ function cm = spm_orthviews_hotcool_colormap(t, thr)
 %         colormap(axishandles(i), cm);
 %     end
 
-end
+% Set Transparency map
+% This will not work because SPM creates single-layer image for anatomy and
+% colors. So this will be left for a later date.
+%
+% hh = findobj(st.fig, 'Type', 'Image');
+% for i = 1:length(hh)
+% set(hh(i), 'AlphaDataMapping', 'scaled', 'AlphaData', abs(hh(i).CData));
+% end
+
+end % function
 
 
 
 function hotcm = hotmap(n)
 
-    offset = 3;
-    hotcm = hot(n + offset);
-    hotcm = hotcm(offset+1:end,:);
+%     offset = 3;
+%     hotcm = hot(n + offset);
+%     hotcm = hotcm(offset+1:end,:);
+% 
+%     hotcm = hotcm + greyfade(n, offset+2);  % blend hot map with fade-out grayscale map
+%     hotcm(hotcm > 1) = 1;
 
-    hotcm = hotcm + greyfade(n, offset+2);  % blend hot map with fade-out grayscale map
-    hotcm(hotcm > 1) = 1;
-
+% Replaced jan 2020:
+    hotcm = colormap_tor([.4 .4 .3], [1 1 0], 'n', n);
+    
 end
 
 

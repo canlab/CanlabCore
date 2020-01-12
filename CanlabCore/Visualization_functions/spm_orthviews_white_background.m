@@ -11,7 +11,8 @@ function spm_orthviews_white_background()
 % 
 % Uses SPM_OV_BLACK2WHITE.M
 
-spm_defaults
+spm('Defaults','fmri')
+
 global st
 
 for i = 1:24 % for all vols

@@ -599,14 +599,21 @@ if doind
                 
             elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
 
-%                 handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./ 2, 'LineWidth', 1, 'MarkerFaceColor', myc);
                 if verLessThan('matlab','8.4')
                     handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                
                 else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
-                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                    
+%                     if myalpha > .99
+%                         handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+%                     else
+                        % This can be very slow with scatter.m sometimes...
+                        handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+%                     end
+                    
                 end
                 
-                                
+                
             end
             
         end % j data points

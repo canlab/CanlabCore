@@ -98,7 +98,11 @@ switch meth
             
         end
         
-        o2 = legend(o2);
+        if ~do_multirow
+            % Plot legend only for single-row, otherwise obscures some
+            % images
+            o2 = legend(o2);
+        end
         
         fig_handle = o2;
         clear o2

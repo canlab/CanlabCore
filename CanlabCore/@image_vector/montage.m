@@ -43,7 +43,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             case 'scnmontage', meth = 'scnmontage';
                 
-            case {'trans', 'maxcolor', 'mincolor', 'transvalue', 'cmaprange'}
+            case {'trans', 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'compact2'}
                 % ignore these - passed through
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);

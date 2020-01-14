@@ -65,7 +65,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 %                
 %   'names', 'labels'   var_names = varargin{i+1}; varargin{i+1} = [];
 %   Partitions: Note: partition labels MUST be sorted (ascending sequential) for this to work right.
-%   'partitions'                                followed by partitions to plot with color bar
+%   'partitions'                                followed by k-length integer vector of partitions to plot with color bars
 %   'partitioncolors'                           followed by cell array of strings for colors
 %   'partitionlabels'                           followed by cell array of labels for each partition
 %                
@@ -295,6 +295,9 @@ end
 if k > 50 && docircles
     disp('Warning: plotting correlations as circles will be slow with large number of variables');
 end
+
+% Remove nan values row-wise - 'rows' 'complete' method.
+[wasnan, X] = nanremove(X);
 
 if skip_calculation
 % Do nothing - we already have r, p, sig

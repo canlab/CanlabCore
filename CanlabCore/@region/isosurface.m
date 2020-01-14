@@ -49,7 +49,11 @@ for i = 1:length(varargin)
             % do nothing for inputs passed on to imageCluster
             case {'alpha'}  
                 
-            case {'color', 'colors'}, colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
+            case {'color', 'colors'}
+                colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
+                if length(colors) == 1 % single color; matchcolorsleftright will overwrite this
+                    matchcolorsleftright = false;
+                end
                 
             case {'nomatchleftright', 'nosymmetric'}, matchcolorsleftright = false; varargin{i} = [];
                 

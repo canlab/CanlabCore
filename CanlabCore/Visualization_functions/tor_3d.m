@@ -89,8 +89,8 @@ function [D,Ds,hdr,p,coords,X,Y,Z] = tor_3d(varargin)
 % ..
 %    Set up arguments and default values
 % ..
-D = [];
-Ds =[];
+
+[D,Ds,hdr] = deal([]);
 p = zeros(1,2);
 coords = [0 0 0];
 whichcuts = 'xyz';
@@ -124,9 +124,18 @@ end
 
 %------------------------------------------------------------------------------
 % Load the image file, if necessary
+% Get origin and voxel size
 %------------------------------------------------------------------------------
-if isempty(D)
-    fullpath = which([filename '.img']);
+if isempty(D) 
+    
+    if isa(D, 'fmri_data'), D = []; end % empty fmri_data object
+    
+    if ~exist(filename, 'file')
+        fullpath = which([filename '.img']);
+    else
+        fullpath = filename;
+    end
+    
     if isempty(fullpath), error(['Cannot find file: ' filename '.img']);
     else disp(['Loading structural image: ' fullpath]);drawnow
     end
@@ -137,6 +146,26 @@ if isempty(D)
         D(:,:,i) = rot90(rot90(rot90((array(:,:,i)))));
     end
 
+    VV = spm_vol(fullpath);
+    origin = VV.mat(1:3, 4);
+    voxsize = (diag(VV.mat(1:3, 1:3)));
+
+elseif isa(D, 'fmri_data')
+
+    mymat = D.volInfo.mat;
+    origin = mymat(1:3, 4);
+    voxsize = (diag(mymat(1:3, 1:3)));
+    array = reconstruct_image(D);
+    
+    % rotate 270 degrees so that front of head is positive y
+    % (works with canonical SPM images, at least, so this orientation is ok.)
+    D = [];
+    for i = 1:size(array,3)
+        D(:,:,i) = rot90(rot90(rot90((array(:,:,i)))));
+    end
+    
+else
+    error('Use no ''data'' argument for default surface, or enter ''data'' followed by fmri_data object')
 end
 
 if isempty(Ds)
@@ -153,9 +182,6 @@ end
 
 % NOTE: spm5 no longer sets things in origin, apparently, so use spm_vol
 % to get origin
-VV = spm_vol(fullpath); 
-origin = VV.mat(1:3, 4);
-voxsize = (diag(VV.mat(1:3, 1:3)));
 
 [M N P] = size(D);
 %[X Y Z] = meshgrid(((1:N)-hdr.origin(1))*hdr.xsize, ((1:M)-hdr.origin(2))*hdr.ysize, ((1:P)-hdr.origin(3))*hdr.zsize);

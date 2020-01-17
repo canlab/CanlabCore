@@ -969,8 +969,12 @@ if exist(myfile, 'file')
 else
     % Load the files from disk, and clean up downloaded files
 
-    fprintf('Did not find %s\nUsing retrieve_neurovault_collection() to download collection 3324\n', myfile);
+    fprintf('Did not find %s on path.\nUsing retrieve_neurovault_collection() to download collection 3324\n', 'kragel_2018_nat_neurosci_270_subjects_test_images.mat');
     
+    try
+        % This is not working for some computers/maybe things have changed
+        % with the API. if it fails, try direct download from Dropbox
+        
     files_on_disk = retrieve_neurovault_collection(3324);
     data_obj = fmri_data(files_on_disk);
     data_obj = enforce_variable_types(data_obj);
@@ -1040,6 +1044,26 @@ else
     % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
     
     image_obj = data_obj;
+    
+    catch
+        % retrieve_neurovault_collection did not work. Download from
+        % Dropbox:
+        
+        myfile = 'kragel_2018_nat_neurosci_270_subjects_test_images.mat';
+        
+        disp('Retrieving from Neurovault failed. Trying to download from Dropbox.')
+        disp('Saving file with objects: kragel_2018_nat_neurosci_270_subjects_test_images.mat')
+        
+        websave(myfile, 'https://www.dropbox.com/s/i88qgg88lgsm0s6/kragel_2018_nat_neurosci_270_subjects_test_images.mat?dl=1');
+        
+        fprintf('Loading %s\n', myfile);
+        load(myfile)
+        
+        image_obj = data_obj;
+        networknames = data_obj.additional_info;
+        imagenames = data_obj.dat_descrip.imagenames;
+        
+    end % try Neurovault...catch
     
 end
 

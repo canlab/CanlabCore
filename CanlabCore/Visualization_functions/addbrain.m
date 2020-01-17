@@ -49,7 +49,16 @@ function p = addbrain(varargin)
 %       Bottom of brain and head
 %
 %   **'cutaway':**
-%       A canonical surface cutaway, using surface_cutaway.m
+%       A canonical surface cutaway 
+%       Uses: canlab_canonical_brain_surface_cutaways
+%       pre-2020 used surface_cutaway.m
+%
+%   **'left_cutaway'**
+%   **'right_cutaway' **
+%   **'left_insula_slab'**
+%   **'right_insula_slab'**
+%   **'accumbens_slab'**
+%
 %
 % :COMPOSITES:
 %
@@ -150,6 +159,7 @@ switch meth
         docolor = 0;
         
     case {'eraseblobs', 'set_all_to_gray'}
+        
         myp = varargin{2};
         for i = 1:length(myp)
             %set(hh, 'FaceColor', [.5 .5 .5]);
@@ -157,6 +167,7 @@ switch meth
             set(myp(i), 'FaceVertexCData', repmat([.5 .5 .5], len, 1));
         end
         p = myp;
+        
         return
   
     % -------------------------------------------------------------------
@@ -302,9 +313,11 @@ switch meth
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
 
-    case 'cutaway'
+    case {'cutaway', 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'}
         
-        p = surface_cutaway('ycut_mm', -30);
+        p = canlab_canonical_brain_surface_cutaways(meth);
+        
+        % Pre-2020: p = surface_cutaway('ycut_mm', -30);
         
     % -------------------------------------------------------------------
     % Other subcortical regions 

@@ -90,7 +90,7 @@ percentagethresh = [];
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
-        switch varargin{i}
+        switch lower(varargin{i})
             % reserved keywords
             
             case 'thresh',  mythresh = varargin{i + 1}; varargin{i + 1} = [];

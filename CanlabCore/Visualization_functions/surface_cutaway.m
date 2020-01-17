@@ -229,20 +229,9 @@ if ~isempty(color_lowerboundpercentile)
     color_lowerboundvalueneg = prctile(clZ(clZ < 0), 100-color_lowerboundpercentile);
 end
 
-% refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
-% refZ = [0 prctile(clZ(clZ > 0), 80) prctile(clZ(clZ < 0), 20) 0];
 refZ = [color_lowerboundvaluepos prctile(clZ(clZ > 0), color_upperboundpercentile) prctile(clZ(clZ < 0), 100-color_upperboundpercentile) color_lowerboundvalueneg];
 
-% Add blobs to all surfaces
-% - Map color scale to custom colormaps using 'heatmap' and refZ,
-% - and also map intensity to transparency using 'colorscale'
-
-% make bigger to avoid cross-hatching bug/problem
-%specialp = false(size(surface_handles));
-%specialp([end end-2]) = true;
-cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
-
-%cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles(~specialp), refZ, 'colorscale');
+cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale', 'noverbose');
 
 % create render_blobs_surface after
 % [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)

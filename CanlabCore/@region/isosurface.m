@@ -82,9 +82,14 @@ surface_handles = [];
 
 for i = 1:k
     
-    out = imageCluster('cluster', cl(i), 'color', colors{i}, varargin{:});
-    
-    surface_handles(i) = out;
+    try
+        out = imageCluster('cluster', cl(i), 'color', colors{i}, varargin{:});
+        
+        surface_handles(i) = out;
+    catch
+        disp('Error imaging isosurface; too few voxels?')
+        %surface_handles(i) = [];
+    end
     
 %     % Isocaps, if needed
 %     

@@ -93,11 +93,14 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %    DEFAULTS AND INPUTS
 % ..
 
-allowable_args = {'cutaway' 'rightsurface' 'existingfig', 'foursurfaces', 'surface_handles'}; % optional inputs
-default_values = {0, 0, 0, 0, []};
+allowable_args = {'cutaway' 'rightsurface' 'existingfig', 'foursurfaces', 'surface_handles' 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'};
+% optional inputs
+default_values = {0, 0, 0, 0, [], 0,0,0,0,0,0,0,0};
+
+cutaway_mode = false;
 
 % actions for inputs can be: 'assign_next_input' or 'flag_on'
-actions = {'flag_on', 'flag_on', 'flag_on', 'flag_on', 'assign_next_input'};
+actions = {'flag_on', 'flag_on', 'flag_on', 'flag_on', 'assign_next_input', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -126,6 +129,10 @@ for i = 1:length(allowable_args)
             case 'flag_on'
                 eval([allowable_args{i} ' = 1;']);
                 
+            case 'toggle_cutaway_mode'
+                cutaway_mode = true;
+                cutaway_string = varargin{wh(1)};
+                
             otherwise
                 error(['Coding bug: Illegal action for argument ' allowable_args{i}])
         end
@@ -135,15 +142,25 @@ end
 
 % END DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
+% Note: IN the below, varargin{:} is passed on, so any valid arguments
+% readable by surface_cutaway will be passed on and interpreted by it.
+% e.g., surface handles are passed in and will be used if entered.
 
 [pcl, ncl] = posneg_separate(r, 'Z');
 
-if ~isempty(surface_handles)
-    %all_surf_handles = surface_handles;
+if ~isempty(surface_handles) || cutaway
+
     all_surf_handles = surface_cutaway('cl', r, varargin{:});
     
-elseif cutaway
-    all_surf_handles = surface_cutaway('cl', r, varargin{:});
+% elseif cutaway
+%     
+%     % Cutaway without special keyword; will enter surf handles 
+%     all_surf_handles = surface_cutaway('cl', r, varargin{:});
+    
+elseif cutaway_mode
+
+    all_surf_handles = addbrain(cutaway_string);
+    all_surf_handles = surface_cutaway('cl', r, 'surface_handles', all_surf_handles, varargin{:});
 
 elseif rightsurface
     % could easily be extended to any methods for addbrain.m, but may be

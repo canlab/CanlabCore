@@ -34,12 +34,12 @@ end
 
 if isa(obj, 'atlas')
     
-    r = atlas2region(obj);
+    r = atlas2region(obj, 'noverbose');
     
     
 else
     
-    r = region(obj);
+    r = region(obj, 'noverbose');
     [all_surf_handles, pcl, ncl] = surface(r, varargin{:});
 
 end

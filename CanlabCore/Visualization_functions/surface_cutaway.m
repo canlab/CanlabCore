@@ -231,7 +231,16 @@ end
 
 refZ = [color_lowerboundvaluepos prctile(clZ(clZ > 0), color_upperboundpercentile) prctile(clZ(clZ < 0), 100-color_upperboundpercentile) color_lowerboundvalueneg];
 
+
+% if isa(cl, 'region')
+%     %obj = region2fmri_data(cl);
+%     obj = region2imagevec(cl);
+%     change_surface_colors(obj, surface_handles)
+% else
+%     disp('WARNING: YOU HAVE ENTERED AN OLDER STYLE CLUSTERS STRUCTURE')
+
 cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale', 'noverbose');
+% end
 
 % create render_blobs_surface after
 % [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)

@@ -158,13 +158,10 @@ voldata = mesh_struct.voldata;
 v0 = voldata == 0;
 
 wh_z = ~squeeze(all(all(v0, 1), 2));
-zl = [min(find(wh_z)) max(find(wh_z))];
 
 wh_y = ~squeeze(all(all(v0, 1), 3));
-yl = [min(find(wh_y)) max(find(wh_y))];
 
 wh_x = ~squeeze(all(all(v0, 2), 3));
-xl = [min(find(wh_x)) max(find(wh_x))];
 
 mesh_struct.X = mesh_struct.X(wh_x, wh_y, wh_z);
 mesh_struct.Y = mesh_struct.Y(wh_x, wh_y, wh_z);
@@ -172,9 +169,11 @@ mesh_struct.Z = mesh_struct.Z(wh_x, wh_y, wh_z);
 
 voldata = voldata(wh_x, wh_y, wh_z);
 
-% mylimits = [xl yl zl];
-% [mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata] = subvolume(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, voldata, mylimits);
-%     
+mesh_struct.voldata = voldata;
+%mesh_struct.x = mesh_struct.x(wh_x);
+% * note: would select x, y, z here, but needs to be fixed in
+% reconstruct_image() and thoroughly tested. x y z fields are not used much (at all)
+% so leave for now *
     
 if dosmooth
     V = smooth3(voldata, 'gaussian', mysmoothbox, mygaussstd);

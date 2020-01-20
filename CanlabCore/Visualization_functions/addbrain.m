@@ -315,7 +315,7 @@ switch meth
 
     case {'cutaway', 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'}
         
-        p = canlab_canonical_brain_surface_cutaways(meth);
+        p = canlab_canonical_brain_surface_cutaways(meth, varargin{:});
         
         % Pre-2020: p = surface_cutaway('ycut_mm', -30);
         

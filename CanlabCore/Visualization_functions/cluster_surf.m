@@ -122,6 +122,9 @@ function [p,str] = cluster_surf(varargin)
 %    cleanup
 % ..
 
+disp('Cluster_surf uses a type of surface rendering with cluster_surf that is deprecated')
+disp('It still functions, but the new method based on isocolors is dramatically faster')
+
 % -----------------------------------------------------------------------
 %    set up input arguments and defaults
 % -----------------------------------------------------------------------
@@ -144,6 +147,7 @@ donormalize = 0; % used with colorscale
 adjust_var = [];
 
 doverbose = true;
+if any(strcmp(varargin,'noverbose')), doverbose = false; end % do first
 
 % -----------------------------------------------------------------------
 %    optional inputs
@@ -170,7 +174,7 @@ for i = 1:length(varargin)
         elseif strcmp(varargin{i},'heatmap'), heatm = 1;
             
         elseif strcmp(varargin{i},'colormaps')
-            disp('Using custom color maps.');
+            if doverbose, disp('Using custom color maps.'); end
             poscm = varargin{i + 1}; varargin{i + 1} = [];
             negcm = varargin{i + 2};  varargin{i + 2} = [];
             
@@ -227,7 +231,7 @@ for i = 1:length(varargin)
     elseif  all(ishandle(varargin{i})) && all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  %% all(~isa(varargin{i}, 'matlab.ui.Figure'))
         % all are handles, and patches
         % OLD: Pre-2014:  all(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
-        disp('Found surface patch handles - plotting on existing surfaces.');
+        if doverbose, disp('Found surface patch handles - plotting on existing surfaces.'); end
         P = varargin{i}; % handle(s) for existing surface
         
         % get rid of later calls to other surfaces
@@ -239,10 +243,12 @@ for i = 1:length(varargin)
         % Note: some weird things are happening as fig handles are class
         % double, and not recognized as figs, but are figure handles.
         % hopefully this will work with strcmp()
-        disp('Found existing surface patch handles, but some are invalid.  Check handles.');
-        error('Exiting')
+        if doverbose
+            disp('Found existing surface patch handles, but some are invalid.  Check handles.');
+            error('Exiting')
+        end
         
-    elseif length(varargin{i}) > 1,   % it's a vector
+    elseif length(varargin{i}) > 1   % it's a vector
         refZ = varargin{i};
         
     else    % no idea
@@ -423,6 +429,11 @@ end
 if ~isempty(adjust_var)
     str = [str ',''' adjust_var ''''];
 end
+
+if ~doverbose
+    str = [str ', ''noverbose'''];
+end
+
 str = [str ');'];
 
 %p = P(end);
@@ -443,7 +454,7 @@ if ishandle(P)      % no input file, use existing handle
     end
     for i = 1:length(P)
         p = P(i);
-        disp([' eval: ' str])
+        if doverbose, disp([' eval: ' str]), end
         eval(str)
     end
 else

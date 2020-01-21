@@ -1,4 +1,4 @@
-function [all_surf_handles, pcl, ncl] = surface(r, varargin)
+function [surface_handles, pcl, ncl] = surface(r, varargin)
 % Render image data on brain surfaces; options for cutaways and canonical surfaces
 % Surface method for region object - renders blobs on multiple types of 3-D
 % surfaces
@@ -6,7 +6,10 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 % :Usage:
 % ::
 %
-%    [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
+%    [surface_handles, pcl, ncl] = surface(r, [optional inputs])
+%
+%    - accepts combinations of existing surface handles and one or more
+%    keywords accepted by addbrain.m to build surfaces
 %
 % ..
 %     Author and copyright information:
@@ -32,24 +35,50 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %   **r:**
 %        A region object
 %
-%   **'cutaway':**
-%        String command for rendering cutaways instead of the default
-%           - default is call to mediation_brain_surface_figs
-%           - cutaways calls surface_cutaway
-%           - all optional arguments are passed to surface_cutaway
-%
-%   **'rightsurface':**
-%        String command for rendering a right frontal cortical
-%                      view complementary to 'cutaways'
-%
-%   **'foursurfaces':**
-%        Compact plots of four surfaces
-%
 %   **'surface_handles':**
 %        Followed by surface handles to render on
 %
-% Other optional inputs to surface_cutaway
-% e.g., 'pos_colormap', 'existingfig', 'mm_deep'
+%   **addbrain.m keywords:**
+%        Keywords for surfaces accepted by addbrain.m
+%        A list is below:
+%
+%         % % Regions
+%         % -----------------------------------------------------------------------
+%         'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
+%         'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
+%         'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
+%         'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
+%         'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal', ...
+%         'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP'
+%         'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires'
+%
+%         % Cortical Surfaces
+%         % -----------------------------------------------------------------------
+%         'left' 'hires left' 'surface left' 'hires surface left' ...
+%         'right' 'hires right' 'surface right' 'hires surface right' ...
+%         'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
+%
+%         % Macro subcortical surfaces
+%         % -----------------------------------------------------------------------
+%         'CIT168' 'cerebellum','cblm' 'brainstem' 'suit brainstem'
+%
+%         % Cutaways
+%         % -----------------------------------------------------------------------
+%         'brainbottom' 'cutaway', 'left_cutaway' 'right_cutaway' ...
+%         'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5' ...
+%
+%         % Groups
+%         % -----------------------------------------------------------------------
+%         'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'
+%
+%   **render_on_surface keywords:**
+%   allowable = {'clim' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+%   'clim'          Limits for image values mapped to most extreme colors
+%   'colormap'      Followed by the name of a Matlab colormap to use (
+%   'colormapname'
+%   'axis_handle'
+%   'pos_colormap'
+%   'neg_colormap'
 %
 %
 % :Outputs:
@@ -76,7 +105,7 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %    [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'pos_colormap', poscm, 'neg_colormap', negcm);
 %    [all_surf_handles2, pcl, ncl] = surface(r, 'foursurfaces', 'existingfig', 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]));
 %
-%    % use mediation_brain_surface_figs and re-make colors
+%    % use mediation_brain_surface_figs and re-make colors [OLD METHOD! SLOW!]
 %    all_surf_handles = mediation_brain_surface_figs([]);
 %    surface(r, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
 %
@@ -84,6 +113,8 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %    create_figure; p = addbrain('thalamus'); lightRestoreSingle;
 %    [all_surf_handles2, pcl, ncl] = surface(region(t_age), 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.4 0 .7]), 'surface_handles', p);
 %
+% figure; hh = addbrain('foursurfaces');
+% t.surface('surface_handles', hh);
 %
 % :See also:*
 %
@@ -93,180 +124,71 @@ function [all_surf_handles, pcl, ncl] = surface(r, varargin)
 %    DEFAULTS AND INPUTS
 % ..
 
-allowable_args = {'cutaway' 'rightsurface' 'existingfig', 'foursurfaces', 'surface_handles' 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'};
-% optional inputs
-default_values = {0, 0, 0, 0, [], 0,0,0,0,0,0,0,0};
+existingfig = false;
+surface_handles = [];
 
-cutaway_mode = false;
+% optional inputs with default values
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
 
-% actions for inputs can be: 'assign_next_input' or 'flag_on'
-actions = {'flag_on', 'flag_on', 'flag_on', 'flag_on', 'assign_next_input', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode', 'toggle_cutaway_mode'};
-
-% logical vector and indices of which inputs are text
-textargs = cellfun(@ischar, varargin);
-whtextargs = find(textargs);
-
-for i = 1:length(allowable_args)
-    
-    % assign default
-    % -------------------------------------------------------------------------
-    
-    eval([allowable_args{i} ' =  default_values{i};']);
-    
-    wh = strcmp(allowable_args{i}, varargin(textargs));
-    
-    if any(wh)
-        % Optional argument has been entered
-        % -------------------------------------------------------------------------
-        
-        wh = whtextargs(wh);
-        if length(wh) > 1, warning(['input ' allowable_args{i} ' is duplicated.']); end
-        
-        switch actions{i}
-            case 'assign_next_input'
-                eval([allowable_args{i} ' = varargin{wh(1) + 1};']);
+            case 'surface_handles', surface_handles = varargin{i+1}; varargin{i} = []; varargin{i+1} = [];
+            case {'existingfig', 'nofigure'}, existingfig = true; varargin{i} = []; 
                 
-            case 'flag_on'
-                eval([allowable_args{i} ' = 1;']);
-                
-            case 'toggle_cutaway_mode'
-                cutaway_mode = true;
-                cutaway_string = varargin{wh(1)};
-                
-            otherwise
-                error(['Coding bug: Illegal action for argument ' allowable_args{i}])
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
+    end
+end
+
+% BUILD BRAIN SURFACE BASED ON ALLOWABLE INPUTS TO ADDBRAIN
+% -------------------------------------------------------------------------
+addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
+    'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
+    'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
+    'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
+    'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal', ...
+    'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP' ...
+    'left' 'hires left' 'surface left' 'hires surface left' ...
+    'right' 'hires right' 'surface right' 'hires surface right' ...
+    'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
+    'brainbottom' 'cutaway', 'left_cutaway' 'right_cutaway' ...
+    'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5' ...
+    'brainstem' 'suit brainstem' 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 'cerebellum','cblm' 'CIT168' ...
+    'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'};
+
+for i = 1:length(varargin)
+    
+    if ischar(varargin{i}) && any(strcmp(addbrain_allowable_args, varargin{i}))
         
-    end % argument is input
+        surface_handles = [surface_handles addbrain(varargin{i})];
+        
+    end
+    
 end
 
 % END DEFAULTS AND INPUTS
 % -------------------------------------------------------------------------
-% Note: IN the below, varargin{:} is passed on, so any valid arguments
-% readable by surface_cutaway will be passed on and interpreted by it.
-% e.g., surface handles are passed in and will be used if entered.
 
-[pcl, ncl] = posneg_separate(r, 'Z');
-
-if ~isempty(surface_handles) || cutaway
-
-    all_surf_handles = surface_cutaway('cl', r, varargin{:});
-    
-% elseif cutaway
-%     
-%     % Cutaway without special keyword; will enter surf handles 
-%     all_surf_handles = surface_cutaway('cl', r, varargin{:});
-    
-elseif cutaway_mode
-
-    all_surf_handles = addbrain(cutaway_string);
-    all_surf_handles = surface_cutaway('cl', r, 'surface_handles', all_surf_handles, varargin{:});
-
-elseif rightsurface
-    % could easily be extended to any methods for addbrain.m, but may be
-    % better to build your own and pass in custom handles.
-    
-    if ~existingfig, create_figure('right_surface'); end
-    
-    all_surf_handles = addbrain('hires');
-    view(133, 10);
-    set(all_surf_handles, 'FaceAlpha', .9);
-    axis tight, axis image
-    lightRestoreSingle; lighting gouraud
-    
-    all_surf_handles = surface_cutaway('cl', r, 'surface_handles', all_surf_handles, varargin{:});
-
-elseif foursurfaces
-    all_surf_handles = run_foursurfaces(r, existingfig, varargin{:});
-
-else  %if ~(cutaway || rightsurface || foursurfaces)
-    
-    % default method
-    all_surf_handles = mediation_brain_surface_figs({pcl}, {ncl});
-    
+% Legacy
+if nargout > 1
+    [pcl, ncl] = posneg_separate(r, 'Z');
 end
 
-% Or, could modify to use this as an option:
-%cluster_surf(obj, varargin{:})
+% Run color change
+% Convert to image vector first
+% -------------------------------------------------------------------------
+obj = region2imagevec(r);
 
+if isempty(obj)
+    disp('No data to display. Returning')
+    return
 end
 
-
-
-
-
-
-%% Subfunction
-
-function all_surf_handles = run_foursurfaces(r, existingfig, varargin)
-
-if ~existingfig, f1 = create_figure('foursurfaces'); else f1 = gcf; end
-
-all_surf_handles = [];
-
-nrows = 2;
-ncols = 2;
-
-% Right lateral
-% ------------------------------------------------------------------------
-figure(f1);
-subplot(nrows, ncols , 1);
-surfh = addbrain('hires right');
-set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
-view(90, 0)
-lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-
-surfh2 = addbrain('brainstem');
-surfh2 = [surfh2 addbrain('thalamus')];
-set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
-surfh = [surfh surfh2];
-
-surfh = surface_cutaway('cl', r, 'surface_handles', surfh, varargin{:});
-
-all_surf_handles = [all_surf_handles surfh];
-
-% Right medial
-% ------------------------------------------------------------------------
-
-figure(f1);
-axh = subplot(nrows, ncols , 4);
-surfh2 = copyobj(surfh, axh);
-view(270, 0);
-
-all_surf_handles = [all_surf_handles surfh2'];
-
-lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-
-% Left lateral
-% ------------------------------------------------------------------------
-
-figure(f1);
-subplot(nrows, ncols , 2);
-surfh = addbrain('hires left');
-set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
-view(270, 0)
-lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-
-surfh2 = addbrain('brainstem');
-surfh2 = [surfh2 addbrain('thalamus')];
-set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
-surfh = [surfh surfh2];
-
-surfh = surface_cutaway('cl', r, 'surface_handles', surfh, varargin{:});
-
-all_surf_handles = [all_surf_handles surfh];
-
-% Left medial
-% ------------------------------------------------------------------------
-
-figure(f1);
-axh = subplot(nrows, ncols , 3);
-surfh2 = copyobj(surfh, axh);
-view(90, 0);
-
-all_surf_handles = [all_surf_handles surfh2'];
-
-lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
-
+if isempty(surface_handles)
+    disp('No surface handles to display on. Returning')
+    return
 end
 
+render_on_surface(obj, surface_handles, varargin{:});
+
+end % function

@@ -1,10 +1,10 @@
-function render_on_surface(obj, surface_handles, varargin)
+function cm = render_on_surface(obj, surface_handles, varargin)
 % Map voxels in obj to isosurface (patch) handles in han and change surface colors according to values in obj
 %
 % :Usage:
 % ::
 %
-%     render_on_surface(obj, han, [optional inputs])
+%     cm = render_on_surface(obj, han, [optional inputs])
 %
 % - Object can be thresholded or unthresholded statistic_image, or other image_vector object
 % - Uses only the first image in obj
@@ -122,11 +122,16 @@ end
 % OPTIONAL INPUTS
 % -------------------------------------------------------------------------
 
+% cm = [];
 nvals = 256;                % number of values for each segment of colormap
 colormapname = 'hot';       % default colormap name (all Matlab defined colormaps OK)
 custom_colormap = false;
-clim = [];                  
-allowable_inputs = {'clim' 'colormap' 'colormapname'};
+pos_colormap = [];
+neg_colormap = [];
+clim = [];  
+axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
+allowable_keyword_value_pairs = {'clim' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -139,14 +144,47 @@ for i = 1:length(varargin)
                 colormapname = varargin{i+1}; varargin{i+1} = [];
                 custom_colormap = true;
                 
-            case allowable_inputs
+            case allowable_keyword_value_pairs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
-                
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
+            
+            % eliminate this here because we may have passed many irrelevant values in in surface() call    
+            %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
+
+if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
+    
+    if any(strcmp(varargin, 'colormap'))
+        error('Entering ''colormap'' argument and name cannot be done when entering custom colormaps in ''pos_colormap''/''neg_colormap''');
+    end
+     
+    if ~isempty(pos_colormap)
+        validateattributes(pos_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
+    end
+    
+    if ~isempty(neg_colormap)
+        validateattributes(neg_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
+    end
+    
+    custom_colormap = true;
+    
+    colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
+    nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
+    
+end
+    
+% There are 2 ways to enter custom colormaps. 
+% 1. By name
+% 'colormap', [name of Matlab colormap]
+%
+% 2. Enter colormaps generated externally
+% 'pos_colormap', followed by [n x 3] color vectors and/or
+% 'neg_colormap', followed by [n x 3] color vectors
+% 
+% If you enter 'pos_colormap' / 'neg_colormap', these will be stacked and
+% added to a gray colormap
 
 if isempty(clim)
     
@@ -178,15 +216,15 @@ end
 
 if custom_colormap
     
-    cm = split_colormap(nvals, colormapname);
+    cm = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
 
 elseif diff(sign(clim))
     
     % Default colormap for objects with - and + values
-    cm = hotcool_split_colormap(nvals, clim);
+    cm = hotcool_split_colormap(nvals, clim, axis_handle);
     
 else 
-    cm = split_colormap(nvals, colormapname);
+    cm = split_colormap(nvals, colormapname, axis_handle);
 end
 
 % Map object data values to indices in split colormap
@@ -278,7 +316,7 @@ end
 % - If object is positive-valued or negative-valued only, assume we want a unipolar colormap 
 
 
-function cm = hotcool_split_colormap(nvals, clim, varargin)
+function cm = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
 %
 % cm = hotcool_split_colormap(nvals, clim, [lowhot hihot lowcool hicool]), each is [r g b] triplet
 %
@@ -291,7 +329,7 @@ hihot = [1 1 0];
 lowcool = [0 0 1];
 hicool = [.4 .3 .4];
 
-if length(varargin) > 0
+if ~isempty(varargin)
     if length(varargin) < 4
         error('Enter no optional arguments or 4 [r g b] color triplets');
     end
@@ -327,19 +365,55 @@ coolcm(end, :) = [.5 .5 .5]; % last element is gray
 cm = [coolcm; hotcm];
 
 cm = [cmgray; cm];
-colormap(cm);
+
+% Change colormap(s)
+if isempty(axis_handle)
+    colormap(cm)
+    
+elseif iscell(axis_handle)
+    
+    for i = 1:length(axis_handle)
+        colormap(axis_handle{i}, cm);
+    end
+    
+else
+    colormap(axis_handle, cm);
+end
 
 end
 
 
-function cm = split_colormap(nvals, colormapname)
+function cm = split_colormap(nvals, cmcolor, axis_handle)
 % Get split colormap with gray then colored values
 % e.g., cm = split_colormap(256, [2 8], 'hot')
+%
+% colormapname is either name or [nvals x 3] matrix
+
+%validateattributes(cmcolor, {'numeric' 'char'})
+
 cmgray = gray(nvals);
 
-cmcolor = eval(sprintf('%s(%d)', colormapname, nvals));
+if ischar(cmcolor)
+    % Named colormap function
+cmcolor = eval(sprintf('%s(%d)', cmcolor, nvals));
+end
 
+validateattributes(cmcolor, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
+    
 cm = [cmgray; cmcolor];
-colormap(cm)
+
+% Change colormap(s)
+if isempty(axis_handle)
+    colormap(cm)
+    
+elseif iscell(axis_handle)
+    
+    for i = 1:length(axis_handle)
+        colormap(axis_handle{i}, cm);
+    end
+    
+else
+    colormap(axis_handle, cm);
+end
 
 end

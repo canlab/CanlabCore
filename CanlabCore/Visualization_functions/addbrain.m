@@ -11,7 +11,38 @@ function p = addbrain(varargin)
 %
 %    han = addbrain('brainstem');
 %
-% NOTE: this version uses structures in SPM2 space (Colin atlas)
+% NOTE: this version uses structures in MNI space
+% The exact space depends on the method used.
+%
+% % Regions
+% % -----------------------------------------------------------------------
+% 'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
+% 'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
+% 'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
+% 'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
+% 'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal', ...
+% 'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP'
+% 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 
+% 
+% % Cortical Surfaces
+% % -----------------------------------------------------------------------
+% 'left' 'hires left' 'surface left' 'hires surface left' ...
+% 'right' 'hires right' 'surface right' 'hires surface right' ...
+% 'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
+% 
+% % Macro subcortical surfaces
+% % -----------------------------------------------------------------------
+% 'CIT168' 'cerebellum','cblm' 'brainstem' 'suit brainstem' 
+% 
+% % Cutaways
+% % -----------------------------------------------------------------------
+% 'brainbottom' 'cutaway', 'left_cutaway' 'right_cutaway' ...
+% 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5' ...
+% 
+% % Groups
+% % -----------------------------------------------------------------------
+% 'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group' 
+%
 % Available keywords:
 %
 % :CORTICAL SURFACES:
@@ -181,7 +212,7 @@ switch meth
     'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
     'pbn' 'lc' 'rvm' 'rvm_old' 'nts' 'sc' 'ic' 'drn' 'mrn' ...
     'thalamus' 'thal' 'LGN' 'lgn' 'MGN' 'mgn' 'VPthal', 'VPLthal', 'VPL', 'intralaminar_thal', ...
-    'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'pbn' 'ncf' 'vep' 'PBP'}
+    'medullary_raphe' 'spinal_trigeminal' 'nuc_ambiguus' 'dmnx_nts' 'ncs_B6_B8' 'nrp_B5' 'ncf' 'vep'}
         
     [r, ~, default_color] = canlab_load_ROI(meth, 'noatlas');  % noatlas speeds things up! we don't need atlas 
     
@@ -312,7 +343,7 @@ switch meth
         set(p(1),'FaceColor',[.6 .4 .3]); colormap copper;material dull;axis off
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
-
+        
     case {'cutaway', 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'}
         
         p = canlab_canonical_brain_surface_cutaways(meth, varargin{:});
@@ -324,7 +355,7 @@ switch meth
     % Some do not work well for display in canlab_load_ROI 
     % Some not in there because there are surface files, not regions
     % -------------------------------------------------------------------
-    
+            
     case 'brainstem'
 
         pname = 'surf_spm2_brainstem.mat';
@@ -409,8 +440,7 @@ switch meth
             set(p(end), 'Tag', names{i});
             
         end
-    
-        
+
     case {'midbrain_group'}
         
         names = {'pag' 'sc' 'ic' 'drn' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn'};
@@ -489,91 +519,12 @@ switch meth
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
         set(gca, 'ZLim', [-30 10])
         
-                % --------------------------------------
-% 
-%                 
-%     case 'pag'
-%         load pag_cl
-%         p = imageCluster('cluster',pag,'color',[1 0 0],'alpha',1);
-% 
-%         %P = which('ROI_pag.img');
-%         %P = which('spm5_pag.img');
-%         %[p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 0]);
-% 
-%     case {'md','mediodorsal'}
-%         load thal_brainstem_approx_working MD
-%         p = imageCluster('cluster',MD,'color',[1 0 0],'alpha',1);
-% 
-%     case {'cm','centromedian'}
-%         load thal_brainstem_approx_working CM
-%         p = imageCluster('cluster',CM,'color',[1 .7 0],'alpha',1);
-% 
-%         
-%     case 'pbn'
-%         load pbn_cl
-%         p = imageCluster('cluster',pbn,'color',[1 .5 0],'alpha',1);
-% 
-%     case 'rvm_old' % legacy RVM mask
-%         load rvm_cl
-%         p = imageCluster('cluster',rvm,'color',[1 .2 .1],'alpha',1);
-% 
-%     case {'rvm','rvm_brooks'} % RVM mask from Jon Brooks
-%         load RVMmask_symm_2mm_Brooks
-%         p = imageCluster('cluster',rvm_brooks,'color',[1 .7 .1],'alpha',1);
-%         
-%     case 'nts'
-%         load nts_cl
-%         p = imageCluster('cluster',nts,'color',[0 0 1],'alpha',1);
-%     
-%     case {'lc'} %******
-%         %P = which('ROI_LC.img');
-%         %[p,outP,FV, cl, myLight] = mask2surface(P,0,[1 .5 0]);
-%          
-%         r = load('Keren_2009_LC_2SD_regions.mat'); r = r.r;  
-%         % too small, smooth...coming later...
-%         p = imageCluster('cluster',r,'color',[1 1 0],'alpha',1);
-%        
-% % 
-%     case {'sn', 'substantia nigra'}
-% %         P = which('ROI_SN.img');
-% %         [p,outP,FV, cl, myLight] = mask2surface(P,0,[0 0 .5]);
-% 
-%         load(which('Keuken_2014_7T_regions.mat'), 'SN')
-%         p = imageCluster('cluster', SN, 'color',[0 0 .5],'alpha', .5);
-%         
-%     case {'stn', 'subthalamic nucleus'} % ****
-% %         P = which('ROI_STN.img');
-% %         [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 .5]);
-% 
-%         load(which('Keuken_2014_7T_regions.mat'), 'STN')
-%         p = imageCluster('cluster', STN, 'color',[1 0 .5],'alpha', .5);
-%         
-%     case {'rn', 'red nucleus'}
-% %         P = which('ROI_red_nucleus.img');
-% %         [p,outP,FV, cl, myLight] = mask2surface(P,0,[1 0 0]);
-% 
-%         load(which('Keuken_2014_7T_regions.mat'), 'RN')
-%         p = imageCluster('cluster', RN, 'color',[1 0 0],'alpha', .5);
-%         
-%     case {'olive', 'inferior olive'}
-%         P = which('ROI_inf_olive.img');
-%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[.5 1 .5]);
-% 
-%     case {'nrm', 'raphe magnus'}
-%         P = which('ROI_raphe_magnus.img');
-%         [p,outP,FV, cl, myLight] = mask2surface(P,0,[.3 0 1]);
-% 
-%     case {'vmpfc', 'vmPFC'}
-%         
-%         P = which('VMPFC_display_mask.img');
-%          [p,outP,FV, cl, myLight] = mask2surface(P, 0, [.7 .3 0]);
-
          
          
          % ---------------------------------
          
     case 'foursurfaces'
-        P = run_foursurfaces;
+        p = run_foursurfaces;
         
     case 'flat left'
         
@@ -720,7 +671,10 @@ all_surf_handles = [all_surf_handles surfh];
 
 figure(f1);
 axh = subplot(nrows, ncols , 4);
-copyobj(surfh, axh);
+surfh2 = copyobj(surfh, axh);
+if iscolumn(surfh2), surfh2 = surfh2'; end
+all_surf_handles = [all_surf_handles surfh2];
+
 view(270, 0);
 
 lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
@@ -747,7 +701,10 @@ all_surf_handles = [all_surf_handles surfh];
 
 figure(f1);
 axh = subplot(nrows, ncols , 3);
-copyobj(surfh, axh);
+surfh2 = copyobj(surfh, axh);
+if iscolumn(surfh2), surfh2 = surfh2'; end
+all_surf_handles = [all_surf_handles surfh2];
+
 view(90, 0);
 
 lightRestoreSingle; axis image; axis off; lighting gouraud; material dull

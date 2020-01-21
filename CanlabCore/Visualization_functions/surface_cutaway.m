@@ -1,6 +1,12 @@
 function surface_handles = surface_cutaway(varargin)
 % Make a specialized cutaway surface and add blobs if entered
 %
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
+%
 % :Usage:
 % ::
 %
@@ -99,7 +105,12 @@ function surface_handles = surface_cutaway(varargin)
 %    % use mediation_brain_surface_figs and re-make colors
 %    all_surf_handles = mediation_brain_surface_figs([]);
 %    surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
-
+%
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
 
 % ..
 %    DEFAULTS AND INPUTS

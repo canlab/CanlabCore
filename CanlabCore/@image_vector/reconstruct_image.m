@@ -39,6 +39,12 @@ function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj
 % ..
 
 obj = replace_empty(obj);
+
+if isa(obj, 'statistic_image')
+    % Apply threshold
+    obj.dat = obj.dat .* logical(obj.sig);
+end
+
 voldata = iimg_reconstruct_vols(obj.dat, obj.volInfo);
 
 if nargout > 1
@@ -46,7 +52,7 @@ if nargout > 1
 end
 
 if nargout > 2
-    disp('Returning coordinates in mm and meshgrid matrices.');
+    % disp('Returning coordinates in mm and meshgrid matrices.');
     
     % return xyz mm coordinates for full volume
     xyzmin = voxel2mm([1 1 1]', obj.volInfo.mat);
@@ -66,6 +72,7 @@ if nargout > 2
     dims = size(voldata);
 
     % reverse dims 2 and 1 because dim 1 is y
+    % * NOTE: x and y probably need to be reversed here, but needs thorough testing to make sure everything works *
     x = linspace(xyzmin(1), xyzmax(1), dims(1))';
     y = linspace(xyzmin(2), xyzmax(2), dims(2))';
     z = linspace(xyzmin(3), xyzmax(3), dims(3))';

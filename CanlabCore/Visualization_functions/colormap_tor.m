@@ -1,10 +1,32 @@
 function newcm = colormap_tor(lowcolor, hicolor, varargin)
+% Create a new colormap of your choosing.
+%
 % :Usage:
 % ::
 %
 %    newcolormap = colormap_tor(lowcolor, hicolor, [midcolor], [midcolor2], etc.)
 %
-% Create a new colormap of your choosing.
+% :Inputs:
+%
+%   **lowcolor:**
+%        3-element color vector [r g b] 
+%
+%   **hicolor:**
+%        3-element color vector [r g b] 
+%
+% :Optional Inputs:
+%   **'n':**
+%        Followed by number of desired colormap elements
+%        Must be divisible by # colors entered - 1
+%
+%   **[r g b]:**
+%        Additional [rgb]3-element color vectors, as many as you want
+%        These define intermediate colorsﬂ
+%
+% :Outputs:
+%
+%   **cm:**
+%        A colormap matrix, [n x 3]
 %
 % :Examples:
 % ::
@@ -14,39 +36,110 @@ function newcm = colormap_tor(lowcolor, hicolor, varargin)
 %    colormap_tor([.8 .1 .1], [1 1 0], [.9 .6 .1]);  %red to orange to yellow
 %    colormap_tor([.2 .2 .4], [1 1 0], [.9 .6 .1]);  %slate to orange to yellow
 %
+%    cm = colormap_tor([.2 .2 .6], [1 1 0], 'n', 25);  % with 25 elements in color map
+%
+%    % Generate a split colormap with 32 grayscale and 32 colored values:
+%    cm = colormap_tor([.2 .2 .6], [1 1 0], [.4 .4 .4], 'n', 32);
+%    cm = [cmgray; cm];
+%
+%    % Set the current figure colormap to cm:
+%    colormap(cm)
+%
 % ..
 %    tor wager, sept. 2007
 % ..
 
+% -------------------------------------------------------------------------
+% DEFAULT ARGUMENT VALUES
+% -------------------------------------------------------------------------
 
-    n = 64;
-    newcm = NaN .* zeros(n, 3);  %initialize
+n = 64;
+newcm = NaN .* zeros(n, 3);  %initialize
+additional_colors = {};
 
+% -------------------------------------------------------------------------
+% OPTIONAL INPUTS
+% -------------------------------------------------------------------------
 
-    if nargin < 3
-        % no mid-color
-        newcm = [linspace(lowcolor(1), hicolor(1), n)' linspace(lowcolor(2), hicolor(2), n)' linspace(lowcolor(3), hicolor(3), n)' ];
-    else
-        % we have more colors
-        newcm = [linspace(lowcolor(1), varargin{1}(1), n/2)' linspace(lowcolor(2), varargin{1}(2), n/2)' linspace(lowcolor(3),varargin{1}(3), n/2)' ];
+allowable_inputs = {'n'};
+
+% optional inputs with default values - each keyword entered will create a variable of the same name
+
+for i = 1:length(varargin)
+    
+    if ischar(varargin{i})
         
-        for i = 1:length(varargin) - 1
-            newcm1 = [linspace(varargin{i}(1), varargin{i+1}(1), n/2)' linspace(varargin{i}(2), varargin{i+1}(2), n/2)' linspace(varargin{i}(3),varargin{i+1}(3), n/2)' ];
-            newcm = [newcm; newcm1];
+        switch varargin{i}
+            
+            case allowable_inputs
+                
+                eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
         
-        newcm1 = [linspace(varargin{end}(1), hicolor(1), n/2)' linspace(varargin{end}(2), hicolor(2), n/2)' linspace(varargin{end}(3),hicolor(3), n/2)' ];
-        newcm = [newcm; newcm1];
+    elseif length(varargin{i}) == 3
         
-% %         
+        % We have additional colors
+        additional_colors{end+1} = varargin{i};
+        
+    end
+    
+end % Input parsing
+
+% -------------------------------------------------------------------------
+% MAIN FUNCTION
+% -------------------------------------------------------------------------
+
+
+if isempty(additional_colors)
+    % no mid-color
+    newcm = [linspace(lowcolor(1), hicolor(1), n)' linspace(lowcolor(2), hicolor(2), n)' linspace(lowcolor(3), hicolor(3), n)' ];
+    
+else
+    % we have more colors
+    
+    allcolors = [{lowcolor} additional_colors {hicolor}];
+    
+    % Redefine n based on number of total colors
+    % 3 colors turns into 2 segments, 4 to 3, etc.
+    n = n ./ (length(allcolors) - 1);
+    
+    if (n - round(n))
+        error('Length of colormap requested must be divisible by total number of colors entered - 1');
+    end
+    
+    newcm = [];
+    
+    for i = 1:(length(allcolors)-1)
+         
+        newlocolor = allcolors{i};
+        newhicolor = allcolors{i + 1};
+        
+        newcolorcm = [linspace(newlocolor(1), newhicolor(1), n)' linspace(newlocolor(2), newhicolor(2), n)' linspace(newlocolor(3), newhicolor(3), n)' ];
+        newcm = [newcm; newcolorcm];
+        
+    end % colors loop 
+    
+end
+
+
+%         for i = 1:length(varargin) - 1
+%             newcm1 = [linspace(varargin{i}(1), varargin{i+1}(1), n/2)' linspace(varargin{i}(2), varargin{i+1}(2), n/2)' linspace(varargin{i}(3),varargin{i+1}(3), n/2)' ];
+%             newcm = [newcm; newcm1];
+%         end
+%
+%         newcm1 = [linspace(varargin{end}(1), hicolor(1), n/2)' linspace(varargin{end}(2), hicolor(2), n/2)' linspace(varargin{end}(3),hicolor(3), n/2)' ];
+%         newcm = [newcm; newcm1];
+
+% %
 % %         % we have a mid-color
 % %         newcm1 = [linspace(lowcolor(1), midcolor(1), n/2)' linspace(lowcolor(2), midcolor(2), n/2)' linspace(lowcolor(3), midcolor(3), n/2)' ];
 % %         newcm2 = [linspace(midcolor(1), hicolor(1), n/2)' linspace(midcolor(2), hicolor(2), n/2)' linspace(midcolor(3), hicolor(3), n/2)' ];
-% % 
+% %
 % %         newcm = [newcm1; newcm2];
-    end
-
 end
+
 
 % %
 % %     % ------------------------------------------------------------

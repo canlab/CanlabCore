@@ -67,6 +67,7 @@ function stats = rsa_regression(obj,design,study)
 % Download images from Kragel et al. 2018 Nature Neuroscience
 % Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
 % 270 subject-level images systematically sampled from 18 studies across 3 domains
+%
 % [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
 % data_obj = fmri_data(files_on_disk)
 %

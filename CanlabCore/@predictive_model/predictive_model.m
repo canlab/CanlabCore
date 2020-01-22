@@ -20,6 +20,9 @@ classdef predictive_model
 % select_features
 % bootstrap  (and reproducibility)
 % error_analysis
+%
+% This is a stub - the start of an incomplete function. For now, use predict.m to
+% train models, which returns stats structures. 
 
 properties
     

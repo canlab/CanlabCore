@@ -49,7 +49,11 @@ for i = 1:length(varargin)
             % do nothing for inputs passed on to imageCluster
             case {'alpha'}  
                 
-            case {'color', 'colors'}, colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
+            case {'color', 'colors'}
+                colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
+                if length(colors) == 1 % single color; matchcolorsleftright will overwrite this
+                    matchcolorsleftright = false;
+                end
                 
             case {'nomatchleftright', 'nosymmetric'}, matchcolorsleftright = false; varargin{i} = [];
                 
@@ -78,9 +82,14 @@ surface_handles = [];
 
 for i = 1:k
     
-    out = imageCluster('cluster', cl(i), 'color', colors{i}, varargin{:});
-    
-    surface_handles(i) = out;
+    try
+        out = imageCluster('cluster', cl(i), 'color', colors{i}, varargin{:});
+        
+        surface_handles(i) = out;
+    catch
+        disp('Error imaging isosurface; too few voxels?')
+        %surface_handles(i) = [];
+    end
     
 %     % Isocaps, if needed
 %     

@@ -1,6 +1,12 @@
 function [p,str] = cluster_surf(varargin)
 % Surface plot of clusters on a standard brain
 %
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
+%
 % :Usage:
 % ::
 %
@@ -110,14 +116,27 @@ function [p,str] = cluster_surf(varargin)
 %
 % :See Also: addbrain, img2surf.m, surface() methods for objects, cluster_cutaways
 %
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
+
+
 % ..
 %    Programmers' Notes
 %    Created by Tor, a long time ago
 %    updated Sept 2015 to keep up with matlab graphics and handle some weird
-%    stuff with processing inputs.  
+%    stuff with processing inputs.
 %      - Figures are now scalars and we need to check for those first.
 %      - Also changed default surface and colormap
+%
+%    Jan 2020: Updated to add 'noverbose' option, minor cosmetic code
+%    cleanup
 % ..
+
+disp('Cluster_surf uses a type of surface rendering with cluster_surf that is deprecated')
+disp('It still functions, but the new method based on isocolors is dramatically faster')
 
 % -----------------------------------------------------------------------
 %    set up input arguments and defaults
@@ -128,13 +147,10 @@ heatm = 0;
 viewdeg = [135 30];
 cl = [];
 
-%P = which('surf_single_subj_T1_gray.mat');
 P = which('surf_spm2_brain.mat');
 P = which('surf_spm2_brain_1mm.mat');
 
 % default color maps
-% poscm = colormap_tor([.7 0 0], [1 1 0]);
-% negcm = colormap_tor([0 0 1], [0 .5 .5]);
 % These match fmridisplay:
 poscm = colormap_tor([1 .5 0], [1 1 0]);
 negcm = colormap_tor([0 0 1], [0 1 1]);
@@ -142,6 +158,9 @@ negcm = colormap_tor([0 0 1], [0 1 1]);
 actcolors = [];  % used with heatmap
 donormalize = 0; % used with colorscale
 adjust_var = [];
+
+doverbose = true;
+if any(strcmp(varargin,'noverbose')), doverbose = false; end % do first
 
 % -----------------------------------------------------------------------
 %    optional inputs
@@ -158,14 +177,17 @@ for i = 1:length(varargin)
     elseif iscell(varargin{i}), mycolors = varargin{i};
         
     elseif isstr(varargin{i})
-        if strcmp(varargin{i},'colorscale'), cscale = 1;
+        
+        if strcmp(varargin{i},'noverbose'), doverbose = false;
+            
+        elseif strcmp(varargin{i},'colorscale'), cscale = 1;
             
         elseif strcmp(varargin{i},'normalize'), donormalize = 1;
-                
-        elseif strcmp(varargin{i},'heatmap'), heatm = 1; 
+            
+        elseif strcmp(varargin{i},'heatmap'), heatm = 1;
             
         elseif strcmp(varargin{i},'colormaps')
-            disp('Using custom color maps.');
+            if doverbose, disp('Using custom color maps.'); end
             poscm = varargin{i + 1}; varargin{i + 1} = [];
             negcm = varargin{i + 2};  varargin{i + 2} = [];
             
@@ -185,8 +207,8 @@ for i = 1:length(varargin)
             P = which('surf_spm2_brain_right.mat'); %which('surf_single_subj_grayR.mat');
             viewdeg = [270 0];
         elseif strcmp(varargin{i},'fsavg_right') % uses freesurfer inflated brain
-                                                 % with Thomas Yeo group's RF_ANTs mapping
-                                                 % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+            % with Thomas Yeo group's RF_ANTs mapping
+            % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
             P = which('surf_freesurf_inflated_Right.mat');
             viewdeg = [270 0];
             adjust_var = 'fsavg_right'; % varargin for getVertexColors
@@ -196,14 +218,14 @@ for i = 1:length(varargin)
             adjust_var = 'fsavg_left'; % varargin for getVertexColors
         else P = varargin{i};
         end
-    
+        
     elseif isnumeric(varargin{i}) && isscalar(varargin{i})
         % it's a number, mm deep to render (any face within mmdeep mm of a significant voxel will
         % be colored)
         mmdeep = varargin{i};
         
     elseif any(ishandle(varargin{i})) && ~all(ishandle(varargin{i}))
-         % Note: some weird things are happening as fig handles are class
+        % Note: some weird things are happening as fig handles are class
         % double, and not recognized as figs, but are figure handles.
         % hopefully this will work with strcmp()
         % do nothing, but fig handles may be passed in inadvertently?
@@ -222,33 +244,35 @@ for i = 1:length(varargin)
     elseif  all(ishandle(varargin{i})) && all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  %% all(~isa(varargin{i}, 'matlab.ui.Figure'))
         % all are handles, and patches
         % OLD: Pre-2014:  all(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
-        disp('Found surface patch handles - plotting on existing surfaces.');
+        if doverbose, disp('Found surface patch handles - plotting on existing surfaces.'); end
         P = varargin{i}; % handle(s) for existing surface
         
         % get rid of later calls to other surfaces
         wh = find(strcmp(varargin,'left') | strcmp(varargin,'right') | strcmp(varargin,'hires left') | strcmp(varargin,'hires right'));
         for jj = 1:length(wh), varargin{wh(jj)} = []; end
         
-    elseif any(ishandle(varargin{i})) && ~all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))  
+    elseif any(ishandle(varargin{i})) && ~all(isa(varargin{i}, 'matlab.graphics.primitive.Patch'))
         % OLD:  Pre-2014: any(ishandle(varargin{i})) && all(varargin{i} ~= round(varargin{i}))
         % Note: some weird things are happening as fig handles are class
         % double, and not recognized as figs, but are figure handles.
         % hopefully this will work with strcmp()
-        disp('Found existing surface patch handles, but some are invalid.  Check handles.');
-        error('Exiting')
+        if doverbose
+            disp('Found existing surface patch handles, but some are invalid.  Check handles.');
+            error('Exiting')
+        end
         
-    elseif length(varargin{i}) > 1,   % it's a vector
+    elseif length(varargin{i}) > 1   % it's a vector
         refZ = varargin{i};
         
     else    % no idea
-        warning('cluster_surf: Unknown input');  
+        warning('cluster_surf: Unknown input');
         
     end
     
 end
 
 if ~exist('cl', 'var') || isempty(cl)
-    disp('cluster_surf.m: No clusters to plot.  Try addbrain for brain surfaces with no activation.');
+    if doverbose, disp('cluster_surf.m: No clusters to plot.  Try addbrain for brain surfaces with no activation.'); end
     p = []; str = [];
     return
 end
@@ -262,31 +286,37 @@ if isempty(P)
     P = spm_get(1,'*mat','Choose brain surface file');
 end
 
-
-disp('cluster_surf')
-disp('___________________________________________')
-fprintf('\t%3.0f cluster structures entered\n',length(cl))
-disp('  Colors are:')
-for i = 1:length(mycolors)
-    disp([' ' num2str(mycolors{i})])
+if doverbose
+    
+    disp('cluster_surf')
+    disp('___________________________________________')
+    fprintf('\t%3.0f cluster structures entered\n',length(cl))
+    disp('  Colors are:')
+    
+    for i = 1:length(mycolors)
+        disp([' ' num2str(mycolors{i})])
+    end
+    
 end
+
 if length(mycolors) > length(cl)
-    disp([' overlap color is ' num2str(mycolors{length(cl)+1})])
+    if doverbose, disp([' overlap color is ' num2str(mycolors{length(cl)+1})]), end
     ovlc = ['[' num2str(mycolors{length(cl)+1}) ']'];
 else
     ovlc = '[0 1 1]';
 end
 
 if length(mycolors) > length(cl)+1 && length(cl) > 2
-    disp([' all overlap color is ' num2str(mycolors{length(cl)+2})])
+    if doverbose, disp([' all overlap color is ' num2str(mycolors{length(cl)+2})]), end
     aovlc = ['[' num2str(mycolors{length(cl)+2}) ']'];
 else
     aovlc = '[1 1 1]';
 end
 
 %disp([' Surface stored in: ' P])
-
-fprintf(' Building XYZ coord list\n');
+if doverbose
+    fprintf(' Building XYZ coord list\n');
+end
 
 % -------------------------------------------------------------------------
 % * build xyz list
@@ -311,7 +341,7 @@ for i = 1:length(cl) % each cell is a whole vector of cl, not a single region
         tmp = [xyz{i} Z{i}];
         tmp = sortrows(tmp,4);
         xyz{i} = tmp(:,1:3);
-        Z{i} = tmp(:,4);1 ./mad(abs(Z{i}))
+        Z{i} = tmp(:,4);1 ./ mad(abs(Z{i}));
         
         if cscale
             if donormalize
@@ -328,16 +358,16 @@ for i = 1:length(cl) % each cell is a whole vector of cl, not a single region
                 
                 sZ = 1 ./ (1 + exp(-b*(Za-a)));
                 
-                % fix, if all constant 
+                % fix, if all constant
                 sZ(isnan(sZ)) = 1;
                 
-                alphascale{i} = sZ;  
-
+                alphascale{i} = sZ;
+                
                 % this is further adusted based on radius
                 alphascale{i} = 5 * alphascale{i} ./ mmdeep^3; % should be 3?
                 %alphascale
                 
-
+                
                 
             end
             
@@ -352,12 +382,12 @@ end
 % for heatmap option: get actcolors
 % -------------------------------------------------------------
 if heatm
-    fprintf(' Getting heat-mapped colors\n');
+    if doverbose, fprintf(' Getting heat-mapped colors\n'); end
     if exist('refZ') == 1
         actcolors = get_actcolors(Z, refZ, poscm, negcm);
     else
         actcolors = get_actcolors(Z, [], poscm, negcm);
-    end 
+    end
 end
 
 % rearrange Z to map the negative peak later
@@ -373,7 +403,7 @@ end
 % -------------------------------------------------------------------------
 % * build function call
 % -------------------------------------------------------------------------
-fprintf(' Building color change function call\n');
+if doverbose, fprintf(' Building color change function call\n'); end
 
 if length(cl) > 2 && exist('aovlc') == 1
     str = ['[c,alld] = getVertexColors(xyz{1},p,mycolors{1},[.5 .5 .5],' num2str(mmdeep) ',''ovlcolor'',' ovlc ',''allcolor'',' aovlc];
@@ -402,7 +432,7 @@ for i = 2:length(cl)
             % treat colorscale as alpha scaling to add transparent blobs
             str = [str ',''alphascale'',alphascale{' num2str(i) '}'];
         end
-    elseif cscale 
+    elseif cscale
         % cscale alone - treat cscale as color-mapping index for single
         % colors in actcolors
         str = [str ',''colorscale'',Z{' num2str(i) '}'];
@@ -412,6 +442,11 @@ end
 if ~isempty(adjust_var)
     str = [str ',''' adjust_var ''''];
 end
+
+if ~doverbose
+    str = [str ', ''noverbose'''];
+end
+
 str = [str ');'];
 
 %p = P(end);
@@ -426,16 +461,18 @@ end
 % * run brain surface
 % -------------------------------------------------------------------------
 if ishandle(P)      % no input file, use existing handle
-    fprintf(' Using existing surface image\n');
-    fprintf(' Running color change.\n');
+    if doverbose
+        fprintf(' Using existing surface image\n');
+        fprintf(' Running color change.\n');
+    end
     for i = 1:length(P)
         p = P(i);
-        disp([' eval: ' str])
+        if doverbose, disp([' eval: ' str]), end
         eval(str)
     end
 else
     % we have either an input file or a special string ('bg')
-    fprintf(' Loading surface image\n');
+    if doverbose, fprintf(' Loading surface image\n'); end
     [dtmp,ftmp,etmp]=fileparts(P);
     
     if strcmp(etmp,'.mat')
@@ -458,8 +495,10 @@ else
         % -------------------------------------------------------------------------
         % * run color change
         % -------------------------------------------------------------------------
-        fprintf(' Running color change.\n');
-        disp([' eval: ' str])
+        if doverbose
+            fprintf(' Running color change.\n');
+            disp([' eval: ' str])
+        end
         eval(str);
         
         
@@ -538,7 +577,7 @@ else
         myp = addbrain('putamen');p = [p myp];
         run_colorchange(myp,str,xyz, mycolors, actcolors);
         %         myp = addbrain('globus pallidus');p = [p myp];  %Seems to be missing from canonical folder
-%         run_colorchange(myp,str,xyz, mycolors, actcolors);
+        %         run_colorchange(myp,str,xyz, mycolors, actcolors);
         
         view(90,10); axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
         
@@ -568,10 +607,12 @@ axis off
 set(gcf,'Color','w')
 %scn_export_papersetup(400);  % this will mess up movies!!
 
-disp('Finished!')
-disp('___________________________________________')
+if doverbose
+    disp('Finished!')
+    disp('___________________________________________')
+end
 
-return
+end % main function
 
 
 
@@ -580,177 +621,14 @@ return
 
 function actcolor = get_actcolors(datavaluesets, refZ, poscm, negcm)
 
-% refZ is fixed reference range for colors; should be empty to use
-% range of data
-
-% ------------------------------------------------------------
-% for heatmap option: define color maps - biscale hot/cool
-% -------------------------------------------------------------
-
-% % % %     % color map - hot
-% % % %     % --------------------------------------------
-% % % %     %h1 = (0:1/99:1)';
-% % % %     h1 = linspace(.7,1,300)';
-% % % %     %h2 = ones(size(h1));
-% % % %     h2 = linspace(0,.8,200)';
-% % % %     h2 = [h2; linspace(.8,1,100)'];
-% % % %
-% % % %     h3 = zeros(size(h1));
-% % % %     h = [h1 h2 h3];
-% % % %     %h = [h1 h3 h3; h2 h1 h3; h2 h2 h1];
-% % % %     %h(1:75,:) = []; % take only red values to start
-% % % %     % in new matlab: h = colormap(hot(300));
-% % % %
-% % % %     % color map - winter
-% % % %     % --------------------------------------------
-% % % %     %h1 = (0:1/249:1)';
-% % % %     h1 = linspace(0,.5,250)';
-% % % %     %h2 = (1:-1/(249*2):.2)';
-% % % %     h2 = linspace(1,.7,250)';
-% % % %     h3 = zeros(size(h1));
-% % % %     hc = [h3 h1 h2];
-
-% log scale : transform
-%     for i = 1:length(datavaluesets)
-%         pos = datavaluesets{i} > 0;
-%         datavaluesets{i}(pos) = log(datavaluesets{i}(pos));
-%
-%         neg = datavaluesets{i} < 0;
-%         datavaluesets{i}(neg) = -log(abs(datavaluesets{i}(neg)));
-%     end
-
 actcolor = map_data_to_colormap(datavaluesets, poscm, negcm, refZ);
 
-
-% % % %     % -------------------------------------------------------------
-% % % %     % determine overall z-score range
-% % % %     % -------------------------------------------------------------
-% % % %
-% % % %     zrange = cat(2,sz{:});
-% % % %     tmp = zrange(zrange > 0);
-% % % %     tmpc = zrange(zrange < 0);
-% % % %
-% % % %     if ~isempty(tmp)
-% % % %         zrange = [min(tmp) max(tmp)];
-% % % %         if length(varargin) > 0, zrange = varargin{1}(1:2);,end % for reference range, use first 2
-% % % %         %zh = zrange(1):(zrange(2)-zrange(1))./224:zrange(2);
-% % % %
-% % % %         %zh =  linspace(zrange(1),zrange(2),299);
-% % % %         zh =  linspace(zrange(1)*zrange(1),zrange(2),299);
-% % % %         zh = round(zh*100);
-% % % %
-% % % %         if isempty(zh), zh = [1 1 0], end   % only one element?
-% % % %     end
-% % % %
-% % % %     if ~isempty(tmpc)
-% % % %         zrangec = [min(tmpc) max(tmpc)];
-% % % %         if length(varargin) > 0, zrangec = varargin{1}(3:4);,end % for reference range, use first 2
-% % % %         %zhc = zrangec(1):(zrangec(2)-zrangec(1))./249:zrangec(2);
-% % % %         zhc =  linspace(zrangec(1),zrangec(2),249);
-% % % %         zhc = round(zhc*100);
-% % % %         if isempty(zhc), zhc = [0 0 1], end   % only one element?
-% % % %     end
-% % % %
-% % % %     % -------------------------------------------------------------
-% % % %     % loop through sets of input coordinates
-% % % %     % -------------------------------------------------------------
-% % % %     % break up coords into list
-% % % %     % xyz2 = {}; indx = 1;
-% % % %     % for kk = 1:1000:size(xyz,1)
-% % % %     %     setwh{indx} = (kk:min(size(xyz,1),kk+1000))';
-% % % %     %     xyz2{indx} = xyz(setwh{indx},:);
-% % % %     %
-% % % %     %     indx = indx + 1;
-% % % %     % end
-% % % %     %
-% % % %     %
-% % % %     % for myset = 1:length(sets)
-% % % %
-% % % %
-% % % %
-% % % %
-% % % %     for i = 1:length(sz)
-% % % %
-% % % %         % -------------------------------------------------------------
-% % % %         % find color for each xyz
-% % % %         % -------------------------------------------------------------
-% % % %         clear h2,clear wh
-% % % %         myz = sz{i};
-% % % %
-% % % %         for j = 1:length(myz)
-% % % %             if myz(j) >= 0, docool = 0; else, docool = 1;, end
-% % % %
-% % % %             if docool,
-% % % %
-% % % %                 tmp = find(round(myz(j)*100) == zhc);
-% % % %                 if isempty(tmp),
-% % % %                     tmp = find((zhc-round(myz(j)*100)).^2 == min((zhc-round(myz(j)*100)).^2));
-% % % %                 end
-% % % %             else
-% % % %                 tmp = find(round(myz(j)*100) == zh);
-% % % %                 if isempty(tmp),
-% % % %                     tmp = find((zh-round(myz(j)*100)).^2 == min((zh-round(myz(j)*100)).^2));
-% % % %                 end
-% % % %             end
-% % % %
-% % % %             wh(j) = tmp(1);
-% % % %
-% % % %             if docool
-% % % %                 actcolor{i}(j,:) = hc(wh(j),:);
-% % % %             else
-% % % %                 actcolor{i}(j,:) = h(wh(j),:);
-% % % %             end
-% % % %
-% % % %         end
-% % % %
-% % % %     end
-% % % %
-
-
-
-% % % %     % -------------------------------------------------------------
-% % % %     % color scale bar - we must create by hand
-% % % %     % -------------------------------------------------------------
-% % % %     if length(varargin) == 0
-% % % %         try
-% % % %
-% % % %             zrange = cat(2,datavaluesets{:});
-% % % %             tmp = zrange(zrange > 0);
-% % % %             tmpc = zrange(zrange < 0);
-% % % %
-% % % %             if ~isempty(tmp)
-% % % %                 figure('Color','w'); subplot(4,1,1);hold on;
-% % % %                 zh2 = zh./100;
-% % % %
-% % % %                 for i = 2:size(h,1), fill([zh2(i-1) zh2(i-1) zh2(i) zh2(i)],[0 1 1 0],h(i,:),'EdgeColor','none');, end
-% % % %                 set(gca,'YTickLabel','');
-% % % %                 xlabel('Z-score','FontSize',14)
-% % % %
-% % % %                 docolbar = 0;
-% % % %             end
-% % % %
-% % % %             if ~isempty(tmpc)
-% % % %                 figure('Color','w'); subplot(4,1,2); hold on;
-% % % %                 zh2 = zhc./100;
-% % % %                 axis([0 .3 zh2(1) zh2(end)]),hold on
-% % % %                 for i = 1:size(h,1), plot([0 1],[zh2(i) zh2(i)],'Color',hc(i,:));, end
-% % % %                 set(gca,'XTickLabel',''); % ylabel('Z-score')
-% % % %                 h3 = get(gcf,'Position');
-% % % %                 set(gcf,'Position',[h3(1:2) h3(3)*.3 h3(4)*.5])
-% % % %                 docolbar = 0;
-% % % %             end
-% % % %
-% % % %         catch
-% % % %             figure; disp('Cannot make colorbar.  Only one voxel?')
-% % % %         end
-% % % %
-% % % %     end % if no reference Z
-return
+end
 
 
 
 
-function run_colorchange(myp,str,xyz, mycolors, actcolors)
+function run_colorchange(myp, str, xyz, mycolors, actcolors)
 
 set(myp,'FaceAlpha',1);
 
@@ -766,7 +644,7 @@ for i = 1:length(myp)
     
     % change non-active back to original color
     vdat = get(p,'FaceVertexCData');
-    wh = find(all(vdat == .5,2));
+    wh = find(all(vdat == .5, 2));
     vdat(wh,:) = repmat(origcolor,length(wh),1);
     set(p,'FaceVertexCData',vdat);
     
@@ -774,7 +652,7 @@ end
 p = myp;
 lighting gouraud; lightRestoreSingle(gca);
 
-return
+end
 
 
 

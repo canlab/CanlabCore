@@ -41,13 +41,13 @@ mycollection.number_of_images, ...
 mycollection.url);
 
 % Get images
-myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr),options);
+myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr), options);
 
 while length(myimages.results)~=myimages.count
     if ~exist('moreimages','var')
-    moreimages = webread(myimages.next,options);
+        moreimages = webread(myimages.next, options);
     else
-    moreimages = webread(moreimages.next,options);        
+        moreimages = webread(moreimages.next, options);
     end
     myimages.results=[myimages.results; moreimages.results];
 end

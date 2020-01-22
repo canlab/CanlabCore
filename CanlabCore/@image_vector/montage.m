@@ -43,7 +43,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             case 'scnmontage', meth = 'scnmontage';
                 
-            case {'trans', 'maxcolor', 'mincolor', 'transvalue', 'cmaprange'}
+            case {'trans', 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'compact2'}
                 % ignore these - passed through
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -98,7 +98,11 @@ switch meth
             
         end
         
-        o2 = legend(o2);
+        if ~do_multirow
+            % Plot legend only for single-row, otherwise obscures some
+            % images
+            o2 = legend(o2);
+        end
         
         fig_handle = o2;
         clear o2

@@ -8,6 +8,13 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %
 %    [poscl, negcl] = table(cl, [optional inputs])
 %
+% - By default, region.table() separates clusters into subregions with positive
+%   and negative values. Thus, the number of rows may not match the original number of regions. 
+%   To turn this feature off, use 'nosep'.
+% - By default, region.table() re-sorts the regions to group the table rows by macro-scale brain
+%   structures (cortex, basal ganglia, etc.). So the ordering in the table may not match
+%   the original region object. To turn this feature off, use 'nosort'.
+%
 % :Optional inputs:
 %
 %   **k:**
@@ -187,6 +194,8 @@ else
     % not separating
     poscl = cl;
     negcl = [];
+    
+    ispos = true(1, length(cl));
 end
 
 % poscl and negcl are done here, so we have values to be returned.

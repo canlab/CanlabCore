@@ -47,6 +47,13 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
 %
 %   **'montagetype':**
+% 
+%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
+%        'compact'         Midline saggital and two rows of axial slices [the default] 
+%        'compact2'        A single row showing midline saggital and axial slices
+%        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
+%        'regioncenters'   A series of separate axes, each focused on one region
+%
 %        'full' for full montages of axial and sagg slices.
 %
 %        'full hcp' for full montage, but with surfaces and volumes from
@@ -59,8 +66,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'multirow': followed by number of rows
 %           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
 %
-%        {'blobcenters', 'regioncenters'}: Slices for the center of each
-%        blob/region
+%        {'blobcenters', 'regioncenters'}: Slices for the center of each blob/region
 %        Note: this creates a new figure, tagged
 %        'fmridisplay_regioncenters', and is not compatible with 'nofigure'
 %        
@@ -284,7 +290,7 @@ if ~exist('o2', 'var')
     if doverbose
         
         disp('Setting up fmridisplay objects');
-        disp('This takes a lot of memory, and can hang if you have too little.');
+        % disp('This takes a lot of memory, and can hang if you have too little.');
         
     end
     

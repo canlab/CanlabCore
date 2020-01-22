@@ -1,6 +1,12 @@
 function surface_handles = surface_cutaway(varargin)
 % Make a specialized cutaway surface and add blobs if entered
 %
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
+%
 % :Usage:
 % ::
 %
@@ -58,6 +64,11 @@ function surface_handles = surface_cutaway(varargin)
 %   **'color_lowerboundpercentile':**
 %        followed by 1-100 percentile threshold; see Color values below
 %
+%   ** surface type keywords **
+%   'original': Use     'SPM8_colin27T1_seg.img'
+%     'bigbrain': Use 'BigBrain_processed_1mm_for_cutaways.nii'
+%     'average': Use 'icbm152_2009_symm_enhanced_for_cutaways'
+% 
 % :Output:
 %
 %   **surface_handles:**
@@ -69,7 +80,7 @@ function surface_handles = surface_cutaway(varargin)
 % percentile of the distribution of scores in .Z field.
 %   - To change the upper bound for which percentile of Z-scores is mapped to
 %     the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
-%   - To change the lower bound value mapped to the lowest color value, 
+%   - To change the lower bound value mapped to the lowest color value,
 %     enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
 %
 % :Examples:
@@ -94,7 +105,12 @@ function surface_handles = surface_cutaway(varargin)
 %    % use mediation_brain_surface_figs and re-make colors
 %    all_surf_handles = mediation_brain_surface_figs([]);
 %    surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
-
+%
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
+%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
+%    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
+%    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
 
 % ..
 %    DEFAULTS AND INPUTS
@@ -114,10 +130,10 @@ negcm = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
 allowable_args = {'cl', 'ycut_mm', 'pos_colormap', 'neg_colormap', ...
     'surface_handles', 'existingfig' 'color_upperboundpercentile', 'color_lowerboundpercentile' ...
-    'mm_deep'};
+    'mm_deep', 'original', 'bigbrain', 'average'};
 
 default_values = {[], [], poscm, negcm, ...
-    [], 0, 80, [], 4};
+    [], 0, 80, [], 4, [], [], []};
 
 % define actions for each input
 % -----------------------------------
@@ -126,7 +142,7 @@ default_values = {[], [], poscm, negcm, ...
 % - allowable actions for inputs in the code below are: 'assign_next_input' or 'flag_on'
 
 actions = {'assign_next_input', 'assign_next_input', 'assign_next_input', 'assign_next_input', ...
-    'assign_next_input', 'flag_on', 'assign_next_input', 'assign_next_input', 'assign_next_input'};
+    'assign_next_input', 'flag_on', 'assign_next_input', 'assign_next_input', 'assign_next_input', 'flag_on', 'flag_on', 'flag_on'};
 
 % logical vector and indices of which inputs are text
 textargs = cellfun(@ischar, varargin);
@@ -180,7 +196,7 @@ end
 
 if isempty(surface_handles)
     
-    surface_handles = build_brain_surface(ycut_mm);
+    surface_handles = build_brain_surface(ycut_mm, varargin{:});
     
 else
     
@@ -211,9 +227,9 @@ if isempty(cl), return, end
 % percentile of the distribution of scores in .Z field.
 % - To change the upper bound for which percentile of Z-scores is mapped to
 % the highest color value, enter 'color_upperboundpercentile', [new percentile from 1-100]
-% - To change the lower bound value mapped to the lowest color value, 
+% - To change the lower bound value mapped to the lowest color value,
 % enter 'color_lowerboundpercentile' followed by [new percentile from 1-100]
-  
+
 clZ = cat(2,cl.Z);
 
 color_lowerboundvaluepos = 0;
@@ -224,20 +240,18 @@ if ~isempty(color_lowerboundpercentile)
     color_lowerboundvalueneg = prctile(clZ(clZ < 0), 100-color_lowerboundpercentile);
 end
 
-% refZ = [min(clZ(clZ > 0)) max(clZ) min(clZ(clZ < 0)) min(clZ)];
-% refZ = [0 prctile(clZ(clZ > 0), 80) prctile(clZ(clZ < 0), 20) 0];
 refZ = [color_lowerboundvaluepos prctile(clZ(clZ > 0), color_upperboundpercentile) prctile(clZ(clZ < 0), 100-color_upperboundpercentile) color_lowerboundvalueneg];
 
-% Add blobs to all surfaces
-% - Map color scale to custom colormaps using 'heatmap' and refZ,
-% - and also map intensity to transparency using 'colorscale'
 
-% make bigger to avoid cross-hatching bug/problem
-%specialp = false(size(surface_handles));
-%specialp([end end-2]) = true;
-cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale');
+% if isa(cl, 'region')
+%     %obj = region2fmri_data(cl);
+%     obj = region2imagevec(cl);
+%     change_surface_colors(obj, surface_handles)
+% else
+%     disp('WARNING: YOU HAVE ENTERED AN OLDER STYLE CLUSTERS STRUCTURE')
 
-%cluster_surf(cl, 4, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles(~specialp), refZ, 'colorscale');
+cluster_surf(cl, mm_deep, 'heatmap', 'colormaps', pos_colormap, neg_colormap, surface_handles, refZ, 'colorscale', 'noverbose');
+% end
 
 % create render_blobs_surface after
 % [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mymontage, SPACE, varargin)
@@ -257,7 +271,7 @@ end % main function
 % -------------------------------------------------------------------------
 
 
-function surface_handles = build_brain_surface(ycut_mm)
+function surface_handles = build_brain_surface(ycut_mm, varargin)
 
 % BUILD BRAIN SURFACE
 
@@ -267,44 +281,114 @@ p2 = [];
 p3 = [];
 
 surface_handles = addbrain('limbic hires');
-delete(surface_handles(end)); surface_handles(end) = [];
+ 
+ set(surface_handles, 'FaceColor', [.5 .5 .5]);
+%set(surface_handles(3), 'Visible', 'off');             % cortex
+delete(surface_handles(3)); surface_handles(3) = [];    % cortex
 
-set(surface_handles, 'FaceAlpha', .7)
+% This pertains to old "limbic" method for addbrain 
+% delete(surface_handles(end)); surface_handles(end) = [];
+% 
+% set(surface_handles, 'FaceAlpha', .7)
+% 
+% surface_handles = [surface_handles addbrain('brainstem')];
+% 
+% set(gca, 'ZLim', [-85 82]);
+% 
+% set(surface_handles, 'FaceColor', [.5 .5 .5]);
+% 
+% hh = findobj(gcf, 'Tag', 'thalamus');
+% set(hh, 'FaceAlpha', .8);
+% 
+% hh = get(surface_handles, 'Tag');
+% % wh = strcmp(hh, 'hippocampus');
+% wh = strcmp(hh, 'HC');
+% 
+% set(surface_handles(wh), 'FaceAlpha', .6);
+% 
+% wh = strcmp(hh, 'caudate');
+% set(surface_handles(wh), 'FaceAlpha', .6);
 
-surface_handles = [surface_handles addbrain('brainstem')];
+% Set brain cutaway surface filename
+% ---------------------------------------------------
+figurestyle = 'original'; % 'original' 'bigbrain' 'average';
 
-set(gca, 'ZLim', [-85 82]);
+if any(strcmp(varargin, 'original')), figurestyle = 'original'; end
+if any(strcmp(varargin, 'bigbrain')), figurestyle = 'bigbrain'; end
+if any(strcmp(varargin, 'average')), figurestyle = 'average'; end
 
-set(surface_handles, 'FaceColor', [.5 .5 .5]);
+    
+switch figurestyle
+    
+    case 'original'
+        
+        overlay = which('SPM8_colin27T1_seg.img');
+        ovlname = 'SPM8_colin27T1_seg';
+        intens_thr = 81;        % intensity threshold, retain % when making isosurface
+        brighten_val = 0.3;
 
-hh = findobj(gcf, 'Tag', 'thalamus');
-set(hh, 'FaceAlpha', .8);
+    case 'bigbrain'
+        
+        overlay = which('BigBrain_processed_1mm_for_cutaways.nii'); %underlay...
+        ovlname = 'BigBrain_processed_1mm_for_cutaways.nii';
+        intens_thr = 85;        % intensity threshold, retain % when making isosurface
+        brighten_val = 0.5;
+        
+    case 'average'
+        
+%         overlay = which('icbm152_2009_symm_enhanced_for_cutaways.nii'); %underlay...
+%         ovlname = 'icbm152_2009_symm_enhanced_for_cutaways.nii';
+        
+        overlay = 'keuken_2014_enhanced_for_underlay.nii';
+        ovlname = 'keuken_2014_enhanced_for_underlay.nii';
+        intens_thr = 85;        % intensity threshold, retain % when making isosurface
+        brighten_val = 0.5;
+        
+    otherwise
+        error('illegal figurestyle string')
+end
 
-hh = get(surface_handles, 'Tag');
-% wh = strcmp(hh, 'hippocampus');
-wh = strcmp(hh, 'HC');
+% Load the image 
+dat = fmri_data(which(overlay), 'noverbose');
 
-set(surface_handles(wh), 'FaceAlpha', .6);
-
-wh = strcmp(hh, 'caudate');
-set(surface_handles(wh), 'FaceAlpha', .6);
-
-% overlay = which('SPM8_colin27T1_seg.img');
-% ovlname = 'SPM8_colin27T1_seg';
-overlay = which('BigBrain_processed.nii'); %underlay...
-ovlname = 'BigBrain_processed';
+% Create the surfaces
+% ---------------------------------------------------
 
 if ~isempty(ycut_mm)
     
-    [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 81);
+    % [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'filename', overlay, 'intensity_threshold', 81);
+    
+    % Pass in data
+    [D,Ds,hdr,p2,bestCoords] = tor_3d('whichcuts','y','coords',[0 ycut_mm 0], 'topmm', 90, 'data', dat, 'intensity_threshold', intens_thr);
+    
     set(p2(1),'FaceColor',[.5 .5 .5]);
     
 end
 
-[D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[-4 0 0], 'topmm', 90, 'filename', ovlname, 'intensity_threshold', 85, 'bottommm', -75);
-set(p3(1),'FaceColor',[.5 .5 .5]);
+    % Sagg surface only - don't need if ycut_mm because we use existing
+    % surface
+    %[D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[-4 0 0], 'topmm', 90, 'filename', overlay, 'intensity_threshold', 85, 'bottommm', -75);
+    
+    [D,Ds,hdr,p3,bestCoords] = tor_3d('whichcuts','x','coords',[0 0 0], 'topmm', 90, 'data', dat, 'bottommm', -75, 'intensity_threshold', intens_thr);
+    
+    set(p3(1),'FaceColor',[.5 .5 .5]);
+    
+% Better:   
+% create_figure('cutaway');
+% anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
+% p = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
+% p2 = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
+% alpha 1 ; lightRestoreSingle; view(135, 30); colormap gray;
+% p3 = addbrain('limbic hires');
+% set(p3, 'FaceAlpha', .6, 'FaceColor', [.5 .5 .5]);
+% delete(p3(3)); p3(3) = [];
+% lightRestoreSingle;
+% surface_handles = [p p2 p3];
 
-    colormap(flipud(gray));
+colormap(gray);
+brighten(brighten_val);
+
+%colormap(flipud(gray));
 material dull;
 axis off
 

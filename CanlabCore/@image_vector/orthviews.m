@@ -204,8 +204,21 @@ for i = handle_indices
         end
     end
     
+
+end
+
+% Set colormap
+% If one image, we can use 'hot/cool' split, which shows zero point
+% If multiple images, default to a single colormap, as the entire
+% figure can use only one colormap.
+
+if length(handle_indices) > 1
     %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
-    spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
+    %spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
+    spm_orthviews_change_colormap([.2 .2 .6], [1 1 0]);  % slate to yellow
+    
+else % one image.
+    spm_orthviews_hotcool_colormap(image_obj.dat(:), 0);
 end
 
 % center image

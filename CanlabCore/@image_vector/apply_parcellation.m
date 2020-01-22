@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat, parcels, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_count] = apply_parcellation(dat, parcels, varargin)
 % Computes the mean value / pattern expression for each parcels specified in a data object
 %
 % Usage:

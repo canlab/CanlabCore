@@ -257,7 +257,27 @@ for i=1:size(Y,2)
         if isempty(b)==0
             [f, u, bb]=ksdensity(Y{i},'bandwidth',b(i));
         elseif isempty(b)
-            [f, u, bb]=ksdensity(Y{i});
+            % ksdensity uses a "robust" method of estimating standard deviation.
+            % SDrobust = median(abs(X - median(X))) / 0.6745
+            % This can potentially fail, most conspicuously when you have lots of
+            % zeros. So let's see if the robust SD is sensible first and if not,
+            % invoke ksdensity with a dummy censored variable which causes
+            % ksdensity to use a different sd estimation method.
+            if mad(Y{i},1,1) < 10e-7
+                [m,n] = size(Y{i});
+
+                if m == length(Y{i})
+                    yy = [Y{i};zeros(1,n)];
+                else
+                    yy = [Y{i},zeros(m,1)];
+                end
+                censor = zeros(length(yy),1);
+                censor(end) = 1;
+                [f, u, bb] = ksdensity(yy,'Censoring',censor);
+            else
+                [f, u, bb]=ksdensity(Y{i});
+            end
+    
         end
     else
         if isempty(b)==0
@@ -451,7 +471,7 @@ end
 % WANI ADDED nopoints OPTION (11/12/15)
 if dopoints
     %[~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
-    plot_violin_points(x, Y, lc, fc, varargin);  pointloc = [];
+    pointloc = plot_violin_points(x, Y, lc, fc, varargin);
 end
 
 % SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
@@ -754,7 +774,26 @@ Y = enforce_cell_array(Y);
 % ------------------------------------------------
 for i = 1:k
     
-    [f, u, bb]=ksdensity(Y{i});
+    % ksdensity uses a "robust" method of estimating standard deviation.
+    % SDrobust = median(abs(X - median(X))) / 0.6745
+    % This can potentially fail, most conspicuously when you have lots of
+    % zeros. So let's see if the robust SD is sensible first and if not,
+    % invoke ksdensity with a dummy censored variable which causes
+    % ksdensity to use a different sd estimation method.
+    if mad(Y{i},1,1) < 10e-7
+        [m,n] = size(Y{i});
+
+        if m == length(Y{i})
+            yy = [Y{i};zeros(1,n)];
+        else
+            yy = [Y{i},zeros(m,1)];
+        end
+        censor = zeros(length(yy),1);
+        censor(end) = 1;
+        [f, u, bb] = ksdensity(yy,'Censoring',censor);
+    else
+        [f, u, bb]=ksdensity(Y{i});
+    end
     
     f=f/max(f)*0.3; %normalize
     F(:,i) = f;

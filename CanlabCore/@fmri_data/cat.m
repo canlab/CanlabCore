@@ -115,9 +115,9 @@ obj2 = resample_space(obj2, obj);
 fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'covariates' 'additional_info' 'dat'};
 
 for i = 1:length(fnames)
-    
-    obj.(fnames{i}) = [obj.(fnames{i}) obj2.(fnames{i})];
-    
+
+    obj.(fnames{i}) = [obj.(fnames{i}) obj2.(fnames{i})];    
+
 end
 
 % strvcat these attributes

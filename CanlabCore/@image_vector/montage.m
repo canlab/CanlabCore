@@ -69,7 +69,7 @@ switch meth
         
         if n > 1
             do_multirow = true;
-            o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', 'multirow', n);
+            o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', 'multirow', n, varargin{:});
             
         else
             do_multirow = false;

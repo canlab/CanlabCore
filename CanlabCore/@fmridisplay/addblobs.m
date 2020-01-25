@@ -155,6 +155,8 @@ function obj = addblobs(obj, cl, varargin)
 % Check and convert to region
 % -------------------------------------------------------------------
 if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
+
+if isa(cl, 'image_vector'), cl = region(cl); end
     
 if ~isa(cl, 'region')
     error('cl input must be a region object. Try region() constructor method.');

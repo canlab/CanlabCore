@@ -340,7 +340,7 @@ switch meth
         
     case 'brainbottom'
         [D,Ds,hdr,p,bestCoords] = tor_3d('whichcuts','z','coords',[0 0 -20],'filename','scalped_single_subj_T1');
-        set(p(1),'FaceColor',[.6 .4 .3]); colormap copper;material dull;axis off
+        set(p(1),'FaceColor',[.6 .4 .3]); colormap(gca, copper);material dull;axis off
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
         

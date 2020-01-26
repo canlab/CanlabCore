@@ -83,6 +83,12 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'rejection': Woo et et al. 2014 Romantic Rejection
 %        'siips': Woo et et al. 2017 Stimulus intensity-independent pain Signature
 %        'pines' : Chang et et al. 2015 Picture-induced negative emotion Signature
+%        'gsr' : Eisenbarth et al. 2016 Stress-induced skin conductance
+%        'hr' : Eisenbarth et al. 2016 Stress-induced heart rate
+%        'multisensory' : Lopez-sola et al. 2016 Fibromyalgia multisensory pattern
+%        'fmpain' : Lopez-sola et al. 2016 Fibromyalgia pain-period pattern
+%        'plspain' : Kragel el al. 2018 PLS pain-related
+%        'cpdm' : Geuter et al. 2020 multivariate mediation pain-related
 %
 %        'npsplus': Wager lab published multivariate patterns:
 %                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
@@ -99,11 +105,13 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
 %                                                Neurosynth, unthresholded, 2013 
 % 
-%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable representations of pain, cog control, emotion 
+%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable 
+%                   representations of pain, cog control, emotion. From
+%                   Kragel et al. 2018, Nature Neuroscience
 % 
-%
-%        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10 individual PDM maps and a joint
-%                           PDM, which is a weighted combination of the 10. From Geuter et al. (in prep)
+%        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10
+%        individual PDM maps and a combined PDM, which is a weighted
+%        combination of the 10. From Geuter et al. (2020) Cerebral Cortex
 %
 %
 % :Optional inputs:
@@ -232,7 +240,7 @@ else
             [image_obj, networknames, imagenames] = load_bucknerlab_wholebrain_plus_subctx;
             networknames=networknames';
           
-        case {'nps', 'pines' 'vps', 'rejection'}
+        case {'nps', 'pines' 'vps', 'rejection', 'siips' 'hr' 'gsr' 'cpdm' 'fmpain' 'multisensory' 'plspain'}
             
             [image_obj, networknames, imagenames] = load_signature(image_names_or_keyword);
             
@@ -532,7 +540,7 @@ function [image_obj, networknames, imagenames] = load_signature(keyword)
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'PLSpain' 'cPDM_Pain'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -547,9 +555,12 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
     'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia 
     'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
-    'Ashar_2017_empathic_distress_marker.nii'};         
+    'Ashar_2017_empathic_distress_marker.nii' ...
+    'bPLS_Wholebrain_Pain.nii' ...                      % Kragel 2018 Nature Neuroscience pain
+    'Geuter_2020_cPDM_combined_pain_map.nii'};          % Geuter 2020 pain mvmediation cPDM
 
-switch keyword
+
+switch lower(keyword)
     case 'nps'
         wh = 1;
     case 'siips'
@@ -560,6 +571,19 @@ switch keyword
         wh = 6;
     case 'vps'
         wh = 7;
+    case 'gsr'
+        wh = 9;
+    case 'hr'
+        wh = 10;
+    case 'multisensory'
+        wh = 11;
+    case 'fmpain'
+        wh = 12;
+    case 'plspain'
+        wh = 15;
+    case 'cpdm'
+        wh = 16;
+        
     otherwise error('Only some signature keywords are implemented in load_image_set, and the one you entered is invalid. Try ''npsplus''');
 end
 
@@ -578,7 +602,7 @@ function [image_obj, networknames, imagenames] = load_npsplus
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Dist' 'Empathic_Care'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -871,9 +895,9 @@ function [image_obj, networknames, imagenames] = load_pain_pdm
 
 % Load Geuter et al. 2018 high-dimensional pain mediator map (PDM)
 % ------------------------------------------------------------------------
-imagenames = {'JointPDM_unthresholded.nii' 'All_PDM10_unthresholded.nii'};
+imagenames = {'Geuter_2020_cPDM_combined_pain_map.nii' 'All_PDM10_unthresholded.nii'};
 
-networknames = {'GeuterJointPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
+networknames = {'GeuterCombinedPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
 
 imagenames = check_image_names_get_full_path(imagenames);
 

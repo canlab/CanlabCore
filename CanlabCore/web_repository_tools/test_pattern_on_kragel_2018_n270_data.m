@@ -1,4 +1,4 @@
-function test_pattern_on_kragel_2018_n270_data(varargin)
+function OUT = test_pattern_on_kragel_2018_n270_data(varargin)
 %
 % test a multivariate signature pattern stored in an fmri_data object on Kragel et al. 2018 datasets, N = 270
 %
@@ -63,11 +63,13 @@ function test_pattern_on_kragel_2018_n270_data(varargin)
 %
 % :Outputs:
 %
-%   **out1:**
-%        description of out1
+%   **OUT:**
+%        A structure with a summary table of sensivity, specificity, PPV,
+%        and effect size for each classification (pain vs. other, cog
+%        control vs. other, negative emotion vs. other.
+%        Also includes roc_plot output for all three classifications, with
+%        more stats and function handles.
 %
-%   **out2:**
-%        description of out2
 %
 % :Examples:
 % ::
@@ -190,6 +192,23 @@ fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(pain vs no) = %3.2f, Boots
 disp(' ')
 
 % ----------------------------------------------------------------------
+% Output table
+% ----------------------------------------------------------------------
+
+tabledata(1, :) = [roc_pain.class_threshold cohens_d_2sample(vector_data, ispain) roc_pain.sensitivity roc_pain.specificity roc_pain.PPV ];
+tabledata(2, :) = [roc_cog.class_threshold cohens_d_2sample(vector_data, iscog) roc_cog.sensitivity roc_cog.specificity roc_cog.PPV ];
+tabledata(3, :) = [roc_emo.class_threshold cohens_d_2sample(vector_data, isemo) roc_emo.sensitivity roc_emo.specificity roc_emo.PPV ];
+
+T = array2table(tabledata, 'VariableNames', {'Cos_Sim_Thresh' 'Cohens_d' 'Sensitivity' 'Specificity' 'PPV'}, 'RowNames', {'Pain' 'Cog Control' 'Neg Emotion'});
+
+disp(T);
+
+OUT.summary_table = T;
+OUT.roc_pain = roc_pain;
+OUT.roc_cog = roc_cog;
+OUT.roc_emo = roc_emo;
+
+% ----------------------------------------------------------------------
 % Plot
 % ----------------------------------------------------------------------
 if doplot
@@ -221,7 +240,7 @@ if doplot
     
     set(gca, 'FontSize', fontsize);
     barplot_columns(pattern_response,'names',labels,'colors',colors,'nofig');
-    ylabel 'NPS Response (Cosine Similarity)'
+    ylabel 'Pattern Response (Cosine Similarity)'
     hold on; 
     
     if roc_pain.accuracy_p < .05

@@ -53,7 +53,7 @@ function newcm = colormap_tor(lowcolor, hicolor, varargin)
 % DEFAULT ARGUMENT VALUES
 % -------------------------------------------------------------------------
 
-n = 64;
+n = 256;
 newcm = NaN .* zeros(n, 3);  %initialize
 additional_colors = {};
 

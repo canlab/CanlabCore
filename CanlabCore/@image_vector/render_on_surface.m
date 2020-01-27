@@ -154,27 +154,6 @@ for i = 1:length(varargin)
     end
 end
 
-if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
-    
-    if any(strcmp(varargin, 'colormap'))
-        error('Entering ''colormap'' argument and name cannot be done when entering custom colormaps in ''pos_colormap''/''neg_colormap''');
-    end
-     
-    if ~isempty(pos_colormap)
-        validateattributes(pos_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
-    end
-    
-    if ~isempty(neg_colormap)
-        validateattributes(neg_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
-    end
-    
-    custom_colormap = true;
-    
-    colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
-    nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
-    
-end
-    
 % There are 2 ways to enter custom colormaps. 
 % 1. By name
 % 'colormap', [name of Matlab colormap]
@@ -210,28 +189,80 @@ if isempty(clim)
     
 end
 
-% Build the colormap
-% -----------------------------------------------------------------------
-% See notes below
+% -------------------------------------------------------------------------
+% Define colormap
+% -------------------------------------------------------------------------
 
-if custom_colormap
+if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     
-    cm = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
+    if any(strcmp(varargin, 'colormap'))
+        error('Entering ''colormap'' argument and name cannot be done when entering custom colormaps in ''pos_colormap''/''neg_colormap''');
+    end
+    
+    if ~isempty(pos_colormap) && ~isempty(neg_colormap) && size(pos_colormap, 1) ~= size(neg_colormap, 1)    
+        error('Lengths of positive-color and negative-color colormaps must match.')
+    end
+    
+    if ~isempty(pos_colormap)
+        validateattributes(pos_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
+        nvals = size(pos_colormap, 1);
+    end
+    
+    if ~isempty(neg_colormap)
+        validateattributes(neg_colormap, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
+        nvals = size(neg_colormap, 1);
+    end
+    
+    if isempty(pos_colormap)
+        pos_colormap = hot(nvals);
+    end
+    
+    if isempty(neg_colormap)
+        neg_colormap = cool(nvals);
+    end
+        
+    custom_colormap = true;
+    
+    % Build the colormap
+    % -----------------------------------------------------------------------
+    % Skip colormap generator, already
+    % found the range of colors for pos/neg values to split around 0 here.
+    cm = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :));
+        
+    % colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
+    % nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
+    
+else
+    
+    
+    % Build the colormap
+    % -----------------------------------------------------------------------
+    % See notes below
+    
+    if custom_colormap
+        
+        cm = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
+        
+    elseif diff(sign(clim))
+        
+        % Default colormap for objects with - and + values
+        cm = hotcool_split_colormap(nvals, clim, axis_handle);
+        
+    else
+        cm = split_colormap(nvals, colormapname, axis_handle);
+    end
+    
+end % custom posneg or other colormap
 
-elseif diff(sign(clim))
-    
-    % Default colormap for objects with - and + values
-    cm = hotcool_split_colormap(nvals, clim, axis_handle);
-    
-else 
-    cm = split_colormap(nvals, colormapname, axis_handle);
-end
+% -------------------------------------------------------------------------
+% Change colors
+% -------------------------------------------------------------------------
 
 % Map object data values to indices in split colormap
 % -----------------------------------------------------------------------
 % Define mapping function. We will apply this later to vertex color data
 % Defining this here preserves the same mapping across different surfaces
-map_function = @(c) nvals + (c - clim(1)) ./ range(clim) .* nvals;
+map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
 
 
 % Reconstruct volume data
@@ -265,15 +296,28 @@ for i = 1:length(surface_handles)
         % solid
         c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
     else
-        c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
+        %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
+        
+        if range(c_gray(wh)) == 0
+            % Solid surface color
+            % do nothing - skip rescaling
+            % -----------------------------------------------------------------------
+            
+        else
+            % rescale to gray part of colormap
+            c_gray(wh) = (c_gray(wh) - min(c_gray(wh))) ./ range(c_gray(wh)) .* nvals;
+            
+            % Now merge graycsale and object-mapped colors
+            % -----------------------------------------------------------------------
+            % Everything that was originally zero in isocolors c
+            % gets replaced with its original grayscale values in c_gray
+            
+            c_colored(wh) = c_gray(wh);
+            
+        end
     end
     
-    % Now merge graycsale and object-mapped colors 
-    % -----------------------------------------------------------------------
-    % Everything that was originally zero in isocolors c
-    % gets replaced with its original grayscale values in c_gray
 
-    c_colored(wh) = c_gray(wh);
     
     % Set object handle properties 
     % -----------------------------------------------------------------------
@@ -324,10 +368,17 @@ function cm = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
 % note: colormaps with these colors match spm_orthviews_hotcool_colormap used in orthviews()
 % [.4 .4 .3], [1 1 0] (hot/pos) and [0 0 1], [.4 .3 .4] (cool/neg)
 
-lowhot = [.4 .4 .3];
-hihot = [1 1 0];
-lowcool = [0 0 1];
-hicool = [.4 .3 .4];
+% Split blue/yellow
+% lowhot = [.4 .4 .3];
+% hihot = [1 1 0];
+% lowcool = [0 0 1];
+% hicool = [.4 .3 .4];
+
+% Default addblobs - orange/pink
+hihot = [1 1 0]; % max pos, most extreme values
+lowhot = [1 .4 .5]; % [.8 .3 0]; % min pos
+hicool = [0 .8 .8]; % [.3 .6 .9]; % max neg
+lowcool = [0 0 1]; % min neg, most extreme values
 
 if ~isempty(varargin)
     if length(varargin) < 4
@@ -351,16 +402,16 @@ np = length(pos);
 
 if np > 0
     hotcm = colormap_tor(lowhot, hihot, 'n', np);
+    hotcm(1, :) = [.5 .5 .5]; % first element is gray
 end
-hotcm(1, :) = [.5 .5 .5]; % first element is gray
 
 neg = find(vec < -thr);
 nn = length(neg);
 
 if nn > 0
     coolcm = colormap_tor(lowcool, hicool, 'n', nn);
+    coolcm(end, :) = [.5 .5 .5]; % last element is gray
 end
-coolcm(end, :) = [.5 .5 .5]; % last element is gray
 
 cm = [coolcm; hotcm];
 

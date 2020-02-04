@@ -101,9 +101,10 @@ addpath(genpath('/usr/local/spm/spm8/canonical'));
 
 % set defaults
 diarydirname = 'canlab_glm_logs';
-diaryfilename = ['subject_levels_' regexprep(regexprep(STARTTIME,' ','_'), ':','') '.log'];
+diaryfilename = ['subject_levels_' regexprep(regexprep(STARTTIME,' ','_'), ':','') '_' num2str(randi(1000000)) '.log'];
 
 OPTS.parallel_dream = '';
+OPTS.parallel_local = false;
 OPTS.overwrite = false;
 OPTS.onlycons = false;
 OPTS.nocatch = false;
@@ -152,6 +153,8 @@ while i<=numel(varargin)
                     otherwise
                         error('Current version of matlab (%s)',version.Release)
                 end
+            case {'parallel'}
+                OPTS.parallel_local = true;
             case {'dsgninfo'}
                 system(sprintf('cat %s',which('canlab_glm_dsgninfo.txt')));
                 return;
@@ -450,10 +453,17 @@ if ~isempty(OPTS.parallel_dream)
     [ignore ignore] = system(sprintf('rm %s/diary*',wd)); %#ok
     [ignore ignore] = system(sprintf('grep ''^> '' %s | sed ''s|^> ||'' >> %s',fulldiaryname,diaryname)); %#ok
 else
-    for s = 1:numel(DSGN.subjects)
-        parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
-        [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
-    end
+    if OPTS.parallel_local
+        parfor s = 1:numel(DSGN.subjects)
+            parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
+            [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
+        end
+    else
+        for s = 1:numel(DSGN.subjects)
+            parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
+            [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
+        end
+    end        
     
     % merge diaries
     [ignore ignore] = system(sprintf('cat %s/diary* >> %s',wd,diaryname)); %#ok

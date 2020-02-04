@@ -122,13 +122,17 @@ if isok == 0
     fprintf('curl retrieved %s from Github\n', repofullname);
 else
     disp(queryoutput);
-    error('Could not retrieve repository info.');
+    error('Could not retrieve repository info from Github - missing or private?');
+end
+
+if ~exist('jsondecode', 'builtin')
+    error('Cannot find Matlab jsondecode. Old Matlab version? Skipping repository import')
 end
 
 try
     queryoutput = jsondecode(queryoutput);
 catch
-    disp('curl did not find repo in Github - missing or private?');
+    disp('jsondecode error - skipping repository import');
     return
 end
 

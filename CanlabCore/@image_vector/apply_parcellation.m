@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat, parcels, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_count] = apply_parcellation(dat, parcels, varargin)
 % Computes the mean value / pattern expression for each parcels specified in a data object
 %
 % Usage:
@@ -6,15 +6,21 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 %
 %    [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat,parcels,'pattern_expression',fmri_data('pattern.nii'))
 %
-% This is a method for an fmri_data object that computes the mean value and
-% optionally, pattern expression within parcels. This can be used to
-% compare the average activity within a region to the expression of a
-% particular marker
+%    This fmri_data object method computes the mean value and
+%    optionally, pattern expression within parcels. This can be used to
+%    compare the average activity within a region to the expression of a
+%    particular marker
+%    - Returns means for each parcel, local patterns if requested, and
+%      other outputs see below)
+%    - SPACE MATCHING: pattern obj -> (data obj -> atlas obj)
+%    - Parcels lost due to resampling and missing data are accounted for
+%    - A full-num-parcels matrix is returned, with NaNs for missing parcels
+%
 %
 % ..
 %     Author and copyright information:
 %
-%     Copyright (C) 2017 Phil Kragel
+%     Copyright (C) 2017 Phil Kragel; Modified 2019 Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -148,6 +154,10 @@ function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rms
 %             5/13/17 Phil and Tor revise; minor edits by Tor Wager
 %             2/5/18  Tor added support for atlas object, pattern valence
 %             8/18    Tor adjusted condf2indic to avoid bug with empty parcels at end of list returning wrong size output
+%             9/2019  Tor adjusted space matching with patterns; was breaking in some cases
+%                     Also added root mean square pos and neg values in
+%                     each parcel (rmsv)
+%             11/2019 Tor adjusted parcels/data voxel list matching and related missing-parcel issues; was breaking in some cases
 % ..
 
 [parcel_means, parcel_pattern_expression, parcel_valence] = deal([]);
@@ -193,6 +203,7 @@ if any(strcmp(varargin, 'pattern_expression'))
     pattern_image = varargin{find(strcmp(varargin, 'pattern_expression')) + 1};
     dopatternexpression = true;
     
+    % SPACE MATCHING: pattern obj -> (data obj -> atlas obj)
     % resample pattern_image to data space
     %[dat, pattern_image] = match_spaces(dat, pattern_image);
     % 9/30/2019 : Tor changed to match dat to parcels first, then patterns
@@ -232,8 +243,32 @@ parcels.dat = condf2indic(parcels.dat, 'integers', n_orig_parcels);
 % parcels.dat = naninsert(missing_parcels, parcels.dat')';
 % 
 
+% parcels.dat voxel list must match dat.dat voxel list.
+% get list of which voxels match those in data (for some masks, may not automatically match)
+% remove voxels that do not exist in data from parcels
+% this will change calculations of region volume later
+% -------------------------------------------------------------------------
+
+wh_in_dat = (~dat.removed_voxels);                          % not removed from data; full mask list (all-in-mask vox)
+% wh_in_dat_parcel_vox = wh_in_dat(~parcels.removed_voxels);  % relevant vox from among those in the parcels.dat field
+% 
+% if sum(wh_in_dat_parcel_vox) ~= size(dat.dat, 1)
+%     error('Error: voxels in parcel do not match those in data image. This needs further debugging...');
+% end
+
+% Remove parcel voxels that are not in data images
+wh = wh_in_dat & ~parcels.removed_voxels;
+parcels = remove_empty(parcels, ~wh);
+
 %for computing means, scale each column of parcels to sum to 1
 parcels.dat = bsxfun(@rdivide, parcels.dat, nansum(parcels.dat));
+
+% Now we need to insert images back in if we have lost any (if voxel removal eliminated some parcels)
+parceldat = parcels.dat;
+parceldat = naninsert(parcels.removed_images, parceldat')';
+
+parcels.dat = parceldat;                            % Replace in .dat. for compat with rmsv below too.
+parcels.removed_images = false(size(parcels.removed_images)); 
 
 %matrix products will give us the mean now...
 parcel_means = dat.dat' * parcels.dat;

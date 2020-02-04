@@ -34,9 +34,15 @@ cm = [gray(64) ; newcm(wh, :)];
 % specify split color-map of 128 values; first 64 are gray, last 64 have
 % colors for activations; this is specified by spm_orthviews
 
-for i = 1:length(axishandles)
-    colormap(axishandles(i), cm);
-end
+% Don't set directly, because legends will not draw right.
+% Use spm_figure. % Redraw color bar
+
+spm_figure_canlab('Colormap',cm)
+
+% for i = 1:length(axishandles)
+%     colormap(axishandles(i), cm);
+% end
+
 
 end
 

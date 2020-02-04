@@ -54,7 +54,7 @@ dat.removed_voxels = false;
 if upsamplevalue > 1
     % Need to re-create image space and dims from scratch
     % up-sample mask as well
-    
+        
 end
 
 end % function

@@ -12,4 +12,9 @@ function orthviews(obj, varargin)
 
 cluster_orthviews(obj, varargin{:});
 
+try
+    spm_orthviews_hotcool_colormap([], 0);
+catch
+end
+
 end

@@ -226,7 +226,11 @@ classdef statistic_image < image_vector
                 obj.image_names = sprintf('rob_tmap_%04d.img',obj.dat_descrip); 
             end
             
+            if doverbose
             obj = check_image_filenames(obj);
+            else
+                 obj = check_image_filenames(obj, 'noverbose');
+            end
             
             if isempty(obj.dat) && any(obj.files_exist)
                 obj = read_from_file(obj);

@@ -95,6 +95,10 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 %      **'contour':**
 %
+%      **'interp':**
+%         Options to pass to interp2. See help interp2 for valid
+%         interpolation methods
+%
 %   **Orientation:**
 %         'sagittal', 'coronal', 'axial'
 %
@@ -134,6 +138,7 @@ transvalue = []; % default: map with clim
 contourmin = 100*eps;
 outline = 0;
 mylinewidth = 2;
+interpStyle = 'linear';
 
 % color-mapped blobs options
 docolormap = 1;
@@ -214,6 +219,9 @@ for i = 1:length(varargin)
                 % other related functions, including calling functions, and can be ignored here.
                 
             case 'noverbose', doverbose = false;
+                
+            case 'interp'
+                interpStyle = varargin{i+1};
             
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -370,7 +378,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myy = currentmap.SPACE.Ymm(:, :, wh_slice(j));
                     mynewx = SPACE.Xmm(:, :, 1);
                     mynewy = SPACE.Ymm(:, :, 1);
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy);
+                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'sagittal' % Y x Z; Xmm is for some reason Y mm coords
                     % myx should have all rows the same, myy should have all
@@ -379,14 +387,14 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myx = squeeze(currentmap.SPACE.Zmm(wh_slice(j), :, :));
                     mynewy = squeeze(SPACE.Xmm(wh_slice(j), :, :));
                     mynewx = squeeze(SPACE.Zmm(wh_slice(j), :, :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy);
+                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'coronal' % X x Z
                     myy = squeeze(currentmap.SPACE.Ymm(:, wh_slice(j), :));
                     myx = squeeze(currentmap.SPACE.Zmm(:, wh_slice(j), :));
                     mynewy = squeeze(SPACE.Ymm(:, wh_slice(j), :));
                     mynewx = squeeze(SPACE.Zmm(:, wh_slice(j), :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy); % Wani modified this line. 08/11/12
+                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
                     
             end
             

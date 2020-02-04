@@ -6,6 +6,13 @@ function xout = scale(x,varargin)
 %
 %     x = scale(x,[just center])
 %
+% Notes:
+% - This function will remove NaNs, but will remove ENTIRE row if any
+% observation is NaN. This may be suboptimal for some applications.
+% - In the future, this function should be renamed to avoid conflict with
+% Matlab's internal scale.m, which could cause erratic behavior. This will
+% require updating multiple other functions that call scale.m, however.
+
 % ..
 %    Programmer's notes:
 %    2/17/14 - Luke: rewrote using vectorization instead of loop -MUCH FASTER!

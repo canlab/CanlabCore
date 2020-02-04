@@ -59,11 +59,35 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 % :Examples:
 % ::
 %
-%    for i = 1:20, X{i} = randn(4, 1); Y{i} = X{i} + .3*randn(4, 1) + randn(1); end
+%    % Complete example with data generation and results
+%    % -----------------------------------------------------------
+%    % Create data for 5 simulated subjects, 10 observations each, random intercept, random positive slope:
+%    for i = 1:5, X{i} = randn(10, 1); Y{i} = rand(1) * X{i} + .3 * randn(10, 1) + randn(1); end
 %    han = line_plot_multisubject(X, Y)
+% %
+%    % Plot the results three ways, with different data transformations:
+%     create_figure('Line plot multisubject', 1, 3);
+%     han = line_plot_multisubject(X, Y);
+%     title('Raw data (no transformation');
+%     subplot(1, 3, 2);
+%     han = line_plot_multisubject(X, Y, 'center');
+%     title('Centered within-person');
+%     subplot(1, 3, 3);
+%     han = line_plot_multisubject(X, Y, 'zscore');
+%     title('Z-scored within-person');
 %
-%   Custom colors and points:
-%   [han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
+%
+%   % -----------------------------------------------------------
+  % Example creating bins of data within-person, useful for many within-person observations
+
+  % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
+%    for i = 1:5, expect{i} = randn(100, 1); pain{i} = rand(1) * expect{i} + .3 * randn(100, 1) + randn(1); end
+
+%   % Plot with bins, custom colors and points:
+%   create_figure('Line plot multisubject with bins');
+   %[han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
+
+%   % -----------------------------------------------------------
 %
 % Center within subjects and bin, then calculate correlation of
 % within-subject variables:
@@ -72,14 +96,22 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %    create_figure('lines'); [han, Xbin, Ybin] = line_plot_multisubject(stats.Y, stats.yfit, 'n_bins', 7, 'center');
 %    corr(cat(1, Xbin{:}), cat(1, Ybin{:}))
 
+%    Programmer's notes:
+%    12/22/19 - Marta: added z-scoring option, added and clarified
+%    different flavors of r (overall r, within-subject r, between-subject r)
+%    01/05/20 - Marta: added NaN handling for r_within for case when all input
+%    values of a subject are 0)
+
+
 % -------------------------------------------------------------------------
 % Defaults and inputs
 % -------------------------------------------------------------------------
 
-docenter = 0;
-doind = 1;
-dolines = 1;
-group_avg_ref_line = 0;
+docenter = false;
+dozscore = false; 
+doind = true;
+dolines = true;
+group_avg_ref_line = false;
 
 for i=1:length(varargin)
     if ischar(varargin{i})
@@ -102,8 +134,11 @@ for i=1:length(varargin)
                 X = XX;
                 Y = YY;
                 
-            case 'center'
+            case {'center', 'docenter'}
                 docenter = 1;
+                
+            case {'zscore', 'dozscore'}
+                dozscore = 1;
                 
             case 'colors'
                 colors = varargin{i+1};
@@ -155,6 +190,51 @@ if length(gcolors) < 2, gcolors{2} = gcolors{1}; end
 hold on
 
 % -------------------------------------------------------------------------
+% Center/scale data as requested
+% -------------------------------------------------------------------------
+
+% Marta 12/22/19 (+Tor):
+% Calc mean and std per subject before doing anything else to data (excluding NaNs)
+% This is useful for reporting on input data state
+X_between=cellfun(@nanmean, X);
+Y_between=cellfun(@nanmean, Y);
+
+X_std=cellfun(@nanstd, X); % 01/05/2020 Marta corrected nanmean to nanstd
+Y_std=cellfun(@nanstd, Y); 
+
+% Save some text for a report to be printed later
+
+X_is_centered = all(abs(X_between)) < 1e-10; % fix this to be valid for 0s too
+Y_is_centered = all(abs(Y_between)) < 1e-10;
+X_is_zscored = X_is_centered && all(abs(X_std - 1)) < 1e-10;
+Y_is_zscored = Y_is_centered && all(abs(Y_std - 1)) < 1e-10;
+
+if X_is_zscored, X_data_str = 'Z-scored'; elseif X_is_centered, X_data_str = 'Centered'; else X_data_str = 'No centering or z-scoring'; end
+if Y_is_zscored, Y_data_str = 'Z-scored'; elseif Y_is_centered, Y_data_str = 'Centered'; else Y_data_str = 'No centering or z-scoring'; end
+
+report_str{1} = 'Input data:';
+report_str{2} = sprintf('X scaling: %s', X_data_str);
+report_str{3} = sprintf('Y scaling: %s', Y_data_str);
+report_str{4} = '\nTransformations:';
+ 
+% zscore, if asked for (removes mean AND divides by std) 
+if dozscore
+    X = cellfun(@scale, X, 'UniformOutput', false);
+    Y = cellfun(@scale, Y, 'UniformOutput', false);
+   report_str{5} = 'X and Y Z-scored before plot';
+
+elseif docenter
+% center, if asked for (removes mean)
+    X = cellfun(@(x) scale(x, 1), X,  'UniformOutput', false);
+    Y = cellfun(@(x) scale(x, 1), Y,  'UniformOutput', false);
+    report_str{5} = 'X and Y centered (forced mean-zero) before plot';
+
+else
+   report_str{5} = 'No data transformations before plot';
+end
+
+
+% -------------------------------------------------------------------------
 % Plot points and lines
 % -------------------------------------------------------------------------
 
@@ -170,14 +250,7 @@ for i = 1:N
     elseif length(X{i}) ~= length(Y{i})
         error(['Subject ' num2str(i) ' has unequal elements in X{i} and Y{i}. Check data.'])
     end
-    
-    % centere, if asked for
-    if docenter
-        X{i} = scale(X{i}, 1);
-        Y{i} = scale(Y{i}, 1);
-    end
-    
-    
+
     % plot points in bins
     if exist('n_bins', 'var')
         if n_bins ~= 0
@@ -232,8 +305,68 @@ Yc = cat(1, Y{:});
 slope_stats.r = corr(Xc, Yc);
 slope_stats.wasnan = wasnan;
 
-fprintf('average within-person r = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
-    slope_stats.r, slope_stats.df, slope_stats.t, slope_stats.p, sum(slope_stats.wasnan));
+% Marta 12/22/19 
+
+% Overall r 
+% -----------------------------------------------------------------
+% Clarify consequences of removing mean and z-scoring
+if docenter
+    report_str{6} = sprintf('\nCorrelations:\nr = %3.2f across all observations, removing subject mean (X and Y are centered)', slope_stats.r);
+elseif dozscore
+    report_str{6} = sprintf('\nCorrelations:\nr = %3.2f across all observations, based on Z-scored X and Y data', slope_stats.r);
+else
+    report_str{6} = sprintf('\nCorrelations:\nr = %3.2f across all observations, based on untransformed input data', slope_stats.r);
+end
+
+
+% Within-person r (each subject's X and Y correlated, then the r values averaged across subjects) 
+% -----------------------------------------------------------------
+[wasnan, Xr]= cellfun(@nanremove, X, 'UniformOutput', false); % Marta 1/7/20 unique name for nan-removed cell arrays 
+[wasnan, Yr]= cellfun(@nanremove, Y, 'UniformOutput', false);
+r_within = cellfun(@corr, Xr,Yr);
+
+% Marta 01/05/2020
+if (nnz(isnan(r_within)))>0;
+    sprintf('%3.0f subject(s) have an r value of NaN, will remove remove NaNs', ...
+       nnz(isnan(r_within)))
+    r_within=r_within(~isnan(r_within));
+end
+    
+slope_stats.r_within = mean(r_within);
+slope_stats.r_within_std = std(r_within);
+
+report_str{8} = sprintf('Average within-person r = %3.2f +- %3.2f (std)', ...
+    slope_stats.r_within, slope_stats.r_within_std);
+
+if dozscore
+    report_str{9} = sprintf('* Note that the overall r and average within-person r are the same because X and Y data are z-scored\n');
+
+elseif docenter
+    report_str{9} = sprintf('* Note that the overall r and average within-person r may be similar because subject mean is removed\n');  
+
+else
+    report_str{9} = '';
+end 
+
+% Between-person r
+% -----------------------------------------------------------------
+slope_stats.r_between = corr(X_between', Y_between');
+report_str{10} = sprintf('Between-person r (across subject means) = %3.2f', ...
+    slope_stats.r_between);
+
+
+% Stats on slopes across subjects
+% -----------------------------------------------------------------
+report_str{7} = sprintf('\nStats on slopes after transormation, subject is random effect: \nMean b = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
+    nanmean(slope_stats.b(:, 2)), slope_stats.df, slope_stats.t, slope_stats.p, sum(slope_stats.wasnan));
+
+
+% Print report
+% -----------------------------------------------------------------
+% All stats/text have been collected now
+
+canlab_print_legend_text(report_str{:});
+
 
 % Individual points
 % -----------------------------------------------------------------

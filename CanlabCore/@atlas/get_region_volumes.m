@@ -11,9 +11,10 @@ dat = double(atlas_obj.dat);
 [imtx, parcel_index_values] = condf2indic(dat, 'integers');
 imtx(isnan(imtx)) = 0;
 
-% if last region is missing, condf2indic will be missing last entry
+% if last regions are missing, condf2indic will be missing last entries
 if any(missing_regions == n_regions)
-    imtx(:, end + 1) = 0;
+    [~,f] = size(imtx);
+    imtx(:, (f+1):n_regions) = 0;
     parcel_index_values = [parcel_index_values; n_regions];
 end
 

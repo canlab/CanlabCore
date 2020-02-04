@@ -9,14 +9,14 @@ function obj = read_from_file(obj)
 %   - img = image_vector('image_names', name);
 % 
 
-disp('Reading image data into object .dat field.');
+% disp('Reading image data into object .dat field.');
 
 % if we have mask info, use that. Otherwise, create
 if isempty(obj.volInfo)
-    disp('Creating mask info from first image and storing in .volInfo.');
+    % disp('Creating mask info from first image and storing in .volInfo.');
     obj.volInfo = iimg_read_img(obj.fullpath(1, :), 2);
 else
-    disp('Using mask and space-defining info already stored in .volInfo field.');
+    % disp('Using mask and space-defining info already stored in .volInfo field.');
 end
 
 % Now extract the actual data from the mask

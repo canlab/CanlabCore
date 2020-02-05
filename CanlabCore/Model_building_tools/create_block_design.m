@@ -59,7 +59,7 @@ contrasts(:, end+1) = 0; % for intercept
         X(:, 1:end-1) = hpfilter(X(:, 1:end-1), TR, HPlength, scanLength_in_TRs);
     end
     
-    plotDesign(ons,[], TR, 'samefig', 'durs', 1, nonlinstr);
+    plotDesign(ons,[], TR, 'samefig', nonlinstr); % Redundant: 'durs', 1,
     set(gca, 'XLim', [0 scanLength], 'XTick', round(linspace(0, scanLength, 10)));
     
     % test efficiency

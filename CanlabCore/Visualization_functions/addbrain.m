@@ -181,6 +181,11 @@ if length(varargin) > 1
     color = varargin{2};
 end
 
+% --------------------------------------------------------
+% Create surfaces
+% --------------------------------------------------------
+
+
 switch meth
 
     case 'colorchange'
@@ -218,7 +223,8 @@ switch meth
     
     p = imageCluster('cluster',region2struct(r),'color',default_color,'alpha',.5);
     
-    
+    if all(ishandle(p)), set(p, 'Tag', meth); end
+        
     % -------------------------------------------------------------------
     % Surfaces
     % -------------------------------------------------------------------
@@ -553,10 +559,13 @@ switch meth
         
 end  % method
 
+% --------------------------------------------------------
+% Set Tag
+% --------------------------------------------------------
 
 switch meth
     
-    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway'}
+    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway', 'brainstem_group', 'limbic hires', 'left_cutaway', 'right_cutaway'}
         % do nothing; multi-region
         
     otherwise

@@ -23,7 +23,7 @@ function [model,delta] = getPredictors(stimList, HRF, varargin)
 %
 %           multiple column vectors for HRF are treated as basis functions!
 %
-%   **varargin** for downsampleing:
+%   **varargin** for downsampling:
 %        'dsrate': takes every nth element of the design matrix
 %
 %        'dslen': the target number (length) you want to downsample to

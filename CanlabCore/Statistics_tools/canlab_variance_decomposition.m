@@ -11,6 +11,9 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 % OUT = canlab_variance_decomposition(y, X, X_type);
 %
 % colors = cell vector with {r g b} for vars 1...k, then shared, then error
+%
+% 'VarNames': cell array followed by variable names. Omit to show
+% percent variance explained instead of variable name
 
 % Inputs and names
 % -------------------------------------------------------------------------
@@ -18,7 +21,21 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 doverbose = true;
 doplots = true;
 varnames = {};
-for i = 1:size(X, 2), varnames{i} = sprintf('Var_%d', i); end
+
+% parse input
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch lower(varargin{i})
+            case 'varnames'
+                varnames = varargin{i+1};
+        end
+    end
+end
+
+% if varnames was not passed in
+if isempty(varnames)
+    for i = 1:size(X, 2), varnames{i} = sprintf('Var_%d', i); end
+end
 
 colors = scn_standard_colors(size(X, 2) + 1);
 colors{end + 1} = [.5 .5 .5]; % for error
@@ -146,7 +163,7 @@ if doplots
     
     % Pie chart of total variance excluding participant-level intercepts
     piedata = double([unique_var_explained shared_var_explained 1-var_explained_full_model]);
-    h = wani_pie(piedata, 'hole', 'colors', colors, varargin{:});
+    h = wani_pie(piedata, 'hole', 'colors', colors, 'labels', {varnames{:} 'Shared' 'Unexplained'}, varargin{:});
     
     title('% of total variance');
     
@@ -154,7 +171,8 @@ if doplots
     
     % Pie chart of all explained variance excluding participant-level intercepts
     piedata = double([unique_var_explained shared_var_explained] ./ var_explained_full_model);
-    h = wani_pie(piedata, 'hole', 'colors', colors, varargin{:});
+    %h = wani_pie(piedata, 'hole', 'colors', colors, 'labels', {varnames{:} 'Shared'}, varargin{:});
+    h = wani_pie(piedata, 'hole', 'colors', colors)%, 'labels', {varnames{:} 'Shared'}, varargin{:});
     
     title('% of explained variance');
     

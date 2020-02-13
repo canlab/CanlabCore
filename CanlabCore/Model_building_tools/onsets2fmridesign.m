@@ -265,7 +265,7 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         
         % bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
         
-        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 6));
+        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 15));
         hrf = bf.bf;
         
         if doampscale && ~strcmp(varargin{2}, 'Finite Impulse Response')

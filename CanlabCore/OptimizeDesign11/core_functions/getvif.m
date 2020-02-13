@@ -1,6 +1,6 @@
 function vif = getvif(X, no_add_intercept, varargin)
 
-% function vif = getvif(model design matrix (X), [no_add_intercept], varargin)
+% function vif = getvif(model design matrix (X), [no_add_intercept], ['plot'], varargin)
 %
 % Optional arguments:
 %

@@ -35,7 +35,7 @@ ons = cell(1, nconditions);
 
 % onsets and lengths in seconds
     ons{1} = [0:ISI:len]';
-    ons{1}(:, 2) = eventduration;
+    ons{1}(:, 2) = eventduration; 
     
     X = onsets2fmridesign(ons, TR, len, 'hrf', nonlinstr);
 
@@ -46,7 +46,7 @@ ons = cell(1, nconditions);
         
     end
     
-    plotDesign(ons, [], TR, 'samefig', 'durs', eventduration, nonlinstr, 'overlapping');
+    plotDesign(ons, [], TR, 'samefig',  nonlinstr, 'overlapping'); % 'durs', eventduration, This is redundant if we pass in durs
     
     set(gca, 'XLim', [0 scanLength * TR], 'XTick', round(linspace(0, scanLength * TR, 10)));
     

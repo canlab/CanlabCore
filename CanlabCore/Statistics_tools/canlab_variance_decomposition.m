@@ -3,17 +3,91 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 %
 % OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 %
-% Example:
+% :Inputs:
+%
+%   **param1:**
+%        description of param1
+%
+%   **param2:**
+%        description of param2
+%
+% :Optional Inputs:
+%   **'colors':**
+%       Followed by cell vector with {r g b} for vars 1...k, then shared, then error
+%
+%   **'names', 'VarNames':**
+%       Followed by variable names. Omit to show
+%       percent variance explained instead of variable name
+%
+%   **'prediction_r2':**
+%       Do not re-estimated intercept and betas, and instead calculate
+%       absolute model fit between y and X. Use if X is y-hat from a
+%       pre-trained model and you want to evaluate absolute prediction r^2
+%       Betas will be fixed at 1, and the model has 0 model df.
+%
+%
+% :Outputs:
+%
+%   **OUT:**
+%        A structure with various variance estimates, and a table with
+%        total and unique variance explained by each column (predictor) in X.
+%
+% Notes: Using canlab_variance_decomposition to assess cross-validated or
+% pre-trained model prediction
+% -------------------------------------------------------------------------
+% Two options:
+% 1. Pass in y = observed, X = cross-validated or test-sample model
+% predictions (y-hat from one or more models). Multiple columns of X would
+% be used to test multiple, potentially correlated model predictions from
+% different models simultaneously.
+%
+% By default, canlab_variance_decomposition re-fits a model (X) to y, so it?s 
+% not exactly the prediction R^2 in Schienost 2019 (Rule 5). That is, it will 
+% fit y ~ X and use the fits to get variance explained for each. If X is a 
+% cross-validated or test-sample model prediction, this function will re-estimate 
+% the slope and intercept, which will allow rescaling between the observed(y) and 
+% predicted (y-hat/X). This may not be a bad thing if the scale is different between 
+% training and test and you want to allow this minor flexibility. But if you want to 
+% assess prediction R^2 with the exact same parameters as in the original training 
+% model and no flexibility, we use the special case where all betas
+% estimated in this function are fixed to 1. In this case, use 'prediction_r2'
+% Variance explained can be negative.
+%
+% 2. Pass in y = y-hat from pre-trained model, and X variables that attempt
+% to explain the model predictions (y-hat) as a function of other
+% variables (e.g., explanatory variables or confounds). Here re-fitting a model is 
+% generally approprate, as the scale of y-hat and predictors may not match.
+%
+% Examples:
+% -------------------------------------------------------------------------
+%
 % load carsmall
 % y = MPG;
 % X = [Model_Year Weight];
 % X_type = {'categorical' 'continuous'};
 % OUT = canlab_variance_decomposition(y, X, X_type);
 %
-% colors = cell vector with {r g b} for vars 1...k, then shared, then error
+     
+% ..
+%     Author and copyright information:
 %
-% 'VarNames': cell array followed by variable names. Omit to show
-% percent variance explained instead of variable name
+%     Copyright (C) 2020 Tor Wager
+%
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
+% 
+% Contributors: Tor Wager, Yoni Ashar, Phil Kragel
 
 % Inputs and names
 % -------------------------------------------------------------------------
@@ -22,12 +96,22 @@ doverbose = true;
 doplots = true;
 varnames = {};
 
+colors = scn_standard_colors(size(X, 2) + 1);
+colors{end + 1} = [.5 .5 .5]; % for error
+
 % parse input
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch lower(varargin{i})
-            case 'varnames'
-                varnames = varargin{i+1};
+            case {'names', 'varnames'}
+                varnames = varargin{i + 1};
+                
+            case {'colors', 'color'}
+                colors = varargin{i + 1};
+                
+            case 'prediction_r2'
+                % do nothing here; this is passed in varargin{:} to get_residual_variance
+                % if it is, betas will be fixed at 1, and the model has 0 model df.
         end
     end
 end
@@ -37,9 +121,9 @@ if isempty(varnames)
     for i = 1:size(X, 2), varnames{i} = sprintf('Var_%d', i); end
 end
 
-colors = scn_standard_colors(size(X, 2) + 1);
-colors{end + 1} = [.5 .5 .5]; % for error
-
+% Check colors
+validateattributes(colors,{'cell'},{@(x) length(x) >= size(X, 2) + 2});
+    
 % X_type must be ROW vector
 if iscolumn(X_type), X_type = X_type'; end
 
@@ -70,7 +154,7 @@ xbasis = expand_X_variables(Xn, X_type);
 
 full_xbasis = cat(2, xbasis{:});   % Concatenate into design matrix
 
-[resid_var_full_model, ~, dfe, df_model] = get_residual_variance(yn, full_xbasis);
+[resid_var_full_model, ~, dfe, df_model] = get_residual_variance(yn, full_xbasis, varargin{:});
 
 var_explained_full_model = 1 - resid_var_full_model / var_y;
 
@@ -83,7 +167,7 @@ for i = 1:size(X, 2)
     % -------------------------------------------------------------------------
     
     % Get residual variance after removing this variable (i) only
-    resid_var(i) = get_residual_variance(yn, xbasis{i});
+    resid_var(i) = get_residual_variance(yn, xbasis{i}, varargin{:});
     
     total_var_explained(i) = 1 - resid_var(i) / var_y;
     
@@ -96,7 +180,7 @@ for i = 1:size(X, 2)
     xbasis_other_vars(i) = [];                          % remove target variable
     xbasis_other_vars = cat(2, xbasis_other_vars{:});   % Concatenate into design matrix
     
-    resid_var_without_var_i = get_residual_variance(yn, xbasis_other_vars);
+    resid_var_without_var_i = get_residual_variance(yn, xbasis_other_vars, varargin{:});
     
     % Unique variance explained by target variable (i) after removing all other variables
     
@@ -157,13 +241,15 @@ end
 
 if doplots
     
-    create_figure('pie charts')
+    create_figure('pie charts');
     
     subplot(1, 2, 1);
     
+    plotlabels = format_strings_for_legend({varnames{:} 'Shared' 'Unexplained'});
+    
     % Pie chart of total variance excluding participant-level intercepts
     piedata = double([unique_var_explained shared_var_explained 1-var_explained_full_model]);
-    h = wani_pie(piedata, 'hole', 'colors', colors, 'labels', {varnames{:} 'Shared' 'Unexplained'}, varargin{:});
+    h = wani_pie(piedata, 'hole', 'colors', colors, 'labels', plotlabels, varargin{:});
     
     title('% of total variance');
     
@@ -172,7 +258,7 @@ if doplots
     % Pie chart of all explained variance excluding participant-level intercepts
     piedata = double([unique_var_explained shared_var_explained] ./ var_explained_full_model);
     %h = wani_pie(piedata, 'hole', 'colors', colors, 'labels', {varnames{:} 'Shared'}, varargin{:});
-    h = wani_pie(piedata, 'hole', 'colors', colors)%, 'labels', {varnames{:} 'Shared'}, varargin{:});
+    h = wani_pie(piedata, 'hole', 'colors', colors); %, 'labels', {varnames{:} 'Shared'}, varargin{:});
     
     title('% of explained variance');
     
@@ -240,22 +326,36 @@ end
 
 
 
-function [resid_var, x_resid, dfe, k] = get_residual_variance(y, xbasis)
+function [resid_var, x_resid, dfe, k] = get_residual_variance(y, xbasis, varargin)
 % y = outcome
 % xbasis = set of one or more regressors for this variable
 % assumes all NaNs removed
 
 xbasis = double(xbasis);
 
-xbasis(:, end+1) = 1;                       % Add intercept
+if ~isempty(varargin) && any(strcmp(varargin, 'prediction_r2'))
+    % Fix all betas to 1
+    
+    x_resid = y - xbasis * ones(size(xbasis, 2), 1);  % Residual variance after removing regressor(s)
 
-x_resid = y - xbasis * pinv(xbasis) * y;  % Residual variance after removing regressor(s)
+    dfe = size(xbasis, 1);
+    k = 0;
+    
+    
+else
+    % Fit model to estimate intercept and betas
+    
+    xbasis(:, end+1) = 1;                       % Add intercept
 
-[n, k] = size(xbasis);                      % Non-Nan obs (n) and k regressor(s) for this variable/factor
-% k = 2 (intercept + regressor) unless this is a
-% categorical factor
+    x_resid = y - xbasis * pinv(xbasis) * y;  % Residual variance after removing regressor(s)
 
-dfe = n - k;                                % intercept accounted for here
+    [n, k] = size(xbasis);                      % Non-Nan obs (n) and k regressor(s) for this variable/factor
+    % k = 2 (intercept + regressor) unless this is a
+    % categorical factor
+
+    dfe = n - k;                                % intercept accounted for here
+
+end
 
 resid_var = get_variance(x_resid, dfe);   % Residual uUnexplained) variance after removing xbasis
 

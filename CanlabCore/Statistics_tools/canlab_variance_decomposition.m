@@ -187,7 +187,7 @@ for i = 1:size(X, 2)
     xbasis_other_vars(i) = [];                          % remove target variable
     xbasis_other_vars = cat(2, xbasis_other_vars{:});   % Concatenate into design matrix
     
-    if  any(strcmp(varargin, 'prediction_r2'))
+    if  any(strcmp(varargin, 'prediction_r2')) && isempty(xbasis_other_vars)
     resid_var_without_var_i =   var_y; %in this case there is only one predictor...  
     else
     resid_var_without_var_i = get_residual_variance(yn, xbasis_other_vars, varargin{:});

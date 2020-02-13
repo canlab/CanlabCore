@@ -20,7 +20,7 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 %       percent variance explained instead of variable name
 %
 %   **'prediction_r2':**
-%       Do not re-estimated intercept and betas, and instead calculate
+%       Do not re-estimate intercept and betas, and instead calculate
 %       absolute model fit between y and X. Use if X is y-hat from a
 %       pre-trained model and you want to evaluate absolute prediction r^2
 %       Betas will be fixed at 1, and the model has 0 model df.
@@ -46,12 +46,12 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 % fit y ~ X and use the fits to get variance explained for each. If X is a 
 % cross-validated or test-sample model prediction, this function will re-estimate 
 % the slope and intercept, which will allow rescaling between the observed(y) and 
-% predicted (y-hat/X). This may not be a bad thing if the scale is different between 
-% training and test and you want to allow this minor flexibility. But if you want to 
-% assess prediction R^2 with the exact same parameters as in the original training 
-% model and no flexibility, we use the special case where all betas
-% estimated in this function are fixed to 1. In this case, use 'prediction_r2'
-% Variance explained can be negative.
+% predicted (y-hat/X). This may be useful if the scale is different between 
+% training and test and you want to allow this minor flexibility (at the expense of 
+% having positively biased estimates of R^2 which is *very bad*). But if you want 
+% to assess prediction R^2 with the exact same parameters as in the original 
+% training model, we use the standard approach of using the model fit on training data. 
+% In this case, use 'prediction_r2'. Variance explained can be negative.
 %
 % 2. Pass in y = y-hat from pre-trained model, and X variables that attempt
 % to explain the model predictions (y-hat) as a function of other
@@ -112,6 +112,13 @@ for i = 1:length(varargin)
             case 'prediction_r2'
                 % do nothing here; this is passed in varargin{:} to get_residual_variance
                 % if it is, betas will be fixed at 1, and the model has 0 model df.
+                
+            case 'noplots'
+                
+                doplots=false;
+                
+            case 'noverbose'
+                doverbose = false;
         end
     end
 end
@@ -180,8 +187,11 @@ for i = 1:size(X, 2)
     xbasis_other_vars(i) = [];                          % remove target variable
     xbasis_other_vars = cat(2, xbasis_other_vars{:});   % Concatenate into design matrix
     
+    if  any(strcmp(varargin, 'prediction_r2'))
+    resid_var_without_var_i =   var_y; %in this case there is only one predictor...  
+    else
     resid_var_without_var_i = get_residual_variance(yn, xbasis_other_vars, varargin{:});
-    
+    end
     % Unique variance explained by target variable (i) after removing all other variables
     
     unique_var_explained(i) = (resid_var_without_var_i - resid_var_full_model) ./ var_y;

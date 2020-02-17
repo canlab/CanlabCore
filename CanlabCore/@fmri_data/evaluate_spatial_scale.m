@@ -8,7 +8,7 @@ function [fitresult, gof] = evaluate_spatial_scale(data_obj,parcel_obj,varargin)
 % Usage:
 % ::
 %
-%    [fitresult, gof] = evaluate_spatial_scale(obj, parel_obj, varargin);
+%    [fitresult, gof] = evaluate_spatial_scale(obj, parcel_obj, varargin);
 %
 %
 % ..

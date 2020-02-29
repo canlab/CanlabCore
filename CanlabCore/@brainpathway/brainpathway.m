@@ -566,8 +566,8 @@ classdef brainpathway < handle
 
 
         
-        function plot_connectivity(obj, varargin)
-        % plot_connectivity(obj, varargin)
+        function OUT = plot_connectivity(obj, varargin)
+        % OUT = plot_connectivity(obj, varargin)
         %
         % Method for brainpathway object class.
         % Plots significant pairwise associations in obj.connectivity.regions and obj.connectivity.nodes

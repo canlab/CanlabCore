@@ -55,6 +55,10 @@
 %
 % You can create an object by assembling an image_vector object from parts
 % (entering fields) and converting using fmri_obj = fmri_data(image_vec_obj)
+% This can also be a structure with field names that match properties of
+% the new intended fmri_data object. e.g., 
+%   new_obj.volInfo = MC_Setup.volInfo;
+%   new_obj.dat = MC_Setup.unweighted_study_data(:, sym_cons);
 %
 % You can create an fmri_data object with extacted image data.
 % - Let "imgs" be a string array or cell array of image names
@@ -359,7 +363,7 @@ classdef fmri_data < image_vector
             if iscell(image_names), image_names = char(image_names{:}); end
             
             
-            if isa(image_names, 'image_vector')
+            if isstruct(image_names) || isa(image_names, 'image_vector')
                 % Map fields of input object into fmri_data structure
                 
                 warning off
@@ -555,6 +559,10 @@ function obj = run_checks_and_fixes(obj, verbosestr)
 
 obj = check_image_filenames(obj, verbosestr);
 
+if isempty(obj.volInfo)
+    error('obj.volInfo cannot be empty');
+end
+
 if isempty(obj.mask) && ~isempty(obj)  % isempty is an object method here
     % fix/create mask
     
@@ -562,6 +570,14 @@ if isempty(obj.mask) && ~isempty(obj)  % isempty is an object method here
     obj.mask.removed_voxels = obj.removed_voxels;
     obj.mask.volInfo_descrip = 'Generic mask built from .dat. Any voxel with a value in .dat is in-mask';
     
+end
+
+if issparse(obj.dat)
+    obj.dat = full(obj.dat);
+end
+
+if ~isfield(obj.volInfo, 'cluster')
+    obj = reparse_contiguous(obj);
 end
 
 end % function

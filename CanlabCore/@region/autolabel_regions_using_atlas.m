@@ -1,4 +1,4 @@
-function [region_obj, region_table, table_legend_text] = autolabel_regions_using_atlas(region_obj, varargin)
+function [region_obj, region_table, table_legend_text, all_regions_covered_cell] = autolabel_regions_using_atlas(region_obj, varargin)
 % Load an atlas object (i.e., defined brain parcels with labels)  and use it to 
 % label regions in a region object (e.g., 'blobs' or regions from an analysis)
 %
@@ -52,6 +52,13 @@ function [region_obj, region_table, table_legend_text] = autolabel_regions_using
 %
 %   **table_legend_text:**
 %        A descriptive legend with more info about the table.
+%
+%   **all_regions_covered_cell**
+%       Labels for all atlas regions with 50% coverage by regions in region_obj
+%       Cell array with one cell per region
+%       Some large regions can cover multiple areas, so it's useful to list
+%       which atlas regions they cover.
+%       For a flat list of labels, try cat(2, all_regions_covered_cell{:})
 %
 % :Examples:
 % -------------------------------------------------------------------------
@@ -140,7 +147,7 @@ end
 
 % Main work done here, on atlases
 % ------------------------------
-[region_table, table_legend_text, coverage25_labels] = atlas_similarity(r, atlas_obj);
+[region_table, table_legend_text, coverage25_labels, ~, ~, ~, all_regions_covered_cell] = atlas_similarity(r, atlas_obj);
 
 % Add region labels
 % ------------------------------
@@ -150,5 +157,8 @@ for i = 1:length(region_obj)
     region_obj(i).shorttitle = region_table.modal_label{i};
     
     region_obj(i).title = char(coverage25_labels{i});
+    
+    region_obj(i).custom_info2 = all_regions_covered_cell{i};
+    region_obj(i).custom_info2_descrip = 'Atlas regions covered >50% by this region';
     
 end % function

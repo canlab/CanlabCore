@@ -34,7 +34,7 @@ function obj = reparse_contiguous(obj, varargin)
 % use 'nonempty' to exclude empty data values when
 % redefining clusters.
 
-wh = true(size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
+wh = true(obj.volInfo.n_inmask, 1); %size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 
 if isempty(wh)
     

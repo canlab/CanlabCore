@@ -185,9 +185,11 @@ if isempty(clim)
         
     end
     
-    clim = [min(dat(:)) max(dat(:))];
+    clim = [min(dat(:)) max(dat(:))];  % clim: data values for min and max, should become min/max colors
     
 end
+
+
 
 % -------------------------------------------------------------------------
 % Define colormap
@@ -262,14 +264,28 @@ end % custom posneg or other colormap
 % -----------------------------------------------------------------------
 % Define mapping function. We will apply this later to vertex color data
 % Defining this here preserves the same mapping across different surfaces
-map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
+% clim(1) mapped to lowest color, clim(2) to highest color
+ map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
 
+% problem is that vertices near empty (zero) voxels get interpolated down to zero
+%map_function = @(c) 1 + nvals + (c - 0) ./ range(clim) .* nvals;
 
 % Reconstruct volume data
 % -----------------------------------------------------------------------
 % Needed to map to vertices later
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
 
+% Deal with edge interpolation effects
+% problem is that vertices near empty (zero) voxels get interpolated down to zero
+% solution: map all non-zero voxels to lowest limit value
+% Need to preserve signs as well.
+% Then replace empty voxels with gray
+% lower lim to interp to 10% of the way towards zero,
+% preserving sign
+% lowerclimit = linspace(clim(1), 0, 10);
+% lowerclimit = lowerclimit(2);           
+% mesh_struct.voldata(mesh_struct.voldata == 0) = lowerclimit;
+% lowerclimit = 0; ... wh = c == 0 | isnan(c); 
 
 for i = 1:length(surface_handles)
     % For each surface handle entered
@@ -282,6 +298,7 @@ for i = 1:length(surface_handles)
     % colored range
     % isocolors returns nans sometimes even when no NaNs in data 
     c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+    
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later
     
     c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
@@ -293,8 +310,11 @@ for i = 1:length(surface_handles)
     c_gray = get(surface_handles(i), 'FaceVertexCData');
     
     if isempty(c_gray)
+        
         % solid
         c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
+        %c_colored(wh) = c_gray(wh);
+        
     else
         %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
         
@@ -302,6 +322,7 @@ for i = 1:length(surface_handles)
             % Solid surface color
             % do nothing - skip rescaling
             % -----------------------------------------------------------------------
+            %c_colored(wh) = c_gray(wh);
             
         else
             % rescale to gray part of colormap
@@ -312,12 +333,12 @@ for i = 1:length(surface_handles)
             % Everything that was originally zero in isocolors c
             % gets replaced with its original grayscale values in c_gray
             
-            c_colored(wh) = c_gray(wh);
+            %c_colored(wh) = c_gray(wh);
             
         end
     end
     
-
+c_colored(wh) = c_gray(wh);
     
     % Set object handle properties 
     % -----------------------------------------------------------------------

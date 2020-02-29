@@ -158,7 +158,7 @@ switch weight_option
         statsx.b_star = b';
         statsx.b_star_descrip = 'R & B reweighted fixed-effects estimates';
         statsx.Y_star = Y_star';  % individual subjects' (first-level) Empirical Bayes estimates; don't use for group inference, but save
-        statsx.Y_star_descrip = 'Empirical Bayes estimates of data after re-weighting';
+        statsx.Y_star_descrip = 'Empirical Bayes estimates of individual 2nd-level effects after re-weighting';
         
 end
 % Main estimation, with whatever weights we have
@@ -435,6 +435,16 @@ if verbose
     fprintf('Analysis description: %s \n', analysisname);
     fprintf('GLS analysis\n\nObservations: %3.0f, Predictors: %3.0f\n', n, k);
 
+    % fix names by adding intercept if needed 
+    if length(names) == nvars - 1
+        if ~isrow(names), names = names'; end
+        names = {'Intercept' names{:}};
+    end
+    
+    if length(names) ~= nvars
+        error('names cell vector must be same length as number of columns');
+    end
+        
     fprintf('Outcome names: ');
     for i = 1:nvars
         fprintf('%s\t',names{i});

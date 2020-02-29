@@ -483,6 +483,12 @@ if any(whbad)
     
 end
 
+% check n columns of X
+sz = cellfun(@size, X, 'UniformOutput', false);
+sz = cat(1, sz{:});
+sz = sz(:, 2); % cols
+if any(sz > 1), error('Error! X has multiple columns. Must have only one'); end
+
 % check restricted range
 within_range_X = cellfun(@range, X);
 within_range_Y = cellfun(@range, Y);

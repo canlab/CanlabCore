@@ -34,7 +34,7 @@
 % Basic usage:
 % obj = fmri_data(image_names, [maskinput], [other optional inputs]) 
 %
-% maskinput     :   [optional] name of mask image to use.  Default: 'brainmask.nii', a
+% maskinput     :   [optional] name of mask image to use.  Default: 'brainmask_canlab.nii', a
 %                   brain mask that is distributed with SPM software and in
 %                   the CANlab Core Tools
 %                   Alternative in CANlab tools: which('gray_matter_mask.img')
@@ -47,7 +47,7 @@
 % You can create an empty object by using:
 % fmri_dat = fmri_data
 % - fmri_dat is the object.
-% - It will be created with a standard brain mask, brainmask.nii
+% - It will be created with a standard brain mask, brainmask_canlab.nii
 % - This image should be placed on your Matlab path
 % - The space information is stored in fmri_dat.volInfo
 % - Data is stored in fmri_dat.dat, in a [voxels x images] matrix
@@ -65,7 +65,7 @@
 % - This command creates an object with your (4-D) image data:
 % - fmri_dat = fmri_data(imgs);
 % - Images can be zipped (.gz) as well. fmri_data() will unpack them.
-% - Only values in the standard brain mask, brainmask.nii, will be included.
+% - Only values in the standard brain mask, brainmask_canlab.nii, will be included.
 % - This saves memory by reducing the number of voxels saved dramatically.
 %
 % You can specify any mask you'd like to extract data from.
@@ -75,7 +75,7 @@
 % - The mask information is saved in fmri_dat.mask
 %
 % e.g., this extracts data from images within the standard brain mask:
-% dat = fmri_data(imgs, which('brainmask.nii'));
+% dat = fmri_data(imgs, which('brainmask_canlab.nii'));
 %
 % Defining the space of the extracted data
 % -----------------------------------------------------------------------
@@ -338,10 +338,10 @@ classdef fmri_data < image_vector
                 % -----------------------------------
                 
                 % Empty: Define with standard default mask
-                [image_names, maskinput] = deal(which('brainmask.nii'));
+                [image_names, maskinput] = deal(which('brainmask_canlab.nii'));
                 
                 if isempty(maskinput)
-                    disp('Warning: Cannot find brainmask.nii, creating without mask info.');
+                    disp('Warning: Cannot find brainmask_canlab.nii, creating without mask info.');
                     return
                 end
                 
@@ -419,7 +419,7 @@ classdef fmri_data < image_vector
             % Empty mask: use default
             if (nargin < 2 || isempty(maskinput)) % && isempty(varargin)  
                 
-                maskinput = which('brainmask.nii');
+                maskinput = which('brainmask_canlab.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end
                 

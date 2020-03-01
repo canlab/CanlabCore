@@ -149,6 +149,13 @@ ispain(1:6*15) = true;
 iscog(6*15 + 1 : (12*15)) = true;
 isemo(12*15+1:18*15) = true;
 
+wh_isnan=isnan(vector_data);
+vector_data=vector_data(~wh_isnan);
+
+ispain=ispain(~wh_isnan);
+iscog=iscog(~wh_isnan);
+isemo=isemo(~wh_isnan);
+
 % Boostrap confidence intervals for effect size
 fprintf('Bootstrapping CIs\n')
 
@@ -180,14 +187,16 @@ disp('Classification of cognitive control vs. other')
 
 roc_cog = roc_plot(vector_data,iscog, 'noplot', 'threshold_type', threshold_type);
 
-fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(pain vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
+fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(cog vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
     roc_cog.class_threshold, cohens_d_2sample(vector_data, iscog), bci_cog(1), bci_cog(2));
+
+disp(' ')
 
 disp('Classification of emotion vs. other')
 
 roc_emo = roc_plot(vector_data,isemo, 'noplot', 'threshold_type', threshold_type);
 
-fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(pain vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
+fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(emo vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
     roc_emo.class_threshold, cohens_d_2sample(vector_data, isemo), bci_emo(1), bci_emo(2));
 disp(' ')
 

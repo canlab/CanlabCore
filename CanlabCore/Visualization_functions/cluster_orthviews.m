@@ -75,8 +75,9 @@ function cluster_orthviews(varargin)
     
     % overlay = which('scalped_single_subj_T1.img');
     % overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-    overlay = which('keuken_2014_enhanced_for_underlay.img');
-    
+%     overlay = which('keuken_2014_enhanced_for_underlay.img');
+                overlay = which('spm152.nii');
+
     donew = 1;  % new fig
     docopy = 0;  % copy to new axis
     douniquecolors = 0;

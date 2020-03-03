@@ -425,6 +425,12 @@ delta_hires = cf2;
 % ------------------------------------------------------------------------
 if ~isempty(len_original)
     % Downsample using 'dslen' input
+    % dslen should be an integer multiple of TR
+    if len_original/TR ~= round(len_original/TR)
+        fprintf('You passed in a fixed design length  (%3.0f) that is not an even multiple of the TR (%3.0f)\n', len_original, TR);
+        error('Quitting');
+    end
+    
     X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
 else
     % Downsample using 'dsrate'

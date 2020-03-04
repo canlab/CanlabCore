@@ -135,6 +135,10 @@ for i = 1:k
     
     atlas_obj{i} = load_atlas(atlases{i});
     
+    if isempty(atlas_obj{i})
+        error('Atlas not found in registry in load_atlas.');
+    end
+    
     % redefine names if needed
     switch atlases{i}
         case 'cerebellum'

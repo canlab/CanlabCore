@@ -22,19 +22,14 @@ if ~islogical(wh_group), error('wh_group must be a logical array'), end
 doplot = 0;
 if strcmp(varargin{1}, 'doplot'), doplot = 1; end
 
-n_subjects = size(bs.connectivity.regions.r, 3);
-n_nodes = size(bs.connectivity.regions.r, 2);
-
-% there is probably a faster way to do this
-for i=1:n_subjects
-    tmp = tril(bs.connectivity.regions.r(:,:,i), -1);
-    mat(i,:) = tmp(tril(true(n_nodes), -1));
-end
+mat = bs.flatten_conn_matrices();
 
 % test at each node -- ttest2 tests columnwise
 [h,p,ci,stats] = ttest2(mat(wh_group, :), mat(~wh_group, :));
 
 % revert back to square form
+n_nodes = size(bs.connectivity.regions.r, 2);
+
 t_square = tril(ones(n_nodes), -1); % sets indices for assignment in next line
 t_square(t_square>0) = stats.tstat; % assign in values in correct (columnwise) order
 t_square = t_square + t_square'; % flip to be mirrored on upper tri too

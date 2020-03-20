@@ -6,7 +6,10 @@ function [h,p,ci,stats, p_square, t_square, q_square] = ttest(bs, wh_group, vara
 %   now, this function defaults to testing the matrices in
 %   bs.connectivity.regions.r, but could be expanded later.
 %
-%   'doplot': show a plot
+%   Input:
+%       'doplot': show a plot
+%       'labels': followed by a 2-element cell array, containing labels for
+%                 the top two plots
 %
 %   Output: 
 %       [h,p,ci,stats] from matlab's ttest2
@@ -20,7 +23,19 @@ function [h,p,ci,stats, p_square, t_square, q_square] = ttest(bs, wh_group, vara
 if ~islogical(wh_group), error('wh_group must be a logical array'), end
 
 doplot = 0;
-if strcmp(varargin{1}, 'doplot'), doplot = 1; end
+labels = {'Group == 1', 'Group==0'};
+
+for i=1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'doplot'
+                doplot = 1;
+            case 'labels'
+                labels = varargin{i+1};
+                
+        end
+    end
+end
 
 mat = bs.flatten_conn_matrices();
 
@@ -30,27 +45,18 @@ mat = bs.flatten_conn_matrices();
 % revert back to square form
 n_nodes = size(bs.connectivity.regions.r, 2);
 
-t_square = tril(ones(n_nodes), -1); % sets indices for assignment in next line
-t_square(t_square>0) = stats.tstat; % assign in values in correct (columnwise) order
-t_square = t_square + t_square'; % flip to be mirrored on upper tri too
-   
-p_square = tril(ones(n_nodes), -1); % sets indices for assignment in next line
-p_square(p_square>0) = p; % assign in values in correct (columnwise) order
-p_square = p_square + p_square'; % flip to be mirrored on upper tri too
-p_square = p_square + eye(size(p_square)); % set the diagonal p values to be 1
+t_square = square_form (stats.tstat, n_nodes);
+p_square = square_form (p, n_nodes, 1); % set the diagonal p values to be 1
 
 [fdr] = mafdr(p');%, 'BHFDR', true);
-q_square = tril(ones(n_nodes), -1); % sets indices for assignment in next line
-q_square(q_square>0) = fdr; % assign in values in correct (columnwise) order
-q_square = q_square + q_square'; % flip to be mirrored on upper tri too
-q_square = q_square + eye(size(q_square)); % set the diagonal p values to be 1
+q_square = square_form (fdr, n_nodes, 1); % set the diagonal p values to be 1
 
 if doplot
     create_figure('brainpathways multi t-test',2,2)
     mat = bs.connectivity.regions.r;
-    imagesc(mean(mat(:,:,wh_group), 3)); colorbar, title('Group == 1')
+    imagesc(mean(mat(:,:,wh_group), 3)); colorbar, title(labels{1})
     subplot(2,2,2)
-    imagesc(mean(mat(:,:,~wh_group), 3)); colorbar, title('Group == 0')
+    imagesc(mean(mat(:,:,~wh_group), 3)); colorbar, title(labels{2})
     subplot(2,2,3)
     imagesc(t_square); colorbar, title('T-statistic: group difference')
     subplot(2,2,4)

@@ -1,6 +1,8 @@
-% Will return a 2D matrix, n subjects x n node-pairs
+% Given a 3d matrix, n_nodes x n_nodes * subjects, will return a 2D matrix, subjects x n_node-pairs
 % by default, will use bs.connectivity.regions.r
 % if a matrix is passed in, will use that instead
+%
+% To revert a 1 x node-pairs matrix back to square form, see square_form.m in CanlabCore
 %
 % Yoni Ashar, March 2020
 %

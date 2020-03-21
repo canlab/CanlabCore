@@ -1,10 +1,10 @@
-function [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_dat, varargin)
+function [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps] = neurosynth_feature_labels(test_dat, varargin)
 % Calculates top term match with Neurosynth 2013 feature set (or topic maps)
 %
 % :Usage:
 % ::
 %
-%     [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_dat,[optional inputs]);
+%     [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps] = neurosynth_feature_labels(test_dat,[optional inputs]);
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -236,5 +236,10 @@ if display_output
     end
     
 end
+
+% Return maps
+feature_dat.dat = feature_dat.dat(:, indx); % resort to order them
+top_ns_maps = get_wh_image(feature_dat, highindx);
+bottom_ns_maps = get_wh_image(feature_dat, lowindx);
 
 end % main function

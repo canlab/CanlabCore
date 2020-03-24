@@ -19,6 +19,6 @@ function flat_conn_mat = flatten_conn_matrices(bs, varargin)
     % there is probably a faster way to do this
     for i=1:n_subjects
         tmp = tril(mat3d(:,:,i), -1);
-        flat_conn_mat(i,:) = tmp(tril(true(n_nodes), -1));
+        flat_conn_mat(i,:) = tmp(tril(true(n_nodes), -1)); % could also use squareform(), but this requires 0's along the diagonal, so would need to set that first. no clear benefit to using that function so will leave as is. Yoni March 2020
     end
 end

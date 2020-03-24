@@ -43,13 +43,14 @@ mat = bs.flatten_conn_matrices();
 [h,p,ci,stats] = ttest2(mat(wh_group, :), mat(~wh_group, :));
 
 % revert back to square form
-n_nodes = size(bs.connectivity.regions.r, 2);
+t_square = squareform (stats.tstat, 'tomatrix');
 
-t_square = square_form (stats.tstat, n_nodes);
-p_square = square_form (p, n_nodes, 1); % set the diagonal p values to be 1
+p_square = squareform (p, 'tomatrix');
+p_square(logical(eye(size(p_square)))) = 1; % set the diagonal p values to be 1
 
 [fdr] = mafdr(p');%, 'BHFDR', true);
-q_square = square_form (fdr, n_nodes, 1); % set the diagonal p values to be 1
+q_square = squareform (fdr, 'tomatrix');
+q_square(logical(eye(size(q_square)))) = 1; % set the diagonal p values to be 1
 
 if doplot
     create_figure('brainpathways multi t-test',2,2)

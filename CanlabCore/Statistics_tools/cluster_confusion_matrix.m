@@ -291,7 +291,10 @@ if dofig
     xlabel Distance
     title 'Optimal Clustering Solution'
     
-    clrs=hsv(stats.optimalK);
+    C=hsv(stats.optimalK);
+    for c=1:size(C,1);
+        clrs{c}=C(c,:);
+    end
     cluster_labels=stats.optimalY(perm);
     if any(strcmp(varargin,'colors'))
        clrs=varargin{find(strcmp(varargin,'colors'))+1}; 

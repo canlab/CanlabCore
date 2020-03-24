@@ -107,6 +107,7 @@ threshold_type = 'Optimal balanced error rate'; % 'Optimal overall accuracy'; %
 colors = [repmat({[1 .2 0]}, 1, 6) repmat({[.4 .5 .2]}, 1, 6) repmat({[.1 0 .9]}, 1, 6)];
 
 sim_string = 'cosine_similarity';  % or 'dotproduct' or 'correlation'
+weight_string = 'none';  % or 'weighted'
 
 canlab_parse_inputs_subfcn();
 
@@ -130,7 +131,8 @@ test_images = load_image_set('kragel18_alldata', 'noverbose');
 
 test_images.Y = test_images.dat_descrip.Studynumber;
 
-vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string);
+% vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string);
+vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string,weight_string); %weight by overall cosine similarity
 
 for s = 1:num_cols
     pattern_response{s} = vector_data(test_images.Y==s);
@@ -312,6 +314,7 @@ end % plot
         p.addParameter('fontsize', fontsize);
         p.addParameter('colors', colors);
         p.addParameter('sim_string', sim_string);
+        p.addParameter('weight_string',weight_string);
         p.addParameter('threshold_type', threshold_type);
         
         % Optional inputs - Logical flags and keywords

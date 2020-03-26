@@ -8,6 +8,13 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %
 %    [poscl, negcl] = table(cl, [optional inputs])
 %
+% - By default, region.table() separates clusters into subregions with positive
+%   and negative values. Thus, the number of rows may not match the original number of regions. 
+%   To turn this feature off, use 'nosep'.
+% - By default, region.table() re-sorts the regions to group the table rows by macro-scale brain
+%   structures (cortex, basal ganglia, etc.). So the ordering in the table may not match
+%   the original region object. To turn this feature off, use 'nosort'.
+%
 % :Optional inputs:
 %
 %   **k:**
@@ -141,6 +148,8 @@ else
 end
 
 
+% Auto-label names
+%
 % Attempt to label regions with descriptive names; requires
 % Neuroimaging_Pattern_Masks repository
 % Used in both legacy and 2018+ version
@@ -152,19 +161,19 @@ end
 [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
 
 
-% Manual labeling of names
+% Manual labeling of names, if forcing
 % -------------------------------------------------------------------------
 
-if donames
+if donames && forcenames
     
-    if forcenames
-        for i = 1:length(cl)
-            cl(i).shorttitle = [];
-        end
+    for i = 1:length(cl)
+        cl(i).shorttitle = [];
     end
     
     cl = cluster_names(cl);
+    
 end
+
 
 
 % separate again so we return clusters with region names added.
@@ -187,6 +196,8 @@ else
     % not separating
     poscl = cl;
     negcl = [];
+    
+    ispos = true(1, length(cl));
 end
 
 % poscl and negcl are done here, so we have values to be returned.
@@ -223,7 +234,14 @@ else
     %     results_table = removevars(results_table, 'Region');
     %     results_table = removevars(results_table, 'Voxels');
     
-    Region = table(region_table.modal_label, 'VariableNames', {'Region'});
+    if donames
+        % we have already entered names
+        Region = table(region_table.Region, 'VariableNames', {'Region'})
+    else
+        % use modal label
+        Region = table(region_table.modal_label, 'VariableNames', {'Region'});
+    end
+    
     Volume = table(region_table.Region_Vol_mm, 'VariableNames', {'Volume'});
     Atlas_coverage = region_table(:, [6 7 4]);
     XYZ = table(round(cat(1, cl.mm_center)), 'VariableNames', {'XYZ'});

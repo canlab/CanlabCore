@@ -1,5 +1,10 @@
 function [o2, title_handle] = title_montage(o2, wh_montage, title_str)
-% o2 = title_montage(o2, wh_montage, title_str)
+% Add a title to a montage figure registered in an fmridisplay object o2
+%
+% [o2, title_handle] = title_montage(o2, wh_montage, title_str)
+%
+% wh_montage is an integer that specifies the image axis to add the title to
+% it is usually 5 for standard canlab 2020 double-row montages.
 
 title_handle = [];
 

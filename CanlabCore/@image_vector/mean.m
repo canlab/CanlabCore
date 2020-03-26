@@ -12,6 +12,7 @@ function [m, varargout] = mean(obj, varargin)
 %
 % - Average available valid data in each voxel. Some images may have
 % missing data for some voxels.
+% - Treats values of 0 as missing (after SPM) and excludes from mean.
 % 
 % :Optional Inputs:
 %   - 'write', followed by file name

@@ -54,7 +54,7 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %   **'dependent':**
 %        followed by vector of subject IDs, e.g., ('dependent',[1,1,2,2,3,3].
 %
-%        This will perform multilevel version of binomial test for single interval classifation.
+%        This will perform multilevel version of binomial test for single interval classification.
 %
 %   **'noplot':**
 %        Skip generating plots
@@ -98,13 +98,14 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %    Tor Wager, Feb 2012
 %    See Notes in text for more programming details.
 %
+
 %    Notes:
-%    Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
+%    Tor Edited 3/17/2012 to add standard Gaussian signal detection fit curves,
 %    effect size estimates based on Gaussian equal variance model
 %
-%    Edited 3/20/2012 to fix AUC estimate and add/change output.
+%    Tor Edited 3/20/2012 to fix AUC estimate and add/change output.
 %
-%    Tested 3/20/12 against RScorePlus.  There are some consequences of
+%    Tor Tested 3/20/12 against RScorePlus.  There are some consequences of
 %    binning for input to RScorePlus, inclding that the "response" criteria are inferred
 %    in RScorePlus, but they are given if we are selecting arbitrary criteria based on
 %    continuous measures (e.g., brain activity). This influences the actual
@@ -131,6 +132,28 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %
 %    Edited 8/2015: Tor Wager - reduced length of thr to speed computation
 %    with large numbers of values (e.g., images with 50K+voxels)
+%
+%    12/8/2018: Tor Wager - made 2 substantive changes:
+%     For 'Optimal balanced error rate', we don't want the threshold
+%     that optimizes overall sensitivity+specificity; we want the threshold that
+%     minimizes the discrepancy between sensitivity and specificity.
+%     This is because with unbalanced classes, one can always choose
+%     "yes" or "no" and the threshold will be at the bounds, yielding a
+%     sens/spec of 0% and 100% or vice versa.
+% 
+%     Threshold optimization correction for binomial P-values
+%     Chance values can be tricky, and optimizing a threshold can be
+%     circular. For example, if only 33% of observations are true
+%     positives, and the classifier always guesses "no", it will be right
+%     66% of the time, which is better than the 50% expected under random guessing.
+%     We want to build in a correction for threshold selection.
+%     The expectation under chance is that we'll adopt a strategy that
+%     gives us at least the base-rate of true positive or true negative
+%     results. For 33% true-pos, this would be 66%.
+%     We take the max p-value of the difference from 0.5 and the baserate
+%     or 1 - baserate.
+%     Not implemented for 'dependent' binomial test.
+%
 % ..
 
 include = true(size(binary_outcome));
@@ -271,9 +294,23 @@ n0 = sum(~isnan(input_values(~binary_outcome)) & ~isinf(input_values(~binary_out
 switch threshold_type
     case 'Optimal balanced error rate'
         
-        avg = mean([tpr; 1-fpr]);
-        [dummy, wh] = max(avg);
+        % For 'Optimal balanced error rate', we don't want the threshold
+        % that optimizes overall sensitivity+specificity; we want the threshold that
+        % minimizes the discrepancy between sensitivity and specificity.
+        % This is because with unbalanced classes, one can always choose
+        % "yes" or "no" and the threshold will be at the bounds, yielding a
+        % sens/spec of 0% and 100% or vice versa.
+        
+        % old:
+%         avg = mean([tpr; 1-fpr]);
+%         [dummy, wh] = max(avg);
+%         class_thr = thr(wh);
+        
+        % new:
+        tfdiff = diff([tpr; (1-fpr)]);
+        [dummy, wh] = min(abs(tfdiff));
         class_thr = thr(wh);
+        
         dobalanced = 1;
         
     case 'A priori threshold'
@@ -302,6 +339,7 @@ end
 
 % Save stuff
 % -------------------------------------------------------------------------
+ROC.baserate = sum(binary_outcome) ./ length(binary_outcome);
 
 ROC.all_vals.thr = thr;
 
@@ -369,7 +407,25 @@ end
 ROC.accuracy = accuracy;
 
 if ~doDependent
+    
+    % Threshold optimization correction for binomial P-values
+    % Chance values can be tricky, and optimizing a threshold can be
+    % circular. For example, if only 33% of observations are true
+    % positives, and the classifier always guesses "no", it will be right
+    % 66% of the time, which is better than the 50% expected under random guessing.
+    % We want to build in a correction for threshold selection.
+    % The expectation under chance is that we'll adopt a strategy that
+    % gives us at least the base-rate of true positive or true negative
+    % results. For 33% true-pos, this would be 66%. 
+    % We take the max p-value of the difference from 0.5 and the baserate
+    % or 1 - baserate.
+    % Not implemented for 'dependent' binomial test.
+
     RES = binotest(double(~misclass), .5);
+    RES2 = binotest(double(~misclass), ROC.baserate);
+    RES3 = binotest(double(~misclass), 1 - ROC.baserate);
+    RES.p_val = max([RES.p_val RES2.p_val RES3.p_val]);
+    
 else %Run hierarchical version of binomial test
     
     %Create new subject matrix
@@ -588,6 +644,8 @@ bins = [-Inf plotthr Inf];   % bin edges: EDGES(k) <= X(i) < EDGES(k+1)
 npoints = length(bins);
 s0 = histc(input_values(~binary_outcome), bins)';
 s1 = histc(input_values(binary_outcome), bins)';
+
+bin_names = {};
 
 for i = 1:length(bins)
     %bin_names{i} = sprintf('R_%3.1f', bins(i));

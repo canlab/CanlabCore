@@ -34,7 +34,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 %   **posterior_overlap**
 %       Using percent overlap of binary masks, this option calculates the
-%       posterior probability of observing non-zero pattern weights (binary) 
+%       posterior probability of observing non-zero pattern weights (binary)
 %       given binary masks
 %
 %   **ignore_missing**
@@ -50,8 +50,8 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % :Outputs:
 %   **similarity_output**
 %       Matrix of similarity measures.
-%          
-% 
+%
+%
 % :Examples:
 % ::
 % dat = rand(100, 5);  % 100 voxels, 5 images
@@ -67,7 +67,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % ..
 %    Notes:
-% 
+%
 % Dealing with missing data and partial coverage
 % ---------------------------------------------------
 % Pattern pattern_weights can have zeros, which may be valid values in voxels,
@@ -175,6 +175,9 @@ similarity_output = NaN .* zeros(k, npatt);
 
 badvals = dat == 0 | isnan(dat);  % Matrix. not used for binary overlap (SG).
 
+
+
+
 % ---------------------------------
 % Main similarity calculation
 % ---------------------------------
@@ -193,13 +196,13 @@ else
         
         switch sim_metric
             case 'corr'
-            
-                similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
-                 
+                
+               
+                    similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
             case 'cosine'
-        
+                
                 similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
-            
+                
             case 'overlap'
                 
                 similarity_output(:, i) = overlap_similarity(dat, pattern_weights(:, i));
@@ -215,6 +218,24 @@ else
     end
     
 end % pattern sim calculation
+
+
+% ---------------------------------
+% Weight cases based on distance to mean
+% ---------------------------------
+
+if any(strcmp(varargin,'weighted')) % if we want to weight data based on similarity to group mean
+    mean_dat = mean(dat,2); %sample mean
+    distances = squareform(pdist([dat,mean_dat]')); %use other measures?
+    weights=1./distances(1:end-1,end);
+    weights=weights-min(weights)+1e-12; %min0
+    weights=weights./mean(weights); % scale so weights are positive with mean value one
+else %
+    weights=ones(size(dat,2),1); %just use a weight of one
+end
+
+
+similarity_output = bsxfun(@times,similarity_output,weights);
 
 % ---------------------------------
 % Warnings
@@ -313,15 +334,18 @@ end
 end % function
 
 
-function r = image_correlation(dat, pattern_weights, badvals)
+function r = image_correlation(dat, pattern_weights, badvals, varargin)
+
 
 for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions in each image
     
     inmask = ~badvals(:, i);
-    
+            
     r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
-    
+        
+   
 end
+
 
 end % function
 
@@ -369,13 +393,66 @@ for i = 1:size(dat, 2)
     % calculate the space
     inmask = sum(dat,2)~=0;
     % calculate P(pattern | data) using overlaps
-    r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(dat(inmask,i)==1); 
+    r(i,1) = sum(dat(inmask,i)==1 & pattern_weights(inmask)==1)./sum(dat(inmask,i)==1);
     
 end
 
+
+end
+
+function R = weightedcorrs(Y, w)
+%
+%   WEIGHTEDCORRS returns a symmetric matrix R of weighted correlation
+%   coefficients calculated from an input T-by-N matrix Y whose rows are
+%   observations and whose columns are variables and an input T-by-1 vector
+%   w of weights for the observations. This function may be a valid
+%   alternative to CORRCOEF if observations are not all equally relevant
+%   and need to be weighted according to some theoretical hypothesis or
+%   knowledge.
+%
+%   R = WEIGHTEDCORRS(Y, w) returns a positive semidefinite matrix R,
+%   i.e. all its eigenvalues are non-negative (see Example 1).
+
+%
+% % ======================================================================
+%
+%   See also CORRCOEF, COV, STD, MEAN.
+%
+% % ======================================================================
+%
+%-*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-*%
+%                                                                                               %
+%            Author: Liber Eleutherios                                             %
+%            E-Mail: libereleutherios@gmail.com                             %
+%            Date: 23 July 2008                                                      %
+%            Updated: 6 June 2012                                                 %
+%                                                                                               %
+%-*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-* -*-*%
+%
+% % ======================================================================
+%
+% Check input
+ctrl = isvector(w) & isreal(w) & ~any(isnan(w)) & ~any(isinf(w)) & all(w > 0);
+if ctrl
+    w = w(:) / sum(w);                                                          % w is column vector
+else
+    error('Check w: it needs be a vector of real positive numbers with no infinite or nan values!')
+end
+ctrl = isreal(Y) & ~any(isnan(Y)) & ~any(isinf(Y)) & (size(size(Y), 2) == 2);
+if ~ctrl
+    error('Check Y: it needs be a 2D matrix of real numbers with no infinite or nan values!')
+end
+ctrl = length(w) == size(Y, 1);
+if ~ctrl
+    error('size(Y, 1) has to be equal to length(w)!')
+end
+[T, N] = size(Y);                                                             % T: number of observations; N: number of variables
+temp = Y - repmat(w' * Y, T, 1);                                              % Remove mean (which is, also, weighted)
+temp = temp' * (temp .* repmat(w, 1, N));                                     % Covariance Matrix (which is weighted)
+temp = 0.5 * (temp + temp');                                                  % Must be exactly symmetric
+R = diag(temp);                                                               % Variances
+R = temp ./ sqrt(R * R');
+
 end % function
-
-
-
 
 

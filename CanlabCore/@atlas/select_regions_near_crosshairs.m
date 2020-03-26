@@ -1,9 +1,9 @@
-function obj_selected = select_regions_near_crosshairs(atlas_obj, varargin)
+function [obj_selected, index_vals] = select_regions_near_crosshairs(atlas_obj, varargin)
 % atlas object method: Select regions within x mm of the crosshairs of an spm_orthviews display
 % :Usage:
 % ::
 %
-%     obj_selected = select_regions_near_crosshairs(obj, [distance_threshold])
+%     [obj_selected, index_vals] = select_regions_near_crosshairs(obj, [distance_threshold])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -82,6 +82,7 @@ function obj_selected = select_regions_near_crosshairs(atlas_obj, varargin)
 % Some useful things
 thresh = 15;
 coords = [];
+input_args = {}; % to select_atlas_subset
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -90,6 +91,8 @@ for i = 1:length(varargin)
 
             case 'thresh', thresh = varargin{i+1}; varargin{i+1} = [];
             case 'coords', coords = varargin{i+1}; varargin{i+1} = [];
+                
+            case 'flatten', input_args(end+1) = {'flatten'};
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -108,7 +111,7 @@ d = distance_euclid(coords,centers);
 
 wh = find(d <= thresh);
 
-obj_selected = select_atlas_subset(atlas_obj, wh);
+[obj_selected, index_vals] = select_atlas_subset(atlas_obj, wh, input_args{:});
 
 end
 

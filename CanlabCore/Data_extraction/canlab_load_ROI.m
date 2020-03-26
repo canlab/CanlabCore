@@ -14,7 +14,7 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % :Usage:
 % ::
 %
-%    handle = canlab_load_ROI(region_name,[optional arguments])
+%    [r, atlas_obj, default_color, region_file, image_file] = canlab_load_ROI(region_name,[optional arguments])
 %
 % Working options:
 % -----------------------------------------------------------
@@ -170,7 +170,7 @@ if has_image
     
     % Load image file as obj, an fmri_data object, to convert to region
     
-    obj = fmri_data(image_file);
+    obj = fmri_data(image_file, 'noverbose');
     
 else
     

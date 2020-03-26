@@ -155,6 +155,8 @@ function obj = addblobs(obj, cl, varargin)
 % Check and convert to region
 % -------------------------------------------------------------------
 if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
+
+if isa(cl, 'image_vector'), cl = region(cl); end
     
 if ~isa(cl, 'region')
     error('cl input must be a region object. Try region() constructor method.');
@@ -396,8 +398,13 @@ if addsurfaceblobs
             pos_colormap = colormap_tor(minposcolor, maxposcolor);
             neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
         end
-        cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
         
+        % OLD method: cluster_surf
+        % cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
+        
+        img = region2imagevec(cl);
+        render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap);
+
     end
 end
 

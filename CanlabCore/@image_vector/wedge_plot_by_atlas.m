@@ -140,6 +140,10 @@ for i = 1:k
         atlas_obj{i} = atlases{i};
     end
     
+    if isempty(atlas_obj{i})
+        error('Atlas not found in registry in load_atlas.');
+    end
+    
     % redefine names if needed
     if ischar(atlases{i})
         switch atlases{i}

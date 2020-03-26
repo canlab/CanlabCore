@@ -1,0 +1,10 @@
+Standard CANlab brainmask (brainmask_Fieldmap.nii): https://www.fil.ion.ucl.ac.uk/spm/toolbox/fieldmap/ - this comes with spm12 by default
+Restricted brainmask (brainmask_cat12.nii): http://www.neuro.uni-jena.de/cat/ - this is a more recent brainmask from the Computational Anatomy Toolbox
+ICBM brainmask 2009c (brainmask_icbm.nii): http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009
+
+These masks have been saved into CanlabCore in canlab_canonical brains. The cat12 mask was copied and renamed brainmask_canlab.nii in this directory for
+use as the default mask. To update, simply copy a new mask with that name. 
+
+
+
+

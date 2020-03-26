@@ -89,6 +89,7 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
     alphascale = {};
     do_fsavg_left = false;
     do_fsavg_right = false;
+    doverbose = true;
     
     % -----------------------------------------------------------------------
     % * set up input arguments
@@ -140,6 +141,10 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
             % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
             ras = load(which('rh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat'));
             do_fsavg_right = true;
+        
+        elseif strcmp(varargin{i}, 'noverbose')
+            doverbose = false;
+            
         end
     end
 
@@ -201,9 +206,9 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
     % -----------------------------------------------------------------------
 
     t1 = clock;
-    fprintf('Main color vertices: ')
+    if doverbose, fprintf('Main color vertices: '), end
 
-    c = change_colors(c, xyz, v, mind, cscale, actcolor, p, alphascale);
+    c = change_colors(c, xyz, v, mind, cscale, actcolor, p, alphascale, doverbose);
     drawnow();
 
 
@@ -213,7 +218,7 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
     % -----------------------------------------------------------------------
     if exist('vv', 'var')
         for j = 1:length(vv)
-            fprintf('\nAdditional vertices: ')
+            if doverbose, fprintf('\nAdditional vertices: '), end
 
             % cscale:
             % pass in vector of ones length coords for solid color
@@ -221,7 +226,7 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
             % pass in cell array
 
             % cc{j} is color, cscale{j+1} is scaling vals for coords
-            c = change_colors(c, vv{j}, v, mind, cscale(j+1), cc{j}, p, alphascale);
+            c = change_colors(c, vv{j}, v, mind, cscale(j+1), cc{j}, p, alphascale, doverbose);
         end
         drawnow();
     end
@@ -237,13 +242,13 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
         xyzb = cat(1, xyzb{:});
 
         t1 = clock;
-        fprintf('\nOverlap vertices: ')
+        if doverbose, fprintf('\nOverlap vertices: '), end
 
         cscaletmp = {ones(size(xyzb, 1), 1)};
-        c = change_colors(c, xyzb, v, mind, cscaletmp, ocol, p, alphascale);
+        c = change_colors(c, xyzb, v, mind, cscaletmp, ocol, p, alphascale, doverbose);
         drawnow();
 
-        fprintf('%3.0f.done in %3.0f s\n', i, etime(clock, t1))
+        if doverbose,  fprintf('%3.0f.done in %3.0f s\n', i, etime(clock, t1)), end
     end
 
 
@@ -258,13 +263,13 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
         end
 
         t1 = clock;
-        fprintf('\nAll overlap vertices: ')
+        if doverbose, fprintf('\nAll overlap vertices: '), end
 
         cscaletmp = {ones(size(xyzall, 1), 1)};
-        c = change_colors(c, xyzall, v, mind, cscaletmp, acol, p, alphascale);
+        c = change_colors(c, xyzall, v, mind, cscaletmp, acol, p, alphascale, doverbose);
         drawnow();
 
-        fprintf('%3.0f.done in %3.0f s\n', i, etime(clock, t1))
+        if doverbose, fprintf('%3.0f.done in %3.0f s\n', i, etime(clock, t1)), end
 
     end
 
@@ -294,13 +299,13 @@ end
 
 
 
-function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
+function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale, doverbose)
 
 % c is list of colors. by default, usually [.5 .5 .5] for all colors
 % (basecolor)
     global do_fsavg_left do_fsavg_right ras
 
-    if isempty(coords), disp('Coords is empty. Nothing to plot.'), return, end
+    if isempty(coords), if doverbose, disp('Coords is empty. Nothing to plot.'), end, return, end
 
     % select surface vertices that are close to coords
     % vertices that are far will be omitted
@@ -308,7 +313,7 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
     % --------------------------------------------------------------------
     cmax = max(coords, [], 1);
     cmin = min(coords, [], 1);
-    fprintf('%3.0f vertices.  selecting: ', size(v, 1));
+    if doverbose, fprintf('%3.0f vertices.  selecting: ', size(v, 1)); end
     
     wh = any(v - repmat(cmax, size(v, 1), 1) > mind, 2);
     wh2 = any(repmat(cmin, size(v, 1), 1) - v > mind, 2);
@@ -323,7 +328,7 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
     end
     smallv(wh | wh2,:) = [];     % vertices--restricted list
 
-    fprintf('%3.0f\n', size(whverts, 1));
+    if doverbose, fprintf('%3.0f\n', size(whverts, 1)); end
 
     if isempty(smallv), return, end
 
@@ -332,7 +337,7 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
     % ---------------------------------------------------------------------
     cmax = max(smallv, [], 1);
     cmin = min(smallv, [], 1);
-    fprintf('%3.0f coords.  selecting: ', size(coords, 1));
+    if doverbose, fprintf('%3.0f coords.  selecting: ', size(coords, 1)); end
     
     % omit wh and wh2 - outside scope of this coord set
     wh = any(coords - repmat(cmax, size(coords, 1), 1) > mind, 2);
@@ -352,7 +357,7 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
     if isempty(coords), return, end
 
     nc = size(coords, 1);
-    fprintf('%3.0f\n', nc);
+    if doverbose, fprintf('%3.0f\n', nc); end
 
     % break up coords into list and run
     % ----------------------------------
@@ -366,13 +371,13 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
         indx = indx + 1;
     end
 
-    fprintf('Running %3.0f sets of coordinates: 000', length(xyz2));
+    if doverbose, fprintf('Running %3.0f sets of coordinates: 000', length(xyz2)); end
 
     indxval = 1;
     wh_coords_near_surface = false(size(coords, 1), 1);
     
     for setno = 1:length(xyz2)
-        fprintf('\b\b\b%03d', setno);
+        if doverbose, fprintf('\b\b\b%03d', setno); end
 
         for i = 1:size(xyz2{setno}, 1)
             % i indexes coordinate; e.g., 1000 iterations for a typical
@@ -410,19 +415,20 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale)
             end
             
             c = color_change_vertices(c, mycscale, actcolor, vertex_indices, myalphascale);
-
+            
             if ~isempty(vertex_indices), wh_coords_near_surface(indxval) = 1; end
             
             indxval = indxval + 1;
         end
-
-        if exist('p', 'var')
-            set(p, 'FaceColor', 'interp')
-            set(p, 'FaceVertexCData', c)
-            drawnow
-        end
+    end % setno
+    
+    if exist('p', 'var')
+        set(p, 'FaceColor', 'interp')
+        set(p, 'FaceVertexCData', c)
+        drawnow
     end
-end
+    
+end % change_colors
 
 
 

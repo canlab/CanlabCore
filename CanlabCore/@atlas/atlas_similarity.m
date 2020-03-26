@@ -1,4 +1,4 @@
-function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
+function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice, x_atlas_coverage, all_regions_covered_cell] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
 % Annotate regions in an atlas object with labels from another atlas object
 % Take regions in an atlas object (atlas_to_parse) and annotate them with labels and quantitative
 % coverage stats from another atlas (ref_atlas_obj)
@@ -22,6 +22,7 @@ function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice
 % covered by the best-matching region
 %
 % all_regions_covered: String matrix list of all reference regions covered by the target region down to 25% coverage, sorted in descending order of coverage
+% all_regions_covered_cell: Cell array of all regions covered
 %
 % See table_legend_text output for description of table entries.
 % to print legend: canlab_print_legend_text(table_legend_text{:})
@@ -31,6 +32,7 @@ function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice
 
 
 % Notes:
+% - Updated Feb 2020 by Tor Wager - added all_regions_covered_cell
 
 % Percent of voxels in each atlas region covered by the blob
 % Intersection / size of atlas region
@@ -142,6 +144,7 @@ end
 %
 [modal_atlas_coverage, modal_region_coverage] = deal(zeros(nr, 1));
 all_regions_covered = cell(nr, 1);                                  % strings for all regions covered >= 50%
+all_regions_covered_cell = cell(nr, 1);     
 
 for i = 1:nr
    
@@ -168,9 +171,11 @@ for i = 1:nr
         end
         
         for j = 1:sum(wh)
-           
+                       
             all_regions_covered{i} = char(all_regions_covered{i}, sprintf('%s:\t%3.0f%%', ref_atlas_obj.labels{indx(j)}, 100 * coverage_vals(j)));
             
+            all_regions_covered_cell{i}{j} = ref_atlas_obj.labels{indx(j)};
+
         end
 
     end

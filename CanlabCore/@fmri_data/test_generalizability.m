@@ -1,4 +1,4 @@
-function stats = rsa_regression(obj,design,study)
+function stats = test_generalizability(obj,design,study)
 % Representational similarity analysis (RSA)-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
 % Takes a stimulus/experimental design (design), which is a set of binary
@@ -67,6 +67,7 @@ function stats = rsa_regression(obj,design,study)
 % Download images from Kragel et al. 2018 Nature Neuroscience
 % Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
 % 270 subject-level images systematically sampled from 18 studies across 3 domains
+%
 % [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
 % data_obj = fmri_data(files_on_disk)
 %
@@ -91,7 +92,7 @@ brainRDM=pdist(obj.dat','correlation');
 brainRDM(brainRDM<.00001)=NaN;
 gen_index= glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
 
-num_it=100;
+num_it=1000;
 bs_gen_index=zeros(num_it,size(gen_index,1));
 parfor it=1:num_it
 bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study);

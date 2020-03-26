@@ -68,15 +68,16 @@ function cluster_orthviews(varargin)
 %    April 2007 by TW : add hot/cool colormap to bivalent option
 %               Add handles option
 %    April 2014 by TW : add custom colors option for unique colors
+%    Jan 2020: changed to spm('Defaults','fmri')
 % ..
 
-
-    spm_defaults;
+    spm('Defaults','fmri')
     
     % overlay = which('scalped_single_subj_T1.img');
     % overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-    overlay = which('keuken_2014_enhanced_for_underlay.img');
-    
+%     overlay = which('keuken_2014_enhanced_for_underlay.img');
+                overlay = which('spm152.nii');
+
     donew = 1;  % new fig
     docopy = 0;  % copy to new axis
     douniquecolors = 0;
@@ -283,7 +284,6 @@ function cluster_orthviews(varargin)
     if length(mypos) < 3, mypos = cl{1}(1).XYZmm; end
     if isempty(mypos), mypos = [0 0 0]'; end
     spm_orthviews('Reposition', mypos);
-
 
     % try to set the window button up function to show x, y, z position
     % coordinates

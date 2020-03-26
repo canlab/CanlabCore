@@ -61,7 +61,7 @@ cm = colormap_tor(startrgb, endrgb); % custom colormap
 % turn it into a cell array and sample only the number desired
 % ---------------------------------------------
 
-whcolors = round(linspace(1, 64, k));
+whcolors = round(linspace(1, size(cm, 1), k));
 
 colors = mat2cell(cm(whcolors, :), ones(k, 1));
 

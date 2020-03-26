@@ -131,19 +131,26 @@ disp('Prepping atlases: ');
 
 for i = 1:k
     
-    fprintf('%s ', atlases{i});
+    if ischar(atlases{i})
+        fprintf('%s ', atlases{i});
     
-    atlas_obj{i} = load_atlas(atlases{i});
+        atlas_obj{i} = load_atlas(atlases{i});
+    else
+        fprintf('custom atlas ');
+        atlas_obj{i} = atlases{i};
+    end
     
     % redefine names if needed
-    switch atlases{i}
-        case 'cerebellum'
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Left', 'L');
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Right', 'R');
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Vermis', 'Verm');
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Interposed', 'Intp');
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Dentate', 'Dnt');
-            atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Fastigial', 'Fst');
+    if ischar(atlases{i})
+        switch atlases{i}
+            case 'cerebellum'
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Left', 'L');
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Right', 'R');
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Vermis', 'Verm');
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Interposed', 'Intp');
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Dentate', 'Dnt');
+                atlas_obj{i}.labels = strrep(atlas_obj{i}.labels, 'Fastigial', 'Fst');
+        end
     end
     
     labels{i} = format_strings_for_legend(atlas_obj{i}.labels);

@@ -273,6 +273,8 @@ classdef fmri_data < image_vector
         
         additional_info = struct('');
         
+        metadata_table = table(); % a table for storing image-level metadata. Numbers of rows should be the number of images in .dat
+        
     end % properties
     
     methods

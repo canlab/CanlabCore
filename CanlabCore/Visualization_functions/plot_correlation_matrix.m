@@ -36,6 +36,8 @@ function OUT = plot_correlation_matrix(X, varargin)
 %
 %   **X:**
 %        n_observations x k_variables data matrix
+%        OR:
+%        a table object with n x k numeric data matrix
 %
 %        Correlation matrix will be calculated, as per options specified
 %        UNLESS:
@@ -161,6 +163,14 @@ if isstruct(X)  % Adjust if struct input
     [n, k] = size(X.r);
 end
 
+if isa(X, 'table')
+    
+    var_names = X.Properties.VariableNames;
+    X = table2array(X);
+    
+end
+
+    
 % adjust defaults if needed (these will be overridden by inputs below)
 if k > 15
     dotext = false;

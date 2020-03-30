@@ -85,7 +85,7 @@ for i = 1:length(varargin)
             
             case allowable_inputs
                 
-                eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                eval([lower(varargin{i}) ' = varargin{i+1}; varargin{i+1} = [];']);
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

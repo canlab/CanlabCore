@@ -123,14 +123,16 @@ for i = 1:size(urows, 1)
     
     wh = ismember(data_to_match, urows(i, :), 'rows'); % rows unnecessary, calls table.ismember
     
-    out_dat{i} = data_table.pexp_val(wh);
+    out_dat{i} = data_table.(var_to_extract)(wh);
     
     % Name this level
     levelnames{i} = '';
+    
     for j = 1:length(vars)
         if isnumeric(data_table.(vars{j}))
-            levelnames{i} = [levelnames{i} sprintf('%s=%d ', vars{j}, table2array(urows(i, j)))];
-        else
+            levelnames{i} = [levelnames{i} sprintf('%s=%d ', vars{j}, urows{i, j})];
+        elseif iscategorical(data_table.(vars{j})) | ischar(data_table.(vars{j}))
+            levelnames{i} = [levelnames{i} sprintf('%s=%s ', vars{j}, char(urows{i, j}))];
             % Needs more work for char array variables!
         end
     end

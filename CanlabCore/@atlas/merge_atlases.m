@@ -164,7 +164,11 @@ else  % if ~has_pmaps && ~toadd_has_pmaps
     
 end % cases
 
-atlas_obj.labels = [atlas_obj.labels atlas_obj_to_add.labels];
+label_fields = {'labels' 'labels_2' 'labels_3' 'labels_4' 'labels_5'};
+for f = label_fields
+    fld = f{1};
+    atlas_obj.(fld) = [atlas_obj.(fld) atlas_obj_to_add.(fld)];
+end
 
 atlas_obj.label_descriptions = [atlas_obj.label_descriptions; atlas_obj_to_add.label_descriptions];
 

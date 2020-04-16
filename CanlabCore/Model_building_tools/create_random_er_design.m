@@ -88,7 +88,7 @@ if dohpfilt
     
 end
 
-plotDesign(ons, [], TR, 'samefig', 'durs', eventduration, nonlinstr);
+plotDesign(ons, [], TR, 'samefig', nonlinstr); % % 'durs', eventduration,   This is redundant if we pass in durs
 
 set(gca, 'XLim', [0 scanLength], 'XTick', round(linspace(0, scanLength, 10)));
 

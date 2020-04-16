@@ -183,6 +183,14 @@ classdef region
             
             [mask, maskData] = prep_mask_object(maskinput);
             
+            % Check for an incompatibility. Don't try to fix here, force
+            % proper intended use.
+            if isa(maskinput, 'atlas') && strcmp(class(obj.dat), 'int32')
+                
+                %atlas_obj.dat = double(atlas_obj.dat);
+                error('Do not use region() for atlas objects. Use atlas2region instead.');  
+                
+            end
             
             % ---------------------------------
             % define what to average over
@@ -207,8 +215,7 @@ classdef region
                             fprintf('You entered ''%s''\n Valid values are %s or %s\n', varargin{varg}, '''contiguous_regions''', '''unique_mask_values''');
                             error('Exiting');
                     end
-                else
-                    if isa(varargin{varg}, 'image_vector')
+                elseif isa(varargin{varg}, 'image_vector')
                         % data object to extract from at end
                         
                         dataobj = varargin{varg};
@@ -220,10 +227,10 @@ classdef region
                         % fmri_data.reparse_contiguous below.
                         
                         dataobj = reparse_contiguous(dataobj, 'nonempty');
-                    end
+                else
+                    % unknown input
                 end
             end
-            
             
             
             % If extracting data, we'll recreate the regions in
@@ -365,7 +372,7 @@ classdef region
                 obj(i).mm_center = center_of_mass(obj(i).XYZmm, double(obj(i).Z));
                 
                 if ~isempty(mask.volInfo.fname)
-                    [dd, ff, ee] = fileparts(mask.volInfo.fname);
+                    [~, ff, ee] = fileparts(mask.volInfo.fname);
                     obj(i).custom_info1 = [ff ee];
                     obj(i).custom_info1_descrip = 'Mask image name for region definition';
                 else

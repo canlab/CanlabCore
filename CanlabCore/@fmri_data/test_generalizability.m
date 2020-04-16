@@ -1,4 +1,4 @@
-function stats = rsa_regression(obj,design,study)
+function stats = test_generalizability(obj,design,study)
 % Representational similarity analysis (RSA)-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
 % Takes a stimulus/experimental design (design), which is a set of binary
@@ -92,7 +92,7 @@ brainRDM=pdist(obj.dat','correlation');
 brainRDM(brainRDM<.00001)=NaN;
 gen_index= glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
 
-num_it=100;
+num_it=1000;
 bs_gen_index=zeros(num_it,size(gen_index,1));
 parfor it=1:num_it
 bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study);

@@ -119,7 +119,8 @@ classdef fmridisplay
             % ---------------------------------
             
             %obj.overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-            obj.overlay = which('keuken_2014_enhanced_for_underlay.img');
+%             obj.overlay = which('keuken_2014_enhanced_for_underlay.img');
+            obj.overlay = which('spm152.nii');
 
 %             obj.overlay = which('clean_Q1-Q6_RelatedParcellation210_AverageT1w_restore.nii');  % spm8 seg cleaned up
   

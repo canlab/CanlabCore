@@ -91,7 +91,12 @@ function cm = spm_orthviews_hotcool_colormap(t, thr)
         
         %coolcm = [linspace(0, 0.5, n)' linspace(0, 0.7, n)' linspace(1, .5, n)' ];
         % replaced Jan 2020
-        coolcm = colormap_tor([0 0 1], [.4 .3 .4], 'n', n);
+        %coolcm = colormap_tor([0 0 1], [.4 .3 .4], 'n', n); % blue-to-slate
+        
+        maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
+        minnegcolor = [0 0 1]; % min neg, most extreme values
+        
+        coolcm = colormap_tor(minnegcolor, maxnegcolor, 'n', n);
         
         newcm(1:n,:) = coolcm;
     end
@@ -130,7 +135,11 @@ function hotcm = hotmap(n)
 %     hotcm(hotcm > 1) = 1;
 
 % Replaced jan 2020:
-    hotcm = colormap_tor([.4 .4 .3], [1 1 0], 'n', n);
+    % hotcm = colormap_tor([.4 .4 .3], [1 1 0], 'n', n); % slate-to-yellow
+    
+    maxposcolor = [1 1 0]; % max pos, most extreme values
+    minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
+    hotcm = colormap_tor(minposcolor, maxposcolor, 'n', n);
     
 end
 

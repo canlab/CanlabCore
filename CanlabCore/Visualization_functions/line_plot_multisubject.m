@@ -14,9 +14,17 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %
 % varargin:
 %
-%   **'n_bins:**
+%   **'n_bins':**
 %        pass in the number of point "bins".  Will divide each subj's trials
-%        into bins, get the avg X and Y per bin, and plot those points.  
+%        into bins, get the avg X and Y per bin, and plot those points.
+%
+%   **'exclude_low_range_X':**
+%        Exclude cells (i.e., participants) with range < 5th percentile of
+%        group in within-participant calculations.
+%
+%   **'exclude_low_range_Y':**
+%        Exclude cells (i.e., participants) with range < 5th percentile of
+%        group in within-participant calculations.
 %
 %   **'noind':**
 %        suppress points
@@ -33,6 +41,9 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %        followed by cell array length N of desired colors, rgb specification,
 %        for each line.  if not passed in, will use custom_colors.
 %        Group average lines use color{1} for line and color{2} for fill.
+%
+%        If you pass in one color vector per index of input data cell array (e.g.,
+%        participant), it will plot each line in a different color.
 %
 %   **'gcolors':***
 %        Group average line colors, {[r g b] [r g b]} for line and point
@@ -53,9 +64,9 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %   **X, Y:**
 %        new variables (binned if bins requested)
 %
-%   **slope_stats** 
+%   **slope_stats**
 %        slope of linear relationship for each person
-%         
+%
 % :Examples:
 % ::
 %
@@ -78,14 +89,14 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %
 %
 %   % -----------------------------------------------------------
-  % Example creating bins of data within-person, useful for many within-person observations
+% Example creating bins of data within-person, useful for many within-person observations
 
-  % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
+% Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
 %    for i = 1:5, expect{i} = randn(100, 1); pain{i} = rand(1) * expect{i} + .3 * randn(100, 1) + randn(1); end
 
 %   % Plot with bins, custom colors and points:
 %   create_figure('Line plot multisubject with bins');
-   %[han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
+%[han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
 
 %   % -----------------------------------------------------------
 %
@@ -108,12 +119,14 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 % -------------------------------------------------------------------------
 
 docenter = false;
-dozscore = false; 
+dozscore = false;
 doind = true;
 dolines = true;
 group_avg_ref_line = false;
+exclude_low_range_X = false;
+exclude_low_range_Y = false;
 
-for i=1:length(varargin)
+for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'n_bins'
@@ -127,10 +140,12 @@ for i=1:length(varargin)
                     error('X and Y should be vectors when using subjid, not cell arrays.');
                 end
                 u = unique(subjid);
-                for i = 1:length(u)
-                    XX{i} = X(subjid == u(i));
-                    YY{i} = Y(subjid == u(i));
+                
+                for j = 1:length(u)
+                    XX{j} = X(subjid == u(j));
+                    YY{j} = Y(subjid == u(j));
                 end
+                
                 X = XX;
                 Y = YY;
                 
@@ -157,6 +172,12 @@ for i=1:length(varargin)
                 
             case 'gcolors' % Mj added!!
                 gcolors = varargin{i+1};
+                
+            case 'exclude_low_range_X'
+                exclude_low_range_X = true;
+                
+            case 'exclude_low_range_Y'
+                exclude_low_range_Y = true;
         end
     end
 end
@@ -173,21 +194,34 @@ N = length(X);
 if ~exist('colors', 'var') %,colors = scn_standard_colors(N); end
     colors = custom_colors([1 .5 .4], [.8 .8 .4], N);
 end
+
 if ~iscell(colors), error('Colors should be cell array of color specifications.'); end
 if length(colors) < N, colors = repmat(colors, 1, N); end
 
 if ~exist('mtypes', 'var'), mtypes = 'osvd^<>ph'; end
 
-if ~exist('gcolors', 'var') 
+if ~exist('gcolors', 'var')
     % MJ added.  Line then fill.
     gcolors = colors(1:2);
 end
 if ~iscell(gcolors), gcolors = {gcolors}; end
-    
+
 % replicate for fill color if 2nd color is empty
 if length(gcolors) < 2, gcolors{2} = gcolors{1}; end
 
 hold on
+
+% Data checks
+% -------------------------------------------------------------------------
+
+% enforce double
+X = cellfun(@double, X, 'UniformOutput', false);
+Y = cellfun(@double, Y, 'UniformOutput', false);
+
+% within_ste_X = cellfun(@ste, X);
+
+[cannot_compute_within_stats, warning_str, wasnan] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y);
+
 
 % -------------------------------------------------------------------------
 % Center/scale data as requested
@@ -200,7 +234,7 @@ X_between=cellfun(@nanmean, X);
 Y_between=cellfun(@nanmean, Y);
 
 X_std=cellfun(@nanstd, X); % 01/05/2020 Marta corrected nanmean to nanstd
-Y_std=cellfun(@nanstd, Y); 
+Y_std=cellfun(@nanstd, Y);
 
 % Save some text for a report to be printed later
 
@@ -216,22 +250,63 @@ report_str{1} = 'Input data:';
 report_str{2} = sprintf('X scaling: %s', X_data_str);
 report_str{3} = sprintf('Y scaling: %s', Y_data_str);
 report_str{4} = '\nTransformations:';
- 
-% zscore, if asked for (removes mean AND divides by std) 
+
+% zscore, if asked for (removes mean AND divides by std)
 if dozscore
     X = cellfun(@scale, X, 'UniformOutput', false);
     Y = cellfun(@scale, Y, 'UniformOutput', false);
-   report_str{5} = 'X and Y Z-scored before plot';
-
+    report_str{5} = 'X and Y Z-scored before plot';
+    
 elseif docenter
-% center, if asked for (removes mean)
+    % center, if asked for (removes mean)
     X = cellfun(@(x) scale(x, 1), X,  'UniformOutput', false);
     Y = cellfun(@(x) scale(x, 1), Y,  'UniformOutput', false);
     report_str{5} = 'X and Y centered (forced mean-zero) before plot';
-
+    
 else
-   report_str{5} = 'No data transformations before plot';
+    report_str{5} = 'No data transformations before plot';
 end
+
+
+% -------------------------------------------------------------------------
+% Calculate within-cell stats
+% -------------------------------------------------------------------------
+b_fun = @(x, y) pinv([ones(size(x, 1), 1) x]) * y;
+
+b = NaN * zeros(N, 2);
+r_within = NaN * zeros(N, 1);
+
+% run for all good subjects
+wh = find(~cannot_compute_within_stats);
+
+for i = wh
+    
+    b(i, :) = b_fun(X{i}, Y{i});
+    
+    r_within(i) = corr(X{i}, Y{i});
+    
+end
+
+% Group stats on slope
+% -----------------------------------------------------------------
+slope_stats.b = b;
+[~, slope_stats.p, ~, tmpstat] = ttest(b(:, 2));
+slope_stats.t = tmpstat.tstat;
+slope_stats.df = tmpstat.df;
+
+% Within- and between-person correlations
+% -----------------------------------------------------------------
+
+Xc = cat(1, X{:});      % NaNs removed earlier
+Yc = cat(1, Y{:});
+
+slope_stats.r = corr(Xc, Yc);
+slope_stats.wasnan = wasnan;
+
+slope_stats.r_within = nanmean(r_within);
+slope_stats.r_within_std = nanstd(r_within);
+
+[slope_stats.r_between, slope_stats.r_between_p] = corr(X_between', Y_between');
 
 
 % -------------------------------------------------------------------------
@@ -243,14 +318,12 @@ for i = 1:N
     % choose marker
     whm = min(i, mod(i, length(mtypes)) + 1);
     
-    if length(X{i}) == 0 || all(isnan(X{i})) ||  all(isnan(Y{i}))
-        % empty
+    if isempty(X{i}) || all(isnan(X{i})) || all(isnan(Y{i}))   
+        % empty. Don't use cannot_compute_within_stats because we still
+        % want to plot points
         continue
-        
-    elseif length(X{i}) ~= length(Y{i})
-        error(['Subject ' num2str(i) ' has unequal elements in X{i} and Y{i}. Check data.'])
     end
-
+    
     % plot points in bins
     if exist('n_bins', 'var')
         if n_bins ~= 0
@@ -267,22 +340,19 @@ for i = 1:N
                 
                 points(j,:) = nanmean(t(wh, :));
                 
-                ste_points(j, :) = nanstd(t(wh, :)) ./ sqrt(sum(wh));
-                
-                %points(j,:) = nanmean(t( bin_size*(j-1)+1 : bin_size*j ,:));
             end
             
             X{i} = points(:, 1);
             Y{i} = points(:, 2);
             
-            %han.point_handles(i) = plot(points(:,1), points(:,2), ['k' mtypes(whm(1))], 'MarkerFaceColor', colors{i}, 'Color', max([0 0 0; colors{i}.*.7]));
         end
     end
+        
+    % plot ref line 
+    % do not calculate here - done above
+    %b(i,:) = glmfit(X{i}, Y{i});
     
-    % plot ref line
-    b(i,:) = glmfit(X{i}, Y{i});
-    
-    if dolines
+    if dolines && ~(cannot_compute_within_stats(i))
         han.line_handles(i) = plot([min(X{i}) max(X{i})], [b(i,1)+b(i,2)*min(X{i}) b(i,1)+b(i,2)*max(X{i})], 'Color', colors{i}, 'LineWidth', 1);
     end
     
@@ -290,24 +360,13 @@ for i = 1:N
     if doind
         han.point_handles(i) = plot(X{i}, Y{i}, ['k' mtypes(whm(1))], 'MarkerSize', 3, 'MarkerFaceColor', colors{i}, 'Color', max([0 0 0; colors{i}]));
     end
+    
 end % subject loop
 
-% Stats on slope
-% -----------------------------------------------------------------
-slope_stats.b = b;
-[~, slope_stats.p, ~, tmpstat] = ttest(b(:, 2));
-slope_stats.t = tmpstat.tstat;
-slope_stats.df = tmpstat.df;
-    
-Xc = cat(1, X{:});
-Yc = cat(1, Y{:});
-[wasnan, Xc, Yc] = nanremove(Xc, Yc);
-slope_stats.r = corr(Xc, Yc);
-slope_stats.wasnan = wasnan;
 
-% Marta 12/22/19 
+% Marta 12/22/19
 
-% Overall r 
+% Overall r
 % -----------------------------------------------------------------
 % Clarify consequences of removing mean and z-scoring
 if docenter
@@ -318,55 +377,41 @@ else
     report_str{6} = sprintf('\nCorrelations:\nr = %3.2f across all observations, based on untransformed input data', slope_stats.r);
 end
 
-
-% Within-person r (each subject's X and Y correlated, then the r values averaged across subjects) 
-% -----------------------------------------------------------------
-[wasnan, Xr]= cellfun(@nanremove, X, 'UniformOutput', false); % Marta 1/7/20 unique name for nan-removed cell arrays 
-[wasnan, Yr]= cellfun(@nanremove, Y, 'UniformOutput', false);
-r_within = cellfun(@corr, Xr,Yr);
-
-% Marta 01/05/2020
-if (nnz(isnan(r_within)))>0;
-    sprintf('%3.0f subject(s) have an r value of NaN, will remove remove NaNs', ...
-       nnz(isnan(r_within)))
-    r_within=r_within(~isnan(r_within));
-end
-    
-slope_stats.r_within = mean(r_within);
-slope_stats.r_within_std = std(r_within);
-
 report_str{8} = sprintf('Average within-person r = %3.2f +- %3.2f (std)', ...
     slope_stats.r_within, slope_stats.r_within_std);
 
 if dozscore
     report_str{9} = sprintf('* Note that the overall r and average within-person r are the same because X and Y data are z-scored\n');
-
+    
 elseif docenter
-    report_str{9} = sprintf('* Note that the overall r and average within-person r may be similar because subject mean is removed\n');  
-
+    report_str{9} = sprintf('* Note that the overall r and average within-person r may be similar because subject mean is removed\n');
+    
 else
     report_str{9} = '';
-end 
+end
 
 % Between-person r
 % -----------------------------------------------------------------
-slope_stats.r_between = corr(X_between', Y_between');
-report_str{10} = sprintf('Between-person r (across subject means) = %3.2f', ...
-    slope_stats.r_between);
+report_str{10} = sprintf('Between-person r (across subject means) = %3.2f, p = %3.6f', ...
+    slope_stats.r_between, slope_stats.r_between_p);
 
 
 % Stats on slopes across subjects
 % -----------------------------------------------------------------
-report_str{7} = sprintf('\nStats on slopes after transormation, subject is random effect: \nMean b = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
-    nanmean(slope_stats.b(:, 2)), slope_stats.df, slope_stats.t, slope_stats.p, sum(slope_stats.wasnan));
+report_str{7} = sprintf('\nStats on slopes after transformation, subject is random effect: \nMean b = %3.2f, t(%3.0f) = %3.2f, p = %3.6f, num. missing: %3.0f\n', ...
+    nanmean(slope_stats.b(:, 2)), slope_stats.df, slope_stats.t, slope_stats.p, sum(cannot_compute_within_stats));
 
 
 % Print report
 % -----------------------------------------------------------------
 % All stats/text have been collected now
 
-canlab_print_legend_text(report_str{:});
+if ~isempty(warning_str)
+    disp('Warnings:');
+    canlab_print_legend_text(warning_str{:});
+end
 
+canlab_print_legend_text(report_str{:});
 
 % Individual points
 % -----------------------------------------------------------------
@@ -406,13 +451,142 @@ if group_avg_ref_line
         
         han.grpline_handle = h;
         han.grpline_err_handle = [h1 h2];
-        else
-            
-    avg_b = mean(b);
-    Xs = cat(2,X{:});
-    minX = prctile(Xs(1,:),5);
-    maxX = prctile(Xs(end,:),95);
-    han.grpline_handle = plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);
+    else
+        
+        avg_b = mean(b);
+        Xs = cat(2,X{:});
+        minX = prctile(Xs(1,:),5);
+        maxX = prctile(Xs(end,:),95);
+        han.grpline_handle = plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);
+    end
+    
 end
 
+
 end % function
+
+
+
+
+function [cannot_compute_within_stats, warning_str, wasnan] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y)
+
+% Check lengths match
+lenX = cellfun(@length, X);
+lenY = cellfun(@length, Y);
+
+whbad = lenX ~= lenY;
+if any(whbad)
+    
+    disp('Length of X and Y do not match for some variables');
+    sprintf('%d ', find(whbad));
+    error('Exiting');
+    
+end
+
+% check n columns of X
+sz = cellfun(@size, X, 'UniformOutput', false);
+sz = cat(1, sz{:});
+sz = sz(:, 2); % cols
+if any(sz > 1), error('Error! X has multiple columns. Must have only one'); end
+
+% check restricted range
+within_range_X = cellfun(@range, X);
+within_range_Y = cellfun(@range, Y);
+
+wh_zerorange_X = within_range_X < 100*eps;
+wh_lowrange_X = within_range_X < prctile(within_range_X, 5);
+
+wh_zerorange_Y = within_range_Y < 100*eps;
+wh_lowrange_Y = within_range_Y < prctile(within_range_Y, 5);
+
+% Check for empty cells
+empty_X = cellfun(@isempty, X);
+empty_Y = cellfun(@isempty, Y);
+
+% Check for NaNs
+nan_X = cellfun(@(x) any(isnan(x)), X);
+nan_Y = cellfun(@(x) any(isnan(x)), Y);
+
+allnan_X = cellfun(@(x) all(isnan(x)), X);
+allnan_Y = cellfun(@(x) all(isnan(x)), Y);
+
+% Remove NaNs
+N = length(X);
+wasnan = cell(1, N);
+
+for i = 1:N
+    [wasnan{i}, X{i}, Y{i}] = nanremove(X{i}, Y{i});
+end
+
+% Check for too-few data points
+lenX = cellfun(@length, X);
+too_few_points = lenX < 3;
+
+warning_str = {};
+
+if any(empty_X)
+    warning_str{end + 1} = sprintf('X: some input cells are empty');
+    warning_str{end + 1} = sprintf('%d ', find(empty_X));
+end
+
+if any(empty_Y)
+    warning_str{end + 1} = sprintf('Y: some input cells are empty');
+    warning_str{end + 1} = sprintf('%d ', find(empty_Y));
+end
+
+if any(nan_X)
+    warning_str{end + 1} = sprintf('X: some input cells contain NaNs');
+    warning_str{end + 1} = sprintf('%d ', find(nan_X));
+end
+
+if any(nan_Y)
+    warning_str{end + 1} = sprintf('Y: some input cells contain NaNs');
+    warning_str{end + 1} = sprintf('%d ', find(nan_Y));
+end
+
+if any(wh_zerorange_X)
+    warning_str{end + 1} = sprintf('X: some input cells have no varability:');
+    warning_str{end + 1} = sprintf('%d ', find(wh_zerorange_X));
+end
+
+if any(wh_zerorange_Y)
+    warning_str{end + 1} = sprintf('Y: some input cells have no varability:');
+    warning_str{end + 1} = sprintf('%d ', find(wh_zerorange_Y));
+end
+
+if any(wh_lowrange_X)
+    warning_str{end + 1} = sprintf('X: input cells with low varability:');
+    warning_str{end + 1} = sprintf('%d ', find(wh_lowrange_X));
+end
+
+if any(wh_lowrange_Y)
+    warning_str{end + 1} = sprintf('Y: input cells with low varability:');
+    warning_str{end + 1} = sprintf('%d ', find(wh_lowrange_Y));
+end
+
+if any(too_few_points)
+    warning_str{end + 1} = sprintf('Some input cells have too few data points for fit');
+    warning_str{end + 1} = sprintf('%d ', find(too_few_points));
+end
+
+cannot_compute_within_stats = empty_X | empty_Y | allnan_X | allnan_Y | wh_zerorange_X | wh_zerorange_Y | too_few_points;
+
+if exclude_low_range_X
+    
+    cannot_compute_within_stats = cannot_compute_within_stats | wh_lowrange_X;
+    
+end
+
+if exclude_low_range_Y
+    
+    cannot_compute_within_stats = cannot_compute_within_stats | wh_lowrange_Y;
+    
+end
+
+if any(cannot_compute_within_stats)
+    warning_str{end + 1} = sprintf('Excluded some subjects from individual fits:');
+    warning_str{end + 1} = sprintf('%d ', find(cannot_compute_within_stats));
+    
+end
+
+end

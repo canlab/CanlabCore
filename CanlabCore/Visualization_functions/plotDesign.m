@@ -109,6 +109,8 @@ for i = 1:length(varargin)
                 
             case 'overlapping', doseparatelines = 0;
                 
+            case 'nononlin' % ignore
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end

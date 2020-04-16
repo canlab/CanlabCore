@@ -5,7 +5,8 @@ function h = plot_correlation(X,Y,varargin)
 %    handles = plot_correlation(X,Y,varargin)
 %
 % plots robust or OLS simple or partial correlations
-% replaces prplot and plot_correlation_samefig
+% replaces prplot and plot_correlation_samefig. *Remove NaNs from X and Y
+% before calling this function.*
 %
 % :Inputs:
 %
@@ -104,6 +105,16 @@ end
 
 
 % ---------------------------------------------
+% drop NANs
+% ---------------------------------------------
+todrop = isnan(X) | isnan(Y);
+if any(todrop)
+    warning('Dropping %d observations due to NaNs', sum(todrop))
+    X(todrop) = [];
+    Y(todrop) = [];
+end
+
+% ---------------------------------------------
 % intercept
 % ---------------------------------------------
 wh_intercept = find(all(diff(X) < eps));
@@ -155,6 +166,9 @@ if length(varargin) > 0
     % ROBUST (or we just have weights)
     w = varargin{1};
     for i = 1:length(xvec)
+        
+        if isnan(xvec(i)) | isnan(yvec(i)), i, continue, end
+        
         h(i) = plot(xvec(i),yvec(i),mycol,'LineWidth',.5,'MarkerSize',8, ...
             'MarkerFaceColor',mycol(1));
         set(h(i),'MarkerFaceColor',[repmat(1-w(i),1,3)] )

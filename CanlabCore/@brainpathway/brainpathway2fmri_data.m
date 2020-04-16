@@ -2,10 +2,10 @@ function fmri_dat_obj = brainpathway2fmri_data(obj, data_to_add)
 % Extract data from any field of a brainpathway object (or external data
 % vector) and save it as an fmri_data object for viewing and statistics.
 %
-% fmri_dat_obj = brainpathway2fmri_data(bs, data matrix or vector)
+% fmri_dat_obj = brainpathway2fmri_data(brainpathway or brainpathway_multisubject obj, data to add)
 %
 % - Uses obj.region_atlas to define regions
-% - Data should either be (v) voxels x images or (k) regions x images
+% - Data to add: should either be (v) voxels x images or (k) regions x images
 % - If data is region-level (k-length), will be expanded to voxel-level in images
 % - 
 % Examples:
@@ -30,7 +30,7 @@ switch size(data_to_add, 1)
         data_to_add = expand_values_region2voxel(obj, data_to_add);
         
     otherwise
-        error('brainpathway2fmri_data: size(data_to_add, 1) must = num voxels or regions in obj.region_atlas');
+        error('brainpathway2fmri_data: size(data_to_add, 1) must be = num voxels or regions in obj.region_atlas');
 end
 
 fmri_dat_obj = fmri_data(image_vector('volInfo', obj.region_atlas.volInfo, 'dat', data_to_add));

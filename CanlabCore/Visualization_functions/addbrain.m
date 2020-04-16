@@ -181,6 +181,11 @@ if length(varargin) > 1
     color = varargin{2};
 end
 
+% --------------------------------------------------------
+% Create surfaces
+% --------------------------------------------------------
+
+
 switch meth
 
     case 'colorchange'
@@ -218,7 +223,8 @@ switch meth
     
     p = imageCluster('cluster',region2struct(r),'color',default_color,'alpha',.5);
     
-    
+    if all(ishandle(p)), set(p, 'Tag', meth); end
+        
     % -------------------------------------------------------------------
     % Surfaces
     % -------------------------------------------------------------------
@@ -340,7 +346,7 @@ switch meth
         
     case 'brainbottom'
         [D,Ds,hdr,p,bestCoords] = tor_3d('whichcuts','z','coords',[0 0 -20],'filename','scalped_single_subj_T1');
-        set(p(1),'FaceColor',[.6 .4 .3]); colormap copper;material dull;axis off
+        set(p(1),'FaceColor',[.6 .4 .3]); colormap(gca, copper);material dull;axis off
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
         
@@ -553,10 +559,13 @@ switch meth
         
 end  % method
 
+% --------------------------------------------------------
+% Set Tag
+% --------------------------------------------------------
 
 switch meth
     
-    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway'}
+    case {'limbic', 'BG', 'globus pallidus', 'gp', 'bg', 'basal ganglia', 'cutaway', 'brainstem_group', 'limbic hires', 'left_cutaway', 'right_cutaway'}
         % do nothing; multi-region
         
     otherwise

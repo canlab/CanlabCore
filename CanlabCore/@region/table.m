@@ -148,6 +148,8 @@ else
 end
 
 
+% Auto-label names
+%
 % Attempt to label regions with descriptive names; requires
 % Neuroimaging_Pattern_Masks repository
 % Used in both legacy and 2018+ version
@@ -159,19 +161,19 @@ end
 [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
 
 
-% Manual labeling of names
+% Manual labeling of names, if forcing
 % -------------------------------------------------------------------------
 
-if donames
+if donames && forcenames
     
-    if forcenames
-        for i = 1:length(cl)
-            cl(i).shorttitle = [];
-        end
+    for i = 1:length(cl)
+        cl(i).shorttitle = [];
     end
     
     cl = cluster_names(cl);
+    
 end
+
 
 
 % separate again so we return clusters with region names added.
@@ -232,7 +234,14 @@ else
     %     results_table = removevars(results_table, 'Region');
     %     results_table = removevars(results_table, 'Voxels');
     
-    Region = table(region_table.modal_label, 'VariableNames', {'Region'});
+    if donames
+        % we have already entered names
+        Region = table(region_table.Region, 'VariableNames', {'Region'})
+    else
+        % use modal label
+        Region = table(region_table.modal_label, 'VariableNames', {'Region'});
+    end
+    
     Volume = table(region_table.Region_Vol_mm, 'VariableNames', {'Volume'});
     Atlas_coverage = region_table(:, [6 7 4]);
     XYZ = table(round(cat(1, cl.mm_center)), 'VariableNames', {'XYZ'});

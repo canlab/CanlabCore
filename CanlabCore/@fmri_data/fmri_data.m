@@ -34,7 +34,7 @@
 % Basic usage:
 % obj = fmri_data(image_names, [maskinput], [other optional inputs]) 
 %
-% maskinput     :   [optional] name of mask image to use.  Default: 'brainmask.nii', a
+% maskinput     :   [optional] name of mask image to use.  Default: 'brainmask_canlab.nii', a
 %                   brain mask that is distributed with SPM software and in
 %                   the CANlab Core Tools
 %                   Alternative in CANlab tools: which('gray_matter_mask.img')
@@ -47,7 +47,7 @@
 % You can create an empty object by using:
 % fmri_dat = fmri_data
 % - fmri_dat is the object.
-% - It will be created with a standard brain mask, brainmask.nii
+% - It will be created with a standard brain mask, brainmask_canlab.nii
 % - This image should be placed on your Matlab path
 % - The space information is stored in fmri_dat.volInfo
 % - Data is stored in fmri_dat.dat, in a [voxels x images] matrix
@@ -55,13 +55,17 @@
 %
 % You can create an object by assembling an image_vector object from parts
 % (entering fields) and converting using fmri_obj = fmri_data(image_vec_obj)
+% This can also be a structure with field names that match properties of
+% the new intended fmri_data object. e.g., 
+%   new_obj.volInfo = MC_Setup.volInfo;
+%   new_obj.dat = MC_Setup.unweighted_study_data(:, sym_cons);
 %
 % You can create an fmri_data object with extacted image data.
 % - Let "imgs" be a string array or cell array of image names
 % - This command creates an object with your (4-D) image data:
 % - fmri_dat = fmri_data(imgs);
 % - Images can be zipped (.gz) as well. fmri_data() will unpack them.
-% - Only values in the standard brain mask, brainmask.nii, will be included.
+% - Only values in the standard brain mask, brainmask_canlab.nii, will be included.
 % - This saves memory by reducing the number of voxels saved dramatically.
 %
 % You can specify any mask you'd like to extract data from.
@@ -71,7 +75,7 @@
 % - The mask information is saved in fmri_dat.mask
 %
 % e.g., this extracts data from images within the standard brain mask:
-% dat = fmri_data(imgs, which('brainmask.nii'));
+% dat = fmri_data(imgs, which('brainmask_canlab.nii'));
 %
 % Defining the space of the extracted data
 % -----------------------------------------------------------------------
@@ -269,6 +273,8 @@ classdef fmri_data < image_vector
         
         additional_info = struct('');
         
+        metadata_table = table(); % a table for storing image-level metadata. Numbers of rows should be the number of images in .dat
+        
     end % properties
     
     methods
@@ -334,10 +340,10 @@ classdef fmri_data < image_vector
                 % -----------------------------------
                 
                 % Empty: Define with standard default mask
-                [image_names, maskinput] = deal(which('brainmask.nii'));
+                [image_names, maskinput] = deal(which('brainmask_canlab.nii'));
                 
                 if isempty(maskinput)
-                    disp('Warning: Cannot find brainmask.nii, creating without mask info.');
+                    disp('Warning: Cannot find brainmask_canlab.nii, creating without mask info.');
                     return
                 end
                 
@@ -359,7 +365,7 @@ classdef fmri_data < image_vector
             if iscell(image_names), image_names = char(image_names{:}); end
             
             
-            if isa(image_names, 'image_vector')
+            if isstruct(image_names) || isa(image_names, 'image_vector')
                 % Map fields of input object into fmri_data structure
                 
                 warning off
@@ -415,7 +421,7 @@ classdef fmri_data < image_vector
             % Empty mask: use default
             if (nargin < 2 || isempty(maskinput)) % && isempty(varargin)  
                 
-                maskinput = which('brainmask.nii');
+                maskinput = which('brainmask_canlab.nii');
                 if verbose, fprintf('Using default mask: %s\n', maskinput); end
                 if isempty(maskinput), error('Cannot find mask image!'); end
                 
@@ -555,6 +561,10 @@ function obj = run_checks_and_fixes(obj, verbosestr)
 
 obj = check_image_filenames(obj, verbosestr);
 
+if isempty(obj.volInfo)
+    error('obj.volInfo cannot be empty');
+end
+
 if isempty(obj.mask) && ~isempty(obj)  % isempty is an object method here
     % fix/create mask
     
@@ -562,6 +572,14 @@ if isempty(obj.mask) && ~isempty(obj)  % isempty is an object method here
     obj.mask.removed_voxels = obj.removed_voxels;
     obj.mask.volInfo_descrip = 'Generic mask built from .dat. Any voxel with a value in .dat is in-mask';
     
+end
+
+if issparse(obj.dat)
+    obj.dat = full(obj.dat);
+end
+
+if ~isfield(obj.volInfo, 'cluster')
+    obj = reparse_contiguous(obj);
 end
 
 end % function

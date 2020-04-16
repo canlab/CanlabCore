@@ -210,12 +210,21 @@ end
 % Set colormap
 % If one image, we can use 'hot/cool' split, which shows zero point
 % If multiple images, default to a single colormap, as the entire
-% figure can use only one colormap.
+% figure can use only one colormap. Note: colormaps can apply to specific
+% axes...
 
 if length(handle_indices) > 1
     %spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 1 1], [.5 .5 .5], [1 .5 0]);
     %spm_orthviews_change_colormap([.5 0 1], [1 1 0]);
     spm_orthviews_change_colormap([.2 .2 .6], [1 1 0]);  % slate to yellow
+    
+    % won't work now -
+    %     maxposcolor = [1 1 0]; % max pos, most extreme values
+    %     minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
+    %     maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
+    %     minnegcolor = [0 0 1]; % min neg, most extreme values
+    %
+    %     spm_orthviews_change_colormap(minnegcolor, maxnegcolor, minposcolor, maxposcolor);
     
 else % one image.
     spm_orthviews_hotcool_colormap(image_obj.dat(:), 0);

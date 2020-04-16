@@ -582,6 +582,15 @@ n_predictors = size(stats.beta, 1);
 
 if isfield(stats.inputOptions, 'beta_names')
     pred_names = stats.inputOptions.beta_names;
+    
+    % fix names by adding intercept if needed 
+    if length(pred_names) == n_predictors - 1
+        if ~isrow(pred_names), pred_names = pred_names'; end
+        pred_names = {'Intercept' pred_names{:}};
+        
+        % stats.inputOptions.beta_names = pred_names;
+    end
+    
 else
     for i = 1:n_predictors
         pred_names{i} = sprintf('Predictor %02d', i);
@@ -1266,7 +1275,10 @@ wmean = @(Y, W, X) gls_wrapper(Y, W, X);
 if verbose, fprintf('Bootstrapping %3.0f samples...', final_boot_samples); end
 
 % initalize random number generator to new values; bootstrp uses this
-rand('twister',sum(100*clock))
+% old syntax replaced in 2020 by Tor Wager, per Matlab's recs.
+% see "Replace Discouraged Syntaxes of rand and randn" in Matlab docs
+rng('default')
+% rand('twister',sum(100*clock))
 
 % start with weights all equal whether multilevel or not
 means = bootstrp(final_boot_samples, wmean, Y, W, X);

@@ -87,7 +87,7 @@ graph_prop.core_w = core_periphery_dir(wu_matrix, 1)';         % Core-periphery
 
 graph_prop.degree = degrees_und(bu_matrix)';                   % Node degree
 graph_prop.strength = strengths_und(wu_matrix)';               % weighted strength. tested: same results as using r_mean
-graph_prop.betweenness = betweenness_bin(bu_matrix)';
+graph_prop.betweenness = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...
 graph_prop.clustercoef = clustering_coef_bu(bu_matrix);        % Clustering coefficient
 graph_prop.local_efficiency = efficiency_bin(bu_matrix, 1);    % Local efficiency
 

@@ -127,21 +127,6 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 existingfig = false;
 surface_handles = [];
 
-% optional inputs with default values
-for i = 1:length(varargin)
-    if ischar(varargin{i})
-        switch varargin{i}
-
-            case 'surface_handles', surface_handles = varargin{i+1}; varargin{i} = []; varargin{i+1} = [];
-            case {'existingfig', 'nofigure'}, existingfig = true; varargin{i} = []; 
-                
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
-        end
-    end
-end
-
-% BUILD BRAIN SURFACE BASED ON ALLOWABLE INPUTS TO ADDBRAIN
-% -------------------------------------------------------------------------
 addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
     'midbrain' 'pag' 'PBP' 'sn' 'SNc' 'SNr' 'VTA' 'rn' ...
@@ -156,6 +141,27 @@ addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe'
     'brainstem' 'suit brainstem' 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 'cerebellum','cblm' 'CIT168' ...
     'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'};
 
+% optional inputs with default values
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+
+            case 'surface_handles', surface_handles = varargin{i+1}; varargin{i} = []; varargin{i+1} = [];
+            case {'existingfig', 'nofigure'}, existingfig = true; varargin{i} = []; 
+                
+            case 'noverbose'
+                
+            case addbrain_allowable_args 
+                % do nothing, handle later
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
+
+% BUILD BRAIN SURFACE BASED ON ALLOWABLE INPUTS TO ADDBRAIN
+% -------------------------------------------------------------------------
+
 for i = 1:length(varargin)
     
     if ischar(varargin{i}) && any(strcmp(addbrain_allowable_args, varargin{i}))
@@ -163,6 +169,12 @@ for i = 1:length(varargin)
         surface_handles = [surface_handles addbrain(varargin{i})];
         
     end
+    
+end
+
+if isempty(surface_handles)
+    
+    surface_handles = addbrain('left_cutaway');
     
 end
 

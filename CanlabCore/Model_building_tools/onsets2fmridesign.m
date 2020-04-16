@@ -265,7 +265,7 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         
         % bf = spm_get_bf(struct('name', 'hrf (with time and dispersion derivatives)', 'length', 30, 'dt', 1));
         
-        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 6));
+        bf = spm_get_bf(struct('name', varargin{2}, 'length', 30, 'dt', 1/res, 'order', 15));
         hrf = bf.bf;
         
         if doampscale && ~strcmp(varargin{2}, 'Finite Impulse Response')
@@ -425,6 +425,12 @@ delta_hires = cf2;
 % ------------------------------------------------------------------------
 if ~isempty(len_original)
     % Downsample using 'dslen' input
+    % dslen should be an integer multiple of TR
+    if len_original/TR ~= round(len_original/TR)
+        fprintf('You passed in a fixed design length  (%3.0f) that is not an even multiple of the TR (%3.0f)\n', len_original, TR);
+        error('Quitting');
+    end
+    
     X = getPredictors(delta_hires, hrf, 'dslen', len_original/TR, 'force_delta', varargin{:}); % added len_original by Wani
 else
     % Downsample using 'dsrate'

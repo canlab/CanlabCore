@@ -1,4 +1,4 @@
-function test_pattern_on_kragel_2018_n270_data(varargin)
+function OUT = test_pattern_on_kragel_2018_n270_data(varargin)
 %
 % test a multivariate signature pattern stored in an fmri_data object on Kragel et al. 2018 datasets, N = 270
 %
@@ -63,11 +63,13 @@ function test_pattern_on_kragel_2018_n270_data(varargin)
 %
 % :Outputs:
 %
-%   **out1:**
-%        description of out1
+%   **OUT:**
+%        A structure with a summary table of sensivity, specificity, PPV,
+%        and effect size for each classification (pain vs. other, cog
+%        control vs. other, negative emotion vs. other.
+%        Also includes roc_plot output for all three classifications, with
+%        more stats and function handles.
 %
-%   **out2:**
-%        description of out2
 %
 % :Examples:
 % ::
@@ -105,6 +107,7 @@ threshold_type = 'Optimal balanced error rate'; % 'Optimal overall accuracy'; %
 colors = [repmat({[1 .2 0]}, 1, 6) repmat({[.4 .5 .2]}, 1, 6) repmat({[.1 0 .9]}, 1, 6)];
 
 sim_string = 'cosine_similarity';  % or 'dotproduct' or 'correlation'
+weight_string = 'none';  % or 'weighted'
 
 canlab_parse_inputs_subfcn();
 
@@ -128,7 +131,8 @@ test_images = load_image_set('kragel18_alldata', 'noverbose');
 
 test_images.Y = test_images.dat_descrip.Studynumber;
 
-vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string);
+% vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string);
+vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string,weight_string); %weight by overall cosine similarity
 
 for s = 1:num_cols
     pattern_response{s} = vector_data(test_images.Y==s);
@@ -146,6 +150,13 @@ labels = test_images.additional_info;
 ispain(1:6*15) = true;
 iscog(6*15 + 1 : (12*15)) = true;
 isemo(12*15+1:18*15) = true;
+
+wh_isnan=isnan(vector_data);
+vector_data=vector_data(~wh_isnan);
+
+ispain=ispain(~wh_isnan);
+iscog=iscog(~wh_isnan);
+isemo=isemo(~wh_isnan);
 
 % Boostrap confidence intervals for effect size
 fprintf('Bootstrapping CIs\n')
@@ -178,16 +189,35 @@ disp('Classification of cognitive control vs. other')
 
 roc_cog = roc_plot(vector_data,iscog, 'noplot', 'threshold_type', threshold_type);
 
-fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(pain vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
+fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(cog vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
     roc_cog.class_threshold, cohens_d_2sample(vector_data, iscog), bci_cog(1), bci_cog(2));
+
+disp(' ')
 
 disp('Classification of emotion vs. other')
 
 roc_emo = roc_plot(vector_data,isemo, 'noplot', 'threshold_type', threshold_type);
 
-fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(pain vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
+fprintf('Threshold for cosine_sim = %3.4f, Cohen''s d(emo vs no) = %3.2f, Bootstrapped CI is [%3.2f %3.2f]\n', ...
     roc_emo.class_threshold, cohens_d_2sample(vector_data, isemo), bci_emo(1), bci_emo(2));
 disp(' ')
+
+% ----------------------------------------------------------------------
+% Output table
+% ----------------------------------------------------------------------
+
+tabledata(1, :) = [roc_pain.class_threshold cohens_d_2sample(vector_data, ispain) roc_pain.sensitivity roc_pain.specificity roc_pain.PPV ];
+tabledata(2, :) = [roc_cog.class_threshold cohens_d_2sample(vector_data, iscog) roc_cog.sensitivity roc_cog.specificity roc_cog.PPV ];
+tabledata(3, :) = [roc_emo.class_threshold cohens_d_2sample(vector_data, isemo) roc_emo.sensitivity roc_emo.specificity roc_emo.PPV ];
+
+T = array2table(tabledata, 'VariableNames', {'Cos_Sim_Thresh' 'Cohens_d' 'Sensitivity' 'Specificity' 'PPV'}, 'RowNames', {'Pain' 'Cog Control' 'Neg Emotion'});
+
+disp(T);
+
+OUT.summary_table = T;
+OUT.roc_pain = roc_pain;
+OUT.roc_cog = roc_cog;
+OUT.roc_emo = roc_emo;
 
 % ----------------------------------------------------------------------
 % Plot
@@ -221,7 +251,7 @@ if doplot
     
     set(gca, 'FontSize', fontsize);
     barplot_columns(pattern_response,'names',labels,'colors',colors,'nofig');
-    ylabel 'NPS Response (Cosine Similarity)'
+    ylabel 'Pattern Response (Cosine Similarity)'
     hold on; 
     
     if roc_pain.accuracy_p < .05
@@ -284,6 +314,7 @@ end % plot
         p.addParameter('fontsize', fontsize);
         p.addParameter('colors', colors);
         p.addParameter('sim_string', sim_string);
+        p.addParameter('weight_string',weight_string);
         p.addParameter('threshold_type', threshold_type);
         
         % Optional inputs - Logical flags and keywords

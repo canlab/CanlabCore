@@ -5,19 +5,28 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %     stats = glmfit_multilevel(Y, X1, X2, varargin)
 %
 % Mixed-effects models differ in their assumptions and implementation
-% details. glmfit_multilevel fits regressions for individual 2nd-level
-% units (e.g., participants), and then uses a precision-weighted least
-% squares approach to model group effects, treating 1st-level units as a
-% random effect. This is appropriate when 2st-level units are participants
+% details. glmfit_multilevel is a fast and simple option for running a 
+% two-level mixed effects model with participant as a random effect. 
+% It implements a random-intercept, random-slope model across 2nd-level units 
+% (e.g., participants). it fits regressions for individual 2nd-level
+% units (e.g., participants), and then (optionally) uses a precision-weighted least
+% squares approach to model group effects. It thus treats participants as a
+% random effect. This is appropriate when 2nd-level units are participants
 % and 1st-level units are observations (e.g., trials) within participants. 
 % glmfit_multilevel was designed with this use case in mind.
 % 
-% In addition, glmfit_multilevel:
-% - Requires enough 1st-level units to fit a separate model for each
-% 2nd-level unit (participant). If this is not the case, other models
-% (igls.m, LMER, etc.) are preferred.
+% Options:
+% glmfit_multilevel includes some options that are not included in many
+% mixed effects models, including:
+% - bootstrapping or sign permutation for inference
+% - robust regression (*needs code update*)
+% - AR(p) autoregressive model (*needs code update*)
 %
-% - glmfit_multilevel  is conservative in the sense that the degrees of 
+% Requirements: glmfit_multilevel requires enough 1st-level units to fit a 
+% separate model for each  2nd-level unit (participant). If this is not the 
+% case, other models (igls.m, LMER, etc.) are preferred.
+%
+% Degrees of freedom: glmfit_multilevel is conservative in the sense that the degrees of 
 % freedom in the group statistical test is always based on the number of 
 % subjects - 2nd-level parameters. 
 % The df is never higher than the sample size, which you would have with 
@@ -26,7 +35,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 % observations and they are uncorrelated, resulting in large and undesirable 
 % estimated df. 
 %
-% - The correlations across 1st-level observations are not measured, and 
+% Correlated effects: The correlations across 1st-level observations are not measured, and 
 % 1st-level obs are assumed to be IID. This is valid when generalizing across 
 % 2nd-level units, but may not be fully efficient (powerful) if 1st-level 
 % units are correlated.
@@ -99,6 +108,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 % Estimation Defaults
 %  - case 'robust', robust_option = 'yes';
 %  - case {'weight', 'weighted', 'var', 's2'}, weight_option = 'unweighted';
+%  - case {'nocenter'}, do not force centering of 2nd-level predictors
 %
 % Inference defaults
 %  - case {'boot1', 'boot', 'bootstrap'}, inference_option = 'bootstrap';
@@ -130,6 +140,10 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %    subject only if there are too few observations to estimate.
 % ..
 
+ % Convert from matrix form to cells
+ % Matrix: Y is a col vector, X is one predictor column per subject
+ % -------------------------------------------------------------------
+
   if ~iscell(Y)
     N = size(Y, 2);
     for i = 1:N
@@ -154,11 +168,13 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
     error('Enter one cell per subject for each of X and Y');
   end
 
-
-
-
  % first level: SETUP
  % -------------------------------------------------------------------
+
+ % Check variances and exclude subjects with no variance in any Y or X
+ [Y, X1, X2] = check_variances_and_exclude(Y, X1, X2);
+ N = length(Y);
+ 
  % set up first-level X matrix (sample)
   if any(strcmp(varargin, 'noint')) % no-intercept version
     X1tmp = X1{1};
@@ -225,6 +241,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
    targetu, nresample, whpvals_for_boot, ...
    permsign] = ...
   setup_inputs(beta', X2, varargin{:});
+
   switch weight_option
     case 'weighted'
   % Note: R & B-style : replaced sterr' with V
@@ -423,6 +440,7 @@ analysisname = 'Second Level of Multilevel Model ';
 % Estimation Defaults
 robust_option = 'no';               % robust IRLS; 'no' 'yes'
 weight_option = 'unweighted';       % 'weighted' 'unweighted'
+force_centering = true;             % force 2nd-level predictor centering
 
 % Inference defaults
 inference_option = 't-test';        % 't-test' 'bootstrap' 'signperm'
@@ -463,7 +481,8 @@ for i = 1:length(varargin)
                 % Estimation Defaults
             case 'robust', robust_option = 'yes';
             case {'weight', 'weighted', 'var', 's2'}, weight_option = 'weighted';
-
+            case {'nocenter', 'nocentering'}, force_centering = false;
+                
                 % Inference defaults
             case {'boot1', 'boot', 'bootstrap'}, inference_option = 'bootstrap';
             case {'sign perm', 'signperm', 'sign'}, inference_option = 'signperm';
@@ -496,7 +515,73 @@ for i = 1:length(varargin)
     end
 end
 
-% all the checking, etc. is done in glmfit_general
+% all the other checking, etc. is done in glmfit_general
 
+
+    
+is_intercept = all(abs(diff(X, 1, 1)) < 100 * eps);
+
+if force_centering
+    X(:, ~is_intercept) = X(:, ~is_intercept) - mean(X(:, ~is_intercept));
+end
+
+is_centered = abs(mean(X)) < 100*eps;
+
+any_noncentered = any(~is_intercept & ~is_centered);
+intercept_beta_name = 'Within-person average effects';
+
+if any_noncentered
+    disp('WARNING!!! Some 2nd-level predictors are not mean-centered.')
+    disp('Within-person effects and P-values are NOT interpretable as the')
+    disp('average within-person effect');
+    
+    intercept_beta_name = 'Within-person effects when all 2nd-level predictors are zero';
+    
+end
+
+% fix names by adding intercept if needed
+% This is over-rided by user input
+if length(beta_names) == k - 1
+    if ~isrow(beta_names), beta_names = beta_names'; end
+    beta_names = {intercept_beta_name beta_names{:}};
+end
+
+
+
+end
+
+
+% -------------------------------------------------------------------------
+% Check variances
+% -------------------------------------------------------------------------
+
+function [Y, X1, X2] = check_variances_and_exclude(Y, X1, X2)
+xvar = cellfun(@var, X1, 'UniformOutput', false);
+xvar = cat(1, xvar{:});
+wh = any(xvar < 100 * eps, 2);
+if any(wh)
+    disp('Warning! Some participants have no variance in X column(s) and will be excluded')
+    fprintf('Participant numbers:');
+    fprintf('%d', find(wh));
+    fprintf('\n');
+end
+
+wh_out = wh;
+
+yvar = cellfun(@var, Y, 'UniformOutput', false);
+yvar = cat(1, yvar{:});
+wh = any(yvar < 100 * eps, 2);
+if any(wh)
+    disp('Warning! Some participants have no variance in Y and will be excluded')
+    fprintf('Participant numbers:');
+    fprintf('%d', find(wh));
+    fprintf('\n');
+end
+
+wh_out = wh_out | wh;
+
+X1(wh_out) = [];
+Y(wh_out) = [];
+if ~isempty(X2), X2(wh_out,  :) = []; end
 
 end

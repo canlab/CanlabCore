@@ -145,14 +145,14 @@ end
 
 % Check vars, etc.
 % ---------------------------------------------------------------------
-if isdir('/Users/tor/Documents/matlab_code_external/matlab_bgl')
-    g = genpath('/Users/tor/Documents/matlab_code_external/matlab_bgl');
-    addpath(g);
-end
-
-if ~exist('fruchterman_reingold_force_directed_layout.m', 'file')
-    error('Must have Matlab BGL toolbox on path (external toolbox)');
-end
+% if isdir('/Users/tor/Documents/matlab_code_external/matlab_bgl')
+%     g = genpath('/Users/tor/Documents/matlab_code_external/matlab_bgl');
+%     addpath(g);
+% end
+% 
+% if ~exist('fruchterman_reingold_force_directed_layout.m', 'file')
+%     error('Must have Matlab BGL toolbox on path (external toolbox)');
+% end
 
 activationdata = double(activationdata);
 
@@ -234,10 +234,17 @@ C = sparse(C);
 
 % Graph Stats
 % -----------------------------------------------
-bc = betweenness_centrality(abs(C));  % abs if ignoring neg connections
+
+% 2020: Use Matlab graph object
+G = graph(C);
+
+%bc = betweenness_centrality(abs(C));  % abs if ignoring neg connections
+bc = degree(G);
 
 % shortest paths: used as estimate of connectivity
-[D S] = mean_path_length(r, rset);
+% [D S] = mean_path_length(r, rset);
+[D S] = mean_path_length(G, rset);
+
 
 deg = full(sum(C ~= 0))';
 
@@ -248,9 +255,9 @@ stats.r = r;
 stats.b = b;
 stats.thr = thr;
 stats.betweenness = bc;
-stats.path_length_distance = D;
+%stats.path_length_distance = D;
 stats.degree = deg;
-stats.mean_path_by_rset = S;
+%stats.mean_path_by_rset = S;
 
 
 switch ptsizetype
@@ -272,7 +279,14 @@ end
 % -------------------------------------------------------------------------
 
 % Xc is coordinate matrix
-Xc = fruchterman_reingold_force_directed_layout(C);
+% Xc = fruchterman_reingold_force_directed_layout(C);
+
+han = plot(G, 'Layout', 'force');   % Get layout
+Xc = [han.XData; han.YData]';
+delete(han);                        % erase
+
+% could rotate here
+% ***
 
 if ~isempty(cl)
     create_figure('graph', 1, 2);
@@ -462,7 +476,7 @@ end
 
 
 
-function [C S] = mean_path_length(r, rset)
+function [C S] = mean_path_length(G, rset)
 % compute matrix of 1/path lengths for n x n matrix of regions, C (connectivity)
 % and 1 / mean path length for sets of regions specified by rset
 %
@@ -472,16 +486,20 @@ function [C S] = mean_path_length(r, rset)
 %
 % e.g., r = region_r{i};
 
-r(isnan(r)) = 0;
-r = (r' + r) ./ 2;  % enforce symmetry, just in case
+% 2020: Use Matlab Graph object
+% 
+% r(isnan(r)) = 0;
+% r = (r' + r) ./ 2;  % enforce symmetry, just in case
+% 
+% 
+% % shortest paths: used to calculate connectivity
+% rtmp = sparse(r);
+% rtmp(rtmp < 0) = 0;
 
+C = distances(G);
 
-% shortest paths: used to calculate connectivity
-rtmp = sparse(r);
-rtmp(rtmp < 0) = 0;
-
-% Note: Uses Floyd-Warshall method if 10% non-zero elements or more
-C = all_shortest_paths(rtmp);
+% OLDNote: Uses Floyd-Warshall method if 10% non-zero elements or more
+% C = all_shortest_paths(rtmp);
 
 
 % for each set, average elements of D corresponding to pairs of SETS

@@ -37,6 +37,12 @@ function [surface_handles, ax] = canlab_canonical_brain_surface_cutaways(method_
 %   **surface_handles:**
 %        A vector of handles to surface objects (isosurfaces and isocaps)
 %
+%  % To recreate these isosurfaces, do this:
+% anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
+% [isosurf, isocap] = deal({});
+% [p, ~, isosurf{1}, isocap{1}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
+% [p2, ~, isosurf{2}, isocap{2}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
+% 
 % :See also:
 %   fmri_data.isosurface, addbrain, cluster_cutaways, fmri_data.surface,
 %   region.surface
@@ -140,7 +146,7 @@ switch method_keyword
         load('canlab_canonical_brain_surface_right_insula', 'isosurf', 'isocap');
         p = draw_isosurface_patches(isosurf, isocap, [.5 .5 .5]);
         
-        set_slab_view_properties(p, [91 0])
+        set_slab_view_properties(p, [271 0])
         surface_handles = p;
         
     case 'accumbens_slab'
@@ -187,7 +193,7 @@ end % main function
 function set_slab_view_properties(p, az_el)
 
 set(p, 'FaceAlpha', 1);
-colormap gray;
+colormap(gca, gray);
 axis vis3d image
 view(az_el(1), az_el(2));
 lightRestoreSingle;

@@ -645,6 +645,8 @@ npoints = length(bins);
 s0 = histc(input_values(~binary_outcome), bins)';
 s1 = histc(input_values(binary_outcome), bins)';
 
+bin_names = {};
+
 for i = 1:length(bins)
     %bin_names{i} = sprintf('R_%3.1f', bins(i));
     bin_names{i} = sprintf('R_%d', i);

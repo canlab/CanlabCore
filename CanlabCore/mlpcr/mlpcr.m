@@ -397,7 +397,11 @@ function [weights, Intercept, lme, CM, SCW] = mlpcr(X,Y,varargin)
     for i = 1:n_lvls
         vars = min(n_d{i},lambda_cnt(i));
         if vars < n_d{i}
+<<<<<<< HEAD
             warning('MLPCR:dimOverflow','Requested %d dimensions for level %i but only %d returned by PCA. Using %d',n_d{i},i,lambda_cnt(i),lambda_cnt(i));
+=======
+            warning('MLPCR:insufficientDim','Requested %d dimensions for level %i but only %d returned by PCA. Using %d',n_d{i},i,lambda_cnt(i),lambda_cnt(i));
+>>>>>>> 9e62bed9067a8909d96c51d8140146ddfd9f4dce
             n_d{i} = vars;
             CM{i} = CM{i}(:,1:n_d{i});
             SCW{i} = SCW{i}(:,1:n_d{i});

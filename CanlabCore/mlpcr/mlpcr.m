@@ -389,7 +389,7 @@ function [weights, Intercept, lme, CM, SCW] = mlpcr(X,Y,varargin)
         df = size(X,1);
     end
     if df < sum(lambda_cnt) + size(cell2mat(covs),2) + 1
-        warning('Cannot fit requested %d total PCA dims and %d additional covariates to data with %d degrees of freedom.',sum(lambda_cnt),size(cell2mat(covs),2),df);
+        warning('MLPCR:dimOverflow','Cannot fit requested %d total PCA dims and %d additional covariates to data with %d degrees of freedom.',sum(lambda_cnt),size(cell2mat(covs),2),df);
         del = sum(lambda_cnt) + size(cell2mat(covs),2) + 1 - df;
         warning('Dropping %d dims from bottom most level.',del);
         lambda_cnt(end) = lambda_cnt(end) - del;
@@ -397,7 +397,7 @@ function [weights, Intercept, lme, CM, SCW] = mlpcr(X,Y,varargin)
     for i = 1:n_lvls
         vars = min(n_d{i},lambda_cnt(i));
         if vars < n_d{i}
-            warning('Requested %d dimensions for level %i but only %d returned by PCA. Using %d',n_d{i},i,lambda_cnt(i),lambda_cnt(i));
+            warning('MLPCR:dimOverflow','Requested %d dimensions for level %i but only %d returned by PCA. Using %d',n_d{i},i,lambda_cnt(i),lambda_cnt(i));
             n_d{i} = vars;
             CM{i} = CM{i}(:,1:n_d{i});
             SCW{i} = SCW{i}(:,1:n_d{i});

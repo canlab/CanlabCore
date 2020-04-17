@@ -63,7 +63,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
 % 
 %        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
-% 
+%
+%        'kragelschemas': 20 visual emotion-schemas from Kragel et al. 2019 
+%
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
 %
@@ -252,6 +254,9 @@ else
             
         case 'kragelemotion'
             [image_obj, networknames, imagenames] = load_kragelemotion;
+        
+        case 'kragelschemas'
+            [image_obj, networknames, imagenames] = load_kragelschemas;
             
         case 'allengenetics'
             [image_obj, networknames, imagenames] = load_allengenetics;
@@ -697,6 +702,25 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
 
 end % function
+
+
+function [image_obj, networknames, imagenames] = load_kragelschemas
+
+% Load Kragel 2019 emotion maps
+% ------------------------------------------------------------------------
+
+networknames ={'Adoration'	'Aesthetic Appreciation' 'Amusement' 'Anxiety'	'Awe'	'Boredom'	'Confusion'  'Craving'		'Disgust'	'Empathic Pain'	'Entrancement'		'Excitement'	'Fear'	'Horror'	'Interest'	'Joy'	'Romance'	'Sadness'	  'Sexual Desire'	'Surprise'};
+s=dir(which('PLS_betas_Adoration.nii.gz'));
+all_imgs=dir([s.folder filesep '*.gz']);
+imagenames={all_imgs(:).name}';
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+
+end % function
+
+
 
 
 function [image_obj, networknames, imagenames] = load_guilt

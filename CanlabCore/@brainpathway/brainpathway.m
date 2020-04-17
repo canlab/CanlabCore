@@ -207,11 +207,13 @@ classdef brainpathway < handle
         
         region_atlas (1, 1) atlas;          % An atlas-class object defining k regions
         
-        voxel_dat (:, :) single;            % A [voxels x images/observations] matrix of data
-        node_dat  (:, :) single;
-        region_dat (:, :) single;
-        network_dat (:, :) single;
-        partition_dat (:, :) single;
+        voxel_dat;                          % A [voxels x images/observations] single matrix of data
+                                            % Or a cell array { } with 1 cell per subject for brainpathway_multisubject
+                                            
+        node_dat  ;            
+        region_dat ;
+        network_dat ;
+        partition_dat ;
         
         node_weights (1, :) cell;           %  A series of n cells, one per node. Each cell contains a vector of pattern weights across voxels
         node_labels (1, :) cell;           %  A series of n cells, one per node. Each cell contains a char array name for the node.
@@ -260,7 +262,7 @@ classdef brainpathway < handle
         
         verbose = true;
         
-        data_quality struct = struct(''); % A flexible structure defining data quality metrics
+        data_quality struct = struct('tSNR', [], 'tSTD', []); % A flexible structure defining data quality metrics
         
     end % properties
     
@@ -303,6 +305,21 @@ classdef brainpathway < handle
                 end
             end
             
+            % Check properties
+            % If brainpathway_multisubject, cell (check in brainpathway_multisubject constructor)
+            % Check here rather than in class property def to allow for this
+            % If empty, defaults to double, so reformat
+            
+            to_check = {'voxel_dat' 'node_dat' 'network_dat' 'partition_dat'};
+            
+            for i = 1:length(to_check)
+                
+                if isa(obj.(to_check{i}), 'double'), obj.(to_check{i}) = single(obj.(to_check{i})); end
+                
+                validateattributes(obj.(to_check{i}),{'single'}, {'2d'}, 'brainpathway', ['.' to_check{i}]);
+                
+            end
+
             
             %             input_atlas = false;
             
@@ -814,8 +831,8 @@ classdef brainpathway < handle
             obj.region_dat = obj.voxel_dat' * mydat;
             
             % update data quality metrics
-            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat); % if data is mean-centered, will be meaningless
-            obj.data_quality.tSTD = std(obj.region_dat); % if data is mean-centered, will be meaningless
+            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat);    % if data are mean-centered, will be meaningless
+            obj.data_quality.tSTD = std(obj.region_dat);                            % if data are mean-centered, will be meaningless
             
             obj = obj.update_region_connectivity(obj,src,evt);
         end

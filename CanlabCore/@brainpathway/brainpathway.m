@@ -226,8 +226,8 @@ classdef brainpathway < handle
         
         graphstruct = struct('within_network_degree', [], 'between_network_degree', []);
         
-        graph_properties(1, 1) struct = struct('regions', struct('within_network_degree', [], 'between_network_degree', []), ...
-            'nodes', struct('within_network_degree', [], 'between_network_degree', []));
+        % intended to contain metrics computed from the BCT, e.g.
+        graph_properties(1, 1) struct = struct('regions', table(), 'nodes', table());
         
         %       Specify a function handle and optional arguments to the
         %       function (in addition to data). This allows connectivity_properties to be defined in a very flexible way, using multiple functions and inputs.

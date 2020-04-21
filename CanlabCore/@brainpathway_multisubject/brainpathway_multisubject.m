@@ -26,6 +26,8 @@ classdef brainpathway_multisubject < brainpathway
         
         subject_metadata table;
         
+        HDIs = struct('regions', table(), 'nodes', table());
+        
     end
     
     

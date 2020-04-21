@@ -1,16 +1,11 @@
-function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r, varargin)
+function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r, thresh)
 % Calculate some Sporns BCT toolbox functions
 %
 % graph_prop = bct_toolbox_undirected_graph_metrics(r, [threshold_input])
 % 
 % Inputs:
 % r = correlation matrix
-% threshold_input = logical positive sig matrix or %linkdensity (scalar).
-%       Default = 10 (top 10% of links retained)
-%       If sig matrix includes sig negative associations, results could be
-%       misleading; they will be considered to be connected just as
-%       positive associations are. Best to use only sig positive
-%       associations.
+% thresh = 0 to 1 value. (.1 is a common value)
 %
 % Outputs:
 % graph_prop = A table of node-level graph metrics 
@@ -55,28 +50,9 @@ r = (r' + r) ./ 2;          % enforce symmetry (rounding error possible)
 r = r - eye(size(r));       % for BCT and squareform
 
 % Threshold: Use sig matrix or link density
-sigmat = [];
-if isempty(varargin)
-    thr_percent_dens = 10; % 10% link density
-elseif ismatrix(varargin{1})
-    thr_percent_dens = NaN;
-    sigmat = varargin{1};
-else
-    thr_percent_dens = varargin{1};
-end
-
-if isempty(sigmat) 
-    % use thr for link density
-    thr_val = prctile(squareform(r), 100 - thr_percent_dens); % uses stats toolbox
-    sigmat = r > thr_val;                                     % positive connections only
-end
-
-% validate sigmat: logical
-validateattributes(sigmat,{'logical'}, {'nonempty' 'nonnegative'});
-
-bu_matrix = sigmat; 
-wu_matrix = r .* sigmat;
-
+bu_matrix = weight_conversion(threshold_proportional(r, thresh), 'binarize');
+wu_matrix = threshold_proportional(r, thresh);
+    
 % Node-level properties: Undirected binary and weighted networks
 graph_prop = table();
 
@@ -90,6 +66,7 @@ graph_prop.strength = strengths_und(wu_matrix)';               % weighted streng
 graph_prop.betweenness = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...
 graph_prop.clustercoef = clustering_coef_bu(bu_matrix);        % Clustering coefficient
 graph_prop.local_efficiency = efficiency_bin(bu_matrix, 1);    % Local efficiency
+graph_prop.eigenvector_centrality = eigenvector_centrality_und(wu_matrix);    % Eigenvector centrality (similar to PageRank)
 
 % Others to consider
 % assortativity_bin(bu_network, 0);

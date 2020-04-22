@@ -98,6 +98,10 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_pcr:**
 %        [default] Cross-validated principal components regression
 %
+%   **cv_pls:**
+%        Cross-validated partial least squares regression (only univariate
+%        outcomes for now)
+%
 %   **cv_lassopcr:**
 %        Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
 %        NOTE: can enter 'EstimateParams' to use shrankage
@@ -510,6 +514,9 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 %    6/2017: Tor and Phil Kragel: update parallel processing for
 %    bootstrapping. Default is to use parallel.
+%
+%
+%    4/22/2020: Phil Kragel, add PLS regression assuming univariate outcome
 % ..
 
 % ..
@@ -576,7 +583,7 @@ for i = 1:length(varargin)
                 varargin{i} = [];
                 varargin{i + 1} = [];
                 
-            case {'cv_pcr', 'cv_multregress', 'cv_univregress', 'cv_svr', 'cv_lassopcr', 'cv_svm','cv_lassopcrmatlab'}
+            case {'cv_pcr', 'cv_multregress', 'cv_univregress', 'cv_svr', 'cv_lassopcr', 'cv_svm','cv_lassopcrmatlab' ,'cv_pls'}
                 algorithm_name = varargin{i};
                 
             case {'bootweights'}
@@ -1024,6 +1031,35 @@ b = stats.beta(2:end)';
 yfit = intercept + xtest * b;
 
 end
+
+% ----------------------------- algorithms -------------------------------
+
+function [yfit, vox_weights, intercept] = cv_pls(xtrain, ytrain, xtest, cv_assignment, varargin)
+
+% Choose number of components to save [optional]
+wh = find(strcmp(varargin, 'numcomponents'));
+if ~isempty(wh) && length(varargin) >= wh + 1
+    
+    numc = varargin{wh + 1};
+    
+else
+
+    numc = [];
+end
+
+if ~isempty(numc)
+[~,~,~,~,b]=plsregress(xtrain,ytrain,numc);
+else %use max possible
+[~,~,~,~,b]=plsregress(xtrain,ytrain);
+end
+vox_weights = b(2:end);
+
+intercept = b(1);
+
+yfit = intercept + xtest * vox_weights;
+
+end
+
 
 % ----------------------------- algorithms -------------------------------
 

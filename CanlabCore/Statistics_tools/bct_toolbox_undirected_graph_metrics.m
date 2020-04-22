@@ -1,16 +1,13 @@
-function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r, varargin)
+function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r, thresh, varargin)
 % Calculate some Sporns BCT toolbox functions
 %
 % graph_prop = bct_toolbox_undirected_graph_metrics(r, [threshold_input])
 % 
 % Inputs:
 % r = correlation matrix
-% threshold_input = logical positive sig matrix or %linkdensity (scalar).
-%       Default = 10 (top 10% of links retained)
-%       If sig matrix includes sig negative associations, results could be
-%       misleading; they will be considered to be connected just as
-%       positive associations are. Best to use only sig positive
-%       associations.
+% thresh = 0 to 1 value. (.1 is a common value)
+%
+% optional: 'doplots'
 %
 % Outputs:
 % graph_prop = A table of node-level graph metrics 
@@ -29,7 +26,8 @@ function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r,
 % - Others are calculated on thresholded, binarized matrix (positive connections only)
 %   If you enter a sig matrix, this will be used as the input to graph metric functions
 %   If you enter a link density, a binary matrix will be calculated
-% 
+% - Fisher r to Z is computed, which will have little impact in many cases
+%   but may help in some cases
 % - Many BCT functions will not use negative values and ignore weights, so require thresholding. 
 %   P-values/statistical significance is one way to threshold.
 %   Another way would be using multiple arbitrary thresholds (e.g., 10% link density)
@@ -49,33 +47,34 @@ function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r,
 % % Note: correlations among community vectors are not meaningful. 
 % % for similarity among communities/modules detected with different methods, see partition_distance.m
 
+doplots = false;
+if any(strcmp(varargin, 'doplots')), doplots = true; end
+
+
 % Prep r for BCT undirected 
 r = double(r);
 r = (r' + r) ./ 2;          % enforce symmetry (rounding error possible)
 r = r - eye(size(r));       % for BCT and squareform
 
+% Fisher transform
+z = rToZ(r);    
+
+% correlations of 1.00 get transformed to Inf, which causes
+% BCT to crash in some functions. Replace w/ max value. Note that this code
+% does not correctly handle case of r = -1.00, as this is very unlikely.
+z(isinf(z)) = max(z(~isinf(z)));
+
 % Threshold: Use sig matrix or link density
-sigmat = [];
-if isempty(varargin)
-    thr_percent_dens = 10; % 10% link density
-elseif ismatrix(varargin{1})
-    thr_percent_dens = NaN;
-    sigmat = varargin{1};
-else
-    thr_percent_dens = varargin{1};
+bu_matrix = weight_conversion(threshold_proportional(z, thresh), 'binarize');
+wu_matrix = threshold_proportional(z, thresh);
+
+% view
+if doplots
+    create_figure('BCT networks', 1, 2)
+    imagesc(bu_matrix), colorbar
+    subplot(1,2,2)
+    imagesc(wu_matrix), colorbar
 end
-
-if isempty(sigmat) 
-    % use thr for link density
-    thr_val = prctile(squareform(r), 100 - thr_percent_dens); % uses stats toolbox
-    sigmat = r > thr_val;                                     % positive connections only
-end
-
-% validate sigmat: logical
-validateattributes(sigmat,{'logical'}, {'nonempty' 'nonnegative'});
-
-bu_matrix = sigmat; 
-wu_matrix = r .* sigmat;
 
 % Node-level properties: Undirected binary and weighted networks
 graph_prop = table();
@@ -87,9 +86,17 @@ graph_prop.core_w = core_periphery_dir(wu_matrix, 1)';         % Core-periphery
 
 graph_prop.degree = degrees_und(bu_matrix)';                   % Node degree
 graph_prop.strength = strengths_und(wu_matrix)';               % weighted strength. tested: same results as using r_mean
-graph_prop.betweenness = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...
-graph_prop.clustercoef = clustering_coef_bu(bu_matrix);        % Clustering coefficient
-graph_prop.local_efficiency = efficiency_bin(bu_matrix, 1);    % Local efficiency
+
+graph_prop.betweenness_bin = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...
+graph_prop.betweenness_weighted = betweenness_wei(wu_matrix);  % note: I think this one is very slow
+
+graph_prop.clustercoef_bin = clustering_coef_bu(bu_matrix);        % Clustering coefficient
+graph_prop.clustercoef_weighted = clustering_coef_wu(wu_matrix);        % Clustering coefficient
+
+graph_prop.local_efficiency_bin = efficiency_bin(bu_matrix, 1);    % Local efficiency
+graph_prop.local_efficiency_weighted = efficiency_wei(wu_matrix, 1);    % Local efficiency
+
+graph_prop.eigenvector_centrality = eigenvector_centrality_und(wu_matrix);    % Eigenvector centrality (similar to PageRank)
 
 % Others to consider
 % assortativity_bin(bu_network, 0);

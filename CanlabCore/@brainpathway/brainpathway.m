@@ -207,11 +207,13 @@ classdef brainpathway < handle
         
         region_atlas (1, 1) atlas;          % An atlas-class object defining k regions
         
-        voxel_dat (:, :) single;            % A [voxels x images/observations] matrix of data
-        node_dat  (:, :) single;
-        region_dat (:, :) single;
-        network_dat (:, :) single;
-        partition_dat (:, :) single;
+        voxel_dat;                          % A [voxels x images/observations] single matrix of data
+                                            % Or a cell array { } with 1 cell per subject for brainpathway_multisubject
+                                            
+        node_dat  ;            
+        region_dat ;
+        network_dat ;
+        partition_dat ;
         
         node_weights (1, :) cell;           %  A series of n cells, one per node. Each cell contains a vector of pattern weights across voxels
         node_labels (1, :) cell;           %  A series of n cells, one per node. Each cell contains a char array name for the node.
@@ -224,8 +226,8 @@ classdef brainpathway < handle
         
         graphstruct = struct('within_network_degree', [], 'between_network_degree', []);
         
-        graph_properties(1, 1) struct = struct('regions', struct('within_network_degree', [], 'between_network_degree', []), ...
-            'nodes', struct('within_network_degree', [], 'between_network_degree', []));
+        % intended to contain metrics computed from the BCT, e.g.
+        graph_properties(1, 1) struct = struct('regions', table(), 'nodes', table());
         
         %       Specify a function handle and optional arguments to the
         %       function (in addition to data). This allows connectivity_properties to be defined in a very flexible way, using multiple functions and inputs.
@@ -260,7 +262,7 @@ classdef brainpathway < handle
         
         verbose = true;
         
-        data_quality struct = struct(''); % A flexible structure defining data quality metrics
+        data_quality struct = struct('tSNR', [], 'tSTD', [], 'median_corr', []); % A flexible structure defining data quality metrics
         
     end % properties
     
@@ -303,6 +305,21 @@ classdef brainpathway < handle
                 end
             end
             
+            % Check properties
+            % If brainpathway_multisubject, cell (check in brainpathway_multisubject constructor)
+            % Check here rather than in class property def to allow for this
+            % If empty, defaults to double, so reformat
+            
+            to_check = {'voxel_dat' 'node_dat' 'network_dat' 'partition_dat'};
+            
+            for i = 1:length(to_check)
+                
+                if isa(obj.(to_check{i}), 'double'), obj.(to_check{i}) = single(obj.(to_check{i})); end
+                
+                validateattributes(obj.(to_check{i}),{'single'}, {'2d'}, 'brainpathway', ['.' to_check{i}]);
+                
+            end
+
             
             %             input_atlas = false;
             
@@ -400,43 +417,43 @@ classdef brainpathway < handle
             % obj.listeners = addlistener(obj,'voxel_dat', 'PreSet',  @(src, evt) resample_space(obj, src, evt));
             
             % update region_dat
-            obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) brainpathway.update_region_data(obj, src, evt));
+            obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) obj.update_region_data(obj, src, evt));
 
             % update node_dat
-            obj.listeners(end+1) = addlistener(obj,'voxel_dat', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'voxel_dat', 'PostSet', @(src, evt) obj.update_node_data(obj, src, evt));
             
             
             % When region_dat is set/updated...
             % ------------------------------------------------------------
             % update region connectivity
-            obj.listeners(end+1) = addlistener(obj,'region_dat', 'PostSet',  @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'region_dat', 'PostSet',  @(src, evt) obj.update_region_connectivity(obj, src, evt));
   
             % When node_weights are set/updated...
             % ------------------------------------------------------------
             % update node_dat
-            obj.listeners(end+1) = addlistener(obj,'node_weights', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'node_weights', 'PostSet', @(src, evt) obj.update_node_data(obj, src, evt));
             
             
             % When node_dat is set/updated...
             % ------------------------------------------------------------
             % update node connectivity
-            obj.listeners(end+1) = addlistener(obj,'node_dat', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'node_dat', 'PostSet', @(src, evt) obj.update_node_connectivity(obj, src, evt));
             
             % When connectivity_properties are set/updated...
             % ------------------------------------------------------------
             % update node connectivity
-            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) obj.update_node_connectivity(obj, src, evt));
             
             % update region connectivity
-            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) obj.update_region_connectivity(obj, src, evt));
             
             % ------------------------------------------------------------
             % When region_atlas is set/updated ....
             % update region_dat
-            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.update_region_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) obj.update_region_data(obj, src, evt));
             
             % initialize nodes
-            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) obj.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
                         
             
         end % class constructor
@@ -814,8 +831,9 @@ classdef brainpathway < handle
             obj.region_dat = obj.voxel_dat' * mydat;
             
             % update data quality metrics
-            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat); % if data is mean-centered, will be meaningless
-            obj.data_quality.tSTD = std(obj.region_dat); % if data is mean-centered, will be meaningless
+            obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat);    % if data are mean-centered, will be meaningless
+            obj.data_quality.tSTD = std(obj.region_dat);                            % if data are mean-centered, will be meaningless
+            obj.data_quality.median_corr = median(nonzeros(tril(obj.connectivity.regions.r, -1)));
             
             obj = obj.update_region_connectivity(obj,src,evt);
         end

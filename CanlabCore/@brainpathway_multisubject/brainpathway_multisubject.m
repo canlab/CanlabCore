@@ -26,11 +26,26 @@ classdef brainpathway_multisubject < brainpathway
         
         subject_metadata table;
         
+        HDIs = struct('regions', table(), 'nodes', table());
+        
     end
     
     
     methods
 
+        % class constructor
+        function obj = brainpathway_multisubject(varargin)
+            % delete listeners for now, so they don't cause trouble. don't
+            % need them at the moment in this class
+            delete(obj.listeners)
+        end
+        
+        function obj = update_region_connectivity(obj, src, evt)
+           print('test') % never gets called
+           % need to have this so that the listener calls this function,
+           % rather than the superclass function. DOES NOT WORK
+        end
+        
         function obj = add_subject(obj, new_subj)
 
             validateattributes([new_subj], {'brainpathway'}, {'nonempty'});
@@ -41,25 +56,39 @@ classdef brainpathway_multisubject < brainpathway
             %obj.node_dat{end+1} = new_subj.node_dat;
             %obj.region_dat{end+1} = new_subj.region_dat;
             
-            % if first subj added, grab it all
-            if isempty(obj.connectivity.regions)
-                obj.connectivity.regions = new_subj.connectivity.regions;
-            else % for later Ss, append data
-                obj.connectivity.regions.r(:,:,end+1) = new_subj.connectivity.regions.r;
-                obj.connectivity.regions.p(:,:,end+1) = new_subj.connectivity.regions.p;
-                
-                if isfield(new_subj.connectivity.regions, 'within')
-                    obj.connectivity.regions.within(end+1, :) = new_subj.connectivity.regions.within;
-                    obj.connectivity.regions.between(end+1, :) = new_subj.connectivity.regions.between;
-                    obj.connectivity.regions.avg_between_over_within(end+1) = new_subj.connectivity.regions.avg_between_over_within;
-                end
+            if isempty(obj.connectivity.regions) % if first subj added
+                next_index = 1;
+            else
+                next_index = size(obj.connectivity.regions.r,3) + 1;
             end
             
-            row = height(obj.subject_metadata) + 1;
-            obj.subject_metadata.id(row) = row;
+            % region_dat
+            obj.region_dat{next_index} = new_subj.region_dat;
             
-            % median corr in the lower diagonal of corr matrix
-            obj.data_quality.median_corr(row) = median(nonzeros(tril(new_subj.connectivity.regions.r)));
+            % connectivity
+            %if isempty(obj.connectivity.regions) % if first subj added, grab it all
+            %    obj.connectivity.regions(:,:,next_index) = new_subj.connectivity.regions;
+            %else % for later Ss, append data
+                obj.connectivity.regions.r(:,:,next_index) = new_subj.connectivity.regions.r;
+                obj.connectivity.regions.p(:,:,next_index) = new_subj.connectivity.regions.p;
+                
+                if isfield(new_subj.connectivity.regions, 'within')
+                    obj.connectivity.regions.within(next_index, :) = new_subj.connectivity.regions.within;
+                    obj.connectivity.regions.between(next_index, :) = new_subj.connectivity.regions.between;
+                    obj.connectivity.regions.avg_between_over_within(end+1) = new_subj.connectivity.regions.avg_between_over_within;
+                end                
+            %end
+            
+            % region_data
+%             if isempty(obj.region_dat) % if first subj added, grab it all
+%                 obj.region_dat(:,:,1) = new_subj.region_dat;
+%             else % for later Ss, append data
+%                 obj.region_dat(:,:,end+1) = new_subj.region_dat;
+%             end
+%             
+            
+            % median corr (of the lower diagonal of corr matrix)
+            obj.data_quality.median_corr(next_index) = median(nonzeros(tril(new_subj.connectivity.regions.r, -1)));
             
         end
     

@@ -37,7 +37,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        keywords load pre-defined image sets, as indicated below.
 %        NOTE: you will need to have these images on your Matlab path!
 %        Some are in the CANlab Neuroimaging_Pattern_Masks repository, 
-%        some in Masks_Private repository 
+%        some in Masks_Private repository, other (unlisted) datasets can be
+%        loaded if you have a load_<dataset>.m file in your path. This is
+%        for simplified extensions to this method by other libraries.
 % 
 % Sample test datasets - one image per subject
 % ------------------------------------------------------------------------
@@ -300,7 +302,11 @@ else
             [image_obj, networknames, imagenames] = load_guilt;
             
         otherwise
-            error('Unknown mapset keyword. If entering image names, use a cell array.');
+            if which(['load_', lower(image_names_or_keyword)])
+                [image_obj, networknames, imagenames] = feval(['load_', lower(image_names_or_keyword)]);
+            else
+                error('Unknown mapset keyword. If entering image names, use a cell array.');
+            end
             
     end % switch
     

@@ -1329,7 +1329,7 @@ if length(unique(ytrain)) == 2 %run in classification mode
     
     % enforce logical in case of [1, -1] inputs
     ytrain = ytrain > 0;
-elseif any(strcmp(lower(varargin),'poisson'))
+elseif any(strcmp(varargin,'poisson'))
     runmode = 'poisson regression';
     fprintf(1,'Regression mode (Poisson) ');
     distribution = 'poisson';

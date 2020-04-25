@@ -89,6 +89,16 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_multregress:**
 %        multiple regression
 %
+%   **cv_moorepenroseinv**
+%        the l2 minimizing norm solution. Uses matlab's pinv(). This is not
+%        the same as ridge regression. In underdetermined problems there
+%        are multiple solutions which satisfy the MSE minimation criteria.
+%        This picks one of those (infinite) solutions based on norm
+%        minimization. Ridge regression wouldn't necessarily pick ANY of
+%        them. Useful as a naive benchmark in evaluating ML solutions, and
+%        as a fast algorithm (although SVR may have similar speed and better 
+%        performance).
+%
 %   **cv_univregress:**
 %        Average predictions from separate univariate regression of outcome on each feature
 %
@@ -1062,6 +1072,16 @@ end
 
 
 % ----------------------------- algorithms -------------------------------
+function [yfit, vox_weights, intercept] = cv_moorepenroseinv(xtrain, ytrain, xtest, cv_assignment, varargin)
+
+X = [ones(size(xtrain,1),1), xtrain];
+b = pinv(X) * ytrain;
+intercept = b(1);
+vox_weights = b(2:end);
+
+yfit = intercept + xtest*vox_weights;
+
+end
 
 function [yfit, vox_weights, intercept] = cv_pcr(xtrain, ytrain, xtest, cv_assignment, varargin)
 

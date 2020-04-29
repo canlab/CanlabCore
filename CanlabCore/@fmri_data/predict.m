@@ -588,6 +588,8 @@ for i = 1:length(varargin)
                 useparallel = 'never';
                 
             case {'nfolds', 'error_type', 'algorithm_name', 'useparallel', 'verbose'}
+                predfun_inputs{end+1} = varargin{i};
+                predfun_inputs{end+1} = varargin{i+1};
                 str = [varargin{i} ' = varargin{i + 1};'];
                 eval(str)
                 varargin{i} = [];
@@ -1685,6 +1687,11 @@ end % function
 
 function [yfit, w, dummy, intercept] = cv_svr(xtrain, ytrain, xtest, cv_assignment, varargin)
 
+verbose=0;
+if any(strcmp(varargin,'verbose'))
+    verbose = varargin{find(strcmp(varargin,'verbose'))+1};
+end
+
 dataobj = data('spider data', xtrain, ytrain);
 
 % Define algorithm
@@ -1696,20 +1703,21 @@ wh = find(strcmp('C', varargin));
 if ~isempty(wh), slackstr = ['C=' num2str(varargin{wh(1)+1})]; end
 
 svrobj = svr({slackstr, 'optimizer="andre"'});
+if ~verbose, svrobj.verbosity = 0; end
 
 % Training
-fprintf('Training...')
+if verbose, fprintf('Training...'); end
 t1 = tic;
 [res, svrobj] = train(svrobj, dataobj);
 w = get_w(svrobj);
 t2 = toc(t1);
-fprintf('Done in %3.2f sec\n', t2)
+if verbose, fprintf('Done in %3.2f sec\n', t2); end
 
 % Testing
-fprintf('Testing...')
+if verbose, fprintf('Testing...'); end
 res2 = test(svrobj, data('test data', xtest, []));
 yfit = res2.X; % this is proportional to res.X*w (perfectly correlated), but scale is different
-fprintf('\n');
+if verbose, fprintf('\n'); end;
 % vec = [res.X res.Y dataobj.X * w' res2.X]
 % corrcoef(vec)
 

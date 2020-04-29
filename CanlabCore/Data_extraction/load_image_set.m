@@ -203,6 +203,8 @@ for i = 1:length(varargin)
             
             case 'verbose', verbose = 1;
                 
+            case 'md5check', continue; % only supported by custom functions in other extension repositories
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -303,7 +305,8 @@ else
             
         otherwise
             if which(['load_', lower(image_names_or_keyword)])
-                [image_obj, networknames, imagenames] = feval(['load_', lower(image_names_or_keyword)]);
+                [image_obj, networknames, imagenames] = feval(['load_', lower(image_names_or_keyword)],...
+                    'verbose', verbose, varargin{:});
             else
                 error('Unknown mapset keyword. If entering image names, use a cell array.');
             end

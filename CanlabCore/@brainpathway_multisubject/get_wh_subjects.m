@@ -50,7 +50,7 @@ function bs2 = get_wh_subjects(bs, wh_keep)
     bs2.connectivity.regions.r(:,:,~wh_keep) = [];
     bs2.connectivity.regions.p(:,:,~wh_keep) = [];
     
-    if ~isempty(bs2.connectivity.nodes.r)
+    if ~isempty(bs2.connectivity.nodes) && ~isempty(bs2.connectivity.nodes.r)
         bs2.connectivity.nodes.r(:,:,~wh_keep) = [];
         bs2.connectivity.nodes.p(:,:,~wh_keep) = [];
     end

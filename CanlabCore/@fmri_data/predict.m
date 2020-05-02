@@ -870,7 +870,7 @@ switch error_type
         
         phi = corr(obj.Y, yfit); %10/7/12: Luke Chang: this will calculate phi correlation coefficient between two binary variables
         
-    case {'mse' 'rmse', 'meanabserr'}
+    case {'mse' 'rmse', 'meanabserr','r'}
         err = obj.Y - yfit;
         
         %mse = mean(err' * err); %10/8/12: Luke Chang: I think this is only capturing sum of squared error

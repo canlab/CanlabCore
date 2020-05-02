@@ -601,7 +601,7 @@ function [weights, Intercept, lme, CM, SCW] = mlpcr(X,Y,varargin)
     end
     
     weights{end} = sum(cell2mat(weights),2);
-    Intercept{1:(end-1)} = []; %mask these because intercept computation isn't reliable for these yet
+    [Intercept{1:(end-1)}] = deal([]); %mask these because intercept computation isn't reliable for these yet
     Intercept{end} = yOffset - mean(X)*weights{end}(:);
     if verbose
         fprintf('Total time to generated MLPCR weight maps in %.2fs\n',toc(tstart));

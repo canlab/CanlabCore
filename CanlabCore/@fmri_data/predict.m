@@ -878,7 +878,7 @@ switch error_type
         rmse = sqrt(mse);
         meanabserr = nanmean(abs(err));  %if you are getting strange error here make sure yo are using matlab default nanmean (e.g., which nanmean)
         r = corrcoef(obj.Y, yfit, 'rows', 'pairwise');
-        r = -1*r(1, 2); % we need to maximize correlation, not minimize, so flip sign
+        r = r(1, 2); % we need to maximize correlation, not minimize, so flip sign
         
         eval(['cverr = ' error_type ';']);
         

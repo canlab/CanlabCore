@@ -1139,7 +1139,11 @@ end
 % tic, for i = 1:1000, b3 = glmfit(sc, ytrain); end, toc
 % b1 is 6 x faster than b2, which is 2 x faster than b3
 
-vox_weights = pc(:, 1:numcomps) * b(2:end);
+if numcomps > 0
+    vox_weights = pc(:, 1:numcomps) * b(2:end);
+else
+    vox_weights = zeros(size(xtrain,2),1);
+end
 
 intercept = b(1);
 

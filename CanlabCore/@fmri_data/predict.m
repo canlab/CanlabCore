@@ -108,6 +108,21 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_pcr:**
 %        [default] Cross-validated principal components regression
 %
+%   **cv_mlpcr:**
+%        Cross-validated multilevel principal components regression. See
+%        'help mlpcr2' for full documentation. If run with default settings
+%        returns the same result as cv_pcr, except with information
+%        pertaining to within and between predictive variance in optout.
+%        optout provides 8 outputs: total model, between model, within 
+%        model, intercept (same for all models), between eigenvectors, 
+%        between scores, within eigenvectors and within scores. Requires 
+%        'subjID' option followed by size(obj.dat,2) x 1 vector of block 
+%        labels. Subjects must be adjacent (see cv_multilevel_glm for
+%        details)
+%        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
+%        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
+%                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
+%
 %   **cv_pls:**
 %        Cross-validated partial least squares regression (only univariate
 %        outcomes for now)

@@ -8,7 +8,7 @@
 % Identifies within block (subject) eigenvectors with optional balancing 
 % across subjects. Computes loadings of full dataset on these within 
 % subject eigenvectors (so they can vary both within and between blocks). 
-% Comptes a separate PCA on the residual and obtains a second set of 
+% Computes a separate PCA on the residual and obtains a second set of 
 % orthogonal components and scores which only vary between blocks. Performs 
 % regression of between and within loadings (jointly) on pain outcome, and 
 % projects regression coefficients back to voxel space using within and 
@@ -20,7 +20,8 @@
 %
 % If the defaults are used then the result is identical to PCR, only you 
 % get both within and between subject predictive models in addition to the 
-% full model.
+% full model. Different results may be obtained with hyperparameter
+% optimization or concensus PCA enabled.
 %
 % Input ::
 %
@@ -29,7 +30,10 @@
 %   Y           - n x 1 outcome vector
 %
 %   'subjIDs    - n x 1 vector (ideal) or cellstr (throws warning, but
-%                   fine) indicating group affilitations.
+%                   fine) indicating group affilitations. Subjects must be
+%                   adjacent. Don't intermix blocks with one another. This
+%                   function was not designed for this scenario and will
+%                   break even with equivalently intermixed block labels.
 %
 % Optional Input ::
 %
@@ -42,7 +46,11 @@
 %                   matlab toolbox provides an elegant way to optimize
 %                   these variables.
 %                 Note 2: More dimensions result in less biased solutions,
-%                   which is a good reason for using the default choice.
+%                   which is a good reason for using the default [Inf,Inf].
+%                   However task driven variance is going to be captured by 
+%                   within components, so [0, Inf] is also a sensible
+%                   default if you wish to treat trait differences as
+%                   noise.
 %
 %   'cpca'      - followed by 0/1 to indicate whether or not concensus PCA
 %                   (Westerhuis, et al. 1998) should be used in place of 
@@ -83,18 +91,18 @@
 %
 %   MLPCR was originally developed using mixed effects models (version 1,
 %   Petre, et al., 2019), however model fitting was prohibitively slow and
-%   consequently was never fully evaluated for performance. Version 2.0
-%   substitutes (optionally weighted) OLS for much faster convergence, and
-%   minimaly different weight fitting. Version 1 is much more flexible than
-%   version 2, and is still available in CanlabPrivate for potential future
-%   development. It has been removed from CanlabCore.
+%   consequently performance characteristics could not be fully evaluated. 
+%   Version 2.0 substitutes (optionally weighted) OLS for much faster 
+%   convergence, and minimaly different weight fitting. Version 1 is much 
+%   more flexible than version 2, and is still available in CanlabPrivate 
+%   for potential future development. It has been removed from CanlabCore.
 %
 % References ::
 %
-%   Pete B, Woo W, Losin E, Eisenbarth H, Wager TD. (2019) Separate within
+%   Petre B, Woo W, Losin E, Eisenbarth H, Wager TD. (2019) Separate within
 %       -subject and individual-difference predictions with multilevel
 %       MVPA. Society for Neuroscience, San Diego, CA. (included with 
-%       canlabCore mlpcr library in pdf).
+%       canlabCore mlpcr library as pdf).
 %
 %   Westerhuis J, Kourti T, MacGregor J. (1998) Analysis of Multiblock and 
 %       Hierarchical PCA and PLS Methods. Journal of Chemometrics 12(5).
@@ -113,7 +121,7 @@
 %   cv_mlpcr_wi and cv_mlpcr_bt should have within and between priority
 %   (respectively) by default.
 
-function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr(X,Y,varargin)
+function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
     subjIDs = [];
     wiDim = Inf;
     btDim = Inf;
@@ -163,7 +171,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr(X,Y,varargin)
         % determine within dimension retention
         if wiDim > length(subjIDs) - length(uniq_grp)
             if wiDim < Inf % something user supplied was too big
-                warning('Max wiDim exceeds max df, reseting wiDim to %d',length(subjIDs) - length(uniq_grp) - 1);
+                warning('Max wiDim exceeds max df, reseting wiDim to %d',length(subjIDs) - length(uniq_grp));
             end
 
             wiDim = length(subjIDs) - length(uniq_grp);

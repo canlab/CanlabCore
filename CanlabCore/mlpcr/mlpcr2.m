@@ -254,10 +254,10 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
         bDim(~ismember(bDim,retainComps)) = [];
         wDim(~ismember(wDim,retainComps)) = [];
         
-        sc_w = sc_w(:,wDim);
-        sc_b = sc_b(:,bDim);
-        pc_w = pc_w(:,wDim);
-        pc_b = pc_b(:,bDim);
+        sc_w = sc(:,wDim);
+        sc_b = sc(:,bDim);
+        pc_w = pc(:,wDim);
+        pc_b = pc(:,bDim);
         
         if ~any(ismember(bDim,retainComps)), warning('All between dimensions dropped due to rank deficiency'); end
         if ~any(ismember(wDim,retainComps)), warning('All within dimensions dropped due to rank deficiency'); end

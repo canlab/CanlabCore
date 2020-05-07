@@ -122,6 +122,18 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
+%        Note: You probably want to bootstrap this manually if
+%           bootstrapping. If bootstrapping using fmri_data/predict's
+%           built in method you should note three things. First, You are
+%           bootstrapping at the image level, not the block level (true
+%           for all algorithms in fmri_data/predict, but carries special
+%           implications for block aware algorithms). Second, higher order
+%           within block PCA dimensions are HIGHLY unstable. If your
+%           model's within block PCA dimension is not low you may have no
+%           significant voxels. Third, if your full dataset is balanced you
+%           may want to weight your bootstrap PCAs and regressions by using
+%           the {'cpca',1} argument pair to compensate for imbalance in
+%           bootstrap samples.
 %
 %   **cv_pls:**
 %        Cross-validated partial least squares regression (only univariate
@@ -1107,8 +1119,8 @@ pc(:,end) = [];                % remove the last component, which is close to ze
                                % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
                                % end to accomodate predictor matrices with
                                % fewer features (voxels) than trials. SG
-                               % 2017/2/6
-
+                               % 2017/2/6                              
+                               
 % [pc, sc, eigval] = princomp(xtrain, 'econ');
 
 % Choose number of components to save [optional]

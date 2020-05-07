@@ -141,6 +141,13 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
         end
     end
     
+    % we need adjacent subjIDs, so let's ensure that
+    [subjIDs, newOrder] = sortrows(subjIDs(:));
+    [~,origOrder] = sort(newOrder);
+    
+    X = X(newOrder,:);
+    Y = Y(newOrder);
+    
     if isempty(subjIDs)
         error('Cannot perform multilevel PCR without a subjIDs identifier');
     end
@@ -249,18 +256,29 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
     elseif rank(sc) < size(sc,2)
         numcomps = rank(sc)-1;
         [~,compRank] = sort(var(sc),'descend');
-        retainComps = compRank(1:numcomps);
+        retainComps = sort(compRank(1:numcomps));
         
-        bDim(~ismember(bDim,retainComps)) = [];
-        wDim(~ismember(wDim,retainComps)) = [];
+        [bDimnew, wDimnew] = deal(zeros(length(compRank),1));
+        
+        bDimnew(bDim) = 1;
+        bDimnew = bDimnew(retainComps);
+        bDim = find(bDimnew);
+                
+        wDimnew(wDim) = 1;
+        wDimnew = wDimnew(retainComps);
+        wDim = find(wDimnew);
         
         sc_w = sc(:,wDim);
         sc_b = sc(:,bDim);
         pc_w = pc(:,wDim);
         pc_b = pc(:,bDim);
         
-        if ~any(ismember(bDim,retainComps)), warning('All between dimensions dropped due to rank deficiency'); end
-        if ~any(ismember(wDim,retainComps)), warning('All within dimensions dropped due to rank deficiency'); end
+        if ~any(ismember(bDim,retainComps)) && btDim > 0
+            warning('All between dimensions dropped due to rank deficiency'); 
+        end
+        if ~any(ismember(wDim,retainComps)) && wiDim > 0
+            warning('All within dimensions dropped due to rank deficiency'); 
+        end
     end
     
     xx = [ones(size(Y, 1), 1) sc(:, retainComps)];
@@ -295,4 +313,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
     else
         Bw = [0; pc(:,wDim)*b(wDim + 1)];
     end
+    
+    sc_b = sc_b(origOrder,:);
+    sc_w = sc_w(origOrder,:);
 end

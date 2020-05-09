@@ -226,8 +226,8 @@ classdef brainpathway < handle
         
         graphstruct = struct('within_network_degree', [], 'between_network_degree', []);
         
-        graph_properties(1, 1) struct = struct('regions', struct('within_network_degree', [], 'between_network_degree', []), ...
-            'nodes', struct('within_network_degree', [], 'between_network_degree', []));
+        % intended to contain metrics computed from the BCT, e.g.
+        graph_properties(1, 1) struct = struct('regions', table(), 'nodes', table());
         
         %       Specify a function handle and optional arguments to the
         %       function (in addition to data). This allows connectivity_properties to be defined in a very flexible way, using multiple functions and inputs.
@@ -262,7 +262,7 @@ classdef brainpathway < handle
         
         verbose = true;
         
-        data_quality struct = struct('tSNR', [], 'tSTD', []); % A flexible structure defining data quality metrics
+        data_quality struct = struct('tSNR', [], 'tSTD', [], 'median_corr', []); % A flexible structure defining data quality metrics
         
     end % properties
     
@@ -351,7 +351,12 @@ classdef brainpathway < handle
             % SPECIAL COMMANDS/PROCESSES
             % -------------------------------------------------------------------------
             
-            isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
+            if ~isempty(varargin)
+                isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
+            else % if no argments are passed in
+                isatlas = 0;
+            end
+        
             if ~any(isatlas) 
                 % load a default atlas if no atlas was passed in
                 % This normally also triggers the static method initialize_nodes: 
@@ -417,43 +422,43 @@ classdef brainpathway < handle
             % obj.listeners = addlistener(obj,'voxel_dat', 'PreSet',  @(src, evt) resample_space(obj, src, evt));
             
             % update region_dat
-            obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) brainpathway.update_region_data(obj, src, evt));
+            obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) obj.update_region_data(obj, src, evt));
 
             % update node_dat
-            obj.listeners(end+1) = addlistener(obj,'voxel_dat', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'voxel_dat', 'PostSet', @(src, evt) obj.update_node_data(obj, src, evt));
             
             
             % When region_dat is set/updated...
             % ------------------------------------------------------------
             % update region connectivity
-            obj.listeners(end+1) = addlistener(obj,'region_dat', 'PostSet',  @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'region_dat', 'PostSet',  @(src, evt) obj.update_region_connectivity(obj, src, evt));
   
             % When node_weights are set/updated...
             % ------------------------------------------------------------
             % update node_dat
-            obj.listeners(end+1) = addlistener(obj,'node_weights', 'PostSet', @(src, evt) brainpathway.update_node_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'node_weights', 'PostSet', @(src, evt) obj.update_node_data(obj, src, evt));
             
             
             % When node_dat is set/updated...
             % ------------------------------------------------------------
             % update node connectivity
-            obj.listeners(end+1) = addlistener(obj,'node_dat', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'node_dat', 'PostSet', @(src, evt) obj.update_node_connectivity(obj, src, evt));
             
             % When connectivity_properties are set/updated...
             % ------------------------------------------------------------
             % update node connectivity
-            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_node_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) obj.update_node_connectivity(obj, src, evt));
             
             % update region connectivity
-            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) brainpathway.update_region_connectivity(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'connectivity_properties', 'PostSet', @(src, evt) obj.update_region_connectivity(obj, src, evt));
             
             % ------------------------------------------------------------
             % When region_atlas is set/updated ....
             % update region_dat
-            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.update_region_data(obj, src, evt));
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) obj.update_region_data(obj, src, evt));
             
             % initialize nodes
-            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) brainpathway.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
+            obj.listeners(end+1) = addlistener(obj,'region_atlas', 'PostSet', @(src, evt) obj.intialize_nodes(obj, src, evt)); % this should update nodes too...not yet...
                         
             
         end % class constructor
@@ -833,6 +838,7 @@ classdef brainpathway < handle
             % update data quality metrics
             obj.data_quality.tSNR = mean(obj.region_dat) ./ std(obj.region_dat);    % if data are mean-centered, will be meaningless
             obj.data_quality.tSTD = std(obj.region_dat);                            % if data are mean-centered, will be meaningless
+            obj.data_quality.median_corr = median(nonzeros(tril(obj.connectivity.regions.r, -1)));
             
             obj = obj.update_region_connectivity(obj,src,evt);
         end

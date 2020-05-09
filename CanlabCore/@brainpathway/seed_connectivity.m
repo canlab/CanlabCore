@@ -5,7 +5,7 @@
 %
 % fmri_dat_connectivity_maps = seed_connectivity(obj, varargin)
 %
-% Given a brainpathway object, return voxel-wise maps of connectivity with
+% Given a brainpathway object, return region-wise, node-wise or voxel-wise maps of connectivity with
 % one or more 'seed' regions defined in the region_atlas atlas object.
 % - Uses Pearson's correlation metric on voxel data (.voxel_dat field)
 % - Returns output in an fmri_data object
@@ -52,6 +52,9 @@
 %
 %   **'nodes':**
 %       Calculate connectivity among node responses only
+%
+%   **'voxels':**
+%       Calculate voxwelwise connectivity
 %
 %   **param2:**
 %        future: could change correlation metrics or other options
@@ -119,8 +122,9 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             
-            case {'region', 'regions'}, regions_or_nodes = 'regions'; varargin{i+1} = [];
-            case {'node', 'nodes'}, regions_or_nodes = 'nodes'; varargin{i+1} = [];
+            case {'region', 'regions'}, regions_or_nodes = 'regions'; varargin{i} = [];
+            case {'node', 'nodes'}, regions_or_nodes = 'nodes'; varargin{i} = [];
+            case {'voxel', 'voxels'}, regions_or_nodes = 'voxels'; varargin{i} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

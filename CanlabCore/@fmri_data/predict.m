@@ -89,6 +89,16 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_multregress:**
 %        multiple regression
 %
+%   **cv_moorepenroseinv**
+%        the l2 minimizing norm solution. Uses matlab's pinv(). This is not
+%        the same as ridge regression. In underdetermined problems there
+%        are multiple solutions which satisfy the MSE minimation criteria.
+%        This picks one of those (infinite) solutions based on norm
+%        minimization. Ridge regression wouldn't necessarily pick ANY of
+%        them. Useful as a naive benchmark in evaluating ML solutions, and
+%        as a fast algorithm (although SVR may have similar speed and better 
+%        performance).
+%
 %   **cv_univregress:**
 %        Average predictions from separate univariate regression of outcome on each feature
 %
@@ -97,6 +107,25 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 %   **cv_pcr:**
 %        [default] Cross-validated principal components regression
+%
+%   **cv_mlpcr:**
+%        Cross-validated multilevel principal components regression. See
+%        'help mlpcr2' for full documentation. If run with default settings
+%        returns the same result as cv_pcr, except with information
+%        pertaining to within and between predictive variance in optout.
+%        optout provides 8 outputs: total model, between model, within 
+%        model, intercept (same for all models), between eigenvectors, 
+%        between scores, within eigenvectors and within scores. Requires 
+%        'subjID' option followed by size(obj.dat,2) x 1 vector of block 
+%        labels. Subjects must be adjacent (see cv_multilevel_glm for
+%        details)
+%        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
+%        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
+%                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
+%
+%   **cv_pls:**
+%        Cross-validated partial least squares regression (only univariate
+%        outcomes for now)
 %
 %   **cv_lassopcr:**
 %        Cross-val LASSO-PCR; can enter 'lasso_num' followed by components to retain by shrinkage
@@ -510,6 +539,9 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %
 %    6/2017: Tor and Phil Kragel: update parallel processing for
 %    bootstrapping. Default is to use parallel.
+%
+%
+%    4/22/2020: Phil Kragel, add PLS regression assuming univariate outcome
 % ..
 
 % ..
@@ -571,12 +603,14 @@ for i = 1:length(varargin)
                 useparallel = 'never';
                 
             case {'nfolds', 'error_type', 'algorithm_name', 'useparallel', 'verbose'}
+                predfun_inputs{end+1} = varargin{i};
+                predfun_inputs{end+1} = varargin{i+1};
                 str = [varargin{i} ' = varargin{i + 1};'];
                 eval(str)
                 varargin{i} = [];
                 varargin{i + 1} = [];
                 
-            case {'cv_pcr', 'cv_multregress', 'cv_univregress', 'cv_svr', 'cv_lassopcr', 'cv_svm','cv_lassopcrmatlab'}
+            case {'cv_pcr', 'cv_multregress', 'cv_univregress', 'cv_svr', 'cv_lassopcr', 'cv_svm','cv_lassopcrmatlab' ,'cv_pls'}
                 algorithm_name = varargin{i};
                 
             case {'bootweights'}
@@ -851,7 +885,7 @@ switch error_type
         
         phi = corr(obj.Y, yfit); %10/7/12: Luke Chang: this will calculate phi correlation coefficient between two binary variables
         
-    case {'mse' 'rmse', 'meanabserr'}
+    case {'mse' 'rmse', 'meanabserr','r'}
         err = obj.Y - yfit;
         
         %mse = mean(err' * err); %10/8/12: Luke Chang: I think this is only capturing sum of squared error
@@ -859,7 +893,7 @@ switch error_type
         rmse = sqrt(mse);
         meanabserr = nanmean(abs(err));  %if you are getting strange error here make sure yo are using matlab default nanmean (e.g., which nanmean)
         r = corrcoef(obj.Y, yfit, 'rows', 'pairwise');
-        r = r(1, 2);
+        r = r(1, 2); % we need to maximize correlation, not minimize, so flip sign
         
         eval(['cverr = ' error_type ';']);
         
@@ -1027,6 +1061,45 @@ end
 
 % ----------------------------- algorithms -------------------------------
 
+function [yfit, vox_weights, intercept] = cv_pls(xtrain, ytrain, xtest, cv_assignment, varargin)
+
+% Choose number of components to save [optional]
+wh = find(strcmp(varargin, 'numcomponents'));
+if ~isempty(wh) && length(varargin) >= wh + 1
+    
+    numc = varargin{wh + 1};
+    
+else
+
+    numc = [];
+end
+
+if ~isempty(numc)
+[~,~,~,~,b]=plsregress(xtrain,ytrain,numc);
+else %use max possible
+[~,~,~,~,b]=plsregress(xtrain,ytrain);
+end
+vox_weights = b(2:end);
+
+intercept = b(1);
+
+yfit = intercept + xtest * vox_weights;
+
+end
+
+
+% ----------------------------- algorithms -------------------------------
+function [yfit, vox_weights, intercept] = cv_moorepenroseinv(xtrain, ytrain, xtest, cv_assignment, varargin)
+
+X = [ones(size(xtrain,1),1), xtrain];
+b = pinv(X) * ytrain;
+intercept = b(1);
+vox_weights = b(2:end);
+
+yfit = intercept + xtest*vox_weights;
+
+end
+
 function [yfit, vox_weights, intercept] = cv_pcr(xtrain, ytrain, xtest, cv_assignment, varargin)
 
 [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
@@ -1081,7 +1154,11 @@ end
 % tic, for i = 1:1000, b3 = glmfit(sc, ytrain); end, toc
 % b1 is 6 x faster than b2, which is 2 x faster than b3
 
-vox_weights = pc(:, 1:numcomps) * b(2:end);
+if numcomps > 0
+    vox_weights = pc(:, 1:numcomps) * b(2:end);
+else
+    vox_weights = zeros(size(xtrain,2),1);
+end
 
 intercept = b(1);
 
@@ -1329,7 +1406,7 @@ if length(unique(ytrain)) == 2 %run in classification mode
     
     % enforce logical in case of [1, -1] inputs
     ytrain = ytrain > 0;
-elseif any(strcmp(lower(varargin),'poisson'))
+elseif any(strcmp(varargin,'poisson'))
     runmode = 'poisson regression';
     fprintf(1,'Regression mode (Poisson) ');
     distribution = 'poisson';
@@ -1629,6 +1706,11 @@ end % function
 
 function [yfit, w, dummy, intercept] = cv_svr(xtrain, ytrain, xtest, cv_assignment, varargin)
 
+verbose=0;
+if any(strcmp(varargin,'verbose'))
+    verbose = varargin{find(strcmp(varargin,'verbose'))+1};
+end
+
 dataobj = data('spider data', xtrain, ytrain);
 
 % Define algorithm
@@ -1640,20 +1722,21 @@ wh = find(strcmp('C', varargin));
 if ~isempty(wh), slackstr = ['C=' num2str(varargin{wh(1)+1})]; end
 
 svrobj = svr({slackstr, 'optimizer="andre"'});
+if ~verbose, svrobj.verbosity = 0; end
 
 % Training
-fprintf('Training...')
+if verbose, fprintf('Training...'); end
 t1 = tic;
 [res, svrobj] = train(svrobj, dataobj);
 w = get_w(svrobj);
 t2 = toc(t1);
-fprintf('Done in %3.2f sec\n', t2)
+if verbose, fprintf('Done in %3.2f sec\n', t2); end
 
 % Testing
-fprintf('Testing...')
+if verbose, fprintf('Testing...'); end
 res2 = test(svrobj, data('test data', xtest, []));
 yfit = res2.X; % this is proportional to res.X*w (perfectly correlated), but scale is different
-fprintf('\n');
+if verbose, fprintf('\n'); end;
 % vec = [res.X res.Y dataobj.X * w' res2.X]
 % corrcoef(vec)
 

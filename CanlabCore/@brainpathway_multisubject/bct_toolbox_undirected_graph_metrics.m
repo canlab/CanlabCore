@@ -1,4 +1,4 @@
-function bs = bct_toolbox_undirected_graph_metrics(bs)
+function bs = bct_toolbox_undirected_graph_metrics(bs, thresh, varargin)
 % bs = bct_toolbox_undirected_graph_metrics(bs)
 %
 % Method for brainpathway_multisubject that extracts graph metrics using
@@ -23,34 +23,42 @@ function bs = bct_toolbox_undirected_graph_metrics(bs)
 r = double(bs.connectivity.regions.r);
 
 n = size(r, 3); % subjects
+n_nodes = size(r, 1); % nodes
 
+bs.graph_properties.regions = table(); % clear out -- overwrite
 
+fprintf('Completed  subject        ');
+
+warning off
 for i = 1:n
     
-    [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r(:, :, i));
+    [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r(:, :, i), thresh, varargin{:});
     
-    vnames = graph_prop.Properties.VariableNames;
-    
-    bs.graph_properties.regions.metric_names = vnames;
-    
+    % nodal properties
+    vnames = graph_prop.Properties.VariableNames;    
     for j = 1:length(vnames)
         
-        bs.graph_properties.regions.(vnames{j})(:, i) = graph_prop.(vnames{j});
+        bs.graph_properties.regions.(vnames{j})(i, 1:n_nodes) = graph_prop.(vnames{j});
         
     end
     
-    vnames = graph_prop_glob.Properties.VariableNames;
-    
-    bs.graph_properties.regions.glob_metric_names = vnames;
-    
+    % global properties
+    vnames = graph_prop_glob.Properties.VariableNames;    
     for j = 1:length(vnames)
         
-        bs.graph_properties.regions.(vnames{j})(1, i) = graph_prop_glob.(vnames{j});
+        bs.graph_properties.regions.(vnames{j})(i, 1) = graph_prop_glob.(vnames{j});
         
     end
     
+    % print to update status
+    fprintf('\b\b\b\b\b\b%5d\n',i) 
+
 end % subject loop
+warning on
 
 end % function
+
+
+    
 
 

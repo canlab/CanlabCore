@@ -152,8 +152,22 @@ cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
 vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
 
 % adjust defaults
+prct_splitcolor = 20;
 if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    cmaprange = double([prctile(mapd(mapd < 0), 20) prctile(mapd(mapd < 0), 80) prctile(mapd(mapd > 0), 20) prctile(mapd(mapd > 0), 80) ]);
+    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+    while numel(unique(cmaprange)) < 4
+        prct_splitcolor = prct_splitcolor - 5;
+        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+        if prct_splitcolor == 0
+            warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
+            cmaprange([2 3]) = cmaprange([1 4])*0.9;
+            break;
+        end
+    end
 end
 
 

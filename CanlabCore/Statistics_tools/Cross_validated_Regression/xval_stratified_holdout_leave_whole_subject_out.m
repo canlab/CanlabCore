@@ -46,7 +46,7 @@
 %   **doverbose:**
 %        Verbose output
 %
-%   **doplots:**
+%   **doplot:**
 %        Plot output/holdout sets
 %
 % :Outputs:
@@ -103,7 +103,7 @@ end
 % Logical flags
 % ----------------------------------------------------------------------
 if any(strcmp(varargin, 'noverbose')), doverbose = false; end
-if any(strcmp(varargin, 'noplots')), doplots = false; end
+if any(strcmp(varargin, 'noplots')), doplot = false; end
 
 % ----------------------------------------------------------------------
 % Select holdout sets
@@ -173,7 +173,7 @@ end
     end
     
 % Plot holdout sets
-if doplots
+if doplot
     
     % scaledid = 1 + (rankdata(id) ./ max(id));
     
@@ -239,7 +239,7 @@ p.addRequired('id', valfcn_number);
 % Pattern: keyword, value, validation function handle
 
 p.addParameter('doverbose', true);
-p.addParameter('doplots', true);
+p.addParameter('doplot', true);
 p.addParameter('nfolds', 10, valfcn_scalar);
 
 % Parse inputs and distribute out to variable names in workspace

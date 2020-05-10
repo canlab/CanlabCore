@@ -121,7 +121,7 @@
 %   cv_mlpcr_wi and cv_mlpcr_bt should have within and between priority
 %   (respectively) by default.
 
-function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
+function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
     subjIDs = [];
     wiDim = Inf;
     btDim = Inf;
@@ -285,13 +285,13 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
     
     if rank(xx) <= size(sc, 2)
         % compute (optional: weighted) pseudoinverse if not full rank
-        [u,s,v] = svd(sf.^2.*xx,'econ');
+        [u,s,v] = svd(sf.*xx,'econ');
         s = diag(s);
         s(s~=0) = 1./s(s~=0);
         s = diag(s);
         pinv_xx = v*s*u';
-        
-        b = pinv_xx * Y;
+
+        b = pinv_xx * (sf.*Y);
     else
         b = inv(xx'*diag(sf.^2)*xx)*xx'*diag(sf.^2)*Y;
     end
@@ -314,6 +314,6 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
         Bw = [0; pc(:,wDim)*b(wDim + 1)];
     end
     
-    sc_b = sc_b(origOrder,:);
-    sc_w = sc_w(origOrder,:);
+    if ~isempty(sc_b), sc_b = sc_b(origOrder,:); end
+    if ~isempty(sc_w), sc_w = sc_w(origOrder,:); end
 end

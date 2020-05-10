@@ -166,7 +166,7 @@ end
     num_folds_for_each_grouping_id = sum(fold_sim' > 0);
     
     if all(num_folds_for_each_grouping_id) == 1
-        fprintf('Observations from each id appear in exactly 1 fold\n')
+        if doverbose, fprintf('Observations from each id appear in exactly 1 fold\n'); end
     else
         disp('Observations from each id appear in > 1 fold! Check/debug this function.');
         keyboard

@@ -7,7 +7,10 @@ function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r,
 % r = correlation matrix
 % thresh = 0 to 1 value. (.1 is a common value)
 %
-% optional: 'doplots'
+% optional: 
+%   'doplots' - show matrices
+%   'doweighted' -- this increase compute time by several orders of
+%   magnitude. Default = false
 %
 % Outputs:
 % graph_prop = A table of node-level graph metrics 
@@ -48,7 +51,9 @@ function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r,
 % % for similarity among communities/modules detected with different methods, see partition_distance.m
 
 doplots = false;
+doweighted = false;
 if any(strcmp(varargin, 'doplots')), doplots = true; end
+if any(strcmp(varargin, 'doweighted')), doweighted = true; end
 
 
 % Prep r for BCT undirected 
@@ -56,17 +61,13 @@ r = double(r);
 r = (r' + r) ./ 2;          % enforce symmetry (rounding error possible)
 r = r - eye(size(r));       % for BCT and squareform
 
-% Fisher transform
-z = rToZ(r);    
-
-% correlations of 1.00 get transformed to Inf, which causes
-% BCT to crash in some functions. Replace w/ max value. Note that this code
-% does not correctly handle case of r = -1.00, as this is very unlikely.
-z(isinf(z)) = max(z(~isinf(z)));
-
 % Threshold: Use sig matrix or link density
-bu_matrix = weight_conversion(threshold_proportional(z, thresh), 'binarize');
-wu_matrix = threshold_proportional(z, thresh);
+bu_matrix = weight_conversion(threshold_proportional(r, thresh), 'binarize');
+
+% Make weighted matrix based on Fisher transform
+z = rToZ(r);
+z(isinf(z)) = max(z(~isinf(z))); % correlations of 1.00 get transformed to Inf, which causes BCT to crash in some functions. Replace w/ max value. Note that this code does not correctly handle case of r = -1.00, as this is very unlikely.
+wu_matrix = z;
 
 % view
 if doplots
@@ -80,25 +81,25 @@ end
 graph_prop = table();
 
 graph_prop.community = modularity_und(bu_matrix, 1);           % C: communities from adjacency matrix
-graph_prop.community_w = modularity_und(wu_matrix, 1);
-graph_prop.community_w2 = community_louvain(wu_matrix, 1, [], 'negative_asym');
 graph_prop.core_w = core_periphery_dir(wu_matrix, 1)';         % Core-periphery
 
 graph_prop.degree = degrees_und(bu_matrix)';                   % Node degree
-graph_prop.strength = strengths_und(wu_matrix)';               % weighted strength. tested: same results as using r_mean
-
 graph_prop.betweenness_bin = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...
-graph_prop.betweenness_weighted = betweenness_wei(wu_matrix);  % note: I think this one is very slow
-
 graph_prop.clustercoef_bin = clustering_coef_bu(bu_matrix);        % Clustering coefficient
-graph_prop.clustercoef_weighted = clustering_coef_wu(wu_matrix);        % Clustering coefficient
-
 graph_prop.local_efficiency_bin = efficiency_bin(bu_matrix, 1);    % Local efficiency
-graph_prop.local_efficiency_weighted = efficiency_wei(wu_matrix, 1);    % Local efficiency
 
-graph_prop.eigenvector_centrality = eigenvector_centrality_und(wu_matrix);    % Eigenvector centrality (similar to PageRank)
-
-% Others to consider
+% weighted matrix computations
+if doweighted
+    graph_prop.strength = strengths_und(wu_matrix)';               % weighted strength. tested: same results as using r_mean
+    graph_prop.local_efficiency_weighted = efficiency_wei(wu_matrix, 1);    % Local efficiency
+    graph_prop.eigenvector_centrality = eigenvector_centrality_und(wu_matrix);    % Eigenvector centrality (similar to PageRank)
+    graph_prop.clustercoef_weighted = clustering_coef_wu(wu_matrix);        % Clustering coefficient
+    graph_prop.betweenness_weighted = betweenness_wei(wu_matrix);  % note: slow
+    
+    graph_prop.community_w = modularity_und(wu_matrix, 1);
+    graph_prop.community_w2 = community_louvain(wu_matrix, 1, [], 'negative_asym');
+end
+    % Others to consider
 % assortativity_bin(bu_network, 0);
 % kcore_bu
 % graph_prop.betweenness_w = betweenness_wei(OUT.r);            % slow

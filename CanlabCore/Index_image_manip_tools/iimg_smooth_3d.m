@@ -6,7 +6,7 @@ function w = iimg_smooth_3d(w, volInfo, sfwhm, varargin)
 %
 %     function w = smooth_3d(w, volInfo, sfwhm, [badvox])
 %
-% NOTE: SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN
+% NOTE: Enter smoothing kernel in mm, as a scalar or [sx sy sz] triple
 %
 % :Inputs:
 %

@@ -351,7 +351,12 @@ classdef brainpathway < handle
             % SPECIAL COMMANDS/PROCESSES
             % -------------------------------------------------------------------------
             
-            isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
+            if ~isempty(varargin)
+                isatlas = cellfun(@(x) isa(x, 'atlas'), varargin);
+            else % if no argments are passed in
+                isatlas = 0;
+            end
+        
             if ~any(isatlas) 
                 % load a default atlas if no atlas was passed in
                 % This normally also triggers the static method initialize_nodes: 

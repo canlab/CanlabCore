@@ -1,5 +1,9 @@
 function [yfit, vox_weights, vox_weights_bt, vox_weights_wi, intercept, pc_b, sc_b, pc_w, sc_w] = ...
+<<<<<<< HEAD
 cv_mlpcr(xtrain, ytrain, xtest, cv_assignment, varargin)
+=======
+    cv_mlpcr(xtrain, ytrain, xtest, cv_assignment, varargin)
+>>>>>>> parent of e9333bc... Revert "Merge branch 'master' of https://github.com/canlab/CanlabCore"
 
     [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(xtrain, ytrain,  varargin{:});
                 

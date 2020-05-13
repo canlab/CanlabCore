@@ -53,6 +53,19 @@
 %   **out2:**
 %        description of out2
 %
+%   **'doplot', [logical flag]:**
+%        Create plots; default = true. 'noplot' to turn off.
+%
+%   **'doverbose', [logical flag]:**
+%        Verbose output; default = true. 'noverbose' to turn off.
+%
+%   **'dooptimize', [logical flag]:**
+%        Optimize hyperparameters; default = true. 'nooptimize' to turn off.
+%
+%   **'doprepeats', [num repeats]:**
+%        Repeat cross-val with different partitions; default = 10. 
+%        Enter number of repeats, 'norepeats' to turn off.
+%
 % :Examples:
 % ::
 %
@@ -89,9 +102,15 @@
 %    DEFAULTS AND INPUTS
 % ..
 
-% Some useful things
+% Some useful display helper functions
+% --------------------------------------------------------
+
 n_cols = 80;
 sep_str = repmat('_', 1, n_cols);  % see textwrap
+
+dashes = '----------------------------------------------';
+printstr = @(dashes) disp(dashes);
+printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
 
 
 % ----------------------------------------------------------------------
@@ -107,11 +126,10 @@ ARGS = parse_inputs(varargin{:});
 
 % If you want to distribute arguments back out to variables, use this:
 
-IN = p.Results;
-fn = fieldnames(IN);
+fn = fieldnames(ARGS);
 
 for i = 1:length(fn)
-    str = sprintf('%s = IN.(''%s'');', fn{i}, fn{i});
+    str = sprintf('%s = ARGS.(''%s'');', fn{i}, fn{i});
     eval(str)
 end
 

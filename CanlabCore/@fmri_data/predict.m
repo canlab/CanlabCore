@@ -122,6 +122,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
+<<<<<<< HEAD
 %        Note: You probably want to bootstrap this manually if
 %           bootstrapping. If bootstrapping using fmri_data/predict's
 %           built in method you should note three things. First, You are
@@ -134,6 +135,8 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %           may want to weight your bootstrap PCAs and regressions by using
 %           the {'cpca',1} argument pair to compensate for imbalance in
 %           bootstrap samples.
+=======
+>>>>>>> parent of e9333bc... Revert "Merge branch 'master' of https://github.com/canlab/CanlabCore"
 %
 %   **cv_pls:**
 %        Cross-validated partial least squares regression (only univariate

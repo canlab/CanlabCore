@@ -48,7 +48,7 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %   **smooth:**
 %         Smoothed images with Gaussian filter
 %           - obj = preprocess(obj, 'smooth', FWHM in mm)
-%           - Enter smoothing kernel in mm, as a scalar or [sx sy sz] triple
+%         *NOTE* SMOOTHING KERNEL MAY BE IN VOX, AS VOL INFO IS NOT PASSED IN
 %
 %   **interp_images:**
 %        Interpolate all voxels in a series of images specified
@@ -454,19 +454,8 @@ switch meth
             error('Enter smoothing FWHM in mm as 3rd argument.');
         end
         
-        sfwhm = varargin{1};
-        
-        if length(sfwhm) == 1, sfwhm = repmat(sfwhm, 1, 3); end
-        
-        if ~iscolumn(sfwhm), sfwhm = sfwhm'; end
-        
-        if length(sfwhm) ~= 3, error('FWHM must be scalar or [sx sy sz] triple'), end
-        
-        % convert to voxels
-        sfwhm = sfwhm ./ abs(diag(obj.volInfo.mat(1:3, 1:3)));
-
         obj = replace_empty(obj);
-        obj.dat = iimg_smooth_3d(obj.dat, obj.volInfo, sfwhm);
+        obj.dat = iimg_smooth_3d(obj.dat, obj.volInfo, varargin{1});
         
         obj.history{end+1} = sprintf('Smoothed images with %3.0f FWHM filter', varargin{1});
         disp(obj.history{end});

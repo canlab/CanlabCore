@@ -60,6 +60,11 @@ function [handles, key_points] = tor_wedge_plot(radius_values, text_labels, vara
 %   **'outer_circle_radius':**
 %       Followed by radius for outer guide circle
 %
+%   **'labelradius':**
+%       Followed by a multiplier to use with outer_circle_radius (which
+%       will be set automatically if not specified). Larger values give
+%       text farther out.
+%
 %   **'nofill':**
 %       Turn off color fill in wedges
 %
@@ -119,6 +124,7 @@ linewidth = 1;
 outer_circle_radius = 1;
 nofill = false;
 docolorband=false;
+labelradius = [];
 
 radius_values = double(radius_values);
 
@@ -163,6 +169,8 @@ for i = 1:length(varargin)
             case 'outer_circle_radius', outer_circle_radius = varargin{i+1}; varargin{i+1} = [];
                 
             case 'colorband_colors', colorband_colors = varargin{i+1}; varargin{i+1} = [];
+            
+            case 'labelradius', labelradius = varargin{i+1}; varargin{i+1} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -363,12 +371,15 @@ switch labelstyle
         
     case 'equal'
         
+        if isempty(labelradius)
+            labaelradius = 0.04;
+        end
         
         for i = 1:n_categories
             tmid = key_points(i).tmid_radians;
             
-            xmid_outside = 0 + (outer_circle_radius + .04*outer_circle_radius) * cos(tmid);
-            ymid_outside = 0 + (outer_circle_radius + .04*outer_circle_radius) * sin(tmid);
+            xmid_outside = 0 + (outer_circle_radius + labelradius*outer_circle_radius) * cos(tmid);
+            ymid_outside = 0 + (outer_circle_radius + labelradius*outer_circle_radius) * sin(tmid);
             
             handles(i).texth = text(xmid_outside, ymid_outside, text_labels{i}, ...
                 'Rotation', myrotation(i), 'FontSize', mytextsize,...
@@ -379,9 +390,13 @@ switch labelstyle
     case 'curvy'
         breakpoints=0:2*pi/n_categories:2*pi;
 
+        if isempty(labelradius)
+            labaelradius = 0.28;
+        end
+        
         for i = 1:n_categories
             
-            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .28*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
+            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ labelradius*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
             delete(text_location_handles{i}.line_han(2:3))
             
             xy = fliplr([text_location_handles{i}.line_han(1).XData;
@@ -410,9 +425,13 @@ switch labelstyle
     case 'radial'
        breakpoints=0:2*pi/n_categories:2*pi;
 
+        if isempty(labelradius)
+            labaelradius = 0.28;
+        end
+        
         for i = 1:n_categories
             
-            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ .28*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
+            text_location_handles{i} = draw_pie_wedge(breakpoints(i), breakpoints(i+1), outer_circle_radius+ labelradius*outer_circle_radius, 'linecolor', 'none', 'fillcolor', 'none');
             delete(text_location_handles{i}.line_han(2:3))
             
             xy = fliplr([text_location_handles{i}.line_han(1).XData;

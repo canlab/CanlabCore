@@ -35,12 +35,9 @@
 %        crossvalind and cvpartition can be helpful in generating these
 %        indices. The hold-out set is used as the reference distribution
 %
+% :Optional Inputs:
 %   **thresh:**
 %        Followed by a link density, ranging from .01 - .99. Will use .1 by default.
-%
-% :Optional Inputs:
-%    **'doweighted'**  
-%       Compute weighted metrics
 %
 % :Outputs:
 %
@@ -67,14 +64,28 @@
 %    Programmers' notes:
 %    Initial commit -- Yoni Ashar, April 2020
 % ..
-function [bs, refgroup] = compute_HDIs(bs, refgroup, thresh, varargin)
+function [bs, refgroup] = compute_HDIs(bs, refgroup, varargin)
 
-doweighted = 0;
-if any(strcmp(varargin, 'doweighted')), doweighted = true; end
+thresh = .1; % default 10% link density
+
+allowable_inputs = {'thresh'};
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+
+            case allowable_inputs
+                
+                eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
 
 %% compute BCT measures on my subjects
-print_header(sprintf('Computing BCT measures on %d subjects in test group', size(bs.connectivity.regions.r,3)));
-bs = bct_toolbox_undirected_graph_metrics(bs, thresh, varargin{:});
+print_header(sprintf('Computing BCT measures on %d subjects in test reference group', size(bs.connectivity.regions.r,3)));
+bs = bct_toolbox_undirected_graph_metrics(bs, thresh);
 
 
 %% Compute BCT measures on ref group and regress
@@ -91,7 +102,7 @@ elseif isa(refgroup, 'brainpathway_multisubject')
     print_header(sprintf('Computing BCT measures on %d subjects in external reference group', size(refgroup.connectivity.regions.r,3)));
     
     %% compute BCT measures on ref group  
-    refgroup = bct_toolbox_undirected_graph_metrics(refgroup, thresh, varargin{:});
+    refgroup = bct_toolbox_undirected_graph_metrics(refgroup, thresh);
     
     %% for each subject, regress on mean referece group to get an HDI (i.e., the slope)
 

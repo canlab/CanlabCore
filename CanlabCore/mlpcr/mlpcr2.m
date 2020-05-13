@@ -1,4 +1,4 @@
-% function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
+% function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
 %
 % Multilevel PCR v2.0 designed for prediction on datasets with multiple 
 % subjects and multiple observations per subject. This function is most
@@ -85,8 +85,6 @@
 %   pc_w        - within eigenvectors
 %
 %   sc_w        - scores on within eigenvectors
-%
-%   b           - regression coefficients in PCA space
 %
 %
 % Version History ::

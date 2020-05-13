@@ -108,6 +108,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_pcr:**
 %        [default] Cross-validated principal components regression
 %
+<<<<<<< HEAD
 %   **cv_mlpcr:**
 %        Cross-validated multilevel principal components regression. See
 %        'help mlpcr2' for full documentation. If run with default settings
@@ -134,6 +135,8 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %           the {'cpca',1} argument pair to compensate for imbalance in
 %           bootstrap samples.
 %
+=======
+>>>>>>> 33d81deb662faf793c7dfbbe54ea1ab08bb31cd2
 %   **cv_pls:**
 %        Cross-validated partial least squares regression (only univariate
 %        outcomes for now)
@@ -896,7 +899,7 @@ switch error_type
         
         phi = corr(obj.Y, yfit); %10/7/12: Luke Chang: this will calculate phi correlation coefficient between two binary variables
         
-    case {'mse' 'rmse', 'meanabserr','r'}
+    case {'mse' 'rmse', 'meanabserr'}
         err = obj.Y - yfit;
         
         %mse = mean(err' * err); %10/8/12: Luke Chang: I think this is only capturing sum of squared error

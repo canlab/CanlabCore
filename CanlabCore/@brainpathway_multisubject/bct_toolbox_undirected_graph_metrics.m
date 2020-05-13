@@ -1,4 +1,4 @@
-function bs = bct_toolbox_undirected_graph_metrics(bs, thresh, varargin)
+function bs = bct_toolbox_undirected_graph_metrics(bs, thresh)
 % bs = bct_toolbox_undirected_graph_metrics(bs)
 %
 % Method for brainpathway_multisubject that extracts graph metrics using
@@ -32,7 +32,7 @@ fprintf('Completed  subject        ');
 warning off
 for i = 1:n
     
-    [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r(:, :, i), thresh, varargin{:});
+    [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r(:, :, i), thresh);
     
     % nodal properties
     vnames = graph_prop.Properties.VariableNames;    

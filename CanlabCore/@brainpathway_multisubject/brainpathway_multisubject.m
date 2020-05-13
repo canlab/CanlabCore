@@ -35,13 +35,9 @@ classdef brainpathway_multisubject < brainpathway
 
         % class constructor
         function obj = brainpathway_multisubject(varargin)
-            % call super-class constructor
-            obj@brainpathway(varargin{:})
-            
             % delete listeners for now, so they don't cause trouble. don't
             % need them at the moment in this class
             delete(obj.listeners)
-            
         end
         
         function obj = update_region_connectivity(obj, src, evt)

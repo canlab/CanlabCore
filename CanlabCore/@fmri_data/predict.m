@@ -102,18 +102,16 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %   **cv_mlpcr:**
 %        Cross-validated multilevel principal components regression. See
 %        'help mlpcr2' for full documentation. If run with default settings
-%        returns the same result as cv_pcr, except with information
-%        pertaining to within and between predictive variance in optout.
-%        optout provides 8 outputs: total model, between model, within 
-%        model, intercept (same for all models), between eigenvectors, 
-%        between scores, within eigenvectors and within scores. Requires 
-%        'subjID' option followed by size(obj.dat,2) x 1 vector of block 
-%        labels. Subjects must be adjacent (see cv_multilevel_glm for
-%        details)
+%        returns the same result as cv_pcr (except when bootstrapping, 
+%        see below), except with information pertaining to within and 
+%        between predictive variance in optout. optout provides 8 outputs: 
+%        total model, between model, within model, intercept (same for all 
+%        models), between eigenvectors, between scores, within 
+%        eigenvectors and within scores. Requires 'subjID' option followed 
+%        by size(obj.dat,2) x 1 vector of block labels.
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
-<<<<<<< HEAD
 %        Note: You probably want to bootstrap this manually if
 %           bootstrapping. If bootstrapping using fmri_data/predict's
 %           built in method you should note three things. First, You are
@@ -126,11 +124,9 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %           may want to weight your bootstrap PCAs and regressions by using
 %           the {'cpca',1} argument pair to compensate for imbalance in
 %           bootstrap samples.
-=======
->>>>>>> parent of e9333bc... Revert "Merge branch 'master' of https://github.com/canlab/CanlabCore"
 %
 =======
->>>>>>> parent of 7fb9cb7... Merge branch 'master' of https://github.com/canlab/CanlabCore
+>>>>>>> 33d81deb662faf793c7dfbbe54ea1ab08bb31cd2
 %   **cv_pls:**
 %        Cross-validated partial least squares regression (only univariate
 %        outcomes for now)
@@ -2054,6 +2050,9 @@ if doMultiClass
     end%reshape because MATLAB's bootstrp makes a single row
 end
 
+% ToDO:
+% This needs to be updated to a bias corrected bootstrap with kernel
+% density estimation for sparse data.
 WTS.wste = squeeze(nanstd(WTS.w)); %1/20/16 add squeeze for multiclass case
 WTS.wmean = squeeze(nanmean(WTS.w)); %1/20/16 add squeeze for  multiclass case
 WTS.wste(WTS.wste == 0) = Inf;  % in case unstable regression returns all zeros

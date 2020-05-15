@@ -51,7 +51,7 @@ end
 % and then grab a few more fields that are not found with the size check
 % above.  these field are all 1D
 
-otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y'};
+otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y', 'metadata_table'};
 for f = otherfields
     field = char(f);
     

@@ -296,7 +296,7 @@ end
 % Variance inflation
 vifs = getvif(X);
 
-if any(vifs) > 4
+if any(vifs > 4)
     
     mywarnings{end+1} = 'Warning!!!  Design multicolinearity. Some regressors have variance inflation factors > 4.';
     

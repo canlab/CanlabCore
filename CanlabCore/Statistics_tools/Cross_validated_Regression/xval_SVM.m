@@ -150,7 +150,7 @@ function S = xval_SVM(varargin)
 % Simulate some data with true signal, with two observations per person
 % -------------------------------------------------------------------------
 % n = 50; % participants
-% k = 100; % features
+% k = 120; % features
 % true_sig = [repmat(randn(1, k), n, 1); repmat(randn(1, k), n, 1)]; % First n are Class 1, second n are Class 2
 % noise = 10 * randn(2 * n, k);         % Noise var >> true signal var
 % X = true_sig + noise;                  % Predictors
@@ -165,6 +165,11 @@ function S = xval_SVM(varargin)
 % S = xval_SVM(X, Y, id);                                              % Optimize, repeat with optimal model, bootstrap
 %
 % S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap', 'noverbose', 'noplot');  % Returns only the output S
+%
+% Train the same model without within-person observations (i.e., 1 observation per id):
+% This does single-interval classification only
+% 
+% S = xval_SVM(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
 %
 % :References:
 %   See Mathworks functions
@@ -351,7 +356,7 @@ if dooptimize
     % parameters.
     Mdl = fitcsvm(X, S.Y,...
         'OptimizeHyperparameters', {'BoxConstraint' 'Standardize'}, 'HyperparameterOptimizationOptions',...
-        struct('AcquisitionFunctionName','expected-improvement-plus', 'Verbose', double(doverbose)), 'ShowPlots', double(doplot)); %#ok<*IDISVAR>
+        struct('AcquisitionFunctionName','expected-improvement-plus', 'Verbose', double(doverbose), 'ShowPlots', double(doplot))); %#ok<*IDISVAR>
     
     % Notes:
     % - Extract hyperparameter choices in a format that we can pass back in
@@ -774,7 +779,7 @@ function  best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, other_
 % - We could use the best observed point, but it's preferred to use the
 % best estimated values from a smooth model fit to observed samples.
 
-opt_hyperparam_table = Mdl.HyperparameterOptimizationResults.XAtMinObjective;
+% opt_hyperparam_table = Mdl.HyperparameterOptimizationResults.XAtMinObjective;
 opt_hyperparam_table = Mdl.HyperparameterOptimizationResults.XAtMinEstimatedObjective;
 
 best_modeloptions = other_modeloptions;
@@ -889,7 +894,7 @@ set(gca, 'XTick', [1 2], 'XTickLabel', {'Y' 'id'});
 title('Outcome (Y) and id');
 
 subplot(1, 3, 3);
-r = corr(X);
+r = corr(X');
 [~, wh] = sort(Y);
 imagesc(r(wh, wh));
 n1 = sum(Y == -1);
@@ -904,6 +909,8 @@ set(h1, 'FaceColor', 'none', 'EdgeColor', 'r', 'LineWidth', 2);
 axis tight; set(gca, 'YDir', 'reverse');
 % set(gca, 'XTick', [1 2], 'XTickLabel', {'Y' 'id'});
 title('Inter-obs correlations sorted by Y [-1, 1]');
+
+colorbar
 
 drawnow, snapnow
 end
@@ -1039,12 +1046,13 @@ subplot(1, 2, 2)
 lineh = plot(S.dist_from_hyperplane_xval(S.Y == 1), S.class_probability_xval(S.Y == 1), 'v', 'MarkerFaceColor', [.2 .8 .2]);
 lineh = [lineh plot(S.dist_from_hyperplane_xval(S.Y == -1), S.class_probability_xval(S.Y == -1), '^', 'MarkerFaceColor', [.2 .2 1])];
 
-legend({'True Class = 1' 'True Class = -1'});
 xlabel('Cross-validated SVM scores (colors are folds)');
 ylabel('Cross-validated class prob estimates');
 
 hh = plot_vertical_line(0); set(hh, 'LineStyle', '--');
 hh = plot_horizontal_line(.5); set(hh, 'LineStyle', '--');
+
+legend(lineh, {'True Class = 1' 'True Class = -1'});
 
 drawnow, snapnow
 

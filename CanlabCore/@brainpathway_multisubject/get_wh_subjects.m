@@ -49,8 +49,14 @@ function bs2 = get_wh_subjects(bs, wh_keep)
     bs2.subject_metadata(~wh_keep,:) = [];
     bs2.connectivity.regions.r(:,:,~wh_keep) = [];
     bs2.connectivity.regions.p(:,:,~wh_keep) = [];
+    bs2.region_dat(~wh_keep) = [];
     
-    if ~isempty(bs2.connectivity.nodes.r)
+    for f = fieldnames(bs2.data_quality)'
+        if ~isempty(bs2.data_quality.(f{1}))
+            bs2.data_quality.(f{1})(~wh_keep) = [];
+        end
+    end
+    if ~isempty(bs2.connectivity.nodes) && ~isempty(bs2.connectivity.nodes.r)
         bs2.connectivity.nodes.r(:,:,~wh_keep) = [];
         bs2.connectivity.nodes.p(:,:,~wh_keep) = [];
     end

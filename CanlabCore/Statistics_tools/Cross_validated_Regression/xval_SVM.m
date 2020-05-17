@@ -183,13 +183,27 @@ function S = xval_SVM(varargin)
 %    Created by Tor Wager, May 2020
 %    ver 1.0 (no version number listed) - some bugs in optimization
 %    ver 1.1 (Tor): fixed bugs, optimization changes and documentation, multiple small tweaks and some new plots
+%             Updated to handle within-person or between-person obs only
+%             ROC_plot should be at threshold 0 for single-interval
+%             Get rid of plots for all folds in opt output
+%             OptimizeHypParams returns point est. No need to rerun. Builds in 5-fold eval by default
+%             Add ?Summary of nested cross-val accuracy with hyperparameter optimization?
+%             Optim.: Allow control of verbosity and plots. No plots/verbose in nested eval.
+%             Optim: use best estim, not best observed
+%             Have a look at the data and add data plots. Sorted by cases
+%   Future:
+%             Enforce [1 -1] inputs
+%             Troubleshoot prediction vs. class probability reversals
+%                   % either scores or pscores appear to be inconsistent in terms of which column is class -1 and which is class 1. Check for instability in scores, and select pscores to be consistent with this on each fold.
+%             Add permutation test
+% 
 % ..
 
 %% ----------------------------------------------------------------------
 % Version
 % ----------------------------------------------------------------------
 
-ver = 1.1;
+ver = 1.2;
 
 %% ----------------------------------------------------------------------
 % Parse inputs
@@ -597,8 +611,21 @@ for i = 1:S.nfolds
     
     SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
     
+    % Note:
+    % either scores or pscores appear to be inconsistent in terms of which
+    % column is class -1 and which is class 1. Check for instability in
+    % scores, and select pscores to be consistent with this on each fold.
+    if mean(label(score > 0)) < mean(label(score < 0))
+        disp('WARNING!!! Scores for label 1 are < scores for label -1, scores are reversed!!! This should not happen. Check code/implementation.');
+    end
+    
     [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
-    pscore = pscore(:, 2);                                  % Platt scaling scores (class probability)
+    
+    % which pscores correlate more positively with score? use this one.
+     r = corr([score pscore]);
+    [~, wh] = max(r(1, 2:3));
+   
+    pscore = pscore(:, wh);                                  % Platt scaling scores (class probability)
     
     S.class_probability_xval(S.teIdx{i}, 1) = pscore;
     

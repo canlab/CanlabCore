@@ -284,10 +284,12 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
     xx = [ones(size(Y, 1), 1) sc(:, retainComps)];
     
     if rank(xx) <= size(sc, 2)
-        % compute (optional: weighted) pseudoinverse if not full rank
+        % compute (optional: weighted) pseudoinverse if not full rank. If
+        % unweighted pinv_xx == pinv(xx)
+        tol = max(size(xx))*eps(norm(xx));
         [u,s,v] = svd(sf.*xx,'econ');
         s = diag(s);
-        s(s~=0) = 1./s(s~=0);
+        s(s>tol) = 1./s(s>tol);
         s = diag(s);
         pinv_xx = v*s*u';
 

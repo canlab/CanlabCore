@@ -175,6 +175,9 @@ function S = xval_SVR(varargin)
 %
 % :References:
 %   See Mathworks functions
+%   Prediction r^2: Scheinost et al. 2019, "Ten simple rules for predictive
+%   modeling of individual differences in neuroimaging"
+%
 %
 % :See also:
 %   - fmri_data.predict, xval_SVM, canlab_run_paired_SVM, other xval_ functions
@@ -259,8 +262,8 @@ S.modeloptions = modeloptions;
 % correlation). This can be negative if predictions are not very accurate.
 % ***
 
-S.accfun = @(Y, yfit) (var(Y - mean(Y)) - var(Y - yfit)) ./ var(Y - mean(Y));
-S.accfun_descrip = 'Obs-wise variance explained';
+S.accfun = @(Y, yfit) 1 - (var(Y - yfit) ./ var(Y - mean(Y)));
+S.accfun_descrip = 'Prediction R^2. Residual MSE normalized by MSE from the "mean model"';
 
 if doverbose
     
@@ -374,8 +377,10 @@ if dooptimize
     % best relative model. Nested cross-val will estimate the accuracy of the
     % whole procedure, including the hparam search, but not return the final best
     % parameters.
+    hparams_to_optimize = 'all'; % {'could put in linear only'}
+    
     Mdl = fitrsvm(X, S.Y,...
-        'OptimizeHyperparameters', {'BoxConstraint' 'Standardize'}, 'HyperparameterOptimizationOptions',...
+        'OptimizeHyperparameters', hparams_to_optimize, 'HyperparameterOptimizationOptions',...
         struct('AcquisitionFunctionName','expected-improvement-plus', 'Verbose', double(doverbose), 'ShowPlots', double(doplot))); %#ok<*IDISVAR>
     
     % Notes:
@@ -384,7 +389,8 @@ if dooptimize
     % - We could use the best observed point, but it's preferred to use the
     % best estimated values from a smooth model fit to observed samples.
     
-    best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions);
+    best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, []);                % optimizing "all"
+    %best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions);   % optimizing "linear"
     
     S.modeloptions = best_modeloptions;
     
@@ -477,6 +483,8 @@ if dorepeats > 1
         S.crossval_accuracy(i) = Sr.crossval_accuracy; % Sr.accfun(Sr.Y, Sr.yfit);
         S.regression_d_singleinterval(i) = Sr.regression_d_singleinterval;
         
+        S.classification_d_singleinterval(i) = NaN; % for consistency with xval_SVM output
+        
         if S.mult_obs_within_person
             
             S.crossval_accuracy_within(i) = Sr.crossval_accuracy_within; % Sr.accfun(Sr.Y, Sr.yfit);
@@ -490,7 +498,7 @@ if dorepeats > 1
         
         fprintf('Done!\n')
         
-        fprintf('CV single-interval accuracy across %d reps, mean = %3.2f, std = %3.2f, min = %3.2f, max = %3.2f\n', dorepeats, ...
+        fprintf('CV prediction r^2 across %d reps, mean = %3.2f, std = %3.2f, min = %3.2f, max = %3.2f\n', dorepeats, ...
             mean(S.crossval_accuracy), std(S.crossval_accuracy), min(S.crossval_accuracy), max(S.crossval_accuracy));
         
         disp('Performance metrics saved in S.crossval_accuracy, regression_d_singleinterval')
@@ -842,12 +850,15 @@ S.cverrfun = @(Y, yfit) sqrt( sum ( (Y - yfit) .^ 2 ) );
 S.cverr = 'Root mean squared error, cross-validated';
 
 S.crossval_accuracy = S.accfun(S.Y, S.yfit);
+S.crossval_accuracy_descrip = 'Prediction R^2, 1 - Normalized RMSE; negative if residual variance > Y variation around mean';
 
 S.prediction_outcome_r = corr(S.Y, S.yfit);
 S.prediction_outcome_r_descrip = 'Correlation between predicted and outcome; not good as an error metric, can be negatively biased under null';
 
 r2d = @(r) 2*r ./ (1 - r.^2).^.5;               % convert r to d
 S.regression_d_singleinterval = r2d(S.prediction_outcome_r);
+
+S.classification_d_singleinterval = NaN; % for consistency with xval_SVM output
 
 % Do we have multiple obs within-person? If so return within-person stats
 S.mult_obs_within_person = length(S.id) > length(unique(S.id));
@@ -922,6 +933,7 @@ create_figure('cross-val accuracy', nr, nc);
 subplot(nr, nc, 1);
 
 plot(S.yfit, S.Y, 'o', 'MarkerFaceColor', [.3 .3 1]);
+refline;
 
 xlabel(sprintf('Predicted outcome, r = %3.2f, prediction r^2 = %3.2f', S.prediction_outcome_r, S.crossval_accuracy));
 ylabel('Outcome');
@@ -984,11 +996,11 @@ if S.mult_obs_within_person
     for i = 1:n
         
         if k == 2
-            h = plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o-', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
+            plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o-', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
             
         else % more than 2, plot points only
             
-            h = plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
+            plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
             
         end
     end
@@ -1042,7 +1054,7 @@ valfcn_cell = @(x) validateattributes(x, {'cell'}, {'nonempty'}); % scalar or ve
 
 valfcn_logical = @(x) validateattributes(x, {}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
 
-valfcn_effectscode = @(x) validateattributes(x, {'numeric'}, {'nonempty', '<=', 1, '>=', -1});
+% valfcn_effectscode = @(x) validateattributes(x, {'numeric'}, {'nonempty', '<=', 1, '>=', -1});
 
 % Required inputs
 % ----------------------------------------------------------------------

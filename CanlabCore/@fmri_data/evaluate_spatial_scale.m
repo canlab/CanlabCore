@@ -1,4 +1,4 @@
-function [fitresult, gof] = evaluate_spatial_scale(data_obj,parcel_obj,varargin)
+function [fitresult, gof,stats] = evaluate_spatial_scale(data_obj,parcel_obj,varargin)
 % Evaluate information coding at multiple spatial scales, using a prespecified parcellation
 % and the predict function (and associated optional inputs). This function evaluates the
 % spatial scale of information coding by constructing predictive models using random draws
@@ -8,7 +8,7 @@ function [fitresult, gof] = evaluate_spatial_scale(data_obj,parcel_obj,varargin)
 % Usage:
 % ::
 %
-%    [fitresult, gof] = evaluate_spatial_scale(obj, parcel_obj, varargin);
+%    [fitresult, gof,stats] = evaluate_spatial_scale(obj, parcel_obj, varargin);
 %
 %
 % ..
@@ -64,6 +64,11 @@ function [fitresult, gof] = evaluate_spatial_scale(data_obj,parcel_obj,varargin)
 %   **gof:**
 %        cell array of with performance metrics for each parcel
 %
+%   **stats:**
+%        structure with normal approximation Z-stats and P-values for
+%        pairwise comparisons of effect size at the second largest spatial
+%        scale
+%
 % :Examples:
 % ::
 %
@@ -113,12 +118,12 @@ if size(parcel_obj.dat,2)==1
 end
 
 % defaults
-num_iterations = 10;
+num_iterations = 1000;
 num_parcels = size(parcel_obj.dat,2);
 num_vox = [ 50 150 250 500 750 1000 1500 5000 10000];
 
 do_plot=true;
-render_brain=true;
+render_brain=false;
 
 mycolors=scn_standard_colors(num_parcels);
 
@@ -388,3 +393,24 @@ if do_plot
     end
 end
 
+
+%%  stats across regions
+random_subsampled_outcomes=cat(2,permute(cat(3,pred_outcome_r_full,pred_outcome_r_all_parcels),[1,3,2]),pred_outcome_r);
+
+for i=1:size(random_subsampled_outcomes,2)
+    for j=1:size(random_subsampled_outcomes,2)
+
+        if i<j
+            
+            b_mean = squeeze(nanmean(random_subsampled_outcomes(:,i,size(random_subsampled_outcomes,3)-1)- random_subsampled_outcomes(:,j,size(random_subsampled_outcomes,3)-1)));
+            b_ste = squeeze(nanstd(random_subsampled_outcomes(:,i,size(random_subsampled_outcomes,3)-1) - random_subsampled_outcomes(:,j,size(random_subsampled_outcomes,3)-1)));
+            b_ste(b_ste == 0) = Inf;
+            b_Z(i,j) = b_mean ./ b_ste;
+            b_P(i,j) = 2*normcdf(-1*abs(b_Z(i,j)),0,1);
+            
+        end
+    end
+end
+
+stats.pairwise_comparisons.Z = b_Z;
+stats.pairwise_comparisons.P = b_P;

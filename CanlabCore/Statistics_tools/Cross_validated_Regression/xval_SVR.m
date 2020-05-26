@@ -260,6 +260,7 @@ S.modeloptions = modeloptions;
 % Obs-wise absolute reduction in variance
 % Note: based on absolute predictions, not re-fit of a model (e.g.,
 % correlation). This can be negative if predictions are not very accurate.
+% See Scheinhost et al 2019 Neuroimage, "Rule 5A"
 % ***
 
 S.accfun = @(Y, yfit) 1 - (var(Y - yfit) ./ var(Y - mean(Y)));
@@ -850,10 +851,10 @@ S.cverrfun = @(Y, yfit) sqrt( sum ( (Y - yfit) .^ 2 ) );
 S.cverr = 'Root mean squared error, cross-validated';
 
 S.crossval_accuracy = S.accfun(S.Y, S.yfit);
-S.crossval_accuracy_descrip = 'Prediction R^2, 1 - Normalized RMSE; negative if residual variance > Y variation around mean';
+S.crossval_accuracy_descrip = 'Prediction R^2, 1 - Normalized RMSE; negative if residual variance > Y variation around mean  (e.g., Scheinhost et al 2019 p.39)';
 
 S.prediction_outcome_r = corr(S.Y, S.yfit);
-S.prediction_outcome_r_descrip = 'Correlation between predicted and outcome; not good as an error metric, can be negatively biased under null';
+S.prediction_outcome_r_descrip = 'Correlation between predicted and outcome; not good as an error metric since is positively biased under null (e.g., Scheinhost et al 2019 p.39)';
 
 r2d = @(r) 2*r ./ (1 - r.^2).^.5;               % convert r to d
 S.regression_d_singleinterval = r2d(S.prediction_outcome_r);

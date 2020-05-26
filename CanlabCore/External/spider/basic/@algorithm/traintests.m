@@ -2,8 +2,8 @@ function [reslt,tReslt,alg] =  traintests(algo,dat,trn,tst,lossType)
   
 
 % <<-----unspecified loss ------>>
-  if 
-      nargin==4 lossType=[];  
+  if nargin==4
+       lossType=[];  
   end  
       
   if ~isa(dat,'cell')

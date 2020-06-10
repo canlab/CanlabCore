@@ -193,8 +193,7 @@ else
     n_orig_parcels = max(parcels.dat);  % fmri_data. max, not length(unique), because if there are missing integers we want empty cols for these
 end
 
-
-[dat,parcels,orig_parcel_size] = match_spaces(dat, parcels);  % keeps only in-image parcels
+[dat,parcels] = match_spaces(dat, parcels);  % keeps only in-image parcels
 
 % get pattern_image data object if specified
 % -------------------------------------------------------------------------
@@ -261,12 +260,8 @@ wh_in_dat = (~dat.removed_voxels);                          % not removed from d
 wh = wh_in_dat & ~parcels.removed_voxels;
 parcels = remove_empty(parcels, ~wh);
 
-parcel_retained_size = sum(parcels.dat);
-%%for computing means, scale each column of parcels to sum to 1
+%for computing means, scale each column of parcels to sum to 1
 parcels.dat = bsxfun(@rdivide, parcels.dat, nansum(parcels.dat));
-parcels.dat = parcel_retained_size./orig_parcel_size .* parcels.dat;
-
-
 
 % Now we need to insert images back in if we have lost any (if voxel removal eliminated some parcels)
 parceldat = parcels.dat;
@@ -397,9 +392,8 @@ end  % Main function
 
 
 
-function [dat,parcels,parcel_size] = match_spaces(dat,parcels)
-%code originally  taken from apply_mask to make sure data are in same space
-%subsequently modified by Bogdan on 4/9/20
+function [dat,parcels] = match_spaces(dat,parcels)
+%code taken from apply_mask to make sure data are in same space
 
 
 isdiff = compare_space(dat, parcels);
@@ -437,6 +431,7 @@ parcels = replace_empty(parcels);
 % save which are in mask, but do not replace with logical, because mask may
 % have weights we want to preserve
 inparcelsdat = logical(parcels.dat);
+
 
 % Remove out-of-mask voxels
 % ---------------------------------------------------
@@ -491,21 +486,6 @@ else
     disp('Stopping to debug');
     keyboard
 end
-
-parcel_labels = unique(parcels.dat);
-parcel_labels = parcel_labels(parcel_labels ~= 0);
-
-% masks voxel not in both parcels and dat (the parcels/dat "conjunction")
-parcels_conj = parcels;
-parcels_conj.dat = parcels.dat(inboth(parcels.volInfo.wh_inmask));
-% identify parcels of conjunction
-retained_parcel_labels = unique(parcels_conj.dat);
-retained_parcel_labels = retained_parcel_labels(retained_parcel_labels ~= 0); % probably redundant, but just in case
-retained_parcel = ismember(parcel_labels,retained_parcel_labels);
-% get size of these parcels (faster than getting size of all parcels)
-parcels_conj.dat = parcels.dat(ismember(parcels.dat,retained_parcel_labels));
-parcel_size = sum(condf2indic(parcels_conj.dat, 'integers'));
-parcel_size = parcel_size(retained_parcel);
 
 dat = remove_empty(dat, to_remove);
 parcels = remove_empty(parcels, to_remove_parcels);

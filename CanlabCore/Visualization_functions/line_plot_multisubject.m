@@ -356,6 +356,13 @@ for i = 1:N
         han.line_handles(i) = plot([min(X{i}) max(X{i})], [b(i,1)+b(i,2)*min(X{i}) b(i,1)+b(i,2)*max(X{i})], 'Color', colors{i}, 'LineWidth', 1);
     end
     
+    if dolines && all(cellfun(@numel, X) == 2)
+        % two points per participant exactly
+        % cannot compute within stats
+        
+        han.line_handles(i) = plot(X{i}', Y{i}', 'Color', [.7 .7 .7], 'LineWidth', .5);
+    end
+
     % plot all the points
     if doind
         han.point_handles(i) = plot(X{i}, Y{i}, ['k' mtypes(whm(1))], 'MarkerSize', 3, 'MarkerFaceColor', colors{i}, 'Color', max([0 0 0; colors{i}]));

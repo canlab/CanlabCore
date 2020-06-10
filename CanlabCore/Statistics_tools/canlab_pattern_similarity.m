@@ -340,9 +340,12 @@ function r = image_correlation(dat, pattern_weights, badvals, varargin)
 for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions in each image
     
     inmask = ~badvals(:, i);
-            
-    r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
-        
+    fprintf('%d\n',i);
+    if ~isempty(pattern_weights(inmask))        
+       r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
+    else
+       r(i,1) = NaN;
+    end    
    
 end
 

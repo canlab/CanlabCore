@@ -1,10 +1,10 @@
-function S = xval_SVM(varargin)
-%  SVM for repeated-measures (within-person) classification, with repeated cross-val and nested cross-val options
+function S = xval_SVR(varargin)
+%  Support Vector Regression (SVR) for between or within-person multivariate regression, with repeated cross-val and nested cross-val options
 %
 % :Usage:
 % ::
 %
-% S = xval_SVM(X, Y, id, varargin)
+% S = xval_SVR(X, Y, id, varargin)
 %
 % Steps and features:
 % -------------------------------------------------------------------------
@@ -24,17 +24,13 @@ function S = xval_SVM(varargin)
 %
 % Notes:
 % -------------------------------------------------------------------------
-% - Uses Matlab's Stats/ML Toolbox SVM object, fitcsvm, and hyperparameter
-% optimization. Other options, e.g., fitclinear, may be better for some
+% - Uses Matlab's Stats/ML Toolbox RegressionSVM object, fitrsvm, and hyperparameter
+% optimization. Other options, e.g., fitrlinear, may be better for some
 % situations (large num. variables)
 %
-% - Single-interval accuracy from cross-val and ROC_plot may differ because
-% ROC_plot chooses a new score threshold that maximizes overall balanced
-% accuracy. Forced-choice accuracy should be identical.
-%
-% Optimizing hyperparameters: 
+% Optimizing hyperparameters:
 % HyperparameterOptimizationOptions include defaults of:
-% - 5-fold CV (not grouped by id) without repartitioning 
+% - 5-fold CV (not grouped by id) without repartitioning
 % - Bayesian optimization, using best estimates from smooth function
 % - maximizes accuracy, so may need large(ish) samples to be effective.
 %
@@ -46,7 +42,7 @@ function S = xval_SVM(varargin)
 % estimates will use nested cross-validation, and can take a long time to run
 %
 %
-% Class probability estimates: 
+% Class probability estimates:
 % - crossval returns cross-validated yfit (class predictions), scores (dist_from_hyperplane_xval),
 % class_probability_xval. Scores and class probabilties will diverge (may
 % not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
@@ -99,7 +95,7 @@ function S = xval_SVM(varargin)
 %
 %   **'modeloptions', [modeloptions cell]:**
 %        Options for model structure and hyperparameters
-%        Cell array of keyword-value pairs, as specified in fitcsvm (Matlab Stats/ML toolbox)
+%        Cell array of keyword-value pairs, as specified in fitrsvm (Matlab Stats/ML toolbox)
 %        Default: {'KernelFunction', 'linear'}
 %
 % :Outputs:
@@ -107,8 +103,8 @@ function S = xval_SVM(varargin)
 %   **S:**
 %        Structure with model output
 %        of them (partially consistent with this function).
-%                           Y: Actual (obs) outcome - should be 1, -1 for SVM analysis
-%                        yfit: Predicted outcome - should be 1, -1 for SVM analysis
+%                           Y: Actual (obs) outcome - continuous
+%                        yfit: Predicted outcome - continuous
 %                              Cross-validated, so can be used as series
 %                              of predicted values based on brain
 %                              measures (very useful!)
@@ -125,12 +121,13 @@ function S = xval_SVM(varargin)
 %                               observation scores. Can calculate
 %                               effect sizes from this, for example.
 %       class_probability_xval: Cross-validated distance expressed as probabilities of Class 1, using Platt scaling
-%            crossval_accuracy: Cross-validated accuracy (input options; no hyperparam opt)
-%  classification_d_singleinterval: Classification effect size (input options; no hyperparam opt)
+%            crossval_accuracy: Cross-validated prediction r^2 (input options; no hyperparam opt)
+%         prediction_outcome_r: Simple prediction-outcome correlation; not for use as quantitative objective function
+%  regression_d_singleinterval: Cohen's d effect size from r (input options; no hyperparam opt)
 %crossval_accuracy_opt_hyperparams: Cross-validated accuracy with optimized hyper-parameters
 %                  Y_within_id: Outcomes arranged by id, for within-person comparisons
-%             scores_within_id: SVM scores arranged by id, for within-person comparisons
-%                    scorediff: Within-person SVM scores arranged by id, for within-person comparisons
+%             scores_within_id: SVR scores arranged by id, for within-person comparisons
+%                    scorediff: Within-person SVR scores arranged by id, for within-person comparisons
 %     crossval_accuracy_within: Within-person cross-validated accuracy (input options; no hyperparam opt)
 %      classification_d_within: Within-person classification effect size (input options; no hyperparam opt)
 %                 S.boot_w_ste: Bootstrapped standard errors of model weights (feature-level)
@@ -140,49 +137,56 @@ function S = xval_SVM(varargin)
 %                 S.wP_fdr_thr: P-value threshold for FDR q < 0.05
 %              S.boot_w_fdrsig: Logical vector for which weights are significant with FDR
 %               S.w_thresh_fdr: Thresholded weights at FDR q < 0.05 based on bootstrapping (feature-level)
-%                   S.SVMModel: ClasssificationSVM model object trained on full dataset, final chosen parameter set; for predicting in subsequent validation samples.
+%                   S.SVRModel: Regression model object trained on full dataset, final chosen parameter set; for predicting in subsequent validation samples.
 %                               Y-hat = (X/s)'* w + b
-%                               ClassificationSVM objects store w, b, and s in the properties Beta, Bias, and KernelParameters.Scale, respectively.
+%                               *check....RegressionSVM objects store w, b, and s in the properties Beta, Bias, and KernelParameters.Scale, respectively.
 %
 % :Examples:
 % ::
 %
-% Simulate some data with true signal, with two observations per person
-% -------------------------------------------------------------------------
-% n = 50; % participants
-% k = 120; % features
-% true_sig = [repmat(randn(1, k), n, 1); repmat(randn(1, k), n, 1)]; % First n are Class 1, second n are Class 2
-% noise = 10 * randn(2 * n, k);         % Noise var >> true signal var
-% X = true_sig + noise;                  % Predictors
-% Y = [ones(n, 1); -ones(n, 1)];         % Outcome to classify, coded [1 -1]
-% id = [(1:n)'; (1:n)'];                 % Grouping ID codes for participants
+% % Simulate data with one observation per person (id) and test
+% % -------------------------------------------------------------------------
+% n = 50;                                             % participants
+% k = 120;                                            % features
+% Y = randn(n, 1);                                    % True outcome
+% X = Y * randn(1, k) + ones(n, 1) * randn(1, k) + 5 * randn(n, k);    % True, random intercept/slope for each var, + noise
+% id = (1:n)';                                        % Grouping ID codes for participants
+% 
+% S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap');    % Fastest for quick cross-validated performance
+% 
+% % Try with 2 images per participant (ids grouped)
+% % This will produce some different within-person classification metrics and plots
+% id = [(1:n/2)'; (1:n/2)'];                          % Grouping ID codes for participants
+% 
+% S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap');    % Fastest for quick cross-validated performance
 %
-% S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap');    % Fastest for quick cross-validated performance
-% S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats', 'nboot', 100);     % Very quick test of bootstrapping with few samples (not for final models)
-% S = xval_SVM(X, Y, id, 'nooptimize', 'dorepeats', 5, 'nobootstrap'); % Quick test of repeated cross-val, 5x
-% S = xval_SVM(X, Y, id, 'nooptimize', 'nobootstrap');                 % Repeat cross-val only
-% S = xval_SVM(X, Y, id, 'norepeats', 'nobootstrap');                  % Optimize with nested cross-val only
-% S = xval_SVM(X, Y, id);                                              % Optimize, repeat with optimal model, bootstrap
+% S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', 'nboot', 100);     % Very quick test of bootstrapping with few samples (not for final models)
+% S = xval_SVR(X, Y, id, 'nooptimize', 'dorepeats', 5, 'nobootstrap'); % Quick test of repeated cross-val, 5x
+% S = xval_SVR(X, Y, id, 'nooptimize', 'nobootstrap');                 % Repeat cross-val only
+% S = xval_SVR(X, Y, id, 'norepeats', 'nobootstrap');                  % Optimize with nested cross-val only
+% S = xval_SVR(X, Y, id);                                              % Optimize, repeat with optimal model, bootstrap
 %
-% S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap', 'noverbose', 'noplot');  % Returns only the output S
+% S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap', 'noverbose', 'noplot');  % Returns only the output S
 %
 % Train the same model without within-person observations (i.e., 1 observation per id):
 % This does single-interval classification only
-% 
-% S = xval_SVM(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
+%
+% S = xval_SVR(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
 %
 % :References:
 %   See Mathworks functions
+%   Prediction r^2: Scheinost et al. 2019, "Ten simple rules for predictive
+%   modeling of individual differences in neuroimaging"
+%
 %
 % :See also:
-%   - fmri_data.predict, canlab_run_paired_SVM, other xval_ functions
+%   - fmri_data.predict, xval_SVM, canlab_run_paired_SVM, other xval_ functions
 %
 
 % ..
 %    Programmers' notes:
 %    Created by Tor Wager, May 2020
 %    ver 1.0 (no version number listed) - some bugs in optimization
-%             Enforce [1 -1] inputs
 %    ver 1.1 (Tor): fixed bugs, optimization changes and documentation, multiple small tweaks and some new plots
 %             Updated to handle within-person or between-person obs only
 %             ROC_plot should be at threshold 0 for single-interval
@@ -193,14 +197,11 @@ function S = xval_SVM(varargin)
 %             Optim: use best estim, not best observed
 %             Have a look at the data and add data plots. Sorted by cases
 %   Future:
-%             
+%             Enforce [1 -1] inputs
 %             Troubleshoot prediction vs. class probability reversals
 %                   % either scores or pscores appear to be inconsistent in terms of which column is class -1 and which is class 1. Check for instability in scores, and select pscores to be consistent with this on each fold.
 %             Add permutation test
-%     v1.3
-%     Linear/nonlinear - pass in hyparams to optimize.
-%     Return model weights from folds for further analysis/application
-% 
+%
 % ..
 
 %% ----------------------------------------------------------------------
@@ -256,7 +257,14 @@ S.id = id;      % Subject grouping - not in fmri_data.predict
 
 S.modeloptions = modeloptions;
 
-S.accfun = @(Y, yfit) 100 .* nansum(Y == yfit) ./ sum(~isnan(Y));
+% Obs-wise absolute reduction in variance
+% Note: based on absolute predictions, not re-fit of a model (e.g.,
+% correlation). This can be negative if predictions are not very accurate.
+% See Scheinhost et al 2019 Neuroimage, "Rule 5A"
+% ***
+
+S.accfun = @(Y, yfit) 1 - (var(Y - yfit) ./ var(Y - mean(Y)));
+S.accfun_descrip = 'Prediction R^2. Residual MSE normalized by MSE from the "mean model"';
 
 if doverbose
     
@@ -264,7 +272,7 @@ if doverbose
     printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
     
     printhdr(' ') %#ok<*UNRCH>
-    printhdr(sprintf('xval_SVM ver %3.2f: Cross-validated Support Vector Machine classification', ver));
+    printhdr(sprintf('xval_SVR ver %3.2f: Cross-validated Support Vector Regression', ver));
     printhdr(' ')
     
     disp(' ')
@@ -280,26 +288,26 @@ if doplot
     prelim_data_plot(X, Y, id);
 end
 
-% Select train/test sets
+% Select train/test sets ***
 % -------------------------------------------------------------------------
 
 [S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot);
 drawnow, snapnow
 
-% Fit the overall a priori model: SVM with linear kernel
+% Fit the overall a priori model: SVR with linear kernel
 % -------------------------------------------------------------------------
 if doverbose
     
     printhdr('Model training and cross-validation without optimization')
     fprintf('Training overall model. ')
     
-    SVMModel = fitcsvm(X, S.Y, S.modeloptions{:}); %#ok<*NODEF>
+    SVRModel = fitrsvm(X, S.Y, S.modeloptions{:}); %#ok<*NODEF>
     
     % non-cross-val accuracy: sanity check. should usually be 100% if training is overfit and n >> p
-    label = predict(SVMModel, X);
+    label = predict(SVRModel, X);
     
     acc = S.accfun(S.Y, label);
-    fprintf('Accuracy without cross-val: %3.0f%%\n', acc);
+    fprintf('Accuracy without cross-val: %3.2f\n', acc);
     
 end
 
@@ -317,18 +325,18 @@ S = crossval(S, X, doverbose);
 % Summarize accuracy
 % -------------------------------------------------------------------------
 % Given Y, yfit, cross-val scores (dist_from_hyperplane_xval), id
-% Update crossval_accuracy,classification_d_singleinterval
+% Update crossval_accuracy,regression_d_singleinterval
 % Y_within_id, scores_within_id, scorediff,
 % crossval_accuracy_within, classification_d_within
 S = update_accuracy_stats(S);
 
 if doverbose
     
-    fprintf('Accuracy (cross-validated): Single-interval: %3.0f%%, d = %3.2f\n', S.crossval_accuracy, S.classification_d_singleinterval);
+    fprintf('Accuracy (cross-validated): Single-interval: %3.2f, d = %3.2f\n', S.crossval_accuracy, S.regression_d_singleinterval);
     
     if S.mult_obs_within_person
         
-        fprintf('                            Forced-choice within-person: %3.0f%% d = %3.2f\n', S.crossval_accuracy_within, S.classification_d_within);
+        fprintf('                            Forced-choice within-person: %3.2f d = %3.2f\n', S.crossval_accuracy_within, S.classification_d_within);
         
     end
     
@@ -339,8 +347,6 @@ end
 if doplot
     
     plot_scores_and_ROC(S);
-    
-    xval_plot_scores_vs_class_probability(S);
     
 end
 
@@ -359,7 +365,7 @@ if dooptimize
     % ---------------------------------------------------------------------
     % Updates S.yfit, S.dist_from_hyperplane_xval, S.class_probability_xval
     S = crossval_nested(S, X, doverbose);
-     
+    
     % Given Y, yfit, cross-val scores (dist_from_hyperplane_xval), id
     % Update crossval_accuracy, Y_within_id, scores_within_id, scorediff, crossval_accuracy_within, classification_d
     S = update_accuracy_stats(S);
@@ -372,8 +378,9 @@ if dooptimize
     % best relative model. Nested cross-val will estimate the accuracy of the
     % whole procedure, including the hparam search, but not return the final best
     % parameters.
-    hparams_to_optimize = 'all'; % {'BoxConstraint' 'Standardize'}
-    Mdl = fitcsvm(X, S.Y,...
+    hparams_to_optimize = 'all'; % {'could put in linear only'}
+    
+    Mdl = fitrsvm(X, S.Y,...
         'OptimizeHyperparameters', hparams_to_optimize, 'HyperparameterOptimizationOptions',...
         struct('AcquisitionFunctionName','expected-improvement-plus', 'Verbose', double(doverbose), 'ShowPlots', double(doplot))); %#ok<*IDISVAR>
     
@@ -385,16 +392,16 @@ if dooptimize
     
     best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, []);                % optimizing "all"
     %best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions);   % optimizing "linear"
-
+    
     S.modeloptions = best_modeloptions;
-
+    
     
     % Summarize accuracy
     % -------------------------------------------------------------------------
- 
+    
     if doverbose
         
-        disp('Summary of nested cross-val accuracy with hyperparameter optimization')
+        disp('Summary of nested cross-val R^2 with hyperparameter optimization')
         disp(' ')
         
         disp('Optimized hyperparameters for each fold')
@@ -405,11 +412,11 @@ if dooptimize
         
         disp(best_modeloptions)
         
-        fprintf('Accuracy (nested cross-validation): Single-interval: %3.0f%%, d = %3.2f\n', S.crossval_accuracy, S.classification_d_singleinterval);
+        fprintf('R^2 (nested cross-validation): Single-interval: %3.2f, d = %3.2f\n', S.crossval_accuracy, S.regression_d_singleinterval);
         
         if S.mult_obs_within_person
             
-            fprintf('                            Forced-choice within-person: %3.0f%% d = %3.2f\n', S.crossval_accuracy_within, S.classification_d_within);
+            fprintf('                            Forced-choice within-person: %3.2f d = %3.2f\n', S.crossval_accuracy_within, S.classification_d_within);
             
         end
         
@@ -419,7 +426,7 @@ if dooptimize
     % -------------------------------------------------------------------------
     if doplot
         
-        plot_scores_and_ROC(S, 'Cross-validated SVM scores with hyperparameter optimization');
+        plot_scores_and_ROC(S, 'Cross-validated SVR scores with hyperparameter optimization');
         
     end
     
@@ -446,10 +453,10 @@ if dorepeats > 1
         
         if doverbose, fprintf('%d ', i), end
         
-
+        
         Sr = S;
         
-        % Get new cvpartition (or outer loop if optimizing) 
+        % Get new cvpartition (or outer loop if optimizing)
         [Sr.trIdx, Sr.teIdx] = xval_stratified_holdout_leave_whole_subject_out(Sr.Y, Sr.id, 'doverbose', false, 'doplot', false);
         
         if dooptimize
@@ -468,20 +475,22 @@ if dorepeats > 1
         % Save accuracy
         % -------------------------------------------------------------------------
         % Given Y, yfit, cross-val scores (dist_from_hyperplane_xval), id
-        % Update crossval_accuracy,classification_d_singleinterval
+        % Update crossval_accuracy,regression_d_singleinterval
         % Y_within_id, scores_within_id, scorediff,
         % crossval_accuracy_within, classification_d_within
         
         Sr = update_accuracy_stats(Sr);
-
+        
         S.crossval_accuracy(i) = Sr.crossval_accuracy; % Sr.accfun(Sr.Y, Sr.yfit);
-        S.classification_d_singleinterval(i) = Sr.classification_d_singleinterval;
+        S.regression_d_singleinterval(i) = Sr.regression_d_singleinterval;
+        
+        S.classification_d_singleinterval(i) = NaN; % for consistency with xval_SVM output
         
         if S.mult_obs_within_person
             
             S.crossval_accuracy_within(i) = Sr.crossval_accuracy_within; % Sr.accfun(Sr.Y, Sr.yfit);
             S.classification_d_within(i) = Sr.classification_d_within;
-
+            
         end
         
     end
@@ -490,17 +499,17 @@ if dorepeats > 1
         
         fprintf('Done!\n')
         
-        fprintf('CV single-interval accuracy across %d reps, mean = %3.0f%%, std = %3.0f%%, min = %3.0f%%, max = %3.0f%%\n', dorepeats, ...
+        fprintf('CV prediction r^2 across %d reps, mean = %3.2f, std = %3.2f, min = %3.2f, max = %3.2f\n', dorepeats, ...
             mean(S.crossval_accuracy), std(S.crossval_accuracy), min(S.crossval_accuracy), max(S.crossval_accuracy));
         
-        disp('Performance metrics saved in S.crossval_accuracy, classification_d_singleinterval')
+        disp('Performance metrics saved in S.crossval_accuracy, regression_d_singleinterval')
         
         if S.mult_obs_within_person
             
-            fprintf('\nCV forced_choice accuracy across %d reps, mean = %3.0f%%, std = %3.0f%%, min = %3.0f%%, max = %3.0f%%\n', dorepeats, ...
+            fprintf('\nCV forced_choice accuracy across %d reps, mean = %3.2f, std = %3.2f, min = %3.2f, max = %3.2f\n', dorepeats, ...
                 mean(S.crossval_accuracy_within), std(S.crossval_accuracy_within), min(S.crossval_accuracy_within), max(S.crossval_accuracy_within));
             
-             disp('Performance metrics saved in S.crossval_accuracy_within, classification_d_within')
+            disp('Performance metrics saved in S.crossval_accuracy_within, classification_d_within')
             
         end
         
@@ -513,8 +522,8 @@ end
 
 %% Fit model on full dataset with selected options (final model if optimizing hyperparams) to get betas
 
-S.SVMModel = fitcsvm(X, S.Y, S.modeloptions{:});
-S.w = S.SVMModel.Beta;                                       % Model weights/betas
+S.SVRModel = fitrsvm(X, S.Y, S.modeloptions{:});
+S.w = S.SVRModel.Beta;                                       % Model weights/betas
 
 % Bootstrap betas
 if dobootstrap
@@ -532,9 +541,9 @@ if dobootstrap
         
         [Xb, Yb] = get_bootstrap_sample_grouped_by_id(S, X);
         
-        SVMModel = fitcsvm(Xb, Yb, S.modeloptions{:});
+        SVRModel = fitrsvm(Xb, Yb, S.modeloptions{:});
         
-        S.boot_w(:, i) = SVMModel.Beta;                                       % Model weights/betas
+        S.boot_w(:, i) = SVRModel.Beta;                                       % Model weights/betas
         
         
     end
@@ -579,7 +588,7 @@ end
 % nichols...
 % indx = randperm(size(X, 1));
 % X = X(indx, :); Y = Y(indx); id = id(indx);
-% S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats');
+% S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats');
 
 
 end % main function
@@ -605,36 +614,10 @@ for i = 1:S.nfolds
     if doverbose, fprintf('%d ', i), end
     
     % Fit to training data for this fold
-    SVM_fold = fitcsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), S.modeloptions{:});
+    SVR_fold = fitrsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), S.modeloptions{:});
     
     % Apply holdout test set for this fold
-    [label, score] = predict(SVM_fold, X(S.teIdx{i}, :));   % Get raw scores
-    score = score(:, 2);                                    % Decision boundary is symmetrical
-    
-    S.dist_from_hyperplane_xval(S.teIdx{i}, 1) = score;     % Unscaled SVM scores
-    
-    S.yfit(S.teIdx{i}, 1) = label;                          % Predicted class, cross-val
-    
-    SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
-    
-    % Note:
-    % either scores or pscores appear to be inconsistent in terms of which
-    % column is class -1 and which is class 1. Check for instability in
-    % scores, and select pscores to be consistent with this on each fold.
-    if mean(label(score > 0)) < mean(label(score < 0))
-        disp('WARNING!!! Scores for label 1 are < scores for label -1, scores are reversed!!! This should not happen. Check code/implementation.');
-    end
-    
-    [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
-    
-    % which pscores correlate more positively with score? use this one.
-     r = corr([score pscore]);
-    [~, wh] = max(r(1, 2:3));
-   
-    pscore = pscore(:, wh);                                  % Platt scaling scores (class probability)
-    
-    S.class_probability_xval(S.teIdx{i}, 1) = pscore;
-    
+    S.yfit(S.teIdx{i}, 1) = predict(SVR_fold, X(S.teIdx{i}, :));   % Get raw scores
     
 end
 
@@ -665,19 +648,19 @@ for i = 1:S.nfolds
     
     hparams_to_optimize = 'all'; % {'BoxConstraint' 'Standardize'}
     
-    Mdl = fitcsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}),...
+    Mdl = fitrsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}),...
         'OptimizeHyperparameters', hparams_to_optimize, 'HyperparameterOptimizationOptions',...
         struct('AcquisitionFunctionName','expected-improvement-plus', 'Verbose', 0, 'ShowPlots', 0));
     
     % Notes: HyperparameterOptimizationOptions include defaults of:
-    % - 5-fold CV (not grouped by id) without repartitioning 
+    % - 5-fold CV (not grouped by id) without repartitioning
     % - Bayesian optimization, using best estimates from smooth function
     
     % Add hyperparameter results to table
     % -------------------------------------
     % Use estimated rather than observed. This uses the smooth function estimated across observations
-
-    opt_hyperparam_table = Mdl.HyperparameterOptimizationResults.XAtMinEstimatedObjective; 
+    
+    opt_hyperparam_table = Mdl.HyperparameterOptimizationResults.XAtMinEstimatedObjective;
     
     if i == 1
         S.hyperparams_by_fold = opt_hyperparam_table; % best parameters - table
@@ -686,30 +669,18 @@ for i = 1:S.nfolds
         S.hyperparams_by_fold(i, :) = opt_hyperparam_table;
     end
     
-    fold_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, []); % Optimizing "all" 
+    fold_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, []); % Optimizing "all"
     %fold_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions); % Optimizing "linear"
     
     S.fold_modeloptions{i} = fold_modeloptions;
     
     % Fit to training data for this fold
-    SVM_fold = fitcsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), fold_modeloptions{:});
+    SVR_fold = fitrsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), fold_modeloptions{:});
     
     % Updates S.yfit, S. S.dist_from_hyperplane_xval, S.class_probability_xval
     
     % Apply holdout test set for this fold
-    [label, score] = predict(SVM_fold, X(S.teIdx{i}, :));   % Get raw scores
-    score = score(:, 2);                                    % Decision boundary is symmetrical
-    
-    S.dist_from_hyperplane_xval(S.teIdx{i}, 1) = score;     % Unscaled SVM scores
-    
-    S.yfit(S.teIdx{i}, 1) = label;                          % Predicted class, cross-val
-    
-    SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
-    
-    [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
-    pscore = pscore(:, 2);                                  % Platt scaling scores (class probability)
-    
-    S.class_probability_xval(S.teIdx{i}, 1) = pscore;
+    S.yfit(S.teIdx{i}, 1) = predict(SVR_fold, X(S.teIdx{i}, :));   % Get raw scores
     
 end
 
@@ -724,23 +695,40 @@ end % crossval
 % -------------------------------------------------------------------------
 
 
-function [scores_within_id, scorediff, d] = get_scores_within_id(S, varname)
+function S = get_scores_within_id(S)
+% Updates S.scores_within_id, Y_within_id, scorediff,
+% crossval_accuracy_within, classification_d_within, S.high_vs_low_scores_within_id
 
-myvar = S.(varname);
 u = unique(S.id);
 
 for i = 1:length(u)
     
-    wh_id = S.id == u(i) & S.Y == -1;
-    scores_within_id(i, 1) = nanmean(myvar(wh_id));
+    wh_id = S.id == u(i);
+    x = S.yfit(wh_id);
+    y = S.Y(wh_id);
     
-    wh_id = S.id == u(i) & S.Y == 1;
-    scores_within_id(i, 2) = nanmean(myvar(wh_id));
+    % sort by y
+    [ysort, wh] = sort(y);
+    xsort = x(wh);
+    
+    scores_within_id(i, :) = xsort';
+    Y_within_id(i, :) = ysort';
     
 end
 
-scorediff = diff(scores_within_id')';
-d = nanmean(scorediff) ./ nanstd(scorediff);
+S.scores_within_id = scores_within_id;
+S.Y_within_id = Y_within_id;
+
+S.scorediff = diff(scores_within_id')';
+S.high_vs_low_scores_within_id = S.scores_within_id(:, end) - S.scores_within_id(:, 1);
+
+% d is highest vs lowest
+d = nanmean(S.high_vs_low_scores_within_id) ./ nanstd(S.high_vs_low_scores_within_id);
+
+S.classification_d_within = d;
+S.classification_d_within_descrip = 'Cohen''s d: within-person classification based on highest vs. lowest true observation per id';
+
+S.crossval_accuracy_within = 100 * sum(S.high_vs_low_scores_within_id > 0) ./ sum(~isnan(S.high_vs_low_scores_within_id));
 
 end %get scores
 
@@ -816,38 +804,38 @@ for j = 1:size(opt_hyperparam_table, 2)
 end
 
 end
-    
+
 % function best_modeloptions = get_modal_params_across_folds(S)
-% 
+%
 % % This function is deprecated because modal parameters across folds is not
 % % the best way to get the final hyperparameters. Instead, the model should
-% % be re-fit using single cross-validation with all hparam options pick the 
+% % be re-fit using single cross-validation with all hparam options pick the
 % % best relative model. Nested cross-val will estimate the accuracy of the
 % % whole procedure, including the hparam search, but not return the final best
 % % parameters.
-% 
+%
 % hbyfold = cat(1, S.fold_modeloptions{:});
 % best_modeloptions = {};
-% 
+%
 % for i = 1:size(hbyfold, 2)
-%     
+%
 %     mydat = cat(1, hbyfold{:, i});
-%     
+%
 %     if ischar(mydat) || iscategorical(mydat) || islogical(mydat)
-%         
+%
 %         best_modeloptions{1, i} = mode(mydat);
-%         
+%
 %     elseif isnumeric(mydat)
-%         
+%
 %         best_modeloptions{1, i} = trimmean(mydat, 80);
-%         
+%
 %     else
 %         error('Unknown model option class! Extend this code.')
-%         
+%
 %     end
-%     
+%
 % end
-% 
+%
 % end
 
 
@@ -859,28 +847,29 @@ end
 
 function S = update_accuracy_stats(S)
 
+S.cverrfun = @(Y, yfit) sqrt( sum ( (Y - yfit) .^ 2 ) );
+S.cverr = 'Root mean squared error, cross-validated';
+
 S.crossval_accuracy = S.accfun(S.Y, S.yfit);
+S.crossval_accuracy_descrip = 'Prediction R^2, 1 - Normalized RMSE; negative if residual variance > Y variation around mean  (e.g., Scheinhost et al 2019 p.39)';
 
-s1 = S.dist_from_hyperplane_xval(S.Y == 1);
-s2 = S.dist_from_hyperplane_xval(S.Y == -1);
+S.prediction_outcome_r = corr(S.Y, S.yfit);
+S.prediction_outcome_r_descrip = 'Correlation between predicted and outcome; not good as an error metric since is positively biased under null (e.g., Scheinhost et al 2019 p.39)';
 
-% d = difference / std pooled within, weighted by sample size
-S.classification_d_singleinterval = (mean(s1) - mean(s2)) ./ sqrt( ( var(s1) .* length(s1) + var(s2) .* length(s2) ) ./ (length(s1) + length(s2)) );
+r2d = @(r) 2*r ./ (1 - r.^2).^.5;               % convert r to d
+S.regression_d_singleinterval = r2d(S.prediction_outcome_r);
+
+S.classification_d_singleinterval = NaN; % for consistency with xval_SVM output
 
 % Do we have multiple obs within-person? If so return within-person stats
 S.mult_obs_within_person = length(S.id) > length(unique(S.id));
 
 if S.mult_obs_within_person
     
-    varname = 'dist_from_hyperplane_xval';
-    [scores_within_id, scorediff, d] = get_scores_within_id(S, varname);
+    % Updates S.scores_within_id, Y_within_id, scorediff,
+    % crossval_accuracy_within, classification_d_within, S.high_vs_low_scores_within_id
     
-    S.Y_within_id = get_scores_within_id(S, 'Y');
-    
-    S.scores_within_id = scores_within_id;
-    S.scorediff = scorediff;
-    S.crossval_accuracy_within = 100 * sum(scorediff > 0) ./ sum(~isnan(scorediff));
-    S.classification_d_within = d;
+    S = get_scores_within_id(S);
     
 end
 
@@ -933,145 +922,110 @@ end
 function plot_scores_and_ROC(S, varargin)
 % plot_scores_and_ROC(S, varargin) -> varargin = new title
 
-create_figure('cross-val accuracy', 2, 2);
-subplot(2, 2, 1); delete(gca); subplot(2, 2, 2); delete(gca);
-axes('Position', [.13 .58 .77 .35]);
-set(gca, 'FontSize', 16)
+if S.mult_obs_within_person
+    nr = 2;
+    nc = 2;
+else
+    nr = 1;
+    nc = 2;
+end
+
+create_figure('cross-val accuracy', nr, nc);
+subplot(nr, nc, 1);
+
+plot(S.yfit, S.Y, 'o', 'MarkerFaceColor', [.3 .3 1]);
+refline;
+
+xlabel(sprintf('Predicted outcome, r = %3.2f, prediction r^2 = %3.2f', S.prediction_outcome_r, S.crossval_accuracy));
+ylabel('Outcome');
+
+title('CV-SVR scores (no hyperparameter optimization)');
+if ~isempty(varargin), title(varargin{1}); end
+
+subplot(nr, nc, 2);
+% Classification accuracy as a function of difference between two obs
+n = length(S.yfit);
+[M_yfit, M_y] = deal(NaN .* zeros(n));  % matrix form: pairwise diffs
+
+for i = 1:n
+    for j = i+1:n
+        
+        M_y(i, j) = S.Y(i) - S.Y(j);  %  true observed vals
+        
+        M_yfit(i, j) = S.yfit(i) - S.yfit(j);  %  true observed vals
+    end
+end
+
+y = M_y(:); y(isnan(y)) = [];               % pairwise diffs in observed
+absy = abs(y);
+yfit = M_yfit(:); yfit(isnan(yfit)) = [];
+acc = sign(yfit) == sign(y);
+
+nbins = 10;
+[accbin, ybin, accste, yste] = deal(zeros(nbins, 1));  % matrix form: pairwise diffs
+p = linspace(0, 100, nbins);
+prc = prctile(absy, p);
+prc = [prc Inf];
+for i = 1:nbins
+    
+    wh = absy >= prc(i) &  absy < prc(i + 1);
+    ybin(i) = mean(absy(wh));
+    yste(i) = ste(absy(wh));
+    
+    accbin(i) = 100 .* mean(acc(wh));
+    accste(i) = 100 .* ste(acc(wh));           % could use binomial
+    
+end
+
 hold on
+h = errorbar(ybin, accbin, accste);
+set(h, 'Color', [.3 .3 1]);
+h = errorbar_horizontal(ybin, accbin, yste);
+set(h, 'Color', [.3 .3 1]);
+
+plot(ybin, accbin, '-o', 'Color', [.3 .3 .3], 'MarkerFaceColor', [.3 .3 1]);
+xlabel('Absolute difference in observed');
+ylabel('Single-interval classification accuracy');
+title('Classification based on comparing scores')
 
 if S.mult_obs_within_person
     % Within-person scores
+    subplot(nr, nc, 3);
     
-    n = size(S.scores_within_id, 1);
-    x = [1:n; 1:n];
-    plot(x(:, S.scorediff > 0), S.scores_within_id(S.scorediff > 0, :)', 'Color', [.3 .3 .3], 'LineWidth', 1);
-    plot(x(:, S.scorediff < 0), S.scores_within_id(S.scorediff < 0, :)', 'r', 'LineWidth', 1);
+    [n, k] = size(S.scores_within_id);
     
-    plot(x(1, :), S.scores_within_id(:, 1)', '^', 'Color', [.3 .5 1] / 2, 'MarkerFaceColor', [.3 .5 1],  'LineWidth', 1);
-    plot(x(2, :), S.scores_within_id(:, 2)', 'v', 'Color', [1 .5 0] / 2, 'MarkerFaceColor', [1 .5 0],  'LineWidth', 1);
+    for i = 1:n
+        
+        if k == 2
+            plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o-', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
+            
+        else % more than 2, plot points only
+            
+            plot(S.scores_within_id(i, :), S.Y_within_id(i, :), 'o', 'Color', [.7 .7 .7], 'MarkerFaceColor', rand(1, 3));
+            
+        end
+    end
     
-    xlabel(sprintf('ID, %3.0f%% single-interval acc, %3.0f%% forced-choice', S.crossval_accuracy, S.crossval_accuracy_within));
+    if k > 2, refline; end
     
-    disp('Black lines: Correct, Red lines: Errors. Red triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
+    xlabel(sprintf('Predicted outcome, r = %3.2f, prediction r^2 = %3.2f', S.prediction_outcome_r, S.crossval_accuracy));
+    ylabel('Outcome');
     
-else
+    title('CV-SVR scores by individual');
     
-    % Scores, all between-person
+    subplot(nr, nc, 4);
     
-    n = size(S.dist_from_hyperplane_xval, 1);
-    x = 1:n;
-    iscorrect = sign(S.dist_from_hyperplane_xval) == sign(S.Y);
+    barplot_columns(S.high_vs_low_scores_within_id, 'noviolin', 'nofig');
+    xlabel('Highest - Lowest outcome within-person');
+    ylabel('CV scores (Highest - Lowest)');
+    title('Within-person classification');
     
-    %plot(x(:, iscorrect), S.dist_from_hyperplane_xval(iscorrect, :)', 'o', 'MarkerSize', 10, 'Color', [.3 .3 .3], 'LineWidth', 1);
-    plot(x(:, ~iscorrect), S.dist_from_hyperplane_xval(~iscorrect, :)', 'o', 'MarkerSize', 10, 'Color', [1 0 0], 'LineWidth', 1);
-    
-    h = plot_horizontal_line(0); set(h, 'LineStyle', '--');
-    
-    color1 = [.2 .8 .2];
-    color2 = [.3 .3 1];
-    
-    plot(x(:, S.Y == 1), S.dist_from_hyperplane_xval(S.Y == 1, :)', 'v', 'MarkerSize', 6, 'Color', color1, 'MarkerFaceColor', color1, 'LineWidth', 1);
-    plot(x(:, S.Y == -1), S.dist_from_hyperplane_xval(S.Y == -1, :)', '^', 'MarkerSize', 6, 'Color', color2, 'MarkerFaceColor', color2, 'LineWidth', 1);
-    
-    xlabel(sprintf('ID, %3.0f%% single-interval acc', S.crossval_accuracy));
-    
-    disp('Red cicles: Errors. Green triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
-    
-    axis tight
-    
-end
-
-ylabel('SVM Score');
-
-title('Cross-validated SVM scores (no hyperparameter optimization)');
-if ~isempty(varargin), title(varargin{1}); end
-
-
-% ROC plot
-subplot(2, 2, 3);
-S.ROC_single_interval = roc_plot(S.dist_from_hyperplane_xval, logical(S.Y > 0), 'color', [.4 .4 .7], 'threshold', 0);
-title('Single-interval ROC')
-set(gca, 'FontSize', 16)
-
-subplot(2, 2, 4);
-
-if S.mult_obs_within_person
-    
-    % Paired forced-choice. Get complete cases - Remove NaNs id-wise
-    outcomes = S.Y_within_id;
-    scores = S.scores_within_id;
-    [~, outcomes, scores] = nanremove(outcomes, scores);
-    
-    S.ROC_forced_choice = roc_plot(scores(:), logical(outcomes(:) > 0), 'color', [.4 .4 .7], 'twochoice');
-    title('Forced-choice ROC')
-    set(gca, 'FontSize', 16)
-    
-else
-    % Scores, all between-person
-    
-    plot(S.Y(~iscorrect), S.dist_from_hyperplane_xval(~iscorrect, :)', 'o', 'MarkerSize', 10, 'Color', [1 0 0], 'LineWidth', 1);
-    
-    h = plot_horizontal_line(0); set(h, 'LineStyle', '--');
-    
-    color1 = [.2 .8 .2];
-    color2 = [.3 .3 1];
-    
-    plot(ones(1, sum(S.Y == 1)), S.dist_from_hyperplane_xval(S.Y == 1, :)', 'v', 'MarkerSize', 6, 'Color', color1, 'MarkerFaceColor', color1, 'LineWidth', 1);
-    plot(-ones(1, sum(S.Y == -1)), S.dist_from_hyperplane_xval(S.Y == -1, :)', '^', 'MarkerSize', 6, 'Color', color2, 'MarkerFaceColor', color2, 'LineWidth', 1);
-    
-    set(gca, 'XTick', [-1 1], 'XLim', [-1.5 1.5]);
-    xlabel('True class');
-    ylabel('Predicted class')
-    
+    set(gca, 'FontSize', 14);
 end
 
 drawnow, snapnow
 
 end
-
-
-
-function xval_plot_scores_vs_class_probability(S)
-
-% crossval returns cross-validated yfit (class predictions), scores (dist_from_hyperplane_xval),
-% class_probability_xval. Scores and class probabilties will diverge (may
-% not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
-% They will diverge more if there is no true signal.
-
-create_figure('xval scores vs. class probability estimates', 1, 2); 
-
-plot(S.dist_from_hyperplane_xval, S.class_probability_xval, 'o');
-
-for j = 1:length(S.teIdx)
-    
-    plot(S.dist_from_hyperplane_xval(S.teIdx{j}), S.class_probability_xval(S.teIdx{j}), 'o', 'MarkerFaceColor', rand(1, 3));
-
-end
-
-xlabel('Cross-validated SVM scores (colors are folds)');
-ylabel('Cross-validated class prob estimates');
-
-hh = plot_vertical_line(0); set(hh, 'LineStyle', '--');
-hh = plot_horizontal_line(.5); set(hh, 'LineStyle', '--');
-
-subplot(1, 2, 2)
-
-lineh = plot(S.dist_from_hyperplane_xval(S.Y == 1), S.class_probability_xval(S.Y == 1), 'v', 'MarkerFaceColor', [.2 .8 .2]);
-lineh = [lineh plot(S.dist_from_hyperplane_xval(S.Y == -1), S.class_probability_xval(S.Y == -1), '^', 'MarkerFaceColor', [.2 .2 1])];
-
-xlabel('Cross-validated SVM scores (colors are folds)');
-ylabel('Cross-validated class prob estimates');
-
-hh = plot_vertical_line(0); set(hh, 'LineStyle', '--');
-hh = plot_horizontal_line(.5); set(hh, 'LineStyle', '--');
-
-legend(lineh, {'True Class = 1' 'True Class = -1'});
-
-drawnow, snapnow
-
-end
-
-
 
 
 % -------------------------------------------------------------------------
@@ -1092,6 +1046,8 @@ p = inputParser;
 
 valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
 
+valfcn_vector = @(x) validateattributes(x, {'numeric'}, {'column' 'nonempty'}); % scalar or vector
+
 valfcn_cell = @(x) validateattributes(x, {'cell'}, {'nonempty'}); % scalar or vector
 
 % Validation: Region object, structure, or [x1 x2 x3] triplet
@@ -1099,13 +1055,13 @@ valfcn_cell = @(x) validateattributes(x, {'cell'}, {'nonempty'}); % scalar or ve
 
 valfcn_logical = @(x) validateattributes(x, {}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
 
-valfcn_effectscode = @(x) validateattributes(x, {'numeric'}, {'nonempty', '<=', 1, '>=', -1});
+% valfcn_effectscode = @(x) validateattributes(x, {'numeric'}, {'nonempty', '<=', 1, '>=', -1});
 
 % Required inputs
 % ----------------------------------------------------------------------
 p.addRequired('X', valfcn_number);
-p.addRequired('Y', valfcn_effectscode); 
-p.addRequired('id', valfcn_number);
+p.addRequired('Y', valfcn_vector);
+p.addRequired('id', valfcn_vector);
 
 % Optional inputs
 % ----------------------------------------------------------------------

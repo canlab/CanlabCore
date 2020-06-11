@@ -1,4 +1,4 @@
-function obj_out = image_math(obj1, varargin)
+function [obj_out, varargout] = image_math(obj1, varargin)
 % Perform simple mathematical and boolean operations on image objects
 %
 % :Usage:
@@ -32,6 +32,13 @@ function obj_out = image_math(obj1, varargin)
 %   **{'power'}:**
 %        Keyword to raise data to power element-wise; obj.dat = obj.dat.^b;
 %                              Followed by exponent to apply (b)
+%
+%   **{'rmssd'}:**
+%        Keyword to perform root-mean-square successive differences.
+%        Meaningful if image series is a timeseries.
+%
+%        [obj, rmssd, wh_outliers] = image_math(obj, 'rmssd');
+%        Does not affect object.
 %
 % :Outputs:
 %
@@ -79,6 +86,8 @@ for i = 1:length(varargin)
                 
             case 'power', keyword = 'power'; varargin{i+1} = my_exponent;
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
+               
+            case 'rmssd', keyword = 'rmssd'; varargin{i} = [];
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -136,6 +145,8 @@ switch keyword
             end
             
         end
+        
+    case 'rmssd'
         
     otherwise
         warning(['Unknown keyword:' keyword]);
@@ -195,6 +206,23 @@ switch keyword
         obj_out = obj1;
         obj_out.dat = obj_out.dat .^ my_exponent;
         obj_out.history{end+1} = sprintf('Raised to %3.0f element-wise by image_math', my_exponent);
+
+    case 'rmssd'
+        
+        obj_out = obj1;
+        
+        sdiffs = diff(obj1.dat')';
+        sdiffs = [mean(sdiffs, 2) sdiffs]; % keep in image order
+        rmssd = ( mean(sdiffs .^ 2) ) .^ .5; % rmssd - root mean square successive diffs
+        
+        % avoid first time point being very different and influencing distribution and plots.
+        rmssd(1) = median(rmssd);
+        
+        % z-scores of rmssd
+        wh_outliers = scale(rmssd) > 3;
+        
+        varargout{1} = rmssd;
+        varargout{2} = wh_outliers;
 
     otherwise
         warning(['Unknown keyword:' keyword]);

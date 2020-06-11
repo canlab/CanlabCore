@@ -1,8 +1,6 @@
 % Create stratified k-fold holdout sets, balancing on outcome class and keeping observations from a grouping variable (e.g., subject) together
 %
-% - Works for classification (binary classes) and regression (continuous outcomes)
-% - Balances (stratifies) folds on outcome class membership (for categorical outcomes Y) or
-%   quartiles of outcome (for continuous outcomes Y)
+% - This function currently works for classification (binary classes) only
 %
 % :Usage:
 % ::
@@ -124,23 +122,11 @@ end
 % Gid: group, subject-wise. Assumes all obs for a subject have same Y value.
 Yid = Y(wh);
 
- % Y is categorical (vs. continuous)...deal with stratification and plots differently if so
-is_cat = length(unique(Y)) < 3;
-
 % Partition subject-wise, and then re-assign observations to folds
 % This keeps all subjects together.
 % nfolds defined in input parser, default = 10
 
-if is_cat
-    cvpart = cvpartition(Yid, 'k', nfolds, 'Stratify', true);
-    
-else
-    % Group into 4 categories based on mean for each id, and stratify by this.
-    % 
-    Ybins = scores_to_bins(Yid);
-    cvpart = cvpartition(Ybins, 'k', nfolds, 'Stratify', true);
-
-end
+cvpart = cvpartition(Yid, 'k', nfolds, 'Stratify', true);
 
 % Reassign train/test in observation-wise list
 [trIdx, teIdx] = deal(cell(1, nfolds));
@@ -163,19 +149,12 @@ holdout_integer_indic = indic2condf(testmat);
 % Tabulate proportions of each class in each fold
 for i = 1:nfolds
     
-    if is_cat
-        % tabulate(Y(trIdx{1})) How many obs of each outcome class in fold?
-        prop_table = tabulate(Y(trIdx{i}));
-        class_proportions(i, :) = prop_table(:, 3)';
-        
-    else
-        % use mean outcome for each fold
-        outcome_means(i, 1) = mean(Y(trIdx{i}));
-        outcome_std(i, 1) = std(Y(trIdx{i}));
-        outcome_vals{i} = Y(trIdx{i});
-    end
+    % tabulate(Y(trIdx{1}))
+    prop_table = tabulate(Y(trIdx{i}));
+    class_proportions(i, :) = prop_table(:, 3)';
     
 end
+
 
 if doverbose
     fprintf('Groups (e.g., subjects): %d, Images: %d, Classes: %d\n', length(Yid), length(id), length(unique(Y)))
@@ -203,33 +182,19 @@ if doplot
     create_figure('Test sets', 2, 2);
 
     imagesc(to_plot); axis tight; set(gca, 'YDir', 'reverse');
-    title('holdout sets, with outcome (Y)');
+    title('holdout sets, with class (Y)');
     xlabel('Fold');
     ylabel('Observation index');
     
     subplot(2, 2, 2);
     [~, wh] = sort(Y);
     imagesc(to_plot(wh, :)); axis tight; set(gca, 'YDir', 'reverse');
-    title('holdout sets, sorted by outcome');
+    title('holdout sets, sorted by group');
     ylabel('Observations (resorted)');
     
     subplot(2, 2, 3);
-    if is_cat
-        bar(class_proportions,'stacked');
-        ylabel('Class proportions')
-    else
-        %         barplot_columns(outcome_vals, 'noviolin', 'nofig'); % slow
-        for i = 1:length(outcome_vals)
-            plot(i * ones(size(outcome_vals{i})), outcome_vals{i}, 'o', 'Color', [.6 .6 .6]);
-        end
-        bar(outcome_means);
-        h = errorbar(outcome_means, outcome_std);
-        set(h, 'Color', [.3 .3 .3]);
-        ylabel('Outcome value');
-    end
-    
-    colormap(cool)
-    
+    bar(class_proportions,'stacked'), colormap(cool)
+    ylabel('Class proportions')
     xlabel('Fold');
     axis tight;
     
@@ -286,22 +251,4 @@ ARGS = p.Results;
 
 end % parse_inputs
 
-
-function x_binned = scores_to_bins(x)
-
-n_bins = 4;
-% adapted from line_plot_multisubject
-
-bins = prctile(x, linspace(0, 100, n_bins + 1));
-bins(end) = Inf;
-
-for j=1:n_bins %make the bins
-    
-    wh = x >= bins(j) & x < bins(j+1);
-    
-    x_binned(wh) = j; %nanmean(t(wh, :));
-    
-end
-
-end
 

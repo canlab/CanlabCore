@@ -57,14 +57,14 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %       Followed by vector of point sizes for all points - works ONLY if sizescale
 %       is set to 'custom'
 %
-%   **'rset', 'partitions':**
+%   **'setcolors':**
+%        Cell array of colors for each group, [1 x g]
+%
+%   **'rset':**
 %        Cell of vectors, with indices (integers) of member
 %        elements in each group, [1 x g] cell
 %        rset can ALSO be a vector of integers, i.e., output
 %        from clusterdata
-%
-%   **'setcolors', 'partitioncolors':**
-%        Cell array of colors for each group, [1 x g]
 %
 %   **'names':**
 %       followed by cell array of names for each region/object
@@ -118,8 +118,6 @@ names = [];
 namesfield = [];        % enter field name, e.g., 'shorttitle'
 linewidth = 1;
 
-dofigure = true;
-
 % Variable arg inputs
 % -----------------------------------
 
@@ -136,16 +134,9 @@ for i = 1:length(varargin)
             case 'linewidth', linewidth = varargin{i + 1}; varargin{i + 1} = [];
                 
             case 'linestyle', linestyle = varargin{i + 1}; varargin{i + 1} = [];
-            
-            case 'partitions', rset = varargin{i + 1}; varargin{i + 1} = [];
                 
-            case 'partitioncolors', setcolors = varargin{i + 1}; varargin{i + 1} = [];
-                    
-            case {'threshtype' 'connectmetric' 'sizescale' 'setcolors' 'rset' 'names' 'namesfield' 'sizes' 'fdr'}
+            case {'threshtype' 'connectmetric' 'sizescale' 'setcolors' 'rset' 'names' 'namesfield' 'sizes'}
                 eval([varargin{i} ' = varargin{i + 1}; varargin{i + 1} = [];'])
-                
-            case {'nofigure', 'nofig'}
-                dofigure = false;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -171,7 +162,7 @@ if ~isempty(cl) && (size(activationdata, 2) ~= length(cl))
 end
 
 if isempty(rset)
-    rset = {1:size(activationdata, 2)};
+    rset = {1:size(activationdata)};
 end
 
 if isempty(setcolors)
@@ -201,49 +192,38 @@ if issymmetric(activationdata)
 else
     fprintf('activationdata appears to be raw data. Running inter-correlations. See also xcorr_multisubject.\n')
     
-     switch connectmetric
+    [r, rp] = corr(double(activationdata));
+    sz = size(r, 1);
+    
+    switch threshtype
+        case 'bonf'
+            thr = .05 ./ (sz * (sz - 1) / 2);  % bonferroni...
+    end
+    
+    % Partial correlations
+    [b, p] = calc_partial_r(activationdata);
+    
+    % Threshold
+    sig = sparse(double(p < thr & b > 0));
+    signeg = sparse(-double(p < thr & b < 0));
+    sig = sig + signeg;
+    
+    
+    % Threshold based on significant partial regression effects
+    % C is connectivity matrix for graph
+    
+    switch connectmetric
         case 'partial_corr'
             
-            % Partial correlation slopes (r is actually slope)
-            [r, p] = calc_partial_r(activationdata);
+            C = b;
+            C(~sig) = 0;
             
-            b = r;
+        case 'corr' % default
+            C = r;
+            C(~sig) = 0;
             
-         case 'corr' % default
-             
-            [r, p] = corr(double(activationdata));
-             
-            b = [];
-            
-         otherwise error('Unknown connectmetric');
-     end
-     
-     sz = size(r, 1);
-     
-     switch threshtype
-         case 'bonf'
-             thr = .05 ./ (sz * (sz - 1) / 2);  % bonferroni...
-             
-         case 'fdr'
-             
-             thr = p_matrix2fdrthresh(p);             
-             
-     end
-
-     C = r;
-     
-     % Threshold
-     sig = sparse(double(p < thr & r > 0));
-     signeg = sparse(-double(p < thr & r < 0));
-     sig = sig + signeg;
-     
-     C(~sig) = 0;
-     
-     
-     % Threshold based on significant partial regression effects
-     % C is connectivity matrix for graph
-     
-   
+        otherwise error('Unknown connectmetric');
+    end
     
     % end if issymmetric
 end
@@ -263,11 +243,7 @@ bc = degree(G);
 
 % shortest paths: used as estimate of connectivity
 % [D S] = mean_path_length(r, rset);
-% shortest path using POSITIVE edges only
-GG = G;
-GG.Edges.Weight( G.Edges.Weight < 0) = 0;
-
-[D S] = mean_path_length(GG, rset);
+[D S] = mean_path_length(G, rset);
 
 
 deg = full(sum(C ~= 0))';
@@ -312,12 +288,10 @@ delete(han);                        % erase
 % could rotate here
 % ***
 
-if dofigure
-    if ~isempty(cl)
-        create_figure('graph', 1, 2);
-    else
-        create_figure('graph');
-    end
+if ~isempty(cl)
+    create_figure('graph', 1, 2);
+else
+    create_figure('graph');
 end
 
 switch lower(linestyle)
@@ -651,19 +625,3 @@ spherehan = {spherehan};
 
 
 end % function
-
-
-
-
-function thr = p_matrix2fdrthresh(p)
-
-trilp = tril(p, -1);
-wh = logical(tril(ones(size(p)), -1)); % Select off-diagonal values (lower triangle)
-trilp = double(trilp(wh));             % Vectorize and enforce double
-trilp(trilp < 10*eps) = 10*eps;        % Avoid exactly zero values
-fdrthr = FDR(trilp, 0.05);
-
-if isempty(fdrthr), fdrthr = -Inf; end
-thr = fdrthr;
-
-end

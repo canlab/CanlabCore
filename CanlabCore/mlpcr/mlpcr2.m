@@ -121,7 +121,7 @@
 %   cv_mlpcr_wi and cv_mlpcr_bt should have within and between priority
 %   (respectively) by default.
 
-function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
+function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w] = mlpcr2(X,Y,varargin)
     subjIDs = [];
     wiDim = Inf;
     btDim = Inf;
@@ -140,13 +140,6 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
             end
         end
     end
-    
-    % we need adjacent subjIDs, so let's ensure that
-    [subjIDs, newOrder] = sortrows(subjIDs(:));
-    [~,origOrder] = sort(newOrder);
-    
-    X = X(newOrder,:);
-    Y = Y(newOrder);
     
     if isempty(subjIDs)
         error('Cannot perform multilevel PCR without a subjIDs identifier');
@@ -256,44 +249,31 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
     elseif rank(sc) < size(sc,2)
         numcomps = rank(sc)-1;
         [~,compRank] = sort(var(sc),'descend');
-        retainComps = sort(compRank(1:numcomps));
+        retainComps = compRank(1:numcomps);
         
-        [bDimnew, wDimnew] = deal(zeros(length(compRank),1));
+        bDim(~ismember(bDim,retainComps)) = [];
+        wDim(~ismember(wDim,retainComps)) = [];
         
-        bDimnew(bDim) = 1;
-        bDimnew = bDimnew(retainComps);
-        bDim = find(bDimnew);
-                
-        wDimnew(wDim) = 1;
-        wDimnew = wDimnew(retainComps);
-        wDim = find(wDimnew);
+        sc_w = sc_w(:,wDim);
+        sc_b = sc_b(:,bDim);
+        pc_w = pc_w(:,wDim);
+        pc_b = pc_b(:,bDim);
         
-        sc_w = sc(:,wDim);
-        sc_b = sc(:,bDim);
-        pc_w = pc(:,wDim);
-        pc_b = pc(:,bDim);
-        
-        if ~any(ismember(bDim,retainComps)) && btDim > 0
-            warning('All between dimensions dropped due to rank deficiency'); 
-        end
-        if ~any(ismember(wDim,retainComps)) && wiDim > 0
-            warning('All within dimensions dropped due to rank deficiency'); 
-        end
+        if ~any(ismember(bDim,retainComps)), warning('All between dimensions dropped due to rank deficiency'); end
+        if ~any(ismember(wDim,retainComps)), warning('All within dimensions dropped due to rank deficiency'); end
     end
     
     xx = [ones(size(Y, 1), 1) sc(:, retainComps)];
     
     if rank(xx) <= size(sc, 2)
-        % compute (optional: weighted) pseudoinverse if not full rank. If
-        % unweighted pinv_xx == pinv(xx)
-        tol = max(size(xx))*eps(norm(xx));
-        [u,s,v] = svd(sf.*xx,'econ');
+        % compute (optional: weighted) pseudoinverse if not full rank
+        [u,s,v] = svd(sf.^2.*xx,'econ');
         s = diag(s);
-        s(s>tol) = 1./s(s>tol);
+        s(s~=0) = 1./s(s~=0);
         s = diag(s);
         pinv_xx = v*s*u';
-
-        b = pinv_xx * (sf.*Y);
+        
+        b = pinv_xx * Y;
     else
         b = inv(xx'*diag(sf.^2)*xx)*xx'*diag(sf.^2)*Y;
     end
@@ -315,7 +295,4 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
     else
         Bw = [0; pc(:,wDim)*b(wDim + 1)];
     end
-    
-    if ~isempty(sc_b), sc_b = sc_b(origOrder,:); end
-    if ~isempty(sc_w), sc_w = sc_w(origOrder,:); end
 end

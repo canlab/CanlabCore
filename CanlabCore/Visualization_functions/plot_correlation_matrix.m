@@ -140,28 +140,27 @@ dofigure = true;
 doimage = false;
 docircles = true;
 dotext = true;
-colorlimit = [-1 1];    % for correlations
-max_radius = [];        % set by default to range(colorlimit)/4 or 0.5 if empty
+colorlimit = [-1 1]; % for correlations
+max_radius = [];     % set by default to range(colorlimit)/4 or 0.5 if empty
 
 partitions = [];
 partitioncolors = {};
 partitionlabels = {};
-doreorder = false;      % Reorder columns to sort by partition labels; udpated below
 
 % names
 var_names = {};
 
 % text options
-text_x_offset = .30;    % higher is farther to the left
-text_y_offset = 0;      % -.35; % negative is down
+text_x_offset = .15;
+text_y_offset = 0; % -.35; % negative is down
 text_fsize = 16;
 text_nonsig_color = [.3 .3 .3];
 text_sig_color = [0 0 0];
 
-[~, k] = size(X);
+[n, k] = size(X);
 
 if isstruct(X)  % Adjust if struct input
-    [~, k] = size(X.r);
+    [n, k] = size(X.r);
 end
 
 if isa(X, 'table')
@@ -222,7 +221,7 @@ for i = 1:length(varargin)
             case {'circles'},                                docircles = true; doimage = false;    
             case {'notext'},                                 dotext = false;
             case {'fdr' 'FDR'},                              dofdr = true; 
-            % case {'nocalc' 'input_rmatrix'},                 docalc = false; 
+            case {'nocalc' 'input_rmatrix'},                 docalc = false; 
             case {'nofigure'},                               dofigure = false; hold on;
                 
             case {'names', 'labels'}, var_names = varargin{i+1}; varargin{i+1} = [];
@@ -234,23 +233,6 @@ for i = 1:length(varargin)
     end
 end
 
-% Handle reordering flag
-if ~isempty(partitions)
-    
-    [psort, sort_order] = sort(partitions, 'ascend');
-    
-    if any(psort - partitions)
-        
-        doreorder = true;
-        partitions = psort;
-        
-        OUT.reorder_note = 'Note: Variables were re-ordered based on partitions. Reordered names saved in .var_names field.';
-        disp(OUT.reorder_note);
-        
-    end
-end
-    
-    
 % Process variables that depend on values optional inputs: 
 
 if isstruct(X)
@@ -260,12 +242,6 @@ if isstruct(X)
     % p = p-values
     % sig = signficance matrix (logical)
     
-    if doreorder
-        X.r = X.r(sort_order, sort_order);
-        X.p = X.p(sort_order, sort_order);
-        X.sig = X.sig(sort_order, sort_order);
-    end
-    
     r = X.r;
     p = X.p;
     sig = X.sig;
@@ -274,12 +250,6 @@ if isstruct(X)
     X = X.r;        % placeholder for attribute validation
     
     skip_calculation = true;
-    
-elseif doreorder
-    % Reorder matrix
-    
-    X = X(:, sort_order);
-    
 end
     
 if isempty(max_radius)
@@ -289,16 +259,12 @@ if isempty(max_radius)
 end
 
 if ~isempty(partitions)
-    
     npartitions = length(unique(partitions));
     
     if isempty(partitioncolors)
-        % Get default colors
-        
         partitioncolors = scn_standard_colors(npartitions + 2);
         partitioncolors([1 3]) = [];  % remove red and blue (confusing)
     end
-    
 end
 
 % -------------------------------------------------------------------------
@@ -331,11 +297,6 @@ for i = 1:length(vector_args)
 
 end
 
-if doreorder && ~isempty(partitions) && ~isempty(var_names)
-    
-    var_names = var_names(sort_order);
-    
-end
 
 
 % Correlation stats
@@ -346,7 +307,7 @@ if k > 50 && docircles
 end
 
 % Remove nan values row-wise - 'rows' 'complete' method.
-[~, X] = nanremove(X);
+[wasnan, X] = nanremove(X);
 
 if skip_calculation
 % Do nothing - we already have r, p, sig
@@ -369,7 +330,13 @@ end
 if ~skip_calculation && dofdr
     % FDR-correct p-values across unique elements of the matrix
     
-    fdrthr = p_matrix2fdrthresh(p);
+    trilp = tril(p, -1);
+    wh = logical(tril(ones(size(p)), -1)); % Select off-diagonal values (lower triangle)
+    trilp = double(trilp(wh));             % Vectorize and enforce double
+    trilp(trilp < 10*eps) = 10*eps;        % Avoid exactly zero values
+    fdrthr = FDR(trilp, 0.05);
+    
+    if isempty(fdrthr), fdrthr = -Inf; end
     
     sig = p < fdrthr;
     
@@ -437,7 +404,7 @@ end
 % --------------------------------------------------
 if ~isempty(partitions)
     
-    % u = unique(partitions);
+    u = unique(partitions);
     if ~iscolumn(partitions), partitions = partitions'; end
     
     st = find(diff([0; partitions])) - 0.5;           % starting and ending values for each partition
@@ -478,7 +445,6 @@ end
 % max radius = 0.5 to fit in unit square
 
 if docircles
-    circhan = [];
     
     for rr = 1:k
         
@@ -486,7 +452,7 @@ if docircles
             
             % get color
             myr = r(rr, cc);
-            [~, r_ind] = min((myr - r_ref_indx) .^ 2); % find closest
+            [mymin, r_ind] = min((myr - r_ref_indx) .^ 2); % find closest
             mycolor = cm(r_ind, :);
             
             % draw filled circle
@@ -498,7 +464,6 @@ if docircles
                 
                 han = circle([rr cc], max_radius * abs(myr));
                 set(han, 'LineWidth', 2, 'Color', mycolor ./ 1.5);
-                circhan(end+1) = han;
                 
             end
             
@@ -526,7 +491,7 @@ if dotext
             % if significant, bold weight
             if rr == cc || sig(rr, cc)
                 
-                text_han(rr, cc) = text(rr - text_x_offset, cc - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'FontWeight', 'b', 'Color', text_sig_color); %#ok<*AGROW>
+                text_han(rr, cc) = text(rr - text_x_offset, cc - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'FontWeight', 'b', 'Color', text_sig_color);
                 
             else
                 
@@ -540,32 +505,6 @@ if dotext
     
     OUT.text_han = text_han;
     
-    if docircles && all(ishandle(circhan))
-        
-        % Make circles lighter so will not compete with text
-        set(circhan, 'LineWidth', .5);
-        
-    end
-    
 end
 
 end % main function
-
-
-
-
-
-
-
-function thr = p_matrix2fdrthresh(p)
-
-trilp = tril(p, -1);
-wh = logical(tril(ones(size(p)), -1)); % Select off-diagonal values (lower triangle)
-trilp = double(trilp(wh));             % Vectorize and enforce double
-trilp(trilp < 10*eps) = 10*eps;        % Avoid exactly zero values
-fdrthr = FDR(trilp, 0.05);
-
-if isempty(fdrthr), fdrthr = -Inf; end
-thr = fdrthr;
-
-end

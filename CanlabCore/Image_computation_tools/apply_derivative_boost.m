@@ -224,9 +224,9 @@ function apply_derivative_boost(varargin)
                 % ---------------------------------------------
                 switch derivative_case
                     case 'timeonly'
-                        spm_imcalc_ui(imgs_cond, out_name, 'sign(i1) .* sqrt(i1.^2 + i2.^2)');
+                        spm_imcalc(imgs_cond, out_name, 'sign(i1) .* sqrt(i1.^2 + i2.^2)');
                     case 'timedispersion'
-                        spm_imcalc_ui(imgs_cond, out_name, 'sign(i1) .* sqrt(i1.^2 + i2.^2 + i3.^2)');
+                        spm_imcalc(imgs_cond, out_name, 'sign(i1) .* sqrt(i1.^2 + i2.^2 + i3.^2)');
                     otherwise
                         error('Basis set is incompatible with DB estimation!');
                 end

@@ -41,6 +41,7 @@ mycollection.number_of_images, ...
 mycollection.url);
 
 % Get images
+
 myimages = webread(sprintf('http://neurovault.org/api/collections/%s/images', collstr), options);
 
 while length(myimages.results)~=myimages.count
@@ -70,6 +71,7 @@ nimgs = length(myimages.results);
 [file_to_save, url_on_neurovault, files_on_disk] = deal(cell(nimgs, 1));
 
 fprintf('Loading: %4.0f', 0);
+options.ContentType='json'; %assume json
 
 for i = 1:nimgs
     
@@ -80,8 +82,11 @@ for i = 1:nimgs
     
     url_on_neurovault{i} = myimages.results(i).file;
     
+    try 
     files_on_disk{i, 1} = websave(file_to_save{i}, url_on_neurovault{i},options);
-    
+    catch
+    files_on_disk{i, 1} = urlwrite(url_on_neurovault{i},file_to_save{i});
+    end
 end
 
 % All done.

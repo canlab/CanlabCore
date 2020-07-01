@@ -37,7 +37,7 @@ if ~iscell(nms)
     error('Names input must be a cell array.');
 end
 
-if ismatrix(cm)
+if ismatrix(cm) && ~isempty(cm)
     % We have entered a matrix to mark
     
     validateattributes(cm, {'numeric'}, {'square' '2d'});

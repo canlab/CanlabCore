@@ -163,6 +163,7 @@ if ischar(input_activation)
         % Entered no data map; intention is not to plot blobs, just create underlay
         varargin{end + 1} = 'noblobs'; 
         varargin{end + 1} = 'nooutline';
+        varargin{end + 1} = input_activation; % so code below finds it later
         % do nothing else for now - this is not an input image
         
     else

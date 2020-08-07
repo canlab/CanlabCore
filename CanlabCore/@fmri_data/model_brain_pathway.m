@@ -391,13 +391,36 @@ stats.V_pathway_four = pinv(target_two_obj.dat') * xs_pathway_four;
 
 if do_boot
     
+   
+    bs_source_one_dat=source_one_obj.dat';
+    bs_source_two_dat=source_two_obj.dat';
+    bs_target_one_dat=target_one_obj.dat';
+    bs_target_two_dat=target_two_obj.dat';
+    for i=1:nboot
+        
+        [~,rand_subs]=datasample(1:max(indices),max(indices)); %randomly replace whole blocks with replacement
+        count_vec=1:length(indices);
+        for ii=1:max(indices)
+            
+            rand_inds(indices==ii)=count_vec(indices==rand_subs(ii));
+            
+        end
+        
+        bs_V_pathway_one(i,:)= bootPLS_target_pattern_weights(bs_source_one_dat(rand_inds,:),bs_target_one_dat(rand_inds,:),ndim,flip_maps);
+        bs_Z_pathway_one(i,:)= bootPLS_source_pattern_weights(bs_source_one_dat(rand_inds,:),bs_target_one_dat(rand_inds,:),ndim,flip_maps);
+        
+        
+        bs_V_pathway_four(i,:)= bootPLS_target_pattern_weights(bs_source_two_dat,bs_target_two_dat,ndim,flip_maps);
+        bs_Z_pathway_four(i,:)= bootPLS_source_pattern_weights(bs_source_two_dat,bs_target_two_dat,ndim,flip_maps);
+    end
     
-    bs_V_pathway_one= bootstrp(1000,@bootPLS_target_pattern_weights,source_one_obj.dat',target_one_obj.dat',ndim,flip_maps);
-    bs_Z_pathway_one= bootstrp(1000,@bootPLS_source_pattern_weights,source_one_obj.dat',target_one_obj.dat',ndim,flip_maps);
+    
+%     bs_V_pathway_one= bootstrp(nboot,@bootPLS_target_pattern_weights,source_one_obj.dat',target_one_obj.dat',ndim,flip_maps);
+%     bs_Z_pathway_one= bootstrp(nboot,@bootPLS_source_pattern_weights,source_one_obj.dat',target_one_obj.dat',ndim,flip_maps);
     
     
-    bs_V_pathway_four= bootstrp(1000,@bootPLS_target_pattern_weights,source_two_obj.dat',target_two_obj.dat',ndim,flip_maps);
-    bs_Z_pathway_four= bootstrp(1000,@bootPLS_source_pattern_weights,source_two_obj.dat',target_two_obj.dat',ndim,flip_maps);
+%     bs_V_pathway_four= bootstrp(nboot,@bootPLS_target_pattern_weights,source_two_obj.dat',target_two_obj.dat',ndim,flip_maps);
+%     bs_Z_pathway_four= bootstrp(nboot,@bootPLS_source_pattern_weights,source_two_obj.dat',target_two_obj.dat',ndim,flip_maps);
     
     bs_Z=(mean(bs_Z_pathway_one)./std(bs_Z_pathway_one))';
     bs_P = 2*normcdf(-1*abs(bs_Z),0,1);

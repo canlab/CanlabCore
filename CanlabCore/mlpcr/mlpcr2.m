@@ -301,7 +301,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr2(X,Y,varargin)
     if ~isempty(retainComps)
         B = [b(1); pc(:,retainComps)*b(2:end)];
     else
-        B = b;
+        B = [b; zeros(size(X,2),1)];
     end
     
     if isempty(bDim)

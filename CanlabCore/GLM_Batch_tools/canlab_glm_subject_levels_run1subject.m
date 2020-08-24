@@ -433,7 +433,7 @@ pmods = {};
 multipleregressors = '';
 
 for sess = 1:numel(concat)  
-    oldsess1 = concat{sess}(1);
+    oldsess1 = concat{sess}(1); 
     
     % concatenate functional data
     runs3d{sess} = []; %#ok
@@ -467,7 +467,16 @@ for sess = 1:numel(concat)
             
             % pmods
             if ~numel(oldpmods{oldsess}{cond})
-                pmods{sess}{cond} = oldpmods{oldsess}{cond}; %#ok
+                % if this is run 2 and this condition is missing on run 2
+                % then we enter this conditional, but what if it wasn't
+                % missing on run 1? Then we're overwriting that data. Let's
+                % fix that
+                %pmods{sess}{cond} = oldpmods{oldsess}{cond}; %#ok
+                if length(pmods) < sess || length(pmods{sess}) < cond % if pmods{sess}{cond} doesn't exist
+                    pmods{sess}{cond} = oldpmods{oldsess}{cond}; %#ok
+                elseif isempty(pmods{sess}{cond}) % if it exists but is empty. Doubt this will ever occur, but just in case
+                    pmods{sess}{cond} = oldpmods{oldsess}{cond}; %#ok
+                end
             else
                 for p = 1:size(oldpmods{oldsess}{cond},2)
                     if r==1
@@ -475,7 +484,18 @@ for sess = 1:numel(concat)
                         pmods{sess}{cond}(p).name = oldpmods{oldsess1}{cond}(p).name; %#ok
                         pmods{sess}{cond}(p).param = []; %#ok
                     end
-                    pmods{sess}{cond}(p).param = [pmods{sess}{cond}(p).param; oldpmods{oldsess}{cond}(p).param]; %#ok
+                    
+                    % Bogdan: pmods is always empty on r == 1 but it can be 
+                    % empty on subsequent runs if r == 1 was missing 'this'
+                    % condition, so let's make this conditional to account
+                    % for that too.
+                    if ~numel(pmods{sess}{cond})
+                        pmods{sess}{cond}(p).poly = oldpmods{oldsess}{cond}(p).poly; %note use of oldsess, not oldsess1
+                        pmods{sess}{cond}(p).name = oldpmods{oldsess}{cond}(p).name;
+                        pmods{sess}{cond}(p).param = oldpmods{oldsess}{cond}(p).param(:); % note non-null assignment
+                    else
+                        pmods{sess}{cond}(p).param = [pmods{sess}{cond}(p).param(:); oldpmods{oldsess}{cond}(p).param(:)]; %#ok
+                    end
                 end
             end
         end

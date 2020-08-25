@@ -54,11 +54,16 @@ function hist_han = histogram(obj, varargin)
 %       inclusive. The potential value of this is that signal in the CSF/white
 %       compartments may be removed from images prior to/during analysis
 %
+% % **'singleaxis'**
+%       If (only if) 'byimage', plot all histograms on single axis in
+%       different random colors. Replaces default behavior of one axis per
+%       image.
+%
 % **'plot'**
 %       No function right now.
 %
 % **'nbins'**
-%       Followed by number of bins to use (default 100)
+%       Followed by number of bins to use (default is 'auto', n_values/1000)
 %
 % **'color'**
 %       Followed by color [r g b] triplet or text, e.g., 'b'
@@ -119,6 +124,7 @@ nbins = [];
 color = [.3 .3 .3];
 mask = [];
 by_tissue_type = 0;
+singleaxis = false;
 
 % initalize optional variables to default values here.
 
@@ -129,6 +135,8 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case {'byimage', 'by_image', 'separate'}, do_by_image = 1;
+                
+            case 'singleaxis', singleaxis = true;
                 
             case 'plot', doplot = 1;
                 
@@ -159,9 +167,9 @@ if by_tissue_type
     hist_han = cell(1, 3);
     colors = {[.2 .2 .2] [1 .6 .6] [.3 .3 1]};
     
-    for i = 1:3
+    for i = 3:-1:1
         
-        hist_han{i} = histogram(full_data_objects{i}, varargin{:}, 'color', colors{i}, 'nofigure');
+        hist_han{i} = histogram(full_data_objects{i}, varargin{:}, 'color', colors{i}, 'nofigure', 'nbins', 100, 'nofill');
         
         full_data_objects{i} = remove_empty(full_data_objects{i});  % just in case
         
@@ -223,10 +231,10 @@ if do_by_image
     % Set scale range
     Xtmp = obj.dat(:);
     Xtmp(Xtmp == 0 | isnan(Xtmp)) = [];
-    mylim = prctile(Xtmp, [1 99]);
+    mylim = prctile(Xtmp, [.1 99.9]);
     
     % Set n bins if auto-select
-    if isempty(nbins), nbins = ceil(size(obj.dat, 1) ./ 500); end
+    if isempty(nbins), nbins = ceil(size(obj.dat, 1) ./ 1000); end
     
     % Set up subplots
     nimgs = size(obj.dat, 2);
@@ -235,23 +243,37 @@ if do_by_image
     naxes = rows * cols;
     
     if dofigure
-        create_figure('histogram', rows, cols);
+        if singleaxis
+            create_figure('histogram');
+        else
+            create_figure('histogram', rows, cols);
+        end
     end
     
     % Do for each image
     for i = 1:nimgs
         
-        subplot(rows, cols, i);
-        hist_han(i) = create_hist(obj.dat(:, i), nbins, doline, dofill, color);
+        if singleaxis
+            
+            hist_han(i) = create_hist(obj.dat(:, i), nbins, doline, false, rand(1, 3));
+            
+        else
+            
+            subplot(rows, cols, i);
+            hist_han(i) = create_hist(obj.dat(:, i), nbins, doline, dofill, color);
+            
+        end
         
         % set axes
         set(gca, 'XLim', mylim);
         
     end
     
-    for i = nimgs + 1:naxes
-        subplot(rows, cols, i)
-        axis off
+    if ~singleaxis
+        for i = nimgs + 1:naxes
+            subplot(rows, cols, i)
+            axis off
+        end
     end
     
 else

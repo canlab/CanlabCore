@@ -489,7 +489,7 @@ for sess = 1:numel(concat)
                     % empty on subsequent runs if r == 1 was missing 'this'
                     % condition, so let's make this conditional to account
                     % for that too.
-                    if ~numel(pmods{sess}{cond})
+                    if numel(pmods{sess}{cond}) < p
                         pmods{sess}{cond}(p).poly = oldpmods{oldsess}{cond}(p).poly; %note use of oldsess, not oldsess1
                         pmods{sess}{cond}(p).name = oldpmods{oldsess}{cond}(p).name;
                         pmods{sess}{cond}(p).param = oldpmods{oldsess}{cond}(p).param(:); % note non-null assignment

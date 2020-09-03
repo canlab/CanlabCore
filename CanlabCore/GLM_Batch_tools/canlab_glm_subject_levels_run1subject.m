@@ -44,7 +44,7 @@ if OPTS.onlycons
     diary(diaryfile), fprintf('%sSKIPPED: turned off in options.\n',z), diary off
 else
     run_this_model = true;
-    %{
+    
     if exist(submodeldir,'dir')
         %if ~numel(filenames(fullfile(submodeldir,'beta_*.img')))
         try status = importdata(fullfile(submodeldir,'.ssglm_model_status')); catch, status = ''; end %#ok
@@ -64,7 +64,6 @@ else
             end
         end
     end
-    %}
     
     if run_this_model
         if ~exist(DSGN.subjects{s},'dir')

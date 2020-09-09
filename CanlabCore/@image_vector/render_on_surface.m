@@ -85,7 +85,10 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 % 
 % t = threshold(t, [2 Inf], 'raw-between');
 % render_on_surface(t, han, 'colormap', 'winter', 'clim', [2 6]);
-
+%
+% Note:
+% To erase rendered blobs, use:
+% sh = addbrain('eraseblobs', sh);
 
 % Programmers' Notes:
 % Tor Wager, Jan 2020
@@ -112,6 +115,9 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 % (like isocaps). This will be set to interp for all patches, but we have
 % to preserve the existing colormapped grayscale values for interp patches
 % by using the split colormap.
+%
+% Sept 2020: add solid-color 'color' option
+% revise surface() method to use this
 
 if any(~ishandle(surface_handles))
     error('Some surface_handles are not valid handles');
@@ -130,7 +136,7 @@ pos_colormap = [];
 neg_colormap = [];
 clim = [];  
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
-allowable_keyword_value_pairs = {'clim' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
@@ -139,6 +145,15 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
 
+            case 'color'
+                % Special instructions for solid colors
+                mycolor = varargin{i+1};
+                validateattributes(mycolor, {'numeric'}, {'>=', 0, '<=', 1, 'size', [1 3]})
+                
+                nvals = 256;
+                pos_colormap = repmat(mycolor, nvals, 1);
+                
+               
             case 'colormap'
                 
                 colormapname = varargin{i+1}; varargin{i+1} = [];
@@ -187,6 +202,12 @@ if isempty(clim)
     
     clim = [min(dat(:)) max(dat(:))];  % clim: data values for min and max, should become min/max colors
     
+    % if no variance, we have constant data values - special case.
+    % reducing lower clim(1) will effectively map all data to max color value
+    if abs(diff(clim)) < 100 * eps
+        clim(1) = clim(2) - 1;
+    end
+    
 end
 
 
@@ -229,13 +250,13 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     % -----------------------------------------------------------------------
     % Skip colormap generator, already
     % found the range of colors for pos/neg values to split around 0 here.
+    % this sets the colormap for axis_handle
     cm = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :));
         
     % colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
     % nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
     
 else
-    
     
     % Build the colormap
     % -----------------------------------------------------------------------
@@ -263,6 +284,7 @@ end % custom posneg or other colormap
 % Map object data values to indices in split colormap
 % -----------------------------------------------------------------------
 % Define mapping function. We will apply this later to vertex color data
+% (only colored)
 % Defining this here preserves the same mapping across different surfaces
 % clim(1) mapped to lowest color, clim(2) to highest color
  map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
@@ -344,6 +366,10 @@ c_colored(wh) = c_gray(wh);
     % -----------------------------------------------------------------------
     % Change from 'scaled' to 'direct' mode
 
+    % Save FaceVertexCData f or later
+    prevdata = get(surface_handles(i), 'FaceVertexCData');
+    set(surface_handles(i), 'UserData', prevdata);
+    
     set(surface_handles(i), 'FaceVertexCData', c_colored);  % dot indexing sometimes works, sometimes doesn't...depends on handle type
     set(surface_handles(i), 'FaceColor', 'interp')
     set(surface_handles(i), 'CDataMapping', 'direct')

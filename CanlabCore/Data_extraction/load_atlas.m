@@ -19,7 +19,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'buckner'                       'buckner_networks_atlas_object.mat'
 % 'cerebellum', 'suit'            'SUIT_Cerebellum_MNI_atlas_object.mat'
 % 'shen'                          'Shen_atlas_object.mat'
-% 'schaefer400'                   'Schaefer2018Cortex_atlas_regions.mat'
+% 'schaefer400'                   *Not saved as object yet* 'Schaefer2018Cortex_atlas_regions.mat' 
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
 % 'insula'                        'Faillenot_insular_atlas.mat'
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
@@ -103,9 +103,9 @@ end
             savefile = which('Shen_atlas_object.mat');
             varname = 'atlas_obj';
             
-         case 'schaefer400'                   
-             savefile = which('Schaefer2018Cortex_atlas_regions.mat');
-             varname = 'atlas_obj';
+%          case 'schaefer400'                   
+%              savefile = which('Schaefer2018Cortex_atlas_regions.mat');
+%              varname = 'atlas_obj';
              
         case 'yeo17networks'                 
             savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');

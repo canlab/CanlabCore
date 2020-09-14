@@ -80,6 +80,17 @@ if exist(obj.fullpath, 'file') && ~any(strcmp(varargin, 'overwrite'))
     
 end
 
+% If file exists and want to overwrite, delete the original file.
+% Otherwise, it will only overwrite the initial volumes (timepoints), which
+% is probably not the behavior expected by users. Added by Yoni
+% 9/14/2020
+
+if exist(obj.fullpath, 'file') && any(strcmp(varargin, 'overwrite'))
+    
+    delete(obj.fullpath)
+    
+end
+
 % Check for illegal fullpath:
 
 if size(obj.fullpath, 1) > 1

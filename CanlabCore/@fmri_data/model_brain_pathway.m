@@ -6,6 +6,10 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %
 %    stats = model_brain_pathway(obj,source_one,source_two,target_one,target_two,varargin);
 %
+% - Default: 10-fold cross-validation (no grouping; see optional inputs) for testing connection strength
+% - Default: block bootstrap with random selection of observations in blocks for significance of pattern weights
+% - If running across multiple participants, enter 'Indices' (see below) to properly hangle subject grouping
+%
 % This is a method for an fmri_data object that attempts to identify a set of
 % weights in one brain region (X, the source) that can be used to explain activity
 % in another brain region (Y, the target region). This many to many mapping is
@@ -88,6 +92,13 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %      Followed by the number of bootstrap samples to conduct for
 %      estimating voxel-wise significance of V and Z weights
 %
+% **'Indices'**
+%      Followed by an integer vector specifying participant (or blocking) ID
+%      Used in two ways:
+%      (1) to define cross-validation holdout set for each observation, n_obs x 1. This is useful if you want to,
+%      e.g., leave out all images from a participant.
+%      (2) to define blocks for block bootstrap
+%
 %   **'Align'**
 %      Perform hyperalignment, requires input 'Indices' to be specified
 %      with each index corresponding to a subject
@@ -96,10 +107,22 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %
 %   **stats:**
 %        Structure including:
-%           - simple_correlations: 
-%           - latent_correlations:
+%           - simple_correlations:  correlations among region averages,
+%             order: 1->1, 1->2, 2->1, 2->2
+%           - latent_correlations:  correlations among PLS-optimized latent timeseries,
+%             order: 1->1, 1->2, 2->1, 2->2
 %           - latent_timeseries:
-%           - PLS_betas: fmri_data object with PLS regression coefficients
+%             latent_correlation_interaction_ttest: T-test on Fisher-transformed on-target vs. off-target
+%             simple_correlation_interaction_ttest: [1×1 struct]
+%             latent_correlation_pathway_one_ttest: T-test on
+%             Fisher-transformed, pathway 1. Pathway 1 connection is
+%             non-zero.
+%             latent_correlation_pathway_two_ttest: T-test on
+%             Fisher-transformed, pathway 2. Pathway 2 connection is
+%             non-zero.
+%             simple_correlation_pathway_one_ttest: [1×1 struct]
+%             simple_correlation_pathway_two_ttest: [1×1 struct]
+%           - PLS_betas (not included now): fmri_data object with PLS regression coefficients
 %           - PLS_bootstrap_stats_Z: statistic image for PLS regression coefficients
 %           - PLS_bootstrap_stats_V: statistic image for PLS regression coefficients
 %           - Z_pathway_one/four: estimated patterns in source regions that covary with each target 
@@ -113,14 +136,51 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 % :Examples:
 % ::
 %
+% % Load multi-subject image object (toy example, 6 images per subject)
+% imgs = load_image_set('bmrk3'); 
+%
+% % Define ROIs
+% vpl = select_atlas_subset(atlas_obj, {'VPL'}, 'flatten');
+% pbn = select_atlas_subset(atlas_obj, {'pbn'}, 'flatten');
+% orthviews(vpl);
+% orthviews(pbn);
+% cea = select_atlas_subset(atlas_obj, {'Amygdala_CM'}, 'flatten');
+% dpins = select_atlas_subset(atlas_obj, {'Ig'}, 'flatten');
+%
+% % Define participant indices for xval and bootstrap
+% indx = imgs.additional_info.subject_id;
+%
+% % Run it!
+% % This estimates PLS models with two pathways: vpl->dpins and pbn->cea
+% % It tests the cross-validated connectivity strength in each pathway
+% % and across pathways (off=target), and compares target vs off-target pathways
+% % 
+% stats = model_brain_pathway(imgs, vpl, pbn, dpins, cea, 'Indices', indx);
+%
+% % Plot the correlations among region averages:
+% figure; barplot_columns(stats.simple_correlations, 'names', {'vpl->dpins' 'vpl->cea' 'pbn->dpins' 'pbn->cea'});
+%
+% % Plot the correlations among PLS-optimized latent timeseries:
+% figure; barplot_columns(stats.latent_correlations, 'names', {'vpl->dpins' 'vpl->cea' 'pbn->dpins' 'pbn->cea'});
+%
+% % Run it again with bootstrapping too:
+% stats = model_brain_pathway(imgs, vpl, pbn, dpins, cea, 'Indices', indx, 'nboot', 1000);
 %
 % :See also:
+%
 
 % ..
 %    Programmers' notes:
 % 10/10/2019 Wrote funcion (Phil Kragel)
 % 4/14/2020 Major overhaul and documentation (Phil Kragel and Tor Wager)
 % 4/15/2020 Add more documentation (Phil Kragel)
+% 9/16/2020 Tor Wager - update documentation
+%
+% Notes for future development:
+% - could use xval_stratified_holdout_leave_whole_subject_out in future versions for cross-validation
+% - could write separate hyperalignment object method
+% 
+%
 % ..
 
 %% Get defaults and initialize user inputs
@@ -391,14 +451,13 @@ stats.V_pathway_four = pinv(target_two_obj.dat') * xs_pathway_four;
 
 if do_boot
     
-   
     bs_source_one_dat=source_one_obj.dat';
     bs_source_two_dat=source_two_obj.dat';
     bs_target_one_dat=target_one_obj.dat';
     bs_target_two_dat=target_two_obj.dat';
     for i=1:nboot
         
-        [~,rand_subs]=datasample(1:max(indices),max(indices)); %randomly replace whole blocks with replacement
+        [~,rand_subs]=datasample(1:max(indices), max(indices)); %randomly replace whole blocks with replacement
         count_vec=1:length(indices);
         for ii=1:max(indices)
             

@@ -200,7 +200,23 @@ switch meth
         for i = 1:length(myp)
             %set(hh, 'FaceColor', [.5 .5 .5]);
             len = size(myp(i).FaceVertexCData, 1);
-            set(myp(i), 'FaceVertexCData', repmat([.5 .5 .5], len, 1));
+            
+            % If we have intensity data saved, use that
+            % This is saved for isocaps
+            usedprev = false;
+            prevdata = [];
+            
+            try prevdata = get(myp(i), 'UserData'); catch, end % may not exist in all Matlab versions?
+            
+            if ~isempty(prevdata) && size(prevdata, 1) == len
+                
+                set(myp(i), 'FaceVertexCData', prevdata); % [.5 .5 .5]
+                usedprev = true;
+                
+            else
+                set(myp(i), 'FaceVertexCData', repmat(128, len, 1)); % [.5 .5 .5]
+            end
+            
         end
         p = myp;
         

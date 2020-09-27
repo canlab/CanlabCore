@@ -36,7 +36,7 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 %        A region object
 %
 %   **'surface_handles':**
-%        Followed by surface handles to render on
+%        Followed by existing surface handles to render on
 %
 %   **addbrain.m keywords:**
 %        Keywords for surfaces accepted by addbrain.m
@@ -72,14 +72,14 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 %         'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'
 %
 %   **render_on_surface keywords:**
-%   allowable = {'clim' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+%   allowable = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+%   'color'         followed by [r g b] triplet for solid color
 %   'clim'          Limits for image values mapped to most extreme colors
 %   'colormap'      Followed by the name of a Matlab colormap to use (
 %   'colormapname'
 %   'axis_handle'
 %   'pos_colormap'
 %   'neg_colormap'
-%
 %
 % :Outputs:
 %
@@ -116,6 +116,10 @@ function [surface_handles, pcl, ncl] = surface(r, varargin)
 % figure; hh = addbrain('foursurfaces');
 % t.surface('surface_handles', hh);
 %
+% Note:
+% To erase rendered blobs, use:
+% sh = addbrain('eraseblobs', sh);
+%
 % :See also:*
 %
 % surface_cutaway, cluster_surf, mediation_brain_surface_figs
@@ -141,6 +145,9 @@ addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe'
     'brainstem' 'suit brainstem' 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 'cerebellum','cblm' 'CIT168' ...
     'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'};
 
+render_on_surface_allowable_args = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+
+
 % optional inputs with default values
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -153,6 +160,9 @@ for i = 1:length(varargin)
                 
             case addbrain_allowable_args 
                 % do nothing, handle later
+                
+            case render_on_surface_allowable_args
+                % no nothing, will pass in to render_on_surface
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

@@ -30,11 +30,11 @@ function o2 = montage(obj, varargin)
 %        region. Note: If 'symmetric' option is on, will reorganize color
 %        to region assignments.
 %
-%   **symmetric** [default]
+%   **symmetric** 
 %       Mirror left/right blobs with same colors
 %       See match_colors_left_right
 %
-%   **nosymmetric**
+%   **nosymmetric** [default]
 %       Standard color map, no L/R color-matching for symmetry 
 %
 %   **'noblobs':**
@@ -160,15 +160,17 @@ function o2 = montage(obj, varargin)
 % Defaults and inputs
 % -----------------------------------------------------------------------
 
-methodtype = 'symmetric';
+methodtype = 'map'; % 'symmetric';
 colortype = 'unique';
 one_blob_per_slice = false; 
 dozoom = true;
 colors = scn_standard_colors(length(obj));
 dofigure = true;
+doredefinecolors = true;
 
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
+if any(strcmp(varargin, 'symmetric')), methodtype = 'symmetric'; end
 if any(strcmp(varargin, 'old')), methodtype = 'old'; end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 
@@ -187,8 +189,11 @@ if any(strcmp(varargin, 'colormap'))
 end
 
 if any(strcmp(varargin, 'colors'))
+    % If we have passed in specific colors, don't redefine them
     wh = find(strcmp(varargin, 'colors'));
-    colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = [];  
+    colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = []; 
+    
+    doredefinecolors = false;
 end
 
 if any(strcmp(varargin, 'regioncenters')), one_blob_per_slice = true; end
@@ -255,13 +260,26 @@ switch colortype
         else
             % All visible blobs on each slice
             
-            % Redefine blob groups based on color categories, to reduce number of regions, combining those with same color too many function calls are bad news!! overloads handle graphics system?
-            [region_groups, colors] = redefine_colors_based_on_groups(obj, colors);
-            
-            for i = 1:length(region_groups)
+            if doredefinecolors
+                % Redefine blob groups based on color categories, to reduce number of regions, combining those with same color too many function calls are bad news!! overloads handle graphics system?
+                [region_groups, colors] = redefine_colors_based_on_groups(obj, colors);
                 
-                o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
-                drawnow
+                for i = 1:length(region_groups)
+                    
+                    o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
+                    drawnow
+                    
+                end
+                
+            else
+                % no redefine
+                
+                for i = 1:length(obj)
+                    
+                    o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', varargin{:});
+                    drawnow
+                    
+                end
                 
             end
             

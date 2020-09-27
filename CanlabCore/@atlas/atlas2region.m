@@ -44,6 +44,10 @@ for i = 1:length(varargin)
             case {'nocontiguous', 'unique_mask_values'}
                 region_parse_method = 'unique_mask_values';
                 
+            case 'noverbose'
+                % do nothing; avoid warnings when calling from other
+                % functions and passing args through
+                
             otherwise , warning(['Unknown input string option:' varargin{i}]);
         end
     end

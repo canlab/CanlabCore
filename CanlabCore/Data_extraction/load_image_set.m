@@ -117,6 +117,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        individual PDM maps and a combined PDM, which is a weighted
 %        combination of the 10. From Geuter et al. (2020) Cerebral Cortex
 %
+%        'multiaversive', 'mpa2': Ceko et al. multiple predictive patterns
+%        for aversive experience: General, Mechanical pain,
+%        Aversive Sounds, Thermal pain, Visual aversive images
 %
 % :Optional inputs:
 %
@@ -312,6 +315,10 @@ else
         case {'guilt', 'guilt_behavior'}
             
             [image_obj, networknames, imagenames] = load_guilt;
+            
+        case {'multiaversive', 'mpa2'}
+            
+            [image_obj, networknames, imagenames] = load_mpa2;
             
         otherwise
             if which(['load_', lower(image_names_or_keyword)])
@@ -948,6 +955,24 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
 
+function [image_obj, networknames, imagenames] = load_mpa2
+  
+
+% Load MPA2 Ceko patterns - multiaversive
+% ------------------------------------------------------------------------
+imagenames = {'General_bplsF_unthr.nii'
+'Mechanical_bplsF_unthr.nii'
+'Thermal_bplsF_unthr.nii'
+'Sound_bplsF_unthr.nii'		
+'Visual_bplsF_unthr.nii'};
+
+networknames = {'General' 'Mech pain' 'Thermal pain' 'Sound' 'Visual'}; 
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
 
 
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1

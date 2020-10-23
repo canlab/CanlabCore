@@ -594,6 +594,7 @@ obj.Y = double(obj.Y);
 
 predfun_inputs = {};
 bootfun_inputs = {}; % for setting number of bootstrap samples
+nfold = []; % to catch typos
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -603,7 +604,7 @@ for i = 1:length(varargin)
             case {'noparallel'}
                 useparallel = 'never';
                 
-            case {'nfolds', 'error_type', 'algorithm_name', 'useparallel', 'verbose'}
+            case {'nfolds', 'nfold' 'error_type', 'algorithm_name', 'useparallel', 'verbose'}
                 str = [varargin{i} ' = varargin{i + 1};'];
                 eval(str)
                 varargin{i} = [];
@@ -658,6 +659,10 @@ for i = 1:length(varargin)
                 
         end
     end
+end
+
+if ~isempty(nfold) % catch a potentially problematic typo
+    nfolds = nfold;
 end
 
 % Set up parallel processing input to bootstrap function

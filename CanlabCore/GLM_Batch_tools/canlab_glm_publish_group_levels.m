@@ -20,7 +20,7 @@ else
         robregdirs{i} = d{i};
         load(fullfile(robregdirs{i},'SETUP.mat'));
         load(fullfile(fileparts(SETUP.files(1,:)),'SPM.mat'));
-        c = regexprep(SETUP.files(1,:),'.*con_0*([0-9]*)\.img','$1');
+        c = regexprep(SETUP.files(1,:),'.*con_0*([0-9]*)\.nii','$1');
         connames{i} = SPM.xCon(str2num(c)).name;
     end
 end

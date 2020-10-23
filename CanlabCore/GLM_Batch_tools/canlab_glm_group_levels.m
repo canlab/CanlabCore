@@ -411,7 +411,7 @@ else
     for c = 1:ncons
         confiles = {};
         for s = 1:numel(sublevs)
-            confilename = fullfile(sublevs{s}, sprintf('con_%04d.img', tcons(c)));
+            confilename = fullfile(sublevs{s}, sprintf('con_%04d.nii', tcons(c)));
             confile = filenames(confilename, 'char', 'absolute');
             if exist(confile,'file')
                 confiles{s} = confile; %#ok

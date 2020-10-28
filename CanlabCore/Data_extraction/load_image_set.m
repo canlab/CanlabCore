@@ -194,6 +194,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   2017/09/07 Stephan
 %       - added (no)verbose option
+%
+%   2020/10/28 Tor
+%       - Corrected error in Kragel270 all data thermal vs. visceral labels
+%       switched.
 % ..
 
 % ..
@@ -1110,7 +1114,7 @@ else
     % imagenames will become text labels
     [imagenames, Domain, Subdomain] = deal(cell(size(labels)));
     
-    networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
+    networknames = {'VisceralPain1' 'VisceralPain2' 'ThermalPain1' 'ThermalPain2' 'MechanicalPain1' 'MechanicalPain2' ...
         'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
         'Emotion_Aversiveimages1' 'Emotion_Aversiveimages2' 'Emotion_Rejection1' 'Emotion_VicariousPain2' 'Emotion_AversiveSound1' 'Emotion_AversiveSound2'};
     
@@ -1118,7 +1122,7 @@ else
         'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' ...
         'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion'};
     
-    subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
+    subdomains = {'Visceral' 'Visceral' 'Thermal' 'Thermal' 'Mechanical' 'Mechanical' ...
         'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
         'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
      

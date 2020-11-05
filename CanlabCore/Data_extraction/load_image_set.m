@@ -1091,8 +1091,7 @@ else
     labels = strrep(labels, 'Study' ,'');
     for i = 1:length(labels), labels{i} = str2num(labels{i}); end % extract numbers from text
     labels = cat(1, labels{:});
-    Studynumber = labels;
-    
+
     subj=regexp(files_on_disk,'Subject\d+', 'match');
     subj = cat(1, subj{:});
     subj = strrep(subj, 'Subject' ,'');
@@ -1111,10 +1110,13 @@ else
     % label the images
     sorted_study_labels = labels(wh_sort);
     
+    Studynumber = sorted_study_labels;
+    Orig_Studynumber = labels;
+    
     % imagenames will become text labels
     [imagenames, Domain, Subdomain] = deal(cell(size(labels)));
     
-    networknames = {'VisceralPain1' 'VisceralPain2' 'ThermalPain1' 'ThermalPain2' 'MechanicalPain1' 'MechanicalPain2' ...
+    networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
         'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
         'Emotion_Aversiveimages1' 'Emotion_Aversiveimages2' 'Emotion_Rejection1' 'Emotion_VicariousPain2' 'Emotion_AversiveSound1' 'Emotion_AversiveSound2'};
     
@@ -1122,7 +1124,7 @@ else
         'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' ...
         'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion'};
     
-    subdomains = {'Visceral' 'Visceral' 'Thermal' 'Thermal' 'Mechanical' 'Mechanical' ...
+    subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
         'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
         'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
      
@@ -1134,7 +1136,7 @@ else
         
     end
 
-    data_obj.dat_descrip = table(Domain, Subdomain, imagenames, Studynumber);
+    data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber);
     data_obj.additional_info = networknames;
     
     % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
@@ -1157,7 +1159,7 @@ else
         
         image_obj = data_obj;
         networknames = data_obj.additional_info;
-        imagenames = data_obj.dat_descrip.imagenames;
+        imagenames = data_obj.metadata_table.imagenames;
         
     end % try Neurovault...catch
     

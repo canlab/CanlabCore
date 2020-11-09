@@ -117,6 +117,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        individual PDM maps and a combined PDM, which is a weighted
 %        combination of the 10. From Geuter et al. (2020) Cerebral Cortex
 %
+%        'multiaversive', 'mpa2': Ceko et al. multiple predictive patterns
+%        for aversive experience: General, Mechanical pain,
+%        Aversive Sounds, Thermal pain, Visual aversive images
 %
 % :Optional inputs:
 %
@@ -191,6 +194,10 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   2017/09/07 Stephan
 %       - added (no)verbose option
+%
+%   2020/10/28 Tor
+%       - Corrected error in Kragel270 all data thermal vs. visceral labels
+%       switched.
 % ..
 
 % ..
@@ -312,6 +319,10 @@ else
         case {'guilt', 'guilt_behavior'}
             
             [image_obj, networknames, imagenames] = load_guilt;
+            
+        case {'multiaversive', 'mpa2'}
+            
+            [image_obj, networknames, imagenames] = load_mpa2;
             
         otherwise
             if which(['load_', lower(image_names_or_keyword)])
@@ -948,6 +959,24 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
 
+function [image_obj, networknames, imagenames] = load_mpa2
+  
+
+% Load MPA2 Ceko patterns - multiaversive
+% ------------------------------------------------------------------------
+imagenames = {'General_bplsF_unthr.nii'
+'Mechanical_bplsF_unthr.nii'
+'Thermal_bplsF_unthr.nii'
+'Sound_bplsF_unthr.nii'		
+'Visual_bplsF_unthr.nii'};
+
+networknames = {'General' 'Mech pain' 'Thermal pain' 'Sound' 'Visual'}; 
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
 
 
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
@@ -1062,8 +1091,7 @@ else
     labels = strrep(labels, 'Study' ,'');
     for i = 1:length(labels), labels{i} = str2num(labels{i}); end % extract numbers from text
     labels = cat(1, labels{:});
-    Studynumber = labels;
-    
+
     subj=regexp(files_on_disk,'Subject\d+', 'match');
     subj = cat(1, subj{:});
     subj = strrep(subj, 'Subject' ,'');
@@ -1081,6 +1109,9 @@ else
     
     % label the images
     sorted_study_labels = labels(wh_sort);
+    
+    Studynumber = sorted_study_labels;
+    Orig_Studynumber = labels;
     
     % imagenames will become text labels
     [imagenames, Domain, Subdomain] = deal(cell(size(labels)));
@@ -1105,7 +1136,7 @@ else
         
     end
 
-    data_obj.dat_descrip = table(Domain, Subdomain, imagenames, Studynumber);
+    data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber);
     data_obj.additional_info = networknames;
     
     % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
@@ -1128,7 +1159,7 @@ else
         
         image_obj = data_obj;
         networknames = data_obj.additional_info;
-        imagenames = data_obj.dat_descrip.imagenames;
+        imagenames = data_obj.metadata_table.imagenames;
         
     end % try Neurovault...catch
     

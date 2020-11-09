@@ -106,8 +106,8 @@
 %   more flexible than version 2, and is still available in CanlabPrivate 
 %   for potential future development. It has been removed from CanlabCore.
 %   Version 3.0 reintroduces mixed effects modelling as a non-default
-#   option, but abides by better coding practices, following in the 
-#   footsteps of version 2.0.
+%   option, but abides by better coding practices, following in the 
+%   footsteps of version 2.0.
 %
 % References ::
 %

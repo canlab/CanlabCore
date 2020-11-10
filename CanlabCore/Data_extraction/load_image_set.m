@@ -197,7 +197,12 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %   2020/10/28 Tor
 %       - Corrected error in Kragel270 all data thermal vs. visceral labels
-%       switched.
+%       switched.<Note: switched back as phil updated Neurovault order,
+%       fixed another bug in study order saving in metadata table.
+%
+%   2020/11/10 Tor
+%       - Corrected kragel270 image load to retrieve from Google drive.
+%       Added more descriptive study name codes.
 % ..
 
 % ..
@@ -1060,7 +1065,7 @@ if exist(myfile, 'file')
     
     image_obj = data_obj;
     networknames = data_obj.additional_info;
-    imagenames = data_obj.dat_descrip.imagenames;
+    imagenames = data_obj.metadata_table.imagenames;
     
 else
     % Load the files from disk, and clean up downloaded files
@@ -1080,10 +1085,12 @@ else
         for i = 1:length(files_on_disk), delete(files_on_disk{i}); end
         % remove non-gzipped files just in case
         for i = 1:length(files_on_disk), delete(files_on_disk{i}(1:end-3)); end
+        rmdir('3324');    
     catch
+        disp('Failed to clean up and remove files after download. Check files.')
     end
     
-    rmdir('3324');
+
     
     % resort files/images in order
     labels=regexp(files_on_disk,'Study\d+', 'match');
@@ -1114,7 +1121,7 @@ else
     Orig_Studynumber = labels;
     
     % imagenames will become text labels
-    [imagenames, Domain, Subdomain] = deal(cell(size(labels)));
+    [imagenames, Domain, Subdomain, StudyCodes] = deal(cell(size(labels)));
     
     networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
         'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
@@ -1127,16 +1134,21 @@ else
     subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
         'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
         'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
-     
+    
+    studycodes = {'Atlas_2010_EXP' 'Wager_2013_BMRK3' 'Kano_2017_Rectal' 'Rubio_2015_Rectal' 'Ceko_Woo_MPA1_Mech' 'Ceko_MPA2_Mech' ...
+                  'DeYoung_2009_WM' 'vanAst_2016_WM' 'Aron_2007_RespSel' 'Xue_2008_RespSel' 'ds101_SimonConflict_NYU' 'Kelly_2008_Flanker' 'Gianaros_2014_IAPS' ...
+                  'Yarkoni_2011_IAPS' 'Kross_2011_Rejection' 'Krishnan_2016_VicariousPain' 'Losin_Geuter_2018_BMRK5_IADS' 'Kragel_PM01_IADS'};
+
     for i = 1:18
         
         Domain(sorted_study_labels == i) = domains(i);
         Subdomain(sorted_study_labels == i) = subdomains(i);
         imagenames(sorted_study_labels == i) = networknames(i);
         
+        StudyCodes(sorted_study_labels == i) = studycodes(i);
     end
 
-    data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber);
+    data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber, StudyCodes);
     data_obj.additional_info = networknames;
     
     % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
@@ -1149,10 +1161,12 @@ else
         
         myfile = 'kragel_2018_nat_neurosci_270_subjects_test_images.mat';
         
-        disp('Retrieving from Neurovault failed. Trying to download from Dropbox.')
+        disp('Retrieving from Neurovault failed. Trying to download from Google Drive.')
         disp('Saving file with objects: kragel_2018_nat_neurosci_270_subjects_test_images.mat')
         
-        websave(myfile, 'https://www.dropbox.com/s/i88qgg88lgsm0s6/kragel_2018_nat_neurosci_270_subjects_test_images.mat?dl=1');
+        %websave(myfile, 'https://www.dropbox.com/s/i88qgg88lgsm0s6/kragel_2018_nat_neurosci_270_subjects_test_images.mat?dl=1');
+        
+        websave(myfile, 'https://drive.google.com/open?id=1ghDaM55w3dHW2StZ74VTQnJXoE_2uQKm&authuser=tor.d.wager%40dartmouth.edu&usp=drive_fs');
         
         fprintf('Loading %s\n', myfile);
         load(myfile)

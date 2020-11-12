@@ -577,6 +577,7 @@ else
     
     ROC.Gaussian_model.AUC_numerical_integration = aucn;
     ROC.Gaussian_model.AUC = normcdf(d/sqrt(2));
+    ROC.Gaussian_model.all_vals = struct('fprn', fprn, 'tprn', tprn);
     
     
 end

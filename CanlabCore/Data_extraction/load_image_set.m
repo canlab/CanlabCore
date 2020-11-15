@@ -1056,7 +1056,7 @@ myfile = which('kragel_2018_nat_neurosci_270_subjects_test_images.mat');
 if exist(myfile, 'file')
     
     fprintf('Loading %s\n', myfile);
-    load(myfile)
+    load(myfile,'data_obj')
     
     image_obj = data_obj;
     networknames = data_obj.additional_info;
@@ -1074,7 +1074,7 @@ else
     files_on_disk = retrieve_neurovault_collection(3324);
     data_obj = fmri_data(files_on_disk);
     data_obj = enforce_variable_types(data_obj);
-
+    
     % clean up
     try
         for i = 1:length(files_on_disk), delete(files_on_disk{i}); end
@@ -1084,7 +1084,7 @@ else
     end
     
     rmdir('3324');
-    
+  
     % resort files/images in order
     labels=regexp(files_on_disk,'Study\d+', 'match');
     labels = cat(1, labels{:});

@@ -38,7 +38,8 @@ for i = 1:length(robregdirs)
     
     fprintf(fid,'try\n');
     maskimg = fullfile(robregdirs{i}, 'rob_tmap_0001.img'); % any image in space with non-zero vals for all vox would do
-    fprintf(fid,'robust_results_batch(''thresh'', thresh, ''size'', size, ''prune'', ''mask'', ''%s'');\n',maskimg);
+    %fprintf(fid,'robust_results_batch(''thresh'', thresh, ''size'', size, ''prune'', ''mask'', ''%s'');\n',maskimg);
+    fprintf(fid,'robust_results_batch;\n');
     
     fprintf(fid,'catch exc\n');
     fprintf(fid,'disp(getReport(exc,''extended''))\n'); 

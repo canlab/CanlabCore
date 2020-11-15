@@ -93,7 +93,7 @@ end
         case {'buckner'}
             %savefile = 'Buckner1000FC_2011_cortex_atlas_object.mat';
             savefile = 'buckner_networks_atlas_object.mat';
-            varname = 'atlas_obj';
+            varname = 'buckner_atlas';
             
         case {'cerebellum', 'suit'}
             savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');

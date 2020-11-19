@@ -54,7 +54,17 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                             These are saved in kragel_2018_nat_neurosci_270_subjects_test_images.mat
 %                             if not found, will attempt to download from Neurovault using
 %                             retrieve_neurovault_collection(). 
-%                               
+%    
+% Sample test datasets - one image per trial (single trial datasets)
+% ------------------------------------------------------------------------
+%     A set of single-trial datasets for pain studies have been compiled by Bogdan Petre and stored here:
+%     https://github.com/canlab/canlab_single_trials
+% 
+%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3'), and you can enter
+%     any of these names as keywords, or 'all_single_trials' to load all of
+%     them. The canlab_single_trials repo must be on your matlab path.
+%     Each study file loads as an fmri_data object, with a metadata_table field
+%     that stores trial info in a Matlab table-class object.
 %
 % Parcellations and large-scale networks/patterns
 % ------------------------------------------------------------------------

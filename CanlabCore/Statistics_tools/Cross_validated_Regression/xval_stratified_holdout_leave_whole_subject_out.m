@@ -118,7 +118,7 @@ if doverbose
 end
 
 % Keep subject together (all images in same train/test)
-[group_together, wh] = unique(id);
+[group_together, wh] = unique(id,'stable');
 
 
 % Gid: group, subject-wise. Assumes all obs for a subject have same Y value.

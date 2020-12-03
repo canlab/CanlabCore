@@ -1,4 +1,4 @@
-clear Models, clear MM
+clear Models MM GA
 
 % User-Specified Parameters
 % ===============================================================
@@ -27,11 +27,7 @@ GA.ISI = 1.5;
 GA.TR = 1.5; 
     % the TR (sampling resolution) of your experiment; time for volume acquisition
 
-GA.doepochs = 0;        % build epochs instead of events
-	% use this if you have epochs instead of events; alpha version.  use with caution.
-	% if you use this, use the GA function optimizeGA_epochs.m
-	% also, the contrast matrix will be different, with 3 periods per trial explicitly modeled
-	% this wasn't intended to be a general solution, but a specific optimization for a certain design.
+GA.epochdur = 2;        % build epochs instead of events; enter dur in sec (default is events, 0 sec)
 
 % Hox optimization parameters
 % A hox gene is a master gene.  These numbers control the stimulus

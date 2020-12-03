@@ -87,24 +87,24 @@ case 'brief'
     dopower = 0; doenergy = 0; doeff = 0; dovif = 0; docondnum = 0; docolin = 1;   
     docbal = 0; dofreq = 1; dotimes = 0; dohrf = 0;
 case 'plot'
-	M = finput;,if doverb,disp('Using already-computed M and plotting.'),end
+	M = finput; if doverb,disp('Using already-computed M and plotting.'),end
 	
     M = setup_blockcontrast_fix(M);
     
-	if ~isfield(M.ga,'TR'),M.ga.TR = input('M.ga.TR not found: Enter TR in s: ');,end
-	if ~isfield(M.ga,'HPlength'),M.ga.HPlength = input('M.ga.HPlength not found: Enter HPlength in s: ');,end
+	if ~isfield(M.ga,'TR'),M.ga.TR = input('M.ga.TR not found: Enter TR in s: '); end
+	if ~isfield(M.ga,'HPlength'),M.ga.HPlength = input('M.ga.HPlength not found: Enter HPlength in s: '); end
 	
 	% plot predictors
     plotvarious(M,M.ga.TR,'Predictors')
 
 	% make Q structure with contrast information
     Q.model = M.model * M.contrasts';
-    try,Q.smoothed = M.consmooth;,catch,disp('Error: contrasts should be empty but they''re not?'),contrasts,end
+    try Q.smoothed = M.consmooth; catch, disp('Error: contrasts should be empty but they''re not?'),contrasts,end
 	Q.modelatTR = resample(Q.model,1,M.ga.TR*10);
 
-	if isempty(M.ga.HPlength), specstring = 'none';,else specstring = 'specify';,end
+	if isempty(M.ga.HPlength), specstring = 'none'; else specstring = 'specify'; end
 	[S,KL,KH] = use_spm_filter(M.ga.TR,size(Q.modelatTR,1),'hrf',specstring,M.ga.HPlength); 
-	if isempty(KH),KH = eye(size(Q.modelatTR));,end
+	if isempty(KH),KH = eye(size(Q.modelatTR)); end
     Q.filtered = Q.modelatTR - KH*(KH'*Q.modelatTR);
     Q.delta = M.delta * M.contrasts(:,1:end-1)';
 
@@ -124,7 +124,7 @@ end         % end switch
 % -----------------------------------------------------------------------------------
 if 		isstruct(finput),inptType = 'Mstruct';
 elseif 	size(finput,2) == 1, inptType = 'stimList';
-elseif 	size(finput,2) > 1, inptType = 'model'
+elseif 	size(finput,2) > 1, inptType = 'model';
 else	error('Illegal input.')	
 end
 
@@ -137,7 +137,7 @@ case 'Mstruct'
 	M = finput;
 
     
-    if isfield(M,'contrasts'), contrasts = M.contrasts;, end
+    if isfield(M,'contrasts'), contrasts = M.contrasts;  end
     
     N = fieldnames(opt);
     for i = 1:length(N)
@@ -190,17 +190,25 @@ end 	% end switch
 % * build X model matrix, if necessary
 % -----------------------------------------------------------------------------------
 if ~strcmp(inptType,'model')
-	if ~exist('ISI') == 1, ISI = input('Enter ISI in s: ');,end
-	if ~exist('TR') == 1, TR = input('Enter TR in s: ');,end
-
-%gst changed line below, because if satval was empty, it should
-%remain empty!=> no non-linear thresholding
-    if ~exist('satval') == 1,  satval=[]; ,end %satval = 2; ,end    % satval = input('Enter saturation threshold in s: ');,end
-
-    if ~exist('HRF') == 1, 
-    	HRF = spm_hrf(.1);
-    	HRF = HRF / max(HRF);
-	end
+    if ~exist('ISI') == 1, ISI = input('Enter ISI in s: '); end
+    if ~exist('TR') == 1, TR = input('Enter TR in s: '); end
+    
+    %gst changed line below, because if satval was empty, it should
+    %remain empty!=> no non-linear thresholding
+    if ~exist('satval') == 1,  satval=[]; end %satval = 2; ,end    % satval = input('Enter saturation threshold in s: ');,end
+    
+    if ~exist('HRF') == 1
+        
+        if isfield(M, 'ga') && isfield(M.ga, 'HRF') % entered in epochdur...
+            HRF = M.ga.HRF;
+        else
+            
+            HRF = spm_hrf(.1);
+            HRF = HRF / max(HRF);
+            
+        end
+        
+    end
 
 	[M.modelatTR,M.model,M.delta] = rna2model(M.stimlist,ISI,HRF,TR,numsamps,satval,[]);
 end
@@ -424,7 +432,7 @@ function plotvarious(M,TR,textlbl)
     % --------------------------------------
 
 
-   figure; set(gcf,'Color','w')
+    create_figure('Model heatmap');  %figure; set(gcf,'Color','w')
     imagesc(M.modelatTR);colormap(copper)
     numsamp = size(M.smoothed,1);
 
@@ -456,7 +464,7 @@ function plotvarious(M,TR,textlbl)
     % Plot all columns in model after resampling and smoothing
     % --------------------------------------
 
-    figure;set(gcf,'Color','w')
+    create_figure('Model regressors'); 
     for i = 1:numregs
   	  subplot(numregs,1,i)
       hold on
@@ -490,7 +498,7 @@ function plotvarious(M,TR,textlbl)
     % Plot first column at various stages
     % --------------------------------------
 
-    figure;set(gcf,'Color','w')
+        create_figure('Model first contrast'); 
         subplot(3,1,1)
         ymin = min(min(M.model));
         ymax = max(max(M.model));
@@ -557,9 +565,9 @@ if M.ga.trans2block && isfield(M.ga, 'blockcontrast') && M.ga.blockcontrast
     M.modelatTR = [blkmodel M.modelatTR];
     
     % filter
-    if isempty(M.ga.HPlength), specstring = 'none';,else specstring = 'specify';,end
-    [S,KL,KH] = use_spm_filter(M.ga.TR,size(M.modelatTR,1),'hrf', specstring, M.ga.HPlength); 
-    M.smoothed = M.modelatTR - KH*(KH'*M.modelatTR);
+    if isempty(M.ga.HPlength), specstring = 'none'; else specstring = 'specify'; end
+    [~, ~, KH] = use_spm_filter(M.ga.TR,size(M.modelatTR,1),'hrf', specstring, M.ga.HPlength); 
+    M.smoothed = M.modelatTR - KH * (KH'*M.modelatTR);
     
     % contrasts
     M.conmodel = [blkmodel M.conmodel];

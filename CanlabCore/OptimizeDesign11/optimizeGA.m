@@ -1,15 +1,82 @@
-function M = optimizeGA(GA)
+function M = optimizeGA(GA, varargin)
 % :Usage:
 % ::
 %
-%     M = optimizeGA(GA)
+%     M = optimizeGA(GA, [epochdur, dur_in_sec])
 %
 % outputs a pseudo-random list of condition codes that optimizes
 % multiple fitness measures for fMRI task designs
 %
-% more help can be found in ga_example_script.m
+% more help can be found in ga_example_script.m and other examples
 % and in Genetic_Algorithm_readme.rtf
 %
+% 
+% :Inputs:
+%
+%   **GA:**
+%        structure with input specifications; see ga_example_script.m 
+%
+% :Optional Inputs:
+%   **epochdur:**
+%        Followed by epoch duration for events in sec 
+%        Note: you can also enter GA.epochdur with dur in sec
+%
+% :Outputs:
+%
+%   **M:**
+%        Structure with model outputs  
+%
+%         M.ga = GA inputs from script  (all input variables, plus metrics across generations)
+%
+%         M.ga.HRF = HRF used (default = event, but altered if you enter the 'epochdur' optional input
+%         M.ga.bestCbal = counterbalancing metric for best overall design in each generation
+%         M.ga.bestCVar = weighted contrast efficiency metric for best overall design in each generation
+%         M.ga.bestHrf = HRF estimation (FIR) metric for best overall design in each generation
+%
+%         M.ga.bestFreq = Frequency deviation from targets for best overall design in each generation
+%     
+%         M.ga.popVar = Population variability for each generation (high is good; low may reduce performance)
+%         M.ga.totalGenTime = Time for each generation to run
+%         M.ga.qualifyinglists = qualifyinglists; 
+%         M.ga.numStimEachCond = stimuli per condition; See ga_example_script.m
+%         M.ga.numGenerations = number of generations;
+%         M.ga.sizeGenerations = size of Generations;
+%         M.ga.nonlinthreshold = Threshold for nonlinear predictor squashing
+%         M.ga.listMatrix = Lists tested in latest generation
+%         M.bestLists = Stimulus sequence for best list in each generation
+%         M.date = date run
+%
+%        These fields describe the final model:
+%        stimlist: your original list of conditions
+%           delta: delta matrix sampled at .01 seconds
+%           model: model sampled at .01 seconds
+%       modelatTR: model sampled at TR
+%        smoothed: temporally smoothed model at TR
+%        conmodel: predictors for contrasts
+%       consmooth: temporally smoothed predictors for contrasts
+%           power: power (abs(fft)) matrix for smoothed model
+%        conPower: power matrix for smoothed contrasts
+%          energy: sum of squared deviations from mean for each predictor
+%       conEnergy: sum of squared deviations from mean for each contrast
+%             eff: efficiency of design.  1/trace(xtxi)
+%  resampleeffinf: efficiency loss due to resampling compared to TR = 1 s.  eff(TR=1) / eff(TR)
+%    smootheffinf: loss of efficiency due to smoothing; eff(nosmooth) / eff(smooth)
+%         varbeta: variance of each individual beta
+%          coneff: efficiency of contrast set
+%      convarbeta: efficiency of each contrast beta
+%             vif: variance inflation factors for predictors
+%          conVif: variance inflation factors for contrasts
+%            cond: condition number of model; larger is worse, > 30 is bad
+%         conCond: condition number for contrast set
+%           colin: correlation coefficients between individual predictors
+%        conColin: correlation coefficients between contrasts
+%       cbalfreqs: counterbalancing frequencies up to 3rd order
+%            freq: frequencies with which each stimulus type occurs
+%
+% To plot output for final list separately, try this:
+%
+% M = modelDiagnostics2(M,'screen');
+
 % ..
 %    Tor Wager 2/10/01
 %    Edited 11/17/01
@@ -18,7 +85,36 @@ function M = optimizeGA(GA)
 %                          informative
 %    Edited 8/15/10    - fixed minor bug in contrast length checking with
 %                       trans2block option
+%    Edited 12/3/2020  - add optional epoch length and checking for missing regressors, label typo 
 % ..
+
+% -------------------------------------------------------------------------
+% OPTIONAL INPUTS
+% -------------------------------------------------------------------------
+
+% This is a compact way to assign multiple variables. The input argument
+% names and variable names must match, however:
+
+epochdur = 0;
+allowable_inputs = {'epochdur'};
+
+% optional inputs with default values - each keyword entered will create a variable of the same name
+
+if isfield(GA, 'epochdur'), epochdur = GA.epochdur; end
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+
+            case allowable_inputs
+                
+                eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
+
 
 N = fieldnames(GA);
 for i = 1:length(N)
@@ -53,6 +149,7 @@ else error('Frequency and condition vectors must be same length, or freq must be
 end
 
 nconds = sum(conditions > 0);
+
 fprintf('You entered %01d conditions  (event types) that will each be modeled with a regessor. \n ', nconds);
 fprintf('Note that if you enter 0 as a condition number, those events will not be modeled\n (they are assumed to be rest/inter-stimulus interval periods)\n\n');
 pause(.5)
@@ -60,7 +157,7 @@ pause(.5)
 % ----------------------------------------------------------------
 % * saturation setup
 % ----------------------------------------------------------------
-if isempty(nonlinthreshold) | strcmp(nonlinthreshold,'none'),dosaturation = 0; nonlinthreshold = []; else dosaturation = 1; end
+if isempty(nonlinthreshold) || strcmp(nonlinthreshold,'none'),dosaturation = 0; nonlinthreshold = []; else dosaturation = 1; end
 
 
 % ----------------------------------------------------------------
@@ -71,11 +168,13 @@ if isempty(nonlinthreshold) | strcmp(nonlinthreshold,'none'),dosaturation = 0; n
 if isempty(contrasts)
     disp('  ...no contrasts entered; Calculating efficiency of model betas (regression parameters)')
     docontrasts = 0;
+    
 else
     csize = size(contrasts);
     fprintf('Contrasts entered. You entered matrix of %01d contrasts, with weights across %01d conditions.\n ', csize);
 
     docontrasts = 1;
+    
     disp('Contrasts:')
     disp(contrasts)
     
@@ -87,13 +186,15 @@ else
 
     disp(' ...adding one column to contrast matrix with weights of 0, to model the intercept')
 
-    contrasts(:,size(contrasts,2)+1) = 0;  % add 0s contrasts to account for intercept
+    contrasts(:, end+1) = 0;  % add 0s contrasts to account for intercept
 
     if ~isempty(contrastweights)
+        
          fprintf('You entered a contrast weight vector across %01d contrasts\n ', length(contrastweights));
          if length(contrastweights) ~= size(contrasts, 1)
              error('The length of contrastweights should equal the number of contrasts (rows) in your contrast matrix.');
          end
+         
     end
 end
 
@@ -113,7 +214,7 @@ pause(2)
 if ~sum(freqConditions) > 1, error('freqConditions must sum to 1 or less than 1.'),end
     
 % flag for rest length.
-	if ~isempty(restevery) &  ~isempty(restlength)
+	if ~isempty(restevery) &&  ~isempty(restlength)
 		disp(['	...Using rests of length ' num2str(restlength) ' and resting every ' num2str(restevery)])
 		dorests = 1;
 	else disp('	...No rests specified.'),dorests = 0;
@@ -128,7 +229,7 @@ if ~(mod(scanLength / ISI,1) == 0),disp('Warning: Scan length in s is not an eve
 
 fitnessMatrix = zeros(4,sizeGenerations);
 numStim = ceil(scanLength / (ISI));
-if dorests,
+if dorests
 	numRestStim = (ceil(numStim/(mean(restevery)+restlength)) - 1) * restlength;
 else
 	numRestStim = 0;
@@ -150,15 +251,24 @@ disp('====================================================')
 % ----------------------------------------------------------------
 % * get smoothing matrix and autocorrelation matrix
 % ----------------------------------------------------------------
-if ~isfield(GA,'LPsmooth'),GA.LPsmooth = 1;,end
-[S,Vi,svi] = getSmoothing(HPlength,GA.LPsmooth,TR,numsamps,xc);
-clear Vi
+if ~isfield(GA,'LPsmooth'),GA.LPsmooth = 1; end
+[S, ~, svi] = getSmoothing(HPlength,GA.LPsmooth,TR,numsamps,xc);
 
 % ----------------------------------------------------------------
 % * HRF GAMMA FUNCTION - spm 99
 % ----------------------------------------------------------------
 
    HRF = spm_hrf(.1);						% SPM HRF sampled at .1 s
+   
+   if epochdur
+       % Epoch dur in sec - convolve
+       
+       hrfnew = conv(ones(epochdur * 10, 1), HRF);
+       hrfnew = hrfnew/ max(hrfnew);
+       HRF = hrfnew;
+       
+   end
+   
    HRF = HRF/ max(HRF);
    
 % ----------------------------------------------------------------
@@ -265,21 +375,22 @@ end
 %	restMatrix is a matrix with period length in ITIs X list (cols)
 %		that specifies how long to go for each period between a rest/probe.
 if dorests
+    
 	atleast = min(restevery);
 	restPeriods = numStim / atleast + 5;	% make this many rows in restMatrix
 	restList = [];
+    
 	for i = 1:size(restevery,2):restPeriods
 		restList = [restList;restevery'];
-	end
+    end
+    
 	for i = 1:sizeGenerations
 		restMatrix(:,i) = getRandom(restList);
-	end
+    end
+    
 	% disp('=============== Rest calculation ===================')
 	disp(['	...restMatrix is ' num2str(size(restMatrix,1)) ' X ' num2str(size(restMatrix,2))])
 	restMatrix(1:5,1:10)
-
-
-
 
     % ----------------------------------------------------------------
     % * insert rests, if needed, and trim list
@@ -309,6 +420,7 @@ end
 % * allow user-entered listmatrix, to use non-random start.
 % ----------------------------------------------------------------
 if isfield(GA,'listMatrix')
+    
 	disp('	...Existing listMatrix detected.  Starting with matrix in GA.listMatrix.')
 	try
 		listMatrix(:,1:size(GA.listMatrix,2)) = GA.listMatrix;
@@ -317,10 +429,8 @@ if isfield(GA,'listMatrix')
 		error('Input listMatrix size does not match generated size.')
 	end
 end
-	%while size(listMatrix,2) < sizeGenerations,
-	%	listMatrix = [listMatrix listMatrix];
-	%end
-if size(listMatrix,2) > sizeGenerations,
+
+if size(listMatrix,2) > sizeGenerations 
 	listMatrix = listMatrix(:,1:sizeGenerations);
 end
 
@@ -330,8 +440,10 @@ end
 
 % This should never happen if using rests, because insert_rests should adjust list length to numStim if necessary, but...
 if size(TESTlistMatrix,1) < numStim
+    
     disp(['Warning: # stim = ' num2str(numStim) '; list length = ' num2str(size(TESTlistMatrix,1)) ' : Padding with zeros.'])
     listMatrix(end+1:numStim,:) = 0;
+    
 elseif size(TESTlistMatrix,1) > numStim,disp(['Warning: # stim = ' num2str(numStim) '; list length = ' num2str(size(TESTlistMatrix,1)) ' : Truncating lists.'])
     listMatrix = listMatrix(1:numStim,:);
 end
@@ -340,10 +452,12 @@ end
  bestMat = uint8(zeros(numStim,1));
  
 disp('======== Num stimuli, averaged across lists (before instruction/rest stimuli) ========')
-for i = 0:size(freqConditions,2)
+for i = 0:length(freqConditions)
+    
 	num = mean(sum(listMatrix == i));
 	freq = num / numStim;
 	disp(['		Condition ' num2str(i) ': ' num2str(num) ' stimuli, ' num2str(freq*100) '% of total stimuli'])
+    
 end
 disp('======================================================================================')
 
@@ -354,11 +468,13 @@ restMatrix = uint8(restMatrix);
 % ----------------------------------------------------------------
 % * criterion measures setup
 % ---------------------------------------------------------------- 
-if ~isempty(NumStimthresh) | ~isempty(maxCbalDevthresh) | ~isempty(maxFreqDevthresh)
+if ~isempty(NumStimthresh) || ~isempty(maxCbalDevthresh) || ~isempty(maxFreqDevthresh)
+    
 	docriterion = 1;
-	if isempty(NumStimthresh),NumStimthresh = 10000; end
- 	if isempty(maxCbalDevthresh),maxCbalDevthresh = 10000; end
-	if isempty(maxFreqDevthresh),maxFreqDevthresh = 10000; end
+	if isempty(NumStimthresh), NumStimthresh = 10000; end
+ 	if isempty(maxCbalDevthresh), maxCbalDevthresh = 10000; end
+	if isempty(maxFreqDevthresh), maxFreqDevthresh = 10000; end
+    
 else
 	docriterion = 0;
 end
@@ -447,8 +563,8 @@ for generation = 1:numGenerations+1
       	% if (cbalColinPowerWeights(1) > 0)    removed 3/30 to implement criterion rather than weights.
 		% -------------------------------------------------------------------------------------------------
 
-		if (cbalColinPowerWeights(1) > 0) | (docriterion & maxCbalDevthresh < 10000)
-   			[cBal,dummy,maxDev] = getCounterBal(stimList, maxOrder,conditions,freqConditions);
+		if (cbalColinPowerWeights(1) > 0) || (docriterion && maxCbalDevthresh < 10000)
+   			[cBal, ~, maxDev] = getCounterBal(stimList, maxOrder,conditions,freqConditions);
     		if (cbalColinPowerWeights(1) > 0),fitnessMatrix(1,z) = cBal; end
 		else
 			maxDev = 0;				% satisfy criterion without testing if this criterion not specified.
@@ -459,10 +575,10 @@ for generation = 1:numGenerations+1
 		% * discrepancy from desired frequencies
 		% -------------------------------------------------------------------------------------------------
                  
-    	if (cbalColinPowerWeights(4) > 0) | docriterion
+    	if (cbalColinPowerWeights(4) > 0) || docriterion
 			[maxFreqDev,fitnessMatrix(4,z),freqMat] = calcFreqDev(stimList,conditions,freqConditions);
 		elseif docriterion
-			[maxFreqDev,omega,freqMat] = calcFreqDev(stimList,conditions,freqConditions);
+			[maxFreqDev, ~, freqMat] = calcFreqDev(stimList,conditions,freqConditions);
 		end
 	  
 	 
@@ -470,41 +586,51 @@ for generation = 1:numGenerations+1
 		% * hard-constraint criteria
 		% -------------------------------------------------------------------------------------------------
 	
-	    go = 1;
-	    if docriterion
-	  	[maxNumStim,maxrest] = getMaxInARow(stimList,dojitter); 
-	  		if maxNumStim > NumStimthresh | maxrest > maxrestthresh | maxDev > maxCbalDevthresh | maxFreqDev > maxFreqDevthresh
-		  		go = 0;
-		  		countnoqualify = countnoqualify + 1;
-	          	genMaxNumStim = genMaxNumStim + maxNumStim;
+	    go = true;
+        
+        % It's possible to get random variation that eliminates a
+        % condition. Check for this and skip if so
+        
+        if length(unique(stimList(stimList ~= 0))) ~= nconds %size(contrasts, 2)
+            go = false;
+        end
+        
+        if docriterion
+            [maxNumStim,maxrest] = getMaxInARow(stimList,dojitter);
+            if maxNumStim > NumStimthresh || maxrest > maxrestthresh || maxDev > maxCbalDevthresh || maxFreqDev > maxFreqDevthresh
+                go = false;
+                countnoqualify = countnoqualify + 1;
+                genMaxNumStim = genMaxNumStim + maxNumStim;
                 genMaxDev = genMaxDev + maxDev;
                 genMaxFreqDev = genMaxFreqDev + maxFreqDev;
                 genFreqMat = genFreqMat + freqMat;
                 genmaxrest = genmaxrest + maxrest;
-			end
-		end
-	
+            end
+        end
+        
 	 
 		% -------------------------------------------------------------------------------------------------
 		% * efficiency
 		% -------------------------------------------------------------------------------------------------
 	
-    	if (cbalColinPowerWeights(2) > 0) & go   % build predictor set of vectors and convolve with HRF
+    	if (cbalColinPowerWeights(2) > 0) && go   % build predictor set of vectors and convolve with HRF
 
 			model = designvector2model(stimList,ISI,HRF,TR,numsamps,nonlinthreshold,S);
             
             % add Block effect for mixed block/ER
             % Kludgy insertion. tor: 5/6/08
             if GA.trans2block && isfield(GA, 'blockcontrast') && GA.blockcontrast
+                
                 testcontrasts = blkdiag(1, contrasts);
                 testmodel = [blkmodel model];
 
                 xtxitx = pinv(testmodel);   % a-optimality   % inv(X'S'SX)*(SX)'; pseudoinv of (S*X)
                 fitnessMatrix(2,z) = calcEfficiency([1 contrastweights],testcontrasts, xtxitx, svi, dflag);
+                
             else
                 % Original code, used in most cases
                 if dflag
-                    xtxitx = model'*svi*model;  % d-optimality
+                    xtxitx = model' * svi * model;  % d-optimality
                     fitnessMatrix(2,z) = calcEfficiency(contrastweights,contrasts,xtxitx,[],dflag);
                 else
                     xtxitx = pinv(model);   % a-optimality   % inv(X'S'SX)*(SX)'; pseudoinv of (S*X)
@@ -513,7 +639,8 @@ for generation = 1:numGenerations+1
 
             end
 
-		elseif 	docriterion & ~go    %(cbalColinPowerWeights(2) > 0 | cbalColinPowerWeights(3) > 0) & ~go  
+		elseif ~go    %(cbalColinPowerWeights(2) > 0 | cbalColinPowerWeights(3) > 0) & ~go  
+            
 			fitnessMatrix(2,z) = -1000;
 		else
 			fitnessMatrix(2,z) = 0;
@@ -523,7 +650,7 @@ for generation = 1:numGenerations+1
 		% * HRF shape estimation efficiency
 		% -------------------------------------------------------------------------------------------------
 	
-    	if (cbalColinPowerWeights(3) > 0) & go   % build predictor set of vectors and convolve with HRF
+    	if (cbalColinPowerWeights(3) > 0) && go   % build predictor set of vectors and convolve with HRF
 
             delta = [];
             for i = 1:max(stimList(:,1))
@@ -550,7 +677,7 @@ for generation = 1:numGenerations+1
                 fitnessMatrix(3,z) = calcEfficiency([],[],xtxitx,svi,dflag);
             end
 		   
-		elseif 	docriterion && ~go    %(cbalColinPowerWeights(2) > 0 | cbalColinPowerWeights(3) > 0) & ~go  
+		elseif 	~go    %(cbalColinPowerWeights(2) > 0 | cbalColinPowerWeights(3) > 0) & ~go  
 			fitnessMatrix(3,z) = -1000;
 		else
 			fitnessMatrix(3,z) = 0;
@@ -582,20 +709,20 @@ for generation = 1:numGenerations+1
    
    qualifyinglists(generation) = sizeGenerations - countnoqualify;
    
-   if size(cbalColinPowerWeights,2) > 3, bestFreq(generation) = f(4);,end
+   if size(cbalColinPowerWeights,2) > 3, bestFreq(generation) = f(4); end
    bestHrf(generation) = f(3);
    clear f;
     
    % print summary of this generation to screen
    % -------------------------------------------------------------------------------------------------
    str = (['best of generation ' num2str(generation)]);
-   if (cbalColinPowerWeights(1) > 0),
+   if (cbalColinPowerWeights(1) > 0) 
        str = [str ' / cbal. = ' num2str(bestCbal(generation))];
    end
-   if (cbalColinPowerWeights(2) > 0),
+   if (cbalColinPowerWeights(2) > 0) 
         str = [str ' / Wtd. con eff = ' num2str(bestVar(generation))];
    end
-   if (cbalColinPowerWeights(3) > 0),
+   if (cbalColinPowerWeights(3) > 0) 
         str = [str ' / Wtd. HRF eff = ' num2str(bestHrf(generation))];
    end
    if docriterion
@@ -630,7 +757,7 @@ for generation = 1:numGenerations+1
     % -------------------------------------------------------------------------------------------------
    	% * crossbreeding
    	% -------------------------------------------------------------------------------------------------
-   	if generation < numGenerations+1 & (cputime - clockStart) < maxTime	     
+   	if generation < numGenerations+1 && (cputime - clockStart) < maxTime	     
    		if dorests
 		  	[listMatrix,restMatrix] = breedorgs(overallFitness,listMatrix,alph,restMatrix);
 	  	else
@@ -649,9 +776,9 @@ for generation = 1:numGenerations+1
    	% * 10% random burst if pop var is low
    	% -------------------------------------------------------------------------------------------------
     if popVar(generation) < .40
-        if trans2block,
+        if trans2block 
             listMatrix = tenPercentRandom(listMatrix,mostFit,conditions(1:floor(length(conditions)./2)));
-        else,
+        else 
             listMatrix = tenPercentRandom(listMatrix,mostFit,conditions);
         end
     end
@@ -659,7 +786,7 @@ for generation = 1:numGenerations+1
 	% Save in-process results for recovery in case of crash
 	% -------------------------------------------------------------------------------------------------
 	
-    if mod(generation,10) == 0,
+    if mod(generation,10) == 0 
 		save listMat_working
         % try, pack, catch, end
     end
@@ -709,13 +836,14 @@ save GAresults
 
 
 M.origlist = listMatrix(:,mostFit);
-if dorests,M.restlist = restMatrix(:,mostFit);,end
+if dorests,M.restlist = restMatrix(:,mostFit); end
 M.stimlist = myDesign;
 M.ga = GA;
+M.ga.HRF = HRF;
 M.ga.bestCbal = bestCbal;
 M.ga.bestCVar = bestVar;
 M.ga.bestHrf = bestHrf;
-if size(cbalColinPowerWeights,2) > 3,M.ga.bestFreq = bestFreq;,end
+if size(cbalColinPowerWeights,2) > 3,M.ga.bestFreq = bestFreq; end
 M.ga.popVar = popVar;
 M.ga.totalGenTime = totalGenTime;
 
@@ -727,46 +855,62 @@ M.ga.nonlinthreshold = nonlinthreshold;
 M.ga.listMatrix = listMatrix;
 M.bestLists = bestMat;
 date = clock;
-M.date = [num2str(date(2)) '-' num2str(date(3)) '-' num2str(date(1))]
+M.date = [num2str(date(2)) '-' num2str(date(3)) '-' num2str(date(1))];
 
 
 try
+    
 	if plotFlag
-    	M = modelDiagnostics2(M,'screen');
+    	M = modelDiagnostics2(M,'screen', 'HRF', HRF);
 	else
-    	M = modelDiagnostics2(M,'noplot');
-	end
+    	M = modelDiagnostics2(M,'noplot', 'HRF', HRF);
+    end
+    
 catch
+    
 	disp('Error in modelDiagnostics2')
 	lasterr
 	keyboard
+    
 end
 
 
 % PLOT additional OUTPUT
 % -------------------- %
 if plotFlag
-   figure
-	subplot(5,1,1)
-	plot(bestCbal, 'g')
-	title('Counterbalancing of best individual in each generation')
-	subplot(5,1,2)
-	plot(bestVar, 'b')
-	title('Max. predictor colinearity of best individual in each generation')
-	subplot(5,1,3)
-	plot(qualifyinglists, 'r')
-     title('Number of lists satisfying criteria in each generation')
-   subplot(5,1,4)
-	plot(bestFreq, 'k')
-   title('Max % discrepancy between actual and specified frequencies')
-   subplot(5,1,5)
-   plot(popVar, 'm')
-   title('Population variability - 1 is uncorrelated columns, 0 is all identical organisms')
-   set(gcf,'Position',[232   258   560   420]); % [612    55   665   889]);
-   format short g
+    
+    create_figure('GA_over_generations', 6, 1);
+    
+    subplot(6,1,1)
+    plot(bestCbal, 'g', 'LineWidth', 2)
+    title('Counterbalancing of best design in each generation')
+    
+    subplot(6,1,2)
+    plot(bestVar, 'b', 'LineWidth', 2)
+    title('Contrast efficiency for best design in each generation')
+    
+    subplot(6,1,3)
+    plot(bestHrf, 'r', 'LineWidth', 2)
+    title('HRF efficiency for best design in each generation')
+
+    subplot(6,1,4)
+    plot(qualifyinglists, 'k')
+    title('Number of lists satisfying criteria in each generation')
+    
+    subplot(6,1,5)
+    plot(bestFreq, 'k')
+    title('Max % discrepancy between actual and specified frequencies')
+    
+    subplot(6,1,6)
+    plot(popVar, 'm')
+    title('Population variability - 1 is uncorrelated columns, 0 is all identical organisms')
+    
+%     set(gcf,'Position',[232   258   560   420]); % [612    55   665   889]);
+    format short g
     format compact
     disp('Elapsed Time for this run')
     elapsedTime = clock - clockStart
+    
 end
 
 disp(['optimizeGA done: ' num2str(cputime-clockStart) ' s']) 
@@ -780,21 +924,24 @@ return
 function outList = transform2switches(stimList)
 % assumes 2 stimtypes, 1 and 2
 % classifies them into no switch (1 and 2) or switch (3 and 4)
+
 outList(1,1) = stimList(1,1);
 for i = 2:size(stimList,1)
-   switch stimList(i-1,1)		% based on previous trial
-   case 1
-      if stimList(i,1) == 2, outList(i,1) = 4;,else outList(i,1) = stimList(i,1);,end
-   case 2
-      if stimList(i,1) == 1, outList(i,1) = 3;,else outList(i,1) = stimList(i,1);,end
-   case 5
-      if i > 2 & stimList(i,1) == 1 & stimList(i-2,1) == 2, outList(i,1) = 3;
-      elseif i > 2 & stimList(i,1) == 2 & stimList(i-2,1) == 1, outList(i,1) = 4;
-      else outList(i,1) = stimList(i,1);
-      end
-   otherwise outList(i,1) = stimList(i,1);
-   end
+    switch stimList(i-1,1)		% based on previous trial
+        
+        case 1
+            if stimList(i,1) == 2, outList(i,1) = 4; else outList(i,1) = stimList(i,1); end
+        case 2
+            if stimList(i,1) == 1, outList(i,1) = 3; else outList(i,1) = stimList(i,1); end
+        case 5
+            if i > 2 && stimList(i,1) == 1 && stimList(i-2,1) == 2, outList(i,1) = 3;
+            elseif i > 2 && stimList(i,1) == 2 && stimList(i-2,1) == 1, outList(i,1) = 4;
+            else outList(i,1) = stimList(i,1);
+            end
+        otherwise outList(i,1) = stimList(i,1);
+    end
 end
+
 return
 
 
@@ -818,25 +965,26 @@ return
 
 
 function [max,maxrest] = getMaxInARow(stimList,dojitter)
-	max = 1; counter = 1;maxrest = 1;counterrest = 1;
-        if dojitter, restnum = max(stimList);,else restnum = Inf;,end
-	for i = 2:size(stimList,1)
-		if stimList(i,1) == stimList(i-1,1)& ~stimList(i,1) == 0,
-			counter = counter + 1;
-			if counter > max, max = counter;,end
-		else counter = 1;
-                end
-                
-                if dojitter
-                     if stimList(i,1) == restnum & stimList(i-1,1) == restnum
-                        counterrest = counterrest+1;
-                        if counterrest > maxrest,maxrest = counterrest;,end
-                     else counterrest = 1;
-		     end
-                end
 
-	end
+max = 1; counter = 1;maxrest = 1;counterrest = 1;
+if dojitter, restnum = max(stimList); else restnum = Inf; end
+for i = 2:size(stimList,1)
+    if stimList(i,1) == stimList(i-1,1)&& ~stimList(i,1) == 0
+        counter = counter + 1;
+        if counter > max, max = counter; end
+    else counter = 1;
+    end
+    
+    if dojitter
+        if stimList(i,1) == restnum && stimList(i-1,1) == restnum
+            counterrest = counterrest+1;
+            if counterrest > maxrest,maxrest = counterrest; end
+        else counterrest = 1;
+        end
+    end
+    
+end
 
 return
-	
+
 

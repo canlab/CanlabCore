@@ -123,7 +123,13 @@ for i = 1:size(urows, 1)
     
     wh = ismember(data_to_match, urows(i, :), 'rows'); % rows unnecessary, calls table.ismember
     
-    out_dat{i} = data_table.(var_to_extract)(wh);
+    y = data_table.(var_to_extract);
+    
+    if ~isempty(exclude)
+        y = y(~exclude, :);
+    end
+
+    out_dat{i} = y(wh);
     
     % Name this level
     levelnames{i} = '';

@@ -129,12 +129,12 @@ disp(' ');
 % ----------------------------------------------------------------------
 test_images = load_image_set('kragel18_alldata', 'noverbose');
 
-test_images.Y = test_images.dat_descrip.Studynumber;
+test_images.Y = test_images.metadata_table.Studynumber;
 
 % vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string);
 vector_data = apply_mask(test_images, obj, 'pattern_expression', sim_string,weight_string); %weight by overall cosine similarity
 
-for s = 1:num_cols
+for s = 1:length(test_images.additional_info)
     pattern_response{s} = vector_data(test_images.Y==s);
 end
 

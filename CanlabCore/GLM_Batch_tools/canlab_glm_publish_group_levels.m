@@ -20,7 +20,7 @@ else
         robregdirs{i} = d{i};
         load(fullfile(robregdirs{i},'SETUP.mat'));
         load(fullfile(fileparts(SETUP.files(1,:)),'SPM.mat'));
-        c = regexprep(SETUP.files(1,:),'.*con_0*([0-9]*)\.img','$1');
+        c = regexprep(SETUP.files(1,:),'.*con_0*([0-9]*)\.nii','$1');
         connames{i} = SPM.xCon(str2num(c)).name;
     end
 end
@@ -38,7 +38,8 @@ for i = 1:length(robregdirs)
     
     fprintf(fid,'try\n');
     maskimg = fullfile(robregdirs{i}, 'rob_tmap_0001.img'); % any image in space with non-zero vals for all vox would do
-    fprintf(fid,'robust_results_batch(''thresh'', thresh, ''size'', size, ''prune'', ''mask'', ''%s'');\n',maskimg);
+    %fprintf(fid,'robust_results_batch(''thresh'', thresh, ''size'', size, ''prune'', ''mask'', ''%s'');\n',maskimg);
+    fprintf(fid,'robust_results_batch;\n');
     
     fprintf(fid,'catch exc\n');
     fprintf(fid,'disp(getReport(exc,''extended''))\n'); 

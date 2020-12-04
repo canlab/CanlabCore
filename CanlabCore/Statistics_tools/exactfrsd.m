@@ -9,7 +9,7 @@
 %
 % Input ::
 %
-%   d 	- sum of Friendman ranks in treatment. These can be obtained with 
+%   d 	- sum of Friendman rank difference. These can be obtained with 
 %       	a = multcompare(friendman(data)); ranksum = k*a(:,4)
 %   k	- number of treatments (e.g. classifiers) tested
 %   n 	- number of groups (e.g. studies) on which repeated measures were 

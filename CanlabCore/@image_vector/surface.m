@@ -28,22 +28,24 @@ function [all_surf_handles, pcl, ncl] = surface(obj, varargin)
 %    surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
 %
 
+% :Programmers' notes: 
+% 9-8-2020 fixed weird bug that broke this somehow. Maybe someone deleted a line of code and committed?
+
 if size(obj.dat, 2) > 1
     obj = mean(obj);
 end
 
 if isa(obj, 'atlas')
     
-    r = atlas2region(obj, 'noverbose');
-    
+    r = atlas2region(obj, 'noverbose'); 
     
 else
     
     r = region(obj, 'noverbose');
-    [all_surf_handles, pcl, ncl] = surface(r, varargin{:});
-
+    
 end
 
+[all_surf_handles, pcl, ncl] = surface(r, varargin{:});
 
 end
 

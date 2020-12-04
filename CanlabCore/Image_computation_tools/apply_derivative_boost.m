@@ -1,4 +1,4 @@
-function apply_derivative_boost(varargin)
+function apply_derivative_boost(imgtype, varargin)
 % Allows for recalculation of amplitude images from the fitted responses
 % for each trial type. Necessary for calculating group statistics when
 % using multiple basis functions
@@ -16,6 +16,9 @@ function apply_derivative_boost(varargin)
 % This function loads the SPM.mat file in the current directory and uses
 % the basis set specified in the loaded SPM structure.
 %
+% : Required Inputs:
+% 	indicate whether images are'.img' or '.nii'
+% 
 % :Optional Inputs:
 %
 %   **'amplitudes'**
@@ -78,7 +81,7 @@ function apply_derivative_boost(varargin)
 %    apply_derivative_boost('contrasts','condition_numbers',1:14);
 %
 
-
+    imgtype = imgtype;
     spmname = fullfile(pwd, 'SPM.mat');     % SETUP INPUTS
     if ~exist(spmname, 'file'), error('You must be in an SPM 1st-level results directory with SPM5 SPM.mat file.'); end
     
@@ -159,7 +162,7 @@ function apply_derivative_boost(varargin)
         % FILE NAMES
         % ---------------------------------------------
 
-        imgs = dir('beta*img'); imgs = char(imgs.name);
+        imgs = dir(sprintf(['beta*', imgtype])); imgs = char(imgs.name);
         n = size(imgs, 1);
 
         fprintf('Found %3.0f images', n); fprintf('\n');
@@ -212,7 +215,7 @@ function apply_derivative_boost(varargin)
                 disp('Working on :')
                 disp(imgs_cond)
 
-                out_name = sprintf('db_amplitude_%03d.img', cond_indx);
+                out_name = sprintf(['db_amplitude_%03d',imgtype ], cond_indx);
 
                 % This code uses SCN lab tools to create images
                 % ---------------------------------------------
@@ -321,13 +324,13 @@ function apply_derivative_boost(varargin)
                 disp(imgs_cond)
 
                 clear out_name
-                out_name{1} = sprintf('htw_amplitude_%03d.img', cond_indx);
-                out_name{2} = sprintf('htw_time_to_peak_%03d.img', cond_indx);
-                out_name{3} = sprintf('htw_width_%03d.img', cond_indx);
-                out_name{4} = sprintf('htw_area_under_curve_%03d.img', cond_indx);
+                out_name{1} = sprintf(['htw_amplitude_%03d',imgtype], cond_indx);
+                out_name{2} = sprintf(['htw_time_to_peak_%03d',imgtype], cond_indx);
+                out_name{3} = sprintf(['htw_width_%03d',imgtype], cond_indx);
+                out_name{4} = sprintf(['htw_area_under_curve_%03d',imgtype], cond_indx);
 
                 % ---------------------------------------------
-                [h, t, w, auc] = image_eval_function(imgs_cond, htwfunction, 'mask', 'mask.img', ...
+                [h, t, w, auc] = image_eval_function(imgs_cond, htwfunction, 'mask', ['mask', imgtype], ...
                     'outimagelabels', out_name);
 
                 h;t;w;auc;  % we need the outputs above to tell it to write 4 images.
@@ -409,7 +412,7 @@ function apply_derivative_boost(varargin)
 
         % All sets of contrast images
         % ------------------------------------------
-        ampimgs_name = 'db_amplitude_*img'; 
+        ampimgs_name = sprintf(['db_amplitude_*',imgtype]); 
         
         ampimgs = dir(ampimgs_name); ampimgs = char(ampimgs.name);
 
@@ -424,7 +427,7 @@ function apply_derivative_boost(varargin)
 
         % HTW amplitude
         % ------------------------------------------
-        ampimgs_name = 'htw_amplitude_*img';
+        ampimgs_name = sprintf(['htw_amplitude_*',imgtype]);
 
         ampimgs = dir(ampimgs_name); ampimgs = char(ampimgs.name);
 
@@ -437,7 +440,7 @@ function apply_derivative_boost(varargin)
 
         % HTW time
         % ------------------------------------------
-        ampimgs_name = 'htw_time_to_peak_*img';
+        ampimgs_name = sprintf(['htw_time_to_peak_*',imgtype]);
 
         ampimgs = dir(ampimgs_name); ampimgs = char(ampimgs.name);
 
@@ -450,7 +453,7 @@ function apply_derivative_boost(varargin)
 
         % HTW width
         % ------------------------------------------
-        ampimgs_name = 'htw_width_*img';
+        ampimgs_name = sprintf(['htw_width_*',imgtype]);
 
         ampimgs = dir(ampimgs_name); ampimgs = char(ampimgs.name);
 
@@ -463,7 +466,7 @@ function apply_derivative_boost(varargin)
 
         % HTW area
         % ------------------------------------------
-        ampimgs_name = 'htw_area_under_curve_*img';
+        ampimgs_name = sprintf(['htw_area_under_curve_*',imgtype]);
 
         ampimgs = dir(ampimgs_name); ampimgs = char(ampimgs.name);
 
@@ -528,7 +531,7 @@ function contrast_image_names = calc_contrasts(ampimgs_name, ampimgs, wh_F, SPM,
         wh_bad = (name == ' ' | name == ',' | name == '.' | name == '^' | name == '~' | name == '''' | name == ':' | name == '*' | name == '%' | name == ';' | name == '@' | name == '&');
         name(wh_bad) = [];
 
-        name = ['con_' ampimgs_name(1:8) '_' name '.img'];
+        name = ['con_', ampimgs_name(1:8), '_', name, imgtype];
 
         c = SPM.xCon(wh_F(i)).c(:, 1);
         c(wh_intercept) = [];

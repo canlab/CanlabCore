@@ -50,6 +50,11 @@ function [graph_prop, graph_prop_glob] = bct_toolbox_undirected_graph_metrics(r,
 % % Note: correlations among community vectors are not meaningful. 
 % % for similarity among communities/modules detected with different methods, see partition_distance.m
 
+% Check path
+if isempty(which('threshold_proportional.m'))
+    error('The BCT toolbox does not seem to be on your Matlab path. See https://sites.google.com/site/bctnet/');
+end
+
 doplots = false;
 doweighted = false;
 if any(strcmp(varargin, 'doplots')), doplots = true; end

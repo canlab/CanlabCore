@@ -1,6 +1,8 @@
 function bs = bct_toolbox_undirected_graph_metrics(bs, thresh, varargin)
 % bs = bct_toolbox_undirected_graph_metrics(bs)
 %
+% thresh = proportional link density threshold; 0 to 1 value. (.1 is a common value)
+%
 % Method for brainpathway_multisubject that extracts graph metrics using
 % the Sporns lab (et al.) BCT toolbox.
 % Uses bct_toolbox_undirected_graph_metrics

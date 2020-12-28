@@ -117,6 +117,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 % ..
 %    Programmers' notes:
 %    Tor Wager: Aug 2019: Note: some options harmonize output with output structure of ttest3d
+%    12/2020: Tor: fixed bug reversing rows and cols for asymmetric matrix circles/text
 % ..
 
 % BELOW IS A STANDARD TEMPLATE FOR DEFINING VARIABLE (OPTIONAL) INPUT
@@ -152,7 +153,7 @@ doreorder = false;      % Reorder columns to sort by partition labels; udpated b
 var_names = {};
 
 % text options
-text_x_offset = .30;    % higher is farther to the left
+text_x_offset = .15;    % higher is farther to the left
 text_y_offset = 0;      % -.35; % negative is down
 text_fsize = 16;
 text_nonsig_color = [.3 .3 .3];
@@ -490,13 +491,13 @@ if docircles
             mycolor = cm(r_ind, :);
             
             % draw filled circle
-            [~, fhan] = circle([rr cc], max_radius * abs(myr), 'fill', mycolor);
+            [~, fhan] = circle([cc rr], max_radius * abs(myr), 'fill', mycolor); % column cc is x, row rr is y
             set(fhan, 'EdgeColor', 'none');
             
             % if significant, draw thicker border
             if rr == cc || sig(rr, cc)
                 
-                han = circle([rr cc], max_radius * abs(myr));
+                han = circle([cc rr], max_radius * abs(myr));
                 set(han, 'LineWidth', 2, 'Color', mycolor ./ 1.5);
                 circhan(end+1) = han;
                 
@@ -526,11 +527,11 @@ if dotext
             % if significant, bold weight
             if rr == cc || sig(rr, cc)
                 
-                text_han(rr, cc) = text(rr - text_x_offset, cc - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'FontWeight', 'b', 'Color', text_sig_color); %#ok<*AGROW>
+                text_han(rr, cc) = text(cc - text_x_offset, rr - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'FontWeight', 'b', 'Color', text_sig_color); %#ok<*AGROW>
                 
             else
                 
-                text_han(rr, cc) = text(rr - text_x_offset, cc - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'Color', text_nonsig_color);
+                text_han(rr, cc) = text(cc - text_x_offset, rr - text_y_offset, sprintf('%3.2f', myr), 'FontSize', text_fsize, 'Color', text_nonsig_color);
                 
             end
             

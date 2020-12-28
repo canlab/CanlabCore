@@ -170,7 +170,7 @@ covs = [];
 doxlim = 1;
 names = {};
 wh_reg = 1; % regressor of interest - 0 for "no regressor of interest", remove all
-mymarkersize = 20;
+mymarkersize = 6;
 dostars = true;
 handles = [];
 doprinttable = 1;
@@ -555,6 +555,8 @@ if doind
     % ----------------------------------------------------
     % Plot individual points, if requested
     
+    [handles.point_han1, handles.text_han, handles.point_han] = deal(cell(size(dat, 1), ny));
+
     for i = 1:ny % i is column
         
         % marker
@@ -590,26 +592,33 @@ if doind
             mywt = sortedw(j,i);
             myc = mywt * mycolcolor + (1-mywt) * ([1 1 1] - mycolcolor);  % (myc .* sortedw(j,i));
             
-            % plot marker
-            handles.point_han1{j, i} = plot(xvalues{i}(j), dat(j, i), 'w.'); % to set axis scale appropriately
+            pointsexist = ~(any(isnan(x(:, j))) || isnan(dat(j, i)));
             
-            if donumber && ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
+            if donumber && pointsexist
+                % Text labels with numbers
 
+                handles.point_han1{j, i} = plot(xvalues{i}(j), dat(j, i), 'w.'); % to set axis scale appropriately
+            
                 handles.text_han{j, i} = text(xvalues{i}(j), dat(j, i), num2str(j), 'Color', [0 0 0], 'FontSize', 14);
-                
-            elseif ~(any(isnan(x(:, j))) || isnan(dat(j, i)))
+                                
+            elseif pointsexist
 
                 if verLessThan('matlab','8.4')
-                    handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                    %handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                    handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
                 
                 else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
-                    
-%                     if myalpha > .99
-%                         handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
-%                     else
-                        % This can be very slow with scatter.m sometimes...
+
+                    % Note: tor: changed to plot, scatter is very slow. Eliminate alpha.
+                    handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+
+                    if myalpha > .9
+                        %handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                        handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
+                    else
+%                         This can be very slow with scatter.m sometimes...
                         handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
-%                     end
+                    end
                     
                 end
                 

@@ -677,7 +677,15 @@ classdef brainpathway < handle
             fprintf('Creating a copy of brainpathway object\n');
             
             % Need to create a new object first with the same atlas
-            b2 = brainpathway(b.region_atlas);          % Construct a brainpathway object from an atlas object
+            if isa(b, 'brainpathway_multisubject')
+                
+                b2 = brainpathway_multisubject(b.region_atlas);
+                
+            else
+                
+                b2 = brainpathway(b.region_atlas);          % Construct a brainpathway object from an atlas object
+                
+            end
             
             myfields = fieldnames(b);  %{'voxel_dat' 'node_dat' 'region_dat' 'network_dat' 'partition_dat'
             myfields(strcmp(myfields, 'region_atlas')) = [];

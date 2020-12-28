@@ -66,6 +66,15 @@ r = double(r);
 r = (r' + r) ./ 2;          % enforce symmetry (rounding error possible)
 r = r - eye(size(r));       % for BCT and squareform
 
+% Missing regions/constant values will give NaNs, so need to account for them
+
+numnans = any(isnan(r));
+if sum(numnans) > .10 * length(numnans)
+    warning('More than 10% of vars have NaN correlation values [missing data?]. Replacing NaNs with 0s. Be careful about effects on subsequent metrics');
+end
+
+r(isnan(r)) = 0;
+
 % Threshold: Use sig matrix or link density
 bu_matrix = weight_conversion(threshold_proportional(r, thresh), 'binarize');
 

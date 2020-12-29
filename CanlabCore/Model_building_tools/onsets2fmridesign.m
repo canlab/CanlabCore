@@ -48,7 +48,7 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %   **'parametric_singleregressor':**
 %        Parametrically modulate onsets by
 %               modulator values, using single regressor with modulated amplitude
-%               Enter a cell array with modulator values for each event
+%               Follow this keyword with a cell array with modulator values for each event
 %               type, with a column vector (empty cell for no modulation)
 %
 %   **'parametric_standard':**
@@ -60,7 +60,7 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %
 %   **'noampscale':**
 %        Do not scale HRF to max amplitude = 1; default with SPM
-%        basis sets is to scale.  Custom HRF entries are not scaled.
+%        basis sets is to scale.  Custom HRF entries are scaled to sum to 1 unless you enter 'noampscale'
 %
 %   **'noundershoot':**
 %        Do not model undershoot - ONLY when using the canonical HRF
@@ -282,8 +282,13 @@ if length(varargin) > 1 && ~isempty(varargin{2})
         hrf = varargin{2};
         lenh = length(hrf);
         hrf = interp1((1:lenh)', hrf, (1:(1/res):lenh), 'linear', 'extrap');
-        hrf = hrf ./ sum(hrf);
+        
+        if doampscale
+                hrf = hrf ./ sum(hrf);
+        end
+        
     end
+    
 else
     
     hrf = spm_hrf(1/res, hrfparams);   % canonical hrf
@@ -291,6 +296,7 @@ else
     if doampscale
         hrf = hrf ./ max(hrf);
     end
+    
 end
 
 % ----------------------------------------------

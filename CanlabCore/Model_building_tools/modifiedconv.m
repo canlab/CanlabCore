@@ -14,9 +14,14 @@ function reg = modifiedconv(tr,condf,varargin)
 %         an indicator vector of zeros and ones, where ones indicate event
 %         onsets
 %
-% USES nonlinear saturation in height only
+% This is a simplified modified convolution that uses nonlinear saturation in height only
 % with a guess as to what the decrease in saturation is as a function of
 % the time since previous stimulation (exponential model, alpha version)
+%
+% For the full set of equations modifying height, time-to-peak, and
+% dispersion as a function of stumulus history, see
+% modifiedconv_wager2005.m
+%
 % 
 % :Examples:
 % ::
@@ -32,7 +37,7 @@ function reg = modifiedconv(tr,condf,varargin)
 %
 % :Please see:
 % Wager, T. D., Hernandez, L., Vasquez, A., Nichols, T., and Noll, D.
-% C. (in press). Accounting for nonlinear BOLD effects in fMRI: Parameter 
+% C. (2005). Accounting for nonlinear BOLD effects in fMRI: Parameter 
 % estimates and model for accurate prediction in variable-duration blocked 
 % and rapid event-related studies.  Neuroimage.
 %
@@ -84,7 +89,7 @@ reg = myzeros;
 
 whstim = find(condf);   % which elements contain indicators of stimulation
 
-if any(condf(whstim)>1), 
+if any(condf(whstim)>1) 
     disp('warning: modifiedconv not valid for onset mag > 1, which you appear to have entered.'), 
 end
     

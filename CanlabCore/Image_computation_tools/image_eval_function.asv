@@ -80,8 +80,7 @@ function varargout = image_eval_function(imageNames, fhandle, varargin)
     preprochandle = [];
     mask = [];
     fstr = [];
-    nimgs_this_output = []; % need this?
-    
+    nimgs_this_output = []; % 
     setup_inputs(nout);
 
     % test data: Use to check and define outputs before running
@@ -91,7 +90,7 @@ function varargout = image_eval_function(imageNames, fhandle, varargin)
     if ~isempty(preprochandle), ytest = preprochandle(ytest);  end
 
     % must hard-code outputs; not ideal...
-    out1 = []; out2 = []; out3 = []; out4 = []; out5 = []; out6 = []; out7 = []; out8 = []; out9 = []; out10 = []; %#ok<*NASGU>
+    out1 = []; out2 = []; out3 = []; out4 = []; out5 = []; out6 = []; out7 = []; out8 = []; out9 = []; out10 = [];
     out11 = []; out12 = []; out13 = []; out14 = []; out15 = []; out16 = []; out17 = []; out18 = []; out19 = []; out20 = [];
 
     % outputs are called out1, out2, ... etc.
@@ -240,10 +239,8 @@ function varargout = image_eval_function(imageNames, fhandle, varargin)
             end
         end
 
-        if isempty(mask)
-            error('mask is empty. no-mask opt. not implemented yet.');
-        else
-            fprintf('Found mask: %s\n', mask);
+        if isempty(mask), error('mask is empty. no-mask opt. not implemented yet.');
+        else  fprintf('Found mask: %s\n', mask);
         end
 
         if nout ~= length(outimagelabels)
@@ -259,7 +256,7 @@ function varargout = image_eval_function(imageNames, fhandle, varargin)
     function build_eval_string(numargs)
         fstr = '[';
         for arg = 1:numargs
-            fstr = [fstr 'out' num2str(arg)]; %#ok<*AGROW>
+            fstr = [fstr 'out' num2str(arg)];
             if arg ~= numargs
                 fstr = [fstr ', '];
             else
@@ -433,13 +430,13 @@ end % main function
             if length(outimagelabels) >= i  % if we have an output image name for this output
                 outnm = outimagelabels{i};
 
-                % Make sure we have .img or .nii extensions
+                % Make sure we have .img extensions
                 for j = 1:size(outnm, 1)  % for each name in this set, if there is more than one
                     this_img = deblank(outnm(j, :));
 
                     if ~strcmp(this_img(end-3:end), '.img') && ~strcmp(this_img(end-3:end), '.nii')
                         % we need to add img extenstion
-                        error('You must add .img or .nii to the end of each name.');
+                        error('You must add .img to the end of each name.');
 
                         %outnm(j, :) = [outnm(j, :) '.img'];
                     end

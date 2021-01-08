@@ -33,6 +33,9 @@ function varargout = matrix_eval_function(Y,fhandle,varargin)
 
     if nargout == 0, disp('No outputs requested.'); return, end
     
+    % Initialize shared variables with inline functions
+    [n, v, doverbose, fstr, updateperc, updateiterations] = deal([]);
+
     % % -------------------------------------------------------------------
     % % Setup variable X and check
     % define n and v, # observations and # variables
@@ -45,9 +48,6 @@ function varargout = matrix_eval_function(Y,fhandle,varargin)
     
     t1 = clock;
     
-    % do this to make sure these are returned so they may be used in later
-    % inline
-    n; v;
 
     % % -------------------------------------------------------------------
     % % build string to evaluate that defines outputs and inputs
@@ -63,9 +63,11 @@ function varargout = matrix_eval_function(Y,fhandle,varargin)
     %  also make sure we can store everything in memory.
     % % -------------------------------------------------------------------
     i = whichGood(1);
+    
     eval(fstr);
+    
     for i = 1:nargout
-        varargout{i} = NaN .* zeros(v,size(varargout{i},2));
+        varargout{i} = NaN .* zeros(v,size(varargout{i},2)); %#ok<*AGROW>
     end
     
 
@@ -118,11 +120,13 @@ function varargout = matrix_eval_function(Y,fhandle,varargin)
     % % Setup inputs, including variable X and check
     % % -------------------------------------------------------------------
     function setup_inputs_and_check_sizes
+        
         dochk = 1;
         doverbose = 1;
         do_variable_X = 0;
-        if length(varargin) > 0
+        if ~isempty(varargin)
             for i = 1:length(varargin)
+                
                 if ischar(varargin{i})
                     switch varargin{i}
                         case {'verbose','verb'}, doverbose = 1;

@@ -422,10 +422,11 @@ for i = 1:n_conditions
 
         end
         
-    end
+    end % ons_includes_durations
     
     cf2 = cf2(1:len,:);
-end
+    
+end % conditions
 
 delta_hires = cf2;
 

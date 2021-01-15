@@ -279,8 +279,8 @@ if ~isempty(pm_vals) && length(wh) ~= length(pm_vals)
         pm_vals = pm_vals(1:length(wh)); 
     end
     
-    %disp('Bad input?  Stopping in debugger so you can check. Type dbcont or dbquit to continue.')
-    %keyboard
+    disp('Bad input?  Stopping in debugger so you can check. Type dbcont or dbquit to continue.')
+    keyboard
 end
 
 % get modulated delta function

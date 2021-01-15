@@ -158,7 +158,7 @@ end
 % ------------------------------------------------------------------------
 
 if ~isempty(rtin)
-    [X2,d2,out] = rt2delta(ons,rt,TR);
+    [X2, d2, out] = rt2delta(ons, rt, TR);
 else
     % placeholder for plotting only
     % these are the amplitudes of the stick functions in the plot
@@ -201,7 +201,9 @@ end
 
 % Set limits for boxes and sticks
 % ---------------------------------------------------------
-ymax = .05 * (max(X(:)) - min(X(:)));
+%ymax = .1 * size(X, 2);  %.05 * (max(X(:)) - min(X(:)));
+ymax = .2; %* (max(X(:)) - min(X(:)));
+
 if isempty(yoffset)
     % default - auto
     yoffset = min(X(:)) - ymax;
@@ -214,10 +216,11 @@ for i = 1:length(ons)
     
     % for sticks
     xvals = [ons{i}(:, 1) ons{i}(:, 1)]'; %./ TR;
-    yvals = [repmat(yoffset,length(rt{i}),1) ((rt{i} ./ 1000) - 1) + yoffset + ymax]';
+    % yvals = [repmat(yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + yoffset + ymax]';
+    yvals = [repmat(i - yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + i - yoffset + ymax]';
     
     % onsets
-    h = plot(xvals, yvals, 'Color', colors{i});
+    h = plot(xvals, yvals, 'Color', colors{i}, 'LineWidth', 3);
     
     
     % boxes for event durations

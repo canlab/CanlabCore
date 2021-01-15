@@ -224,18 +224,20 @@ end  % end single trial
 if ~isempty(varargin) && ~isempty(varargin{1}) % pre-specified length
     % Entering session len, and using len_original here, will downsample using pre-specified length
     
-    len_original = varargin{1}; % this line is added by Wani to make this work for TR = 1.3
-    len = varargin{1}; % this line is modified by Wani from the next line
-    % len = ceil(varargin{1});
+    len_original = varargin{1};     % this line is added by Wani to make this work for TR = 1.3
+    len = varargin{1};              % this line is modified by Wani from the next line
+    
     for i = 1:length(ons)
 
         % make sure nothing goes past end of session
-        past_end = round(ons{i}(:,1)) > len;
+        past_end = ons{i}(:,1) > len;                   % Tor modified 1/2021 to avoid rare bug with ons just barely past end
         if any(past_end)
-            fprintf('Warning! onsets2fmridesign found %d onsets after the end of the session and is omitting them.\n', sum(past_end));
+            fprintf('Warning! onsets2fmridesign found %d onsets after the end of the session and is omitting them.\nThis will break parametric mods if entered.\n', sum(past_end));
         end
         ons{i}(past_end,:) = [];
+        
     end
+    
     len = ceil(len .* res);
     
 else

@@ -274,8 +274,13 @@ if ~isempty(pm_vals) && length(wh) ~= length(pm_vals)
     disp('Number of events in parametric modulator does not match number of events in delta function.')
     fprintf('%3.0f events in delta function, %3.0f events in param. modulator\n', sum(delta), length(pm_vals));
     
-    disp('Bad input?  Stopping in debugger so you can check. Type dbcont or dbquit to continue.')
-    keyboard
+    if length(pm_vals) > length(wh) 
+        disp('Truncating pm_vals. Could be an onset occurred after the end of the run?');
+        pm_vals = pm_vals(1:length(wh)); 
+    end
+    
+    %disp('Bad input?  Stopping in debugger so you can check. Type dbcont or dbquit to continue.')
+    %keyboard
 end
 
 % get modulated delta function

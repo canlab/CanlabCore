@@ -1,0 +1,9 @@
+If on a Mac you receive the warning 
+"<AppName> cannot be opened because the developer cannot be verified."
+
+This can be solved by having it unblocked from the following menu:
+Preferences -> Security & Privacy -> General -> Allow apps downloaded from:
+
+Here you should see a short text including "...StochasticGradientDescent got blocked..." as well as a button at the extreme right side with the text "Allow Anyway". Now click that "Allow anyway" button, after which both the text and this button should disappear and disable the block that causes the warning.
+
+If you are running an older Mac OS, you may instead see an option labelled "Allow anywhere", which should accomplish the same task after being selected. 

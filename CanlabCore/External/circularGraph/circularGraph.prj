@@ -1,0 +1,112 @@
+<deployment-project plugin="plugin.toolbox" plugin-version="1.0">
+  <configuration build-checksum="1744267201" file="C:\MATLAB\circularGraph\circularGraph.prj" location="C:\MATLAB\circularGraph" name="circularGraph" target="target.toolbox" target-name="Package Toolbox">
+    <param.appname>circularGraph</param.appname>
+    <param.authnamewatermark>Paul Kassebaum</param.authnamewatermark>
+    <param.email>paul.kassebaum@mathworks.com</param.email>
+    <param.company>MathWorks</param.company>
+    <param.summary>Plot an interactive circular graph to illustrate connections in a network.</param.summary>
+    <param.description>A 'circular graph' is a visualization of a network of nodes and their connections. The nodes are laid out along a circle, and the connections are drawn within the circle. Click on a node to make the connections that emanate from it more visible or less visible. Click on the 'Show All' button to make all nodes and their connections visible. Click on the 'Hide All' button to make all nodes and their connections less visible.</param.description>
+    <param.screenshot>${PROJECT_ROOT}\circularGraph.PNG</param.screenshot>
+    <param.version>2.0</param.version>
+    <param.output>${PROJECT_ROOT}\circularGraph.mltbx</param.output>
+    <param.products.name>
+      <item>MATLAB</item>
+    </param.products.name>
+    <param.products.id>
+      <item>1</item>
+    </param.products.id>
+    <param.products.version>
+      <item>8.4</item>
+    </param.products.version>
+    <param.platforms />
+    <param.guid>04027212-1e6d-49d4-84fa-f66cc29418de</param.guid>
+    <param.exclude.filters />
+    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;examples&gt;
+   &lt;exampleCategory name="circularGraph"&gt;
+      &lt;example name="example" type="html"&gt;
+         &lt;file type="source"&gt;/html/example.html&lt;/file&gt;
+         &lt;file type="main"&gt;/example.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/html/example.png&lt;/file&gt;
+         &lt;file type="image"&gt;/html/example_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/html/example_02.png&lt;/file&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+&lt;/examples&gt;</param.examples>
+    <param.demosxml />
+    <param.apps />
+    <param.docs />
+    <unset>
+      <param.output />
+      <param.platforms />
+      <param.exclude.filters />
+      <param.demosxml />
+      <param.apps />
+      <param.docs />
+    </unset>
+    <fileset.rootdir>
+      <file>C:\MATLAB\circularGraph</file>
+    </fileset.rootdir>
+    <fileset.rootfiles>
+      <file>${PROJECT_ROOT}\circularGraph.m</file>
+      <file>${PROJECT_ROOT}\circularGraph.PNG</file>
+      <file>${PROJECT_ROOT}\circularGraph.prj</file>
+      <file>${PROJECT_ROOT}\demos.xml</file>
+      <file>${PROJECT_ROOT}\example.m</file>
+      <file>${PROJECT_ROOT}\html</file>
+      <file>${PROJECT_ROOT}\license.txt</file>
+      <file>${PROJECT_ROOT}\node.m</file>
+    </fileset.rootfiles>
+    <fileset.depfun.included />
+    <fileset.depfun.excluded />
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\MATLAB\circularGraph" name="circularGraph.mltbx" optional="false">C:\MATLAB\circularGraph\circularGraph.mltbx</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2014b</root>
+      <toolboxes>
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="matlabcoder" />
+      </toolboxes>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.1</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

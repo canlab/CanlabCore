@@ -562,7 +562,7 @@ wh = any(xvar < 100 * eps, 2);
 if any(wh)
     disp('Warning! Some participants have no variance in X column(s) and will be excluded')
     fprintf('Participant numbers:');
-    fprintf('%d', find(wh));
+    fprintf('%d ', find(wh));
     fprintf('\n');
 end
 
@@ -574,7 +574,7 @@ wh = any(yvar < 100 * eps, 2);
 if any(wh)
     disp('Warning! Some participants have no variance in Y and will be excluded')
     fprintf('Participant numbers:');
-    fprintf('%d', find(wh));
+    fprintf('%d ', find(wh));
     fprintf('\n');
 end
 

@@ -82,7 +82,7 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 %
 % % If your image is positive-valued only (or negative-valued only), a
 % % bicolor split map will not be created:
-% 
+%
 % t = threshold(t, [2 Inf], 'raw-between');
 % render_on_surface(t, han, 'colormap', 'winter', 'clim', [2 6]);
 %
@@ -99,7 +99,7 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 % - need to know meaning of values, as they often represent statistic values
 % - can re-run without changing colors
 % - need to plot on isosurface or isocaps objects that use colormap to
-% render gray-scale images. 
+% render gray-scale images.
 % This last part makes it a bit more complicated.
 % Rendering only on solid-color patch objects from isosurfaces is easier:
 %     c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, han(i));
@@ -134,7 +134,7 @@ colormapname = 'hot';       % default colormap name (all Matlab defined colormap
 custom_colormap = false;
 pos_colormap = [];
 neg_colormap = [];
-clim = [];  
+clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
 allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
@@ -144,7 +144,7 @@ allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-
+            
             case 'color'
                 % Special instructions for solid colors
                 mycolor = varargin{i+1};
@@ -153,7 +153,7 @@ for i = 1:length(varargin)
                 nvals = 256;
                 pos_colormap = repmat(mycolor, nvals, 1);
                 
-               
+                
             case 'colormap'
                 
                 colormapname = varargin{i+1}; varargin{i+1} = [];
@@ -162,21 +162,21 @@ for i = 1:length(varargin)
             case allowable_keyword_value_pairs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
-            
-            % eliminate this here because we may have passed many irrelevant values in in surface() call    
-            %otherwise, warning(['Unknown input string option:' varargin{i}]);
+                
+                % eliminate this here because we may have passed many irrelevant values in in surface() call
+                %otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
 
-% There are 2 ways to enter custom colormaps. 
+% There are 2 ways to enter custom colormaps.
 % 1. By name
 % 'colormap', [name of Matlab colormap]
 %
 % 2. Enter colormaps generated externally
 % 'pos_colormap', followed by [n x 3] color vectors and/or
 % 'neg_colormap', followed by [n x 3] color vectors
-% 
+%
 % If you enter 'pos_colormap' / 'neg_colormap', these will be stacked and
 % added to a gray colormap
 
@@ -200,7 +200,8 @@ if isempty(clim)
         
     end
     
-    clim = [min(dat(:)) max(dat(:))];  % clim: data values for min and max, should become min/max colors
+    datvec = dat(:); 
+    clim = [min(datvec) max(datvec)];  % clim: data values for min and max, should become min/max colors
     
     % if no variance, we have constant data values - special case.
     % reducing lower clim(1) will effectively map all data to max color value
@@ -222,7 +223,7 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
         error('Entering ''colormap'' argument and name cannot be done when entering custom colormaps in ''pos_colormap''/''neg_colormap''');
     end
     
-    if ~isempty(pos_colormap) && ~isempty(neg_colormap) && size(pos_colormap, 1) ~= size(neg_colormap, 1)    
+    if ~isempty(pos_colormap) && ~isempty(neg_colormap) && size(pos_colormap, 1) ~= size(neg_colormap, 1)
         error('Lengths of positive-color and negative-color colormaps must match.')
     end
     
@@ -243,7 +244,7 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     if isempty(neg_colormap)
         neg_colormap = cool(nvals);
     end
-        
+    
     custom_colormap = true;
     
     % Build the colormap
@@ -251,8 +252,8 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     % Skip colormap generator, already
     % found the range of colors for pos/neg values to split around 0 here.
     % this sets the colormap for axis_handle
-    cm = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :));
-        
+    [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :));
+    
     % colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
     % nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
     
@@ -264,15 +265,15 @@ else
     
     if custom_colormap
         
-        cm = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
+        [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
         
     elseif diff(sign(clim))
         
         % Default colormap for objects with - and + values
-        cm = hotcool_split_colormap(nvals, clim, axis_handle);
+        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle);
         
     else
-        cm = split_colormap(nvals, colormapname, axis_handle);
+        [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle);
     end
     
 end % custom posneg or other colormap
@@ -283,13 +284,22 @@ end % custom posneg or other colormap
 
 % Map object data values to indices in split colormap
 % -----------------------------------------------------------------------
-% Define mapping function. We will apply this later to vertex color data
-% (only colored)
+% Define mapping function from image values -> colormap indices (1-512).
+% We will apply this later to vertex color data (only colored)
 % Defining this here preserves the same mapping across different surfaces
 % clim(1) mapped to lowest color, clim(2) to highest color
- map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
+% map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
 
-% problem is that vertices near empty (zero) voxels get interpolated down to zero
+map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
+
+
+% problem with above is that border gets mapped to low color when interpolating, which is
+% blue for split colormap, creating blue outline around orange blobs. SO
+% we need to map separately for pos and neg colored blobs
+% ***
+
+
+% problem with below is that vertices near empty (zero) voxels get interpolated down to zero
 %map_function = @(c) 1 + nvals + (c - 0) ./ range(clim) .* nvals;
 
 % Reconstruct volume data
@@ -305,25 +315,59 @@ end % custom posneg or other colormap
 % lower lim to interp to 10% of the way towards zero,
 % preserving sign
 % lowerclimit = linspace(clim(1), 0, 10);
-% lowerclimit = lowerclimit(2);           
+% lowerclimit = lowerclimit(2);
 % mesh_struct.voldata(mesh_struct.voldata == 0) = lowerclimit;
-% lowerclimit = 0; ... wh = c == 0 | isnan(c); 
+% lowerclimit = 0; ... wh = c == 0 | isnan(c);
+
+% Kludgy fix for interpolation issues around border of blobs
+% Changing c or c_colored won't do it because of how gray and colored
+% colormaps are stacked. With one color, we interpolate into the gray zone,
+% into about the top 256-150 values.
+% for i = 256:-1:150
+%     cm(i, :) = [.5 .5 .5];
+% end
+% colormap(cm)
+
 
 for i = 1:length(surface_handles)
     % For each surface handle entered
     % -----------------------------------------------------------------------
-     
+    
     % Get vertex colors for image (obj) to map
     % -----------------------------------------------------------------------
     % Use isocolors to get colormapped values
     % Convert to index color in split colormap by adding nvals to put in
     % colored range
-    % isocolors returns nans sometimes even when no NaNs in data 
+    % isocolors returns nans sometimes even when no NaNs in data
     c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+    
+    % doesn't work to fix interpolation error.
+    %     border_percent = prctile(abs(c(c ~= 0)), 80);
+    %     whlow = abs(c) < border_percent | isnan(c);
+    
+    c_colored = c;
+    
+    whpos = c > 0;
+%     kpos = 61;   % which block of 256 colors; depends on colormap
+    cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+    c_colored(whpos) = cpos;
+    
+    whneg = c < 0;
+%     kneg = 55;   % which block of 256 colors
+    cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
+    c_colored(whneg) = cneg;
     
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later
     
-    c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
+    %c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
+    
+    % FIX: rescale range so we don't map into gray range at edges due to
+    % interpolation
+    %     xx = c_colored(~wh); % in-blob vertices
+    %     xx = 1 + nvals + max(xx) .* (xx - min(xx)) ./ (range(xx) + nvals);
+    %     c_colored(~wh) = xx;
+    %cm(256, :) = [1 0 1];
+    
     
     % Get the original grayscale values
     % -----------------------------------------------------------------------
@@ -334,8 +378,8 @@ for i = 1:length(surface_handles)
     if isempty(c_gray)
         
         % solid
-        c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
-        %c_colored(wh) = c_gray(wh);
+        % c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
+        c_gray = repmat(0 .* nvals + .5 .* round(nvals), size(get(surface_handles(i), 'Vertices'), 1), 1);
         
     else
         %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
@@ -349,6 +393,7 @@ for i = 1:length(surface_handles)
         else
             % rescale to gray part of colormap
             c_gray(wh) = (c_gray(wh) - min(c_gray(wh))) ./ range(c_gray(wh)) .* nvals;
+            % ***
             
             % Now merge graycsale and object-mapped colors
             % -----------------------------------------------------------------------
@@ -360,12 +405,13 @@ for i = 1:length(surface_handles)
         end
     end
     
-c_colored(wh) = c_gray(wh);
+    c_colored(wh) = c_gray(wh);
     
-    % Set object handle properties 
+    
+    % Set object handle properties
     % -----------------------------------------------------------------------
     % Change from 'scaled' to 'direct' mode
-
+    
     % Save FaceVertexCData f or later
     prevdata = get(surface_handles(i), 'FaceVertexCData');
     set(surface_handles(i), 'UserData', prevdata);
@@ -377,17 +423,32 @@ c_colored(wh) = c_gray(wh);
     
 end
 
-colorbar_han = colorbar;
-%set(colorbar_han, 'YLim', [nvals+1 2*nvals]);
-set(colorbar_han, 'YLim', [nvals+1 2*nvals], 'YTick', [nvals+1 2*nvals], 'YTickLabel', round([clim(1) clim(2)] *100)/100);
-set(gca, 'FontSize', 18)
+% Colorbars
+% -----------------------------------------------------------------------
 
-% if isa(obj, 'statistic_image')
-%     hotcool_colormap
-% else 
-%     colormap hot
-% 
-% end
+if any(datvec > 0)
+    
+    bar1axis = axes('Position', [.55 .55 .38 .4]);
+    colormap(bar1axis, cm(1+(kpos-1)*nvals:kpos*nvals, :))
+    colorbar_han = colorbar(bar1axis);
+    set(bar1axis, 'Visible', 'off');
+    
+    minpos = min(datvec(datvec > 0));
+    set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
+
+end
+
+if any(datvec < 0)
+    
+    bar2axis = axes('Position', [.55 .1 .38 .4]);
+    colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :))
+    colorbar_han = colorbar(bar2axis);
+    set(bar2axis, 'Visible', 'off');
+    
+    maxneg = max(datvec(datvec < 0));
+    set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
+
+end
 
 end
 
@@ -404,10 +465,10 @@ end
 % colormap showing negative values in cool colors, positive values in hot
 % colors. The split colormap will also have different ranges for negative and
 % positive values
-% - If object is positive-valued or negative-valued only, assume we want a unipolar colormap 
+% - If object is positive-valued or negative-valued only, assume we want a unipolar colormap
 
 
-function cm = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
+function [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, varargin)
 %
 % cm = hotcool_split_colormap(nvals, clim, [lowhot hihot lowcool hicool]), each is [r g b] triplet
 %
@@ -427,6 +488,8 @@ lowhot = [1 .4 .5]; % [.8 .3 0]; % min pos
 hicool = [0 .8 .8]; % [.3 .6 .9]; % max neg
 lowcool = [0 0 1]; % min neg, most extreme values
 
+graybuffer = 20;  % for border - fade to gray in lowest k values
+
 if ~isempty(varargin)
     if length(varargin) < 4
         error('Enter no optional arguments or 4 [r g b] color triplets');
@@ -441,28 +504,78 @@ cmgray = gray(nvals);
 
 thr = 0;    % Threshold to split colormap into two colors
 
-vec = linspace(clim(1), clim(2), nvals);
-pos = find(vec > thr);
-np = length(pos);
+% vec = linspace(clim(1), clim(2), nvals);
+% pos = find(vec > thr);
+% np = length(pos);
 
 [hotcm, coolcm] = deal([]);
 
-if np > 0
-    hotcm = colormap_tor(lowhot, hihot, 'n', np);
-    hotcm(1, :) = [.5 .5 .5]; % first element is gray
+if graybuffer
+    
+    hotcm = [colormap_tor([.5 .5 .5], lowhot, 'n', graybuffer); ...
+             colormap_tor(lowhot, hihot, 'n', nvals-graybuffer)];
+    
+else
+    
+    hotcm = colormap_tor(lowhot, hihot, 'n', nvals); %np);
+    
 end
 
-neg = find(vec < -thr);
-nn = length(neg);
+%hotcm(1, :) = [.5 .5 .5]; % first element is gray
+% end
 
-if nn > 0
-    coolcm = colormap_tor(lowcool, hicool, 'n', nn);
-    coolcm(end, :) = [.5 .5 .5]; % last element is gray
+% neg = find(vec < -thr);
+% nn = length(neg);
+
+% if nn > 0
+%coolcm(end, :) = [.5 .5 .5]; % last element is gray
+% end
+
+if graybuffer
+    
+    coolcm = [colormap_tor(lowcool, hicool, 'n', nvals-graybuffer); ...
+              colormap_tor(hicool, [.5 .5 .5], 'n', graybuffer)];
+    
+else
+    
+    coolcm = colormap_tor(lowcool, hicool, 'n', nvals); % nn);
+    
 end
 
-cm = [coolcm; hotcm];
 
-cm = [cmgray; cm];
+% for interpolation issues
+% 1:256 is gray-scale anat; 257:512 is buffer; 513:768 is negcm; 769:1024
+% is buffer; 1025:1280 is poscm
+buffercm = repmat([.5 .5 .5], nvals, 1);
+
+% which block of nvals (usually 256) has colored values
+kpos = 61;
+kneg = 55;
+
+
+%cm = [coolcm; buffercm; buffercm; cmgray; hotcm];
+cm = [cmgray; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    buffercm; buffercm; buffercm; buffercm; coolcm; ...
+    buffercm; buffercm; buffercm; buffercm; buffercm; ...
+    hotcm];
+
+% Kludgy fix for interpolation issues
+% cm(128+3*256:4*256, :) = .5;
+% cm(1+3*256:50+3*256, :) = .5;
+
+% cm(128+0*256:1*256, :) = .5;
+% cm(1+0*256:50+0*256, :) = .5;
+
+% cm = [cmgray; cm];
 
 % Change colormap(s)
 if isempty(axis_handle)
@@ -481,7 +594,7 @@ end
 end
 
 
-function cm = split_colormap(nvals, cmcolor, axis_handle)
+function [cm, kpos, kneg] = split_colormap(nvals, cmcolor, axis_handle)
 % Get split colormap with gray then colored values
 % e.g., cm = split_colormap(256, [2 8], 'hot')
 %
@@ -489,16 +602,22 @@ function cm = split_colormap(nvals, cmcolor, axis_handle)
 
 %validateattributes(cmcolor, {'numeric' 'char'})
 
+% which block of nvals (usually 256) has colored values
+kpos = 12;
+kneg = 12;
+
 cmgray = gray(nvals);
 
 if ischar(cmcolor)
     % Named colormap function
-cmcolor = eval(sprintf('%s(%d)', cmcolor, nvals));
+    cmcolor = eval(sprintf('%s(%d)', cmcolor, nvals));
 end
 
 validateattributes(cmcolor, {'numeric'}, {'>=', 0, '<=', 1, 'size', [NaN 3]})
-    
-cm = [cmgray; cmcolor];
+
+buffercm = repmat([.5 .5 .5], nvals, 1);
+
+cm = [cmgray; repmat(buffercm, 10, 1); cmcolor];
 
 % Change colormap(s)
 if isempty(axis_handle)

@@ -74,6 +74,16 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 %
 %
 % --------------------------------------------------------------------------------
+% Coverage:  Percentage of standard MNI gray-matter mask with non-zero/non-nan values
+%       NOT IMPLEMENTED YET
+%       Range: [0 100],  100 is good (full coverage). Low values indicate
+%       dropout due to artifacts or space mis-match
+%
+% Template match:  Dice coefficient (point-biserial r?) with standard MNI gray-matter mask
+%       NOT IMPLEMENTED YET
+%       Range: [0 100],  100 is good (full coverage). Low values indicate
+%       dropout due to artifacts or space mis-match
+%
 % Bright-edge bias:  "brightedge"
 %       NOT IMPLEMENTED YET
 %       High inter-image variability around edge of brain
@@ -87,18 +97,21 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 %       than in gray matter.  This measures the ratio of mean absolute signal in CSF / GM.
 %       Range: [0 Inf]. Values < 1 indicate low ventricle signal, which is good.
 %       Higher values are worse.
+%       Apply to: Individual or group. Contrast images (differences across conditions) for a series of individual participants
 %
 % Effect size in ventricles: "global_d_ventricles"
 %       d = Mean / standard error (STD) of whole-ventricle average signal
 %       Indicates a shift towards global activation or deactivation of the
 %       ventricles in the group.
 %       Range: [-Inf Inf], farther from zero is bad.
+%       Apply to: Group. Contrast images (differences across conditions) for group of participants
 %
 % Significant global activation of ventricles: "global_logp_ventricles"
 %       -log(p-value) in ventricle global mean across subjects, divided by -log(0.05)
 %       Any value > 1 indicates a significant global activation in the
 %       ventricles.
 %       Range: [0 Inf], higher is worse. Values > 1 are bad.
+%       Apply to: Group. Contrast images (differences across conditions) for group of participants
 %
 % Effect size in white matter: "global_d_wm"
 %       d = Mean / standard error (STD) of whole-WM average signal
@@ -117,9 +130,15 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 % Non-spatially specific signal contamination: "r2_explained_by_csf"
 %       Variance in individual differences in whole-gray-matter activity
 %       Range: [-1 1], usually [0 1].  Farther from zero is bad.
+%       Apply to: Group. Contrast images (differences across conditions) for group of participants
 %
-% Scale inhomogeneity: "csf_scale_inhom"
-%       The coefficient of variation of the L1-norm across CSF voxels for each participant.
+% Scale inhomogeneity across participants: "csf_scale_inhom"
+%       Assumption: Subjects should be on the same scale (e.g., if you look
+%       at histograms of contrast images for each subject). We assume that
+%       the signal in gray matter may vary for meaningful reasons, but the
+%       scale of the signal in CSF (and maybe WM?) should be similar across
+%       participants.
+%       Measure: The coefficient of variation of the L1-norm across CSF voxels for each participant.
 %       The L1-norm is a measure of scale (across voxels, for each observation/image)
 %       that is more robust than the variance.
 %       High variability in these individual scale parameters is a sign of inhomogeneity.
@@ -128,8 +147,9 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 %       It also avoids the instability that occurs by dividing by values that may
 %       be near zero, such as the mean.
 %       Range: [0 Inf].  Lower is better.
+%       Apply to: Group. Condition images (betas) for group of participants
 %
-% Scale inhomogeneity in gray matter: "gm_scale_inhom"
+% Scale inhomogeneity across participants in gray matter: "gm_scale_inhom"
 %       The coefficient of variation of the L1-norm across GM voxels for each participant.
 %       The L1-norm is a measure of scale (across voxels, for each observation/image)
 %       that is more robust than the variance.

@@ -116,7 +116,11 @@ fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'covariates' 'addition
 
 for i = 1:length(fnames)
 
-    obj.(fnames{i}) = [obj.(fnames{i}) obj2.(fnames{i})];    
+    try
+        obj.(fnames{i}) = [obj.(fnames{i}) obj2.(fnames{i})];    
+    catch
+        error('Could not merge obj.%s fields',fnames{i});
+    end
 
 end
 

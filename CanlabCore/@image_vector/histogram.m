@@ -250,12 +250,26 @@ if do_by_image
         end
     end
     
+    if singleaxis
+        % Set systematic colors according to index number
+        if nimgs < 24
+            rgbcell = seaborn_colors(nimgs);
+        else
+            rgbcell = seaborn_colors(24);
+            
+            while length(rgbcell) < nimgs
+                rgbcell = [rgbcell; seaborn_colors(min(24, nimgs - length(rgbcell)))];
+            end
+        end
+        
+    end
+    
     % Do for each image
     for i = 1:nimgs
         
         if singleaxis
             
-            hist_han(i) = create_hist(obj.dat(:, i), nbins, doline, false, rand(1, 3));
+            hist_han(i) = create_hist(obj.dat(:, i), nbins, doline, false, rgbcell{i});
             
         else
             
@@ -270,10 +284,21 @@ if do_by_image
     end
     
     if ~singleaxis
+        % turn off remaining axes
         for i = nimgs + 1:naxes
             subplot(rows, cols, i)
             axis off
         end
+    else
+        % single axis legend
+        if nimgs < 40
+            case_id = cellfun(@num2str, num2cell(1:nimgs), 'UniformOutput', false);
+            legend(hist_han, case_id)
+        end
+        
+        xlabel('Value'); ylabel('Frequency')
+        title('Histogram of values');
+        
     end
     
 else
@@ -294,7 +319,7 @@ else
     hh = plot_vertical_line(0);
     set(hh, 'LineStyle', '--');
 
-    xlabel('Values'); ylabel('Frequency');
+    xlabel('Value'); ylabel('Frequency');
     title('Histogram of values');
     
 end

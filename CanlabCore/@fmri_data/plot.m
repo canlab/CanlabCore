@@ -209,7 +209,8 @@ switch plotmethod
         % ---------------------------------------------------------------
         
         subplot(2, 3, 4);
-        histogram(fmridat, 'nofigure');
+        %         histogram(fmridat, 'nofigure');
+        histogram(fmridat, 'nofigure', 'by_image', 'singleaxis');
         drawnow
         
         clear dattmp

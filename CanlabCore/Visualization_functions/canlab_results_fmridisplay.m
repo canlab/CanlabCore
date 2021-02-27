@@ -28,8 +28,11 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %   **'noblobs':**
 %        do not display blobs
 %
+%   **'outline':**
+%        display blob outlines
+%
 %   **'nooutline':**
-%        do not display blob outlines
+%        do not display blob outlines (default)
 %
 %   **'addmontages':**
 %        when entering existing fmridisplay obj, add new montages
@@ -190,7 +193,7 @@ end
 % process input arguments
 % --------------------------------------------
 doblobs = true;
-dooutline = true;
+dooutline = false;
 doaddmontages = false;
 doremove = true;
 outlinecolor = [0 0 0];
@@ -209,6 +212,9 @@ if any(wh), doblobs = false; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'nooutline');
 if any(wh), dooutline = false; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'outline');
+if any(wh), dooutline = true; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'addmontages');
 if any(wh), doaddmontages = true; varargin(wh) = []; end

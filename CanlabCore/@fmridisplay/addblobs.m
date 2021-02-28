@@ -225,7 +225,7 @@ minnegcolor = [0 0 1]; % min neg, most extreme values
 % pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 % neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
-depth=2;
+depth = 2;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})

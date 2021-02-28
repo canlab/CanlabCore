@@ -26,12 +26,12 @@ function fig_handle = montage(image_obj, varargin)
 %    o2 = montage(dat, 'trans', 'color', [1 0 0], 'transvalue', .4);
 %    o2 = montage(dat, 'trans', 'maxcolor', [1 .3 0], 'mincolor', [.5 0 1]);
 %    o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .5);
-%    
-%    Options for canlab_results_fmridisplay are also passed forward, so that 
+%
+%    Options for canlab_results_fmridisplay are also passed forward, so that
 %    different named montage types can be used.  E.g.,:
-% 
+%
 %    o2 = montage(t, 'trans', 'full');
-% 
+%
 % Set all color maps to the same range:
 % o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .7, 'cmaprange', [0 3]);
 
@@ -43,7 +43,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             case 'scnmontage', meth = 'scnmontage';
                 
-            case {'trans', 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'compact2'}
+            case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'compact2' 'noverbose'}
                 % ignore these - passed through
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -59,7 +59,7 @@ n = size(image_obj.dat, 2);
 
 switch meth
     case 'fmridisplay'
-                    
+        
         if n > 4
             disp('Warning: Showing first 4 images in data object only.');
             n = 4;
@@ -80,28 +80,28 @@ switch meth
         
         for i = 1:n
             
-            obj = get_wh_image(image_obj, i); 
+            obj = get_wh_image(image_obj, i);
             
             if do_multirow % plot only on montages for this image
                 
-                o2 = addblobs(o2, region(obj), 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 
             else % just one image, plot on all montages
                 
-                o2 = addblobs(o2, region(obj), 'nooutline', varargin{:});
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:});
                 
             end
             
             drawnow
             
-            %o2 = addblobs(o2, region(obj), 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]});
-            
         end
         
         if ~do_multirow
-            % Plot legend only for single-row, otherwise obscures some
-            % images
-            o2 = legend(o2);
+            
+            % Plot legend only for single-row, otherwise obscures some images
+            
+            o2 = legend(o2, varargin{:});  % pass through "noverbose" option
+            
         end
         
         fig_handle = o2;
@@ -110,6 +110,9 @@ switch meth
     case 'scnmontage'
         
         overlay = which('SPM8_colin27T1_seg.img');
+        
+        cl = cell(1, n);
+        fig_handle = zeros(1, n);
         
         for i = 1:n
             

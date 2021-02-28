@@ -263,7 +263,7 @@ wh = strcmp(varargin, 'allslices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'noverbose');
-if any(wh), doverbose = false; varargin(wh) = []; end
+if any(wh), doverbose = false; end
 
 wh = strcmp(varargin, 'nofigure');
 if any(wh), dofigure = false; varargin(wh) = []; end

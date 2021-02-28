@@ -18,14 +18,17 @@ function obj = legend(obj, varargin)
 % splitmap)
 %
 
-donewfig = 0;
+doverbose = true;
+donewfig = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-            case {'figure' 'newfig'}, donewfig = 1;
+            case {'figure' 'newfig'}, donewfig = true;
+               
+            case 'noverbose', doverbose = false;
                 
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
+            % otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
@@ -63,7 +66,7 @@ for c = 1:length(obj.activation_maps)
     scaleanchors(isnan(scaleanchors)) = 0;
     
     if ~diff(scaleanchors)
-        disp('No variability in mapped values. Not plotting legend.');
+        if doverbose, disp('No variability in mapped values. Not plotting legend.'); end
         continue
     end
     

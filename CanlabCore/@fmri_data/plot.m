@@ -333,8 +333,14 @@ switch plotmethod
             plot(find(wh_outlier_uncorr), Y(wh_outlier_uncorr), 'o', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
             plot(find(wh_outlier_corr), Y(wh_outlier_corr), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
             
-            legend({'Observed' 'Expected' 'Outliers (uncor)' 'Outliers (cor)'});
-
+            if any(wh_outlier_corr)
+                legend({'Observed' 'Expected' 'Outliers (uncor)' 'Outliers (cor)'});
+            elseif any(wh_outlier_uncorr)
+                legend({'Observed' 'Expected' 'Outliers (uncor)'});
+            else
+                legend({'Observed' 'Expected'});
+            end
+            
             ylabel('Mahalanobis Dist')
             %ylabel('Act-Exp Deviation');
             title('Multivar dist (outlier status)');

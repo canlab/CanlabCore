@@ -77,13 +77,13 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %   region_objects: {[1×X region]  [1×X region]} Region objects containing significant blobs with autolabeled names in .shorttitle
 %  contrast_tables_FDR05: {[X×8 table]  [X×8 table]} Table objects with labeled significant regions at q < 0.05 FDR 
 %
-%   **out2:**
-%        description of out2
+%   **names:**
+%        followed by cell array of names for each regressor
 %
-%   **'doplot', [logical flag]:**
+%   **'doplot', [logical flag]:
 %        Create plots; default = true. 'noplot' to turn off.
 %
-%   **'doverbose', [logical flag]:**
+%   **'doverbose', [logical flag]:
 %        Verbose output; default = true. 'noverbose' to turn off.
 %
 % :Examples:
@@ -187,6 +187,16 @@ k = size(X, 2); % number of maps to estimate - one per regressor
 names = cell(1, k);
 for i = 1:k-1, names{i} = sprintf('Predictor %d', i); end, names{k} = 'Intercept (Group avg)';
 
+% Replace names if entered
+if isfield(ARGS, 'names')
+    
+    names = ARGS.names;
+    if length(names) < k
+        names{k} = 'Intercept (Group avg)';
+    end
+    
+end
+
 % --------------------------------------------
 % Initialize output arrays
 % --------------------------------------------
@@ -251,7 +261,12 @@ for i = 1:k
     FDRq(:, i) = mafdr(pvalues(:, i));
     
     % P-threshold for FDR q < 0.05 for each map
-    pthr(i) = max(pvalues(FDRq(:, i) < 0.05, i));
+    pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));
+    if isempty(pthr_i)
+        pthr(i) = Inf;
+    else
+        pthr(i) = pthr_i;
+    end
 end
 
 sig_q05 = FDRq < 0.05;
@@ -350,42 +365,6 @@ OUT.outliers_uncorr = wh_outlier_uncorr | wh_outlier_uncorr_cov;
 
 OUT.ind_quality_dat = [mean(OUT.weights)' OUT.individual_metrics.csf_to_gm_signal_ratio' OUT.individual_metrics.gm_L1norm OUT.individual_metrics.csf_L1norm ds dscov];
 
-
-%%
-% --------------------------------------------
-% Print montages and tables of regions at q < 0.05 FDR
-% --------------------------------------------
-if doverbose
-    
-    printhdr('Tables of regions at q < 0.05 FDR');
-    
-    OUT.region_objects = cell(1, k);
-    
-end
-
-for i = 1:k
-    
-    printhdr(sprintf('Predictor %d: %s', i, names{i}));
-    
-    if doplots
-        canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
-    end
-    
-    if doverbose
-        
-        r = region(get_wh_image(OUT.t_obj, i), 'noverbose');
-        
-        [posr, negr, OUT.contrast_tables_FDR05{i}] = table(r, 'nolegend');
-        
-        disp(' ')
-        
-        OUT.region_objects{i} = [posr negr];
-        
-    end
-
-end
-
-%%
 if doplots
     
     % --------------------------------------------
@@ -403,13 +382,56 @@ if doplots
     
     drawnow, snapnow;
     
-    if size(imgs.dat, 2) > 42
-        histogram(imgs, 'by_image', 'singleaxis');
-    else
-        histogram(imgs, 'by_image');
+end
+
+%%
+% --------------------------------------------
+% Print montages and tables of regions at q < 0.05 FDR
+% --------------------------------------------
+if doverbose
+    
+    printhdr('Tables of regions at q < 0.05 FDR');
+    
+    OUT.region_objects = cell(1, k);
+    
+end
+
+for i = 1:k
+    
+    printhdr(sprintf('Predictor %d: %s', i, names{i}));
+    
+    if doplots && ~isinf(OUT.pthr_FDRq05(i)) % if we have some results to show
+        
+        canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
+        
+        set(gcf, 'Name', names{i}, 'NumberTitle', 'off');
+        
     end
     
-    drawnow, snapnow;
+    if doverbose
+        
+        r = region(get_wh_image(OUT.t_obj, i), 'noverbose');
+        
+        if isempty(r)
+            OUT.contrast_tables_FDR05{i} = 'No significant results at FDR q < 0.05';
+            disp(OUT.contrast_tables_FDR05{i})
+            OUT.region_objects{i} = region();
+            
+        else
+            [posr, negr, OUT.contrast_tables_FDR05{i}] = table(r, 'nolegend');
+            OUT.region_objects{i} = [posr negr];
+        end
+        
+        disp(' ')
+        
+        
+        
+    end
+
+end
+
+%%
+if doplots
     
     % --------------------------------------------
     % Weights and diagnostics figure
@@ -419,6 +441,7 @@ if doplots
     xlabel('Image'); ylabel('Weights');
     errorbar(mean(OUT.weights), std(OUT.weights), 'bo', 'MarkerFaceColor', [0 0 .5])
     title('Mean weights across parcels (s.d. error bars) per image');
+    axis tight; 
     
     subplot(2, 2, 2);
     imagesc(OUT.weights);
@@ -437,8 +460,19 @@ if doplots
     plot(zscore(ds), 'LineWidth', 2);
     plot(zscore(dscov), 'LineWidth', 2);
     legend({'Z(Weights)' 'Z(GM L1 norm)' 'Z(CSF L1 norm)' 'Mahal corr dist' 'Mahal cov dist'});
+    axis tight; 
     
-    % ***mark off who are outliers
+    % mark off who are outliers
+    wh_out = find(OUT.outliers_uncorr);
+    for i = 1:length(wh_out)
+        
+        hh = plot_vertical_line(wh_out(i));
+        set(hh, 'Color', 'r', 'LineStyle', '--');
+        
+        if i == 1
+                legend({'Z(Weights)' 'Z(GM L1 norm)' 'Z(CSF L1 norm)' 'Mahal corr dist' 'Mahal cov dist' 'Mah. outliers p<.05 uncor'});
+        end
+    end
     
     subplot(2, 2, 4)
     plot_correlation_matrix(datmatrix, 'dofigure', false);
@@ -483,7 +517,7 @@ valfcn_scalar = @(x) validateattributes(x, {'numeric' 'logical'}, {'nonempty', '
 % Pattern: keyword, value, validation function handle
 
 % p.addParameter('color', [.9 .2 0], valfcn_xyz);
-p.addParameter('names', {}, @cell); % can be scalar or vector
+p.addParameter('names', {}, @iscell); % can be scalar or vector
 p.addParameter('doverbose', true, valfcn_scalar);
 p.addParameter('doplots', true, valfcn_scalar);
 

@@ -118,11 +118,16 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %
 % Adjust for global intensity and global components and re-run:
 % imgs2 = imgs.rescale('l2norm_images');
-% imgs2 = imgs2.preprocess('remove_white_csf'); ** don't do this**
 % OUT = robfit_parcelwise(imgs2);
 %
+% Run adding global WM and CSF signal covariates:
+% OUT = robfit_parcelwise(imgs2, 'csf_wm_covs');
+%
+% run with global covariates and removing outliers based on Mahalanobis distance:
+% OUT = robfit_parcelwise(imgs2, 'csf_wm_covs', 'remove_outliers');
+%
 % :References:
-%   CITATION(s) HERE
+%   None listed yet.
 %
 % :See also:
 %   - list other functions related to this one, and alternatives*

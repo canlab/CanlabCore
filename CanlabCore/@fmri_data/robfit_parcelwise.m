@@ -86,6 +86,15 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %   **'doverbose', [logical flag]:
 %        Verbose output; default = true. 'noverbose' to turn off.
 %
+%   **'csf_wm_covs', [logical flag]:
+%        Add global WM and CSF from standard MNI-space masks as covariates
+%        default = false 
+% 
+%   **'remove_outliers', [logical flag]:
+%        Remove outliers identified based on mahalanobis distance on either 
+%        cov or corr across images at p < 0.05 uncorrected 
+%        default = false 
+%
 % :Examples:
 % ::
 %
@@ -109,7 +118,7 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %
 % Adjust for global intensity and global components and re-run:
 % imgs2 = imgs.rescale('l2norm_images');
-% imgs2 = imgs2.preprocess('remove_white_csf');
+% imgs2 = imgs2.preprocess('remove_white_csf'); ** don't do this**
 % OUT = robfit_parcelwise(imgs2);
 %
 % :References:
@@ -149,10 +158,8 @@ end
 % Checks for required functions
 if isempty(which('mafdr')), error('Sorry, you need the Matlab bioinformatics toolbox on your Matlab path to use the Storey 2002 mafdr function called here.'); end
 
-
-
 % Load parcel atlas and initalize object
-b = brainpathway();
+b = brainpathway('noverbose');
 
 % Make image space match atlas space
 imgs = resample_space(imgs, b.region_atlas);
@@ -160,9 +167,32 @@ imgs = resample_space(imgs, b.region_atlas);
 % Trigger extraction and averaging of parcel-wise data
 b.voxel_dat = imgs.dat;
 
-%%
 datmatrix = double(b.region_dat);
 [t, v] = size(datmatrix);
+
+
+% --------------------------------------------
+% Run QC metrics and get image diagnostic info
+% --------------------------------------------
+if doverbose
+         
+    dashes = '__________________________________________________________________';
+    printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
+    
+    printhdr('Input image diagnostic information');
+    
+end
+
+% mahalanobis distance
+[ds, ~, ~, wh_outlier_uncorr, wh_outlier_corr] = mahal(imgs, 'noplot', 'corr');
+[dscov, ~, ~, wh_outlier_uncorr_cov, wh_outlier_corr_cov] = mahal(imgs, 'noplot');
+
+[group_metrics, individual_metrics, global_gm_wm_csf_values] = qc_metrics_second_level(imgs); % , values, gwcsf, gwcsfmean, gwcsfl2norm
+
+
+outliers_uncorr = wh_outlier_uncorr | wh_outlier_uncorr_cov;
+outliers_corr = wh_outlier_corr | wh_outlier_corr_cov;
+
 
 % --------------------------------------------
 % set up and check design
@@ -197,6 +227,80 @@ if isfield(ARGS, 'names')
     
 end
 
+
+% --------------------------------------------
+% Additional covariates and adjustments
+% --------------------------------------------
+
+% Add CSF and WM covs if requested
+
+if csf_wm_covs
+    
+    % Add global WM and CSF to design matrix and names
+    X = [X(:, 1:end-1) global_gm_wm_csf_values(:, 2:3) X(:, end)];
+    
+    names = [names(1:end-1) {'Global_WM' 'Global_CSF'} names(end)];
+    
+    k = k + 2;
+    
+    if doverbose
+        fprintf('Adjustments: Added Global WM and CSF covariates\n', sum(outliers_uncorr));
+    end
+    
+end
+
+
+if remove_outliers 
+    % Remove outliers (uncorr means uncorrected)
+    % We do not pass out imgs, so no need to adjust other fields.
+    
+    X(outliers_uncorr, :) = [];
+    
+    datmatrix(outliers_uncorr, :) = [];
+
+    if doverbose
+        fprintf('Adjustments: Removed %d outlier images\n', sum(outliers_uncorr));
+    end
+
+    t = t - sum(outliers_uncorr);
+    
+    individual_metrics.csf_to_gm_signal_ratio(outliers_uncorr) = []; 
+    individual_metrics.gm_L1norm(outliers_uncorr) = []; 
+    individual_metrics.csf_L1norm(outliers_uncorr) = [];
+    ds(outliers_uncorr) = []; 
+    dscov(outliers_uncorr) = [];
+    
+end
+
+% --------------------------------------------
+% Plot design matrix
+% --------------------------------------------
+
+if doplots && k > 2
+    
+    create_figure('design matrix', 1, 2);
+    
+    Xplot = zscore(X);
+    Xplot(:, end) = 1;
+    
+    imagesc(Xplot);
+    set(gca, 'XTick', 1:k, 'XTickLabel', format_strings_for_legend(names), 'XTickLabelRotation', 45, 'YDir', 'reverse');
+    axis tight
+    title('Z-scored Design Matrix');
+    
+    subplot(1, 2, 2);
+    
+    plot_correlation_matrix(X(:, 1:end-1), 'names', names(1:end-1), 'nofigure');
+    title('Correlations among predictors')
+    
+    subplot(1, 2, 1);
+    colormap(gca, 'summer')
+    colormap(gca, 'winter'); colorbar
+
+    drawnow, snapnow
+    
+end
+
 % --------------------------------------------
 % Initialize output arrays
 % --------------------------------------------
@@ -221,7 +325,7 @@ for i = 1:v
     
     if isok
         % OK to run
-        [bb,stats]=robustfit(Xvox, tvox, 'bisquare', [], 'off');
+        [bb,stats] = robustfit(Xvox, tvox, 'bisquare', [], 'off');
         
         w = naninsert(wasnan, stats.w);
         
@@ -281,8 +385,13 @@ maxn = max(OUT.nsubjects);
 OUT.cohens_d_fdr05 = tinv(1 - OUT.pthr_FDRq05, maxn - k) ./ sqrt(maxn - k);
 OUT.cohens_d_fdr05_descrip = 'Min Cohen''s d detectable at FDR q < 0.05';
 
-% sum(sig_q05)  Sig parcels
-
+% QC metrics
+OUT.group_metrics = group_metrics;
+OUT.individual_metrics = individual_metrics;
+OUT.global_gm_wm_csf_values = global_gm_wm_csf_values;
+OUT.outliers_corr = outliers_corr;
+OUT.outliers_uncorr = outliers_uncorr;
+OUT.ind_quality_dat = [mean(OUT.weights)' OUT.individual_metrics.csf_to_gm_signal_ratio' OUT.individual_metrics.gm_L1norm OUT.individual_metrics.csf_L1norm ds dscov];
 
 % --------------------------------------------
 % Transform back to voxelwise output maps
@@ -293,11 +402,13 @@ OUT.t_obj = parcel_stats2statistic_image(b.region_atlas, tscores, pvalues, dfe, 
 OUT.beta_obj = parcel_data2fmri_data(b.region_atlas, betas);
 
 % --------------------------------------------
-% Create mask (could do this from nsubjects later)
+% Create mask and nsubjects
 % --------------------------------------------
 
 mask = parcel_data2fmri_data(b.region_atlas, ones(v, 1));
 OUT.mask = mask;
+
+OUT.nsubjects_obj = parcel_data2fmri_data(b.region_atlas, nsubjects);
 
 % mask = get_wh_image(OUT.t_obj, 1);
 % mask = threshold(mask, 1 - eps, 'unc', 'noverbose');
@@ -327,11 +438,7 @@ OUT.resultstable = resultstable;
 if doverbose
     
     % Print to screen
-    
-    dashes = '__________________________________________________________________';
-%     printstr = @(dashes) disp(dashes);
-    printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
-    
+
     printhdr(resultstable.Properties.Description);
     disp(resultstable);
     disp(' ')
@@ -343,46 +450,6 @@ if doverbose
     
 end
 
-% --------------------------------------------
-% Get diagnostic info
-% --------------------------------------------
-if doverbose
-    
-    printhdr('Input image diagnostic information');
-    
-end
-
-[OUT.group_metrics, OUT.individual_metrics] = qc_metrics_second_level(imgs); % , values, gwcsf, gwcsfmean, gwcsfl2norm
-
-% mahalanobis distance
-[ds, ~, ~, wh_outlier_uncorr, wh_outlier_corr] = mahal(imgs, 'noplot', 'corr');
-[dscov, ~, ~, wh_outlier_uncorr_cov, wh_outlier_corr_cov] = mahal(imgs, 'noplot');
-
-OUT.outliers_corr = wh_outlier_corr | wh_outlier_corr_cov;
-OUT.outliers_uncorr = wh_outlier_uncorr | wh_outlier_uncorr_cov;
-
-% save quality dat
-
-OUT.ind_quality_dat = [mean(OUT.weights)' OUT.individual_metrics.csf_to_gm_signal_ratio' OUT.individual_metrics.gm_L1norm OUT.individual_metrics.csf_L1norm ds dscov];
-
-if doplots
-    
-    % --------------------------------------------
-    % Mask Figure
-    % --------------------------------------------
-    
-    create_figure('mask'); axis off; montage(OUT.mask, 'color', [0 .5 0], 'trans', 'noverbose');
-    
-    drawnow, snapnow;
-    
-    % --------------------------------------------
-    % Data Figure
-    % --------------------------------------------
-    create_figure('data'); axis off; plot(imgs);
-    
-    drawnow, snapnow;
-    
-end
 
 %%
 % --------------------------------------------
@@ -430,8 +497,27 @@ for i = 1:k
 
 end
 
-%%
+
+% --------------------------------------------
+% Additional diagnostic info
+% --------------------------------------------
+    
 if doplots
+    
+    % --------------------------------------------
+    % Mask Figure
+    % --------------------------------------------
+    
+    create_figure('mask'); axis off; montage(OUT.mask, 'color', [0 .5 0], 'trans', 'noverbose');
+    
+    drawnow, snapnow;
+    
+    % --------------------------------------------
+    % Data Figure
+    % --------------------------------------------
+    plot(imgs);
+    
+    drawnow, snapnow;
     
     % --------------------------------------------
     % Weights and diagnostics figure
@@ -520,6 +606,10 @@ valfcn_scalar = @(x) validateattributes(x, {'numeric' 'logical'}, {'nonempty', '
 p.addParameter('names', {}, @iscell); % can be scalar or vector
 p.addParameter('doverbose', true, valfcn_scalar);
 p.addParameter('doplots', true, valfcn_scalar);
+p.addParameter('csf_wm_covs', false, valfcn_scalar);
+p.addParameter('remove_outliers', false, valfcn_scalar);
+
+
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------

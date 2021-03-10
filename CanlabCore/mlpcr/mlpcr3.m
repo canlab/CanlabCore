@@ -184,16 +184,18 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     
     % get centering and expansion matrices
     n_grp = length(uniq_grp);
-    cmat = [];
-    emat = [];
+    cmat = cell(1,n_grp);
+    emat = cell(1,n_grp);
     sf = []; % scale factor for imbalanced datasets
     for i = 1:n_grp
         this_grp = uniq_grp(i);
         this_n = sum(this_grp == subjIDs);
-        cmat = blkdiag(cmat, eye(this_n) - 1/this_n);
-        emat = blkdiag(emat,ones(this_n,1));
+        cmat{i} = eye(this_n) - 1/this_n;
+        emat{i} = ones(this_n,1);
         sf = [sf(:); 1/sqrt(this_n)*ones(this_n,1)];
     end
+    cmat = blkdiag(cmat{:});
+    emat = blkdiag(emat{:});
     if ~cpca
         sf = ones(size(sf));
     end

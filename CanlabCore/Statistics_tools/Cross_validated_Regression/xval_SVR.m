@@ -78,6 +78,7 @@ function S = xval_SVR(varargin)
 %   **id:**
 %        obs x 1 numeric vector of grouping codes, e.g., for participants
 %        all obs from each group will be included together in a training or test set
+%        if no grouping, use integers 1...n images or leave empty
 %
 % :Optional Inputs:
 %   **'doplot', [logical flag]:**
@@ -196,6 +197,8 @@ function S = xval_SVR(varargin)
 %             Optim.: Allow control of verbosity and plots. No plots/verbose in nested eval.
 %             Optim: use best estim, not best observed
 %             Have a look at the data and add data plots. Sorted by cases
+%   ver 1.2   Cosmetic documentation and look updates
+%
 %   Future:
 %             Enforce [1 -1] inputs
 %             Troubleshoot prediction vs. class probability reversals
@@ -244,6 +247,8 @@ if exist('dooptimize1', 'var'), dooptimize = dooptimize1; end
 if exist('dorepeats1', 'var'), dorepeats = dorepeats1; end
 if exist('dobootstrap1', 'var'), dobootstrap = dobootstrap1; end
 
+if isempty(id), id = [1:length(Y)]'; end
+if ~iscolumn(id), id = id'; end
 
 %% Select holdout sets for outer loop
 % - Keep images from the same id together
@@ -912,7 +917,9 @@ axis tight; set(gca, 'YDir', 'reverse');
 % set(gca, 'XTick', [1 2], 'XTickLabel', {'Y' 'id'});
 title('Inter-obs correlations sorted by Y [-1, 1]');
 
-colorbar
+cm = colormap_tor([0 0 1], [1 0 0], [1 1 1]);
+colormap(cm)
+set(gca, 'CLim', [-1 1])
 
 drawnow, snapnow
 end

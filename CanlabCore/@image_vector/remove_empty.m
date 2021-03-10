@@ -130,6 +130,10 @@ if isa(dat, 'statistic_image')
         myfield = {'p' 'ste' 'sig' 'N'};
     end
     
+    if ~isscalar(dat.dfe)
+        myfield(end+1) = {'dfe'};
+    end
+    
     for myfields = myfield
         
         % check orientation

@@ -56,6 +56,8 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %          - obj = preprocess(obj, 'interp_images', whout);
 %
 %   **remove_white_csf:**
+%        Note: Enter 'components' keyword to use 1st 5 comps of WM and CSF,
+%        or no keyword to use only WM and CSF mean global signal.
 %        Extract data values for gray, white, CSF
 %        Regress gray matter mean on first 5 components of white-matter and CSF
 %        Remove the fitted values from the images image-wise
@@ -78,13 +80,15 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %        This is because work, e.g., that of John Gore, suggests there is likely
 %        real signal in WM, so removing it can cause real signal to be
 %        removed
+%        Note: Enter 'components' keyword to use 1st 5 comps of CSF,
+%        or no keyword to use only CSF mean global signal.
 %
 %   **rescale_by_csf:**
 %       This attempts to model and remove scale inhomogeneity across
 %       images.  It estimates the relationship between the spatial median abs.
 %       deviation (MAD) for CSF voxels and for GM voxels. The proportion of the GM deviation 
 %       for each image fitted by CSF is divided out. 
-
+%
 % :Examples:
 % ::
 %
@@ -513,67 +517,34 @@ switch meth
         % ---------------------------------------------------------------------
     case 'remove_white_csf'
         % ---------------------------------------------------------------------
-        
-        doplot = any(strcmp(varargin, 'plot'));
-        
-        [means, components] = extract_gray_white_csf(obj);
-        
-        x = cat(2, components{2:3});        % predictors: white and csf only
-        
-        wh_gray_white = 1:size(x, 2);
-        
-        meangray = means(:, 1);             % mean gray matter for each image
-        
-        if isa(obj, 'fmri_data') && ~isempty(obj.images_per_session)
-            
-            xi = intercept_model(obj.images_per_session);
-            x = [x xi];                       % model
-            gray_tmp = resid(xi, meangray);   % for partial correlation
-            
-        else
-            gray_tmp = meangray;
-        end
-        
-        % regress out signal explainable by gray/white (fits)
-        % estimate regression coefficients for
-        % gray matter average predicted by white-matter and CSF covariates
-        
-        b = pinv(x) * meangray;
-        
-        fit = x(:, wh_gray_white) * b(wh_gray_white);
-        
-        % get correlation value
-        
-        r = corr(gray_tmp, fit);
-        
-        if doplot
-            create_figure('gray predicted from white/CSF components')
-            plot_correlation_samefig(fit, meangray);
-        end
-        
-        sz = size(obj.dat);
-        to_subtract = repmat(fit', sz(1), 1);
-        
-        obj.dat = obj.dat - to_subtract;
-        
-        obj.history{end + 1} = sprintf('Regressed out white/CSF components image-wise. \nCorrelation between predicted and actual mean gray matter before removal: r = %3.4f', r);
-        
-        % ---------------------------------------------------------------------
-    case 'remove_csf'
-        % ---------------------------------------------------------------------
+        % Programmers' notes: Tor Wager Feb 2021: Check and add intercept
+        % to model. Only adjust gray matter vox, not all vox. Option to
+        % remove based on mean CSF signal only or all components.
+        % (Components will overfit with small datasets).
+        % Updated plot.
         
         obj = remove_empty(obj);
         
         doplot = any(strcmp(varargin, 'plot'));
+        docomponents = any(strcmp(varargin, 'components'));
+
+        [means, components, gwcsf] = extract_gray_white_csf(obj);
         
-        [means, components] = extract_gray_white_csf(obj);
+        gm = means(:, 1);  % mean gray matter for each image
+        wm = means(:, 2);
+        csf = means(:, 3);
         
-        x = cat(2, components{3});
-        % predictors: csf only. This is because work, e.g., that of John Gore, suggests there may be real signal in WM
+        if docomponents
+            x_noi = [cat(2, components{2}) cat(2, components{3})];
+        else
+            x_noi = [csf wm];
+        end
         
-        wh_gray_white = 1:size(x, 2);       % here, CSF, not really gray.white
-        
-        meangray = means(:, 1);             % mean gray matter for each image
+        X = [x_noi ones(size(csf))];
+
+        % predictors: csf only? This is because work, e.g., that of John Gore, suggests there may be real signal in WM
+        % But there's probably little WM signal too, and it's more
+        % correlated with gm...     
         
         if isa(obj, 'fmri_data') && ~isempty(obj.images_per_session)
             
@@ -589,42 +560,159 @@ switch meth
             xi(:, end) = 1;                   % now we can add the intercept
 
             x = [x xi];                       % model
-            gray_tmp = resid(xi, meangray);   % for partial correlation
+            gm = resid(xi, gm);   % for partial correlation
             
         else
-            gray_tmp = meangray;
+            % gray_tmp = gm; no need to do anything
         end
         
+               
         % regress out signal explainable by gray/white (fits)
         % estimate regression coefficients for
         % gray matter average predicted by white-matter and CSF covariates
         
-        b = pinv(x) * meangray;
+        gm_adj = resid(x_noi, gm, true);
+
+        % get equation to apply to each voxel i for subject s
+        % vox_i - b1 * csf_s + b2
+        % this applies only to gray matter, as we're estimating intercept for gm
+        % vs. csf.  (And no-intercept model does not make sense, as we don't want
+        % to assume global gm = global csf).
         
-        % partial fit of nuisance
-        fit = x(:, wh_gray_white) * b(wh_gray_white);
+        b = pinv(X) * gm; 
         
-        % get correlation value
+        fit = x_noi * b(1:end-1);
+        adj_factor = (b(end) - fit)';  % add this to each voxel
         
-        r = corr(gray_tmp, fit);
+         % get correlation value for reporting
         
-        if doplot
-            create_figure('gray predicted from CSF components')
-            plot_correlation_samefig(fit, meangray);
-            xlabel('Predicted mean from CSF');
-            ylabel('Observed gray-matter mean');
-        end
+        r = corr(gm, fit);
+        
         
         % Subtract fitted value for overall GM as predicted from CSF for
         % each image.
-        % Then add back in the intercept (overall mean)
-        sz = size(obj.dat);
-        to_subtract = repmat(fit', sz(1), 1);
+        % add back in the intercept (overall mean)
+        wh_gm = ~gwcsf{1}.removed_voxels;
         
-%         obj.dat = remove_empty(obj.dat);  % components in reduced space
-        obj.dat = obj.dat - to_subtract;
+        obj.dat(wh_gm, :) = obj.dat(wh_gm, :) + repmat(adj_factor, sum(wh_gm), 1);
         
-        obj.history{end + 1} = sprintf('Regressed out CSF components image-wise. \nCorrelation between predicted and actual mean gray matter before removal: r = %3.4f', r);
+        obj.history{end + 1} = sprintf('Regressed out WM+CSF global values image-wise. \nCorrelation between predicted and actual global gray matter before removal: r = %3.4f', r);
+        
+        if doplot
+            create_figure('gray predicted from CSF+WM')
+            plot(fit, gm, 'o', 'MarkerFaceColor', [0 .3 .8]);
+            refline
+            plot(fit, gm_adj, 'o', 'MarkerFaceColor', [.8 .3 0]);  % gm intensity is now unrelated to csf 
+            refline
+            xlabel('Predicted global GM from CSF+WM');
+            ylabel('Observed gray-matter (GM) mean');
+            legend({'Original' 'Adjusted'});
+            
+            disp(obj.history{end});
+        end
+        
+        % ---------------------------------------------------------------------
+    case 'remove_csf'
+        % ---------------------------------------------------------------------
+        % Programmers' notes: Tor Wager Feb 2021: Check and add intercept
+        % to model. Only adjust gray matter vox, not all vox. Option to
+        % remove based on mean CSF signal only or all components.
+        % (Components will overfit with small datasets).
+        % Updated plot.
+        
+        obj = remove_empty(obj);
+        
+%         docomponents = false;
+        
+        doplot = any(strcmp(varargin, 'plot'));
+        docomponents = any(strcmp(varargin, 'components'));
+        
+        [means, components, gwcsf] = extract_gray_white_csf(obj);
+        
+        gm = means(:, 1);  % mean gray matter for each image
+        wm = means(:, 2);
+        csf = means(:, 3);
+
+        
+        
+        if docomponents
+            x_noi = cat(2, components{3});
+        else
+            x_noi = [csf];
+        end
+        
+        X = [x_noi ones(size(csf))];
+
+        % predictors: csf only? This is because work, e.g., that of John Gore, suggests there may be real signal in WM
+        % But there's probably little WM signal too, and it's more
+        % correlated with gm...     
+        
+        if isa(obj, 'fmri_data') && ~isempty(obj.images_per_session)
+            
+            % create orthogonal contrast set with session/set intercepts
+            % doesn't actually need to be orthogonalized if we are not
+            % removing the session intercepts
+
+            xi = intercept_model(obj.images_per_session);
+
+            c = create_orthogonal_contrast_set(size(xi, 2));
+
+            xi = xi * c';                     % orthogonal set of nsessions - 1
+            xi(:, end) = 1;                   % now we can add the intercept
+
+            x = [x xi];                       % model
+            gm = resid(xi, gm);   % for partial correlation
+            
+        else
+            % gray_tmp = gm; no need to do anything
+        end
+        
+               
+        % regress out signal explainable by gray/white (fits)
+        % estimate regression coefficients for
+        % gray matter average predicted by white-matter and CSF covariates
+        
+        gm_adj = resid(x_noi, gm, true);
+
+        % get equation to apply to each voxel i for subject s
+        % vox_i - b1 * csf_s + b2
+        % this applies only to gray matter, as we're estimating intercept for gm
+        % vs. csf.  (And no-intercept model does not make sense, as we don't want
+        % to assume global gm = global csf).
+        
+        b = pinv(X) * gm; 
+        
+        fit = x_noi * b(1:end-1);
+        adj_factor = (b(end) - fit)';  % add this to each voxel
+        
+         % get correlation value for reporting
+        
+        r = corr(gm, fit);
+        
+        
+        % Subtract fitted value for overall GM as predicted from CSF for
+        % each image.
+        % add back in the intercept (overall mean)
+        wh_gm = ~gwcsf{1}.removed_voxels;
+        
+        obj.dat(wh_gm, :) = obj.dat(wh_gm, :) + repmat(adj_factor, sum(wh_gm), 1);
+        
+        obj.history{end + 1} = sprintf('Regressed out CSF global values image-wise. \nCorrelation between predicted and actual global gray matter before removal: r = %3.4f', r);
+        
+        
+        if doplot
+            create_figure('gray predicted from CSF')
+            plot(fit, gm, 'o', 'MarkerFaceColor', [0 .3 .8]);
+            refline
+            plot(fit, gm_adj, 'o', 'MarkerFaceColor', [.8 .3 0]);  % gm intensity is now unrelated to csf 
+            refline
+            xlabel('Predicted global GM from CSF');
+            ylabel('Observed gray-matter (GM) mean');
+            legend({'Original' 'Adjusted'});
+            
+            disp(obj.history{end});
+        end
+        
         
         % ---------------------------------------------------------------------
     case 'rescale_by_csf'

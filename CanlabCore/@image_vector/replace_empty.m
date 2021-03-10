@@ -68,6 +68,12 @@ if dovoxels && any(obj.removed_voxels)
         if ~isscalar(obj.N)
             if ~isempty(obj.N), obj.N = zeroinsert(obj.removed_voxels, obj.N); end
         end
+        
+        % Same for dfe
+        if ~isscalar(obj.dfe)
+            if ~isempty(obj.dfe), obj.dfe = zeroinsert(obj.removed_voxels, obj.dfe); end
+        end
+        
     end
     
     if isa(obj, 'atlas')

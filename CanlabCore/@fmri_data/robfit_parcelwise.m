@@ -223,7 +223,7 @@ names = cell(1, k);
 for i = 1:k-1, names{i} = sprintf('Predictor %d', i); end, names{k} = 'Intercept (Group avg)';
 
 % Replace names if entered
-if isfield(ARGS, 'names')
+if isfield(ARGS, 'names') && ~isempty(ARGS.names)
     
     names = ARGS.names;
     if length(names) < k
@@ -274,6 +274,8 @@ if remove_outliers
     individual_metrics.csf_L1norm(outliers_uncorr) = [];
     ds(outliers_uncorr) = []; 
     dscov(outliers_uncorr) = [];
+    
+    global_gm_wm_csf_values(outliers_uncorr, :) = [];
     
 end
 
@@ -396,7 +398,18 @@ OUT.individual_metrics = individual_metrics;
 OUT.global_gm_wm_csf_values = global_gm_wm_csf_values;
 OUT.outliers_corr = outliers_corr;
 OUT.outliers_uncorr = outliers_uncorr;
-OUT.ind_quality_dat = [mean(OUT.weights)' OUT.individual_metrics.csf_to_gm_signal_ratio' OUT.individual_metrics.gm_L1norm OUT.individual_metrics.csf_L1norm ds dscov];
+
+Global_Weight_Mean = mean(OUT.weights)';
+global_GM = global_gm_wm_csf_values(:, 1);
+global_WM = global_gm_wm_csf_values(:, 2);
+global_CSF = global_gm_wm_csf_values(:, 3);
+CSF_to_GM_ratio = OUT.individual_metrics.csf_to_gm_signal_ratio';
+GM_L1_norm = OUT.individual_metrics.gm_L1norm;
+CSF_L1_norm = OUT.individual_metrics.csf_L1norm;
+Mahal_corr = ds;
+Mahal_cov = dscov;
+
+OUT.ind_quality_dat = table(Global_Weight_Mean, global_GM, global_WM, global_CSF, GM_L1_norm, CSF_L1_norm, CSF_to_GM_ratio, Mahal_corr, Mahal_cov);
 
 % --------------------------------------------
 % Transform back to voxelwise output maps
@@ -619,6 +632,7 @@ p.addParameter('remove_outliers', false, valfcn_scalar);
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------
 % e.g., p.parse([30 1 0], [-40 0 10], 'bendpercent', .1);
+
 p.parse(varargin{:});
 
 ARGS = p.Results;

@@ -127,6 +127,10 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %    near-boundary voxels
 % ..
 
+% -------------------------------------------------------------------------
+% Default values
+% -------------------------------------------------------------------------
+
 doverbose = true;
 myview = mymontage.orientation;
 
@@ -143,42 +147,23 @@ outline = 0;
 mylinewidth = 2;
 interpStyle = 'linear';
 
+vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+
 % color-mapped blobs options
 docolormap = 1;
 mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
 
-mapd = currentmap.mapdata(:); mapd = mapd(mapd ~= 0 & ~isnan(mapd));
-cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+% -------------------------------------------------------------------------
+% Set default cmaprange
+% -------------------------------------------------------------------------
 
-vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+cmaprange = get_default_cmaprange(currentmap, varargin{:});
 
-% adjust defaults
-prct_splitcolor = 20;
-if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    % auto-determine colormap range cmaprange
-    
-    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-    
-    while numel(unique(cmaprange)) < 4
-        
-        prct_splitcolor = prct_splitcolor - 5;
-        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-        
-        if prct_splitcolor == 0
-            %             warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
-            cmaprange([2 3]) = cmaprange([1 4])*0.9;
-            break;
-        end
-        
-    end
-end
-
+% -------------------------------------------------------------------------
+% Optional inputs
+% -------------------------------------------------------------------------
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -236,7 +221,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
                 % other related functions, including calling functions, and can be ignored here.
@@ -251,6 +236,10 @@ for i = 1:length(varargin)
     end
 end
 
+% -------------------------------------------------------------------------
+% Additional variable setup
+% -------------------------------------------------------------------------
+
 if ~exist('edgecolor', 'var'), edgecolor = color; end
 
 blobhan = [];
@@ -259,9 +248,12 @@ isvalid = ~isempty(mymontage) && isfield(mymontage, 'axis_handles') && all(ishan
 
 if ~isvalid, return, end
 
-
 handles = mymontage.axis_handles;
 n = length(handles);
+
+% -------------------------------------------------------------------------
+% Identify slice and orientation for each of n handles (blobs)
+% -------------------------------------------------------------------------
 
 % for each slice...
 
@@ -332,6 +324,7 @@ if doverbose
     fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
 end
 
+% -------------------------------------------------------------------------
 % SETUP smoothing, contours
 % -------------------------------------------------------
 if dosmooth
@@ -371,7 +364,7 @@ if ~docontour
 end % end if docontour
 
 % -----------------------------------------------------------
-% Loop through slices to plot
+% Loop through slices to render blobs
 % -----------------------------------------------------------
 
 for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
@@ -588,8 +581,14 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
             blobhan{j} = h;
             
         end % any slicedat(:)
+        
     end % if wh_slice is true
+    
 end % slices
+
+% -------------------------------------------------------------------------
+% Final cleanup and outputs
+% -------------------------------------------------------------------------
 
 if ~isempty(blobhan)
     blobhan = cat(1, blobhan{:});
@@ -605,6 +604,10 @@ end
 end  % main function
 
 
+
+% -------------------------------------------------------------------------
+% Subfunctions
+% -------------------------------------------------------------------------
 
 
 function cdat = define_cdat(sz, color)
@@ -682,3 +685,53 @@ slicecdat = slicecdat + slicecdat2;
 
 end % function
 
+
+
+
+
+
+
+function cmaprange = get_default_cmaprange(currentmap, varargin)
+
+mapd = currentmap.mapdata(:);
+mapd = mapd(mapd ~= 0 & ~isnan(mapd));
+
+if any(isinf(mapd))
+    warning('Some image values are Inf. Expect erratic behavior/errors.');
+    whinf = isinf(mapd);
+    mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf)));
+end
+
+% Default for non-splitcolor
+cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+
+% cmaprange = double([prctile(mapd(mapd < 0), 10) prctile(mapd(mapd > 0), 90)]); % Match defaults for region.surface in render_on_surface.m
+        
+% adjust defaults if splitcolor is entered, without pre-defined cmaprange
+
+prct_splitcolor = 20;
+if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
+    
+    % auto-determine colormap range cmaprange
+    
+    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+    
+    while numel(unique(cmaprange)) < 4
+        
+        prct_splitcolor = prct_splitcolor - 5;
+        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+        
+        if prct_splitcolor == 0
+            %             warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
+            cmaprange([2 3]) = cmaprange([1 4])*0.9;
+            break;
+        end
+        
+    end
+end
+
+end % function

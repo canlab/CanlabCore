@@ -17,16 +17,58 @@ function statsimg = ttest(fmridat, pvalthreshold, thresh_type)
 % :Examples:
 % ::
 %
-%     %T-test, Construct a stats_image object, threshold and display:
-%     statsimg = ttest(fmridat, .001, 'unc');
-%     orthviews(statsimg);
+% % Group one-sample t-test: 
+% % A simple, complete example of a group analysis
+% % For more, see walkthroughs on canlab.github.io 
+% % --------------------------------------------------------------------
+% % Load sample images, creating and fmri_data class object with 30 images     
+%     imgs = load_image_set('emotionreg');
 %
-%     %Re-threshold and display:
-%     statsimg = threshold(statsimg, .000001, 'unc');
-%     orthviews(statsimg);
+% % Display a slice from each image in a montage:
+%     slices(imgs);
 %
-%     statsimg = threshold(statsimg, .01, 'fdr');
-%     orthviews(statsimg);
+% % Display some useful summary plots of the dataset:
+%     plot(imgs);
+%
+% % Perform a t-test on each voxel, returning a statistic_image object
+% % containing t-stats and p-values:
+%     t = ttest(imgs);
+%
+% % Display the unthresholded results in a quick-render montage of image
+% % values only:
+%     display_slices(t, 'axial'); colormap summer; colorbar;
+% 
+% % Display the unthresholded results over an anatomical underlay, 
+% % on a combination of slices and surfaces, 
+% % returning an fmridisplay class object with registered handles
+%     o2 = canlab_results_fmridisplay(t, 'full');
+%
+% % Remove colors from slices and surfaces registered in the o2 object:
+%     o2 = removeblobs(o2);
+%
+% % Threshold the t-statistic_image object at p < 0.005
+%     t = threshold(t, .005, 'unc');
+%
+% % Re-display the thresholded images on slices/surfaces registered in o2:
+%     o2 = addblobs(o2, region(t), 'nolegend');
+%
+% % Display the thresholded t-map with orthviews:
+%     orthviews(t);
+%
+% % display on a slice montage:
+%    create_figure('slices'); axis off; 
+%    montage(t);
+%
+% % Re-threshold at q < 0.05 FDR, and re-display on orthviews:
+%     t = threshold(t, .05, 'fdr');
+%     orthviews(t);
+%
+% % Print a table of results, and return a region-class object r with labels
+% % from a default atlas (an atlas-class object):
+%     r = table(t);
+%
+% % Display a slice montage showing each activation blob, with labels:
+%   montage(r, 'regioncenters', 'colormap');
 %
 % :Note: for two-sample T-test, use fmri_data.regress
 

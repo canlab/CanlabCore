@@ -208,6 +208,8 @@ basistype = 'spm+disp';
 
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
+keyword_inputs = {'noorthviews'};
+
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
 for i = 1:length(varargin)
@@ -217,6 +219,9 @@ for i = 1:length(varargin)
             case allowable_inputs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                     
+            case keyword_inputs
+                % Skip deal with this below
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -235,6 +240,9 @@ for i = 1:length(varargin)
             case {'rows', 'rowsz'}, rowsz = varargin{i+1}; varargin{i+1} = [];
             case 'plot', doplot = 1; 
             case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
+                
+            case allowable_inputs
+                % skip - handled above
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

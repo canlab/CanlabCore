@@ -641,6 +641,7 @@ else
         if doremove
             o2 = removeblobs(o2);
         end
+        
         wh_montages = 1:existingmons;
         wh_surfaces = 1:existingsurs;
 
@@ -659,7 +660,7 @@ end
 
 if doblobs
     if exist('wh_surfaces', 'var')
-        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, 'wh_surfaces', wh_surfaces, varargin{:});
+        o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, 'wh_surfaces', wh_surfaces, 'nolegend', varargin{:});
     else
         o2 = addblobs(o2, cl, 'splitcolor', splitcolor, 'wh_montages', wh_montages, varargin{:});
     end

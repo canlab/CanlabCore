@@ -65,6 +65,10 @@ for c = 1:length(obj.activation_maps)
     % adjuts in case there are no values on one end
     scaleanchors(isnan(scaleanchors)) = 0;
     
+    if any(isinf(scaleanchors))
+        warning('Some scale anchor values in fmridisplay obj.activation_maps.cmaprange are Inf. Expect erratic behavior/errors.');
+    end
+    
     if ~diff(scaleanchors)
         if doverbose, disp('No variability in mapped values. Not plotting legend.'); end
         continue

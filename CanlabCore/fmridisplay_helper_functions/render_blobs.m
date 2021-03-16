@@ -122,7 +122,14 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %    This version was tested by Tor on R2015a.
 %    10/1/2015: Tor fixed functionality for outlines and constant-mask
 %    value displays in new Matlab graphics
+%    
+%    2/27/21: Tor Wager, fixed occasional bug in color rendering for
+%    near-boundary voxels
 % ..
+
+% -------------------------------------------------------------------------
+% Default values
+% -------------------------------------------------------------------------
 
 doverbose = true;
 myview = mymontage.orientation;
@@ -140,36 +147,23 @@ outline = 0;
 mylinewidth = 2;
 interpStyle = 'linear';
 
+vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+
 % color-mapped blobs options
 docolormap = 1;
 mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
 
-mapd = currentmap.mapdata(:); mapd = mapd(mapd ~= 0 & ~isnan(mapd));
-cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+% -------------------------------------------------------------------------
+% Set default cmaprange
+% -------------------------------------------------------------------------
 
-vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
+cmaprange = get_default_cmaprange(currentmap, varargin{:});
 
-% adjust defaults
-prct_splitcolor = 20;
-if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-    while numel(unique(cmaprange)) < 4
-        prct_splitcolor = prct_splitcolor - 5;
-        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-        if prct_splitcolor == 0
-            warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
-            cmaprange([2 3]) = cmaprange([1 4])*0.9;
-            break;
-        end
-    end
-end
-
+% -------------------------------------------------------------------------
+% Optional inputs
+% -------------------------------------------------------------------------
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -179,8 +173,8 @@ for i = 1:length(varargin)
             case 'color', docolormap = 0; color = varargin{i + 1}; % single color, turn off color mapping
                 
             case 'maxcolor', color = varargin{i + 1}; % color for single-color solid or value-mapped
-                             maxcolor = color;        % for output (affects legend)
-                             
+                maxcolor = color;        % for output (affects legend)
+                
             case 'mincolor', mincolor = varargin{i + 1}; % minimum color for value-mapped colors
                 
             case 'onecolor', docolormap = 0; % solid-color blobs
@@ -218,7 +212,7 @@ for i = 1:length(varargin)
                 % contour options
             case 'contour', docontour = 1;
             case 'outline', docontour = 1; outline = 1;
-            case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this. 
+            case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this.
             case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time. This doesn't work with 'splitcolor', though.
             case 'linewidth', mylinewidth = varargin{i + 1};
                 
@@ -227,7 +221,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'colormap', 'solid', 'thresh', 'k', 'nofigure'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
                 % other related functions, including calling functions, and can be ignored here.
@@ -236,11 +230,15 @@ for i = 1:length(varargin)
                 
             case 'interp'
                 interpStyle = varargin{i+1};
-            
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
+
+% -------------------------------------------------------------------------
+% Additional variable setup
+% -------------------------------------------------------------------------
 
 if ~exist('edgecolor', 'var'), edgecolor = color; end
 
@@ -250,9 +248,12 @@ isvalid = ~isempty(mymontage) && isfield(mymontage, 'axis_handles') && all(ishan
 
 if ~isvalid, return, end
 
-
 handles = mymontage.axis_handles;
 n = length(handles);
+
+% -------------------------------------------------------------------------
+% Identify slice and orientation for each of n handles (blobs)
+% -------------------------------------------------------------------------
 
 % for each slice...
 
@@ -323,6 +324,7 @@ if doverbose
     fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
 end
 
+% -------------------------------------------------------------------------
 % SETUP smoothing, contours
 % -------------------------------------------------------
 if dosmooth
@@ -362,7 +364,7 @@ if ~docontour
 end % end if docontour
 
 % -----------------------------------------------------------
-% Loop through slices to plot
+% Loop through slices to render blobs
 % -----------------------------------------------------------
 
 for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
@@ -492,7 +494,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     
                     % If map is constant, scaling will not work; just use original Z
                     if ~abs(cmaprange(1) - cmaprange(2))
-                        Zscaled = Z;  
+                        Zscaled = Z;
                     end
                     
                     w = repmat(Zscaled, [1 1 3]);
@@ -502,69 +504,20 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 elseif dosplitcolor
                     % split colormap around zero
                     
-%                     if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
-%                     if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
-
+                    %                     if max(cmaprange) < 0, [dummy, wh] = max(cmaprange); cmaprange(wh) = abs(min(cmaprange)); end
+                    %                     if min(cmaprange) > 0, [dummy, wh] = min(cmaprange); cmaprange(wh) = -(max(cmaprange)); end
+                    
                     % make into 4-element: min neg, max neg, min pos, max pos
                     if length(cmaprange) == 2
                         cmaprange = [min(cmaprange) 0 0 max(cmaprange)]; % just like before = all the way to 0
                     end
                     
-                    Zscaled = double(Z); % cast as double to avoid weird bug
+                    % Transform Z stats to r x c x 3 true colormap values, interpolating between max and min positive range for each
+                    % of pos and neg values. This determines the color of each voxel below,  set(h, 'CData', slicecdat)
                     
-                    % Zscaled must be transformed to weights from -1 to 1
+                    slicecdat = splitcolor_Z_to_slicecdat(Z, cmaprange, cdat, cdat2, cdatminneg, cdatmaxneg);
                     
-                    %                 Zscaled(Zscaled > 0 & Zscaled > max(cmaprange)) = max(cmaprange);
-                    %                 Zscaled(Zscaled < 0 & Zscaled < min(cmaprange)) = min(cmaprange);
-                    
-                    %Zscaled = Zscaled ./ max(abs(cmaprange)); % keep scale equal
-                    %Zscaled(Zscaled > 0) = Zscaled(Zscaled > 0) ./ max(cmaprange);
-                    %Zscaled(Zscaled < 0) = Zscaled(Zscaled < 0) ./ abs(min(cmaprange));
-                    
-                    % linear scaling into pos and neg range, respectively
-                    % allows for 4-element threshold input; e.g., [-6 -3 3 6] to display between 3 and 6
-                    
-                    Zscaled(Zscaled > 0 & Zscaled < cmaprange(3)) = cmaprange(3) + 100*eps;
-                    Zscaled(Zscaled < 0 & Zscaled > cmaprange(2)) = cmaprange(2) - 100*eps;
-                    
-                    Zscaled(Zscaled > 0) = (Zscaled(Zscaled > 0) - cmaprange(3)) ./ (cmaprange(4) - cmaprange(3));
-                    Zscaled(Zscaled < 0) = (Zscaled(Zscaled < 0) - cmaprange(2)) ./ abs(cmaprange(1) - cmaprange(2));
-                    
-                    % If map is constant, scaling will not work; just use original Z
-                    maprange = abs(cmaprange(1) - cmaprange(2));
-                    if ~isnan(maprange) && ~maprange
-                        Zscaled(Zscaled < 0) = cmaprange(1);  
-                    end
-                    
-                    maprange = abs(cmaprange(4) - cmaprange(3));
-                    if ~isnan(maprange) && ~maprange
-                        Zscaled(Zscaled > 0) = cmaprange(4);  
-                    end
-                    
-                    % pos only
-                    w = repmat(Zscaled, [1 1 3]);
-                    
-                    slicecdat = (w .* cdat) + (1 - w) .* cdat2;
-                    
-                    to_keep = double(repmat(Zscaled > 0, [1 1 3]));
-                    slicecdat = slicecdat .* to_keep;
-                    
-                    % now do neg part, then add them
-                    %w = repmat(Zscaled, [1 1 3]);
-                    w = abs(w); % now values we care about are neg; care about magnitude
-                    slicecdat2 = (w .* cdatminneg) + (1 - w) .* cdatmaxneg;
-                    
-                    to_keep = double(repmat(Zscaled < 0, [1 1 3]));
-                    slicecdat2 = slicecdat2 .* to_keep;
-                    
-                    slicecdat = slicecdat + slicecdat2;
                 end
-                
-                %             switch myview
-                %             case 'axial'
-                %             h = surf(mymontage.axis_handles(j), SPACE.Ymm(:, :, wh_slice(j)), SPACE.Xmm(:, :, wh_slice(j)), Z, 'FaceColor', 'interp', 'edgecolor', 'none');
-                %
-                %case 'sagittal'
                 
                 if ~isa(slicecdat, 'double')
                     keyboard
@@ -587,8 +540,8 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % Z-scores (or whatever the input values are) and scaling
                 % them as desired, and creating colors based on a colormap
                 % of your choosing (or default one).
-
-                if str2double(vstr(1:3))<8.4  % pre R2014b
+                
+                if str2double(vstr(1:3)) < 8.4  % pre R2014b
                     h = surf(mymontage.axis_handles(j), mynewy, mynewx, -ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none', 'FaceAlpha', 'interp');
                 else
                     h = surf(mymontage.axis_handles(j), mynewy, mynewx, ones(size(Z)), 'FaceColor', 'interp', 'edgecolor', 'none');
@@ -598,6 +551,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % end
                 
                 if dotrans
+                    % Set transparency
                     
                     if ~docolormap, Zscaled = abs(Z); end
                     Zscaled(isnan(Zscaled)) = 0;
@@ -618,7 +572,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 else % Default: No transparency for blobs, transparent outside of blobs
                     set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', double(abs(Z) > 0), 'FaceAlpha', 'interp')
                     
-                end
+                end % dotrans
                 
                 set(h, 'CData', slicecdat)
                 
@@ -627,8 +581,14 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
             blobhan{j} = h;
             
         end % any slicedat(:)
+        
     end % if wh_slice is true
+    
 end % slices
+
+% -------------------------------------------------------------------------
+% Final cleanup and outputs
+% -------------------------------------------------------------------------
 
 if ~isempty(blobhan)
     blobhan = cat(1, blobhan{:});
@@ -645,6 +605,10 @@ end  % main function
 
 
 
+% -------------------------------------------------------------------------
+% Subfunctions
+% -------------------------------------------------------------------------
+
 
 function cdat = define_cdat(sz, color)
 % needs a size and a 3-element color vector
@@ -655,3 +619,119 @@ for ii = 1:3
 end
 
 end
+
+
+
+
+function slicecdat = splitcolor_Z_to_slicecdat(Z, cmaprange, cdat, cdat2, cdatminneg, cdatmaxneg)
+% Transform Z stats to r x c x 3 true colormap values, interpolating between max and min positive range for each
+% of pos and neg values. This determines the color of each voxel below,  set(h, 'CData', slicecdat)
+
+Zscaled = double(Z); % cast as double to avoid weird bug
+
+% Zscaled must be transformed to weights from -1 to 1
+
+%                 Zscaled(Zscaled > 0 & Zscaled > max(cmaprange)) = max(cmaprange);
+%                 Zscaled(Zscaled < 0 & Zscaled < min(cmaprange)) = min(cmaprange);
+
+%Zscaled = Zscaled ./ max(abs(cmaprange)); % keep scale equal
+%Zscaled(Zscaled > 0) = Zscaled(Zscaled > 0) ./ max(cmaprange);
+%Zscaled(Zscaled < 0) = Zscaled(Zscaled < 0) ./ abs(min(cmaprange));
+
+% linear scaling into pos and neg range, respectively
+% allows for 4-element threshold input; e.g., [-6 -3 3 6] to display between 3 and 6
+
+% Move values that are below minimum thresholds to threshold
+posrange = cmaprange(4) - cmaprange(3);
+negrange = abs(cmaprange(1) - cmaprange(2));
+
+Zscaled(Zscaled > 0 & Zscaled < cmaprange(3)) = cmaprange(3) + 10000*eps; % .05 * posrange; %
+Zscaled(Zscaled < 0 & Zscaled > cmaprange(2)) = cmaprange(2) - 10000*eps; % .05 * negrange; %
+
+Zscaled(Zscaled > 0) = (Zscaled(Zscaled > 0) - cmaprange(3)) ./ posrange;
+Zscaled(Zscaled < 0) = (Zscaled(Zscaled < 0) - cmaprange(2)) ./ negrange;
+
+% If map is constant, scaling will not work; just use
+% extreme cmap values
+maprange = abs(cmaprange(1) - cmaprange(2));
+
+if ~isnan(maprange) && ~maprange
+    Zscaled(Zscaled < 0) = cmaprange(1);
+end
+
+maprange = abs(cmaprange(4) - cmaprange(3));
+
+if ~isnan(maprange) && ~maprange
+    Zscaled(Zscaled > 0) = cmaprange(4);
+end
+
+% pos only
+w = repmat(Zscaled, [1 1 3]);
+
+slicecdat = (w .* cdat) + (1 - w) .* cdat2; % interpolate from max color to min color
+
+to_keep = double(repmat(Z > 0, [1 1 3])); % was Zscaled, but sometimes this is exactly zero, so use Z
+slicecdat = slicecdat .* to_keep;
+
+% now do neg part, then add them
+%w = repmat(Zscaled, [1 1 3]);
+w = abs(w); % now values we care about are neg; care about magnitude
+slicecdat2 = (w .* cdatminneg) + (1 - w) .* cdatmaxneg;
+
+to_keep = double(repmat(Z < 0, [1 1 3]));
+slicecdat2 = slicecdat2 .* to_keep;
+
+slicecdat = slicecdat + slicecdat2;
+
+end % function
+
+
+
+
+
+
+
+function cmaprange = get_default_cmaprange(currentmap, varargin)
+
+mapd = currentmap.mapdata(:);
+mapd = mapd(mapd ~= 0 & ~isnan(mapd));
+
+if any(isinf(mapd))
+    warning('Some image values are Inf. Expect erratic behavior/errors.');
+    whinf = isinf(mapd);
+    mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf)));
+end
+
+% Default for non-splitcolor
+cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+
+% cmaprange = double([prctile(mapd(mapd < 0), 10) prctile(mapd(mapd > 0), 90)]); % Match defaults for region.surface in render_on_surface.m
+        
+% adjust defaults if splitcolor is entered, without pre-defined cmaprange
+
+prct_splitcolor = 20;
+if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
+    
+    % auto-determine colormap range cmaprange
+    
+    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+    
+    while numel(unique(cmaprange)) < 4
+        
+        prct_splitcolor = prct_splitcolor - 5;
+        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
+            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
+            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
+        
+        if prct_splitcolor == 0
+            %             warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
+            cmaprange([2 3]) = cmaprange([1 4])*0.9;
+            break;
+        end
+        
+    end
+end
+
+end % function

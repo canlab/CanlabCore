@@ -7,7 +7,7 @@ function [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] 
 % :Usage:
 % ::
 %
-%     [group_metrics individual_metrics] = qc_metrics_second_level(list inputs here, [optional inputs])
+%     [group_metrics individual_metrics values gwcsf gwcsfmean gwcsf_l2norm] = qc_metrics_second_level(list inputs here, [optional inputs])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific

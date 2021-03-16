@@ -225,7 +225,7 @@ minnegcolor = [0 0 1]; % min neg, most extreme values
 % pos_colormap = colormap_tor([1 0 .5], [1 1 0], [.9 .6 .1]);  %reddish-purple to orange to yellow
 % neg_colormap = colormap_tor([0 0 1], [0 1 1], [.5 0 1]);  % cyan to purple to dark blue
 
-depth=2;
+depth = 2;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -403,7 +403,7 @@ if addsurfaceblobs
         % cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
         
         img = region2imagevec(cl);
-        render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap);
+        render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
 
     end
 end

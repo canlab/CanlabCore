@@ -136,6 +136,8 @@ pos_colormap = [];
 neg_colormap = [];
 clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
+dolegend = true;
+
 allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
 
@@ -153,11 +155,19 @@ for i = 1:length(varargin)
                 nvals = 256;
                 pos_colormap = repmat(mycolor, nvals, 1);
                 
-                
             case 'colormap'
                 
                 colormapname = varargin{i+1}; varargin{i+1} = [];
                 custom_colormap = true;
+                
+            case 'cmaprange'
+                % option to match region.montage method
+                
+                clim =  varargin{i+1}; varargin{i+1} = [];
+                
+            case 'nolegend'
+                
+                dolegend = false;
                 
             case allowable_keyword_value_pairs
                 
@@ -180,38 +190,15 @@ end
 % If you enter 'pos_colormap' / 'neg_colormap', these will be stacked and
 % added to a gray colormap
 
-if isempty(clim)
-    
-    % Get range of values in object
-    % -----------------------------------------------------------------------
-    % These will be used to map color limits
-    % we will map values into the range of [1 nvals] where nvals = colormap length
-    % Deal with possibility of multiple images in object
-    % Exclude zeros
-    if isa(obj, 'statistic_image')
-        
-        sig = logical(obj.sig);
-        dat = obj.dat(sig);
-        
-    else
-        
-        wh = obj.dat ~= 0 & ~isnan(obj.dat);
-        dat = obj.dat(wh);
-        
-    end
-    
-    datvec = dat(:); 
-    clim = [min(datvec) max(datvec)];  % clim: data values for min and max, should become min/max colors
-    
-    % if no variance, we have constant data values - special case.
-    % reducing lower clim(1) will effectively map all data to max color value
-    if abs(diff(clim)) < 100 * eps
-        clim(1) = clim(2) - 1;
-    end
-    
-end
 
+% Get range of values in object
+% -----------------------------------------------------------------------
+% These will be used to map color limits and create legend
+% we will map values into the range of [1 nvals] where nvals = colormap length
+% Deal with possibility of multiple images in object
+% Exclude zeros
 
+[datvec, clim] = get_data_range(obj, clim);
 
 % -------------------------------------------------------------------------
 % Define colormap
@@ -348,12 +335,12 @@ for i = 1:length(surface_handles)
     c_colored = c;
     
     whpos = c > 0;
-%     kpos = 61;   % which block of 256 colors; depends on colormap
+    %     kpos = 61;   % which block of 256 colors; depends on colormap
     cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
     c_colored(whpos) = cpos;
     
     whneg = c < 0;
-%     kneg = 55;   % which block of 256 colors
+    %     kneg = 55;   % which block of 256 colors
     cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
     c_colored(whneg) = cneg;
     
@@ -423,8 +410,10 @@ for i = 1:length(surface_handles)
     
 end
 
-% Colorbars
+% Colorbars - legend
 % -----------------------------------------------------------------------
+
+if ~dolegend, return, end
 
 if any(datvec > 0)
     
@@ -435,7 +424,7 @@ if any(datvec > 0)
     
     minpos = min(datvec(datvec > 0));
     set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
-
+    
 end
 
 if any(datvec < 0)
@@ -447,10 +436,65 @@ if any(datvec < 0)
     
     maxneg = max(datvec(datvec < 0));
     set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
-
+    
 end
 
+end % main function
+
+
+% -----------------------------------------------------------------------
+% -----------------------------------------------------------------------
+% Subfunctions
+% -----------------------------------------------------------------------
+% -----------------------------------------------------------------------
+
+
+function [datvec, clim] = get_data_range(obj, clim)
+
+if isa(obj, 'statistic_image')
+    
+    sig = logical(obj.sig);
+    dat = obj.dat(sig);
+    
+else
+    
+    wh = obj.dat ~= 0 & ~isnan(obj.dat);
+    dat = obj.dat(wh);
+    
 end
+
+datvec = dat(:);
+
+if any(isinf(datvec))
+    warning('Some image values are Inf. Expect erratic behavior/errors.');
+    whinf = isinf(datvec);
+    datvec(whinf) = sign(datvec(whinf)) .* max(abs(datvec(~whinf)));
+end
+
+if isempty(clim)
+    
+    %clim = [min(datvec) max(datvec)];  % clim: data values for min and max, should become min/max colors
+    
+    if any(datvec < 0) && any(datvec > 0) % split colormap
+        
+        clim = double([prctile(datvec(datvec < 0), 10) prctile(datvec(datvec > 0), 90)]); % Match defaults for montage in render_blobs
+        
+    else
+        % may need adjustment
+        clim = [min(datvec) max(datvec)];
+        
+    end
+    
+    % if no variance, we have constant data values - special case.
+    % reducing lower clim(1) will effectively map all data to max color value
+    if abs(diff(clim)) < 100 * eps
+        clim(1) = clim(2) - 1;
+    end
+    
+end
+
+end % function
+
 
 % -----------------------------------------------------------------------
 % -----------------------------------------------------------------------
@@ -513,7 +557,7 @@ thr = 0;    % Threshold to split colormap into two colors
 if graybuffer
     
     hotcm = [colormap_tor([.5 .5 .5], lowhot, 'n', graybuffer); ...
-             colormap_tor(lowhot, hihot, 'n', nvals-graybuffer)];
+        colormap_tor(lowhot, hihot, 'n', nvals-graybuffer)];
     
 else
     
@@ -534,7 +578,7 @@ end
 if graybuffer
     
     coolcm = [colormap_tor(lowcool, hicool, 'n', nvals-graybuffer); ...
-              colormap_tor(hicool, [.5 .5 .5], 'n', graybuffer)];
+        colormap_tor(hicool, [.5 .5 .5], 'n', graybuffer)];
     
 else
     

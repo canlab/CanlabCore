@@ -185,7 +185,7 @@ classdef region
             
             % Check for an incompatibility. Don't try to fix here, force
             % proper intended use.
-            if isa(maskinput, 'atlas') && strcmp(class(obj.dat), 'int32')
+            if isa(maskinput, 'atlas') && isa(obj.dat, 'int32')
                 
                 %atlas_obj.dat = double(atlas_obj.dat);
                 error('Do not use region() for atlas objects. Use atlas2region instead.');  
@@ -283,10 +283,22 @@ classdef region
             if isa(mask, 'statistic_image')
                 
                  val_descrip = 'Statistic effect value (.dat) for each voxel.';
-
-                 if ~isempty(mask.p)
+    
+                 mask = replace_empty(mask);            % after this p and dat now have all in-mask voxels
+                 
+                 if ~isempty(mask.dat)
+                     % Use values from image. These can be more precise and
+                     % we don't want to convert them to Z-values if we
+                     % don't have to.
                      
-                     mask = replace_empty(mask);            % after this p now has all in-mask voxels
+                     maskZ = mask.dat;
+                     Z_descrip = mask.type;
+                     
+                 elseif ~isempty(mask.p)
+                     
+                     if doverbose('Converting .dat data values to Z-values based on P-values'); end
+                     
+                     
                      Z_descrip = 'Z-score for each voxel.';
                      mask.p(mask.p==0) = eps;               % not to have Inf values in Z field
                      maskZ = sign(mask.dat) .* norminv(1 - mask.p ./ 2); % Z-score based on p-value, assuming two-tailed p-vals.

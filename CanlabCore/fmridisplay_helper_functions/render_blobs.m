@@ -553,7 +553,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 if dotrans
                     % Set transparency
                     
-                    if ~docolormap, Zscaled = abs(Z); end
+                    if ~docolormap || dosplitcolor, Zscaled = abs(Z); end
                     Zscaled(isnan(Zscaled)) = 0;
                     Zscaled = abs(Zscaled);
                     

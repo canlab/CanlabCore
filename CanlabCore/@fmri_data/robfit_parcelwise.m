@@ -39,18 +39,28 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %
 % :Inputs:
 %
-%   **param1:**
-%        description of param1
-%
-%   **param2:**
-%        description of param2
+%   **imgs:**
+%        A dataset of images for 2nd-level analysis
+%        Generally 1st-level contrast images, with one image per participant
 %
 % :Optional Inputs:
-%   **param1:**
-%        description of param1
+%   **names:**
+%        followed by cell array of names for each regressor
 %
-%   **param2:**
-%        description of param2
+%   **'doplot', [logical flag]:
+%        Create plots; default = true. 'noplot' to turn off.
+%
+%   **'doverbose', [logical flag]:
+%        Verbose output; default = true. 'noverbose' to turn off.
+%
+%   **'csf_wm_covs', [logical flag]:
+%        Add global WM and CSF from standard MNI-space masks as covariates
+%        default = false 
+% 
+%   **'remove_outliers', [logical flag]:
+%        Remove outliers identified based on mahalanobis distance on either 
+%        cov or corr across images at p < 0.05 uncorrected 
+%        default = false 
 %
 % :Outputs:
 %
@@ -76,24 +86,6 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %        ind_quality_dat: [30×6 double]     Summary of some QC metrics
 %   region_objects: {[1×X region]  [1×X region]} Region objects containing significant blobs with autolabeled names in .shorttitle
 %  contrast_tables_FDR05: {[X×8 table]  [X×8 table]} Table objects with labeled significant regions at q < 0.05 FDR 
-%
-%   **names:**
-%        followed by cell array of names for each regressor
-%
-%   **'doplot', [logical flag]:
-%        Create plots; default = true. 'noplot' to turn off.
-%
-%   **'doverbose', [logical flag]:
-%        Verbose output; default = true. 'noverbose' to turn off.
-%
-%   **'csf_wm_covs', [logical flag]:
-%        Add global WM and CSF from standard MNI-space masks as covariates
-%        default = false 
-% 
-%   **'remove_outliers', [logical flag]:
-%        Remove outliers identified based on mahalanobis distance on either 
-%        cov or corr across images at p < 0.05 uncorrected 
-%        default = false 
 %
 % :Examples:
 % ::
@@ -369,10 +361,19 @@ pthr = zeros(1, k);
 
 for i = 1:k
     % for each map
-    FDRq(:, i) = mafdr(pvalues(:, i));
+    [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
     
-    % P-threshold for FDR q < 0.05 for each map
-    pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));
+    if pIO > .99
+        % all P-values 1, mafdr may not be suitable
+        disp('Warning: Prior prob of sig P-values is near 1. Using B-H FDR');
+        pthr_i = FDR(pvalues(:, i), .05);
+        
+    else
+        % use mafdr
+        % P-threshold for FDR q < 0.05 for each map
+        pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));
+    end
+    
     if isempty(pthr_i)
         pthr(i) = Inf;
     else
@@ -483,7 +484,9 @@ end
 
 for i = 1:k
     
-    printhdr(sprintf('Predictor %d: %s', i, names{i}));
+    if doverbose
+        printhdr(sprintf('Predictor %d: %s', i, names{i}));
+    end
     
     if doplots && ~isinf(OUT.pthr_FDRq05(i)) % if we have some results to show
         

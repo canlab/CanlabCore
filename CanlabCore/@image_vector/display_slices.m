@@ -128,8 +128,10 @@ end
 % re-set default slices if we have not entered them
 % depends on voxel or mm. if mm, convert to voxels.
 if ~any(strcmp(varargin, 'startslice'))
+    
     if entered_mm_coords  % Figure out mm coords of first slice
-        xyzvoxel = voxel2mm([1 1 1], dat.volInfo.mat);
+        
+        xyzvoxel = voxel2mm([1 1 1]', dat.volInfo.mat);
         startslice = xyzvoxel(wh_col); 
     else
         startslice = 1;
@@ -138,11 +140,21 @@ end
 
 if ~any(strcmp(varargin, 'endslice'))
     if entered_mm_coords % Figure out mm coords of last slice
+        
         xyzvoxel = voxel2mm(size(vdat)', dat.volInfo.mat);
         endslice = xyzvoxel(wh_col);
     else
         endslice = size(vdat, wh_col);
     end
+end
+
+% reverse slices if radiological orientation (-x vox)
+if startslice > endslice
+    
+    tmp = endslice;
+    endslice = startslice;
+    startslice = tmp;
+    
 end
 
 whsl = startslice:spacing:endslice;  % voxel or mm

@@ -142,7 +142,7 @@ else
         clear conditions_by_run
         try
             diary(diaryfile)            
-            [runs runs3d names onsets durations pmods conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,z); %#ok
+            [runs runs3d names onsets durations pmods multipleregressors conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z); %#ok
             diary off
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -391,10 +391,6 @@ for session = 1:numel(runs)
         multipleregressors{session} = {}; %#ok
     end    
 end
-for m=1:size(multipleregressors,2)
-    idx(m)=isempty(multipleregressors{m});
-end
-    multipleregressors(idx)=[];
 end
 
 
@@ -614,7 +610,7 @@ end
 
 
 %%
-function [nonemptyruns nonemptyruns3d flatnames flatonsets flatdurations flatpmods conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,z)
+function [nonemptyruns nonemptyruns3d flatnames flatonsets flatdurations flatpmods flatmultipleregressors conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z)
 
 nonemptyruns = {};
 nonemptyruns3d = {};
@@ -650,6 +646,7 @@ for session = find(~cellfun('isempty',runs3d)) %1:numel(names)
         i=i+1;
     end
     conditions_by_run(newsess) = i; %#ok
+    flatmultipleregressors(newsess) = multipleregressors(session); % added by lukasvo Feb 2021 to fix problem with sessions indices of multipleregressors versus onsets, durations etc in case of non-concatenation and non-final missing runs, downstream in canlab_spm_fmri_model_job
 end
 
 switch DSGN.convolution.type
@@ -696,7 +693,7 @@ for i=1:numel(SPM.xCon)
         for ext = {'img' 'hdr'}
             imgname = fullfile(pwd, sprintf('%s_%04d.%s',stat{1},i,ext{1}));
             linkname = fullfile(renamedir, [stat{1} '_' mapname '.' ext{1}]);
-            eval(['!ln -v -s ' imgname ' ' linkname]); % lukasvo: there is a bug here, ln is not recognized as internal or external commant
+            eval(['!ln -v -s ' imgname ' ' linkname]); % lukasvo: this does not work on a Windows system as the Linux command ln is not recognized as internal or external command on Windows - does not cause problems or errors otherwise
         end
     end
 end

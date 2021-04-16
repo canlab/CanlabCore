@@ -27,7 +27,21 @@ for i = 1:length(obj.activation_maps)
     
 end
 
+% Surfaces
 
 obj.activation_maps(to_remove) = [];
+
+if ~isempty(obj.surface)
+
+    for i = 1:length(obj.surface)
+        
+        myhan = obj.surface{i}.object_handle;
+        
+        myhan = addbrain('eraseblobs', myhan);
+
+    end
+    
+end
+
 
 end

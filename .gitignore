@@ -12,3 +12,4 @@ classifier_compare.ipynb
 .#.gitignore
 .ipynb_checkpoints
 .gitignore~
+*.asv

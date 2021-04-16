@@ -353,11 +353,11 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         end
         
         %m = fitlmematrix(double(sf.*xx), sf.*Y, double(sf.*xxRE), categorical(subjIDs), fitlmeOpts{:});
-        try
+        %try
             m = fitlmematrix(double(xx), Y, double(xxRE), categorical(subjIDs), fitlmeOpts{:});
-        catch
-            keyboard
-        end
+        %catch
+        %    keyboard
+        %end
         b = m.fixedEffects;
     end
 

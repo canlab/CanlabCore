@@ -133,6 +133,7 @@ if iscell(ons)
     % length must be even multiple of TR
     if mod(len, TR)
         len = len + (TR - mod(len, TR));
+        len = round(len * 100) ./ 100; % avoid precision errors later
     end
     
     [X,d] = onsets2fmridesign(xons, TR, len, basisset, inputs_to_pass{:});
@@ -202,7 +203,19 @@ end
 % Set limits for boxes and sticks
 % ---------------------------------------------------------
 %ymax = .1 * size(X, 2);  %.05 * (max(X(:)) - min(X(:)));
-ymax = .2; %* (max(X(:)) - min(X(:)));
+% ymax = .2; %* (max(X(:)) - min(X(:)));
+
+if doseparatelines
+    
+    for i = 1:length(handles)
+        yrange(i) = range(handles(i).YData);
+    end
+    
+    ymax = .2 .* max(yrange);
+    
+else
+    ymax = .2;
+end
 
 if isempty(yoffset)
     % default - auto
@@ -217,8 +230,22 @@ for i = 1:length(ons)
     % for sticks
     xvals = [ons{i}(:, 1) ons{i}(:, 1)]'; %./ TR;
     % yvals = [repmat(yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + yoffset + ymax]';
-    yvals = [repmat(i - yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + i - yoffset + ymax]';
+%     yvals = [repmat(i - yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + i - yoffset + ymax]';
     
+if doseparatelines
+    
+    yvals1 = (i - 1) + ones(1, length(rt{i})) .* (max(handles(1).YData) + ymax);
+    yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
+    yvals = [yvals1; yvals2];
+    
+else
+    
+    yvals1 = ones(1, length(rt{i})) .* yoffset + ymax;
+    yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
+    yvals = [yvals1; yvals2];
+    
+end
+
     % onsets
     h = plot(xvals, yvals, 'Color', colors{i}, 'LineWidth', 3);
     

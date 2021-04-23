@@ -269,7 +269,7 @@ classdef statistic_image < image_vector
                     obj.type = 'robust regression:  .dat is beta values, .p is robust p values';
                     
                     pimg = image_vector('image_names', sprintf('rob_p_%04d.img',obj.dat_descrip));
-                    bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
+                    % bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
                     timg = image_vector('image_names', sprintf('rob_tmap_%04d.img',obj.dat_descrip));
                     
                     

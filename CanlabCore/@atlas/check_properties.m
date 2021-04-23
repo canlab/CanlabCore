@@ -125,8 +125,14 @@ if n_regions ~= n_regions_with_data || any(missing_regions)
             newdat(obj.dat == u(i)) = i;
             
         end
-        
+             
         obj.dat = newdat;
+        
+        % Trim probability maps
+        if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == n_regions
+            % We have valid probability maps
+            obj.probability_maps = obj.probability_maps(:, u);
+        end
         
         if n_regions == n_regions_with_data
             % We have missing regions but a complete set of labels
@@ -143,6 +149,7 @@ if n_regions ~= n_regions_with_data || any(missing_regions)
             end
             
         end
+        
         
     else
         % Just print warning, we are not compressing

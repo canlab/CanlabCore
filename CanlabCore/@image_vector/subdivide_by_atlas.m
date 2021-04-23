@@ -30,11 +30,14 @@
 %
 % :Inputs:
 %
-%   **activation_map:**
-%        image to subdivide
+%   **obj:**
+%        image to subdivide 
+%        e.g., image_vector, fmri_data or statistic_image object containing activation map
+%        single-image objects only. See get_wh_image( ) to select one from a set.
 %
 %   **atlas:**
-%        the subdivisions to apply to the activation_map
+%        atlas object with the subdivisions to apply to the activation_map
+%        see load_atlas( ) for examples/pre-defined atlases.
 %
 % :Optional Inputs:
 %   **'table':**
@@ -44,8 +47,9 @@
 % :Outputs:
 %
 %   **atlas_of_subdivisions:**
-%        an atlas; each atlas parcel is a cluster or part of a cluster from
-%        the activation_map
+%        an atlas object
+%        subdivided_atlas contains voxel in the original map AND the atlas, partitioned by atlas regions.
+%        each atlas parcel is a cluster or part of a cluster from the activation_map
 %
 %   **region_values:**
 %        region object; each region corresponds to a parcel in
@@ -55,18 +59,78 @@
 % :Examples:
 % ::
 %
-%    % give examples of code here
-%    param1 = abc();
-%    param2 = xyz();
-%    [out1,out2] = func_call(param1, param2)
+% % Load an activation map or mask (e.g., thresholded results image)
+%
+% img = '/Users/torwager/Documents/GitHub/OLP4CBP/data/bladder_pain_param_mod/evoked_pain_localizer_masked.nii';
+% obj = fmri_data(img);
+% 
+% % Load an atlas object whose boundaries we want to apply
+%
+% atl = load_atlas('painpathways');
+% 
+% % Subdivide the map into regions defined by the atlas.
+% % subdivided_atlas contains voxel in the original map AND the atlas, partitioned by atlas regions.
+%
+% [subdivided_atlas, r] = subdivide_by_atlas(obj, atl);
+%
+% % Plot the results
+% 
+% figure; montage(subdivided_atlas);
+% montage(r, 'regioncenters', 'colormap');
+%
+% % Make a table of results
+% % Note: the standard table may use a DIFFERENT atlas, chosen in the table( )
+% method. So the "atlas regions covered" here may refer to a different atlas.
+% [poscl, negcl, results_table] = table(r, 'nolegend');
+%
 %
 % :References:
-%   CITATION(s) HERE
+%   N/A
 %
 % :See also:
-%   - list other functions related to this one, and alternatives*
+%   - region.subdivide_by_atlas
 %
-function subdivided_atlas = subdivide_by_atlas(activation_map, atl)
+function [subdivided_atlas, r] = subdivide_by_atlas(obj, atl)
 
-    atl2 = apply_mask(activation_map, atl);
-    r = atlas2region(atl2);
+% Check inputs
+% ---------------------------------------------
+
+% Error if > 1 image
+if size(obj.dat, 2) > 1
+    error('Use image_vector.subdivide_by_atlas with single-image objects only. See get_wh_image( ) to select.');
+end
+
+% Main work done here
+% ---------------------------------------------
+
+subdivided_atlas = apply_mask(atl, obj);
+r = atlas2region(subdivided_atlas);
+
+% Extract the original image values from the activation map and save them
+% in region object, for table-making, etc.
+% ---------------------------------------------
+
+% Some voxels are in obj but not mask; exclude these
+obj2 = resample_space(obj, subdivided_atlas);
+obj2 = apply_mask(obj2, subdivided_atlas);
+
+% Make sure we have the same voxel list, squeezing empties from both
+subdivided_atlas = remove_empty(subdivided_atlas); 
+obj2 = remove_empty(obj2);
+
+for i = 1:length(r)
+
+    wh = subdivided_atlas.dat == i;
+    
+    vox_vals = obj2.dat(wh, 1);
+    
+    % Replace .val and .Z both, because they are/may be used in
+    % table-making, and they're (unfortunately) redundant. Z is legacy.
+    
+    r(i).val = vox_vals;
+    r(i).Z = vox_vals';
+    
+end
+
+end % main function
+

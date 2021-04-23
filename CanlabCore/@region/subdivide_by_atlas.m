@@ -26,20 +26,24 @@ function r = subdivide_by_atlas(r, varargin)
 %    cluster_orthviews(r, 'unique');
 %
 
+% Programmers notes:
+% Changed 4/23/21 by Tor Wager
+% To take atlas object as input, NOT file.
+
 if nargin < 2 || isempty(varargin{1})
-atlasname = which('atlas_labels_combined.img');
+    error('Enter an atlas object as the 2nd input. See load_atlas( ) for some options.');
+    % atlasname = which('atlas_labels_combined.img');
 else
-    atlasname = varargin{1};
+    atlas_obj = varargin{1};
 end
 
-if ~exist(atlasname, 'file')
-    if exist(which(atlasname), 'file')
-        atlasname = which(atlasname);
-    else
-        fprintf('Cannot find atlas image on path! Looking for:%s\n', atlasname);
-    end
-end
-
+%     if ~exist(atlasname, 'file')
+%         if exist(which(atlasname), 'file')
+%             atlasname = which(atlasname);
+%         else
+%             fprintf('Cannot find atlas image on path! Looking for:%s\n', atlasname);
+%         end
+%     end
 
 %r = region(overlapmask); % r is input
 
@@ -47,14 +51,16 @@ end
 % ivec is region object voxels reconstructed into image_vector
 [ivec, orig_indx] = region2imagevec(r);
 
+% region2fmri_data
+
 % region2imagevec creates illegal list of removed_voxels (doesn't match
 % .volInfo.wh_inmask).  Fix...
 % ivec.removed_voxels = ivec.removed_voxels(ivec.volInfo.wh_inmask);
 
-label_mask = fmri_data(atlasname);
+% label_mask = fmri_data(atlasname);
 
 % resample and mask label image
-label_mask = resample_space(label_mask, ivec, 'nearest');
+atlas_obj = resample_space(atlas_obj, ivec, 'nearest');
 
 ulabels = unique(label_mask.dat);
 

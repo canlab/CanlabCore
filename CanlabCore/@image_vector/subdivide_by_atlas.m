@@ -59,30 +59,46 @@
 % :Examples:
 % ::
 %
-% % Load an activation map or mask (e.g., thresholded results image)
-%
-% img = '/Users/torwager/Documents/GitHub/OLP4CBP/data/bladder_pain_param_mod/evoked_pain_localizer_masked.nii';
-% obj = fmri_data(img);
+% % Example 1: Subdivide a thresholded t-statistic image
+% % --------------------------------------------------------------------
+% Load sample images, creating and fmri_data class object with 30 images     
+% 	imgs = load_image_set('emotionreg');
+% 
+% % Perform a t-test on each voxel, returning a statistic_image object
+% % containing t-stats and p-values:
+%	t = ttest(imgs);
+% 
+% % Threshold the t-statistic_image object at p < 0.005
+%	t = threshold(t, .005, 'unc');
 % 
 % % Load an atlas object whose boundaries we want to apply
 %
-% atl = load_atlas('painpathways');
+%   atl = load_atlas('painpathways');
 % 
 % % Subdivide the map into regions defined by the atlas.
 % % subdivided_atlas contains voxel in the original map AND the atlas, partitioned by atlas regions.
 %
-% [subdivided_atlas, r] = subdivide_by_atlas(obj, atl);
+%   [subdivided_atlas, r] = t.subdivide_by_atlas(atl);
 %
 % % Plot the results
 % 
-% figure; montage(subdivided_atlas);
-% montage(r, 'regioncenters', 'colormap');
+%   figure; montage(subdivided_atlas);
+%   montage(r, 'regioncenters', 'colormap');
 %
 % % Make a table of results
 % % Note: the standard table may use a DIFFERENT atlas, chosen in the table( )
 % method. So the "atlas regions covered" here may refer to a different atlas.
-% [poscl, negcl, results_table] = table(r, 'nolegend');
 %
+%   [poscl, negcl, results_table] = table(r, 'nolegend');
+%
+% % Example 2: Subdivide a mask image
+% % --------------------------------------------------------------------
+% % Load an activation map or mask (e.g., thresholded results image)
+%
+% img = '/Users/torwager/Documents/GitHub/OLP4CBP/data/bladder_pain_param_mod/evoked_pain_localizer_masked.nii';
+% obj = fmri_data(img);
+% atl = load_atlas('painpathways');
+% [subdivided_atlas, r] = subdivide_by_atlas(obj, atl);
 %
 % :References:
 %   N/A

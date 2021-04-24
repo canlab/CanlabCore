@@ -85,7 +85,11 @@
 %   figure; montage(subdivided_atlas);
 %   montage(r, 'regioncenters', 'colormap');
 %
-% % Make a table of results
+% % Make a table of results, with one row per atlas-defined region:
+%
+%   [results_table, results_table_pos, results_table_neg] = table_simple(r);
+% 
+% % Make a more elaborate table labeled by a potentially different atlas:
 % % Note: the standard table may use a DIFFERENT atlas, chosen in the table( )
 % method. So the "atlas regions covered" here may refer to a different atlas.
 %
@@ -99,6 +103,7 @@
 % obj = fmri_data(img);
 % atl = load_atlas('painpathways');
 % [subdivided_atlas, r] = subdivide_by_atlas(obj, atl);
+% [results_table, results_table_pos, results_table_neg] = table_simple(r);
 %
 % :References:
 %   N/A

@@ -124,6 +124,10 @@ end
 % Main work done here
 % ---------------------------------------------
 
+% first, resample the atlas to the data space. Without this, unexpected
+% behaviors. -- Yoni, 4/23/2021
+atl = resample_space(atl, obj);
+
 subdivided_atlas = apply_mask(atl, obj);
 r = atlas2region(subdivided_atlas);
 

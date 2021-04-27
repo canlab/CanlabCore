@@ -18,16 +18,39 @@ if ~isfield(stat, 'beta')
     stat.beta = varargin{1};
 end
 
-fprintf(1,'%s\t%s\t%s\t%s\t%s\t\n', ...
-    'Name','Beta','SE','t','p');
+if isrow(nms), nms = nms'; end
 
+Name = nms;
+Beta = stat.beta;
+SE = stat.se;
+t = stat.t;
+p = stat.p;
 
-for i = 1:length(stat.beta)
-    
-    fprintf(1,'%s\t%3.3f\t%3.3f\t%3.3f\t%3.4f\t\n', ...
-        nms{i},stat.beta(i),stat.se(i),stat.t(i),stat.p(i))
-    
-end
+sigstr = cell(size(nms));
+sigstr(:) = {' '};
+sigstr(p < .1) = {'+'};
+sigstr(p < .05) = {'*'};
+sigstr(p < .01) = {'**'};
+sigstr(p < .001) = {'***'};
+Sig = sigstr;
+
+mytable = table(Name, Beta, SE, t, p, Sig);
+
+disp(mytable);
+
+% legacy
+% mytable = [];
+% 
+% fprintf(1,'%s\t%s\t%s\t%s\t%s\t\n', ...
+%     'Name','Beta','SE','t','p');
+% 
+% 
+% for i = 1:length(stat.beta)
+%     
+%     fprintf(1,'%s\t%3.3f\t%3.3f\t%3.3f\t%3.4f\t\n', ...
+%         nms{i},stat.beta(i),stat.se(i),stat.t(i),stat.p(i))
+%     
+% end
 
 end % function
 

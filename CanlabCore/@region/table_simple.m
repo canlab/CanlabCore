@@ -16,10 +16,15 @@ n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap
 
 dosep = true;
-dolegend = false;
+dolegend = true;
 table_legend_text = '';
 
 [results_table_pos, results_table_neg] = deal(table());
+
+if isempty(r) || length(r) == 0
+    disp('No regions to display');
+    return
+end
 
 % Separate subregions with positive and negative values if requested
 % -------------------------------------------------------------------------
@@ -66,6 +71,15 @@ if dosep
     
 end
 
+% Legend info
+
+voxvol = prod(abs(diag(r(1).M(1:3, 1:3))));
+
+table_legend_text = {'Note: XYZ values are Montreal Neurologic Institute coordinates in mm.'};
+table_legend_text{2} = sprintf('Voxel volume is %3.2fmm^3', voxvol);
+table_legend_text{3} = 'maxVal is maximum positive or negatively-valued value in the .Z field. Its meaning varies across analyses. For a t-test, it usually reflects the maximum t-value.';
+
+    
 %
 %     % Sort, if asked for (default = yes)
 %     if dosortrows
@@ -115,8 +129,9 @@ if dolegend == false || isempty(table_legend_text)
     return
     
 else
+    % Print legend text
     
-    disp(table_legend_text);
+    canlab_print_legend_text(table_legend_text{:});
 end
 
 % clean up text for legend

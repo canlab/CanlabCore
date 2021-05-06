@@ -64,6 +64,9 @@ function out = regress(dat, varargin)
 %
 %  **out:**
 %        A structure containing stats_img and fmri_data objects.
+%        In addition to the main outputs below, the out structure also has
+%        fields for input_parameters, the design matrix (X), variable
+%        names, and warnings.
 %
 %  **out.b:**
 %        stats_img object of beta values estimated from regression
@@ -151,7 +154,7 @@ function out = regress(dat, varargin)
 %    Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
 %    Code completely refactored by Luke Chang 2/24/25
 %    Verbose option updated by Tor, 7/2015
-%    Help updated by Tor, 5/2021
+%    Help, some outputs, robust % update: added by Tor, 5/2021
 % ..
 
 % ..
@@ -335,7 +338,7 @@ if length(variable_names) < k
    if ~isempty(variable_names), mywarnings{end+1} = 'Warning!!!  Too few variable names entered, less than size(X, 2). Names may be inaccurate.'; end % suppress warning if NO names entered
     
    for i = length(variable_names)+1:k
-       variable_names{i} = sprintf('R%d', i);
+       variable_names{i} = sprintf('R%d', i); %#ok<*AGROW>
    end
 end
 
@@ -391,7 +394,7 @@ if brain_is_outcome
     
     if do_robust %need to loop through voxels - Slow!
         if doverbose
-            fprintf('\nRunning in Robust Mode');
+            fprintf('\nRunning in Robust Mode ___%%');
         end
         
         v = size(dat.dat, 1);
@@ -414,6 +417,10 @@ if brain_is_outcome
             dfe(:,i)=stats.dfe; %degrees of freedom
             stderr(:,i)=stats.se; %Standard Error
             sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
+            
+            if doverbose && mod(i, 100) == 0
+                fprintf('\b\b\b\b%03d%%', 100 * round(i/v))
+            end
         end
         r = dat.dat' - X*b; %residual
         
@@ -446,9 +453,11 @@ else
     
     if do_robust %need to loop through voxels - Slow!
         if doverbose
-            fprintf('\nRunning in Robust Mode');
+            fprintf('\nRunning in Robust Mode ___%%');
         end
-        for i = 1:size(dat.dat,1)
+        v = size(dat.dat,1);
+        
+        for i = 1:v
             % Create X from brain Data
             if do_intercept
                 X = intercept(dat.dat(i,:)','add');
@@ -465,6 +474,11 @@ else
             stderr(:,i)=stats.se; %Standard Error
             sigma(:,i)=stats.robust_s; %robust estimate of sigma. LC not sure this is the best choice can switch to 'OLS_s','MAD_s', or 's'
             r(:,i) = dat.Y - X * b(:,i); %residual
+            
+            if doverbose && mod(i, 100) == 0
+                fprintf('\b\b\b\b%03d%%', 100 * round(i/v))
+            end
+            
         end
     else %OLS
         

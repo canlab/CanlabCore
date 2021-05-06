@@ -655,12 +655,18 @@ for i = 1:size(image_names, 1)
     
     if was_gzipped(i)
         
-       % Use system to remove unzipped version after zipping.
-       % Will wait for input, and not overwrite, if images exist
-%         [status, result] = system(['gzip ' image_names(i, :)]);
-        gzip(deblank(image_names(i, :)));
-        image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
+        % Use system to remove unzipped version after zipping.
+        % Will wait for input, and not overwrite, if images exist
+        %         [status, result] = system(['gzip ' image_names(i, :)]);
         
+        try
+            gzip(deblank(image_names(i, :)));
+            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
+            
+        catch
+            warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            
+        end
     end
     
 end

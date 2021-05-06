@@ -7,21 +7,21 @@ function [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, varargin)
 %
 % [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, [full_path_of_movie_output_file,image_skip_interval])
 %
-% Images usually change slowly over time, and sudden changes in intensity can also often be a sign of bad things 
-% -- head movement artifact or gradient misfires, interacting with the magnetic field to create distortion 
+% Images usually change slowly over time, and sudden changes in intensity can also often be a sign of bad things
+% -- head movement artifact or gradient misfires, interacting with the magnetic field to create distortion
 % across the brain.
-% RMSSD tracks large changes across successive images, regardless of what the sign of the changes is or where they are. 
-% In addition, images with unusually high spatial standard deviation across voxels may be outliers with image 
-% intensity distortions in some areas of the image but not others (e.g., bottom half of brain vs. top half, 
+% RMSSD tracks large changes across successive images, regardless of what the sign of the changes is or where they are.
+% In addition, images with unusually high spatial standard deviation across voxels may be outliers with image
+% intensity distortions in some areas of the image but not others (e.g., bottom half of brain vs. top half,
 % or odd vs. even slices).
-% The CANlab method rmssd_movie( ), for fmri_data objects, creates a visual movie so you can see what the 
-% image-to-images changes are. It pauses where they're unusual. It also returns a matrix rmssd_outlier_regressor_matrix, 
-% which has an indicator regressor (1 or 0 values) for every image that is quite different from the preceding ones 
-% (the pause point in the movie). This is based on two things: (1) rmssd being > a cutoff number of standard 
-% deviations from the mean, (2) spatial standard deviation of the images being > a cutoff number of 
+% The CANlab method rmssd_movie( ), for fmri_data objects, creates a visual movie so you can see what the
+% image-to-images changes are. It pauses where they're unusual. It also returns a matrix rmssd_outlier_regressor_matrix,
+% which has an indicator regressor (1 or 0 values) for every image that is quite different from the preceding ones
+% (the pause point in the movie). This is based on two things: (1) rmssd being > a cutoff number of standard
+% deviations from the mean, (2) spatial standard deviation of the images being > a cutoff number of
 % standard deviations from the mean. The cutoff is 3 s.d. by default.
 % This matrix can be added to your design matrix as a set of nuisance covariates of no interest.
-%    
+%
 % *Optional Inputs:
 %
 %   **'movieoutfile', <filepath>:**
@@ -29,8 +29,8 @@ function [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, varargin)
 %           movie file
 %
 %   **'image_interval', n:**
-%        Followed by an integer value describing the interval 
-%        between images in each subsequent frame of the movie 
+%        Followed by an integer value describing the interval
+%        between images in each subsequent frame of the movie
 %       (default = 1). Higher values will skip, showing every n images
 %
 % :Examples:
@@ -82,7 +82,7 @@ image_interval = 1;
 %     end
 %     i=i+1;
 % end
-% 
+%
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -146,7 +146,7 @@ rmssd = ( mean(sdiffs .^ 2) ) .^ .5; % rmssd - root mean square successive diffs
 
 % avoid first time point being very different and influencing distribution and plots.
 spatsd(1) = median(spatsd);
-rmssd(1) = median(rmssd); 
+rmssd(1) = median(rmssd);
 
 % z-scores of rmssd
 % rmssd_z = scale(rmssd);
@@ -160,79 +160,82 @@ slow1 = abs(rmssd) > mean(rmssd) + sdlim*std(rmssd);
 slow2 = abs(spatsd) > mean(spatsd) + sdlim*std(spatsd);
 slow = slow1 | slow2;
 
-rmssd_outlier_regressor_matrix = full(ind2vec(find(slow)', size(dat.dat, 2)));
+%rmssd_outlier_regressor_matrix = full(ind2vec(find(slow)', size(dat.dat, 2)));
+
+rmssd_outlier_regressor_matrix = intercept_model(size(dat.dat, 2), find(slow));
+rmssd_outlier_regressor_matrix = rmssd_outlier_regressor_matrix(:, 2:end);  % remove initial intercept column
 
 % -------------------------------------------------------------------------
 % DISPLAY MOVIE
 % -------------------------------------------------------------------------
 
 if showmovie
-
-fh = create_figure('succ_diffs', 2, 1);
-ax1 = subplot(2, 1, 1);
-title('Root mean square successive diffs');
-
-ax2 = subplot(2, 1, 2);
-set(ax1, 'Position', [.13 .75 .77 .2]);
-
-ax3 = axes('Position', [.13 .48 .77 .2]);
-set(ax3, 'FontSize', 16);
-
-axes(ax3);
-title('STD of successive diffs');
-hold on;
-axes(ax2);
-
-vdat = reconstruct_image(mm);
-wh = round(size(vdat, 1)./2);
-
-plot(ax1, rmssd, 'k'); axis tight
-axes(ax1), hold on; 
-hh = plot_horizontal_line(mean(rmssd) + sdlim*std(rmssd));
-set(hh, 'LineStyle', '--');
-
-plot(ax3, spatsd, 'k'); axis tight
-axes(ax3), hold on; 
-hh = plot_horizontal_line(mean(spatsd) + sdlim*std(spatsd));
-set(hh, 'LineStyle', '--');
-
-axes(ax2);
-imagesc(squeeze(vdat(wh, :, :))', mylim);
-drawnow
-hold off
-colormap gray
-
-for i = 1:image_interval:size(sdiffs, 2)
     
-    vh = plot(ax1, i, rmssd(i), 'ro', 'MarkerFaceColor', 'r');
-    vh2 = plot(ax3, i, spatsd(i), 'ro', 'MarkerFaceColor', 'r');
+    fh = create_figure('succ_diffs', 2, 1);
+    ax1 = subplot(2, 1, 1);
+    title('Root mean square successive diffs');
     
-    mm.dat = sdiffs(:, i);
+    ax2 = subplot(2, 1, 2);
+    set(ax1, 'Position', [.13 .75 .77 .2]);
+    
+    ax3 = axes('Position', [.13 .48 .77 .2]);
+    set(ax3, 'FontSize', 16);
+    
+    axes(ax3);
+    title('STD of successive diffs');
+    hold on;
+    axes(ax2);
+    
     vdat = reconstruct_image(mm);
-    imagesc(squeeze(vdat(wh, :, :))', mylim);
-    axis image;
-    set(ax2, 'YDir', 'Normal')
-    xlabel('Successive differences (sagittal slice)');
-
-    drawnow
+    wh = round(size(vdat, 1)./2);
     
-    if writetofile
-        F = getframe(fh);
-        if i == 1
-            imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath, 'Resolution', 30);
-        else
-            imwrite(F.cdata, movieoutfile,'tiff', 'WriteMode', 'append', 'Resolution', 30);
+    plot(ax1, rmssd, 'k'); axis tight
+    axes(ax1), hold on;
+    hh = plot_horizontal_line(mean(rmssd) + sdlim*std(rmssd));
+    set(hh, 'LineStyle', '--');
+    
+    plot(ax3, spatsd, 'k'); axis tight
+    axes(ax3), hold on;
+    hh = plot_horizontal_line(mean(spatsd) + sdlim*std(spatsd));
+    set(hh, 'LineStyle', '--');
+    
+    axes(ax2);
+    imagesc(squeeze(vdat(wh, :, :))', mylim);
+    drawnow
+    hold off
+    colormap gray
+    
+    for i = 1:image_interval:size(sdiffs, 2)
+        
+        vh = plot(ax1, i, rmssd(i), 'ro', 'MarkerFaceColor', 'r');
+        vh2 = plot(ax3, i, spatsd(i), 'ro', 'MarkerFaceColor', 'r');
+        
+        mm.dat = sdiffs(:, i);
+        vdat = reconstruct_image(mm);
+        imagesc(squeeze(vdat(wh, :, :))', mylim);
+        axis image;
+        set(ax2, 'YDir', 'Normal')
+        xlabel('Successive differences (sagittal slice)');
+        
+        drawnow
+        
+        if writetofile
+            F = getframe(fh);
+            if i == 1
+                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath, 'Resolution', 30);
+            else
+                imwrite(F.cdata, movieoutfile,'tiff', 'WriteMode', 'append', 'Resolution', 30);
+            end
+            
+        elseif slow(i)
+            pause(1);
         end
         
-    elseif slow(i)
-        pause(1); 
+        delete(vh);
+        delete(vh2);
     end
     
-    delete(vh);
-    delete(vh2);
-end
-
-end
+end % showmovie
 
 end % main function
 

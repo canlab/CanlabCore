@@ -80,6 +80,10 @@ function out = regress(dat, varargin)
 %  **out.residual:**
 %        fmri_data object of residual data after model has been regressed out (optional).
 %
+%  **out.diagnostics:***
+%        A structure containing VIFs and leverage values for the design matrix
+%        out.diagnostics.Variance_inflation_factors = VIFs
+%        out.diagnostics.Leverages = leverage values
 %
 % :Examples:
 % ::
@@ -106,6 +110,15 @@ function out = regress(dat, varargin)
 %    % Write out beta image to current directory
 %    out.b.fullpath = fullfile(pwd,'beta.nii');
 %    write(out)
+%
+%    % Plot diagnostics
+%    figure; subplot(1,2,1); title('VIFs')
+%    plot(regression_results.diagnostics.Variance_inflation_factors);
+%    subplot(1,2,2); title('Leverage of each observation')
+%    plot(regression_results.diagnostics.Leverages);
+%
+%   % Run with options:
+%   regression_results = regress(dat, 'variable_names', names, 'analysis_name', 'Pinel localizer 1st-level GLM', 'noverbose');
 %
 % ..
 %    Copyright (c) 2015 Tor Wager & Luke Chang
@@ -138,6 +151,7 @@ function out = regress(dat, varargin)
 %    Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
 %    Code completely refactored by Luke Chang 2/24/25
 %    Verbose option updated by Tor, 7/2015
+%    Help updated by Tor, 5/2021
 % ..
 
 % ..
@@ -145,7 +159,7 @@ function out = regress(dat, varargin)
 %    Defaults
 %    ---------------------------------------------------------------------
 % ..
-inputargs = {[.001], 'uncorrected'}; % default options for thresholding
+inputargs = {.001, 'uncorrected'}; % default options for thresholding
 do_display = 1;
 brain_is_outcome = 1; %else do brain on Y
 do_robust = 0;
@@ -178,7 +192,7 @@ for varg = 1:length(varargin)
             do_robust = 1;
             varargin{varg} = {};
         end
-        if strcmpi('brainony',varargin{varg}) | strcmpi('brain_is_predictor',varargin{varg})
+        if strcmpi('brainony',varargin{varg}) | strcmpi('brain_is_predictor',varargin{varg}) %#ok<*OR2>
             brain_is_outcome = 0;
             varargin{varg} = {};
         end
@@ -208,6 +222,10 @@ for varg = 1:length(varargin)
     end % if ischar
 end
 
+if ~doverbose % add to pass into threshold( )
+    inputargs{end+1} = 'noverbose';
+end
+    
 % ---------------------------------------------------------------------
 % Check Data and Diagnostics
 % ---------------------------------------------------------------------
@@ -255,10 +273,10 @@ if do_intercept && brain_is_outcome
         if doverbose, mywarnings{end+1} = 'No intercept detected, adding intercept to last column of design matrix'; end
         X = intercept(dat.X, 'add');
         variable_names{end + 1} = 'Intercept';
-        wh_int = intercept(X, 'which');
+%         wh_int = intercept(X, 'which');
          
     else
-        intercept_string = sprintf('Intercept detected in column %1.0f of dat.x', wh_int);
+        intercept_string = sprintf('Intercept detected in column %1.0f of dat.X', wh_int);
 
         if doverbose, mywarnings{end+1} = intercept_string; end
         X = dat.X;
@@ -298,7 +316,7 @@ vifs = getvif(X);
 
 if any(vifs > 4)
     
-    mywarnings{end+1} = 'Warning!!!  Design multicolinearity. Some regressors have variance inflation factors > 4.';
+    mywarnings{end+1} = 'Warning!!!  Design multicolinearity. Some regressors have variance inflation factors > 4. Check out.diagnostics';
     
 end
 
@@ -307,10 +325,26 @@ H = X*pinv(X);
 %H = X*inv(X'*X)*X'  will be identical if not rank deficient
 leverages = diag(H);
 
-if any(abs(zscore(leverages))) >= 3
-     mywarnings{end+1} = 'Warning!!!  Some observations have extreme leverage values, regression may be unstable. abs(z(leverage)) > 3';
+if any(abs(zscore(leverages)) >= 3)
+     mywarnings{end+1} = 'Warning!!!  Some observations have high leverage values relative to others, regression may be unstable. abs(z(leverage)) > 3';
 end
 
+% Names
+k = size(X, 2);
+if length(variable_names) < k
+   if ~isempty(variable_names), mywarnings{end+1} = 'Warning!!!  Too few variable names entered, less than size(X, 2). Names may be inaccurate.'; end % suppress warning if NO names entered
+    
+   for i = length(variable_names)+1:k
+       variable_names{i} = sprintf('R%d', i);
+   end
+end
+
+if length(variable_names) > k
+   mywarnings{end+1} = 'Warning!!!  Too many variable names entered, more than size(X, 2). Names may be inaccurate.';
+   
+   variable_names = variable_names(1:k);
+end
+ 
 if doverbose
     
     fprintf('Analysis: %s\n', analysis_name);
@@ -360,9 +394,18 @@ if brain_is_outcome
             fprintf('\nRunning in Robust Mode');
         end
         
-        for i = 1:size(dat.dat,1)
-            
-            [n, k] = size(X);
+        v = size(dat.dat, 1);
+        [n, k] = size(X);
+        
+        % Initialize outputs
+        [b, t] = deal(zeros(k, v));
+        p = ones(k, v);
+        dfe = zeros(1, v);
+        [stderr, sigma] = deal(zeros(k, v));
+        
+        for i = 1:v
+            % For each voxel
+
             [bb,stats] = robustfit(X, dat.dat(i,:)', 'bisquare', [], 'off');
             
             b(:,i)=bb; %Betas
@@ -446,8 +489,10 @@ else
         end
         % Inference
         [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
-    end
-end
+        
+    end % dorobust
+    
+end % brain_is_outcome or not
 
 stop = toc;
 if doverbose, fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60)); end
@@ -473,6 +518,8 @@ out.variable_names = variable_names;
 out.diagnostics = struct('Variance_inflation_factors', vifs, 'Leverages', leverages);
 out.warnings = mywarnings;
 
+% Create objects
+
 % Betas
 out.b = statistic_image;
 out.b.type = 'Beta';
@@ -480,11 +527,13 @@ out.b.p = p';
 out.b.ste = stderr';
 out.b.N = n;
 out.b.dat = b';
-out.b.dat_descrip = sprintf('Beta Values from regression, intercept is last');
+out.b.dat_descrip = sprintf('Beta Values from regression, intercept is column %d', wh_int);
 out.b.volInfo = dat.volInfo;
 out.b.removed_voxels = dat.removed_voxels;
 out.b.removed_images = false;  % this image does not have the same dims as the original dataset
-out.b = threshold(out.b, inputargs{:}); % Threshold image
+out.b.image_labels = variable_names;
+if doverbose, fprintf('Thresholding b images at %3.6f %s\n', inputargs{1}, inputargs{2}); end
+out.b = threshold(out.b, inputargs{:}, 'noverbose'); % Threshold image
 
 % T stats
 out.t = statistic_image;
@@ -493,11 +542,14 @@ out.t.p = p';
 out.t.ste = stderr';
 out.t.N = n;
 out.t.dat = t';
-out.t.dat_descrip = sprintf('t-values from regression, intercept is last');
+out.t.dat_descrip = sprintf('t-values from regression, intercept is column %d', wh_int);
 out.t.volInfo = dat.volInfo;
 out.t.removed_voxels = dat.removed_voxels;
 out.t.removed_images = false;  % this image does not have the same dims as the original dataset
-out.t = threshold(out.t, inputargs{:}, 'noverbose'); %Threshold image
+out.t.image_labels = variable_names;
+
+if doverbose, fprintf('Thresholding t images at %3.6f %s\n', inputargs{1}, inputargs{2}); end
+out.t = threshold(out.t, inputargs{:}); %Threshold image
 
 % DF as fmri_data
 out.df = dat;
@@ -523,7 +575,7 @@ if k < 10 && do_display
     
     orthviews(out.t);
     
-elseif do_display
+elseif do_display && doverbose
     disp('Warning: No display because >= 10 images.');
     
 end

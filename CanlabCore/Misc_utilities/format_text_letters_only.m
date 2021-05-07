@@ -1,4 +1,5 @@
-function str_array = format_text_letters_only(str_array, varargin)
+function [str_array, warnings] = format_text_letters_only(str_array, varargin)
+% Make sure string or cell vector of strings is valid as a variable name or table column
 % Replaces all non-letter characters in a string or cell array of strings
 % with '_'.  Good for saving variables with str_array, and other things.
 %
@@ -11,10 +12,17 @@ function str_array = format_text_letters_only(str_array, varargin)
 %            Good for formatting for use as variable names!
 %
 % str_array = format_text_letters_only(str_array, 'numbers')  % numbers ok too, do not replace
+%
+% Best for variable names and table names:
+% str_array = format_text_letters_only(str_array, 'numbers', 'cleanup', 'squeeze', 'underscore_ok');
+
+
 
 search_criteria = 'alpha';
 replace_with = '_';
 docleanup = false;
+warnings = {};
+underscore_ok = false;
 
 if any(strcmp(varargin, 'numbersok')) || any(strcmp(varargin, 'numbers'))
     % numbers are ok
@@ -31,6 +39,12 @@ if any(strcmp(varargin, 'cleanup'))
     docleanup = true;
 end
 
+if any(strcmp(varargin, 'underscore_ok'))
+    % replace with no character
+    underscore_ok = true;
+end
+
+
 % -----------------------------------------------------------------
 
 % Handles cell and non-cell input
@@ -42,25 +56,58 @@ if iscell(is_letter)
         
         wh = ~is_letter{i};
         
-        str_array{i}(wh) = replace_with;
+        if underscore_ok
+            wh(str_array{i} == '_') = false;
+        end
+        
+        if any(wh)
+            warnings{end + 1} = 'Warning: String has special characters that will be dropped.';
+        end
+        
+        if ~isempty(replace_with)
+            str_array{i}(wh) = replace_with;
+        else
+            str_array{i}(wh) = '';
+        end
         
         if docleanup
             
             str_array{i} = clean_up(str_array{i});
             
         end
+        
+        if isempty(str_array{i})
+            warnings{end + 1} = 'Warning: After dropping special characters, string is empty. Invalid string.';
+        end
+        
     end
     
 else % not a cell
     
     wh = ~is_letter;
     
-    str_array(wh) = replace_with;
+    if underscore_ok
+        wh(str_array{i} == '_') = false;
+    end
+        
+    if any(wh)
+        warnings{end + 1} = 'Warning: String has special characters that will be dropped.';
+    end
+        
+    if ~isempty(replace_with)
+        str_array(wh) = replace_with;
+    else
+        str_array(wh) = '';
+    end
     
     if docleanup
         
         str_array = clean_up(str_array);
         
+    end
+    
+    if isempty(str_array)
+        warnings{end + 1} = 'Warning: After dropping special characters, string is empty. Invalid string.';
     end
     
 end

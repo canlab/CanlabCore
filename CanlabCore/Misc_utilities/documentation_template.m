@@ -112,6 +112,8 @@ dashes = '----------------------------------------------';
 printstr = @(dashes) disp(dashes);
 printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
 
+% Enforce valid variable names in a cell array of strings: Eliminate special characters and leading numbers
+[variable_names, namewarnings] = format_text_letters_only(variable_names, 'numbers', 'cleanup', 'squeeze', 'underscore_ok');
 
 % ----------------------------------------------------------------------
 % Parse inputs

@@ -642,6 +642,21 @@ if ~isfield(obj.volInfo, 'cluster')
     obj = reparse_contiguous(obj);
 end
 
+if strcmp(verbosestr, 'verbose')
+    
+    % Check data bit rate
+    % ---------------------------------------------------------------------
+    
+    databitrate = length(unique(obj.dat(:)));
+    
+    fprintf('Number of unique values in dataset: %d  Bit rate: %3.2f bits\n', databitrate, log2(databitrate));
+    
+    if databitrate < 2^10
+        fprintf('Warning: Number of unique values in dataset is low, indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values\n');
+    end
+    
+end
+
 end % function
 
 % -------------------------------------------------------------

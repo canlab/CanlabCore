@@ -128,8 +128,22 @@ switch keyword
         end
         
         %Check number of rows
-        if size(obj1.dat,1)~=size(obj2.dat,1)
-            error('number of voxels is different between objects.')
+        if size(obj1.dat,1) ~= size(obj2.dat,1)
+            % Voxel list mismatch
+            % Try to fix
+            
+            obj1 = replace_empty(obj1);
+            obj2 = replace_empty(obj2);
+            
+            if size(obj1.dat,1) ~= size(obj2.dat,1)
+                % If still different, give a warning and resample.
+                
+                warning('Image_math: Objects being operated on do not appear to be in the same space. Resampling 2nd object, but proceed with caution!!');
+                
+                obj2 = resample_space(obj2, obj1);
+            end
+            
+            %error('number of voxels is different between objects.')
         end
         
         if strcmp(keyword, 'cat')

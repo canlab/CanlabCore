@@ -33,6 +33,10 @@ function out = regress(dat, varargin)
 %        p-value threshold string indicating threshold type
 %        (see help statistic_image.threshold for options)
 %
+%  **C**
+%       Followed by a contrast matrix, each column is a contrast across conditions/events
+%       [k x c] matrix, where k = size(X, 2) and c is number of contrasts
+%
 %  **nointercept:**
 %        Do not add intercept to model
 %
@@ -56,6 +60,9 @@ function out = regress(dat, varargin)
 %       Followed by a cell array of variable/regressor names, for
 %       non-intercept regressors
 % 
+%  **contrast_names:** 
+%       Followed by a cell array of contrast names
+%                
 %  **analysis_name:** 
 %       Followed by a string with a name/description for this analysis.
 % 
@@ -170,7 +177,9 @@ do_intercept = 1;
 do_resid = 0;
 doverbose = true;
 variable_names = {};
+contrast_names = {};
 analysis_name = '';
+C = [];
 
 % ---------------------------------------------------------------------
 % Parse Inputs
@@ -217,6 +226,16 @@ for varg = 1:length(varargin)
             varargin{varg} = {}; varargin{varg + 1} = {};
         end
         
+        if strcmpi('C',varargin{varg}) | strcmpi('contrasts',varargin{varg})
+            C = varargin{varg + 1};
+            varargin{varg} = {}; varargin{varg + 1} = {};
+        end
+   
+        if strcmpi('contrast_names',varargin{varg})
+            contrast_names = varargin{varg + 1};
+            varargin{varg} = {}; varargin{varg + 1} = {};
+        end
+
         if strcmpi('analysis_name',varargin{varg})
             analysis_name = varargin{varg + 1};
             varargin{varg} = {}; varargin{varg + 1} = {};
@@ -348,6 +367,39 @@ if length(variable_names) > k
    variable_names = variable_names(1:k);
 end
  
+% Check contrasts
+if ~isempty(C) && ~size(C, 1) == size(X, 2)
+    
+    disp('Contrasts entered, but size(C, 1) does not equal size(X, 2).');
+    disp('Must have a contrast entry for each column of X');
+    error('Quitting.')
+    
+end
+
+% Contrast names
+if ~isempty(C)
+    
+    kc = size(C, 2);
+    
+    if length(contrast_names) < kc
+        if ~isempty(contrast_names), mywarnings{end+1} = 'Warning!!!  Too few contrast names entered, less than size(C, 2). Names may be inaccurate.'; end % suppress warning if NO names entered
+        
+        for i = length(contrast_names)+1:kc
+            contrast_names{i} = sprintf('Con%d', i); %#ok<*AGROW>
+        end
+    end
+    
+    if length(contrast_names) > kc
+        mywarnings{end+1} = 'Warning!!!  Too many contrast names entered, more than size(C, 2). Names may be inaccurate.';
+        
+        contrast_names = contrast_names(1:kc);
+    end
+
+end
+
+% Enforce double-format (just in case)
+dat.dat = double(dat.dat);
+
 if doverbose
     
     fprintf('Analysis: %s\n', analysis_name);
@@ -392,7 +444,10 @@ if brain_is_outcome
         end
     end
     
-    if do_robust %need to loop through voxels - Slow!
+    if do_robust 
+        % Robust  - Regress X on brain as Y
+        %need to loop through voxels - Slow!
+        
         if doverbose
             fprintf('\nRunning in Robust Mode ___%%');
         end
@@ -424,18 +479,23 @@ if brain_is_outcome
         end
         r = dat.dat' - X*b; %residual
         
-    else %OLS - vectorized - Fast!
+    else
+        % OLS - X predicting brain 
+        % - vectorized - Fast!
+        
         if doverbose, fprintf('\nRunning in OLS Mode'); end
         
         % Estimate Betas in vector
-        [n, k] = size(X);
+
+        
         b = pinv(X) * dat.dat';
         
         % Error
         r = dat.dat' - X*b;
-        sigma = std(r);
-        stderr = ( diag(inv(X' * X)) .^ .5 ) * sigma;  % params x voxels matrix of std. errors
         
+        % Residual variance
+        [stderr, sigma] = get_std_errors(r, X);
+   
         % Inference
         [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
         
@@ -479,8 +539,11 @@ else
                 fprintf('\b\b\b\b%03d%%', 100 * round(i/v))
             end
             
-        end
-    else %OLS
+        end % voxel
+        
+    else
+        % ---------------------------------------------------------------------
+        %OLS -- Regress brain on Y
         
         if doverbose, fprintf('\nRunning in OLS Mode'); end
         
@@ -498,9 +561,14 @@ else
             
             % Error
             r(:,i) = dat.Y - X * b(:,i);
-            sigma(i) = std(r(:,i));
-            stderr(:,i) = ( diag(inv(X' * X)) .^ .5 ) * sigma(i);  % params x voxels matrix of std. errors
+            
+            %             sigma(i) = std(r(:,i)); % wrong
+            %             stderr(:,i) = ( diag(inv(X' * X)) .^ .5 ) * sigma(i);  % params x voxels matrix of std. errors
         end
+        
+        % Residual variance - can do this at end because X is always the same size
+        [stderr, sigma] = get_std_errors(r, X);
+        
         % Inference
         [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma);
         
@@ -510,6 +578,23 @@ end % brain_is_outcome or not
 
 stop = toc;
 if doverbose, fprintf('\nModel run in %d minutes and %.2f seconds\n',floor(stop/60),rem(stop,60)); end
+
+
+% ---------------------------------------------------------------------
+% Contrasts
+% ---------------------------------------------------------------------
+
+if ~isempty(C)
+
+    con_vals = C' * b;
+
+    % Contrast STE
+    con_ste = diag(C' * inv(X' * X) * C) .^ .5 * sigma;
+    
+    [con_t, ~, con_p] = param_t_test(X, con_vals, con_ste, sigma);
+    
+end
+
 
 % ---------------------------------------------------------------------
 % Create Output
@@ -528,11 +613,13 @@ out.input_parameters.initial_statistical_threshold = inputargs;
 % design and diagnostics
 out.X = X;
 out.variable_names = variable_names;
+out.C = C;
 
 out.diagnostics = struct('Variance_inflation_factors', vifs, 'Leverages', leverages);
 out.warnings = mywarnings;
 
 % Create objects
+if doverbose, fprintf('\nCreating and thresholding beta images\n'); end
 
 % Betas
 out.b = statistic_image;
@@ -582,6 +669,44 @@ if do_resid
     out.resid.dat_descrip = sprintf('Residual from Regression');
 end
 
+if ~isempty(C)
+    
+    if doverbose, fprintf('\nCreating and thresholding contrast images\n'); end
+
+    % Contrast values
+    out.contrast_images = statistic_image;
+    out.contrast_images.type = 'Contrast';
+    out.contrast_images.p = con_p';
+    out.contrast_images.ste = stderr';
+    out.contrast_images.N = n;
+    out.contrast_images.dat = con_vals';
+    out.contrast_images.dat_descrip = 'Contrast Values from regression';
+    out.contrast_images.volInfo = dat.volInfo;
+    out.contrast_images.removed_voxels = dat.removed_voxels;
+    out.contrast_images.removed_images = false;  % this image does not have the same dims as the original dataset
+    out.contrast_images.image_labels = contrast_names;
+    if doverbose, fprintf('Thresholding contrast images at %3.6f %s\n', inputargs{1}, inputargs{2}); end
+    out.contrast_images = threshold(out.contrast_images, inputargs{:}, 'noverbose'); % Threshold image
+    
+    % T stats
+    out.con_t = statistic_image;
+    out.con_t.type = 'T';
+    out.con_t.p = con_p';
+    out.con_t.ste = con_ste';
+    out.con_t.N = n;
+    out.con_t.dat = con_t';
+    out.con_t.dat_descrip = sprintf('t-values from regression, intercept is column %d', wh_int);
+    out.con_t.volInfo = dat.volInfo;
+    out.con_t.removed_voxels = dat.removed_voxels;
+    out.con_t.removed_images = false;  % this image does not have the same dims as the original dataset
+    out.con_t.image_labels = contrast_names;
+    
+    if doverbose, fprintf('Thresholding t images at %3.6f %s\n', inputargs{1}, inputargs{2}); end
+    out.con_t = threshold(out.con_t, inputargs{:}); %Threshold image
+    
+end
+
+
 % ---------------------------------------------------------------------
 % Plot Results
 % ---------------------------------------------------------------------
@@ -600,6 +725,25 @@ warning on
 % Subfunctions
 % ---------------------------------------------------------------------
 
+
+
+    function [stderr, sigma] = get_std_errors(r, X)
+        
+        [n, k] = size(X);
+        v = size(dat.dat, 1);
+        
+        % We want diag(r' * r), but matrix size can be large
+        % std(r) does not account for k parameters used, so is incorrect
+        % residual std. not sqrt(var(resid)) -- we must account for k params used
+        for i = 1:v
+            sigma(1, i) = (r(:, i)' * r(:, i) ./ (n - k)) .^ .5;
+        end
+        
+        stderr = ( diag(inv(X' * X)) .^ .5 ) * sigma;  % params x voxels matrix of std. errors
+        
+    end
+
+    
     function [t,dfe,p,sigma] = param_t_test(X,b,stderr,sigma)
         % test whether parameter is significantly different from zero
         %
@@ -626,6 +770,7 @@ warning on
         dfe = repmat(dfe,1,size(t,2));
     end
 
-end
+end % Main Function
+
 
 

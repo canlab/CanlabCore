@@ -139,17 +139,22 @@ for s = 1:length(test_images.additional_info)
 end
 
 % clear exp
-labels = test_images.additional_info;
+% labels = test_images.additional_info;
+labels = format_strings_for_legend(test_images.additional_info);
 
 % ----------------------------------------------------------------------
 % ROC and stats
 % ----------------------------------------------------------------------
 
-[ispain, iscog, isemo] = deal(false(270, 1));
+% [ispain, iscog, isemo] = deal(false(270, 1));
+% 
+% ispain(1:6*15) = true;
+% iscog(6*15 + 1 : (12*15)) = true;
+% isemo(12*15+1:18*15) = true;
 
-ispain(1:6*15) = true;
-iscog(6*15 + 1 : (12*15)) = true;
-isemo(12*15+1:18*15) = true;
+ispain = strcmp(dat.metadata_table.Domain, 'Pain');
+iscog = strcmp(dat.metadata_table.Domain, 'Cog_control');
+isemo = strcmp(dat.metadata_table.Domain, 'Neg_Emotion');
 
 wh_isnan=isnan(vector_data);
 vector_data=vector_data(~wh_isnan);

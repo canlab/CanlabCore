@@ -25,7 +25,12 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
 % 'tian2020_subcortical_scale1/2/3/4'      'Subcortical atlas at four different resolutions (e.g., tian2020_subcortical_scale3) )'
+% 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 %
+% More information and references to original publications are saved in
+% each atlas object. This function is a shell to collect them in a central registry.
+% New atlases can be created by passing a file name (e.g., .nii file) or an fmri_data object
+% and labels into the atlas( ) constructor method.
 %
 % Examples:
 % -------------------------------------------------------------------------
@@ -45,7 +50,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case 'noverbose', verbose = 0;
-            
+                
             case 'verbose', verbose = 1;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -53,109 +58,116 @@ for i = 1:length(varargin)
     end
 end
 
-    switch lower(atlas_file_name_or_keyword)
-        
-        case {'thalamus'}
-            savefile = which('Thalamus_combined_atlas_object.mat');
-            varname = 'thalamus_atlas';
+switch lower(atlas_file_name_or_keyword)
     
-        case {'thalamus_detail', 'morel'}
-            savefile = which('Morel_thalamus_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'cortex', 'glasser'}
-            savefile = which('Glasser2016HCP_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'basal_ganglia', 'bg'}
-            savefile = which('Basal_ganglia_combined_atlas_object.mat');
-            varname = 'atlas_obj';
- 
-        case {'brainstem'}
-            savefile = which('brainstem_combined_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'striatum', 'pauli_bg'}
-            savefile = which('Pauli2016_striatum_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'subcortical_rl', 'CIT168', 'cit168'}
-            savefile = which('CIT168_MNI_subcortical_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'brainnetome'}
-            savefile = which('Brainnetome_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'keuken'}
-            savefile = which('Keuken_7T_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case {'buckner'}
-            %savefile = 'Buckner1000FC_2011_cortex_atlas_object.mat';
-            savefile = 'buckner_networks_atlas_object.mat';
-            varname = 'buckner_atlas';
-            
-        case {'cerebellum', 'suit'}
-            savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-        case 'shen'
-            savefile = which('Shen_atlas_object.mat');
-            varname = 'atlas_obj';
-            
-%          case 'schaefer400'                   
-%              savefile = which('Schaefer2018Cortex_atlas_regions.mat');
-%              varname = 'atlas_obj';
-             
-        case 'yeo17networks'                 
-            savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');
-            varname = 'atlas_obj';
+    case {'thalamus'}
+        savefile = which('Thalamus_combined_atlas_object.mat');
+        varname = 'thalamus_atlas';
+        
+    case {'thalamus_detail', 'morel'}
+        savefile = which('Morel_thalamus_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'cortex', 'glasser'}
+        savefile = which('Glasser2016HCP_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'basal_ganglia', 'bg'}
+        savefile = which('Basal_ganglia_combined_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'brainstem'}
+        savefile = which('brainstem_combined_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'striatum', 'pauli_bg'}
+        savefile = which('Pauli2016_striatum_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'subcortical_rl', 'CIT168', 'cit168'}
+        savefile = which('CIT168_MNI_subcortical_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'brainnetome'}
+        savefile = which('Brainnetome_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'keuken'}
+        savefile = which('Keuken_7T_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case {'buckner'}
+        %savefile = 'Buckner1000FC_2011_cortex_atlas_object.mat';
+        savefile = 'buckner_networks_atlas_object.mat';
+        varname = 'buckner_atlas';
+        
+    case {'cerebellum', 'suit'}
+        savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case 'shen'
+        savefile = which('Shen_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+        %          case 'schaefer400'
+        %              savefile = which('Schaefer2018Cortex_atlas_regions.mat');
+        %              varname = 'atlas_obj';
+        
+    case 'yeo17networks'
+        savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case 'canlab2018'
+        savefile = 'CANlab_combined_atlas_object_2018.mat';
+        varname = 'atlas_obj';
+        
+    case 'canlab2018_2mm'
+        savefile = 'CANlab_combined_atlas_object_2018_2mm.mat';
+        varname = 'atlas_obj';
+        
+    case 'insula'
+        savefile = 'Faillenot_insular_atlas.mat';
+        varname = 'atlas_obj';
+        
+    case 'painpathways'
+        savefile = 'pain_pathways_atlas_obj.mat';
+        varname = 'pain_pathways';
+        
+    case 'painpathways_finegrained'
+        savefile = 'pain_pathways_atlas_obj.mat';
+        varname = 'pain_pathways_finegrained';
+        
+    case 'kragel2019pag'
+        savefile ='Kragel2019PAG_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case 'tian2020_subcortical_scale1'
+        savefile ='Tian2020_subcortical_S1.mat';
+        varname = 'tian_subcortical_S1';
+        
+    case 'tian2020_subcortical_scale2'
+        savefile ='Tian2020_subcortical_S2.mat';
+        varname = 'tian_subcortical_S2';
+        
+    case 'tian2020_subcortical_scale3'
+        savefile ='Tian2020_subcortical_S3.mat';
+        varname = 'tian_subcortical_S3';
+        
+    case 'tian2020_subcortical_scale4'
+        savefile ='Tian2020_subcortical_S4.mat';
+        varname = 'tian_subcortical_S4';
+        
+    case 'delavega'
+        savefile ='delaVega2017_neurosynth_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    otherwise % assume it's a file name
+        savefile = which(atlas_file_name_or_keyword);
+        varname = [];
+        
+end % switch
 
-        case 'canlab2018'
-            savefile = 'CANlab_combined_atlas_object_2018.mat';
-            varname = 'atlas_obj';
-            
-        case 'canlab2018_2mm'
-            savefile = 'CANlab_combined_atlas_object_2018_2mm.mat';
-            varname = 'atlas_obj';
-            
-        case 'insula'
-            savefile = 'Faillenot_insular_atlas.mat';
-            varname = 'atlas_obj';
-            
-        case 'painpathways'
-            savefile = 'pain_pathways_atlas_obj.mat';
-            varname = 'pain_pathways';
-            
-        case 'painpathways_finegrained'
-            savefile = 'pain_pathways_atlas_obj.mat';
-            varname = 'pain_pathways_finegrained';
-            
-        case 'kragel2019pag'
-            savefile ='Kragel2019PAG_atlas_object.mat';
-            varname = 'atlas_obj';
-        
-        case 'tian2020_subcortical_scale1'
-            savefile ='Tian2020_subcortical_S1.mat';
-            varname = 'tian_subcortical_S1';
-        case 'tian2020_subcortical_scale2'
-            savefile ='Tian2020_subcortical_S2.mat';
-            varname = 'tian_subcortical_S2';
-        case 'tian2020_subcortical_scale3'
-            savefile ='Tian2020_subcortical_S3.mat';
-            varname = 'tian_subcortical_S3';
-        case 'tian2020_subcortical_scale4'
-            savefile ='Tian2020_subcortical_S4.mat';
-            varname = 'tian_subcortical_S4';
-        
-        otherwise % assume it's a file name
-            savefile = which(atlas_file_name_or_keyword);
-            varname = [];
-            
-  end % switch
-    
-  atlas_obj = load_atlas_from_file(savefile, varname, verbose);
+atlas_obj = load_atlas_from_file(savefile, varname, verbose);
 
 end % function
 

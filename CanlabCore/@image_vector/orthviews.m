@@ -92,6 +92,9 @@ for i = 1:length(varargin)
             case 'color'
                 additional_inputs{end + 1} = varargin{i + 1};
                 
+            case 'trans'
+                additional_inputs{end + 1} = 'trans';
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -185,13 +188,13 @@ for i = handle_indices
         [clpos{i}, clneg{i}] = posneg_separate(cl{i}, 'Z');
         
         if ~isempty(clpos{i})
-            cluster_orthviews(clpos{i}, {[1 1 0]}, 'add', 'handle', i, 'solid');
+            cluster_orthviews(clpos{i}, {[1 1 0]}, 'add', 'handle', i,  'solid'); % additional_inputs{:}); % 'solid');
         else
             fprintf('Image %3.0f: No positive clusters\n', i);
         end
         
         if ~isempty(clneg{i})
-            cluster_orthviews(clneg{i}, {[0 0 1]}, 'add', 'handle', i, 'solid');
+            cluster_orthviews(clneg{i}, {[0 0 1]}, 'add', 'handle', i,  'solid'); % additional_inputs{:}); % 'solid');
         else
             fprintf('Image %3.0f: No negative clusters\n', i);
         end

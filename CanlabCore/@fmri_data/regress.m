@@ -340,10 +340,10 @@ end
 % Check data bit rate
 % ---------------------------------------------------------------------
 
-databitrate = length(unique(dat.dat(:)));
+nuniquevals = length(unique(dat.dat(:)));
 
-if databitrate < 2^10
-    mywarnings{end+1} = sprintf('Number of unique values in dataset is low (%d, %3.2f bits), indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values', log2(databitrate), databitrate);
+if nuniquevals < 2^10
+    mywarnings{end+1} = sprintf('Number of unique values in dataset is low (%d, %3.2f bits), indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values', nuniquevals, log2(nuniquevals));
 end
 
 % Check of dat.X exists and is correct format
@@ -578,7 +578,7 @@ if brain_is_outcome
     end
     
     if do_robust 
-        % Robust  - Regress X on brain as Y
+        % Robust - Regress stim/behavior(X) on brain (Y)
         %need to loop through voxels - Slow!
         
         if doverbose
@@ -589,10 +589,9 @@ if brain_is_outcome
         [n, k] = size(X);
         
         % Initialize outputs
-        [b, t] = deal(zeros(k, v));
+        [b, t, stderr] = deal(zeros(k, v));
         p = ones(k, v);
-        dfe = zeros(1, v);
-        [stderr, sigma] = deal(zeros(k, v));
+        [dfe, sigma] = deal(zeros(1, v));
         
         for i = 1:v
             % For each voxel
@@ -635,7 +634,7 @@ if brain_is_outcome
     end
     
 else
-    % Regress brain on Y - loops through voxels, slow!
+    % Regress brain (X) on stim/behavior (Y) - loops through voxels, slow!
     % ---------------------------------------------------------------------
     
     if doverbose
@@ -648,7 +647,15 @@ else
         if doverbose
             fprintf('\nRunning in Robust Mode ___%%');
         end
-        v = size(dat.dat,1);
+        
+        v = size(dat.dat, 1);
+        n = size(dat.dat, 2);
+        k = 2; % one predictor (brain) and an intercept
+        
+        % Initialize outputs
+        [b, t, stderr] = deal(zeros(k, v));
+        p = ones(k, v);
+        [dfe, sigma] = deal(zeros(1, v));
         
         for i = 1:v
             % Create X from brain Data
@@ -657,7 +664,7 @@ else
             else
                 X = dat.dat(i,:)';
             end
-            [n, k] = size(X);
+
             [bb,stats] = robustfit(X, dat.Y, 'bisquare', [], 'off');
             
             b(:,i)=bb; %Betas

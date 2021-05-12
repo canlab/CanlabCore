@@ -90,6 +90,13 @@ for i = 1:length(varargin)
                 doparcels = true; dounique = true;
                 
             case 'color'
+                additional_inputs{end + 1} = varargin{i}; 
+                
+                if ~iscell(varargin{i + 1})
+                    warning('Color input must be a cell array. Check inputs');
+                    varargin{i + 1} = {varargin{i + 1}};
+                end
+                
                 additional_inputs{end + 1} = varargin{i + 1};
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
@@ -170,7 +177,7 @@ for i = handle_indices
         %colors = custom_colors([1 1 0], [0 0 1], length(cl{i}));
         
         if ~isempty(cl{i})
-            cluster_orthviews(cl{i}, 'unique', 'add', 'handle', i);
+            cluster_orthviews(cl{i}, 'unique', 'add', 'handle', i, additional_inputs{:});
         else
             fprintf('Image %3.0f empty\n', i);
         end
@@ -185,20 +192,20 @@ for i = handle_indices
         [clpos{i}, clneg{i}] = posneg_separate(cl{i}, 'Z');
         
         if ~isempty(clpos{i})
-            cluster_orthviews(clpos{i}, {[1 1 0]}, 'add', 'handle', i, 'solid');
+            cluster_orthviews(clpos{i}, {[1 1 0]}, 'add', 'handle', i, 'solid', additional_inputs{:}); % if colors input, should override fixed color spec
         else
             fprintf('Image %3.0f: No positive clusters\n', i);
         end
         
         if ~isempty(clneg{i})
-            cluster_orthviews(clneg{i}, {[0 0 1]}, 'add', 'handle', i, 'solid');
+            cluster_orthviews(clneg{i}, {[0 0 1]}, 'add', 'handle', i, 'solid', additional_inputs{:});
         else
             fprintf('Image %3.0f: No negative clusters\n', i);
         end
         
     else
         if ~isempty(cl{i})
-            cluster_orthviews(cl{i}, additional_inputs{:}, 'add', 'handle', i);
+            cluster_orthviews(cl{i}, additional_inputs{:}, 'add', 'handle', i, additional_inputs{:});
         else
             fprintf('Image %3.0f empty\n', i);
         end

@@ -134,7 +134,7 @@ switch method_keyword
         load('canlab_canonical_brain_surface_left_insula', 'isosurf', 'isocap');
         p = draw_isosurface_patches(isosurf, isocap, [.5 .5 .5]);
         
-        set_slab_view_properties(p, [91 0])
+        set_slab_view_properties(p, [271 0])
         surface_handles = p;
         
     case 'right_insula_slab'
@@ -146,7 +146,7 @@ switch method_keyword
         load('canlab_canonical_brain_surface_right_insula', 'isosurf', 'isocap');
         p = draw_isosurface_patches(isosurf, isocap, [.5 .5 .5]);
         
-        set_slab_view_properties(p, [271 0])
+        set_slab_view_properties(p, [91 0])
         surface_handles = p;
         
     case 'accumbens_slab'

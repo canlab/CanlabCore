@@ -660,6 +660,10 @@ switch DSGN.convolution.type
                 flatdurations{c} = 0; %#ok
             end
         end
+    case 'spline'
+        % requires SPM spline patch
+        OPTS.modeljob = [OPTS.modeljob ',' '''spline''' ',' ...
+            num2str(DSGN.convolution.windowlength) ',' num2str(DSGN.convolution.order), ',', num2str(DSGN.convolution.degree)];
     otherwise
         error('Unrecognized convolution type: %s',DSGN.convolution.type)
 end

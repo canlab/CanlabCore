@@ -39,6 +39,9 @@ function obj = resample_space(obj, sampleto, varargin)
 %   2/5/2018    Tor added support for atlas objects - special handling
 %
 %   2/23/2018   Stephan changed replace_empty(obj) into replace_empty(obj,'voxels') to prevent adding removed images back in
+%   5/18/2021   Tor removed line: obj_out = replace_empty(obj_out); for
+%   statistic_image objects, as it was causing a voxel mismatch...incorrect
+%   removed_voxels due to partially built object
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -156,7 +159,9 @@ end % atlas object
 if isa(obj_out, 'statistic_image')
     % Rebuild fields specific to statistic_images
     
-    obj_out = replace_empty(obj_out);
+%     obj_out = replace_empty(obj_out); % TOR REMOVED 5/18/21, AS IT
+%     RESULTS IN VOXEL LIST MISMATCH WITH PARTIALLY BUILT OBJECT FIELDS
+
     k = size(obj_out.dat, 2);
     
     [obj_out.p, obj_out.ste, obj_out.sig, obj_out.N] = deal([]); % these will be resampled
@@ -228,6 +233,10 @@ if isa(obj_out, 'statistic_image')
 end
 
 % End special object subtypes
+% -----------------------------------------------------------------------
+
+
+% Handle removed voxels
 % -----------------------------------------------------------------------
 
 if size(obj_out.dat, 1) == sum(obj_out.volInfo.image_indx)

@@ -20,7 +20,7 @@ K{1}.RT = TR;
 K{1}.LChoice = LChoice;
 K{1}.HChoice = HChoice;
 K{1}.HParam = HParam; 
-K{1}.row = ones(dims,1);
+K{1}.row = ones(dims, 1);
 
 if length(varargin) > 0
         K{1}.LParam = varargin{1};
@@ -29,19 +29,22 @@ end
     
 KL = []; KH = [];
 
-spmS = spm_filter('set',K);
+spmS = spm_filter('set', K);
 
 S = eye(length(K{1}.row));
 
 if ~strcmp(HChoice,'none')
+    
 	KH = full(spmS{1}.KH);
 	S = S - KH * pinv(KH);
+    
 end
 
 if ~strcmp(LChoice,'none')
 	KL = full(spmS{1}.KL);
 	S = KL * S;         	% lowpass * highpass; hp = I - res forming mtx of S.KH
 end
+
 return
 
 

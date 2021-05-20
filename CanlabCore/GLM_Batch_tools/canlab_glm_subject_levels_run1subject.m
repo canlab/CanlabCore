@@ -99,7 +99,7 @@ else
         diary(diaryfile), fprintf('%sADDING conditions and regressors\n',z), diary off
         clear names onsets durations pmods multipleregressors
         try
-            [names onsets durations pmods multipleregressors] = parse_conditions(DSGN,runs,z);
+            [names onsets durations pmods multipleregressors multipleregressorsbehav] = parse_conditions(DSGN,runs,z);
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
             else diary(diaryfile), fprintf('> %s\n',getReport(exc,'extended')); diary off; end
@@ -112,7 +112,7 @@ else
             diary(diaryfile), fprintf('%sCONCATENATING data according to DSGN.concatenation:\n',z), diary off
             try          
                 diary(diaryfile)
-                [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z); %#ok
+                [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z,multipleregressorsbehav); %#ok
                 diary off
             catch exc
                 if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -257,7 +257,7 @@ end
 
 
 %%
-function [names onsets durations pmods multipleregressors] = parse_conditions(DSGN,runs,z)
+function [names onsets durations pmods multipleregressors multipleregressorsbehav] = parse_conditions(DSGN,runs,z)
 
 newpmod = struct('name', [], 'param', [], 'poly', []);
 emptypmod = newpmod([]);
@@ -390,12 +390,24 @@ for session = 1:numel(runs)
     else
         multipleregressors{session} = {}; %#ok
     end    
+    
+    % retrieve behavioral multiple regressors file
+    if ~isempty(DSGN.multiregbehav)
+        multiregbehavfile = fullfile(mfdir, DSGN.multiregbehav);
+%         if ~exist(multiregfile,'file'), error('> No such multiple regressors file : %s',multiregfile); end
+        multipleregressorsbehav{session} = multiregbehavfile; %#ok                
+    else
+        multipleregressorsbehav{session} = {}; %#ok
+    end    
 end
 end
 
 
 %%
-function [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,oldruns,oldruns3d,oldnames,oldonsets,olddurations,oldpmods,oldmultipleregressors,z)
+% Bogdan: in this script it looks like 'oldsess' refers to runs while
+% 'sess' refers to sessions. Maybe the variable names could be updated to
+% be more intuitive?
+function [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,oldruns,oldruns3d,oldnames,oldonsets,olddurations,oldpmods,oldmultipleregressors,z,oldmultipleregressorsbehav)
 
 
 emptyruns = find(cellfun('isempty',oldruns));
@@ -503,6 +515,7 @@ for sess = 1:numel(concat)
     % concatenate regressors
     multipleregressors{sess} = fullfile(submodeldir,sprintf('multireg_%d.mat',sess));
     newR = [];
+    newRbehav = [];
     cri = {};
     for r = 1:numel(concat{sess})
         oldsess = concat{sess}(r);
@@ -511,6 +524,12 @@ for sess = 1:numel(concat)
             oldR = R;            
         else
             oldR=[];
+        end
+        if ~isempty(oldmultipleregressorsbehav{oldsess})
+            load(oldmultipleregressorsbehav{oldsess});
+            oldRbehav = R2;            
+        else
+            oldRbehav=[];
         end
         if ~isfield(DSGN,'customrunintercepts')
             % add intercept (ignore first one)
@@ -536,9 +555,10 @@ for sess = 1:numel(concat)
         oldR(:,end+1) = scale([1:size(oldR,1)]'); %#ok
         
         % append to growing block diagonal nuisance matrix
-        newR = blkdiag(newR,oldR);        
+        newR = blkdiag(newR,oldR);   
+        newRbehav = [newRbehav; oldRbehav];
     end    
-    R = [newR vertcat(cri{:})];
+    R = [newRbehav newR vertcat(cri{:})];
     save(multipleregressors{sess}, 'R');
 end
 
@@ -553,6 +573,7 @@ for r = 1:numel(oldruns)
         durations{end+1} = olddurations{r}; %#ok
         pmods{end+1} = oldpmods{r}; %#ok
         multipleregressors{end+1} = oldmultipleregressors{r}; %#ok
+        multipleregressorsbehav{end+1} = oldmultipleregressorsbehav{r}; %#ok
     end
 end
 

@@ -167,6 +167,19 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |   ('.mat' will be appended to the file name)					 |
 |   location of MAT-file: DSGN.modelingfilesdir (see above)			 |
 |   EX: DSGN.multireg = 'noise_model1';	       	    				 |
+| DSGN.multiregbehav (DEFAULT: no multiple regressors file)			 |
+|   similar to DSGN.multireg except when concatenating runs these are 		 |
+|     concatenated vertically, not block-diagonally. While some multiple 	 |
+|     regressor confounds are scan specific (e.g. motion), some may not be, in   |
+|     which case you can put those here and estimate them across scans. This     |
+|     enables a convolution hack when you want to estimate some design element   |
+|     using a non-conventional hrf (e.g. splines or FIR) while controlling for   |
+|     design elements of no interest using a different (e.g. lower dimensional   |
+|     canonical HRF). You simply preconvolve the latter design elements and 	 |
+|     enter them here. This feature was in fact motivated by a desire to be able |
+|     to study some factors using flexible HRFs while controlling for other      |
+|     using a canonical HRF.	(feature added by Bogdan)			 |
+|   (matrix must be named R2)
 |________________________________________________________________________________|
 
  ________________________________________________________________________________

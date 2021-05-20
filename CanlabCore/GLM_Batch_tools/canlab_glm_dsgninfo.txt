@@ -127,6 +127,16 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |         EX: DSGN.convolution.type = 'fir';					 |
 |	      DSGN.convolution.windowlength = 46;				 |
 |             DSGN.convolution.order = 23;	  				 |
+|	'spline' (b-spline interpolation)					 |
+|	  convolution.windowlength (post-stimulus window length (in seconds))    |
+|         convolution.order (polynomial order)					 |
+|         convolution.degree (number of basis functions) 			 |
+|     Note: SPM will convolve your stimulus boxcar function with the above basis |
+|       functions. If you use a spline or fir basis function, this convolution   |
+|       will still be peformed for each function in the set, which is probably   |
+|       not what you want. More sensible behavior can be achieved by setting     |
+|	your stimulus duration to your microonset time (DSGN.tr/DSGN.fmri_t or   |
+|	DSGN.tr/16 if DSGN.fmri_t isn't set).					 |
 | - DSGN.ar1 (DEFAULT: false)	       						 |
 |     if true, use autoregressive AR(1) to model serial correlations		 |
 |       (see SPM manual)	  	   	 				 |

@@ -127,7 +127,7 @@ classdef statistic_image < image_vector
         sig         % Logical matrix of which voxels are significant, [voxels x images]
         N           % Sample size
         dfe         % Error degrees of freedom for test
-        
+        image_labels ={''}; % Semantic labels for each image, cell array
     end
     
     methods
@@ -152,7 +152,7 @@ classdef statistic_image < image_vector
             obj.sig = [];
             obj.dfe = [];
             obj.N = [];
-            
+            obj.image_labels = {};
             doverbose = false;
             
             wh = strcmp(varargin, 'verbose');
@@ -269,7 +269,7 @@ classdef statistic_image < image_vector
                     obj.type = 'robust regression:  .dat is beta values, .p is robust p values';
                     
                     pimg = image_vector('image_names', sprintf('rob_p_%04d.img',obj.dat_descrip));
-                    bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
+                    % bimg = image_vector('image_names', sprintf('rob_beta_%04d.img',obj.dat_descrip));
                     timg = image_vector('image_names', sprintf('rob_tmap_%04d.img',obj.dat_descrip));
                     
                     

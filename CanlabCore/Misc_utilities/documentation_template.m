@@ -112,6 +112,8 @@ dashes = '----------------------------------------------';
 printstr = @(dashes) disp(dashes);
 printhdr = @(str) fprintf('%s\n%s\n%s\n', dashes, str, dashes);
 
+% Enforce valid variable names in a cell array of strings: Eliminate special characters and leading numbers
+[variable_names, namewarnings] = format_text_letters_only(variable_names, 'numbers', 'cleanup', 'squeeze', 'underscore_ok');
 
 % ----------------------------------------------------------------------
 % Parse inputs
@@ -227,6 +229,45 @@ for i = 1:length(varargin)
         end
     end
 end
+
+% 2nd pass: Keyword inputs. These supersede earlier inputs
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            
+            case 'writetofile'
+                writetofile = true;
+                if isempty(movieoutfile)
+                    movieoutfile = fullfile(pwd, 'rmssd_movie_file');
+                    fprint('Writing file with default name:\n%s\n', movieoutfile);
+                end
+                
+            case {'nomovie' 'nodisplay'}
+                showmovie = false;
+                
+        end
+    end
+end
+
+% 2nd pass: Keyword inputs. These supersede earlier inputs
+
+if any(strcmp(varargin{i}, 'writetofile'))
+    
+    writetofile = true;
+    if isempty(movieoutfile)
+        movieoutfile = fullfile(pwd, 'rmssd_movie_file');
+        fprint('Writing file with default name:\n%s\n', movieoutfile);
+    end
+    
+end
+
+if any(strcmp(varargin{i}, 'nomovie')) || any(strcmp(varargin{i}, 'nodisplay'))
+    
+    showmovie = false;
+    
+end
+
+
 
 % This pattern will flexibly assign arguments based on keywords. 
 % The names of the input keyword and variable created do not need to match.

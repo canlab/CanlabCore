@@ -132,6 +132,7 @@ if ~any(strcmp(varargin, 'startslice'))
     if entered_mm_coords  % Figure out mm coords of first slice
         
         xyzvoxel = voxel2mm([1 1 1]', dat.volInfo.mat);
+        startmm = xyzvoxel;
         startslice = xyzvoxel(wh_col); 
     else
         startslice = 1;
@@ -142,6 +143,7 @@ if ~any(strcmp(varargin, 'endslice'))
     if entered_mm_coords % Figure out mm coords of last slice
         
         xyzvoxel = voxel2mm(size(vdat)', dat.volInfo.mat);
+        endmm = xyzvoxel;
         endslice = xyzvoxel(wh_col);
     else
         endslice = size(vdat, wh_col);
@@ -165,12 +167,23 @@ whsl = startslice:spacing:endslice;  % voxel or mm
 if entered_mm_coords
     % Convert from mm 2 voxel, if we have entered mm coordinates
     
-    xyzmm = zeros(length(whsl), 3);
+    xyzmm = 10 .* ones(length(whsl), 3);
     
     xyzmm(:, wh_col) = whsl;
     
     xyzvoxel = mm2voxel(xyzmm', dat.volInfo.mat, 1);
     whsl = xyzvoxel(:, wh_col)';
+
+    % ISSUE: in some cases, xyzvoxel is < 1
+    if any(whsl < 1)
+        disp('Warning! Interpolation issue: Some slices < 1')
+        whsl(whsl < 1) = 1;
+        
+        sz = size(vdat);
+        whsl(whsl > sz(wh_col)) = sz(wh_col);
+        whsl = unique(whsl);
+        
+    end
     
 end
 
@@ -179,19 +192,20 @@ end
 if dotight
    % figure out which slices to skip because they are empty.
    switch myview
-    case 'axial'
-        subvol = abs(vdat(:, :, whsl));
-        sumabsval = sum(sum(subvol, 1), 2);
-        
-    case {'saggital', 'sagittal'}
-        subvol = abs(vdat(whsl, :, :));
-        sumabsval = sum(sum(subvol, 2), 3);
-        
-    case 'coronal'
-        subvol = abs(vdat(:, whsl, :));
-        sumabsval = sum(sum(subvol, 1), 3);
-        
-    otherwise error('unknown slice view.')
+       case 'axial'
+           subvol = abs(vdat(:, :, whsl));
+           sumabsval = sum(sum(subvol, 1), 2);
+           
+       case {'saggital', 'sagittal'}
+           subvol = abs(vdat(whsl, :, :));
+           sumabsval = sum(sum(subvol, 2), 3);
+           
+       case 'coronal'
+           subvol = abs(vdat(:, whsl, :));
+           sumabsval = sum(sum(subvol, 1), 3);
+           
+       otherwise
+           error('unknown slice view.')
    end
 
    wh_omit = sumabsval < 100 * eps;

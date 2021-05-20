@@ -1,8 +1,8 @@
-function surface_handles = isosurface(r, varargin)
+function [surface_handles, colors] = isosurface(r, varargin)
 % Create a series of surfaces in different colors, one for each region
 % - Options for single color
 %
-% surface_handles = isosurface(r, [optional arguments])
+% [surface_handles, colors] = isosurface(r, [optional arguments])
 %
 % optional arguments: 
 % - Any optional inputs to imageCluster, e.g., 'alpha'
@@ -71,6 +71,7 @@ if matchcolorsleftright
     colors = match_colors_left_right(r);
 end
 
+colors = colors(1:length(r));
 
 % -------------------------------------------------------------------------
 % Make surfaces

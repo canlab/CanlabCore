@@ -642,6 +642,21 @@ if ~isfield(obj.volInfo, 'cluster')
     obj = reparse_contiguous(obj);
 end
 
+if strcmp(verbosestr, 'verbose')
+    
+    % Check data bit rate
+    % ---------------------------------------------------------------------
+    
+    databitrate = length(unique(obj.dat(:)));
+    
+    fprintf('Number of unique values in dataset: %d  Bit rate: %3.2f bits\n', databitrate, log2(databitrate));
+    
+    if databitrate < 2^10
+        fprintf('Warning: Number of unique values in dataset is low, indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values\n');
+    end
+    
+end
+
 end % function
 
 % -------------------------------------------------------------
@@ -655,12 +670,18 @@ for i = 1:size(image_names, 1)
     
     if was_gzipped(i)
         
-       % Use system to remove unzipped version after zipping.
-       % Will wait for input, and not overwrite, if images exist
-%         [status, result] = system(['gzip ' image_names(i, :)]);
-        gzip(deblank(image_names(i, :)));
-        image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
+        % Use system to remove unzipped version after zipping.
+        % Will wait for input, and not overwrite, if images exist
+        %         [status, result] = system(['gzip ' image_names(i, :)]);
         
+        try
+            gzip(deblank(image_names(i, :)));
+            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
+            
+        catch
+            warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            
+        end
     end
     
 end

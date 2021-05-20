@@ -39,6 +39,9 @@ function obj = resample_space(obj, sampleto, varargin)
 %   2/5/2018    Tor added support for atlas objects - special handling
 %
 %   2/23/2018   Stephan changed replace_empty(obj) into replace_empty(obj,'voxels') to prevent adding removed images back in
+%   5/18/2021   Tor removed line: obj_out = replace_empty(obj_out); for
+%   statistic_image objects, as it was causing a voxel mismatch...incorrect
+%   removed_voxels due to partially built object
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -113,7 +116,7 @@ else % if  isa(obj, 'atlas')
     
     if ~n_prob_imgs
         
-        integer_vec = zeros(Vto.n_inmask, 1);
+        % integer_vec = zeros(Vto.n_inmask, 1);
         
         n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
         
@@ -156,38 +159,84 @@ end % atlas object
 if isa(obj_out, 'statistic_image')
     % Rebuild fields specific to statistic_images
     
-    obj_out = replace_empty(obj_out);
+%     obj_out = replace_empty(obj_out); % TOR REMOVED 5/18/21, AS IT
+%     RESULTS IN VOXEL LIST MISMATCH WITH PARTIALLY BUILT OBJECT FIELDS
+
     k = size(obj_out.dat, 2);
+    
+    [obj_out.p, obj_out.ste, obj_out.sig, obj_out.N] = deal([]); % these will be resampled
+    
+    p = ones(obj.volInfo.nvox, k);
+    ste = Inf .* ones(obj.volInfo.nvox, k);
+    sig = zeros(obj.volInfo.nvox, k);
+    N = zeros(obj.volInfo.nvox, 1);
     
     for i = 1:k
         % this may break if nvox (total in image) is different for 2
         % images...
         
         % Wani: in some cases, obj could have empty p, ste, and sig
+        % Tor, 4/2021. Need to resample these appropriately, handle
+        % logicals, and add N field
+        
         if ~isempty(obj.p)
-            p = ones(obj.volInfo.nvox, k);
+            
             p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
+            
+            voldata = iimg_reconstruct_vols(p(:, i), obj.volInfo);
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = resampled_dat(:);
+            obj_out.p(:, i) = resampled_dat(Vto.wh_inmask);
         end
         
         if ~isempty(obj.ste)
-            ste = Inf .* ones(obj.volInfo.nvox, k);
+            
             ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
+            
+            voldata = iimg_reconstruct_vols(ste(:, i), obj.volInfo);
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = resampled_dat(:);
+            obj_out.ste(:, i) = resampled_dat(Vto.wh_inmask);
+            
         end
         
+        % For .sig, we must convert from logical and threshold back to logical
+        % Can't interpolate logical vectors
         if ~isempty(obj.sig)
-            sig = zeros(obj.volInfo.nvox, k);
-            sig(obj.volInfo.wh_inmask, i) = obj.sig(:, i);
+            
+            sig(obj.volInfo.wh_inmask, i) = double(obj.sig(:, i));
+            
+            voldata = iimg_reconstruct_vols(sig(:, i), obj.volInfo);
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = resampled_dat(:);
+            resampled_dat(isnan(resampled_dat)) = 0;
+            obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask));
         end
         
     end
     
-    if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
-    if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
-    if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
+        if ~isempty(obj.N)
+            
+            N(obj.volInfo.wh_inmask, 1) = obj.N(:, 1);
+            
+            voldata = iimg_reconstruct_vols(N, obj.volInfo);
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = resampled_dat(:);
+            obj_out.N = resampled_dat(Vto.wh_inmask);
+            
+        end
+        
+%     if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
+%     if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
+%     if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
     
 end
 
 % End special object subtypes
+% -----------------------------------------------------------------------
+
+
+% Handle removed voxels
 % -----------------------------------------------------------------------
 
 if size(obj_out.dat, 1) == sum(obj_out.volInfo.image_indx)

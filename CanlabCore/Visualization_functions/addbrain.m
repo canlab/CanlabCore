@@ -199,7 +199,8 @@ switch meth
         myp = varargin{2};
         for i = 1:length(myp)
             %set(hh, 'FaceColor', [.5 .5 .5]);
-            len = size(myp(i).FaceVertexCData, 1);
+            
+            len = size(get(myp(i), 'FaceVertexCData'), 1);
             
             % If we have intensity data saved, use that
             % This is saved for isocaps

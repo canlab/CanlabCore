@@ -87,9 +87,27 @@ switch meth
             
             if do_multirow % plot only on montages for this image
 
+                % add title - new in 2021, so use try...catch for now
+                if isa(image_obj, 'statistic_image') && ~isempty(image_obj.image_labels)
+                    try
+                        o2 = title_montage(o2, montage_indx(i)+1, image_obj.image_labels{i});
+                    catch
+                        disp('Problem displaying title montage for statistic_image object');
+                    end
+                end
+            
                 o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 
             else % just one image, plot on all montages
+                
+                % add title - new in 2021, so use try...catch for now
+                if isa(image_obj, 'statistic_image') && ~isempty(image_obj.image_labels)
+                    try
+                        o2 = title_montage(o2, 5, image_obj.image_labels{1});
+                    catch
+                        disp('Problem displaying title montage for statistic_image object');
+                    end
+                end
                 
                 o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:});
                 

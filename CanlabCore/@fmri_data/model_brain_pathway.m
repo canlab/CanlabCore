@@ -216,6 +216,7 @@ target_one_obj=apply_mask(obj,target_one);
 target_two_obj=apply_mask(obj,target_two);
 
 
+
 %% Perform a typical cross-validated connectivity analysis as a comparison condition
 % estimate simple correlations using k-fold CV
 % 4 paths connecting 2 regions, using region averages:
@@ -459,9 +460,11 @@ if do_boot
         
         [~,rand_subs]=datasample(1:max(indices), max(indices)); %randomly replace whole blocks with replacement
         count_vec=1:length(indices);
+        
+        rand_inds=[];
         for ii=1:max(indices)
             
-            rand_inds(indices==ii)=count_vec(indices==rand_subs(ii));
+            rand_inds=[rand_inds count_vec(indices==rand_subs(ii))];
             
         end
         

@@ -257,8 +257,17 @@ switch plotmethod
         % ---------------------------------------------------------------
         
         subplot(2, 3, 4);
-        %         histogram(fmridat, 'nofigure');
-        histogram(fmridat, 'nofigure', 'by_image', 'singleaxis');
+        
+        if size(fmridat.dat,2) < 100
+            % Figure with individual histograms for each image
+            % This is slow with many images
+            
+            histogram(fmridat, 'nofigure', 'by_image', 'singleaxis');
+            
+        else
+            histogram(fmridat, 'nofigure');
+        end
+        
         drawnow
         
         clear dattmp

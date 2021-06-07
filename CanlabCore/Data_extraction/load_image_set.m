@@ -65,11 +65,17 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %     A set of single-trial datasets for pain studies have been compiled by Bogdan Petre and stored here:
 %     https://github.com/canlab/canlab_single_trials
 %
-%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3'), and you can enter
+%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3pain'), and you can enter
 %     any of these names as keywords, or 'all_single_trials' to load all of
 %     them. The canlab_single_trials repo must be on your matlab path.
 %     Each study file loads as an fmri_data object, with a metadata_table field
 %     that stores trial info in a Matlab table-class object.
+%
+%     Single-trial datasets include:
+%     % 'nsf' 'bmrk3pain' 'bmrk3warm' 'bmrk4' 'exp' 'ie' 'ie2' 'ilcp'
+%     'romantic' 'scebl' 'stephan'
+%
+%     Each contains a single-trial object from a differnt study.
 %
 % Parcellations and large-scale networks/patterns
 % ------------------------------------------------------------------------
@@ -360,6 +366,8 @@ else
             
         otherwise
             % Try to load if we have a function name
+            % This will be true for the single trial data (Bogdan Petre
+            % repository) if you have it on your Matlab path
             
             if which(['load_', lower(image_names_or_keyword)])
                 
@@ -371,7 +379,7 @@ else
                 
                 table_list = list_signatures;
                 
-                wh = find(strcmp(image_names_or_keyword, table_list.keyword));
+                wh = find(strcmp(image_names_or_keyword, table_list.keyword)); %#ok<*EFIND>
                 
                 if ~isempty(wh)
                     [image_obj, networknames, imagenames] = load_signature(image_names_or_keyword);
@@ -1071,6 +1079,11 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% NEUROSYNTH
+% ------------------------------------------------------------------------
+
+
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
 
 
@@ -1111,7 +1124,12 @@ networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'Uniform
 end % function
 
 
-function [image_obj, networknames, imagenames] = load_bmrk3
+% ------------------------------------------------------------------------
+% BMRK3
+% ------------------------------------------------------------------------
+
+
+function [image_obj, networknames, imagenames] = load_bmrk3 %#ok<*STOUT>
 
 % This code loads a dataset object saved in a mat file, and attempts to
 % download it if it cannot be found.
@@ -1129,10 +1147,10 @@ end
 
 sprintf('Loading: %s\n', fmri_data_file);
 
-load(fmri_data_file);
+load(fmri_data_file); %#ok<*LOAD>
 
 for i = 1:size(image_obj.dat, 2)
-    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i));
+    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i)); %#ok<*AGROW>
 end
 
 imagenames = networknames';
@@ -1142,6 +1160,10 @@ disp('Temperature data in image_obj.additional_info.temperatures');
 disp('Pain ratings in image_obj.Y');
 
 end
+
+% ------------------------------------------------------------------------
+% KRAGEL270
+% ------------------------------------------------------------------------
 
 
 function [image_obj, networknames, imagenames] = load_kragel18_alldata
@@ -1156,7 +1178,7 @@ if exist(myfile, 'file')
     networknames = data_obj.additional_info;
     
     if isempty(data_obj.metadata_table)
-        error(sprintf('You have an old file %s\nmetadata_table is empty. Consider removing and rerunning load_image_set to re-download.', myfile));
+        error('You have an old file %s\nmetadata_table is empty. Consider removing and rerunning load_image_set to re-download.', myfile);
     end
     
     imagenames = data_obj.metadata_table.imagenames;
@@ -1194,7 +1216,7 @@ else
         subj=regexp(files_on_disk,'Subject\d+', 'match');
         subj = cat(1, subj{:});
         subj = strrep(subj, 'Subject' ,'');
-        for i = 1:length(subj), subj{i} = str2num(subj{i}); end % extract numbers from text
+        for i = 1:length(subj), subj{i} = str2num(subj{i}); end %#ok<*ST2NM> % extract numbers from text
         subj = cat(1, subj{:});
         
         nums = 1000 * labels + subj;

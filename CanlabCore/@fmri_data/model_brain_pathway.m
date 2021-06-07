@@ -111,15 +111,12 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %             order: 1->1, 1->2, 2->1, 2->2
 %           - latent_correlations:  correlations among PLS-optimized latent timeseries,
 %             order: 1->1, 1->2, 2->1, 2->2
-%           - latent_timeseries:
+%           - latent_timeseries: cross-validated time series of the latent var for Y, pathway 1 and 2
+%
 %             latent_correlation_interaction_ttest: T-test on Fisher-transformed on-target vs. off-target
 %             simple_correlation_interaction_ttest: [1×1 struct]
-%             latent_correlation_pathway_one_ttest: T-test on
-%             Fisher-transformed, pathway 1. Pathway 1 connection is
-%             non-zero.
-%             latent_correlation_pathway_two_ttest: T-test on
-%             Fisher-transformed, pathway 2. Pathway 2 connection is
-%             non-zero.
+%             latent_correlation_pathway_one_ttest: T-test on Fisher-transformed on-target vs. off-target, Pathway 1 
+%             latent_correlation_pathway_two_ttest: T-test on Fisher-transformed, pathway 2. Pathway 2
 %             simple_correlation_pathway_one_ttest: [1×1 struct]
 %             simple_correlation_pathway_two_ttest: [1×1 struct]
 %           - PLS_betas (not included now): fmri_data object with PLS regression coefficients
@@ -216,6 +213,7 @@ target_one_obj=apply_mask(obj,target_one);
 target_two_obj=apply_mask(obj,target_two);
 
 
+
 %% Perform a typical cross-validated connectivity analysis as a comparison condition
 % estimate simple correlations using k-fold CV
 % 4 paths connecting 2 regions, using region averages:
@@ -303,15 +301,13 @@ for k=1:max(indices)
     
     
     %pls models to estimate correlation between latent sources
-    [~,~,xs_pathway_one,ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
-    [~,~,xs_pathway_two,ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
-    [~,~,xs_pathway_three,ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
-    [~,~,xs_pathway_four,ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
+    [~,~,xs_pathway_one, ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
+    [~,~,xs_pathway_two, ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
+    [~,~,xs_pathway_three, ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
+    [~,~,xs_pathway_four, ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
     
- 
-     %
-    Z_pathway_one = pinv(source_one_train') * ys_pathway_one;
-    V_pathway_one = pinv(target_one_train') * xs_pathway_one;
+    Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern across X voxels (source), predicting latent Y target
+    V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern across Y voxels (target), predicting latent X source
     
     Z_pathway_two = pinv(source_two_train') * ys_pathway_two;
     V_pathway_two = pinv(target_one_train') * xs_pathway_two;
@@ -346,37 +342,42 @@ for k=1:max(indices)
         Xtest_source_two(:,i)=Xtest_source_two(:,i)-mean(Xtest_source_two(:,i));
     end
     
-    %optimized models
+    % optimized models
+    % Revision 6/4/2021, Phil Kragel and Tor Wager - documentation
     
-    YS_Test_target_one_pathway_one = Ytest_target_one*V_pathway_one;
-    YS_Test_target_one_pathway_two = Ytest_target_one*V_pathway_two;
-    YS_Test_target_two_pathway_three = Ytest_target_two*V_pathway_three;
-    YS_Test_target_two_pathway_four = Ytest_target_two*V_pathway_four;
+    % YS: linear combinations of target voxels chosen to covary with X (source)
+    YS_Test_target_one_pathway_one = Ytest_target_one * V_pathway_one;  % Fitted (predicted) latent X, based on observed Y  % V = pattern across Y voxels (target), predicting latent X source
+    YS_Test_target_one_pathway_two = Ytest_target_one * V_pathway_two;
+    YS_Test_target_two_pathway_three = Ytest_target_two * V_pathway_three;
+    YS_Test_target_two_pathway_four = Ytest_target_two * V_pathway_four;
     
+    % XS: linear combinations of source voxels chosen to covary with Y (source)
+    XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; % Fitted (predicted) latent Y, based on observed X; Z = pattern across X (source) voxels that predicts latent Y target  
+    XS_Test_source_two_pathway_two = Xtest_source_two * Z_pathway_two;
+    XS_Test_source_one_pathway_three = Xtest_source_one * Z_pathway_three;
+    XS_Test_source_two_pathway_four = Xtest_source_two * Z_pathway_four;
     
-    XS_Test_source_one_pathway_one = Xtest_source_one*Z_pathway_one;
-    XS_Test_source_two_pathway_two = Xtest_source_two*Z_pathway_two;
-    XS_Test_source_one_pathway_three = Xtest_source_one*Z_pathway_three;
-    XS_Test_source_two_pathway_four = Xtest_source_two*Z_pathway_four;
+    stats.latent_timeseries_pathway1(indices==k, 1) = XS_Test_source_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for X, pathway 1
+    stats.latent_timeseries_pathway1(indices==k, 2) = YS_Test_target_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for Y, pathway 2
     
-    stats.latent_timeseries(indices==k,1)=YS_Test_target_one_pathway_one(:,1);
-    stats.latent_timeseries(indices==k,2)=YS_Test_target_two_pathway_four(:,1);
+    stats.latent_timeseries_pathway2(indices==k, 1) = XS_Test_source_two_pathway_four(:, 1);
+    stats.latent_timeseries_pathway2(indices==k, 2) = YS_Test_target_two_pathway_four(:, 1);
     
     %optimized pathways
-    latent_correlation_pathway_one(k,:)=diag(corr(YS_Test_target_one_pathway_one,XS_Test_source_one_pathway_one));
-    latent_correlation_pathway_four(k,:)=diag(corr(YS_Test_target_two_pathway_four,XS_Test_source_two_pathway_four));
+    latent_correlation_pathway_one(k,:)=diag(corr(YS_Test_target_one_pathway_one, XS_Test_source_one_pathway_one));
+    latent_correlation_pathway_four(k,:)=diag(corr(YS_Test_target_two_pathway_four, XS_Test_source_two_pathway_four));
     
     %switched targets
-    latent_correlation_pathway_one_crossed(k,:)=diag(corr(YS_Test_target_one_pathway_two,XS_Test_source_one_pathway_one));%;XS_Test_source_one_pathway_three
-    latent_correlation_pathway_four_crossed(k,:)=diag(corr(YS_Test_target_two_pathway_three,XS_Test_source_two_pathway_four));%XS_Test_source_two_pathway_two
+    latent_correlation_pathway_one_crossed(k,:)=diag(corr(YS_Test_target_one_pathway_two, XS_Test_source_one_pathway_one));%;XS_Test_source_one_pathway_three
+    latent_correlation_pathway_four_crossed(k,:)=diag(corr(YS_Test_target_two_pathway_three, XS_Test_source_two_pathway_four));%XS_Test_source_two_pathway_two
     
     
     
     
-end
+end % Cross-validation loop
 
 
-stats.latent_correlations=[latent_correlation_pathway_one(:,1) latent_correlation_pathway_one_crossed(:,1) latent_correlation_pathway_four_crossed(:,1) latent_correlation_pathway_four(:,1) ];
+stats.latent_correlations = [latent_correlation_pathway_one(:,1) latent_correlation_pathway_one_crossed(:,1) latent_correlation_pathway_four_crossed(:,1) latent_correlation_pathway_four(:,1) ];
 
 % on average, are 'on target' pathways more functionally connected than 'off target' pathways
 [~,p,~,stats.latent_correlation_interaction_ttest]=ttest(atanh(stats.latent_correlations(:,1))-atanh(stats.latent_correlations(:,2))-atanh(stats.latent_correlations(:,3))+atanh(stats.latent_correlations(:,4)));
@@ -429,22 +430,47 @@ if do_alignment
     end
 end
 
-[xl_pathway_one,~,xs_pathway_one,ys_pathway_one] = plsregress(source_one_obj.dat',target_one_obj.dat',ndim);
-[xl_pathway_four,~,xs_pathway_four,ys_pathway_four] = plsregress(source_two_obj.dat',(target_two_obj.dat)',ndim);
+% Re-fit an overall model 
+% xl = loadings/coefficients for source (X), xs = time series (scores) for X
+% xs = scores for latent X
+% ys = scores for latent Y
+[xl_pathway_one, ~, xs_pathway_one, ys_pathway_one] = plsregress(source_one_obj.dat',target_one_obj.dat', ndim);
+[xl_pathway_four, ~, xs_pathway_four, ys_pathway_four] = plsregress(source_two_obj.dat',(target_two_obj.dat)', ndim);
 
 if flip_maps
-ys_pathway_one=ys_pathway_one*sign(corr(mean(xl_pathway_one,2),mean(source_one_obj.dat,2)));
-ys_pathway_four=ys_pathway_four*sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));
+    
+    sign_pathway1 = sign(corr(mean(xl_pathway_one, 2), mean(source_one_obj.dat, 2)));
+    
+    sign_pathway2 = sign(corr(mean(xl_pathway_four,2), mean(source_two_obj.dat,2)));
+    
+    % ys_pathway_one, etc = scores for latent Y (e.g., time series/observations)
+    ys_pathway_one = ys_pathway_one * sign_pathway1;  % sign of corr between x loadings and mean data per voxel
+    ys_pathway_four = ys_pathway_four * sign_pathway2;
+    
+    xs_pathway_one = xs_pathway_one * sign_pathway1;
+    xs_pathway_four = xs_pathway_four * sign_pathway2;
+  
+    % Flip time series of each region to match the sign of the region average
+    % Define a flipping criterion, which is sign of spatial corelation between X
+    % loadings and mean data per voxel in X.  
+    % Then, flip scores (time series) accordingly.
+    % Later, Z and V are caculated based on the 
+    % 
+    % Fitted (predicted) latent X, based on observed Y  % V = pattern across Y voxels (target), predicting latent X source
+ 
+    stats.latent_timeseries_pathway1(:, 1) = stats.latent_timeseries_pathway1(:, 1) * sign_pathway1;
+    stats.latent_timeseries_pathway2(:, 1) = stats.latent_timeseries_pathway2(:, 1) * sign_pathway2;
+    
+    stats.latent_timeseries_pathway1(:, 2) = stats.latent_timeseries_pathway1(:, 2) * sign_pathway1;
+    stats.latent_timeseries_pathway2(:, 2) = stats.latent_timeseries_pathway2(:, 2) * sign_pathway2;
+    
+%     stats.latent_timeseries(:, 1) = stats.latent_timeseries(:, 1) * sign(corr(mean(xl_pathway_one,2),mean(source_one_obj.dat,2)));
+%     stats.latent_timeseries(:, 2) = stats.latent_timeseries(:, 2) * sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));
 
-xs_pathway_one=xs_pathway_one*sign(corr(mean(xl_pathway_one,2),mean(source_one_obj.dat,2)));
-xs_pathway_four=xs_pathway_four*sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));
-
-stats.latent_timeseries(:,1)=stats.latent_timeseries(:,1)*sign(corr(mean(xl_pathway_one,2),mean(source_one_obj.dat,2)));
-stats.latent_timeseries(:,2)=stats.latent_timeseries(:,2)*sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));
 end
 
-stats.Z_pathway_one = pinv(source_one_obj.dat') * ys_pathway_one;
-stats.V_pathway_one = pinv(target_one_obj.dat') * xs_pathway_one;
+stats.Z_pathway_one = pinv(source_one_obj.dat') * ys_pathway_one;  % Z is latent weights for source (X)
+stats.V_pathway_one = pinv(target_one_obj.dat') * xs_pathway_one;  % V is latent pattern weights for Target (Y) 
 
 stats.Z_pathway_four = pinv(source_two_obj.dat') * ys_pathway_four;
 stats.V_pathway_four = pinv(target_two_obj.dat') * xs_pathway_four;
@@ -459,9 +485,11 @@ if do_boot
         
         [~,rand_subs]=datasample(1:max(indices), max(indices)); %randomly replace whole blocks with replacement
         count_vec=1:length(indices);
+        
+        rand_inds=[];
         for ii=1:max(indices)
             
-            rand_inds(indices==ii)=count_vec(indices==rand_subs(ii));
+            rand_inds=[rand_inds count_vec(indices==rand_subs(ii))];
             
         end
         
@@ -520,11 +548,15 @@ if do_boot
 end
 
 
-%% output data objects
+%% Output data objects
 stats.source_one_obj=source_one_obj;
 stats.source_two_obj=source_two_obj;
 stats.target_one_obj=target_one_obj;
 stats.target_two_obj=target_two_obj;
+
+%% Add results report with narrative text
+
+stats = add_results_report(stats);
 
 end
 
@@ -534,7 +566,7 @@ function V = bootPLS_target_pattern_weights(X,Y,ndim,flip_maps) %voxels in targe
 [xl,~,xs] = plsregress(X,Y,ndim);
 
 if flip_maps
-xs=xs*sign(corr(mean(xl,2),mean(X)'));
+    xs=xs*sign(corr(mean(xl,2),mean(X)'));
 end
 
 V = pinv(Y) * xs;
@@ -542,9 +574,82 @@ end
 
 
 function Z = bootPLS_source_pattern_weights(X,Y,ndim,flip_maps) %voxels in source region that predict latent variables in target
+
 [xl,~,~,ys] = plsregress(X,Y,ndim);
 if flip_maps
-ys=ys*sign(corr(mean(xl,2),mean(X)'));
+    ys=ys*sign(corr(mean(xl,2),mean(X)'));
 end
+
 Z = pinv(X) * ys;
+
+end
+
+
+function stats = add_results_report(stats)
+
+
+% Latent MPathI correlations
+
+r = stats.latent_correlations;
+rm = mean(r);
+rse = ste(r);
+[h, p, ci, tstat] = ttest(atanh(r));  % t-test on Fisher's z-transformed latent correlations
+
+sigstr = {'not' ''};
+
+stats_report{1} = sprintf('Latent MPathI correlations were %3.2f (sd = %3.2f) for Pathway 1 and %3.2f (sd = %3.2f) for Pathway 2.', rm(1), rse(1), rm(4), rse(4));
+stats_report{2} = sprintf('Correlations were %s significant for Pathway 1, t(%3.1f) = %3.2f, p = %3.6f, and %s significant for Pathway 2, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{h(1)+1}, tstat.df(1), tstat.tstat(1), p(1), sigstr{h(4)+1}, tstat.df(4), tstat.tstat(4), p(4));
+
+istat = stats.latent_correlation_interaction_ttest;
+
+stats_report{3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+istat = stats.latent_correlation_pathway_one_ttest;
+
+stats_report{4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+istat = stats.latent_correlation_pathway_two_ttest;
+
+stats_report{5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+stats_report{6} = '       ';
+
+wh_last = length(stats_report);
+
+% Simple correlations
+
+r = stats.simple_correlations;
+rm = mean(r);
+rse = ste(r);
+[h, p, ci, tstat] = ttest(atanh(r));  % t-test on Fisher's z-transformed latent correlations. Same as fisherz.m
+
+sigstr = {'not' ''};
+
+stats_report{wh_last + 1} = sprintf('Simple ROI correlations were %3.2f (sd = %3.2f) for Pathway 1 and %3.2f (sd = %3.2f) for Pathway 2.', rm(1), rse(1), rm(4), rse(4));
+stats_report{wh_last + 2} = sprintf('Correlations were %s significant for Pathway 1, t(%3.1f) = %3.2f, p = %3.6f, and %s significant for Pathway 2, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{h(1)+1}, tstat.df(1), tstat.tstat(1), p(1), sigstr{h(4)+1}, tstat.df(4), tstat.tstat(4), p(4));
+
+istat = stats.simple_correlation_interaction_ttest;
+
+stats_report{wh_last + 3} = sprintf('The interaction between on-targed (expected) and off-target pathways was %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+istat = stats.simple_correlation_pathway_one_ttest;
+
+stats_report{wh_last + 4} = sprintf('Pathway 1 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+istat = stats.simple_correlation_pathway_two_ttest;
+
+stats_report{wh_last + 5} = sprintf('Pathway 2 on-target vs. off-target correlations were %s signficant, t(%3.1f) = %3.2f, p = %3.6f.', ...
+    sigstr{(istat.p < 0.05) + 1}, istat.df(1), istat.tstat(1), istat.p(1));
+
+stats_report{wh_last + 6} = '       ';
+
+stats.stats_report = char(stats_report{:});
+
 end

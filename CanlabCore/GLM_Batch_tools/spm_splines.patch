@@ -1,0 +1,212 @@
+diff -ruN spm12_bak/config/spm_cfg_fmri_design.m spm12/config/spm_cfg_fmri_design.m
+--- spm12_bak/config/spm_cfg_fmri_design.m	2021-05-18 12:27:30.435715000 -0600
++++ spm12/config/spm_cfg_fmri_design.m	2021-05-18 13:43:53.183622000 -0600
+@@ -430,6 +430,41 @@
+ order         = cfg_entry;
+ order.tag     = 'order';
+ order.name    = 'Order';
++order.help    = {'Polynomial order'};
++order.strtype = 'n';
++order.num     = [1 1];
++% ---------------------------------------------------------------------
++% degree Degree
++% ---------------------------------------------------------------------
++degree         = cfg_entry;
++degree.tag     = 'degree';
++degree.name    = 'Degree';
++degree.help    = {'Number of basis functions'};
++degree.strtype = 'n';
++degree.num     = [1 1];
++% ---------------------------------------------------------------------
++% spline Spline Interpolated HRF
++% ---------------------------------------------------------------------
++spline      = cfg_branch;
++spline.tag  = 'spline';
++spline.name = 'Spline Set';
++spline.val  = {length order degree };
++spline.help = {'Spline interpolation of HRF response. This is useful if you want an approximate representation that is more flexible than the Canonical model but do not want to invoke the full flexibility of an FIR model. '};
++% ---------------------------------------------------------------------
++% length Window length
++% ---------------------------------------------------------------------
++length         = cfg_entry;
++length.tag     = 'length';
++length.name    = 'Window length';
++length.help    = {'Post-stimulus window length (in seconds)'};
++length.strtype = 'r';
++length.num     = [1 1];
++% ---------------------------------------------------------------------
++% order Order
++% ---------------------------------------------------------------------
++order         = cfg_entry;
++order.tag     = 'order';
++order.name    = 'Order';
+ order.help    = {'Number of basis functions'};
+ order.strtype = 'n';
+ order.num     = [1 1];
+@@ -527,7 +562,7 @@
+ bases.name    = 'Basis Functions';
+ bases.val     = {hrf };
+ bases.help    = {'The most common choice of basis function is the Canonical HRF with or without time and dispersion derivatives. '};
+-bases.values  = {hrf fourier fourier_han gamma fir };
++bases.values  = {hrf spline fourier fourier_han gamma fir };
+ % ---------------------------------------------------------------------
+ % volt Model Interactions (Volterra)
+ % ---------------------------------------------------------------------
+diff -ruN spm12_bak/config/spm_cfg_fmri_spec.m spm12/config/spm_cfg_fmri_spec.m
+--- spm12_bak/config/spm_cfg_fmri_spec.m	2021-05-18 12:27:30.195461000 -0600
++++ spm12/config/spm_cfg_fmri_spec.m	2021-05-18 13:42:05.485011000 -0600
+@@ -444,6 +444,45 @@
+ hrf.val     = {derivs };
+ hrf.help    = {'Canonical Hemodynamic Response Function. This is the default option. Contrasts of these effects have a physical interpretation and represent a parsimonious way of characterising event-related responses. This option is also useful if you wish to look separately at activations and deactivations (this is implemented using a t-contrast with a +1 or -1 entry over the canonical regressor). '};
+ 
++% ---------------------------------------------------------------------
++% length Window length
++% ---------------------------------------------------------------------
++length         = cfg_entry;
++length.tag     = 'length';
++length.name    = 'Window length';
++length.help    = {'Post-stimulus window length (in seconds)'};
++length.strtype = 'r';
++length.num     = [1 1];
++
++% ---------------------------------------------------------------------
++% order Order
++% ---------------------------------------------------------------------
++order         = cfg_entry;
++order.tag     = 'order';
++order.name    = 'Order';
++order.help    = {'Polynomial order'};
++order.strtype = 'n';
++order.num     = [1 1];
++
++% ---------------------------------------------------------------------
++% degree Degree
++% ---------------------------------------------------------------------
++degree         = cfg_entry;
++degree.tag     = 'degree';
++degree.name    = 'Degree';
++degree.help    = {'Number of basis functions'};
++degree.strtype = 'n';
++degree.num     = [1 1];
++
++% ---------------------------------------------------------------------
++% spline Spline Interpolated HRF
++% ---------------------------------------------------------------------
++spline      = cfg_branch;
++spline.tag  = 'spline';
++spline.name = 'Spline Set';
++spline.val  = {length order degree };
++spline.help = {'Spline interpolation of HRF response. This is useful if you want an approximate representation that is more flexible than the Canonical model but do not want to invoke the full flexibility of an FIR model. '};
++
+ %--------------------------------------------------------------------------
+ % length Window length
+ %--------------------------------------------------------------------------
+@@ -577,7 +616,7 @@
+ bases.name    = 'Basis Functions';
+ bases.val     = {hrf };
+ bases.help    = {'The most common choice of basis function is the Canonical HRF with or without time and dispersion derivatives.'};
+-bases.values  = {hrf fourier fourier_han gamma fir none};
++bases.values  = {hrf spline fourier fourier_han gamma fir none};
+ 
+ %--------------------------------------------------------------------------
+ % volt Model Interactions (Volterra)
+diff -ruN spm12_bak/config/spm_cfg_mfx.m spm12/config/spm_cfg_mfx.m
+--- spm12_bak/config/spm_cfg_mfx.m	2021-05-18 12:27:30.386349000 -0600
++++ spm12/config/spm_cfg_mfx.m	2021-05-18 13:00:25.853777000 -0600
+@@ -117,6 +117,10 @@
+         matlabbatch{1}.spm.stats.fmri_spec.bases.hrf.derivs = [1 0];
+     case 'hrf (with time and dispersion derivatives)'
+         matlabbatch{1}.spm.stats.fmri_spec.bases.hrf.derivs = [1 1];
++    case 'Spline set'
++        matlabbatch{1}.spm.stats.fmri_spec.bases.spline.length = SPMS{1}.xBF.length;
++        matlabbatch{1}.spm.stats.fmri_spec.bases.spline.order  = SPMS{1}.xBF.order;
++        matlabbatch{1}.spm.stats.fmri_spec.bases.spline.degree  = SPMS{1}.xBF.degree;
+     case 'Fourier set'
+         matlabbatch{1}.spm.stats.fmri_spec.bases.fourier.length = SPMS{1}.xBF.length;
+         matlabbatch{1}.spm.stats.fmri_spec.bases.fourier.order  = SPMS{1}.xBF.order;
+diff -ruN spm12_bak/config/spm_run_fmri_spec.m spm12/config/spm_run_fmri_spec.m
+--- spm12_bak/config/spm_run_fmri_spec.m	2021-05-18 12:27:30.491213000 -0600
++++ spm12/config/spm_run_fmri_spec.m	2021-05-18 13:02:53.283366000 -0600
+@@ -82,6 +82,9 @@
+     end
+ else
+     switch bf
++        case 'spline'
++            SPM.xBF.name   = 'Spline set';
++            SPM.xBF.degree = job.bases.(bf).degree;
+         case 'fourier'
+             SPM.xBF.name = 'Fourier set';
+         case 'fourier_han'
+diff -ruN spm12_bak/spm_get_bf.m spm12/spm_get_bf.m
+--- spm12_bak/spm_get_bf.m	2021-05-18 12:27:11.092996000 -0600
++++ spm12/spm_get_bf.m	2021-06-06 17:23:09.436487000 -0600
+@@ -13,7 +13,8 @@
+ %               'Finite Impulse Response'
+ %               (any other specification will default to 'hrf')
+ % xBF.length  - window length (seconds)
+-% xBF.order   - order
++% xBF.order   - order (number of elements, or spline polynomial order)
++% xBF.degree  - degree (of spline basis set)
+ % xBF.T       - microtime resolution (for 'hrf*')
+ %
+ % xBF.bf      - array of basis functions
+@@ -51,6 +52,7 @@
+         'hrf',...
+         'hrf (with time derivative)',...
+         'hrf (with time and dispersion derivatives)',...
++        'Spline set',...
+         'Fourier set',...
+         'Fourier set (Hanning)',...
+         'Gamma functions',...
+@@ -75,12 +77,32 @@
+     catch, h          = spm_input('order',4,'e',4);
+            xBF.order  = h;
+     end
++
++    case {'Spline set'}
++    %----------------------------------------------------------------------
++    try,   l          = xBF.length;
++    catch, l          = spm_input('window length {secs}',3,'e',32);
++           xBF.length = l;
++    end
++    try,   h          = xBF.order;
++    catch, h          = spm_input('order',4,'e',4);
++           xBF.order  = h;
++    end
++    try,   k          = xBF.degree;
++    catch, k          = spm_input('degree',4,'e',4);
++           xBF.degree = k;
++    end
+ end
+ 
+ 
+ %-Create basis functions
+ %==========================================================================
+ switch xBF.name
++
++    case {'Spline set'}
++    %----------------------------------------------------------------------
++    basis = create_bspline_basis([0,l/dt], k, h);    
++    bf = full(eval_basis((1:l/dt),basis));
+  
+     case {'Fourier set','Fourier set (Hanning)'}
+     %----------------------------------------------------------------------
+@@ -161,6 +183,18 @@
+  
+ %-Orthogonalise and fill in basis function structure
+ %--------------------------------------------------------------------------
++%switch xBF.name
++%    case {'Spline set'}
++%        xBF.bf = bf;
++%    otherwise
++%        xBF.bf = spm_orth(bf);
++%end
++
++% b-splines shouldn't be orthogonal, but spm_fMRI_design will 
++% orthogaonlize within trial type regardless, so lets save an
++% orthogonalized basis set for consistency with what we get downstream,
++% even though theoretically we might want to only orthogonalize non-spline
++% basis functions
+ xBF.bf = spm_orth(bf);
+  
+  

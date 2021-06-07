@@ -206,7 +206,7 @@ allowablefields = {...
     'customrunintercepts' ...
     'contrasts' 'contrastnames' 'contrastweights' ...
     'regmatching' 'defaultsuffix' 'noscale' ...
-    'timingcheck'
+    'timingcheck', 'orth_off'
     };
 actualfields = fieldnames(DSGN);
 for i = 1:numel(actualfields)
@@ -288,6 +288,11 @@ if ~OPTS.onlycons % check all the model spec/estimation stuff
     
     if ~isfield(DSGN,'tr'), error('no TR specified'); end
     if ~isfield(DSGN,'hpf'), error('no HPF specified'); end
+    if isfield(DSGN,'orth_off')
+        if logical(DSGN.orth_off)
+            OPTS.modeljob = [OPTS.modeljob ',''orth_off'''];
+        end
+    end
     if isfield(DSGN,'fmri_t')
         OPTS.modeljob = [OPTS.modeljob ',''fmri_t'',' num2str(DSGN.fmri_t)];
     end

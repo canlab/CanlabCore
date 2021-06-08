@@ -137,9 +137,20 @@ diff -ruN spm12_bak/config/spm_run_fmri_spec.m spm12/config/spm_run_fmri_spec.m
          case 'fourier'
              SPM.xBF.name = 'Fourier set';
          case 'fourier_han'
+diff -ruN spm12_bak/spm_fMRI_design.m spm12/spm_fMRI_design.m
+--- spm12_bak/spm_fMRI_design.m	2021-05-18 12:27:11.487578000 -0600
++++ spm12/spm_fMRI_design.m	2021-06-07 16:46:36.742317000 -0600
+@@ -232,6 +232,7 @@
+     
+     %-Orthogonalise (within trial type)
+     %----------------------------------------------------------------------
++    % Note, this is what prevents using non-orthogonal basis sets
+     for i = 1:length(Fc)
+         if i<= numel(U) && ... % for Volterra kernels
+                 (~isfield(U(i),'orth') || U(i).orth)
 diff -ruN spm12_bak/spm_get_bf.m spm12/spm_get_bf.m
 --- spm12_bak/spm_get_bf.m	2021-05-18 12:27:11.092996000 -0600
-+++ spm12/spm_get_bf.m	2021-06-06 17:23:09.436487000 -0600
++++ spm12/spm_get_bf.m	2021-06-07 16:38:40.896443000 -0600
 @@ -13,7 +13,8 @@
  %               'Finite Impulse Response'
  %               (any other specification will default to 'hrf')
@@ -158,7 +169,7 @@ diff -ruN spm12_bak/spm_get_bf.m spm12/spm_get_bf.m
          'Fourier set',...
          'Fourier set (Hanning)',...
          'Gamma functions',...
-@@ -75,12 +77,32 @@
+@@ -75,12 +77,33 @@
      catch, h          = spm_input('order',4,'e',4);
             xBF.order  = h;
      end
@@ -186,12 +197,13 @@ diff -ruN spm12_bak/spm_get_bf.m spm12/spm_get_bf.m
 +
 +    case {'Spline set'}
 +    %----------------------------------------------------------------------
-+    basis = create_bspline_basis([0,l/dt], k, h);    
++    basis = create_bspline_basis([0,l/dt], k+4, h);    
 +    bf = full(eval_basis((1:l/dt),basis));
++    bf = bf(:,3:end-2);
   
      case {'Fourier set','Fourier set (Hanning)'}
      %----------------------------------------------------------------------
-@@ -161,6 +183,18 @@
+@@ -161,6 +184,18 @@
   
  %-Orthogonalise and fill in basis function structure
  %--------------------------------------------------------------------------

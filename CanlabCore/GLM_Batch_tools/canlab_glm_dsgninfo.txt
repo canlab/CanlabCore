@@ -149,7 +149,11 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |          bspline basis functions from your beta maps using appropriately       |
 |          weighted contrasts. Regress your SPM.xBF.bf on a true bspline basis	 |
 |          set to obtain appropriate contrast weights. See patched spm_get_bf()  |
-|          to see how basis set is generated prior to orthogonalization.         |
+|          to see how basis set is generated prior to orthogonalization. The     |
+|          regression weights should all be positive, but floating point errors  |
+|          will result in some non-zero negative values. Zero these to avoid     |
+|          contrast rescaling related surprises when using default 'noscale'     |
+|          values (see 'noscale' below).                                         |
 |         (Feature added by Bogdan)						 |
 |     Note: SPM will convolve your stimulus boxcar function with the above basis |
 |       functions. If you use a spline or fir basis function, this convolution   |

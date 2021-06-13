@@ -110,7 +110,11 @@ supportedFields = {fnames{:}, 'dat', 'images_per_session', 'removed_images'};
 allFields = fieldnames(obj);
 for i = 1:length(allFields)
     if sum(strcmp(allFields{i},supportedFields)) == 0
-        if length(obj.(allFields{i})) == k
+        if isa(obj.(allFields{i}),'table') 
+            if height(obj.(allFields{i})) == k
+                warning(['Object''s ''', allFields{i}, ''' field length matches number of splits, but ''', allFields{i}, ''' field will not be split'])    
+            end
+        elseif length(obj.(allFields{i})) == k
             warning(['Object''s ''', allFields{i}, ''' field length matches number of splits, but ''', allFields{i}, ''' field will not be split'])
         end
     end

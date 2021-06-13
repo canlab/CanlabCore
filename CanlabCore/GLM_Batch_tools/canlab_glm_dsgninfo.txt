@@ -131,14 +131,21 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |	  convolution.windowlength (post-stimulus window length (in seconds))    |
 |         convolution.order (polynomial order)					 |
 |         convolution.degree (number of basis functions) 			 |
-|         Note: Requires spm_spline.patch be applined to spm12                   |
+|         Note: Requires spm_spline.patch be applined to spm12, and fdaM library |
 |	  Note: consider setting orth = 0 in your SPM conditions files to avoid  |
 |	   transformations of your basis set during runtime. SPM by default will |
-|	   orthogonalize these, so it's not strictly a spline basis set, but by  |
+|	   orthogonalize these, so it's not strictly a bspline basis set, but by |
 |          setting orth=0 you eliminate some of the orthogonalization steps and  |
 |          get design matrices closer to what you might expect/want.             |
 |          Make sure you check your design matrices in SPM.xX.X to make sure     |
-|          you're aware of these deviations from a true b-spline fit.            |
+|          you're aware of these deviations from a true b-spline fit. The        |
+|          overall fit will be identical to a b-spline interpolation, but the    |
+|          beta maps do not correspond perfectly to b-spline basis functions.    |
+|         Note: becauase spm's orthogonalization is linear, you can reconstruct  |
+|          bspline basis functions from your beta maps using appropriately       |
+|          weighted contrasts. Regress your SPM.xBF.bf on a true bspline basis	 |
+|          set to obtain appropriate contrast weights. See patched spm_get_bf()  |
+|          to see how basis set is generated prior to orthogonalization.         |
 |     Note: SPM will convolve your stimulus boxcar function with the above basis |
 |       functions. If you use a spline or fir basis function, this convolution   |
 |       will still be peformed for each function in the set, which is probably   |

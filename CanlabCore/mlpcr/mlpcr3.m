@@ -293,6 +293,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         bDim(~ismember(bDim,retainComps)) = [];
         wDim(~ismember(wDim,retainComps)) = [];
     elseif rank(sc) < size(sc,2)
+        error('You will run into problems when reconstructing Bw at the end. Fix the wDim and bDim indexing');
         numcomps = rank(sc)-1;
         [~,compRank] = sort(var(sc),'descend');
         retainComps = sort(compRank(1:numcomps));
@@ -371,13 +372,15 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     if isempty(bDim)
         Bb = [b(1); zeros(size(X,2),1)];
     else
-        Bb = [b(1); pc_b(:,bDim)*b(bDim + 1)];
+        %Bb = [b(1); pc_b(:,bDim)*b(bDim + 1)];
+        Bb = [b(1); pc(:,bDim)*b(bDim + 1)];
     end
     
     if isempty(wDim)
         Bw = [0; zeros(size(X,2),1)];
     else
-        Bw = [0; pc_w(:,wDim)*b(wDim + 1)];
+        %Bw = [0; pc_w(:,wDim)*b(wDim + 1)];
+        Bw = [0; pc(:,wDim)*b(wDim+1)];
     end
     
     if ~isempty(sc_b), sc_b = sc_b(origOrder,:); end

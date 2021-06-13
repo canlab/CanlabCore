@@ -142,7 +142,7 @@ k = num_regions(r); % after resampling
 
 if k ~= k_orig
     disp('Regions lost due to resampling. Check and develop code.');
-    keyboard
+    %keyboard
 end
 
 % Main work done here, on atlases

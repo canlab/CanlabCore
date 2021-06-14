@@ -82,6 +82,8 @@ function [p,str] = cluster_surf(varargin)
 %
 % :Examples:
 % ::
+% % ------------------------------------------------------------
+% % ------------------------------------------------------------
 %
 %    P = 'C:\tor_scripts\3DheadUtility\canonical_brains\surf_single_subj_T1_gray.mat';
 %    cluster_surf(tcl,acl,P,10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
@@ -89,8 +91,72 @@ function [p,str] = cluster_surf(varargin)
 %    or P = h (surface handle) to use current surface in figure, and refZ
 %    cluster_surf(tcl,acl,h,[3 5 -5 -3],10,{[0 1 0] [1 0 0]},'colorscale','heatmap')
 %
+% % A complete example visualizing a network on several surfaces
+% % ------------------------------------------------------------
+% % Load atlas
+% atl = load_atlas('yeo17networks');
+% 
+% % Select a network
+% r = atlas2region(select_atlas_subset(atl, 1));
+% 
+% % Check what it looks like on slices
+% figure; montage(r);
+% 
+% % Check what it looks like using surface() method
+% % and render_on_surface()
+% 
+% figure; surface(r);
+% 
+% %% Run cluster_surf on several standard left-hemisphere surfaces
+% % ------------------------------------------------------------
+% create_figure('Left lateral surface', 2, 2);
+% cluster_surf(r, 2, 'colors', {[1 1 0]}, 'hires left');
+% view(275, 10); lightRestoreSingle;
+% title('MNI Colin single-subj, addbrain(...''hires left'')');
+% 
+% subplot(2, 2, 2);
+% % Inflated surfaces: These use the pre-calculated mappers from MNI to an
+% % inflated freesurfer cortical surface for each hemisphere:
+% % which('lh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat')
+% % which('rh.avgMapping_allSub_RF_ANTs_MNI152_orig_to_fsaverage.mat')
+% try
+%     cluster_surf(r, 2, 'colors', {[1 1 0]}, 'fsavg_left');
+%     view(275, 10); lightRestoreSingle;
+%     title('Freesurfer average with Wu 2017 MNI->surf mapping');
+% catch
+%     disp('cannot find required surface file');
+% end
+% 
+% subplot(2, 2, 3);
+% % Pial surface from Glasser_et_al_2016 Nature, HCP data
+% % 'L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat';
+% try
+%     surf_han = addbrain('surface left');
+%     cluster_surf(r, 2, 'colors', {[1 1 0]}, surf_han);
+%     view(275, 10); lightRestoreSingle;
+%     set(surf_han, 'FaceAlpha', 1);
+%     title('HCP pial surface, addbrain(...''surface left'')');
+% catch
+%     title('cannot find required surface file');
+% end
+% 
+% subplot(2, 2, 4);
+% % BigBrain surface, Amunts et al.
+% % 'BigBrainSurfaceLeft.mat' in addbrain
+% try
+%     surf_han = addbrain('hires surface left');
+%     cluster_surf(r, 2, 'colors', {[1 1 0]}, surf_han);
+%     view(275, 10); lightRestoreSingle;
+%     set(surf_han, 'FaceAlpha', 1);
+%     title('MNI Colin single-subj, addbrain(...''hires surface left'')');
+% catch
+%     title('cannot find required surface file');
+% end
+% % ------------------------------------------------------------
+% % ------------------------------------------------------------
 % :More examples:
 % ::
+% % ------------------------------------------------------------
 %
 %    cluster_surf(cl,2,'heatmap');     % brain surface.  vertices colored @2 mm
 %    cluster_surf(cl,2,'bg','heatmap');    % heatmap on basal ganglia
@@ -114,14 +180,17 @@ function [p,str] = cluster_surf(varargin)
 %    % Single-color transparent map (green):
 %    cluster_surf(cl, 2, {[0 1 0]}, 'colorscale', p3(2), 'normalize');
 %
-% :See Also: addbrain, img2surf.m, surface() methods for objects, cluster_cutaways
+% :See Also: addbrain, img2surf.m, surface() methods for objects,
+% cluster_cutaways, render_on_surface()
 %
-%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF ARE DEPRECATED.
-%    THEY USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
+%    WARNING: SURFACE_CUTAWAY, TOR_3D, AND CLUSTER_SURF 
+%    USE AN OLDER STYLE OF SURFACE RENDERING THAT IS VERY SLOW. THEY
 %    STILL WORK, BUT OBJECT-ORIENTED CANLAB TOOLS HAVE SHIFTED TO USING
 %    ADDBRAIN.M COMBINED WITH RENDER_ON_SURFACE() METHOD, WHICH USES
 %    MATLAB'S ISOCOLORS FOR DRAMATICALLY FASTER COLOR RENDERING.
-
+%    CLUSTER_SURF IS STILL USEFUL FOR INFLATED SURFACES, AND FOR RENDERING
+%    MULTIPLE SETS OF REGIONS ON THE SAME BRAIN IN DIFFERENT COLORS, AND
+%    WITH FLEXIBLE CONTROL OVER THE DISTANCE TO SURFACE.
 
 % ..
 %    Programmers' Notes

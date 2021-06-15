@@ -75,7 +75,7 @@ function [c, alld] = getVertexColors(xyz, v, actcolor, varargin)
 % ..
 
 
-    global do_fsavg_right do_fsavg_left ras 
+    global do_fsavg_right do_fsavg_left ras
     
     mind = 3;
     basecolor = [.5 .5 .5];
@@ -326,147 +326,101 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale, 
     else
         smallv = v;
     end
+    smallv(wh | wh2,:) = [];     % vertices--restricted list
+
+    if doverbose, fprintf('%3.0f\n', size(whverts, 1)); end
+
+    if isempty(smallv), return, end
+
+    % select coords that are close to surface vertices5
+    % coords, cscale{1}, and alphascale{1} all have same indices
+    % ---------------------------------------------------------------------
+    cmax = max(smallv, [], 1);
+    cmin = min(smallv, [], 1);
+    if doverbose, fprintf('%3.0f coords.  selecting: ', size(coords, 1)); end
     
-    % now we don't need this part:
-    %     smallv(wh | wh2,:) = [];     % vertices--restricted list
-    %
-    %     if doverbose, fprintf('%3.0f\n', size(whverts, 1)); end
-    %
-    %     if isempty(smallv), return, end
-    %
-    %     % select coords that are close to surface vertices5
-    %     % coords, cscale{1}, and alphascale{1} all have same indices
-    %     % ---------------------------------------------------------------------
-    %     cmax = max(smallv, [], 1);
-    %     cmin = min(smallv, [], 1);
-    %     if doverbose, fprintf('%3.0f coords.  selecting: ', size(coords, 1)); end
-    %
-    %     % omit wh and wh2 - outside scope of this coord set
-    %     wh = any(coords - repmat(cmax, size(coords, 1), 1) > mind, 2);
-    %     wh2 = any(repmat(cmin, size(coords, 1), 1) - coords > mind, 2);
-    %
-    %     % if cscale is matrix, must select these values of cscale as well!
-    %     if length(cscale) > 0 && size(cscale{1}, 1) == size(coords, 1)
-    %         cscale{1}(wh | wh2,:) = [];
-    %     end
-    %
-    %     if length(alphascale) > 0 && size(alphascale{1}, 1) == size(coords, 1)
-    %         alphascale{1}(wh | wh2,:) = [];
-    %     end
-    %
-    %     coords(wh | wh2,:) = [];
-    %
-    %     if isempty(coords), return, end
+    % omit wh and wh2 - outside scope of this coord set
+    wh = any(coords - repmat(cmax, size(coords, 1), 1) > mind, 2);
+    wh2 = any(repmat(cmin, size(coords, 1), 1) - coords > mind, 2);
+    
+    % if cscale is matrix, must select these values of cscale as well!
+    if length(cscale) > 0 && size(cscale{1}, 1) == size(coords, 1)
+        cscale{1}(wh | wh2,:) = [];
+    end
+    
+    if length(alphascale) > 0 && size(alphascale{1}, 1) == size(coords, 1)
+        alphascale{1}(wh | wh2,:) = [];
+    end
+    
+    coords(wh | wh2,:) = [];
+    
+    if isempty(coords), return, end
 
     nc = size(coords, 1);
     if doverbose, fprintf('%3.0f\n', nc); end
 
-    fprintf('Calculating distance...\n');
-    % searching for vertex indices within the min distance from coords
-    % using rangesearch function (this is much faster and more efficient
-    % than the previous loop-based search
-    [idxmind, distmind] = rangesearch(smallv, coords, mind);
-    n_idx = cellfun(@numel, idxmind);
+    % break up coords into list and run
+    % ----------------------------------
     
-    vertex_indices_all = cat(2,idxmind{:})';
-    distmind_all = cat(2,distmind{:})';
-    coords_indices_all = repelem(1:numel(idxmind),n_idx)';
-    
-    % remove overlapping vertex index except for the closest ones (this
-    % works better for drawing parcellations)
-    sort_vertex_all = sortrows([vertex_indices_all distmind_all coords_indices_all],[1 2]);
-    [~, ii] = unique(sort_vertex_all(:,1), 'first');
-    x = 1:length(vertex_indices_all);
-    x(ii) = [];
-    sort_vertex_all(x,:) = [];
-    vertex_indices_all = sort_vertex_all(:,1);
-    coords_indices_all = sort_vertex_all(:,3);
-    
-    % remove overlapping vertex index except for the last ones (this
-    % works better for activation maps (e.g., split colors))
-%     [~, ii] = unique(vertex_indices_all, 'last');
-%     x = 1:length(vertex_indices_all);
-%     x(ii) = [];
-%     vertex_indices_all(x) = [];
-%     coords_indices_all(x) = [];
-%     
-    if length(cscale) > 0 && ~isempty(cscale{1})
-        mycscale = cscale{1}(coords_indices_all,:);
-    else
-        mycscale = [];
+    % break up coords into list
+    xyz2 = {}; indx = 1;
+    for kk = 1:1000:nc
+        setwh{indx} = (kk:min(nc, kk + 1000 - 1))';
+        xyz2{indx} = coords(setwh{indx},:);
+
+        indx = indx + 1;
     end
+
+    if doverbose, fprintf('Running %3.0f sets of coordinates: 000', length(xyz2)); end
+
+    indxval = 1;
+    wh_coords_near_surface = false(size(coords, 1), 1);
     
-    if length(alphascale) > 0 && ~isempty(alphascale{1})
-        myalphascale = alphascale{1}(coords_indices_all,:);
-    else
-        myalphascale = [];
-    end
-    
-    c = color_change_vertices_all(c, mycscale, actcolor, vertex_indices_all, myalphascale);
-    
-    %  OLD (commented out by Wani, 6/13/2021)
-    %     % break up coords into list and run
-    %     % ----------------------------------
-    %
-    %     % break up coords into list
-    %     xyz2 = {}; indx = 1;
-    %     for kk = 1:1000:nc
-    %         setwh{indx} = (kk:min(nc, kk + 1000 - 1))';
-    %         xyz2{indx} = coords(setwh{indx},:);
-    %
-    %         indx = indx + 1;
-    %     end
-    %
-    %     if doverbose, fprintf('Running %3.0f sets of coordinates: 000', length(xyz2)); end
-    %
-    %     indxval = 1;
-    %     wh_coords_near_surface = false(size(coords, 1), 1);
-    %
-    %     for setno = 1:length(xyz2)
-    %         if doverbose, fprintf('\b\b\b%03d', setno); end
-    %
-    %         for i = 1:size(xyz2{setno}, 1)
-    %             % i indexes coordinate; e.g., 1000 iterations for a typical
-    %             % coord set
-    %             % find vertices that are within range of point i in set  setno
-    %             % vertex_indices are indices into the ORIGINAL list
-    %             vertex_indices = find_in_radius(xyz2, setno, i, smallv, mind, whverts);
-    %
-    %             % two modes:
-    %             % - if cscale{1} is a matrix, treats as rgb values, and put in
-    %             % color stored in cscale.  actcolor is ignored.
-    %             % - if cscale{1} is a vector, treat it as a scaling value for actcolor
-    %             % In either case, indxval should index location of coordinate in FULL
-    %             % list (corresponding to full list in cscale)
-    %
-    %             % cscale{1}(i) and alphascale{1}(i) contain unique values for each coord i
-    %             % these are used to map colors for single point i to multiple
-    %             % nearby vertices vertex_indices
-    %
-    %             if length(cscale) > 0 && ~isempty(cscale{1})
-    %                 mycscale = cscale{1}(setwh{setno}(i), :);  % color for this point, index into full list of coords/scalevals
-    %             else
-    %                 mycscale = [];
-    %             end
-    %
-    %             if length(alphascale) > 0 && ~isempty(alphascale{1})
-    %                 myalphascale = alphascale{1}(setwh{setno}(i), :);  % alpha for this point, index into full list of coords/scalevals
-    %
-    %                 % adjust by cube of mind, to adjust for overlap in vertices
-    %                 % affected by adjacent coords - done now in cluster_surf
-    %                 %myalphascale = myalphascale ./ mind^3;
-    %
-    %             else
-    %                 myalphascale = [];
-    %             end
-    %
-    %             c = color_change_vertices(c, mycscale, actcolor, vertex_indices, myalphascale);
-    %
-    %             if ~isempty(vertex_indices), wh_coords_near_surface(indxval) = 1; end
-    %
-    %             indxval = indxval + 1;
-    %         end
-    %     end % setno
+    for setno = 1:length(xyz2)
+        if doverbose, fprintf('\b\b\b%03d', setno); end
+
+        for i = 1:size(xyz2{setno}, 1)
+            % i indexes coordinate; e.g., 1000 iterations for a typical
+            % coord set
+            % find vertices that are within range of point i in set  setno
+            % vertex_indices are indices into the ORIGINAL list 
+            vertex_indices = find_in_radius(xyz2, setno, i, smallv, mind, whverts);
+
+            % two modes: 
+            % - if cscale{1} is a matrix, treats as rgb values, and put in
+            % color stored in cscale.  actcolor is ignored.
+            % - if cscale{1} is a vector, treat it as a scaling value for actcolor
+            % In either case, indxval should index location of coordinate in FULL
+            % list (corresponding to full list in cscale)
+            
+            % cscale{1}(i) and alphascale{1}(i) contain unique values for each coord i
+            % these are used to map colors for single point i to multiple
+            % nearby vertices vertex_indices
+            
+            if length(cscale) > 0 && ~isempty(cscale{1})
+                mycscale = cscale{1}(setwh{setno}(i), :);  % color for this point, index into full list of coords/scalevals
+            else
+                mycscale = [];
+            end
+            
+            if length(alphascale) > 0 && ~isempty(alphascale{1})
+                myalphascale = alphascale{1}(setwh{setno}(i), :);  % alpha for this point, index into full list of coords/scalevals
+            
+                % adjust by cube of mind, to adjust for overlap in vertices
+                % affected by adjacent coords - done now in cluster_surf
+                %myalphascale = myalphascale ./ mind^3;
+                
+            else
+                myalphascale = [];
+            end
+            
+            c = color_change_vertices(c, mycscale, actcolor, vertex_indices, myalphascale);
+            
+            if ~isempty(vertex_indices), wh_coords_near_surface(indxval) = 1; end
+            
+            indxval = indxval + 1;
+        end
+    end % setno
     
     if exist('p', 'var')
         set(p, 'FaceColor', 'interp')
@@ -476,152 +430,111 @@ function c = change_colors(c, coords, v, mind, cscale, actcolor, p, alphascale, 
     
 end % change_colors
 
-% new subfunction: change the color all together (added by Wani, 6/13/2021)
-function c = color_change_vertices_all(c, mycscale, actcolor, vertex_indices, myalphascale)
 
-% pass in/out larger list c, update all coordinates together
 
-% cscale is ordered from least color change to most 
-% for graphical/aesthetic purposes
-%
+
+
+
+function z = dist_tmp(w, p)
+
+    %
+    % if isstr(w)
+    %   switch (w)
+    %     case 'deriv', 
+    %       z = '';
+    %     otherwise
+    %       error('Unrecognized code.')
+    %   end
+    %   return
+    % end
+
+    % CALCULATION
+    if nargin == 1
+        p = w;
+        w = w';
+    end
+
+    [S, R] = size(w);
+    [R2, Q] = size(p);
+    if (R ~= R2), error('Inner matrix dimensions do not match.'), end
+
+    z = zeros(S, Q);
+    if (Q<S)
+        p = p';
+        copies = zeros(1, S);
+        for q=1:Q
+            z(:,q) = sum((w-p(q+copies,:)).^2, 2);
+        end
+    else
+        w = w';
+        copies = zeros(1, Q);
+        for i=1:S
+            z(i,:) = sum((w(:,i+copies)-p).^2, 1);
+        end
+    end
+    z = sqrt(z);
+
+end
+
+
+
+
+
+
+function [vertex_indices, d] = find_in_radius(xyz2, setno, i, smallv, mind, whverts)
+    % output: indices of vertices in BIG list, and distances
+    
+    % get vertices v within box -- fast method
+    wh = find(all(abs(bsxfun(@minus, xyz2{setno}(i,:), smallv)) <= mind, 2));
+    d = dist_tmp(smallv(wh,:), xyz2{setno}(i,:)');
+
+    % convert back to big list
+    vertex_indices = whverts(wh(d < mind));
+end
+
+
+
+
+function c = color_change_vertices(c, mycscale, actcolor, vertex_indices, myalphascale)
+
+% pass in/out larger list c, but update only a few coordinates
+% indexed by vertex_indices with a particular color value.  
+
+% cscale is ordered from least color
+% change to most for graphical/aesthetic purposes, so this function is
+% called repetitively to index lower i (less change) to higher i (more
+% change) successively.
+
 % two modes: if cscale{1} is a matrix, treats as rgb values, and put in
 % color stored in cscale
 % if cscale{1} is a vector, treat it as a scaling value for actcolor
 % In either case, the ith index point should correspond to the
 % coordinate being worked on.
 
-% vertex_indices should be the same length with mycscale
+n = length(vertex_indices);
 
-if size(vertex_indices,1) ~= size(mycscale,1)
-    error('vertex_indices and myscale is not the same length');
-end
-
-wh = vertex_indices~=0;
-
-if size(mycscale,2) > 1
-    % if we have rgb values rather than scaling values
-    % this occurs if heatmap = yes and colorscale = no, we pass in rgb values
-    % actcolor is ignored
-    
-    if isempty(myalphascale)
-        % solid colors
-        c(vertex_indices(wh),:) = mycscale(wh,:);
+if n
+    if length(mycscale) > 1
+        % if we have rgb values rather than scaling values
+        % this occurs if heatmap = yes and colorscale = no, we pass in rgb values
+        % actcolor is ignored
+        
+        if isempty(myalphascale)
+            % solid colors
+            c(vertex_indices,:) = repmat(mycscale, n, 1);
+        else
+            w = myalphascale;  % the weight for new color vs. old.
+            c(vertex_indices, :) = (1-w) .* c(vertex_indices, :) + w .* repmat(mycscale, n, 1);
+        end
+        
     else
-        w = myalphascale;  % the weight for new color vs. old.
-        c(vertex_indices(wh), :) = (1-w) .* c(vertex_indices(wh), :) + w .* mycscale(wh,:);
+        % this will scale the activation color in proportion to cscale
+        % for each voxel
+        
+        w = mycscale;  % the weight for new color vs. old.  1 = all new, 0 = all old
+        c(vertex_indices, :) = (1-w) .* c(vertex_indices, :) + w .* repmat(actcolor, n, 1);
     end
-    
-else
-    % this will scale the activation color in proportion to cscale
-    % for each voxel
-    
-    w = mycscale;  % the weight for new color vs. old.  1 = all new, 0 = all old
-    c(vertex_indices(wh), :) = (1-w) .* c(vertex_indices(wh), :) + w .* repmat(actcolor, sum(wh), 1);
 end
 
 end
-
-%  OLD (commented out by Wani, 6/13/2021)
-% function z = dist_tmp(w, p)
-% 
-%     %
-%     % if isstr(w)
-%     %   switch (w)
-%     %     case 'deriv', 
-%     %       z = '';
-%     %     otherwise
-%     %       error('Unrecognized code.')
-%     %   end
-%     %   return
-%     % end
-% 
-%     % CALCULATION
-%     if nargin == 1
-%         p = w;
-%         w = w';
-%     end
-% 
-%     [S, R] = size(w);
-%     [R2, Q] = size(p);
-%     if (R ~= R2), error('Inner matrix dimensions do not match.'), end
-% 
-%     z = zeros(S, Q);
-%     if (Q<S)
-%         p = p';
-%         copies = zeros(1, S);
-%         for q=1:Q
-%             z(:,q) = sum((w-p(q+copies,:)).^2, 2);
-%         end
-%     else
-%         w = w';
-%         copies = zeros(1, Q);
-%         for i=1:S
-%             z(i,:) = sum((w(:,i+copies)-p).^2, 1);
-%         end
-%     end
-%     z = sqrt(z);
-% 
-% end
-
-%  OLD (commented out by Wani, 6/13/2021)
-% function [vertex_indices, d] = find_in_radius(xyz2, setno, i, smallv, mind, whverts)
-%     % output: indices of vertices in BIG list, and distances
-%     
-%     % get vertices v within box -- fast method
-%     wh = find(all(abs(bsxfun(@minus, xyz2{setno}(i,:), smallv)) <= mind, 2));
-%     
-%     % new (by Wani: this is faster and simpler)
-%     d = sqrt(sum((smallv(wh,:)-repmat(xyz2{setno}(i,:),size(wh,1),1)).^2,2));
-%     
-%     % old
-%     % d = dist_tmp(smallv(wh,:), xyz2{setno}(i,:)');
-% 
-%     % convert back to big list
-%     vertex_indices = whverts(wh(d < mind));
-% end
-
-%  OLD (commented out by Wani, 6/13/2021)
-% function c = color_change_vertices(c, mycscale, actcolor, vertex_indices, myalphascale)
-% 
-% % pass in/out larger list c, but update only a few coordinates
-% % indexed by vertex_indices with a particular color value.  
-% 
-% % cscale is ordered from least color
-% % change to most for graphical/aesthetic purposes, so this function is
-% % called repetitively to index lower i (less change) to higher i (more
-% % change) successively.
-% 
-% % two modes: if cscale{1} is a matrix, treats as rgb values, and put in
-% % color stored in cscale
-% % if cscale{1} is a vector, treat it as a scaling value for actcolor
-% % In either case, the ith index point should correspond to the
-% % coordinate being worked on.
-% 
-% n = length(vertex_indices);
-% 
-% if n
-%     if length(mycscale) > 1
-%         % if we have rgb values rather than scaling values
-%         % this occurs if heatmap = yes and colorscale = no, we pass in rgb values
-%         % actcolor is ignored
-%         
-%         if isempty(myalphascale)
-%             % solid colors
-%             c(vertex_indices,:) = repmat(mycscale, n, 1);
-%         else
-%             w = myalphascale;  % the weight for new color vs. old.
-%             c(vertex_indices, :) = (1-w) .* c(vertex_indices, :) + w .* repmat(mycscale, n, 1);
-%         end
-%         
-%     else
-%         % this will scale the activation color in proportion to cscale
-%         % for each voxel
-%         
-%         w = mycscale;  % the weight for new color vs. old.  1 = all new, 0 = all old
-%         c(vertex_indices, :) = (1-w) .* c(vertex_indices, :) + w .* repmat(actcolor, n, 1);
-%     end
-% end
-% 
-% end
-
 

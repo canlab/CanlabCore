@@ -14,7 +14,7 @@ function p = addbrain(varargin)
 % NOTE: this version uses structures in MNI space
 % The exact space depends on the method used.
 %
-% % Regions
+% % Regions (see below, and canlab_load_ROI.m)
 % % -----------------------------------------------------------------------
 % 'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
 % 'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...
@@ -29,11 +29,16 @@ function p = addbrain(varargin)
 % 'left' 'hires left' 'surface left' 'hires surface left' ...
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
 % 'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
+% 'bigbrain'
 % 
 % % Macro subcortical surfaces
 % % -----------------------------------------------------------------------
-% 'CIT168' 'cerebellum','cblm' 'brainstem' 'suit brainstem' 
-% 
+% 'pauli_subcortical'    High-res combined surface from the Pauli CIT168 "reinforcement learning" atlas
+% 'CIT168'               Lower-res combined surface from the Pauli CIT168 "reinforcement learning" atlas
+% 'cerebellum','cblm'    surf_spm2_cblm,  an old but nice surface for rendering
+% 'brainstem'            surf_spm2_brainstem, an old but nice surface for rendering
+% 'suit brainstem'       Diedrichsen SUIT brainstem and cerebellum; 'suit_surface_brainstem_cerebellum.mat
+%        
 % % Cutaways
 % % -----------------------------------------------------------------------
 % 'brainbottom' 'cutaway', 'left_cutaway' 'right_cutaway' ...
@@ -84,7 +89,7 @@ function p = addbrain(varargin)
 %       Uses: canlab_canonical_brain_surface_cutaways
 %       pre-2020 used surface_cutaway.m
 %
-%   **'left_cutaway'**
+%   **'left_cutaway'**      These surfaces use the Keuken 2014 7T MNI surface
 %   **'right_cutaway' **
 %   **'left_insula_slab'**
 %   **'right_insula_slab'**
@@ -270,7 +275,8 @@ switch meth
        pname = 'L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
         p1 = add_surface(pname);
         set(p1,'FaceColor',[.5 .5 .5]);
-         p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
+        
+        p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
         set(p2,'FaceColor',[.5 .5 .5]);
         view(90,0);
         axis off;
@@ -279,7 +285,8 @@ switch meth
         material dull;
         p=[p1 p2];
     
-    case 'hires surface left'
+    case {'hires surface left', 'bigbrain left'}
+        
         pname = 'BigBrainSurfaceLeft.mat'; 
         p = add_surface(pname);
         set(p,'FaceColor',[.5 .5 .5]);
@@ -311,7 +318,8 @@ switch meth
         lightRestoreSingle(gca);
         material dull;
         
-    case 'surface right'
+    case 'surface right' 
+        
         pname = 'R.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
         p1 = add_surface(pname);
         set(p1,'FaceColor',[.5 .5 .5]);
@@ -325,8 +333,9 @@ switch meth
         p=[p1 p2];
 
 
-    case 'hires surface right'
-        pname = 'BigBrainSurfaceRight.mat'; % from Glasser_et_al_2016_HCP
+    case {'hires surface right', 'bigbrain right'}
+        
+        pname = 'BigBrainSurfaceRight.mat'; % from Amunts et al. Julich BigBrain
         p = add_surface(pname);
         set(p,'FaceColor',[.5 .5 .5]);
      
@@ -335,6 +344,23 @@ switch meth
         axis image;
         %         lightRestoreSingle(gca);
         material dull;
+        
+        
+    case 'bigbrain'
+        
+        pname = 'BigBrainSurfaceRight.mat'; 
+        p = add_surface(pname);
+        
+        pname = 'BigBrainSurfaceLeft.mat'; 
+        p = [p add_surface(pname)];
+        
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+     
+        view(135, 30);
+        axis off;
+        axis image;
+        material dull;
+        lightRestoreSingle;
         
         
     case 'transparent_surface'
@@ -403,6 +429,7 @@ switch meth
 
         p = add_surface(pname);
         set(p,'FaceColor',[0 0 .5]);
+        
  case 'amygdala hires'
 
         pname = 'AMY.mat'; %anatomy toolbox
@@ -442,10 +469,17 @@ switch meth
         set(p,'FaceColor',[.8 .65 .8]);
      
     case {'CIT168'}
+        % Lower-res surface from the Pauli CIT168 "reinforcement learning" atlas
         pname ='CIT168.mat';
         p=add_surface(pname);
         set(p,'FaceColor',[.8 .65 .8]);
            
+    case {'pauli_subcortical'}
+        % High-res surface from the Pauli CIT168 "reinforcement learning" atlas
+        pname ='pauli_subcortical.mat';
+        p=add_surface(pname);
+        set(p,'FaceColor',[.8 .65 .8]);
+        
                
             
     % -------------------------------------------------------------------

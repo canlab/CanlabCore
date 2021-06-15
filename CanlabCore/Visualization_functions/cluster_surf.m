@@ -39,7 +39,7 @@ function [p,str] = cluster_surf(varargin)
 %             'hypothalamus' 'cerebellum'
 %
 %   **EXISTING SURFACE HANDLE(S):**
-%        handles for surface patches, created,
+%        Pass in handles for surface patches, created,
 %        e.g., with addbrain.m.  This lets you be very flexible in the
 %        surfaces you image onto.
 %
@@ -148,10 +148,48 @@ function [p,str] = cluster_surf(varargin)
 %     cluster_surf(r, 2, 'colors', {[1 1 0]}, surf_han);
 %     view(275, 10); lightRestoreSingle;
 %     set(surf_han, 'FaceAlpha', 1);
-%     title('MNI Colin single-subj, addbrain(...''hires surface left'')');
+%     title('Julich BigBrain, addbrain(...''hires surface left'')');
 % catch
 %     title('cannot find required surface file');
 % end
+%
+% % ------------------------------------------------------------
+%
+% Example 2:
+% Show all 32 L/R Hem Schafer/Yeo networks on the Julich BigBrain
+%
+% % ------------------------------------------------------------
+%
+% atl = load_atlas('yeo17networks');
+% 
+% % Parse the atlas into a cell array with one cell per region
+% % Each cell will be rendered in a different color
+% clear region_cell
+% 
+% for i = 1:num_regions(atl)
+%     
+%     % Select a network
+%     region_cell{i} = atlas2region(select_atlas_subset(atl, i));
+%     
+% end
+% 
+% create_figure('surface');
+% 
+% % Seaborn colors....
+% colors = seaborn_colors(num_regions(atl) ./ 2)';
+% colors = [colors colors];
+% 
+% % Or standard CANlab colors...
+% colors = scn_standard_colors(num_regions(atl));
+% 
+% surf_han = addbrain('bigbrain');
+% 
+% cluster_surf(region_cell{:}, 3, 'colors', colors, surf_han);
+% view(135, 12);
+% lightRestoreSingle;
+% set(surf_han, 'FaceAlpha', 1);
+% title('HCP pial surface, addbrain(...''surface left'')');
+%
 % % ------------------------------------------------------------
 % % ------------------------------------------------------------
 % :More examples:

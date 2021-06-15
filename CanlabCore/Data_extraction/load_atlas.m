@@ -99,7 +99,7 @@ switch lower(atlas_file_name_or_keyword)
     case {'buckner'}
         %savefile = 'Buckner1000FC_2011_cortex_atlas_object.mat';
         savefile = 'buckner_networks_atlas_object.mat';
-        varname = 'buckner_atlas';
+        varname = 'atlas_obj';
         
     case {'cerebellum', 'suit'}
         savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');

@@ -1,0 +1,3 @@
+Use a command like this one to apply the patch
+patch -s -p0 -d <parent directory of spm12> < spm_splines.patch
+

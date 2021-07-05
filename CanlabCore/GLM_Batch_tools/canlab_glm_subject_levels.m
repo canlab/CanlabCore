@@ -201,12 +201,12 @@ allowablefields = {...
     'funcnames' 'allowmissingfunc' ...
     'concatenation' ...
     'tr' 'hpf' 'fmri_t' 'fmri_t0' ...
-    'conditions' 'pmods' 'convolution' 'multireg' 'singletrialsall' 'singletrials' 'ar1'...
+    'conditions' 'pmods' 'convolution' 'multireg' 'multiregbehav' 'singletrialsall' 'singletrials' 'ar1'...
     'allowmissingcondfiles' 'allowemptycond' 'notimemod' 'modelingfilesdir' ...
     'customrunintercepts' ...
     'contrasts' 'contrastnames' 'contrastweights' ...
     'regmatching' 'defaultsuffix' 'noscale' ...
-    'timingcheck'
+    'timingcheck', 'orth_off'
     };
 actualfields = fieldnames(DSGN);
 for i = 1:numel(actualfields)
@@ -288,6 +288,11 @@ if ~OPTS.onlycons % check all the model spec/estimation stuff
     
     if ~isfield(DSGN,'tr'), error('no TR specified'); end
     if ~isfield(DSGN,'hpf'), error('no HPF specified'); end
+    if isfield(DSGN,'orth_off')
+        if logical(DSGN.orth_off)
+            OPTS.modeljob = [OPTS.modeljob ',''orth_off'''];
+        end
+    end
     if isfield(DSGN,'fmri_t')
         OPTS.modeljob = [OPTS.modeljob ',''fmri_t'',' num2str(DSGN.fmri_t)];
     end
@@ -301,6 +306,12 @@ if ~OPTS.onlycons % check all the model spec/estimation stuff
         DSGN.multireg = [regexprep(DSGN.multireg, '\.mat$', '') '.mat'];
     else
         DSGN.multireg = '';
+    end    
+    
+    if isfield(DSGN,'multiregbehav')
+        DSGN.multiregbehav = [regexprep(DSGN.multiregbehav, '\.mat$', '') '.mat'];
+    else
+        DSGN.multiregbehav = '';
     end    
     
     if ~isfield(DSGN,'concatenation')

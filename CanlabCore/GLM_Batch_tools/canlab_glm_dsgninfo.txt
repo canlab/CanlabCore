@@ -127,6 +127,40 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |         EX: DSGN.convolution.type = 'fir';					 |
 |	      DSGN.convolution.windowlength = 46;				 |
 |             DSGN.convolution.order = 23;	  				 |
+|	'spline' (b-spline interpolation)					 |
+|	  convolution.windowlength (post-stimulus window length (in seconds))    |
+|         convolution.order (polynomial order)					 |
+|         convolution.degree (number of basis functions) 			 |
+|         Note: Requires spm_spline.patch be applined to spm12, and fdaM library |
+|         Note: Splines have boundary constraints. b(t = 0) == b(t = end) == 0.  |
+|	  Note: consider setting orth = 0 in your SPM conditions files to avoid  |
+|	   transformations of your basis set during runtime. SPM by default will |
+|	   orthogonalize these, so it's not strictly a bspline basis set, but by |
+|          setting orth=0 you eliminate some of the orthogonalization steps and  |
+|          get design matrices closer to what you might expect/want.             |
+|          Make sure you check your design matrices in SPM.xX.X to make sure     |
+|          you're aware of these deviations from a true b-spline fit. The        |
+|          overall fit will be identical to a b-spline interpolation, because    |
+|          the orthogonalized basis functions span the same space as the spline  |
+|          basis functions, but the beta maps do not correspond to b-splines and |
+|          are smeared out over large time windows. Direct interpretation of     |
+|          these is discouraged (but see next note).                             |
+|         Note: becauase spm's orthogonalization is linear, you can reconstruct  |
+|          bspline basis functions from your beta maps using appropriately       |
+|          weighted contrasts. Regress your SPM.xBF.bf on a true bspline basis	 |
+|          set to obtain appropriate contrast weights. See patched spm_get_bf()  |
+|          to see how basis set is generated prior to orthogonalization. The     |
+|          regression weights should all be positive, but floating point errors  |
+|          will result in some non-zero negative values. Zero these to avoid     |
+|          contrast rescaling related surprises when using default 'noscale'     |
+|          values (see 'noscale' below).                                         |
+|         (Feature added by Bogdan)						 |
+|     Note: SPM will convolve your stimulus boxcar function with the above basis |
+|       functions. If you use a spline or fir basis function, this convolution   |
+|       will still be peformed for each function in the set, which is probably   |
+|       not what you want. More sensible behavior can be achieved by setting     |
+|	your stimulus duration to your microonset time (DSGN.tr/DSGN.fmri_t or   |
+|	DSGN.tr/16 if DSGN.fmri_t isn't set), i.e. a discrete delta function.    |
 | - DSGN.ar1 (DEFAULT: false)	       						 |
 |     if true, use autoregressive AR(1) to model serial correlations		 |
 |       (see SPM manual)	  	   	 				 |
@@ -167,6 +201,19 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |   ('.mat' will be appended to the file name)					 |
 |   location of MAT-file: DSGN.modelingfilesdir (see above)			 |
 |   EX: DSGN.multireg = 'noise_model1';	       	    				 |
+| DSGN.multiregbehav (DEFAULT: no multiple regressors file)			 |
+|   similar to DSGN.multireg except when concatenating runs these are 		 |
+|     concatenated vertically, not block-diagonally. While some multiple 	 |
+|     regressor confounds are scan specific (e.g. motion), some may not be, in   |
+|     which case you can put those here and estimate them across scans. This     |
+|     enables a convolution hack when you want to estimate some design element   |
+|     using a non-conventional hrf (e.g. splines or FIR) while controlling for   |
+|     design elements of no interest using a different (e.g. lower dimensional   |
+|     canonical HRF). You simply preconvolve the latter design elements and 	 |
+|     enter them here. This feature was in fact motivated by a desire to be able |
+|     to study some factors using flexible HRFs while controlling for other      |
+|     using a canonical HRF.	(feature added by Bogdan)			 |
+|   (matrix must be named R2)
 |________________________________________________________________________________|
 
  ________________________________________________________________________________

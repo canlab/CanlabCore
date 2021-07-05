@@ -168,6 +168,16 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         end
     end
     
+    % check for intercept and remove if present
+    %{
+    intercept = ones(1,size(X,2))';
+    wh = cellfun(@(x) isequal(x,intercept),num2cell(X,1));
+    if ~isempty(wh)
+        warning('Your input X should not contain an intercept. Removing it. Model parameters will corespond to intercept free design')
+        X(:,wh) = [];
+    end
+    %}
+    
     % we need adjacent subjIDs, so let's ensure that
     [subjIDs, newOrder] = sortrows(subjIDs(:));
     [~,origOrder] = sort(newOrder);
@@ -184,16 +194,18 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     
     % get centering and expansion matrices
     n_grp = length(uniq_grp);
-    cmat = [];
-    emat = [];
+    cmat = cell(1,n_grp);
+    emat = cell(1,n_grp);
     sf = []; % scale factor for imbalanced datasets
     for i = 1:n_grp
         this_grp = uniq_grp(i);
         this_n = sum(this_grp == subjIDs);
-        cmat = blkdiag(cmat, eye(this_n) - 1/this_n);
-        emat = blkdiag(emat,ones(this_n,1));
+        cmat{i} = eye(this_n) - 1/this_n;
+        emat{i} = ones(this_n,1);
         sf = [sf(:); 1/sqrt(this_n)*ones(this_n,1)];
     end
+    cmat = blkdiag(cmat{:});
+    emat = blkdiag(emat{:});
     if ~cpca
         sf = ones(size(sf));
     end
@@ -208,7 +220,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
                 warning('Max wiDim exceeds max df, reseting wiDim to %d',length(subjIDs) - length(uniq_grp));
             end
 
-            wiDim = length(subjIDs) - length(uniq_grp);
+            wiDim = min(length(subjIDs) - length(uniq_grp), size(X,2));
         end
         
         
@@ -244,7 +256,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
                 warning('Max btDim exceeds max df, reseting btDim to %d',length(uniq_grp) - 1);
             end
 
-            btDim = length(uniq_grp) - 1;
+            btDim = min(length(uniq_grp) - 1, size(Xb,2));
         end
         
         [pc_b,~,~] = svd(scale(Xb,1)','econ');
@@ -281,11 +293,27 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         bDim(~ismember(bDim,retainComps)) = [];
         wDim(~ismember(wDim,retainComps)) = [];
     elseif rank(sc) < size(sc,2)
+        error('You will run into problems when reconstructing Bw at the end. Fix the wDim and bDim indexing');
         numcomps = rank(sc)-1;
         [~,compRank] = sort(var(sc),'descend');
         retainComps = sort(compRank(1:numcomps));
         
         [bDimnew, wDimnew] = deal(zeros(length(compRank),1));
+        
+        bDim(~ismember(bDim,retainComps)) = [];
+        wDim(~ismember(wDim,retainComps)) = [];
+        
+        if ~any(ismember(bDim,retainComps)) && btDim > 0
+            warning('All between dimensions dropped due to rank deficiency'); 
+        end
+        if ~any(ismember(wDim,retainComps)) && wiDim > 0
+            warning('All within dimensions dropped due to rank deficiency'); 
+        end
+        
+        sc_w = sc(:,wDim);
+        sc_b = sc(:,bDim);
+        pc_w = pc(:,wDim);
+        pc_b = pc(:,bDim);
         
         bDimnew(bDim) = 1;
         bDimnew = bDimnew(retainComps);
@@ -294,18 +322,6 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         wDimnew(wDim) = 1;
         wDimnew = wDimnew(retainComps);
         wDim = find(wDimnew);
-        
-        sc_w = sc(:,wDim);
-        sc_b = sc(:,bDim);
-        pc_w = pc(:,wDim);
-        pc_b = pc(:,bDim);
-        
-        if ~any(ismember(bDim,retainComps)) && btDim > 0
-            warning('All between dimensions dropped due to rank deficiency'); 
-        end
-        if ~any(ismember(wDim,retainComps)) && wiDim > 0
-            warning('All within dimensions dropped due to rank deficiency'); 
-        end
     end
     
     xx = [ones(size(Y, 1), 1) sc(:, retainComps)];
@@ -338,11 +354,11 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         end
         
         %m = fitlmematrix(double(sf.*xx), sf.*Y, double(sf.*xxRE), categorical(subjIDs), fitlmeOpts{:});
-        try
+        %try
             m = fitlmematrix(double(xx), Y, double(xxRE), categorical(subjIDs), fitlmeOpts{:});
-        catch
-            keyboard
-        end
+        %catch
+        %    keyboard
+        %end
         b = m.fixedEffects;
     end
 
@@ -356,13 +372,15 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
     if isempty(bDim)
         Bb = [b(1); zeros(size(X,2),1)];
     else
+        %Bb = [b(1); pc_b(:,bDim)*b(bDim + 1)];
         Bb = [b(1); pc(:,bDim)*b(bDim + 1)];
     end
     
     if isempty(wDim)
         Bw = [0; zeros(size(X,2),1)];
     else
-        Bw = [0; pc(:,wDim)*b(wDim + 1)];
+        %Bw = [0; pc_w(:,wDim)*b(wDim + 1)];
+        Bw = [0; pc(:,wDim)*b(wDim+1)];
     end
     
     if ~isempty(sc_b), sc_b = sc_b(origOrder,:); end

@@ -45,13 +45,13 @@ else
     for i = 1:length(Sess)
         sessons = [];
         for j = 1:length(Sess(i).U)
-            ons{end+1} = Sess(i).U(j).ons;      % all onsets
-            sessons{end+1} = Sess(i).U(j).ons;  % onsets this session
+            ons{end+1} = Sess(i).U(j).ons/SPM.xY.RT;      % all onsets
+            sessons{end+1} = Sess(i).U(j).ons/SPM.xY.RT;  % onsets this session
         end
         
         % add delta functions for this session to overall
-        [X,sessdelt] = onsets2delta(sessons,1,size(SPM.xX.X,1) ./ length(Sess));
-        for k = 1:length(sessdelt)
+        sessdelt = onsets2delta(sessons,size(SPM.xX.X,1) ./ length(Sess));
+        for k = 1:size(sessdelt,2)
             
             % just in case some sessions do not have some
                     % regressors
@@ -60,9 +60,9 @@ else
             end
                     
             try
-                delta{k} = cat(1,[delta{k}; sessdelt{k}]);
+                delta{k} = cat(1,[delta{k}; sessdelt(:,k)]);
             catch
-                 delta{k} = cat(1,[delta{k}; sessdelt{k}']);
+                 delta{k} = cat(1,[delta{k}; sessdelt(:,k)']);
             end
         end
     end

@@ -51,7 +51,7 @@ end
 % and then grab a few more fields that are not found with the size check
 % above.  these field are all 1D
 
-otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y', 'metadata_table'};
+otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y', 'metadata_table' 'threshold' 'image_labels'};
 for f = otherfields
     field = char(f);
     
@@ -62,6 +62,12 @@ for f = otherfields
     if ~isempty(out.(field)) && sz(1) == datsz(2)
         
         out.(field) = out.(field)(wh, :); % these field are all 1D
+        
+    end
+    
+    if ~isempty(out.(field)) && sz(2) == datsz(2)
+        
+        out.(field) = out.(field)(:, wh); % these field are all 1D
         
     end
     

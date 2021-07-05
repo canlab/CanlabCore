@@ -57,7 +57,7 @@ function delta = onsets2delta(ons, len)
 %    Defaults
 % ..
 
-res = 16;   % resolution of high-res delta functions = orig. units * 16
+res = 1;   % resolution of high-res delta functions = orig. units * 16
 
 if nargin == 1
     len = res * (max(cat(1, ons{:})) + 1);

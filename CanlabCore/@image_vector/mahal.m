@@ -4,6 +4,30 @@ function [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj
 %
 % [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
 %
+% Mahalanobis distance, which is a measure of how different each image is from the rest of the images. 
+% It's based on the squared distance across images, just like the typical least-squares solution we 
+% use to fit regression models (the basis for all General Linear Models). But the Mahalanobis distance
+% provides distances along the principal axes of variation based on the covariance across images. 
+% Here is an intuition for why this is important. A difference of a given magnitude doesn't mean the 
+% same thing for all voxels, or for all variables in a dataset in general.  If I'm classifying people 
+% in terms of their height in inches weight in lbs, and the number of fingers they have, +1 inch in 
+% height isn't so surprising, but +1 finger is. And if I transform height to feet, +1 foot is also 
+% very surprising. Rather than differences in raw units, it often makes sense to measure deviations 
+% in units of standard devations, considering the intrinsic variablilty in each variable. 
+% Furthermore, variables can move together (i.e., covary). If someone is +1 sd in height, they're 
+% also likely to be heavier than average as well, so I wouldn't want to sum the deviation in height 
+% and deivation in weight without considering their covariance and discounting it. If height and 
+% weight covary positively, +1 height and -1 weight would be much more surprising, because this pattern 
+% goes against the natural covariance in these measures. Mahalanobis distance takes care of all of that, 
+% by calculating deviations along the principal axes of covariation. 
+%
+% A note on outlier identification:
+% wh_outlier_uncorr identifies images that are outside the 95% confidence region of the cloud of 
+% images (think of each image as a point) in multidimensional space. This is an indicator vector 
+% (values of 1 and 0) for which images are outliers. The plot shows us the distances for each case (image)
+% and the relationship between the observed and expected distance. A positive deviation from the line means 
+% the image is more unusual than expected.
+% 
 % Optional inputs:
 % 'corr' : use correlation matrix of images instead of covariance. 
 % Insensitive to differences in scale and mean of data, and thus more

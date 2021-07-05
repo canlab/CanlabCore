@@ -307,7 +307,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %                                training subsets, re-creating
 %                                cross-validated output
 %       other_output_cv_descrip: 'Other output from algorithm - for each CV fold'
-%                           phi: ??
+%                           phi: Binary correlation between predicted and actual
 %     dist_from_hyperplane_xval: Cross-validated distance perpendicular to class boundary
 %                                   higher =
 %                                   stronger prediction in favor of Class 1, lower = in favor of class 2.

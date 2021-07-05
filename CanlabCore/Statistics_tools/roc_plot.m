@@ -67,6 +67,15 @@ function ROC = roc_plot(input_values, binary_outcome, varargin)
 %   A structure containing the true and false pos rates (tpr, fpr) along the curve
 %   and the criterion threshold values of the input variable (thr) corresponding to these rates.
 %
+% Sensitivity:                  Chances of predicting a "yes" given true "yes"
+% Specificity:                  Chances of predicting a "no" given true "no"
+% Positive predictive value:    Chances of true "yes" given predicted "yes"
+% Negative predictive value:    Chances of true "no" given predicted "no"
+% d or d_a:                     Effect size for classification; higher values indicate stronger predictive signal.
+% AUC:                          Area under the ROC curve. Higher values indicate more true signal, with a max of 1 
+%                               (100% sensitivity with 100% specificity, perfect classification).
+% sensitivity_ci, other _ci     95% confidence intervals for sensitivity and other statistics
+% 
 %   Uses the function roc_calc.m
 %
 %   Also returns some information about misclassified observations

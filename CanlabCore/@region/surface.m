@@ -145,8 +145,8 @@ addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe'
     'brainstem' 'suit brainstem' 'amygdala' 'amygdala hires' 'hippocampus', 'hipp' 'hippocampus hires' 'cerebellum','cblm' 'CIT168' ...
     'bg', 'basal ganglia' 'midbrain_group' 'limbic' 'limbic hires' 'brainstem_group' 'thalamus_group'};
 
-render_on_surface_allowable_args = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap' ...
-    'summer' 'cool' 'hot' 'bone' 'copper' 'prism' 'hsv' 'winter'};
+render_on_surface_allowable_args = {'clim' 'cmaprange' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap' ...
+    'summer' 'cool' 'hot' 'bone' 'copper' 'prism' 'hsv' 'winter' 'nolegend'};
 
 % optional inputs with default values
 for i = 1:length(varargin)

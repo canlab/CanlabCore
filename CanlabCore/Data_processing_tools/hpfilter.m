@@ -109,7 +109,12 @@ function [y, pI, HP, incpt] = hpfilter(y, TR, HP, spersess, varargin)
         pI = pI(1:n, 1:n);
 
         tmp = cumsum(spersess);
-        while tmp(end) > length(y),
+        
+        if tmp(end) > length(y)
+            disp('Warning: hpfilter: Images in spersess does not match length of data to be filtered.');
+        end
+        
+        while tmp(end) > length(y)
             disp('Trying removal of a session.');
             spersess = spersess(1:end-1);
             tmp = cumsum(spersess);

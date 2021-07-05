@@ -214,7 +214,7 @@ end
 
 if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
     
-    if dofigure
+    if dofigure && ~(one_blob_per_slice) % regioncenters will create a new figure anyway
         create_figure('fmridisplay'); axis off
     end
     % TW: I think the above is unnecessary because canlab_results_fmridisplay

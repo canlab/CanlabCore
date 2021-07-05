@@ -37,7 +37,7 @@ if events_only
         
         %n_ofinterest(i) = length(SPM.Sess(i).U);
         % Modified to handle parametric modulators as well. 7/2012
-        n_ofinterest(i) = length(cat(2, SPM.Sess(i).U.name));
+        n_ofinterest(i) = length(cat(2, SPM.Sess(i).U.name))*size(SPM.xBF.bf,2);
         
     end
     

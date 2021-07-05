@@ -30,7 +30,7 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % Forebrain (non-basal ganglia)
 % -----------------------------------------------------------
 % 'nacc'    Nucleus accumbens               % Pauli 2017 BioArxiv subcortical atlas
-% 'hipp'    Hippocampus                     % MISSING/NEEDS UPDATE
+% 'hipp'    Hippocampus                     % SPM Anatomy Toolbox, as stored in Canlab2018_combined atlas
 % 'BST'     Bed nuc. of stria term/SLEA     % Pauli 2017 BioArxiv subcortical atlas
 %
 % Basal ganglia
@@ -254,10 +254,10 @@ switch region_name
         image_file = [];                                % Image file name with binary mask
         default_color = [0 0 .5];                        % default color for display
         
-    case {'hippocampus', 'hipp'} % ***************
+    case {'hippocampus', 'hipp'} 
         
         region_file = which('hipp_clusters.mat');  % File with region object/clusters struct
-        var_name = '';                             % Variable name(s) of interest in file
+        var_name = 'hipp';                         % Variable name(s) of interest in file
         image_file = [];                           % Image file name with binary mask
         default_color = [.5 .6 .6];
                    

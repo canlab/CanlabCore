@@ -36,96 +36,113 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        A string matrix with images to load, or a keyword.
 %        keywords load pre-defined image sets, as indicated below.
 %        NOTE: you will need to have these images on your Matlab path!
-%        Some are in the CANlab Neuroimaging_Pattern_Masks repository, 
+%        Some are in the CANlab Neuroimaging_Pattern_Masks repository,
 %        some in Masks_Private repository, other (unlisted) datasets can be
 %        loaded if you have a load_<dataset>.m file in your path. This is
 %        for simplified extensions to this method by other libraries.
-% 
+%
 % Sample test datasets - one image per subject
 % ------------------------------------------------------------------------
-%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008. 
+%       'list' : List of signatures (enter any keyword from list as input)
+%                Note: returns table as 1st output instead of image_obj
+%
+% Sample test datasets - one image per subject
+% ------------------------------------------------------------------------
+%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008.
 %                       Each image is a contrast image for the contrast [reappraise negative vs. look negative]
-%          
+%
 %        'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat (non-painful and painful).
 %                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
 %                  on figshare (see canlab.github.io/walkthroughs)
-% 
-%        'kragel18_alldata' : 270 subject maps from Kragel 2018; 
+%
+%        'kragel18_alldata' : 270 subject maps from Kragel 2018;
 %                             These are saved in kragel_2018_nat_neurosci_270_subjects_test_images.mat
 %                             if not found, will attempt to download from Neurovault using
-%                             retrieve_neurovault_collection(). 
-%    
+%                             retrieve_neurovault_collection().
+%
 % Sample test datasets - one image per trial (single trial datasets)
 % ------------------------------------------------------------------------
 %     A set of single-trial datasets for pain studies have been compiled by Bogdan Petre and stored here:
 %     https://github.com/canlab/canlab_single_trials
-% 
-%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3'), and you can enter
+%
+%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3pain'), and you can enter
 %     any of these names as keywords, or 'all_single_trials' to load all of
 %     them. The canlab_single_trials repo must be on your matlab path.
 %     Each study file loads as an fmri_data object, with a metadata_table field
 %     that stores trial info in a Matlab table-class object.
 %
+%     Single-trial datasets include:
+%     % 'nsf' 'bmrk3pain' 'bmrk3warm' 'bmrk4' 'exp' 'ie' 'ie2' 'ilcp'
+%     'romantic' 'scebl' 'stephan'
+%
+%     Each contains a single-trial object from a differnt study.
+%
 % Parcellations and large-scale networks/patterns
 % ------------------------------------------------------------------------
 %        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
-% 
-%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
-% 
-%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
-% 
-%        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
 %
-%        'kragelschemas': 20 visual emotion-schemas from Kragel et al. 2019 
+%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
+%
+%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
 %
 %        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
 %                         from Luke Chang (unpublished)
 %
 %        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
 %                             networks from Pauli et al. 2016
-% 
+%
 %        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
-% 
+%
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
-% 
-% 
-% 'Signature' patterns and predictive models 
-% ------------------------------------------------------------------------
-%        'nps': Wager et al. 2013 Neurologic Pain Signature
-%        'vps': Krishnan et et al. 2016 Vicarious Pain Signature
-%        'rejection': Woo et et al. 2014 Romantic Rejection
-%        'siips': Woo et et al. 2017 Stimulus intensity-independent pain Signature
-%        'pines' : Chang et et al. 2015 Picture-induced negative emotion Signature
-%        'gsr' : Eisenbarth et al. 2016 Stress-induced skin conductance
-%        'hr' : Eisenbarth et al. 2016 Stress-induced heart rate
-%        'multisensory' : Lopez-sola et al. 2016 Fibromyalgia multisensory pattern
-%        'fmpain' : Lopez-sola et al. 2016 Fibromyalgia pain-period pattern
-%        'plspain' : Kragel el al. 2018 PLS pain-related
-%        'cpdm' : Geuter et al. 2020 multivariate mediation pain-related
 %
-%        'npsplus': Wager lab published multivariate patterns:
+%
+% 'Signature' patterns and predictive models
+% ------------------------------------------------------------------------
+%        'list'     : Return list of signatures in a table
+%        'all'      : Load all signatures in table registry (see 'list')
+%        'nps'      : Wager et al. 2013 Neurologic Pain Signature
+%        'vps'      : Krishnan et et al. 2016 Vicarious Pain Signature
+%        'rejection': Woo et et al. 2014 Romantic Rejection
+%        'siips'    : Woo et et al. 2017 Stimulus intensity-independent pain Signature
+%        'pines'    : Chang et et al. 2015 Picture-induced negative emotion Signature
+%        'gsr'      : Eisenbarth et al. 2016 Stress-induced skin conductance
+%        'hr'       : Eisenbarth et al. 2016 Stress-induced heart rate
+%        'multisensory' : Lopez-sola et al. 2016 Fibromyalgia multisensory pattern
+%        'fmpain'   : Lopez-sola et al. 2016 Fibromyalgia pain-period pattern
+%        'plspain'  : Kragel el al. 2018 PLS pain-related
+%        'cpdm'     : Geuter et al. 2020 multivariate mediation pain-related
+%
+%        'npsplus'  : Wager lab published multivariate patterns:
 %                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
-% 
-%        'painsig': NPS (incl NPSpos & NPSpos) and SIIPS only
-% 
+%
+%        'painsig'  : NPS (incl NPSpos & NPSpos) and SIIPS only
+%
 %        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
 %                         NPSp, FM-pain, FM-multisensory
-% 
-%        'guilt':   a multivariate fMRI pattern related to guilt behavior
+%
+%        'guilt'    : a multivariate fMRI pattern related to guilt behavior
 %                   Yu, Koban et al. 2019, Cerebral Cortex
 %                   Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii.gz
 %
 %        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
-%                                                Neurosynth, unthresholded, 2013 
-% 
-%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable 
+%                                                Neurosynth, unthresholded, 2013
+%
+%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable
 %                   representations of pain, cog control, emotion. From
 %                   Kragel et al. 2018, Nature Neuroscience
-% 
+%
 %        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10
 %        individual PDM maps and a combined PDM, which is a weighted
 %        combination of the 10. From Geuter et al. (2020) Cerebral Cortex
+%        (see cpdm above)
+%
+%        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
+%
+%        'kragelschemas': 20 visual emotion-schemas from Kragel et al. 2019
+%
+%        {'reddanCSplus' 'threat'}: Reddan et al. 2018 Neuron CS+ vs. CS- classifier map
+%        'zhouvps':  Zhou et al. 2020 eLife generalized vicarious pain signature  
 %
 %        'multiaversive', 'mpa2': Ceko et al. multiple predictive patterns
 %        for aversive experience: General, Mechanical pain,
@@ -160,7 +177,7 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % ::
 %
 %  % Example 1: Load NPS (private) and several other signatures
-% % ------------------------------------------------------------------------- 
+% % -------------------------------------------------------------------------
 % imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
 %     'Rating_Weights_LOSO_2.nii'  ...  % PINES
 %     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
@@ -180,13 +197,13 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % names_wholebrain = names([8 16 24]);
 % bpls_subregions = get_wh_image(obj, [1:6 9:14 17:22]);
 % names_subregions = names([1:6 9:14 17:22]);
-% 
+%
 % % Load test data: Emotion regulation from Wager et al. 2008
 % test_data_obj = load_image_set('emotionreg');
-% 
+%
 % %  Make plots
 % % Yellow: positive associations. Blue: Negative associations.  Plot shows mean +- std. error for each pattern of interest
-%   
+%
 % create_figure('Kragel Pain-Cog-Emo maps', 1, 2);
 % stats = image_similarity_plot(test_data_obj, 'average', 'mapset', bpls_wholebrain, 'networknames', names_wholebrain, 'nofigure');
 % subplot(1, 2, 2)
@@ -230,7 +247,7 @@ for i = 1:length(varargin)
         switch varargin{i}
             
             case 'noverbose', verbose = 0;
-            
+                
             case 'verbose', verbose = 1;
                 
             case 'md5check', continue; % only supported by custom functions in other extension repositories
@@ -248,7 +265,7 @@ if isa(image_names_or_keyword, 'fmri_data') || isa(image_names_or_keyword, 'atla
     imagenames = image_obj.image_names;
     networknames = format_strings_for_legend(imagenames);
     if iscolumn(networknames), networknames = networknames'; end
-
+    
     return
     
 elseif isa(image_names_or_keyword, 'image_vector')
@@ -277,7 +294,7 @@ else
             
             [image_obj, networknames, imagenames] = load_bucknerlab_wholebrain_plus_subctx;
             networknames=networknames';
-          
+            
         case {'nps', 'pines' 'vps', 'rejection', 'siips' 'hr' 'gsr' 'cpdm' 'fmpain' 'multisensory' 'plspain'}
             
             [image_obj, networknames, imagenames] = load_signature(image_names_or_keyword);
@@ -290,7 +307,7 @@ else
             
         case 'kragelemotion'
             [image_obj, networknames, imagenames] = load_kragelemotion;
-        
+            
         case 'kragelschemas'
             [image_obj, networknames, imagenames] = load_kragelschemas;
             
@@ -305,29 +322,29 @@ else
             
         case {'bgloops', 'pauli'}
             [image_obj, networknames, imagenames] = load_pauli_bg;
-
+            
         case {'bgloops_cortex', 'pauli_cortex'}
             [image_obj, networknames, imagenames] = load_pauli_bg_cortex;
-          
-           case {'pauli_subcortical'}
+            
+        case {'pauli_subcortical'}
             [image_obj, networknames, imagenames] = load_pauli_subcortical;
-                   
-        case {'fibromyalgia','fibro','fm'}    
+            
+        case {'fibromyalgia','fibro','fm'}
             [image_obj, networknames, imagenames] = load_fibromyalgia;
-       
+            
         case {'neurosynth', 'neurosynth_featureset1'}
             [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
             
         case {'pain_cog_emo', 'kragel18'}
-             [image_obj, networknames, imagenames] = load_kragel18;
-             
+            [image_obj, networknames, imagenames] = load_kragel18;
+            
         case {'pdm','pain_pdm'}
-             [image_obj, networknames, imagenames] = load_pain_pdm;
-
+            [image_obj, networknames, imagenames] = load_pain_pdm;
+            
         case {'bmrk3', 'pain'}
             [image_obj, networknames, imagenames] = load_bmrk3;
             
-        case {'kragel18_alldata' 'kragel18_testdata'}
+        case {'kragel270' 'kragel2018_alldata' 'kragel18_alldata' 'kragel18_testdata'}
             
             [image_obj, networknames, imagenames] = load_kragel18_alldata;
             
@@ -339,12 +356,37 @@ else
             
             [image_obj, networknames, imagenames] = load_mpa2;
             
+        case 'list'
+            
+            table_list = list_signatures;
+            disp(table_list);
+            
+            image_obj = table_list; % return as 1st output
+            return
+            
         otherwise
+            % Try to load if we have a function name
+            % This will be true for the single trial data (Bogdan Petre
+            % repository) if you have it on your Matlab path
+            
             if which(['load_', lower(image_names_or_keyword)])
+                
                 [image_obj, networknames, imagenames] = feval(['load_', lower(image_names_or_keyword)],...
                     'verbose', verbose, varargin{:});
+                
             else
-                error('Unknown mapset keyword. If entering image names, use a cell array.');
+                % Try to load if it matches any in list
+                
+                table_list = list_signatures;
+                
+                wh = find(strcmp(image_names_or_keyword, table_list.keyword)); %#ok<*EFIND>
+                
+                if ~isempty(wh)
+                    [image_obj, networknames, imagenames] = load_signature(image_names_or_keyword);
+                    
+                else
+                    error('Unknown mapset keyword. If entering image names, use a cell array. Try ''list'' for a list of signatures');
+                end
             end
             
     end % switch
@@ -402,7 +444,7 @@ for i = 1:length(imagenames)
         if ~isempty(myimg)
             imagenames{i} = myimg;
         end
-            
+        
     end
     
     if ~exist(imagenames{i}, 'file')
@@ -509,7 +551,7 @@ img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
 
 image_obj = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
 
-networknames = names.rnames(1:7); 
+networknames = names.rnames(1:7);
 
 k = length(networknames);       % cortex, striatum, cerebellum, same names
 
@@ -520,7 +562,7 @@ for i = 1:7  % breaks up into one map per image/network
     
     wh = image_obj.dat == i;
     newmaskdat(:, i) = double(wh);
-  
+    
     wh = image_obj.dat == i + 7;
     newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
     
@@ -550,10 +592,10 @@ img = which('rBucknerlab_7clusters_SPMAnat_Other_combined.img');
 
 image_obj = fmri_data(img, [], 'noverbose');  % loads image with integer coding of networks
 
-networknames = names.rnames(1:7); 
+networknames = names.rnames(1:7);
 
 m = 5;                              % number of other regions
-                                    % Amy, Thal, Hy, Brainstem, Hippocampus
+% Amy, Thal, Hy, Brainstem, Hippocampus
 k = length(networknames) + m;       % cortex, striatum, cerebellum
 
 newmaskdat = zeros(size(image_obj.dat, 1), k);
@@ -563,7 +605,7 @@ for i = 1:7  % breaks up into one map per image/network
     
     wh = image_obj.dat == i;
     newmaskdat(:, i) = double(wh);
-  
+    
     wh = image_obj.dat == i + 7;
     newmaskdat(:, i) = newmaskdat(:, i) + double(wh);
     
@@ -587,28 +629,15 @@ end  % function
 
 function [image_obj, networknames, imagenames] = load_signature(keyword)
 
-% Load NPS, PINES, Rejection, VPS,
+% Load one of a set of signatures in table (see function at bottom for
+% table registry)
+
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'PLSpain' 'cPDM_Pain'};
+table_list = list_signatures;
 
-imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
-    'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
-    'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
-    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % Woo 2017 SIIPS - stim-indep pain
-    'Rating_Weights_LOSO_2.nii'  ...                    % Chang 2015 PINES - neg emo
-    'dpsp_rejection_vs_others_weights_final.nii' ...    % Woo 2014 romantic rejection
-    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain VPS
-    'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
-    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
-    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
-    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
-    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia 
-    'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
-    'Ashar_2017_empathic_distress_marker.nii' ...
-    'bPLS_Wholebrain_Pain.nii' ...                      % Kragel 2018 Nature Neuroscience pain
-    'Geuter_2020_cPDM_combined_pain_map.nii'};          % Geuter 2020 pain mvmediation cPDM
-
+networknames = table_list.keyword';
+imagenames = table_list.imagenames';
 
 switch lower(keyword)
     case 'nps'
@@ -632,9 +661,17 @@ switch lower(keyword)
     case 'plspain'
         wh = 15;
     case 'cpdm'
-        wh = 16;
+        wh = 27;
         
-    otherwise error('Only some signature keywords are implemented in load_image_set, and the one you entered is invalid. Try ''npsplus''');
+    otherwise
+        wh = find(strcmp(keyword, table_list.keyword));
+        
+end
+
+if isempty(wh)
+    
+    error('Only some signature keywords are implemented in load_image_set, and the one you entered is invalid. Try ''npsplus''');
+    
 end
 
 imagenames = check_image_names_get_full_path(imagenames(wh));
@@ -646,13 +683,30 @@ networknames = networknames(wh);
 end  % function
 
 
+function [image_obj, networknames, imagenames] = load_all(varargin)
+
+% Load all signatures
+% ------------------------------------------------------------------------
+
+table_list = list_signatures;
+
+networknames = table_list.keyword';
+imagenames = table_list.imagenames';
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads images with spatial basis patterns
+
+end  % function
+
 
 function [image_obj, networknames, imagenames] = load_npsplus
 
-% Load NPS, PINES, Rejection, VPS,
+% Load NPS, PINES, Rejection, VPS, more
 % ------------------------------------------------------------------------
 
-networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' 'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist'};
+networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
+    'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist'};
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -664,10 +718,10 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
     'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
     'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
-    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia 
-    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia 
+    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia
+    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia
     'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
-    'Ashar_2017_empathic_distress_marker.nii'};         
+    'Ashar_2017_empathic_distress_marker.nii'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -678,7 +732,7 @@ end  % function
 
 function [image_obj, networknames, imagenames] = load_painsig
 
-% Load pain signatures 
+% Load pain signatures
 % ------------------------------------------------------------------------
 
 networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS'};
@@ -686,7 +740,7 @@ networknames = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS'};
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
     'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
-    'nonnoc_v11_4_137subjmap_weighted_mean.nii'};    % Woo 2017 SIIPS - stim-indep pain         
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii'};    % Woo 2017 SIIPS - stim-indep pain
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -695,7 +749,7 @@ image_obj = fmri_data(imagenames, [], 'noverbose', 'sample2mask');  % loads imag
 end  % function
 
 
-function [image_obj, networknames, imagenames] = load_kragel18
+function [image_obj, networknames, imagenames] = load_kragel18(varargin)
 % Load NPS, PINES, Rejection, VPS,
 % ------------------------------------------------------------------------
 
@@ -726,7 +780,7 @@ end  % function
 
 
 
-function [image_obj, networknames, imagenames] = load_kragelemotion
+function [image_obj, networknames, imagenames] = load_kragelemotion(varargin)
 
 % Load Kragel 2015 emotion maps
 % ------------------------------------------------------------------------
@@ -749,12 +803,12 @@ image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial
 end % function
 
 
-function [image_obj, networknames, imagenames] = load_kragelschemas
+function [image_obj, networknames, imagenames] = load_kragelschemas(varargin)
 
 % Load Kragel 2019 emotion maps
 % ------------------------------------------------------------------------
 
-networknames ={'Adoration'	'Aesthetic Appreciation' 'Amusement' 'Anxiety'	'Awe'	'Boredom'	'Confusion'  'Craving'		'Disgust'	'Empathic Pain'	'Entrancement'		'Excitement'	'Fear'	'Horror'	'Interest'	'Joy'	'Romance'	'Sadness'	  'Sexual Desire'	'Surprise'};
+networknames = {'Adoration'	'Aesthetic Appreciation' 'Amusement' 'Anxiety'	'Awe'	'Boredom'	'Confusion'  'Craving'		'Disgust'	'Empathic Pain'	'Entrancement'		'Excitement'	'Fear'	'Horror'	'Interest'	'Joy'	'Romance'	'Sadness'	  'Sexual Desire'	'Surprise'};
 s=dir(which('PLS_betas_Adoration.nii.gz'));
 all_imgs=dir([s.folder filesep '*.gz']);
 imagenames={all_imgs(:).name}';
@@ -768,7 +822,7 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_guilt
+function [image_obj, networknames, imagenames] = load_guilt(varargin)
 
 % Load Yu 2019 CerCtx map
 % ------------------------------------------------------------------------
@@ -829,7 +883,7 @@ else
 end
 
 % imagenames = filenames(fullfile(mydir, 'con_008100*img'));
-% 
+%
 % imagenames = check_image_names_get_full_path(imagenames);
 
 image_obj = fmri_data(myfile, [], 'noverbose');  % loads images
@@ -840,11 +894,11 @@ imagenames = check_image_names_get_full_path(imagenames);
 networknames = format_strings_for_legend(image_obj.image_names);
 
 if length(networknames) == 1 % 4-d, expand
-   
+    
     networknames = repmat(networknames, size(image_obj.dat, 2), 1);
     
 end
-    
+
 end % function
 
 
@@ -852,12 +906,12 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_pauli_bg
+function [image_obj, networknames, imagenames] = load_pauli_bg(varargin)
 
 % Load Pauli et al. 2016 basal ganglia 5-cluster solution
 % ------------------------------------------------------------------------
 
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'}; 
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'};
 
 imagenames = {'Pauli_bg_cluster_mask_5.nii'};
 imagenames = check_image_names_get_full_path(imagenames);
@@ -874,7 +928,7 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_pauli_bg17
+function [image_obj, networknames, imagenames] = load_pauli_bg17(varargin)
 
 % Load Pauli et al. 2016 basal ganglia 17-cluster solution (no labels
 % given in the paper)
@@ -897,7 +951,7 @@ image_obj = integer_coded_image_to_separate_images(image_obj);
 end % function
 
 
-function [image_obj, networknames, imagenames] = load_pauli_subcortical
+function [image_obj, networknames, imagenames] = load_pauli_subcortical(varargin)
 
 % Load Pauli et al. 2016 basal ganglia 17-cluster solution (no labels
 % given in the paper)
@@ -918,18 +972,18 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_pauli_bg_cortex
+function [image_obj, networknames, imagenames] = load_pauli_bg_cortex(varargin)
 
 % Load Pauli et al. 2016 basal ganglia 5-cluster solution
 % ------------------------------------------------------------------------
 imagenames = {'Pauli_bg_nb_param_rank_fst_Cp.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Pa.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Ca.nii' ...
-                'Pauli_bg_nb_param_rank_fst_VS.nii' ...
-                'Pauli_bg_nb_param_rank_fst_Pp.nii' ...
-};
+    'Pauli_bg_nb_param_rank_fst_Pa.nii' ...
+    'Pauli_bg_nb_param_rank_fst_Ca.nii' ...
+    'Pauli_bg_nb_param_rank_fst_VS.nii' ...
+    'Pauli_bg_nb_param_rank_fst_Pp.nii' ...
+    };
 
-networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'}; 
+networknames = {'Post. Caudate (Cp)' 'Ant. Putamen (Pa)' 'Ant. Caudate (Ca)' 'Ventral striatum (VS)' 'Post. Putamen (PP)'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -939,16 +993,15 @@ end % function
 
 
 
-function [image_obj, networknames, imagenames] = load_fibromyalgia
-  
+function [image_obj, networknames, imagenames] = load_fibromyalgia(varargin)
 
 % Load Lopez Sola et al. 2017 neural classifier maps
 % ------------------------------------------------------------------------
 imagenames = {'FM_pain_wholebrain.nii' ...
-                'FM_Multisensory_wholebrain.nii' ...
-                'rNPS_fdr_pospeaks_smoothed.img' };
+    'FM_Multisensory_wholebrain.nii' ...
+    'rNPS_fdr_pospeaks_smoothed.img' };
 
-networknames = {'FM-pain' 'FM-multisensory' 'NPSp'}; 
+networknames = {'FM-pain' 'FM-multisensory' 'NPSp'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -958,15 +1011,46 @@ end % function
 
 
 
+function [image_obj, networknames, imagenames] = load_csplus(varargin)
+
+% Load Reddan et al. 2018 Neuron CS+ vs. CS- classifier map
+% ------------------------------------------------------------------------
+imagenames = {'IE_ImEx_Acq_Threat_SVM_nothresh.nii.gz'};
+
+networknames = {'Reddan18CSplus_vs_CSminus'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+
+function [image_obj, networknames, imagenames] = load_zhouvps(varargin)
+
+% Load Zhou et al. 2020 eLife generalized vicarious pain signature
+% ------------------------------------------------------------------------
+imagenames = {'General_vicarious_pain_pattern_unthresholded.nii'};
+
+networknames = {'ZhouVPS'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
 
 function [image_obj, networknames, imagenames] = load_pain_pdm
-  
+
 
 % Load Geuter et al. 2018 high-dimensional pain mediator map (PDM)
 % ------------------------------------------------------------------------
 imagenames = {'Geuter_2020_cPDM_combined_pain_map.nii' 'All_PDM10_unthresholded.nii'};
 
-networknames = {'GeuterCombinedPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'}; 
+networknames = {'GeuterPaincPDM','PDM1','PDM2','PDM3','PDM4','PDM5','PDM6','PDM7','PDM8','PDM9','PDM10'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -974,18 +1058,19 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
 
+
 function [image_obj, networknames, imagenames] = load_mpa2
-  
+
 
 % Load MPA2 Ceko patterns - multiaversive
 % ------------------------------------------------------------------------
 imagenames = {'General_bplsF_unthr.nii'
-'Mechanical_bplsF_unthr.nii'
-'Thermal_bplsF_unthr.nii'
-'Sound_bplsF_unthr.nii'		
-'Visual_bplsF_unthr.nii'};
+    'Mechanical_bplsF_unthr.nii'
+    'Thermal_bplsF_unthr.nii'
+    'Sound_bplsF_unthr.nii'
+    'Visual_bplsF_unthr.nii'};
 
-networknames = {'General' 'Mech pain' 'Thermal pain' 'Sound' 'Visual'}; 
+networknames = {'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'};
 
 imagenames = check_image_names_get_full_path(imagenames);
 
@@ -994,8 +1079,15 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% NEUROSYNTH
+% ------------------------------------------------------------------------
+
+
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
-  
+
+
+
 % Load Yarkoni_2013_Neurosynth_featureset1
 % ------------------------------------------------------------------------
 
@@ -1015,12 +1107,12 @@ tmpstruct = load(fullfilename);
 N = fieldnames(tmpstruct);
 
 for i = 1:length(N)
-   if isa(tmpstruct.(N{i}), 'fmri_data')
-       image_obj = tmpstruct.(N{i});
-   end
+    if isa(tmpstruct.(N{i}), 'fmri_data')
+        image_obj = tmpstruct.(N{i});
+    end
 end
 if isempty(image_obj)
-        fprintf('File %s does not contain any fmri_data objects.', datfilename);
+    fprintf('File %s does not contain any fmri_data objects.', datfilename);
     error('Exiting');
 end
 
@@ -1032,7 +1124,12 @@ networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'Uniform
 end % function
 
 
-function [image_obj, networknames, imagenames] = load_bmrk3
+% ------------------------------------------------------------------------
+% BMRK3
+% ------------------------------------------------------------------------
+
+
+function [image_obj, networknames, imagenames] = load_bmrk3 %#ok<*STOUT>
 
 % This code loads a dataset object saved in a mat file, and attempts to
 % download it if it cannot be found.
@@ -1040,20 +1137,20 @@ function [image_obj, networknames, imagenames] = load_bmrk3
 fmri_data_file = which('bmrk3_6levels_pain_dataset.mat');
 
 if isempty(fmri_data_file)
-
+    
     % attempt to download
     disp('Did not find data locally...downloading data file from figshare.com')
-
+    
     fmri_data_file = websave('bmrk3_6levels_pain_dataset.mat', 'https://ndownloader.figshare.com/files/12708989');
-
+    
 end
 
 sprintf('Loading: %s\n', fmri_data_file);
 
-load(fmri_data_file);
+load(fmri_data_file); %#ok<*LOAD>
 
 for i = 1:size(image_obj.dat, 2)
-    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i));
+    networknames{1, i} = sprintf('Subj%03d_%02dDegreesC', image_obj.additional_info.subject_id(i), image_obj.additional_info.temperatures(i)); %#ok<*AGROW>
 end
 
 imagenames = networknames';
@@ -1063,6 +1160,10 @@ disp('Temperature data in image_obj.additional_info.temperatures');
 disp('Pain ratings in image_obj.Y');
 
 end
+
+% ------------------------------------------------------------------------
+% KRAGEL270
+% ------------------------------------------------------------------------
 
 
 function [image_obj, networknames, imagenames] = load_kragel18_alldata
@@ -1075,98 +1176,104 @@ if exist(myfile, 'file')
     
     image_obj = data_obj;
     networknames = data_obj.additional_info;
+    
+    if isempty(data_obj.metadata_table)
+        error('You have an old file %s\nmetadata_table is empty. Consider removing and rerunning load_image_set to re-download.', myfile);
+    end
+    
     imagenames = data_obj.metadata_table.imagenames;
     
 else
     % Load the files from disk, and clean up downloaded files
-
+    
     fprintf('Did not find %s on path.\nUsing retrieve_neurovault_collection() to download collection 3324\n', 'kragel_2018_nat_neurosci_270_subjects_test_images.mat');
     
     try
         % This is not working for some computers/maybe things have changed
         % with the API. if it fails, try direct download from Dropbox
         
-    files_on_disk = retrieve_neurovault_collection(3324);
-    data_obj = fmri_data(files_on_disk);
-    data_obj = enforce_variable_types(data_obj);
-    
-    % clean up
-    try
-        for i = 1:length(files_on_disk), delete(files_on_disk{i}); end
-        % remove non-gzipped files just in case
-        for i = 1:length(files_on_disk), delete(files_on_disk{i}(1:end-3)); end
-        rmdir('3324');    
-    catch
-        disp('Failed to clean up and remove files after download. Check files.')
-    end
-    
-    rmdir('3324');
-
-
-
-    % resort files/images in order
-    labels=regexp(files_on_disk,'Study\d+', 'match');
-    labels = cat(1, labels{:});
-    labels = strrep(labels, 'Study' ,'');
-    for i = 1:length(labels), labels{i} = str2num(labels{i}); end % extract numbers from text
-    labels = cat(1, labels{:});
-
-    subj=regexp(files_on_disk,'Subject\d+', 'match');
-    subj = cat(1, subj{:});
-    subj = strrep(subj, 'Subject' ,'');
-    for i = 1:length(subj), subj{i} = str2num(subj{i}); end % extract numbers from text
-    subj = cat(1, subj{:});
-    
-    nums = 1000 * labels + subj;
-    [~, wh_sort] = sort(nums, 'ascend');
-    
-    files_on_disk = files_on_disk(wh_sort);
-    
-    data_obj.dat = data_obj.dat(:, wh_sort);
-    data_obj.image_names = data_obj.image_names(wh_sort, :);
-    data_obj.fullpath = data_obj.fullpath(wh_sort, :);
-    
-    % label the images
-    sorted_study_labels = labels(wh_sort);
-    
-    Studynumber = sorted_study_labels;
-    Orig_Studynumber = labels;
-    
-    % imagenames will become text labels
-    [imagenames, Domain, Subdomain, StudyCodes] = deal(cell(size(labels)));
-    
-    networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
-        'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
-        'Emotion_Aversiveimages1' 'Emotion_Aversiveimages2' 'Emotion_Rejection1' 'Emotion_VicariousPain2' 'Emotion_AversiveSound1' 'Emotion_AversiveSound2'};
-    
-    domains = {'Pain' 'Pain' 'Pain' 'Pain' 'Pain' 'Pain' ...
-        'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' ...
-        'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion'};
-    
-    subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
-        'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
-        'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
-    
-    studycodes = {'Atlas_2010_EXP' 'Wager_2013_BMRK3' 'Kano_2017_Rectal' 'Rubio_2015_Rectal' 'Ceko_Woo_MPA1_Mech' 'Ceko_MPA2_Mech' ...
-                  'DeYoung_2009_WM' 'vanAst_2016_WM' 'Aron_2007_RespSel' 'Xue_2008_RespSel' 'ds101_SimonConflict_NYU' 'Kelly_2008_Flanker' 'Gianaros_2014_IAPS' ...
-                  'Yarkoni_2011_IAPS' 'Kross_2011_Rejection' 'Krishnan_2016_VicariousPain' 'Losin_Geuter_2018_BMRK5_IADS' 'Kragel_PM01_IADS'};
-
-    for i = 1:18
+        files_on_disk = retrieve_neurovault_collection(3324);
+        data_obj = fmri_data(files_on_disk);
+        data_obj = enforce_variable_types(data_obj);
         
-        Domain(sorted_study_labels == i) = domains(i);
-        Subdomain(sorted_study_labels == i) = subdomains(i);
-        imagenames(sorted_study_labels == i) = networknames(i);
+        % clean up
+        try
+            for i = 1:length(files_on_disk), delete(files_on_disk{i}); end
+            % remove non-gzipped files just in case
+            for i = 1:length(files_on_disk), delete(files_on_disk{i}(1:end-3)); end
+            rmdir('3324');
+        catch
+            disp('Failed to clean up and remove files after download. Check files.')
+        end
         
-        StudyCodes(sorted_study_labels == i) = studycodes(i);
-    end
-
-    data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber, StudyCodes);
-    data_obj.additional_info = networknames;
-    
-    % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
-    
-    image_obj = data_obj;
-    
+        % resort files/images in order
+        labels=regexp(files_on_disk,'Study\d+', 'match');
+        labels = cat(1, labels{:});
+        labels = strrep(labels, 'Study' ,'');
+        for i = 1:length(labels), labels{i} = str2num(labels{i}); end % extract numbers from text
+        labels = cat(1, labels{:});
+        
+        subj=regexp(files_on_disk,'Subject\d+', 'match');
+        subj = cat(1, subj{:});
+        subj = strrep(subj, 'Subject' ,'');
+        for i = 1:length(subj), subj{i} = str2num(subj{i}); end %#ok<*ST2NM> % extract numbers from text
+        subj = cat(1, subj{:});
+        
+        nums = 1000 * labels + subj;
+        [~, wh_sort] = sort(nums, 'ascend');
+        
+        files_on_disk = files_on_disk(wh_sort);
+        
+        data_obj.dat = data_obj.dat(:, wh_sort);
+        data_obj.image_names = data_obj.image_names(wh_sort, :);
+        data_obj.fullpath = data_obj.fullpath(wh_sort, :);
+        
+        % label the images
+        sorted_study_labels = labels(wh_sort);
+        
+        Studynumber = sorted_study_labels;
+        Orig_Studynumber = labels;
+        
+        % imagenames will become text labels
+        [imagenames, Domain, Subdomain, StudyCodes] = deal(cell(size(labels)));
+        
+        networknames = {'ThermalPain1' 'ThermalPain2' 'VisceralPain1' 'VisceralPain2' 'MechanicalPain1' 'MechanicalPain2' ...
+            'Cog WM1' 'Cog WM2' 'Cog Inhib1' 'Cog Inhib2' 'Cog RespSel1' 'Cog RespSel2' ...
+            'Emotion_Aversiveimages1' 'Emotion_Aversiveimages2' 'Emotion_Rejection1' 'Emotion_VicariousPain2' 'Emotion_AversiveSound1' 'Emotion_AversiveSound2'};
+        
+        domains = {'Pain' 'Pain' 'Pain' 'Pain' 'Pain' 'Pain' ...
+            'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' 'Cog_control' ...
+            'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion' 'Neg_Emotion'};
+        
+        subdomains = {'Thermal' 'Thermal' 'Visceral' 'Visceral' 'Mechanical' 'Mechanical' ...
+            'WorkingMem' 'WorkingMem' 'Inhibition' 'Inhibition' 'ResponseSelect' 'ResponseSelect' ...
+            'Images' 'Images' 'Social' 'Social' 'Sounds' 'Sounds'};
+        
+        studycodes = {'Atlas_2010_EXP' 'Wager_2013_BMRK3' 'Kano_2017_Rectal' 'Rubio_2015_Rectal' 'Ceko_Woo_MPA1_Mech' 'Ceko_MPA2_Mech' ...
+            'DeYoung_2009_WM' 'vanAst_2016_WM' 'Aron_2007_RespSel' 'Xue_2008_RespSel' 'ds101_SimonConflict_NYU' 'Kelly_2008_Flanker' 'Gianaros_2014_IAPS' ...
+            'Yarkoni_2011_IAPS' 'Kross_2011_Rejection' 'Krishnan_2016_VicariousPain' 'Losin_Geuter_2018_BMRK5_IADS' 'Kragel_PM01_IADS'};
+        
+        for i = 1:18
+            
+            Domain(sorted_study_labels == i) = domains(i);
+            Subdomain(sorted_study_labels == i) = subdomains(i);
+            imagenames(sorted_study_labels == i) = networknames(i);
+            
+            StudyCodes(sorted_study_labels == i) = studycodes(i);
+        end
+        
+        data_obj.metadata_table = table(Domain, Subdomain, imagenames, Studynumber, Orig_Studynumber, StudyCodes);
+        data_obj.additional_info = networknames;
+        
+        disp('Downloaded and created object successfully.')
+        disp('To save for future use (no re-download), store the object in a')
+        disp('variable called data_obj, and save this variable in a file called')
+        disp('kragel_2018_nat_neurosci_270_subjects_test_images.mat on your Matlab path.');
+        
+        % save kragel_2018_nat_neurosci_270_subjects_test_images data_obj
+        
+        image_obj = data_obj;
+        
     catch
         % retrieve_neurovault_collection did not work. Download from
         % Dropbox:
@@ -1194,4 +1301,67 @@ end
 end % load kragel18_alldata
 
 
-            
+
+
+function table_list = list_signatures
+
+
+
+pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0]';
+negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0]';
+empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0]';
+physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0]';
+posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0]';
+cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0]';
+regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1]';
+other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0]';
+
+keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
+    'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'Guilt_behavior' ...
+    'Amused' 'Angry' 'Content' 'Fearful' 'Neutral' 'Sad' 'Surprised' ...
+    'Kragel18Pain' 'Kragel18CogControl' 'Kragel18NegEmotion' 'Reddan18CSplus_vs_CSminus' ...
+    'GeuterPaincPDM' 'ZhouVPS' ...
+    'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'  ...
+    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain'}';
+
+imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
+    'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
+    'NPSn_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola negative NPS regions only, excluding visual
+    'nonnoc_v11_4_137subjmap_weighted_mean.nii' ...     % Woo 2017 SIIPS - stim-indep pain
+    'Rating_Weights_LOSO_2.nii'  ...                    % Chang 2015 PINES - neg emo
+    'dpsp_rejection_vs_others_weights_final.nii' ...    % Woo 2014 romantic rejection
+    'bmrk4_VPS_unthresholded.nii' ...                   % Krishnan 2016 Vicarious pain VPS
+    'Krishnan_2016_VPS_bmrk4_Without_Occipital_Lobe.nii' ... % Krishnan 2016 no occipital
+    'ANS_Eisenbarth_JN_2016_GSR_pattern.img' ...        % Eisenbarth 2016 autonomic - GSR
+    'ANS_Eisenbarth_JN_2016_HR_pattern.img' ...         % Eisenbarth 2016 autonomic - heart rate (HR)
+    'FM_Multisensory_wholebrain.nii' ...                % 2017 Lopez-Sola fibromyalgia
+    'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia
+    'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
+    'Ashar_2017_empathic_distress_marker.nii' ...       
+    'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii' ...    % Yu 2019 Cer Ctx Guilt behavior
+    'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...  % Kragel 2015 emotion PLS maps
+    'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'mean_3comp_content_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'mean_3comp_fearful_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img' ...
+    'bPLS_Wholebrain_Pain.nii'  ...                     % Kragel 2018 whole-brain pain cog control neg emotion
+    'bPLS_Wholebrain_Cognitive_Control.nii'  ...
+    'bPLS_Wholebrain_Negative_Emotion.nii'  ...
+    'IE_ImEx_Acq_Threat_SVM_nothresh.nii.gz' ...
+    'Geuter_2020_cPDM_combined_pain_map.nii' ...
+    'General_vicarious_pain_pattern_unthresholded.nii' ...  % Zhou 2020 eLife vicarious pain
+    'General_bplsF_unthr.nii'  ...                      % MPA2 general vs. specific aversiveness
+    'Mechanical_bplsF_unthr.nii'  ...
+    'Thermal_bplsF_unthr.nii'  ...
+    'Sound_bplsF_unthr.nii'  ...
+    'Visual_bplsF_unthr.nii'  ...
+    'PlaceboPredict_Anticipation.img'   ...                   % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
+    'PlaceboPredict_PainPeriod.img'    ...                   % During pain [P - C]->behav [P - C]
+    }';
+
+table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, other, imagenames);
+
+end % table_list
+

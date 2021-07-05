@@ -49,3 +49,22 @@ end
 
 end
 
+% Unique color option
+% % Get unique color indices and expand to 256 colors for render_on_surface
+% % expand
+% 
+% obj.dat = double(obj.dat);
+% 
+% len = max(obj.dat);
+% rgbcell = scn_standard_colors(len);
+% 
+% newvec = round(linspace(1, len, 256))';
+% 
+% newcolors = rgbcell(newvec);
+% 
+% newcm = cat(1, newcolors{:});
+% 
+% render_on_surface(obj, hh, 'colormap', newcm);
+% 
+% % works, but need to turn off edge effects!
+

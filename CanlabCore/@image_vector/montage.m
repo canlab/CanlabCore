@@ -71,6 +71,9 @@ switch meth
             do_multirow = true;
             o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', 'multirow', n, varargin{:});
             
+            % scale so all maps are on same color scale
+            [~, cmaprange] = get_data_range(image_obj);
+            
         else
             do_multirow = false;
             o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', varargin{:}); % pass forward args.
@@ -83,10 +86,28 @@ switch meth
             obj = get_wh_image(image_obj, i);
             
             if do_multirow % plot only on montages for this image
-                
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+
+                % add title - new in 2021, so use try...catch for now
+                if isa(image_obj, 'statistic_image') && ~isempty(image_obj.image_labels)
+                    try
+                        o2 = title_montage(o2, montage_indx(i)+1, image_obj.image_labels{i});
+                    catch
+                        disp('Problem displaying title montage for statistic_image object');
+                    end
+                end
+            
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 
             else % just one image, plot on all montages
+                
+                % add title - new in 2021, so use try...catch for now
+                if isa(image_obj, 'statistic_image') && ~isempty(image_obj.image_labels)
+                    try
+                        o2 = title_montage(o2, 5, image_obj.image_labels{1});
+                    catch
+                        disp('Problem displaying title montage for statistic_image object');
+                    end
+                end
                 
                 o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:});
                 
@@ -133,5 +154,57 @@ switch meth
     otherwise, warning(['Unknown input string option:' varargin{i}]);
         
 end % switch
+
+end % function
+
+
+
+
+function [datvec, clim] = get_data_range(obj)
+% see same function in render_on_surface, similar in render_blobs
+
+clim = [];
+
+if isa(obj, 'statistic_image')
+    
+    sig = logical(obj.sig);
+    dat = obj.dat(sig);
+    
+else
+    
+    wh = obj.dat ~= 0 & ~isnan(obj.dat);
+    dat = obj.dat(wh);
+    
+end
+
+datvec = dat(:);
+
+if any(isinf(datvec))
+    warning('Some image values are Inf. Expect erratic behavior/errors.');
+    whinf = isinf(datvec);
+    datvec(whinf) = sign(datvec(whinf)) .* max(abs(datvec(~whinf)));
+end
+
+if isempty(clim)
+    
+    %clim = [min(datvec) max(datvec)];  % clim: data values for min and max, should become min/max colors
+    
+    if any(datvec < 0) && any(datvec > 0) % split colormap
+        
+        clim = double([prctile(datvec(datvec < 0), 10) prctile(datvec(datvec > 0), 90)]); % Match defaults for montage in render_blobs
+        
+    else
+        % may need adjustment
+        clim = [min(datvec) max(datvec)];
+        
+    end
+    
+    % if no variance, we have constant data values - special case.
+    % reducing lower clim(1) will effectively map all data to max color value
+    if abs(diff(clim)) < 100 * eps
+        clim(1) = clim(2) - 1;
+    end
+    
+end
 
 end % function

@@ -99,7 +99,7 @@ else
         diary(diaryfile), fprintf('%sADDING conditions and regressors\n',z), diary off
         clear names onsets durations pmods multipleregressors
         try
-            [names onsets durations pmods multipleregressors] = parse_conditions(DSGN,runs,z);
+            [names onsets durations pmods multipleregressors multipleregressorsbehav] = parse_conditions(DSGN,runs,z);
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
             else diary(diaryfile), fprintf('> %s\n',getReport(exc,'extended')); diary off; end
@@ -112,7 +112,7 @@ else
             diary(diaryfile), fprintf('%sCONCATENATING data according to DSGN.concatenation:\n',z), diary off
             try          
                 diary(diaryfile)
-                [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z); %#ok
+                [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z,multipleregressorsbehav); %#ok
                 diary off
             catch exc
                 if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -142,7 +142,7 @@ else
         clear conditions_by_run
         try
             diary(diaryfile)            
-            [runs runs3d names onsets durations pmods conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,z); %#ok
+            [runs runs3d names onsets durations pmods multipleregressors conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z); %#ok
             diary off
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -257,7 +257,7 @@ end
 
 
 %%
-function [names onsets durations pmods multipleregressors] = parse_conditions(DSGN,runs,z)
+function [names onsets durations pmods multipleregressors multipleregressorsbehav] = parse_conditions(DSGN,runs,z)
 
 newpmod = struct('name', [], 'param', [], 'poly', []);
 emptypmod = newpmod([]);
@@ -390,16 +390,24 @@ for session = 1:numel(runs)
     else
         multipleregressors{session} = {}; %#ok
     end    
+    
+    % retrieve behavioral multiple regressors file
+    if ~isempty(DSGN.multiregbehav)
+        multiregbehavfile = fullfile(mfdir, DSGN.multiregbehav);
+%         if ~exist(multiregfile,'file'), error('> No such multiple regressors file : %s',multiregfile); end
+        multipleregressorsbehav{session} = multiregbehavfile; %#ok                
+    else
+        multipleregressorsbehav{session} = {}; %#ok
+    end    
 end
-for m=1:size(multipleregressors,2)
-    idx(m)=isempty(multipleregressors{m});
-end
-    multipleregressors(idx)=[];
 end
 
 
 %%
-function [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,oldruns,oldruns3d,oldnames,oldonsets,olddurations,oldpmods,oldmultipleregressors,z)
+% Bogdan: in this script it looks like 'oldsess' refers to runs while
+% 'sess' refers to sessions. Maybe the variable names could be updated to
+% be more intuitive?
+function [runs3d names onsets durations pmods multipleregressors] = concatdata(DSGN,submodeldir,oldruns,oldruns3d,oldnames,oldonsets,olddurations,oldpmods,oldmultipleregressors,z,oldmultipleregressorsbehav)
 
 
 emptyruns = find(cellfun('isempty',oldruns));
@@ -507,6 +515,7 @@ for sess = 1:numel(concat)
     % concatenate regressors
     multipleregressors{sess} = fullfile(submodeldir,sprintf('multireg_%d.mat',sess));
     newR = [];
+    newRbehav = [];
     cri = {};
     for r = 1:numel(concat{sess})
         oldsess = concat{sess}(r);
@@ -515,6 +524,12 @@ for sess = 1:numel(concat)
             oldR = R;            
         else
             oldR=[];
+        end
+        if ~isempty(oldmultipleregressorsbehav{oldsess})
+            load(oldmultipleregressorsbehav{oldsess});
+            oldRbehav = R2;            
+        else
+            oldRbehav=[];
         end
         if ~isfield(DSGN,'customrunintercepts')
             % add intercept (ignore first one)
@@ -540,9 +555,10 @@ for sess = 1:numel(concat)
         oldR(:,end+1) = scale([1:size(oldR,1)]'); %#ok
         
         % append to growing block diagonal nuisance matrix
-        newR = blkdiag(newR,oldR);        
+        newR = blkdiag(newR,oldR);   
+        newRbehav = [newRbehav; oldRbehav];
     end    
-    R = [newR vertcat(cri{:})];
+    R = [newRbehav newR vertcat(cri{:})];
     save(multipleregressors{sess}, 'R');
 end
 
@@ -557,6 +573,7 @@ for r = 1:numel(oldruns)
         durations{end+1} = olddurations{r}; %#ok
         pmods{end+1} = oldpmods{r}; %#ok
         multipleregressors{end+1} = oldmultipleregressors{r}; %#ok
+        multipleregressorsbehav{end+1} = oldmultipleregressorsbehav{r}; %#ok
     end
 end
 
@@ -614,7 +631,7 @@ end
 
 
 %%
-function [nonemptyruns nonemptyruns3d flatnames flatonsets flatdurations flatpmods conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,z)
+function [nonemptyruns nonemptyruns3d flatnames flatonsets flatdurations flatpmods flatmultipleregressors conditions_by_run OPTS] = prep_for_canlab_spm_fmri_model_job(DSGN,OPTS,runs,runs3d,names,onsets,durations,pmods,multipleregressors,z)
 
 nonemptyruns = {};
 nonemptyruns3d = {};
@@ -650,6 +667,7 @@ for session = find(~cellfun('isempty',runs3d)) %1:numel(names)
         i=i+1;
     end
     conditions_by_run(newsess) = i; %#ok
+    flatmultipleregressors(newsess) = multipleregressors(session); % added by lukasvo Feb 2021 to fix problem with sessions indices of multipleregressors versus onsets, durations etc in case of non-concatenation and non-final missing runs, downstream in canlab_spm_fmri_model_job
 end
 
 switch DSGN.convolution.type
@@ -663,6 +681,10 @@ switch DSGN.convolution.type
                 flatdurations{c} = 0; %#ok
             end
         end
+    case 'spline'
+        % requires SPM spline patch
+        OPTS.modeljob = [OPTS.modeljob ',' '''spline''' ',' ...
+            num2str(DSGN.convolution.windowlength) ',' num2str(DSGN.convolution.order), ',', num2str(DSGN.convolution.degree)];
     otherwise
         error('Unrecognized convolution type: %s',DSGN.convolution.type)
 end
@@ -696,7 +718,7 @@ for i=1:numel(SPM.xCon)
         for ext = {'img' 'hdr'}
             imgname = fullfile(pwd, sprintf('%s_%04d.%s',stat{1},i,ext{1}));
             linkname = fullfile(renamedir, [stat{1} '_' mapname '.' ext{1}]);
-            eval(['!ln -v -s ' imgname ' ' linkname]); % lukasvo: there is a bug here, ln is not recognized as internal or external commant
+            eval(['!ln -v -s ' imgname ' ' linkname]); % lukasvo: this does not work on a Windows system as the Linux command ln is not recognized as internal or external command on Windows - does not cause problems or errors otherwise
         end
     end
 end

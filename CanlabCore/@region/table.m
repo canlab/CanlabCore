@@ -236,7 +236,7 @@ else
     
     if donames
         % we have already entered names
-        Region = table(region_table.Region, 'VariableNames', {'Region'})
+        Region = table(region_table.Region, 'VariableNames', {'Region'});
     else
         % use modal label
         Region = table(region_table.modal_label, 'VariableNames', {'Region'});

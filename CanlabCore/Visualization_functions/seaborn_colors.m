@@ -47,13 +47,22 @@ if length(varargin) > 0
     n = varargin{1};
     
     if n > 24
-        error('24 colors max');
+       % error('24 colors max');
         
+       while size(rgb, 1) < n
+          
+           m = 0.75; 
+           rgb = [rgb; rgb .* m];
+           m = m .* .75;
+           
+       end
     end
 end
 
 % choose from middle if low n, so we don't duplicate colors
-wh = round(linspace(1, 24 * (1 + 1/24 - 1/n), n));
+len = size(rgb, 1);
+
+wh = round(linspace(1, len * (1 + 1/len - 1/n), n));
 
 %wh = round(linspace(1, 24, n));
 

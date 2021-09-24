@@ -1,4 +1,14 @@
 function r = subdivide_by_atlas(r, varargin)
+% Subdivide a set of blobs stored in a region object by an anatomical atlas.
+%  It takes each contiguous blob in the original region object and subdivides 
+% it into a new region object with separate regions for each atlas parcel covered 
+% within each blob. Thus, if your original region object has 3 blobs, and the blobs 
+% span 1 5 and 2 atlas parcels, respectively, then your new region object will have 
+% 8 regions. 
+% - The atlas parcel labels will be included in the output r.shorttitle. 
+% - Two or more parcels can have the same anatomical label. 
+% - Voxels in original blobs (input r) with no anatomical labels will be excluded
+%
 % :Usage:
 % ::
 %
@@ -10,8 +20,7 @@ function r = subdivide_by_atlas(r, varargin)
 %        a region object, defined using region(mask)
 %
 %   **atlas name:**
-%        Optional mask image with integer codes defining in-mask
-%        regions.  Default is 'atlas_labels_combined.img'
+%        atlas-class object to subdivide by; see load_atlas() for options.
 %
 % :Output:
 %
@@ -48,7 +57,7 @@ end
 %r = region(overlapmask); % r is input
 
 % if is region, reconstruct...
-% ivec is region object voxels reconstructed into image_vector
+% ivec is region object voxels (the full set) reconstructed into image_vector
 [ivec, orig_indx] = region2imagevec(r);
 
 % region2fmri_data
@@ -62,9 +71,10 @@ end
 % resample and mask label image
 atlas_obj = resample_space(atlas_obj, ivec, 'nearest');
 
-ulabels = unique(label_mask.dat);
+ulabels = unique(atlas_obj.dat(atlas_obj.dat ~= 0));
 
-fprintf('%3.0f unique atlas labels in mask (label = 0 will be excluded).\n', length(ulabels));
+fprintf('%3.0f unique non-zero atlas labels covered by the input region object (label = 0 will be excluded).\n', length(ulabels));
+fprintf('%3.0f voxels in the input region object have atlas labels of 0 and will not be labeled.\n', length(atlas_obj.dat == 0));
 
 % Define regions based on unique voxels values in mask_image, and extract
 % data stored in data_comb object, resampled to space of mask_image.
@@ -81,19 +91,34 @@ for i = 1:length(r)
     
     if nvox == 1
         rr{i} = r(i); % just copy - nothing to subdivide
+        
+        % add title
+        %wh = atlas_obj.dat(whvox);
+        label_indx = atlas_obj.dat(orig_indx == i);
+        if label_indx == 0
+            rr{i} = [];
+        else
+            rr{i}.shorttitle = atlas_obj.labels{label_indx};
+        end
+        
     else
-        mylabel = label_mask;
-        mylabel.dat(orig_indx ~= i, 1) = 0; % remove these - not in contiguous region
+        %mylabel = label_mask;
+        mylabel = atlas_obj;
+        mylabel.dat(~whvox, 1) = 0; % remove these - not in contiguous region
         
         if ~any(mylabel.dat)
             % no labels - exclude
             rr{i} = [];
         else
             
-            % mylabel is fmri_data object
-            % ivec is image_vector with .dat containing new anatomical
-            % labels
-            rr{i} = region(mylabel, ivec, 'unique_mask_values');
+            % Get all atlas regions covered by the original region, return
+            % regions in rr{i} with names in rr{i}.shorttitle
+            
+            % mylabel is atlas object with .dat containing new anatomical labels
+            % ivec is image_vector object with voxels in input region blobs
+            % voxel lists/spaces match
+            
+            rr{i} = atlas2region(mylabel, ivec, 'unique_mask_values', 'noverbose');
             
             for jj = 1:length(rr{i})
                 if size(rr{i}(jj).XYZ, 2) ~= size(rr{i}(jj).val, 1)
@@ -108,8 +133,9 @@ for i = 1:length(r)
     
 end
 
+% Count how many original regions do not have any labeled voxels 
 for i = 1:length(rr)
-wh_omit(1, i) = isempty(rr{i});
+    wh_omit(1, i) = isempty(rr{i});
 end
 
 fprintf('%3.0f original regions do not have any labeled voxels.\n', sum(wh_omit));

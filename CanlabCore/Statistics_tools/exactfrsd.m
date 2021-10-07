@@ -32,6 +32,8 @@ function p = exactfrsd(d, k, n)
     if k < 2, error('n >= 2 please'); end
     if d > n*(k-1), error('|d| <= n*(k-1) please'); end
     
+    assert(length(d) == 1, 'Please run on scalar value d');
+    
     if d < 0, d=-1*d; end
     
     % rscript expresses variable precision arithmetic bounds in bits, but

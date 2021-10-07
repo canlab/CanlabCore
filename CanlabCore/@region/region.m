@@ -239,7 +239,9 @@ classdef region
             
             if exist('dataobj', 'var')
                 % extract data
-                disp('> Found image data, extracting region averages.');
+                if doverbose
+                    disp('> Found image data, extracting region averages.');
+                end
                 
                 dataobj = replace_empty(dataobj); % may need to do this to get voxels to line up
                 
@@ -248,16 +250,18 @@ classdef region
                 % if empty, skip
                 isemptymask = isempty(mask.dat) || all(mask.dat(:) == 0);
                 if isemptymask
-                    disp('No in-region voxels from which to extract data.');
+                    if doverbose
+                        disp('No in-region voxels from which to extract data.');
+                    end
                     return
                 end
                 
                 if cs == 3
                     disp('Spaces for data object and mask object line up, but voxel numbers do not. Check.');
-                    disp('> Resampling to mask space first.');
+                    if doverbose, disp('> Resampling to mask space first.'); end
                     dataobj = resample_space(dataobj, mask); % resample data to mask space
                 elseif cs
-                    disp('> Resampling to mask space first.');
+                    if doverbose, disp('> Resampling to mask space first.'); end
                     dataobj = resample_space(dataobj, mask); % resample data to mask space
                 end
                 
@@ -443,6 +447,9 @@ elseif isa(maskinput, 'image_vector')
     end
     
     mask = maskinput;
+    
+elseif isa(maskinput, 'atlas')
+    error('Use atlas2region to convert an atlas object to a region object.');
     
 else
     error('region class constructor: unknown mask input type.')

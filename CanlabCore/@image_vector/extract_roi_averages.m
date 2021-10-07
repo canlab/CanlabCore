@@ -113,6 +113,7 @@ mask.volInfo.cluster = mask.volInfo.cluster(wh_to_keep, :);
 wh_to_keep = is_inmask(obj.volInfo.wh_inmask);
 
 % eliminate out-of-mask voxels before indexing into them with new mask
+ % transpose, cols are voxels
 obj.dat = obj.dat(wh_to_keep, :)';
 
 if doverbose
@@ -181,7 +182,7 @@ switch average_over
         maskData = round(maskData);
         u = unique(maskData)'; u(u == 0) = [];
         nregions = length(u);
-        fprintf('Averaging over unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions);
+        if doverbose, fprintf('Averaging over unique mask values, assuming integer-valued mask: %3.0f regions\n', nregions); end
         
         
     case 'contiguous_regions'
@@ -214,17 +215,16 @@ end
 for i = 1:nregions
     imgvec = maskData == u(i);
     
-    
-    regiondat = obj.dat(:, imgvec);
-    
+    regiondat = obj.dat(:, imgvec); % transposed above, cols are voxels. images x voxels
     
     if ~isempty(regiondat)
-        if size(regiondat, 2) == 1
-            regionmean = double(regiondat);
+        if size(regiondat, 2) == 1              % only one image, mean is image val
+            regionmean = double(regiondat);     % row vector
         else
-            regionmean = double(nanmean(regiondat')');
+            regionmean = double(nanmean(regiondat, 1)); % mean over images
         end
-        cl(i).all_data = single(regiondat);
+        
+        cl(i).all_data = single(regiondat);     % images x voxels
         
     else
         regionmean = NaN .* zeros(size(dat, 1), 1);

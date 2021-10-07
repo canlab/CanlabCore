@@ -1,10 +1,82 @@
+Brain masks
+-----------------------------------------------
 Standard CANlab brainmask (brainmask_Fieldmap.nii): https://www.fil.ion.ucl.ac.uk/spm/toolbox/fieldmap/ - this comes with spm12 by default
+
 Restricted brainmask (brainmask_cat12.nii): http://www.neuro.uni-jena.de/cat/ - this is a more recent brainmask from the Computational Anatomy Toolbox
+
 ICBM brainmask 2009c (brainmask_icbm.nii): http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009
 
-These masks have been saved into CanlabCore in canlab_canonical brains. The cat12 mask was copied and renamed brainmask_canlab.nii in this directory for
+These masks have been saved into CanlabCore in canlab_canonical brains. 
+The cat12 mask was copied and renamed brainmask_canlab.nii in this directory for
 use as the default mask. To update, simply copy a new mask with that name. 
 
+gray_matter_mask.nii\
+A gray-matter mask from the ICBM template manually modified and filled in by Tor Wager to avoid removing some brain regions where gray matter is poorly estimated (e.g., brainstem). 
 
 
+Glasser 2016 HCP surfaces
+-----------------------------------------------
+L.flat.32k.mat\
+R.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat\
+R.flat.32k.mat\
+LR.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat\
+L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat\
 
+BigBrain 
+-----------------------------------------------
+https://bigbrainproject.org/
+"the first openly accessible, microscopic resolution 3D model of the human brain"
+Amunts K, Mohlberg H, Bludau S, Zilles K (2020) Julich-Brain: A 3D probabilistic atlas of the human brain’s cytoarchitecture. Science, 369(6506):988-992
+
+Notes:
+https://bigbrainproject.org/winter-school.html
+Day 2 - 01. The BigBrain Warp. 
+https://www.youtube.com/watch?v=Stg_R63GyVY
+Casey Paquola, Institute of Neuroscience and Medicine, Structural and functional organisation of the brain (INM-1), Forschungszentrum Jülich, Germany
+The BigBrain Warp is a toolbox for multi-modal integration of BigBrain, composed of a centralised repository of BigBrain related transformations and scripts to easily move between histological and MRI spaces. This session introduces the toolbox and presents short tutorials on how to use BigBrain in the context of structural and functional MRI.
+
+BigBrain_2mm_for_surface.nii.gz\
+BigBrain_processed.nii.gz\
+BigBrainSurfaceRight.mat\
+BigBrainSurfaceLeft.mat\
+
+-----------------------------------------------
+
+Surfaces segmented and/or prepared by Tor Wager, often from contrast-enhanced template images.
+Keuken et al. 2014 7T surfaces were segmented after some manual contrast enhancement to increase gray/white separation and avoid removing some brain regions by Tor.
+
+canlab_canonical_brain_surface_right_insula.mat\
+canlab_canonical_brain_surface_left_insula.mat\
+
+canlab_canonical_brain_surface_coronal_slabs5.mat\
+canlab_canonical_brain_surface_coronal_slabs6.mat\
+canlab_canonical_brain_surface_coronal_slabs4.mat\
+canlab_canonical_brain_surface_accumbens_slab.mat\
+canlab_canonical_brain_surface_right_cutaway.mat\
+canlab_canonical_brain_surface_left_cutaway.mat\
+
+keuken_2014_enhanced_for_underlay_right_surface.mat\
+keuken_2014_enhanced_for_underlay_left_surface.mat\
+keuken_2014_enhanced_for_underlay_surface.mat\
+keuken_2014_enhanced_for_underlay_obj.mat\
+
+-----------------------------------------------
+
+Canonical ventricles and white matter eroded to avoid including voxels at gray-matter boundary
+
+canonical_white_matter_thrp5_ero1.nii\
+canonical_ventricles_thrp5_ero1.nii\
+
+canonical_white_matter.img\
+canonical_white_matter.hdr\
+canonical_ventricles.img\
+canonical_ventricles.hdr\
+
+-----------------------------------------------
+Single-subject template from SPM8 and the Colin 27 brain
+
+SPM8_colin27T1_seg.mat\
+SPM8_colin27T1_seg.img\
+SPM8_colin27T1_seg.hdr\
+SPM8_colin27T1_cortical_ribbon.img\
+SPM8_colin27T1_cortical_ribbon.hdr}

@@ -44,7 +44,7 @@ vw_nuisance(:, 1) = mean(vdat.dat, 1)'; % avg across voxels
 
 % save the first 5 components
 
-[~, nuisance_comps] = princomp(vdat.dat', 'econ');
+[~, nuisance_comps] = pca(vdat.dat', 'econ');
 
 vw_nuisance_comps = nuisance_comps(:, 1:5);
 
@@ -59,7 +59,7 @@ vw_nuisance(:, 2) = mean(wdat.dat, 1)'; % avg across voxels
 
 % save the first 5 components
 
-[~, n2] = princomp(wdat.dat', 'econ');
+[~, n2] = pca(wdat.dat', 'econ');
 
 vw_nuisance_comps = [vw_nuisance_comps n2(:, 1:5)];
 

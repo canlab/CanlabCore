@@ -157,7 +157,7 @@ QC = struct('filenames', epi_names(:), 'idstr', idstr);
 all_outputs = {};
 
 % Get implicit mask, if no mask is entered
-if nargin < 3 || isempty(mask_name)
+if nargin < 2 || isempty(mask_name)
  
     mask_name = fmri_mask_image(epi_names); % full mask with all valid voxels
     

@@ -113,6 +113,15 @@ SPMinfo.TR_by_session = cat(1, SPM.xX.K.RT);
 % List of betas
 SPMinfo.beta_image_names = char(SPM.Vbeta.fname);
 
+% Events and betas for events of interest
+
+wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only');
+
+SPMinfo.betas_events_of_interest = SPMinfo.beta_image_names(wh_cols, :);
+
+SPMinfo.condition_names_events_of_interest = SPM.xX.Xnames(wh_cols);
+
+disp(SPM.xX.name(wh_cols)')
 
 %% Get table of onsets, durations, names, beta images for single trials
 % - For events in event-related design, with U field

@@ -391,7 +391,7 @@ switch labelstyle
         breakpoints=0:2*pi/n_categories:2*pi;
 
         if isempty(labelradius)
-            labaelradius = 0.28;
+            labelradius = 0.28;        % typo fix Michael Sun 10/29/2021 labaelradius -> labelradius
         end
         
         for i = 1:n_categories

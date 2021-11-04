@@ -117,8 +117,10 @@ function command = shellCommand(pattern, isPCandIsRelative, sortField, sortField
         if(~isempty(sortField))
             error('Cannot currently sort on PCs. No sort command.');
         end
-        whFileSeps = strfind(pattern, filesep());
-        whWildcards = strfind(pattern, '*');
+%         whFileSeps = strfind(pattern, filesep()); % Bug: strfind arguments are reversed - Michael 10/19/2021
+%         whWildcards = strfind(pattern, '*');      % Bug: strfind arguments are reversed - Michael 10/19/2021
+        whFileSeps = strfind(filesep(), pattern);
+        whWildcards = strfind('*', pattern);
         % if there's a wildcard before the last file separator, we have a problem
         if(length(whFileSeps) > 0 && length(whWildcards) > 0 && whWildcards(1) < whFileSeps(end))
             error('There appears to be a wildcard before the last file separator in "%s", which Windows cannot handle, unfortunately.', pattern);
@@ -152,10 +154,12 @@ end
 
 function isAbsolute = isAbsolutePath(pattern)
     isAbsolute = 0;
-    if(ispc() && (~isempty(strfind(pattern, '\\')) || ~isempty(strfind(pattern, ':\'))))
+%     if(ispc() && (~isempty(strfind(pattern, '\\')) || ~isempty(strfind(pattern, ':\')))) % This is a bug. The arguments for strfind are reversed. - Michael 10/19/2021
+    if(ispc() && (contains('\\', pattern) || contains(':\', pattern)))                     % contains() is stylistically more readable - Michael 10/19/2021
         isAbsolute = 1;
     elseif(isunix())
-        location = strfind(pattern, '/');
+%       location = strfind(pattern, '/');  % This is a bug. The arguments for strfind are reversed. - Michael 10/19/2021
+        location = strfind('/', pattern);  
         if(~isempty(location) && any(location == 1))
             isAbsolute = 1;
         end

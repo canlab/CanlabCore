@@ -2,6 +2,7 @@ function desc = descriptives(dat, varargin)
 % Get descriptives for an fmri_data or other image_vector object
 % - Returns a structure with useful numbers: min/max, percentiles
 % - Vectors for nonempty and complete voxels and images
+% - Returns summary fmri_data objects showing coverage: numbers of images with valid data in each voxel 
 %
 % Image_vector (and subclass fmri_data) objects are 4-d datasets in which
 % 3-D images are vectorized into columns in a 2-D matrix.
@@ -41,6 +42,35 @@ function desc = descriptives(dat, varargin)
 %   **'noverbose':**
 %        Suppress printing of output summary
 %
+% :Outputs:
+% **desc.coverage_obj**
+% a summary fmri_data object showing coverage: numbers of images with valid data in each voxel   
+%
+% **desc.coverage_obj_binned**
+% fmri_data object showing coverage binned by percentiles of images:
+% all images have data = 100
+% 80% - 99.9% (all but one) = 80
+% 50% - 99.9% (all but one) = 50
+% 1 image - 50% = 50
+% Rationale: Sometimes it's hard to see if there is only one or a few
+% images missing voxels/areas out of a large set.
+%
+% **desc.coverage_obj_complete** 
+% fmri_data object showing voxels with complete coverage
+%
+% Example:
+% % Load a standard dataset and create a color map of the coverage
+% obj = load_image_set('emotionreg');
+% desc = descriptives(obj);
+% o2 = montage(desc.coverage_obj_binned, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [1 0 0], 'cmaprange', [1 100], 'transvalue', 0.8);
+%
+% Show areas with valid data for all voxels
+% o2 = montage(desc.coverage_obj_complete, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [0 0 0], 'cmaprange', [1 100], 'transvalue', 0.8);
+%
+% Show histogram of missing voxels per image
+% figure; hist(desc.percent_missing_per_image, 30)
+% xlabel('Percentage of voxels missing'); ylabel('Number of images');
+
 % :See also:
 %   - methods(image_vector) and methods(fmri_data)
 %
@@ -82,13 +112,34 @@ m = mean(dat);
 m.dat = sum(~isnan(dat.dat) & dat.dat ~= 0, 2);
 desc.coverage_obj = m;
 
+% Object with coverage summary binned by percentage categories for easy viewing.
+cutoffs = [floor(desc.n_images .* .5) floor(desc.n_images .* .8)]; 
+obj2 = m;
+obj2.dat(m.dat == desc.n_images) = 100;
+obj2.dat(m.dat > 0 & m.dat <= cutoffs(1)) = 1;
+obj2.dat(m.dat > cutoffs(1) & m.dat <= cutoffs(2)) = 50;
+obj2.dat(m.dat > cutoffs(2) & m.dat < desc.n_images) = 80;
+
+desc.coverage_obj_complete = m;
+desc.coverage_obj_complete.dat(m.dat == desc.n_images) = 100;
+desc.coverage_obj_complete.dat(m.dat ~= desc.n_images) = 0;
+
+% orthviews(desc.coverage_obj_binned, 'continuous')
+
 % By convention, zero indicates missing (empty) data and is not a valid value.
 
-desc.nonempty_vox_descrip = 'Voxels with non-zero, non-NaN data values for at least one image';
+desc.nonempty_vox_descrip = '.nonempty_voxels: Voxels with non-zero, non-NaN data values for at least one image';
 desc.nonempty_voxels = ~all(desc.wh_zero | desc.wh_nan, 2);
 desc.n_nonempty_vox = sum(desc.nonempty_voxels);
 desc.n_in_mask = dat.volInfo.n_inmask;
 
+% percentage of missing voxels per image
+desc.percent_missing_per_image_descrip = sprintf('.percent_missing_per_image: percentage of coverage area in desc.nonempty_voxels (%3.0f voxels) with valid data for each image.', desc.n_nonempty_vox);  
+desc.percent_missing_per_image = 100 .* sum((desc.wh_zero | desc.wh_nan) & desc.nonempty_voxels) ./ sum(desc.nonempty_voxels);
+desc.images_missing_over_50percent = desc.percent_missing_per_image >= 49.5;
+desc.images_missing_over_10percent = desc.percent_missing_per_image >= 9.5;
+
+desc.complete_voxels_descrip = '.complete_voxels: Voxels with non-zero, non-NaN data values for all images';
 desc.complete_voxels = ~any(desc.wh_zero | desc.wh_nan, 2);
 desc.n_complete_vox = sum(desc.complete_voxels);
 
@@ -97,7 +148,7 @@ desc.nonempty_images = ~all(desc.wh_zero(desc.nonempty_voxels, :) | desc.wh_nan(
 desc.n_nonempty_images = sum(desc.nonempty_images);
 
 desc.complete_image_descrip = 'Images with non-zero, non-NaN data values for all nonempty voxels';
-desc.complete_images = ~any(desc.wh_zero(desc.nonempty_voxels, :) & desc.wh_nan(desc.nonempty_voxels, :), 1);
+desc.complete_images = desc.percent_missing_per_image == 0; % ~any(desc.wh_zero(desc.nonempty_voxels, :) & desc.wh_nan(desc.nonempty_voxels, :), 1);
 desc.n_complete_images = sum(desc.complete_images);
 
 datavec = dat.dat(desc.nonempty_voxels, desc.nonempty_images);
@@ -168,7 +219,19 @@ if doverbose
     
     fprintf('Images: %3.0f\tNonempty: %3.0f\tComplete: %3.0f\n', desc.n_images, desc.n_nonempty_images, desc.n_complete_images);
     
-    fprintf('Voxels: %3.0f\tNonempty: %3.0f\tComplete: %3.0f\n', desc.n_vox, desc.n_nonempty_vox, desc.n_complete_vox);
+    fprintf('  Images missing >50%% of voxels: %3.0f\t', sum(desc.images_missing_over_50percent));
+    if any(desc.images_missing_over_50percent)
+        fprintf('%3.0f ', find(desc.images_missing_over_50percent));
+    end
+    fprintf('\n');
+    
+    fprintf('  Images missing >10%% of voxels: %3.0f\t', sum(desc.images_missing_over_10percent));
+    if any(desc.images_missing_over_10percent)
+        fprintf('%3.0f ', find(desc.images_missing_over_10percent));
+    end
+    fprintf('\n');
+    
+    fprintf('Voxels: %3.0f\tNonempty (1+ images have valid data): %3.0f\tComplete  (all images have data): %3.0f\n', desc.n_vox, desc.n_nonempty_vox, desc.n_complete_vox);
     
     fprintf('Unique data values: %3.0f\n', desc.num_unique_vals);
     
@@ -181,6 +244,18 @@ if doverbose
     disp(desc.prctile_table);
     
     disp(' ');
+    
+    disp('Saved desc.coverage_obj_binned with maps of number of valid images,')
+    disp('and desc.coverage_obj_binned with values of 100=100% valid images, 80=80-99.9% valid, 50=50-80% valid, and 1=>50% valid images');
+    
+    % warnings
+    if desc.n_nonempty_vox > desc.n_complete_vox
+        disp('Warning: Some voxels have data for 1+ images but not for all images')
+    end
+    
+    if any(desc.images_missing_over_50percent)
+            disp('Warning: Some images are missing over 50% of voxels')
+    end
     
 end
 

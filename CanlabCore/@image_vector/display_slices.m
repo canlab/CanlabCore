@@ -75,6 +75,9 @@ end
 % wh = strcmp(varargin, 'voxelspace'); % entered in voxel space
 % if any(wh), entered_mm_coords = false; end
 
+if  size(dat.dat, 2) > 1
+    error('Use display_slices on objects containing only one image, not a series');
+end
 
 % ------------------------------------------------------------------------
 % Multi-view mode (default)
@@ -312,7 +315,7 @@ function vdat = eliminate_empty_areas(vdat, myview)
     nullvox = vdat == 0 | isnan(vdat);
     bottom = all(nullvox, 3);
     
-    if strcmp(myview, 'saggital') | strcmp(myview, 'sagittal')
+    if strcmp(myview, 'saggital') || strcmp(myview, 'sagittal')
         % skip
     else
         nullx = squeeze(all(bottom, 2));

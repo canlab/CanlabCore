@@ -12,7 +12,7 @@ function desc = descriptives(dat, varargin)
 % :Usage:
 % ::
 %
-%     desc = descriptives(dat, ['noverbose'])
+%     desc = descriptives(dat, ['noverbose', 'plotcoverage'])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -61,8 +61,7 @@ function desc = descriptives(dat, varargin)
 % Example:
 % % Load a standard dataset and create a color map of the coverage
 % obj = load_image_set('emotionreg');
-% desc = descriptives(obj);
-% o2 = montage(desc.coverage_obj_binned, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [1 0 0], 'cmaprange', [1 100], 'transvalue', 0.8);
+% desc = descriptives(obj, 'plotcoverage');
 %
 % Show areas with valid data for all voxels
 % o2 = montage(desc.coverage_obj_complete, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [0 0 0], 'cmaprange', [1 100], 'transvalue', 0.8);
@@ -85,6 +84,8 @@ function desc = descriptives(dat, varargin)
 % ..
 
 doverbose = true;
+plotcoverage = false;
+
 % initalize optional variables to default values here.
 
 
@@ -95,6 +96,8 @@ for i = 1:length(varargin)
             
             case 'noverbose', doverbose = false;
                 
+            case 'plotcoverage', plotcoverage = true;
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -103,6 +106,9 @@ end
 desc.n_images = size(dat.dat, 2);
 desc.n_vox = size(dat.dat, 1);
 
+desc.num_unique_values = length(unique(dat.dat(:)));
+desc.databitrate = log2(desc.num_unique_values);
+    
 desc.wh_zero = dat.dat == 0;
 desc.wh_nan = isnan(dat.dat);
 
@@ -120,9 +126,12 @@ obj2.dat(m.dat > 0 & m.dat <= cutoffs(1)) = 1;
 obj2.dat(m.dat > cutoffs(1) & m.dat <= cutoffs(2)) = 50;
 obj2.dat(m.dat > cutoffs(2) & m.dat < desc.n_images) = 80;
 
+desc.coverage_obj_binned = obj2;
+
 desc.coverage_obj_complete = m;
 desc.coverage_obj_complete.dat(m.dat == desc.n_images) = 100;
 desc.coverage_obj_complete.dat(m.dat ~= desc.n_images) = 0;
+
 
 % orthviews(desc.coverage_obj_binned, 'continuous')
 
@@ -137,6 +146,7 @@ desc.n_in_mask = dat.volInfo.n_inmask;
 desc.percent_missing_per_image_descrip = sprintf('.percent_missing_per_image: percentage of coverage area in desc.nonempty_voxels (%3.0f voxels) with valid data for each image.', desc.n_nonempty_vox);  
 desc.percent_missing_per_image = 100 .* sum((desc.wh_zero | desc.wh_nan) & desc.nonempty_voxels) ./ sum(desc.nonempty_voxels);
 desc.images_missing_over_50percent = desc.percent_missing_per_image >= 49.5;
+desc.images_missing_over_25percent = desc.percent_missing_per_image >= 24.5;
 desc.images_missing_over_10percent = desc.percent_missing_per_image >= 9.5;
 
 desc.complete_voxels_descrip = '.complete_voxels: Voxels with non-zero, non-NaN data values for all images';
@@ -171,6 +181,17 @@ desc.prctile_table = table(Percentiles, Values);
 
 desc.mean = mean(datacat);
 desc.std = std(datacat);
+
+% Max correlation -> redundant images
+if desc.n_images > 1
+    
+    rr = corr(dat.dat);
+    rr = triu(corr(obj2.dat)) - eye(size(dat.dat, 2));
+    desc.max_image_correlation = max(abs(rr(:)));
+    
+else
+    desc.max_image_correlation = NaN;
+end
 
 if doverbose
     
@@ -225,6 +246,16 @@ if doverbose
     end
     fprintf('\n');
     
+    fprintf('Number of unique values in dataset: %d  Bit rate: %3.2f bits\n', desc.num_unique_values, desc.databitrate);
+    
+    if desc.databitrate < 2^10
+        fprintf('Warning: Number of unique values in dataset is low, indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values\n');
+    end
+    
+    if desc.max_image_correlation > 0.999
+        fprintf('Warning: Image dataset has redundant (identical) images. Max correlation between images r > 0.999\n');
+    end
+    
     fprintf('  Images missing >10%% of voxels: %3.0f\t', sum(desc.images_missing_over_10percent));
     if any(desc.images_missing_over_10percent)
         fprintf('%3.0f ', find(desc.images_missing_over_10percent));
@@ -259,6 +290,25 @@ if doverbose
     
 end
 
+if plotcoverage
+    
+    create_figure('coverage'); delete(gca);
+    o2 = canlab_results_fmridisplay([], 'multirow', 2, 'nofigure');
+    
+    o2 = addblobs(o2, desc.coverage_obj_complete, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [0 0 0], 'cmaprange', [1 100], 'transvalue', 0.8, 'wh_montages', 1:2);
+    o2 = addblobs(o2, desc.coverage_obj_binned, 'trans', 'maxcolor', [.5 1 .5], 'mincolor', [1 0 0], 'cmaprange', [1 100], 'transvalue', 0.8, 'wh_montages', 3:4);
+
+    o2 = title_montage(o2, 2, 'Complete coverage (all images)');
+    
+    o2 = title_montage(o2, 4, 'Coverage (100%=bright green, 80%+ = dark green, 50%=red/brown, 1 image=red)');
+    
+    ax1 = axes('Position', [.3 .1 .4 .4], 'FontSize', 20);
+    hist(desc.percent_missing_per_image, max(30, ceil(desc.n_images ./ 10)))
+    title('Percentage of total non-empty area missing in each image', 'FontSize', 20);
+    xlabel('% voxels missing');
+    ylabel('Frequency');
+    
+end
 
 end % function
 

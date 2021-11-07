@@ -147,6 +147,10 @@ end
 % -------------------------------------------------------------------------
 
 if doverbose
+    fprintf('______________________________________________________________')
+    fprintf('Outlier analysis')
+    fprintf('______________________________________________________________')
+    
     fprintf('global mean | global mean to var | spatial MAD | ');
 else
     verbosestr = 'noverbose';

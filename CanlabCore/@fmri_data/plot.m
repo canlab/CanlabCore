@@ -370,54 +370,49 @@ switch plotmethod
                 
             else
                 
-                fprintf('Calculating mahalanobis distances to identify extreme-valued images\n')
-                fprintf('...based on union of corr...')
-                [ds, ~, ~, wh_outlier_uncorr1, wh_outlier_corr1] = mahal(fmridat, 'noplot', 'corr');
-                
-                fprintf('...and cov...')
-                [ds2, ~, ~, wh_outlier_uncorr2, wh_outlier_corr2] = mahal(fmridat, 'noplot');
-                
-                fprintf('done.\n');
-                
-                % Take union
-                wh_outlier_uncorr = wh_outlier_uncorr1 | wh_outlier_uncorr2;
-                wh_outlier_corr = wh_outlier_corr1 | wh_outlier_corr2;
-                
-                fprintf('Outliers:\n')
-                fprintf('Outliers after p-value correction:\nImage numbers: ')
-                fprintf('%d ', find(wh_outlier_corr))
-                fprintf('\n')
-                fprintf('\nImage numbers, uncorrected: ')
-                fprintf('%d ', find(wh_outlier_uncorr))
-                fprintf('\n');
-                
-                hold on;
-                plot(ds, 'ko-', 'MarkerFaceColor', [.5 .8 .5], 'MarkerSize', 4);
-                plot(log(ds2), 'ko-', 'MarkerFaceColor', [.5 .5 .8], 'MarkerSize', 4);
-                
-                plot(find(wh_outlier_uncorr1), ds(wh_outlier_uncorr1), 'o', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
-                plot(find(wh_outlier_corr1), ds(wh_outlier_corr1), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
-                
-                plot(find(wh_outlier_uncorr2), log(ds2(wh_outlier_uncorr2)), 's', 'color', [.7 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
-                plot(find(wh_outlier_corr2), log(ds2(wh_outlier_corr2)), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
-                
-%                 if any(wh_outlier_corr)
-%                     legend({'Mahal (corr)' 'Mahal (cov)' 'Outliers (uncor)' 'Outliers (cor)'});
-%                     
-%                 elseif any(wh_outlier_uncorr)
-%                     legend({'Mahal (corr)' 'Mahal (cov)' 'Outliers (uncor)'});
-%                     
-%                 else
-                    legend({'Mahal (corr)' 'Log(mahal) (cov)'});
-                    
-%                 end
-                
-                ylabel('Mahalanobis Dist')
-                %ylabel('Act-Exp Deviation');
-                title('Multivar dist (outlier status)');
-                xlabel('Case No. Correlation-based, red=outliers');
+                % do without time series - more generic
+                [wh_outlier_uncorr, wh_outlier_corr] = outliers(fmridat, 'notimeseries');
                 
             end % dooutliers
+            
+                %                 fprintf('Calculating mahalanobis distances to identify extreme-valued images\n')
+                %                 fprintf('...based on union of corr...')
+                %                 [ds, ~, ~, wh_outlier_uncorr1, wh_outlier_corr1] = mahal(fmridat, 'noplot', 'corr');
+                %
+                %                 fprintf('...and cov...')
+                %                 [ds2, ~, ~, wh_outlier_uncorr2, wh_outlier_corr2] = mahal(fmridat, 'noplot');
+                %
+                %                 fprintf('done.\n');
+                %
+                %                 % Take union
+                %                 wh_outlier_uncorr = wh_outlier_uncorr1 | wh_outlier_uncorr2;
+                %                 wh_outlier_corr = wh_outlier_corr1 | wh_outlier_corr2;
+                %
+                %                 fprintf('Outliers:\n')
+                %                 fprintf('Outliers after p-value correction:\nImage numbers: ')
+                %                 fprintf('%d ', find(wh_outlier_corr))
+                %                 fprintf('\n')
+                %                 fprintf('\nImage numbers, uncorrected: ')
+                %                 fprintf('%d ', find(wh_outlier_uncorr))
+                %                 fprintf('\n');
+                %
+                %                 hold on;
+                %                 plot(ds, 'ko-', 'MarkerFaceColor', [.5 .8 .5], 'MarkerSize', 4);
+                %                 plot(log(ds2), 'ko-', 'MarkerFaceColor', [.5 .5 .8], 'MarkerSize', 4);
+                %
+                %                 plot(find(wh_outlier_uncorr1), ds(wh_outlier_uncorr1), 'o', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
+                %                 plot(find(wh_outlier_corr1), ds(wh_outlier_corr1), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
+                %
+                %                 plot(find(wh_outlier_uncorr2), log(ds2(wh_outlier_uncorr2)), 's', 'color', [.7 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
+                %                 plot(find(wh_outlier_corr2), log(ds2(wh_outlier_corr2)), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
+                %
+                %                     legend({'Mahal (corr)' 'Log(mahal) (cov)'});
+                %
+                %
+                %                 ylabel('Mahalanobis Dist')
+                %                 %ylabel('Act-Exp Deviation');
+                %                 title('Multivar dist (outlier status)');
+                %                 xlabel('Case No. Correlation-based, red=outliers');
             
         end % of > 1 image
         

@@ -1,4 +1,4 @@
-function [outlier_table, outlier_regressor_matrix_uncorr, outlier_regressor_matrix_corr] = slice_movie(dat, varargin)
+function outlier_tables = slice_movie(dat, varargin)
 % Movie of slice timeseries (sagittal slice)
 % Enter an image_vector or fmri_data object (usually with time series)
 %
@@ -135,7 +135,7 @@ end
 
 % Get potential outliers to pause at
 
-[slow, ~, outlier_table, outlier_regressor_matrix_uncorr, outlier_regressor_matrix_corr] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose);
+[slow, ~, outlier_tables] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose);
 
 mm = mean(dat);
 
@@ -163,9 +163,9 @@ if showmovie
     vdat = reconstruct_image(mm);
     wh = round(size(vdat, 1)./2);
     
-    plot(ax1, outlier_table.rmssd_dvars, 'k'); axis tight
+    plot(ax1, outlier_tables.score_table.rmssd_dvars, 'k'); axis tight
     axes(ax1), hold on;
-    cutoff_val = mean(outlier_table.rmssd_dvars) + madlim * std(outlier_table.rmssd_dvars);
+    cutoff_val = mean(outlier_tables.score_table.rmssd_dvars) + madlim * std(outlier_tables.score_table.rmssd_dvars);
     hh = plot_horizontal_line(cutoff_val);
     set(hh, 'LineStyle', '--');
     
@@ -185,7 +185,7 @@ if showmovie
     
     for i = 1:image_interval:size(dat.dat, 2)  % changed from sdiffs
         
-        vh = plot(ax1, i, outlier_table.rmssd_dvars(i), 'ro', 'MarkerFaceColor', 'r');
+        vh = plot(ax1, i, outlier_tables.score_table.rmssd_dvars(i), 'ro', 'MarkerFaceColor', 'r');
         
         axes(ax2)
         display_slices(get_wh_image(dat, i), 'sagittal');

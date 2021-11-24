@@ -63,7 +63,58 @@ function [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
 %
 %    [X3,d] = plotDesign(evtonsets,[],1,2,cat(2,conditions.stimlength));
 %
-% :See Also: onsets2fmridesign
+% ------------------------------------------------------------------------
+% Create a single-trial design with 5 trials, TR = 1, 
+% modeling each event with a 3-sec epoch
+% ons = [{1} {5} {9} {13} {17} {21}];
+% [X,d,out,handles] = plotDesign(ons,[], 1, 'durs', 3);
+% 
+% % Same as above, but with 2 sec epoch
+% [X,d,out,handles] = plotDesign(ons,[], 1, 'durs', 2);
+% 
+% % Same as above, but with event-related (no epoch)
+% [X,d,out,handles] = plotDesign(ons,[], 1);
+% 
+% % Same as above, but with TR = 1.3
+% [X,d,out,handles] = plotDesign(ons,[], 1.3);
+%
+% ------------------------------------------------------------------------
+% % Create random event-related design with an event every 3 sec, 4
+% % conditions with 20% frequency each, 2 sec epochs, and plot it with 1.3 sec TR:
+% ons = create_random_onsets(100, 3, [.2 .2 .2 .2], 2);
+% [X,d,out,handles] = plotDesign(ons,[], 1.3);
+%
+% % Plot VIFs for this design:
+% create_figure('vifs'); getvif(X, 0, 'plot');
+%
+% % Get efficiency
+% nconditions = length(ons);
+% 
+% contrasts = create_orthogonal_contrast_set(nconditions);
+% contrasts(:, end+1) = 0; % for intercept
+% 
+% e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
+%
+% ------------------------------------------------------------------------
+% % Create a single-trial design with an event every 10 sec
+% % 4-sec epoch dur, and 1.3 sec TR.  plot it.
+% ons = mat2cell([1:10:200]', ones(20, 1))';
+% [X,d,out,handles] = plotDesign(ons,[], 1.3, 'durs', 4);
+% 
+% % Plot VIFs for this design:
+% create_figure('vifs'); getvif(X, 0, 'plot');
+% 
+% % Get efficiency
+% nconditions = length(ons);
+% 
+% contrasts = create_orthogonal_contrast_set(nconditions);
+% contrasts(:, end+1) = 0; % for intercept
+% 
+% e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
+% ------------------------------------------------------------------------
+%
+% :See Also: onsets2fmridesign, create_random_er_design,
+% create_block_design, create_random_onsets
 %
 % ..
 %    Programmers' notes
@@ -107,6 +158,8 @@ for i = 1:length(varargin)
                 
             case 'nonlinsaturation', inputs_to_pass = {'nonlinsaturation'};
                 
+            case 'singletrial', inputs_to_pass = {'singletrial'};
+                
             case 'overlapping', doseparatelines = 0;
                 
             case 'nononlin' % ignore
@@ -123,9 +176,12 @@ end
 
 if iscell(ons)
     
-    xons = parse_cell_onsets_durs(ons, durs);
+    [xons, ons_includes_durations] = parse_cell_onsets_durs(ons, durs);
     
     len = max(cat(1, xons{:}));
+    
+    len = len + 16; % add 16 sec past last event
+    
     if length(len) > 1
         % in case durations are entered
         len = len(1) + len(2);
@@ -142,24 +198,13 @@ else
     
     error('Enter onsets in sec in a cell array, one cell per event type.');
     
-    %     % note: will not convolve properly with durs
-    %     if ~isempty(durs)
-    %         warning('Must enter cell array of onsets if using dirs');
-    %     end
-    %     X = getPredictors(ons,spm_hrf(TR)./max(spm_hrf(TR)));
-    %
-    %     d = ons; clear ons
-    %     for i = 1:size(d,2)
-    %         ons{i} = (find(d(:,i)) - 1) .* TR;
-    %     end
-    
 end
 
 % RT model - special
 % ------------------------------------------------------------------------
 
 if ~isempty(rtin)
-    [X2, d2, out] = rt2delta(ons, rt, TR);
+    [~, ~, out] = rt2delta(ons, rt, TR);
 else
     % placeholder for plotting only
     % these are the amplitudes of the stick functions in the plot
@@ -174,7 +219,7 @@ while size(X, 2) > length(colors), colors = [colors colors]; end
 
 if ~samefig, figure('Color','w'); end
 
-if ~isempty(rtin), subplot(4,1,1); end
+if ~isempty(rtin), subplot(4, 1, 1); end
 
 set(gca,'FontSize',16); hold on;
 handles = [];
@@ -183,7 +228,7 @@ handles = [];
 % Plot lines for regressors
 % ---------------------------------------------------------
 % Plot in seconds (convert X from TRs)
-time_in_sec = TR .* [0:size(X, 1)-1]';
+time_in_sec = TR .* [0:size(X, 1)-1]'; %#ok<NBRAK>
 
 if doseparatelines
     
@@ -222,30 +267,25 @@ if isempty(yoffset)
     yoffset = min(X(:)) - ymax;
 end
 
-[~, ons_includes_durations] = check_onsets(ons);
-
-
-for i = 1:length(ons)
+for i = 1:length(xons)
     
     % for sticks
-    xvals = [ons{i}(:, 1) ons{i}(:, 1)]'; %./ TR;
-    % yvals = [repmat(yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + yoffset + ymax]';
-%     yvals = [repmat(i - yoffset, length(rt{i}), 1) ((rt{i} ./ 1000) - 1) + i - yoffset + ymax]';
+    xvals = [xons{i}(:, 1) xons{i}(:, 1)]'; %./ TR; % was ons
     
-if doseparatelines
+    if doseparatelines
+        
+        yvals1 = (i - 1) + ones(1, length(rt{i})) .* (max(handles(1).YData) + ymax);
+        yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
+        yvals = [yvals1; yvals2];
+        
+    else
+        
+        yvals1 = ones(1, length(rt{i})) .* yoffset + ymax;
+        yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
+        yvals = [yvals1; yvals2];
+        
+    end
     
-    yvals1 = (i - 1) + ones(1, length(rt{i})) .* (max(handles(1).YData) + ymax);
-    yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
-    yvals = [yvals1; yvals2];
-    
-else
-    
-    yvals1 = ones(1, length(rt{i})) .* yoffset + ymax;
-    yvals2 = yvals1 - ymax .* (rt{i} ./ 1000)' ;
-    yvals = [yvals1; yvals2];
-    
-end
-
     % onsets
     h = plot(xvals, yvals, 'Color', colors{i}, 'LineWidth', 3);
     
@@ -254,11 +294,12 @@ end
     
     if ons_includes_durations
         
-        for j = 1:size(ons{i}, 1)
+        for j = 1:size(xons{i}, 1)
+            
+            yoffset = yvals2(j);
             
             % now durs are always integrated into ons above.
-            %hh = drawbox(ons{i}(j)./TR, durs(i), yoffset, ymax, colors{i});
-            hh = drawbox(ons{i}(j, 1), ons{i}(j, 2), yoffset, ymax, colors{i});
+            hh = drawbox(xons{i}(j, 1), xons{i}(j, 2), yoffset, ymax, colors{i});
             
             set(hh, 'EdgeColor', 'none');
         end
@@ -334,16 +375,19 @@ end % function
 
 
 
-function xons = parse_cell_onsets_durs(ons, durs)
+function [xons, ons_includes_durations] = parse_cell_onsets_durs(ons, durs)
 
 xons = [];
 
+
+[~, ons_includes_durations] = check_onsets(ons);
+
 % sizes of onsets in each cell: First col is # events, 2nd is durations
 % if they exist.
-sz = cellfun(@size, ons, 'UniformOutput', false)';
-sz = cat(1, sz{:});
+% sz = cellfun(@size, ons, 'UniformOutput', false)';
+% sz = cat(1, sz{:});
 
-ons_includes_durations = size(sz, 2) > 1;
+% ons_includes_durations = any(sz(:, 2) > 1);  %  was: size(sz, 2) > 1;  sz(:, 2) = number of columns
 
 if ons_includes_durations
     % we are done.
@@ -358,6 +402,9 @@ elseif ~isempty(durs) && iscell(durs)
         xons{i} = [ons{i} durs{i}];
     end
     
+    % update
+    ons_includes_durations = true;
+    
 elseif ~isempty(durs) && length(durs) == 1
     % We have the same duration for every event
     
@@ -365,12 +412,19 @@ elseif ~isempty(durs) && length(durs) == 1
         xons{i} = [ons{i} repmat(durs, size(ons{i}, 1), 1)];
     end
     
+    % update
+    ons_includes_durations = true;
+    
 elseif ~isempty(durs) && length(durs) == length(ons)
     % We have one duration value for each event type
     
     for i = 1:length(ons)
         xons{i} = [ons{i} repmat(durs(i), size(ons{i}, 1), 1)];
     end
+    
+    % update
+    ons_includes_durations = true;
+    
 elseif ~isempty(durs)
     warning('Durs input is entered, but format/length is unrecognized. Will not be used.');
     

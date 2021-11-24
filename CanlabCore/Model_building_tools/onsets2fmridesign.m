@@ -103,6 +103,41 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %    X2 = onsets2fmridesign(onsp, 2, length(dat.removed_images) .* 2, [], [], 'customneural', report_predictor);
 %    plotDesign(ons,[], TR, 'yoffset', 1);
 %
+% ------------------------------------------------------------------------
+% % Create random event-related design with an event every 3 sec, 
+% % 4 conditions with 20% frequency each, 2 sec epochs, and plot it with 1.3 sec TR:
+%   ons = create_random_onsets(100, 3, [.2 .2 .2 .2], 2);
+%   [X,d,out,handles] = plotDesign(ons,[], 1.3);
+%  
+% % Plot VIFs for this design:
+%   create_figure('vifs'); getvif(X, 0, 'plot');
+%  
+%  % Get efficiency
+%   nconditions = length(ons);
+%   
+%   contrasts = create_orthogonal_contrast_set(nconditions);
+%   contrasts(:, end+1) = 0; % for intercept
+%   
+%   e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
+%
+% ------------------------------------------------------------------------
+% % Create a single-trial design with an event every 10 sec
+% % 4-sec epoch dur, and 1.3 sec TR.  plot it.
+% ons = mat2cell([1:10:200]', ones(20, 1))';
+% [X,d,out,handles] = plotDesign(ons,[], 1.3, 'durs', 4);
+% 
+% % Plot VIFs for this design:
+% create_figure('vifs'); getvif(X, 0, 'plot');
+% 
+% % Get efficiency
+% nconditions = length(ons);
+% 
+% contrasts = create_orthogonal_contrast_set(nconditions);
+% contrasts(:, end+1) = 0; % for intercept
+% 
+% e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
+% ------------------------------------------------------------------------
+%
 % A note on absolute scaling and efficiency:
 % Scaling of the response influences efficiency. It does not affect model
 % fits or power when the scaling is equated (constant across events in a
@@ -521,7 +556,10 @@ function [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(on
     
     % Check orientation
     % --------------------------------------------------
-    if docheckorientation && all(sz(:, 1) == 1)
+    % Note: ~all(sz(:, 2) == 2) checks whether we have exactly 2 values in
+    % each cell. This happens when we have a single-trial model and include
+    % durations. 
+    if docheckorientation && all(sz(:, 1) == 1) && ~all(sz(:, 2) == 2)
         
         % we have likely entered row vectors. transpose all.
         for i = 1:length(ons), ons{i} = ons{i}'; end

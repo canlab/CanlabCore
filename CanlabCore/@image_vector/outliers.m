@@ -6,7 +6,7 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 % :Usage:
 % ::
 %
-% [est_outliers_uncorr, est_outliers_corr, outlier_table, outlier_regressor_matrix_uncorr, outlier_regressor_matrix_corr] = outliers(dat, ['noverbose', 'notimeseries'])
+% [est_outliers_uncorr, est_outliers_corr, outlier_table] = outliers(dat, ['noverbose', 'notimeseries'])
 %
 % Images usually change slowly over time, and sudden changes in intensity can also often be a sign of bad things
 % -- head movement artifact or gradient misfires, interacting with the magnetic field to create distortion

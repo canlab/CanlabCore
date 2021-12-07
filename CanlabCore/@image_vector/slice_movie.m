@@ -58,7 +58,7 @@ function outlier_tables = slice_movie(dat, varargin)
 % -------------------------------------------------------------------------
 % DEFAULT ARGUMENT VALUES
 % -------------------------------------------------------------------------
-madlim = 3;
+madlim = 3;     % median absolute deviation limits
 
 writetofile = false;
 movieoutfile = [];
@@ -67,6 +67,8 @@ showmovie = true;
 image_interval = 1;
 
 doverbose = true;
+
+domontage = false;
 
 % %deal out varargin
 % i = 1;
@@ -90,7 +92,7 @@ doverbose = true;
 
 allowable_inputs = {'madlim' 'movieoutfile' 'showmovie' 'image_interval'};
 
-keyword_inputs = {'writetofile' 'nomovie' 'nodisplay'};
+keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -118,12 +120,15 @@ for i = 1:length(varargin)
             case 'writetofile'
                 writetofile = true;
                 if isempty(movieoutfile)
-                    movieoutfile = fullfile(pwd, 'slice_movie_file');
-                    fprint('Writing file with default name:\n%s\n', movieoutfile);
+                    movieoutfile = fullfile(pwd, 'slice_movie_file.tiff');
+                    fprintf('Writing file with default name:\n%s\n', movieoutfile);
                 end
                 
             case {'nomovie' 'nodisplay'}
                 showmovie = false;
+            
+            case ('montage')
+                domontage = true;
                 
         end
     end
@@ -161,8 +166,14 @@ if showmovie
     title('Axial slices'); 
     
     vdat = reconstruct_image(mm);
-    wh = round(size(vdat, 1)./2);
+    wh = round(size(vdat, 1)./2);     % Middle Sagittal Slice
+    wh_z = round(size(vdat, 3)./2);   % Middle Axial Slice
     
+    sdiffs = diff(dat.dat')';
+    sdiffs = [mean(sdiffs, 2) sdiffs]; % keep in image order
+    mysd = std(sdiffs(:));
+    mylim = [mean(vdat(:)) - madlim*mysd mean(vdat(:)) + madlim*mysd];
+
     plot(ax1, outlier_tables.score_table.rmssd_dvars, 'k'); axis tight
     axes(ax1), hold on;
     cutoff_val = mean(outlier_tables.score_table.rmssd_dvars) + madlim * std(outlier_tables.score_table.rmssd_dvars);
@@ -172,14 +183,23 @@ if showmovie
     plot(find(slow), cutoff_val * ones(sum(slow, 1)), 'o', 'Color', [1 .5 0], 'MarkerFaceColor', [.7 .3 0]);
     
     axes(ax2); 
-    display_slices(get_wh_image(dat, 1), 'sagittal');
+    if domontage
+        display_slices(get_wh_image(dat, 1), 'sagittal');
+    else
+        get_sagittal_slice(vdat, wh, mylim)
+    end
+    
     drawnow
     hold off
     colormap gray
     
-    axes(ax3) 
-    display_slices(get_wh_image(dat, 1), 'axial');
-    
+    axes(ax3)
+    if domontage
+        display_slices(get_wh_image(dat, 1), 'axial');
+    else
+        get_axial_slice(vdat, wh_z, mylim)
+    end
+
     % Get color limits
     clim = prctile(dat.dat(:), [.05 99.5]);
     
@@ -188,10 +208,18 @@ if showmovie
         vh = plot(ax1, i, outlier_tables.score_table.rmssd_dvars(i), 'ro', 'MarkerFaceColor', 'r');
         
         axes(ax2)
-        display_slices(get_wh_image(dat, i), 'sagittal');
+        if domontage
+            display_slices(get_wh_image(dat, 1), 'sagittal');
+        else
+            get_sagittal_slice(vdat, wh, mylim)
+        end
         
         axes(ax3)
-        display_slices(get_wh_image(dat, i), 'axial');
+        if domontage
+            display_slices(get_wh_image(dat, 1), 'axial');
+        else
+            get_axial_slice(vdat, wh_z, mylim)
+        end
         
         set([ax2 ax3], 'CLim', clim)
         
@@ -200,7 +228,7 @@ if showmovie
         if writetofile
             F = getframe(fh);
             if i == 1
-                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath, 'Resolution', 30);
+                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath(1,:), 'Resolution', 30);
             else
                 imwrite(F.cdata, movieoutfile,'tiff', 'WriteMode', 'append', 'Resolution', 30);
             end
@@ -218,3 +246,15 @@ end % showmovie
 end % main function
 
 
+function get_sagittal_slice(vdat, wh, clim)
+    imagesc(rot90(squeeze(vdat(wh,:,:))), clim);
+    axis image
+    title('Sagittal Slice')
+end
+
+
+function get_axial_slice(vdat, wh, clim)
+    imagesc(squeeze(vdat(:,:,wh)), clim)
+    axis image
+    title('Axial Slice')
+end

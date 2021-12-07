@@ -1,8 +1,8 @@
-function [SPMinfo, dat] = canlab_glm_extract_trial_info_and_betas(input_path)
+function [SPMinfo, dat] = canlab_spm_glm_extract_trial_info_and_betas(input_path)
 % Meta-data extraction and fmri_data creation for single-trial models
 % Extracts information and single-trial data table from an SPM.mat file
 %
-% [SPMinfo, dat] = canlab_glm_extract_info_and_fmri_data(input_path)
+% [SPMinfo, dat] = canlab_spm_glm_extract_info_and_fmri_data(input_path)
 %
 % Inputs:
 % -----------------------------------------------------------------------
@@ -28,8 +28,14 @@ function [SPMinfo, dat] = canlab_glm_extract_trial_info_and_betas(input_path)
 % zipped with gz.  Does not delete original image files after re-zipping
 % yet - this feature could be added
 %
-%
 % Tor Wager, 6/25/2017
+%
+% NOT FINISHED!! DEVELOPMENT IN PROGRESS
+% - create table object for non-single trial too
+% - checked for accuracy
+% - extract and save table of other model parameters
+% - add control options:  optional to extract data object
+
 
 % LOAD SPM FILE
 % - make sure we have the correct one
@@ -241,7 +247,7 @@ if is_single_trial
     dat = enforce_variable_types(dat);
     
     % Store meta-data with object in additional_info field:
-    dat.additional_info = single_trial_info_table;
+    dat.metadata_table = single_trial_info_table;
     
     % zip - do later outside this fcn
 %     !gzip *.img

@@ -38,6 +38,24 @@ function [eff,eff_vector] = calcEfficiency(contrastweights,contrasts,xtxitx,svi,
 % p = 1 - tcdf(Z, df)
 % p = 1 - tcdf(sqrt(eff), size(X, 1) - size(X, 2))
 % -log(p) is -log of expected p-value given design and std. effect size
+%
+% Example:
+% ------------------------------------------------------------------------
+% % Create random event-related design with an event every 3 sec
+% % 4 conditions with 20% frequency each, 2 sec epochs, and plot it with 1.3 sec TR:
+% ons = create_random_onsets(100, 3, [.2 .2 .2 .2], 2);
+% [X,d,out,handles] = plotDesign(ons,[], 1.3);
+%
+% % Plot VIFs for this design:
+% create_figure('vifs'); getvif(X, 0, 'plot');
+%
+% % Get efficiency
+% nconditions = length(ons);
+% 
+% contrasts = create_orthogonal_contrast_set(nconditions);
+% contrasts(:, end+1) = 0; % for intercept
+% 
+% e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
 
 if isempty(svi), svi = eye(size(xtxitx,2)); end
 

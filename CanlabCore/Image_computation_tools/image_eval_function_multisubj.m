@@ -1,4 +1,4 @@
-function image_eval_function_multisubj(imageNames,fhandle,varargin)
+function image_eval_function_multisubj(imageNames, fhandle, varargin)
 % Evaluate any function, defined by the function handle fhandle,
 % on each in-mask voxel for a set of images.
 % imageNames is a cell array of N cells, each containing images for one
@@ -68,10 +68,8 @@ function image_eval_function_multisubj(imageNames,fhandle,varargin)
 %    tor wager, jan 31, 2007
 % ..
 
+    [mask, preprochandle, outimagenames, connames, startslice, nout] = setup_inputs(varargin{:});
 
-    setup_inputs; % setup inputs
-    connames;
-    outimagenames;
     
     switch spm('Ver')
         case 'SPM2'
@@ -120,21 +118,17 @@ function image_eval_function_multisubj(imageNames,fhandle,varargin)
 
         fprintf('Subject %3.0f, %3.0f images.\n', ii, n(ii));
 
-        if ~doload,
+        if ~doload
             V{ii} = spm_vol(imageNames{ii});
 
             switch lower(spm('Ver'))
 
                 case 'spm2'
                     % OK
-                case 'spm5'
+                case {'spm5', 'spm8', 'spm12'}
                     % update image number
                     n(ii) = length(V{ii});
 
-                case 'spm8'
-                    % update image number
-                    n(ii) = length(V{ii});
-                    
                 otherwise
                     error('I don''t recognize your version of SPM!');
 
@@ -213,6 +207,8 @@ function image_eval_function_multisubj(imageNames,fhandle,varargin)
 
     eval(fstr);  % this evaluates the function
 
+    outputs = cell(1, nout);
+    
     for ii = 1:nout
         str = ['outputs{ii} = out' num2str(ii) ';'];
         eval(str)
@@ -300,44 +296,6 @@ function image_eval_function_multisubj(imageNames,fhandle,varargin)
     %
     % -------------------------------------------------------------------
 
-    function setup_inputs
-        mask = [];
-        preprochandle = [];
-        outimagenames = cell(1);
-        connames = {};
-
-        startslice = 1;
-
-        for i = 1:length(varargin)
-            if ischar(varargin{i})
-                switch varargin{i}
-
-                    % functional commands
-                    case 'mask', mask = varargin{i+1}; varargin{i+1} = [];
-
-                    case 'preprochandle', preprochandle = varargin{i+1}; varargin{i+1} = [];
-
-                    case {'outnames' 'outimagenames'}, outimagenames = varargin{i+1}; varargin{i+1} = [];
-                        nout = length(outimagenames);
-
-                    case {'start','startslice','slice'}, startslice = varargin{i+1};
-
-                    case 'connames', connames = varargin{i+1}; varargin{i+1} = []; % Not used anymore
-
-                    otherwise, warning(['Unknown input string option:' varargin{i}]);
-                end
-            end
-        end
-
-        if isempty(mask), error('mask is empty. no-mask opt. not implemented yet.');
-        else fprintf(1,'Found mask: %s\n',mask);
-        end
-
-    end
-
-
-
-
 
     % % -------------------------------------------------------------------
     % % Analyze data for this slice (inline)
@@ -407,6 +365,45 @@ end     % END MAIN FUNCTION
 %
 %
 % -------------------------------------------------------------------
+
+
+
+function [mask, preprochandle, outimagenames, connames, startslice, nout] = setup_inputs(varargin)
+
+mask = [];
+preprochandle = [];
+outimagenames = cell(1);
+connames = {};
+
+startslice = 1;
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            
+            % functional commands
+            case 'mask', mask = varargin{i+1}; varargin{i+1} = [];
+                
+            case 'preprochandle', preprochandle = varargin{i+1}; varargin{i+1} = [];
+                
+            case {'outnames' 'outimagenames'}, outimagenames = varargin{i+1}; varargin{i+1} = [];
+                nout = length(outimagenames);
+                
+            case {'start','startslice','slice'}, startslice = varargin{i+1};
+                
+            case 'connames', connames = varargin{i+1}; varargin{i+1} = []; % Not used anymore
+                
+            otherwise, warning(['Unknown input string option:' varargin{i}]);
+        end
+    end
+end
+
+if isempty(mask), error('mask is empty. no-mask opt. not implemented yet.');
+else fprintf(1,'Found mask: %s\n',mask);
+end
+
+end  % setup_inputs
+
 
 
 % % -------------------------------------------------------------------
@@ -555,13 +552,14 @@ function V = make_output_image(maskInfo, fname, descrip,n)
     V = struct('fname','', 'dim', maskInfo.dim, 'mat',maskInfo.mat, 'pinfo', [1 0 maskInfo.pinfo(3, 1)]'); % scaling factors 1 0, keep data type from mask 
 
     % set data type to float
-    switch(spm('Ver'))
-        case 'SPM2'
+    switch(lower(spm('Ver')))
+        case 'spm2'
             Type = 'double';
             V.dim(4) = spm_type(Type);
-        case {'SPM5', 'SPM8'}
+            
+        case {'spm5', 'spm8', 'spm12'}
             Type = 'float32';
-            V.dt(1) = spm_type(Type); % NOT TESTED.  %'float32');
+            V.dt(1) = spm_type(Type); 
             V.dt(2) = 1;
         otherwise
             error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
@@ -613,15 +611,15 @@ function n = Nvol(V)
         %spm_close_vol(V); % spm2
     end
 
-    switch(spm('Ver'))
-        case 'SPM2'
+    switch(lower(spm('Ver')))
+        case 'spm2'
             fp   = fopen(V.fname);
             fseek(fp,0,'eof');
             Len  = ftell(fp);
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
 
-        case {'SPM5', 'SPM8'}
+        case {'spm5', 'spm8', 'spm12'}
             n = length(V);
 
         otherwise

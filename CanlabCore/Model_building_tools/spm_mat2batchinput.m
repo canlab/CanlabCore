@@ -27,6 +27,9 @@ function [imgs, TR, scanspersess, names, onsets, durations] = spm_mat2batchinput
 %    Could be extended to include nuisance covs, parametric modulators, etc.
 %    Right now this is very basic.
 % ..
+%
+% CANlab SPM 1st-level model helper tools:
+% scn_spm_design_check, spm2canlab_dataset, spm_mat2batchinput, scn_spm_get_events_of_interest
 
 if iscell(SPM.xY.P) % check input image names
     imgs = char(SPM.xY.P{:});

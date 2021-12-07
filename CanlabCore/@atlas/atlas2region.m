@@ -29,11 +29,17 @@ function r = atlas2region(atlas_obj, varargin)
 %
 % Tor Wager, Jan 2018
 
+% Programmers' notes:
+% 9/24/21: region labels were wrong in some cases, if atlas object has been
+    % altered to remove some regions. Tor fixed this to use region.val
+    % mode.
+    
 % Defaults and inputs
 % ----------------------------------------------------------------------------
 
 use_probabilities_if_available = false;
 region_parse_method = 'contiguous_regions';
+ivec = [];
 
 for i = 1:length(varargin)
     
@@ -50,6 +56,12 @@ for i = 1:length(varargin)
                 
             otherwise , warning(['Unknown input string option:' varargin{i}]);
         end
+    end
+    
+    if isa(varargin{i}, 'image_vector')
+        
+        ivec = varargin{i};
+        
     end
 end
 
@@ -94,9 +106,38 @@ else
     
     atlas_obj.dat = double(atlas_obj.dat); % int32 doesn't work - conflict when adding vars to orthviews of diff types
     
-    r = region(atlas_obj, 'unique_mask_values', 'noverbose');
+    % region( ) is intended to return .dat values in .val and .Z fields.
+    % Here, these are anatomical parcel label numbers. 
+    % Use these to get the labels, and then replace them with image values
+    % iff we have entered images to extract from.
     
-    wh_label = 1:n_regions;    % for label assignment
+    if ~isempty(ivec)
+        % We have image values to extract
+        r = region(atlas_obj, ivec, 'unique_mask_values', 'noverbose');
+        
+    else
+        r = region(atlas_obj, 'unique_mask_values', 'noverbose');
+        
+    end
+    
+    % Get the labels in each region from the .val field
+    for i = 1:length(r)
+        wh_label(i) = mode(r(i).val);
+    end
+    
+    if ~isempty(ivec)
+        % Replace values with image values, if we have them
+        for i = 1:length(r)
+            
+            r(i).val = r(i).dat';
+            r(i).Z = r(i).dat;            % .Z is legacy field used for display
+            
+        end
+    end
+    
+    % Note: the below was wrong in some cases, if atlas object has been
+    % altered to remove some regions. Tor changed: 9/24/21
+    %      wh_label = 1:n_regions;    % for label assignment
     
     if n_regions > length(atlas_obj.labels)
         error('More regions than labels! Labels or integer codes may be wrong.');

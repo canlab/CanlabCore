@@ -175,22 +175,35 @@ else
             if was_missing(i)
                 
                 fprintf('\n%s\n', dashes);
+    
+                % Make sure we are in the main directory above CANlab Core
+                % canlab_clone_github_repository also adds to Path
+                cd(main_repository_dir)
+
+                try
 
                 canlab_clone_github_repository('repo', repo_names{i}, 'noverbose');
                 
+                catch
+
+                    warning('DID NOT CLONE REPO: %s\n', repo_names{i})
+                    
+                end
             end
             
         end
         
     end % doinstall
     
+    % remove .git dirs
+    strip_git_dirs;
+
     disp('Finished install. Saving path.');
     savepath
 
 end % any missing
 
-% remove .git dirs
-strip_git_dirs;
+
 
 
 

@@ -1,6 +1,20 @@
 function [out,P] = onsets2efficiency(ons,TR,varargin)
 % [out,P] = onsets2efficiency(ons,TR,[contrasts])
 %
+% ---------------------------------------------------------------------
+% NOTE: This is older code that could be refactored to work with newer
+% functions, onsets2fmridesign, plotDesign
+% These take in more input options, like event durations.
+% After using either of these to obtain X, the following code will return
+% average efficiency for each condition:
+% nconditions = length(ons);
+% 
+% contrasts = create_orthogonal_contrast_set(nconditions);
+% contrasts(:, end+1) = 0; % for intercept
+% 
+% e = calcEfficiency(ones(1, size(contrasts, 1)), contrasts, pinv(X), []);
+% ---------------------------------------------------------------------
+%
 % A summary plot comparing a design with event onsets (ons) to 
 % random designs and m-sequences. Tests first contrast entered.
 % ** currently, permuted designs are used, and they are sampled

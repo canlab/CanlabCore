@@ -35,6 +35,13 @@ function outlier_tables = slice_movie(dat, varargin)
 %        between images in each subsequent frame of the movie
 %       (default = 1). Higher values will skip, showing every n images
 %
+%   **'montage':**
+%        Show montage of all slices, rather than just 2 slices
+%
+%   **'nooutliers':**
+%        Skip the outlier detection stage (can speed things up with long
+%        image series)
+%
 % :Examples:
 % ::
 %
@@ -70,6 +77,8 @@ doverbose = true;
 
 domontage = false;
 
+dooutliers = true;
+
 % %deal out varargin
 % i = 1;
 % while i <= length(varargin)
@@ -92,7 +101,7 @@ domontage = false;
 
 allowable_inputs = {'madlim' 'movieoutfile' 'showmovie' 'image_interval'};
 
-keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage'};
+keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage' 'nooutliers'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -127,8 +136,11 @@ for i = 1:length(varargin)
             case {'nomovie' 'nodisplay'}
                 showmovie = false;
             
-            case ('montage')
+            case 'montage'
                 domontage = true;
+                
+            case 'nooutliers'
+                dooutliers = false;
                 
         end
     end
@@ -139,8 +151,17 @@ end
 % -------------------------------------------------------------------------
 
 % Get potential outliers to pause at
+if dooutliers
+    
+[slow, ~, outlier_tables] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose, 'noplot');
 
-[slow, ~, outlier_tables] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose);
+else
+
+    slow = zeros(size(dat.dat, 2), 1);
+    outlier_tables = struct();
+    outlier_tables.score_table = table(slow, 'VariableNames', {'rmssd_dvars'});
+    
+end
 
 mm = mean(dat);
 
@@ -155,7 +176,7 @@ if showmovie
     for i = 1:4, myax = subplot(2, 2, i); delete(myax); end
     
     ax1 = axes('Position', [.1 .75 .8 .2], 'FontSize', 16); 
-    title('Root mean square successive diffs');
+    if dooutliers, title('Root mean square successive diffs'); else, title('(no outliers shown)'); end
     hold on
     
     ax2 = axes('Position', [.1 .1 .4 .55], 'FontSize', 16);
@@ -182,11 +203,13 @@ if showmovie
     
     plot(find(slow), cutoff_val * ones(sum(slow, 1)), 'o', 'Color', [1 .5 0], 'MarkerFaceColor', [.7 .3 0]);
     
+    my3dimage = get_wh_image(dat, 1);
+    
     axes(ax2); 
     if domontage
-        display_slices(get_wh_image(dat, 1), 'sagittal');
+        display_slices(my3dimage, 'sagittal');
     else
-        get_sagittal_slice(vdat, wh, mylim)
+        get_sagittal_slice(my3dimage, wh, mylim)
     end
     
     drawnow
@@ -195,30 +218,32 @@ if showmovie
     
     axes(ax3)
     if domontage
-        display_slices(get_wh_image(dat, 1), 'axial');
+        display_slices(my3dimage, 'axial');
     else
-        get_axial_slice(vdat, wh_z, mylim)
+        get_axial_slice(my3dimage, wh_z, mylim)
     end
 
     % Get color limits
-    clim = prctile(dat.dat(:), [.05 99.5]);
+    clim = prctile(dat.dat(:), [2 98]);
     
     for i = 1:image_interval:size(dat.dat, 2)  % changed from sdiffs
         
         vh = plot(ax1, i, outlier_tables.score_table.rmssd_dvars(i), 'ro', 'MarkerFaceColor', 'r');
         
+        my3dimage = get_wh_image(dat, i);
+        
         axes(ax2)
         if domontage
-            display_slices(get_wh_image(dat, 1), 'sagittal');
+            display_slices(my3dimage, 'sagittal');
         else
-            get_sagittal_slice(vdat, wh, mylim)
+            get_sagittal_slice(my3dimage, wh, mylim)
         end
         
         axes(ax3)
         if domontage
-            display_slices(get_wh_image(dat, 1), 'axial');
+            display_slices(my3dimage, 'axial');
         else
-            get_axial_slice(vdat, wh_z, mylim)
+            get_axial_slice(my3dimage, wh_z, mylim)
         end
         
         set([ax2 ax3], 'CLim', clim)
@@ -246,14 +271,20 @@ end % showmovie
 end % main function
 
 
-function get_sagittal_slice(vdat, wh, clim)
+function get_sagittal_slice(my3dimage, wh, clim)
+
+    vdat = reconstruct_image(my3dimage);
+    
     imagesc(rot90(squeeze(vdat(wh,:,:))), clim);
     axis image
     title('Sagittal Slice')
 end
 
 
-function get_axial_slice(vdat, wh, clim)
+function get_axial_slice(my3dimage, wh, clim)
+
+    vdat = reconstruct_image(my3dimage);
+    
     imagesc(squeeze(vdat(:,:,wh)), clim)
     axis image
     title('Axial Slice')

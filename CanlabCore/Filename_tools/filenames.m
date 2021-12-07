@@ -155,7 +155,7 @@ end
 function isAbsolute = isAbsolutePath(pattern)
     isAbsolute = 0;
 %     if(ispc() && (~isempty(strfind(pattern, '\\')) || ~isempty(strfind(pattern, ':\')))) % This is a bug. The arguments for strfind are reversed. - Michael 10/19/2021
-    if(ispc() && (contains('\\', pattern) || contains(':\', pattern)))                     % contains() is stylistically more readable - Michael 10/19/2021
+    if(ispc() && (~contains('\\', pattern) || ~contains(':\', pattern)))                     % contains() is stylistically more readable - Michael 10/19/2021
         isAbsolute = 1;
     elseif(isunix())
 %       location = strfind(pattern, '/');  % This is a bug. The arguments for strfind are reversed. - Michael 10/19/2021

@@ -72,7 +72,7 @@ else
             return
         end
         mkdir(submodeldir);
-        eval(sprintf('!echo started > %s',fullfile(submodeldir,'.ssglm_model_status')))
+        eval(sprintf('!echo started > %s',fullfile(submodeldir, '.ssglm_model_status'))) % Michael: There seems to be problems for file paths with names
         save(fullfile(submodeldir,'DSGN'),'DSGN');
         
         %% GET RUNS
@@ -80,7 +80,11 @@ else
         clear runs runs3d
         try
             diary(diaryfile)
-            [runs runs3d] = find_runs(DSGN,s,z);
+%             Currentcd=pwd;  % Ke Edit 07-03-2021
+%             cd(DSGN.subjects{s})
+            [runs runs3d] = find_runs(DSGN,s,z);    
+            % Ke Edit 07-03-2021
+%             cd(Currentcd)
             diary off
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -157,7 +161,7 @@ else
             eval(modeljobcmd);
             save(batchfile, 'matlabbatch');
             spm_jobman('run', matlabbatch);
-            eval(sprintf('!echo finished > %s',fullfile(submodeldir,'.ssglm_model_status')))
+            eval(sprintf('!echo finished > %s',"'",fullfile(submodeldir, '.ssglm_model_status'),"'")) % Michael: This fix is for if there're spaces in in the path
             modelstatus = 1;
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)
@@ -233,6 +237,9 @@ r=1;
 for f = 1:numel(DSGN.funcnames)
     % find runs using path from funcnames (wildcards optional)
     runstoadd = filenames(fullfile(DSGN.subjects{session}, DSGN.funcnames{f}));
+
+    
+    % runstoadd = filenames(DSGN.funcnames{f});   %% Ke Bo Edit, we had some directory problems.
     if isempty(runstoadd)
         if DSGN.allowmissingfunc
             fprintf('%sWARNING: no runs found with: %s\n',z,DSGN.funcnames{f})
@@ -295,6 +302,7 @@ for session = 1:numel(runs)
             end
         else
             matfiles{1} = fullfile(mfdir,DSGN.conditions{sess}{i});
+%             matfiles{1} = fullfile(mfdir,'..','..',DSGN.conditions{sess}{i});
             matfiles{1} = [regexprep(matfiles{1},'.mat$','') '.mat'];
             if ~exist(matfiles{1},'file')
                 if DSGN.allowmissingcondfiles
@@ -384,7 +392,10 @@ for session = 1:numel(runs)
     
     % retrieve multiple regressors file
     if ~isempty(DSGN.multireg)
-        multiregfile = fullfile(mfdir, DSGN.multireg);
+        multiregfile = fullfile(mfdir, DSGN.multireg); % Michael and Ke:
+%         We are changing this line to better deal with the BIDS formatting
+%         that does not feature separate run folders
+%         multiregfile = fullfile(mfdir, DSGN.multireg{session}{1});
 %         if ~exist(multiregfile,'file'), error('> No such multiple regressors file : %s',multiregfile); end
         multipleregressors{session} = multiregfile; %#ok                
     else

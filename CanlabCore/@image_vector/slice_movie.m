@@ -74,10 +74,9 @@ showmovie = true;
 image_interval = 1;
 
 doverbose = true;
-
 domontage = false;
-
 dooutliers = true;
+dostepthrough = false;
 
 % %deal out varargin
 % i = 1;
@@ -101,7 +100,7 @@ dooutliers = true;
 
 allowable_inputs = {'madlim' 'movieoutfile' 'showmovie' 'image_interval'};
 
-keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage' 'nooutliers'};
+keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage' 'nooutliers' 'dostepthrough'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -141,6 +140,9 @@ for i = 1:length(varargin)
                 
             case 'nooutliers'
                 dooutliers = false;
+                
+            case 'dostepthrough'
+                dostepthrough = true;
                 
         end
     end
@@ -263,7 +265,18 @@ if showmovie
         end
         
         delete(vh);
-%         delete(vh2);
+
+        if dostepthrough
+            
+            if i == 1
+                myinput = input(sprintf('Press a key to scroll through, or ''x'' to quit. Image %3.0f', i)); 
+            else
+                myinput = input(sprintf('\b\b\b\b%3.0f', i));
+            end
+            
+            if strcmp(myinput, 'x'), return, end
+        end
+            
     end
     
 end % showmovie

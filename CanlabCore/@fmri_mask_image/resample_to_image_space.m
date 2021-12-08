@@ -50,9 +50,9 @@ function obj = resample_to_image_space(obj, sampleto, varargin)
 %    because only in-mask voxels in volInfo were not selected.  This was
 %    fixed.
 % ..
-
+sampleto
 switch class(sampleto)
-    case 'char'
+    case {'char', 'string'}
         image_name_to_sample_to = sampleto;
         
         volInfo_to = iimg_read_img(sampleto, 2, 1, 1); % read data from file, first volume only

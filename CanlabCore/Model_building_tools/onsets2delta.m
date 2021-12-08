@@ -44,12 +44,12 @@ function delta = onsets2delta(ons, len)
 % getPredictors : for design-matrix building
 % downsample_canlab : for downsampling to TR/secs
 %
-% :See also: ONSETS2FMRIDESIGN and object-oriented fmri_model object
+% :See also: ONSETS2FMRIDESIGN and object-oriented fmri_glm_design_matrix object
 % (methods: build, etc.)
 %
 %
 % ..
-%    Revision: tor: 10/12/10, for integration with object-oriented fmri_model
+%    Revision: tor: 10/12/10, for integration with object-oriented fmri_glm_design_matrix
 % ..
 
 

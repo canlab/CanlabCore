@@ -42,6 +42,17 @@ function [X, delta, delta_hires, hrf] = onsets2fmridesign(ons, TR, varargin)
 %             2) a custom HRF, sampled in seconds
 %             3) or [] to skip
 %
+%   **'durs':**
+%        followed by durations in sec, either:
+%
+%        (a) Scalar with constant duration value
+%
+%        (b) Vector of one duration for each event type
+%        (c) Cell array of one cell per condition, one duration per trial 
+% 
+%        * Note: You can also add duration to ons input manually
+%        instead; see ons above for more info *
+%
 %   **'norm':**
 %        mean-center, orthogonalize, and L2-norm basis set
 %
@@ -211,6 +222,18 @@ for i = 3:length(varargin)
             case 'nonlinsaturation', dononlinsaturation = 1;
                 
             case 'nononlin',  dononlinsaturation = false;
+                
+            case 'durs', durs = varargin{i+1};
+                
+                % Note: onsets entered in secs but TR sampling accounted
+                % for later. For durations, account for it here.
+                if iscell(durs), durs = cellfun(@(x) x ./ TR, ons, 'UniformOutput', false);
+                else
+                    durs = durs ./ TR;
+                    if length(durs) == 1, durs = repmat(durs, 1, length(ons)); end
+                end
+                
+                ons = parse_cell_onsets_durs(ons, durs, docheckorientation);
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -586,3 +609,74 @@ function [ons, n_conditions, n_events, ons_includes_durations] = check_onsets(on
 
     
 end
+
+% ---------------------------------------------------------------------
+% Parse onsets and add durations if needed
+% Note: There is some redundancy with other code
+% This was inherited from plotDesign
+% Included here only to add 'durs' option
+% ---------------------------------------------------------------------
+function [xons, ons_includes_durations] = parse_cell_onsets_durs(ons, durs, docheckorientation)
+
+xons = [];
+
+
+[~, ~, ~, ons_includes_durations] = check_onsets(ons, docheckorientation);
+
+% sizes of onsets in each cell: First col is # events, 2nd is durations
+% if they exist.
+% sz = cellfun(@size, ons, 'UniformOutput', false)';
+% sz = cat(1, sz{:});
+
+% ons_includes_durations = any(sz(:, 2) > 1);  %  was: size(sz, 2) > 1;  sz(:, 2) = number of columns
+
+if ons_includes_durations
+    % we are done.
+    xons = ons;
+    
+    if ~isempty(durs), warning('Onsets input already contains durations. Durs input will be ignored'); end
+    
+elseif ~isempty(durs) && iscell(durs)
+    % We have durations for each event
+    
+    for i = 1:length(durs)
+        xons{i} = [ons{i} durs{i}];
+    end
+    
+    % update
+    ons_includes_durations = true;
+    
+elseif ~isempty(durs) && length(durs) == 1
+    % We have the same duration for every event
+    
+    for i = 1:length(ons)
+        xons{i} = [ons{i} repmat(durs, size(ons{i}, 1), 1)];
+    end
+    
+    % update
+    ons_includes_durations = true;
+    
+elseif ~isempty(durs) && length(durs) == length(ons)
+    % We have one duration value for each event type
+    
+    for i = 1:length(ons)
+        xons{i} = [ons{i} repmat(durs(i), size(ons{i}, 1), 1)];
+    end
+    
+    % update
+    ons_includes_durations = true;
+    
+elseif ~isempty(durs)
+    warning('Durs input is entered, but format/length is unrecognized. Will not be used.');
+    
+elseif isempty(durs)
+    % No durations
+    xons = ons; % xons is what we need to pass in to onsets2fmridesign handle dur option
+    
+else
+    error('impossible case? Check code.');
+    
+end  % Parse what to do with durations
+
+end % function
+

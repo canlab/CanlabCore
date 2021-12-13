@@ -337,6 +337,10 @@ classdef fmri_timeseries < fmri_data
             verbosestr = 'verbose';
             sample2mask = 0;
             
+            % DesginmatrixTable INPUT
+            
+            xlsread(DesginmatrixTable)
+            
             % SET UP OPTIONAL INPUTS
             % -----------------------------------
             

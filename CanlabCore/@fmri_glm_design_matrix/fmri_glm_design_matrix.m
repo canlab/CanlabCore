@@ -243,6 +243,8 @@ classdef fmri_glm_design_matrix
             
             
         end % class constructor function
+        
+        
     end % properties
     
     

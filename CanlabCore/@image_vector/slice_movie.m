@@ -35,6 +35,13 @@ function outlier_tables = slice_movie(dat, varargin)
 %        between images in each subsequent frame of the movie
 %       (default = 1). Higher values will skip, showing every n images
 %
+%   **'montage':**
+%        Show montage of all slices, rather than just 2 slices
+%
+%   **'nooutliers':**
+%        Skip the outlier detection stage (can speed things up with long
+%        image series)
+%
 % :Examples:
 % ::
 %
@@ -58,7 +65,7 @@ function outlier_tables = slice_movie(dat, varargin)
 % -------------------------------------------------------------------------
 % DEFAULT ARGUMENT VALUES
 % -------------------------------------------------------------------------
-madlim = 3;
+madlim = 3;     % median absolute deviation limits
 
 writetofile = false;
 movieoutfile = [];
@@ -67,6 +74,9 @@ showmovie = true;
 image_interval = 1;
 
 doverbose = true;
+domontage = false;
+dooutliers = true;
+dostepthrough = false;
 
 % %deal out varargin
 % i = 1;
@@ -90,7 +100,7 @@ doverbose = true;
 
 allowable_inputs = {'madlim' 'movieoutfile' 'showmovie' 'image_interval'};
 
-keyword_inputs = {'writetofile' 'nomovie' 'nodisplay'};
+keyword_inputs = {'writetofile' 'nomovie' 'nodisplay', 'montage' 'nooutliers' 'dostepthrough'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -118,12 +128,21 @@ for i = 1:length(varargin)
             case 'writetofile'
                 writetofile = true;
                 if isempty(movieoutfile)
-                    movieoutfile = fullfile(pwd, 'slice_movie_file');
-                    fprint('Writing file with default name:\n%s\n', movieoutfile);
+                    movieoutfile = fullfile(pwd, 'slice_movie_file.tiff');
+                    fprintf('Writing file with default name:\n%s\n', movieoutfile);
                 end
                 
             case {'nomovie' 'nodisplay'}
                 showmovie = false;
+            
+            case 'montage'
+                domontage = true;
+                
+            case 'nooutliers'
+                dooutliers = false;
+                
+            case 'dostepthrough'
+                dostepthrough = true;
                 
         end
     end
@@ -134,8 +153,17 @@ end
 % -------------------------------------------------------------------------
 
 % Get potential outliers to pause at
+if dooutliers
+    
+[slow, ~, outlier_tables] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose, 'noplot');
 
-[slow, ~, outlier_tables] = outliers(dat, 'madlim', madlim, 'doverbose', doverbose);
+else
+
+    slow = zeros(size(dat.dat, 2), 1);
+    outlier_tables = struct();
+    outlier_tables.score_table = table(slow, 'VariableNames', {'rmssd_dvars'});
+    
+end
 
 mm = mean(dat);
 
@@ -150,7 +178,7 @@ if showmovie
     for i = 1:4, myax = subplot(2, 2, i); delete(myax); end
     
     ax1 = axes('Position', [.1 .75 .8 .2], 'FontSize', 16); 
-    title('Root mean square successive diffs');
+    if dooutliers, title('Root mean square successive diffs'); else, title('(no outliers shown)'); end
     hold on
     
     ax2 = axes('Position', [.1 .1 .4 .55], 'FontSize', 16);
@@ -161,8 +189,14 @@ if showmovie
     title('Axial slices'); 
     
     vdat = reconstruct_image(mm);
-    wh = round(size(vdat, 1)./2);
+    wh = round(size(vdat, 1)./2);     % Middle Sagittal Slice
+    wh_z = round(size(vdat, 3)./2);   % Middle Axial Slice
     
+    sdiffs = diff(dat.dat')';
+    sdiffs = [mean(sdiffs, 2) sdiffs]; % keep in image order
+    mysd = std(sdiffs(:));
+    mylim = [mean(vdat(:)) - madlim*mysd mean(vdat(:)) + madlim*mysd];
+
     plot(ax1, outlier_tables.score_table.rmssd_dvars, 'k'); axis tight
     axes(ax1), hold on;
     cutoff_val = mean(outlier_tables.score_table.rmssd_dvars) + madlim * std(outlier_tables.score_table.rmssd_dvars);
@@ -171,27 +205,48 @@ if showmovie
     
     plot(find(slow), cutoff_val * ones(sum(slow, 1)), 'o', 'Color', [1 .5 0], 'MarkerFaceColor', [.7 .3 0]);
     
+    my3dimage = get_wh_image(dat, 1);
+    
     axes(ax2); 
-    display_slices(get_wh_image(dat, 1), 'sagittal');
+    if domontage
+        display_slices(my3dimage, 'sagittal');
+    else
+        get_sagittal_slice(my3dimage, wh, mylim)
+    end
+    
     drawnow
     hold off
     colormap gray
     
-    axes(ax3) 
-    display_slices(get_wh_image(dat, 1), 'axial');
-    
+    axes(ax3)
+    if domontage
+        display_slices(my3dimage, 'axial');
+    else
+        get_axial_slice(my3dimage, wh_z, mylim)
+    end
+
     % Get color limits
-    clim = prctile(dat.dat(:), [.05 99.5]);
+    clim = prctile(dat.dat(:), [2 98]);
     
     for i = 1:image_interval:size(dat.dat, 2)  % changed from sdiffs
         
         vh = plot(ax1, i, outlier_tables.score_table.rmssd_dvars(i), 'ro', 'MarkerFaceColor', 'r');
         
+        my3dimage = get_wh_image(dat, i);
+        
         axes(ax2)
-        display_slices(get_wh_image(dat, i), 'sagittal');
+        if domontage
+            display_slices(my3dimage, 'sagittal');
+        else
+            get_sagittal_slice(my3dimage, wh, mylim)
+        end
         
         axes(ax3)
-        display_slices(get_wh_image(dat, i), 'axial');
+        if domontage
+            display_slices(my3dimage, 'axial');
+        else
+            get_axial_slice(my3dimage, wh_z, mylim)
+        end
         
         set([ax2 ax3], 'CLim', clim)
         
@@ -200,7 +255,7 @@ if showmovie
         if writetofile
             F = getframe(fh);
             if i == 1
-                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath, 'Resolution', 30);
+                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath(1,:), 'Resolution', 30);
             else
                 imwrite(F.cdata, movieoutfile,'tiff', 'WriteMode', 'append', 'Resolution', 30);
             end
@@ -210,7 +265,18 @@ if showmovie
         end
         
         delete(vh);
-%         delete(vh2);
+
+        if dostepthrough
+            
+            if i == 1
+                myinput = input(sprintf('Press a key to scroll through, or ''x'' to quit. Image %3.0f', i)); 
+            else
+                myinput = input(sprintf('\b\b\b\b%3.0f', i));
+            end
+            
+            if strcmp(myinput, 'x'), return, end
+        end
+            
     end
     
 end % showmovie
@@ -218,3 +284,21 @@ end % showmovie
 end % main function
 
 
+function get_sagittal_slice(my3dimage, wh, clim)
+
+    vdat = reconstruct_image(my3dimage);
+    
+    imagesc(rot90(squeeze(vdat(wh,:,:))), clim);
+    axis image
+    title('Sagittal Slice')
+end
+
+
+function get_axial_slice(my3dimage, wh, clim)
+
+    vdat = reconstruct_image(my3dimage);
+    
+    imagesc(squeeze(vdat(:,:,wh)), clim)
+    axis image
+    title('Axial Slice')
+end

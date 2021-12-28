@@ -5,7 +5,7 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, varargin)
 % ::
 %
 % plot(fmri_data_object, [optional inputs])
-%
+% Ke edit
 % :Inputs:
 %
 %   **plotmethod:**

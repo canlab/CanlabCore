@@ -14,7 +14,7 @@ valid_names = fieldnames(obj);
 
 for i = 1:length(varargin)
     if ischar(varargin{i}) && ~isempty(varargin{i}) && (i == 1 || ~isattributename(i - 1))
-        
+         
         % Look for a field (attribute) with the input name
         wh = strmatch(varargin{i}, valid_names, 'exact');
         
@@ -110,6 +110,15 @@ for i = find(isothermethod)
             end
             
             isothermethod(i + 1) = false;
+            
+        case 'SPM'
+            load(varargin{i+1})
+            obj.xY=SPM.xY;
+            obj.Sess=SPM.Sess;
+            
+            obj.xBF=SPM.xBF;
+            
+            % Extract event info from SPM.mat
             
         case {'pm', 'mod', 'modulator', 'PM', 'pmname', 'pmnames', 'PMnames'}
             %

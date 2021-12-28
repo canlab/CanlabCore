@@ -13,4 +13,3 @@ classifier_compare.ipynb
 .ipynb_checkpoints
 .gitignore~
 *.asv
-CanlabCore/@fmri_data/rsa_regression.m

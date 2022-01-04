@@ -615,6 +615,7 @@ end
 % ----------------------------------------------------------------------
 mm = cat(m{:});
 alldat = mm.dat(:);
+alldat(isnan(alldat)) = 0;
 clim = [mean(alldat) - 3*std(alldat) mean(alldat) + 3*std(alldat)];
 
 for i = 1:n_runs

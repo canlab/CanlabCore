@@ -38,11 +38,12 @@ function [X,d,out,handles] = plotDesign(ons,rt,TR,varargin)
 %   **'durs':**
 %        followed by durations in sec, either:
 %
-%        Constant duration
+%        (a) Scalar with constant duration value
 %
-%        Vector of one duration for each event type
-%        Cell array of one duration per trial
-%        * Note: You can also add duration to ons input
+%        (b) Vector of one duration for each event type
+%        (c) Cell array of one cell per condition, one duration per trial 
+% 
+%        * Note: You can also add duration to ons input manually
 %        instead; see ons above for more info *
 %
 %   **{'color', 'colors'}:**

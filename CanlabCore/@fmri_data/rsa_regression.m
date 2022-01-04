@@ -1,4 +1,4 @@
-function stats = rsa_regression(obj,design,study)
+function stats = rsa_regression(obj,design,study,varargin)
 % Representational similarity-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
 % Takes a stimulus/experimental design (design), which is a set of binary regressors specifying groups of images. 
@@ -48,6 +48,14 @@ function stats = rsa_regression(obj,design,study)
 %
 % :Optional inputs:
 %
+%	**'average_Euclidean'**
+%		Use Euclidean distance of the response averaged across all voxels (univariate distance)
+%	**'euclidean'**
+%		Use Euclidean distance computed using all voxels
+%	**'cosine'**
+%		Compute distance using cosine similarity computed using all voxels
+%	**'correlation'**
+%		Compute distance using correlation distance (1 - Pearson R) computed using all voxels (default)
 % :Outputs:
 %   **stats:**
 %    Structure including: 
@@ -59,18 +67,19 @@ function stats = rsa_regression(obj,design,study)
 %      sig - significance test at FDR q < .05
 %
 % :Examples:
-% 
 % Example 1:
 % ----------------------------------------------------------------------
 % Download images from Kragel et al. 2018 Nature Neuroscience
 % Kragel, P. A., Kano, M., Van Oudenhove, L., Ly, H. G., Dupont, P., Rubio, A., ? Wager, T. D. (2018). Generalizable representations of pain, cognitive control, and negative emotion in medial frontal cortex. Nature Neuroscience, 21(2), 283?289. doi:10.1038/s41593-017-0051-7 
 % 270 subject-level images systematically sampled from 18 studies across 3 domains
-% [files_on_disk, url_on_neurovault, mycollection, myimages] = retrieve_neurovault_collection(3324);
-% data_obj = fmri_data(files_on_disk)
-%
+% [data_obj, names] = load_image_set('kragel18_alldata');
 % 
-%
-%
+% Amygdala=select_atlas_subset(load_atlas('Canlab2018'),{'Amy'});
+% masked_dat=apply_mask(data_obj,Amygdala);
+% 
+% dsgn = condf2indic(ceil(data_obj.metadata_table.Studynumber/6));
+% study = data_obj.metadata_table.Studynumber;
+% stats = rsa_regression(masked_dat,dsgn,study);
 %
 % ..
 %    Programmers' notes:
@@ -83,20 +92,30 @@ function stats = rsa_regression(obj,design,study)
 modelRDM=[];
 for i=1:size(design,2) %for each specified grouping
    modelRDM(:,i)=pdist(design(:,i),'seuclidean'); %#ok<*AGROW> %compute squared euclidean distance
-   modelRDM(:,i)=1000*modelRDM(:,i)/sum(modelRDM(:,i)); %normalize and scale
+   modelRDM(:,i)=100000*modelRDM(:,i)/sum(modelRDM(:,i)); %normalize and scale
 end
 
 %supress distance warning - 0 value distances get removed...
 warning('off','stats:pdist:ConstantPoints')
 
-brainRDM=pdist(obj.dat','correlation');
+if any(strcmp([varargin{:}],'average_Euclidean'))
+    brainRDM=pdist(nanmean(obj.dat)'); %distance is based on region average
+elseif any(strcmp([varargin{:}],'euclidean'))
+    brainRDM=pdist(obj.dat'); %euclidean
+
+elseif any(strcmp([varargin{:}],'cosine'))
+    brainRDM=pdist(obj.dat','cosine'); %euclidean
+
+else %default to correlation
+    brainRDM=pdist(obj.dat','correlation');
+end
 brainRDM(brainRDM<.00001)=NaN;
 gen_index= glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
 
 num_it=1000;
 bs_gen_index=zeros(num_it,size(gen_index,1));
 parfor it=1:num_it
-bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study);
+bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study,varargin);
 end
 
 %compute stats from bootstrap distribution (normal approx)  
@@ -117,7 +136,7 @@ stats.RDM=squareform(brainRDM);
 
 end % main function
 
-function beta = random_resample_within_study(modelRDM,obj,study)
+function beta = random_resample_within_study(modelRDM,obj,study,varargin)
 
 bs_inds=zeros(size(obj.dat,2),1); %initialize
 
@@ -131,7 +150,20 @@ end
 warning('off','stats:pdist:ConstantPoints')
 
 resampled_data=obj.dat(:,bs_inds)'; %random subsample and transpose for correlation
-brainRDM=pdist(resampled_data,'correlation'); %1 - pearson correlation
+
+
+if any(strcmp([varargin{:}],'average_Euclidean'))
+    brainRDM=pdist(nanmean(resampled_data')'); %distance is based on region average
+elseif any(strcmp([varargin{:}],'euclidean'))
+    brainRDM=pdist(resampled_data); %euclidean
+
+elseif any(strcmp([varargin{:}],'cosine'))
+    brainRDM=pdist(resampled_data,'cosine'); %euclidean
+
+else %default to correlation
+    brainRDM=pdist(resampled_data,'correlation');
+end
+
 brainRDM(brainRDM<.00001)=NaN; %exclude pairs that have exactly 0 distance
 
 

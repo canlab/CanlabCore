@@ -1,7 +1,7 @@
 
-% fmri_model
+% fmri_glm_design_matrix
 %
-% Specify and/or create an fmri_model object. This object is designed to contain
+% Specify and/or create an fmri_glm_design_matrix object. This object is designed to contain
 % all the information about a model necessary to create a design matrix
 % and, when combined with an fmri_data object, to fit the model.
 %
@@ -10,7 +10,7 @@
 % spm_fmri_design.m. This should help with inter-operability and standards
 % for storing information.
 %
-% See methods(fmri_model) for things you can do with this.
+% See methods(fmri_glm_design_matrix) for things you can do with this.
 % See the code of this function for additional details about all the
 % fields.
 %
@@ -22,15 +22,15 @@
 %
 % For example:
 %
-% my_model = fmri_model(2);
-% creates an empty fmri_model object with a TR of 2 (which is used to
+% my_model = fmri_glm_design_matrix(2);
+% creates an empty fmri_glm_design_matrix object with a TR of 2 (which is used to
 % create a default b-spline basis set for the HRF.
 %
-% my_model = fmri_model(2, 'nscan', [198 198 198]);
+% my_model = fmri_glm_design_matrix(2, 'nscan', [198 198 198]);
 % creates an empty structure but assigns data to the field nscans, number
 % of scans per session.
 %
-% my_model = fmri_model(TR, 'nscan', nscan, 'units', 'secs', 'onsets', ons_temperature, 'condition_names', names_temperature);
+% my_model = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', 'onsets', ons_temperature, 'condition_names', names_temperature);
 % does the above and also adds onsets and names to the appropriate place
 % in the object structure.
 % my_model.Sess(1).U(2).name : names for session 1, condition 2 
@@ -47,10 +47,10 @@
 %
 % You can also specify different basis sets for different conditions, which
 % SPM will not allow you to do.  Here is an example of a process of
-% creating an fmri_model object from onsets, etc., building it, and then
+% creating an fmri_glm_design_matrix object from onsets, etc., building it, and then
 % replacing the basis set for one event type with another one.
 %
-% reportmod_model = fmri_model(TR, 'nscan', nscan, 'units', 'secs', 'onsets', ons_reportmod, ...
+% reportmod_model = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', 'onsets', ons_reportmod, ...
 % 'condition_names', names_reportmod, 'pm', PM, 'pmnames', PM_names);
 %
 % reportmod_model = build(reportmod_model);
@@ -113,7 +113,7 @@
 %                    h: - order of polynomial expansion (0 = none)
 %                    i: - sub-indices of U(i).u for plotting
 
-classdef fmri_model
+classdef fmri_glm_design_matrix
     
     properties
         
@@ -137,7 +137,7 @@ classdef fmri_model
     methods
         
         % Class constructor
-        function obj = fmri_model(TR, varargin)
+        function obj = fmri_glm_design_matrix(TR, varargin)
             %
             % [obj, cl_with_averages] = fmri_data(image_names, mask_image, varargin)
             %
@@ -243,6 +243,8 @@ classdef fmri_model
             
             
         end % class constructor function
+        
+        
     end % properties
     
     

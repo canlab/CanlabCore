@@ -298,37 +298,41 @@ classdef fmri_timeseries < fmri_data
         % Track processing
         processing_status_table = create_processing_status_table(); 
         
+        TR = NaN;  % in sec
+
     end % properties
     
     methods
         
         % Class constructor
-        function obj = fmri_timeseries(image_names,DesginmatrixTable,TR,maskinput, varargin)
-            %
+        function obj = fmri_timeseries(varargin)
+            % obj = fmri_timeseries(TR, image_names,DesginmatrixTable,maskinput, varargin)
+            % % NOTE: make inputs varargin so you can create an empty
+            % object!
             % [obj, cl_with_averages] = fmri_timeseries(image_names, mask_image, varargin)
             %
             % Reads a set of image files and a mask image, and returns
             % an fmri_timeseries object with data for all in-mask voxels.
             
             
-
-            obj.source_notes = 'Info about image source here';
-            obj.mask = fmri_mask_image;
-            obj.mask_descrip = 'Volume and in-area mask info from iimg_read_img';
-            
-            obj.X = []; % legacy; temporary, so we can load old objects
-            obj.Y = [];
-            obj.Y_names;
-            obj.Y_descrip = 'Behavioral or outcome data matrix.';
-            obj.covariates;
-            obj.covariate_names = {''};
-            obj.covariates_descrip = 'Nuisance covariates associated with data';
-            
-            obj.images_per_session = [];
-            
-            obj.history = {''};
-            obj.history_descrip = 'Cell array of names of methods applied to this data, in order';
-            obj.additional_info = struct('');
+% These are not needed because they are inherited from fmri_data
+%             obj.source_notes = 'Info about image source here';
+%             obj.mask = fmri_mask_image;
+%             obj.mask_descrip = 'Volume and in-area mask info from iimg_read_img';
+%             
+%             obj.X = []; % legacy; temporary, so we can load old objects
+%             obj.Y = [];
+%             obj.Y_names;
+%             obj.Y_descrip = 'Behavioral or outcome data matrix.';
+%             obj.covariates;
+%             obj.covariate_names = {''};
+%             obj.covariates_descrip = 'Nuisance covariates associated with data';
+%             
+%             obj.images_per_session = [];
+%             
+%             obj.history = {''};
+%             obj.history_descrip = 'Cell array of names of methods applied to this data, in order';
+%             obj.additional_info = struct('');
             
             % DEFAULT INPUTS
             % -----------------------------------
@@ -336,10 +340,6 @@ classdef fmri_timeseries < fmri_data
             verbose = 1;
             verbosestr = 'verbose';
             sample2mask = 0;
-            
-            % DesginmatrixTable INPUT
-            
-            xlsread(DesginmatrixTable)
             
             % SET UP OPTIONAL INPUTS
             % -----------------------------------
@@ -359,7 +359,15 @@ classdef fmri_timeseries < fmri_data
                 end
             end
             
-            if nargin == 0
+            if nargin > 0
+
+                obj.TR = varargin{1};
+
+                obj.glm_design_obj = fmri_glm_design_matrix(obj.TR);
+
+            end
+
+            if nargin < 2
                 % SPECIAL DEFAULT METHOD: Standard empty mask
                 % -----------------------------------
                 

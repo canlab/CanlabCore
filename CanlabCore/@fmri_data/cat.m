@@ -1,7 +1,7 @@
 function [obj, obj_codes] = cat(obj, varargin)
-% Merge two fmri_data objects, appending additional objects to the one
+% Merge two or more fmri_data objects, appending additional objects to the one
 % entered first.  Resamples to the space of the first object if necessary.
-
+%
 % :Usage:
 % ::
 %

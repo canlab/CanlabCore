@@ -117,6 +117,8 @@ classdef fmri_glm_design_matrix
     
     properties
         
+        TR = NaN;
+
         % custom: not in SPM
         build_method
         history
@@ -137,7 +139,7 @@ classdef fmri_glm_design_matrix
     methods
         
         % Class constructor
-        function obj = fmri_glm_design_matrix(TR, varargin)
+        function obj = fmri_glm_design_matrix(varargin)
             %
             % [obj, cl_with_averages] = fmri_data(image_names, mask_image, varargin)
             %
@@ -149,8 +151,12 @@ classdef fmri_glm_design_matrix
             % arguments
             % ---------------------------------
             
-            if nargin == 0
-                error('Must define TR, repetition time for scans, as first input.')
+%             if nargin == 0
+%                 error('Must define TR, repetition time for scans, as first input.')
+%             end
+            
+            if nargin > 0
+                obj.TR = varargin{1};
             end
             
             obj.build_method = 'Separate sessions';
@@ -163,9 +169,9 @@ classdef fmri_glm_design_matrix
             
             % Default basis set
             %    ----------------------------------------------------------------------
-            obj.xY.RT = TR; % : - repetition time {seconds)
+            obj.xY.RT = obj.TR; % : - repetition time {seconds)
             
-            obj.xBF = fmri_spline_basis(TR, 0);
+            obj.xBF = fmri_spline_basis(obj.TR, 0);
             % obj.xBF.name: - name of basis set
             % obj.xBF.length: - support of basis set {seconds}
             % obj.xBF.order: - order of basis set
@@ -181,7 +187,7 @@ classdef fmri_glm_design_matrix
             P = struct('name', '', 'P', [], 'h', 0, 'dur', [], 'i', []);
             
             % Onset structure
-            U = struct('dt', TR ./ 16, 'name', {}, 'ons', [], 'dur', 1, 'P', P, 'u', [], 'pst', []);
+            U = struct('dt', obj.TR ./ obj.xBF.T , 'name', {}, 'ons', [], 'dur', 1, 'P', P, 'u', [], 'pst', []);
             
             % Covariate structure
             C = struct('C', [], 'name', {'User-specified regressors here'});

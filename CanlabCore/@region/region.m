@@ -185,7 +185,7 @@ classdef region
             
             % Check for an incompatibility. Don't try to fix here, force
             % proper intended use.
-            if isa(maskinput, 'atlas') && isa(obj.dat, 'int32')
+            if isa(maskinput, 'atlas') && isa(maskinput.dat, 'int32')
                 
                 %atlas_obj.dat = double(atlas_obj.dat);
                 error('Do not use region() for atlas objects. Use atlas2region instead.');  

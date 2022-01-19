@@ -125,7 +125,11 @@ wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only');
 
 SPMinfo.betas_events_of_interest = SPMinfo.beta_image_names(wh_cols, :);
 
-SPMinfo.condition_names_events_of_interest = SPM.xX.Xnames(wh_cols);
+try
+    SPMinfo.condition_names_events_of_interest = SPM.xX.Xnames(wh_cols);
+catch
+    SPMinfo.condition_names_events_of_interest = SPM.xX.name(wh_cols);
+end
 
 disp(SPM.xX.name(wh_cols)')
 
@@ -254,9 +258,88 @@ if is_single_trial
 %     !gzip *.nii
     
     
-end % if is single trial model
+else % if is not single trial model
 
-
+     clear ons_names ons durs sess_col continuous_regs continuous_reg_names wh_spike trial_num sess_trial_betas
+    
+    [sess_col, ons_names, ons, durs, trial_num, sess_trial_betas, sess_trial_image_names, run_num, cond_num, cond_name, continuous_regs, continuous_reg_names, wh_spike] = deal(cell(1, k));
+    
+    all_ons_names = [];
+    
+    for i = 1:k
+        % For each session
+        % ---------------------------------------------------------------------
+        
+        sess_col{i} = SPM.Sess(i).col';  % columns in X for this session
+        
+        if ~isempty(SPM.Sess(i).U)
+            % We have trial onsets
+            
+            ons_names{i} = cat(1, SPM.Sess(i).U.name);
+            
+            for j = 1:length(ons_names{i})
+                
+                ons{i}{j} = SPM.Sess(i).U(j).ons;
+                
+                durs{i}{j} = SPM.Sess(i).U(j).dur;
+                
+                % run number and other stuff (for data table)
+                
+                run_num{i}{j} = repmat(i, length(ons{i}{j}), 1);
+               
+                % cumulative condition number within run
+                cond_num{i}{j} = repmat(length(all_ons_names) + j, length(ons{i}{j}), 1);
+                
+                cond_name{i}{j} = repmat({ons_names{i}{j}}, length(ons{i}{j}), 1);
+                
+            end
+            
+            all_ons_names = [all_ons_names ons_names{i}'];
+            
+        end
+        
+        % Continuous regressors
+        continuous_regs{i} = SPM.Sess(i).C.C;
+        
+        continuous_reg_names{i} = SPM.Sess(i).C.name;
+        
+        % Single trials: Which have exactly one onset of value 1
+        wh_spike{i} =-all(continuous_regs{i} == 1 | continuous_regs{i} == 0, 1) & sum(continuous_regs{i}) == 1;
+        
+    end % Session
+    
+    all_ons = [ons{:}];
+    all_durs = [durs{:}];
+    all_run_num = [run_num{:}];
+    
+    all_cond_num = [cond_num{:}];
+    all_cond_name = [cond_name{:}];
+    
+    % Concatenate trial info
+    SPMinfo.onsets = all_ons;
+    SPMinfo.durations = all_durs;
+    SPMinfo.run_number = all_run_num;
+    
+    % build trial table
+    info_table = table();
+    %     info_table.image_names = cat(1, sess_trial_image_names{:});
+    %
+    %     info_table.condition = cat(1, ons_names{:});
+    
+    info_table.onsets = cat(1, all_ons{:});
+    info_table.onsets_in_trs = info_table.onsets ./ SPMinfo.TR;
+    
+    info_table.durations = cat(1, all_durs{:});
+    info_table.durations_in_trs = info_table.durations ./ SPMinfo.TR;
+    
+    info_table.run_number = cat(1, all_run_num{:});
+    info_table.condition_number = cat(1, all_cond_num{:});
+    
+    info_table.condition_name = cat(1, all_cond_name{:});
+    
+    SPMinfo.event_info_table = info_table;
+    
+end % is_singletrial
 
 end % function
 

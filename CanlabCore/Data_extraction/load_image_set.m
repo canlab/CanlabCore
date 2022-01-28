@@ -96,6 +96,9 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 %
+%        'pet_nr_map', 'hansen22' :     2022_Hansen_PET_tracer_maps, 36 maps with
+%        different combinations of tracers and neurotransmitter receptors
+%
 %
 % 'Signature' patterns and predictive models
 % ------------------------------------------------------------------------
@@ -355,6 +358,10 @@ else
         case {'multiaversive', 'mpa2'}
             
             [image_obj, networknames, imagenames] = load_mpa2;
+            
+        case {'pet_nr_map', 'hansen22'}
+            
+            [image_obj, networknames, imagenames] = load_hansen22;
             
         case 'list'
             
@@ -1077,6 +1084,20 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
+
+
+
+
+function [image_obj, networknames, imagenames] = load_hansen22
+datfilename = 'Hansen_2022_PET_tracer_maps.mat';
+fullfilename = which(datfilename);    
+
+load(fullfilename)
+    image_obj=obj;
+    imagenames=obj.image_names;
+    imagenames=cellstr(imagenames);
+    networknames=obj.metadata_table(:,1);
+end% function
 
 
 % ------------------------------------------------------------------------

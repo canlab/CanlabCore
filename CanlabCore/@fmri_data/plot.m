@@ -160,7 +160,7 @@ dorunmeanmontages = true;
 
 allowable_inputs = {'plotmethod' 'doorthviews' 'dooutliers' 'dorunmeanmontages'};
 
-keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'montages' 'means_for_unique_Y'};
+keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'montage' 'montages' 'means_for_unique_Y'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -195,7 +195,7 @@ for i = 1:length(varargin)
 
             case 'norunmontages', dorunmeanmontages = false;
 
-            case 'montages', plotmethod = 'montages'; % montages only
+            case {'montage' 'montages'}, plotmethod = 'montages'; % montages only
 
             case 'orthviews', plotmethod = 'orthviews'; % orthviews only
 

@@ -77,6 +77,9 @@ end
 
 m.removed_voxels = obj.removed_voxels;
 
+% convert NaNs in means back to 0s for compatibility
+m.dat(isnan(m.dat)) = 0;
+
 if doplot || doorth
     orthviews(m);
 end
@@ -101,7 +104,7 @@ end
 
 if nargout > 1
     
-    imagemeans = mean(obj.dat);
+    imagemeans = nanmean(obj.dat);
     varargout{1} = imagemeans;
     
 end
@@ -110,5 +113,6 @@ if nargout > 2
     voxelmeans = nanmean(obj.dat, 2);
     varargout{2} = voxelmeans;
 end
+
 
 end % function

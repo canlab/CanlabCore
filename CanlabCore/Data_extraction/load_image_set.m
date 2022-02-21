@@ -96,8 +96,12 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 %
-%        'pet_nr_map', 'hansen22' :     2022_Hansen_PET_tracer_maps, 36 maps with
+%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 36 maps with
 %        different combinations of tracers and neurotransmitter receptors
+%
+%        'emometa' 'emotionmeta' '2015emotionmeta' : 2015 Wager/Kang et al.
+%        Meta-analysis maps for 5 basic categories.
+%        'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'
 %
 %
 % 'Signature' patterns and predictive models
@@ -359,7 +363,11 @@ else
             
             [image_obj, networknames, imagenames] = load_mpa2;
             
-        case {'pet_nr_map', 'hansen22'}
+        case {'emometa' 'emotionmeta' '2015emotionmeta'}
+            
+            [image_obj, networknames, imagenames] = load_emotionmeta;
+
+        case {'pet_nr_map', 'hansen22' 'pet' 'receptorbinding'}
             
             [image_obj, networknames, imagenames] = load_hansen22;
             
@@ -1066,6 +1074,10 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% CEKO MPA2 PREDICTIVE MODELS
+% ------------------------------------------------------------------------
+
 function [image_obj, networknames, imagenames] = load_mpa2
 
 
@@ -1087,7 +1099,9 @@ end % function
 
 
 
-
+% ------------------------------------------------------------------------
+% PET TRACERS
+% ------------------------------------------------------------------------
 function [image_obj, networknames, imagenames] = load_hansen22
 datfilename = 'Hansen_2022_PET_tracer_maps.mat';
 fullfilename = which(datfilename);    
@@ -1097,7 +1111,35 @@ load(fullfilename)
     imagenames=obj.image_names;
     imagenames=cellstr(imagenames);
     networknames=obj.metadata_table(:,1);
-end% function
+    
+end % function
+
+
+
+% ------------------------------------------------------------------------
+% WAGER KANG 2015 EMOTION CATEGORY META-ANALYSIS
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_emotionmeta
+
+
+% Load MPA2 Ceko patterns - multiaversive
+% ------------------------------------------------------------------------
+imagenames =     {'Wager_Kang_PlosCB_emometa_2015_anger.nii.gz'  
+    'Wager_Kang_PlosCB_emometa_2015_disgust.nii.gz'
+    'Wager_Kang_PlosCB_emometa_2015_fear.nii.gz'   
+    'Wager_Kang_PlosCB_emometa_2015_happy.nii.gz'  
+    'Wager_Kang_PlosCB_emometa_2015_sad.nii.gz'}    ;
+
+networknames = {'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+
 
 
 % ------------------------------------------------------------------------

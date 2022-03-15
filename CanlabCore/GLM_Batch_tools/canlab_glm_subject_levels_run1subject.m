@@ -55,7 +55,8 @@ else
             diary(diaryfile), fprintf('%sDELETING existing analysis directory: no betas.\n',z), diary off
             rmdir(submodeldir,'s')
         else
-            if OPTS.overwrite
+            if OP
+                TS.overwrite
                 diary(diaryfile), fprintf('%sOVERWRITING: analysis directory exists.\n',z), diary off
                 rmdir(submodeldir,'s')
             else
@@ -161,7 +162,10 @@ else
             eval(modeljobcmd);
             save(batchfile, 'matlabbatch');
             spm_jobman('run', matlabbatch);
-            eval(sprintf('!echo finished > %s',"'",fullfile(submodeldir, '.ssglm_model_status'),"'")) % Michael: This fix is for if there're spaces in in the path
+            % eval(sprintf('!echo finished > %s',"'",fullfile(submodeldir,
+            % '.ssglm_model_status'),"'")) 
+            % Michael: This fix is for if there're spaces in in the path 
+            % lukasvo76: commented out, did not work and is not needed
             modelstatus = 1;
         catch exc
             if OPTS.nocatch, cd(STARTINGDIR); rethrow(exc)

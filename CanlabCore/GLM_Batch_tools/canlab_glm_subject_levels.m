@@ -87,16 +87,17 @@ STARTINGDIR = pwd;
 %% SET UP
 
 % set path
-if exist('canlab_preproc.m','file') ~= 2
-    try
-        addpath(genpath('/data/projects/wagerlab/Repository'));
-    catch %#ok
-        error('Failed to add canlab repository (/data/projects/wagerlab/Repository) to path')
-    end
-end
-addpath(genpath('/usr/local/spm/spm8/matlabbatch'));
-addpath(genpath('/usr/local/spm/spm8/apriori'));
-addpath(genpath('/usr/local/spm/spm8/canonical'));
+% if exist('canlab_preproc.m','file') ~= 2
+%     try
+%         addpath(genpath('/data/projects/wagerlab/Repository'));
+%     catch %#ok
+%         error('Failed to add canlab repository (/data/projects/wagerlab/Repository) to path')
+%     end
+% end
+% addpath(genpath('/usr/local/spm/spm8/matlabbatch'));
+% addpath(genpath('/usr/local/spm/spm8/apriori'));
+% addpath(genpath('/usr/local/spm/spm8/canonical'));
+% lukasvo76: commented out because this was old hard-coded stuff
 
 
 % set defaults
@@ -472,7 +473,7 @@ else
         end
     else
         for s = 1:numel(DSGN.subjects)
-            parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
+            save(fullfile(wd,sprintf('env_%04d',s)),'DSGN','OPTS','STARTINGDIR'); % edited lukasvo76 because 1) parsave is not a standard matlab function and 2) save works fine in ordinary for loop
             [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
         end
     end        

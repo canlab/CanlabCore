@@ -40,6 +40,7 @@ k = size(X_interest, 2);
 %% Start by plotting the regressors of interest
 
 create_figure('regressors', 2, 2);
+set(gcf,'WindowState','maximized'); % lukasvo76 edited to improve figure quality
 delete(subplot(2, 2, 1:2));
 axh = axes('Position', [.05 .55 .9 .4]);
 set(axh, 'FontSize', 16);

@@ -86,6 +86,7 @@ end
 %%
 
 create_figure('X', 2, 2); 
+set(gcf,'WindowState','maximized'); % lukasvo76 edited to improve figure quality
 imagesc(zscore(SPM.xX.X)); set(gca, 'YDir', 'Reverse');
 colormap gray
 title('Full Design Matrix (zscored)');

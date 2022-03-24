@@ -16,6 +16,12 @@ function out = scn_spm_design_check(spm_results_dir, varargin)
 %        other user-specified regressors.  Useful when you have many nuisance
 %        covs.
 %
+%   **'from_multireg':*** % edit lukasvo76
+%        followed by an integer, to include first n columns from
+%        the multireg R matrix as "of interest".  only works with 'events_only'
+%        flag, of course.
+%        gets passed on to scn_spm_events_of_interest
+%
 %   **'vif_thresh', t':**
 %        Only regressors with a VIF > t will be printed in VIF table.
 %
@@ -33,6 +39,8 @@ function out = scn_spm_design_check(spm_results_dir, varargin)
 %    Updated: Tor Wager, Aug 2010; Oct 2011: Add 'events_only'; July 2012:
 %    fixed for parametric modulators. Luka Ruzic, Sept 2012: added VIF tables.
 %    Wani Woo, Apr, 2018: added an output (out) to return vif values 
+%    Lukas Van Oudenhove, March, 2022: added 'from_multireg' option which
+%    was already implemented in scn_spm_get_events_of_interest
 % ..
 
 
@@ -46,6 +54,7 @@ load(spmfilename);
 
 VIFTHRESH = 1.3;
 EVENTS_ONLY = false;
+FROM_MULTIREG = false;
 SORTBYVIF = false;
 
 i=1;
@@ -54,6 +63,10 @@ while i<=numel(varargin)
         switch varargin{i}
             case 'events_only'
                 EVENTS_ONLY = true;
+            case 'from_multireg' % added lukasvo76
+                FROM_MULTIREG = true;
+                i=i+1;
+                nr_regs = varargin{i};
             case 'vif_thresh'
                 i=i+1;
                 VIFTHRESH = varargin{i};
@@ -75,9 +88,14 @@ end
 
 
 % Gets events of interest: All regressors, or events only if 'events_only'
-% is input as keyword
+% is input as keyword, or first nr_regs if 'from_multireg' is additionally
+% specified
 if EVENTS_ONLY
-    wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only');
+    if FROM_MULTIREG % added lukasvo76
+        wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only','from_multireg',nr_regs);
+    else
+        wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only');
+    end
 else
     wh_cols = scn_spm_get_events_of_interest(SPM);
 end
@@ -155,7 +173,11 @@ saveas(gcf, 'Variance_Inflation', 'png');
 disp('Saved Variance_Inflation.png in SPM directory');
 
 if EVENTS_ONLY
-    scn_spm_choose_hpfilter(spm_results_dir, 'events_only');
+    if FROM_MULTIREG % added lukasvo76
+        scn_spm_choose_hpfilter(spm_results_dir, 'events_only','from_multireg',nr_regs);
+    else
+        scn_spm_choose_hpfilter(spm_results_dir, 'events_only');
+    end
 else
     scn_spm_choose_hpfilter(spm_results_dir);
 end

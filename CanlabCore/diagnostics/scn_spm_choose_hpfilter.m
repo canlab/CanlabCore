@@ -5,16 +5,19 @@ function scn_spm_choose_hpfilter(spm_results_dir, varargin)
 % :Usage:
 % ::
 %
-%     scn_spm_choose_hpfilter(spm_results_dir, ['events_only'])
+%     scn_spm_choose_hpfilter(spm_results_dir, ['events_only'],['from_multireg',nr_regs)
 %
 % SPM5 compatible and SPM8.
 %
 % Called by: scn_spm_design_check.m
-% For all regressors or events only: see scn_spm_choose_hpfilter.m
+% For all regressors or events only: see scn_spm_get_events_of_interest.m
 %
 % ..
 %    Tor Wager
 %    August 2010
+%    Lukas Van Oudenhove
+%    March 2022: added 'from_multireg' option which was already implemented
+%    in scn_spm_get_events_of_interest.m
 % ..
 
 if nargin < 1, spm_results_dir = pwd; end
@@ -25,10 +28,41 @@ if ~exist(spmfilename, 'file')
 end
 load(spmfilename);
 
-% Gets events of interest: All regressors, or events only if 'events_only'
-% is input as keyword
+EVENTS_ONLY = false;
+FROM_MULTIREG = false;
+SORTBYVIF = false;
 
-wh_cols = scn_spm_get_events_of_interest(SPM, varargin{:});
+i=1;
+while i<=numel(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'events_only'
+                EVENTS_ONLY = true;
+            case 'from_multireg' % added lukasvo76
+                FROM_MULTIREG = true;
+                i=i+1;
+                nr_regs = varargin{i};
+            otherwise
+                error(['Unrecognized argument: ' varargin{i}])
+        end
+    else
+        error(['Unrecognized argument: ' varargin{i}])
+    end
+    i=i+1;
+end
+
+% Gets events of interest: All regressors, or events only if 'events_only'
+% is input as keyword, or first nr_regs if 'from_multireg' is additionally
+% specified
+if EVENTS_ONLY
+    if FROM_MULTIREG % added lukasvo76
+        wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only','from_multireg',nr_regs);
+    else
+        wh_cols = scn_spm_get_events_of_interest(SPM, 'events_only');
+    end
+else
+    wh_cols = scn_spm_get_events_of_interest(SPM);
+end
 
 % Prepare design columns of interest
 X_interest = SPM.xX.X(:, wh_cols);
@@ -47,7 +81,7 @@ set(axh, 'FontSize', 16);
 
 nregs = length(wh_cols);
 
-if k < 20
+if k < 30 % edited lukasvo76
     plot_matrix_cols(X_interest, 'horiz');
 else
     imagesc(X_interest); colormap gray; colorbar
@@ -61,7 +95,7 @@ spm_hplength = SPM.xX.K(1).HParam;
 X_filtered = filter_X(X_interest, cat(1, SPM.xX.K(:).X0));
 
 hold on;
-if k < 20
+if k < 30 % edited lukasvo76
     han = plot_matrix_cols(X_filtered, 'horiz');
     set(han, 'Color', 'r');
 else

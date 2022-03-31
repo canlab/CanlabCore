@@ -141,6 +141,11 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        one radius value for wedge
 %
 %
+%   **treat_zero_as_data**
+%       In some certain situations, zero value within data.obj could be
+%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
+%       rather than missing value) or binary map.
+%
 % :Outputs:
 %
 %   **stats:**
@@ -218,6 +223,9 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % debugged wedge plot with average option.
 % 2018/1/16 Stephan: added pain PDM mediators as mapsets
 % 
+% 2022/03/31 Ke Bo
+%   - added option for treating zero value in the map as real value rather
+%   than missing data
 % ..
 
 
@@ -261,6 +269,7 @@ sim_metric = 'corr'; % default: correlation
 % doCosine = 0; %do cosine similarity
 plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
+treat_zero_as_data=0; % Treat zero value as missing data.
 
 % optional inputs with default values
 % -----------------------------------
@@ -277,7 +286,8 @@ for i = 1:length(varargin)
                 force_noaverage = true;
                 
             case 'cosine_similarity', sim_metric = 'cosine';
-                
+%               case 'cosine_similarity', sim_metric = 'corr';
+                  
             case 'binary_overlap', sim_metric = 'overlap';
                 
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
@@ -318,6 +328,8 @@ for i = 1:length(varargin)
             case 'plotstyle'
                 plotstyle = varargin{i + 1}; varargin{i + 1} = [];
                 
+            case 'treat_zero_as_data'   
+                treat_zero_as_data=1;
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -431,8 +443,11 @@ switch sim_metric
             
             % r(im, :) = corr_matrix(double(mask.dat(:,im)), double(obj.dat));
             
-            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');
-            
+            if treat_zero_as_data==1
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data');
+            else  
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');
+            end
         end
         
     case 'cosine'
@@ -444,13 +459,23 @@ switch sim_metric
             %
             %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
             %
-            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity');
+            if treat_zero_as_data==1
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity','treat_zero_as_data');
+            else  
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity');
+            end
+            
         end
         
     case 'overlap'
         % binary overlap
         for im = 1:n_obs2
-            r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
+%             r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
+            if treat_zero_as_data==1
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap','treat_zero_as_data');
+            else  
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
+            end
         end
         
 end
@@ -570,8 +595,8 @@ elseif doaverage
         
         % Plot mean and se of values
         m(:,g) = nanmean(r_group')';
-        se(:,g) = ste(r_group')';
-        
+%         se(:,g) = ste(r_group')'; Ke edited only for current project
+        se(:,g) = std(r_group')';
         
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);

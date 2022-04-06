@@ -265,6 +265,12 @@ switch plotmethod
         axis tight; set(gca, 'YDir', 'Reverse');
         title('Spatial covariance across images');
         colorbar;
+        
+        cm = colormap_tor([0 0 1], [1 0 0], [1 1 1]);
+        colormap(gca, cm)
+        climval = max(abs(get(gca, 'CLim')));
+        set(gca, 'CLim', [-climval climval]);
+
         drawnow;
 
         if ~isempty(fmridat.Y)
@@ -336,6 +342,11 @@ switch plotmethod
         axis tight; set(gca, 'YDir', 'Reverse');
         title('Spatial correlation across images');
         colorbar;
+        
+        cm = colormap_tor([0 0 1], [1 0 0], [1 1 1]);
+        colormap(gca, cm)
+        set(gca, 'CLim', [-1 1]);
+
         drawnow;
 
         if ~isempty(fmridat.Y)

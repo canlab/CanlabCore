@@ -595,8 +595,8 @@ elseif doaverage
         
         % Plot mean and se of values
         m(:,g) = nanmean(r_group')';
-%         se(:,g) = ste(r_group')'; Ke edited only for current project
-        se(:,g) = std(r_group')';
+        se(:,g) = ste(r_group')'; 
+%         se(:,g) = std(r_group')';
         
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);

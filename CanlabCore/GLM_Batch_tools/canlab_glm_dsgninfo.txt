@@ -212,8 +212,12 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |     canonical HRF). You simply preconvolve the latter design elements and 	 |
 |     enter them here. This feature was in fact motivated by a desire to be able |
 |     to study some factors using flexible HRFs while controlling for other      |
-|     using a canonical HRF.	(feature added by Bogdan)			 |
-|   (matrix must be named R2)
+|     using a canonical HRF. Note that these will be treated as nuisance         |
+|     regressors by spm, and spm centers nuisance regressors by default. This    |
+|     may be undesirable if your model contains any interaction effects. There   |
+|     is no solution for this scenario yet, and it may not be possible to        |
+|     within SPM's framework. (feature added by Bogdan)	                         |
+|   (matrix must be named R2)                                                    |
 |________________________________________________________________________________|
 
  ________________________________________________________________________________

@@ -1,3 +1,20 @@
 Use a command like this one to apply the patch
 patch -s -p0 -d <parent directory of spm12> < spm_splines.patch
 
+There are several unresolved issues with this implementation
+1) SPM requires orthogonal basis functions for HRF convolution. Spline basis functions are 
+	not orthogonal. For computing area under the curve this isn't an issue. You can
+	average the coefficients of an orthogonal basis fit or a nonorthogonal basis fit of
+	splines and you should get the same value, which will be proportional to the area
+	under the estimated HRF curve. However, if you're interested in specific splines
+	(e.g. an early or a late response) this is going to be a problem, because 
+	orthogonalized splines are not well bounded in time (look at SPM.xBF.bf, and note 
+	unlike spline basis functions, the orthogonalized splines have squiggles extending
+	out into the domain of all their predecessor basis functions).
+2) If you try to mix and match basis functions (e.g. modeling some responses using a spline
+	basis set, and others using a canonical HRF), this is possible using the multiregbehav
+	option for DSGN (see canlab_glm_subject_levels('dsgninfo')), but whatever stimuli are
+	passed in using multiregbehav will be treated like nuisance covariates, which
+	includes centering. This won't normally matter. The effect should simply alter the
+	intecept interpretation which is never of interest anyway, but it could have 
+	consequences if you're modeling interactions in your design at any point.

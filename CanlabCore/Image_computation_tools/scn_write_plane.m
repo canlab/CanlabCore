@@ -173,10 +173,10 @@ else
     % fprintf('Checking spm_vol structures ');
     % Make sure spm_vol structure (SPM5 only)
     % alter data type if needed
-    switch(spm('Ver'))
-        case 'SPM2'
+    switch(lower(spm('Ver')))
+        case 'spm2'
             V = filenames_or_V; % Skip because hard to check.
-        case {'SPM5', 'SPM8'}
+        case {'spm5', 'spm8', 'spm12'}
             V = spm_vol(filenames_or_V);
 %         otherwise 
 %             error('Fix or verify image writing for SPMxx. Not implemented yet.');

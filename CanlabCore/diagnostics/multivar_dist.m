@@ -41,8 +41,11 @@ function [ds, S, p] = multivar_dist(X, varargin)
     % ..
 
     doplot = true;
+    doverbose = true;
+    
     if any(strcmp(varargin, 'noplot')), doplot = false; end
-        
+    if any(strcmp(varargin, 'noverbose')), doverbose = false; end
+     
     % center
     Xs = X - repmat(mean(X), size(X, 1), 1);
 
@@ -70,12 +73,18 @@ function [ds, S, p] = multivar_dist(X, varargin)
 
     t = chi2inv(.5, size(X, 2));  % for general test
     p50 = 100 * (sum(d > t) ./ length(d));
-    fprintf(1, 'Expected 50%% of points within 50%% normal ellipsoid, found %3.2f%%\n', p50);
-
+    
+    if doverbose
+        fprintf(1, 'Expected 50%% of points within 50%% normal ellipsoid, found %3.2f%%\n', p50);
+    end
+    
     t = chi2inv(.95, size(X, 2));  % for general test
     p95 = sum(d > t);
-    fprintf(1, 'Expected %3.2f outside 95%% ellipsoid, found %3.0f\n', .05*length(d), p95);
-
+    
+    if doverbose
+        fprintf(1, 'Expected %3.2f outside 95%% ellipsoid, found %3.0f\n', .05*length(d), p95);
+    end
+    
     % -----------------------------------------------------
     % * get case numbers and sort by distance
     % -----------------------------------------------------

@@ -47,6 +47,12 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   **no_warnings**
 %       Suppress output on missing values.
 %
+%
+%   **treat_zero_as_data**
+%       In some certain situations, zero value within data.obj could be
+%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
+%       rather than missing value) or binary map.
+%
 % :Outputs:
 %   **similarity_output**
 %       Matrix of similarity measures.
@@ -116,6 +122,11 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   image_similarity_plot.m and riverplot.m
 %   - Changed metric selection to string format.
 %
+% 2022/03/31 Ke Bo
+%   - added option for treating zero value in the map as real value rather
+%   than missing data
+%
+
 
 % ---------------------------------
 % Defaults and optional inputs
@@ -125,6 +136,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
+treat_zero_as_data=false; % Treat zero value as missing data.
 
 if any(strcmp(varargin, 'ignore_missing'))
     doignoremissing = true;
@@ -154,6 +166,10 @@ if any(strcmp(varargin, 'posterior_overlap')) % run overlap instead of dot-produ
     sim_metric = 'posterior_overlap';
 end
 
+if any(strcmp(varargin, 'treat_zero_as_data'))
+    treat_zero_as_data = true;
+end
+
 % if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
 
 % ---------------------------------
@@ -173,7 +189,11 @@ similarity_output = NaN .* zeros(k, npatt);
 % Missing/excluded values image-wise
 % ---------------------------------
 
-badvals = dat == 0 | isnan(dat);  % Matrix. not used for binary overlap (SG).
+if treat_zero_as_data==true
+    badvals = isnan(dat);
+else
+    badvals = dat == 0 | isnan(dat);  % Matrix. not used for binary overlap (SG).
+end
 
 
 

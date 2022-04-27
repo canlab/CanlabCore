@@ -71,8 +71,11 @@ fig_number = zeros(1, length(all_fig_han));
 % fig numbers for each axis handle
 
 for i = 1:length(all_fig_han) % cell 
-   
-    fig_number(1, i) = all_fig_han{i}.Number;
+   if iscell(all_fig_han)                       % all_fig_han is not always a cell - Fix - Michael Sun 10/29/2021
+       fig_number(1, i) = all_fig_han{i}.Number;
+   else
+       fig_number(1, i) = all_fig_han.Number;
+   end
     
 end
 
@@ -80,9 +83,11 @@ end
 figure_handles = all_fig_han(wh)';          % cell array, 1 x number of unique figures
 
 for i = 1:length(all_fig_han)
-    
-    figure(all_fig_han{i});
-    
+    if iscell(all_fig_han)                       % all_fig_han is not always a cell - Fix - Michael Sun 10/29/2021
+        figure(all_fig_han{i});
+    else
+        figure(all_fig_han)
+    end
 end
 
 

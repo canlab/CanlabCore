@@ -7,7 +7,12 @@ function escapedString = escapeForShell(string)
 %
 %     [escapedString] = escapeForShell(string)
 %
-
+    % Michael: This function wouldn't accept an actual string so here I
+    % converted the string to a character array.
+    if(isstring(string))
+        string = convertStringsToChars(string);
+    end
+    
     if(ischar(string))
         for i=1:size(string,1)
             escapedString{i} = efsReplace(string(i,:));

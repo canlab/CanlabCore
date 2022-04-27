@@ -1,4 +1,4 @@
-function h = wani_pie(X, varargin)
+ function h = wani_pie(X, varargin)
 % Draw a little better pie chart
 %
 % :Usage:
@@ -151,7 +151,8 @@ end
 %set(gcf, 'color', 'w', 'position', [360 393 389 305]);
 
 for i = 1:n
-    set(h(2*i-1), 'facecolor', cols(i,:), 'edgecolor', 'none');
+%     set(h(2*i-1), 'facecolor', cols(i,:), 'edgecolor', 'none');
+    set(h(2*i-1), 'facecolor', cols(i,:), 'edgecolor', 'k');
     hold on;
     if dotext
         set(h(2*i), 'fontSize', fs);

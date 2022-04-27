@@ -96,6 +96,13 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 %
+%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 36 maps with
+%        different combinations of tracers and neurotransmitter receptors
+%
+%        'emometa' 'emotionmeta' '2015emotionmeta' : 2015 Wager/Kang et al.
+%        Meta-analysis maps for 5 basic categories.
+%        'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'
+%
 %
 % 'Signature' patterns and predictive models
 % ------------------------------------------------------------------------
@@ -147,6 +154,8 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'multiaversive', 'mpa2': Ceko et al. multiple predictive patterns
 %        for aversive experience: General, Mechanical pain,
 %        Aversive Sounds, Thermal pain, Visual aversive images
+%
+%        'stroop': Silvestrini et al. 2020 Stroop-demand SVM. stroop_pattern_wani_121416.nii
 %
 % :Optional inputs:
 %
@@ -355,6 +364,18 @@ else
         case {'multiaversive', 'mpa2'}
             
             [image_obj, networknames, imagenames] = load_mpa2;
+            
+        case {'emometa' 'emotionmeta' '2015emotionmeta'}
+            
+            [image_obj, networknames, imagenames] = load_emotionmeta;
+
+        case {'pet_nr_map', 'hansen22' 'pet' 'receptorbinding'}
+            
+            [image_obj, networknames, imagenames] = load_hansen22;
+
+        case 'stroop'
+            
+            [image_obj, networknames, imagenames] = load_stroop;
             
         case 'list'
             
@@ -1059,6 +1080,10 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% CEKO MPA2 PREDICTIVE MODELS
+% ------------------------------------------------------------------------
+
 function [image_obj, networknames, imagenames] = load_mpa2
 
 
@@ -1077,6 +1102,62 @@ imagenames = check_image_names_get_full_path(imagenames);
 image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end % function
+
+
+
+% ------------------------------------------------------------------------
+% PET TRACERS
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_hansen22
+datfilename = 'Hansen_2022_PET_tracer_maps.mat';
+fullfilename = which(datfilename);    
+
+load(fullfilename)
+    image_obj=obj;
+    imagenames=obj.image_names;
+    imagenames=cellstr(imagenames);
+    networknames=obj.metadata_table(:,1);
+    
+end % function
+
+
+% ------------------------------------------------------------------------
+% Stroop
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_stroop
+
+imagenames = {'stroop_pattern_wani_121416.nii'}    ;
+
+networknames = {'Stroop'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+    
+end % function
+
+
+% ------------------------------------------------------------------------
+% WAGER KANG 2015 EMOTION CATEGORY META-ANALYSIS
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_emotionmeta
+
+imagenames =     {'Wager_Kang_PlosCB_emometa_2015_anger.nii.gz'  
+    'Wager_Kang_PlosCB_emometa_2015_disgust.nii.gz'
+    'Wager_Kang_PlosCB_emometa_2015_fear.nii.gz'   
+    'Wager_Kang_PlosCB_emometa_2015_happy.nii.gz'  
+    'Wager_Kang_PlosCB_emometa_2015_sad.nii.gz'}    ;
+
+networknames = {'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+
 
 
 % ------------------------------------------------------------------------
@@ -1307,14 +1388,14 @@ function table_list = list_signatures
 
 
 
-pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0]';
-negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0]';
-empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0]';
-physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0]';
-posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0]';
-cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0]';
-regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1]';
-other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0]';
+pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0]';
+negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0]';
+empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0]';
+physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0]';
+posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0]';
+cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1]';
+regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0]';
+other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0]';
 
 keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
     'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'Guilt_behavior' ...
@@ -1322,7 +1403,7 @@ keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_noocci
     'Kragel18Pain' 'Kragel18CogControl' 'Kragel18NegEmotion' 'Reddan18CSplus_vs_CSminus' ...
     'GeuterPaincPDM' 'ZhouVPS' ...
     'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'  ...
-    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain'}';
+    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop'}';
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -1359,6 +1440,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'Visual_bplsF_unthr.nii'  ...
     'PlaceboPredict_Anticipation.img'   ...                   % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
     'PlaceboPredict_PainPeriod.img'    ...                   % During pain [P - C]->behav [P - C]
+    'stroop_pattern_wani_121416.nii' ...
     }';
 
 table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, other, imagenames);

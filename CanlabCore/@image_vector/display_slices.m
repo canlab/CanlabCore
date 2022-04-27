@@ -1,4 +1,4 @@
-function whsl = display_slices(dat, varargin)
+function [whsl, plate] = display_slices(dat, varargin)
 % Creates 3 separate montage views - ax, cor, sagg in a special figure window
 %
 % - By default, a figure with axial, coronal, and saggital montages are
@@ -16,7 +16,44 @@ function whsl = display_slices(dat, varargin)
 % :Usage:
 % ::
 %
-%    display_slices(dat, [myview], ['spacing', slicespacing], ['vertical'])
+%    [whsl, data_matrix] = display_slices(dat, [myview], ['spacing', slicespacing], ['vertical'])
+%
+% :Inputs:
+%
+% **'axial', 'saggital', 'sagittal', 'coronal':**
+%   Keywords to control view
+% 
+% **'spacing'**
+%   Followed by slice spacing in mm
+%
+% **'vertical'**
+%   Vertical stack instead of horizontal
+%
+% **'slices_per_row'**
+%   Followed by slices per row in mm
+%
+% **'startslice'**
+%   Followed by start slice in mm
+%
+% **'endslice'**
+%   Followed by ending slice in mm
+%
+% **'mm'**
+%   Enter input coordinates in mm
+%
+% **'voxelspace'**
+%   Enter input coords in voxels
+%
+% **'clim'**
+%   Followed by color limit for plot
+%
+% :Outputs:
+%
+%   **whsl:**
+%        Vector of which slices have been chosen
+%
+%   **data_matrix:**
+%        Concatenated data matrix to be imaged
 %
 % :Examples:
 % ::
@@ -48,6 +85,7 @@ s = 12;           % slices per row
 % startslice = [];  % first slice to show; set later 
 % endslice = [];    % last slice to show (empty = all); set later 
 entered_mm_coords = true;  % interpret entries in mm or voxel space coordinates
+clim = [];
 
 % Process inputs - single case
 % in current axes
@@ -66,6 +104,9 @@ for i = 1:length(varargin)
             case 'endslice', endslice = varargin{i + 1}; 
             case 'mm', entered_mm_coords = true;            % we have entered coords in mm [default]
             case 'voxelspace', entered_mm_coords = false;   % entered values in voxel space
+
+            case 'clim', clim = varargin{i + 1};
+
             otherwise
                 disp('Warning: Unknown input.')
         end
@@ -75,6 +116,9 @@ end
 % wh = strcmp(varargin, 'voxelspace'); % entered in voxel space
 % if any(wh), entered_mm_coords = false; end
 
+if  size(dat.dat, 2) > 1
+    error('Use display_slices on objects containing only one image, not a series');
+end
 
 % ------------------------------------------------------------------------
 % Multi-view mode (default)
@@ -275,12 +319,17 @@ plate = cat(platestack, plate{:});
 
 % create image
 % ------------------------------------------------------------------------
-imagesc(plate)
+han = imagesc(plate);
+
 axis image
 set(gca, 'YDir', 'Reverse')
 axis off
 
+if ~isempty(clim)
+    set(gca, 'CLim', clim)
 end
+
+end % Main function
 
 % function vdat = eliminate_empty_areas(vdat)
 % % Eliminate empty areas of image
@@ -312,7 +361,7 @@ function vdat = eliminate_empty_areas(vdat, myview)
     nullvox = vdat == 0 | isnan(vdat);
     bottom = all(nullvox, 3);
     
-    if strcmp(myview, 'saggital') | strcmp(myview, 'sagittal')
+    if strcmp(myview, 'saggital') || strcmp(myview, 'sagittal')
         % skip
     else
         nullx = squeeze(all(bottom, 2));

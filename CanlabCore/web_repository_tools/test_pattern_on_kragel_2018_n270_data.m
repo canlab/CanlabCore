@@ -152,9 +152,9 @@ labels = format_strings_for_legend(test_images.additional_info);
 % iscog(6*15 + 1 : (12*15)) = true;
 % isemo(12*15+1:18*15) = true;
 
-ispain = strcmp(dat.metadata_table.Domain, 'Pain');
-iscog = strcmp(dat.metadata_table.Domain, 'Cog_control');
-isemo = strcmp(dat.metadata_table.Domain, 'Neg_Emotion');
+ispain = strcmp(test_images.metadata_table.Domain, 'Pain');
+iscog = strcmp(test_images.metadata_table.Domain, 'Cog_control');
+isemo = strcmp(test_images.metadata_table.Domain, 'Neg_Emotion');
 
 wh_isnan=isnan(vector_data);
 vector_data=vector_data(~wh_isnan);

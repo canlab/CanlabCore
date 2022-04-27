@@ -17,14 +17,22 @@ function fmridat = rescale(fmridat, meth, varargin)
 %     - zscorevoxels        subtract voxel means, divide by voxel std. dev
 %     - rankvoxels          replace values in each voxel with rank across images
 %
+%                           *Note: these methods must exclude invalid (0 or
+%                           NaN) voxels image-wise. Some images (but not others) in an
+%                           object may be missing some voxels.
+%
 %     Rescaling of images
 %     - centerimages        subtract image means
 %     - zscoreimages        subtract image means, divide by image std. dev
 %
-%     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)        
+%                           *Note: these methods must exclude invalid (0 or
+%                           NaN) voxels image-wise. Some images (but not others) in an
+%                           object may be missing some voxels.
+%
+%     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)
 %     - divide_by_csf_l2norm  divide each image by CSF l2 norm. requires MNI space images for ok results!
 %     - rankimages          rank voxels within image;
-%     - csf_mean_var        Subtract mean CSF signal from image and divide by CSF variance. (Useful for PE 
+%     - csf_mean_var        Subtract mean CSF signal from image and divide by CSF variance. (Useful for PE
 %                               maps where CSF mean and var should be 0).
 %
 %     Other procedures
@@ -47,13 +55,34 @@ switch meth
     
     case 'centervoxels'
         
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = NaN;
+        
+        m = nanmean(fmridat.dat');
+        fmridat.dat = (fmridat.dat' - m)';  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
+        
+        % Old - this does not handle different missing voxels in different images
         fmridat.dat = scale(fmridat.dat', 1)';
+        
+        fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
         
         fmridat.history{end+1} = 'Centered voxels (rows) across images';
         
     case 'zscorevoxels'
         
-        fmridat.dat = scale(fmridat.dat')';
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = NaN;
+        
+        m = nanmean(fmridat.dat');
+        s = nanstd(fmridat.dat');
+        fmridat.dat = ((fmridat.dat' - m) ./ s)';  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
+        
+        fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
+        
+        % Old - this does not handle different missing voxels in different images
+        %         fmridat.dat = scale(fmridat.dat')';
         
         fmridat.history{end+1} = 'Z-scored voxels (rows) across images';
         
@@ -61,39 +90,90 @@ switch meth
         for i = 1:size(fmridat.dat, 1) % for each voxel
             
             d = fmridat.dat(i, :)';
+            
+            % Consider missing voxels, and exclude case-wise (image-wise)
+            ismissing = d == 0 | isnan(d);
+            d(ismissing) = NaN;
+            
             if ~all(d == 0)
-                fmridat.dat(i, :) = rankdata(d)';
+                fmridat.dat(i, ~ismissing) = rankdata(d(~ismissing))';
             end
             
         end
         
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = 0; % Replace with 0 for compatibility with image format
+        
+        fmridat.history{end+1} = 'Ranked voxels (rows) across images';
+        
     case 'rankimages'
         dat = zeros(size(fmridat.dat));
-        parfor i = 1:size(fmridat.dat,2)
+        
+        parfor i = 1:size(fmridat.dat, 2)
+            
             d = fmridat.dat(:,i);
+            
+            % Consider missing voxels, and exclude case-wise (image-wise)
+            ismissing = d == 0 | isnan(d);
+            d(ismissing) = NaN;
+            
             if ~all(d == 0)
-                dat(:,i) = rankdata(d);
-            end 
-        end 
+                d(~ismissing, i) = rankdata(d(~ismissing));
+            end
+            
+            dat(:, i) = d;
+            
+        end
+        
+        dat(isnan(dat)) = 0; % Replace with 0 for compatibility with image format
+        
         fmridat.dat = dat;
+        
+        fmridat.history{end+1} = 'Ranked images (columns) across voxels';
         
     case 'centerimages'
         
         % center images (observations)
-        fmridat.dat = scale(fmridat.dat, 1);
+        
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = NaN;
+        
+        m = nanmean(fmridat.dat);
+        fmridat.dat = (fmridat.dat - m);  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
+        
+        fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
+        
+        % Old - this does not handle different missing voxels in different images
+        % fmridat.dat = scale(fmridat.dat, 1);
         
         fmridat.history{end+1} = 'Centered images (columns) across voxels';
         
     case 'zscoreimages'
         
-        fmridat.dat = scale(fmridat.dat);
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = NaN;
         
-        fmridat.history{end+1} = 'Z-scored imagesc(columns) across voxels';
+        m = nanmean(fmridat.dat);
+        s = nanstd(fmridat.dat);
+        fmridat.dat = (fmridat.dat - m) ./ s;  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
+        
+        fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
+        
+        % Old - this does not handle different missing voxels in different images
+        %         fmridat.dat = scale(fmridat.dat);
+        
+        fmridat.history{end+1} = 'Z-scored each image (columns) across voxels, excluding missing values (0 or NaN) for the image';
         
         
     case 'doublecenter'
-              
-        imagemeans = mean(fmridat.dat);
+        
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        fmridat.dat(ismissing) = NaN;
+        
+        imagemeans = nanmean(fmridat.dat);
         [v, n] = size(fmridat.dat);
         imagemeanmatrix = repmat(imagemeans, v, 1);
         dat_doublecent = fmridat.dat - imagemeanmatrix;
@@ -103,8 +183,10 @@ switch meth
         dat_doublecent = dat_doublecent - voxelmeanmatrix;
         fmridat.dat = dat_doublecent;
         
+        fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
+        
         fmridat.history{end+1} = 'Double-centered data matrix across images and voxels';
-
+        
     case 'l2norm_images'
         
         % Vector L2 norm / sqrt(length) of vector
@@ -114,33 +196,40 @@ switch meth
         
         x = fmridat.dat;
         
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        x(ismissing) = NaN;
+        
         for i = 1:size(x, 2)
             
             % remove nans, 0s
-            xx = x(:, i);
-            isbad = xx == 0 | isnan(xx);
-            xx(isbad) = [];
+            xx = x(~ismissing(:, i), i);
+            %             isbad = xx == 0 | isnan(xx);
+            %             xx(isbad) = [];
             
             % divide by sqrt(length) so number of elements will not change scaling
             n(i) = normfun(xx) ./ sqrt(length(xx));
             
             xx = xx ./ n(i);
             
-            x(:, i) = zeroinsert(isbad, xx);
+            %             x(:, i) = zeroinsert(isbad, xx);
             
+            x(~ismissing(:, i), i) = xx;
         end
         
+        x(ismissing) = 0;  % Replace with 0 for compatibility with image format
+                
         fmridat.dat = x;
         
-
+        
     case 'divide_by_csf_l2norm'
         
         [~, ~, ~, l2norms] = extract_gray_white_csf(fmridat);
         
-        % divide each column image by its respective ventricle l2norm  
+        % divide each column image by its respective ventricle l2norm
         fmridat.dat = bsxfun(@rdivide, fmridat.dat, l2norms(:, 3)') ;
-
-
+        
+        
     case 'session_global_percent_change'
         
         nscan = fmridat.images_per_session;  % num images per session
@@ -314,14 +403,14 @@ switch meth
         [~,~,tissues] = extract_gray_white_csf(fmridat);
         csfStd = nanstd(tissues{3}.dat);
         csfMean = nanmean(tissues{3}.dat);
-
+        
         fmridat = fmridat.remove_empty;
         dat = fmridat.dat;
-
+        
         dat = bsxfun(@minus,dat,csfMean);
         dat = bsxfun(@rdivide,dat,csfStd);
-
-       	fmridat.dat = dat;
+        
+        fmridat.dat = dat;
         fmridat = fmridat.replace_empty;
         
     otherwise

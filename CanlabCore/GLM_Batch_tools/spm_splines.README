@@ -23,7 +23,9 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
 	reconstruction weights for each spline function and estimate corresponding contrasts
 	when doing first level analysis. SPM can compute contrasts that are linear combinations
 	of parameter estimates, you just need to know the contrast weights. Here's how you get
-	them. In this example we have 8 cubic spline basis functions (cubic means order=3).
+	them if you're say using canlab tools. In this example we have 8 cubic spline basis 
+        functions (cubic means order=3), and this code would be used when creating our DSGN object
+        that then gets passed to canlab_glm_subject_levels()
 
     % we create 12 spline fits and discard the first and last 2 later. This is because by 
     % default the first spline is centered at 0, but we don't expect any response at t=0, 
@@ -36,8 +38,9 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     DSGN.convolution.windowlength = 25;                        % time in seconds
     DSGN.convolution.order = 3;
 
-    % our microtime is 16, so that each fame is expanded into 16 frames for cleaner event timing estimation
-    TR = DSGN.tr/16;                                           % basis functions' timepoint length
+    % our microtime resolution is 16 by default but whatever it is each fame is expanded into this many subframes 
+    % for cleaner event timing estimation
+    TR = DSGN.tr/DSGN.fmri_t;                                  % basis functions' timepoint length, based on microtime res.
     Tlen = DSGN.convolution.windowlength/TR;                   % Length of HRF array
 
     % Create a true (non-orthogonal) bspline basis set
@@ -49,9 +52,8 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     [~, bf] = canlab_glm_convolve([],DSGN,[],'spline',...
         struct('windowlength',DSGN.convolution.windowlength,'order',DSGN.convolution.order,'degree',DSGN.convolution.degree));
 
-    % this is where compute the back transformation. The next line is an OLS regression.
-    Bw = (bf'*bf)\bf'*splineBasisSet; % Bw is an 8 x 8 matrix that maps from bf to splineBasisSet
-    Bw(Bw<0) = 0; % these are floating point errors and don't cooperate well with contrast scaling
+    % The next line is an OLS regression.
+    Bw = (bf'*bf)\bf'*splineBasisSet; % Bw is an 8 x 8 matrix that maps from (orthogonal) bf to (nonorthogonal) splineBasisSet
 
     % now note the following,
     % splineModel = splineBasisSet*true_B 	We don't now true_B. This is what we need.
@@ -68,6 +70,7 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     % you will find that inv(Bw) = (splineBasisSet'*bf)\bf'*bf
 
     reconB = (splineBasisSet'*bf)\bf'*bf;
+    reconB(reconB < 0) = 0; 	% these are floating point errors and don't cooperate well with contrast scaling
 
     % reconB is an 8x8 matrix and each row represents the relative contribution of each spm_B_est to the row's spline
     % bf. So row 1 gives you the linear combination of spm_B_est to get the weight of the corresponding first true

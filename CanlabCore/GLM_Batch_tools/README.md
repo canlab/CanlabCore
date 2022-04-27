@@ -23,7 +23,7 @@ orthogonalized basis functions SPM uses, so you can reconstruct individual splin
 SPM gives you. This can be automated at the first level with appropriate contrast estimates. Please refer to spm_patch.README
 for an example.
 
-<img src="extra/spline_example.png" width = 350 />
+<img src="extra/spline_example.png" />
 
 You might use spline basis functions if you're interested in the temporal properties of an evoked response, but more often
 you might simply want to make fewer assumptions about the shape of the evoked response while otherwise asking similar 

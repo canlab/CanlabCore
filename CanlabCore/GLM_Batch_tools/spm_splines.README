@@ -1,20 +1,87 @@
 Use a command like this one to apply the patch
 patch -s -p0 -d <parent directory of spm12> < spm_splines.patch
 
+The mechanics of this implementation are complicated in a numbe of ways. The issues
+below are important to understand, please read them.
+
 There are several unresolved issues with this implementation
 1) SPM requires orthogonal basis functions for HRF convolution. Spline basis functions are 
-	not orthogonal. For computing area under the curve this isn't an issue. You can
-	average the coefficients of an orthogonal basis fit or a nonorthogonal basis fit of
-	splines and you should get the same value, which will be proportional to the area
-	under the estimated HRF curve. However, if you're interested in specific splines
-	(e.g. an early or a late response) this is going to be a problem, because 
-	orthogonalized splines are not well bounded in time (look at SPM.xBF.bf, and note 
-	unlike spline basis functions, the orthogonalized splines have squiggles extending
-	out into the domain of all their predecessor basis functions).
+	not orthogonal. Computing area under an interpolation curve is not straightforward
+	given this orthogonalization step. However, the true spline functions can be derived
+	from the orthogonal spline basis set as a linear combination of the latter. An example
+	of how to do this is provided below.
 2) If you try to mix and match basis functions (e.g. modeling some responses using a spline
 	basis set, and others using a canonical HRF), this is possible using the multiregbehav
 	option for DSGN (see canlab_glm_subject_levels('dsgninfo')), but whatever stimuli are
 	passed in using multiregbehav will be treated like nuisance covariates, which
 	includes centering. This won't normally matter. The effect should simply alter the
 	intecept interpretation which is never of interest anyway, but it could have 
-	consequences if you're modeling interactions in your design at any point.
+	consequences if you're modeling interactions in your design at any point. I think 
+        parametric modulation may be a problem in particular.
+
+Reconstruction spline basis functions from orthogonal basis set: You need to compute the
+	reconstruction weights for each spline function and estimate corresponding contrasts
+	when doing first level analysis. SPM can compute contrasts that are linear combinations
+	of parameter estimates, you just need to know the contrast weights. Here's how you get
+	them. In this example we have 8 cubic spline basis functions (cubic means order=3).
+
+    % we create 12 spline fits and discard the first and last 2 later. This is because by 
+    % default the first spline is centered at 0, but we don't expect any response at t=0, 
+    % so we incorporate that knowledge by using a hack to get a spline basis function that
+    % only has the middle 8 of 12 spline basis functions. There is no hard and fast rule for
+    % picking this number or making these decisions about dropping early and late splines,
+    % it's just my own arbitrary choice. Make your own, or find some principled way to pick.
+    DSGN.convolution.degee = 8;
+    n_splines = DSGN.convolution.degree + 4;
+    DSGN.convolution.windowlength = 25;                        % time in seconds
+    DSGN.convolution.order = 3;
+
+    % our microtime is 16, so that each fame is expanded into 16 frames for cleaner event timing estimation
+    TR = DSGN.tr/16;                                           % basis functions' timepoint length
+    Tlen = DSGN.convolution.windowlength/TR;                   % Length of HRF array
+
+    % Create a true (non-orthogonal) bspline basis set
+    basis = create_bspline_basis([0,Tlen], n_splines, order);    
+    splineBasisSet = full(eval_basis((1:Tlen),basis));
+    splineBasisSet = splineBasisSet(:,3:10);		       % this is where we drop the first and last 2 splines
+
+    % now let's get the orthogonal SPM basis set
+    [~, bf] = canlab_glm_convolve([],DSGN,[],'spline',...
+        struct('windowlength',DSGN.convolution.windowlength,'order',DSGN.convolution.order,'degree',DSGN.convolution.degree));
+
+    % this is where compute the back transformation. The next line is an OLS regression.
+    Bw = (bf'*bf)\bf'*splineBasisSet; % Bw is an 8 x 8 matrix that maps from bf to splineBasisSet
+    Bw(Bw<0) = 0; % these are floating point errors and don't cooperate well with contrast scaling
+
+    % now note the following,
+    % splineModel = splineBasisSet*true_B 	We don't now true_B. This is what we need.
+    % splineModel = bf*spm_B_est		spm_B_est are the values we have after running first level models
+    % but splineBasisSet is a linear combination of bf, the orthogonalized spm basis functions
+    % splineBasisSet = bf*Bw
+    % so we can rearrange
+    % bf*spm_B_est = splineBasisSet*true_B
+    %		   = bf*Bw*true_B
+    % bf cancels
+    % spm_B_est = Bw*true_B
+    % inv(Bw)*spm_B_est = true_B
+    % so by inverting Bw we get the linear combination that gives us true_B from spm_B_est.  If you do the algebra
+    % you will find that inv(Bw) = (splineBasisSet'*bf)\bf'*bf
+
+    reconB = (splineBasisSet'*bf)\bf'*bf;
+
+    % reconB is an 8x8 matrix and each row represents the relative contribution of each spm_B_est to the row's spline
+    % bf. So row 1 gives you the linear combination of spm_B_est to get the weight of the corresponding first true
+    % spline function. The area under the curve is just the sum of these, sum(reconB)*spm_B_est. This is similar to Bw
+    % except Bw mapped from one set of basis functions to another, while reconB maps from one set of beta weights to
+    % the other.
+
+    % now you can define new contrasts using the DSGN.contrastweights option and use reconB to set the weights.
+    % supposing you have a condition in this statistical design called cond1, which now has 8 spm_B_est values. You
+    % can compute the area under the curve like so,
+    DSGN.contrasts = {{{'cond1 *bf(1)'},{'cond1 *bf(2)'},{'cond1 *bf(3)'},{'cond1 *bf(4)'},{'cond1 *bf(5)'},{'cond1 *bf(6)'},{'cond1 *bf(7)'},{'cond1 *bf(8)'}}}
+    DSGN.contrastnames = {'cond1_AUC'};
+    DSGN.contrastweights = {sum(reconB)};
+    % strictly speaking, this isn't the area under the curve, it is 1.25x larger, and this depends on your spline count,
+    % order, etc. But the amplitude of the BOLD signal doesn't mean anything, so as long as the contrast is proportional
+    % to the AUC we're good. You could use sum(reconB)/1.25 if you want to be nitpicky though. 1.25 is empirically estimated.
+

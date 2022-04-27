@@ -1,14 +1,16 @@
 # Spline models with SPM
 
-Spline interpolation is a method of estimating smooth but flexible HRF functions, and are a substitute for canonical models.
-Spline interpolation is suppoted natively by some fMRI packages like AFNI, but not SPM. spm_spline.patch provides support
-for spline modeling in SPM, and canlab tools are already configured to support this.
+Spline interpolation is a method of estimating smooth but flexible HRF functions, and are a substitute for canonical models 
+like the double gamma HRF. Spline interpolation is suppoted natively by some fMRI packages like AFNI, but not SPM. 
+spm_spline.patch provides support for spline modeling in SPM, and canlab tools are already configured for compatability. For
+canlab tools compatibility refer to canlab_glm_dsgninfo.txt and in particular DSGN.convolution and DSGN.multiregbehav.
 
-Spline interpolation works by fitting a bellshaped curve (the spline basis function) at a particular point in time to the
-HRF estimate, similar to how a single canonical HRF function might be fit, except instead of a single curve you have 
-multiple (figure, top panel). A weighted sum (linear combination) of these curves adds up to a smooth fit to a line, with a 
-couple of 'nodes' where the shape of the fit can change. These nodes are defined by the crossover points in time of the
-underlying basis functions. This is shown in the figure below (bottom panel).
+Spline interpolation works by fitting a bellshaped curve (the spline basis function, although strictly speaking it could
+be more triangular than bellshaped, depending on how your parameterize it) at a particular point in time to the HRF estimate, 
+similar to how a single canonical HRF function might be fit, except instead of a single curve you have multiple (figure, top 
+panel). A weighted sum (linear combination) of these curves adds up to a smooth fit to a line, with a couple of 'nodes' which
+are the inflection points of the curve. These nodes are defined by the crossover points in time of the underlying basis 
+functions. This is shown in the figure below (bottom panel).
 
 All SPM needs to do to fit a canonical HRF to BOLD data is to estimate a scaling factor that optimizes the fit. That scaling 
 factor is then your contrast estimate (say at a particular voxel). Similarly, when fitting spline basis sets SPM will 
@@ -38,9 +40,11 @@ cubic, etc), but it's a constant. In principle we don't care about the exact are
 isn't quantitative, so having an estimate that's proportional to the area up to a scaling constant is fine, as long as
 you're using the same spline function parameterization across all instances you're comparing (e.g. all subjects, all voxels,
 etc.). If you're using different spline parameterizations, or using splines in some cases and canonical HRFs in others,
-you will want to compute this proportionality constant and correct for it.
+you will want to compute this proportionality constant and correct for it before comparing HRFs fit using different models.
+This is unlikely to be a common scenario though.
 
-The catch is that we don't have the parameter estimates for the true spline basis functions. We only have the parameter
-estimates from the orthogonal spline basis functions. These span the same linear subspace, so you can compute the area
-under the curve from the orthogonal splines as well, but doing so will require a little extra work, and properly defined
-contrasts in your first level design. Refer to spm_spline.README for more details and an example.
+As far as the naive AUC estimate (i.e. without estimating the proportionality constant), there's still a catch: We don't 
+have the parameter estimates for the true spline basis functions. We only have the parameter estimates from the orthogonal 
+spline basis functions. These span the same linear subspace, so you can compute the area under the curve from the orthogonal 
+splines as well, but doing so will require a little extra work, and properly defined contrasts in your first level design. 
+Refer to spm_spline.README for more details and an example.

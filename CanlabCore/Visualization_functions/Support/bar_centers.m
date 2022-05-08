@@ -5,19 +5,25 @@
 %       handles - a handle or handles to start searching from. Ideally, this should be the barseries handle(s), but axes handles will usually work, too
 %   Outputs:
 %       centers - a list of centers, one row per group
+%
+% Note: Updated for Matlab 2020b, which uses XEndPoints
 
 function centers = bar_centers(handles)
 
-    hPatches = findobj(handles, 'Type', 'patch'); % old Matlab, pre-2015
+%     hPatches = findobj(handles, 'Type', 'patch'); % old Matlab, pre-2015
     
-    if isempty(hPatches)
-       % new matlab?
-       hPatches = findobj(handles, 'Type', 'bar');
-    end
+%     if isempty(hPatches)
+%        % new matlab?
+        hPatches = findobj(handles, 'Type', 'bar');
+%     end
     
     for i=1:length(hPatches)
-        centers(i,:) = mean(get(hPatches(i), 'XData'));
+        
+        centers(i,:) = get(hPatches(i), 'XEndPoints');
+        
+%         centers(i,:) = mean(get(hPatches(i), 'XData'));
+        
     end
-    centers = flipud(centers);
+%     centers = flipud(centers);
     
 end

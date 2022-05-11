@@ -29,7 +29,9 @@ function p = addbrain(varargin)
 % 'left' 'hires left' 'surface left' 'hires surface left' ...
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
 % 'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
-% 'bigbrain'
+% 'bigbrain' 
+% 'fsavg_left' or 'inflated left', 'fsavg_right' or 'inflated right', 
+% uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
 % 
 % % Macro subcortical surfaces
 % % -----------------------------------------------------------------------
@@ -115,6 +117,23 @@ function p = addbrain(varargin)
 %
 %   **'thalamus_group'**
 %        Midbrain and pons/medulla structures
+%
+%   **'inflated surfaces'**
+%        Left and right inflated cortical hemispheres, uses fsavg
+%        Freesurfer with Yeo transformation to MNI
+%
+%   **'flat surfaces'**
+%        Left and right inflated cortical hemispheres, uses fsavg
+%        Freesurfer with Yeo transformation to MNI
+%
+%   **'insula surfaces'**
+%        Left and right insula slabs and inflated surfaces
+%        Zooms in on insula
+%
+%   **'multi_surface'**
+%        Left and right cutaways (with basal ganglia/brainstem)
+%        Left and right cortical surfaces (average brain)
+%        Insula surfaces
 %
 % :SUBCORTICAL SURFACES: see canlab_load_ROI.m for complete list
 %   - 'brainstem'
@@ -346,6 +365,31 @@ switch meth
         material dull;
         
         
+    case {'inflated right' 'fsavg_right'} % uses freesurfer inflated brain
+            % with Thomas Yeo group's RF_ANTs mapping
+            % from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+            pname = 'surf_freesurf_inflated_Right.mat';
+             p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+     
+        view(90, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'inflated left' 'fsavg_left'} 
+        % uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+        pname = 'surf_freesurf_inflated_Left.mat';
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
     case 'bigbrain'
         
         pname = 'BigBrainSurfaceRight.mat'; 
@@ -576,8 +620,78 @@ switch meth
         axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
         set(gca, 'ZLim', [-30 10])
         
-         
-         
+    case 'inflated surfaces'
+        clf;
+        subplot(1, 2, 1);
+        p = addbrain('fsavg_left');
+        subplot(1, 2, 2);
+        p = [p addbrain('fsavg_right')];
+        
+    case 'flat surfaces'
+        clf;
+        subplot(1, 2, 1);
+        p = addbrain('flat left');
+        subplot(1, 2, 2);
+        p = [p addbrain('flat right')];
+      
+    case 'insula surfaces'
+        clf;
+        subplot(2, 2, 1);
+        p = addbrain('left_insula_slab');
+        axis off
+        set(gca, 'YLim', [-40 40], 'ZLim', [-25 25]);
+        
+        subplot(2, 2, 2);
+        p = [p addbrain('right_insula_slab')];
+        axis off
+        set(gca, 'YLim', [-40 40], 'ZLim', [-25 25]);
+        
+        subplot(2, 2, 3);
+        p = [p addbrain('fsavg_left')];
+        camzoom(1.5)
+        set(gca, 'YLim', [-40 40], 'ZLim', [-25 25]);
+        
+        ax = subplot(2, 2, 4);
+        p = [p addbrain('fsavg_right')];
+        axes(ax)
+        camzoom(1.5)
+        set(gca, 'YLim', [-40 40], 'ZLim', [-25 25]);  % not working for some reason - don't know why!! camzoom works
+        disp('set(gca, ''YLim'', [-40 40], ''ZLim'', [-25 25]);');
+        
+        
+        % four surfaces, inflated and flat
+        
+    case 'multi_surface'
+        
+        create_figure('multi_surface', 2, 2);
+        subplot(2, 2, 1);
+        p = addbrain('right_cutaway');
+        camzoom(1.3)
+        
+        subplot(2, 2, 2);
+        p = [p addbrain('left_cutaway')];
+        camzoom(1.3)
+        
+        subplot(2, 2, 3);
+        p = [p addbrain('surface left')];
+        view(270,0);
+        lightRestoreSingle
+        camzoom(1.3)
+        
+        subplot(2, 2, 4);
+        p = [p addbrain('surface right')];
+        lightRestoreSingle
+        camzoom(1.3)
+
+        set(p, 'FaceAlpha', 1);
+        drawnow
+        
+        create_figure('multi_surface2', 2, 2);
+        p = [p addbrain('insula surfaces')];
+        
+        set(p, 'FaceAlpha', 1);
+
+        
          % ---------------------------------
          
     case 'foursurfaces'

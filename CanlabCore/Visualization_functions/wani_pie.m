@@ -9,7 +9,10 @@
 % :Inputs:
 %
 %   **X:**
-%        a vector
+%        a vector of counts for each pie wedge
+%        OR
+%        a vector of cell strings with unique text labels for a series of
+%        observations to be counted
 %
 % :Optional Inputs: Enter keyword followed by variable with values
 %
@@ -41,6 +44,9 @@
 %   **'labels':**
 %       followed by a cell array with string labels for each slice. Can be
 %       empty.
+%
+%   **'nolabels':**
+%       Suppress labels ONLY when entering a cell string with observations
 %
 % :Output:
 %
@@ -100,6 +106,7 @@ outlinecol = [0 0 0];
 outlinewidth = 1.2;
 dolabels = 0;
 labels = {};
+suppresslabels = false;
 
 % Optional inputs
 % -------------------------------------------------------------------------
@@ -127,6 +134,8 @@ for i = 1:length(varargin)
             case {'labels'}
                 dolabels = 1;
                 labels = varargin{i+1};
+            case 'nolabels' % only operative if cell string input
+                suppresslabels = 1;
         end
     end
 end
@@ -137,8 +146,26 @@ if iscell(cols)
     cols = cat(1, cols{:});
 end
 
+
+% check if X is cell and convert to numeric if so.
+if iscell(X)
+    
+    [indic, labels] = string2indicator(X);
+    X = sum(indic)';
+    n = numel(X);
+    
+    labels = format_strings_for_legend(labels);
+    
+    if ~suppresslabels
+        dolabels = true;
+    end
+    
+end
+
 % avoid exactly-zero values, which will give error
 X(X <= 0) = abs(min(X(X ~= 0) ./ 1000)); 
+
+
 
 % Create pie
 % -------------------------------------------------------------------------

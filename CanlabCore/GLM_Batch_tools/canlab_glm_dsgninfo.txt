@@ -164,6 +164,12 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 | - DSGN.ar1 (DEFAULT: false)	       						 |
 |     if true, use autoregressive AR(1) to model serial correlations		 |
 |       (see SPM manual)	  	   	 				 |
+|     Note: there is a potential bug wth SPM when implementing AR(1) models. The |
+|       but will manifest as an error spm_est_non_sphericity.m. A fix is         |
+|       here: https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=spm;2c0ae193.1611   |
+|       This bug appears to be fixed in some of the newer versions of SPM, but   |
+|       the buggy SPM version is still circulating, so take note of the fix if   |
+|       you need it.                                                             |
 | - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
 |     if true, turn off time modulation of conditions				 |
 |     (see the 'notimemod' option to canlab_spm_contrast_job)			 |

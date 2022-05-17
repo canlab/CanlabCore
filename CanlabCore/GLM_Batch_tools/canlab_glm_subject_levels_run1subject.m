@@ -704,6 +704,10 @@ if DSGN.ar1
     OPTS.modeljob = [OPTS.modeljob ',''AR(1)'''];
 end
 
+if DSGN.fast
+    OPTS.modeljob = [OPTS.modeljob ',''FAST'''];
+end
+
 end
 
 

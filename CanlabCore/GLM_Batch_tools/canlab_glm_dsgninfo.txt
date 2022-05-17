@@ -170,6 +170,14 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |       This bug appears to be fixed in some of the newer versions of SPM, but   |
 |       the buggy SPM version is still circulating, so take note of the fix if   |
 |       you need it.                                                             |
+| - DSGN.fast (DEFAULT: false)                                                   |
+|     if true, uses the FAST autoregressive model to model serial correlations.  |
+|       This method was developed for sub-second TRs. For detals see Bollmann,   |
+|       et al. (2018) Neuroimage.                                                |
+|     Note: if DSGN.fast = true, DSGN.ar1 must be false. These are mutually      |
+|       exclusive options.                                                       |
+|     Note: the resultant SPM.mat files may be quite large. You may need to      |
+|       spm_defaults.m to set defaults.mat.format to '-v7.3' to save them.       |
 | - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
 |     if true, turn off time modulation of conditions				 |
 |     (see the 'notimemod' option to canlab_spm_contrast_job)			 |

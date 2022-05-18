@@ -55,7 +55,7 @@ function [img, Vto] = scn_map_image(loadImg, sampleTo, varargin)
 
     % image whose space to sample into
     % -------------------------------------------------------
-    if ischar(sampleTo)
+    if ischar(sampleTo) || isstring(sampleTo)     % Doesn't check if sampleTo is a string; fixed - Michael Sun 12/10/2021
         sampleTo = deblank(sampleTo);
         Vto = spm_vol(sampleTo);               % volume to sample TO
         

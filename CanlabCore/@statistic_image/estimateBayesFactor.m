@@ -122,6 +122,9 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %        A string specifying the type of map provided for now, 
 %        options are 't', 'r', and 'prop'
 %
+%   **numeric (optional):**
+%       Scaling factor r for effect size prior if 't' map is specified.
+%
 %
 % :Outputs:
 %
@@ -164,6 +167,7 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %   Phil: created, Dec 2018
 %
 %   TODO: add optional input for base-rate when testing proportions
+%   TODO: add optional input for r scaling factor when t1smpbf() 
 %
 %   11/21/2019 : Tor Wager added documentation and explanation to help.
 % ..
@@ -171,7 +175,17 @@ function BF = estimateBayesFactor(stat_image,varargin)
 if isempty(varargin)
     input_type='t';
 else
-   input_type=varargin{1}; 
+   input_type=varargin{1};
+   if length(varargin)>1
+        if ~any(strcmp(input_type,{'prop', 'r'}))
+            disp('Scaling factor not applied for prop or r-maps')
+        end
+        if isnumeric(varargin{2})
+            scaling_r=varargin{2}
+        else
+            error('Scaling factor r should be a number')
+        end
+   end
 end
 
 if ~any(strcmp(input_type,{'t','prop','r'}))
@@ -180,15 +194,22 @@ end
 
 if strcmp(input_type,'t')
     
-
-    % Calculates JZS Bayes Factor for a one-sample t-test given t and sample size n.
-    % The optional input r is the scale factor which defaults to 0.707.
-    % This quantifies the evidence in favour of the alternative hypothesis.
-    % See Rouder et al, 2009, Psychon Bull Rev for details.
-
-    parfor i=1:length(stat_image.N)
-        bf10(i,1) = t1smpbf(stat_image.dat(i),stat_image.N(i));
+    if ~exist('scaling_r')
+        input_type='t';
+        % Calculates JZS Bayes Factor for a one-sample t-test given t and sample size n.
+        % The optional input r is the scale factor which defaults to 0.707.
+        % This quantifies the evidence in favour of the alternative hypothesis.
+        % See Rouder et al, 2009, Psychon Bull Rev for details.
+    
+        parfor i=1:length(stat_image.N)
+            bf10(i,1) = t1smpbf(stat_image.dat(i),stat_image.N(i));
+        end
+    else
+        parfor i=1:length(stat_image.N)
+            bf10(i,1) = t1smpbf(stat_image.dat(i),stat_image.N(i), scaling_r);
+        end
     end
+
     
 elseif strcmp(input_type,'r')
     
@@ -205,8 +226,6 @@ elseif strcmp(input_type,'prop')
     end
     
 else
-    
-
     
 end
 

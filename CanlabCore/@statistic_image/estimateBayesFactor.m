@@ -167,9 +167,9 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %   Phil: created, Dec 2018
 %
 %   TODO: add optional input for base-rate when testing proportions
-%   TODO: add optional input for r scaling factor when t1smpbf() 
 %
 %   11/21/2019 : Tor Wager added documentation and explanation to help.
+%   05/18/2022 : Michael Sun added optional input for r scaling factor when t1smpbf() 
 % ..
 
 if isempty(varargin)

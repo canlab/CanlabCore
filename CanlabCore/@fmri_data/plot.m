@@ -146,6 +146,9 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, varargin)
 %
 % 12/2/2021  Tor : Added some input options and documentation, and
 % run-by-run montages of means.
+%
+% 05/18/2022 Lukas: maximized windows for figures systematically, to
+% improve image quality when publishing
 
 [wh_outlier_uncorr, wh_outlier_corr] = deal([]);
 
@@ -222,6 +225,7 @@ switch plotmethod
         end
 
         create_figure('fmri data matrix', 2, 3);
+        set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figures when publishing
 
         % center voxels - 9/9/18 Tor
         [~, nimg] = size(fmridat.dat);
@@ -475,6 +479,7 @@ switch plotmethod
         end
 
         create_figure('means by condition (unique Y values)', 2, 1);
+        set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figures when publishing
         imagesc(means);
         colorbar;
         axis tight; set(gca, 'YDir', 'Reverse');
@@ -532,7 +537,8 @@ switch plotmethod
             vecs_to_reconstruct = mean(means)';
             vecs_to_reconstruct(vecs_to_reconstruct < prctile(vecs_to_reconstruct, 70)) = 0;
             fig_handle = create_montage(vecs_to_reconstruct, fmridat);
-            set(fig_handle, 'Name', 'Montage_mean_across_conditions')
+            set(fig_handle, 'Name', 'Montage_mean_across_conditions');
+            
 
             vecs_to_reconstruct = std(means)' ./ mean(means)';
             vecs_to_reconstruct(vecs_to_reconstruct < prctile(vecs_to_reconstruct, 70)) = 0;

@@ -41,7 +41,8 @@ if length(varargin) > 0, convTR = varargin{1};, end
 
 hrf = spm_hrf(convTR) ./ max(spm_hrf(convTR));
 
-[X,d] = onsets2delta(ons,TR,ceil(max(cat(1,ons{:}))));  % fix length to longest
+% [X,d] = onsets2delta(ons,TR,ceil(max(cat(1,ons{:}))));  % fix length to longest
+[X,~,d] = onsets2fmridesign(ons,TR);  % lukasvo76: onsets2delta function only takes two inputs and generates one output, and seems to be a more basic version of onsets2fmridesign which can also generate a high-res delta matrix
 dout = zeros(size(d));
 rtclass = [];
 

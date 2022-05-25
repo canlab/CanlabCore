@@ -109,6 +109,7 @@ function hist_han = histogram(obj, varargin)
 % ..
 %    Programmers' notes:
 %   Documentation and update, July 2016, Tor Wager
+%   Added line to maximize figure window, May 2022, Lukas Van Oudenhove
 % ..
 
 % -------------------------------------------------------------------------
@@ -181,6 +182,7 @@ if by_tissue_type
     % Plot locations of each and relationships
      
     create_figure('relationships', 1, 3);
+    set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figure quality when publishing 
     disp('------------------------------------------------------------')
     disp('Plotting mean values by tissue type')
     fprintf('Gray = gray, red = white, blue = CSF\n');
@@ -245,8 +247,10 @@ if do_by_image
     if dofigure
         if singleaxis
             create_figure('histogram');
+            set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figure quality when publishing 
         else
             create_figure('histogram', rows, cols);
+            set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figure quality when publishing 
         end
     end
     
@@ -310,6 +314,7 @@ else
     
     if dofigure
         create_figure('histogram');
+        set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figure quality when publishing 
     end
     
     Xtmp = obj.dat(:);

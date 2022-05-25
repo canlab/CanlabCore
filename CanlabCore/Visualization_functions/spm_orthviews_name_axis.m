@@ -12,7 +12,7 @@ function spm_orthviews_name_axis(name, axisnum)
 
     name(name == '_') = ' ';
 
-    title(name,'FontSize',24,'Color','k')
+    title(name,'FontSize',18,'Color','k') % lukasvo76 decreased fontsize from 24 to improve figure quality
 
 
 

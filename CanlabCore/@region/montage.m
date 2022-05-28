@@ -36,6 +36,11 @@ function o2 = montage(obj, varargin)
 %   **'indexmap'**
 %        Interprets data as an indexmap and plots as a single 'blob'
 %        mapping colors to data values.
+%        Note: {'colors', cmap} and {'indexmap', cmap} may produce similar
+%        results in certain cases, but {'colors', cmap} may result in some
+%        overlap between adjacent regions due to an interpolation artifact 
+%        while {'indexmap',cmap} doesn't suffer from this problem. This
+%        makes the indexmap better for displaying parcellations on a brain.
 %
 %   **symmetric** 
 %       Mirror left/right blobs with same colors

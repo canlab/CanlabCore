@@ -164,6 +164,20 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 | - DSGN.ar1 (DEFAULT: false)	       						 |
 |     if true, use autoregressive AR(1) to model serial correlations		 |
 |       (see SPM manual)	  	   	 				 |
+|     Note: there is a potential bug wth SPM when implementing AR(1) models. The |
+|       but will manifest as an error spm_est_non_sphericity.m. A fix is         |
+|       here: https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=spm;2c0ae193.1611   |
+|       This bug appears to be fixed in some of the newer versions of SPM, but   |
+|       the buggy SPM version is still circulating, so take note of the fix if   |
+|       you need it.                                                             |
+| - DSGN.fast (DEFAULT: false)                                                   |
+|     if true, uses the FAST autoregressive model to model serial correlations.  |
+|       This method was developed for sub-second TRs. For detals see Bollmann,   |
+|       et al. (2018) Neuroimage.                                                |
+|     Note: if DSGN.fast = true, DSGN.ar1 must be false. These are mutually      |
+|       exclusive options.                                                       |
+|     Note: the resultant SPM.mat files may be quite large. You may need to      |
+|       spm_defaults.m to set defaults.mat.format to '-v7.3' to save them.       |
 | - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
 |     if true, turn off time modulation of conditions				 |
 |     (see the 'notimemod' option to canlab_spm_contrast_job)			 |
@@ -212,8 +226,12 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |     canonical HRF). You simply preconvolve the latter design elements and 	 |
 |     enter them here. This feature was in fact motivated by a desire to be able |
 |     to study some factors using flexible HRFs while controlling for other      |
-|     using a canonical HRF.	(feature added by Bogdan)			 |
-|   (matrix must be named R2)
+|     using a canonical HRF. Note that these will be treated as nuisance         |
+|     regressors by spm, and spm centers nuisance regressors by default. This    |
+|     may be undesirable if your model contains any interaction effects. There   |
+|     is no solution for this scenario yet, and it may not be possible to        |
+|     within SPM's framework. (feature added by Bogdan)	                         |
+|   (matrix must be named R2)                                                    |
 |________________________________________________________________________________|
 
  ________________________________________________________________________________

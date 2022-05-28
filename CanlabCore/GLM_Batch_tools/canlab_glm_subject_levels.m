@@ -87,16 +87,17 @@ STARTINGDIR = pwd;
 %% SET UP
 
 % set path
-if exist('canlab_preproc.m','file') ~= 2
-    try
-        addpath(genpath('/data/projects/wagerlab/Repository'));
-    catch %#ok
-        error('Failed to add canlab repository (/data/projects/wagerlab/Repository) to path')
-    end
-end
-addpath(genpath('/usr/local/spm/spm8/matlabbatch'));
-addpath(genpath('/usr/local/spm/spm8/apriori'));
-addpath(genpath('/usr/local/spm/spm8/canonical'));
+% if exist('canlab_preproc.m','file') ~= 2
+%     try
+%         addpath(genpath('/data/projects/wagerlab/Repository'));
+%     catch %#ok
+%         error('Failed to add canlab repository (/data/projects/wagerlab/Repository) to path')
+%     end
+% end
+% addpath(genpath('/usr/local/spm/spm8/matlabbatch'));
+% addpath(genpath('/usr/local/spm/spm8/apriori'));
+% addpath(genpath('/usr/local/spm/spm8/canonical'));
+% lukasvo76: commented out because this was old hard-coded stuff
 
 
 % set defaults
@@ -201,7 +202,7 @@ allowablefields = {...
     'funcnames' 'allowmissingfunc' ...
     'concatenation' ...
     'tr' 'hpf' 'fmri_t' 'fmri_t0' ...
-    'conditions' 'pmods' 'convolution' 'multireg' 'multiregbehav' 'singletrialsall' 'singletrials' 'ar1'...
+    'conditions' 'pmods' 'convolution' 'multireg' 'multiregbehav' 'singletrialsall' 'singletrials' 'ar1' 'fast'...
     'allowmissingcondfiles' 'allowemptycond' 'notimemod' 'modelingfilesdir' ...
     'customrunintercepts' ...
     'contrasts' 'contrastnames' 'contrastweights' ...
@@ -281,6 +282,12 @@ if ~OPTS.onlycons % check all the model spec/estimation stuff
     if ~isfield(DSGN,'singletrialsall'), DSGN.singletrialsall = false; end
     
     if ~isfield(DSGN,'ar1'), DSGN.ar1 = false; end
+
+    if ~isfield(DSGN,'fast')
+        DSGN.fast = false;
+    else
+        assert(~(DSGN.fast && DSGN.ar1), "You can only specify one of FAST or AR(1) models at most");
+    end
         
     if isfield(DSGN,'notimemod') && DSGN.notimemod
         OPTS.modeljob = [OPTS.modeljob ',''notimemod'''];
@@ -472,7 +479,7 @@ else
         end
     else
         for s = 1:numel(DSGN.subjects)
-            parsave(fullfile(wd,sprintf('env_%04d',s)),DSGN,OPTS,STARTINGDIR);
+            save(fullfile(wd,sprintf('env_%04d',s)),'DSGN','OPTS','STARTINGDIR'); % edited lukasvo76 because 1) parsave is not a standard matlab function and 2) save works fine in ordinary for loop
             [modelstatus(s) constatus(s) linkstatus(s)] = canlab_glm_subject_levels_run1subject(wd,s);
         end
     end        

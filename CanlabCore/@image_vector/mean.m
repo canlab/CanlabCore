@@ -62,12 +62,12 @@ obj.dat(wh) = NaN;
 % return output in the same format as input object
 
 if isa(obj, 'fmri_data')
-    m = image_vector('dat', nanmean(obj.dat', 1)', 'volInfo', obj.mask.volInfo);
-    m = fmri_data(m);
+    m = image_vector('dat', nanmean(obj.dat', 1)', 'volInfo', obj.mask.volInfo, 'noverbose');
+    m = fmri_data(m, [], 'noverbose');
     m.mask = obj.mask;
     
 else
-    m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.volInfo);
+    m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.volInfo, 'noverbose');
 end
 
 % Not completed for statistic_image
@@ -76,6 +76,9 @@ end
 % end
 
 m.removed_voxels = obj.removed_voxels;
+
+% convert NaNs in means back to 0s for compatibility
+m.dat(isnan(m.dat)) = 0;
 
 if doplot || doorth
     orthviews(m);
@@ -101,7 +104,7 @@ end
 
 if nargout > 1
     
-    imagemeans = mean(obj.dat);
+    imagemeans = nanmean(obj.dat);
     varargout{1} = imagemeans;
     
 end
@@ -110,5 +113,6 @@ if nargout > 2
     voxelmeans = nanmean(obj.dat, 2);
     varargout{2} = voxelmeans;
 end
+
 
 end % function

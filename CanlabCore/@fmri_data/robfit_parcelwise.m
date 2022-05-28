@@ -350,7 +350,7 @@ for i = 1:v
     
 end % loop through nodes
 
-OUT = struct('betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe);
+OUT = struct('betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction

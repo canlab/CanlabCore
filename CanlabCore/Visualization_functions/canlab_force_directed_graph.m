@@ -31,7 +31,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %
 %   **activationdata:**
 %        observations x variables matrix of data to be
-%        inter-correlated
+%        inter-correlated (variables will be inter-correlated)
 %
 %        OR
 %
@@ -44,7 +44,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %        followed by clusters or region structure with brain clusters
 %
 %   **'threshtype':**
-%        followed by threshold type; 'bonf' is option now
+%        followed by threshold type; 'bonf' [default] or 'fdr'
 %
 %   **'connectmetric':**
 %        followed by node connection metric 'corr' or 'partial_corr'
@@ -107,7 +107,7 @@ cl = [];
 threshtype = 'bonf';
 connectmetric = 'corr';  % or partial_corr
 sizescale = 'sigmoid';
-sizes = ones(size(activationdata, 1));
+sizes = ones(min(size(activationdata)), 1);
 linestyle = 'curved';
 
 setcolors = [];         % control of color subgroups
@@ -277,6 +277,15 @@ stats.rset = rset;
 stats.C = C;
 stats.r = r;
 stats.b = b;
+
+if exist('p', 'var')
+    stats.p = p;
+end
+
+if exist('sig', 'var')
+    stats.sig = sig;
+end
+
 stats.thr = thr;
 stats.betweenness = bc;
 %stats.path_length_distance = D;

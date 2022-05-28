@@ -125,25 +125,35 @@ function han = barplot_grouped(dat,X,xnames,seriesnames,varargin)
     han = bar(m,'grouped');
     
     set(han(1),'FaceColor',[.2 .2 .2]);
+    
     if length(han) > 1, set(han(2),'FaceColor',[.8 .8 .8]); end
+    
     if exist('mycolors','var') && iscell(mycolors) && ~isempty(mycolors(1))
         for i =1:length(han), set(han(i),'FaceColor',mycolors{i}); end
     end
     
-    if length(han) > 1
-        set(gca,'XTick',1:ngroups,'XTickLabel',xnames);
-        legend(han, seriesnames);
-    else
-        set(gca,'XTick',1:nbars,'XTickLabel',xnames);
-    end
+    xnames = format_strings_for_legend(xnames);
     
+
     xlocs = bar_centers(han);
     xlocs = sort(xlocs(:));
     
     tor_bar_steplot(b(1,:), se, {'k'}, xlocs)
     
     %tor_bar_steplot(b(1,:),se,{'k'},.35,.5,.2);
-
+    
+    if length(han) > 1
+        
+        set(gca,'XTick',1:ngroups,'XTickLabel',xnames, 'XTickLabelRotation', 70);
+        legend(han, seriesnames);
+        
+    else
+        
+        set(gca,'XTick',1:nbars,'XTickLabel',xnames);
+        
+    end
+    
+    
     if dostars
         star_plot(b(1,:),pvals,se,nbars,ngroups);
     end

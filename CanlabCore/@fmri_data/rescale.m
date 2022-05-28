@@ -382,7 +382,7 @@ switch meth
         % scale each voxel (column) to percent signal change with a mean of 100
         % based on smoothed mean values across space (cols), using iimg_smooth_3d
         
-        m = mean(fmridat.dat')'; % mean at each voxel, voxels x 1
+        m = mean(fmridat.dat',1)'; % mean at each voxel, voxels x 1
         
         sfwhm = 16;
         ms = iimg_smooth_3d(m, fmridat.volInfo, sfwhm, fmridat.removed_voxels);

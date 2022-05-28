@@ -176,8 +176,8 @@ if isempty(varargin)
     input_type='t';
 else
    input_type=varargin{1};
-   if length(varargin)>1
-        if ~any(strcmp(input_type,{'prop', 'r'}))
+   if nargin>2
+        if strcmp(input_type,{'prop', 'r'})
             disp('Scaling factor not applied for prop or r-maps')
         end
         if isnumeric(varargin{2})

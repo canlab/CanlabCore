@@ -72,7 +72,7 @@ function o2 = montage(obj, varargin)
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
-% See help fmridisplay
+% See help fmridisplay and region/montage
 % e.g., 'color', [1 0 0]
 %
 %

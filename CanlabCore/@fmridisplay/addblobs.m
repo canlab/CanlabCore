@@ -44,6 +44,11 @@ function obj = addblobs(obj, cl, varargin)
 %        {minnegcolor maxnegcolor minposcolor maxposcolor}
 %        e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
+%   **'indexmap':**
+%       Interpret data as indices into colormap. Followed by an n x 3
+%       vector of colormap values. Each element of your input data should
+%       specify a row of this colormap.
+%
 %   **'OUTLINING:**
 %
 %   **''outline'

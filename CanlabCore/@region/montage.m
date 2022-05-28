@@ -29,6 +29,13 @@ function o2 = montage(obj, varargin)
 %        Followed by a cell array of [r g b] triplets, one color for each
 %        region. Note: If 'symmetric' option is on, will reorganize color
 %        to region assignments.
+%        Note: if an n x 3 matrix is supplied instead of a cell array a
+%        warning is thrown and automatic conversion to the correct format
+%        is attempted.
+%
+%   **'indexmap'**
+%        Interprets data as an indexmap and plots as a single 'blob'
+%        mapping colors to data values.
 %
 %   **symmetric** 
 %       Mirror left/right blobs with same colors
@@ -173,6 +180,15 @@ if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'symmetric')), methodtype = 'symmetric'; end
 if any(strcmp(varargin, 'old')), methodtype = 'old'; end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
+if any(strcmp(varargin, 'indexmap'))
+    colors = varargin{find(strcmp(varargin,'indexmap'))+1};
+    colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
+    colortype = 'indexmap';
+    
+    if any(strcmp(varargin,'symmetric'))
+        warning('''symmetric'' argument is ignored when providing an explicit indexed colormapping.');
+    end
+end
 
 if any(strcmp(varargin, 'color'))
     colortype = 'solid'; 
@@ -192,6 +208,12 @@ if any(strcmp(varargin, 'colors'))
     % If we have passed in specific colors, don't redefine them
     wh = find(strcmp(varargin, 'colors'));
     colors = varargin{wh + 1}; varargin{wh} = []; varargin{wh + 1} = []; 
+    if ~iscell(colors) && size(colors,2) == 3
+        warning('''colors'' supplied as matrix, assuming this is a colormap n x 3 matrix, and converting accordingly');
+        colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
+    else
+        error('colors must be a cell array of 3-vectors');
+    end
     
     doredefinecolors = false;
 end
@@ -234,10 +256,14 @@ end
 switch colortype
     
     case 'unique' % different color for each blob (some reuse)
+        indx = find(strcmp(varargin,'indexmap'));
+        if ~isempty(indx)
+            varargin(indx:indx+1) = [];
+        end
         
         switch methodtype
             case 'symmetric'
-                colors = match_colors_left_right(obj);
+                colors = match_colors_left_right(obj, @(x1)(colors(1:x1)));
         end
         
         if one_blob_per_slice
@@ -285,7 +311,7 @@ switch colortype
             
         end
         
-    case 'solid' % solid color, user-entered, or use colormap
+    case {'solid', 'indexmap'} % solid color, user-entered, or use colormap
         
         if one_blob_per_slice
             

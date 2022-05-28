@@ -52,6 +52,11 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 %        - Creates a split colormap with gray values where object values
 %        are zero, and colors where object values are nonzero
 %
+%   **'indexmap':**
+%       Interpret data as indices into colormap. You must specify
+%       'colormap' argument as well, otherwise this does nothing and a
+%       warning is thrown.
+%
 % :Outputs:
 %
 %   **renders colors on surfaces:**
@@ -137,6 +142,7 @@ neg_colormap = [];
 clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
 dolegend = true;
+doindexmap = false;
 
 allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
@@ -168,6 +174,13 @@ for i = 1:length(varargin)
             case 'nolegend'
                 
                 dolegend = false;
+                
+            case 'indexmap'
+                if ~contains('colormap',varargin(cellfun(@ischar,varargin))),...
+                        warning('render_on_surface() given ''indexmap'' argument, but no ''colormap'' argument. ''indexmap'' doesn''t do anything without a ''colormap'' argument.');
+                end
+                
+                doindexmap = true;
                 
             case allowable_keyword_value_pairs
                 
@@ -250,6 +263,12 @@ else
     % -----------------------------------------------------------------------
     % See notes below
     
+    if doindexmap
+        
+        nvals = min([256, length(unique(obj.dat))]);
+        
+    end
+    
     if custom_colormap
         
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
@@ -327,6 +346,7 @@ for i = 1:length(surface_handles)
     % colored range
     % isocolors returns nans sometimes even when no NaNs in data
     c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+    if doindexmap, c = round(c); end
     
     % doesn't work to fix interpolation error.
     %     border_percent = prctile(abs(c(c ~= 0)), 80);
@@ -404,7 +424,11 @@ for i = 1:length(surface_handles)
     set(surface_handles(i), 'UserData', prevdata);
     
     set(surface_handles(i), 'FaceVertexCData', c_colored);  % dot indexing sometimes works, sometimes doesn't...depends on handle type
-    set(surface_handles(i), 'FaceColor', 'interp')
+    if ~doindexmap
+        set(surface_handles(i), 'FaceColor', 'interp');
+    else
+        set(surface_handles(i), 'FaceColor', 'flat');
+    end
     set(surface_handles(i), 'CDataMapping', 'direct')
     set(surface_handles(i), 'EdgeColor', 'none');
     

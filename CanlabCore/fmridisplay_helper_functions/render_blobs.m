@@ -62,6 +62,12 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %         optionally by cell array with vectors of 4 colors defining
 %         max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 %
+%      **indexmap':**
+%         Followed by a n x 3 matrix of colormap values. Each data in 
+%         currentmap specifies an index in this colormap. e.g. a value of 3
+%         will be plotted with the color specified by the 3rd row of your
+%         colormap.
+%
 %   **OUTLINING:**
 %
 %      **'outline'**
@@ -151,6 +157,7 @@ vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in ol
 
 % color-mapped blobs options
 docolormap = 1;
+indexmap = [];
 mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
@@ -178,6 +185,33 @@ for i = 1:length(varargin)
             case 'mincolor', mincolor = varargin{i + 1}; % minimum color for value-mapped colors
                 
             case 'onecolor', docolormap = 0; % solid-color blobs
+            case 'indexmap'
+                for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor'}
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
+                        sprintf('Cannot evaluate render_blobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
+                            exclusive{1}));
+                end
+                
+                interpInd = find(strcmp('interp',varargin));
+                if isempty(interpInd)
+                    warning('Indexmap requires ''interp'',''nearest'' but these were not specified. Adding them automatically');
+                    varargin{end+1} = 'interp';
+                    varargin{end+1} = 'nearest';
+                    interpStyle = 'nearest';
+                elseif ~strcmp(varargin(interpInd+1),'nearest')
+                    warning(sprintf('Indexmap requires ''interp'',''nearest'' but ''intep'',%s was specified instead. Automatically changing to ''nearest''',varargin{interpInd+1}));
+                    varargin{interpInd+1} = 'nearest';
+                    interpStyle = 'nearest';
+                end
+
+                
+                docolormap = 1; 
+                dosplitcolor = 0; 
+                try
+                    indexmap=varargin{i+1};
+                catch
+                    error('''indexmap'' argument must be followed by an n x 3 matrix of colormap values');
+                end
             case 'splitcolor'
                 
                 docolormap = 1; dosplitcolor = 1;
@@ -250,6 +284,15 @@ if ~isvalid, return, end
 
 handles = mymontage.axis_handles;
 n = length(handles);
+
+
+if ~isempty(indexmap)
+    n_color_needed = length(unique(currentmap.mapdata(:)));
+    if n_color_needed > size(indexmap,1)
+        warning('More indices were specified than colormap values. Looping colormap');
+        indexmap = repmat(indexmap,ceil(n_color_needed/size(indexmap,1)),1);
+    end
+end
 
 % -------------------------------------------------------------------------
 % Identify slice and orientation for each of n handles (blobs)
@@ -487,19 +530,26 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     
                 elseif ~dosplitcolor
                     % color-mapped
-                    Zscaled = Z;
-                    Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
-                    Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
-                    Zscaled = (Zscaled - min(cmaprange)) ./ (max(cmaprange) - min(cmaprange));
-                    
-                    % If map is constant, scaling will not work; just use original Z
-                    if ~abs(cmaprange(1) - cmaprange(2))
+                    if isempty(indexmap)
                         Zscaled = Z;
+                        Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
+                        Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
+                        Zscaled = (Zscaled - min(cmaprange)) ./ (max(cmaprange) - min(cmaprange));
+
+                        % If map is constant, scaling will not work; just use original Z
+                        if ~abs(cmaprange(1) - cmaprange(2))
+                            Zscaled = Z;
+                        end
+                    
+                        w = repmat(Zscaled, [1 1 3]);
+
+                        slicecdat = (w .* cdat) + (1 - w) .* cdat2;
+                    else
+                        w = repmat(Z, [1 1 3]);
+                        [Zi, Zj] = find(w > 0);
+                        slicecdat = nan(size(Z,1), size(Z,2) ,3);
+                        slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(Z(Z > 0),:);
                     end
-                    
-                    w = repmat(Zscaled, [1 1 3]);
-                    
-                    slicecdat = (w .* cdat) + (1 - w) .* cdat2;
                     
                 elseif dosplitcolor
                     % split colormap around zero

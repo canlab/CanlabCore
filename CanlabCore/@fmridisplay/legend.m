@@ -28,6 +28,10 @@ for i = 1:length(varargin)
                
             case 'noverbose', doverbose = false;
                 
+            case 'indexmap'
+                warning('Legend plotting not yet supported for indexed colormaps')
+                return;
+                
             % otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end

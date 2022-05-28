@@ -217,6 +217,7 @@ maxposcolor = [1 1 0]; % max pos, most extreme values
 minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
 maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
 minnegcolor = [0 0 1]; % min neg, most extreme values
+indexmap = [];
 
 % More purply orange and deeper blue:  {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}
 % more straight orange to yellow, cyan: {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}
@@ -244,6 +245,20 @@ for i = 1:length(varargin)
                 dosplitcolor = 0;
                  domincolor = 1;
                  mincolor = varargin{i + 1};
+            
+            case 'indexmap'
+                for exclusive = {'color', 'onecolor', 'solid', 'maxcolor','mincolor','splitcolor'}
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
+                        sprintf('Cannot evaluate addblobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
+                            exclusive{1}));
+                end
+                dosplitcolor = 0;
+                
+                try
+                    indexmap = varargin{i+1}; 
+                catch
+                    error('''indexmap'' argument must be followed by an n x 3 matrix of colormap values');
+                end
                 
             case 'splitcolor'
 
@@ -403,7 +418,15 @@ if addsurfaceblobs
         % cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
         
         img = region2imagevec(cl);
-        render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+        if dosplitcolor
+            render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+        else
+            if isempty(indexmap)
+                render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+            else
+                render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
+            end
+        end
 
     end
 end

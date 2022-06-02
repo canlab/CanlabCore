@@ -186,7 +186,7 @@ for i = 1:length(varargin)
                 
             case 'onecolor', docolormap = 0; % solid-color blobs
             case 'indexmap'
-                for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor'}
+                for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
                     assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
                         sprintf('Cannot evaluate render_blobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));

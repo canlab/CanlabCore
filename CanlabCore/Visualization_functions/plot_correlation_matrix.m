@@ -57,7 +57,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 %
 %   **[OTHERS]:**
 %
-%   'spearman', 'Spearman', 'rank', 'dorank'   dospearman = true; 
+%   'dospearman', 'spearman', 'Spearman', 'rank', 'dorank'   dospearman = true; 
 %   'partial', 'Partial', 'partialcorr'        dopartial = true; 
 %   'image'                                    doimage = true; docircles = false; 
 %   'circles'                                  docircles = true; doimage = false;    
@@ -74,11 +74,19 @@ function OUT = plot_correlation_matrix(X, varargin)
 %       See code for other optional inputs controlling display
 %       Enter a keyword followed by a value (e.g., true / false)
 %       These include:
-%       dofigure, dospearman, doimage, docircles, dotext, colorlimit, text_x_offset, text_y_offset,  
-%       text_fsize, text_nonsig_color, text_sig_color
-%       'dopartitions', followed by k-length integer vector defining partitions of variables  [optional] 
-%       'partitioncolors', m-length cell vector defining rgb color triplets for each partition [optional] 
-%       'p_thr', followed by p-value threshold
+% 
+%       Figure control:
+%           'nofigure', 'dofigure'
+%
+%       Stats control: 
+%           'p_thr', followed by p-value threshold
+%
+%       Image control: 
+%           'doimage, docircles, dotext, colorlimit, text_x_offset, text_y_offset,  
+%           text_fsize, text_nonsig_color, text_sig_color'
+%
+%       'dopartitions', followed by k-length integer vector defining partitions of variables  [optional]  
+%       
 %
 %       The default behavior is to plot circles with text values, UNLESS
 %       your matrix is larger than 20 x 20, in which case it defaults to

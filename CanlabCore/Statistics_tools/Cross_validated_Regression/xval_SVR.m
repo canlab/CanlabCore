@@ -296,7 +296,7 @@ end
 % Select train/test sets ***
 % -------------------------------------------------------------------------
 
-[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot);
+[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot, 'nfolds', nfolds);
 drawnow, snapnow
 
 % Fit the overall a priori model: SVR with linear kernel
@@ -1080,6 +1080,7 @@ p.addParameter('dooptimize', true, valfcn_logical);
 p.addParameter('dorepeats', 10, valfcn_number);
 p.addParameter('dobootstrap', true, valfcn_logical);
 p.addParameter('nboot', 1000, valfcn_number);
+p.addParameter('nfolds', 10, valfcn_number);
 
 p.addParameter('modeloptions', {'KernelFunction', 'linear'}, valfcn_cell);
 

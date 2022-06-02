@@ -49,6 +49,9 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |       - add intercept regressors for all but one run in each concatenation	 |
 |           (one left out because SPM still includes intercept for session)	 |
 |       - add linear trend regressors for each run in concatenation		 |
+|     concatenation DOES NOT include scan-specific constraints on high pass      |
+|       filtering or autoregressive noise models. These are implemented by       |
+|       spm_fmri_concatenate.m but are not invoked by CANlab tools.              |
 | - DSGN.customrunintercepts							 |
 |     Note: This will only have an effect if using DSGN.convolution		 |
 |     cell array of vectors specifying custom intercepts			 |
@@ -68,7 +71,7 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 
  ________________________________________________________________________________
 | DSGN.tr        repetition time (or "TR") of functional data (in seconds))	 |
-| DSGN.hpf       high pass filter (in seconds)		     	 		 |
+| DSGN.hpf       high pass filter (in seconds).                                  |
 | DSGN.fmri_t    microtime resolution (DEFAULT: 16)				 |
 |   should be left at default unless TR is quite long				 |
 | DSGN.fmri_t0   microtime onset     	   	 				 |
@@ -170,6 +173,10 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |       This bug appears to be fixed in some of the newer versions of SPM, but   |
 |       the buggy SPM version is still circulating, so take note of the fix if   |
 |       you need it.                                                             |
+|     Note: does not yet support multisession concatenated designs. Covariance 	 |
+|      	structure will not be constrained to subcomponent scans. SPM however     |
+|       support this natively. See spm_fmri_concatenate.m for a solution. It 	 |
+|       is not yet implemented by CANlab tools.                                  |
 | - DSGN.fast (DEFAULT: false)                                                   |
 |     if true, uses the FAST autoregressive model to model serial correlations.  |
 |       This method was developed for sub-second TRs. For detals see Bollmann,   |
@@ -178,6 +185,8 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |       exclusive options.                                                       |
 |     Note: the resultant SPM.mat files may be quite large. You may need to      |
 |       spm_defaults.m to set defaults.mat.format to '-v7.3' to save them.       |
+|     Note: does not yet support multisession concatenated designs. Covariance   |
+|       structure will not be constrained to subcomponent scans.                 |
 | - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
 |     if true, turn off time modulation of conditions				 |
 |     (see the 'notimemod' option to canlab_spm_contrast_job)			 |

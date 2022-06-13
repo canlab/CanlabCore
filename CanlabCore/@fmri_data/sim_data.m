@@ -188,7 +188,7 @@ if smoothness
     obj.dat = noise_sigma .* obj.dat;
 end
 
-% Predictor (regressor[s])
+% Predictor (regressor[s]) for univariate regression (true signal)
 Y = randn(n, 1);
 obj.X = Y;
 

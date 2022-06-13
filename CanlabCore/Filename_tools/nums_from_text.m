@@ -7,10 +7,32 @@ function [nums,whnums] = nums_from_text(mytext)
 %
 %     function [nums,whnums] = nums_from_text(mytext)
 %
+%     see also regexp, which is much faster and very flexible.
+%     e.g., to find numbers in text:
+%     % Test string:
+%     str = {'aix 1 2005' '99 db' '47_db' '1982 db 37'}'
+%
+%     % Convert matches to numbers:
+%     S = regexp(str, '\d+', 'match', 'forceCellOutput');  S = [S{:}]'; nums = cellfun(@str2num, S);
+%
+%     % Take only the first match
+%     S = regexp(str, '\d+', 'match', 'once', 'forceCellOutput');  nums = cellfun(@str2num, S);
+%
+%     % Say you have 2-digit or 4-digit years, and want to include only
+%     % these in your match:
+%     S = regexp(str, '\d{2,4}', 'match', 'once', 'forceCellOutput'); nums = cellfun(@str2num, S);
+%
 % ..
 %    tor wager
 % ..
 
+
+
+
+
+
+
+mytext = strrep(mytext, ' ', '_');  % fix; did not work with spaces
 
 nums = NaN;
 ind = 1;

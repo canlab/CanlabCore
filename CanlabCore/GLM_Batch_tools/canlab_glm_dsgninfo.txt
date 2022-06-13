@@ -187,6 +187,8 @@ This is the structure variable used by canlab_glm_subject_levels to define an an
 |       spm_defaults.m to set defaults.mat.format to '-v7.3' to save them.       |
 |     Note: does not yet support multisession concatenated designs. Covariance   |
 |       structure will not be constrained to subcomponent scans.                 |
+|     Note: make sure you're using spm12 r7771 at least (check spm('version')),  |
+|       earlier versions have incomplete FAST implementations.                    |
 | - DSGN.notimemod  (DEFAULT: false) 		 	 			 |
 |     if true, turn off time modulation of conditions				 |
 |     (see the 'notimemod' option to canlab_spm_contrast_job)			 |

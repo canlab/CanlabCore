@@ -113,6 +113,8 @@ else
         end
         
         %% CONCATENATION (if desired)
+        vol_cnts = cellfun(@length, runs3d); % tallies number of volumes per scan into a 1 x length(DSGN.concatenation) matrix
+        vol_cnts = vol_cnts(vol_cnts > 0);
         if ~isempty(DSGN.concatenation)
             diary(diaryfile), fprintf('%sCONCATENATING data according to DSGN.concatenation:\n',z), diary off
             try          
@@ -156,12 +158,13 @@ else
             return
         end
         
-        modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ');'];
+        modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];
         diary(diaryfile), fprintf('%s\nRUNNING model\n\t%s\n',modeljobcmd,z), diary off
         try
             eval(modeljobcmd);
             save(batchfile, 'matlabbatch');
-            spm_jobman('run', matlabbatch);
+            
+            spm_jobman('run', matlabbatch);            
             % eval(sprintf('!echo finished > %s',"'",fullfile(submodeldir,
             % '.ssglm_model_status'),"'")) 
             % Michael: This fix is for if there're spaces in in the path 
@@ -547,8 +550,11 @@ for sess = 1:numel(concat)
             oldRbehav=[];
         end
         if ~isfield(DSGN,'customrunintercepts')
-            % add intercept (ignore first one)
-            if r>1
+            % add intercept (ignore first one) if we don't have
+            % fmri_concatenate support available. If we do that will
+            % account for run intercepts and other things. A warning is
+            % thrown by canlab_spm_fmri_model_job if we'r emissing it.
+            if exist([cell2mat(spm_get_defaults('tbx.dir')), '/CANLab_spm_toolbox/'],'dir') ~= 7 && r > 1
                 oldR(:,end+1) = 1; %#ok
             end
         else

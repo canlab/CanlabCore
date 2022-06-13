@@ -1,0 +1,43 @@
+Re: spm_*_fmri_concatenate.m
+
+Without these files in your <spmpath>/toolbox/ folder first 
+level GLMs that concatenate data across multiple scans (runs)
+will produce the following error,
+
+
+Warning: Scan concatenation was enabled but spm_cfg_fmri_concatenate.m was not found on the matlab path. Filter and noise covariance will not be constrained by scan.
+Please copy CanlabCore/GLM_Batch_tools/CANLab_spm_toolbox to /dartfs-hpc/rc/home/m/f0042vm/software/spm12_without_canlab/toolbox 
+> In canlab_spm_fmri_model_job (line 346)
+  In canlab_glm_subject_levels_run1subject (line 164)
+  In canlab_glm_subject_levels (line 483)
+  In spm_fit_firstlvl_models_stim_deleteme (line 15)
+
+
+Additionally, bandpass filters and timeseries error models will
+not be constrained by run. This is undesirable. If you copy this
+toolbox to your spm toolbox directory (the entire folder, not its
+contents), then first level GLMs run using canlab tools will 
+incorporate spm's spm_fmri_concatenate.m function into their spm 
+batch job to constrain filtering and timeseries error models to 
+each individual scan (run). The result is easiest to understand 
+in the context of filtered and unfiltered design matrices, which 
+are shown in extra/spm_fmri_concatenate.png in raw form and in 
+filtered forms. Error models are not included in this example so 
+"whitened" matrices look the same as their unwhitened 
+counterparts and are not shown.
+
+There is a slight difference in the organization of the 
+intercepts across the two implementations: the old implementation
+modeled intercepts for scans 2-n, with one intercept for the
+entire design, while spm_fmri_concatenate.m adds one unique
+intercept for each scan, but these span the same subspace so it 
+has no impact on the estimation of the other design parameters.
+
+The most obvious consequence of filtering with the new 
+implementation is in the attenuation of the linear drift 
+regressors, because these are very similar to the low frequency
+descrete cosine components of our frequency filter. In the old
+approach however we have a much a more aggressive impact on the 
+design matrix with oscillatory components appearing across scans.
+
+

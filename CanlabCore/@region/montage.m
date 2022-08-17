@@ -216,7 +216,7 @@ if any(strcmp(varargin, 'colors'))
     if ~iscell(colors) && size(colors,2) == 3
         warning('''colors'' supplied as matrix, assuming this is a colormap n x 3 matrix, and converting accordingly');
         colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
-    else
+    elseif ~iscell(colors)
         error('colors must be a cell array of 3-vectors');
     end
     

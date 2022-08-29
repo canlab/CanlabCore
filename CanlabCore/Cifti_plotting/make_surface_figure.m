@@ -7,8 +7,8 @@ function han = make_surface_figure(varargin)
 % to call it directly.
 %
 % You need the gifti-toolbox installed
-% (http://www.artefact.tk/software/matlab/gifti/) and HCP S1200 release
-% surface files on your MATLAB path 
+% (http://www.artefact.tk/software/matlab/gifti/, https://github.com/gllmflndn/gifti) 
+% and HCP S1200 release surface files on your MATLAB path 
 % (e.g., S1200.L.inflated_MSMAll.32k_fs_LR.surf.gii, 
 %        S1200.R.inflated_MSMAll.32k_fs_LR.surf.gii), unless you specify 
 %  your own surface files (see 'surfacefile' input options below).
@@ -52,8 +52,15 @@ function han = make_surface_figure(varargin)
 %       will create a new figure instead of overwriting any existing
 %       surface figure (default).
 %
-% 
-% 
+% Examples 
+% see plot_surface_map
+%
+% Example of GIFTI plotting:
+% f = which('S1200.L.inflated_MSMAll.32k_fs_LR.surf.gii')
+% s = gifti(f);
+% figure; handles = plot(s);
+% set(handles, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .4)
+%
 % ..
 %     Author and copyright information:
 %     -------------------------------------------------------------------------

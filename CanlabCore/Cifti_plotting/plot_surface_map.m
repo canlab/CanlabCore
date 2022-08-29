@@ -19,6 +19,11 @@ function h = plot_surface_map(dat,varargin)
 %
 % See make_surface_figure for the underlaying rendering of the brain surfaces.
 % 
+% :Dependencies:
+%
+% gifti toolbox : distributed with spm12. http://www.artefact.tk/software/matlab/gifti/, https://github.com/gllmflndn/gifti 
+% ft_read_cifti : FieldTrip (ft) toolbox, distributed with spm12. in fieldtrip/external/fileio
+% Connectome HCP maps: https://www.humanconnectome.org/
 % 
 % :Inputs:
 %
@@ -130,6 +135,11 @@ function h = plot_surface_map(dat,varargin)
 % glassermap = which('Q1-Q6_RelatedParcellation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR.dlabel');
 % h = plot_surface_map(glassermap,'surface','pial','outline');
 % 
+% Example of GIFTI plotting:
+% f = which('S1200.L.inflated_MSMAll.32k_fs_LR.surf.gii')
+% s = gifti(f);
+% figure; handles = plot(s);
+% set(handles, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .4)
 % 
 % ..
 %     Author and copyright information:

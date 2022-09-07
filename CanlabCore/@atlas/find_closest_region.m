@@ -72,7 +72,7 @@ end
 mmcoords = voxel2mm(atl.volInfo.xyzlist', atl.volInfo.mat);
 
 % find closest
-out.d = dist(input_xyz_coord , mmcoords);
+out.d = dist(input_xyz_coord , mmcoords(:,~atl.removed_voxels));
 
 [out.mind, out.wh] = min(out.d);
 

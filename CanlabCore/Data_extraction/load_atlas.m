@@ -26,6 +26,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
 % 'tian2020_subcortical_scale1/2/3/4'      'Subcortical atlas at four different resolutions (e.g., tian2020_subcortical_scale3) )'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
+% 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -159,6 +160,10 @@ switch lower(atlas_file_name_or_keyword)
         
     case 'delavega'
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'cyto', 'jubrain', 'amunts2020'}
+        savefile = which('Amunts2020_jubrain_cytoarchitecture.mat');
         varname = 'atlas_obj';
         
     otherwise % assume it's a file name

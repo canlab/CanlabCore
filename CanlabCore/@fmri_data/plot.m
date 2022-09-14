@@ -632,8 +632,14 @@ end
 % ----------------------------------------------------------------------
 mm = cat(m{:});
 alldat = mm.dat(:);
+<<<<<<< HEAD
 alldat(isnan(alldat)) = 0;
 clim = [mean(alldat) - 3*std(alldat) mean(alldat) + 3*std(alldat)];
+=======
+% clim = [mean(alldat) - 3*std(alldat) mean(alldat) + 3*std(alldat)];
+% have to omitnan
+clim = [mean(alldat, 'omitnan') - 3*std(alldat, 'omitnan') mean(alldat, 'omitnan') + 3*std(alldat, 'omitnan')];
+>>>>>>> 20a57be (Some minor bug fixes)
 
 for i = 1:n_runs
 

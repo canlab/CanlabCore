@@ -222,7 +222,7 @@ if showmovie
         if writetofile
             F = getframe(fh);
             if i == 1
-                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath, 'Resolution', 30);
+                imwrite(F.cdata, movieoutfile,'tiff', 'Description', dat.fullpath(1,:), 'Resolution', 30); % Edit description so that imwrite doesn't crash if dat is a cell-array instead of of text - Michael Sun 2/17/2022
             else
                 imwrite(F.cdata, movieoutfile,'tiff', 'WriteMode', 'append', 'Resolution', 30);
             end

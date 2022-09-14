@@ -80,6 +80,9 @@ function canlab_glm_subject_levels(dsgnarg, varargin)
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
 %     Programmers' notes:
+%       
+%           Added support for reading help documentation in Windows -
+%           Michael Sun 09/13/2022
 % ..
 
 STARTTIME = datestr(now,31);
@@ -120,10 +123,18 @@ OPTS.conjob = '';
 % get DSGN structure
 if ischar(dsgnarg)
     if strcmp(dsgnarg,'README')
-        system(sprintf('cat %s',which('canlab_glm_README.txt')));
+        if ispc()
+            system(sprintf('type %s',which('canlab_glm_README.txt')));
+        else
+            system(sprintf('cat %s',which('canlab_glm_README.txt')));
+        end
         return;
     elseif strcmp(dsgnarg,'dsgninfo')
-        system(sprintf('cat %s',which('canlab_glm_dsgninfo.txt')));
+        if ispc()
+            system(sprintf('type %s',which('canlab_glm_dsgninfo.txt')));
+        else
+            system(sprintf('cat %s',which('canlab_glm_dsgninfo.txt')));
+        end
         return;
     elseif any(regexp(dsgnarg,'\.mat$')) && exist(dsgnarg,'file')
         load(dsgnarg);
@@ -142,7 +153,11 @@ while i<=numel(varargin)
     if ischar(varargin{i})
         switch(varargin{i})
             case {'README'}
-                system(sprintf('cat %s',which('canlab_glm_README.txt')));
+                if ispc()
+                    system(sprintf('type %s',which('canlab_glm_README.txt')));
+                else
+                    system(sprintf('cat %s',which('canlab_glm_README.txt')));
+                end
                 return;
             case {'dream'}
                 version = ver('matlab');
@@ -157,7 +172,11 @@ while i<=numel(varargin)
             case {'parallel'}
                 OPTS.parallel_local = true;
             case {'dsgninfo'}
-                system(sprintf('cat %s',which('canlab_glm_dsgninfo.txt')));
+                if ispc()
+                    system(sprintf('type %s',which('canlab_glm_README.txt')));
+                else
+                    system(sprintf('cat %s',which('canlab_glm_dsgninfo.txt')));
+                end
                 return;
             case {'subjects'}
                 i=i+1;

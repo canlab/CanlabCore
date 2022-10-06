@@ -278,7 +278,12 @@ if doverbose
     fprintf('\n');
 end
 
-cl = region(mask, average_over);
+if strmatch(class(mask),'atlas') %% bug fix 10/06/2022: error when mask is an atlas. using atlas2region instead.
+    cl = atlas2region(mask, average_over);
+else
+    cl = region(mask, average_over);
+end
+
 cl(1).source_images = obj.fullpath;
 
 if length(cl) == 1 && isempty(cl(1).XYZ)

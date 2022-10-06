@@ -2000,7 +2000,7 @@ for i = 1:length(varargin)
                     
                 catch
                     
-                    disp('Problem starting matlab pool - JAVA issue?');
+                    disp('Problem starting matlab pool - JAVA issue? Path issue? Try to test your parallel pool configuration in Matlab Settings.');
                 
                 end
                 

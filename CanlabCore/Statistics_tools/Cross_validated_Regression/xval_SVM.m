@@ -102,6 +102,10 @@ function S = xval_SVM(varargin)
 %        Options for model structure and hyperparameters
 %        Cell array of keyword-value pairs, as specified in fitcsvm (Matlab Stats/ML toolbox)
 %        Default: {'KernelFunction', 'linear'}
+%   
+%   **'nfolds', [num folds]:**
+%        Set number of cross-validation folds; default = 10.
+%        Enter number of folds.
 %
 % :Outputs:
 %
@@ -203,6 +207,9 @@ function S = xval_SVM(varargin)
 %     v1.3
 %     Linear/nonlinear - pass in hyparams to optimize.
 %     Return model weights from folds for further analysis/application
+%
+%     v1.4
+%     Add nfolds argument - Michael Sun, 07/07/2022
 % 
 % ..
 
@@ -245,6 +252,7 @@ if exist('doplot1', 'var'), doplot = doplot1; end
 if exist('dooptimize1', 'var'), dooptimize = dooptimize1; end
 if exist('dorepeats1', 'var'), dorepeats = dorepeats1; end
 if exist('dobootstrap1', 'var'), dobootstrap = dobootstrap1; end
+if ~exist('nfolds', 'var'), nfolds=10; end
 
 if isempty(id), id = [1:length(Y)]'; end
 if ~iscolumn(id), id = id'; end
@@ -288,7 +296,8 @@ end
 % Select train/test sets
 % -------------------------------------------------------------------------
 
-[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot);
+% [S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot);
+[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot, 'nfolds', nfolds);  % MS 6/16/2022: Crashes if you can't do 10-fold.
 drawnow, snapnow
 
 % Fit the overall a priori model: SVM with linear kernel
@@ -389,7 +398,7 @@ if dooptimize
     % best estimated values from a smooth model fit to observed samples.
     
     best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, []);                % optimizing "all"
-    %best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions);   % optimizing "linear"
+    % best_modeloptions = convert_hyperparameter_choices_to_cell(Mdl, S.modeloptions);   % optimizing "linear" : ms 06242022 Changed default settings to not optimize
 
     S.modeloptions = best_modeloptions;
 
@@ -455,7 +464,8 @@ if dorepeats > 1
         Sr = S;
         
         % Get new cvpartition (or outer loop if optimizing) 
-        [Sr.trIdx, Sr.teIdx] = xval_stratified_holdout_leave_whole_subject_out(Sr.Y, Sr.id, 'doverbose', false, 'doplot', false);
+%         [Sr.trIdx, Sr.teIdx] = xval_stratified_holdout_leave_whole_subject_out(Sr.Y, Sr.id, 'doverbose', false, 'doplot', false);
+        [Sr.trIdx, Sr.teIdx] = xval_stratified_holdout_leave_whole_subject_out(Sr.Y, Sr.id, 'doverbose', false, 'doplot', false, 'nfolds', nfolds); % MS 6/16/2022 add nfold option, otherwise default nfold=10 will cause this to crash if there are fewer than 10 possible folds.
         
         if dooptimize
             % If optimizing, repeat nested xval procedure
@@ -1126,6 +1136,7 @@ p.addParameter('dooptimize', true, valfcn_logical);
 p.addParameter('dorepeats', 10, valfcn_number);
 p.addParameter('dobootstrap', true, valfcn_logical);
 p.addParameter('nboot', 1000, valfcn_number);
+p.addParameter('nfolds',10, valfcn_number); % Added by Michael Sun 08/2/2022
 
 p.addParameter('modeloptions', {'KernelFunction', 'linear'}, valfcn_cell);
 

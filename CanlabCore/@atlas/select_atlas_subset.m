@@ -119,7 +119,8 @@ for i = 1:length(strings_to_find)
     % Find which names match
     wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
     
-    to_extract = to_extract | wh;
+%     to_extract = to_extract | wh;
+    to_extract = to_extract | wh'; % Bug fix which maintains the dimensions of to_extract
     
 end
 

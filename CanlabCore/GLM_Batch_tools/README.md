@@ -1,15 +1,15 @@
 # Spline models with SPM
 
 Spline interpolation is a method of estimating smooth but flexible HRF functions, and are a substitute for canonical models 
-like the double gamma HRF. Spline interpolation is suppoted natively by some fMRI packages like AFNI, but not SPM. 
+like the double gamma HRF. Spline interpolation is supported natively by some fMRI packages like AFNI, but not SPM. 
 spm_spline.patch provides support for spline modeling in SPM, and canlab tools are already configured for compatability. For
 canlab tools compatibility refer to canlab_glm_dsgninfo.txt and in particular DSGN.convolution and DSGN.multiregbehav.
 
 Spline interpolation works by fitting a bellshaped curve (the spline basis function, although strictly speaking it could
 be more triangular than bellshaped, depending on how your parameterize it) at a particular point in time to the HRF estimate, 
 similar to how a single canonical HRF function might be fit, except instead of a single curve you have multiple (figure, top 
-panel). A weighted sum (linear combination) of these curves adds up to a smooth fit to a line, with a couple of 'nodes' which
-are the inflection points of the curve. These nodes are defined by the crossover points in time of the underlying basis 
+panel). A weighted sum (linear combination) of these curves adds up to a smooth fit to a line, with a couple of 'knots' which
+are the inflection points of the curve. These knots are defined by the crossover points in time of the underlying basis 
 functions. This is shown in the figure below (bottom panel).
 
 All SPM needs to do to fit a canonical HRF to BOLD data is to estimate a scaling factor that optimizes the fit. That scaling 

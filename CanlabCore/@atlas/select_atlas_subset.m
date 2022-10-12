@@ -118,7 +118,11 @@ for i = 1:length(strings_to_find)
     
     % Find which names match
     wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
-    
+    if strmatch(mylabelsfield, 'label_descriptions')
+        wh=wh';
+    end
+
+
     to_extract = to_extract | wh;
 
 end
@@ -162,9 +166,6 @@ end
 my_strings = {'label_descriptions' 'image_names' 'fullpath' 'labels_2' 'labels_3' 'labels_4' 'labels_5'};
 
 for i = 1:length(my_strings)
-    if strmatch(my_strings(i), 'label_descriptions')    % 10/12/2022 Bug fix, label_descriptions is of a different orientation than all other properties, so deal with it specifically. - Michael Sun
-        obj_subset.(my_strings{i}) = obj_subset.(my_strings{i})(to_extract)';
-    end
     if  ~isempty(obj_subset.(my_strings{i})) && length(obj_subset.(my_strings{i})) == k
         obj_subset.(my_strings{i}) = obj_subset.(my_strings{i})(to_extract);
     end

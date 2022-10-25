@@ -239,7 +239,7 @@ classdef canlab_dataset
                         case 'fmri'
                             
                             obj.Subj_Level.names = {'Sex' 'Age' 'Race' 'Hispanic' 'Handedness'};
-                            obj.Subj_Level.type = {'text' 'numeric' 'text' 'numeric' 'text' 'text'};
+                            obj.Subj_Level.type = {'text' 'numeric' 'text' 'numeric' 'text'}; % extra 'text' entry eliminated at index 6: 10/25/2020 - Michael Sun
                             obj.Subj_Level.descrip = {'M or F, male/female'
                                                        'Participant age'
                                                        'Af_Am/White/Native_Am/Asian/PacificIslander/Other'

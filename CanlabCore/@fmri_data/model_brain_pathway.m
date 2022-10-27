@@ -108,11 +108,16 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %   **stats:**
 %        Structure including:
 %           - simple_correlations:  correlations among region averages,
-%             order: 1->1, 1->2, 2->1, 2->2
+%             order: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
 %           - latent_correlations:  correlations among PLS-optimized latent timeseries,
-%             order: 1->1, 1->2, 2->1, 2->2
+%             order: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
 %           - latent_timeseries: cross-validated time series of the latent var for Y, pathway 1 and 2
-%
+%             latent_timeseries_pathway1: 
+%                   Column 1: Scores for Source 1 (1st region entered): X * Z
+%                   Column 2: Scores for Target 1 (3rd region entered): Y * V
+%             latent_timeseries_pathway2: 
+%                   Column 1: Scores for Source 2 (2nd region entered): X * Z
+%                   Column 2: Scores for Target 2 (4th region entered): Y * V
 %             latent_correlation_interaction_ttest: T-test on Fisher-transformed on-target vs. off-target
 %             simple_correlation_interaction_ttest: [1×1 struct]
 %             latent_correlation_pathway_one_ttest: T-test on Fisher-transformed on-target vs. off-target, Pathway 1 
@@ -155,10 +160,10 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 % stats = model_brain_pathway(imgs, vpl, pbn, dpins, cea, 'Indices', indx);
 %
 % % Plot the correlations among region averages:
-% figure; barplot_columns(stats.simple_correlations, 'names', {'vpl->dpins' 'vpl->cea' 'pbn->dpins' 'pbn->cea'});
+% figure; barplot_columns(stats.simple_correlations, 'names', {'vpl->dpins' 'pbn->dpins' 'vpl->cea' 'pbn->cea'});
 %
 % % Plot the correlations among PLS-optimized latent timeseries:
-% figure; barplot_columns(stats.latent_correlations, 'names', {'vpl->dpins' 'vpl->cea' 'pbn->dpins' 'pbn->cea'});
+% figure; barplot_columns(stats.latent_correlations, 'names', {'vpl->dpins' 'pbn->dpins' 'vpl->cea' 'pbn->cea'});
 %
 % % Run it again with bootstrapping too:
 % stats = model_brain_pathway(imgs, vpl, pbn, dpins, cea, 'Indices', indx, 'nboot', 1000);
@@ -172,6 +177,7 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 % 4/14/2020 Major overhaul and documentation (Phil Kragel and Tor Wager)
 % 4/15/2020 Add more documentation (Phil Kragel)
 % 9/16/2020 Tor Wager - update documentation
+% 10/25/2022 Byeol Lux & Tor Wager - update documentation and add latent_timeseries_pathway
 %
 % Notes for future development:
 % - could use xval_stratified_holdout_leave_whole_subject_out in future versions for cross-validation
@@ -351,14 +357,14 @@ for k=1:max(indices)
     YS_Test_target_two_pathway_three = Ytest_target_two * V_pathway_three;
     YS_Test_target_two_pathway_four = Ytest_target_two * V_pathway_four;
     
-    % XS: linear combinations of source voxels chosen to covary with Y (source)
+    % XS: linear combinations of source voxels chosen to covary with Y (target)
     XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; % Fitted (predicted) latent Y, based on observed X; Z = pattern across X (source) voxels that predicts latent Y target  
     XS_Test_source_two_pathway_two = Xtest_source_two * Z_pathway_two;
     XS_Test_source_one_pathway_three = Xtest_source_one * Z_pathway_three;
     XS_Test_source_two_pathway_four = Xtest_source_two * Z_pathway_four;
     
     stats.latent_timeseries_pathway1(indices==k, 1) = XS_Test_source_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for X, pathway 1
-    stats.latent_timeseries_pathway1(indices==k, 2) = YS_Test_target_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for Y, pathway 2
+    stats.latent_timeseries_pathway1(indices==k, 2) = YS_Test_target_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for Y, pathway 1
     
     stats.latent_timeseries_pathway2(indices==k, 1) = XS_Test_source_two_pathway_four(:, 1);
     stats.latent_timeseries_pathway2(indices==k, 2) = YS_Test_target_two_pathway_four(:, 1);

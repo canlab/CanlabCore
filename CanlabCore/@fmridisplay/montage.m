@@ -378,6 +378,9 @@ end
                 end
             end
             slices_fig_h = get(newax(1), 'Parent');
+            while ~isa(slices_fig_h,'matlab.ui.Figure')
+                slices_fig_h = get(slices_fig_h, 'Parent');
+            end
             return
         end
         

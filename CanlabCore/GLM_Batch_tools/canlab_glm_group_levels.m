@@ -199,7 +199,11 @@ while i<=numel(varargin)
     elseif ischar(varargin{i})
         switch varargin{i}
             case {'README'}
-                system(sprintf('cat %s',which('canlab_glm_README.txt')));
+                if ispc()
+                    system(sprintf('type %s',which('canlab_glm_README.txt')));
+                else
+                    system(sprintf('cat %s',which('canlab_glm_README.txt')));
+                end
                 return;
             case {'dream'}
                 version = ver('matlab');
@@ -532,7 +536,13 @@ else
 %             if any(grfstatuses==-1), grfstatus = -1; else grfstatus = 1; end
             
             % output stream
-            [ignore ignore] = system(sprintf('cat %s/cmdwnd_*txt > %s',wd,fulldiaryname)); %#ok
+            if ispc()
+                [ignore ignore] = system(sprintf('type %s/cmdwnd_*txt > %s',wd,fulldiaryname));
+            else
+                [ignore ignore] = system(sprintf('cat %s/cmdwnd_*txt > %s',wd,fulldiaryname));
+            end
+
+%             system(sprintf('cat %s/cmdwnd_*txt > %s',wd,fulldiaryname)); %#ok
             
             % merge diaries
             [ignore ignore] = system(sprintf('grep ''^> '' %s >> %s',fulldiaryname,diaryname)); %#ok

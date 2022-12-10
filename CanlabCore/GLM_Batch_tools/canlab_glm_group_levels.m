@@ -274,7 +274,9 @@ if ~exist(modeldir,'dir')
     error(['No such directory: ' modeldir])
 else
     % make absolute (unsure if necessary)
-    modeldir = filenames(modeldir,'absolute','char');
+
+    % This is a bug on discovery
+%     modeldir = filenames(modeldir,'absolute','char');
 end
 
 
@@ -358,7 +360,8 @@ end
 % set up diary - to be on except when calling other functions that do their own logging
 diarydir = fullfile(grpmodeldir,diarydirname);
 if ~exist(diarydir,'dir'), mkdir(diarydir); end
-diarydir = filenames(diarydir,'absolute','char');
+% diarydir = filenames(diarydir,'absolute','char');
+diarydir = filenames(diarydir, 'char');
 diaryname = fullfile(diarydir,diaryfilename);
 fulldiaryname = regexprep(diaryname,'\.log$','_full.log');
 fprintf('Writing to logfile: %s\n',diaryname)
@@ -376,7 +379,8 @@ else
     % subject level analyses + 1 SPM.mat (assumed representative)
     if ~exist('sublevs','var')
         diary(diaryname), fprintf('> No subject levels specified: looking for all subject level analyses in:\n\t%s\n',modeldir); diary off
-        spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'),'absolute');
+%         spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'),'absolute');
+        spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'));
         if isempty(spmfiles)
             diary(diaryname), fprintf('> ERROR: No subject level analyses found.\n'), diary off
             cd(STARTINGDIR)
@@ -416,7 +420,8 @@ else
         confiles = {};
         for s = 1:numel(sublevs)
             confilename = fullfile(sublevs{s}, sprintf('con_%04d.nii', tcons(c)));
-            confile = filenames(confilename, 'char', 'absolute');
+%             confile = filenames(confilename, 'char', 'absolute');
+            confile=confilename;
             if exist(confile,'file')
                 confiles{s} = confile; %#ok
             else
@@ -508,7 +513,8 @@ else
                 notdone = false;
                 for i=1:8, fprintf('\b'); end; fprintf('%8.1f',etime(clock,t1)/60);
                 pause(10)
-                jobstatefiles = filenames(sprintf('%s/Job*.state.mat',wd),'absolute');
+%                 jobstatefiles = filenames(sprintf('%s/Job*.state.mat',wd),'absolute');
+                jobstatefiles = filenames(sprintf('%s/Job*.state.mat',wd));
                 for s = 1:numel(jobstatefiles)
                     jobstate = textread(jobstatefiles{s},'%s');
                     if strcmp(jobstate,'running') || strcmp(jobstate,'queued'), notdone = true; break; end
@@ -518,7 +524,8 @@ else
             
             % handle output arguments/streams
             diary(diaryname), fprintf('> GATHERING job outputs\n'); diary off
-            jobdirs = filenames(sprintf('%s/Job*[0-9]',wd),'absolute');
+%             jobdirs = filenames(sprintf('%s/Job*[0-9]',wd),'absolute');
+            jobdirs = filenames(sprintf('%s/Job*[0-9]',wd));
             for i = 1:numel(jobdirs)
                 % load state and output
                 jobin = load(sprintf('%s/Task1.in.mat',jobdirs{i}));
@@ -589,7 +596,9 @@ else
         diary(diaryname), announce_string('SIGNIFICANT CLUSTER SIZE ESTIMATION using GRF'), diary off
         graymattermask = which('scalped_avg152T1_graymatter_smoothed.img'); %#ok used in eval
         try
-            robdirs = filenames(fullfile(grpmodeldir,'robust[0-9][0-9][0-9][0-9]'),'absolute');
+%             robdirs = filenames(fullfile(grpmodeldir,'robust[0-9][0-9][0-9][0-9]'),'absolute');
+            robdirs = filenames(fullfile(grpmodeldir,'robust[0-9][0-9][0-9][0-9]'));
+
             for i = 1:numel(robdirs)
                 load(fullfile(robdirs{i},'SETUP.mat'));
                 

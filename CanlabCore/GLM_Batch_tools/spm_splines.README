@@ -84,7 +84,8 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     DSGN.contrasts = {{{'cond1 *bf(1)'},{'cond1 *bf(2)'},{'cond1 *bf(3)'},{'cond1 *bf(4)'},{'cond1 *bf(5)'},{'cond1 *bf(6)'},{'cond1 *bf(7)'},{'cond1 *bf(8)'}}}
     DSGN.contrastnames = {'cond1_AUC'};
     DSGN.contrastweights = {sum(reconB)};
+    DSGN.noscale = true;
     % strictly speaking, this isn't the area under the curve, it is 1.25x larger, and this depends on your spline count,
     % order, etc. But the amplitude of the BOLD signal doesn't mean anything, so as long as the contrast is proportional
     % to the AUC we're good. You could use sum(reconB)/1.25 if you want to be nitpicky though. 1.25 is empirically estimated.
-
+    % setting DSGN.noscale = true is necessary to avoid automatic rescaling of positive and negative weights to sum to 1.

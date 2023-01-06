@@ -28,9 +28,16 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     end
     
     % Start:
-    funcs=dir(fullfile(bidsdir, 'sub-*', '**', 'func', funcstring));   % Identify the functional scans.
-    noise=dir(fullfile(bidsdir, 'sub-*', '**', 'func', noisestring));  % Identify the confound files.
-
+    if contains(bidsdir, 'func')
+        funcs=dir(fullfile(bidsdir, funcstring));   % Identify the functional scans.
+        noise=dir(fullfile(bidsdir, noisestring));  % Identify the confound files.
+    elseif contains(bidsdir, 'ses')
+        funcs=dir(fullfile(bidsdir, 'func', funcstring));   % Identify the functional scans.
+        noise=dir(fullfile(bidsdir, 'func', noisestring));  % Identify the confound files.
+    else
+        funcs=dir(fullfile(bidsdir, 'sub-*', '**', 'func', funcstring));   % Identify the functional scans.
+        noise=dir(fullfile(bidsdir, 'sub-*', '**', 'func', noisestring));  % Identify the confound files.
+    end
 
     for f = 1:numel(funcs)
         img=cell2mat(erase(fullfile({funcs(f).folder}, {funcs(f).name}), '.gz'));

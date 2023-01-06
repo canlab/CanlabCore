@@ -119,8 +119,8 @@ atlas_obj = load_atlas('canlab2018_2mm', 'noverbose');
 
 else
     
+%     atlas_obj = varargin{1};
     atlas_obj = varargin{1};
-    
 end
 
 % Prep atlases and match spaces

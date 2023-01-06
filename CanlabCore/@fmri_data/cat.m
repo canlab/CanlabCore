@@ -129,7 +129,10 @@ fnames = {'image_names' 'fullpath'};
 
 for i = 1:length(fnames)
     
-    obj.(fnames{i}) = strvcat(obj.(fnames{i}), obj2.(fnames{i}));
+%     obj.(fnames{i}) = strvcat(obj.(fnames{i}), obj2.(fnames{i}));  % Bug
+%     involved with DATA_OBJs at the second level, .image_paths are cell
+%     arrays instead of character arrays. -- MS 10/05/2022
+    obj.(fnames{i}) = strvcat(char(obj.(fnames{i})), char(obj2.(fnames{i})));
     
 end
 

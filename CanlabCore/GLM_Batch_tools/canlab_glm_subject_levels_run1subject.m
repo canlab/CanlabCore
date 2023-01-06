@@ -95,7 +95,7 @@ else
         end
                 
         diary(diaryfile)
-        fprintf('Functional data:\n');
+        fprintf('Functional data');
         for r = 1:numel(runs), fprintf('%s\t%3d\t%s\n',z,r,runs{r}); end
         diary off
         
@@ -158,7 +158,15 @@ else
             return
         end
         
-        modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];
+%         modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];
+        % Fixed a bug here that will pass in a nonexistant vol_cnts
+        % variable if DSGN.concatenation is not set: MS 12/10/2022
+        if ~isempty(DSGN.concatenation)
+            modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ', ''vol_cnts'', vol_cnts);'];
+        else
+            modeljobcmd = ['matlabbatch = canlab_spm_fmri_model_job(submodeldir, DSGN.tr, DSGN.hpf, runs3d, conditions_by_run, onsets, durations, names, multipleregressors, ''pmod'', pmods ' OPTS.modeljob ');'];
+        end        
+
         diary(diaryfile), fprintf('%s\nRUNNING model\n\t%s\n',modeljobcmd,z), diary off
         try
             eval(modeljobcmd);

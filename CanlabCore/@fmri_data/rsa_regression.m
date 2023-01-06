@@ -1,4 +1,4 @@
-function stats = rsa_regression(obj,design,study,varargin)
+function stats = rsa_regression(obj,design,sudy,varargin)
 % Representational similarity-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
 % Takes a stimulus/experimental design (design), which is a set of binary regressors specifying groups of images. 
@@ -53,7 +53,7 @@ function stats = rsa_regression(obj,design,study,varargin)
 %	**'euclidean'**
 %		Use Euclidean distance computed using all voxels
 %	**'cosine'**
-%		Compute distance using cosine similarity computed using all voxels
+%		Compute distance using cosine similarity computed using all voxelst
 %	**'correlation'**
 %		Compute distance using correlation distance (1 - Pearson R) computed using all voxels (default)
 % :Outputs:

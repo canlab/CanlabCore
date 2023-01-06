@@ -28,6 +28,10 @@ function out = scn_spm_design_check(spm_results_dir, varargin)
 %   **'sort_by_vif'':**
 %        Sort regressors in VIF table by VIF (DEFAULT: order regressors as in model).   
 %
+% Note: full design VIFs are computed using filtered design matrices to
+% inform first level analysis beta's. 'events only' output uses unfiltered 
+% design matrices to inform the study design.
+%
 % Calls: scn_spm_choose_hpfilter.m, scn_spm_get_events_of_interest.m
 %
 % :Examples:
@@ -105,9 +109,9 @@ end
 
 create_figure('X', 2, 2); 
 set(gcf,'WindowState','maximized'); % lukasvo76 edited to improve figure quality
-imagesc(zscore(SPM.xX.X)); set(gca, 'YDir', 'Reverse');
+imagesc(zscore(SPM.xX.xKXs.X)); set(gca, 'YDir', 'Reverse');
 colormap gray
-title('Full Design Matrix (zscored)');
+title('Full Design Matrix (filtered, zscored)');
 axis tight
 drawnow
 
@@ -121,7 +125,7 @@ drawnow
 % Variance Inflation Factors for regs of interest (iC)
 
 warning off % some nuisance covs could be redundant; we don't care.
-allvifs = getvif(SPM.xX.X(:, SPM.xX.iC), 0);
+allvifs = getvif(SPM.xX.xKXs.X(:, SPM.xX.iC), 0);
 warning on
 
 subplot(2, 2, 3);

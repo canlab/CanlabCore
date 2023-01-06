@@ -17,6 +17,9 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %
 % :Optional inputs:
 %
+%   **atlas_obj**
+%       Any atlas-class object, e.g., loaded by load_atlas().
+%
 %   **k:**
 %        Print only regions with k or more contiguous voxels
 %
@@ -87,6 +90,7 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %    List dates and changes here, and author of changes
 % ..
 %    July 2018:  Autolabel update and "new 2018 version", Tor Wager. Also added legend text.
+%    November 2022: Autolabel now accepts 'atlas_obj' argument. Michael Sun
 
 
 n_cols = 140;                       % 140 good for HTML reports
@@ -115,6 +119,8 @@ for i = 1:length(varargin)
             case {'legacy', 'dolegacy'}, dolegacy = true;
                 
             case 'nolegend', dolegend = false;
+
+            case 'atlas_obj', atl=varargin{i+1};     % Now accepts atlas_obj, MS: 11/3/2022
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -158,8 +164,13 @@ end
 % -------------------------------------------------------------------------
 
 % do this with concatenated pos and neg cl because it's faster.
-[cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
 
+% Now accepts atlas_obj, MS: 11/3/2022
+if exist('atl','var')
+    [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, atl);
+else
+    [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
+end
 
 % Manual labeling of names, if forcing
 % -------------------------------------------------------------------------
@@ -393,7 +404,7 @@ val = sign(vals(wh)) .* maxabs;
 end
 
 
-function [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy)
+function [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, varargin)   % Now accepts atlas_obj, MS: 11/3/2022
 
 table_legend_text = '';
 region_table = [];
@@ -404,8 +415,12 @@ if isempty(cl)
 end
 
 try
-    [cl, region_table, table_legend_text] = autolabel_regions_using_atlas(cl);
-    
+    if size(varargin)>0
+        [cl, region_table, table_legend_text] = autolabel_regions_using_atlas(cl, varargin{1});
+    else
+        [cl, region_table, table_legend_text] = autolabel_regions_using_atlas(cl);
+    end
+
     % A bit of error checking to make sure things don't break in beta
     % testing...
     if size(region_table, 1) ~= length(cl)

@@ -2,7 +2,7 @@ function [SPMinfo, dat] = canlab_spm_glm_extract_trial_info_and_betas(input_path
 % Meta-data extraction and fmri_data creation for single-trial models
 % Extracts information and single-trial data table from an SPM.mat file
 %
-% [SPMinfo, dat] = canlab_spm_glm_extract_info_and_fmri_data(input_path)
+% [SPMinfo, dat] = canlab_spm_glm_extract_trial_info_and_betas(input_path)
 %
 % Inputs:
 % -----------------------------------------------------------------------

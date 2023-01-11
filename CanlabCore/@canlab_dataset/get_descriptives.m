@@ -152,8 +152,17 @@ end
 
 if iscell(var)  % SHOULD BE DEPRECATED - need to handle text differently
     % istext
+
+    % check for some (partial) empty vars
+    is_empty = cellfun(@isempty, var);
+    num_empty = sum(is_empty);
+    
+    if num_empty > 0 && num_empty < length(var)
+        warning(sprintf('Some values of %s are missing.', vname))
+    end
+
     fprintf('%s (%s): Text. Unique values: %d\t\n', ...
-        vname, descrip, length(unique(var)));
+        vname, descrip, length(unique(var(~is_empty))));
      
 else 
     % Standard Subj-level and Event-level vars with same no. of obs.

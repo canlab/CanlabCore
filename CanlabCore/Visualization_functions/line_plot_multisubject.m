@@ -87,17 +87,16 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %     han = line_plot_multisubject(X, Y, 'zscore');
 %     title('Z-scored within-person');
 %
-%
 %   % -----------------------------------------------------------
 % Example creating bins of data within-person, useful for many within-person observations
-
+%
 % Create data for 5 simulated subjects, 100 observations each, random intercept, random positive slope:
 %    for i = 1:5, expect{i} = randn(100, 1); pain{i} = rand(1) * expect{i} + .3 * randn(100, 1) + randn(1); end
-
+%
 %   % Plot with bins, custom colors and points:
 %   create_figure('Line plot multisubject with bins');
 %[han, Xbin, Ybin] = line_plot_multisubject(expect, pain, 'n_bins', 4, 'group_avg_ref_line', 'MarkerTypes', 'o', 'colors', custom_colors([1 .7 .4], [1 .7 .4], 100));
-
+%
 %   % -----------------------------------------------------------
 %
 % Center within subjects and bin, then calculate correlation of
@@ -106,6 +105,27 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %
 %    create_figure('lines'); [han, Xbin, Ybin] = line_plot_multisubject(stats.Y, stats.yfit, 'n_bins', 7, 'center');
 %    corr(cat(1, Xbin{:}), cat(1, Ybin{:}))
+%
+%   % -----------------------------------------------------------
+% Example creating data in matrix format, rather than cell arrays, and then
+% converting to cells
+% clear fitted obs
+% for i = 1:5, fitted(:, i) = randn(100, 1); obs(:, i) = rand(1) * fitted(:, i) + .3 * randn(100, 1) + randn(1); end
+% xx = fitted;
+% cols = ones(1, size(xx, 2));
+% xx = mat2cell(xx, size(xx, 1), cols);
+% 
+% yy = obs;
+% cols = ones(1, size(yy, 2));
+% yy = mat2cell(yy, size(yy, 1), cols);
+% 
+% % Plot deciles
+% create_figure('Predicted vs. observed ratings');
+% set(gca, 'FontSize', 20);
+% han = line_plot_multisubject(xx, yy, 'n_bins', 10);
+% title('Fitted vs. observed, deciles');
+% xlabel('Deciles of fitted response');
+% ylabel('Deciles of observed ratings');
 
 %    Programmer's notes:
 %    12/22/19 - Marta: added z-scoring option, added and clarified

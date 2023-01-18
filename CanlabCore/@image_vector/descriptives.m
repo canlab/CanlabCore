@@ -186,8 +186,13 @@ desc.std = std(datacat);
 if desc.n_images > 1
     
     rr = corr(dat.dat);
-    rr = triu(corr(obj2.dat)) - eye(size(dat.dat, 2));
-    desc.max_image_correlation = max(abs(rr(:)));
+
+    rvec = squareform(rr - eye(size(dat.dat, 2)));
+    %rvec = triu(rr - eye(size(dat.dat, 2));
+
+    desc.interimage_correlation = rr;
+    desc.mean_image_correlation = mean(rvec);
+    desc.max_image_correlation = max(abs(rvec(:)));
     
 else
     desc.max_image_correlation = NaN;

@@ -1153,7 +1153,7 @@ end % function
 
 function [image_obj, networknames, imagenames] = load_ncs
 
-% Load pain signatures
+% Load NCS craving signatures
 % ------------------------------------------------------------------------
 
 networknames = {'NCS' 'NCSdrugs' 'NCSfood'};

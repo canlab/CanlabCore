@@ -1,4 +1,4 @@
-function stats = rsa_regression(obj,design,sudy,varargin)
+function stats = rsa_regression(obj,design,study,varargin)
 % Representational similarity-based analysis, including inferences about a stimulus/task model 
 % Constructs a rep. dissim. matrix (RDM) based on spatial covariance across images.
 % Takes a stimulus/experimental design (design), which is a set of binary regressors specifying groups of images. 

@@ -252,6 +252,9 @@ switch meth
     % See canlab_load_ROI for more info and provenance of regions
     % -------------------------------------------------------------------
     
+    case {'BNST', 'bnst'}
+        error('For Bed Nucleus of Stria Terminalis use BST')
+        
     case {'vmpfc' 'nacc' 'BST' ...
     'cau' 'caudate' 'put' 'GP' 'GPe' 'GPi' 'VeP' ...
     'cm' 'md' 'stn' 'habenula' 'mammillary' 'hypothalamus','hy','hythal' ...

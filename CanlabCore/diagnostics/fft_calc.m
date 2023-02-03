@@ -76,14 +76,14 @@ myfft = abs(myfft(1:timepts)) .^ 2;  % power
 
 myfft = myfft ./ sum(myfft);
 
-h = plot(freq, myfft); 
+h = plot(freq, myfft, 'LineWidth', 2); 
 xlabel('Frequency (Hz)')
 title('Frequency domain')
 
 % nyquist = Fs ./ 2;  % Any signal faster than Nyquist freq will be aliased
-
+hold on
 h2 = plot_vertical_line(nyq);
-set(h, 'LineStyle', ':')
+set(h2, 'LineStyle', ':')
 
 end
 

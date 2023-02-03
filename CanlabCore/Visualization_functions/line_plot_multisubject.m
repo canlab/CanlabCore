@@ -480,8 +480,20 @@ if group_avg_ref_line
         han.grpline_err_handle = [h1 h2];
     else
         
-        avg_b = mean(b);
-        Xs = cat(2,X{:});
+        avg_b = mean(b); % lines 484-496 added by lukasvo76 Jan 2023 to fix bug in case n(trials) differs between subjects
+            for i = 1:size(X,2)
+                l(i,1) = size(X{i},1);
+            end
+        min_length = min(l);
+        max_length = max(l);
+            if min_length ~= max_length
+                for i = 1:size(X,2)
+                    X_trimmed{i} = X{i}(1:min_length,1);
+                end
+                Xs = cat(2,X_trimmed{:});
+            else
+                Xs = cat(2,X{:});
+            end
         minX = prctile(Xs(1,:),5);
         maxX = prctile(Xs(end,:),95);
         han.grpline_handle = plot([minX maxX], [avg_b(1)+avg_b(2)*minX avg_b(1)+avg_b(2)*maxX], 'Color', 'k', 'LineWidth', 6);

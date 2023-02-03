@@ -107,7 +107,7 @@ function [results_obj, stats, indx] = searchlightLukas(dat, varargin)
 r = 5; % For defining regions
 indx = [];      % cell; with logical index of inclusion sets for each region/sphere in searchlight
 do_online = false;
-no_weights = false; %dont save weight objects (can lead to memory issues)
+no_weights = false; % don't save weight objects (can lead to memory issues)
 
 % For prediction/classification
 algorithm_name = 'cv_lassopcr';
@@ -151,7 +151,7 @@ for i = 1:length(varargin)
 end
 
 % n = dat.volInfo.n_inmask;
-n = size(dat.dat,1); % lukasvo76 changed since dat.volInfo is not updated after applying mask, causing an index out out bounds error on line 207 > line 401
+n = size(dat.dat,1); % lukasvo76 changed since dat.volInfo is not updated after applying mask, causing an index out out bounds error on line 207 > line 401; trim_mask should solve this too I guess
 
 
 if ~do_online
@@ -208,18 +208,23 @@ for i = 1:n
         wh_voxels = faster_index(xyzlist, i, r);
 
     else
+        
         wh_voxels = indx(:,i);
+        
     end
+    
     output_val{i} = predict_wrapper(dat, wh_voxels, algorithm_name, holdout_set);
 
     if no_weights
-    output_val{i}.weight_obj =[];
+        
+        output_val{i}.weight_obj =[];
+        
     end
+    
 end
 
 e = toc(t);
-% IMPORTANT NOTE: searchlight option is currently not working because of
-% weird memory issues in fmri_data.searchlight - DO NOT USE UNTIL FIXED
+
 [hour, minute, second] = sec2hms(e);
 fprintf(1,'Done in %3.0f hours %3.0f min %2.0f sec\n',hour, minute, second);
 
@@ -256,7 +261,7 @@ indx = cell(1, n);
 t = tic;
 fprintf('Setting up seeds...');
 
-parfor i = 1:n
+for i = 1:n
     seed{i} = dat.volInfo.xyzlist(i, :);
 end
 
@@ -276,7 +281,7 @@ fprintf('Getting a rough time estimate for how long this will take...\n');
 n_to_run = min(500, n);
 t = tic;
 
-parfor i = 1:n_to_run
+for i = 1:n_to_run
     
     mydist = sum([dat.volInfo.xyzlist(:, 1) - seed{i}(1) dat.volInfo.xyzlist(:, 2) - seed{i}(2) dat.volInfo.xyzlist(:, 3) - seed{i}(3)] .^ 2, 2);
     indx{i} = mydist <= r.^2;
@@ -297,7 +302,7 @@ fprintf('Constructing spheres for each seed...');
 
 %infdist = inf * ones(size(dat.volInfo.xyzlist(:, 1), 1), 1);
 
-parfor i = 1:n
+for i = 1:n
     
     mydist = sum([dat.volInfo.xyzlist(:, 1) - seed{i}(1) dat.volInfo.xyzlist(:, 2) - seed{i}(2) dat.volInfo.xyzlist(:, 3) - seed{i}(3)] .^ 2, 2);
     indx{i} = mydist <= r.^2;
@@ -345,7 +350,7 @@ function output_val = predict_wrapper(dat, indx, algorithm_name, holdout_set)
 dat.dat = dat.dat(indx, :);
 dat.removed_voxels(~indx) = true;
 
-[cverr, stats] = predict(dat, 'algorithm_name', algorithm_name, 'nfolds', holdout_set, 'useparallel', 0, 'verbose', 0);
+[cverr, stats] = predict(dat, 'algorithm_name', algorithm_name, 'nfolds', holdout_set, 'useparallel', 1, 'verbose', 0);
 
 % Parse output
 % Only storing important info and full data weight map - we will probably

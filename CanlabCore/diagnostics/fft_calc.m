@@ -1,4 +1,4 @@
-function [myfft, freq, h, h2] = fft_calc(dat, TR, varargin)
+function [mag, freq, h, h2, peak_freq] = fft_calc(dat, TR, varargin)
 % Simple function to calculate the FFT power of a 
 % data vector (dat) as a function of frequency,
 % given a sample-to-sample repetition time (TR)
@@ -6,7 +6,7 @@ function [myfft, freq, h, h2] = fft_calc(dat, TR, varargin)
 % :Usage:
 % ::
 %
-%     [myfft, freq, line_handle, nyquist_line_handle] = fft_calc(dat, TR)
+%     [mag, freq, line_handle, nyquist_line_handle, peak_freq] = fft_calc(dat, TR)
 %
 % Example:
 % Create and plot a sin wave:
@@ -40,10 +40,10 @@ function [myfft, freq, h, h2] = fft_calc(dat, TR, varargin)
 % title(sprintf('Sampling rate = %3.1f, Nyquist limit = %3.2f', Fs, Nyquist))
 % 
 % figure; hold on;
-% [myfft, freq, line_han] = fft_calc(y, 1/1000);
+% [mag, freq, line_han] = fft_calc(y, 1/1000);
 % set(line_han, 'Color', 'k', 'LineWidth', 2, 'LineStyle', '-');
 % 
-% [myfft, freq, line_han] = fft_calc(y(1:downsample_by:end), 1/Fs);
+% [mag, freq, line_han] = fft_calc(y(1:downsample_by:end), 1/Fs);
 % set(line_han, 'Color', [1 .3 .6], 'LineWidth', 2, 'LineStyle', '-');
 % 
 % set(gca, 'XLim', [0 (max(Fs, 1.2 * F))]);
@@ -71,12 +71,12 @@ timepts = floor(n ./ 2);
 freq = (0:timepts-1)/timepts * nyq;
 %freq = linspace(0, nyq, timepts)';
 
-myfft = fft(dat); %real(abs(fft(dat)));
-myfft = abs(myfft(1:timepts)) .^ 2;  % power
+mag = fft(dat); %real(abs(fft(dat)));
+mag = abs(mag(1:timepts)) .^ 2;  % power
 
-myfft = myfft ./ sum(myfft);
+mag = mag ./ sum(mag);
 
-h = plot(freq, myfft, 'LineWidth', 2); 
+h = plot(freq, mag, 'LineWidth', 2); 
 xlabel('Frequency (Hz)')
 title('Frequency domain')
 
@@ -84,6 +84,8 @@ title('Frequency domain')
 hold on
 h2 = plot_vertical_line(nyq);
 set(h2, 'LineStyle', ':')
+
+peak_freq = freq(mag == max(mag));
 
 end
 

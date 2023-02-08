@@ -62,6 +62,13 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %        cov or corr across images at p < 0.05 uncorrected 
 %        default = false 
 %
+%   **'mask', [atlas_object]
+%       Perform analysis in a subset of parcels rather than all parcels in
+%       canlab_2018 atlas, or in any different atlas or a subset thereof
+%           NOTE: in this case, the output will not contain 489 parcels but
+%           a different number
+%
+%
 % :Outputs:
 %
 %   **OUT:**
@@ -128,6 +135,9 @@ function OUT = robfit_parcelwise(imgs, varargin)
 % ..
 %    Programmers' notes:
 %    Created by Tor Wager, Feb 2021
+%    
+%    Added mask option, Lukas Van Oudenhove, Feb 2023
+%
 % ..
 
 % --------------------------------------------
@@ -156,7 +166,11 @@ end
 if isempty(which('mafdr')), error('Sorry, you need the Matlab bioinformatics toolbox on your Matlab path to use the Storey 2002 mafdr function called here.'); end
 
 % Load parcel atlas and initalize object
-b = brainpathway('noverbose');
+if ~isempty(ARGS.mask)
+    b = brainpathway(ARGS.mask,'noverbose'); % added by Lukas
+else
+    b = brainpathway('noverbose');
+end
 
 % Make image space match atlas space
 imgs = resample_space(imgs, b.region_atlas);
@@ -602,6 +616,7 @@ p = inputParser;
 % ----------------------------------------------------------------------
 
 valfcn_scalar = @(x) validateattributes(x, {'numeric' 'logical'}, {'nonempty', 'scalar'});
+valfcn_atlas = @(x) isa(x,'atlas'); % added by Lukas
 
 % valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
 %
@@ -629,6 +644,7 @@ p.addParameter('doverbose', true, valfcn_scalar);
 p.addParameter('doplots', true, valfcn_scalar);
 p.addParameter('csf_wm_covs', false, valfcn_scalar);
 p.addParameter('remove_outliers', false, valfcn_scalar);
+p.addParameter('mask', {}, valfcn_atlas); % added by Lukas
 
 
 

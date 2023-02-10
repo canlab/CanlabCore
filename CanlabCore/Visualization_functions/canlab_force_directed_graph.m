@@ -36,7 +36,12 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 %        OR
 %
 %        signed, thresholded connection matrix to be used (e.g.,
-%        thresholded t-values from multi-subject group analysis
+%        average time-series correlation matrix across individuals
+%        it's also possible to use thresholded t-values from multi-subject group analysis
+%
+%        If working with multi-subject time series data, best to enter connection matrix
+%        as this function does not run models with participants as random
+%        effects.
 %
 % :Optional Inputs: Enter keyword followed by variable with values
 %
@@ -259,7 +264,7 @@ C = sparse(C);
 G = graph(C);
 
 %bc = betweenness_centrality(abs(C));  % abs if ignoring neg connections
-bc = degree(G);
+bc = centrality(G, 'betweenness');  % 'Importance', IMP
 
 % shortest paths: used as estimate of connectivity
 % [D S] = mean_path_length(r, rset);

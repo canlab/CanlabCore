@@ -1,10 +1,10 @@
-function newcm = colormap_tor(lowcolor, hicolor, varargin)
+function [newcm, cm_colors_cell] = colormap_tor(lowcolor, hicolor, varargin)
 % Create a new colormap of your choosing.
 %
 % :Usage:
 % ::
 %
-%    newcolormap = colormap_tor(lowcolor, hicolor, [midcolor], [midcolor2], etc.)
+%    [newcolormap, cm_colors_cell] = colormap_tor(lowcolor, hicolor, [midcolor], [midcolor2], etc.)
 %
 % :Inputs:
 %
@@ -27,6 +27,9 @@ function newcm = colormap_tor(lowcolor, hicolor, varargin)
 %
 %   **cm:**
 %        A colormap matrix, [n x 3]
+%
+%   **cm_colors_cell:**
+%        A cell array with one color per cell, [1 x n]
 %
 % :Examples:
 % ::
@@ -123,6 +126,10 @@ else
     
 end
 
+if nargout > 1
+    cm_colors_cell = mat2cell(newcm, ones(size(newcm, 1), 1), 3)';
+end
+
 
 %         for i = 1:length(varargin) - 1
 %             newcm1 = [linspace(varargin{i}(1), varargin{i+1}(1), n/2)' linspace(varargin{i}(2), varargin{i+1}(2), n/2)' linspace(varargin{i}(3),varargin{i+1}(3), n/2)' ];
@@ -138,7 +145,9 @@ end
 % %         newcm2 = [linspace(midcolor(1), hicolor(1), n/2)' linspace(midcolor(2), hicolor(2), n/2)' linspace(midcolor(3), hicolor(3), n/2)' ];
 % %
 % %         newcm = [newcm1; newcm2];
-end
+
+end % main function
+
 
 
 % %

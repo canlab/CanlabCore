@@ -139,7 +139,7 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %
 %        dat=load_image_set('emotionreg');
 %        t=ttest(dat);
-%        BF_tstat=estimateBF(t,'t');
+%        BF_tstat=estimateBayesFactor(t,'t');
 %        BF_tstat_th = threshold(BF_tstat, [-6 6], 'raw-outside');
 %        orthviews(BF_tstat_th);
 %
@@ -151,7 +151,7 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %        t=ttest(dat);
 %        prop=t; %initialize stats object from t-test output
 %        prop.dat=sum(dat.dat'>0)'; 
-%        BF_prop=estimateBF(prop,'prop'); %estimate BF
+%        BF_prop=estimateBayesFactor(prop,'prop'); %estimate BF
 %        BF_prop_th = threshold(BF_prop, [-6 6], 'raw-outside');
 %        orthviews(BF_prop_th);
 % 

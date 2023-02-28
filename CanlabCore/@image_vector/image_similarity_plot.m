@@ -5,7 +5,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % Usage:
 % ::
 %
-%    stats = image_similarity_plot(obj, 'average');
+%    [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, 'average');
 %
 % This is a method for an image_vector object that compares the spatial
 % similarity of input image(s) to a specified set of a priori spatial basis maps.

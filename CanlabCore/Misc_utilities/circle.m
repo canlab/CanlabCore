@@ -38,7 +38,7 @@ h = plot(xunit, yunit, 'Color', linecolor);
         fillh = fill(xunit, yunit, fillcolor, 'FaceAlpha', fillalpha);
 
         delete(h)
-        h = [];
+        h = fillh;
         
 %         if length(varargin) > 1
 %             set(fillh, 'FaceColor', varargin{2})

@@ -29,8 +29,8 @@ function p = addbrain(varargin)
 % 'left' 'hires left' 'surface left' 'hires surface left' ...
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
 % 'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
-% 'bigbrain' 
-% 'fsavg_left' or 'inflated left', 'fsavg_right' or 'inflated right', 
+% 'bigbrain' {'hires surface left', 'bigbrain left'}
+% ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right', 
 % uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
 % 
 % % Macro subcortical surfaces
@@ -58,7 +58,8 @@ function p = addbrain(varargin)
 %        the default.  2 mm res SPM2 brain surface
 %
 %   **'hires':**
-%        a high-resolution surface (from Caret segmentation)
+%        a high-resolution cortical surface (from Caret segmentation)
+%        of the Colin27 single-subject brain
 %
 %   **'hires left':**
 %        hi-resolution left medial with cerebellum (Caret seg)
@@ -67,9 +68,11 @@ function p = addbrain(varargin)
 %        same, right hem
 %
 %   **'surface left':**
-%        hi-resolution left medial with cerebellum
-%        slightly expanded, from Glasser et al. 2016 Nature 
-%        based on the Human Connectome Project
+%        hi-resolution left cortical surface with cerebellum, defaults in medial view
+%        
+%        Pial surface with MSM alignment based on the Human Connectome Project
+%        Reference: Glasser et al. 2016 Nature 
+%        Surface template: L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; 
 %
 %   **'surface right':**
 %        same, right hem

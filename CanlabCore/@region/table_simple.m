@@ -1,7 +1,7 @@
-function [results_table, results_table_pos, results_table_neg] = table_simple(r)
+function [results_table, results_table_pos, results_table_neg, table_legend_text] = table_simple(r)
 % Make a simple table of fMRI results with one row per region
 %
-% [results_table, results_table_pos, results_table_neg] = table_simple(r)
+% [results_table, results_table_pos, results_table_neg, table_legend_text] = table_simple(r)
 %
 % - This is most useful if you've divided an activation map into blobs (regions)
 % separated by defined anatomical parcels. 
@@ -64,6 +64,8 @@ results_table.XYZ = round(cat(1, r.mm_center));
     
 results_table = [results_table get_signed_max(r, 'Z', 'maxZ')];  % use function because may be empty, handle if so
     
+results_table.Properties.VariableNames{4} = 'maxVal';
+
 if dosep
     
     results_table_pos = results_table(ispos, :);
@@ -125,7 +127,9 @@ else
         
 end % dosep
 
+
 if dolegend == false || isempty(table_legend_text)
+
     return
     
 else

@@ -1,4 +1,4 @@
-function r = subdivide_by_atlas(r, varargin)
+function [r, percent_coverage] = subdivide_by_atlas(r, varargin)
 % Subdivide a set of blobs stored in a region object by an anatomical atlas.
 %  It takes each contiguous blob in the original region object and subdivides 
 % it into a new region object with separate regions for each atlas parcel covered 
@@ -12,7 +12,7 @@ function r = subdivide_by_atlas(r, varargin)
 % :Usage:
 % ::
 %
-%    r = subdivide_by_atlas(r, [atlas name])
+%    [r, percent_coverage] = subdivide_by_atlas(r, [atlas name])
 %
 % :Inputs:
 %
@@ -24,8 +24,12 @@ function r = subdivide_by_atlas(r, varargin)
 %
 % :Output:
 %
+%   **r:**
 %   A region object with separate clusters for each contiguous blob,
 %   subdivided by regions labeled in atlas.
+%
+%   **percent_coverage:**
+%   Percentage of voxels in the atlas parcel covered by the region
 %
 % :Example:
 % ::
@@ -69,7 +73,8 @@ end
 % label_mask = fmri_data(atlasname);
 
 % resample and mask label image
-atlas_obj = resample_space(atlas_obj, ivec, 'nearest');
+original_atlas_obj = atlas_obj;                         % save for calculating coverage
+atlas_obj = resample_space(atlas_obj, ivec, 'nearest'); % this eliminates atlas regions
 
 ulabels = unique(atlas_obj.dat(atlas_obj.dat ~= 0));
 
@@ -141,6 +146,26 @@ end
 fprintf('%3.0f original regions do not have any labeled voxels.\n', sum(wh_omit));
 
 r = cat(2, rr{:});
+
+% If requested, calculate coverage of each labeled region -- percentage of
+% voxels in the atlas parcel in the region
+
+if nargout > 1
+
+    percent_coverage = zeros(length(r), 1);
+
+    % relative volume of a voxel in atlas compared to region
+    conversion_factor = prod(diag(abs(original_atlas_obj.volInfo.mat))) ./ prod(diag(abs(r(1).M)));
+
+    for i = 1:length(r)
+
+        parcel = select_atlas_subset(original_atlas_obj, {r(i).shorttitle});
+
+        percent_coverage(i) = 100 .* r(i).numVox ./ (sum(parcel.dat > 0) .* conversion_factor);
+
+    end
+
+end
 
 
 end % function

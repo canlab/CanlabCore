@@ -56,7 +56,7 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     Bw = (bf'*bf)\bf'*splineBasisSet; % Bw is an 8 x 8 matrix that maps from (orthogonal) bf to (nonorthogonal) splineBasisSet
 
     % now note the following,
-    % splineModel = splineBasisSet*true_B 	We don't now true_B. This is what we need.
+    % splineModel = splineBasisSet*true_B 	We don't know true_B. This is what we need.
     % splineModel = bf*spm_B_est		spm_B_est are the values we have after running first level models
     % but splineBasisSet is a linear combination of bf, the orthogonalized spm basis functions
     % splineBasisSet = bf*Bw
@@ -66,15 +66,16 @@ Reconstruction spline basis functions from orthogonal basis set: You need to com
     % bf cancels
     % spm_B_est = Bw*true_B
     % inv(Bw)*spm_B_est = true_B
-    % so by inverting Bw we get the linear combination that gives us true_B from spm_B_est.  If you do the algebra
-    % you will find that inv(Bw) = (splineBasisSet'*bf)\bf'*bf
+    % so by inverting Bw we get the linear combination that gives us true_B from spm_B_est.  I believe if you do 
+    % the algebra you will find that inv(Bw) = (splineBasisSet'*bf)\bf'*bf, but double check this and if I'm wrong
+    % just compute Bw above and do inv(Bw) to get reconB below.
 
     reconB = (splineBasisSet'*bf)\bf'*bf;
     reconB(reconB < 0) = 0; 	% these are floating point errors and don't cooperate well with contrast scaling
 
     % reconB is an 8x8 matrix and each row represents the relative contribution of each spm_B_est to the row's spline
     % bf. So row 1 gives you the linear combination of spm_B_est to get the weight of the corresponding first true
-    % spline function. The area under the curve is just the sum of these, sum(reconB)*spm_B_est. This is similar to Bw
+    % spline function. The area under the curve is proportional to the sum of these, sum(reconB)*spm_B_est. This is similar to Bw
     % except Bw mapped from one set of basis functions to another, while reconB maps from one set of beta weights to
     % the other.
 

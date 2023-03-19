@@ -256,8 +256,7 @@ switch meth
         
     case 'divide_by_csf_l2norm'
         
-        [~, ~, ~, l2norms] = extract_gray_white_csf(fmridat, ...
-            'masks', {'gray_matter_mask.nii' 'canonical_white_matter_thrp5_ero1.nii' 'canonical_ventricles_thrp5_ero1.nii'});
+        [~, ~, ~, l2norms] = extract_gray_white_csf(fmridat);
         
         % divide each column image by its respective ventricle l2norm
         fmridat.dat = bsxfun(@rdivide, fmridat.dat, l2norms(:, 3)') ;

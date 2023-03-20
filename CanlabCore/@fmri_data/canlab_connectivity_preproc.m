@@ -387,7 +387,7 @@ if do_preproc
         if do_additional_regress
             
             % regression
-            beta_dat.dat = data.dat * pinv(X)';
+            beta_dat.dat = dat.dat * pinv(X)';
             beta_dat.dat = beta_dat.dat(:,1:nreg);
             beta_dat.covariates = X;
             X(:,1:nreg) = [];

@@ -372,7 +372,7 @@ switch labelstyle
     case 'equal'
         
         if isempty(labelradius)
-            labaelradius = 0.04;
+            labelradius = 0.04;
         end
         
         for i = 1:n_categories

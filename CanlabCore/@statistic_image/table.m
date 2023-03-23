@@ -75,7 +75,7 @@ if size(t.dat, 2) > 1
     
 end
 
-[r_pos, r_neg] = table(region(t));
+[r_pos, r_neg] = table(region(t), varargin{:});
 
 r = [r_pos r_neg];
 

@@ -20,6 +20,9 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, r_excl
 % table-class objects.  It also returns a region-class object for reference 
 % and rendering the subdivided blobs on brain slices or surfaces.
 %
+% The default threshold for coverage is 25% or more of the atlas parcel
+% covered by the activation map.
+%
 % You can enter any atlas-class object as a 2nd argument. If you don't,
 % a default atlas object will be used.
 %

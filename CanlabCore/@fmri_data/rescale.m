@@ -187,6 +187,38 @@ switch meth
         
         fmridat.history{end+1} = 'Double-centered data matrix across images and voxels';
         
+    case 'l1norm_images'
+        
+        % Vector L1 norm of vector
+        % divide by this value to normalize image
+        
+%         wh = x ~= 0 & ~isnan(x);  % valid values
+%         nvalid = sum(wh);
+%         l1norm = double(sum(abs(x(wh))))
+%         normalized_x = x .* nvalid ./ l1norm;  % divides each voxel x in image by the mean valid voxel value.
+
+
+        normfun = @(x) sum(abs(x));
+        
+        x = fmridat.dat;
+        
+        % Consider missing voxels, and exclude case-wise (image-wise)
+        ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
+        x(ismissing) = NaN;
+        
+        for i = 1:size(x, 2)
+            % remove nans, 0s
+            xx = x(~ismissing(:, i), i);
+            % divides each voxel xx in image by the mean valid voxel value.
+            n(i) = normfun(xx);
+            xx = xx.* length(xx) ./ n(i);
+            x(~ismissing(:, i), i) = xx;
+        end
+        
+        x(ismissing) = 0;  % Replace with 0 for compatibility with image format
+                
+        fmridat.dat = x;
+    
     case 'l2norm_images'
         
         % Vector L2 norm / sqrt(length) of vector

@@ -30,10 +30,10 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     [~, lastdir] = fileparts(bidsdir);    % get the last part of the directory
 
     % Start:
-    if lastdir == 'func'
+    if contains(lastdir, 'func')
         funcs=dir(fullfile(bidsdir, funcstring));   % Identify the functional scans.
         noise=dir(fullfile(bidsdir, noisestring));  % Identify the confound files.
-    elseif lastdir == 'ses'
+    elseif contains(lastdir, 'ses')
         funcs=dir(fullfile(bidsdir, 'func', funcstring));   % Identify the functional scans.
         noise=dir(fullfile(bidsdir, 'func', noisestring));  % Identify the confound files.
     else

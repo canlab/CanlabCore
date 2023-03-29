@@ -26,12 +26,14 @@ function canlab_prep_bidsdir(bidsdir, varargin)
             noisestring=varargin{2};
         end
     end
-    
+
+    [~, lastdir] = fileparts(bidsdir);    % get the last part of the directory
+
     % Start:
-    if contains(bidsdir, 'func')
+    if lastdir == 'func'
         funcs=dir(fullfile(bidsdir, funcstring));   % Identify the functional scans.
         noise=dir(fullfile(bidsdir, noisestring));  % Identify the confound files.
-    elseif contains(bidsdir, 'ses')
+    elseif lastdir == 'ses'
         funcs=dir(fullfile(bidsdir, 'func', funcstring));   % Identify the functional scans.
         noise=dir(fullfile(bidsdir, 'func', noisestring));  % Identify the confound files.
     else
@@ -52,11 +54,13 @@ function canlab_prep_bidsdir(bidsdir, varargin)
         % Copy the requisite func file to the new folder
         copyfile(img, rundir);
     end
-
+    disp('Func files all copied.')
+    
     for n = 1:numel(noise)
         % Copy the requisite noise file to the new folder
         rundir=cell2mat(fullfile(noise(n).folder, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
         copyfile(fullfile(noise(n).folder, noise(n).name), rundir);
     end
+    disp('Noise files all copied. Done.')
 
 end

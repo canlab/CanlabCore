@@ -572,10 +572,14 @@ if ishandle(P)      % no input file, use existing handle
         fprintf(' Using existing surface image\n');
         fprintf(' Running color change.\n');
     end
+
+%     str="[c,alld] = getVertexColors(xyz{1},p,mycolors{1},[1 0  1],2,'ovlcolor',[1 1 1])" Ke tested
     for i = 1:length(P)
         p = P(i);
         if doverbose, disp([' eval: ' str]), end
+        if i~=3 && i~=4 
         eval(str)
+        end
     end
 else
     % we have either an input file or a special string ('bg')

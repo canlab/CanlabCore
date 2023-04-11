@@ -28,7 +28,9 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %   **dofixrange:**
 %        Followed by range of values [min max] for plot (see
 %        image_similarity_plot)
-%
+%   
+%    **doAverage:**
+%      Plot average correlation from the input images
 % :Outputs:
 %
 %   **stats:**
@@ -87,7 +89,7 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 % ..
 %     Author and copyright information:
 %
-%     Copyright (C) 2023 Mijin Kwon and Tor Wager
+%     Copyright (C) 2023 Mijin Kwon, Tor Wager and Ke Bo
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -107,6 +109,10 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %    Programmers' notes:
 %    Tor: Created from Mijin's script -- plus resort rows of image names and
 %    fullpath fields
+
+%    Ke:Add function to input group of image_obj and plot mean correlation.
+%    e.g group of bootsrap sample. In this case, the error bar is displayed
+%    by standard deviation.
 % ..
 
 % -------------------------------------------------------------------------
@@ -116,9 +122,10 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 colors = [1 0 0];
 dofigure = true;
 doplot = true;
-similarity_metric = 'cosine_similarity';
+similarity_metric = 'corr';
 dofixrange = [];
 
+doAverage=0;
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
 % -------------------------------------------------------------------------
@@ -128,7 +135,7 @@ dofixrange = [];
 
 allowable_inputs = {'colors' 'doplot' 'similarity_metric' 'dofixrange'};
 
-keyword_inputs = {'noplot' 'nofigure' 'correlation'};
+keyword_inputs = {'noplot' 'nofigure' 'cosine_similarity','doAverage'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -142,7 +149,7 @@ for i = 1:length(varargin)
 
             case keyword_inputs
                 % Skip deal with this below
-
+            
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -159,8 +166,10 @@ for i = 1:length(varargin)
             case 'nofigure'
                 dofigure = false;
 
-            case 'correlation'
-                similarity_metric = 'correlation';
+            case 'cosine_similarity'
+                similarity_metric = 'cosine_similarity';
+            case 'doAverage'
+                doAverage=1;
 
         end
     end
@@ -187,14 +196,23 @@ end
 if doplot
     if ~iscell(colors), colors = {colors}; end
 
-    if isempty(dofixrange)
+    if doAverage==1
+        if isempty(dofixrange)
+             [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
+        else
 
-        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure');
-
-    else % we have fixed range
-
-        [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange);
-
+              [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
+        end
+    else
+        if isempty(dofixrange)
+    
+            [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure');
+    
+        else % we have fixed range
+    
+            [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange);
+    
+        end
     end
 
 else

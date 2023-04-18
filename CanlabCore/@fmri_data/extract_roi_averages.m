@@ -1,4 +1,4 @@
-function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, varargin)
+function [cl, cl_roisum, cl_demeanedpattern] = extract_roi_averages(obj, mask_image, varargin)
 % This fmri_data method a extracts and averages data stored in an fmri_data object
 % from a set of ROIs defined in a mask.
 %
@@ -24,7 +24,7 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 % :Usage:
 % ::
 %
-%     [[cl, clroimean, clpattern] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
+%     [cl, cl_roisum, cl_demeanedpattern] = extract_roi_averages(fmri_data obj, [mask_image], [average_over])
 %
 % :Inputs:
 %   1. char array of strings containing 4D image file names (data extracted from these)
@@ -58,19 +58,43 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %       Use correlation metric for pattern expression instead of dot product
 %       Passed in to canlab_pattern_similarity
 %
+% :Outputs:
+%
+%   **cl:**
+%        A region-class object with one element per region as defined by
+%        inputs to the function (unique mask values or contiguous regions)
+%
+%        .dat contains the pattern expression (applied local weights) or roi mean, depending on your inputs
+%        .all_data contains the [image x voxel] data matrix of extracted data
+%        .val contains the pattern weights, if any (possibly normalized; see val_descrip)
+%  
+%   **cl_roisum:**
+%        A region-class object with one element per region as defined by
+%        inputs to the function (unique mask values or contiguous regions)
+%
+%        .dat contains the summed activity across voxels (proportional to the roi mean)
+%
+%   **cl_demeanedpattern:**
+%        A region-class object with one element per region as defined by
+%        inputs to the function (unique mask values or contiguous regions)
+%
+%        .dat contains the expression of the de-meaned pattern, i.e., the
+%        pattern after orthogonalizing it with respect to the mean across
+%        voxels. 
+%
+%
 % :Examples:
 % ::
 %
 %     imgs_to_extract_from = filenames('w*.nii','char');
 %     mask_image = which('anat_lbpa_thal.img');
-%     [cl, clroimean, clpattern] = extract_image_data(imgs_to_extract_from, mask_image);
+%     [cl, cl_roisum, cl_demeanedpattern] = extract_image_data(imgs_to_extract_from, mask_image);
 %
 %     region_obj = extract_roi_averages(data_obj, mask_char_name, 'pattern_expression', 'contiguous_regions');
 %
 % :Related functions:
 %    For an non-object-oriented alternative, see extract_image_data.m
 %    apply_parcellation.m
-%
 % ..
 %     Notes:
 %     cl(i).dat gives you the pattern expression values for cluster i.
@@ -78,6 +102,9 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %     This function LOSES removed image data - you must re-remove if you have
 %     removed images!
 %
+
+% ..
+% Programmers' notes:
 %     Modified June 11, 2013 by Tor
 %       - use resample_space instead of resample_to_image_space
 %
@@ -89,10 +116,7 @@ function [cl, clroimean, clpattern] = extract_roi_averages(obj, mask_image, vara
 %
 %     Modified Oct 2015 by Tor]
 %       - Clarified options, empty cl error check, changed varargout behavior
-% ..
-% Programmers' notes:
-% This function is different from fmri_data.extract_roi_averages
-% Better to have only one function of record in the future...
+
 % Note: 
 % cl = extract_roi_averages(imgs, atlas_obj{1});
 % accomplishes the same task as apply_parcellation, returns slightly different values due to interpolation.  
@@ -295,7 +319,7 @@ if length(cl) == 1 && isempty(cl(1).XYZ)
 end
 
 if nargout > 1
-    [clroimean, clpattern] = deal(cl);
+    [cl_roisum, cl_demeanedpattern] = deal(cl);
 end
 
 % ---------------------------------
@@ -393,15 +417,15 @@ for i = 1:nregions
                 z = ones(size(w));
                 w2 = w - mean(w);
         
-                clroimean(i).val = z;
-                clroimean(i).dat = regiondat * z;
+                cl_roisum(i).val = z;
+                cl_roisum(i).dat = regiondat * z;
                 
-                clpattern(i).val = w - mean(w);
-                clpattern(i).dat = canlab_pattern_similarity(regiondat', w2, 'ignore_missing', varargin{:});
+                cl_demeanedpattern(i).val = w - mean(w);
+                cl_demeanedpattern(i).dat = canlab_pattern_similarity(regiondat', w2, 'ignore_missing', varargin{:});
                 
             end
             
-        else
+        else  % end pattern expression
             % else, simple average
             
             if size(regiondat, 2) == 1
@@ -426,8 +450,8 @@ if doverbose
 end
 
 % if nargout > 1
-%     varargout{1} = clroimean;
-%     varargout{2} = clpattern;
+%     varargout{1} = cl_roisum;
+%     varargout{2} = cl_demeanedpattern;
 % end
 
 

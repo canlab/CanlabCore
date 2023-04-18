@@ -55,6 +55,11 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        Useful if obj contains one image per subject and you want
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
+%   **Error_STD**
+%       Default setting for error shading plot used standard error of
+%       average images. However, in some cases, standard error is not
+%       possible to compute. E.g all the images in the object are bootstrap samples rather than real data.
+%       Set Error_STD
 %
 %   **mapset**
 %       Followed by one of the keywords below, or by an fmri_data object
@@ -226,6 +231,10 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % 2022/03/31 Ke Bo
 %   - added option for treating zero value in the map as real value rather
 %   than missing data
+% 2023/03/02 Ke Bo
+%   - added option for compute error bar using standard deviation rather
+%   than standard error. This will suit for the dataset including bootstrap
+%   samples.
 % ..
 
 
@@ -270,7 +279,7 @@ sim_metric = 'corr'; % default: correlation
 plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
 treat_zero_as_data=0; % Treat zero value as missing data.
-
+Error_STD=0;
 % optional inputs with default values
 % -----------------------------------
 
@@ -330,6 +339,9 @@ for i = 1:length(varargin)
                 
             case 'treat_zero_as_data'   
                 treat_zero_as_data=1;
+
+            case 'Error_STD'
+                Error_STD=1;
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -595,8 +607,13 @@ elseif doaverage
         
         % Plot mean and se of values
         m(:,g) = nanmean(r_group')';
+
+
         se(:,g) = ste(r_group')'; 
-%         se(:,g) = std(r_group')';
+
+        if Error_STD==1
+                    se(:,g) = std(r_group')';  %% Special case for bootstrap data
+        end
         
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);

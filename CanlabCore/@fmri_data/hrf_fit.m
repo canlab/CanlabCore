@@ -151,7 +151,6 @@ params_obj = myoutargs(numstim+1 : end);
 end
 
 
-
 function varargout = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode)
 % parse outputs into separate row vectors (for matrix_eval_function)
 % outputs must be row vectors

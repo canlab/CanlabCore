@@ -1,38 +1,21 @@
 function [PowLoss] = PowerLoss(modres, modfit, moddf, tc, TR, Run, alpha)
+% function [PowLoss] = PowerLoss(modres, modfit, moddf, tc, TR, Run, alpha)
+%
 % Estimates Power-loss due to mis-modeling.
 %
-% :Usage:
-% ::
+% INPUT:
 %
-%     function [PowLoss] = PowerLoss(modres, modfit, moddf, tc, TR, Run, alpha)
+% modres - residuals
+% modfit - model fit
+% moddf  - model degrees of freedom
+% tc     - time course
+% TR     - time resolution
+% Runs   - expermental design
+% alpha  - alpha value
 %
-% :Inputs:
+% OUTPUT:
 %
-%   **modres:**
-%        residuals
-%
-%   **modfit:**
-%        model fit
-%
-%   **moddf:**
-%        model degrees of freedom
-%
-%   **tc:**
-%        time course
-%
-%   **TR:**
-%        time resolution
-%
-%   **Runs:**
-%        expermental design
-%
-%   **alpha:**
-%        alpha value
-%
-% :Output:
-%
-%   **PowLoss:**
-%        Estimated power loss
+% PowLoss - Estimated power loss
 %
 %
 

@@ -1,18 +1,17 @@
 function [param] = get_parameters2(hdrf,t)
+%
 % Find model parameters
 %
 % Height - h
-%
 % Time to peak - p (in time units of TR seconds)
-%
 % Width (at half peak) - w  
-%
-% Calculate Heights and Time to peak:
-%
-% delta = 1/(t(2)-t(1));
 
-n = round(length(t)*0.8);
+
+% Calculate Heights and Time to peak:
+
+% delta = 1/(t(2)-t(1));
 % n = round(t(end)*0.6*delta)
+n = round(length(t)*0.8);
 
 [~,p] = max(abs(hdrf(1:n)));
 h = hdrf(p);

@@ -1,57 +1,33 @@
 function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p)
+% function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runs,T,p)
+%
 % Fits GLM using canonical hrf (with option of using time and dispersion derivatives)';
 %
-% :Usage:
-% ::
+% INPUTS:
+% 
+% tc    - time course
+% TR    - time resolution
+% Runs  - expermental design
+% T     - length of estimated HRF
+% p     - Model type
 %
-%     function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runs,T,p)
+% Options: p=1 - only canonical HRF
+%          p=2 - canonical + temporal derivative
+%          p=3 - canonical + time and dispersion derivative
+% 
+% OUTPUTS:
 %
-% :Inputs:
+% hrf   - estimated hemodynamic response function
+% fit   - estimated time course
+% e     - residual time course
+% param - estimated amplitude, height and width
+% info  - struct containing design matrices, beta values etc
 %
-%   **tc:**
-%        time course
-%
-%   **TR:**
-%        time resolution
-%
-%   **Runs:**
-%        expermental design
-%
-%   **T:**
-%        length of estimated HRF
-%
-%   **p:**
-%        Model type
-%
-% :Options:
-%    - p=1 - only canonical HRF
-%    - p=2 - canonical + temporal derivative
-%    - p=3 - canonical + time and dispersion derivative
-%
-% :Outputs:
-%
-%   **hrf:**
-%        estimated hemodynamic response function
-%
-%   **fit:**
-%        estimated time course
-%
-%   **e:**
-%        residual time course
-%
-%   **param:**
-%        estimated amplitude, height and width
-%
-%   **info:**
-%        struct containing design matrices, beta values etc
-%
-% ..
-%    Created by Martin Lindquist on 10/02/09
-%    Last edited: 05/17/13 (ML)
-% ..
+% Created by Martin Lindquist on 10/02/09
+% Last edited: 05/17/13 (ML)
 
-d = length(Run);
 %tc = tc';
+d = length(Run);
 len = length(Run{1});
 t=1:TR:T;
 

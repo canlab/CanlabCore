@@ -1,51 +1,28 @@
 function [hrf, fit, e, param] = Fit_sFIR(tc, TR, Run, T, mode)
+% function [hrf, fit, e, param] = Fit_sFIR(tc,TR,Runs,T,mode)
+%
 % Fits FIR and smooth FIR model  
 %
-% :Usage:
-% ::
+% INPUTS:
+% 
+% tc    - time course
+% TR    - time resolution
+% Runs  - expermental design
+% T     - length of estimated HRF
+% mode  - FIR or smooth FIR
+%   options:
+%       0 - standard FIR 
+%       1 - smooth FIR
+% 
+% OUTPUTS:
 %
-%     function [hrf, fit, e, param] = Fit_sFIR(tc,TR,Runs,T,mode)
+% hrf   - estimated hemodynamic response function
+% fit   - estimated time course
+% e     - residual time course
+% param - estimated amplitude, height and width
 %
-% :Inputs:
-%
-%   **tc:**
-%        time course
-%
-%   **TR:**
-%        time resolution
-%
-%   **Runs:**
-%        expermental design
-%
-%   **T:**
-%        length of estimated HRF
-%
-%   **mode:**
-%        FIR or smooth FIR
-%
-%        Options:
-%           0 - standard FIR 
-%
-%           1 - smooth FIR
-%
-% :Outputs:
-%
-%   **hrf:**
-%        estimated hemodynamic response function
-%
-%   **fit:**
-%        estimated time course
-%
-%   **e:**
-%        residual time course
-%
-%   **param:**
-%        estimated amplitude, height and width
-%
-% ..
-%    Created by Martin Lindquist on 10/02/09
-%    Last edited: 05/17/13 (ML)
-% ..
+% Created by Martin Lindquist on 10/02/09
+% Last edited: 05/17/13 (ML)
 
 numstim = length(Run);
 len = length(Run{1});
@@ -53,9 +30,9 @@ t=1:TR:T;
 tlen = length(t);
 
 Runs = zeros(len,numstim);
-for i=1:numstim,
+for i=1:numstim
     Runs(:,i) = Run{i};
-end;
+end
 
 [DX] = tor_make_deconv_mtx3(Runs,tlen,1);
 

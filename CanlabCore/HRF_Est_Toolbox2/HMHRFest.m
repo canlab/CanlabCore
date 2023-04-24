@@ -1,38 +1,28 @@
 function [Res] = HMHRFest(y, Runs, TR, nbasis, norder)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HRF estimation algorithm
 %
-% :Inputs:
+% By David Degras and Martin Lindquist
+% Created: 08/22/12
+% Last edited: 03/27/14
 %
-%   **y:**
-%        Data matrix (#time points) by (#subjects) by (#voxels)
+% INPUTS:
 %
-%   **Runs:**
-%        Stick functions for each subject (#time points) by (#conditions) by (#subjects) 
-%
-%   **TR:**
-%        Time resolution
-%
-%   **nbasis:**
-%        Number of b-spline basis
-%
-%   **norder:**
-%        Order of b-spline basis
-%
-% ..
-%    By David Degras and Martin Lindquist
-%    Created: 08/22/12
-%    Last edited: 03/27/14
-% ..
+% y:        Data matrix (#time points) by (#subjects) by (#voxels)
+% Runs:     Stick functions for each subject (#time points) by (#conditions) by (#subjects) 
+% TR:       Time resolution
+% nbasis:   Number of b-spline basis
+% norder:   Order of b-spline basis
 
-
-[len, sub, voxpar] = size(y);
-[~, L, ~] = size(Runs);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set initial values
-%
+
 % TR = 1;                 % TR of experiment
 % nbasis = 20;            % Number of b-spline basis
 % norder = 6;             % Order of b-spline basis
+
+[len, sub, voxpar] = size(y);
+[~, L, ~] = size(Runs);
 
 I = 1;                  % Number of groups
 N1 = sub;               % N1: Number of subjects in Group 1

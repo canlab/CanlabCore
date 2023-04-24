@@ -1,34 +1,24 @@
 function [theta,HH,C,P,hrf,fit,e,param] = Anneal_Logit(theta0,t,tc,Run)
+%
+% [theta,HH,C,P] = Anneal_Logit(theta0,t,tc,Run)
+%
 % Estimate inverse logit (IL) HRF model using Simulated Annealing
 % Creates fitted curve - 3 logistic functions to be summed together - from parameter estimates
 %
-% :Usage:
-% ::
+% INPUT: theta0, t, tc, Run
+% Run = stick function
+% tc = time course
+% t = vector of time points
+% theta0 = initial value for the parameter vector
 %
-%     [theta,HH,C,P] = Anneal_Logit(theta0,t,tc,Run)
+% By Martin Lindquist and Tor Wager
+% Edited 12/12/06
 %
-% :Inputs:
-%
-%   **Run:**
-%        stick function
-%
-%   **tc:**
-%        time course
-%
-%   **t:**
-%        vector of time points
-%
-%   **theta0:**
-%        initial value for the parameter vector
-%
-% ..
-%    By Martin Lindquist and Tor Wager
-%    Edited 12/12/06
-% ..
 
-% ..
-%    Initial values
-% ..
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Initial values
+
 iter = 15000;                               % Number of iterations
 theta = theta0;                             % Set initial value for the parameter vector
 h0 = cost(theta0,t,tc,Run);                 % Calculate cost of initial estimate

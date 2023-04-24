@@ -11,6 +11,7 @@ function bf10 = t1smpbf(t,n,r)
 % Default scale factor
 if nargin < 3
     r = 0.707;
+%     r = 0.5;
 end
 
 % Function to be integrated

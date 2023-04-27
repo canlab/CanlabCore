@@ -227,7 +227,9 @@ for i = 1:nregions
         cl(i).all_data = single(regiondat);     % images x voxels
         
     else
-        regionmean = NaN .* zeros(size(dat, 1), 1);
+        % regionmean = NaN .* zeros(size(dat, 1), 1); % This seems to be a typo since there's no dat instantiated. Probably regiondat MS 2/15/2023
+        regionmean = NaN .* zeros(size(regiondat, 1), 1); % This seems to be a typo since there's no dat instantiated. Probably regiondat MS 2/15/2023
+
     end
     
     cl(i).dat = regionmean;

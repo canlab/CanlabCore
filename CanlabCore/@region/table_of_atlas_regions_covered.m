@@ -154,7 +154,9 @@ end
 
 % Legend info
 
-voxvol = prod(abs(diag(r(1).M(1:3, 1:3))));
+if ~isempty(r)
+    voxvol = prod(abs(diag(r(1).M(1:3, 1:3))));
+end
 
 table_legend_text = {'Note: XYZ values are Montreal Neurologic Institute coordinates in mm.'};
 table_legend_text{2} = sprintf('Voxel volume is %3.2fmm^3', voxvol);

@@ -277,24 +277,29 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
-    case 'session_spm_style'
+        
+    case 'session_grand_mean_scaling_spm_style'
         % SPM's default method of global mean scaling
         % useful for replicating SPM analyses or comparing SPM's scaling to
         % other methods.
         % not implemented yet because tor decided to use spm_global on images for comparison; this could be done though...
         % see help spm_global
-        %         nscan = fmridat.images_per_session;  % num images per session
-        %         I = intercept_model(nscan);
-        %         for i = 1:size(I, 2)
-        %
-        %             wh = find(I(:, i));
-        %             y = fmridat.dat(:, wh)';   % y is images x voxels
-        %             gm = mean(y); % mean at each voxel, 1 x voxels
-        %
-        %             % subtract mean at each vox, divide by global session mean
-        %             y = (y - repmat(gm, size(y, 1), 1)) ./ std(y(:));
-        %             fmridat.dat(:, wh) = y;
-        %         end
+        nscan = fmridat.images_per_session;  % num images per session
+        I = intercept_model(nscan);
+        for i = 1:size(I, 2)
+            
+            wh = find(I(:, i));
+            y = fmridat.dat(:, wh);   % y is vox  x images
+            
+            y_vec = y(:);
+            y_vec(y_vec == 0 | isnan(y_vec)) = [];  % exclude invalid values from scaling
+            
+            gm = mean(y_vec); % grand mean for session
+            
+            % subtract mean at each vox, divide by global session mean
+            y = 100 .* y ./ gm;
+            fmridat.dat(:, wh) = y;
+        end
         
         
     case 'session_global_z'

@@ -20,11 +20,13 @@ mypath = which('ilogit');
 if isempty(mypath), error('Cannot find directory with ilogit.m and other functions. Not on path?'); end
 [mydir] = fileparts(mypath);
 
-% load(fullfile(mydir,'timecourse'))
-% 
-% tc = (tc- mean(tc))/std(tc);
-% len = length(tc);
+load(fullfile(mydir,'timecourse'))
 
+tc = (tc- mean(tc))/std(tc);
+len = length(tc);
+
+
+%%
 % Create HRFs
 
 [xBF] = spm_get_bf(struct('dt', .5, 'name', 'hrf (with time and dispersion derivatives)', 'length', 32));
@@ -35,7 +37,7 @@ end
 for i = 2:3, xx = conv(xBF.bf(:,i), [1 1]');
     Xtrue1(:, i) = xx(1:66);
 end
-hrf1 = Xtrue * [1 .5 .3]';
+hrf1 = Xtrue1 * [1 .5 .3]';
 
 
 clear Xtrue2
@@ -213,8 +215,6 @@ disp('Power Loss:'); disp(PowLoss3);
 
 hold on; han(5) = plot(fit4,'b');
 
-legend(han,{'Data' 'IL' 'sFIR' 'DD' 'Spline'})
-
 
 disp('Summary: Spline');
 
@@ -225,6 +225,30 @@ disp('Width'); disp(param(3,:)*TR);
 disp('MSE:'); disp((1/(len-1)*sum(e4.^2)));
 disp('Mis-modeling'); disp(pv);
 disp('Power Loss:'); disp(PowLoss4);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fit HRF using non-linear gamma
+
+[h5, fit5, e5, param] = Fit_NLgamma(tc, TR, Runc, T);
+
+[pv sres sres_ns5] = ResidScan(e5, FWHM);
+[PowLoss5] = PowerLoss(e5, fit5, (len-p) , tc, TR, Runc, alpha);
+
+hold on; han(6) = plot(fit5,'b');
+
+legend(han,{'Data' 'IL' 'sFIR' 'DD' 'Spline' 'NL'})
+
+
+disp('Summary: NL gamma');
+
+disp('Amplitude'); disp(param(1,:));
+disp('Time-to-peak'); disp(param(2,:)*TR);
+disp('Width'); disp(param(3,:)*TR);
+
+disp('MSE:'); disp((1/(len-1)*sum(e5.^2)));
+disp('Mis-modeling'); disp(pv);
+disp('Power Loss:'); disp(PowLoss5);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -244,7 +268,9 @@ xsecs3 = xsecs(1:length(h3));
 han2(5:6) = plot(xsecs3, h3,'m');
 xsecs4 = xsecs(1:length(h4));
 han2(7:8) = plot(xsecs4, h4,'b');
-legend(han2,{'IL1' 'IL2' 'sFIR1' 'sFIR2' 'DD1' 'DD2' 'Spline1' 'Spline2'})
+xsecs5 = xsecs(1:length(h5));
+han2(9:10) = plot(xsecs5, h5,'y');
+legend(han2,{'IL1' 'IL2' 'sFIR1' 'sFIR2' 'DD1' 'DD2' 'Spline1' 'Spline2' 'NL1' 'NL2'})
 
 title('Estimated HRF');
 
@@ -258,9 +284,10 @@ han3 = plot(sres_ns1,'r');
 hold on; han3(2) = plot(sres_ns2,'g');
 hold on; han3(3) = plot(sres_ns3,'m');
 hold on; han3(4) = plot(sres_ns4,'b');
+hold on; han3(5) = plot(sres_ns5,'y');
 
 hold on; plot((1:len),zeros(len,1),'--k');
-legend(han3,{'IL' 'sFIR' 'DD' 'Spline'})
+legend(han3,{'IL' 'sFIR' 'DD' 'Spline' 'NL'})
 title('Mis-modeling (time course)');
 
 
@@ -270,15 +297,16 @@ subplot(3,2,6); hold on;
 [s2] = Fit_sFIR(sres_ns2,TR,Runc,T,0);
 [s3] = Fit_sFIR(sres_ns3,TR,Runc,T,0);
 [s4] = Fit_sFIR(sres_ns4,TR,Runc,T,0);
-
+[s5] = Fit_sFIR(sres_ns5,TR,Runc,T,0);
 
 han4 = plot(s1(1:T),'r');
 hold on; han4(2) = plot(s2(1:T),'g');
 hold on; han4(3) = plot(s3(1:T),'m');
 hold on; han4(4) = plot(s4(1:T),'b');
+hold on; han4(5) = plot(s5(1:T),'y');
 hold on; plot((1:T),zeros(T,1),'--k');
 
-legend(han4,{'IL' 'sFIR' 'DD' 'Spline'})
+legend(han4,{'IL' 'sFIR' 'DD' 'Spline' 'NL'})
 title('Mis-modeling (HRF)');
 
 %%
@@ -286,20 +314,56 @@ title('Mis-modeling (HRF)');
 
 figure; hold on;
 
-plot(xsecs, beta1*hrf1, 'k', 'LineWidth', 2)
-plot(xsecs, beta2*hrf2, 'k', 'LineWidth', 2)
+% plot(xsecs, beta1*hrf1, 'k--', 'LineWidth', 2)
+% plot(xsecs, beta2*hrf2, 'k--', 'LineWidth', 2)
+% 
+% xsecs1 = xsecs(1:length(h1));
+% han2 = plot(xsecs1, h1,'r', 'LineWidth', 2);
+% xsecs2 = xsecs(1:length(h2));
+% han2(3:4) = plot(xsecs2, h2,'g', 'LineWidth', 2);
+% xsecs3 = xsecs(1:length(h3));
+% han2(5:6) = plot(xsecs3, h3,'m', 'LineWidth', 2);
+% xsecs4 = xsecs(1:length(h4));
+% han2(7:8) = plot(xsecs4, h4,'b', 'LineWidth', 2);
+% xsecs5 = xsecs(1:length(h5));
+% han2(9:10) = plot(xsecs5, h5,'y', 'LineWidth', 2);
+% 
+% legend(han2,{'IL1' 'IL2' 'sFIR1' 'sFIR2' 'DD1' 'DD2' 'Spline1' 'Spline2' 'NL1' 'NL2'})
+% title('Estimated HRF');
+
+subplot 121
+hold
+plot(xsecs, beta1*hrf1, 'k--', 'LineWidth', 2)
 
 xsecs1 = xsecs(1:length(h1));
-han2 = plot(xsecs1, h1,'r', 'LineWidth', 2);
-
+han2 = plot(xsecs1, h1(:,1),'r', 'LineWidth', 2);
 xsecs2 = xsecs(1:length(h2));
-han2(3:4) = plot(xsecs2, h2,'g', 'LineWidth', 2);
+han2(2) = plot(xsecs2, h2(:,1),'g', 'LineWidth', 2);
 xsecs3 = xsecs(1:length(h3));
-han2(5:6) = plot(xsecs3, h3,'m', 'LineWidth', 2);
-
+han2(3) = plot(xsecs3, h3(:,1),'m', 'LineWidth', 2);
 xsecs4 = xsecs(1:length(h4));
-han2(7:8) = plot(xsecs4, h4,'b', 'LineWidth', 2);
-legend(han2,{'IL1' 'IL2' 'sFIR1' 'sFIR2' 'DD1' 'DD2' 'Spline1' 'Spline2'})
+han2(4) = plot(xsecs4, h4(:,1),'b', 'LineWidth', 2);
+xsecs5 = xsecs(1:length(h5));
+han2(5) = plot(xsecs5, h5(:,1),'y', 'LineWidth', 2);
+
+legend(han2,{'IL1' 'sFIR1' 'DD1' 'Spline1' 'NL1'})
 title('Estimated HRF');
 
+subplot 122
+hold
+plot(xsecs, beta2*hrf2, 'k--', 'LineWidth', 2)
+
+xsecs1 = xsecs(1:length(h1));
+han2 = plot(xsecs1, h1(:,2),'r', 'LineWidth', 2);
+xsecs2 = xsecs(1:length(h2));
+han2(2) = plot(xsecs2, h2(:,2),'g', 'LineWidth', 2);
+xsecs3 = xsecs(1:length(h3));
+han2(3) = plot(xsecs3, h3(:,2),'m', 'LineWidth', 2);
+xsecs4 = xsecs(1:length(h4));
+han2(4) = plot(xsecs4, h4(:,2),'b', 'LineWidth', 2);
+xsecs5 = xsecs(1:length(h5));
+han2(5) = plot(xsecs5, h5(:,2),'y', 'LineWidth', 2);
+
+legend(han2,{'IL2' 'sFIR2' 'DD2' 'Spline2' 'NL2'})
+title('Estimated HRF');
 

@@ -480,7 +480,7 @@ if group_avg_ref_line
         han.grpline_err_handle = [h1 h2];
     else
         
-        avg_b = mean(b); % lines 484-496 added by lukasvo76 Jan 2023 to fix bug in case n(trials) differs between subjects
+        avg_b = nanmean(b); % lines 484-496 added by lukasvo76 Jan 2023 to fix bug in case n(trials) differs between subjects
             for i = 1:size(X,2)
                 l(i,1) = size(X{i},1);
             end

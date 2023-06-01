@@ -30,5 +30,11 @@ end
 function outarray = pwn_expand(inarray, dim, diff)
     sznandims = size(inarray);
     sznandims(dim) = abs(diff);
-    outarray = cat(dim, inarray, NaN(sznandims));
+    if isnumeric(inarray)
+        nanfill=NaN(sznandims);
+    elseif iscell(inarray)
+        nanfill=num2cell(NaN(sznandims));
+    end
+
+    outarray = cat(dim, inarray, nanfill);
 end

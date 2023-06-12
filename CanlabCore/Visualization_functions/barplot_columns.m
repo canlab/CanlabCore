@@ -1,4 +1,4 @@
-function [handles, dat, xdat] = barplot_columns(dat, varargin)
+function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 % :Usage:
 % ::
 %
@@ -163,6 +163,8 @@ myalpha = 1;
 barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
+do95within = 0;
+
 nanwarningflag = 1;
 doviolin = 1;
 mytitle = [];
@@ -239,6 +241,7 @@ if length(varargin) > 0
 
         % Error bar options
         if strcmp(varargin{i}, 'within'), dowithin = 1; end %cons = varargin{i + 1}; end
+        if strcmp(varargin{i}, '95within'), dowithin = 1, do95within = 1; end 
         if strcmp(varargin{i}, 'custom_se'), within_ste = varargin{i+1}; custom_se = true; end
         if strcmp(varargin{i}, '95CI'), do95CI = 1; end
 
@@ -380,7 +383,10 @@ dat = y;  % adjusted data, for plot
 if dowithin && ~custom_se
     
     within_ste = barplot_get_within_ste(dat);
-    
+    if do95within
+        within_ste = within_ste * tinv(.975, nn-1); 
+    end
+
     Std_Error = repmat(within_ste, 1, size(dat, 2));
     
 elseif custom_se
@@ -404,7 +410,7 @@ if ~iscolumn(Std_Error), Std_Error = Std_Error'; end % can happen for within-sub
 if isempty(Name), for i = 1:length(T), Name{i, 1} = sprintf('Col %3.0f', i); end, end
 
 statstable = table(Name, Mean_Value, Std_Error, T, P, Cohens_d);
-if do95CI, statstable.Properties.VariableNames{3} = 'half_CI_95perc'; end
+if do95CI || do95within, statstable.Properties.VariableNames{3} = 'half_CI_95perc'; end
 if doprinttable
     disp(statstable)
 end

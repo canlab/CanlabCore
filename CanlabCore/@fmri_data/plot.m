@@ -630,6 +630,8 @@ end
 
 % Set color limits for all runs together
 % ----------------------------------------------------------------------
+% colormap('default'); % Ensure a default colormap
+
 mm = cat(m{:});
 alldat = mm.dat(:);
 
@@ -637,6 +639,14 @@ alldat = mm.dat(:);
 % have to omitnan
 clim = [mean(alldat, 'omitnan') - 3*std(alldat, 'omitnan') mean(alldat, 'omitnan') + 3*std(alldat, 'omitnan')];
 
+% indices = reshape(1:n_runs^2, n_runs, [])';
+% indices_except_first=indices;
+% indices_except_last=indices;
+% 
+% indices_except_first(:, 1) = [];
+% indices_except_last(:, n_runs) = [];
+
+% last_column_indices = n_runs:n_runs:n_runs^2;
 
 for i = 1:n_runs
 
@@ -651,6 +661,38 @@ for i = 1:n_runs
 end
 
 drawnow
+
+
+
+dataMatrix = [];
+imageNames= {};
+for i = 1:numel(m)
+    structure = m{i};
+    datField = structure.dat;
+    dataMatrix = [dataMatrix, datField];
+    imgNames{i} = ['Run ', num2str(i)];
+end
+
+% subplot(n_runs, n_runs, sort(indices_except_last(:)'));
+
+if n_runs==2
+    figure; plot(m{1}.dat, m{2}.dat, 'k.'); refline
+    % figure; corr(m{1}.dat, m{2}.dat, 'k.'); refline
+    corr(m{1}.dat, m{2}.dat)
+    title(sprintf('r = %3.2f',  corr(m{1}.dat, m{2}.dat)))
+    xlabel('Run-1')
+    ylabel('Run-2')
+    drawnow
+end
+
+if n_runs > 2
+    plot_correlation_matrix(dataMatrix, 'var_names', imgNames, 'circles', false);
+    drawnow
+end
+
+
+
+
 
 end % montage_run_means
 

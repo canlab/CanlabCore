@@ -1,7 +1,7 @@
 function sig = holm_sidak(pVector, alpha)
 % performs Holm-Sidak correction for multiple independent comparisons. Sidak correction is a slightly less conservative bonferonni
 % Holm's method is a step down approach implemented by the while loop iterations. More commonly used in the context of bonferonni
-# rather than Sidak, but equally valid in both cases.
+% rather than Sidak, but equally valid in both cases.
 % 
 % pVector - array of p-values obtained from multiple independent tests
 % alpha - Overall desired false positive rate, e.g. 0.05.

@@ -96,7 +96,13 @@ function out = regress(dat, varargin)
 %                
 %  **analysis_name:** 
 %       Followed by a string with a name/description for this analysis.
-% 
+%                
+%  **covdat:** 
+%       Followed by an fmri_data object, or a cell array of fmri_data
+%       objects. These serve as voxel-varying covariates -- each voxel can have
+%       a unique set of covariates. One common use case might be to regress
+%       post-treatment data on group + pre-treatment data. NOTE: this field
+%       only works in 'robust' mode, and is not implemented for OLS regression.
 %
 % :Outputs:
 %
@@ -242,6 +248,7 @@ contrast_names = {};
 analysis_name = '';
 C = [];
 grandmeanscale = false;
+covdat = [];   % covariates for each vox. initialize to empty (no voxel-varying covariates)
 
 % ---------------------------------------------------------------------
 % Parse Inputs
@@ -314,6 +321,11 @@ for varg = 1:length(varargin)
         if strcmpi('grandmeanscale',varargin{varg})
             grandmeanscale = true;
             varargin{varg} = {};
+        end
+
+        if strcmpi('covdat',varargin{varg})
+            covdat = varargin{varg + 1};
+            varargin{varg} = {}; varargin{varg + 1} = {};
         end
              
     end % if ischar
@@ -531,6 +543,38 @@ if grandmeanscale
     
 end
 
+% Check and set up for covdat (voxel-varying covariates)
+% ---------------------------------------------------------------------
+if ~isempty(covdat)
+
+    % check robust enabled
+    if ~do_robust
+        warning('Covdat (voxel-varying covariates) requested, but robust flag not enabled. Covariates will be ignored (see Help)');
+    end
+
+    % if not in cell array, put it in cell array
+    if iscell(covdat)
+        ; % fine - nothing to do
+    elseif isa(covdat, 'image_vector')
+        covdat = {covdat};
+    else
+        error('Covdat must be a cell array of image_vectors or an image_vector')
+    end
+
+    for i=1:numel(covdat)
+        % resample to dat space if needed
+        if(compare_space(dat, covdat{i}))
+            covdat{i} = resample_space(covdat{i}, dat);
+        end
+
+        % add covs to end of variable names
+        if ~isempty(variable_names)
+            variable_names{end+1} = sprintf('voxelwise_cov%d', i);
+        end
+    end
+
+end
+
 
 if doverbose
     
@@ -587,17 +631,36 @@ if brain_is_outcome
         
         v = size(dat.dat, 1);
         [n, k] = size(X);
+
+        % multiple covariates
+         if ~isempty(covdat)  % if we have covariate for each vox
+            k = k + numel(covdat);
+         end
         
         % Initialize outputs
         [b, t, stderr] = deal(zeros(k, v));
         p = ones(k, v);
         [dfe, sigma] = deal(zeros(1, v));
         
+
         for i = 1:v
             % For each voxel
 
-            [bb,stats] = robustfit(X, dat.dat(i,:)', 'bisquare', [], 'off');
-            
+            if ~isempty(covdat)  % if we have different covariates for each vox
+
+                Xi = X;
+                for j=1:numel(covdat)
+                    Xi(:,end+1) = covdat{j}.dat(i,:)';
+                end
+
+                [bb,stats] = robustfit(Xi, dat.dat(i,:)', 'bisquare', [], 'off');
+                r(:,i) = stats.resid; % save voxelwise residual
+
+            else % standard robust regression -- same covs for all vox
+
+                [bb,stats] = robustfit(X, dat.dat(i,:)', 'bisquare', [], 'off');
+            end
+
             b(:,i)=bb; %Betas
             t(:,i)=stats.t; %t-values
             p(:,i)=stats.p; %p-values
@@ -609,7 +672,13 @@ if brain_is_outcome
                 fprintf('\b\b\b\b%03d%%', 100 * round(i/v))
             end
         end
-        r = dat.dat' - X*b; %residual
+        
+        % if no vox varying covs, one-shot computation of residuals
+        % residuals for vox varying covs are computed in loop above
+        if isempty(covdat)
+            r = dat.dat' - X*b; %residual
+        end 
+           
         
     else
         % OLS - X predicting brain 
@@ -747,7 +816,7 @@ out.analysis_name = analysis_name;
 out.input_parameters = struct( ...
     'brain_is_predictor', brain_is_outcome, 'do_robust', do_robust, 'grandmeanscale', grandmeanscale, ...
     'do_intercept', do_intercept, ...
-    'do_resid', do_resid, 'doverbose', doverbose, 'do_display', do_display);
+    'do_resid', do_resid, 'doverbose', doverbose, 'do_display', do_display, 'covdat', covdat);
 
 out.input_parameters.initial_statistical_threshold = inputargs;
 

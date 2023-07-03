@@ -1,4 +1,4 @@
-function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, varargin)
+function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
 % Custom plots for fmri_data object. Includes mulitple plots and outlier detection.
 %
 % :Usage:
@@ -138,6 +138,17 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, varargin)
 %          If a contrast with one image per person is passed to plot(), this plot gives you
 %          the effect size in a simple group analysis (e.g., one-sample t-test) across
 %          the brain. It is reasonable to use this plot to look for distortions such as high values for means and mean/STDs in the ventricles.
+%
+%   **X:**
+%        X is a struct that contains the following fields:
+%        - X.r: The correlation matrix
+%        - X.p: The p-value matrix that corresponds to the correlation
+%           matrix.
+%        - X.sig: The logical sognificance matrix that corresponds to a
+%        p-values less than .05.
+%       X can be passed into such methods such as plot_correlation_matrix()
+%       and other methods that use such structs.
+
 
 % Programmers' notes: tor - 4/6/2018, changed mahalanobis distance method
 % to 'corr', using correlation matrix, and changing how many/how prin comps
@@ -149,6 +160,9 @@ function [wh_outlier_uncorr, wh_outlier_corr] = plot(fmridat, varargin)
 %
 % 05/18/2022 Lukas: maximized windows for figures systematically, to
 % improve image quality when publishing
+%
+% 07/02/2023 Michael Sun: Added the X struct as an output.
+
 
 [wh_outlier_uncorr, wh_outlier_corr] = deal([]);
 
@@ -341,8 +355,14 @@ switch plotmethod
         % Correlation matrix
         % ---------------------------------------------------------------
         subplot(2, 3, 3); hold on;
-        covmtx = corr(fmridat.dat);
-        imagesc(covmtx);
+        [cormtx p] = corr(fmridat.dat);
+        imagesc(cormtx);
+        sig=p<.05;
+
+        X.r=cormtx;
+        X.p=p;
+        X.sig=sig;
+
         axis tight; set(gca, 'YDir', 'Reverse');
         title('Spatial correlation across images');
         colorbar;

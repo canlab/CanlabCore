@@ -79,14 +79,17 @@ colors = colors(1:length(r));
 
 cl = region2struct(r);
 
-surface_handles = [];
+% surface_handles = []; % This appears to be a bug, as it coerces the Patch object into a double. 05/23/2023 MS
+surface_handles = {};
 
 for i = 1:k
     
     try
         out = imageCluster('cluster', cl(i), 'color', colors{i}, varargin{:});
         
-        surface_handles(i) = out;
+%         surface_handles(i) = out; % This appears to be a bug, as it
+%         coerces the Patch object into a double. 05/23/2023 MS
+        surface_handles{i} = out;
     catch
         disp('Error imaging isosurface; too few voxels?')
         %surface_handles(i) = [];

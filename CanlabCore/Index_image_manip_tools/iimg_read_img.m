@@ -313,7 +313,8 @@ elseif gzipexists
     % use .gz - unzip and use previous value of imname
     % flag for re-gzipping later.
     waszipped = true;
-    system(['gunzip ' imname '.gz']);
+%     system(['gunzip ' imname '.gz']);
+    gunzip([imname,'.gz']);
     
 else
     error('Image "%s" does not exist or cannot be found on path (unzipped or .gz versions)!', imname);

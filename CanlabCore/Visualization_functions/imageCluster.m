@@ -81,7 +81,7 @@ for i = 1:nargin
     if isstr(varargin{i})
         switch varargin{i}
         case 'cluster', cl = varargin{i+1};
-        case 'getclusters', clusters = tor_ihb_getClusters;
+        case 'getclusters', clusters = tor_ihb_GetClusters;
         case 'getfigclusters', clusters = getappdata(gcf, 'clusters');
         case 'figure', h3dfig = figure; set(h3dfig,'Tag','myFig');
         case 'color',mycolor = varargin{i+1};

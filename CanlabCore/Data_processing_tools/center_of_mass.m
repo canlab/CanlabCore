@@ -38,16 +38,23 @@ Z = repmat(Z, 3, 1);
 
 if any(isnan(Z(:)) | isinf(Z(:))), Z = 1; end
 
-XYZw = XYZ .* abs(Z); % Wani modified Z into abs(Z), 11/12/12
+% if any(isempty(XYZ) | isempty(Z)), Z=XYZ; end  % If XYZ and Z are empty, they need to be compatible dimensions, Michael 12/3/2022
 
-%center = sum(XYZw,2) ./ sum(Z,2);
-center = sum(XYZw,2) ./ sum(abs(Z),2);
+if (~isempty(XYZ) & ~isempty(Z))  % Check if Empty, Michael 12/3/2022
 
-center = repmat(center,1,size(XYZ,2));
+    XYZw = XYZ .* abs(Z); % Wani modified Z into abs(Z), 11/12/12
 
-whch = find(sum((XYZ - center).^2) == min(sum((XYZ - center).^2)));
+    %center = sum(XYZw,2) ./ sum(Z,2);
+    center = sum(XYZw,2) ./ sum(abs(Z),2);
 
-com = XYZ(:,whch)';
-com = com(1,:);
+    center = repmat(center,1,size(XYZ,2));
+
+    whch = find(sum((XYZ - center).^2) == min(sum((XYZ - center).^2)));
+
+    com = XYZ(:,whch)';
+    com = com(1,:);
+else
+    com=NaN;
+end
 
 return

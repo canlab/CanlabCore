@@ -208,7 +208,8 @@ end
 
 % Names
 % ----------------------------------------------
-names = [{xvardescrip} {yvardescrip} {mvardescrip} {m2varsdescrip{:}}];
+% names = [{xvardescrip} {yvardescrip} {mvardescrip} {m2varsdescrip{:}}];
+names = [{xvardescrip} {yvardescrip} {mvardescrip} {m2varsdescrip}];
 
 [paths, stats] = mediation(x, y, m, 'boot', 'plots', 'verbose', 'bootsamples', nboot, 'names', names, 'covs', c, 'M', m2, varargin{:});
 

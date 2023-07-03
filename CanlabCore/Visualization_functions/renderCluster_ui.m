@@ -359,7 +359,9 @@ if dohead
 end
     
         
-end
+% end
+
+
 colormap(gray(100))
 
 O.H = cH;
@@ -394,3 +396,5 @@ set(gcf,'Color','k')
 
 % make3davi(O)
 return
+
+end

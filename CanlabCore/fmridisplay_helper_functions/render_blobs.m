@@ -548,7 +548,10 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         w = repmat(Z, [1 1 3]);
                         [Zi, Zj] = find(w > 0);
                         slicecdat = nan(size(Z,1), size(Z,2) ,3);
-                        slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(Z(Z > 0),:);
+                        slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(Z(Z> 0),:); 
+% I'm pretty sure this is a bug since
+%                         indexmap is not selecting rows.... 2/11/2023 MS
+%                         slicecdat(sub2ind(size(w),Zi,Zj)) = indexmap(find(Z(Z > 0)),:);
                     end
                     
                 elseif dosplitcolor

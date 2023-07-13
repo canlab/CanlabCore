@@ -85,6 +85,13 @@ end
 
 [r, percent_coverage] = subdivide_by_atlas(r, atlas_obj);
 
+% attach this so we can deal with reordering of regions
+for i = 1:length(r)
+    r(i).custom_info2 = percent_coverage(i);
+    r(i).custom_info2_descrip = 'atlas parcel coverage';
+end
+
+
 % Separate subregions with positive and negative values if requested
 % -------------------------------------------------------------------------
 
@@ -92,9 +99,24 @@ if dosep
     % separate pos and neg
     [poscl, negcl] = posneg_separate(r);
 
+    [poscl, percent_coverage]=subdivide_by_atlas(poscl, atlas_obj);
+    
+
+    for i = 1:length(poscl)
+        poscl(i).custom_info2 = percent_coverage(i);
+        poscl(i).custom_info2_descrip = 'atlas parcel coverage';
+    end
+
+    [negcl, percent_coverage]=subdivide_by_atlas(negcl, atlas_obj);
+    for i = 1:length(negcl)
+        negcl(i).custom_info2 = percent_coverage(i);
+        negcl(i).custom_info2_descrip = 'atlas parcel coverage';
+    end
+
     r = [poscl negcl];
 
-    r=autolabel_regions_using_atlas(r, atlas_obj);
+    % r=autolabel_regions_using_atlas(r, atlas_obj);
+    
     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
 
     clear poscl negcl
@@ -106,11 +128,6 @@ else
     fprintf('\n%s\nTable of all regions\n', sep_str)
 end
 
-% attach this so we can deal with reordering of regions
-for i = 1:length(r)
-    r(i).custom_info2 = percent_coverage(i);
-    r(i).custom_info2_descrip = 'atlas parcel coverage';
-end
 
 % Volume in mm^3
 % count per cubic mm - voxel count * voxel volume

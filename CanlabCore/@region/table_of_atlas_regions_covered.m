@@ -55,6 +55,9 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, r_excl
 % detailed table output.
 %
 % Tor Wager, Feb 2023
+%
+% Fixed some minor bugs and improved error handling when there are no regions to display - Michael Sun, 07/13/2023
+
 
 n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap
@@ -82,19 +85,16 @@ end
 
 [r, percent_coverage] = subdivide_by_atlas(r, atlas_obj);
 
-% attach this so we can deal with reordering of regions
-for i = 1:length(r)
-    r(i).custom_info2 = percent_coverage(i);
-    r(i).custom_info2_descrip = 'atlas parcel coverage';
-end
-
 % Separate subregions with positive and negative values if requested
 % -------------------------------------------------------------------------
+
 if dosep
     % separate pos and neg
     [poscl, negcl] = posneg_separate(r);
 
     r = [poscl negcl];
+
+    r=autolabel_regions_using_atlas(r, atlas_obj);
     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
 
     clear poscl negcl
@@ -106,6 +106,11 @@ else
     fprintf('\n%s\nTable of all regions\n', sep_str)
 end
 
+% attach this so we can deal with reordering of regions
+for i = 1:length(r)
+    r(i).custom_info2 = percent_coverage(i);
+    r(i).custom_info2_descrip = 'atlas parcel coverage';
+end
 
 % Volume in mm^3
 % count per cubic mm - voxel count * voxel volume
@@ -129,6 +134,9 @@ results_table = [results_table get_signed_max(r, 'Z', 'maxZ')];  % use function 
 
 results_table.Properties.VariableNames{4} = 'maxVal';
 
+% results_table.maxVal=get_signed_max(r, 'Z', 'maxZ');  % Replace the above 2 lines MS
+% results_table = addvars(results_table, get_signed_max(r, 'Z', 'maxZ'));
+
 atlas_region_coverage = cat(1, r.custom_info2);
 
 results_table = addvars(results_table, round(atlas_region_coverage), 'NewVariableNames', 'Coverage');
@@ -140,94 +148,97 @@ excluded_region_table = results_table(wh_exclude, :);
 
 results_table(wh_exclude, :) = [];
 
-ispos(wh_exclude) = [];
 r_excluded = r(wh_exclude);
 
 r(wh_exclude) = [];
 
 if dosep
-
+    ispos(wh_exclude) = [];
     results_table_pos = results_table(ispos, :);
     results_table_neg = results_table(~ispos, :);
 
 end
 
 % Legend info
+if ~isempty(r)
 
-voxvol = prod(abs(diag(r(1).M(1:3, 1:3))));
-
-table_legend_text = {'Note: XYZ values are Montreal Neurologic Institute coordinates in mm.'};
-table_legend_text{2} = sprintf('Voxel volume is %3.2fmm^3', voxvol);
-table_legend_text{3} = 'maxVal is maximum positive or negatively-valued value in the .Z field. Its meaning varies across analyses. For a t-test, it usually reflects the maximum t-value.';
-table_legend_text{4} = 'Coverage: Percentage of voxels in the labeled atlas parcel covered by the identified activation region.';
-table_legend_text{5} = 'Regions shown are those with >1 voxel and >=25% coverage of the atlas parcel. See excluded_region_table for additional regions excluded in this way.';
-
-% Now split into positive and neg sub-tables and display
-if dosep
-    % Tables for pos and neg results separately
-
-    if any(ispos)
-        disp(results_table_pos)
+    voxvol = prod(abs(diag(r(1).M(1:3, 1:3))));
+    
+    table_legend_text = {'Note: XYZ values are Montreal Neurologic Institute coordinates in mm.'};
+    table_legend_text{2} = sprintf('Voxel volume is %3.2fmm^3', voxvol);
+    table_legend_text{3} = 'maxVal is maximum positive or negatively-valued value in the .Z field. Its meaning varies across analyses. For a t-test, it usually reflects the maximum t-value.';
+    table_legend_text{4} = 'Coverage: Percentage of voxels in the labeled atlas parcel covered by the identified activation region.';
+    table_legend_text{5} = 'Regions shown are those with >1 voxel and >=25% coverage of the atlas parcel. See excluded_region_table for additional regions excluded in this way.';
+    
+    % Now split into positive and neg sub-tables and display
+    if dosep
+        % Tables for pos and neg results separately
+    
+        if any(ispos)
+            disp(results_table_pos)
+        else
+            disp('No regions to display');
+        end
+    
+        fprintf('\nNegative Effects\n')
+        if any(~ispos)
+            disp(results_table_neg)
+        else
+            disp('No regions to display');
+        end
+    
     else
-        disp('No regions to display');
+        % No separation
+    
+        if size(results_table, 1) > 0
+            disp(results_table)
+        else
+            disp('No regions to display');
+        end
+    
+    end % dosep
+    
+    % Get region list
+    % -------------------------------------------------------------
+    region_list = cell(4, 1);
+    for i = 1:4, region_list{i} = ''; end
+    region_list{1} = 'Positive effects:';
+    region_list{3} = 'Negative effects:';
+    
+    for i = 1:size(results_table_pos, 1)
+        region_list{2} = [region_list{2} sprintf('%s (%2.0f%%), ', results_table_pos.Region{i}, results_table_pos.Coverage(i))];
     end
-
-    fprintf('\nNegative Effects\n')
-    if any(~ispos)
-        disp(results_table_neg)
+    
+    for i = 1:size(results_table_neg, 1)
+        region_list{4} = [region_list{4} sprintf('%s (%2.0f%%), ', results_table_neg.Region{i}, results_table_neg.Coverage(i))];
+    end
+    
+    
+    if dolegend == false || isempty(table_legend_text)
+    
+        return
+    
     else
-        disp('No regions to display');
+        % Print legend text
+    
+        canlab_print_legend_text(table_legend_text{:});
     end
-
+    
+    disp('')
+    disp('List of regions covered:')
+    for i = 1:4
+        disp(region_list{i});
+    end
+    
+    
+    % clean up text for legend
+    % if length(table_legend_text) > 2
+    %     table_legend_text(2:3) = [];
+    % end
 else
-    % No separation
-
-    if size(results_table, 1) > 0
-        disp(results_table)
-    else
-        disp('No regions to display');
-    end
-
-end % dosep
-
-% Get region list
-% -------------------------------------------------------------
-region_list = cell(4, 1);
-for i = 1:4, region_list{i} = ''; end
-region_list{1} = 'Positive effects:';
-region_list{3} = 'Negative effects:';
-
-for i = 1:size(results_table_pos, 1)
-    region_list{2} = [region_list{2} sprintf('%s (%2.0f%%), ', results_table_pos.Region{i}, results_table_pos.Coverage(i))];
+    region_list=[];
+    disp('No regions to display');
 end
-
-for i = 1:size(results_table_neg, 1)
-    region_list{4} = [region_list{4} sprintf('%s (%2.0f%%), ', results_table_neg.Region{i}, results_table_neg.Coverage(i))];
-end
-
-
-if dolegend == false || isempty(table_legend_text)
-
-    return
-
-else
-    % Print legend text
-
-    canlab_print_legend_text(table_legend_text{:});
-end
-
-disp('')
-disp('List of regions covered:')
-for i = 1:4
-    disp(region_list{i});
-end
-
-
-% clean up text for legend
-% if length(table_legend_text) > 2
-%     table_legend_text(2:3) = [];
-% end
-
 
 
 

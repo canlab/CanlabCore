@@ -33,6 +33,7 @@ if dosep
     [poscl, negcl] = posneg_separate(r);
     
     r = [poscl negcl];
+    r=autolabel_regions_using_atlas(r, atlas_obj);
     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
     
     clear poscl negcl

@@ -51,9 +51,15 @@ function [mag, freq, h, h2, peak_freq] = fft_calc(dat, TR, varargin)
 
 
 n = length(dat);
+doplot = true;
+[h, h2] = deal([]);
 
 if ~isempty(varargin)
     if ischar(varargin{1}) && strcmp(varargin{1}, 'plot')
+        doplot = true;
+
+    elseif ischar(varargin{1}) && strcmp(varargin{1}, 'noplot')
+        doplot = false;
     else
         doplot = varargin{1};
     end
@@ -76,14 +82,20 @@ mag = abs(mag(1:timepts)) .^ 2;  % power
 
 mag = mag ./ sum(mag);
 
-h = plot(freq, mag, 'LineWidth', 2); 
-xlabel('Frequency (Hz)')
-title('Frequency domain')
+if doplot
 
-% nyquist = Fs ./ 2;  % Any signal faster than Nyquist freq will be aliased
-hold on
-h2 = plot_vertical_line(nyq);
-set(h2, 'LineStyle', ':')
+    h = plot(freq, mag, 'LineWidth', 2);
+    xlabel('Frequency (Hz)')
+    title('Frequency domain')
+
+    % nyquist = Fs ./ 2;  % Any signal faster than Nyquist freq will be aliased
+    hold on
+    h2 = plot_vertical_line(nyq);
+    set(h2, 'LineStyle', ':')
+
+end
+
+% max_freq = freq(myfft == max(myfft));
 
 peak_freq = freq(mag == max(mag));
 

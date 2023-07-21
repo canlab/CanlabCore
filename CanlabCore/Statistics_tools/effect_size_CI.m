@@ -20,6 +20,9 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 %
 % This function uses the method suggested by David C. Howell, University of Vermont
 % Using the CDF of the non-central t distribution for the observed t score
+% https://www.uvm.edu/~statdhtx/methods8/Supplements/MISC/Confidence%20Intervals%20on%20Effects/Effect%20Sizes%20Confidence%20Intervals.html
+%
+% NOTE: Confidence intervals are not symmetric.
 %
 % See also:
 % Hedges LV, Olkin I. Statistical methods for meta-analysis. Orlando: Academic Press Inc; 2014. p. 86.
@@ -57,16 +60,23 @@ end
 t = d * sqrt(n);
 
 % Confidence interval on t
+minbnd = min(-10, 10*sign(t));
+maxbnd = max(10, 10*sign(t));
 
-x = [0:.001:t];           % we want critical value x where noncentral tcdf is 0.025 and 0.975 for 2-tailed CI
-p = nctcdf(t, dfe, x);  % Non-central t distribution CDF
+x = [minbnd:.001:t];           % we want critical value x where noncentral tcdf is 0.025 and 0.975 for 2-tailed CI
+%p = nctcdf(t, dfe, x);  % Non-central t distribution CDF
+p = nctcdf(x, dfe, t);
 
-wh = find(p < 0.975);   % 2.5% in each tail
-t_CI = x(wh(1));    % bounds on t (noncentrality parameter)
+%wh = find(p < 0.975);   % 2.5% in each tail
+wh = find(p < 0.025);   % 2.5% in each tail
 
-x = [t:.001:4*t];  % we want critical value x where noncentral tcdf is 0.025 and 0.975 for 2-tailed CI
-p = nctcdf(t, dfe, x);
-wh = find(p > 0.025);
+t_CI = x(wh(end));    % bounds on t (noncentrality parameter)
+
+x = [t:.001:maxbnd];  % we want critical value x where noncentral tcdf is 0.025 and 0.975 for 2-tailed CI
+% p = nctcdf(t, dfe, x);
+p = nctcdf(x, dfe, t);
+
+wh = find(p < 0.975);
 
 t_CI(2) = x(wh(end));
 

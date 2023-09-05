@@ -20,6 +20,9 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'labels_2' : If you enter any field name in the object, e.g., labels_2,
 % the function will search for keyword matches here instead of in obj.labels.
 %
+% 'exact' : If you enter 'exact', function will not look for overlaps in
+% names, and only look for exact string matches.
+%
 % Examples:
 % 
 % atlasfile = which('Morel_thalamus_atlas_object.mat');
@@ -59,6 +62,9 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Edited by tor, 12/2019, to use any field to select labels; and update
 % auxiliary label fields too.
 %
+% Edited by Michael Sun, 09/04/2023, added an 'exact' flag, so that users
+% can select to match string labels exactly and not capture regions with
+% overlapping labels e.g., Cblm_Vermis_VI and Cblm_Vermis_VII.
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS
@@ -67,6 +73,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 strings_to_find = [];
 integers_to_find = [];
 doflatten = false;
+doexact=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -87,6 +94,7 @@ for i = 1:length(varargin)
              case 'flatten', doflatten = true;
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
+            case 'exact', doexact = true;
                 
             otherwise
                 
@@ -117,14 +125,22 @@ to_extract = false(1, k);
 for i = 1:length(strings_to_find)
     
     % Find which names match
-    wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
-    if strmatch(mylabelsfield, 'label_descriptions')
-        wh=wh';
+    if doexact == false
+        wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
+        if strmatch(mylabelsfield, 'label_descriptions')
+            wh=wh'; 
+        end
+    
+        to_extract = to_extract | wh;
+    % Addition by Michael Sun 09/04/2023: Match strings exactly
+    else
+        wh = strcmp(obj.(mylabelsfield), strings_to_find{i});
+        if strmatch(mylabelsfield, 'label_descriptions')
+            wh=wh'; 
+        end
+    
+        to_extract = to_extract | wh;
     end
-
-
-    to_extract = to_extract | wh;
-
 end
 
 % -------------------------------------------------------------------------

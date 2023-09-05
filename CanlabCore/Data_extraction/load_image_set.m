@@ -1398,8 +1398,14 @@ else
         
         %websave(myfile, 'https://www.dropbox.com/s/i88qgg88lgsm0s6/kragel_2018_nat_neurosci_270_subjects_test_images.mat?dl=1');
         
+        try
         websave(myfile, 'https://drive.google.com/open?id=1ghDaM55w3dHW2StZ74VTQnJXoE_2uQKm&authuser=tor.d.wager%40dartmouth.edu&usp=drive_fs');
         
+        catch
+            % figshare
+            websave(myfile, 'https://figshare.com/ndownloader/files/42143352')
+        end
+
         fprintf('Loading %s\n', myfile);
         load(myfile)
         

@@ -170,6 +170,10 @@ for i = 1:length(varargin)
                 % option to match region.montage method
                 
                 clim =  varargin{i+1}; varargin{i+1} = [];
+                if length(clim)==4
+                    clim = clim([1,end]);
+                end
+                    
                 
             case 'nolegend'
                 

@@ -94,6 +94,11 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %      **'transvalue':**
 %         Followed by width value, e.g., 1. also 'constanttrans'
 %
+%      **'transcontrast':** 
+%         If scaledtransparency is used, this increases the contrast in
+%         alpha transparency values. Useful if you want a nonlinear 
+%         (sigmoidal) value dependence.
+%
 %   **OTHER OPTIONS:**
 %
 %      **'smooth':**
@@ -241,7 +246,7 @@ for i = 1:length(varargin)
                 %  enter contanttrans followed by a transparency value
                 
             case 'scaledtransparency' % Transparency is a function of voxel value, lower values are more transparent
-                transvalue = [];  % Empty invokes the scaled mapping later
+                dotrans= 1; transvalue = [];  % Empty invokes the scaled mapping later
                 
                 % contour options
             case 'contour', docontour = 1;
@@ -264,6 +269,11 @@ for i = 1:length(varargin)
                 
             case 'interp'
                 interpStyle = varargin{i+1};
+                
+            case 'transcontrast'
+                k = varargin{i+1};
+                enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
+
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -607,7 +617,9 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     % Set transparency
                     
                     if ~docolormap || dosplitcolor, Zscaled = abs(Z); end
+                    
                     Zscaled(isnan(Zscaled)) = 0;
+                    Zscaled = enhance_contrast(Zscaled);
                     Zscaled = abs(Zscaled);
                     
                     if ~isempty(transvalue)

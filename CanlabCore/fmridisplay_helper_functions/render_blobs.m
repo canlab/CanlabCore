@@ -167,6 +167,8 @@ mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
 
+enhance_contrast = @(x1)(x1);
+
 % -------------------------------------------------------------------------
 % Set default cmaprange
 % -------------------------------------------------------------------------

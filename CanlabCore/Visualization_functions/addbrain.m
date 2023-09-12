@@ -395,6 +395,50 @@ switch meth
         axis image;
         lightRestoreSingle(gca);
         material dull;
+        
+    case {'hcp inflated left'}
+        % uses inflated midthickness image distributed with HCP_utils
+        % package. By contrast 'inflated left' seems to use the 'very
+        % inflated' image in HCP_utils, but I didn't create that so I'm not
+        % changing the name.
+        % - Bogdan        
+        pname = 'S12000.L.inflated_MSMAll.32k_fsl_LR.mat';
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+        
+    case {'hcp inflated right'}
+        % uses inflated midthickness image distributed with HCP_utils
+        % package. By contrast 'inflated left' seems to use the 'very
+        % inflated' image in HCP_utils, but I didn't create that so I'm not
+        % changing the name.
+        % - Bogdan
+        pname = 'S12000.R.inflated_MSMAll.32k_fsl_LR.mat';
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+    
+    case {'hcp inflated'}
+        % bilateral versions of the above
+        pname = 'S12000.inflated_MSMAll.32k_fsl_LR.mat';
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
             
     case 'bigbrain'
         

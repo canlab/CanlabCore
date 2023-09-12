@@ -52,6 +52,14 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 %        - Creates a split colormap with gray values where object values
 %        are zero, and colors where object values are nonzero
 %
+%   **splitcolor':**
+%        Positive and negative values are mapped to different
+%        colormaps. Default is +=hot, -=cool colors.  Followed
+%        optionally by cell array with vectors of 4 colors defining
+%        max/min for +/- range, e.g., {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1
+%        0]}. This is ignored if pos_colormap or neg_colormap are
+%        specified.
+%
 %   **'indexmap':**
 %       Interpret data as indices into colormap. You must specify
 %       'colormap' argument as well, otherwise this does nothing and a
@@ -143,6 +151,7 @@ clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
 dolegend = true;
 doindexmap = false;
+splitcolors = {};
 
 allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
@@ -170,8 +179,15 @@ for i = 1:length(varargin)
                 % option to match region.montage method
                 
                 clim =  varargin{i+1}; varargin{i+1} = [];
-                if length(clim)==4
+                if length(clim)==4;
                     clim = clim([1,end]);
+                end
+                
+            case 'splitcolor'                
+                splitcolors = varargin{i + 1};
+                
+                if ~iscell(splitcolors) || length(splitcolors) ~= 4
+                    error('Enter splitcolor followed by a 4-element cell vector of 4 colors\n{Min_neg} {Max_neg} {Min_pos} {Max_pos}');
                 end
                     
                 
@@ -185,6 +201,8 @@ for i = 1:length(varargin)
                 end
                 
                 doindexmap = true;
+                
+                
                 
             case allowable_keyword_value_pairs
                 
@@ -280,7 +298,7 @@ else
     elseif diff(sign(clim))
         
         % Default colormap for objects with - and + values
-        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle);
+        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:});
         
     else
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle);

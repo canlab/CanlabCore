@@ -102,14 +102,6 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %         curve in photoshop, but only affects alpha transparency, not colormapping, and therefore does not 
 %         alter the data being shown.
 %
-%      **'transcontrast':** 
-%         If scaledtransparency is used transparency alpha values are a linear function of the data. This 
-%         option makes them a sigmoidal function of the data with higher values disproportionately opaque and
-%         lower values disproportionately transparent. This argument is followed by a scalar value which 
-%         specifies how steep the sigmoidal part of the contrast curve should be. It works like a contrast 
-%         curve in photoshop, but only affects alpha transparency, not colormapping, and therefore does not 
-%         alter the data being shown.
-%
 %
 %   **OTHER OPTIONS:**
 %

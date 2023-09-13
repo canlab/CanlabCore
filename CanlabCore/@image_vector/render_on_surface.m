@@ -65,6 +65,19 @@ function cm = render_on_surface(obj, surface_handles, varargin)
 %       'colormap' argument as well, otherwise this does nothing and a
 %       warning is thrown.
 %
+%   **'scaledtransparency':**
+%       Transparency is a function of voxel value, lower values are more transparent. This will look very
+%       strange without an underlay. To create an underlay render a two duplicate surfaces and invoke
+%       render_on_surface only on the second duplicate.
+%   
+%    **'transcontrast':** 
+%       If scaledtransparency is used transparency alpha values are a linear function of the data. This 
+%       option makes them a sigmoidal function of the data with higher values disproportionately opaque and
+%       lower values disproportionately transparent. This argument is followed by a scalar value which 
+%       specifies how steep the sigmoidal part of the contrast curve should be. It works like a contrast 
+%       curve in photoshop, but only affects alpha transparency, not colormapping, and therefore does not 
+%       alter the data being shown.
+%
 % :Outputs:
 %
 %   **renders colors on surfaces:**
@@ -152,6 +165,8 @@ axis_handle = get(surface_handles, 'Parent');          % axis handle to apply co
 dolegend = true;
 doindexmap = false;
 splitcolors = {};
+doscaledtrans = 0;
+enhance_contrast = @(x1)(x1);
 
 allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
 
@@ -202,8 +217,13 @@ for i = 1:length(varargin)
                 
                 doindexmap = true;
                 
-                
-                
+            case 'scaledtransparency'
+                doscaledtrans = 1;
+
+            case 'transcontrast'
+                k = varargin{i+1};
+                enhance_contrast = @(x1)(2*((1./(1+exp(-k.*x1)))-0.5));
+
             case allowable_keyword_value_pairs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
@@ -335,6 +355,9 @@ map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
 % Needed to map to vertices later
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
 
+% fixes colormap out of range bug
+mesh_struct.voldata(mesh_struct.voldata < min(clim)) = min(clim);
+
 % Deal with edge interpolation effects
 % problem is that vertices near empty (zero) voxels get interpolated down to zero
 % solution: map all non-zero voxels to lowest limit value
@@ -453,6 +476,13 @@ for i = 1:length(surface_handles)
     end
     set(surface_handles(i), 'CDataMapping', 'direct')
     set(surface_handles(i), 'EdgeColor', 'none');
+    
+    if doscaledtrans
+        z = c/max(abs(c));
+        z = enhance_contrast(z);
+        set(surface_handles(i), 'FaceVertexAlphaData',abs(z));
+        set(surface_handles(i), 'FaceAlpha', 'interp');
+    end
     
 end
 

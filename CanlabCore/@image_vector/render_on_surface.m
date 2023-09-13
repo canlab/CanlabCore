@@ -478,7 +478,7 @@ for i = 1:length(surface_handles)
     set(surface_handles(i), 'EdgeColor', 'none');
     
     if doscaledtrans
-        z = c/max(abs(c));
+        z = c/max(abs(datvec));
         z = enhance_contrast(z);
         set(surface_handles(i), 'FaceVertexAlphaData',abs(z));
         set(surface_handles(i), 'FaceAlpha', 'interp');

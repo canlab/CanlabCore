@@ -621,12 +621,13 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 
                 if dotrans
                     % Set transparency
+                                        
+                    if dotrans
+                        s = max(abs(Z(Z~=0 & ~isnan(Z))));
+                        Z(~isnan(Z)) = enhance_contrast(Z(~isnan(Z))/s)*s;
+                    end
                     
                     if ~docolormap || dosplitcolor, Zscaled = abs(Z); end
-                    
-                    Zscaled(isnan(Zscaled)) = 0;
-                    Zscaled = enhance_contrast(Zscaled);
-                    Zscaled = abs(Zscaled);
                     
                     if ~isempty(transvalue)
                         % constant transparency value
@@ -637,6 +638,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         % Note: changed by Tor, 2015. Zscaled values > 1
                         % were messing up transparency scale for underlay.
                         % Max should be 1.
+                        
                         set(h, 'AlphaDataMapping', 'scaled', 'AlphaData', Zscaled ./ max(abs(Zscaled(:))), 'FaceAlpha', 'interp');
                     end
                     

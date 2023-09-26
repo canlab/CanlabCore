@@ -1,4 +1,4 @@
-function [params_obj hrf_obj] = hrf_fit(obj,TR,Runc,T,method,mode)
+function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Runc,T,method,mode)
 % HRF estimation on fmri_data class object
 %
 % HRF estimation function for a single voxel;
@@ -41,7 +41,7 @@ function [params_obj hrf_obj] = hrf_fit(obj,TR,Runc,T,method,mode)
 %           - 0 - FIR
 %           - 1 - smooth FIR
 %
-% C. **Fit HRF using FIR-model**
+% C. **Fit Canonical HRF**
 %        Choose mode (FIR/sFIR)
 %           - 0 - FIR 
 %           - 1 - smooth FIR        
@@ -120,32 +120,36 @@ shell_obj = mean(obj);  % shell object
     
 for i=1:numstim
 
-    hrf_obj_i = shell_obj;
-    params_obj_i = shell_obj;
+    % hrf_obj_i = shell_obj;
+    % params_obj_i = shell_obj;
+
+    hrf_obj_dat{i} = shell_obj;
+    params_obj_dat{i} = shell_obj;
+
+    % Generate fmri_dat objects
+    params_obj{i}.dat = myoutargs{numstim + i};    
+    hrf_obj_dat{i}.dat= myoutargs{i};
 
     %%%%%%%%%%%%%%%%%%%
     % Assign param data
-    params_obj_i.dat = myoutargs{numstim + i};
-
-    %%%%%%%%%%%%%%%%%%%
-    % Write data
-    params_obj_i.fullpath = sprintf('HRF_params_cond%04d.img', i);
-    write(params_obj_i);
-
-
+    % params_obj_i.dat = myoutargs{numstim + i};
+    
     %%%%%%%%%%%%%%%%%%%%
     % Assign HRF data
-    hrf_obj_i.dat = myoutargs{i};
+    % hrf_obj_i.dat = myoutargs{i};
 
+    % params_obj_i.fullpath = sprintf('HRF_params_cond%04d.img', i); 
+    % hrf_obj_i.fullpath = sprintf('HRF_timecourse_cond%04d.img', i);
+    
     %%%%%%%%%%%%%%%%%%%%
     % Write data
-    hrf_obj_i.fullpath = sprintf('HRF_timecourse_cond%04d.img', i);
-    write(hrf_obj_i);
+    % write(params_obj_i);
+    % write(hrf_obj_i);
 
 end
 
 hrf_obj = myoutargs(1:numstim);
-params_obj = myoutargs(numstim+1 : end);
+params_obj = myoutargs(numstim+1 : end); % Estimated amplitude, height, and width of each condition
 
 
 end
@@ -162,7 +166,7 @@ for i = 1:size(h, 2)
     varargout{end+1} = h(:, i)';
 end
 
-for i = 1:size(param, 2)
+for i = 1:size(param, 2) % 
     varargout{end+1} = param(:, i)';
 end
 

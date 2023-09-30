@@ -1,7 +1,7 @@
 function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
     % Helper script to create condition vectors for hrf_fit_one_voxel()
     % Michael Sun, Ph.D.
-    % - Takes fmri_data() object
+    % - Takes fmri_data() object or the number of TRs in a 4D object.
     % - conditions: cell-vector of cellstrings for each condition e.g., {'hot', 'warm', 'imagine'}
     % - onsets: SPM-style onsets cell array in seconds from first-level model, e.g., {{1,2,3}, {4, 5, 6}, {7, 8, 9}}
     % - duration: SPM-style duration cell array in seconds from first-level model, e.g., {{12, 12 ,12}, {12, 12, 12}, {12, 12, 12}} 
@@ -23,7 +23,12 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
         SPIKETRAINS=0;
     end
     
-    n=size(fmri_d.dat,2);
+    if strcmp(class(fmri_d), 'fmri_data')
+        n=size(fmri_d.dat,2);
+    elseif isnumeric(fmri_d)
+        n=fmri_d;
+    end
+
 
     % Number of conditions
     nconds = length(conditions);

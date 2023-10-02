@@ -55,7 +55,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
 
     % Initialize 'tc' and 'temp_HRF_fit' cell arrays
     tc = cell(1, numel(rois));
-    temp_HRF_fit = cell(1, numel(rois));
+    temp_HRF_fit = cell(1, numel(HRF_PARAMS.types));
 
     % Write out the images for later post-analyses
     % [~, fname, ~]=fileparts(preproc_dat.image_names);

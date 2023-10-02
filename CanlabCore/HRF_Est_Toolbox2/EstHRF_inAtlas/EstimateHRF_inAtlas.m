@@ -44,6 +44,13 @@ end
 
 function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
 
+    % Make directories for files if needed
+    if ~isempty(fileparts(outfile))
+        if ~exist(fileparts(outfile), 'dir')
+            mkdir(fileparts(outfile));
+        end
+    end
+
     HRF.atlas=at.atlas_name;
     HRF.region=rois;
     HRF.types=HRF_PARAMS.types;

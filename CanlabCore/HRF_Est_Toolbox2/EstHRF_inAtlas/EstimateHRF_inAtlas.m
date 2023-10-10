@@ -69,7 +69,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     % fname=outfile
 
     parfor t=1:numel(HRF_PARAMS.types)
-        
+    for t=1:numel(HRF_PARAMS.types)    
         warning('off', 'all');
         if strcmp(HRF_PARAMS.types{t}, 'IL')
 
@@ -115,7 +115,8 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
             
                     HRF_local{r}.(HRF_PARAMS.CondNames{c}).model=tc_local{r};
                     [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs]=detectPeaksTroughs(tc_local{r}, false);
-                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks_voxnormed, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs_voxnormed]=detectPeaksTroughs(tc_local{r}/atlas2region(at.select_atlas_subset(rois(r), 'exact')).numVox, false);
+                    [~, regionVoxNum, ~, ~]=at.select_atlas_subset(rois(r), 'exact').get_region_volumes;
+                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks_voxnormed, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs_voxnormed]=detectPeaksTroughs(tc_local{r}/regionVoxNum, false);
                 catch
                     disp(t);
                     disp(c);

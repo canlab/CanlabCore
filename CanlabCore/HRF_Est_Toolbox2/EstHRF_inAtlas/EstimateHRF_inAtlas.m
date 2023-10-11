@@ -69,7 +69,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     % fname=outfile
 
     parfor t=1:numel(HRF_PARAMS.types)
-    for t=1:numel(HRF_PARAMS.types)    
+    % for t=1:numel(HRF_PARAMS.types)  % FOR TROUBLESHOOTING  
         warning('off', 'all');
         if strcmp(HRF_PARAMS.types{t}, 'IL')
 
@@ -87,8 +87,6 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
             error('No valid fit-type. Choose IL, FIR, or CHRF')
         end
         
-
-
         for c=1:numel(HRF_PARAMS.Condition)
 
             HRF_OBJ{c}.fullpath=sprintf([outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_fit.nii']);
@@ -174,8 +172,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
                     end
                 end
             end
-            display([num2str(t), ' Done in ', toc, ' with ' rois(r)]);
-            
+            display([num2str(t), ' Done in ', toc, ' with ' rois(r)]); 
         end
         % Save the results for this ROI
         display([num2str(t), ' Done!'])

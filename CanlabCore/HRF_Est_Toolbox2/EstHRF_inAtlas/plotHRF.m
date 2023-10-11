@@ -54,6 +54,13 @@ function plotHRF(HRF, t, r)
     % Loop through each condition and plot
     for cond = 1:numel(conds)
         subplot(numel(conds), 1, cond);
+
+        if isfield(HRF.fit{typ}{reg}, conds{cond}) && isfield(HRF.fit{typ}{reg}.(conds{cond}), 'models')
+            for m = 1:height(HRF.fit{typ}{reg}.(conds{cond}).models)
+                plot(HRF.fit{typ}{reg}.(conds{cond}).models(m,:), 'Color', [0.7,0.7,0.7], 'LineWidth', 0.2);
+                hold on;
+            end
+
         detectPeaksTroughs(squeeze(array3D(:, :, cond))', true);
         hold on;
         hline(0);

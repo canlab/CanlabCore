@@ -142,21 +142,69 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='Kragel2019PAG_atlas_object.mat';
         varname = 'atlas_obj';
         
-    case 'tian2020_subcortical_scale1'
-        savefile ='Tian2020_subcortical_S1.mat';
-        varname = 'tian_subcortical_S1';
+    case {'tian2020_subcortical_scale1', 'tian_3t_s1_fmriprep20_2mm'}
+        savefile ='tian_3t_s1_fmriprep20_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
         
-    case 'tian2020_subcortical_scale2'
-        savefile ='Tian2020_subcortical_S2.mat';
-        varname = 'tian_subcortical_S2';
+    case {'tian2020_subcortical_scale2', 'tian_3t_s2_fmriprep20_2mm'}
+        savefile ='tian_3t_s2_fmriprep20_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
         
-    case 'tian2020_subcortical_scale3'
-        savefile ='Tian2020_subcortical_S3.mat';
-        varname = 'tian_subcortical_S3';
+    case {'tian2020_subcortical_scale3', 'tian_3t_s3_fmriprep20_2mm'}
+        savefile ='tian_3t_s3_fmriprep20_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
         
-    case 'tian2020_subcortical_scale4'
-        savefile ='Tian2020_subcortical_S4.mat';
-        varname = 'tian_subcortical_S4';
+    case {'tian2020_subcortical_scale4', 'tian_3t_s4_fmriprep20_2mm'}
+        savefile ='tian_3t_s4_fmriprep20_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+       
+    case {'tian_3t_s1_fmriprep20'}
+        savefile ='tian_3t_s1_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s2_fmriprep20'}
+        savefile ='tian_3t_s2_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s3_fmriprep20'}
+        savefile ='tian_3t_s3_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s4_fmriprep20'}
+        savefile ='tian_3t_s4_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s1_fsl6_2mm'}
+        savefile ='tian_3t_s1_fsl6_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s2_fsl6_2mm'}
+        savefile ='tian_3t_s2_fsl6_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s3_fsl6_2mm'}
+        savefile ='tian_3t_s3_fsl6_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s4_fsl6_2mm'}
+        savefile ='tian_3t_s4_fsl6_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s1_fsl6'}
+        savefile ='tian_3t_s1_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s2_fsl6'}
+        savefile ='tian_3t_s2_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s3_fsl6'}
+        savefile ='tian_3t_s3_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+        
+    case {'tian_3t_s4_fsl6'}
+        savefile ='tian_3t_s4_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
         
     case 'delavega'
         savefile ='delaVega2017_neurosynth_atlas_object.mat';

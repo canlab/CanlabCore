@@ -27,6 +27,8 @@ function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, r
     % Step 1. Preprocess only if you are using raw data, not fmriprepped
     % preprocessed data.
     % [preproc_dat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', .018, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
+    % THIS PART MIGHT BE RESPONSIBLE FOR ACC WAVEFORM DIFFERENCES BEFORE AND NOW
+
     preproc_dat=fmri_d;
 
     % Step 2. Smooth
@@ -61,7 +63,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     HRF.atlas=at.atlas_name;
     HRF.region=rois;
     HRF.types=HRF_PARAMS.types;
-    HRF.name=fmri_d.image_names;
+    HRF.name=preproc_dat.image_names;
     
     % Initialize the parallel pool if it's not already running
     if isempty(gcp('nocreate'))

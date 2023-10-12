@@ -18,6 +18,12 @@ function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, r
 
     % [tc, roi_val, maskdat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', .018, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
 
+    % TODO: Pass in estHRF directory to reuse nifti files.
+
+    % Step 0. Check if a directory exists that has estHRF .nii outputs
+    % already.
+
+
     % Step 1. Preprocess only if you are using raw data, not fmriprepped
     % preprocessed data.
     % [preproc_dat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', .018, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
@@ -40,6 +46,7 @@ function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, r
 end
 
 
+
 %% HELPER FUNCTIONS
 
 function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
@@ -54,6 +61,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     HRF.atlas=at.atlas_name;
     HRF.region=rois;
     HRF.types=HRF_PARAMS.types;
+    HRF.name=fmri_d.image_names;
     
     % Initialize the parallel pool if it's not already running
     if isempty(gcp('nocreate'))
@@ -61,7 +69,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     end
 
     % Initialize 'tc' and 'temp_HRF_fit' cell arrays
-    tc = cell(1, numel(rois));
+    tc = cell(1, numel(HRF_PARAMS.types);
     temp_HRF_fit = cell(1, numel(HRF_PARAMS.types));
 
     % Write out the images for later post-analyses
@@ -107,19 +115,20 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
             tic
             for c=1:numel(HRF_PARAMS.CondNames)
 
-                
                 try
-                    tc_local{r}=mean(apply_mask(HRF_OBJ{c}, at.select_atlas_subset(rois(r), 'exact')).dat);
+                    tc_local{r}{c}=mean(apply_mask(HRF_OBJ{c}, at.select_atlas_subset(rois(r), 'exact')).dat);
             
-                    HRF_local{r}.(HRF_PARAMS.CondNames{c}).model=tc_local{r};
-                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs]=detectPeaksTroughs(tc_local{r}, false);
+                    HRF_local{r}.(HRF_PARAMS.CondNames{c}).model=tc_local{r}{c};
+                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs]=detectPeaksTroughs(tc_local{r}{c}', false);
+
                     [~, regionVoxNum, ~, ~]=at.select_atlas_subset(rois(r), 'exact').get_region_volumes;
-                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks_voxnormed, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs_voxnormed]=detectPeaksTroughs(tc_local{r}/regionVoxNum, false);
+                    HRF_local{r}.(HRF_PARAMS.CondNames{c}).model_voxnormed=tc_local{r}/regionVoxNum;
+                    [HRF_local{r}.(HRF_PARAMS.CondNames{c}).peaks_voxnormed, HRF_local{r}.(HRF_PARAMS.CondNames{c}).troughs_voxnormed]=detectPeaksTroughs(tc_local{r}{c}'/regionVoxNum, false);
                 catch
                     disp(t);
                     disp(c);
                     disp(rois{r});
-                    tc_local{r}
+                    tc_local{r}{c}
                     mean(apply_mask(HRF_OBJ{c}, at.select_atlas_subset(rois(r), 'exact')).dat)
                     {apply_mask(HRF_OBJ{c}, at.select_atlas_subset(rois(r), 'exact')).dat}
                     HRF_OBJ{c}
@@ -173,11 +182,12 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
                 end
             end
             display([num2str(t), ' Done in ', toc, ' with ' rois(r)]); 
+            
         end
         % Save the results for this ROI
         display([num2str(t), ' Done!'])
-        tc{t} = tc_local;
         temp_HRF_fit{t} = HRF_local;
+        tc{t} = tc_local;
     end
 
     % Transfer the results from the temporary cell array to the HRF structure

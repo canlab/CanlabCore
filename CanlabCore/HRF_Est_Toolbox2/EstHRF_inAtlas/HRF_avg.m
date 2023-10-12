@@ -158,8 +158,6 @@ function avgHRF = HRF_avg(HRF_cell_array, at)
                         end
                     end
                 end
-
-
             end
         end
     end

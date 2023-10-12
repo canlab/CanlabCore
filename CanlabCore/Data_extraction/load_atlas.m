@@ -24,9 +24,10 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'insula'                        'Faillenot_insular_atlas.mat'
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
-% 'tian2020_subcortical_scale1/2/3/4'      'Subcortical atlas at four different resolutions (e.g., tian2020_subcortical_scale3) )'
+% 'tian_3t_s1/2/3/4_fmriprep20/fsl6'      'Subcortical atlas at four different resolutions and two different reference spaces (e.g., tian_3t_s4_fmriprep20) )'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 % 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
+% 'jubrain/jubrain_fmriprep20/jubrain_fsl6' 'Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -206,11 +207,20 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='tian_3t_s4_fsl6_atlas_object.mat';
         varname = 'atlas_obj';
         
+    case {'jubrain','jubrain_fmriprep20'}
+        savefile = 'julich_fmriprep20_atlas_object.mat';
+        varname = 'juAtlas';
+
+    case 'jubrain_fsl6'
+        savefile = 'julich_fsl6_atlas_object.mat';
+        varname = 'juAtlas';
+
     case 'delavega'
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
 
     case {'cyto', 'jubrain', 'amunts2020'}
+        warning('This atlas is deprecated. Please see ''jubrain'' instead.')
         savefile = which('Amunts2020_jubrain_cytoarchitecture.mat');
         varname = 'atlas_obj';
         

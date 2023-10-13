@@ -104,7 +104,7 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
 
         end
 
-        HRF_local = cell(1, numel(HRF_PARAMS.types));
+        HRF_local = cell(1, numel(rois));
         tc_local = cell(1, numel(rois));
 
 
@@ -198,6 +198,8 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
     % Transfer the results from the temporary cell array to the HRF structure
     HRF.fit = temp_HRF_fit;
     HRF.params=HRF_PARAMS;
+
+    delete(gcp('nocreate'));
 end
 
 

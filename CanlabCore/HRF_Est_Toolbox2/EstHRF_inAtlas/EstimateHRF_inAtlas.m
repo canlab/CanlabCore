@@ -1,36 +1,31 @@
 function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, rois, outfile)
-    % Generate timecourse vector and HRF Structure object from a single 4D file. 
-    % Michael Sun, Ph.D.
-    % - Takes fmri_data() object
-    % - conditions: cell-vector of cellstrings for each condition e.g., {'hot', 'warm', 'imagine'}
-    % - onsets: SPM-style onsets cell array in seconds from first-level model, e.g., {{1,2,3}, {4, 5, 6}, {7, 8, 9}}
-    % - duration: SPM-style duration cell array in seconds from first-level model, e.g., {{12, 12 ,12}, {12, 12, 12}, {12, 12, 12}} 
-    %
-    % *Usage:
-    % ::
-    %    Condition = generateConditionTS(image_obj, {'hot','warm','imagine'}, onsets, durations})
-    %
     % EstimateHRF_inAtlas takes a raw 4D fmri_data object, preprocesses it, and
     % then outputs an estimated HRF time series for each condition of interest.
     % PREPROC struct needs to have TR, hpf, and Condition information
     % HRF struct is a structure of HRF fitting parameters. It needs to have T, FWHM, alpha, and type, otherwise default
     % values will be supplied.
-
-    % [tc, roi_val, maskdat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', .018, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
-
+    %
+    % Michael Sun, Ph.D.
+    % - Takes 4D fmri_data() object
+    % - PREPROC_PARAMS: struct object that contains the fields: TR, R, hpf, and smooth
+    % - HRF_PARAMS: struct object that contains the fields: Condition, CondNames, TR, T, FWHM, alpha, and types. 
+    % - at: atlas object
+    % - rois: cell-array of labels that match labels in at.labels
+    % - outfile: Desired filepath without extension. Extensions will be appended.
+    %
+    % *Usage:
+    % ::
+    %    [tc, HRF] = EstimateHRF_inAtlas(image_obj, PREPROC_PARAMS, HRF_PARAMS, at, rois, outfile})
+    %
     % TODO: Pass in estHRF directory to reuse nifti files.
 
     % Step 0. Check if a directory exists that has estHRF .nii outputs
     % already.
 
 
-    % Step 1. Preprocess only if you are using raw data, not fmriprepped
-    % preprocessed data.
-    % [preproc_dat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', .018, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
-    % THIS PART MIGHT BE RESPONSIBLE FOR ACC WAVEFORM DIFFERENCES BEFORE AND NOW
-
-    preproc_dat=fmri_d;
-
+    % Step 1. Preprocess 
+    [preproc_dat]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', PREPROC_PARAMS.hpf, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
+    
     % Step 2. Smooth
     preproc_dat=preprocess(preproc_dat, 'smooth', PREPROC_PARAMS.smooth);
     
@@ -46,7 +41,6 @@ function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, r
         warning([outfile, ' files could not be saved.']);
     end
 end
-
 
 
 %% HELPER FUNCTIONS
@@ -113,6 +107,15 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile)
         HRF_local = cell(1, numel(HRF_PARAMS.types));
         tc_local = cell(1, numel(rois));
 
+
+        % Consider doing apply_parcellation instead of mean(apply_mask(HRF_OBJ{c}, at.select_atlas_subset(rois(r), 'exact')).dat);
+        % [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat,at);
+        % nps=load_image_set('npsplus');
+        % nps = get_wh_image(nps,1);
+        % [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(dat,at, 'pattern_expression', nps);
+        % r=region(at,'unique_mask_values');
+        % wh_parcels=~all(isnan(parcel_means))
+        
         for r=1:numel(rois)
             tic
             for c=1:numel(HRF_PARAMS.CondNames)

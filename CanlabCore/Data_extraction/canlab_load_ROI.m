@@ -98,7 +98,7 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % -----------------------------------------------------------------------
 
 doatlas = true;
-reference_space_image = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
+reference_space_image = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii.gz');
 
 if any(strcmp(varargin, 'noatlas')) || nargout < 2, doatlas = false; end
 

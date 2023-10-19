@@ -21,7 +21,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     %   'noise'       - Confound filename identifiers (with wildcards) to pull from 
     %                   every subject. Default: '*confound*.tsv'.
     %
-    %   'outdir'      - Directory where the new structure with symbolic links will be created.
+    %   'outdir'      - Full filepath of the directory where the new structure with symbolic links will be created.
     %                   By default, it's the same as the input BIDS directory.
     %
     % Notes:

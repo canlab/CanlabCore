@@ -26,9 +26,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
 % 'tian_3t_s[1|2|3|4]_[fmriprep20|fsl6]'      'Subcortical atlas at four different resolutions and two different reference spaces (e.g., tian_3t_s4_fmriprep20) )'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
-% 'julich_[fmriprep20|fsl6]'      'Cytoarchitectonic Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces'
-% 'bianciardi_[hires_][fmriprep20|fsl6]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces. In MasksPrivate due to licensing constraints.'
+% 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
+% 'julich_[fmriprep20|fsl6]'      'Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces
+% 'bianciardi_[fine_][fmriprep20|fsl6]   'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -229,18 +229,30 @@ switch lower(atlas_file_name_or_keyword)
 
     case {'bianciardi','bianciardi_fmriprep20'}
         savefile='bianciardi_fmriprep20_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin2009cAsym',false);
+        end
         varname = 'bianciaAtlas';
 
-    case {'bianciardi_hires', 'bianciardi_hires_fmriprep20'}
-        savefile='bianciardi_fmriprep20_hires_atlas_object.mat';
+    case {'bianciardi_fine', 'bianciardi_fine_fmriprep20'}
+        savefile='bianciardi_fmriprep20_fine_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin2009cAsym',true);
+        end
         varname = 'bianciaAtlas';
         
     case {'bianciardi_fsl6'}
         savefile='bianciardi_fsl6_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin6Asym',false);
+        end
         varname = 'bianciaAtlas';
         
-    case {'bianciardi_hires_fsl6'}
-        savefile='bianciardi_fsl6_hires_atlas_object.mat';
+    case {'bianciardi_fine_fsl6'}
+        savefile='bianciardi_fsl6_fine_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin6Asym',true);
+        end
         varname = 'bianciaAtlas';
         
     otherwise % assume it's a file name

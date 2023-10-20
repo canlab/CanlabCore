@@ -18,7 +18,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'keuken'                        'Keuken_7T_atlas_object.mat'
 % 'buckner'                       'buckner_networks_atlas_object.mat'
 % 'cerebellum', 'suit'            'SUIT_Cerebellum_MNI_atlas_object.mat'
-% 'shen'                          'Shen_atlas_object.mat'
+% 'shen[_fmriprep20|_fsl6]'       'Shen_atlas_object.mat, in MNIColin27v1998 space (default), MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.0.3) spaces'
 % 'schaefer400'                   *Not saved as object yet* 'Schaefer2018Cortex_atlas_regions.mat' 
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
 % 'insula'                        'Faillenot_insular_atlas.mat'
@@ -29,6 +29,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
 % 'julich_[fmriprep20|fsl6]'      'Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces
 % 'bianciardi_[fine_][fmriprep20|fsl6]   'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces
+% 'morel[_fmriprep20|_fsl6]       'Morel atlas in fsl6 (default) or fmriprep 20 space. (In MasksPrivate)'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -67,10 +68,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile = which('Thalamus_combined_atlas_object.mat');
         varname = 'thalamus_atlas';
         
-    case {'thalamus_detail', 'morel'}
+    case {'thalamus_detail', 'morel', 'morel_fsl6'}
         savefile = which('Morel_thalamus_atlas_object.mat');
         varname = 'atlas_obj';
         
+    case {'morel_fmriprep20'}
+        savefile = which('Morel_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
     case {'cortex', 'glasser'}
         savefile = which('Glasser2016HCP_atlas_object.mat');
         varname = 'atlas_obj';
@@ -115,6 +120,14 @@ switch lower(atlas_file_name_or_keyword)
         %          case 'schaefer400'
         %              savefile = which('Schaefer2018Cortex_atlas_regions.mat');
         %              varname = 'atlas_obj';
+    case 'shen_fmriprep20'
+        savefile = which('Shen_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+        
+    case 'shen_fsl6'
+        savefile = which('Shen_MNI152NLin6Asym_atlas_object.mat');
+        varname = 'atlas_obj';
+        
         
     case 'yeo17networks'
         savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');

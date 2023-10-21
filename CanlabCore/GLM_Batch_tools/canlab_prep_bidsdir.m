@@ -156,8 +156,8 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     
         for n = 1:numel(noise)
             % Recreate the original directory structure in output_dir
-            relative_path = strrep(task(t).folder, taskdir, '');  % Extract the relative path
-            rundir = cell2mat(fullfile(relative_path, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
+            relative_path = strrep(noise(n).folder, taskdir, '');  % Extract the relative path
+            rundir = cell2mat(fullfile(relative_path, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
             new_path = fullfile(output_dir, rundir);       % Combine with output_dir
             disp(new_path)
             if ~isdir(new_path)

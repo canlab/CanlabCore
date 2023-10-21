@@ -133,7 +133,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
             end
 
             % Create a symlink for the requisite noise file to the new folder
-            rundir = cell2mat(fullfile(output_dir, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
+            rundir = cell2mat(fullfile(new_path, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
             if ispc  % Check if the system is Windows
                 cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, task(t).name) '" "' fullfile(task(t).folder, task(t).name) '"'];
                 system(cmd_str);
@@ -162,7 +162,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
             end
             
             % Create a symlink for the requisite noise file to the new folder
-            rundir = cell2mat(fullfile(output_dir, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
+            rundir = cell2mat(fullfile(new_path, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
             if ispc  % Check if the system is Windows
                 cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
                 system(cmd_str);

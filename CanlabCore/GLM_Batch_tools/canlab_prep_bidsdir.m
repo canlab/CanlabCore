@@ -18,10 +18,10 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     %   'datatype'    - Data type ('anat' or 'func') filename identifiers (with wildcards) to pull from 
     %                   every subject. Default: 'func'.
     %   'filename'    - The filename identifiers (with wildcards) based on datatype.
-    %                   Default: '*preproc*.nii.gz' for 'func' and some suitable default for 'anat'.
+    %                   Default: '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz' for 'func' and *T1w.nii.gz' for 'anat'.
     %
     %   'noise'       - Confound filename identifiers (with wildcards) to pull from 
-    %                   every subject. Default: '*confound*.tsv'.
+    %                   every subject. Default: '*desc-confounds_timeseries.tsv'.
     %
     %   'outdir'      - Full filepath of the directory where the new structure with symbolic links will be created.
     %                   By default, it's the same as the input BIDS directory.
@@ -38,9 +38,9 @@ function canlab_prep_bidsdir(bidsdir, varargin)
 
     % Define default values
     defaultDataType = 'func';
-    defaultFuncString = '*preproc*.nii.gz';
+    defaultFuncString = '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz';
     defaultAnatString = '*T1w.nii.gz'; % Choose a suitable default for anat
-    defaultNoiseString = '*confound*.tsv';
+    defaultNoiseString = '*desc-confounds_timeseries.tsv';
     defaultOutDir = bidsdir;
 
     % Add required and optional inputs

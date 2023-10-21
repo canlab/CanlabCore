@@ -142,7 +142,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
             end
     
             % Update waitbar
-            waitbar(t / numel(task), h, sprintf('Processing task file %d of %d...(%d%%)', n, numel(task), round((n/numel(task))*100)));
+            waitbar(t / numel(task), h, sprintf('Processing task file %d of %d...(%d%%)', t, numel(task), round((t/numel(task))*100)));
     
         end
         disp('Task files all symlinked. Done.')

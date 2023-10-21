@@ -676,6 +676,7 @@ for i = 1:size(image_names, 1)
         
         try
             gzip(deblank(image_names(i, :)));
+            delete(deblank(image_names(i, :)))
             image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
             
         catch

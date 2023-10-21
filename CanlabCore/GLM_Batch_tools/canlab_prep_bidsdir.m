@@ -71,7 +71,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
         filename = p.Results.filename;
         noisestring = p.Results.noise;
         taskstring = p.Results.task;
-        taskdir = p.Result.taskdir;
+        taskdir = p.Results.taskdir;
     else % anat
         filename = p.Results.filename;
     end

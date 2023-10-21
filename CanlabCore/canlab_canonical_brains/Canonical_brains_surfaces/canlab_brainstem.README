@@ -1,0 +1,10 @@
+canlab_brainstem is likely in MNI152Lin space. Based on the github history it appears to be associated with
+SPM8, which used this as a standard reference, and it overlaps this template quite well. This isn't a very 
+detailed template though so computing transformations from it to modern nonlinear templates is difficult. For
+now we don't need very precise boundaries for brainstem, but we do need comprehensive brainstem coverage, so
+we have a diluted version. In the future a different brainstem segmentation may be worth considering and 
+transforming into desired spaces.
+
+FSL has an alternative, but it doesn't have midbrain coverage. Diedrichesen has one as well, but it includes
+cerebellum which would need to be masked out. See the SUIT git repo for this combined mask (it's listed as
+a cerebellum mask, but it's both cerebellum and brainstem).

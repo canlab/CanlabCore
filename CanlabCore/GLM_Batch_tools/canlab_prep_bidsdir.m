@@ -138,7 +138,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
                 cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, task(t).name) '" "' fullfile(task(t).folder, task(t).name) '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' fullfile(task(t).folder, task(t).name) ' ' rundir]);
+                system(['ln -s ' fullfile(task(t).folder, task(t).name) ' ' fullfile(rundir, task(t).name)]);
             end
     
             % Update waitbar
@@ -167,7 +167,7 @@ function canlab_prep_bidsdir(bidsdir, varargin)
                 cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' rundir]);
+                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' fullfile(rundir, noise(n).name)]);
             end
     
             % Update waitbar
@@ -188,7 +188,6 @@ function canlab_prep_bidsdir(bidsdir, varargin)
 
         % Recreate the original directory structure in output_dir
         relative_path = fileparts(strrep(img, bidsdir, ''));  % Extract the relative path
-        disp(relative_path)
         new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
 
         disp(new_path)
@@ -208,15 +207,16 @@ function canlab_prep_bidsdir(bidsdir, varargin)
                 cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, datafiles(f).name) '" "' img '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' img ' ' rundir]);
+                system(['ln -s ' img ' ' fullfile(rundir, datafiles(f).name)]);
             end
+        % non-func images don't need to be in a rundir
         else
             % Create a symlink for the requisite func file to the new folder
             if ispc  % Check if the system is Windows
                 cmd_str = ['cmd.exe /C mklink "' fullfile(new_path, datafiles(f).name) '" "' img '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' img ' ' new_path]);
+                system(['ln -s ' img ' ' fullfile(new_path, datafiles(f).name)]);
             end
 
         end

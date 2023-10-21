@@ -126,19 +126,21 @@ function canlab_prep_bidsdir(bidsdir, varargin)
         for t = 1:numel(task)
             % Recreate the original directory structure in output_dir
             relative_path = strrep(task(t).folder, taskdir, '');  % Extract the relative path
-            new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
+            rundir = cell2mat(fullfile(relative_path, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
+            new_path = fullfile(output_dir, rundir);       % Combine with output_dir
+
             disp(new_path)
             if ~isdir(new_path)
                 mkdir(new_path);
             end
 
             % Create a symlink for the requisite noise file to the new folder
-            rundir = cell2mat(fullfile(new_path, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
+            
             if ispc  % Check if the system is Windows
-                cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, task(t).name) '" "' fullfile(task(t).folder, task(t).name) '"'];
+                cmd_str = ['cmd.exe /C mklink "' fullfile(new_path, task(t).name) '" "' fullfile(task(t).folder, task(t).name) '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' fullfile(task(t).folder, task(t).name) ' ' fullfile(rundir, task(t).name)]);
+                system(['ln -s ' fullfile(task(t).folder, task(t).name) ' ' fullfile(new_path, task(t).name)]);
             end
     
             % Update waitbar
@@ -154,20 +156,19 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     
         for n = 1:numel(noise)
             % Recreate the original directory structure in output_dir
-            relative_path = strrep(noise(n).folder, bidsdir, '');  % Extract the relative path
-            new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
+            relative_path = strrep(task(t).folder, taskdir, '');  % Extract the relative path
+            rundir = cell2mat(fullfile(relative_path, strcat('run-', extractBetween(task(t).name, 'run-', '_'))));
+            new_path = fullfile(output_dir, rundir);       % Combine with output_dir
             disp(new_path)
             if ~isdir(new_path)
                 mkdir(new_path);
             end
             
-            % Create a symlink for the requisite noise file to the new folder
-            rundir = cell2mat(fullfile(new_path, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
             if ispc  % Check if the system is Windows
-                cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
+                cmd_str = ['cmd.exe /C mklink "' fullfile(new_path, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
                 system(cmd_str);
             else
-                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' fullfile(rundir, noise(n).name)]);
+                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' fullfile(new_path, noise(n).name)]);
             end
     
             % Update waitbar

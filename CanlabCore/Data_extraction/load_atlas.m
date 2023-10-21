@@ -93,16 +93,16 @@ switch lower(atlas_file_name_or_keyword)
         savefile = which('Pauli2016_striatum_atlas_object.mat');
         varname = 'atlas_obj';
         
-    case {'subcortical_rl', 'CIT168', 'cit168'}
+    case {'subcortical_rl', 'cit168'}
         warning('This version (v1.0.0) is deprecated. Please use v1.1.0 by invoking cit168_fmriprep20 or cit168_fsl6.')
         savefile = which('CIT168_MNI_subcortical_atlas_object.mat');
         varname = 'atlas_obj';
 
-    case {'cit168_fmriprep20', 'CIT168_fmriprep20'}
+    case {'cit168_fmriprep20'}
         savefile = which('CIT168_MNI152NLin2009cAsym_subcortical_v1.1.0_atlas_object.mat');
         varname = 'atlas_obj';
         
-    case {'cit168_fsl6', 'CIT168_fsl6'}
+    case {'cit168_fsl6'}
         savefile = which('CIT168_MNI152NLin6Asym_subcortical_v1.1.0_atlas_object.mat');
         varname = 'atlas_obj';
 
@@ -124,6 +124,7 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
         
     case 'shen'
+        warning('This is Shen in MNIColin27v1998 space, a subject specific space of the original paper. Consider shen_[fmriprep20|fsl6] instead.')
         savefile = which('Shen_atlas_object.mat');
         varname = 'atlas_obj';
         
@@ -137,7 +138,6 @@ switch lower(atlas_file_name_or_keyword)
     case 'shen_fsl6'
         savefile = which('Shen_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
-        
         
     case 'yeo17networks'
         savefile = which('Schaefer2018Cortex_17networks_atlas_object.mat');
@@ -242,13 +242,6 @@ switch lower(atlas_file_name_or_keyword)
     case 'delavega'
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
-
-        %{
-    case {'cyto', 'jubrain', 'amunts2020'}
-        warning('This atlas is deprecated. Please see ''jubrain'' instead.')
-        savefile = which('Amunts2020_jubrain_cytoarchitecture.mat');
-        varname = 'atlas_obj';
-        %}
 
     case {'bianciardi','bianciardi_fmriprep20'}
         savefile='bianciardi_fmriprep20_atlas_object.mat';

@@ -15,13 +15,21 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     %                   e.g., 'F:\Dropbox (Dartmouth College)\Tor Pinel datasets\Pinel_localizer\data\pinel_localizer_Dartmouth_S2019'
     %
     % Optional Key-Value Arguments:
-    %   'datatype'    - Data type ('anat' or 'func') filename identifiers (with wildcards) to pull from 
+    %   'datatype'    - Data type ('func' or 'anat') filename identifiers (with wildcards) to pull from 
     %                   every subject. Default: 'func'.
     %   'filename'    - The filename identifiers (with wildcards) based on datatype.
     %                   Default: '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz' for 'func' and *T1w.nii.gz' for 'anat'.
     %
     %   'noise'       - Confound filename identifiers (with wildcards) to pull from 
     %                   every subject. Default: '*desc-confounds_timeseries.tsv'.
+    %
+    %   'taskdir'      - Full filepath of the root BIDS directory where the task files reside.
+    %                   By default, it's the same as the input BIDS
+    %                   directory, but more likely than not, it is the root
+    %                   BIDS directory (non-derivative).
+    %
+    %   'task'        - Task filename identifiers (with wildcards) to pull from 
+    %                   every subject. This likely has to pull from the original BIDS directory so set that. Default: '*_events.tsv'.
     %
     %   'outdir'      - Full filepath of the directory where the new structure with symbolic links will be created.
     %                   By default, it's the same as the input BIDS directory.
@@ -41,6 +49,8 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     defaultFuncString = '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz';
     defaultAnatString = '*T1w.nii.gz'; % Choose a suitable default for anat
     defaultNoiseString = '*desc-confounds_timeseries.tsv';
+    defaultTaskDir = bidsdir;
+    defaultTaskString = '*_events.tsv';
     defaultOutDir = bidsdir;
 
     % Add required and optional inputs
@@ -48,6 +58,8 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     addParameter(p, 'datatype', defaultDataType, @(x) any(validatestring(x, {'func', 'anat'})));
     addParameter(p, 'filename', defaultFuncString, @ischar);
     addParameter(p, 'noise', defaultNoiseString, @ischar);
+    addParameter(p, 'task', defaultTaskString, @ischar);
+    addParameter(p, 'taskdir', defaultTaskDir, @ischar);
     addParameter(p, 'outdir', defaultOutDir, @ischar);
 
     % Parse the inputs
@@ -56,11 +68,14 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     % Extract the parsed values
     datatype = p.Results.datatype;
     if strcmp(datatype, 'func')
-        datastring = p.Results.filename;
+        filename = p.Results.filename;
+        noisestring = p.Results.noise;
+        taskstring = p.Results.task;
+        taskdir = p.Result.taskdir;
     else % anat
-        datastring = p.Results.filename;
+        filename = p.Results.filename;
     end
-    noisestring = p.Results.noise;
+    
     output_dir = p.Results.outdir;
 
     % Override the filename default based on datatype
@@ -81,22 +96,90 @@ function canlab_prep_bidsdir(bidsdir, varargin)
 
     [~, lastdir] = fileparts(bidsdir);
 
-    % Start:
     if contains(lastdir, datatype)
         datafiles = dir(fullfile(bidsdir, filename));   % Identify the data files.
         if strcmp(datatype, 'func')
             noise = dir(fullfile(bidsdir, noisestring));      % Identify the confound files.
+            task = dir(fullfile(taskdir, taskstring));      
         end
     elseif contains(lastdir, 'ses')
         datafiles = dir(fullfile(bidsdir, datatype, filename));   % Identify the data files.
         if strcmp(datatype, 'func')
             noise = dir(fullfile(bidsdir, datatype, noisestring));      % Identify the confound files.
+            task = dir(fullfile(taskdir, datatype, taskstring)); 
         end
     else
         datafiles = dir(fullfile(bidsdir, 'sub-*', '**', datatype, filename));   % Identify the data files.
         if strcmp(datatype, 'func')
             noise = dir(fullfile(bidsdir, 'sub-*', '**', datatype, noisestring));      % Identify the confound files.
+            task = dir(fullfile(taskdir, 'sub-*', '**', datatype, taskstring)); 
         end
+    end
+
+ 
+
+    % Start:
+    if strcmp(datatype, 'func')
+
+        h = waitbar(0, 'Processing task files...');
+    
+        for t = 1:numel(task)
+            % Recreate the original directory structure in output_dir
+            relative_path = strrep(task(t).folder, taskdir, '');  % Extract the relative path
+            new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
+            disp(new_path)
+            if ~isdir(new_path)
+                mkdir(new_path);
+            end
+
+            % Create a symlink for the requisite noise file to the new folder
+            rundir = cell2mat(fullfile(output_dir, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
+            if ispc  % Check if the system is Windows
+                cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
+                system(cmd_str);
+            else
+                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' rundir]);
+            end
+    
+            % Update waitbar
+            waitbar(t / numel(task), h, sprintf('Processing task file %d of %d...(%d%%)', n, numel(noise), round((n/numel(noise))*100)));
+    
+        end
+        disp('Task files all symlinked. Done.')
+    
+        close(h);
+
+    
+        h = waitbar(0, 'Processing noise files...');
+    
+        for n = 1:numel(noise)
+            % Recreate the original directory structure in output_dir
+            relative_path = strrep(noise(n).folder, bidsdir, '');  % Extract the relative path
+            new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
+            disp(new_path)
+            if ~isdir(new_path)
+                mkdir(new_path);
+            end
+            
+            % Create a symlink for the requisite noise file to the new folder
+            rundir = cell2mat(fullfile(output_dir, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
+            if ispc  % Check if the system is Windows
+                cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
+                system(cmd_str);
+            else
+                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' rundir]);
+            end
+    
+            % Update waitbar
+            waitbar(n / numel(noise), h, sprintf('Processing noise file %d of %d...(%d%%)', n, numel(noise), round((n/numel(noise))*100)));
+    
+        end
+        disp('Noise files all symlinked. Done.')
+    
+        close(h);
+
+
+        
     end
 
     h = waitbar(0, ['Processing ' datatype ' files...']);
@@ -142,37 +225,6 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     end
     close(h);
 
-    if strcmp(datatype, 'func')
-    
-        h = waitbar(0, 'Processing noise files...');
-        disp(['Func ' datatype ' all symlinked.'])
-    
-        for n = 1:numel(noise)
-            % Recreate the original directory structure in output_dir
-            relative_path = fileparts(strrep(img, bidsdir, ''));  % Extract the relative path
-            disp(relative_path)
-            new_path = fullfile(output_dir, relative_path);       % Combine with output_dir
-    
-            disp(new_path)
-            if ~isdir(new_path)
-                mkdir(new_path);
-            end
-            
-            % Create a symlink for the requisite noise file to the new folder
-            rundir = cell2mat(fullfile(output_dir, strcat('run-', extractBetween(noise(n).name, 'run-', '_'))));
-            if ispc  % Check if the system is Windows
-                cmd_str = ['cmd.exe /C mklink "' fullfile(rundir, noise(n).name) '" "' fullfile(noise(n).folder, noise(n).name) '"'];
-                system(cmd_str);
-            else
-                system(['ln -s ' fullfile(noise(n).folder, noise(n).name) ' ' rundir]);
-            end
-    
-            % Update waitbar
-            waitbar(n / numel(noise), h, sprintf('Processing noise file %d of %d...(%d%%)', n, numel(noise), round((n/numel(noise))*100)));
-    
-        end
-        disp('Noise files all symlinked. Done.')
-    
-        close(h);
-    end
+    disp(['Func ' datatype ' all symlinked.'])
+
 end

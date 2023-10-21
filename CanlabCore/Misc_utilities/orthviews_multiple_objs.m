@@ -12,7 +12,7 @@ function orthviews_multiple_objs(imgs, varargin)
 
     n=length(imgs);
 
-    overlay = which('keuken_2014_enhanced_for_underlay.img');
+    overlay = which('fmriprep20_template.nii.gz');
 
     spm_check_registration(repmat(overlay, n, 1));
 

@@ -55,7 +55,8 @@ function cl = orthviews(image_obj, varargin)
 % parcel, continuous. and autodetect.
 
 %overlay = which('SPM8_colin27T1_seg.img');
-overlay = which('keuken_2014_enhanced_for_underlay.img');
+%overlay = which('keuken_2014_enhanced_for_underlay.img');
+overlay = which('fmriprep20_template.nii.gz');
 
 doposneg = false;
 doreg = false;

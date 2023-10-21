@@ -48,7 +48,7 @@ function cl = orthviews(image_obj, varargin)
 input_handle = [];
 cl = [];
 doreg=0;
-overlay = which('keuken_2014_enhanced_for_underlay.img');
+overlay = which('fmriprep20_template.nii.gz');
 %dounique = 0; uniquestr = 'nounique';
 
 for i = 1:length(varargin)

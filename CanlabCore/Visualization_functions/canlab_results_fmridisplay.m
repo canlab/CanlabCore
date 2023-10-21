@@ -78,7 +78,10 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        image name
 %        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
 %
-%         The default brain for overlays is based on Keuken et al. 2014
+%         The default brain for overlays is the brain extracted MNI152NLin2009cAsym 
+%         T1 1mm template from templatFlow.
+%         For legacy brains based on Keuken et al. 2014 enter as arguments:
+%         'overlay', which('keuken_2014_enhanced_for_underlay.img')
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
 % 
@@ -199,7 +202,7 @@ splitcolor = {[0 0 1] [0 .8 .8] [1 .4 .5] [1 1 0]}; % {[0 0 1] [.3 .6 .9] [.8 .3
 montagetype = 'compact';
 doverbose = true;
 %overlay='SPM8_colin27T1_seg.img';
-overlay = 'keuken_2014_enhanced_for_underlay.img';
+overlay = 'fmriprep20_template.nii.gz';
 dofigure = true;
 
 wh = strcmp(varargin, 'overlay');

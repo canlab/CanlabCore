@@ -8,12 +8,14 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'canlab2018'                    'Combined atlas from other published atlases, whole brain. 
 % 'canlab2018_2mm'                'Combined atlas resampled at 2 mm resolution'
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
-% 'thalamus_detail', 'morel'      'Morel_thalamus_atlas_object.mat'
+% 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
+%                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. (Both in MasksPrivate)'
 % 'cortex', 'glasser'             'Glasser2016HCP_atlas_object.mat'
 % 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
-% 'subcortical_rl', 'cit168'      'CIT168_MNI_subcortical_atlas_object.mat'
+% 'subcortical_rl','cit168'       'CIT168 MNI152Nlin2009cAsym subcortical atlas v1.0.0 (deprecated)'
+% 'cit168_[fmriprep20|fsl6]'      'CIT168 subcortical atlas in fmriprep20 or fsl6 v1.1.0 space'
 % 'brainnetome'                   'Brainnetome_atlas_object.mat'
 % 'keuken'                        'Keuken_7T_atlas_object.mat'
 % 'buckner'                       'buckner_networks_atlas_object.mat'
@@ -29,7 +31,6 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
 % 'julich_[fmriprep20|fsl6]'      'Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces
 % 'bianciardi_[fine_][fmriprep20|fsl6]   'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces
-% 'morel[_fmriprep20|_fsl6]       'Morel atlas in fsl6 (default) or fmriprep 20 space. (In MasksPrivate)'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -93,9 +94,18 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
         
     case {'subcortical_rl', 'CIT168', 'cit168'}
+        warning('This version (v1.0.0) is deprecated. Please use v1.1.0 by invoking cit168_fmriprep20 or cit168_fsl6.')
         savefile = which('CIT168_MNI_subcortical_atlas_object.mat');
         varname = 'atlas_obj';
+
+    case {'cit168_fmriprep20', 'CIT168_fmriprep20'}
+        savefile = which('CIT168_MNI152NLin2009cAsym_subcortical_v1.1.0_atlas_object.mat');
+        varname = 'atlas_obj';
         
+    case {'cit168_fsl6', 'CIT168_fsl6'}
+        savefile = which('CIT168_MNI152NLin6Asym_subcortical_v1.1.0_atlas_object.mat');
+        varname = 'atlas_obj';
+
     case {'brainnetome'}
         savefile = which('Brainnetome_atlas_object.mat');
         varname = 'atlas_obj';

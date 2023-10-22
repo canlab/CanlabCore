@@ -19,18 +19,20 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'brainnetome'                   'Brainnetome_atlas_object.mat'
 % 'keuken'                        'Keuken_7T_atlas_object.mat'
 % 'buckner'                       'buckner_networks_atlas_object.mat'
-% 'cerebellum', 'suit'            'SUIT_Cerebellum_MNI_atlas_object.mat'
+% 'cerebellum[_fsl6|_fmriprep20]', 'suit[_fsl6|_fmriprep20]'
+%                                 'Diedrichsen cerrebellar atlas in MNI152NLin6Asym space (aka fsl, default) or MNI152NLin2009cAsym space (aka fmriprep).'
 % 'shen[_fmriprep20|_fsl6]'       'Shen_atlas_object.mat, in MNIColin27v1998 space (default), MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.0.3) spaces'
 % 'schaefer400'                   *Not saved as object yet* 'Schaefer2018Cortex_atlas_regions.mat' 
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
 % 'insula'                        'Faillenot_insular_atlas.mat'
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
-% 'tian_3t_s[1|2|3|4]_[fmriprep20|fsl6]'      'Subcortical atlas at four different resolutions and two different reference spaces (e.g., tian_3t_s4_fmriprep20) )'
+% 'tian_3t_s[1|2|3|4]_[fmriprep20|fsl6]'      
+%                                 'Subcortical atlas at four different resolutions and two different reference spaces (e.g. tian_3t_s4_fmriprep20)'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
-% 'cytoarchitecture_jubrain'      'Amunts2020_jubrain_cytoarchitecture.mat'
-% 'julich_[fmriprep20|fsl6]'      'Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces
-% 'bianciardi_[fine_][fmriprep20|fsl6]   'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces
+% 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces'
+% 'bianciardi_[fine_][fmriprep20|fsl6]   
+%                                 'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -119,10 +121,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile = 'buckner_networks_atlas_object.mat';
         varname = 'atlas_obj';
         
-    case {'cerebellum', 'suit'}
+    case {'cerebellum', 'suit', 'cerebellum_fsl6', 'suit_fsl6'}
         savefile = which('SUIT_Cerebellum_MNI_atlas_object.mat');
         varname = 'atlas_obj';
         
+    case {'cerebellum_fmriprep20', 'suit_fmriprep20'}
+        savefile = which('SUIT_Cerebellum_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
     case 'shen'
         warning('This is Shen in MNIColin27v1998 space, a subject specific space of the original paper. Consider shen_[fmriprep20|fsl6] instead.')
         savefile = which('Shen_atlas_object.mat');

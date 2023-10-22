@@ -97,7 +97,7 @@ has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probability_m
 
 toadd_n_regions = num_regions(atlas_obj_to_add);
 
-toadd_has_pmaps = ~isempty(atlas_obj.probability_maps) && size(atlas_obj.probability_maps, 2) == toadd_n_regions;
+toadd_has_pmaps = ~isempty(atlas_obj_to_add.probability_maps) && size(atlas_obj_to_add.probability_maps, 2) == toadd_n_regions;
 
 if has_pmaps && toadd_has_pmaps
     % We have probability maps for both
@@ -170,7 +170,7 @@ for f = label_fields
     atlas_obj.(fld) = [atlas_obj.(fld) atlas_obj_to_add.(fld)];
 end
 
-atlas_obj.label_descriptions = [atlas_obj.label_descriptions; atlas_obj_to_add.label_descriptions];
+atlas_obj.label_descriptions = [atlas_obj.label_descriptions(:); atlas_obj_to_add.label_descriptions(:)];
 
 atlas_obj.references = strvcat(atlas_obj.references, atlas_obj_to_add.references);
 

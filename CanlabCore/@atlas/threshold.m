@@ -151,28 +151,27 @@ switch thresh_type
 end
 
 
+% Re-compute parcel id vector
+% --------------------------------------
+
+obj = probability_maps_to_region_index(obj);
+
 % Apply size threshold
 % --------------------------------------
 if k > 1
     
     if doverbose, fprintf('Applying cluster extent threshold of %3.0f contiguous voxels\n', k); end
     
-    for i = 1:size(obj.dat, 2)
-        
-        anyvalue = any(double(obj.probability_maps), 2);
-        
-        whkeep = logical(iimg_cluster_extent(anyvalue, obj.volInfo, k));
-        
-        obj.probability_maps(~whkeep, :) = 0;
-        
+    % iteratively remove clusters until removal operation has nothing left
+    % to do
+    newobj = apply_cluster_constraint(obj, k);
+    while length(unique(newobj.dat)) ~= length(unique(obj.dat))
+        obj = newobj;
+        newobj = apply_cluster_constraint(obj, k);
     end
+    obj = newobj;
 end
 
-
-% Re-compute parcel id vector
-% --------------------------------------
-
-obj = probability_maps_to_region_index(obj);
 
 
 % Clean up and trim
@@ -195,3 +194,23 @@ end % function
 % for i = 1:k
 % dat_wh = get_wh_image(dat, 1); 
 % dat_wh = threshold(dat_wh, [.2 Inf], 'raw-between', 'k', 3);
+
+function obj = apply_cluster_constraint(obj, k)
+    new_obj = obj;
+    new_obj.probability_maps = [];
+
+    uniq_roi = unique(new_obj.dat, 'stable');
+    uniq_roi(uniq_roi == 0) = [];
+
+    for i = 1:length(uniq_roi)
+        this_obj = new_obj.select_atlas_subset(i);
+        
+        anyvalue = any(double(this_obj.dat), 2);
+            
+        whkeep = logical(iimg_cluster_extent(anyvalue, obj.volInfo, k));
+            
+        obj.probability_maps(~whkeep, i) = 0;
+    end
+
+    obj = obj.probability_maps_to_region_index;
+end

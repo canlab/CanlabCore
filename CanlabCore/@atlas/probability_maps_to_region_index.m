@@ -9,7 +9,7 @@ function dat = probability_maps_to_region_index(dat)
 
 [maxval, condf] = max(double(full(dat.probability_maps)),[], 2);   % double is safer
 
-allempty = all(dat.probability_maps == 0, 2) | isnan(maxval);  % some out-of-mask values may get NaNs
+allempty = all(maxval == 0,2) | isnan(maxval);
 
 condf(allempty) = 0;
 
@@ -26,7 +26,7 @@ if length(unique(condf)) < n_regions
         end
     end
     for i = 1:length(dropped_ind)
-        warning('Dropping region %d: %s', dropped_ind(i), labels{dropped_ind(i)});
+        warning('Dropping region %d: %s', dropped_ind(i), labels{i});
     end
 end
 

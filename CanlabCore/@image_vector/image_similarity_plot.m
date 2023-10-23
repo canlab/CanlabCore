@@ -235,8 +235,11 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %   - added option for compute error bar using standard deviation rather
 %   than standard error. This will suit for the dataset including bootstrap
 %   samples.
-% ..
-
+% 2023/10/23 Michael Sun
+%   - Groups are now plotted with different colors, and includes legend
+%   - Group Variable can now accept categorical
+%   - Plot labels and tables now include significance stars
+%   - 'notable' option now suppresses all tables.
 
 % PRELIMINARIES
 % ------------------------------------------------------------------------
@@ -280,6 +283,8 @@ plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
 treat_zero_as_data=0; % Treat zero value as missing data.
 Error_STD=0;
+
+
 % optional inputs with default values
 % -----------------------------------
 
@@ -372,8 +377,11 @@ end
 % if colors are not entered
 
 if doaverage && strcmp(plotstyle, 'polar') && ~any(strcmp(varargin, 'colors'))
-   
+   if exist('group', 'var')
+    groupColors=scn_standard_colors(length(unique(group)))';
+   else
     groupColors = {[1 0 0]};  % unicolor. can change line and err with 2nd color entry.
+   end
     
 end
 
@@ -571,19 +579,43 @@ elseif doaverage
             
             [p table_group{i} st]=anova1(z(:,i), group, 'off'); %get anova table
             [c,~] = multcompare(st, 'Display', 'off'); %perform multiple comparisons
-            multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end))]; %format table for output
+            multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end)), pValueToStars(c(:,end))]; %format table for output
             
         end
         
-        for i=1:size(z,2)
-            disp(['Between-group comparisons for ' networknames{i} ':']);
-            disp('--------------------------------------');
-            disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
-            disp(' ')
-            disp('Multiple comparisons of means:')
-            disp(' ');
-            print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Estimate' 'UCI' 'P'});
-            disp(' ');
+        if printTable
+            for i=1:size(z,2)
+                disp(['Between-group comparisons for ' networknames{i} ':']);
+                disp('--------------------------------------');
+                disp(['One-way ANOVA: F(' num2str(table_group{i}{2,3}) ','  num2str(table_group{i}{3,3}) ') = ' num2str(table_group{i}{2,5},3) ', P = ' num2str(table_group{i}{2,6},3)])
+                disp(' ')
+                disp('Multiple comparisons of means:')
+                disp(' ');
+                % print_matrix(cell2mat(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Esti.' 'UCI' 'P'});
+                % print_matrix(char(multcomp_group{i}), {'Group 1' 'Group 2' 'LCI' 'Esti.' 'UCI' 'P'});
+                fprintf('Group 1\tGroup 2\tLCI\tEsti.\tUCI\tP\n');
+                [numRows, numCols] = size(multcomp_group{i});
+                for row = 1:numRows
+                    for col = 1:numCols
+                        cellContent = multcomp_group{i}{row, col};
+                        if ischar(cellContent) || isstring(cellContent) || iscategorical(cellContent)
+                            fprintf('%s\t', cellContent);
+                        elseif isnumeric(cellContent)
+                            if abs(cellContent) < 1e-3 || abs(cellContent) >= 1e6
+                                fprintf('%.0e\t', cellContent);
+                            else
+                                fprintf('%.4f\t', cellContent);
+                            end
+                        else
+                            warning('Unsupported cell type: %s', class(cellContent));
+                        end
+                    end
+                    fprintf('\n');  % to move to the next line after printing the row
+                end
+                fprintf('\n');  % to move to the next line after printing the cell array
+
+                disp(' ');
+            end
         end
           
     else
@@ -627,6 +659,7 @@ elseif doaverage
         stats(g).sig = h';
         stats(g).t = stat.tstat';
         stats(g).df = stat.df';
+        starCellArray = pValueToStars(stats(g).p);
         
         %perform repeated measures anova  (two way anova with subject as the
         %row factor
@@ -635,13 +668,17 @@ elseif doaverage
         stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
         
         
-        disp(['Table of correlations Group:' num2str(g)]);
-        disp('--------------------------------------');
-        disp(stats(g).descrip)
-        
-        print_matrix([m(:,g) stats(g).t stats(g).p stats(g).sig], {'R_avg' 'T' 'P' 'sig'}, networknames);
-        disp(' ');
-        
+        if printTable
+            disp(['Table of correlations Group:' num2str(g)]);
+            disp('--------------------------------------');
+            disp(stats(g).descrip)
+            
+            print_matrix([m(:,g) stats(g).t stats(g).p stats(g).sig], {'R_avg' 'T' 'P' 'sig'}, networknames, '%3.4f', starCellArray);
+    
+            disp(' ');
+        end
+
+        networknames=strcat(networknames, starCellArray');
     end %groups
     
     % Plot (average + error bars)
@@ -649,6 +686,7 @@ elseif doaverage
     if ~noplot
         % groupColors = scn_standard_colors(length(groupValues))'; %
         % removed to enable use of user-defined colors. SG 2017/2/7
+        gc=groupColors;
         groupColors=repmat(groupColors',3,1);
         groupColors={groupColors{:}};
         
@@ -690,12 +728,19 @@ elseif doaverage
                 else
                     [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
                 end
+
+                % Make legend
+                if numel(groupValues)>1
+                    % if ~isempty(obj.image_names)
+                        han = makelegend(cellstr(groupValues), gc);
+                    % end
+                end
                 
                 set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
                 set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
                 
                 set(hh{1}(2:3:end), 'LineWidth', 4);
-                set(hhfill{1}([3:3:end]), 'FaceAlpha', 1, 'FaceColor', 'w');
+                set(hhfill{1}([3:3:end]), 'FaceAlpha', 0, 'FaceColor', 'w');
                 set(hhfill{1}([2:3:end]), 'FaceAlpha', 0);
                 set(hhfill{1}([1:3:end]), 'FaceAlpha', .3);
                 
@@ -710,6 +755,7 @@ elseif doaverage
                 kk = size(toplot, 1);
                 mytextsize = 30 ./ (kk.^.3);
                 hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', mytextsize);
+
                 
             otherwise
                 error('Unknown plottype');
@@ -888,3 +934,27 @@ else
     end
 end
 end
+
+
+function stars = pValueToStars(p)
+    if iscell(p)
+        stars = cellfun(@pValueToStars, p, 'UniformOutput', false);
+    elseif isnumeric(p)
+        stars = arrayfun(@convertPValue, p, 'UniformOutput', false);
+    else
+        error('Input must be a cell array or numeric array');
+    end
+end
+
+function star = convertPValue(p)
+    if p < 0.001
+        star = '***';
+    elseif p < 0.01
+        star = '**';
+    elseif p < 0.05
+        star = '*';
+    else
+        star = '';
+    end
+end
+

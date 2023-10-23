@@ -740,7 +740,11 @@ elseif doaverage
                 set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
                 
                 set(hh{1}(2:3:end), 'LineWidth', 4);
-                set(hhfill{1}([3:3:end]), 'FaceAlpha', 0, 'FaceColor', 'w');
+                if numel(groupValues)>1
+                    set(hhfill{1}([3:3:end]), 'FaceAlpha', .7, 'FaceColor', 'w');
+                else
+                    set(hhfill{1}([3:3:end]), 'FaceAlpha', 1, 'FaceColor', 'w');
+                end
                 set(hhfill{1}([2:3:end]), 'FaceAlpha', 0);
                 set(hhfill{1}([1:3:end]), 'FaceAlpha', .3);
                 

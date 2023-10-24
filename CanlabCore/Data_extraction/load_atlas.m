@@ -10,8 +10,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. (Both in MasksPrivate)'
-% 'cortex', 'glasser[_fmriprep20]'
-%                                 'Glasser 2016 multimodal cortical parcellation in fmriprep20 space (default)'
+% 'cortex', 'glasser'
+%                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from surface (deprecated)'
+% 'glasser_[fmriprep20|fsl6]'     'Glasser 2016 multimodal cortical parcellation volumetric projection using registration fusion to two surface templates using 2 studies (N=241/89)
 % 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
@@ -80,8 +81,17 @@ switch lower(atlas_file_name_or_keyword)
         savefile = which('Morel_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
 
-    case {'cortex', 'glasser', 'glasser_fmriprep20'}
+    case {'cortex', 'glasser'}
+        warning('This version of the Glasser atlas is deprecated. Please invoke glasser_[fmriprep20|fsl6]');
         savefile = which('Glasser2016HCP_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case 'glasser_fmriprep20'
+        savefile = which('glasser_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case 'glasser_fsl6'
+        savefile = which('glasser_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
         
     case {'basal_ganglia', 'bg'}

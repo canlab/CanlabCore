@@ -3,6 +3,10 @@ function dat = probability_maps_to_region_index(dat)
 %
 % dat = probability_maps_to_region_index(dat)
 %
+% Note: this script should not invoke remove_empty, replace_empty or
+% resampling because it is invoked on atlas objects that may have
+% mismatched probability_maps and dat fields, causing such functions to 
+% fail.
 
 % Start: dat has one image per region, with probability values
 % convert to integer vector
@@ -15,12 +19,22 @@ condf(allempty) = 0;
 
 dat.dat = int32(condf);
 n_regions = num_regions(dat);
-if length(unique(condf)) < n_regions
-    dropped_ind = find(~ismember(1:n_regions,unique(condf)));
-    labels = cell(length(dropped_ind),1);
+% I chagned this line sunday night, and also the n_maps reference below
+n_maps = find(any(full(dat.probability_maps) > 0,1));
+if length(n_maps) < n_regions
+    dropped_ind = find(~ismember(1:n_regions,n_maps));
+    
+    % note, labels must be last in this list or lese it would end up being
+    % asigned to the labels variable which is needed subsequently
     fnames = {'probability_maps', 'labels_2','labels_3','labels_4',...
         'labels_5','label_descriptions','labels'};
-    for f = 1:length(fnames)
+    assert(strcmp(fnames{end},'labels'));
+    for f = 1:length(fnames)            
+        if length(dat.labels) ~= n_regions
+            for i = 1:length(dropped_ind)
+                warning('Dropping %s index %d', fnames{f}, dropped_ind);
+            end
+        end
         if length(dat.(fnames{f})) == n_regions
             labels = dat.(fnames{f});
             dat.(fnames{f})(dropped_ind) = [];
@@ -28,12 +42,17 @@ if length(unique(condf)) < n_regions
             dat.(fnames{f})(:,dropped_ind) = [];
         end
     end
-    for i = 1:length(dropped_ind)
-        warning('Dropping region %d: %s', dropped_ind(i), labels{i});
+    if length(dat.labels) == n_regions
+        for i = 1:length(dropped_ind)
+            warning('Dropping region %d: %s', dropped_ind(i), labels{dropped_ind(i)});
+        end
     end
-    newdat = dat.remove_empty;
-    [~,~, newdat.dat] = unique(newdat.dat);
-    dat = newdat.replace_empty;
+    if ismember(dat.dat, 0)
+        [~,~, dat.dat] = unique(dat.dat);
+        dat.dat = dat.dat - 1;
+    else
+        [~,~, dat.dat] = unique(dat.dat);
+    end
 end
 
 

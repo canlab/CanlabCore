@@ -58,6 +58,26 @@ if ~isempty(varargin) && any(cellfun(@isvector, varargin) || cellfun(@iscell, va
     
 end
 
+%% populate descriptive fields if mismatched
+fname = {'labels', 'label_descriptions', 'labels_2', 'labels_3', 'labels_4', 'labels_5'};
+n_regions = num_regions(atlas_obj);
+n_regions_to_add = num_regions(atlas_obj_to_add);
+for i = 1:length(fname)
+    if any(~cellfun(@isempty, atlas_obj.(fname{i}))) || any(~cellfun(@isempty, atlas_obj_to_add.(fname{i}))) 
+        if length(atlas_obj.(fname{i})) == n_regions || length(atlas_obj_to_add.(fname{i})) == n_regions_to_add
+            if length(atlas_obj.(fname{i})) ~= n_regions
+                atlas_obj.(fname{i}) = repmat({''}, 1, n_regions);
+            end
+            if length(atlas_obj_to_add.(fname{i})) ~= n_regions_to_add
+                atlas_obj_to_add.(fname{i}) = repmat({''}, 1, n_regions_to_add);
+            end
+        end
+    end
+end
+atlas_obj.label_descriptions = atlas_obj.label_descriptions(:);
+atlas_obj_to_add.label_descriptions = atlas_obj_to_add.label_descriptions(:);
+        
+
 % -------------------------------------------------------------------------
 % Resample space
 % -------------------------------------------------------------------------

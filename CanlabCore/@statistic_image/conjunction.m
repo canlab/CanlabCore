@@ -1,4 +1,4 @@
-function conj = conjunction(si1, si2, type, varargin)
+function conj = conjunction(si1, si2, direction, type)
 % Returns the conjunction of two statistic_images.  considers positive and
 % negative activations separately.
 %
@@ -22,19 +22,27 @@ function conj = conjunction(si1, si2, type, varargin)
 % 
 % :Inputs:
 %
-%   Added another input argument "type", allowed values are "indicator" or
-% "values". "indicator" will return an output with voxel values set to 1 
+%   Changed the name of the previous optional 3rd argument to "direction"
+%
+%   Added another optional argument "type", allowed values are "indicator" 
+% or "values". "indicator" will return an output with voxel values set to 1 
 % and -1 (as previously designed); "values" will return the average voxel
 % values of the two input maps. Default to "values" to prevent crashing
 % previous scripts using this function.
 % 
 
-direction = 0; % default: both pos and neg
 if nargin == 2
     type = "values"; % default: average of two maps
+    direction = 0; % default: both pos and neg
 end
-if nargin > 3
-    direction = varargin{1};
+if nargin == 3
+    type = "values";
+    if isempty(direction) % allow empty input
+        direction = 0;
+    end
+end
+if nargin == 4 && isempty(direction)
+    direction = 0;
 end
 
 if compare_space(si1, si2), error('Objects are not in same space'); end
@@ -91,9 +99,11 @@ elseif strcmp(type, 'values')    % output a value map
     
     elseif direction < 0 % only neg
         conj.sig = neg_conj.sig;
+        conj.dat(conj.dat > 0) = 0;
     
     else % only pos
         conj.sig = pos_conj.sig;
+        conj.dat(conj.dat < 0) = 0;
     end
 end
     

@@ -47,7 +47,7 @@ if length(n_maps) < n_regions
             warning('Dropping region %d: %s', dropped_ind(i), labels{dropped_ind(i)});
         end
     end
-    if ismember(dat.dat, 0)
+    if ismember(0,unique(dat.dat))
         [~,~, dat.dat] = unique(dat.dat);
         dat.dat = dat.dat - 1;
     else

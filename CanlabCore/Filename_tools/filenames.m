@@ -114,22 +114,41 @@ function command = shellCommand(pattern, isPCandIsRelative, sortField, sortField
             command = [command ' | ' sortCommand(sortField, sortFieldSeparator)];
         end
     elseif(ispc())
-        if(~isempty(sortField))
-            error('Cannot currently sort on PCs. No sort command.');
-        end
-        whFileSeps = strfind(pattern, filesep());
-        whWildcards = strfind(pattern, '*');
+        % if(~isempty(sortField))
+        %     error('Cannot currently sort on PCs. No sort command.');
+        % end
+        % % whFileSeps = strfind(pattern, filesep());
+        % % whWildcards = strfind(pattern, '*');
+        % % 
+        % % % if there's a wildcard before the last file separator, we have a problem
+        % % if(length(whFileSeps) > 0 && length(whWildcards) > 0 && whWildcards(1) < whFileSeps(end))
+        % %     error('There appears to be a wildcard before the last file separator in "%s", which Windows cannot handle, unfortunately.', pattern);
+        % % else
+        % %     if(isPCandIsRelative)
+        % %         command = sprintf('dir /B %s', escapeForShell(pattern));
+        % %     else
+        % %         command = sprintf('dir /B /S %s', ['"' pattern '"']);
+        % %     end
+        % % end
+        % 
+        % [pathstr, name, ext] = fileparts(pattern);
+        % filePattern = [name, ext];
+        % psCommand = sprintf('Get-ChildItem -Path "%s" -Filter "%s" -Recurse | Select-Object -ExpandProperty FullName', escapeForShell(pathstr), escapeForShell(filePattern));
+        % command = sprintf('powershell -Command "%s"', psCommand);
+        % disp(command);
+        
+        % 10/26/2023 -- Michael Sun Edits for PC users:
 
-        % if there's a wildcard before the last file separator, we have a problem
-        if(length(whFileSeps) > 0 && length(whWildcards) > 0 && whWildcards(1) < whFileSeps(end))
-            error('There appears to be a wildcard before the last file separator in "%s", which Windows cannot handle, unfortunately.', pattern);
-        else
-            if(isPCandIsRelative)
-                command = sprintf('dir /B %s', escapeForShell(pattern));
-            else
-                command = sprintf('dir /B /S %s', ['"' pattern '"']);
-            end
+        [pathstr, name, ext] = fileparts(pattern);
+        filePattern = [name, ext];
+        psCommand = sprintf('Get-ChildItem -Path "%s" -Filter "%s" -Recurse | Select-Object -ExpandProperty FullName', escapeForShell(pathstr), escapeForShell(filePattern));
+        
+        if(~isempty(sortField))
+            psCommand = [psCommand ' | Sort-Object'];
         end
+        
+        command = sprintf('powershell -Command "%s"', psCommand);
+
     else
         error('What kinda system you got?');
     end

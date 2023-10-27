@@ -86,7 +86,7 @@ DX = [copyDX ones(len,1)];
 
 if mode == 1
    
-    MRI = zeros(sum(tlen_all)+numstim); % adjust size based on varying tlen
+    MRI = zeros(sum(tlen_all)+1); % adjust size based on varying tlen and intercept at end
     start_idx = 1;
 
     for i=1:numstim

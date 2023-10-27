@@ -120,9 +120,12 @@ end
 param = zeros(3,numstim);
 
 for i=1:numstim
-    hrf{:,i} = b(((i-1)*tlen_all(i)+1):(i*tlen_all(i)))';
-    param(:,i) = get_parameters2(hrf{:,i},(1:tlen_all(i)));
-end;
+    % hrf{:,i} = b(((i-1)*tlen_all(i)+1):(i*tlen_all(i)))'; % Buggy line Edit is below: Michael Sun, 10/27/2023   
+    start_idx = sum(tlen_all(1:i-1)) + 1;
+    end_idx = start_idx + tlen_all(i) - 1;
+    hrf{:,i} = b(start_idx:end_idx)';
+    param(:,i) = get_parameters2(hrf{:,i}, (1:tlen_all(i)));
+end
 
 % HJ: concatenate estimated hrf
 % since different event lengths have different lengths of hrf estimation, 

@@ -46,6 +46,10 @@ function [hrf, fit, e, param] = Fit_sFIR_epochmodulation(tc, TR, Run, T, mode)
 % Created by Martin Lindquist on 10/02/09
 % Last edited: 05/17/13 (ML)
 % 
+% [10/27/2023 - HJ v1.2]: BUGFIX: remove redundant intercept due to multiple design matrix estimation
+% - due to horzcat, we will have multiple intercepts in this design matrix
+% - therefore, we find the intercepts, drop them, and add an intercept at the end of the matrix
+
 % [10/26/2023 - HJ v1.2]: Updated the code to Allow for Different Epoch Lengths
 % - handles varying epoch lengths with the addition of T vector, instead of a scalar T
 % - made adjustments accordingly to handle T vector in variable `tlen_all`
@@ -72,6 +76,13 @@ for i=1:numstim
     DX_all{i} = tor_make_deconv_mtx3(Runs(:,i), tlen_all(i), 1);
 end
 DX = horzcat(DX_all{:});
+
+% due to horzcat, we will have multiple intercepts in this design matrix
+% therefore, we'll find the intercepts, drop them, and add an intercept at the end of the matrix
+intercept_idx = find(sum(DX)==len);
+copyDX = DX;
+copyDX(:,intercept_idx) = [];
+DX = [copyDX ones(len,1)];
 
 if mode == 1
    

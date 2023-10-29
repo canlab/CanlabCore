@@ -63,6 +63,14 @@ function obj = threshold(obj, input_threshold, varargin)
 %   **k:**
 %        Followed by extent threshold cluster size, default = 1 (no cluster thresholding)
 %
+%   **remove_parcel_fragments:**
+%        Probability maps can have multiple local maxima per parcel, resulting in fragmentation of 
+%        parcels after thresholding. This flag eliminates fragments.
+%
+%   **spin_off_parcel_fragments:**
+%        Probability maps can have multiple local maxima per parcel, resulting in fragmentation of 
+%        parcels after thresholding. This flag creates new parcels from fragmented subparcels.
+%
 %   **trim_mask:**
 %        Reduce the mask in obj.voInfo based on thresholding
 %
@@ -99,6 +107,8 @@ doverbose = true;
 dotrim = false;
 k = 1;
 thresh_type = 'above';
+do_remove_frag = false;
+do_spin_off_frag = false;
 
 wh = strcmp(varargin, 'k');  
 if any(wh), wh = find(wh); wh = wh(1); k = varargin{wh + 1}; varargin{wh + 1} = []; end
@@ -109,6 +119,11 @@ if any(wh), doverbose = false; end
 wh = strcmp(varargin, 'thresh_type');  
 if any(wh), wh = find(wh); wh = wh(1); thresh_type = varargin{wh + 1}; varargin{wh + 1} = []; end
 
+wh = strcmp(varargin,'remove_parcel_fragments');
+if any(wh), do_remove_frag = true; end
+
+wh = strcmp(varargin,'spin_off_parcel_fragments');
+if any(wh), do_spin_off_frag = true;  end
 
 % Error checking
 % --------------------------------------
@@ -173,6 +188,13 @@ if k > 1
 end
 
 
+if do_spin_off_frag || do_remove_frag
+    obj = spin_off_frag(obj);
+end
+
+if do_remove_frag
+    obj = remove_frag(obj);
+end
 
 % Clean up and trim
 % --------------------------------------
@@ -213,4 +235,57 @@ function obj = apply_cluster_constraint(obj, k)
     end
 
     obj = obj.probability_maps_to_region_index;
+end
+
+
+% Identifies any fragmented parcels, splits them in two and postfixes
+% _fragN to the label name, retaining corresponding probabilities for
+% each regoin. N is the fragment index, frag1 is the largest and subsequent
+% parcels are in order of size.
+function obj = spin_off_frag(obj)
+    new_obj = obj;
+    new_obj.probability_maps = [];
+
+    uniq_roi = unique(new_obj.dat, 'stable');
+    uniq_roi(uniq_roi == 0) = [];
+
+    pmaps = [];
+    labels = {};
+    for i = 1:length(uniq_roi)
+        this_obj = new_obj.select_atlas_subset(i);
+        
+        r = atlas2region(this_obj);
+        r = r.reparse_continguous();
+
+        numVox = arrayfun(@(x1)(x1.numVox), r.reparse_continguous);
+        [numVox, I] = sort(numVox,'descend');
+        for j = 1:length(numVox)
+            new_region = r(I(j)).region2atlas(obj);
+            pmaps = [pmaps, zeros(size(obj.probability_maps,1),1)];
+            pmaps(new_region.dat == 1,end) = obj.probability_maps(new_region.dat == 1,i);
+            if length(numVox) > 1
+                labels{end+1} = [obj.labels{i},'_frag',num2str(j)];
+                fprintf('Spinning off %s\n', labels{end});
+            else
+                labels{end+1} = obj.labels{i};
+            end
+        end
+    end
+
+    obj.probability_maps = pmaps;
+    obj.labels = labels;
+    obj = obj.probability_maps_to_region_index;
+end
+
+% removes all parcels after the largest parcel fragment
+function obj = remove_frag(obj)
+    isfrag = contains(obj.labels, '_frag');
+    isPrincipalFrag = contains(obj.labels,'_frag1');
+    keep = isPrincipalFrag | ~isfrag;
+    
+    if sum(~keep) > 0
+        fprintf('Removing %s\n', obj.labels{~keep});
+    end
+    obj = obj.select_atlas_subset(find(keep));
+    obj.labels = cellfun(@(x1)strrep(x1,'_frag1',''), obj.labels, 'UniformOutput', false);
 end

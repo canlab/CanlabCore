@@ -19,12 +19,11 @@ condf(allempty) = 0;
 
 dat.dat = int32(condf);
 n_regions = num_regions(dat);
-% I chagned this line sunday night, and also the n_maps reference below
 n_maps = find(any(full(dat.probability_maps) > 0,1));
 if length(n_maps) < n_regions
     dropped_ind = find(~ismember(1:n_regions,n_maps));
     
-    % note, labels must be last in this list or lese it would end up being
+    % note, labels must be last in this list or else it would end up being
     % asigned to the labels variable which is needed subsequently
     fnames = {'probability_maps', 'labels_2','labels_3','labels_4',...
         'labels_5','label_descriptions','labels'};

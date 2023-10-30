@@ -243,6 +243,7 @@ end
 % each regoin. N is the fragment index, frag1 is the largest and subsequent
 % parcels are in order of size.
 function obj = spin_off_frag(obj)
+    obj = obj.replace_empty();
     new_obj = obj;
     new_obj.probability_maps = [];
 
@@ -280,12 +281,12 @@ end
 % removes all parcels after the largest parcel fragment
 function obj = remove_frag(obj)
     isfrag = contains(obj.labels, '_frag');
-    isPrincipalFrag = contains(obj.labels,'_frag1');
+    isPrincipalFrag = endsWith(obj.labels,'_frag1');
     keep = isPrincipalFrag | ~isfrag;
     
     if sum(~keep) > 0
         fprintf('Removing %s\n', obj.labels{~keep});
     end
     obj = obj.select_atlas_subset(find(keep));
-    obj.labels = cellfun(@(x1)strrep(x1,'_frag1',''), obj.labels, 'UniformOutput', false);
+    obj.labels = cellfun(@(x1)regexprep(x1,'_frag1$',''), obj.labels, 'UniformOutput', false);
 end

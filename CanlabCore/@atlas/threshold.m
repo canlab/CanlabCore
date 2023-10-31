@@ -179,6 +179,7 @@ if k > 1
     
     % iteratively remove clusters until removal operation has nothing left
     % to do
+    obj = obj.replace_empty();
     newobj = apply_cluster_constraint(obj, k);
     while length(unique(newobj.dat)) ~= length(unique(obj.dat))
         obj = newobj;
@@ -243,7 +244,6 @@ end
 % each regoin. N is the fragment index, frag1 is the largest and subsequent
 % parcels are in order of size.
 function obj = spin_off_frag(obj)
-    obj = obj.replace_empty();
     new_obj = obj;
     new_obj.probability_maps = [];
 
@@ -252,6 +252,7 @@ function obj = spin_off_frag(obj)
 
     pmaps = [];
     labels = {};
+    extra_labels = struct('labels_2',{{''}}, 'labels_3',{{''}}, 'labels_4', {{''}}, 'labels_5', {{''}}, 'label_descriptions', {{''}});
     for i = 1:length(uniq_roi)
         this_obj = new_obj.select_atlas_subset(i);
         
@@ -270,23 +271,37 @@ function obj = spin_off_frag(obj)
             else
                 labels{end+1} = obj.labels{i};
             end
+            for fname = fieldnames(extra_labels)'
+                if length(obj.(fname{1})) == length(obj.labels)
+                    if strcmp(extra_labels.(fname{1}){1},'')
+                        extra_labels.(fname{1}) = obj.(fname{1})(i);
+                    else
+                        extra_labels.(fname{1}){end+1} = obj.(fname{1}){i};
+                    end
+                end
+            end
         end
     end
 
     obj.probability_maps = pmaps;
     obj.labels = labels;
     obj = obj.probability_maps_to_region_index;
+    for fname = fieldnames(extra_labels)'
+        obj.(fname{1}) = extra_labels.(fname{1});
+    end
+
+    obj.label_descriptions = obj.label_descriptions(:);
 end
 
 % removes all parcels after the largest parcel fragment
 function obj = remove_frag(obj)
     isfrag = contains(obj.labels, '_frag');
-    isPrincipalFrag = endsWith(obj.labels,'_frag1');
+    isPrincipalFrag = contains(obj.labels,'_frag1');
     keep = isPrincipalFrag | ~isfrag;
     
     if sum(~keep) > 0
         fprintf('Removing %s\n', obj.labels{~keep});
     end
     obj = obj.select_atlas_subset(find(keep));
-    obj.labels = cellfun(@(x1)regexprep(x1,'_frag1$',''), obj.labels, 'UniformOutput', false);
+    obj.labels = cellfun(@(x1)strrep(x1,'_frag1',''), obj.labels, 'UniformOutput', false);
 end

@@ -31,7 +31,7 @@ if length(n_maps) < n_regions
     for f = 1:length(fnames)            
         if length(dat.labels) ~= n_regions
             for i = 1:length(dropped_ind)
-                warning('Dropping %s index %d', fnames{f}, dropped_ind);
+                warning('Dropping %s index %d', fnames{f}, dropped_ind(i));
             end
         end
         if length(dat.(fnames{f})) == n_regions

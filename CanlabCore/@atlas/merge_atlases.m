@@ -135,7 +135,7 @@ if has_pmaps && toadd_has_pmaps
         atlas_obj_to_add.probability_maps(wh, :) = 0;
     end
     
-    atlas_obj.probability_maps = [atlas_obj.probability_maps atlas_obj_to_add.probability_maps];
+    atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
     
     atlas_obj = probability_maps_to_region_index(atlas_obj);
     

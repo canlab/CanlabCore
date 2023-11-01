@@ -132,7 +132,7 @@ function [han, X, Y, slope_stats] = line_plot_multisubject(X, Y, varargin)
 %    different flavors of r (overall r, within-subject r, between-subject r)
 %    01/05/20 - Marta: added NaN handling for r_within for case when all input
 %    values of a subject are 0)
-
+%    11/1/2023 - Tor: Fixed bug -- was not removing NaNs appropriately
 
 % -------------------------------------------------------------------------
 % Defaults and inputs
@@ -240,7 +240,7 @@ Y = cellfun(@double, Y, 'UniformOutput', false);
 
 % within_ste_X = cellfun(@ste, X);
 
-[cannot_compute_within_stats, warning_str, wasnan] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y);
+[cannot_compute_within_stats, warning_str, wasnan, X, Y] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y);
 
 
 % -------------------------------------------------------------------------
@@ -323,10 +323,18 @@ Yc = cat(1, Y{:});
 slope_stats.r = corr(Xc, Yc);
 slope_stats.wasnan = wasnan;
 
+% slope_stats.individual_r = r_within;
 slope_stats.r_within = nanmean(r_within);
 slope_stats.r_within_std = nanstd(r_within);
 
-[slope_stats.r_between, slope_stats.r_between_p] = corr(X_between', Y_between');
+[wasnansubj, X_between, Y_between] = nanremove(X_between', Y_between');
+[slope_stats.r_between, slope_stats.r_between_p] = corr(X_between, Y_between);
+slope_stats.r_between_N = length(Y_between);
+
+slope_stats.cov_table = array2table(nancov(b(:, 1), b(:, 2)), 'VariableNames', {'Intercept' 'Slope'});
+
+n_obs_within = cellfun(@length, X)';
+slope_stats.data_table = table(b(:, 1), b(:, 2), r_within, n_obs_within, 'VariableNames', {'Intercept' 'Slope' 'r_within' 'n_obs_within'});
 
 
 % -------------------------------------------------------------------------
@@ -507,7 +515,7 @@ end % function
 
 
 
-function [cannot_compute_within_stats, warning_str, wasnan] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y)
+function [cannot_compute_within_stats, warning_str, wasnan, X, Y] = check_data_inputs(X, Y, exclude_low_range_X, exclude_low_range_Y)
 
 % Check lengths match
 lenX = cellfun(@length, X);

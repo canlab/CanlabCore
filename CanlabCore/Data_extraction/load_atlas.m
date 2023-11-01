@@ -10,7 +10,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. (Both in MasksPrivate)'
-% 'cortex', 'glasser'             'Glasser2016HCP_atlas_object.mat'
+% 'cortex', 'glasser'
+%                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from surface (deprecated)'
+% 'glasser_[fmriprep20|fsl6]'     'Glasser 2016 multimodal cortical parcellation volumetric projection using registration fusion to two surface templates using 2 studies (N=241/89)
 % 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
@@ -21,7 +23,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'buckner'                       'buckner_networks_atlas_object.mat'
 % 'cerebellum[_fsl6|_fmriprep20]', 'suit[_fsl6|_fmriprep20]'
 %                                 'Diedrichsen cerrebellar atlas in MNI152NLin6Asym space (aka fsl, default) or MNI152NLin2009cAsym space (aka fmriprep).'
-% 'shen[_fmriprep20|_fsl6]'       'Shen_atlas_object.mat, in MNIColin27v1998 space (default), MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.0.3) spaces'
+% 'shen[_fmriprep20|_fsl6]'       'Shen_atlas_object.mat, in MNIColin27v1998 space (default), MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.2.3) spaces'
 % 'schaefer400'                   *Not saved as object yet* 'Schaefer2018Cortex_atlas_regions.mat' 
 % 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
 % 'insula'                        'Faillenot_insular_atlas.mat'
@@ -30,9 +32,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'tian_3t_s[1|2|3|4]_[fmriprep20|fsl6]'      
 %                                 'Subcortical atlas at four different resolutions and two different reference spaces (e.g. tian_3t_s4_fmriprep20)'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
-% 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.0.3 LTS (default) or fsl spaces'
-% 'bianciardi_[fine_][fmriprep20|fsl6]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.0.3 LTS space (default) or fsl spaces'
+% 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
+% 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]   
+%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at coarse (default) or fine scale'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -80,7 +82,16 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
 
     case {'cortex', 'glasser'}
+        warning('This version of the Glasser atlas is deprecated. Please invoke glasser_[fmriprep20|fsl6]');
         savefile = which('Glasser2016HCP_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case 'glasser_fmriprep20'
+        savefile = which('glasser_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case 'glasser_fsl6'
+        savefile = which('glasser_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
         
     case {'basal_ganglia', 'bg'}
@@ -249,7 +260,7 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
 
-    case {'bianciardi','bianciardi_fmriprep20'}
+    case {'bianciardi', 'bianciardi_coarse', 'bianciardi_fmriprep20', 'bianciardi_coarse_fmriprep20'}
         savefile='bianciardi_fmriprep20_atlas_object.mat';
         if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
             bianciardi_create_atlas_obj('MNI152NLin2009cAsym',false);
@@ -263,7 +274,7 @@ switch lower(atlas_file_name_or_keyword)
         end
         varname = 'bianciaAtlas';
         
-    case {'bianciardi_fsl6'}
+    case {'bianciardi_fsl6', 'bianciardi_coarse_fsl6'}
         savefile='bianciardi_fsl6_atlas_object.mat';
         if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
             bianciardi_create_atlas_obj('MNI152NLin6Asym',false);

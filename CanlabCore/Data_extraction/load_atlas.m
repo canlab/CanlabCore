@@ -5,14 +5,20 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
-% 'canlab2018'                    'Combined atlas from other published atlases, whole brain. 
-% 'canlab2018_2mm'                'Combined atlas resampled at 2 mm resolution'
+% 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_2mm]
+%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
+%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%                                 resolutions. Refer to github README for details.'
+% 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
-%                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. (Both in MasksPrivate)'
+%                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
+%                                 (Both in MasksPrivate)'
 % 'cortex', 'glasser'
-%                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from surface (deprecated)'
-% 'glasser_[fmriprep20|fsl6]'     'Glasser 2016 multimodal cortical parcellation volumetric projection using registration fusion to two surface templates using 2 studies (N=241/89)
+%                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from 
+%                                  surface (deprecated)'
+% 'glasser_[fmriprep20|fsl6]'     'Glasser 2016 multimodal cortical parcellation volumetric projection using registration fusion to two surface 
+%                                  templates using 2 studies (N=241/89)
 % 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
@@ -35,6 +41,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
 % 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]   
 %                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at coarse (default) or fine scale'
+% 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]_2mm   
+%                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error.'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -287,6 +295,92 @@ switch lower(atlas_file_name_or_keyword)
             bianciardi_create_atlas_obj('MNI152NLin6Asym',true);
         end
         varname = 'bianciaAtlas';
+
+    case {'bianciardi_2mm', 'bianciardi_coarse_2mm', 'bianciardi_fmriprep20_2mm', 'bianciardi_coarse_fmriprep20_2mm'}
+        savefile='bianciardi_fmriprep20_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',false);
+        end
+        varname = 'bianciaAtlas';
+
+    case {'bianciardi_fine_2mm', 'bianciardi_fine_fmriprep20_2mm'}
+        savefile='bianciardi_fmriprep20_2mm_fine_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',true);
+        end
+        varname = 'bianciaAtlas';
+        
+    case {'bianciardi_fsl6_2mm', 'bianciardi_coarse_fsl6_2mm'}
+        savefile='bianciardi_fsl6_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',false);
+        end
+        varname = 'bianciaAtlas';
+        
+    case {'bianciardi_fine_fsl6_2mm'}
+        savefile='bianciardi_fsl6_2mm_fine_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
+            bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',true);
+        end
+        varname = 'bianciaAtlas';
+
+    case {'canlab2023_coarse_fmriprep20_2mm', 'canlab2023_coarse_fmriprep20','canlab2023_coarse_2mm', ...
+            'canlab2023_fmriprep20_2mm', 'canlab2023_coarse', 'canlab2023_fmriprep20', 'canlab2023_2mm', ...
+            'canlab2023'}
+        savefile='CANLab2023_coarse_fmriprep20_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',2);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_coarse_fsl6_2mm', 'canlab2023_coarse_fsl6', 'canlab2023_fsl6_2mm', 'canlab2023_fsl6'}
+        savefile='CANLab2023_coarse_fsl6_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin6Asym','coarse',2);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_coarse_fmriprep20_1mm', 'canlab2023_coarse_1mm', 'canlab2023_fmriprep20_1mm', 'canlab2023_1mm'}
+        savefile='CANLab2023_coarse_fmriprep20_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',1);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_coarse_fsl6_1mm', 'canlab2023_fsl6_1mm'}
+        savefile='CANLab2023_coarse_fsl6_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin6Asym','coarse',1);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_fine_fmriprep20_2mm', 'canlab2023_fine_fmriprep20','canlab2023_fine_2mm', 'canlab2023_fine'}
+        savefile='CANLab2023_fine_fmriprep20_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',2);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_fine_fsl6_2mm', 'canlab2023_fine_fsl6'}
+        savefile='CANLab2023_fine_fsl6_2mm_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin6Asym','fine',2);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_fine_fmriprep20_1mm', 'canlab2023_fine_1mm'}
+        savefile='CANLab2023_fine_fmriprep20_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',1);
+        end
+        varname = 'atlas_obj';
+
+    case {'canlab2023_fine_fsl6_1mm'}
+        savefile='CANLab2023_fine_fsl6_atlas_object.mat';
+        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
+            create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
+        end
+        varname = 'atlas_obj';
         
     otherwise % assume it's a file name
         savefile = which(atlas_file_name_or_keyword);

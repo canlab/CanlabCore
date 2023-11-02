@@ -6,9 +6,10 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
 % 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_2mm]
-%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
-%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
-%                                 resolutions. Refer to github README for details.'
+%                                 'Combined atlas from other published atlases, whole brain. Available in a fine or coarse (default) parcellation
+%                                 in MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%                                 resolutions. Note atlases are best if thresholded using atlas/threshold to p>0.2. Refer to github README for 
+%                                 more details.'
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',

@@ -6,10 +6,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
 % 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_2mm]
-%                                 'Combined atlas from other published atlases, whole brain. Available in a fine or coarse (default) parcellation
-%                                 in MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
-%                                 resolutions. Note atlases are best if thresholded using atlas/threshold to p>0.2. Refer to github README for 
-%                                 more details.'
+%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
+%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%                                 resolutions. Refer to github README for details.'
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
@@ -59,6 +58,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 
 docustom = 0;
 verbose = 1;
+docreate = 0;
 
 % optional inputs with default values
 % -----------------------------------
@@ -78,11 +78,12 @@ end
 
 switch lower(atlas_file_name_or_keyword)
     
-    case {'thalamus'}
+    case {'thalamus', 'morel'}
+        warning('This atlas is deprecated. Please specify thalamus_[fsl6|fmriprep20] instead.');
         savefile = which('Thalamus_combined_atlas_object.mat');
         varname = 'thalamus_atlas';
         
-    case {'thalamus_detail', 'morel', 'morel_fsl6'}
+    case {'thalamus_detail', 'morel_fsl6'}
         savefile = which('Morel_thalamus_atlas_object.mat');
         varname = 'atlas_obj';
         
@@ -270,118 +271,102 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
 
     case {'bianciardi', 'bianciardi_coarse', 'bianciardi_fmriprep20', 'bianciardi_coarse_fmriprep20'}
-        savefile='bianciardi_fmriprep20_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin2009cAsym',false);
-        end
+        savefile='bianciardi_coarse_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym',false);
 
     case {'bianciardi_fine', 'bianciardi_fine_fmriprep20'}
-        savefile='bianciardi_fmriprep20_fine_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin2009cAsym',true);
-        end
+        savefile='bianciardi_fine_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym',true);
         
     case {'bianciardi_fsl6', 'bianciardi_coarse_fsl6'}
-        savefile='bianciardi_fsl6_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin6Asym',false);
-        end
+        savefile='bianciardi_coarse_MNI152NLin6Asym_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym',false);
         
     case {'bianciardi_fine_fsl6'}
-        savefile='bianciardi_fsl6_fine_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin6Asym',true);
-        end
+        savefile='bianciardi_fine_MNI152NLin6Asym_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym',true);
 
     case {'bianciardi_2mm', 'bianciardi_coarse_2mm', 'bianciardi_fmriprep20_2mm', 'bianciardi_coarse_fmriprep20_2mm'}
-        savefile='bianciardi_fmriprep20_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',false);
-        end
+        savefile='bianciardi_coarse_MNI152NLin2009cAsym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',false);
 
     case {'bianciardi_fine_2mm', 'bianciardi_fine_fmriprep20_2mm'}
-        savefile='bianciardi_fmriprep20_2mm_fine_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',true);
-        end
+        savefile='bianciardi_fine_MNI152NLin2009cAsym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',true);
         
     case {'bianciardi_fsl6_2mm', 'bianciardi_coarse_fsl6_2mm'}
-        savefile='bianciardi_fsl6_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',false);
-        end
+        savefile='bianciardi_coarse_MNI152NLin6Asym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',false);
         
     case {'bianciardi_fine_fsl6_2mm'}
-        savefile='bianciardi_fsl6_2mm_fine_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('bianciardi_create_atlas_obj.m')))
-            bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',true);
-        end
+        savefile='bianciardi_fine_MNI152NLin6Asym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
-
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',true);
+        
     case {'canlab2023_coarse_fmriprep20_2mm', 'canlab2023_coarse_fmriprep20','canlab2023_coarse_2mm', ...
             'canlab2023_fmriprep20_2mm', 'canlab2023_coarse', 'canlab2023_fmriprep20', 'canlab2023_2mm', ...
             'canlab2023'}
         savefile='CANLab2023_coarse_fmriprep20_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',2);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',2);
 
     case {'canlab2023_coarse_fsl6_2mm', 'canlab2023_coarse_fsl6', 'canlab2023_fsl6_2mm', 'canlab2023_fsl6'}
         savefile='CANLab2023_coarse_fsl6_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin6Asym','coarse',2);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','coarse',2);
 
     case {'canlab2023_coarse_fmriprep20_1mm', 'canlab2023_coarse_1mm', 'canlab2023_fmriprep20_1mm', 'canlab2023_1mm'}
         savefile='CANLab2023_coarse_fmriprep20_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',1);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',1);
 
     case {'canlab2023_coarse_fsl6_1mm', 'canlab2023_fsl6_1mm'}
         savefile='CANLab2023_coarse_fsl6_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin6Asym','coarse',1);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','coarse',1);
 
     case {'canlab2023_fine_fmriprep20_2mm', 'canlab2023_fine_fmriprep20','canlab2023_fine_2mm', 'canlab2023_fine'}
         savefile='CANLab2023_fine_fmriprep20_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',2);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',2);
 
     case {'canlab2023_fine_fsl6_2mm', 'canlab2023_fine_fsl6'}
         savefile='CANLab2023_fine_fsl6_2mm_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin6Asym','fine',2);
-        end
         varname = 'atlas_obj';
-
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','fine',2);
+        
     case {'canlab2023_fine_fmriprep20_1mm', 'canlab2023_fine_1mm'}
         savefile='CANLab2023_fine_fmriprep20_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',1);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','fine',1);
 
     case {'canlab2023_fine_fsl6_1mm'}
         savefile='CANLab2023_fine_fsl6_atlas_object.mat';
-        if isempty(dir(which(savefile))) && ~isempty(dir(which('create_CANLab2023_atlas.m')))
-            create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
-        end
         varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
         
     otherwise % assume it's a file name
         savefile = which(atlas_file_name_or_keyword);
@@ -389,7 +374,41 @@ switch lower(atlas_file_name_or_keyword)
         
 end % switch
 
-atlas_obj = load_atlas_from_file(savefile, varname, verbose);
+if ~docreate
+
+    atlas_obj = load_atlas_from_file(savefile, varname, verbose);
+
+else
+    % has creation script, so let's run it if either is true: (1) atlas
+    % file is missing, (2) atlas is out of date
+    if isempty(dir(which(savefile))) 
+        % atlas is missing
+        create_atlas(0);
+        this_atlas = load_atlas_from_file(savefile, varname, verbose);
+    else
+        latest = which(strrep(savefile,'.mat','.latest'));
+        if exist(latest, 'file') ~= 2
+            create_atlas(0);
+        end
+        fid = fopen(latest);
+        latest = str2num(char(fread(fid,inf)'));
+        fclose(fid);
+
+        atlas_obj = load_atlas_from_file(savefile, varname, verbose);
+        if round(latest) ~= round(atlas_obj.additional_info.creation_date)
+            % evaluation is rounded to the nearest second to deal with
+            % floating point issues. If there's an atlas 1s newer availble
+            % then it means we rebuild the atlas to get it.
+            if verbose
+                fprintf('Updating atlas...\n');
+            end
+            create_atlas(0);
+            
+            atlas_obj = load_atlas_from_file(savefile, varname, verbose);
+        end
+    end
+end
+
 
 end % function
 

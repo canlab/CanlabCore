@@ -13,7 +13,7 @@ function [m, varargout] = mean(obj, varargin)
 % - Average available valid data in each voxel. Some images may have
 % missing data for some voxels.
 % - Treats values of 0 as missing (after SPM) and excludes from mean.
-% 
+%
 % :Optional Inputs:
 %   - 'write', followed by file name
 %   - 'path', followed by location for file (default = current directory)
@@ -33,9 +33,11 @@ function [m, varargout] = mean(obj, varargin)
 
 fname = [];
 fpath = pwd;
-dohist = 0;
-doorth = 0;
-doplot = 0;
+dohist = false;
+doorth = false;
+doplot = false;
+dogroup = false;
+group_by = [];
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -44,10 +46,16 @@ for i = 1:length(varargin)
             case 'write', fname = varargin{i+1}; varargin{i+1} = [];
             case 'path', fpath = varargin{i+1}; varargin{i+1} = [];
             case 'plot', dohist = 1; doorth = 1;
-                
+
             case {'hist', 'histogram'}, dohist = 1;
             case {'orth', 'orthviews'}, doorth = 1;
-                
+
+            case 'group'
+                dogroup = true;
+                group_by = varargin{i+1};
+                group_by = categorical(group_by);  % this should work for strings or numeric arrays
+                u = unique(group_by);
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -62,11 +70,33 @@ obj.dat(wh) = NaN;
 % return output in the same format as input object
 
 if isa(obj, 'fmri_data')
-    m = image_vector('dat', nanmean(obj.dat', 1)', 'volInfo', obj.mask.volInfo, 'noverbose');
+
+    if dogroup
+        for i = 1:length(u)
+            mydat(:, i) = nanmean(obj.dat(:, group_by == u(i))', 1)';
+        end
+
+    else
+        mydat = nanmean(obj.dat', 1)';
+    end
+
+    m = image_vector('dat', mydat, 'volInfo', obj.mask.volInfo, 'noverbose');
+
     m = fmri_data(m, [], 'noverbose');
     m.mask = obj.mask;
+
+
+    % metadata_table, if entered
+    if ~isempty(obj.metadata_table)
     
+        m.metadata_table = obj.metadata_table;
+        m = average_metadata_table(m, group_by, u);
+
+    end
+
 else
+    if dogroup, error('Grouping only permitted for fmri_data objects...extend code if needed'), end
+
     m = image_vector('dat', mean(obj.dat', 1, 'omitnan')', 'volInfo', obj.volInfo, 'noverbose');
 end
 
@@ -92,10 +122,10 @@ end
 if ~isempty(fname)
     fullp = fullfile(fpath, fname);
     fprintf('Writing mean image to disk')
-    
+
     m.filename = fname;
     m.fullpath = fullp;
-    
+
     write(m);
 end
 
@@ -103,10 +133,10 @@ end
 % Row means, Column means, double-centered object
 
 if nargout > 1
-    
+
     imagemeans = nanmean(obj.dat);
     varargout{1} = imagemeans;
-    
+
 end
 
 if nargout > 2
@@ -114,5 +144,42 @@ if nargout > 2
     varargout{2} = voxelmeans;
 end
 
+
+end % function
+
+
+
+
+
+function obj = average_metadata_table(obj, group_by, u)
+% average values in table
+if isempty(group_by)
+    group_by = categorical(ones(size(obj.dat, 2), 1));
+end
+
+newtable = obj.metadata_table(1, :); % placeholder
+
+for i = 1:length(u)
+    % for each group
+
+    t = obj.metadata_table(group_by == u(i), :); % this group/participant
+    newt = t(1, :); % placeholder
+
+    for j = 1:size(t, 2) % for each column
+
+        tcolumn = table2array(t(:, j));
+
+        if isnumeric(tcolumn)
+            newt(1, j) = table(nanmean(tcolumn));
+        elseif iscell(tcolumn)
+            newt(1, j) = table({char(mode(categorical(cellstr(tcolumn))))});
+        end
+    end
+
+    newtable(i, :) = newt;
+
+end % groups/participants
+
+obj.metadata_table = newtable;
 
 end % function

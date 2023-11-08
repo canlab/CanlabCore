@@ -89,10 +89,12 @@ function hdr = read_hdr(name,varargin)
 % ..
 %    Luis hernandez
 %    last edit 12-9-01 by tor wager
+%    Unzip .gz files before processing.         Editted 11/7/2023 by Michael Sun, Ph.D.
 % ..
 
 
 global SPM_scale_factor
+unzipped=0;
 
 if nargin > 1, 
 	dtype = varargin{1};
@@ -105,6 +107,15 @@ dtstring = {'l' 'b'};
 
    warning off
    % Read in Headerfile into the hdrstruct
+
+   % Unzip if the file is zipped, otherwise the results will be corrupted.
+    if contains(name, '.gz')
+        gunzip(name);
+        name=erase(name, '.gz');
+        unzipped=1;
+    end
+
+
    [pFile,messg] = fopen(name,'r',dtype);
    if pFile == -1
       %msgbox(messg); 
@@ -182,6 +193,10 @@ dtstring = {'l' 'b'};
 		
 	end
 
+   end
+
+   if unzipped==1
+    delete(name);
    end
 
 

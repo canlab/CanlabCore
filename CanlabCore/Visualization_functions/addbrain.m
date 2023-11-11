@@ -607,7 +607,7 @@ switch meth
         view(140, 30)
         p = [p addbrain('brainstem')];
         set(p(end), 'FaceAlpha', .15);
-        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca);
         set(gca, 'ZLim', [-30 10])
 
     case 'limbic'
@@ -622,7 +622,7 @@ switch meth
          myp = addbrain('brainstem'); p = [p myp];
         set(p,'FaceAlpha',1);
 
-        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca);
         
  case 'limbic hires'
         p = [];
@@ -633,7 +633,7 @@ switch meth
         myp = addbrain('brainstem'); p = [p myp];
         set(p,'FaceAlpha',1);
 
-        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca);
 
         
     case 'brainstem_group'
@@ -667,7 +667,7 @@ switch meth
         p = [p addbrain('brainstem')];
         p = [p addbrain('thalamus')];
         set(p(end), 'FaceAlpha', .15);
-        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca)
+        axis image; axis vis3d; lighting gouraud; lightRestoreSingle(gca);
         set(gca, 'ZLim', [-30 10])
         
     case 'inflated surfaces'

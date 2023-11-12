@@ -21,11 +21,11 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %
 % E.g.:  (and see options below)
 % - default is violin plot (distribution) plus bars
-% - optional: lines, not bars 
+% - optional: lines, not bars
 % - optional:  plots circles around points at z >= 1.96
 % - optional: add case numbers or labels instead of points
 %
-% Input formats (dat input argument):  
+% Input formats (dat input argument):
 % - Matrix or cell vector (good for unequal numbers of observations)
 % - if dat is a cell array, each entry becomes one "bar".  Useful if n
 % observations is different for each column.
@@ -38,7 +38,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %
 % :Optional arguments:
 %
-%   1. 
+%   1.
 %
 %   2-k. String Arguments - in any order
 %
@@ -52,7 +52,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %        - 'nofig' : do not make figure
 %        - 'skipallplots': skip making figure and all plots; table only
 %
-%   Plot type options 
+%   Plot type options
 %        - 'line' : Make line plot instead of bar plot
 %        - 'violin': add violin plot to each bar, with data points
 %        - 'noviolin': suppress default violin plot behavior
@@ -63,7 +63,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
 %        - 'number' : plot case numbers instead of points
-%        - 'MarkerSize' : followed by marker size 
+%        - 'MarkerSize' : followed by marker size
 %        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %           Sig. levels are coded as * = p<.05, ** = p<.01, *** = q<.05 FDR across variables tested in this plot
@@ -84,7 +84,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %        - 'noxlim' : Suppress automatic setting of x-limit (e.g., when adding to existing plot)
 %        - 'color' : followed by color for bars (text: 'r' or [r g b]) OR
 %               cell array with names of colors cell for each line/bar
-%        - 'title' : followed by title for figure (or empty for no title)   
+%        - 'title' : followed by title for figure (or empty for no title)
 %        - 'width' : followed by bar width
 %
 % :Examples:
@@ -130,7 +130,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %    subplot(1, 4, 4)
 %
 %    Y{:,1} = randn(50,1) + 5;
-%    Y{:,2} = Y{1} + .3 * randn(50,1) + 3; 
+%    Y{:,2} = Y{1} + .3 * randn(50,1) + 3;
 %
 %    barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
 %    title('barplot\_columns.m parallel coords', 'FontSize', 16)
@@ -185,7 +185,7 @@ if isa(dat, 'table')
     names = format_strings_for_legend(dat.Properties.VariableNames);
     dat = table2array(dat);
 end
-    
+
 % ----------------------------------------------------
 % > handle cell input - concatenate and pad with NaN
 % ----------------------------------------------------
@@ -200,15 +200,15 @@ xvals = 1:size(dat, 2);
 
 if length(varargin) > 0
     for i = 1:length(varargin)
-        
+
         if iscell(varargin{i}), continue, end
-        
+
         % Figure control
         if strcmp(varargin{i},'nofig') || strcmp(varargin{i},'nofigure'), dofig = 0;  end
-        
+
         if strcmp(varargin{i},'skipallplots'), skipallplots = true;  end
-        
-        
+
+
         % Plot type options
         if strcmp(varargin{i},'line'), dolineplot = 1;  end
         if strcmp(varargin{i},'nobars'), dobars = 0;  end
@@ -216,23 +216,23 @@ if length(varargin) > 0
             doviolin = 1;
             doind = 0;  % ind is already done in violin
         end
-        
-        if strcmp(varargin{i}, 'noviolin')
+
+        if strcmp(varargin{i}, 'noviolin') || strcmp(varargin{i}, 'noviolins')
             doviolin = 0;
         end
-                
+
         % Point plotting, individual lines, and outlier options
         if strcmp(varargin{i},'noind'), doind = 0;  end
         if strcmp(varargin{i},'plotout'), plotout = 1;  end
         if strcmp(varargin{i},'dolines'), dolines = 1;  end
         if strcmp(varargin{i},'number'), donumber = 1;  end
         if strcmp(varargin{i},'MarkerSize') || strcmp(varargin{i},'markersize')
-            mymarkersize = varargin{i + 1}; varargin{i + 1} = [];  
+            mymarkersize = varargin{i + 1}; varargin{i + 1} = [];
         end
         if strcmpi(varargin{i},'MarkerAlpha') || strcmpi(varargin{i},'MarkerFaceAlpha')
-            myalpha = varargin{i + 1}; varargin{i + 1} = [];  
+            myalpha = varargin{i + 1}; varargin{i + 1} = [];
         end
-            
+
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
 
@@ -241,7 +241,7 @@ if length(varargin) > 0
 
         % Error bar options
         if strcmp(varargin{i}, 'within'), dowithin = 1; end %cons = varargin{i + 1}; end
-        if strcmp(varargin{i}, '95within'), dowithin = 1, do95within = 1; end 
+        if strcmp(varargin{i}, '95within'), dowithin = 1; do95within = 1; end
         if strcmp(varargin{i}, 'custom_se'), within_ste = varargin{i+1}; custom_se = true; end
         if strcmp(varargin{i}, '95CI'), do95CI = 1; end
 
@@ -257,22 +257,22 @@ if length(varargin) > 0
         if strcmp(varargin{i}, 'noxlim'), doxlim = 0;  end
 
         % Labels
-         if strcmp(varargin{i}, 'names'), names = varargin{i + 1}; varargin{i + 1} = []; end
-        
+        if strcmp(varargin{i}, 'names'), names = varargin{i + 1}; varargin{i + 1} = []; end
+
         % Covariate options
         if strcmp(varargin{i}, 'covs')
             covs = varargin{i + 1};
             if ~isempty(covs), covs = scale(covs,1); end
         end
-        
+
         % verbose options
         if strcmpi(varargin{i}, 'notable'), doprinttable = 0; end
-            
-        
+
+
         if strcmp(varargin{i}, 'wh_reg')
             wh_reg = varargin{i + 1};
         end
-        
+
     end % for
 end % varargin
 
@@ -312,7 +312,7 @@ Std_Error = [];
 % Mean_Value, Std_Error, T, P (for stars), Cohens_d (for table)
 
 for i = 1:ny
-    
+
     if doprinttable
         if ~isempty(names) && length(names) >= i
             fprintf(1,'Col %3.0f: %s\t', i, names{i});
@@ -325,39 +325,39 @@ for i = 1:ny
     % > Get [robust or non-robust] mean and standard error
     %   Return y, data from column, with nans in
     % ----------------------------------------------------
-    
+
     % remove nans from this column - dat and design (X) including covs if entered
     tmpy = dat(:, i);
     tmpx = X;
-    
+
     [wasnan, tmpx, tmpy] = nanremove(tmpx, tmpy);
     all_nan_index{i} = wasnan;
-    
+
     n(i) = size(tmpy,1);
-    
+
     % get mean and standard error of intercept (robust or OLS)
     % y is adjusted for all non-intercept covs
     % stats has weights, stats.w, which are all 1 for OLS
-    
+
     [x, newy, r, p, Std_Error(i, 1), Mean_Value(i, 1), stats] = partialcor(tmpx, tmpy, wh_intercept, 0, dorob);
     T(i, 1) = stats.t(wh_intercept);
     P(i, 1) = stats.p(wh_intercept);
-    
+
     % very low P-values: do not use exactly zero, because of problems
     P(i, 1) = max(P(i, 1), 10 * eps);
 
     Cohens_d(i, 1) = stats.t(wh_intercept) ./ (size(x, 1) .^ .5);  % mean(tmpy) ./ std(tmpy), but adjusts for covs
-    
+
     % Convert to 95% CI, if requested
     if do95CI
-        Std_Error(i) = Std_Error(i) * tinv(.975, nn-1); 
+        Std_Error(i) = Std_Error(i) * tinv(.975, nn-1);
     end
-    
+
     y(:, i) = naninsert(wasnan, newy);
-    
+
     %%%not needed y(:,i) = y(:,i) + Mean_Value(i);   % add mean
     myweights(:,i) = naninsert(wasnan, stats.w);
-    
+
     % If we have a covariate of interest specified by wh_reg, re-calculate
     % adjusted y to leave in this covariate. This will be used to sort and
     % plot y values.
@@ -367,32 +367,32 @@ for i = 1:ny
     % > Use partialcor to remove covariates if requested
     %   Return y, adjusted y-values
     % ----------------------------------------------------
-    
+
     if ~isempty(covs) && wh_reg
-        
+
         % if we have covs, leave in cov. of interest (cov1)
         % y is adjusted for all non-intercept covs
         [x, y(:, i)] = partialcor(tmpx, tmpy, wh_reg, 0, dorob);
-                
+
     end
-    
+
 end
 
 dat = y;  % adjusted data, for plot
 
 if dowithin && ~custom_se
-    
+
     within_ste = barplot_get_within_ste(dat);
     if do95within
-        within_ste = within_ste * tinv(.975, nn-1); 
+        within_ste = within_ste * tinv(.975, nn-1);
     end
 
     Std_Error = repmat(within_ste, 1, size(dat, 2));
-    
+
 elseif custom_se
-    
+
     Std_Error = within_ste;
-    
+
 end
 
 % ----------------------------------------------------
@@ -423,14 +423,14 @@ if skipallplots
 end
 
 if dofig
-    handles.fig_han = create_figure('barplot'); 
+    handles.fig_han = create_figure('barplot');
 else
-    handles.fig_han = get(gcf); 
+    handles.fig_han = get(gcf);
 
 end
 
-handles.axis_han = gca; 
-set(handles.axis_han, 'FontSize',18); 
+handles.axis_han = gca;
+set(handles.axis_han, 'FontSize',18);
 hold on
 
 % ----------------------------------------------------
@@ -438,53 +438,53 @@ hold on
 % ----------------------------------------------------
 
 if dolineplot
-    
+
     handles.line_han = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
     handles.errorbar_han = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
     set(handles.errorbar_han, 'LineWidth', 2, 'Color', mycolor);
-    
+
 elseif dobars
-    
+
     handles.bar_han1 = bar(xvals, Mean_Value, barwidth);
-    
+
     if iscell(mycolor)
         % each bar a different color
-        
+
         for i = 1:length(xvals)
             handles.bar_han{i} = bar(xvals(i), Mean_Value(i), 'FaceColor', mycolor{i});
-            
+
             handles.errorbar_han{i} = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor{i} ./ 2, 'LineWidth', 3);
-            
+
         end
-        
+
     else
         %all bars the same color
-        
+
         set(handles.bar_han1, 'FaceColor', mycolor); %,'LineWidth',2)
-        
+
         for i = 1:length(xvals)
             handles.errorbar_han{i} = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor ./ 2, 'LineWidth', 3);
         end
-        
+
     end
-    
+
 end
 
 % add violin if entered
 if doviolin
-    
+
     if iscell(mycolor)
         mycolor = cat(1, mycolor{:});
     elseif size(mycolor, 1) < ny
         mycolor = repmat(mycolor, ny, 1);
     end
-    
+
     Y = enforce_cell_array(y);
-    
+
     % Do not plot indiv points here; we will do later if requested. So use 'noind' option.
     violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
     legend off
-    
+
 end
 
 if doxlim
@@ -497,164 +497,179 @@ title(mytitle, 'FontSize', 24);
 
 if ~isempty(names)
     if verLessThan('matlab','8.4')
-        set(gca, 'XTickLabel', names); 
+        set(gca, 'XTickLabel', names);
     else % not sure if this works with 8.4, but doesn't work with 8.3. Update conditional if needed
-        set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45); 
+        set(gca, 'XTickLabel', names, 'XTickLabelRotation', 45);
     end
 end
 
 if doind
-    
+
     if iscell(mycolor)
         mycolor = cat(1, mycolor{:});
     elseif size(mycolor, 1) < ny
         mycolor = repmat(mycolor, ny, 1);
     end
-    
+
     % ----------------------------------------------------
     % > Plot individual points and lines
     % ----------------------------------------------------
-    
+
     % these are cells - get violin points in the same way that violinplot does
     xvalues = get_violin_points(xvals, y);
-    
+
     for i = 1:ny
         xvalues{i} = naninsert(all_nan_index{i}, xvalues{i});
     end
-    
+
     % ----------------------------------------------------
     % Plot parallel coordinate lines across columns, if requested
-    
+
     if dolines
 
         % this works because points are matched, equal numbers in each column...
         xvalues_for_lines = cat(2, xvalues{:});
-        
-        for j = 1:size(dat, 1) % j is row (observation) 
-            
+
+        for j = 1:size(dat, 1) % j is row (observation)
+
             handles.parallel_line_han{j} = plot(xvalues_for_lines(j, :), dat(j, :), 'k', 'LineWidth', .5, 'Color', [.7 .7 .7]);
-        
+
         end
     end
-    
+
     % ----------------------------------------------------
     % > Sort individual scores by covariate if entered, for point plot
     % ----------------------------------------------------
     % sort individual scores by covariate, if covs
     if ~isempty(covs) && wh_reg
-        
+
         [sortedcov,indx] = sort(covs(:,wh_reg));
         dat = dat(indx,:);
         sortedw = myweights(indx,:);
-        
+
         x = (0:(nn-1)) ./ (nn+5) - (.5 - 1/(nn-5));
     else
         x = zeros(1,nn) - .1;
         sortedw = myweights;
     end
-    
+
     % NOTE: X IS NOT USED ANYMORE, LEGACY FOR FUTURE CLEAN-UP...
     x = [x; x];
-    
+
     hold on
-    
+
     % ----------------------------------------------------
     % Plot individual points, if requested
-    
+
     [handles.point_han1, handles.text_han, handles.point_han] = deal(cell(size(dat, 1), ny));
 
     for i = 1:ny % i is column
-        
+
         % marker
         mym = 'o';
-        
+
         % get color
         % ----------------------------------------------------
         if iscell(mycolor) && ~ischar(mycolor)
             mycolcolor = mycolor{i} ./ 2;
-        
+
         elseif iscell(mycolor) && ischar(mycolor{1})
             mycolcolor = [.2 .2 .2];
-            
+
         else
             mycolcolor = mycolor(i, :) ./ 2;
         end
-        
+
         % if matrix
         if ismatrix(mycolcolor) && size(mycolcolor, 1) == ny
             mycolcolor = mycolcolor(i, :);
         end
-        
+
         % Plot points
         % ----------------------------------------------------
 
-        for j = 1:size(dat, 1) % j is row (observation) 
-            % Plot points for each row, for this outcome (column)
-            % If first outcome column, plot lines if requested
-            
-            % Color by weight
-            % Uses original color if weights are 1, shades towards white for weights < 1
-            
-            mywt = sortedw(j,i);
-            myc = mywt * mycolcolor + (1-mywt) * ([1 1 1] - mycolcolor);  % (myc .* sortedw(j,i));
-            
-            pointsexist = ~(any(isnan(x(:, j))) || isnan(dat(j, i)));
-            
-            if donumber && pointsexist
-                % Text labels with numbers
+        % 11/2023, tor: fast method, avoiding slow plot of different weights on
+        % points if all weights are the same
+        if ~donumber && all(stats.wts == 1)
+            % simple column
+            myc = mycolcolor;
+            wh = ~isnan(dat(:, i));
 
-                handles.point_han1{j, i} = plot(xvalues{i}(j), dat(j, i), 'w.'); % to set axis scale appropriately
-            
-                handles.text_han{j, i} = text(xvalues{i}(j), dat(j, i), num2str(j), 'Color', [0 0 0], 'FontSize', 14);
-                                
-            elseif pointsexist
 
-                if verLessThan('matlab','8.4')
-                    %handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
-                    handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
-                
-                else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
+            myhan = plot(xvalues{i}(wh), dat(wh, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
+            handles.point_han{1, i} = myhan;
 
-                    % Note: tor: changed to plot, scatter is very slow. Eliminate alpha.
-                    handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+        else
+            % point-by-point
+            for j = 1:size(dat, 1) % j is row (observation)
+                % Plot points for each row, for this outcome (column)
+                % If first outcome column, plot lines if requested
 
-                    if myalpha > .9
-                        %handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                % Color by weight
+                % Uses original color if weights are 1, shades towards white for weights < 1
+
+                mywt = sortedw(j,i);
+                myc = mywt * mycolcolor + (1-mywt) * ([1 1 1] - mycolcolor);  % (myc .* sortedw(j,i));
+
+                pointsexist = ~(any(isnan(x(:, j))) || isnan(dat(j, i)));
+
+                if donumber && pointsexist
+                    % Text labels with numbers
+
+                    handles.point_han1{j, i} = plot(xvalues{i}(j), dat(j, i), 'w.'); % to set axis scale appropriately
+
+                    handles.text_han{j, i} = text(xvalues{i}(j), dat(j, i), num2str(j), 'Color', [0 0 0], 'FontSize', 14);
+
+                elseif pointsexist
+
+                    if verLessThan('matlab','8.4')
+                        %handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
                         handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
-                    else
-%                         This can be very slow with scatter.m sometimes...
-                        handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+
+                    else % doesn't work with 8.3. Not sure about 8.4. Update conditional if needed
+
+                        % Note: tor: changed to plot, scatter is very slow. Eliminate alpha.
+                        handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+
+                        if myalpha > .9
+                            %handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc);
+                            handles.point_han{j, i} = plot(xvalues{i}(j), dat(j, i), mym, 'MarkerSize', mymarkersize, 'Color', mycolcolor ./2 , 'LineWidth', 1, 'MarkerFaceColor', myc);
+                        else
+                            %                         This can be very slow with scatter.m sometimes...
+                            handles.point_han{j, i} = scatter(xvalues{i}(j), dat(j, i), mymarkersize, mycolcolor ./2 , mym, 'LineWidth', 1, 'MarkerFaceColor', myc,'MarkerFaceAlpha',myalpha,'MarkerEdgeAlpha',myalpha);
+                        end
+
                     end
-                    
-                end
-                
-                
-            end
-            
-        end % j data points
-        
-        if plotout 
-            % Plot outliners
-            
+
+
+                end % if points exist
+
+            end % j data points
+
+        end % simple column vs point-by-point
+
+        if plotout
+            % Plot outliers
+
             z = (dat(:,i) - mean(dat(:,i))) ./ std(dat(:,i));
             wh = find(abs(z) >= 1.96);
-            
+
             if ~isempty(wh)
                 handles.outlier_han{i} = plot(x(:,wh) + i,[dat(wh,i) dat(wh,i)]', 'ro', 'MarkerSize', mymarkersize .* 2, 'LineWidth', 2);
             end
         end
-        
+
     end
-    
+
 end % plot individuals
 
 
 % Add stars
 % ----------------------------------------------------
 if dostars
-   
+
     handles.star_handles = star_plot(P, xvals, mymarkersize);
-    
+
 end
 
 end % main function
@@ -682,19 +697,19 @@ xvalues = get_violin_points(x, Y);
 linehandles = [];
 
 for i = 1:size(Y, 2)
-    
+
     myfillcolor = lc(i, :); % line color for this plot
     mylinecolor = fc(i, :); % line color for this plot
-    
+
     myY = Y{i};     % data points
-    
+
     % set point size
     pointsize = 1000 ./ length(myY);
     pointsize(pointsize < 1) = 1;
     pointsize(pointsize > 12) = 12;
-    
+
     linehandles{i} =  plot(xvalues{i}, myY, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
-    
+
 end % column
 
 end % function
@@ -707,17 +722,17 @@ function Y = enforce_cell_array(Y)
 k = size(Y, 2);
 
 if ~iscell(Y)
-    
+
     for i = 1:k
-        
+
         Ytmp{i} = Y(:, i);
-        
+
         Ytmp{i}(isnan(Ytmp{i})) = [];
-        
+
     end
-    
+
     Y = Ytmp;
-    
+
 end
 end % function
 
@@ -744,77 +759,75 @@ Y = enforce_cell_array(Y);
 % calculate  density values
 % ------------------------------------------------
 for i = 1:k
-    
+
     [f, u, bb]=ksdensity(Y{i});
-    
+
     f=f/max(f)*0.3; %normalize
     F(:,i) = f;
     U(:,i) = u;
-    
+
 end
-
-
 
 % get x positions
 % ------------------------------------------------
 
 for i = 1:k
-    
+
     myx = x(i);     % x-value for this bar in plot
-    
+
     myU = U(:, i);  % x-values of ksdensity output
     myF = F(:, i);  % y-values (density) of ksdensity output
-    
+
     myY = Y{i};     % data points
     mybins = linspace(min(myY), max(myY), nbins);
-    
+
     % starting and ending values
     st = [-Inf mybins(1:end-1)];
     en = [mybins];
-    
+
     for j = 1:nbins
         % define points within a bin or 'slab'
-        
+
         whpoints = myY > st(j) & myY <= en(j);
-        
+
         if sum(whpoints) == 0, continue, end
-        
+
         whu = myU > st(j) & myU <= en(j);
-        
+
         mylimit(j) = nanmean(myF(whu));  % average density for this 'slab' of points
         %if isnan(mylimit(j)), mylimit(j) = 0; end % can happen...
-        
+
         % this will be the limit on x-values
-        
+
         % re-use nbins here for convenience - now it means bins ACROSS the
         % graph within the violin shape, though
         % interleave points on either side of the midline
         % make the first point the actual midline value
-        
+
         my_xvals = linspace(myx - mylimit(j), myx + mylimit(j), sum(whpoints))';
-        
+
         if length(my_xvals) == 1, my_xvals = myx;  end
-        
-%         if mod(length(my_xvals), 2)
-%             % odd number, use the midline point
-%             my_xvals = [myx; my_xvals];  % (1:end-1)];
-%         end
-        
+
+        %         if mod(length(my_xvals), 2)
+        %             % odd number, use the midline point
+        %             my_xvals = [myx; my_xvals];  % (1:end-1)];
+        %         end
+
         % build coordinates:
         % xlocs is left to right, ylocs is y-values to plot
-        
+
         ylocs = myY(whpoints);
         %xlocs = repmat(my_xvals, ceil(length(ylocs) ./ length(my_xvals)), 1);
-        
+
         xlocs = my_xvals(1:length(ylocs));
-        
+
         % save in original point list
         xvalues{i}(whpoints, 1) = xlocs;
-        
+
         %linehandles{i, j} =  plot(xlocs, ylocs, 'o', 'Color', mylinecolor, 'MarkerSize', pointsize, 'MarkerFaceColor', myfillcolor);
-        
+
     end % slab
-    
+
 end % column
 
 end % function
@@ -828,19 +841,19 @@ if iscell(dat)
     for i = 1:length(dat)
         if length(dat{i}) > maxlen
             maxlen = length(dat{i});
-            
+
         end
     end
-    
+
     dat2 = repmat(NaN, maxlen, length(dat));
     for i=1:length(dat)
         mylen = length(dat{i});
-        
+
         dat2(1:mylen,i) = dat{i};
-        
+
         if mylen < maxlen, nanwarningflag = 0; end % turn off warning in this case
     end
-    
+
     dat = dat2;
 end
 
@@ -858,19 +871,19 @@ my_ylim = get(gca, 'YLim');
 yval = my_ylim(2) - .05 * range(my_ylim);
 
 for i = 1:length(P)
- 
+
     if P(i) < FDR(P,.05), mystr = '***';
     elseif P(i) < .01, mystr = '**';
     elseif P(i) < .05, mystr = '*';
     else mystr = ''; xadj = 0;
     end
-    
+
     star_han(i) = text(xvals(i), yval, mystr, 'FontSize', starsize, 'FontWeight', 'b');
-    
+
     % Center text - Adjust for width of text string
     star_han(i) = center_text(star_han(i));
 
-    
+
 end % loop through columns of plot
 
 end % star_plot function

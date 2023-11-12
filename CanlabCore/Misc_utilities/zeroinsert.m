@@ -18,7 +18,7 @@ wh = find(wasbad);
 if isempty(wh), yout = y; return, end
 
 if length(wh) + size(y, 1) ~= length(wasbad)
-    disp('Illegal removed-cases vector. length must equal size(y, 1) + # left-out cases.');
+    disp('Illegal removed-cases vector. length of ''wasbad'' input must equal size(y, 1) + # left-out cases.');
     fprintf('Left out = %3.0f, size(y, 1) = %3.0f, sum = %3.0f, length(wasbad) = %3.0f', length(wh), size(y, 1), length(wh)+size(y, 1), length(wasbad));
     error('Quitting')
 end

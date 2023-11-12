@@ -57,6 +57,9 @@ for i = 1:length(varargin)
                 
             case {'nomatchleftright', 'nosymmetric'}, matchcolorsleftright = false; varargin{i} = [];
                 
+            case {'sd' 'smoothbox'}
+                % do nothing, but pass these into imageCluster later
+                
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end

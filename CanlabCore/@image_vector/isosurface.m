@@ -81,6 +81,7 @@ mysmoothbox = 3;
 mygaussstd = 1;
 mythresh = 0;
 percentagethresh = [];
+zshift = 0;             % for shifting surface up/down in Z-dim in axis
 
 [xlim, ylim, zlim] = deal([-Inf Inf]);
 
@@ -108,7 +109,8 @@ for i = 1:length(varargin)
             case 'ylim', ylim = varargin{i + 1}; varargin{i + 1} = [];
             case 'zlim', zlim = varargin{i + 1}; varargin{i + 1} = [];
                 
-                
+            case 'zshift', zshift = varargin{i + 1}; varargin{i + 1} = [];
+
             case 'noverbose'
                 doverbose = false;
                 
@@ -143,6 +145,11 @@ if diff(xlimvox) < 0, xlimvox = xlimvox(end:-1:1); end
 whx = x < xlimvox(1) | x > xlimvox(2);
 why = y < ylimvox(1) | y > ylimvox(2);
 whz = z < zlimvox(1) | z > zlimvox(2);
+
+% replace, because whx why whz are full-length list, not reduced
+obj = replace_empty(obj);
+
+if length(whx) ~= size(obj.dat, 1), error('Voxel lists are wrong size...debug me.'), end
 
 obj.dat(whx | why | whz, :) = 0;
 
@@ -187,6 +194,10 @@ end
 
 my_isosurface = isosurface(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, V, mythresh);
 
+if zshift
+    my_isosurface.vertices(:, 3) = my_isosurface.vertices(:, 3) + zshift;
+end
+
 p = patch('Faces',my_isosurface.faces,'Vertices',my_isosurface.vertices,'FaceColor', mycolor, ...
     'EdgeColor','none','SpecularStrength', .2,'FaceAlpha', .3,'SpecularExponent', 200);
 
@@ -196,7 +207,12 @@ drawnow
 
 % pp = [];
 my_isocap = isocaps(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, V, mythresh);
-p(end + 1) = patch(my_isocap, 'FaceColor', 'interp','EdgeColor', 'none', 'FaceAlpha',1);
+
+if zshift
+    my_isocap.vertices(:, 3) = my_isocap.vertices(:, 3) + zshift;
+end
+
+p(end + 1) = patch(my_isocap, 'FaceColor', 'interp', 'EdgeColor', 'none', 'FaceAlpha',1);
 
 
 % ------------------------------------------------------

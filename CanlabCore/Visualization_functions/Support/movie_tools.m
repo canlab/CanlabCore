@@ -330,42 +330,44 @@ for i = 1:size(startcoords,1)   % coords are one triplet per row.  each row is a
 
     out{i} = nmdsfig_tools('connect3d',startcoords(i,:),endcoords(i,:),'color', color, 'nstreamlines', 30, 'bendpercent', bendval, 'nsamples', nframes);
     
-    M = drawDynamicLines(out{i}.h, 'pause', .1);
+%     M = drawDynamicLines(out{i}.h, 'pause', .1);
     
-    %**** 
-    delete(out{i}.h);  % we will draw this piece by piece later
+    M = drawDynamicLines(out{i}.h, 'pause', .1, 'az', myaz, 'el', myel, 'trans', mytrans, 'dotrans', dotrans, 'handles', handles);
+
+%     delete(out{i}.h);  % we will draw this piece by piece later
 end
+
+mov = [mov M];
 
 
 % make each frame
 % ---------------------------------
-lineh = [];
-hold on
-
-for i = 1:nframes
-
-    mov = add_a_frame(mov,axh);
-    view(myaz(i),myel(i));
-
-    if dotrans
-        set(handles,'FaceAlpha',mytrans(i));
-    end
-
-    % draw all lines up to point specified for this frame
-    if ishandle(lineh), delete(lineh); lineh = []; end
-
-    for n = 1:length(out)
-        h = plot3(out{n}.xcoords(1:i),out{n}.ycoords(1:i),out{n}.zcoords(1:i),'Color', color,'LineWidth',3);
-
-        h2 = plot3(out{n}.xcoords(i),out{n}.ycoords(i),out{n}.zcoords(i),'*','Color',[1 .8 0],'MarkerFaceColor',[1 1 0],'MarkerSize',12);
-        lineh = [lineh h h2];
-    end
-
-
-end
-
-mov = add_a_frame(mov,axh);
-
+% lineh = [];
+% hold on
+% 
+% for i = 1:nframes
+% 
+%     mov = add_a_frame(mov,axh);
+%     view(myaz(i),myel(i));
+% 
+%     if dotrans
+%         set(handles,'FaceAlpha',mytrans(i));
+%     end
+% 
+%     % draw all lines up to point specified for this frame
+%     if ishandle(lineh), delete(lineh); lineh = []; end
+% 
+%     for n = 1:length(out)
+%         h = plot3(out{n}.xcoords(1:i),out{n}.ycoords(1:i),out{n}.zcoords(1:i),'Color', color,'LineWidth',3);
+% 
+%         h2 = plot3(out{n}.xcoords(i),out{n}.ycoords(i),out{n}.zcoords(i),'*','Color',[1 .8 0],'MarkerFaceColor',[1 1 0],'MarkerSize',12);
+%         lineh = [lineh h h2];
+%     end
+% 
+% 
+% end
+% 
+% mov = add_a_frame(mov,axh);
 
 end % movie_lines
 
@@ -449,11 +451,15 @@ end % add a frame
 
 
 function M = drawDynamicLines(h, varargin)
+% M = drawDynamicLines(out{i}.h, 'pause', .1, 'az', myaz, 'el', myel, 'trans', mytrans, 'dotrans' dotrans);
 
 M = getframe(gca); % Movie, if requested
 mypos = get(gca, 'Position');
 myxlim = get(gca, 'XLim');
 myylim = get(gca, 'XLim');
+
+% [myaz, myel, mytrans] = deal([]);
+% dotrans = false;
 
 % ---------------------------------------------------------------------- 
 % Parse inputs
@@ -471,6 +477,12 @@ valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar 
 % Pattern: keyword, value, validation function handle
 p.addParameter('pause', .1, valfcn_number); % can be scalar or vector
 p.addParameter('movie', true, @islogical);
+
+p.addParameter('az', [], valfcn_number);
+p.addParameter('el', [], valfcn_number);
+p.addParameter('trans', [], valfcn_number);
+p.addParameter('dotrans', true, valfcn_scalar);
+p.addParameter('handles', [], @ishandle);
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------
@@ -513,8 +525,17 @@ for t = 1:ntimepoints
         
     end
  
-    set(gca, 'Position', mypos, 'XLim', myxlim, 'YLim', myylim); % enforce same position and limits
+%     set(gca, 'Position', mypos, 'XLim', myxlim, 'YLim', myylim); % enforce same position and limits
     
+    % az, el, trans
+    if ~isempty(IN.az) && ~isempty(IN.el)
+        view(IN.az(t), IN.el(t));
+    end
+
+    if IN.dotrans
+        set(IN.handles,'FaceAlpha',IN.trans(t));
+    end
+
     drawnow
     
     M(end+1) = getframe(gca);

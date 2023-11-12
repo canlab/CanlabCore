@@ -88,8 +88,8 @@ for i = 1:nargin
         case 'alpha',myalpha = varargin{i+1};
             
             case 'heightthresh', heightthresh = varargin{i+1};
-            case 'fwhm', fwhm = varargin{i+1};
-            case 'kernelsize', kernelsize = varargin{i+1};
+            case {'fwhm', 'sd'}, fwhm = varargin{i+1};
+            case {'kernelsize', 'smoothbox'}, kernelsize = varargin{i+1};
                 
         end
     end

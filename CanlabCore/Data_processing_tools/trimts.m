@@ -33,7 +33,7 @@ MADs = 10;
 
 if nargin < 3, X = []; end
 
-if ~isempty(X),
+if ~isempty(X)
     mfit = X * pinv(X) * y;
     yf = y - mfit;
 else

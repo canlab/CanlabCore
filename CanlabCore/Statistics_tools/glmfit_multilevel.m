@@ -14,6 +14,10 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 % random effect. This is appropriate when 2nd-level units are participants
 % and 1st-level units are observations (e.g., trials) within participants. 
 % glmfit_multilevel was designed with this use case in mind.
+%
+% In Wilkinson notation, for DV Y and X1 with a series of predictors x01,
+% x02, x03, and random subject indicator sid, the glmfit_multilevel model corresponds to:
+% 'Y ~ x01 + x02 + x03 + (1 + x01 + x02 + x03|sid)'
 % 
 % Options:
 % glmfit_multilevel includes some options that are not included in many
@@ -35,10 +39,10 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 % observations and they are uncorrelated, resulting in large and undesirable 
 % estimated df. 
 %
-% Correlated effects: The correlations across 1st-level observations are not measured, and 
-% 1st-level obs are assumed to be IID. This is valid when generalizing across 
+% Correlated effects: The correlations across 1st-level errors are not measured, and 
+% 1st-level errors are assumed to be IID. This is valid when generalizing across 
 % 2nd-level units, but may not be fully efficient (powerful) if 1st-level 
-% units are correlated.
+% errors are correlated.
 %
 % :Inputs:
 %
@@ -226,6 +230,7 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
   varnames = {'beta' 't' 'p' 'dfe' 'phi'};
   first_level = create_struct(varnames);
   first_level.ste = sterr;
+  first_level.V = V;  % within-person var/cov matrix, sigmasq_wi*(X'X)^-1
 
  % second level: Finish SETUP and ESTIMATE
  % -------------------------------------------------------------------

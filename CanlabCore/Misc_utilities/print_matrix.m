@@ -49,7 +49,7 @@ if length(varargin) > 1 && ~isempty(varargin{2})
     colnames = [{' '} colnames];
 end 
 
-if length(varargin) > 1 && ~isempty(varargin{4})
+if length(varargin) > 3 && ~isempty(varargin{4})
 
     right_rownames = varargin{4};
     if ~isempty(right_rownames) && iscolumn(right_rownames), right_rownames = right_rownames'; end

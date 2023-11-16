@@ -96,6 +96,7 @@ function p = addbrain(varargin)
 %
 %   **'left_cutaway'**      These surfaces use the Keuken 2014 7T MNI surface
 %   **'right_cutaway' **
+%   **'right_cutaway_x8' -- like right_cutaway but x=8
 %   **'left_insula_slab'**
 %   **'right_insula_slab'**
 %   **'accumbens_slab'**
@@ -487,7 +488,7 @@ switch meth
         h = findobj('Type','Light'); delete(h); [az,el]=view;lightangle(az,el); lightangle(az-180,el-60);
         set(p,'FaceAlpha',1)
         
-    case {'cutaway', 'left_cutaway' 'right_cutaway' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'}
+    case {'cutaway', 'left_cutaway' 'right_cutaway' 'right_cutaway_x8' 'left_insula_slab' 'right_insula_slab' 'accumbens_slab' 'coronal_slabs' 'coronal_slabs_4' 'coronal_slabs_5'}
         
         p = canlab_canonical_brain_surface_cutaways(meth, varargin{:});
         

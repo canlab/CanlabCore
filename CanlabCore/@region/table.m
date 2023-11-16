@@ -167,6 +167,11 @@ end
 
 % Now accepts atlas_obj, MS: 11/3/2022
 if exist('atl','var')
+
+    if isempty(atl.label_descriptions)
+        atl.label_descriptions = atl.labels';
+    end
+
     [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, atl);
 else
     [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);

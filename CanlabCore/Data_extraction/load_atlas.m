@@ -178,6 +178,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile = 'CANlab_combined_atlas_object_2018_2mm.mat';
         varname = 'atlas_obj';
         
+    case 'canlab2023'
+        savefile = 'canlab2023_combined_atlas_MNI152NLin6Asym_1mm.mat';
+        varname = 'atlas_obj';
+
+    case 'canlab2023_2mm'
+        savefile = 'canlab2023_combined_atlas_MNI152NLin6Asym_2mm.mat';
+        varname = 'atlas_obj';
+
     case 'insula'
         savefile = 'Faillenot_insular_atlas.mat';
         varname = 'atlas_obj';

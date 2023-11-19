@@ -144,6 +144,16 @@ for i = 1:length(strings_to_find)
 end
 
 % -------------------------------------------------------------------------
+% Check for problems
+% -------------------------------------------------------------------------
+
+if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) ~= k  
+
+    warning('The obj.probability_maps field is invalid because it has the wrong number of entries. Removing it from the created subset atlas.');
+    obj.probability_maps = [];
+end
+
+% -------------------------------------------------------------------------
 % FIND BY NUMBERS
 % -------------------------------------------------------------------------
 
@@ -194,6 +204,7 @@ if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid
     
     obj_subset = probability_maps_to_region_index(obj_subset);
     
+
 else % must use .dat vector with integers
     
     % rebuild integer index

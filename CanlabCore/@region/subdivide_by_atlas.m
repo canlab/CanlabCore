@@ -43,6 +43,16 @@ function [r, percent_coverage] = subdivide_by_atlas(r, varargin)
 % Changed 4/23/21 by Tor Wager
 % To take atlas object as input, NOT file.
 
+
+percent_coverage = [];
+
+if isempty(r), return, end  % for case when calling with empty clusters 
+
+if ~isa(r, 'region'), error('Object is not a region object'); end
+
+% The cases above shouldn't happen, but they apparently can when calling from some
+% enclosing functions
+
 if nargin < 2 || isempty(varargin{1})
     error('Enter an atlas object as the 2nd input. See load_atlas( ) for some options.');
     % atlasname = which('atlas_labels_combined.img');

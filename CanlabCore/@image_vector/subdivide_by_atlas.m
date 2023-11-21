@@ -116,6 +116,14 @@ function [subdivided_atlas, r] = subdivide_by_atlas(obj, atl)
 % Check inputs
 % ---------------------------------------------
 
+subdivided_atlas = [];
+r = [];
+
+if isempty(obj), return, end  % for case when calling with empty clusters 
+
+% The cases above shouldn't happen, but they apparently can when calling from some
+% enclosing functions
+
 % Error if > 1 image
 if size(obj.dat, 2) > 1
     error('Use image_vector.subdivide_by_atlas with single-image objects only. See get_wh_image( ) to select.');

@@ -58,6 +58,13 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, r_excl
 %
 % Fixed some minor bugs and improved error handling when there are no regions to display - Michael Sun, 07/13/2023
 
+disp('THIS FUNCTION NEEDS SOME LOVE AND DOES NOT CURRENTLY WORK PROPERLY. ')
+disp('******************************************************************')
+disp('please use table_of_atlas_regions_covered() method for image_vector/statistic_image instead')
+warning('Developers: Please fix me!')
+pause(3)
+
+
 
 n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap

@@ -232,7 +232,7 @@ allowablefields = {...
 actualfields = fieldnames(DSGN);
 for i = 1:numel(actualfields)
     if isempty(strmatch(actualfields{i},allowablefields,'exact'))
-        error('UNRECOGNIZED DSGN FIELD: DSGN.%s', actualfields{i})
+        warning('UNRECOGNIZED DSGN FIELD: DSGN.%s', actualfields{i})
     end
 end
 

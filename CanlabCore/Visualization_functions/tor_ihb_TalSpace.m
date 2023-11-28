@@ -68,12 +68,12 @@ function tor_ihb_TalSpace()
 %
 %   axes            hAxAxial            axial               
 %   axes            hAxFront            frontal      
-%   axes            hAxSagL             left saggital       
-%   axes            hAxSagR             right saggital       
+%   axes            hAxSagL             left sagittal       
+%   axes            hAxSagR             right sagittal       
 %   strucure array  clusters            array of selected clusters
 %   integer         indClusterToView    index of currently viewed cluster in clusters array
-%   bool            drawSymLS           == 1 if draw symmetrical on left saggital
-%   bool            drawSymRS           == 1 if draw symmetrical on right saggital
+%   bool            drawSymLS           == 1 if draw symmetrical on left sagittal
+%   bool            drawSymRS           == 1 if draw symmetrical on right sagittal
 %
 %----------------------------------------------------------------------------------
 %

@@ -13,7 +13,7 @@ function o = slices(obj, varargin)
 % :Optional Inputs:
 %
 %   **orientation:**
-%        can be followed by 'saggital', 'axial', or 'coronal'
+%        can be followed by 'sagittal', 'axial', or 'coronal'
 %
 %   **slice_mm:**
 %        is followed by the mm coord of the slice to display; default = 0
@@ -50,14 +50,14 @@ function o = slices(obj, varargin)
 %    slices(dat, 'slice', -5);                 % display sagg at x = -5
 %    o = slices(dat, 'names', terms); % use 'terms' var as names
 %
-%    o2 = slices(all_chi2_images, 'orientation', 'saggital', 'slice', 0);
+%    o2 = slices(all_chi2_images, 'orientation', 'sagittal', 'slice', 0);
 %
 % ..
 %    Copyright 2011, Tor Wager
 % ..
 
 slice_mm = 0;
-my_orientation = 'saggital';
+my_orientation = 'sagittal';
 nimgs = size(obj.dat, 2);
 dosplitcolor = 1;
 outlinecolor = [];

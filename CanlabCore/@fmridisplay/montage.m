@@ -3,7 +3,7 @@ function [obj, dat] = montage(obj, varargin)
 %  - Solid brain slices or contour outlines
 %  - Points or text labels or both
 %  - Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)
-%  - axial or saggital orientation
+%  - axial or sagittal orientation
 %
 % :Usage:
 % ::
@@ -36,7 +36,7 @@ function [obj, dat] = montage(obj, varargin)
 %   **{'close', 'closeenough', 'close_enough'}:**
 %        close_enough =    varargin{i+1};
 %
-%   **{'sagg','saggital','sagittal'}:**
+%   **{'sagg','sagittal','sagittal'}:**
 %        orientation = 'sagittal';
 %
 %   **{'MarkerSize', 'markersize'}:**
@@ -70,7 +70,7 @@ function [obj, dat] = montage(obj, varargin)
 %        followed my mm values for slices desired
 %      e.g., for cluster/region centers, xyz = cat(1, cl.mm_center)
 %      o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
-%      o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow');
+%      o2 = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow');
 %
 %   **'spacing':**
 %        followed by inter-slice spacing in mm
@@ -109,15 +109,15 @@ function [obj, dat] = montage(obj, varargin)
 % ::
 %
 %    axh = axes('Position', [0.05 0.4 .1 .5]);
-%    o2 = montage(o2, 'saggital', 'wh_slice', xyz(1,:), 'existing_axes', axh);
+%    o2 = montage(o2, 'sagittal', 'wh_slice', xyz(1,:), 'existing_axes', axh);
 %
-%    o2 = montage(o2, 'saggital', 'slice_range', [-10 10], 'onerow');
+%    o2 = montage(o2, 'sagittal', 'slice_range', [-10 10], 'onerow');
 %    o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 4);
 %    o2 = montage(o2, 'axial', 'slice_range', [-20 30], 'onerow', 'spacing', 8);
 %    o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');
 %
-%    % Parasaggital only:
-%    o2 = montage(o2, 'saggital', 'slice_range', [-4 4], 'onerow', 'spacing', 8);
+%    % Parasagittal only:
+%    o2 = montage(o2, 'sagittal', 'slice_range', [-4 4], 'onerow', 'spacing', 8);
 %
 % Add/remove blobs and points with fmridisplay.addblobs,
 % fmridisplay.addpoints, fmridisplay.removeblobs, fmridisplay.removepoints
@@ -194,7 +194,7 @@ for i = 1:length(varargin)
                 varargin{i+1} = [];
                 varargin{i} = [];
                 
-            case {'sag', 'sagg','saggital','sagittal'}, myview = 'sagittal';
+            case {'sag', 'sagg','sagittal','sagittal'}, myview = 'sagittal';
                 
             case {'cor', 'coronal'}, myview = 'coronal';
                 

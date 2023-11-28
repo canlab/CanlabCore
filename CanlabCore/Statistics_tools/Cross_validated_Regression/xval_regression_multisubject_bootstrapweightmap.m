@@ -547,7 +547,7 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
         obj = montage(obj, 'onerow');  % Show axial montage of underlay
         %obj = montage(obj, 'axial', 'slice_range', [-40 55], 'onerow', 'spacing', 8);
         enlarge_axes(gcf, .95);
-        obj = montage(obj, 'saggital', 'slice_range', [-6 6], 'onerow');
+        obj = montage(obj, 'sagittal', 'slice_range', [-6 6], 'onerow');
 
         for i = 1:length(thresh)
             

@@ -369,7 +369,7 @@ for j = 1:nimgs
 %             
             %             o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
             %             axh = axes('Position', [0.05 0.4 .1 .5]);
-            %             o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            %             o2 = montage(o2, 'sagittal', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             
         end
     end

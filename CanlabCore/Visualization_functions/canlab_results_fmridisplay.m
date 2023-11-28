@@ -51,9 +51,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %
 %   **'montagetype':**
 % 
-%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
-%        'compact'         Midline saggital and two rows of axial slices [the default] 
-%        'compact2'        A single row showing midline saggital and axial slices
+%        'full'            Axial, coronal, and sagittal slices, 4 cortical surfaces
+%        'compact'         Midline sagittal and two rows of axial slices [the default] 
+%        'compact2'        A single row showing midline sagittal and axial slices
 %        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
 %        'regioncenters'   A series of separate axes, each focused on one region
 %        'full2' for a slightly less full montage that avoids colorbar overlap issues
@@ -260,7 +260,7 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'coronal');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
-wh = strcmp(varargin, 'saggital');
+wh = strcmp(varargin, 'sagittal');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'allslices');
@@ -358,20 +358,20 @@ if ~exist('o2', 'var')
         case 'compact'
             % The default
             
-            % saggital
+            % sagittal
             axh1 = axes('Position', [-0.02 0.4 .17 .17]);
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', [-4 0 0], 'onerow', 'noverbose', 'existing_axes', axh1);
             text(50, -50, 'left');
             drawnow
             
             axh2 = axes('Position', [-0.02 0.6 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
+            o2 = montage(o2, 'volume_data', dat, 'sagittal', 'wh_slice', [4 0 0], 'onerow', 'noverbose', 'existing_axes', axh2);
             text(50, -50, 'right');
             drawnow
             
             % sagg center
             axh3 = axes('Position', [.08 0.5 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
+            o2 = montage(o2, 'volume_data', dat, 'sagittal', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh3);
             drawnow;
             o2.montage{3}.slice_mm_coords;
          
@@ -427,15 +427,15 @@ if ~exist('o2', 'var')
                     
                 end
                     
-                % saggital
+                % sagittal
                 axh = axes('Position', [-0.02 .75-shiftvals(i) .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
                 axh(2) = axes('Position', [.022 .854-shiftvals(i) .17 .17]);
                 
                 if i == 1
-                    [o2, dat] = montage(o2, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+                    [o2, dat] = montage(o2, 'sagittal', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
                     
                 else
-                    o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+                    o2 = montage(o2, 'volume_data', dat, 'sagittal', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
                     
                 end
                 drawnow
@@ -449,8 +449,8 @@ if ~exist('o2', 'var')
             
             
         case 'full'
-            % saggital
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % sagittal
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
             % coronal
@@ -483,8 +483,8 @@ if ~exist('o2', 'var')
 
         case 'full2'
 
-            % saggital
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % sagittal
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
             % coronal
@@ -534,8 +534,8 @@ if ~exist('o2', 'var')
             axh = axes('Position', [-0.02 .75-.3 .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
             axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
             
-            %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
-            o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+            %o2 = montage(o2, 'sagittal', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+            o2 = montage(o2, 'volume_data', dat, 'sagittal', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
             %ss = get(0, 'ScreenSize');
             %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
@@ -549,14 +549,14 @@ if ~exist('o2', 'var')
             o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
              wh_montages = 1;
 
-        case  'saggital'
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+        case  'sagittal'
+            o2 = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             
              wh_montages = 1;
 
         case 'allslices'
             
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
             axh = axes('Position', [-0.02 0.37 .17 .17]);
@@ -569,8 +569,8 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3];
             
         case 'full hcp'
-            % saggital
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % sagittal
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
             
             % coronal
@@ -617,8 +617,8 @@ else
         % use same o2, but add montages
         switch montagetype
             case 'full'
-            % saggital
-            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % sagittal
+            [o2, dat] = montage(o2, 'sagittal', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
 
             % coronal
@@ -651,13 +651,13 @@ else
             case 'compact'
                 [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
-                o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                o2 = montage(o2, 'volume_data', dat, 'sagittal', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
                 
             case 'compact2'
                 [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
                 enlarge_axes(gcf, 1);
                 axh = axes('Position', [-0.03 0.15 .2 1]);
-                o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+                o2 = montage(o2, 'volume_data', dat, 'sagittal', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
 
                 % shift all axes down and right
                 shift_axes(+0.03, -0.10);

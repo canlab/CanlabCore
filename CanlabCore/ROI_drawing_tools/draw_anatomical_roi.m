@@ -45,8 +45,8 @@ vol = spm_read_vols(V);
 vol = double(vol);
 
 
-dosagg = input('Press 1 to choose saggital slices, or 0 for axial.');
-% if saggital, use vol, not rvol
+dosagg = input('Press 1 to choose sagittal slices, or 0 for axial.');
+% if sagittal, use vol, not rvol
 % y is not reversed
 % ginput x = brain y, ginput y = brainz, slice = x
 

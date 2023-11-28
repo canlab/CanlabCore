@@ -2820,7 +2820,7 @@ can show &#8216;unthresholded&#8217; statistic values.  e.g.:</p>
 <li>enter xyz as n x 3 list of coordinates in mm to plot (world space)</li>
 <li>Points or text labels or both</li>
 <li>Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)</li>
-<li>axial, saggital, or coronal orientation handled automatically</li>
+<li>axial, sagittal, or coronal orientation handled automatically</li>
 <li>Multiple different sets of points can be plotted in different colors/text labels</li>
 </ul>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2962,7 +2962,7 @@ obj = legend(obj, &#39;figure&#39;) % new figure
 <li>Solid brain slices or contour outlines</li>
 <li>Points or text labels or both</li>
 <li>Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)</li>
-<li>axial or saggital orientation</li>
+<li>axial or sagittal orientation</li>
 </ul>
 </dd>
 </dl>
@@ -2999,7 +2999,7 @@ obj = legend(obj, &#39;figure&#39;) % new figure
 <dt><strong>{&#8216;close&#8217;, &#8216;closeenough&#8217;, &#8216;close_enough&#8217;}:</strong></dt>
 <dd><p class="first last">close_enough =    varargin{i+1};</p>
 </dd>
-<dt><strong>{&#8216;sagg&#8217;,&#8217;saggital&#8217;,&#8217;sagittal&#8217;}:</strong></dt>
+<dt><strong>{&#8216;sagg&#8217;,&#8217;sagittal&#8217;,&#8217;sagittal&#8217;}:</strong></dt>
 <dd><p class="first last">orientation = &#8216;sagittal&#8217;;</p>
 </dd>
 <dt><strong>{&#8216;MarkerSize&#8217;, &#8216;markersize&#8217;}:</strong></dt>
@@ -3038,7 +3038,7 @@ NOTE! DO NOT ENTER THIS HERE; ENTER WHEN YOU INITIALIZE FMRIDISPLAY OBJECT</p>
 <div>followed my mm values for slices desired</div></blockquote>
 <p class="last">e.g., for cluster/region centers, xyz = cat(1, cl.mm_center)
 o2 = montage(o2, &#8216;axial&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;onerow&#8217;);
-o2 = montage(o2, &#8216;saggital&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;onerow&#8217;);</p>
+o2 = montage(o2, &#8216;sagittal&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;onerow&#8217;);</p>
 </dd>
 <dt><strong>&#8216;spacing&#8217;:</strong></dt>
 <dd>followed by inter-slice spacing in mm</dd>
@@ -3076,15 +3076,15 @@ o2 = montage(o2, &#8216;saggital&#8217;, &#8216;wh_slice&#8217;, xyz, &#8216;one
 </div>
 <p>Define new axes in existing figure, and use those for montage:</p>
 <div class="highlight-python"><div class="highlight"><pre>axh = axes(&#39;Position&#39;, [0.05 0.4 .1 .5]);
-o2 = montage(o2, &#39;saggital&#39;, &#39;wh_slice&#39;, xyz(1,:), &#39;existing_axes&#39;, axh);
+o2 = montage(o2, &#39;sagittal&#39;, &#39;wh_slice&#39;, xyz(1,:), &#39;existing_axes&#39;, axh);
 
-o2 = montage(o2, &#39;saggital&#39;, &#39;slice_range&#39;, [-10 10], &#39;onerow&#39;);
+o2 = montage(o2, &#39;sagittal&#39;, &#39;slice_range&#39;, [-10 10], &#39;onerow&#39;);
 o2 = montage(o2, &#39;axial&#39;, &#39;slice_range&#39;, [-40 50], &#39;onerow&#39;, &#39;spacing&#39;, 4);
 o2 = montage(o2, &#39;axial&#39;, &#39;slice_range&#39;, [-20 30], &#39;onerow&#39;, &#39;spacing&#39;, 8);
 o2 = montage(o2, &#39;axial&#39;, &#39;wh_slice&#39;, xyz, &#39;onerow&#39;);
 
-% Parasaggital only:
-o2 = montage(o2, &#39;saggital&#39;, &#39;slice_range&#39;, [-4 4], &#39;onerow&#39;, &#39;spacing&#39;, 8);
+% Parasagittal only:
+o2 = montage(o2, &#39;sagittal&#39;, &#39;slice_range&#39;, [-4 4], &#39;onerow&#39;, &#39;spacing&#39;, 8);
 </pre></div>
 </div>
 <p>Add/remove blobs and points with fmridisplay.addblobs,
@@ -3819,9 +3819,9 @@ bounded by voxels of 0 or NaN (non-data values)</li>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">);</span>
 <span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;coronal&#39;</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;vertical&#39;</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;slices_per_row&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;vertical&#39;</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;slices_per_row&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -5011,7 +5011,7 @@ columns in its .dat field.</p>
 <tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
 <dt><strong>orientation:</strong></dt>
-<dd><p class="first last">can be followed by &#8216;saggital&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</p>
+<dd><p class="first last">can be followed by &#8216;sagittal&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</p>
 </dd>
 <dt><strong>slice_mm:</strong></dt>
 <dd><p class="first last">is followed by the mm coord of the slice to display; default = 0</p>
@@ -5058,7 +5058,7 @@ slices(dat, &#39;orientation&#39;, &#39;axial&#39;);
 slices(dat, &#39;slice&#39;, -5);                 % display sagg at x = -5
 o = slices(dat, &#39;names&#39;, terms); % use &#39;terms&#39; var as names
 
-o2 = slices(all_chi2_images, &#39;orientation&#39;, &#39;saggital&#39;, &#39;slice&#39;, 0);
+o2 = slices(all_chi2_images, &#39;orientation&#39;, &#39;sagittal&#39;, &#39;slice&#39;, 0);
 </pre></div>
 </div>
 </dd></dl>
@@ -10543,7 +10543,7 @@ behavior, for example.</p>
 <dd><p class="first last">to plot montage of slices to the screen</p>
 </dd>
 <dt><strong>sagg:</strong></dt>
-<dd><p class="first last">to rotate to saggital view</p>
+<dd><p class="first last">to rotate to sagittal view</p>
 </dd>
 <dt><strong>cor:</strong></dt>
 <dd><p class="first last">to rotate to coronal view</p>
@@ -26906,7 +26906,7 @@ colors (hard coded colors right now).</p>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">classes</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">;</span>
 <span class="n">overlay</span> <span class="o">=</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">;</span>
-<span class="n">cluster_orthviews_classes</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cluster_orthviews_classes</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="n">cluster_orthviews_classes</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">,</span> <span class="s">&#39;axial&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="n">cluster_orthviews_classes</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">,</span> <span class="s">&#39;coronal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="n">cluster_orthviews_classes</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">ClusterSolution</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">EXPT</span><span class="o">.</span><span class="n">overlay</span><span class="p">,</span> <span class="p">[],</span> <span class="mi">0</span><span class="p">);</span>
@@ -28333,7 +28333,7 @@ but with no zoom.</p>
 </pre></div>
 </div>
 <p>Copies a surface rendering or glass brain into three separate view
-panels, one saggital, one axial, and one coronal</p>
+panels, one sagittal, one axial, and one coronal</p>
 <p>returns handles to objects in each view and hl light handles</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -29832,7 +29832,7 @@ renderCluster_ui(O)
 <dl class="function">
 <dt id="Visualization_functions.roi_contour_map">
 <code class="descclassname">Visualization_functions.</code><code class="descname">roi_contour_map</code><span class="sig-paren">(</span><em>dat</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#Visualization_functions.roi_contour_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Draw a pattern map of one slice (either saggital, axial, or coronal) that
+<dd><p>Draw a pattern map of one slice (either sagittal, axial, or coronal) that
 shows the most voxels, or the slice that you specify (e.g., x = #). 
 You can also draw outlines for the significant voxels from a statistical test.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -29888,7 +29888,7 @@ same color range for the two maps.</p>
 </dd>
 <dt><strong>&#8216;xyz&#8217;:</strong></dt>
 <dd><p class="first last">When you want a specific view and slice, you can use this
-option with &#8216;coord&#8217;. (1:x - saggital view, 2:y - coronal 
+option with &#8216;coord&#8217;. (1:x - sagittal view, 2:y - coronal 
 view, 3:z - axial view)</p>
 </dd>
 <dt><strong>&#8216;coord&#8217;:</strong></dt>
@@ -29921,7 +29921,7 @@ akes this function not to divide into contiguous regions.</p>
 <dd><ul class="first last simple">
 <li>[2x30 double] (xyz mesh)</li>
 <li>Z: [1x30 double] (z values)</li>
-<li>xyz: 3 (1:x-saggital, 2:y-coronal, 3:z-axial)</li>
+<li>xyz: 3 (1:x-sagittal, 2:y-coronal, 3:z-axial)</li>
 <li>xyz_coord: -2 (slice coordinate; in this case, z = 3)</li>
 <li>region_idx: 1</li>
 </ul>
@@ -30989,12 +30989,12 @@ uimenu                      ihb_LineWidthMenuThick</p>
 <blockquote>
 <div>axes            hAxAxial            axial               
 axes            hAxFront            frontal      
-axes            hAxSagL             left saggital       
-axes            hAxSagR             right saggital       
+axes            hAxSagL             left sagittal       
+axes            hAxSagR             right sagittal       
 strucure array  clusters            array of selected clusters
 integer         indClusterToView    index of currently viewed cluster in clusters array
-bool            drawSymLS           == 1 if draw symmetrical on left saggital
-bool            drawSymRS           == 1 if draw symmetrical on right saggital</div></blockquote>
+bool            drawSymLS           == 1 if draw symmetrical on left sagittal
+bool            drawSymRS           == 1 if draw symmetrical on right sagittal</div></blockquote>
 </div></blockquote>
 <blockquote>
 <div><dl class="docutils">

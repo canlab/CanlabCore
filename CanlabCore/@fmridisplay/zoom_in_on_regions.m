@@ -2,7 +2,7 @@ function zoom_in_on_regions(o2, cl, orientation)
 % Assumes you have one axis per region in a montage registered in an
 % fmridisplay object (o2). Given the object o2, which montage to adjust
 % (montage_num), a corresponding region object with coordinates (cl), and an
-% orientation ('axial', 'saggital', or 'coronal'), this object method zooms 
+% orientation ('axial', 'sagittal', or 'coronal'), this object method zooms 
 % in on each cluster by adjusting the axes.  
 %
 % Tor Wager, Feb 2018
@@ -25,7 +25,7 @@ for i = 1:length(cl)
             xl = xyzminmax(1, :);
             yl = xyzminmax(2, :);
             
-        case 'saggital'
+        case 'sagittal'
             xl = xyzminmax(2, :);
             yl = xyzminmax(3, :);
             

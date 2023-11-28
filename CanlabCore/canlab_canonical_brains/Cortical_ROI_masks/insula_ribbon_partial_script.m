@@ -1,4 +1,4 @@
-% procedure: use draw_anatomical_ROI_2008 to draw saggital slices
+% procedure: use draw_anatomical_ROI_2008 to draw sagittal slices
 % then mask with cortical ribbon from segmentation
 % then clean up using draw...
 

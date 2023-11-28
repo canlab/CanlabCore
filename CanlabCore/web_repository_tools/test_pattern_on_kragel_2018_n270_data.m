@@ -163,7 +163,7 @@ ispain=ispain(~wh_isnan);
 iscog=iscog(~wh_isnan);
 isemo=isemo(~wh_isnan);
 
-% Boostrap confidence intervals for effect size
+% Bootstrap confidence intervals for effect size
 fprintf('Bootstrapping CIs\n')
 
 bci_pain = bootci(5000, @cohens_d_2sample, vector_data, ispain);

@@ -108,7 +108,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        models), between eigenvectors, between scores, within 
 %        eigenvectors and within scores. Requires 'subjID' option followed 
 %        by size(obj.dat,2) x 1 vector of block labels.
-%        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
+%        Optional: Consensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
 %        Note: You probably want to bootstrap this manually if

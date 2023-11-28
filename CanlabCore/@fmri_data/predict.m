@@ -500,7 +500,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %              -added nancorr to ignore nans when calculating correlation
 %              -added rng 'shuffle' to ensure that bootstrapping will use
 %              different inital seed.  VERY IMPORTANT for aggregating across
-%              multiple boostrap sessions!
+%              multiple bootstrap sessions!
 %
 %    11/28/13: Luke Chang
 %              -added ability to use hv block cross-validation, which is good

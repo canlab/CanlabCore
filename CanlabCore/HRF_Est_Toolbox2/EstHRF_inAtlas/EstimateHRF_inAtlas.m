@@ -30,7 +30,6 @@ function [tc, HRF]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, r
     preproc_dat=preprocess(preproc_dat, 'smooth', PREPROC_PARAMS.smooth);
     
     % Step 3. fitHRF to each ROI's worth of data
-
     
     [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile);
     HRF.preproc_params=PREPROC_PARAMS;
@@ -123,19 +122,6 @@ function [tc, HRF]=gen_HRFstruct_from_dir(preproc_dat, HRF_PARAMS, rois, at, out
     temp_HRF_fit = cell(1, numel(HRF_PARAMS.types));
 
     parfor t=1:numel(HRF_PARAMS.types)
-
-        for c=1:numel(HRF_PARAMS.Condition)
-
-            HRF_OBJ{c}.fullpath=sprintf([outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_fit.nii']);
-            PARAM_OBJ{c}.fullpath=sprintf([outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_params.nii']);
-            try
-                write(HRF_OBJ{c}, 'overwrite');
-                write(PARAM_OBJ{c}, 'overwrite');
-            catch
-                warning('Not able to write one or more files.');
-            end
-
-        end
 
         HRF_local = cell(1, numel(rois));
         tc_local = cell(1, numel(rois));
@@ -238,7 +224,7 @@ function [tc, HRF]=gen_HRFstruct_from_dir(preproc_dat, HRF_PARAMS, rois, at, out
 end
 
 
-function [tc, HRF]=roiTS_fitHRF(HRF_OBJ, HRF_PARAMS, rois, at, outfile, HRF)
+function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile, HRF)
 
     % Make directories for files if needed
     if ~isempty(fileparts(outfile))

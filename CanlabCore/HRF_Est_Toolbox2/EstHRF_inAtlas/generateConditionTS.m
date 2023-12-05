@@ -49,6 +49,10 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
         % Note: Add 0.5TRs to correct for slice-timing correction if needed
         % current_times = ceil(current_times(current_times < n) + 0.5);
         current_times = ceil(current_times(current_times < n));
+        % Correct any onsets that start at 0;
+        if any(current_times==0)
+            current_times(find(current_times==0))=1;
+        end
         
         % Model events as a single impulse
         if SPIKES == 1

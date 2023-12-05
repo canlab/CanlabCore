@@ -10,6 +10,13 @@ function canlab_prep_bidsdir(bidsdir, varargin)
     % Usage:
     %   canlab_prep_bidsdir(bidsdir, 'datatype', datatypestring, 'noise', noisestring, 'outdir', outdir)
     %
+    % Examples:
+    %   Clone T1 for CAT12 analysis:
+    %   canlab_prep_bidsdir(raw_bidsdir, 'datatype', anat, 'outdir', outdir)
+    %   
+    %   Clone funcs for CANlab First-Level Analyses:
+    %   canlab_prep_bidsdir(fmriprep_bidsdir, 'datatype', func, 'taskdir', raw_bidsdir, 'outdir', outdir)
+    %
     % Required Argument:
     %   bidsdir       - Full filepath to the BIDS-directory of your study.
     %                   e.g., 'F:\Dropbox (Dartmouth College)\Tor Pinel datasets\Pinel_localizer\data\pinel_localizer_Dartmouth_S2019'

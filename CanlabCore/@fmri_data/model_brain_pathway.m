@@ -255,6 +255,20 @@ end
 
 %% estimate pattern-based connectivity with kfold or user-specified xval
 
+    % Convert to cell array of size of kfold. Number of cells are equal to number of k-fold.
+    % Voxels x Images matrix in each cell (e.i. for 10-fold, images will be devided into 10 cells)
+    % note by kodiweera: convert to a cell array before the cross validation loop. I took this loop out of the main loop below to make the the program little faster as this is repeatedlty run during the k-fold validation.
+
+
+    for kk=1:max(indices)
+        to_align_dat_one{kk}=source_one_obj.dat(:,indices==kk);
+        to_align_dat_two{kk}=source_two_obj.dat(:,indices==kk);
+        to_align_dat_three{kk}=target_one_obj.dat(:,indices==kk);
+        to_align_dat_four{kk}=target_two_obj.dat(:,indices==kk);
+
+    end
+
+
 for k=1:max(indices)
     
     un_inds=unique(indices);
@@ -263,13 +277,13 @@ for k=1:max(indices)
     % Convert to cell array, one cell per subject
     % Voxels x Images matrix
     
-    for kk=1:max(indices)
-        to_align_dat_one{kk}=source_one_obj.dat(:,indices==kk);
-        to_align_dat_two{kk}=source_two_obj.dat(:,indices==kk);
-        to_align_dat_three{kk}=target_one_obj.dat(:,indices==kk);
-        to_align_dat_four{kk}=target_two_obj.dat(:,indices==kk);
+    %for kk=1:max(indices)
+    %    to_align_dat_one{kk}=source_one_obj.dat(:,indices==kk);
+    %    to_align_dat_two{kk}=source_two_obj.dat(:,indices==kk);
+       % to_align_dat_three{kk}=target_one_obj.dat(:,indices==kk);
+       % to_align_dat_four{kk}=target_two_obj.dat(:,indices==kk);
         
-    end
+    %end
     
     if do_alignment
         % Call Manning hyperalign.m

@@ -56,7 +56,8 @@ function cl = orthviews(image_obj, varargin)
 
 %overlay = which('SPM8_colin27T1_seg.img');
 %overlay = which('keuken_2014_enhanced_for_underlay.img');
-overlay = which('fmriprep20_template.nii.gz');
+% overlay = which('fmriprep20_template.nii.gz');
+overlay = canlab_get_underlay_image;
 
 doposneg = false;
 doreg = false;

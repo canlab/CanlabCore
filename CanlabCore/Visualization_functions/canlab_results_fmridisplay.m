@@ -202,7 +202,8 @@ splitcolor = {[0 0 1] [0 .8 .8] [1 .4 .5] [1 1 0]}; % {[0 0 1] [.3 .6 .9] [.8 .3
 montagetype = 'compact';
 doverbose = true;
 %overlay='SPM8_colin27T1_seg.img';
-overlay = 'fmriprep20_template.nii.gz';
+% overlay = 'fmriprep20_template.nii.gz';
+overlay = canlab_get_underlay_image;
 dofigure = true;
 
 wh = strcmp(varargin, 'overlay');

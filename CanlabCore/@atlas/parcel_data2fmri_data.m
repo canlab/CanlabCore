@@ -64,6 +64,9 @@ function obj = parcel_data2fmri_data(atlas_obj, data_values)
 %   parcel_stats2statistic_image
 %
 
+% Programmers' notes:
+% 12/2023 - Tor Wager - fixed fmri_data constructor call to avoid unnecessary bit rate warning
+
 % Create placeholder statistic image
 
 atlas_obj = replace_empty(atlas_obj);   
@@ -77,8 +80,8 @@ u = unique(all_parcel_idx); u(u == 0) = [];
 obj = fmri_data( ...
     struct('dat', single(0 .* placeholder_vec), ...
     'volInfo', atlas_obj.volInfo, ...
-    'removed_voxels', atlas_obj.removed_voxels) ...
-    );
+    'removed_voxels', atlas_obj.removed_voxels), ...
+    [], 'noverbose');
 
 % number of parcels 
 

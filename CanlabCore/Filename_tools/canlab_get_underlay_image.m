@@ -19,7 +19,7 @@ function underlay = canlab_get_underlay_image(varargin)
 % underlay = canlab_get_underlay_image
 % underlay = canlab_get_underlay_image('icbm2009c_0.5mm')
 
-current_default = 'fmriprep20_template.nii.gz';
+current_default = 'fmriprep20_template.nii';
 
 if nargin == 0
     underlaystr = current_default;

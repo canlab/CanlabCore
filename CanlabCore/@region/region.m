@@ -384,9 +384,11 @@ classdef region
                 obj(i).dim = mask.volInfo.dim;
                 obj(i).numVox = size(obj(i).XYZ, 2);
                 
-                obj(i).center = center_of_mass(myXYZ, double(obj(i).Z));
-                obj(i).mm_center = center_of_mass(obj(i).XYZmm, double(obj(i).Z));
-                
+                if ~isempty(myXYZ) % XYZ initialization may be skipped, so skip this if so MS 2/15/2023
+                    obj(i).center = center_of_mass(myXYZ, double(obj(i).Z));
+                    obj(i).mm_center = center_of_mass(obj(i).XYZmm, double(obj(i).Z));
+                end
+
                 if ~isempty(mask.volInfo.fname)
                     [~, ff, ee] = fileparts(mask.volInfo.fname);
                     obj(i).custom_info1 = [ff ee];

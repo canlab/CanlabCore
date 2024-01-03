@@ -33,7 +33,7 @@ function [model, models]=plotHRF(HRF, t, varargin)
             at=varargin{k};
             isAtlasFound = true;
         else
-            disp(['Input argument ' num2str(k) ' unknown.'])
+            disp(['Input argument ' num2str(k) ' unknown.']);
         end
     end
 
@@ -46,6 +46,7 @@ function [model, models]=plotHRF(HRF, t, varargin)
             at=load_atlas('canlab2018_2mm');
         else
             at=HRF.atlas;
+            % at=load_atlas('canlab2018_2mm');
         end
     end
 
@@ -120,7 +121,7 @@ function [model, models]=plotHRF(HRF, t, varargin)
         
         if numel(reg)==1
             model=HRF.fit{typ}{reg}.(conds{cond}).model;
-            se=HRF.fit{typ}{reg}.(conds{cond}).wse;
+            
 
             % plot(HRF.fit{typ}{reg}.(conds{cond}).model, '-')
 
@@ -128,18 +129,24 @@ function [model, models]=plotHRF(HRF, t, varargin)
             detectPeaksTroughs(HRF.fit{typ}{reg}.(conds{cond}).model', true);
             hold on;
 
-            % Plot error shade:
-            x = 1:length(model);
-            upper_bound = model + se;
-            lower_bound = model - se;
-            % Create x values for fill (concatenate forward and reverse x values)
-            x_fill = [x, fliplr(x)];
-            % Create y values for fill (concatenate upper_bound and reverse of lower_bound)
-            y_fill = [upper_bound, fliplr(lower_bound)];
-            fill_color = [0.7, 0.7, 0.7]; % Change to desired color
-            fill_alpha = 0.3; % Transparency, change to desired value
-            fill(x_fill, y_fill, fill_color, 'FaceAlpha', fill_alpha, 'EdgeColor', 'none');
-            hold on;
+            % Plot Standard Error if possible
+            try
+                se=HRF.fit{typ}{reg}.(conds{cond}).wse;
+                % Plot error shade:
+                x = 1:length(model);
+                upper_bound = model + se;
+                lower_bound = model - se;
+                % Create x values for fill (concatenate forward and reverse x values)
+                x_fill = [x, fliplr(x)];
+                % Create y values for fill (concatenate upper_bound and reverse of lower_bound)
+                y_fill = [upper_bound, fliplr(lower_bound)];
+                fill_color = [0.7, 0.7, 0.7]; % Change to desired color
+                fill_alpha = 0.3; % Transparency, change to desired value
+                fill(x_fill, y_fill, fill_color, 'FaceAlpha', fill_alpha, 'EdgeColor', 'none');
+                hold on;
+            catch
+                
+            end
 
             hline(0);
 
@@ -169,20 +176,26 @@ function [model, models]=plotHRF(HRF, t, varargin)
                 end
 
                 model{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum;
-                se{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).wse/regionVoxNum;
 
-                % Plot error shade:
-                x = 1:length(model{i});
-                upper_bound = model{i} + se{i};
-                lower_bound = model{i} - se{i};
-                % Create x values for fill (concatenate forward and reverse x values)
-                x_fill = [x, fliplr(x)];
-                % Create y values for fill (concatenate upper_bound and reverse of lower_bound)
-                y_fill = [upper_bound, fliplr(lower_bound)];
-                fill_color = colors(i,:); % Change to desired color
-                fill_alpha = 0.3; % Transparency, change to desired value
-                fill(x_fill, y_fill, fill_color, 'FaceAlpha', fill_alpha, 'EdgeColor', 'none');
-                hold on;
+                % Plot Standard Error if possible
+                try
+                    se{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).wse/regionVoxNum;
+    
+                    % Plot error shade:
+                    x = 1:length(model{i});
+                    upper_bound = model{i} + se{i};
+                    lower_bound = model{i} - se{i};
+                    % Create x values for fill (concatenate forward and reverse x values)
+                    x_fill = [x, fliplr(x)];
+                    % Create y values for fill (concatenate upper_bound and reverse of lower_bound)
+                    y_fill = [upper_bound, fliplr(lower_bound)];
+                    fill_color = colors(i,:); % Change to desired color
+                    fill_alpha = 0.3; % Transparency, change to desired value
+                    fill(x_fill, y_fill, fill_color, 'FaceAlpha', fill_alpha, 'EdgeColor', 'none');
+                    hold on;
+                catch
+                    
+                end
 
                 h(i)=plot(HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(r(i))));
                 hline(0);

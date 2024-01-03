@@ -55,7 +55,8 @@ elseif (strcmp(method,'FIR')),
 % mode = 1;     % 0 - FIR 
                 % 1 - smooth FIR
             
-            [h, fit, e, param] = Fit_sFIR(tc,TR,Runc,T,mode);
+            % [h, fit, e, param] = Fit_sFIR(tc,TR,Runc,T,mode);
+            [h, fit, e, param] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode);
             param(2:3,:) = param(2:3,:).*TR;
 
 

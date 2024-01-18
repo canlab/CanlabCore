@@ -59,7 +59,8 @@ function stats = rsa_regression(obj,design,study,varargin)
 % :Outputs:
 %   **stats:**
 %    Structure including: 
-%      gen_index  - sample estimate of generalization indices
+%      gen_index  - regression slopes (betas) for model fixed fx predicting dissimilarity across observations (images)
+%                   in Kragel 2018 Nat Neuro, this is the sample estimate of generalization indices
 %      bs_gen_index - bootstrap distribution for each generalization index
 %      ste  - standard error of generalization index
 %      Z  - Z score for each parameter
@@ -85,17 +86,20 @@ function stats = rsa_regression(obj,design,study,varargin)
 %    Programmers' notes:
 % List dates and changes here, and author of changes
 %    01/08/2018, created function, Phil Kragel
+%    01/17/2024, comments and 'nobootstrap' option added by Tor and Byeol 
 % ..
 
 
 %% convert design matrix into dissimilarity matrix
 modelRDM=[];
 for i=1:size(design,2) %for each specified grouping
+    % Turn each column of design into a 1 x [n x (n-1)/2] row vector of
+    % inter-observation distances
    modelRDM(:,i)=pdist(design(:,i),'seuclidean'); %#ok<*AGROW> %compute squared euclidean distance
    modelRDM(:,i)=100000*modelRDM(:,i)/sum(modelRDM(:,i)); %normalize and scale
 end
 
-%supress distance warning - 0 value distances get removed...
+%suppress distance warning - 0 value distances get removed...
 warning('off','stats:pdist:ConstantPoints')
 
 if any(strcmp([varargin{:}],'average_Euclidean'))
@@ -110,33 +114,53 @@ else %default to correlation
     brainRDM=pdist(obj.dat','correlation');
 end
 brainRDM(brainRDM<.00001)=NaN;
-gen_index= glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
+gen_index = glmfit([ones(length(modelRDM),1) double(modelRDM)],brainRDM','normal','constant','off');
 
-num_it=1000;
-bs_gen_index=zeros(num_it,size(gen_index,1));
-parfor it=1:num_it
-bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study,varargin);
-end
+% initialize stats output
 
-%compute stats from bootstrap distribution (normal approx)  
-b_ste = squeeze(nanstd(bs_gen_index));
-b_mean = squeeze(nanmean(bs_gen_index));
-b_ste(b_ste == 0) = Inf;
-b_Z = b_mean ./ b_ste;
-b_P = 2 * (1 - normcdf(abs(b_Z)));
-
-% assign stats to output
-stats.gen_index=gen_index;
-stats.Z=b_Z;
-stats.p=b_P;
-stats.sig=b_P<FDR(b_P,.05);
-stats.ste=b_ste;
-stats.bs_gen_index=bs_gen_index;
+% initialize outputs
+stats.gen_index = gen_index;
+stats.Z = [];
+stats.p = [];
+stats.sig = [];
+stats.ste = [];
+stats.bs_gen_index = [];
 stats.RDM=squareform(brainRDM);
+
+if any(strcmp([varargin{:}],'nobootstrap'))
+
+    return
+    
+else
+    % bootstrap beta estimates and inferential statistics
+    num_it=1000;
+    bs_gen_index=zeros(num_it,size(gen_index,1));
+    parfor it=1:num_it
+        bs_gen_index(it,:) = random_resample_within_study(modelRDM,obj,study,varargin);
+    end
+    
+    %compute stats from bootstrap distribution (normal approx)
+    b_ste = squeeze(nanstd(bs_gen_index));
+    b_mean = squeeze(nanmean(bs_gen_index));
+    b_ste(b_ste == 0) = Inf;
+    b_Z = b_mean ./ b_ste;
+    b_P = 2 * (1 - normcdf(abs(b_Z)));
+    
+    % assign stats to output
+    stats.Z=b_Z;
+    stats.p=b_P;
+    stats.sig=b_P<FDR(b_P,.05);
+    stats.ste=b_ste;
+    stats.bs_gen_index=bs_gen_index;
+    
+end % bootstrap
 
 end % main function
 
 function beta = random_resample_within_study(modelRDM,obj,study,varargin)
+% bootstrap within-study dissimilarity (Euclidean distance, stratified by study)
+% - bootstrap samples within-study for k studies
+% - glm model estimating mean within-study dissim for each bootstrap sample
 
 bs_inds=zeros(size(obj.dat,2),1); %initialize
 
@@ -149,13 +173,14 @@ end
 %supress distance warning - 0 value distances get removed...
 warning('off','stats:pdist:ConstantPoints')
 
+% images by voxels 
 resampled_data=obj.dat(:,bs_inds)'; %random subsample and transpose for correlation
 
 
-if any(strcmp([varargin{:}],'average_Euclidean'))
-    brainRDM=pdist(nanmean(resampled_data')'); %distance is based on region average
+if any(strcmp([varargin{:}],'average_Euclidean')) % distance between means of images, n x (n-1) / 2 vector form
+    brainRDM=pdist(nanmean(resampled_data')'); %distance is based on region average, pdist(images x 1)
 elseif any(strcmp([varargin{:}],'euclidean'))
-    brainRDM=pdist(resampled_data); %euclidean
+    brainRDM=pdist(resampled_data); %euclidean geometric distance, voxels as variables (dimensions)
 
 elseif any(strcmp([varargin{:}],'cosine'))
     brainRDM=pdist(resampled_data,'cosine'); %euclidean

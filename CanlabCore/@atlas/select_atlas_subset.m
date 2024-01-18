@@ -229,6 +229,12 @@ if doflatten
     % -------------------------------------------------------------------
     obj_subset.dat = single(obj_subset.dat > 0);
     
+    % this is wrong. Consider, you could have a voxel that has 50% 
+    % probability of being voxel A and 50% probability of being voxel B.
+    % the max value is %50, but the probability that it's one or the other
+    % must be 100%. Let's try assuming conditional independence instead.
+    % There are a number of assumptions we need to make for a better
+    % solution though, so let this be the default
     obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
     
     % Add labels for combined mask

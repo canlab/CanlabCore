@@ -23,7 +23,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
 % 'subcortical_rl','cit168'       'CIT168 MNI152Nlin2009cAsym subcortical atlas v1.0.0 (deprecated)'
-% 'cit168_[fmriprep20|fsl6]'      'CIT168 subcortical atlas in fmriprep20 or fsl6 v1.1.0 space'
+% 'cit168_[fmriprep20|fsl6]'      'CIT168 v1.1.0 subcortical atlas in fmriprep20 or fsl6 space'
+% 'cit168_amygdala_[fmriprep20|fsl6]
+%                                 'CIT168 v1.0.3 amygdalar nuclear parcellation in fmriprep20 or fsl6 space'
 % 'brainnetome'                   'Brainnetome_atlas_object.mat'
 % 'keuken'                        'Keuken_7T_atlas_object.mat'
 % 'buckner'                       'buckner_networks_atlas_object.mat'
@@ -127,6 +129,14 @@ switch lower(atlas_file_name_or_keyword)
         
     case {'cit168_fsl6'}
         savefile = which('CIT168_MNI152NLin6Asym_subcortical_v1.1.0_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'cit168_amygdala_fmriprep20', 'cit168_amygdala'}
+        savefile = which('CIT168_MNI152NLin2009cAsym_amygdala_v1.0.3_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'cit168_amygdala_fsl6'}
+        savefile = which('CIT168_MNI152NLin6Asym_amygdala_v1.0.3_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'brainnetome'}

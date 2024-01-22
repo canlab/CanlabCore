@@ -54,7 +54,7 @@ rm_lbl_ind = rm_lbl_ind(~ismember(rm_lbl_ind, 1));
 new_parcels = cell(1,length(new_lbl_parcels));
 new_labels = cell(length(valid_lbls), length(new_lbl_parcels));
 for i = 1:length(new_lbl_parcels)
-    this_parcel{i} = obj.select_atlas_subset(new_lbl_parcels(i), new_lbl, 'flatten');
+    this_parcel{i} = obj.select_atlas_subset(new_lbl_parcels(i), new_lbl, 'exact', 'flatten');
     for j = 1:length(kept_lbl_ind)
         new_labels{j,i} = obj.(valid_lbls{j}){i};
     end

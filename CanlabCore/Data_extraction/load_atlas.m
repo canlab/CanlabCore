@@ -23,7 +23,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
 % 'brainstem'                     'brainstem_combined_atlas_object.mat'
 % 'subcortical_rl','cit168'       'CIT168 MNI152Nlin2009cAsym subcortical atlas v1.0.0 (deprecated)'
-% 'cit168_[fmriprep20|fsl6]'      'CIT168 subcortical atlas in fmriprep20 or fsl6 v1.1.0 space'
+% 'cit168_[fmriprep20|fsl6]'      'CIT168 v1.1.0 subcortical atlas in fmriprep20 or fsl6 space'
+% 'cit168_amygdala_[fmriprep20|fsl6]
+%                                 'CIT168 v1.0.3 amygdalar nuclear parcellation in fmriprep20 or fsl6 space'
 % 'brainnetome'                   'Brainnetome_atlas_object.mat'
 % 'keuken'                        'Keuken_7T_atlas_object.mat'
 % 'buckner'                       'buckner_networks_atlas_object.mat'
@@ -35,8 +37,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'insula'                        'Faillenot_insular_atlas.mat'
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
-% 'tian_3t_s[1|2|3|4]_[fmriprep20|fsl6]'      
-%                                 'Subcortical atlas at four different resolutions and two different reference spaces (e.g. tian_3t_s4_fmriprep20)'
+% 'tian_3t_[fmriprep20|fsl6]'      
+%                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 % 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
 % 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]   
@@ -129,6 +131,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile = which('CIT168_MNI152NLin6Asym_subcortical_v1.1.0_atlas_object.mat');
         varname = 'atlas_obj';
 
+    case {'cit168_amygdala_fmriprep20', 'cit168_amygdala'}
+        savefile = which('CIT168_MNI152NLin2009cAsym_amygdala_v1.0.3_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'cit168_amygdala_fsl6'}
+        savefile = which('CIT168_MNI152NLin6Asym_amygdala_v1.0.3_atlas_object.mat');
+        varname = 'atlas_obj';
+
     case {'brainnetome'}
         savefile = which('Brainnetome_atlas_object.mat');
         varname = 'atlas_obj';
@@ -202,68 +212,12 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='Kragel2019PAG_atlas_object.mat';
         varname = 'atlas_obj';
         
-    case {'tian2020_subcortical_scale1', 'tian_3t_s1_fmriprep20_2mm'}
-        savefile ='tian_3t_s1_fmriprep20_2mm_atlas_object.mat';
+    case {'tian_3t_fmriprep20'}
+        savefile ='tian_3t_fmriprep20_atlas_object.mat';
         varname = 'atlas_obj';
         
-    case {'tian2020_subcortical_scale2', 'tian_3t_s2_fmriprep20_2mm'}
-        savefile ='tian_3t_s2_fmriprep20_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian2020_subcortical_scale3', 'tian_3t_s3_fmriprep20_2mm'}
-        savefile ='tian_3t_s3_fmriprep20_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian2020_subcortical_scale4', 'tian_3t_s4_fmriprep20_2mm'}
-        savefile ='tian_3t_s4_fmriprep20_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-       
-    case {'tian_3t_s1_fmriprep20'}
-        savefile ='tian_3t_s1_fmriprep20_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s2_fmriprep20'}
-        savefile ='tian_3t_s2_fmriprep20_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s3_fmriprep20'}
-        savefile ='tian_3t_s3_fmriprep20_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s4_fmriprep20'}
-        savefile ='tian_3t_s4_fmriprep20_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s1_fsl6_2mm'}
-        savefile ='tian_3t_s1_fsl6_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s2_fsl6_2mm'}
-        savefile ='tian_3t_s2_fsl6_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s3_fsl6_2mm'}
-        savefile ='tian_3t_s3_fsl6_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s4_fsl6_2mm'}
-        savefile ='tian_3t_s4_fsl6_2mm_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s1_fsl6'}
-        savefile ='tian_3t_s1_fsl6_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s2_fsl6'}
-        savefile ='tian_3t_s2_fsl6_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s3_fsl6'}
-        savefile ='tian_3t_s3_fsl6_atlas_object.mat';
-        varname = 'atlas_obj';
-        
-    case {'tian_3t_s4_fsl6'}
-        savefile ='tian_3t_s4_fsl6_atlas_object.mat';
+    case {'tian_3t_fsl6'}
+        savefile ='tian_3t_fsl6_atlas_object.mat';
         varname = 'atlas_obj';
         
     case {'julich','julich_fmriprep20'}

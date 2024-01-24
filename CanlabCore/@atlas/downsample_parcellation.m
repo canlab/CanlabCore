@@ -110,7 +110,7 @@ for i = 2:length(new_parcel)
     fprintf('%s',new_msg);
     last_msg = new_msg;
 
-    new_atlas_obj = new_atlas_obj.merge_atlases(new_parcel{i},'noverbose','nocomparespace');
+    new_atlas_obj = new_atlas_obj.merge_atlases(new_parcel{i},'noverbose');
 end
 fprintf('\n');
 new_atlas_obj.probability_maps = sparse(new_atlas_obj.probability_maps);

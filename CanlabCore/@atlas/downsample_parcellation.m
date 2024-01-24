@@ -1,4 +1,4 @@
-function new_atlas_obj = get_coarser_parcellation(obj, labelfield)
+function new_atlas_obj = downsample_parcellation(obj, varargin)
 % An atlas_obj has multiple label fields meant to label nested parcellations
 % at different levels of granularity. labels is the default which must
 % contain unique entries and correspond to the number of unique indices
@@ -11,11 +11,30 @@ function new_atlas_obj = get_coarser_parcellation(obj, labelfield)
 % Input ::
 %     obj - an atlas_object. Must have at least one of labels_2 ...
 %                 labels_5 defined
-%     labelfield - which label field to substitute for labels. Must be one of
-%                  {'labels_2', 'labels_3', 'labels_4', 'labels_5'}
+%     varargin - either a vector of new labels to use, a string or leave empty. 
+%                  If you provide a vector, its length should equal number of
+%                  regions in original atlas, with redundant labels for regions
+%                  you want to combine in the downsampled atlas.
+%                  If you provide a string, it should be one of 
+%                  {'labels_2', 'labels_3', 'labels_4', 'labels_5'} which will
+%                  then be used as the downsampling vector.
+%                  If you don't provide anything the contents of labels_2 is used
+%                  by default.
 %
 % Output ::
 %     atlas_obj - a new atlas object, reindexed according to labelfield
+
+if isvector(varargin{1})
+    if length(varargin{1}) ~= num_regions(obj)
+        error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
+    end
+    labelfield='labels';
+    obj.lbaels = varargin{1};
+elseif isempty(varargin)
+    labelfield = 'labels_2';
+else
+    labelfield = varargin{1};
+end
 
 % input check
 valid_lbls = {'labels', 'labels_2', 'labels_3', 'labels_4', 'labels_5'};

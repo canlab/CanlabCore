@@ -24,14 +24,16 @@ function new_atlas_obj = downsample_parcellation(obj, varargin)
 % Output ::
 %     atlas_obj - a new atlas object, reindexed according to labelfield
 
-if isvector(varargin{1})
+fprintf('Downsampling %s parcels\n', obj.atlas_name);
+
+if isempty(varargin)
+    labelfield = 'labels_2';
+elseif isvector(varargin{1})
     if length(varargin{1}) ~= num_regions(obj)
         error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
     end
     labelfield='labels';
     obj.lbaels = varargin{1};
-elseif isempty(varargin)
-    labelfield = 'labels_2';
 else
     labelfield = varargin{1};
 end
@@ -64,16 +66,55 @@ kept_lbl_ind = find((n_unique_lbls <= n_unique_lbls(new_ind)) & ...
 
 rm_lbl_ind = find(~ismember(1:length(valid_lbls), 1:length(kept_lbl_ind)));
 
+% merge high resolution regions
 [new_lbl_parcels, lbl_exp] = unique(obj.(new_lbl),'stable');
 new_parcels = cell(1,length(new_lbl_parcels));
-parfor i = 1:length(new_lbl_parcels)
+
+% init progress watcher
+n_reg = length(new_lbl_parcels);
+last_msg = sprintf('Creating new region 1/%d',n_reg);
+fprintf('%s',last_msg);
+
+% working with sparse matrices is much faster for atlases with many
+% parcels, while atlases with few parcels are likely to run quickly
+% regardless
+obj.probability_maps = sparse(obj.probability_maps);
+for i = 1:length(new_lbl_parcels)
+    % this can be parallelized but it's very memory intensive for some
+    % atlases (e.g. canlab2023) and parallelization makes the problem worse
+    % by several factors.
+
+    % update progress watcher
+    delete_last_chars = length(last_msg);
+    fprintf('%s',char(8*ones(1,delete_last_chars)))
+    new_msg = sprintf('Assembling region %d/%d',i,n_reg);
+    fprintf('%s',new_msg);
+    last_msg = new_msg;
+
     new_parcel{i} = obj.select_atlas_subset(new_lbl_parcels(i), new_lbl, 'exact', 'flatten');
 end
+fprintf('\n');
 
+% init progress watcher
+n_reg = length(new_parcel);
+last_msg = sprintf('Merging new region 1/%d',n_reg);
+fprintf('%s',last_msg);
+
+% Combine parcels
 new_atlas_obj = new_parcel{1};
 for i = 2:length(new_parcel)
-    new_atlas_obj = new_atlas_obj.merge_atlases(new_parcel{i});
+    % update progress watcher
+    delete_last_chars = length(last_msg);
+    fprintf('%s',char(8*ones(1,delete_last_chars)))
+    new_msg = sprintf('Adding region %d/%d',i,n_reg);
+    fprintf('%s',new_msg);
+    last_msg = new_msg;
+
+    new_atlas_obj = new_atlas_obj.merge_atlases(new_parcel{i},'noverbose','nocomparespace');
 end
+fprintf('\n');
+new_atlas_obj.probability_maps = sparse(new_atlas_obj.probability_maps);
+
 for i = 1:length(kept_lbl_ind)
     % increment by 1 
     old_lbls = obj.(valid_lbls{kept_lbl_ind(i)});

@@ -232,53 +232,29 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
 
-    case {'bianciardi', 'bianciardi_coarse', 'bianciardi_fmriprep20', 'bianciardi_coarse_fmriprep20'}
-        savefile='bianciardi_coarse_MNI152NLin2009cAsym_atlas_object.mat';
+    case {'bianciardi', 'bianciardi_fmriprep20'}
+        savefile='bianciardi_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'bianciaAtlas';
         docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym',false);
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym');
+        
+    case {'bianciardi_fsl6'}
+        savefile='bianciardi_MNI152NLin6Asym_atlas_object.mat';
+        varname = 'bianciaAtlas';
+        docreate = true;
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym');
 
-    case {'bianciardi_fine', 'bianciardi_fine_fmriprep20'}
-        savefile='bianciardi_fine_MNI152NLin2009cAsym_atlas_object.mat';
+    case {'bianciardi_2mm', 'bianciardi_fmriprep20_2mm'}
+        savefile='bianciardi_MNI152NLin2009cAsym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
         docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym',true);
-        
-    case {'bianciardi_fsl6', 'bianciardi_coarse_fsl6'}
-        savefile='bianciardi_coarse_MNI152NLin6Asym_atlas_object.mat';
-        varname = 'bianciaAtlas';
-        docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym',false);
-        
-    case {'bianciardi_fine_fsl6'}
-        savefile='bianciardi_fine_MNI152NLin6Asym_atlas_object.mat';
-        varname = 'bianciaAtlas';
-        docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym',true);
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm');
 
-    case {'bianciardi_2mm', 'bianciardi_coarse_2mm', 'bianciardi_fmriprep20_2mm', 'bianciardi_coarse_fmriprep20_2mm'}
-        savefile='bianciardi_coarse_MNI152NLin2009cAsym_2mm_atlas_object.mat';
+    case {'bianciardi_fsl6_2mm'}
+        savefile='bianciardi_MNI152NLin6Asym_2mm_atlas_object.mat';
         varname = 'bianciaAtlas';
         docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',false);
-
-    case {'bianciardi_fine_2mm', 'bianciardi_fine_fmriprep20_2mm'}
-        savefile='bianciardi_fine_MNI152NLin2009cAsym_2mm_atlas_object.mat';
-        varname = 'bianciaAtlas';
-        docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin2009cAsym_2mm',true);
-        
-    case {'bianciardi_fsl6_2mm', 'bianciardi_coarse_fsl6_2mm'}
-        savefile='bianciardi_coarse_MNI152NLin6Asym_2mm_atlas_object.mat';
-        varname = 'bianciaAtlas';
-        docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',false);
-        
-    case {'bianciardi_fine_fsl6_2mm'}
-        savefile='bianciardi_fine_MNI152NLin6Asym_2mm_atlas_object.mat';
-        varname = 'bianciaAtlas';
-        docreate = true;
-        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm',true);
+        create_atlas = @(x1)bianciardi_create_atlas_obj('MNI152NLin6Asym_2mm');
         
     case {'canlab2023_coarse_fmriprep20_2mm', 'canlab2023_coarse_fmriprep20','canlab2023_coarse_2mm', ...
             'canlab2023_fmriprep20_2mm', 'canlab2023_coarse', 'canlab2023_fmriprep20', 'canlab2023_2mm', ...

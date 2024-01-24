@@ -41,10 +41,10 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 % 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
-% 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at coarse (default) or fine scale'
-% 'bianciardi[_coarse|_fine][_fmriprep20|_fsl6]_2mm   
-%                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error.'
+% 'bianciardi[_fmriprep20|_fsl6]   
+%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm sampling resolution'
+% 'bianciardi[_fmriprep20|_fsl6]_2mm   
+%                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.

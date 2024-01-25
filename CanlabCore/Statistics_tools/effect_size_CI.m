@@ -34,6 +34,9 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 %   **'tails', [1 or 2]:**
 %        1 for one-tailed, 2 for two-tailed tests/CIs. Default = 2
 %
+%   **'dfe', [value]:**
+%        Manually entered error degrees of freedom
+%
 % :Outputs:
 %
 %   **d_CI:**
@@ -100,12 +103,13 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 % n = 20;
 % [d_CI1, d_CI2] = deal(zeros(length(dvals), 2));
 % P = [];
+% P2 = []; % 2-group case
 % 
 % for i = 1:length(dvals)
 % 
 %     [d_CI1(i, :), P(i, 1)] = effect_size_CI(dvals(i), n);
 %  
-%     d_CI2(i, :) = effect_size_CI(dvals(i), n, 'n2', n);
+%     [d_CI2(i, :), P2(i, 1)] = effect_size_CI(dvals(i), n, 'n2', n);
 % 
 % end
 % 
@@ -128,6 +132,7 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 % han = errorbar(dvals, dvals, dvals - d_CI2(:, 1), d_CI2(:, 2) - dvals);
 % set(han, 'Color', 'b', 'LineWidth', 0.1)
 % 
+% han = errorbar(dvals(P2 < 0.05), dvals(P2 < 0.05), dvals(P2 < 0.05) - d_CI2(P2 < 0.05, 1), d_CI2(P2 < 0.05, 2) - dvals(P2 < 0.05));
 % xlabel('Effect size (d)');
 % ylabel('Effect size (d) with CIs')
 % title('Two-sample test');
@@ -147,13 +152,6 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 
 
 
-if length(varargin) > 0
-    dfe = varargin{1};
-else
-    dfe = n - 1;
-end
-
-
 % -------------------------------------------------------------------------
 % DEFAULT ARGUMENT VALUES
 % -------------------------------------------------------------------------
@@ -162,6 +160,7 @@ tails = 2;
 method = 'hedges';  % or 'noncentralt'
 alphaval = 0.05;
 n2 = NaN;           % Group 2 sample size for between-groups
+dfe = n - 1;        % Updated if 2 groups, or manual input
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -170,7 +169,7 @@ n2 = NaN;           % Group 2 sample size for between-groups
 % This is a compact way to assign multiple variables. The input argument
 % names and variable names must match, however:
 
-allowable_inputs = {'tails' 'method' 'alphaval' 'n2'};
+allowable_inputs = {'tails' 'method' 'alphaval' 'n2' 'dfe'};
 
 keyword_inputs = {'noncentralt'};
 
@@ -217,7 +216,11 @@ classes = {'numeric'};
 attributes = {'scalar', 'integer', '<=',2,'>=', 1};
 validateattributes(tails,classes,attributes);
 
+if ~isnan(n2) && ~any(strcmp(varargin, 'dfe'))
 
+    dfe = n - 2;
+
+end
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -269,7 +272,12 @@ end % case
 % Get P-value and Confidence interval on P
 
 % Convert d back to p
+if isnan(n2)
 d2p = @(d, n, dfe, tails) tails .* (1 - tcdf(d .* sqrt(n), dfe));
+
+else % 2-group
+    d2p = @(d, n, dfe, tails) tails .* (1 - tcdf(d .* sqrt(n/2), dfe));  % 2-group case
+end
 
 P = d2p(d, n, dfe, tails);
 P_CI = d2p(d_CI, n, dfe, tails);

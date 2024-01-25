@@ -456,6 +456,7 @@ OUT.nsubjects_obj = parcel_data2fmri_data(b.region_atlas, nsubjects);
 resultstable = table;
 resultstable.Properties.Description = 'Parcel-wise robust regression';
 resultstable.maxT = max(OUT.tscores)';
+resultstable.minT = min(OUT.tscores)';
 resultstable.minP = min(OUT.pvalues)';
 
 resultstable.sig05 = sum(OUT.pvalues < 0.05)';

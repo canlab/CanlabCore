@@ -28,6 +28,8 @@ fprintf('Downsampling %s parcels\n', obj.atlas_name);
 
 if isempty(varargin)
     labelfield = 'labels_2';
+elseif ischar(varargin{1})
+    labelfield=varargin{1};
 elseif isvector(varargin{1})
     if length(varargin{1}) ~= num_regions(obj)
         error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
@@ -35,7 +37,7 @@ elseif isvector(varargin{1})
     labelfield='labels';
     obj.lbaels = varargin{1};
 else
-    labelfield = varargin{1};
+    error('Unrecognized input datatype');
 end
 
 % input check
@@ -87,7 +89,7 @@ for i = 1:length(new_lbl_parcels)
     % update progress watcher
     delete_last_chars = length(last_msg);
     fprintf('%s',char(8*ones(1,delete_last_chars)))
-    new_msg = sprintf('Assembling region %d/%d',i,n_reg);
+    new_msg = sprintf('Creating new region %d/%d',i,n_reg);
     fprintf('%s',new_msg);
     last_msg = new_msg;
 
@@ -106,7 +108,7 @@ for i = 2:length(new_parcel)
     % update progress watcher
     delete_last_chars = length(last_msg);
     fprintf('%s',char(8*ones(1,delete_last_chars)))
-    new_msg = sprintf('Adding region %d/%d',i,n_reg);
+    new_msg = sprintf('Merging new region %d/%d',i,n_reg);
     fprintf('%s',new_msg);
     last_msg = new_msg;
 

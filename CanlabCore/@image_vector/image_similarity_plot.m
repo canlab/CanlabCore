@@ -55,6 +55,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        Useful if obj contains one image per subject and you want
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
+%
 %   **Error_STD**
 %       Default setting for error shading plot used standard error of
 %       average images. However, in some cases, standard error is not
@@ -105,7 +106,8 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        each spatial basis); requires group as subsequent input
 %
 %   **group**
-%        Indicates group membership for each image
+%        Indicates group membership for each image as vector, categorical,
+%        or string array
 %
 %   **plotstyle:**
 %            'wedge' [default] or 'polar'
@@ -240,6 +242,9 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %   - Group Variable can now accept categorical
 %   - Plot labels and tables now include significance stars
 %   - 'notable' option now suppresses all tables.
+% 2023/12/19 Lukas Van Oudenhove
+%   - debugged and improved wedge and polarplot code for multiple
+%       groups, see notes in code below for details
 
 % PRELIMINARIES
 % ------------------------------------------------------------------------
@@ -378,7 +383,7 @@ end
 
 if doaverage && strcmp(plotstyle, 'polar') && ~any(strcmp(varargin, 'colors'))
    if exist('group', 'var')
-    groupColors=scn_standard_colors(length(unique(group)))';
+    groupColors = scn_standard_colors(length(unique(group)))';
    else
     groupColors = {[1 0 0]};  % unicolor. can change line and err with 2nd color entry.
    end
@@ -519,7 +524,7 @@ if ~doaverage
                 
                 if bicolor
                     % plot negative values in the complementary color
-                    %groupColors(2) = {[1 1 1] - groupColors{1}};
+                    % groupColors(2) = {[1 1 1] - groupColors{1}};
                     hh = tor_wedge_plot(r, networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
                     
                 else
@@ -577,7 +582,7 @@ elseif doaverage
           
         for i=1:size(z,2) %for each spatial basis do an anova across groups
             
-            [p table_group{i} st]=anova1(z(:,i), group, 'off'); %get anova table
+            [p, table_group{i}, st]=anova1(z(:,i), group, 'off'); %get anova table
             [c,~] = multcompare(st, 'Display', 'off'); %perform multiple comparisons
             multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end)), pValueToStars(c(:,end))]; %format table for output
             
@@ -679,16 +684,27 @@ elseif doaverage
         end
 
         networknames=strcat(networknames, starCellArray');
+        
     end %groups
     
     % Plot (average + error bars)
     % ------------------------------------------------------------
     if ~noplot
-        % groupColors = scn_standard_colors(length(groupValues))'; %
+        % groupColors = scn_standard_colors(length(groupValues))';
+        
         % removed to enable use of user-defined colors. SG 2017/2/7
-        gc=groupColors;
-        groupColors=repmat(groupColors',3,1);
-        groupColors={groupColors{:}};
+        % gc=groupColors;
+        % groupColors=repmat(groupColors',3,1);
+        % groupColors={groupColors{:}};
+        
+        % removed and replaced to debug plotting code below
+        % LVO 2023/12/18
+        gc = groupColors(1:size(groupValues,2));
+        gc_rep = repmat(gc',1,3);
+        gc_toplot = gc_rep(1,:);
+        for c = 2:size(groupValues,2)
+            gc_toplot = [gc_toplot gc_rep(2,:)];
+        end
         
         toplot=[];
         
@@ -696,26 +712,89 @@ elseif doaverage
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
         
-        if dofigure, create_figure('tor_polar'); end
+%         if dofigure, create_figure('tor_polar'); end
         
         switch plotstyle
             case 'wedge'
+                
+                if dofigure, create_figure(); end
+                
                 % --------------------------------------------------
+                % debugged this section LVO 2023/12/19 
+                % PROBLEMS with previous version
+                % - r_group as first argument in tor_wedge_plot on line 732
+                %   represents results for second group only (cfr. loop
+                %   over groups line 635-685), hence for loop over groups
+                %   needed
+                % - groupColors input for 'colors' option is not compatible 
+                %   with 'bicolor' option 
+                % - outercircleradius was defined twice, but main issue is
+                %   that this should not be a range, but one value, 
+                %   which is checked on line 186 of tor_wedge_plot.m, 
+                %   but there is a syntax error there
+                %
+                % Separate plot for each group, otherwise not clear, can be
+                % combined in multi-panel figure as outercircleradius is
+                % the same, created single legend
 
                 if ~dofixRange
-                    outercircleradius = min(1, max(m) + .1*max(m));
+                    outercircleradius = (max(max(m)) - min(min(m)))*0.8;
                 else
-                    outercircleradius = fixedrange;
+                    outercircleradius = (max(fixedrange) - min(fixedrange));
                 end
                 
-                if ~dofixRange
-                    outercircleradius = min(1, max(abs(toplot(:))) + .1*max(abs(toplot(:))));
-                else
-                    outercircleradius = fixedrange;
-                end
+%                 if ~dofixRange
+%                     outercircleradius = min(1, max(abs(toplot(:))) + .1*max(abs(toplot(:))));
+%                 else
+%                     outercircleradius = fixedrange;
+%                 end
                 
                 if bicolor
-                    hh = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
+                    
+                    if exist('compareGroups','var')
+                        
+                        hh = cell(1,size(groupValues,2));
+                        hhfill = cell(1,size(groupValues,2));
+                        names = cell(1,g*2);
+                        for g = 1:size(groupValues,2)
+                            if g == 1
+                                [hh{g},hhfill{g}] = tor_wedge_plot(stats(g).r', networknames, 'outer_circle_radius', outercircleradius, 'colors', gc, 'nofigure', 'bicolor');
+                                ax = gca;
+                                if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                                    ax.Title.String = num2str(groupValues(g));
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{g} = ['positive group ' num2str(groupValues(g))];
+                                    names{g+1} = ['negative group ' num2str(groupValues(g))];
+                                else
+                                    ax.Title.String = groupValues(g);
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{g} = ['positive group ' groupValues(g)];
+                                    names{g+1} = ['negative group ' groupValues(g)];
+                                end
+                            else
+                                [hh{g},hhfill{g}] = tor_wedge_plot(stats(g).r', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors((g*2)-1:(g*2)), 'bicolor');
+                                ax = gca;
+                                if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                                    ax.Title.String = num2str(groupValues(g));
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{(g*2)-1} = ['positive group ' num2str(groupValues(g))];
+                                    names{g*2} = ['negative group ' num2str(groupValues(g))];
+                                else
+                                    ax.Title.String = groupValues(g);
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{(g*2)-1} = ['positive group ' groupValues(g)];
+                                    names{g*2} = ['negative group ' groupValues(g)];
+                                end
+                            end
+                        end
+                        han = makelegend(names,groupColors(1:(g*2)));
+                        
+                    else
+                        [hh,hhfill] = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors(1:2), 'nofigure', 'bicolor');
+                        han = makelegend({'positive' 'negative'},groupColors(1:2));
+                        
+                    end
+                        
                 else
                     error('bicolor is set to 1 by default - this should not happen. debug me.');
                 end
@@ -723,17 +802,21 @@ elseif doaverage
             case 'polar'
                 % --------------------------------------------------
                 
+                if dofigure, create_figure('tor_polar'); end
+                
                 if ~dofixRange
-                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+                    [hh, hhfill] = tor_polar_plot({toplot}, gc_toplot, {networknames}, 'nonneg');
                 else
-                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
+                    [hh, hhfill] = tor_polar_plot({toplot}, gc_toplot, {networknames}, 'nonneg', 'fixedrange', fixedrange);
                 end
 
                 % Make legend
                 if numel(groupValues)>1
-                    % if ~isempty(obj.image_names)
+                    if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                        han = makelegend(num2cell(string(groupValues)), gc);
+                    else
                         han = makelegend(cellstr(groupValues), gc);
-                    % end
+                    end
                 end
                 
                 set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);

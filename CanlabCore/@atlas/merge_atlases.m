@@ -138,8 +138,14 @@ if has_pmaps && toadd_has_pmaps
     end
     
     % concatenating sparse matrices first is much faster than converting to full and the
-    % concatenating full matrices
+    % concatenating full matrices so instead of doing a double conversion
+    % and concatenating, try concatenating sparse matricies if either of
+    % them are sparse and then converting to full
     %atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
+    if issparse(atlas_obj.probability_maps) || issparse(atlas_obj_to_add.probability_maps)
+        atlas_obj.probability_maps = sparse(double(atlas_obj.probability_maps));
+        atlas_obj_to_add.probability_maps = sparse(double(atlas_obj_to_add.probability_maps));
+    end
     atlas_obj.probability_maps = full([atlas_obj.probability_maps atlas_obj_to_add.probability_maps]);
     
     atlas_obj = probability_maps_to_region_index(atlas_obj);

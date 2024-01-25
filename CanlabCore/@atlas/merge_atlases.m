@@ -143,8 +143,12 @@ if has_pmaps && toadd_has_pmaps
     % them are sparse and then converting to full
     %atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
     if issparse(atlas_obj.probability_maps) || issparse(atlas_obj_to_add.probability_maps)
-        atlas_obj.probability_maps = sparse(double(atlas_obj.probability_maps));
-        atlas_obj_to_add.probability_maps = sparse(double(atlas_obj_to_add.probability_maps));
+        if ~issparse(atlas_obj.probability_maps)
+            atlas_obj.probability_maps = sparse(double(atlas_obj.probability_maps));
+        end
+        if ~issparse(atlas_obj_to_add.probability_maps)
+            atlas_obj_to_add.probability_maps = sparse(double(atlas_obj_to_add.probability_maps));
+        end
     end
     atlas_obj.probability_maps = full([atlas_obj.probability_maps atlas_obj_to_add.probability_maps]);
     

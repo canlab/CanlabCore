@@ -323,11 +323,11 @@ else
             latest = which(strrep(savefile,'.mat','.latest'));
         end
         fid = fopen(latest);
-        latest = str2num(char(fread(fid,inf)'));
+        latest = char(fread(fid,inf)');
         fclose(fid);
 
         atlas_obj = load_atlas_from_file(savefile, varname, verbose);
-        if round(latest) ~= round(atlas_obj.additional_info.creation_date)
+        if latest ~= atlas_obj.additional_info.hash
             % evaluation is rounded to the nearest second to deal with
             % floating point issues. If there's an atlas 1s newer availble
             % then it means we rebuild the atlas to get it.

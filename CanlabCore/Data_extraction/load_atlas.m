@@ -258,7 +258,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',2);
 
     case {'canlab2023_coarse_fsl6_2mm', 'canlab2023_coarse_fsl6', 'canlab2023_fsl6_2mm', 'canlab2023_fsl6'}
-        savefile='CANLab2023_MNI152NLin2009cAsym_coarse_2mm_atlas_object.mat';
+        savefile='CANLab2023_MNI152NLin6Asym_coarse_2mm_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','coarse',2);
@@ -270,7 +270,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin2009cAsym','coarse',1);
 
     case {'canlab2023_coarse_fsl6_1mm', 'canlab2023_fsl6_1mm'}
-        savefile='CANLab2023_MNI152NLin2009cAsym_coarse_atlas_object.mat';
+        savefile='CANLab2023_MNI152NLin6Asym_coarse_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','coarse',1);

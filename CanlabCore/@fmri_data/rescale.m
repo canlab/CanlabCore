@@ -28,6 +28,12 @@ function fmridat = rescale(fmridat, meth, varargin)
 %                           *Note: these methods must exclude invalid (0 or
 %                           NaN) voxels image-wise. Some images (but not others) in an
 %                           object may be missing some voxels.
+%     - prctileimages       - Convert image values to percentile scores. This
+%                           normalizes the range and distribution of all
+%                           images. It is like ranking but MUCH faster for
+%                           images with many elements.
+%                           - Normalize each image by number of valid values, so images in set
+%                           will be on the same scale if some are missing voxels
 %
 %     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)
 %     - divide_by_csf_l2norm  divide each image by CSF l2 norm. requires MNI space images for ok results!
@@ -131,6 +137,47 @@ switch meth
         
         fmridat.history{end+1} = 'Ranked images (columns) across voxels';
         
+
+    case 'prctileimages'
+
+        res = 0.1;  
+        
+        newobj = fmridat;
+
+        for i = 1:size(fmridat.dat, 2)
+
+            d = fmridat.dat(:,i);
+
+            % Consider missing voxels, and exclude case-wise (image-wise)
+            ismissing = d == 0 | isnan(d);
+            d(ismissing) = NaN;
+
+            if ~all(d == 0 | isnan(d))
+
+                x = [-Inf prctile(d, 0:res:100)];
+
+                for j = 1:length(x) - 1
+
+                    wh = d <= x(j + 1) & d > x(j);
+                    newobj.dat(wh, i) = j;
+
+                end % bins
+
+                % normalize by number of valid values, so images in set
+                % will be on the same scale if some are missing voxels
+                d = d ./ length(d(~ismissing));
+
+            end % if image has values
+
+        end % images
+
+        newobj.dat(isnan(newobj.dat)) = 0; % Replace with 0 for compatibility with image format
+
+        fmridat = newobj;
+
+        fmridat.history{end+1} = 'Ranked images (columns) across voxels';
+
+
     case 'centerimages'
         
         % center images (observations)

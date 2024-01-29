@@ -29,6 +29,9 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 %   **'noplot'**
 %   Suppress plot output
 %
+%   **'fullplot'**
+%   A more detailed plot of each criterion
+%
 %   **'notimeseries'**
 %   Suppress time series-specific metrics -- use for 2nd-level contrasts or beta series
 %
@@ -91,6 +94,7 @@ dotimeseries = true;    % Adds rmssd/dvars, time series-specific outliers
 doverbose = true;
 verbosestr = 'doverbose';
 doplot = true;
+dobriefplot = true;
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -101,7 +105,7 @@ doplot = true;
 
 allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot'};
 
-keyword_inputs = {'noverbose' 'notimeseries' 'noplot'};
+keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -134,6 +138,10 @@ for i = 1:length(varargin)
                 
             case {'noplot'}
                 doplot = false;
+
+            case 'fullplot'
+                dobriefplot = false;
+
         end
     end
 end
@@ -234,8 +242,8 @@ end
 % Summarize
 % -------------------------------------------------------------------------
 
-est_outliers_uncorr = rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
-est_outliers_corr = rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
+est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
+est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
 
 % Make indicator table
 
@@ -273,18 +281,58 @@ outlier_tables.outlier_regressor_matrix_corr = outlier_tables.outlier_regressor_
 % Plot
 % -------------------------------------------------------------------------
 if doplot
-    
-    hold on;
-    scores = zscore(table2array(score_table));
-    maxscore = nanmax(scores, [], 2);
-    plot(scores, 'ko-', 'MarkerFaceColor', [.5 .8 .5], 'MarkerSize', 4);
-    
-    plot(find(est_outliers_uncorr), maxscore(est_outliers_uncorr), '+', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
-    plot(find(est_outliers_corr), maxscore(est_outliers_corr), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
-    
-    xlabel('Case number');
-    ylabel('Scaled outlier criterion scores');
-    
+
+    if dobriefplot
+        hold on;
+        scores = zscore(table2array(score_table));
+        maxscore = nanmax(scores, [], 2);
+        plot(scores, 'k.-'); %, 'MarkerSize', 4);
+
+        plot(find(est_outliers_uncorr), maxscore(est_outliers_uncorr), '+', 'color', [1 .3 .3], 'MarkerSize', 4, 'LineWidth', 2, 'MarkerFaceColor', [.5 .25 0]);
+        plot(find(est_outliers_corr), maxscore(est_outliers_corr), 'ro', 'MarkerSize', 6, 'LineWidth', 2, 'MarkerFaceColor', [1 .5 0]);
+
+        xlabel('Case number');
+        ylabel('Scaled outlier criterion scores');
+
+    else % full plot
+        create_figure('plot', 3, 2);
+        plot(score_table.globalmean); plot(find(global_mean_outliers), score_table.globalmean(find(global_mean_outliers)), 'ro', 'MarkerFaceColor', 'r');
+        title('Global mean')
+
+        subplot(3, 2, 2)
+        plot(global_mean_to_var); plot(find(global_mean_to_variance_outliers), global_mean_to_var(find(global_mean_to_variance_outliers)), 'ro', 'MarkerFaceColor', 'r');
+        title('Global mean to var')
+
+        subplot(3, 2, 3)
+        x = spatialmad;
+        wh = spatialmad_outliers;
+        plot(x); plot(find(wh), x(find(wh)), 'ro', 'MarkerFaceColor', 'r');
+        title('Spatialmad')
+
+        subplot(3, 2, 4)
+        x = mahalcov;
+        wh = mahal_cov_outlier_corr;
+        plot(x); plot(find(wh), x(find(wh)), 'ro', 'MarkerFaceColor', 'r');
+        title('Mahal cov')
+
+        subplot(3, 2, 5)
+        x = rmssd;
+        wh = rmssd_outliers;
+        plot(x); plot(find(wh), x(find(wh)), 'ro', 'MarkerFaceColor', 'r');
+        title('RMSSD')
+        xlabel('Case number');
+
+
+        subplot(3, 2, 6)
+        x = mahalcorr;
+        wh = mahal_corr_outlier_corr;
+        plot(x); plot(find(wh), x(find(wh)), 'ro', 'MarkerFaceColor', 'r');
+        title('Mahal corr')
+        xlabel('Case number');
+
+    end
+
+
 end
 
 end % main function

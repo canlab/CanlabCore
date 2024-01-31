@@ -279,7 +279,9 @@ for i = 1:length(varargin)
             case 'transcontrast'
                 k = varargin{i+1};
                 enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
-
+            
+            case {'full','full hcp','full2'}
+                continue
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

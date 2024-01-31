@@ -35,7 +35,7 @@ elseif isvector(varargin{1})
         error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
     end
     labelfield='labels';
-    obj.lbaels = varargin{1};
+    obj.labels = varargin{1};
 else
     error('Unrecognized input datatype');
 end
@@ -128,5 +128,7 @@ end
 for ind = rm_lbl_ind(:)'
     new_atlas_obj.(valid_lbls{ind}) = {};
 end
+
+new_atlas.references = unique(new_atlas.references,'rows');
 
 end

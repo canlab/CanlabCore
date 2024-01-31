@@ -129,6 +129,6 @@ for ind = rm_lbl_ind(:)'
     new_atlas_obj.(valid_lbls{ind}) = {};
 end
 
-new_atlas.references = unique(new_atlas.references,'rows');
+new_atlas_obj.references = unique(new_atlas_obj.references,'rows');
 
 end

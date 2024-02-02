@@ -256,7 +256,7 @@ for i = 1:length(varargin)
                 
                 % contour options
             case 'contour', docontour = 1;
-            case 'outline', docontour = 1; outline = 1;
+            case 'outline', outline = 1; % docontour = 1;
             case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this.
             case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time. This doesn't work with 'splitcolor', though.
             case 'linewidth', mylinewidth = varargin{i + 1};
@@ -502,7 +502,15 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 else
                     
                     % new matlab graphics:
-                    set(h, 'FaceColor', color);
+%                     set(h, 'FaceColor', color);
+
+                    % Michael Sun Adjustment 12/8/2023 to make contours
+                    % more flexible:
+                    set(h, 'LineWidth', mylinewidth, 'EdgeColor', edgecolor);
+                    if ~dofill
+                        set(h, 'Fill', 'off')
+                    end
+
                     
                 end
                 

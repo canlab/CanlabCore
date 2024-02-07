@@ -283,7 +283,12 @@ switch colortype
             end
             
             if dozoom
-                zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+                wh = ismember(varargin,{'axial','saggital','coronal'});
+                if any(wh)
+                    zoom_in_on_regions(o2, obj, varargin{wh});
+                else
+                    zoom_in_on_regions(o2, obj, 'axial'); 
+                end
             end
             
             drawnow

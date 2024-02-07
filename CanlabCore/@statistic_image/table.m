@@ -1,4 +1,4 @@
-function r = table(t, varargin)
+function [r, t] = table(t, varargin)
 %
 % Create and print a table of labeled regions from thresholded statistic_image object t.
 %
@@ -75,7 +75,7 @@ if size(t.dat, 2) > 1
     
 end
 
-[r_pos, r_neg] = table(region(t), varargin{:});
+[r_pos, r_neg, t] = table(region(t), varargin{:});
 
 r = [r_pos r_neg];
 

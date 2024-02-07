@@ -200,6 +200,7 @@ doremove = true;
 outlinecolor = [0 0 0];
 splitcolor = {[0 0 1] [0 .8 .8] [1 .4 .5] [1 1 0]}; % {[0 0 1] [.3 .6 .9] [.8 .3 0] [1 1 0]};  % more straight orange to yellow: {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}
 montagetype = 'compact';
+orientation = 'axial';
 doverbose = true;
 %overlay='SPM8_colin27T1_seg.img';
 % overlay = 'fmriprep20_template.nii.gz';
@@ -240,12 +241,6 @@ if any(wh), montagetype = varargin{find(wh)};
         varargin(wh) = [];
 end
 
-wh = strcmp(varargin, 'blobcenters');
-if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
-
-wh = strcmp(varargin, 'regioncenters');
-if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
-
 wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
@@ -266,6 +261,26 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'allslices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+% if these are run before coronal/saggital arguments are parsed they will
+% overwrite the blob/regioncenters argument, so run these last.
+wh = strcmp(varargin, 'blobcenters');
+if any(wh)
+    if ismember(montagetype,{'coronal','saggital'})
+        orientation = montagetype;
+    end
+    montagetype = varargin{find(wh)}; 
+    varargin(wh) = []; 
+end
+
+wh = strcmp(varargin, 'regioncenters');
+if any(wh)
+    if ismember(montagetype,{'coronal','saggital'})
+        orientation = montagetype;
+    end
+    montagetype = varargin{find(wh)}; 
+    varargin(wh) = []; 
+end
 
 wh = strcmp(varargin, 'noverbose');
 if any(wh), doverbose = false; end
@@ -329,7 +344,6 @@ if ~exist('o2', 'var')
             %           onerowstr = [];
             %           if length(cl) < 20, onerowstr = 'onerow'; end
             
-            orientation = 'axial';
             
             % Make a grid - determine subplots
             nr = floor(sqrt(length(cl)));

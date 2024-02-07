@@ -37,6 +37,10 @@ function write(obj, varargin)
 %   **overwrite:**
 %        Force overwrite of existing file. Use with caution!
 %
+%   **'nan':**
+%        By default, out-of-brain voxels are indicated by 0. With this
+%        flag, out-of-brain voxels are indicated by NaN.
+%
 % :Examples:
 % ::
 %
@@ -131,13 +135,13 @@ if any(strcmp(varargin, 'mni'))
 end
 
 % Keep original dt option -- added Luk[ea]
+% Write NaNs instead of 0s -- added Yoni
 
-if any(strcmp(varargin,'keepdt'))
-    iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath, 'keepdt');
-else
-    iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath);
-end
+opts = {};
+if any(strcmp(varargin,'keepdt')), opts{end+1} = 'keepdt'; end
+if any(strcmp(varargin,'nan')), opts{end+1} = 'nan'; end
 
+iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath, opts{:});
 
 fprintf('Writing: \n%s\n', obj.fullpath);
 

@@ -40,7 +40,6 @@ for i = 1:length(varargin)
             
             case 'always_replace', always_replace = true; varargin{i} = [];
             case 'noreplace', doreplacevoxels = false; varargin{i} = [];
-            case 'noverbose', doverbose = false; varargin{i} = [];
                 
             otherwise , warning(['Unknown input string option:' varargin{i}]);
         end
@@ -51,12 +50,11 @@ end
 % Subset
 % -------------------------------------------------------------------------
 
-if ~isempty(varargin) && any(cellfun(@isvector, varargin) | cellfun(@iscell, varargin))
+if ~isempty(varargin) && any(cellfun(@isvector, varargin) || cellfun(@iscell, varargin))
     
     if doverbose, disp('Getting atlas subset with select_atlas_subset'); end
     
-    args = varargin(cellfun(@isvector, varargin) | cellfun(@iscell, varargin));
-    atlas_obj_to_add = select_atlas_subset(atlas_obj_to_add, args{:});
+    atlas_obj_to_add = select_atlas_subset(atlas_obj_to_add, varargin{:});
     
 end
 
@@ -137,20 +135,7 @@ if has_pmaps && toadd_has_pmaps
         atlas_obj_to_add.probability_maps(wh, :) = 0;
     end
     
-    % concatenating sparse matrices first is much faster than converting to full and the
-    % concatenating full matrices so instead of doing a double conversion
-    % and concatenating, try concatenating sparse matricies if either of
-    % them are sparse and then converting to full
-    %atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
-    if issparse(atlas_obj.probability_maps) || issparse(atlas_obj_to_add.probability_maps)
-        if ~issparse(atlas_obj.probability_maps)
-            atlas_obj.probability_maps = sparse(double(atlas_obj.probability_maps));
-        end
-        if ~issparse(atlas_obj_to_add.probability_maps)
-            atlas_obj_to_add.probability_maps = sparse(double(atlas_obj_to_add.probability_maps));
-        end
-    end
-    atlas_obj.probability_maps = full([atlas_obj.probability_maps atlas_obj_to_add.probability_maps]);
+    atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
     
     atlas_obj = probability_maps_to_region_index(atlas_obj);
     

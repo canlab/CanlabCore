@@ -101,21 +101,34 @@
 % Creating class instances
 % -----------------------------------------------------------------------
 % You can create an empty object by using:
-% b = brainpathways();
-% 
-% You can assign optional inputs with the following fields, followed by
-% data for the relevant field:
-% - any atlas_class object
-% 'voxel_dat'   
-% 'node_dat'    
-% 'region_dat'    
-% 'network_dat'    
-% 'partition_dat' 
-% 'node_weights'    
-% 'connectivity'    
-% 'connections_apriori'    
-% 'additional_info'
-%             
+% fmri_dat = fmri_data
+% - fmri_dat is the object.
+% - It will be created with a standard brain mask, brainmask.nii
+% - This image should be placed on your Matlab path
+% - The space information is stored in fmri_dat.volInfo
+% - Data is stored in fmri_dat.dat, in a [voxels x images] matrix
+% - You can replace or append data to the fmri_dat.dat field.
+%
+% You can create an object by assembling an image_vector object from parts
+% (entering fields) and converting using fmri_obj = fmri_data(image_vec_obj)
+%
+% You can create an fmri_data object with extacted image data.
+% - Let "imgs" be a string array or cell array of image names
+% - This command creates an object with your (4-D) image data:
+% - fmri_dat = fmri_data(imgs);
+% - Images can be zipped (.gz) as well. fmri_data() will unpack them.
+% - Only values in the standard brain mask, brainmask.nii, will be included.
+% - This saves memory by reducing the number of voxels saved dramatically.
+%
+% You can specify any mask you'd like to extract data from.
+% - Let "maskimagename" be a string array with a mask image name.
+% - this command creates the object with data saved in the mask:
+% - fmri_dat = fmri_data(imgs, maskimagename);
+% - The mask information is saved in fmri_dat.mask
+%
+% e.g., this extracts data from images within the standard brain mask:
+% dat = fmri_data(imgs, which('brainmask.nii'));
+%
 % Defining the space of the extracted data
 % -----------------------------------------------------------------------
 % Note: There are two options for defining the space (i.e., coordinates/voxels)
@@ -272,7 +285,7 @@ classdef brainpathway < handle
             % allowable_inputs = properties(brainpathway)';       % should
             % be row cell vector of property names. This is recursive if we
             % do this though...
-            allowable_inputs = {'region_atlas'  'voxel_dat'    'node_dat'    'region_dat'    'network_dat'    'partition_dat' 'node_weights'    'connectivity'    'connections_apriori'    'additional_info'};
+            allowable_inputs = {'region_atlas'    'voxel_dat'    'node_dat'    'region_dat'    'network_dat'    'partition_dat' 'node_weights'    'connectivity'    'connections_apriori'    'additional_info'};
             
             % optional inputs with default values - each keyword entered will create a variable of the same name
             
@@ -314,7 +327,7 @@ classdef brainpathway < handle
                 
                 switch class(varargin{i})
                     
-                    case {'atlas'}, obj.region_atlas = varargin{i}; % input_atlas = true;
+                    case 'atlas', obj.region_atlas = varargin{i}; % input_atlas = true;
                         
                     case 'char'
                         switch varargin{i}

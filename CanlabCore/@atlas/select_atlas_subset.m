@@ -14,11 +14,8 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Options:
 % 'flatten' : Flatten integer vector in .dat to a single 1/0 mask. Good for
 % creating masks from combinations of regions, or adding a set to another
-% atlas as a single atlas region. .probability_maps is reestimated as
-% posterior probability of union of constituent regions under conditional 
-% independence assumption. If probability maps don't sum to 1 across voxels
-% then conditional independence assumption is violated and we default to
-% using the maximum probability instead.
+% atlas as a single atlas region. .probability_maps reduced to single max
+% map
 %
 % 'labels_2' : If you enter any field name in the object, e.g., labels_2,
 % the function will search for keyword matches here instead of in obj.labels.
@@ -235,25 +232,10 @@ if doflatten
     % this is wrong. Consider, you could have a voxel that has 50% 
     % probability of being voxel A and 50% probability of being voxel B.
     % the max value is %50, but the probability that it's one or the other
-    % must be 100%. Let's check if it's safe to assume conditional 
-    % independence instead.
-    %
-    % We don't know if the atlas labels are exhaustive, but if the sum of
-    % atlas label probabilities exceeds 1 we can conclude that P(A,B) ~=
-    % P(A) + P(B), because the total density must sum to 1 to be a valid
-    % probability measure. We check if probabilities exceed 1 with some
-    % tolerance to deal with floating point errors.
-    hasdata = any(obj.probability_maps,2);
-    tol = 1e-7;
-    if all(sum(obj.probability_maps(hasdata,:), 2) - 1 < tol)
-        obj_subset.probability_maps = sum(obj_subset.probability_maps, 2);
-    else
-        % we have evidence that probabilities are not conditionally
-        % independent
-        warning('Probabilities don''t sum to 1, so cannot assume condition independence. New map will use maximum probability instead of sum of probabilities.')
-        obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
-    end
-
+    % must be 100%. Let's try assuming conditional independence instead.
+    % There are a number of assumptions we need to make for a better
+    % solution though, so let this be the default
+    obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
     
     % Add labels for combined mask
     

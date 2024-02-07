@@ -142,9 +142,6 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
 %    Programmer's notes:
 %    9/2/09: Tor and Lauren: Edited to drop NaNs within-subject, and drop
 %    subject only if there are too few observations to estimate.
-%    
-%    1/9/2024: Tor : minor bug fix checking 2nd-level with missing
-%    subjects; no effect on performance/validity
 % ..
 
  % Convert from matrix form to cells
@@ -200,20 +197,18 @@ function stats = glmfit_multilevel(Y, X1, X2, varargin)
      %if any(isnan(Y{i})) || any(isnan(X1{i}(:))), wh_omit(i) = 1; end
     
     can_be_nans = length(Y{i}) - k - 1;  % up to this many can be NaN, still leaving 1 degree of freedom
-    if can_be_nans < 0
-        warning('Warning: your model might be overparameterized!  Seems like you have more predictors than observations for 1+ 2nd-level units'); 
-    end
+    if can_be_nans < 0, warning('Warning: you might be overparameterized!  Seems like you have more predictors than observations'); end
     if sum(isnan(Y{i}) | any(isnan(X1{i}), 2)) > can_be_nans
       wh_omit(i) = 1; 
     end
   end
 
   if any(wh_omit)
-%     if isempty(X2), X2 = ones(N, 1); end  THIS IS NOW done later in setup_X_matrix
+    if isempty(X2), X2 = ones(N, 1); end
     
     Y(wh_omit) = [];
     X1(wh_omit) = [];
-    if ~isempty(X2), X2(wh_omit, :) = []; end
+    X2(wh_omit, :) = [];
     N = length(Y);
   end
 

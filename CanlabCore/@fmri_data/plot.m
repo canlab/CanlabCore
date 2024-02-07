@@ -177,7 +177,7 @@ dorunmeanmontages = true;
 
 allowable_inputs = {'plotmethod' 'doorthviews' 'dooutliers' 'dorunmeanmontages'};
 
-keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'nomontages' 'montage' 'montages' 'means_for_unique_Y'};
+keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'montage' 'montages' 'means_for_unique_Y'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -210,7 +210,7 @@ for i = 1:length(varargin)
 
             case 'nooutliers', dooutliers = false;
 
-            case {'norunmontages', 'nomontages'}, dorunmeanmontages = false;
+            case 'norunmontages', dorunmeanmontages = false;
 
             case {'montage' 'montages'}, plotmethod = 'montages'; % montages only
 
@@ -231,7 +231,7 @@ end
 switch plotmethod
     %  ==============================================================
     case 'data'
-    %  ==============================================================
+        %  ==============================================================
 
         if isempty(fmridat.dat)
             warning('No data in .dat field.');
@@ -385,7 +385,7 @@ switch plotmethod
         drawnow
 
         % ---------------------------------------------------------------
-        % Global mean vs. image series (i.e., time)
+        % Global mean vs. time
         % ---------------------------------------------------------------
         if size(fmridat.dat,2) > 1
 

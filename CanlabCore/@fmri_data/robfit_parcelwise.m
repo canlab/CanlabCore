@@ -50,12 +50,6 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %   **'doplot', [logical flag]:
 %        Create plots; default = true. 'noplot' to turn off.
 %
-%   **'plotdiagnostics', [logical flag]:
-%        Create diagnostic plots; default = true.
-%
-%   **'simpleplots', [logical flag]:
-%        Create simple results plots with no surfaces; default = false.
-%
 %   **'doverbose', [logical flag]:
 %        Verbose output; default = true. 'noverbose' to turn off.
 %
@@ -69,12 +63,11 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %        default = false 
 %
 %   **'mask', [atlas_object]
-%       Perform analysis in parcels defined by a custom atlas object
+%       Perform analysis in a subset of parcels rather than all parcels in
 %       canlab_2018 atlas, or in any different atlas or a subset thereof
 %           NOTE: in this case, the output will not contain 489 parcels but
 %           a different number
 %
-%   **'atlas', [atlas_object]
 %
 % :Outputs:
 %
@@ -179,15 +172,9 @@ if isempty(which('mafdr')), error('Sorry, you need the Matlab bioinformatics too
 
 % Load parcel atlas and initalize object
 if ~isempty(ARGS.mask)
-
-
-        b = brainpathway(ARGS.mask,'noverbose'); % added by Lukas
-
-
+    b = brainpathway(ARGS.mask,'noverbose'); % added by Lukas
 else
-
-        b = brainpathway('noverbose');
-
+    b = brainpathway('noverbose');
 end
 
 % Make image space match atlas space
@@ -383,14 +370,10 @@ for i = 1:v
         w = naninsert(wasnan, stats.w);
         
     else
-        % empty voxel/region: not enough data
-        %         disp('THIS CODE SHOULD NEVER RUN B/C EXCLUDING BAD VOXELS ABOVE');
-        % but sometimes missing regions, maybe if data are
-        %         resampled to mask/atlas space and there are missing vox
-
+        % empty voxel: not enough data
+        disp('THIS CODE SHOULD NEVER RUN B/C EXCLUDING BAD VOXELS ABOVE');
         bb = NaN .* ones(k, 1);
-        stats = struct('t', bb, 'p', ones(k, 1), 'dfe', NaN);
-        N = length(wasnan);
+        stats = struct('t', bb, 'p', ones(k, 1));
         w = NaN .* ones(N, 1);
         
     end
@@ -501,7 +484,6 @@ OUT.nsubjects_obj = parcel_data2fmri_data(b.region_atlas, nsubjects);
 resultstable = table;
 resultstable.Properties.Description = 'Parcel-wise robust regression';
 resultstable.maxT = max(OUT.tscores)';
-resultstable.minT = min(OUT.tscores)';
 resultstable.minP = min(OUT.pvalues)';
 
 resultstable.sig05 = sum(OUT.pvalues < 0.05)';
@@ -542,11 +524,6 @@ if doverbose
     
 end
 
-if doplots && simpleplots
-    OUT.t_obj.image_labels = names;
-    montage(OUT.t_obj, 'noverbose');
-end
-
 for i = 1:k
     
     if doverbose
@@ -555,15 +532,10 @@ for i = 1:k
     
     if doplots && ~isinf(OUT.pthr_FDRq05(i)) % if we have some results to show
         
-        if simpleplots
-%             o2 = canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'compact2', 'noverbose');
-%             o2 = title_montage(o2, 1, names{i});
-        else
-            canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
-            set(gcf, 'Name', names{i}, 'NumberTitle', 'off');
-        end
-
-           
+        canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
+        
+        set(gcf, 'Name', names{i}, 'NumberTitle', 'off');
+        
     end
     
     if doverbose
@@ -613,14 +585,13 @@ if doverbose
 
     whbadweights = y < 0.85;
     disp('Cases with mean rob reg weight < 0.85 (low weights), possible bad data:');
-    
+    find(whbadweights)'
+
     if ~isempty(imgs.metadata_table)
         bad_t = (imgs.metadata_table(whbadweights, :));
         bad_t = addvars(bad_t, y(whbadweights), 'Before', 1, 'NewVariableNames', 'Global_weight');
         bad_t = sortrows(bad_t, 'Global_weight', 'ascend');
         disp(bad_t)
-    else
-        find(whbadweights)'
     end
 
 end % verbose
@@ -771,11 +742,6 @@ p.addParameter('csf_wm_covs', false, valfcn_scalar);
 p.addParameter('remove_outliers', false, valfcn_scalar);
 p.addParameter('mask', {}, valfcn_atlas); % added by Lukas
 p.addParameter('plotdiagnostics', true, valfcn_scalar);
-
-p.addParameter('simpleplots', false, valfcn_scalar);
-
-
-% p.addParameter('atlas', [], @(x) isa(x, 'atlas'));
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------

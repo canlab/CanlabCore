@@ -34,8 +34,8 @@ ihbdfl_tal_z_vox = 1;
 %----------------------------------------------------------------------------------
 % Prepare MNI volume data xMNI, yMNI, zMNI, and volMNI
 %----------------------------------------------------------------------------------
-rMin = min(clOut.XYZmm',[],1);
-rMax = max(clOut.XYZmm',[],1);
+rMin = min(clOut.XYZmm');
+rMax = max(clOut.XYZmm');
 voxMNI = clOut.voxSize;
 
 % make all voxMNI positive: Correct bug with negative x voxel size

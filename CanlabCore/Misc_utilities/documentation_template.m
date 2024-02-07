@@ -296,20 +296,6 @@ end
 
 validateattributes(X,{'numeric'},{'2d'},'plot_correlation_matrix','X', 1);
 
-classes = {'numeric'};
-attributes = {'size',[4,6,2]};
-
-A = rand(3,5,2);
-validateattributes(A,classes,attributes)
-
-% make sure input has a value of 1 or 2
-A = 2
-classes = {'numeric'};
-attributes = {'scalar', 'integer', '<=',2,'>=', 1};
-validateattributes(A,classes,attributes)
-
-
-
 logical_args = {'dofdr' 'false' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext'};
 for i = 1:length(logical_args)
     

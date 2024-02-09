@@ -31,6 +31,9 @@ function gKWYs=spmify(obj, SPM)
     % See also: fmri_data, spm_filter
     % Michael Sun, Ph.D. 02/09/2024
 
+    if ischar(SPM) || isstring(SPM)
+        load(SPM);
+    end
 
     K=SPM.xX.K;
     runs_expected=numel(K);

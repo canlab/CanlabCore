@@ -99,6 +99,7 @@ function gKWYs=spmify(obj, SPM)
     for j = 1:length(KWY)
         for i = 1:size(KWY{j}, 1)
             gKWYs{j}(:, i) = KWY{j}(i, :) * SPM.xGX.gSF(i + offset);
+            gKWYs{j}=single(gKWYs{j});
         end
         offset = offset + size(KWY{j}, 1);
     end

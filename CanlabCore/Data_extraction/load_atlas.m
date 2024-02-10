@@ -46,6 +46,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm sampling resolution'
 % 'bianciardi[_fmriprep20|_fsl6]_2mm   
 %                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
+% 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -225,6 +226,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
 
+    case {'cartmell_nac', 'cartmell_nac_fmriprep20'}
+        savefile='NAcCoreShell_MNI152NLin2009cAsym_atlas_object.mat';
+        varname='atlas_obj';
+        
+    case 'cartmell_nac_fsl6'
+        savefile='NAcCoreShell_MNI152NLin6Asym_atlas_object.mat';
+        varname='atlas_obj';
+        
     case {'bianciardi', 'bianciardi_fmriprep20'}
         savefile='bianciardi_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'bianciaAtlas';

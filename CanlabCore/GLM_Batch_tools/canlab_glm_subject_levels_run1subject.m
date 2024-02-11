@@ -114,7 +114,7 @@ else
         
         %% CONCATENATION (if desired)
         vol_cnts = cellfun(@length, runs3d); % tallies number of volumes per scan into a 1 x length(DSGN.concatenation) matrix
-        vol_cnts = vol_cnts(vol_cnts > 0);
+        vol_cnts = vol_cnts(vol_cnts(~cellfun(@isempty,onsets) & ~cellfun(@isempty,durations)) > 0);
         if ~isempty(DSGN.concatenation)
             diary(diaryfile), fprintf('%sCONCATENATING data according to DSGN.concatenation:\n',z), diary off
             try          
@@ -437,6 +437,9 @@ function [runs3d names onsets durations pmods multipleregressors] = concatdata(D
 
 
 emptyruns = find(cellfun('isempty',oldruns));
+emptyons = find(~ismember(1:length(oldruns), find(~cellfun(@isempty, oldonsets))));
+emptydurs = find(~ismember(1:length(oldruns), find(~cellfun(@isempty, olddurations))));
+emptyruns = unique([emptyruns, emptyons, emptydurs]);
 if DSGN.allowmissingfunc && ~isempty(emptyruns)        
     i=1;
     for c = 1:numel(DSGN.concatenation)
@@ -594,7 +597,7 @@ end
 % add rest of stuff
 catruns = cell2mat(concat);
 for r = 1:numel(oldruns)
-    if ~any(catruns == r) && ~isempty(oldruns{r})
+    if ~any(catruns == r) && ~ismember(r, emptyruns)
         fprintf ('%s\tsession %d is run(s): %3d\n',z,numel(runs3d)+1,r)        
         runs3d{end+1} = oldruns3d{r}; %#ok
         names{end+1} = oldnames{r}; %#ok

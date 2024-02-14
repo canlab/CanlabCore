@@ -47,7 +47,9 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %   **thresh_type:**
 %        Threshold type which can be one of:
 %          - 'fdr' : FDR-correct based on p-values already stored in image .p field
-%          - 'fwe' : FWE-correct; not implemented
+%          - 'fwe' : FWE-correct using SPM GRF. Must pass in residual
+%          images (as first varargin) and degrees of freedom (...., 'df',
+%          df). See example below.
 %          - 'bfr' : Bonferroni correction (FWE).
 %          - 'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
 %          - 'extent', 'cluster_extent' : Cluster extent correction with GRF at p < .05 corrected, 
@@ -115,6 +117,7 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 
 k = 1;
 doverbose = 1;
+df = NaN;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -181,6 +184,9 @@ for i = 1:length(varargin)
                 %
                 %                 resid_image_obj = varargin{i + 1}; varargin{i + 1} = [];
                 
+            case 'df' % for use in FWE correction
+                df = varargin{i + 1};
+            
             otherwise
                 error('Illegal argument keyword.');
         end
@@ -189,7 +195,7 @@ end
 
 % Extent thresholding
 switch thresh_type
-    case {'extent', 'cluster_extent'}
+    case {'extent', 'cluster_extent', 'fwe'}
         
         resid_image_obj = varargin{1};
         
@@ -220,9 +226,29 @@ for i = 1:n
             fprintf('Image %3.0f FDR q < %3.3f threshold is %3.6f\n', i, input_threshold, thresh(i));
             stats_image_obj.threshold(i) = thresh(i);
             
-        case 'fwe'
-            error('not implemented yet.')
-            
+        case 'fwe' % Jan 2024: added by Yoni Ashar
+
+            % Write mask image to disk - we will remove after threshold determination
+            extent_mask = stats_image_obj;
+            extent_mask.fullpath = fullfile(pwd, 'tmp_mask_img_remove_me.nii');
+            write(extent_mask);
+
+            % Write standardized residuals to disk - we will remove after threshold determination
+
+            % determine how many residuals to write. SPM default max is 64, we
+            % follow that convention here
+
+            % find indices of residuals to sample (if not using all of
+            % them). Sample across observations. see spm_spm lines 512, 535
+            nScan = size(resid_image_obj.dat, 2);
+            nSres = min(nScan, spm_get_defaults('stats.maxres')); % number of standarized residuals
+            iRes = round(linspace(1,nScan,nSres))';              % Indices for residual 
+
+            resid_image_obj.image_names = 'tmp_resid_imgs_remove_me.nii';
+            resid_image_obj.fullpath = fullfile(pwd, resid_image_obj.image_names);
+            write(resid_image_obj);
+
+                        
         case {'bfr', 'bonferroni'} % 7/19/2013: added by Wani Woo.
             thresh(i) = input_threshold/size(stats_image_obj.p,1);
             stats_image_obj.threshold(i) = thresh(i);

@@ -48,8 +48,15 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %        Threshold type which can be one of:
 %          - 'fdr' : FDR-correct based on p-values already stored in image .p field
 %          - 'fwe' : FWE-correct using SPM GRF. Must pass in residual
-%          images (as first varargin) and degrees of freedom (...., 'df',
-%          df). See example below.
+%          images from model (as first varargin) and degrees of freedom (...., 'df',
+%          df). FWE correction will be conducted inside
+%          the statistic_image. You may choose to mask that before calling this function to correct
+%          within an ROI (eg, as opposed to whole brain). See example
+%          below. Note that while SPM provides one-tailed behavior by
+%          default, the implementation here is two-tailed by default, for
+%          consistency with other thresholding methods. To achieve
+%          one-tailed behavior, double your input threshold and then only
+%          interpret results in one direction.
 %          - 'bfr' : Bonferroni correction (FWE).
 %          - 'unc' : Uncorrected p-value threshold: p-value, e.g., .05 or .001
 %          - 'extent', 'cluster_extent' : Cluster extent correction with GRF at p < .05 corrected, 
@@ -88,6 +95,12 @@ function stats_image_obj = threshold(stats_image_obj, input_threshold, thresh_ty
 %
 %    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', which('scalped_avg152T1_graymatter_smoothed.img'));
 %    dat = threshold(dat, 0.001, 'unc', 'k', 35, 'mask', maskobj);
+%
+%    %% FWE Example %%
+%    out = regress(dat, 'residual');
+%    df = mean(out.df.dat);
+%    out.t = apply_mask(out.t, fmri_data('RVM.nii')); % to correct within RVM
+%    thr = threshold(out.t, .1, 'fwe', out.resid, 'df', df); % one-tailed test at .05 for increases within RVM
 %
 % Here is a complete example using simulated data.  First, we load a
 % canonical network and generate true-signal areas. Second, do a t-test on the simulated images.
@@ -230,24 +243,69 @@ for i = 1:n
 
             % Write mask image to disk - we will remove after threshold determination
             extent_mask = stats_image_obj;
+            extent_mask.dat = ones(size(extent_mask.dat, 1), 1);
             extent_mask.fullpath = fullfile(pwd, 'tmp_mask_img_remove_me.nii');
-            write(extent_mask);
+            write(extent_mask, 'overwrite'); % b/c 'thresh' is not passed, will write all vox
 
-            % Write standardized residuals to disk - we will remove after threshold determination
-
-            % determine how many residuals to write. SPM default max is 64, we
-            % follow that convention here
-
+            % Standardize the residuals. Compute SSQ for each voxel. Note
+            % that, following SPM, this is computed across ALL the
+            % residuals even though we may only use a subset for estimating smoothness.
+            % See spm_spm line 611
+            ResSS = sum(resid_image_obj.dat' .^ 2)'; %-Residual SSQ
+            
+            % determine how many residuals to use. SPM default max is 64.
+            nScan = size(resid_image_obj.dat, 2);
+            nSres = min(nScan, spm_get_defaults('stats.maxres')); 
+            
             % find indices of residuals to sample (if not using all of
             % them). Sample across observations. see spm_spm lines 512, 535
-            nScan = size(resid_image_obj.dat, 2);
-            nSres = min(nScan, spm_get_defaults('stats.maxres')); % number of standarized residuals
             iRes = round(linspace(1,nScan,nSres))';              % Indices for residual 
 
-            resid_image_obj.image_names = 'tmp_resid_imgs_remove_me.nii';
-            resid_image_obj.fullpath = fullfile(pwd, resid_image_obj.image_names);
-            write(resid_image_obj);
+            % Write standardized residuals to disk - we will remove after threshold determination
+            for j = iRes'
+                myresid = get_wh_image(resid_image_obj, j);
+                myresid.dat = myresid.dat ./ sqrt(ResSS/df);
 
+                myresid.fullpath = fullfile(pwd, ['tmp_standardized_resid_img_' sprintf('%03d',j) '.nii']);
+                write(myresid, 'overwrite');
+            end
+            
+            % estimate smoothness of standardized residuals
+            % and make a mask of residuals, to estimate smoothness within
+            resid_mask = get_wh_image(resid_image_obj, 1); % choose one at random
+            resid_mask.dat = ones(size(resid_mask.dat, 1), 1); % convert to mask
+            write(resid_mask, 'fname', fullfile(pwd, 'tmp_resid_mask_img_remove_me.nii'), 'overwrite'); % b/c 'thresh' is not passed, will write all vox
+
+            resid_img_fnames = filenames(fullfile(pwd, 'tmp_standardized_resid_img_*.nii'), 'char');
+            FWHM = spm_est_smoothness(resid_img_fnames, 'tmp_resid_mask_img_remove_me.nii',[nScan df]);
+
+            % determine how many resels in mask
+            R = spm_resels(FWHM , spm_vol(extent_mask.fullpath), 'I');
+
+            % find FWE corrected threshold for this number of resels
+            % SPM is one-tailed by default, but
+            % the p values in statistic_image objects are unsigned
+            % (two-tailed). So, we need to divide our alpha by 2 to
+            % convert to two-tailed. For one-tailed behavior (e.g., if have
+            % an expected direction for an effect), pass in double your
+            % alpha (e.g. .1) and only interpret effects in the expected
+            % direction
+            u = spm_uc_RF(input_threshold / 2, [df nScan], 'T', R, 1);
+
+            % find corresponding p value, which must two-tailed, as
+            % p values here are unsigned. E.g.: for 1 resel, an input threshold of
+            % .05 should now correspond to a p_value of .025, for a total
+            % two-tailed false positive rate of .05
+            p_value = 1 - tcdf(u, df);
+
+            thresh(i) = p_value;
+            stats_image_obj.threshold(i) = thresh(i);
+
+            fprintf('FWHM = [%3.2f %3.2f %3.2f], R (resels) [%3.2f %3.2f %3.2f %3.2f], critical height threshold = %2.5f, p = %1.7f\n', FWHM, R, u, p_value);
+            
+            % clean up
+            !rm tmp*resid*nii
+            delete(extent_mask.fullpath)
                         
         case {'bfr', 'bonferroni'} % 7/19/2013: added by Wani Woo.
             thresh(i) = input_threshold/size(stats_image_obj.p,1);

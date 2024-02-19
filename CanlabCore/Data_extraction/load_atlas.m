@@ -15,7 +15,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
 %                                 (Both in MasksPrivate)'
-% 'iglesias', 'iglesias[_fmriprep20|_fsl6]'
+% 'iglesias_thal', 'iglesias_thal_[_fmriprep20|_fsl6]'
 %                                 'Iglesias/Freesurfer thalamic nuclear parcellation in fmriprep20 (default) or fsl6 space. A bit more coarse than morel, 
 %                                  but open license, more accurate boundaries and probablistic'%
 % 'cortex', 'glasser'
@@ -98,12 +98,20 @@ switch lower(atlas_file_name_or_keyword)
         savefile = which('Morel_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
 
-    case {'iglesias_fmriprep20', 'iglesias'}
+    case {'iglesias_thal_fmriprep20', 'iglesias_thal'}
         savefile = which('iglesias_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
 
-    case {'iglesias_fsl6'}
+    case {'iglesias_thal_fsl6'}
         savefile = which('iglesias_hcp278_MNI152NLin6Asym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_hypothal_fmriprep20', 'iglesias_hypothal'}
+        savefile = which('iglesias_hypothal_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_hypothal_fsl6'}
+        savefile = which('iglesias_hypothal_hcp278_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'cortex', 'glasser'}

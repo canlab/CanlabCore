@@ -20,7 +20,7 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 % 1. Perform a typical cross-validated connectivity analysis as a comparison condition
 %   - estimate simple correlations using k-fold CV
 %   - 4 paths connecting 2 regions, using region averages:
-%   - X1->Y1, X2->Y1, X1->Y2, X2->Y2
+%   - X1(Source1)->Y1(Target1), X2->Y1, X1->Y2, X2(Source2)->Y2(Target2)
 %   - These are described as pathways 1-4.
 %   - Custom holdout set is specified by a vector of counts, 1 per holdout set
 %
@@ -108,17 +108,14 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %   **stats:**
 %        Structure including:
 %           - simple_correlations:  correlations among region averages,
-%             order: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
+%             order of columns: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
 %           - latent_correlations:  correlations among PLS-optimized latent timeseries,
-%             order: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
+%             order of columns: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
 %           - latent_timeseries: cross-validated time series of the latent var for Y, pathway 1 and 2
-%             latent_timeseries_pathway1: 
-%                   Column 1: Scores for Source 1 (1st region entered): X * Z
-%                   Column 2: Scores for Target 1 (3rd region entered): Y * V
-%             latent_timeseries_pathway2: 
-%                   Column 1: Scores for Source 2 (2nd region entered): X * Z
-%                   Column 2: Scores for Target 2 (4th region entered): Y * V
-%             latent_correlation_interaction_ttest: T-test on Fisher-transformed on-target vs. off-target
+%             latent_timeseries_source: X * Z
+%             latent_timeseries_target: Y * V
+%             order of columns: Source 1 -> Target 1, S2->T1, S1->T2, S2->T2
+%           - latent_correlation_interaction_ttest: T-test on Fisher-transformed on-target vs. off-target
 %             simple_correlation_interaction_ttest: [1×1 struct]
 %             latent_correlation_pathway_one_ttest: T-test on Fisher-transformed on-target vs. off-target, Pathway 1 
 %             latent_correlation_pathway_two_ttest: T-test on Fisher-transformed, pathway 2. Pathway 2
@@ -459,20 +456,27 @@ end
 % xs = scores for latent X
 % ys = scores for latent Y
 [xl_pathway_one, ~, xs_pathway_one, ys_pathway_one] = plsregress(source_one_obj.dat',target_one_obj.dat', ndim);
+[xl_pathway_two, ~, xs_pathway_two, ys_pathway_two] = plsregress(source_two_obj.dat',target_one_obj.dat', ndim);
+[xl_pathway_three, ~, xs_pathway_three, ys_pathway_three] = plsregress(source_one_obj.dat',(target_two_obj.dat)', ndim);
 [xl_pathway_four, ~, xs_pathway_four, ys_pathway_four] = plsregress(source_two_obj.dat',(target_two_obj.dat)', ndim);
 
 if flip_maps
     
-    sign_pathway1 = sign(corr(mean(xl_pathway_one, 2), mean(source_one_obj.dat, 2)));
-    
-    sign_pathway2 = sign(corr(mean(xl_pathway_four,2), mean(source_two_obj.dat,2)));
+    sign_pathway(1) = sign(corr(mean(xl_pathway_one, 2), mean(source_one_obj.dat, 2)));
+    sign_pathway(2) = sign(corr(mean(xl_pathway_two, 2), mean(source_two_obj.dat, 2)));
+    sign_pathway(3) = sign(corr(mean(xl_pathway_three, 2), mean(source_one_obj.dat, 2)));    
+    sign_pathway(4) = sign(corr(mean(xl_pathway_four,2), mean(source_two_obj.dat,2)));
     
     % ys_pathway_one, etc = scores for latent Y (e.g., time series/observations)
-    ys_pathway_one = ys_pathway_one * sign_pathway1;  % sign of corr between x loadings and mean data per voxel
-    ys_pathway_four = ys_pathway_four * sign_pathway2;
+    ys_pathway_one = ys_pathway_one * sign_pathway(1);  % sign of corr between x loadings and mean data per voxel
+    ys_pathway_two = ys_pathway_two * sign_pathway(2);
+    ys_pathway_three = ys_pathway_three * sign_pathway(3);
+    ys_pathway_four = ys_pathway_four * sign_pathway(4);
     
-    xs_pathway_one = xs_pathway_one * sign_pathway1;
-    xs_pathway_four = xs_pathway_four * sign_pathway2;
+    xs_pathway_one = xs_pathway_one * sign_pathway(1);
+    xs_pathway_two = xs_pathway_two * sign_pathway(2);
+    xs_pathway_three = xs_pathway_three * sign_pathway(3);
+    xs_pathway_four = xs_pathway_four * sign_pathway(4);
   
     % Flip time series of each region to match the sign of the region average
     % Define a flipping criterion, which is sign of spatial corelation between X
@@ -481,12 +485,11 @@ if flip_maps
     % Later, Z and V are caculated based on the 
     % 
     % Fitted (predicted) latent X, based on observed Y  % V = pattern across Y voxels (target), predicting latent X source
- 
-    stats.latent_timeseries_pathway1(:, 1) = stats.latent_timeseries_pathway1(:, 1) * sign_pathway1;
-    stats.latent_timeseries_pathway2(:, 1) = stats.latent_timeseries_pathway2(:, 1) * sign_pathway2;
-    
-    stats.latent_timeseries_pathway1(:, 2) = stats.latent_timeseries_pathway1(:, 2) * sign_pathway1;
-    stats.latent_timeseries_pathway2(:, 2) = stats.latent_timeseries_pathway2(:, 2) * sign_pathway2;
+    for p = 1:4
+        stats.latent_timeseries_source(:, p) = stats.latent_timeseries_source(:, p) * sign_pathway(p);   % (cross-validated) time series of the latent var for X, pathway 1
+        stats.latent_timeseries_target(:, p) = stats.latent_timeseries_target(:, p) * sign_pathway(p);   % (cross-validated) time series of the latent var for Y, pathway 1
+    end
+    stats.pathway_sign = sign_pathway;
     
 %     stats.latent_timeseries(:, 1) = stats.latent_timeseries(:, 1) * sign(corr(mean(xl_pathway_one,2),mean(source_one_obj.dat,2)));
 %     stats.latent_timeseries(:, 2) = stats.latent_timeseries(:, 2) * sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));

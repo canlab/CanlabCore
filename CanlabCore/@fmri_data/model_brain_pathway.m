@@ -377,11 +377,15 @@ for k=1:max(indices)
     XS_Test_source_one_pathway_three = Xtest_source_one * Z_pathway_three;
     XS_Test_source_two_pathway_four = Xtest_source_two * Z_pathway_four;
     
-    stats.latent_timeseries_pathway1(indices==k, 1) = XS_Test_source_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for X, pathway 1
-    stats.latent_timeseries_pathway1(indices==k, 2) = YS_Test_target_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for Y, pathway 1
-    
-    stats.latent_timeseries_pathway2(indices==k, 1) = XS_Test_source_two_pathway_four(:, 1);
-    stats.latent_timeseries_pathway2(indices==k, 2) = YS_Test_target_two_pathway_four(:, 1);
+    stats.latent_timeseries_source(indices==k, 1) = XS_Test_source_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for X, pathway 1 
+    stats.latent_timeseries_source(indices==k, 2) = XS_Test_source_two_pathway_two(:, 1);
+    stats.latent_timeseries_source(indices==k, 3) = XS_Test_source_one_pathway_three(:, 1);
+    stats.latent_timeseries_source(indices==k, 4) = XS_Test_source_two_pathway_four(:, 1);   
+
+    stats.latent_timeseries_target(indices==k, 1) = YS_Test_target_one_pathway_one(:, 1);   % (cross-validated) time series of the latent var for Y, pathway 1
+    stats.latent_timeseries_target(indices==k, 2) = YS_Test_target_one_pathway_two(:, 1);    
+    stats.latent_timeseries_target(indices==k, 3) = YS_Test_target_two_pathway_three(:, 1);
+    stats.latent_timeseries_target(indices==k, 4) = YS_Test_target_two_pathway_four(:, 1);   
     
     %optimized pathways
     latent_correlation_pathway_one(k,:)=diag(corr(YS_Test_target_one_pathway_one, XS_Test_source_one_pathway_one));

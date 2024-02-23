@@ -283,7 +283,8 @@ switch colortype
             end
             
             if dozoom
-                wh = ismember(varargin,{'axial','saggital','coronal'});
+                wh = find(cellfun(@ischar,varargin));
+                wh = wh(ismember(varargin(wh),{'axial','saggital','coronal'}));
                 if any(wh)
                     zoom_in_on_regions(o2, obj, varargin{wh});
                 else

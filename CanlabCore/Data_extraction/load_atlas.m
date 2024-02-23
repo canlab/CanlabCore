@@ -15,6 +15,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
 %                                 (Both in MasksPrivate)'
+% 'iglesias_thal', 'iglesias_thal_[_fmriprep20|_fsl6]'
+%                                 'Iglesias/Freesurfer thalamic nuclear parcellation in fmriprep20 (default) or fsl6 space. A bit more coarse than morel, 
+%                                  but open license, more accurate boundaries and probablistic'%
 % 'cortex', 'glasser'
 %                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from 
 %                                  surface (deprecated)'
@@ -46,6 +49,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm sampling resolution'
 % 'bianciardi[_fmriprep20|_fsl6]_2mm   
 %                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
+% 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -55,7 +59,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % Examples:
 % -------------------------------------------------------------------------
 % atlas_obj = load_atlas('thalamus');
-% atlas_obj = load_atlas('Thalamus_atlas_combined_Morel.mat');
+% atlas_obj = load_atlas('Thalamus_atlas_combined_Morel.mat');morel
 %
 %
 
@@ -92,6 +96,22 @@ switch lower(atlas_file_name_or_keyword)
         
     case {'morel_fmriprep20'}
         savefile = which('Morel_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_thal_fmriprep20', 'iglesias_thal'}
+        savefile = which('iglesias_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_thal_fsl6'}
+        savefile = which('iglesias_hcp278_MNI152NLin6Asym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_hypothal_fmriprep20', 'iglesias_hypothal'}
+        savefile = which('iglesias_hypothal_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
+        varname = 'atlas_obj';
+
+    case {'iglesias_hypothal_fsl6'}
+        savefile = which('iglesias_hypothal_hcp278_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'cortex', 'glasser'}
@@ -225,6 +245,14 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='delaVega2017_neurosynth_atlas_object.mat';
         varname = 'atlas_obj';
 
+    case {'cartmell_nac', 'cartmell_nac_fmriprep20'}
+        savefile='NAcCoreShell_MNI152NLin2009cAsym_atlas_object.mat';
+        varname='atlas_obj';
+        
+    case 'cartmell_nac_fsl6'
+        savefile='NAcCoreShell_MNI152NLin6Asym_atlas_object.mat';
+        varname='atlas_obj';
+        
     case {'bianciardi', 'bianciardi_fmriprep20'}
         savefile='bianciardi_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'bianciaAtlas';
@@ -327,7 +355,8 @@ else
         fclose(fid);
 
         atlas_obj = load_atlas_from_file(savefile, varname, verbose);
-        if latest ~= atlas_obj.additional_info.hash
+        fnames = fieldnames(atlas_obj.additional_info);
+        if ~any(ismember('hash',fnames)) || ~strcmp(latest,atlas_obj.additional_info.hash)
             % evaluation is rounded to the nearest second to deal with
             % floating point issues. If there's an atlas 1s newer availble
             % then it means we rebuild the atlas to get it.

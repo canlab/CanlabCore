@@ -4,9 +4,11 @@
 % and activation map(s) for creating montage plots and other types of
 % plots.
 %
-% The default brain for overlays is based on Keuken et al. 2014
+% The default brain for overlays is MNI152NLin2009cAsym
 % For legacy SPM8 single subject, enter as arguments:
 % 'overlay', which('SPM8_colin27T1_seg.img')
+% For Keuken 2014 (used prior to 2024) enter:
+% 'overlay', which('keuken_2014_enhanced_for_underlay.img')
 %
 % Creating class instances
 % -----------------------------------------------------------------------

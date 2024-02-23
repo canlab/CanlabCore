@@ -1,4 +1,4 @@
-function [X, e] = create_design_single_event(TR, ISI, eventduration, HPlength, dononlin)
+function [X, e] = create_design_single_event(TR, ISI, eventduration, HPlength, dononlin, varargin)
 % [X, e] = create_design_single_event(TR, ISI, eventduration, HPlength, dononlin)
 %
 % Create and plot design for single event
@@ -19,6 +19,15 @@ contrasts = 1;
 
 
 if ~isempty(HPlength) && ~isinf(HPlength), dohpfilt = 1; else dohpfilt = 0; end
+
+% optional inputs with default values
+% -----------------------------------
+for i = 1:length(varargin)
+    if strcmpi(varargin{i}, 'scanLength')
+        scanLength=varargin{i+1};
+    end
+end
+
 
 if dononlin
     nonlinstr = 'nonlinsaturation';

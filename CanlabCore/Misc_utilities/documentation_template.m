@@ -160,6 +160,8 @@ valfcn_xyz = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'size', [1 3]}
 
 valfcn_logical = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
 
+valfcn_fmridata = @(x) isempty(x) || isa(x, 'fmri_data') ;
+valfcn_imagevec = @(x) isempty(x) || isa(x, 'image_vector') ;
 
 % Required inputs 
 % ----------------------------------------------------------------------

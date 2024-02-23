@@ -1,10 +1,23 @@
-function [component_scores eigenmap_obj] = pca(obj, varargin)
-% Compute and display principal components for a set of images in obj
+function [component_scores eigenmap_obj, explained] = pca(obj, varargin)
+% Compute and display principal components for a set of images in obj. 
+% - PCA is performed on the images x voxels matrix in obj.dat'
+% - Each eigenvector is thus a canonical brain map with weights on voxels
+% - Scores reflect the expression of each observation (row) x component (column)
+% - Scores can be subjected to further analysis (e.g., differences across
+%   conditions, etc. depending on the input data)
+%
+% - Voxels are centered but not z-scored, so PCA works on the covariance
+% matrix here. Voxels with higher scale (variance) will contribute more to
+% the eigenmaps and scores.  A variant using correlations could be
+% desirable in some cases, depending on the analysis goals.
+% -The mean-centered data (across voxels) can be reconstructed by 
+%   X = SCORE*COEFF', or
+%   X = eigenmap_obj.dat * component_scores'
 %
 % :Usage:
 % ::
 %
-%     [component_scores eigenmap_obj] = pca(obj, ['noplot'], ['k', num_components])
+%     [component_scores eigenmap_obj explained] = pca(obj, ['noplot'], ['k', num_components])
 %
 % For objects: Type methods(object_name) for a list of special commands
 %              Type help object_name.method_name for help on specific
@@ -53,6 +66,9 @@ function [component_scores eigenmap_obj] = pca(obj, varargin)
 %        These correspond to voxel weights on the components.
 %        The object contains one image for each component map.
 %
+%   **explained:**
+%       Variance explained by each component
+%
 % :Examples:
 % ::
 %
@@ -68,6 +84,9 @@ function [component_scores eigenmap_obj] = pca(obj, varargin)
 %    spectrum of component scores. The code below does this for a run with
 %    TR = 1.8 sec.
 %    create_figure('fft'); [fftmag, fftfreq, h] = fft_calc(component_scores, 1.8);
+%
+%    To plot the first 4 eigenmaps again:
+%    montage(eigenmap_obj, 'trans')
 %
 % :References:
 %   There are many publications on PCA, e.g., Herve Abdi's book.
@@ -109,7 +128,7 @@ end
 % MAIN FUNCTION
 % -------------------------------------------------------------------------
 
-[eigenmaps, component_scores] = pca(obj.dat', 'Centered', true, 'Economy', true, 'NumComponents', k);
+[eigenmaps, component_scores, ~, ~, explained] = pca(obj.dat', 'Centered', true, 'Economy', true, 'NumComponents', k);
 
 eigenmap_obj = obj;
 eigenmap_obj.dat = eigenmaps;

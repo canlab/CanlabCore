@@ -51,6 +51,9 @@ for i = 1:length(varargin)
                 
             case {'color', 'colors'}
                 colors = varargin{i+1}; varargin{i+1} = []; varargin{i} = [];
+
+                if ~iscell(colors), colors = {colors}; end
+                
                 if length(colors) == 1 % single color; matchcolorsleftright will overwrite this
                     matchcolorsleftright = false;
                 end

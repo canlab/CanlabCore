@@ -28,21 +28,21 @@ end
 
 % Separate subregions with positive and negative values if requested
 % -------------------------------------------------------------------------
-if dosep
-    % separate pos and neg
-    [poscl, negcl] = posneg_separate(r);
-    
-    r = [poscl negcl];
-    ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
-    
-    clear poscl negcl
-    
-    fprintf('\n%s\nPositive Effects\n', sep_str)
-    
-else
-    
-    fprintf('\n%s\nTable of all regions\n', sep_str)
-end
+% if dosep
+%     % separate pos and neg
+%     [poscl, negcl] = posneg_separate(r);
+% 
+%     r = [poscl negcl];
+%     ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
+% 
+%     clear poscl negcl
+% 
+%     fprintf('\n%s\nPositive Effects\n', sep_str)
+% 
+% else
+% 
+%     fprintf('\n%s\nTable of all regions\n', sep_str)
+% end
 
 
 % Volume in mm^3
@@ -67,9 +67,27 @@ results_table = [results_table get_signed_max(r, 'Z', 'maxZ')];  % use function 
 results_table.Properties.VariableNames{4} = 'maxVal';
 
 if dosep
-    
+    % Bugfix 2/26/2024: When passed in region object, many region objects
+    % have identifying integers in .val, instead of voxel activation
+    % values. Better to use 'Z' field for separation of regions instead of .val field which is the
+    % default.
+
+    % separate pos and neg
+    [poscl, negcl] = posneg_separate(r, 'Z');
+
+    r = [poscl negcl];
+    ispos = [true(1, length(poscl)) false(1, length(negcl))]; % logical for splitting combined cl later
+
+    clear poscl negcl
+
+    fprintf('\n%s\nPositive Effects\n', sep_str)
+
     results_table_pos = results_table(ispos, :);
     results_table_neg = results_table(~ispos, :);
+
+else
+
+    fprintf('\n%s\nTable of all regions\n', sep_str)
     
 end
 

@@ -1,12 +1,12 @@
-function [model, models]=plotHRF(HRF, t, varargin)
+function [model, models]=plotHRF(HRF, varargin)
     % Generates a plot from an HRF Structure given a specified fit type and a region name.
     % Michael Sun, Ph.D.
     % - Takes HRF Structure object generated from EstimateHRF_inAtlas()
     % - d is for selecting which data to plot, default is to aggregate them
     % all. Putting a vector plots each file separately in order e.g., [1 2 3]
-    % - t is a cellstring for fit type e.g., 'FIR', 'sFIR', 'IL', 'CHRF0', 'CHRF1', 'CHRF2'
-    % - c is a cellstring for condition names or stems to plot e.g., {'*hot*, *warm*'}
-    % - r is a cellstring for region label from atlas.labels. e.g., 'ACC', or a cell-array of regions to compare relative to each other e.g., {'ACC', 'DLPFC'}  
+    % - 'fit', t is a cellstring for fit type e.g., 'FIR', 'sFIR', 'IL', 'CHRF0', 'CHRF1', 'CHRF2'
+    % - 'conditions', c is a cellstring for condition names or stems to plot e.g., {'*hot*, *warm*'}
+    % - 'regions', r is a cellstring for region label from atlas.labels. e.g., 'ACC', or a cell-array of regions to compare relative to each other e.g., {'ACC', 'DLPFC'}  
     %
     % *Usage:
     % ::
@@ -21,57 +21,74 @@ function [model, models]=plotHRF(HRF, t, varargin)
     isAtlasFound = false;
     r=[];
 
-    for k = 1:length(varargin)
-        if ischar(varargin{k})
-            r=varargin{k};
+    at=HRF.atlas;
 
-            if ~ismember(r, HRF.region)
-                error('Invalid region specified.');
-            end
+    % Get the list of conditions from HRF_PARAMS
+    conds = HRF.CondNames;
+
+    for k = 1:length(varargin)
+        % elseif isa(varargin{k+1}, 'atlas')  % assuming 'atlas' is a class you're checking for
+        %     at=varargin{k+1};
+        %     isAtlasFound = true;
+        % else
+        %     disp(['Input argument for region unknown.']);
+
+
+        if strcmpi(varargin{k}, 'regions')
+            if ischar(varargin{k+1})
+                r=varargin{k+1};
     
-        elseif iscell(varargin{k})
-            r=varargin{k};
-            isCellArrayFound = true;
-        elseif isa(varargin{k}, 'atlas')  % assuming 'atlas' is a class you're checking for
-            at=varargin{k};
-            isAtlasFound = true;
-        else
-            disp(['Input argument ' num2str(k) ' unknown.']);
+                if ~ismember(r, HRF.region)
+                    error('Invalid region specified.');
+                end
+        
+            elseif iscell(varargin{k+1})
+                r=varargin{k+1};
+                isCellArrayFound = true;
+            end
+
         end
+
+        if strcmpi(varargin{k}, 'conditions')
+            if ischar(varargin{k+1})
+                conds=varargin{k+1};
+
+                if ~ismember(conds, HRF.CondNames)
+                    error('Invalid condition specified.');
+                end
+        
+            elseif iscell(varargin{k+1})
+                conds=varargin{k+1};
+                isCellArrayFound = true;
+            else
+                disp(['Input argument for condition unknown.']);
+            end
+
+        end
+
+        if strcmpi(varargin{k}, 'fit')
+            if ischar(varargin{k+1})
+                t=varargin{k+1};
+                
+                if ~ismember(t, HRF.types)
+                    error('Invalid fit-type specified.');
+                end
+            elseif iscell(varargin{k+1})
+                t=varargin{k+1};
+                isCellArrayFound = true;
+            else
+                disp(['Input argument for fit-type unknown.']);
+            end
+
+        end
+
+
+
     end
 
     if isempty(r) && ~isCellArrayFound
         r=HRF.region;
     end
-
-    if ~isAtlasFound
-        if isempty(HRF.atlas)
-            at=load_atlas('canlab2018_2mm');
-        else
-            at=HRF.atlas;
-            % at=load_atlas('canlab2018_2mm');
-        end
-    end
-
-
-    if ~ismember(t, HRF.types)
-        error('Invalid type specified.');
-    end
-
-    if iscell(r)
-        for i = 1:numel(r)
-            if ~ismember(r{i}, HRF.region)
-                error('Invalid region specified.');
-            end
-        end
-
-        % disp(r)
-        % at.get_region_volumes
-    else
-        r={r};
-    end
-
-
 
     % Find the indices of the specified region and type
     reg = find(ismember(HRF.region, r));
@@ -80,8 +97,6 @@ function [model, models]=plotHRF(HRF, t, varargin)
     % disp(reg)
     % disp(typ)
 
-    % Get the list of conditions from HRF_PARAMS
-    conds = HRF.CondNames;
 
     % % Initialize a cell array to store the model matrices
     % array3D = cell(1, length(conds));

@@ -1,4 +1,4 @@
-function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
+function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, varargin)
     % Helper script to create condition vectors for hrf_fit_one_voxel()
     % Michael Sun, Ph.D.
     % - Takes fmri_data() object or the number of TRs in a 4D object.
@@ -21,6 +21,12 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
     if ~exist('SPIKES', 'var') &&  ~exist('SPIKETRAINS', 'var')
         SPIKES=1;
         SPIKETRAINS=0;
+    end
+
+    if ~isempty(varargin)
+        SPIKETRAINS=1;
+    else
+        SPIKES=1;
     end
     
     if strcmp(class(fmri_d), 'fmri_data')

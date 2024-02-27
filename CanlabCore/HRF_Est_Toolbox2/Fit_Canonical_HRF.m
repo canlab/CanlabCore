@@ -1,4 +1,4 @@
-function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p)
+function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p, varargin)
 % function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runs,T,p)
 %
 % Fits GLM using canonical hrf (with option of using time and dispersion derivatives)';
@@ -26,11 +26,17 @@ function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p)
 % Created by Martin Lindquist on 10/02/09
 % Last edited: 05/17/13 (ML)
 
+% Edited to allow passing in custom design matrix e.g., from SPM. Will
+% assume that the first regressor columns of the design matrix pertain to
+% the regressors in Run: Michael Sun, Ph.D. 02/20/2024
+
+
 %tc = tc';
 d = length(Run);
 len = length(Run{1});
 t=1:TR:T;
 
+% Constructing the Design Matrix X:
 X = zeros(len,p*d);
 param = zeros(3,d);
 
@@ -40,17 +46,20 @@ for i=1:d,
     v = conv(Run{i},h);
     X(:,(i-1)*p+1) = v(1:len);
 
+    % Computing the first derivative
     if (p>1)
         v = conv(Run{i},dh);
         X(:,(i-1)*p+2) = v(1:len);
     end
 
+    % Computing the second derivative
     if (p>2)
         v = conv(Run{i},dh2);
         X(:,(i-1)*p+3) = v(1:len);
     end
 end
-    
+
+% This line adds an intercept
 X = [(zeros(len,1)+1) X];
 
 b = pinv(X)*tc;
@@ -58,6 +67,23 @@ e = tc-X*b;
 fit = X*b;
 
 b = reshape(b(2:end),p,d)';
+
+
+% Import your own design matrix
+if ~isempty(varargin)
+    X=varargin{1};
+
+    b = pinv(X)*tc;
+    e = tc-X*b;
+    fit = X*b;
+    
+    % Be careful here. if p>1, make sure Run includes derivatives so there
+    % are p*task regressors.
+    b = reshape(b(1:numel(Run)),p,d)'; % Extract my own regressors
+
+end
+
+
 bc = zeros(d,1);
 
 for i=1:d,

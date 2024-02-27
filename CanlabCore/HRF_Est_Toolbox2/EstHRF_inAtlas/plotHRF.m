@@ -2,7 +2,10 @@ function [model, models]=plotHRF(HRF, t, varargin)
     % Generates a plot from an HRF Structure given a specified fit type and a region name.
     % Michael Sun, Ph.D.
     % - Takes HRF Structure object generated from EstimateHRF_inAtlas()
-    % - t is a cellstring for fit type e.g., 'FIR', 'IL', or 'CHRF'
+    % - d is for selecting which data to plot, default is to aggregate them
+    % all. Putting a vector plots each file separately in order e.g., [1 2 3]
+    % - t is a cellstring for fit type e.g., 'FIR', 'sFIR', 'IL', 'CHRF0', 'CHRF1', 'CHRF2'
+    % - c is a cellstring for condition names or stems to plot e.g., {'*hot*, *warm*'}
     % - r is a cellstring for region label from atlas.labels. e.g., 'ACC', or a cell-array of regions to compare relative to each other e.g., {'ACC', 'DLPFC'}  
     %
     % *Usage:
@@ -78,7 +81,7 @@ function [model, models]=plotHRF(HRF, t, varargin)
     % disp(typ)
 
     % Get the list of conditions from HRF_PARAMS
-    conds = HRF.params.CondNames;
+    conds = HRF.CondNames;
 
     % % Initialize a cell array to store the model matrices
     % array3D = cell(1, length(conds));
@@ -246,8 +249,8 @@ function plotRegionalHrfSummaries(HRF, regs)
     % plot time-to-peak, height, width, start_time, and end_time of every
     % peaks_voxnormed and trough_voxnormed for a region
 
-    create_figure(['Regional HRF summaries for ', HRF.params.CondNames{c}]);
-    for c = 1:numel(HRF.params.CondNames)
+    create_figure(['Regional HRF summaries for ', HRF.CondNames{c}]);
+    for c = 1:numel(HRF.CondNames)
         
 
         handles = [];
@@ -315,17 +318,17 @@ function plotRegionalHrfSummaries(HRF, regs)
                 minw=[];
                 maxw=[];
 
-                for p=1:numel(HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed)
+                for p=1:numel(HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed)
 
                     % meant=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t);
-                    meant=[meant, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).time_to_peak];
+                    meant=[meant, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).time_to_peak];
 
                     % standard error time-to-peak
                     % stet=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t));
     
                     % mean height
                     % meanh=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h);
-                    meanh=[meanh, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).height];
+                    meanh=[meanh, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).height];
 
                     % height standard error
                     % steh=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h));
@@ -335,22 +338,22 @@ function plotRegionalHrfSummaries(HRF, regs)
                     % maximum width
                     % maxw=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).w_times(:,2))-meant;
                     
-                    minw=[minw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).start_time];
-                        maxw=[maxw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).end_time];
+                    minw=[minw, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).start_time];
+                        maxw=[maxw, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).end_time];
 
                 end
 
-                for t=1:numel(HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed)
+                for t=1:numel(HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed)
 
                     % meant=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t);
-                    meant=[meant, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).time_to_peak];
+                    meant=[meant, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).time_to_peak];
 
                     % standard error time-to-peak
                     % stet=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t));
     
                     % mean height
                     % meanh=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h);
-                    meanh=[meanh, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).height];
+                    meanh=[meanh, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).height];
 
                     % height standard error
                     % steh=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h));
@@ -360,15 +363,15 @@ function plotRegionalHrfSummaries(HRF, regs)
                     % maximum width
                     % maxw=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).w_times(:,2))-meant;
                     
-                    minw=[minw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).start_time];
-                        maxw=[maxw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).end_time];
+                    minw=[minw, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).start_time];
+                        maxw=[maxw, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).end_time];
 
                 end
 
                 % handles(end+1)=errorbar(meant, meanh, steh, steh, stet, stet, 'o', 'Color', maxDifferentColors(r,:));
                 [~,vox,~,~]=get_region_volumes(at);
                 vox=vox(r);
-                se=barplot_get_within_ste(HRF.fit{1}{r}.(HRF.params.CondNames{c}).models);
+                se=barplot_get_within_ste(HRF.fit{1}{r}.(HRF.CondNames{c}).models);
                 se=se/vox;
 
                 se=repmat(se, 1, numel(meant));
@@ -413,7 +416,7 @@ function plotRegionalHrfSummaries(HRF, regs)
         xticklabels([0:5:45]*0.46)
         xlabel('Time to Peak (seconds)');
         % title({[signames{i}, ' Condition: ', conds{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
-        title({['Condition: ', HRF.params.CondNames{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
+        title({['Condition: ', HRF.CondNames{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
 
     end
 end

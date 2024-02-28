@@ -3,82 +3,159 @@
 
 % for HRF.types
 
-function avgHRF = HRF_avg(HRF_cell_array, at)
+function avgHRF = HRF_avg(HRF_cell_array, varargin)
     % Check if all HRFs have the same atlas
 
     % Suppress all warnings for now, since they'll mostly flood the screen
     % with Invalid Heights from findpeaks()
     warning('off', 'all');
 
-    % Get the .atlas value of the first structure (assuming HRF_cell_array is not empty)
-    first_atlas = HRF_cell_array{1}.atlas;
-    first_region = HRF_cell_array{1}.region;
-    first_types = HRF_cell_array{1}.types;
-    first_conds = HRF_cell_array{1}.params.CondNames;
-    
-    % Check if all structures have the same .atlas value
-    all_same_atlas = true;
-    all_same_regions = true;
-    all_same_types = true;
-    all_same_conds = true;
-    
-    for i = 2:numel(HRF_cell_array)
-        if ~isequal(HRF_cell_array{i}.atlas, first_atlas)
-            all_same_atlas = false;
-        end
-        if ~isequal(HRF_cell_array{i}.region, first_region)
-            all_same_regions = false;
+    hasAtlas=0;
+    hasRegions=0;
+    hasConditions=0;
+    hasFit=0;
+
+    for k = 1:length(varargin)
+        if strcmpi(varargin{k}, 'atlas')
+            if isa(varargin{k+1}, 'atlas')
+                avgHRF.atlas=varargin{k+1};
+                hasAtlas = true;
+            else
+                error('Passed in atlas not an atlas.');
+            end
         end
 
-        if ~isequal(HRF_cell_array{i}.types, first_types)
-            all_same_types = false;
+        if strcmpi(varargin{k}, 'regions')
+            if ischar(varargin{k+1})
+                avgHRF.region=varargin{k+1};
+                % if ~ismember(avgHRF.region, HRF.region)
+                %     error('Invalid region specified.');
+                % else
+                    hasRegions = true;
+                % end
+            elseif iscell(varargin{k+1})
+                avgHRF.region=varargin{k+1};
+                hasRegions = true;
+            end
         end
 
-        if ~isequal(HRF_cell_array{i}.params.CondNames, first_conds)
-            all_same_conds = false;
+        if strcmpi(varargin{k}, 'conditions')
+            if ischar(varargin{k+1})
+                avgHRF.CondNames=varargin{k+1};
+                % if ~ismember(avgHRF.CondNames, HRF.CondNames)
+                    % error('Invalid condition specified.');
+                % else
+                    hasConditions = true;
+                % end
+            elseif iscell(varargin{k+1})
+                avgHRF.CondNames=varargin{k+1};
+                hasConditions = true;
+            % else
+            %     disp(['Input argument for condition unknown.']);
+            % end
+        end
+
+        if strcmpi(varargin{k}, 'fit')
+            if ischar(varargin{k+1})
+                avgHRF.types=varargin{k+1};
+                % if ~ismember(avgHRF.types, HRF.types)
+                    error('Invalid fit-type specified.');
+                % else
+                    hasFit = true;
+                % end
+            elseif iscell(varargin{k+1})
+                avgHRF.types=varargin{k+1};
+                hasFit = true;
+            else
+                disp(['Input argument for fit-type unknown.']);
+            end
         end
 
     end
 
-    if all_same_atlas
-        avgHRF.atlas=first_atlas;
-    else
-        error('HRF Structures have different .atlas values.\n');
+    if ~hasAtlas
+        first_atlas = HRF_cell_array{1}.atlas;
+        all_same_atlas = true;
+
+        for i = 2:numel(HRF_cell_array)
+            if ~isequal(HRF_cell_array{i}.atlas, first_atlas)
+                all_same_atlas = false;
+            end
+        end
+
+        if all_same_atlas
+            avgHRF.atlas=first_atlas;
+        else
+            error('HRF Structures have different .atlas values.\n');
+        end
     end
 
-    if all_same_regions
-        avgHRF.region=first_region;
-    else
-        error('HRF Structures have different .region values.\n');
+    if ~hasFit
+        first_types = HRF_cell_array{1}.types;
+        all_same_types = true;
+
+        for i = 2:numel(HRF_cell_array)
+            if ~isequal(HRF_cell_array{i}.types, first_types)
+                all_same_types = false;
+            end
+        end
+        if all_same_types
+            avgHRF.types=first_types;
+        else
+            error('HRF Structures have different .types values.\n');
+        end
     end
 
-    if all_same_types
-        avgHRF.types=first_types;
-    else
-        error('HRF Structures have different .types values.\n');
+    if ~hasConditions
+        first_conds = HRF_cell_array{1}.CondNames;
+        all_same_conds = true;
+
+        for i = 2:numel(HRF_cell_array)
+            if ~isequal(HRF_cell_array{i}.CondNames, first_conds)
+                all_same_conds = false;
+            end
+        end
+        if all_same_conds
+            avgHRF.CondNames=first_conds;
+        else
+            error('HRF Structures have different .CondNames values.\n');
+        end
     end
 
-    if all_same_conds
-        avgHRF.params.CondNames=first_conds;
-    else
-        error('HRF Structures have different .params.CondNames values.\n');
+    if ~hasRegions
+        first_region = HRF_cell_array{1}.region;
+        all_same_regions = true;
+
+        for i = 2:numel(HRF_cell_array)
+            if ~isequal(HRF_cell_array{i}.region, first_region)
+                all_same_regions = false;
+            end
+        end
+
+        if all_same_regions
+            avgHRF.region=first_region;
+        else
+            error('HRF Structures have different .region values.\n');
+        end
     end
 
-    conditions=avgHRF.params.CondNames;
 
     % Extract the number of fits, regions, and conditions
     numFits = numel(avgHRF.types);
     numRegions = numel(avgHRF.region);
-    numConditions = numel(avgHRF.params.CondNames);
+    numConditions = numel(avgHRF.CondNames);
     
     % Loop through fits, regions, and conditions
     for fitIndex = 1:numFits
         
         for regionIndex = 1:numRegions
-            avgVector_across_conditions=[];
-            models3d=[];
+
+            
             for conditionIndex = 1:numConditions
-                conditionName = conditions{conditionIndex};
+                avgVector_across_conditions=[];
+                models3d=[];
+
+                % condName = avgHRF.CondNames{conditionIndex};
                 
                 % Initialize an empty array to store 'model' vectors
                 models = [];
@@ -91,6 +168,9 @@ function avgHRF = HRF_avg(HRF_cell_array, at)
                 
                 % Iterate through the structures and extract 'model' vectors
                 for dataIndex = 1:numel(HRF_cell_array)
+                    fields=fieldnames(HRF_cell_array{dataIndex}.fit{fitIndex}{regionIndex});
+                    conditionName=char(fields(contains(fields, avgHRF.CondNames{conditionIndex}))); 
+
                     modelVector = HRF_cell_array{dataIndex}.fit{fitIndex}{regionIndex}.(conditionName).model;
                     models = [models; modelVector]; % Concatenate the vectors
 
@@ -128,6 +208,7 @@ function avgHRF = HRF_avg(HRF_cell_array, at)
 
                 models3d=cat(3, models3d, models);
 
+                conditionName=avgHRF.CondNames{conditionIndex}; 
                 % Store the average vector in the avgStruct
                 avgHRF.fit{fitIndex}{regionIndex}.(conditionName).model = avgVector;
                 avgHRF.fit{fitIndex}{regionIndex}.(conditionName).stddev = stdVector;
@@ -143,7 +224,7 @@ function avgHRF = HRF_avg(HRF_cell_array, at)
                 avgHRF.fit{fitIndex}{regionIndex}.(conditionName).models = models;
 
                 [avgHRF.fit{fitIndex}{regionIndex}.(conditionName).peaks, avgHRF.fit{fitIndex}{regionIndex}.(conditionName).troughs]=detectPeaksTroughs(avgVector', false);
-                [~, region_numVox, ~, ~]=at.select_atlas_subset(avgHRF.region(regionIndex), 'exact').get_region_volumes;
+                [~, region_numVox, ~, ~]=avgHRF.atlas.select_atlas_subset(avgHRF.region(regionIndex), 'exact').get_region_volumes;
                 [avgHRF.fit{fitIndex}{regionIndex}.(conditionName).peaks_voxnormed, avgHRF.fit{fitIndex}{regionIndex}.(conditionName).troughs_voxnormed]=detectPeaksTroughs(avgVector'/region_numVox, false);
 
                 % Number of phases

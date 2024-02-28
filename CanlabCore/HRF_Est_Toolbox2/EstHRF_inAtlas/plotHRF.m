@@ -17,26 +17,35 @@ function [model, models]=plotHRF(HRF, varargin)
     % detectPeaksandTroughs()
 
     % Flags to keep track of whether a cell array or atlas object is found
-    isCellArrayFound = false;
+    % isCellArrayFound = false;
+
     isAtlasFound = false;
+    isRegsFound = false;
+    isCondFound = false;
+    isFitFound = false;
+
     r=[];
 
-    at=HRF.atlas;
+
 
     % Get the list of conditions from HRF_PARAMS
     conds = HRF.CondNames;
 
     for k = 1:length(varargin)
-        % elseif isa(varargin{k+1}, 'atlas')  % assuming 'atlas' is a class you're checking for
-        %     at=varargin{k+1};
-        %     isAtlasFound = true;
-        % else
-        %     disp(['Input argument for region unknown.']);
-
+        if strcmpi(varargin{k}, 'atlas')
+            if isa(varargin{k+1}, 'atlas')
+                at=varargin{k+1};
+            else
+                error('Passed in atlas not an atlas.');
+            end
+            isAtlasFound = true;
+        end
 
         if strcmpi(varargin{k}, 'regions')
             if ischar(varargin{k+1})
                 r=varargin{k+1};
+                % Find the indices of the specified region and type
+                reg = find(ismember(HRF.region, r));
     
                 if ~ismember(r, HRF.region)
                     error('Invalid region specified.');
@@ -44,7 +53,7 @@ function [model, models]=plotHRF(HRF, varargin)
         
             elseif iscell(varargin{k+1})
                 r=varargin{k+1};
-                isCellArrayFound = true;
+                isRegsFound = true;
             end
 
         end
@@ -59,7 +68,7 @@ function [model, models]=plotHRF(HRF, varargin)
         
             elseif iscell(varargin{k+1})
                 conds=varargin{k+1};
-                isCellArrayFound = true;
+                isCondFound = true;
             else
                 disp(['Input argument for condition unknown.']);
             end
@@ -69,30 +78,50 @@ function [model, models]=plotHRF(HRF, varargin)
         if strcmpi(varargin{k}, 'fit')
             if ischar(varargin{k+1})
                 t=varargin{k+1};
-                
+                typ = find(ismember(HRF.types, t));     
+                disp(['Plotting ', t])
+
                 if ~ismember(t, HRF.types)
                     error('Invalid fit-type specified.');
+                else
+                    isFitFound = true;
                 end
             elseif iscell(varargin{k+1})
+                %% FIX THIS PART
                 t=varargin{k+1};
-                isCellArrayFound = true;
+                isFitFound = true;
             else
                 disp(['Input argument for fit-type unknown.']);
             end
 
         end
-
-
-
     end
 
-    if isempty(r) && ~isCellArrayFound
-        r=HRF.region;
+    if isAtlasFound == false
+       at=HRF.atlas;
     end
 
-    % Find the indices of the specified region and type
-    reg = find(ismember(HRF.region, r));
-    typ = find(ismember(HRF.types, t));
+    if isRegsFound == false
+        reg=1:numel(HRF.region);
+    end
+
+    if isCondFound == false
+        c=HRF.CondNames;
+    end
+
+    if isFitFound == false
+        % Default to the first fit-type;
+        typ=1;
+    end
+
+
+    % end
+    % 
+    % if isempty(r) && ~isCellArrayFound
+    %     r=HRF.region;
+    % end
+
+
 
     % disp(reg)
     % disp(typ)
@@ -136,6 +165,9 @@ function [model, models]=plotHRF(HRF, varargin)
     % Loop through each condition and plot
     for cond = 1:numel(conds)
         subplot(numel(conds), 1, cond);
+
+        fieldname=fieldnames(HRF.fit{typ}{1});
+        fld=char(fieldname(find(contains(fieldname, conds{cond}))));
         
         if numel(reg)==1
             model=HRF.fit{typ}{reg}.(conds{cond}).model;
@@ -168,7 +200,8 @@ function [model, models]=plotHRF(HRF, varargin)
 
             hline(0);
 
-            if isfield(HRF.fit{typ}{reg}, conds{cond}) && isfield(HRF.fit{typ}{reg}.(conds{cond}), 'models')
+
+            if isfield(HRF.fit{typ}{reg}, conds{cond}) && isfield(HRF.fit{typ}{reg}.(fld), 'models')
                 models=HRF.fit{typ}{reg}.(conds{cond}).models;
 
                 % Plot all underlying sublines
@@ -182,22 +215,24 @@ function [model, models]=plotHRF(HRF, varargin)
 
             region=format_strings_for_legend(r(1));
             region=region{1};
-            title({['Condition ', conds{cond}, ' Fit-type: ', t, ' Region: ', region]}, 'Interpreter', 'none');
+            title({['Condition ', conds{cond}, ' Fit-type: ', strjoin(HRF.types(typ)), ' Regions: ', strjoin(HRF.region(reg))], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
                 
 
         else
             h=[]; % Linehandles for legend and labels
-            for i = 1:numel(reg)
-                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(r(i), 'exact').get_region_volumes;
-                if isfield(HRF.fit{typ}{i}, conds{cond}) && isfield(HRF.fit{typ}{i}.(conds{cond}), 'models')
-                    models{i}=HRF.fit{typ}{i}.(conds{cond}).models/regionVoxNum;
+            for i = reg
+                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(reg(i), 'exact').get_region_volumes;
+                if isfield(HRF.fit{typ}{i}, fld) && isfield(HRF.fit{typ}{i}.(fld), 'models')
+                    models{i}=HRF.fit{typ}{i}.(fld).models/regionVoxNum;
                 end
 
-                model{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum;
+                
+
+                model{i}=HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum;
 
                 % Plot Standard Error if possible
                 try
-                    se{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).wse/regionVoxNum;
+                    se{i}=HRF.fit{typ}{reg(i)}.(fld).wse/regionVoxNum;
     
                     % Plot error shade:
                     x = 1:length(model{i});
@@ -215,20 +250,20 @@ function [model, models]=plotHRF(HRF, varargin)
                     
                 end
 
-                h(i)=plot(HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(r(i))));
+                h(i)=plot(HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(HRF.region(i))));
                 hline(0);
-                title({['Condition ', conds{cond}, ' Fit-type: ', t, ' Regions: ', strjoin(r)], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
+                title({['Condition ', conds{cond}, ' Fit-type: ', strjoin(HRF.types(typ)), ' Regions: ', strjoin(HRF.region(reg))], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
                 
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'left', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'right', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'center', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'top', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'left', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'right', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'center', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'top', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
 
                 hold on;
             end
             % region_labels = format_strings_for_legend(r);
             % legend(region_labels);
-            legend(h, format_strings_for_legend(r));
+            legend(h, format_strings_for_legend(HRF.region(reg)));
         end
     end
 

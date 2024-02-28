@@ -24,14 +24,35 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAM
 
     % Step 0. Load in an SPM.mat file if available to pass in metadata and
     % such
-    SPM=[];
-    if ~isempty(varargin)
-        if isstruct(varargin{1})
-            SPM=varargin{1};
+
+
+    % Check if its an SPM struct or filepath:
+    if ischar(fmri_d)
+        if contains(fmri_d, 'SPM.mat')
+            load(fmri_d);
+            if exist('SPM', 'var')
+                isSPM=true;
+            end
+        
         else
-            % If pointing to an SPM filepath
-            load(varargin{1})
+            fmri_d=fmri_data(fmri_d);
         end
+    end
+    
+    if isstruct(fmri_d)
+        SPM=fmri_d;
+        isSPM=true;
+    end
+
+
+
+    if isSPM
+        % if isstruct(varargin{1})
+        %     SPM=varargin{1};
+        % else
+        %     % If pointing to an SPM filepath
+        %     load(varargin{1})
+        % end
         % % Don't do that, spmify instead into gKWY (grand-mean-scaled, filtered (K), and whitened (W))
         % gKWY=spmify(fmri_d, SPM);
         % 

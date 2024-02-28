@@ -94,7 +94,7 @@ if isstruct(SPM)
 
     % %% ONE WAY
     % % run hrf_fit separately for every d
-    for i=1:numel(d)
+    parfor i=1:numel(d)
         % Reassign data.
         d{i}.dat=gkwy_d{i};
 

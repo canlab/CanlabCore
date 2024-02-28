@@ -1,4 +1,4 @@
-function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, rois, outfile, varargin)
+function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAMS, HRF_PARAMS, at, rois, outfile)
     % EstimateHRF_inAtlas takes a raw 4D fmri_data object, preprocesses it, and
     % then outputs an estimated HRF time series for each condition of interest.
     % PREPROC struct needs to have TR, hpf, and Condition information
@@ -491,9 +491,9 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
                     HRF_OBJ{t}{d}{c}=fmri_data(HRF_OBJ_path);
                     PARAM_OBJ{t}{d}{c}=fmri_data(PARAM_OBJ_path);
                     files_exist=1;
-                    disp('found file')
+                    % disp('found file')
                 else
-                    disp('did not find file')
+                    % disp('did not find file')
                     files_exist=0;
                 end
             end

@@ -55,7 +55,8 @@ function movie_of_slice_timeseries(imgs, slicenumber, moviename, orientation)
         [dd, ff, ee] = fileparts(V(i).fname);
         title(sprintf('Image %3.0f: %s', i, ff), 'FontSize', 24)
 
-        mov = add_a_frame(mov, H);
+        % mov = add_a_frame(mov, H);
+        writeVideo(mov, H);
     end
 
     tmp = close(mov); %#ok;
@@ -72,7 +73,14 @@ function [mov, nframes, axh] = setup_movie(mov, movlength, moviename)
     nframes = movlength .* fps;
 
     if isempty(mov)
-        mov = avifile(moviename, 'Quality', 75, 'Compression', 'None', 'Fps', fps);
+%         mov = avifile(moviename, 'Quality', 75, 'Compression', 'None', 'Fps', fps);
+        
+%         frame_rate = 1/tr;
+        mov = VideoWriter(moviename);
+        mov.Quality
+        mov.FrameRate = fps;
+        open(mov);
+        
     end
 
     % add to existing

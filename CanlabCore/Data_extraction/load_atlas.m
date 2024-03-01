@@ -50,6 +50,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'bianciardi[_fmriprep20|_fsl6]_2mm   
 %                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
 % 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
+% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
+% 'limbic_brainstem_atlas[_fmriprep20|fsl_6]
+%                                 'Levinson Bari Limbic Brainstem Atlas. Includes VTA, dorsal raphe, locus coereleus, nucleus tractus solitaris and PAG. Probablistic with an open usage license.'
 %
 % More information and references to original publications are saved in
 % each atlas object. This function is a shell to collect them in a central registry.
@@ -326,7 +329,23 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
+
+    case {'harvard_aan', 'harvard_aan_fmriprep20'}
+        savefile='harvard_aan_v2_MNI152NLin2009cAsym_atlas_object.mat';
+        varname = 'atlas_obj';
         
+    case {'harvard_aan_fsl6'}
+        savefile='harvard_aan_v2_MNI152NLin6Asym_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'limbic_brainstem_atlas_fmriprep20', 'limbic_brainstem_atlas'}
+        savefile='levinson_bari_limbic_brainstem_atlas_MNI152NLin2009cAsym_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'limbic_brainstem_atlas_fsl6'}
+        savefile='levinson_bari_limbic_brainstem_atlas_MNI152NLin6Asym_atlas_object.mat';
+        varname = 'atlas_obj';
+
     otherwise % assume it's a file name
         savefile = which(atlas_file_name_or_keyword);
         varname = [];

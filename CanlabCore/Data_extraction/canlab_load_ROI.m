@@ -374,7 +374,9 @@ switch region_name
     case {'MGN', 'mgn'}
         
         region_file = which('Morel_thalamus_atlas_regions.mat');              % File with region object/clusters struct
-        var_name = {'L_MGN' 'R_MGN'};                               % Variable name(s) of interest in file
+        % var_name = {'L_MGN' 'R_MGN'};                               % Variable name(s) of interest in file
+        var_name = {'Thal_MGN_L' 'Thal_MGN_R'};                               % Variable name(s) of interest in file
+
         image_file = [];                                            % Image file name with binary mask
         default_color = [1 0 .5];                                   % default color for display
         

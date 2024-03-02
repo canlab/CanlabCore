@@ -72,6 +72,9 @@ function [d_CI, P, P_CI] = effect_size_CI(d, n, varargin)
 %
 % NOTE: Confidence intervals are not symmetric.
 %
+% Effect size toolbox:
+% https://www.mathworks.com/matlabcentral/fileexchange/32398-hhentschke-measures-of-effect-size-toolbox
+%
 % :See also:
 % ::
 % --------------------------------------------------

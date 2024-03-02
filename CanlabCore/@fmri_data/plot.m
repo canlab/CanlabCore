@@ -680,6 +680,19 @@ for i = 1:n_runs
 
 end
 
+% fix axis limits
+myax = subplot(n_runs, 1, 1);
+mypos = get(myax, 'Position');
+
+for i = 1:n_runs
+
+    myax = subplot(n_runs, 1, i);
+    myaxpos = get(myax, 'Position');
+    myaxpos(4) = mypos(4);
+    set(myax, 'Position', myaxpos);
+end
+
+colormap gray
 drawnow
 
 

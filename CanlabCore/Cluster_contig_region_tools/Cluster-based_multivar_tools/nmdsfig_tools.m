@@ -111,6 +111,7 @@
 % streamlineshift is multiplier for variation in x y z loc across streamlines
 %
 % Note: for 3-D graphs, use cluster_nmdsfig_glassbrain.m
+%       Also used in canlab_force_directed_graph.m
 %
 % -----------------------------------------------------------------------
 % Connect two points x and y in 2-D space with a straight or curved line

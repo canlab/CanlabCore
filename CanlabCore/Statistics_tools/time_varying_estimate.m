@@ -101,7 +101,7 @@ end
 kern = repmat(kern,1,ncols);
 
 if nobs < nshift, error('Not enough observations to support kernel.'); end
-y = zeros(nobs,1);
+% y = zeros(nobs,1); % for matrices, output size not yet defined
 
 % pad data at ends to avoid edge artifacts
 % -------------------------------------------
@@ -137,10 +137,10 @@ for i = [(nshift+1):stepby:(nobs + nshift) (nobs + nshift)]
     
     %y(:,i) = tmpy(nshift+1:nshift+nobs);
     
-end
+end % time steps
 
 if stepby == 1
-    y = y( (nshift+1):(nobs + nshift) );
+    y = y( (nshift+1):(nobs + nshift) , :);
 
 else
     indx = [(nshift+1):stepby:(nobs + nshift) (nobs + nshift)];
@@ -148,7 +148,7 @@ else
 
 end
 
-end
+end % main function
 
 
 

@@ -80,7 +80,7 @@ fprintf('%s',last_msg);
 % working with sparse matrices is much faster for atlases with many
 % parcels, while atlases with few parcels are likely to run quickly
 % regardless
-obj.probability_maps = sparse(obj.probability_maps);
+obj.probability_maps = sparse(double(obj.probability_maps));
 for i = 1:length(new_lbl_parcels)
     % this can be parallelized but it's very memory intensive for some
     % atlases (e.g. canlab2023) and parallelization makes the problem worse

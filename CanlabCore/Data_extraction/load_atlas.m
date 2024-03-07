@@ -15,9 +15,11 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
 %                                 (Both in MasksPrivate)'
-% 'iglesias_thal', 'iglesias_thal_[_fmriprep20|_fsl6]'
+% 'iglesias_thal[_fmriprep20|_fsl6]'
 %                                 'Iglesias/Freesurfer thalamic nuclear parcellation in fmriprep20 (default) or fsl6 space. A bit more coarse than morel, 
-%                                  but open license, more accurate boundaries and probablistic'%
+%                                  but open license, more accurate boundaries and probablistic'
+% 'iglesias_hypothal[_fmriprep20|_fsl6]
+%                                 'Billot/Iglesias/Freesurfer hypothalamic segmentation in fmriprep20 (default) or fsl6 space.
 % 'cortex', 'glasser'
 %                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from 
 %                                  surface (deprecated)'
@@ -45,12 +47,11 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 % 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
-% 'bianciardi[_fmriprep20|_fsl6]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm sampling resolution'
-% 'bianciardi[_fmriprep20|_fsl6]_2mm   
-%                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
+% 'bianciardi[_fmriprep20|_fsl6][_2mm]   
+%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm (default) or 2mm sampling resolution'
 % 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
-% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
+% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the 
+%                                   midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
 % 'limbic_brainstem_atlas[_fmriprep20|fsl_6]
 %                                 'Levinson Bari Limbic Brainstem Atlas. Includes VTA, dorsal raphe, locus coereleus, nucleus tractus solitaris and PAG. Probablistic with an open usage license.'
 %

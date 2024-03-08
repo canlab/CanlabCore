@@ -5,6 +5,10 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
+% 'opencanlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|2mm_]
+%                                 'Variation on canlab2024 that only uses regions with open usage and distribution licenses. No client side 
+%                                 assembly needed, but has fewer brainstem areas, and some have synthetic probabilities. Used as a the starting
+%                                 point for dynamic assembly of canlab2024 though and the two have much in common. Defauts = {coarse,fmriprep20,2mm}
 % 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
 %                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
 %                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
@@ -330,6 +334,39 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
+
+    case {'opencanlab2024_fine_fmriprep20_1mm', 'opencanlab2024_fine_1mm'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym.mat';
+        varname = 'canlab';
+
+    case {'opencanlab2024_fine_fmriprep20_2mm', 'opencanlab2024_fine_fmriprep20', 'opencanlab2024_fine'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_2mm.mat';
+        varname = 'canlab_2mm';
+
+    case {'opencanlab2024_fine_fsl6_1mm'}
+        savefile='openCANLab2024_MNI152NLin6Asym.mat';
+        varname = 'canlab';
+
+    case {'opencanlab2024_fine_fsl6_2mm', 'opencanlab2024_fine_fsl6'}
+        savefile='openCANLab2024_MNI152NLin6Asym.mat';
+        varname = 'canlab_2mm';
+
+    case {'opencanlab2024_coarse_fmriprep20_1mm', 'opencanlab2024_coarse_1mm', 'opencanlab2024_1mm'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_coarse.mat';
+        varname = 'canlab_coarse';
+
+    case {'opencanlab2024_coarse_fmriprep20_2mm', 'opencanlab2024_coarse_fmriprep20', 'opencanlab2024_coarse_2mm', 'opencanlab2024_fmriprep20_2mm', ...
+            'opencanlab2024_coarse', 'opencanlab2024_fmriprep20', 'opencanlab2024_2mm', 'opencanlab2024'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_coarse_2mm.mat';
+        varname = 'canlab_coarse_2mm';
+
+    case {'opencanlab2024_coarse_fsl6_1mm', 'opencanlab2024_fsl6_1mm'}
+        savefile='openCANLab2024_MNI152NLin6Asym_coarse.mat';
+        varname = 'canlab_coarse';
+
+    case {'opencanlab2024_coarse_fsl6_2mm', 'opencanlab2024_fsl6_2mm', 'opencanlab2024_coarse_fsl6', 'opencanlab2024_fsl6'}
+        savefile='openCANLab2024_MNI152NLin6Asym_coarse_2mm.mat';
+        varname = 'canlab_coarse_2mm';
 
     case {'harvard_aan', 'harvard_aan_fmriprep20'}
         savefile='harvard_aan_v2_MNI152NLin2009cAsym_atlas_object.mat';

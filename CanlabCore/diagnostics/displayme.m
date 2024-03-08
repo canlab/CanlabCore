@@ -1,6 +1,6 @@
 function [subjM,Mtotalv] = displayme(mm,txtlab,tlab2)
 % Used in img_hist2 - included as internal function there.
-% this function is for indepenent re-display after img_hist2 is finished.
+% this function is for independent re-display after img_hist2 is finished.
 %
 % :Usage:
 % ::

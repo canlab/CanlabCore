@@ -18,6 +18,21 @@ function canlab_redblue_symmetric_colormap
 % interpret relative values when comparisons are on the same scale,
 % we should use a single color dimension (here, intensity of
 % redness for positive or blueness for negative values).
+%
+% Examples:
+% -----------------------------------------------------------------
+% Generate sample data
+% covmtx = blkdiag(toeplitz([1 .6 .6]), toeplitz([1 .6 .6]));  % two orthogonal latent sources, 3 measures each
+% x = mvnrnd(ones(1, 6), covmtx, 500);
+% 
+% % Image correlation matrix
+% create_figure('corr'); 
+% imagesc(corr(x)); colorbar; set(gca, 'YDir', 'Reverse'); axis tight;
+% canlab_redblue_symmetric_colormap;
+% 
+% % 
+% create_figure('corr2'); 
+% plot_correlation_matrix(x);
 
 cm = colormap_tor([0 0 1], [1 .2 0], [1 1 1]);
 colormap(gca, cm);

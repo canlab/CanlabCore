@@ -5,19 +5,31 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
-% 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_2mm]
+% 'canlab2024_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
 %                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
 %                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
 %                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
-%                                 details.'
+%                                 details. Assembled dynamically when called due to distribution restrictions of Bianciardi subatlas. Development 
+%                                 is ongoing (Date: 03/07/2024)'
+% 'opencanlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|2mm_]
+%                                 'Variation on canlab2024 that only uses regions with open usage and distribution licenses. No client side 
+%                                 assembly needed, but has fewer brainstem areas, and some have synthetic probabilities. Used as the starting
+%                                 point for dynamic assembly of canlab2024 though and the two have much in common. Defauts = {coarse,fmriprep20,2mm}
+% 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
+%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
+%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
+%                                 details. Development is frozen, so it may be more stable than CANLab2024 (Date: 3/07/2024)'
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
 %                                 (Both in MasksPrivate)'
-% 'iglesias_thal', 'iglesias_thal_[_fmriprep20|_fsl6]'
+% 'iglesias_thal[_fmriprep20|_fsl6]'
 %                                 'Iglesias/Freesurfer thalamic nuclear parcellation in fmriprep20 (default) or fsl6 space. A bit more coarse than morel, 
-%                                  but open license, more accurate boundaries and probablistic'%
+%                                  but open license, more accurate boundaries and probablistic'
+% 'iglesias_hypothal[_fmriprep20|_fsl6]
+%                                 'Billot/Iglesias/Freesurfer hypothalamic segmentation in fmriprep20 (default) or fsl6 space.
 % 'cortex', 'glasser'
 %                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from 
 %                                  surface (deprecated)'
@@ -45,12 +57,11 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
 % 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
-% 'bianciardi[_fmriprep20|_fsl6]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm sampling resolution'
-% 'bianciardi[_fmriprep20|_fsl6]_2mm   
-%                                 'Same as above but with enchained spatial projection and resampling to 2mm to minimize interpolation error (preferable over resampling the 1mm version above).'
+% 'bianciardi[_fmriprep20|_fsl6][_2mm]   
+%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm (default) or 2mm sampling resolution'
 % 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
-% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
+% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the 
+%                                   midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
 % 'limbic_brainstem_atlas[_fmriprep20|fsl_6]
 %                                 'Levinson Bari Limbic Brainstem Atlas. Includes VTA, dorsal raphe, locus coereleus, nucleus tractus solitaris and PAG. Probablistic with an open usage license.'
 %
@@ -329,6 +340,89 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2023_atlas('MNI152NLin6Asym','fine',1);
+
+    case {'opencanlab2024_fine_fmriprep20_1mm', 'opencanlab2024_fine_1mm'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym.mat';
+        varname = 'canlab';
+
+    case {'opencanlab2024_fine_fmriprep20_2mm', 'opencanlab2024_fine_fmriprep20', 'opencanlab2024_fine'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_2mm.mat';
+        varname = 'canlab_2mm';
+
+    case {'opencanlab2024_fine_fsl6_1mm'}
+        savefile='openCANLab2024_MNI152NLin6Asym.mat';
+        varname = 'canlab';
+
+    case {'opencanlab2024_fine_fsl6_2mm', 'opencanlab2024_fine_fsl6'}
+        savefile='openCANLab2024_MNI152NLin6Asym_2mm.mat';
+        varname = 'canlab_2mm';
+
+    case {'opencanlab2024_coarse_fmriprep20_1mm', 'opencanlab2024_coarse_1mm', 'opencanlab2024_1mm'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_coarse.mat';
+        varname = 'canlab_coarse';
+
+    case {'opencanlab2024_coarse_fmriprep20_2mm', 'opencanlab2024_coarse_fmriprep20', 'opencanlab2024_coarse_2mm', 'opencanlab2024_fmriprep20_2mm', ...
+            'opencanlab2024_coarse', 'opencanlab2024_fmriprep20', 'opencanlab2024_2mm', 'opencanlab2024'}
+        savefile='openCANLab2024_MNI152NLin2009cAsym_coarse_2mm.mat';
+        varname = 'canlab_coarse_2mm';
+
+    case {'opencanlab2024_coarse_fsl6_1mm', 'opencanlab2024_fsl6_1mm'}
+        savefile='openCANLab2024_MNI152NLin6Asym_coarse.mat';
+        varname = 'canlab_coarse';
+
+    case {'opencanlab2024_coarse_fsl6_2mm', 'opencanlab2024_fsl6_2mm', 'opencanlab2024_coarse_fsl6', 'opencanlab2024_fsl6'}
+        savefile='openCANLab2024_MNI152NLin6Asym_coarse_2mm.mat';
+        varname = 'canlab_coarse_2mm';
+
+    case {'canlab2024_coarse_fmriprep20_2mm', 'canlab2024_coarse_fmriprep20','canlab2024_coarse_2mm', ...
+            'canlab2024_fmriprep20_2mm', 'canlab2024_coarse', 'canlab2024_fmriprep20', 'canlab2024_2mm', ...
+            'canlab2024'}
+        savefile='CANLab2024_MNI152NLin2009cAsym_coarse_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','coarse',2);
+
+    case {'canlab2024_coarse_fsl6_2mm', 'canlab2024_coarse_fsl6', 'canlab2024_fsl6_2mm', 'canlab2024_fsl6'}
+        savefile='CANLab2024_MNI152NLin6Asym_coarse_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','coarse',2);
+
+    case {'canlab2024_coarse_fmriprep20_1mm', 'canlab2024_coarse_1mm', 'canlab2024_fmriprep20_1mm', 'canlab2024_1mm'}
+        savefile='CANLab2024_MNI152NLin2009cAsym_coarse_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','coarse',1);
+
+    case {'canlab2024_coarse_fsl6_1mm', 'canlab2024_fsl6_1mm'}
+        savefile='CANLab2024_MNI152NLin6Asym_coarse_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','coarse',1);
+
+    case {'canlab2024_fine_fmriprep20_2mm', 'canlab2024_fine_fmriprep20','canlab2024_fine_2mm', 'canlab2024_fine'}
+        savefile='CANLab2024_MNI152NLin2009cAsym_fine_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',2);
+
+    case {'canlab2024_fine_fsl6_2mm', 'canlab2024_fine_fsl6'}
+        savefile='CANLab2024_MNI152NLin6Asym_fine_2mm_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','fine',2);
+        
+    case {'canlab2024_fine_fmriprep20_1mm', 'canlab2024_fine_1mm'}
+        savefile='CANLab2024_MNI152NLin2009cAsym_fine_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',1);
+
+    case {'canlab2024_fine_fsl6_1mm'}
+        savefile='CANLab2024_MNI152NLin6Asym_fine_atlas_object.mat';
+        varname = 'atlas_obj';
+        docreate = true;
+        create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','fine',1);
 
     case {'harvard_aan', 'harvard_aan_fmriprep20'}
         savefile='harvard_aan_v2_MNI152NLin2009cAsym_atlas_object.mat';

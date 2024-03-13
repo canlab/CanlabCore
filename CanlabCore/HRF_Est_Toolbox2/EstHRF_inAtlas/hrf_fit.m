@@ -195,59 +195,59 @@ if isstruct(SPM)
     % 
     % % Bug testing
     % nps_test_cHRF={apply_nps(hrf_obj_dat3{1}), apply_nps(hrf_obj_dat3{2}), apply_nps(hrf_obj_dat3{3}), apply_nps(hrf_obj_dat3{4})}
-    nps_test_FIR={apply_nps(hrf_obj_dat1{1}), apply_nps(hrf_obj_dat1{2}), apply_nps(hrf_obj_dat1{3}), apply_nps(hrf_obj_dat1{4})}
-    nps_test_sFIR={apply_nps(hrf_obj_dat2{1}), apply_nps(hrf_obj_dat2{2}), apply_nps(hrf_obj_dat2{3}), apply_nps(hrf_obj_dat2{4})}
-    
-    figure
-    plot([nps_test_FIR{1}{4}], 'r--'), hold on
-    plot([nps_test_FIR{2}{4}], 'g--'), hold on
-    plot([nps_test_FIR{3}{4}], 'b--'), hold on
-    plot([nps_test_FIR{4}{1}], 'm--'), hold on
-
-    plot([nps_test_FIR{1}{4}, nps_test_FIR{2}{4},nps_test_FIR{3}{4},nps_test_FIR{4}{1}]), hold on
-
-    plot([nps_test_sFIR{1}{4}], 'r-'), hold on
-    plot([nps_test_sFIR{2}{4}], 'g-'), hold on
-    plot([nps_test_sFIR{3}{4}], 'b-'), hold on
-    plot([nps_test_sFIR{4}{1}], 'm-'), hold on
-
-    plot([nps_test_sFIR{1}{4}, nps_test_sFIR{2}{4},nps_test_sFIR{3}{4},nps_test_sFIR{4}{1}]), hold on
-
-    hline(0,'k-')
-    legend({'run1', 'run2', 'run3'})
-    legend({'run1', 'run2', 'run3', 'run4'})
-
-    % compare with betas
-
-    % Check out what d looks like
-    nps_d=apply_nps(d)
-    plot([nps_d{:}])
-
-    % Checkout what spmify did
-    figure
-    nps_gkwyd=apply_nps(gkwy_data)
-    plot([nps_gkwyd{:}])
-
-    % Plot to compare
-    plot([nps_d{:}]), hold on
-    plot([nps_gkwyd{:}]), hold on
-
-    plot([nps_d{1}]), hold on
-    plot([nps_gkwyd{1}]), hold on
-    legend({'pre', 'post'})
-
-    plot([nps_d{2}]), hold on
-    plot([nps_gkwyd{2}]), hold on
-    legend({'pre', 'post'})
-
-    plot([nps_d{3}]), hold on
-    plot([nps_gkwyd{3}]), hold on
-    legend({'pre', 'post'})
-
-    plot([nps_d{4}]), hold on
-    plot([nps_gkwyd{4}]), hold on
-    legend({'pre', 'post'})
-
+    % nps_test_FIR={apply_nps(hrf_obj_dat1{1}), apply_nps(hrf_obj_dat1{2}), apply_nps(hrf_obj_dat1{3}), apply_nps(hrf_obj_dat1{4})}
+    % nps_test_sFIR={apply_nps(hrf_obj_dat2{1}), apply_nps(hrf_obj_dat2{2}), apply_nps(hrf_obj_dat2{3}), apply_nps(hrf_obj_dat2{4})}
+    % 
+    % figure
+    % plot([nps_test_FIR{1}{4}], 'r--'), hold on
+    % plot([nps_test_FIR{2}{4}], 'g--'), hold on
+    % plot([nps_test_FIR{3}{4}], 'b--'), hold on
+    % plot([nps_test_FIR{4}{1}], 'm--'), hold on
+    % 
+    % plot([nps_test_FIR{1}{4}, nps_test_FIR{2}{4},nps_test_FIR{3}{4},nps_test_FIR{4}{1}]), hold on
+    % 
+    % plot([nps_test_sFIR{1}{4}], 'r-'), hold on
+    % plot([nps_test_sFIR{2}{4}], 'g-'), hold on
+    % plot([nps_test_sFIR{3}{4}], 'b-'), hold on
+    % plot([nps_test_sFIR{4}{1}], 'm-'), hold on
+    % 
+    % plot([nps_test_sFIR{1}{4}, nps_test_sFIR{2}{4},nps_test_sFIR{3}{4},nps_test_sFIR{4}{1}]), hold on
+    % 
+    % hline(0,'k-')
+    % legend({'run1', 'run2', 'run3'})
+    % legend({'run1', 'run2', 'run3', 'run4'})
+    % 
+    % % compare with betas
+    % 
+    % % Check out what d looks like
+    % nps_d=apply_nps(d)
+    % plot([nps_d{:}])
+    % 
+    % % Checkout what spmify did
+    % figure
+    % nps_gkwyd=apply_nps(gkwy_data)
+    % plot([nps_gkwyd{:}])
+    % 
+    % % Plot to compare
+    % plot([nps_d{:}]), hold on
+    % plot([nps_gkwyd{:}]), hold on
+    % 
+    % plot([nps_d{1}]), hold on
+    % plot([nps_gkwyd{1}]), hold on
+    % legend({'pre', 'post'})
+    % 
+    % plot([nps_d{2}]), hold on
+    % plot([nps_gkwyd{2}]), hold on
+    % legend({'pre', 'post'})
+    % 
+    % plot([nps_d{3}]), hold on
+    % plot([nps_gkwyd{3}]), hold on
+    % legend({'pre', 'post'})
+    % 
+    % plot([nps_d{4}]), hold on
+    % plot([nps_gkwyd{4}]), hold on
+    % legend({'pre', 'post'})
+    % 
 
 
 

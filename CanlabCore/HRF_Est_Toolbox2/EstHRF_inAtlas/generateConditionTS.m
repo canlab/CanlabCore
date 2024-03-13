@@ -1,4 +1,4 @@
-function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, varargin)
+function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, TR, varargin)
     % Helper script to create condition vectors for hrf_fit_one_voxel()
     % Michael Sun, Ph.D.
     % - Takes fmri_data() object or the number of TRs in a 4D object.
@@ -48,8 +48,8 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, va
     for c = 1:nconds
         % Extract the times for the current condition
         % current_times = eval([conditions{c} '_times{sub}{j}']);
-        current_times=onsets{c};
-        current_dur=durations{c};
+        current_times=onsets{c}/TR;
+        current_dur=durations{c}/TR;
         
         % Remove the onset times that didn't get recorded. 
         % Note: Add 0.5TRs to correct for slice-timing correction if needed

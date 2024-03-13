@@ -475,29 +475,30 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
 
     CondNames=cell(1, numel(HRF_PARAMS.types));
 
-    parfor t=1:numel(HRF_PARAMS.types)
-    % for t=1:numel(HRF_PARAMS.types)
+    % parfor t=1:numel(HRF_PARAMS.types)
+    for t=1:numel(HRF_PARAMS.types)
 
-    % First check to see if valid images have already been generated. Then
-    % we don't have to regenerate them.
-        for d = 1:numel(HRF.name)
 
-            CondNames{t}{d} = strtrim([SPM.Sess(d).U.name]');
-        
-            for c=1:numel(CondNames{t}{d})
-                HRF_OBJ_path=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', CondNames{t}{d}{c}, '_fit.nii'];
-                PARAM_OBJ_path=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', CondNames{t}{d}{c}, '_params.nii'];
-                if exist(HRF_OBJ_path, 'file')
-                    HRF_OBJ{t}{d}{c}=fmri_data(HRF_OBJ_path);
-                    PARAM_OBJ{t}{d}{c}=fmri_data(PARAM_OBJ_path);
-                    files_exist=1;
-                    % disp('found file')
-                else
-                    % disp('did not find file')
-                    files_exist=0;
-                end
-            end
-        end
+        % First check to see if valid images have already been generated. Then
+        % we don't have to regenerate them.
+        files_exist=0;
+        % for d = 1:numel(HRF.name)
+        % 
+        %     CondNames{t}{d} = strtrim([SPM.Sess(d).U.name]');
+        %     for c=1:numel(CondNames{t}{d})
+        %         HRF_OBJ_path=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', CondNames{t}{d}{c}, '_fit.nii'];
+        %         PARAM_OBJ_path=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', CondNames{t}{d}{c}, '_params.nii'];
+        %         if exist(HRF_OBJ_path, 'file')
+        %             HRF_OBJ{t}{d}{c}=fmri_data(HRF_OBJ_path);
+        %             PARAM_OBJ{t}{d}{c}=fmri_data(PARAM_OBJ_path);
+        %             files_exist=1;
+        %             % disp('found file')
+        %         else
+        %             % disp('did not find file')
+        %             files_exist=0;
+        %         end
+        %     end
+        % end
 
         if ~files_exist
             % Generate the files otherwise.

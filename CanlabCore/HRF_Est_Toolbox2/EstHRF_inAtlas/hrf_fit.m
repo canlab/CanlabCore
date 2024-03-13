@@ -41,7 +41,6 @@ function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat, info] = hrf_fit(SPM,
 %           - 0 - FIR 
 %           - 1 - smooth FIR        
 %
-%
 % ..
 %    Created by Michael Sun on 02/20/24
 % ..
@@ -54,7 +53,6 @@ if isstring(SPM) || ischar(SPM)
     end
 
 end
-
 
 if isstruct(SPM)
     fnames=unique({SPM.xY.VY.fname})';
@@ -92,6 +90,7 @@ if isstruct(SPM)
         error('Incompatible number of runs in SPM and in cell-array T.')
     end
 
+    % method='CHRF'
     % %% ONE WAY
     % % run hrf_fit separately for every d
     parfor i=1:numel(d)
@@ -100,7 +99,8 @@ if isstruct(SPM)
 
         % Extract TR
         TR = SPM.xY.RT;
-        Runc=generateConditionTS(numel(SPM.Sess(i).row), [SPM.Sess(i).U.name], {SPM.Sess(i).U.ons}, {SPM.Sess(i).U.dur});
+        % 
+        Runc=generateConditionTS(numel(SPM.Sess(i).row), [SPM.Sess(i).U.name], {SPM.Sess(i).U.ons}, {SPM.Sess(i).U.dur}, TR);
         
         % There's a need to pull apart the SPM design matrix for every run
         % Column of regressors + covariates for each session + intercept
@@ -136,28 +136,124 @@ if isstruct(SPM)
             intercept_idx = find(sum(DX)==len);
             copyDX = DX;
             copyDX(:,intercept_idx) = [];
+
+            % Design Matrix Regressors + intercept:
             DX = [copyDX ones(len,1)];
        
             % Covariate Design Matrix for each session (without intercept):
             NX=[SPM.Sess(i).C.C];
 
             % Concatenate the Task regressors with Covariates
-            X=[DX, NX];
+            % X=[DX, NX];
             % Filter
-            X=spm_filter(SPM.xX.K(i), X);
+            % X=spm_filter(SPM.xX.K(i), X);
+
+            % filter is probably performed with spm_sp('Set', xX.K*xX.W*xX.X)
+            % X=spm_sp('Set', SPM.xX.K(i)*SPM.xX.W*SPM.xX.X)
+
+            % xX.KxXs        = spm_sp('Set',spm_filter(xX.K,W*xX.X));    % KWX
+
+
+            % Ke says preprocess the nuisance regressors first before
+            % fitting the FIR, otherwise the design matrix has problematic
+            % VIFs between the FIR indicators and the spike regressors.
+            xKNXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*NX));    % KW*Nuisance
+            NX    = full(xKNXs.X);
+            % d{i}=canlab_connectivity_preproc(d{i}, 'additional_nuisance', NX, TR,'no_plots')
+            % preproc_d=canlab_connectivity_preproc(d{i}, 'additional_nuisance', NX)
+
+            % preproc_d=d{i};
+            d{i}.covariates=NX;
+            d{i}=preprocess(d{i}, 'resid',1) % Residualize out noise regressors
+
+            xKXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*DX));    % KW*Design
+            X    = full(xKXs.X);
 
         else
             % Otherwise set X to be the filtered design matrix of that
             % section.
-            X=spm_filter(SPM.xX.K(i), SPM.xX.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i)]));
+            % X1=spm_filter(SPM.xX.K(i), SPM.xX.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]));
+            X=SPM.xX.xKXs.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG])
         end
 
+        % ~ 40 min
         [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
+        % Test
+        % [params_obj1{i}, hrf_obj1{i}, params_obj_dat1{i}, hrf_obj_dat1{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
+
+        % [params_obj2{i}, hrf_obj2{i}, params_obj_dat2{i}, hrf_obj_dat2{i}] = hrf_fit(d{i},TR,Runc,T{i},method,1,X);
 
         info{i}.X=X;
         info{i}.names=[SPM.Sess(i).U.name]';
 
     end
+    % Possibly need to drop null regressors? No
+
+
+    % betas = filenames(fullfile(pwd, 'data', 'sub-SID000743', '*heat_start*', '*ses-12*bodymap_run*.nii'));
+    % apply_nps([betas(3), betas(4), betas(2), betas(1)])
+    % 
+    % % Bug testing
+    % nps_test_cHRF={apply_nps(hrf_obj_dat3{1}), apply_nps(hrf_obj_dat3{2}), apply_nps(hrf_obj_dat3{3}), apply_nps(hrf_obj_dat3{4})}
+    nps_test_FIR={apply_nps(hrf_obj_dat1{1}), apply_nps(hrf_obj_dat1{2}), apply_nps(hrf_obj_dat1{3}), apply_nps(hrf_obj_dat1{4})}
+    nps_test_sFIR={apply_nps(hrf_obj_dat2{1}), apply_nps(hrf_obj_dat2{2}), apply_nps(hrf_obj_dat2{3}), apply_nps(hrf_obj_dat2{4})}
+    
+    figure
+    plot([nps_test_FIR{1}{4}], 'r--'), hold on
+    plot([nps_test_FIR{2}{4}], 'g--'), hold on
+    plot([nps_test_FIR{3}{4}], 'b--'), hold on
+    plot([nps_test_FIR{4}{1}], 'm--'), hold on
+
+    plot([nps_test_FIR{1}{4}, nps_test_FIR{2}{4},nps_test_FIR{3}{4},nps_test_FIR{4}{1}]), hold on
+
+    plot([nps_test_sFIR{1}{4}], 'r-'), hold on
+    plot([nps_test_sFIR{2}{4}], 'g-'), hold on
+    plot([nps_test_sFIR{3}{4}], 'b-'), hold on
+    plot([nps_test_sFIR{4}{1}], 'm-'), hold on
+
+    plot([nps_test_sFIR{1}{4}, nps_test_sFIR{2}{4},nps_test_sFIR{3}{4},nps_test_sFIR{4}{1}]), hold on
+
+    hline(0,'k-')
+    legend({'run1', 'run2', 'run3'})
+    legend({'run1', 'run2', 'run3', 'run4'})
+
+    % compare with betas
+
+    % Check out what d looks like
+    nps_d=apply_nps(d)
+    plot([nps_d{:}])
+
+    % Checkout what spmify did
+    figure
+    nps_gkwyd=apply_nps(gkwy_data)
+    plot([nps_gkwyd{:}])
+
+    % Plot to compare
+    plot([nps_d{:}]), hold on
+    plot([nps_gkwyd{:}]), hold on
+
+    plot([nps_d{1}]), hold on
+    plot([nps_gkwyd{1}]), hold on
+    legend({'pre', 'post'})
+
+    plot([nps_d{2}]), hold on
+    plot([nps_gkwyd{2}]), hold on
+    legend({'pre', 'post'})
+
+    plot([nps_d{3}]), hold on
+    plot([nps_gkwyd{3}]), hold on
+    legend({'pre', 'post'})
+
+    plot([nps_d{4}]), hold on
+    plot([nps_gkwyd{4}]), hold on
+    legend({'pre', 'post'})
+
+
+
+
+
+
+
 
 end
 

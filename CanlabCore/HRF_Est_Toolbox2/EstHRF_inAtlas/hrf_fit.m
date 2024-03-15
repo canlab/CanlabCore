@@ -277,6 +277,9 @@ if isstruct(SPM)
             % If using sFIR, pre-penalize the pseudoinverted design matrix
             if strcmpi(method, 'FIR') && mode==1
 
+                % Task regressors for each run can be found here:
+                numstim=numel(SPM.Sess(i).U);
+
                 % Initialize an array to hold the length of regressors for each task
                 tlen_all = [];
                 

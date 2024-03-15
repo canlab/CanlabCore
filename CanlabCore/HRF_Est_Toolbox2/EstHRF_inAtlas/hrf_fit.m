@@ -109,7 +109,7 @@ if isstruct(SPM)
     % % run hrf_fit separately for every d
 
     % Tor: Better to pass in pseudoinverse matrix to speed up computation:
-    parfor i=1:numel(d)
+    for i=1:numel(d)
         % Reassign data.
         d{i}.dat=gkwy_d{i};
 

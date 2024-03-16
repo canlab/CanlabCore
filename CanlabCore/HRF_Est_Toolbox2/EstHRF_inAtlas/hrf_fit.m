@@ -227,7 +227,7 @@ if isstruct(SPM)
                 % the pseudoinversion. Need a way to put in in SPM's xKXs
                 % space structure.
                 % PX = PX*X'
-            
+                clear pen;
             
             else
                 % Filter and invert
@@ -334,6 +334,7 @@ if isstruct(SPM)
 
                 % Now penalize SPM's task regressors
                 PX = inv(X'*X+pen)*X';
+                clear pen;
 
             else
                 X=SPM.xX.xKXs.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]);

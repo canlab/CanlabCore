@@ -242,6 +242,14 @@ if isstruct(SPM)
                 % Problem here is we have onsets but no durations from a
                 % FIR matrix. If we use FIR
 
+                switch method
+                    case 'CHRF0'
+                        p=1;
+                    case 'CHRF1'
+                        p=2;
+                    case 'CHRF2'
+                        p=3;
+                end
                 % Generate a design matrix
                 Run=Runc;
                 d = length(Run);

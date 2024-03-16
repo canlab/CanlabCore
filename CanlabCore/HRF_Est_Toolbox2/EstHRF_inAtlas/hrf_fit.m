@@ -246,11 +246,9 @@ if isstruct(SPM)
                 Run=Runc;
                 d = length(Run);
                 len = length(Run{1});
-                t=1:TR:T;
                 
                 % Constructing the Design Matrix X:
                 X = zeros(len,p*d);
-                param = zeros(3,d);
                 
                 [h, dh, dh2] = CanonicalBasisSet(TR);
                 

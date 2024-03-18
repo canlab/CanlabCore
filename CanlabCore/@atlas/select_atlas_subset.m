@@ -20,6 +20,10 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % then conditional independence assumption is violated and we default to
 % using the maximum probability instead.
 %
+% 'conditionally_ind' : If specified then 'flatten' assumes conditional
+% independence even when probabilities don't sum to 1. Does nothing
+% otherwise.
+%
 % 'labels_2' : If you enter any field name in the object, e.g., labels_2,
 % the function will search for keyword matches here instead of in obj.labels.
 %
@@ -76,6 +80,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 strings_to_find = [];
 integers_to_find = [];
 doflatten = false;
+condInd = false;
 doexact=false;
 
 % for entry of optional field to search for keywords
@@ -98,6 +103,8 @@ for i = 1:length(varargin)
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
             case 'exact', doexact = true;
+
+            case 'conditionally_ind', condInd = true;
                 
             otherwise
                 
@@ -147,7 +154,7 @@ for i = 1:length(strings_to_find)
 end
 
 % -------------------------------------------------------------------------
-% Check for problems
+% Check for problesum ms
 % -------------------------------------------------------------------------
 
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) ~= k  
@@ -245,7 +252,12 @@ if doflatten
     % tolerance to deal with floating point errors.
     hasdata = any(obj.probability_maps,2);
     tol = 1e-7;
-    if all(sum(obj.probability_maps(hasdata,:), 2) - 1 < tol)
+    if ~condInd
+        if all(sum(obj.probability_maps(hasdata,:), 2) - 1 < tol)
+            condInd = true;
+        end
+    end
+    if condInd
         obj_subset.probability_maps = sum(obj_subset.probability_maps, 2);
     else
         % we have evidence that probabilities are not conditionally
@@ -254,6 +266,9 @@ if doflatten
         obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
     end
 
+    if any(sum(obj_subset.probability_maps(hasdata,:), 2) - 1 > tol)
+        warning('Max subset cumulative probability = %0.2f. Conditional independence assumption was probably violated.', max(sum(obj_subset.probability_maps(hasdata,:), 2)));
+    end
     
     % Add labels for combined mask
     

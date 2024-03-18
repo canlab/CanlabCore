@@ -5,7 +5,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
-% 'canlab2024_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
+% 'canlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
 %                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
 %                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
 %                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
@@ -113,11 +113,11 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
 
     case {'iglesias_thal_fmriprep20', 'iglesias_thal'}
-        savefile = which('iglesias_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
+        savefile = which('iglesias_HCP278_ST76_PG264_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'iglesias_thal_fsl6'}
-        savefile = which('iglesias_hcp278_MNI152NLin6Asym_atlas_object.mat');
+        savefile = which('iglesias_HCP278_ST76_PG264_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'iglesias_hypothal_fmriprep20', 'iglesias_hypothal'}
@@ -401,7 +401,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','coarse',1);
 
     case {'canlab2024_fine_fmriprep20_2mm', 'canlab2024_fine_fmriprep20','canlab2024_fine_2mm', 'canlab2024_fine'}
-        savefile='CANLab2024_MNI152NLin2009cAsym_fine_2mm_atlas_object.mat';
+        savefile='CANLab2024_MNI152NLin2009cAsym_2mm_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',2);
@@ -413,7 +413,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','fine',2);
         
     case {'canlab2024_fine_fmriprep20_1mm', 'canlab2024_fine_1mm'}
-        savefile='CANLab2024_MNI152NLin2009cAsym_fine_atlas_object.mat';
+        savefile='CANLab2024_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',1);

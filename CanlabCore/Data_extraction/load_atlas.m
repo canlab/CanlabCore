@@ -23,6 +23,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
 % 'desikan_killiany[_fsl6|_fmriprep20]'
 %                                 'Desikan-Killiany cortical gyral/sulcal labeling from Freesurfer (2006). Gyri include pial surface and lateral banks. Default: fmriprep20'
+% 'dkt[_fsl6|_fmriprep20]         'Kline and Tourville's update to the desikan killiany atlas projected to fsl or fmriprep spaces. Default: fmriprep20'
 % 'destrieux[_fsl6|_fmriprep20]'  'Destrieux cortical gyral/sulcal labeling from Freesurfer (2009). Gyral/sulcal division is based on curvature values. Default: fmriprep20'
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
@@ -449,6 +450,14 @@ switch lower(atlas_file_name_or_keyword)
 
     case {'desikan_killiany_fsl6'}
         savefile='desikan_killiany_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'dkt', 'dkt_fmriprep20'}
+        savefile='dkt_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'dkt_fsl6'}
+        savefile='dkt_fsl6_atlas_object.mat';
         varname = 'atlas_obj';
 
     case {'destrieux', 'destrieux_fmriprep20'}

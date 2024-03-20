@@ -438,6 +438,7 @@ for i = 1:length(surface_handles)
         c_gray = repmat(0 .* nvals + .5 .* round(nvals), size(get(surface_handles(i), 'Vertices'), 1), 1);
         
     else
+
         %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
         if range(c_gray(wh)) == 0
             % Solid surface color

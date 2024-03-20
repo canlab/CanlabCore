@@ -87,6 +87,13 @@ function o2 = montage(obj, varargin)
 % Tor Wager, Feb 2018.  
 % This function simply invokes the region montage method.
 
+if ~contains(varargin, 'indexmap')
+    nregions = num_regions(obj);
+    cmap = scn_standard_colors(nregions);
+    cmap = cell2mat(cmap');
+    varargin = [varargin, 'indexmap', cmap];
+end
+
 r = atlas2region(obj);
 
 o2 = montage(r, varargin{:});

@@ -21,6 +21,9 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
 %                                 details. Development is frozen, so it may be more stable than CANLab2024 (Date: 3/07/2024)'
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
+% 'desikan_killiany[_fsl6|_fmriprep20]'
+%                                 'Desikan-Killiany cortical gyral/sulcal labeling from Freesurfer (2006). Gyri include pial surface and lateral banks. Default: fmriprep20'
+% 'destrieux[_fsl6|_fmriprep20]'  'Destrieux cortical gyral/sulcal labeling from Freesurfer (2009). Gyral/sulcal division is based on curvature values. Default: fmriprep20'
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
@@ -439,6 +442,23 @@ switch lower(atlas_file_name_or_keyword)
     case {'limbic_brainstem_atlas_fsl6'}
         savefile='levinson_bari_limbic_brainstem_atlas_MNI152NLin6Asym_atlas_object.mat';
         varname = 'atlas_obj';
+
+    case {'desikan_killiany', 'desikan_killiany_fmriprep20'}
+        savefile='desikan_killiany_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'desikan_killiany_fsl6'}
+        savefile='desikan_killiany_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'destrieux', 'destrieux_fmriprep20'}
+        savefile='destrieux_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'destrieux_fsl6'}
+        savefile='destrieux_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
 
     otherwise % assume it's a file name
         savefile = which(atlas_file_name_or_keyword);

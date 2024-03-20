@@ -356,7 +356,11 @@ map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
 
 % fixes colormap out of range bug
-mesh_struct.voldata(mesh_struct.voldata < min(clim)) = min(clim);
+% BP: sure, but it also asigns colors to empty parts of the cortex. It's
+% better to address the colormap out of range bug directly, which is due to
+% c_gray being initialized to a 3-vector rather than a 2D matrix. We can
+% fix that below instead of using this hacky solution here.
+%mesh_struct.voldata(mesh_struct.voldata < min(clim)) = min(clim);
 
 % Deal with edge interpolation effects
 % problem is that vertices near empty (zero) voxels get interpolated down to zero
@@ -427,7 +431,7 @@ for i = 1:length(surface_handles)
     
     c_gray = get(surface_handles(i), 'FaceVertexCData');
     
-    if isempty(c_gray)
+    if isempty(c_gray) || size(c_gray,1) == 1
         
         % solid
         % c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
@@ -435,7 +439,6 @@ for i = 1:length(surface_handles)
         
     else
         %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
-        
         if range(c_gray(wh)) == 0
             % Solid surface color
             % do nothing - skip rescaling

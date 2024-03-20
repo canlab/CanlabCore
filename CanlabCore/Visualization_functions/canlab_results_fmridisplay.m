@@ -58,6 +58,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'regioncenters'   A series of separate axes, each focused on one region
 %        'full2' for a slightly less full montage that avoids colorbar overlap issues
 %        'full hcp' for full montage, but with surfaces and volumes from HCP data
+%        'full hcp inflated' for full montage using hcp inflated surfaces
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
@@ -162,7 +163,7 @@ if ischar(input_activation)
     
     if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
-            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp') 
+            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
         varargin{end + 1} = 'noblobs'; 
@@ -242,6 +243,9 @@ if any(wh), montagetype = varargin{find(wh)};
 end
 
 wh = strcmp(varargin, 'full hcp');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'full hcp inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full2');
@@ -586,7 +590,7 @@ if ~exist('o2', 'var')
         case 'full hcp'
             % saggital
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-            shift_axes(-0.02, -0.04);
+            shift_axes(-0.02, -0.04);surface right
             
             % coronal
             axh = axes('Position', [-0.02 0.37 .17 .17]);
@@ -612,6 +616,40 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'medial');          
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'lateral');
+            
+            wh_montages = [1 2 3 4];
+            wh_surfaces = [1:8];
+
+
+        case 'full hcp inflated'
+            % saggital
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            shift_axes(-0.02, -0.04);
+            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+
+            % surface
+            o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hcp inflated right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hcp inflated left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hcp inflated right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hcp inflated left', 'orientation', 'lateral');
             
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];

@@ -76,6 +76,9 @@ function o2 = montage(obj, varargin)
 %        'full hcp' for full montage, but with surfaces and volumes from
 %        HCP data
 %
+%        'full hcp inflated' for full montage with inflated surfaces from
+%        HCP data
+%
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
 %        'compact2': like 'compact', but fewer axial slices.

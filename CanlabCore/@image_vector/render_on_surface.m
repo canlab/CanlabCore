@@ -531,7 +531,18 @@ if any(datvec > 0)
         set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
     else
         minpos = min(datvec(datvec > 0));
-        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
+        ticklabels = [minpos clim(2)];
+        ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
+        for i = 1:length(ticklabels)
+            if abs(ticklabels{i}) < 0.01
+                % scientific notation
+                ticklabels{i} = sprintf('%0.1e',ticklabels{i});
+            else
+                % standard notation
+                ticklabels{i} = sprintf('%0.2f',ticklabels{i});
+            end
+        end
+        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
     end
     
 end
@@ -551,7 +562,18 @@ if any(datvec < 0)
         set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
     else
         maxneg = max(datvec(datvec < 0));
-        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
+        ticklabels = [clim(1) maxneg];
+        ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
+        for i = 1:length(ticklabels)
+            if abs(ticklabels{i}) < 0.01
+                % scientific notation
+                ticklabels{i} = sprintf('%0.1e',ticklabels{i});
+            else
+                % standard notation
+                ticklabels{i} = sprintf('%0.2f',ticklabels{i});
+            end
+        end
+        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
     end
     
 end

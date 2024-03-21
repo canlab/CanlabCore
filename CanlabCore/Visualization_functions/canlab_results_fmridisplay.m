@@ -56,9 +56,11 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'compact2'        A single row showing midline saggital and axial slices
 %        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
 %        'regioncenters'   A series of separate axes, each focused on one region
-%        'full2' for a slightly less full montage that avoids colorbar overlap issues
-%        'full hcp' for full montage, but with surfaces and volumes from HCP data
+%        'full2'           for a slightly less full montage that avoids colorbar overlap issues
+%        'full hcp'        for full montage, but with surfaces and volumes from HCP data
 %        'full hcp inflated' for full montage using hcp inflated surfaces
+%        'hcp inflated'    for a connectome workbench style layout without
+%                          volumetric slices
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
@@ -246,6 +248,9 @@ wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full hcp inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full2');
@@ -653,6 +658,19 @@ if ~exist('o2', 'var')
             
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
+
+
+        case 'hcp inflated'
+            figure;
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'lateral');
+            
+            wh_montages = [1 2 3 4];
+            wh_surfaces = [1:8];
+
 
         otherwise error('illegal montage type. choose full or compact.');
     end

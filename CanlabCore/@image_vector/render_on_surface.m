@@ -1,4 +1,4 @@
-function cm = render_on_surface(obj, surface_handles, varargin)
+function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_handles, varargin)
 % Map voxels in obj to isosurface (patch) handles in han and change surface colors according to values in obj
 %
 % :Usage:
@@ -513,6 +513,7 @@ end
 % Colorbars - legend
 % -----------------------------------------------------------------------
 
+[colorbar1_han, colorbar2_han] = deal([]);
 if ~dolegend, return, end
 
 if any(datvec > 0)
@@ -523,14 +524,14 @@ if any(datvec > 0)
     else
         colormap(bar1axis, cm(1+(kpos-1)*nvals:kpos*nvals, :));
     end
-    colorbar_han = colorbar(bar1axis);
+    colorbar1_han = colorbar(bar1axis);
     set(bar1axis, 'Visible', 'off');
     
     if doindexmap
-        set(colorbar_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
+        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
     else
         minpos = min(datvec(datvec > 0));
-        set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
+        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
     end
     
 end
@@ -543,14 +544,14 @@ if any(datvec < 0)
     else
         colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :));
     end
-    colorbar_han = colorbar(bar2axis);
+    colorbar2_han = colorbar(bar2axis);
     set(bar2axis, 'Visible', 'off');
     
     if doindexmap
-        set(colorbar_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
+        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
     else
         maxneg = max(datvec(datvec < 0));
-        set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
+        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
     end
     
 end

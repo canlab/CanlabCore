@@ -424,14 +424,20 @@ if addsurfaceblobs
         
         img = region2imagevec(cl);
         if dosplitcolor
-            render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+            [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
         else
             if isempty(indexmap)
-                render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
             else
-                render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
+                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
             end
         end
+        if ismember('legendhandle',fieldnames(obj.activation_maps{wh_to_display}))
+            % if we plot multiple surfaces then their legends will overlap.
+            % We only need to keep the exteriormost one
+            delete(obj.activation_maps{wh_to_display}.legendhandle);    
+        end
+        obj.activation_maps{wh_to_display}.legendhandle = [bar1axis, bar2axis];
 
     end
 end

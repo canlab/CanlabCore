@@ -190,7 +190,7 @@ if any(strcmp(varargin, 'old')), methodtype = 'old'; end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 if any(strcmp(varargin, 'indexmap'))
     colors = varargin{find(strcmp(varargin,'indexmap'))+1};
-    colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
+    colors = mat2cell(colors,repmat(1,1,size(colors,1)),3)';
     colortype = 'indexmap';
     
     if any(strcmp(varargin,'symmetric'))

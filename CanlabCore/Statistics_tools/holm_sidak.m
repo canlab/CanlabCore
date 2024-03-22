@@ -19,7 +19,7 @@ function [sig, pthr] = holm_sidak(pVector, alpha)
 %   If No: Conclude that none of the comparisons are statistically significant, and you are done.
 %   If Yes: Conclude that this comparison is statistically significant, and continue.
 % 
-% 5.The second to smallest P value is compared next. Set i=K-1. Is the P value less than 1-(1-alpha)(1/i)?
+% 5.The second to smallest P value is compared next. Set i=K-1. Is the P value less than 1-(1-alpha)^(1/i)?
 % 
 % If No: Conclude that this  comparison (and all with larger P values) is not statistically significant. Exit.
 % 

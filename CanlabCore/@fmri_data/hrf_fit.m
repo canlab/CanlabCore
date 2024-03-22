@@ -141,10 +141,11 @@ end
 
 %fhan = @(tc) hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
 
-if exist('DX', 'var')
-    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, DX);
+if ~isempty(varargin)
+    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, varargin{:});
 else
-    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode);
+    [~,~,~,~,info]=hrf_fit_one_voxel(obj.dat(1,:)',TR,Runc,T,method,mode);
+    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, info.DX, 'invertedDX', info.PX);
 end
 
 if isstruct(obj)
@@ -230,10 +231,11 @@ function varargout = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, varargin)
 % outputs must be row vectors
 
 if isempty(varargin)
-    [h, fit, e, param] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
+    [~, ~, ~, ~, info] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
+    [h, fit, e, param] = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, info.DX, 'invertedDX', info.PX);
 else
     % Use a passed-in custom design-matrix - Michael Sun, Ph.D. 02/13/2024
-    [h, fit, e, param] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin{1});
+    [h, fit, e, param] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin{:});
 end    
 
 varargout = {};
@@ -244,6 +246,7 @@ end
 for i = 1:size(param, 2) % 
     varargout{end+1} = param(:, i)';
 end
+
 
 end
 

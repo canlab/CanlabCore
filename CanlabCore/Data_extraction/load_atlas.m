@@ -5,7 +5,7 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %
 % List of keywords/atlases available:
 % -------------------------------------------------------------------------
-% 'canlab2024_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
+% 'canlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
 %                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
 %                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
 %                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
@@ -21,6 +21,10 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 %                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
 %                                 details. Development is frozen, so it may be more stable than CANLab2024 (Date: 3/07/2024)'
 % 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
+% 'desikan_killiany[_fsl6|_fmriprep20]'
+%                                 'Desikan-Killiany cortical gyral/sulcal labeling from Freesurfer (2006). Gyri include pial surface and lateral banks. Default: fmriprep20'
+% 'dkt[_fsl6|_fmriprep20]         'Kline and Tourville's update to the desikan killiany atlas projected to fsl or fmriprep spaces. Default: fmriprep20'
+% 'destrieux[_fsl6|_fmriprep20]'  'Destrieux cortical gyral/sulcal labeling from Freesurfer (2009). Gyral/sulcal division is based on curvature values. Default: fmriprep20'
 % 'thalamus'                      'Thalamus_combined_atlas_object.mat'
 % 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
 %                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
@@ -113,11 +117,11 @@ switch lower(atlas_file_name_or_keyword)
         varname = 'atlas_obj';
 
     case {'iglesias_thal_fmriprep20', 'iglesias_thal'}
-        savefile = which('iglesias_hcp278_MNI152NLin2009cAsym_atlas_object.mat');
+        savefile = which('iglesias_HCP278_ST76_PG264_MNI152NLin2009cAsym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'iglesias_thal_fsl6'}
-        savefile = which('iglesias_hcp278_MNI152NLin6Asym_atlas_object.mat');
+        savefile = which('iglesias_HCP278_ST76_PG264_MNI152NLin6Asym_atlas_object.mat');
         varname = 'atlas_obj';
 
     case {'iglesias_hypothal_fmriprep20', 'iglesias_hypothal'}
@@ -401,7 +405,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','coarse',1);
 
     case {'canlab2024_fine_fmriprep20_2mm', 'canlab2024_fine_fmriprep20','canlab2024_fine_2mm', 'canlab2024_fine'}
-        savefile='CANLab2024_MNI152NLin2009cAsym_fine_2mm_atlas_object.mat';
+        savefile='CANLab2024_MNI152NLin2009cAsym_2mm_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',2);
@@ -413,7 +417,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','fine',2);
         
     case {'canlab2024_fine_fmriprep20_1mm', 'canlab2024_fine_1mm'}
-        savefile='CANLab2024_MNI152NLin2009cAsym_fine_atlas_object.mat';
+        savefile='CANLab2024_MNI152NLin2009cAsym_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',1);
@@ -439,6 +443,31 @@ switch lower(atlas_file_name_or_keyword)
     case {'limbic_brainstem_atlas_fsl6'}
         savefile='levinson_bari_limbic_brainstem_atlas_MNI152NLin6Asym_atlas_object.mat';
         varname = 'atlas_obj';
+
+    case {'desikan_killiany', 'desikan_killiany_fmriprep20'}
+        savefile='desikan_killiany_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'desikan_killiany_fsl6'}
+        savefile='desikan_killiany_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'dkt', 'dkt_fmriprep20'}
+        savefile='dkt_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'dkt_fsl6'}
+        savefile='dkt_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'destrieux', 'destrieux_fmriprep20'}
+        savefile='destrieux_fmriprep20_atlas_object.mat';
+        varname = 'atlas_obj';
+
+    case {'destrieux_fsl6'}
+        savefile='destrieux_fsl6_atlas_object.mat';
+        varname = 'atlas_obj';
+
 
     otherwise % assume it's a file name
         savefile = which(atlas_file_name_or_keyword);

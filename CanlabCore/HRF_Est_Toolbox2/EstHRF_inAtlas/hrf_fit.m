@@ -79,9 +79,24 @@ if isstruct(SPM)
     TR = SPM.xY.RT;
 
     if isempty(T)
-        disp('T is empty, generating T as 2 times the maximum duration for each task regressor.');
-        for i = 1:numel(SPM.Sess)
-            T{i}=cellfun(@(cellArray) 2*ceil(max(cellArray)), {SPM.Sess(i).U.dur});
+        
+        if ~contains(SPM.xBF.name, 'Finite Impulse Response')
+            % For now, assume 'Canonical HRF'
+            disp('T is empty, generating T as 2 times the maximum duration for each task regressor.');
+            for i = 1:numel(SPM.Sess)
+                T{i}=cellfun(@(cellArray) 2*ceil(max(cellArray)), {SPM.Sess(i).U.dur});
+            end
+        else
+            
+            for i = 1:numel(SPM.Sess)
+                % T{i}=[SPM.xBF.order]; 
+                % In normal SPM, the time window (length) and resolution (order) is set the same for all regressors.
+                % T should be in seconds, it gets converted to TRs later.
+                T{i}=repmat(SPM.xBF.length, size({SPM.Sess(i).U.dur}));
+
+                % T{i}=repmat(SPM.xBF.order*TR, size({SPM.Sess(i).U.dur}));
+
+            end
         end
     elseif numel(SPM.Sess)>1 && ~iscell(T)
         % error('SPM structures concatenating multiple runs must have time windows passed in with a matching number of cell arrays.');
@@ -90,10 +105,11 @@ if isstruct(SPM)
         error('Incompatible number of runs in SPM and in cell-array T.')
     end
 
-    % method='CHRF'
     % %% ONE WAY
     % % run hrf_fit separately for every d
-    parfor i=1:numel(d)
+
+    % Tor: Better to pass in pseudoinverse matrix to speed up computation:
+    for i=1:numel(d)
         % Reassign data.
         d{i}.dat=gkwy_d{i};
 
@@ -112,7 +128,7 @@ if isstruct(SPM)
         % Trouble here is, task regressors may have to be re-generated for
         % FIR and sFIR if the original design matrix is cHRF, so check the
         % basis function
-        if strcmpi(method, 'FIR') && ~contains(SPM.xBF.name, 'FIR')
+        if strcmpi(method, 'FIR') && ~contains(SPM.xBF.name, 'Finite Impulse Response')
             disp('Passed in SPM structure is not FIR. Reconstructing task-regressors for FIR fit');
             
             len = numel(SPM.Sess(i).row);
@@ -144,7 +160,7 @@ if isstruct(SPM)
             NX=[SPM.Sess(i).C.C];
 
             % Concatenate the Task regressors with Covariates
-            % X=[DX, NX];
+            X=[DX, NX];
             % Filter
             % X=spm_filter(SPM.xX.K(i), X);
 
@@ -153,38 +169,233 @@ if isstruct(SPM)
 
             % xX.KxXs        = spm_sp('Set',spm_filter(xX.K,W*xX.X));    % KWX
 
-
             % Ke says preprocess the nuisance regressors first before
             % fitting the FIR, otherwise the design matrix has problematic
             % VIFs between the FIR indicators and the spike regressors.
-            xKNXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*NX));    % KW*Nuisance
-            NX    = full(xKNXs.X);
+            % xKNXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*NX));    % KW*Nuisance
+            % NX    = full(xKNXs.X);
             % d{i}=canlab_connectivity_preproc(d{i}, 'additional_nuisance', NX, TR,'no_plots')
             % preproc_d=canlab_connectivity_preproc(d{i}, 'additional_nuisance', NX)
 
             % preproc_d=d{i};
-            d{i}.covariates=NX;
-            d{i}=preprocess(d{i}, 'resid',1) % Residualize out noise regressors
+            % d{i}.covariates=NX;
+            % d{i}=preprocess(d{i}, 'resid',1); % Residualize out noise regressors
 
-            xKXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*DX));    % KW*Design
-            X    = full(xKXs.X);
+            % sFIR
+            if mode == 1
+                for s=1:numstim
+                    t = 1:TR:T{i}(s);
+                    tlen_all(s) = length(t);
+                end
 
+                MRI = zeros(sum(tlen_all)+1); % adjust size based on varying tlen and intercept at end
+                start_idx = 1;
+            
+                for s=1:numstim
+                    tlen = tlen_all(s); % get the tlen for this stimulus
+            
+                    C = (1:tlen)'*(ones(1,tlen));
+                    h = sqrt(1/(7/TR));
+            
+                    v = 0.1;
+                    sig = 1;
+            
+                    R = v*exp(-h/2*(C-C').^2);
+                    RI = inv(R);
+            
+                    % Adjust the indices to account for varying tlen
+                    end_idx = start_idx + tlen - 1;
+                    MRI(start_idx:end_idx, start_idx:end_idx) = RI;
+            
+                    start_idx = end_idx + 1; % update the starting index for next iteration
+                end
+        
+                % multiply a 0 penalty with NX.
+                cov_num = size(X,2)-size(MRI,2); % Number of nuisance covariates
+                pen{1} = sig^2*MRI; % Regularization Penalty Matrix
+                pen{2} = zeros(cov_num); % for nuisance, add no penalty
+                pen=blkdiag(pen{:});
+        
+                % disp(pen) % Check what this looks like.
+
+                % Filter everything, and then perform the pseudoinverse
+                xKXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*X));    % KW*Design
+                X    = full(xKXs.X);
+
+                PX = inv(X'*X+pen)*X';
+                % PX = spm_sp('x-', X'*X+pen); % SPM's way of performing
+                % the pseudoinversion. Need a way to put in in SPM's xKXs
+                % space structure.
+                % PX = PX*X'
+                clear pen;
+            
+            else
+                % Filter and invert
+                xKXs = spm_sp('Set',spm_filter(SPM.xX.K(i), SPM.xX.W(SPM.Sess(i).row, SPM.Sess(i).row)*X));    % KW*Design
+                X    = full(xKXs.X);
+                % PX   = pinv(X);
+                PX = spm_sp('x-', xKXs); % SPM's way of performing the pseudoinversion.
+                % figure, imagesc(X), clim([-.01 .01])
+            end
+
+        elseif contains(method, 'CHRF') && ~contains(SPM.xBF.name, 'hrf')
+                % Problem here is we have onsets but no durations from a
+                % FIR matrix. If we use FIR
+
+                switch method
+                    case 'CHRF0'
+                        p=1;
+                    case 'CHRF1'
+                        p=2;
+                    case 'CHRF2'
+                        p=3;
+                end
+                % Generate a design matrix
+                Run=Runc;
+                d = length(Run);
+                len = length(Run{1});
+                
+                % Constructing the Design Matrix X:
+                X = zeros(len,p*d);
+                
+                [h, dh, dh2] = CanonicalBasisSet(TR);
+                
+                for j=1:d,
+                    v = conv(Run{j},h);
+                    X(:,(j-1)*p+1) = v(1:len);
+                
+                    % Computing the first derivative
+                    if strcmpi(method, 'CHRF1')
+                        v = conv(Run{j},dh);
+                        X(:,(j-1)*p+2) = v(1:len);
+                    end
+                
+                    % Computing the second derivative
+                    if strcmpi(method, 'CHRF2')
+                        v = conv(Run{j},dh2);
+                        X(:,(j-1)*p+3) = v(1:len);
+                    end
+                end
         else
             % Otherwise set X to be the filtered design matrix of that
             % section.
-            % X1=spm_filter(SPM.xX.K(i), SPM.xX.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]));
-            X=SPM.xX.xKXs.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG])
+
+            % If using sFIR, pre-penalize the pseudoinverted design matrix
+            if strcmpi(method, 'FIR') && mode==1
+
+                % Task regressors for each run can be found here:
+                numstim=numel(SPM.Sess(i).U);
+
+                % Initialize an array to hold the length of regressors for each task
+                tlen_all = [];
+                
+                % Extract condition names for the session
+                condition_names = {SPM.Sess(i).U.name};
+                
+                % Loop through condition names to find lengths for each task
+                for c = 1:length(condition_names)
+                    condition = condition_names{c}{1};  % Adjusted for direct use without {1}
+                    % Find indices of regressors matching this condition
+                    condition_idx = find(contains(SPM.xX.name, ['Sn(', num2str(i), ') ', condition]));
+                    
+                    if ~isempty(condition_idx)
+                        % Calculate the length of this task's block of regressors
+                        task_length = max(condition_idx) - min(condition_idx) + 1;
+                        % Add this length to the tlen_all array
+                        tlen_all(end+1) = task_length;
+                    end
+                end
+
+                MRI = zeros(sum(tlen_all)+1); % adjust size based on varying tlen and intercept at end
+                start_idx = 1;
+            
+                for s=1:numstim
+                    tlen = tlen_all(s); % get the tlen for this stimulus
+            
+                    C = (1:tlen)'*(ones(1,tlen));
+                    h = sqrt(1/(7/TR));
+            
+                    v = 0.1;
+                    sig = 1;
+            
+                    R = v*exp(-h/2*(C-C').^2);
+                    RI = inv(R);
+            
+                    % Adjust the indices to account for varying tlen
+                    end_idx = start_idx + tlen - 1;
+                    MRI(start_idx:end_idx, start_idx:end_idx) = RI;
+            
+                    start_idx = end_idx + 1; % update the starting index for next iteration
+                end
+
+                % Create Penalty Matrix
+                cov_num = size(SPM.Sess(i).C.C, 2);
+                pen{1} = sig^2*MRI; % Regularization Penalty Matrix
+                pen{2} = zeros(cov_num); % for nuisance, add no penalty
+                pen=blkdiag(pen{:});
+                % disp(pen) % Check what this looks like.
+        
+                % Invert
+                X=SPM.xX.xKXs.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]);
+
+                % Now penalize SPM's task regressors
+                PX = inv(X'*X+pen)*X';
+                clear pen;
+
+            else
+                X=SPM.xX.xKXs.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]);
+                % Troubleshooting:
+                % For some reason the above differs from this:
+                % X=spm_filter(SPM.xX.K(i), SPM.xX.X(SPM.Sess(i).row, [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]));
+                % X_SPM=SPM.xX.xKXs.X(SPM.Sess(i).row,  [SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG]);
+                % figure, imagesc(X_SPM), clim([-.01 .01])
+                % Grab SPM's prefiltered pseudoinverse matrix
+                PX=SPM.xX.pKX([SPM.Sess(i).col, SPM.xX.iB(i), SPM.xX.iG], SPM.Sess(i).row);
+            
+            end                        
+
+
         end
 
         % ~ 40 min
-        [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
-        % Test
-        % [params_obj1{i}, hrf_obj1{i}, params_obj_dat1{i}, hrf_obj_dat1{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
+        % [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
+        % The reason this takes so long is because of the pseudoinversion
+        % of the design matrix. If we have access to the SPM design matrix,
+        % we should pass in both DX and its inversion.
 
-        % [params_obj2{i}, hrf_obj2{i}, params_obj_dat2{i}, hrf_obj_dat2{i}] = hrf_fit(d{i},TR,Runc,T{i},method,1,X);
+        [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X, 'invertedDX', PX);
+
+
+        % Test
+
+        % [params_obj1{i}, hrf_obj1{i}, params_obj_dat1{i}, hrf_obj_dat1{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X);
+        % 
+        % [params_obj2{i}, hrf_obj2{i}, params_obj_dat2{i}, hrf_obj_dat2{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X_SPM);
+        % 
+        % [params_obj3{i}, hrf_obj3{i}, params_obj_dat3{i}, hrf_obj_dat3{i}] = hrf_fit(d{i},TR,Runc,T{i},method,mode,X_SPM);
+        % 
+        % [params_obj4{i}, hrf_obj4{i}, params_obj_dat4{i}, hrf_obj_dat4{i}] = hrf_fit(d{i},TR,Runc,T{i},method,1,X_SPM);
 
         info{i}.X=X;
         info{i}.names=[SPM.Sess(i).U.name]';
+
+        % Testing
+        % Assuming i is defined, and your variables d, TR, Runc, T, method, mode, X, and X_SPM are initialized
+
+        % Start or get the current parallel pool
+        % pool = gcp();
+        % 
+        % % Asynchronously call hrf_fit with the first set of arguments
+        % future1 = parfeval(pool, @hrf_fit, 4, d{i}, TR, Runc, T{i}, method, mode, X);
+        % 
+        % % Asynchronously call hrf_fit with the second set of arguments
+        % future2 = parfeval(pool, @hrf_fit, 4, d{i}, TR, Runc, T{i}, method, mode, X_SPM);
+        % 
+        % % Wait for the first job to finish and collect its results
+        % [params_obj1{i}, hrf_obj1{i}, params_obj_dat1{i}, hrf_obj_dat1{i}] = fetchOutputs(future1);
+        % 
+        % % Wait for the second job to finish and collect its results
+        % [params_obj2{i}, hrf_obj2{i}, params_obj_dat2{i}, hrf_obj_dat2{i}] = fetchOutputs(future2);
 
     end
     % Possibly need to drop null regressors? No
@@ -256,5 +467,34 @@ if isstruct(SPM)
 
 
 end
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Subfunctions
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [h, dh, dh2] = CanonicalBasisSet(TR)
+
+len = round(30/TR);
+xBF.dt = TR;
+xBF.length= len;
+xBF.name = 'hrf (with time and dispersion derivatives)';
+xBF = spm_get_bf(xBF);
+
+v1 = xBF.bf(1:len,1);
+v2 = xBF.bf(1:len,2);
+v3 = xBF.bf(1:len,3);
+
+h = v1;
+dh =  v2 - (v2'*v1/norm(v1)^2).*v1;
+dh2 =  v3 - (v3'*v1/norm(v1)^2).*v1 - (v3'*dh/norm(dh)^2).*dh;
+
+h = h./max(h);
+dh = dh./max(dh);
+dh2 = dh2./max(dh2);
 
 end

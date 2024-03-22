@@ -26,18 +26,26 @@ function new_atlas_obj = downsample_parcellation(obj, varargin)
 
 fprintf('Downsampling %s parcels\n', obj.atlas_name);
 
+concat_desc = false;
+
 if isempty(varargin)
     labelfield = 'labels_2';
-elseif ischar(varargin{1})
-    labelfield=varargin{1};
-elseif isvector(varargin{1})
-    if length(varargin{1}) ~= num_regions(obj)
-        error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
-    end
-    labelfield='labels';
-    obj.labels = varargin{1};
 else
-    error('Unrecognized input datatype');
+    for i = 1:length(varargin)
+        if ismember(varargin{i},{'labels_2','labels_3','labels_3','labels_4','labels_5'})
+            labelfield=varargin{i};
+        elseif strcmp(varargin{i},'concat_label_descriptions')
+            concat_desc = true;
+        elseif iscell(varargin{i})
+            if length(varargin{i}) ~= num_regions(obj)
+                error('New labels has length %d which does not match input atlas parcel count (%d)',length(varargin{1}), num_regions(obj));
+            end
+            labelfield='labels';
+            obj.labels = varargin{1};
+        else
+            error('Unrecognized input datatype');
+        end
+    end
 end
 
 % input check
@@ -94,6 +102,11 @@ for i = 1:length(new_lbl_parcels)
     last_msg = new_msg;
 
     new_parcel{i} = obj.select_atlas_subset(new_lbl_parcels(i), new_lbl, 'exact', 'flatten');
+    if concat_desc
+        % append semicolon to all constituent descriptions
+        label_desc = cellfun(@(x1)[x1, ';'],  obj.select_atlas_subset(new_lbl_parcels(i), new_lbl, 'exact').label_descriptions, 'UniformOutput', false);
+        new_parcel{i}.label_descriptions = {strcat(label_desc{:})};
+    end
 end
 fprintf('\n');
 

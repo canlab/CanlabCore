@@ -1,4 +1,4 @@
-function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin)
+function [h, fit, e, param, info] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin)
 % function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,type,mode)
 %
 % HRF estimation function for a single voxel;
@@ -25,6 +25,7 @@ function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varar
 % fit   - estimated time course
 % e     - residual time course
 % param - estimated amplitude, height and width
+% info  - Design Matrix, Pseudoinverse information, Misc.
 %
 % Created by Martin Lindquist on 04/11/14
 %
@@ -47,7 +48,7 @@ if ~isempty(varargin)
     % 
     % SPM.xX.xKXs.X
 
-    SPM_DX=varargin{1};
+    % SPM_DX=varargin{1};
 
 end
 
@@ -64,7 +65,7 @@ if (strcmp(method,'IL')),
                 % Please note that when using simulated annealing approach you
                 % may need to perform some tuning before use.
 
-            if exists('SPM')
+            if ~isempty(varargin)
                 disp('IL-function with custom Design Matrix not yet implemented')
                 [h, fit, e, param] = Fit_Logit2(tc,TR,Runc,T,mode);
             else
@@ -86,12 +87,11 @@ elseif (strcmp(method,'FIR')),
             
             % [h, fit, e, param] = Fit_sFIR(tc,TR,Runc,T,mode);
             
-
-            if exist('SPM_DX', 'var')
-                [h, fit, e, param] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode, SPM_DX);
+            if ~isempty(varargin)
+                [h, fit, e, param, info] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode, varargin{:});
 
             else
-                [h, fit, e, param] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode);
+                [h, fit, e, param, info] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode);
             end
 
 
@@ -111,10 +111,10 @@ elseif (strcmp(method,'CHRF')),
             p = mode + 1;
 
 
-            if exist('SPM_DX', 'var')
-                [h, fit, e, param] = Fit_Canonical_HRF(tc,TR,Runc,T,p,SPM_DX);
+            if ~isempty(varargin)
+                [h, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runc,T,p, varargin{:});
             else
-                [h, fit, e, param] = Fit_Canonical_HRF(tc,TR,Runc,T,p);
+                [h, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runc,T,p);
             end
 
 

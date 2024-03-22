@@ -76,6 +76,9 @@ function o2 = montage(obj, varargin)
 %        'full hcp' for full montage, but with surfaces and volumes from
 %        HCP data
 %
+%        'full hcp inflated' for full montage with inflated surfaces from
+%        HCP data
+%
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
 %        'compact2': like 'compact', but fewer axial slices.
@@ -187,7 +190,7 @@ if any(strcmp(varargin, 'old')), methodtype = 'old'; end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 if any(strcmp(varargin, 'indexmap'))
     colors = varargin{find(strcmp(varargin,'indexmap'))+1};
-    colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
+    colors = mat2cell(colors,repmat(1,1,size(colors,1)),3)';
     colortype = 'indexmap';
     
     if any(strcmp(varargin,'symmetric'))

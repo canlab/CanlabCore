@@ -131,7 +131,7 @@ if ~isempty(varargin)
             return;
         end
 
-    else
+    elseif isnumeric(varargin{1})
         % If not an SPM struct, allow a design matrix to be passed in.
         DX_cov=varargin{1};
 
@@ -142,9 +142,34 @@ if ~isempty(varargin)
             tlen_all(i) = length(t);
         end
     end
-    
 
-    if mode == 1
+    for i=1:numel(varargin)
+        % If you pass in both a DX and an inverted DX, this will speed
+        % things up a bit.
+        if strcmpi(varargin{i}, 'invertedDX')
+            PX=varargin{i+1};
+            b = PX*tc;
+            if exist('DX_cov', 'var')
+                fit = DX_cov*b;
+                e = tc - DX_cov*b;
+                DXinfo.DX=DX_cov;
+                DXinfo.PX=DX_cov;
+            else
+                fit = 'DX_cov not passed in';
+                e = 'DX_cov not passed in';
+                DXinfo.DX=[];
+                DXinfo.PX=PX;
+            end
+        end
+
+    end
+
+
+    
+    % Processing of varargin done.
+
+    % sFIR
+    if mode == 1 && ~exist('b', 'var')
         % pen = {toeplitz([1 .3 .1])}
         % n_nuis = 20;  % num of nuisance
         % pen{2} = zeros(20); % for nuisance, add no penalty
@@ -184,17 +209,21 @@ if ~isempty(varargin)
         % disp(pen) % Check what this looks like.
         % X = [DX, NX]; % Full Design Matrix
 
-        b = inv(DX_cov'*DX_cov+pen)*DX_cov'*tc;
+        PX=inv(DX_cov'*DX_cov+pen)*DX_cov';
+        b = PX*tc;
         % b = DX'*tc;
         fit = DX_cov*b;
         e = tc - DX_cov*b; 
-        DXinfo.DX=DX_cov';
+        DXinfo.DX=DX_cov;
+        DXinfo.PX=PX;
 
-    elseif mode == 0
-        b = pinv(DX_cov)*tc;
+    elseif mode == 0 && ~exist('b', 'var')
+        PX=pinv(DX_cov);
+        b = PX*tc;
         fit = DX_cov*b;
         e = tc - DX_cov*b;
         DXinfo.DX=DX_cov;
+        DXinfo.PX=PX;
 
     end
 
@@ -270,26 +299,29 @@ else
     
     
         % b = inv(DX'*DX+sig^2*MRI)*DX'*tc;
-        b = inv(DX'*DX+pen)*DX'*tc;
+        PX=inv(DX'*DX+pen)*DX';
+        b = PX*tc;
         fit = DX*b;
         e = tc - DX*b; 
     
         % Code added by Michael Sun, PhD 02/05/2024
-        DXinfo.DX=inv(DX'*DX+sig^2*MRI)*DX'; % This DX is essentially regression coefficients
-        DXinfo.DX=DXinfo.DX';
+        % DXinfo.DX=inv(DX'*DX+sig^2*MRI)*DX'; % This DX is essentially regression coefficients
+        DXinfo.DX=DX;
+        DXinfo.PX=PX;
     
         % DXinfo.DX=DX;
         DXinfo.sig=sig;
         DXinfo.MRI=MRI;
     
     elseif mode == 0
-    
-        b = pinv(DX)*tc;
+        PX =pinv(DX); 
+        b = PX*tc;
         fit = DX*b;
         e = tc - DX*b;
     
         % Coded added by Michael Sun, Ph.D.
         DXinfo.DX=DX;
+        DXinfo.PX=PX;
     
     end
 

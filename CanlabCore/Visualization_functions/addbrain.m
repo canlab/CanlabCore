@@ -77,6 +77,10 @@ function p = addbrain(varargin)
 %   **'surface right':**
 %        same, right hem
 %
+%   **'hcp inflated left': same as the above but using inflated surfaces
+%
+%   **'hcp inflated right': same as the above but using inflated surfaces
+%
 %   **'left':**
 %        2 mm resolution left hem, no cerebellum
 %

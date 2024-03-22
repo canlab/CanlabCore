@@ -99,8 +99,8 @@ elseif strcmp(dir, 'right')
 elseif strcmp(dir, 'flat right')
     h = addbrain('flat right');
     
-elseif strcmp(dir, 'flat right')
-    h = addbrain('right');
+elseif strcmp(dir, 'flat left')
+    h = addbrain('flat left');
     
 elseif strcmp(dir, 'surface left')
     h = addbrain('surface left');
@@ -113,6 +113,39 @@ elseif strcmp(dir, 'surface left')
     
 elseif strcmp(dir, 'surface right')
     h = addbrain('surface right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+    
+elseif strcmp(dir, 'inflated right')
+    h = addbrain('inflated right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'inflated left')
+    h = addbrain('inflated left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+   
+elseif strcmp(dir, 'hcp inflated right')
+    h = addbrain('hcp inflated right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'hcp inflated left')
+    h = addbrain('hcp inflated left');
     if strcmp(orn, 'medial')
         view(90, 0);
     else

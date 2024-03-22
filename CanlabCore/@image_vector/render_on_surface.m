@@ -1,4 +1,4 @@
-function cm = render_on_surface(obj, surface_handles, varargin)
+function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_handles, varargin)
 % Map voxels in obj to isosurface (patch) handles in han and change surface colors according to values in obj
 %
 % :Usage:
@@ -308,10 +308,11 @@ else
     if doindexmap
         
         nvals = min([256, length(unique(obj.dat))]);
+        cm = colormapname;
+        cm = [0.5,0.5,0.5; cm]; % add gray
+        colormap(axis_handle,cm)
         
-    end
-    
-    if custom_colormap
+    elseif custom_colormap
         
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle); % colormapname is either name or [nvals x 3] matrix
         
@@ -356,7 +357,11 @@ map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
 [~, ~, mesh_struct] = reconstruct_image(obj);                % get volume data for slices
 
 % fixes colormap out of range bug
-mesh_struct.voldata(mesh_struct.voldata < min(clim)) = min(clim);
+% BP: sure, but it also asigns colors to empty parts of the cortex. It's
+% better to address the colormap out of range bug directly, which is due to
+% c_gray being initialized to a 3-vector rather than a 2D matrix. We can
+% fix that below instead of using this hacky solution here.
+%mesh_struct.voldata(mesh_struct.voldata < min(clim)) = min(clim);
 
 % Deal with edge interpolation effects
 % problem is that vertices near empty (zero) voxels get interpolated down to zero
@@ -390,25 +395,36 @@ for i = 1:length(surface_handles)
     % Convert to index color in split colormap by adding nvals to put in
     % colored range
     % isocolors returns nans sometimes even when no NaNs in data
-    c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
-    if doindexmap, c = round(c); end
+    if doindexmap        
+        %c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+        %x,y,z = coordinates
+        %c = values to interpolate
+        c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+            surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), 'nearest');
+        c(mod(c,1) > 0) = 0;
+        c_colored = c;
+    else
+        c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+        %if doindexmap, c = round(c); end
+        
+        % doesn't work to fix interpolation error.
+        %     border_percent = prctile(abs(c(c ~= 0)), 80);
+        %     whlow = abs(c) < border_percent | isnan(c);
+        
+        c_colored = c;
     
-    % doesn't work to fix interpolation error.
-    %     border_percent = prctile(abs(c(c ~= 0)), 80);
-    %     whlow = abs(c) < border_percent | isnan(c);
     
-    c_colored = c;
-    
-    whpos = c > 0;
-    %     kpos = 61;   % which block of 256 colors; depends on colormap
-    cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
-    c_colored(whpos) = cpos;
-    
-    whneg = c < 0;
-    %     kneg = 55;   % which block of 256 colors
-    cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
-    c_colored(whneg) = cneg;
-    
+        whpos = c > 0;
+        %     kpos = 61;   % which block of 256 colors; depends on colormap
+        cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+        c_colored(whpos) = cpos;
+        
+        whneg = c < 0;
+        %     kneg = 55;   % which block of 256 colors
+        cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
+        c_colored(whneg) = cneg;
+    end
+            
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later
     
     %c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
@@ -427,15 +443,19 @@ for i = 1:length(surface_handles)
     
     c_gray = get(surface_handles(i), 'FaceVertexCData');
     
-    if isempty(c_gray)
+    if isempty(c_gray) || size(c_gray,1) == 1
         
         % solid
         % c_gray = repmat(round(nvals ./ 2), size(get(surface_handles(i), 'Vertices'), 1), 1);
-        c_gray = repmat(0 .* nvals + .5 .* round(nvals), size(get(surface_handles(i), 'Vertices'), 1), 1);
+        if doindexmap
+            c_gray = zeros(size(get(surface_handles(i), 'Vertices'), 1), 1);
+        else
+            c_gray = repmat(0 .* nvals + .5 .* round(nvals), size(get(surface_handles(i), 'Vertices'), 1), 1);
+        end
         
     else
+
         %orig: c_gray(~wh) = (c_gray(~wh) - min(c_gray(~wh))) ./ range(c_gray(~wh)) .* nvals;
-        
         if range(c_gray(wh)) == 0
             % Solid surface color
             % do nothing - skip rescaling
@@ -468,18 +488,22 @@ for i = 1:length(surface_handles)
     prevdata = get(surface_handles(i), 'FaceVertexCData');
     set(surface_handles(i), 'UserData', prevdata);
     
-    set(surface_handles(i), 'FaceVertexCData', c_colored);  % dot indexing sometimes works, sometimes doesn't...depends on handle type
-    if ~doindexmap
-        set(surface_handles(i), 'FaceColor', 'interp');
-    else
+    if doindexmap
+        % increment c_colored by 1 to account for gray
+        set(surface_handles(i), 'FaceVertexCData', c_colored+1);
         set(surface_handles(i), 'FaceColor', 'flat');
+    else
+        set(surface_handles(i), 'FaceVertexCData', c_colored);  % dot indexing sometimes works, sometimes doesn't...depends on handle type
+        set(surface_handles(i), 'FaceColor', 'interp');
     end
+    
     set(surface_handles(i), 'CDataMapping', 'direct')
     set(surface_handles(i), 'EdgeColor', 'none');
     
     if doscaledtrans
         z = c/max(abs(datvec));
         z = enhance_contrast(z);
+        set(surface_handles(i), 'FaceColor', 'interp');
         set(surface_handles(i), 'FaceVertexAlphaData',abs(z));
         set(surface_handles(i), 'FaceAlpha', 'interp');
     end
@@ -489,29 +513,68 @@ end
 % Colorbars - legend
 % -----------------------------------------------------------------------
 
+[colorbar1_han, colorbar2_han] = deal([]);
 if ~dolegend, return, end
 
 if any(datvec > 0)
     
     bar1axis = axes('Position', [.55 .55 .38 .4]);
-    colormap(bar1axis, cm(1+(kpos-1)*nvals:kpos*nvals, :))
-    colorbar_han = colorbar(bar1axis);
+    if doindexmap
+        colormap(bar1axis, cm(2:end,:));
+    else
+        colormap(bar1axis, cm(1+(kpos-1)*nvals:kpos*nvals, :));
+    end
+    colorbar1_han = colorbar(bar1axis);
     set(bar1axis, 'Visible', 'off');
     
-    minpos = min(datvec(datvec > 0));
-    set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([minpos clim(2)] * 100)/100, 'FontSize', 18);
+    if doindexmap
+        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
+    else
+        minpos = min(datvec(datvec > 0));
+        ticklabels = [minpos clim(2)];
+        ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
+        for i = 1:length(ticklabels)
+            if abs(ticklabels{i}) < 0.01
+                % scientific notation
+                ticklabels{i} = sprintf('%0.1e',ticklabels{i});
+            else
+                % standard notation
+                ticklabels{i} = sprintf('%0.2f',ticklabels{i});
+            end
+        end
+        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
+    end
     
 end
 
 if any(datvec < 0)
     
     bar2axis = axes('Position', [.55 .1 .38 .4]);
-    colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :))
-    colorbar_han = colorbar(bar2axis);
+    if doindexmap
+        colormap(bar1axis, cm(2:end,:));
+    else
+        colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :));
+    end
+    colorbar2_han = colorbar(bar2axis);
     set(bar2axis, 'Visible', 'off');
     
-    maxneg = max(datvec(datvec < 0));
-    set(colorbar_han, 'YTick', [0 1], 'YTickLabel', round([clim(1) maxneg] * 100)/100, 'FontSize', 18);
+    if doindexmap
+        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
+    else
+        maxneg = max(datvec(datvec < 0));
+        ticklabels = [clim(1) maxneg];
+        ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
+        for i = 1:length(ticklabels)
+            if abs(ticklabels{i}) < 0.01
+                % scientific notation
+                ticklabels{i} = sprintf('%0.1e',ticklabels{i});
+            else
+                % standard notation
+                ticklabels{i} = sprintf('%0.2f',ticklabels{i});
+            end
+        end
+        set(colorbar2_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
+    end
     
 end
 

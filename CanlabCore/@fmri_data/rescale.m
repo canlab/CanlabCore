@@ -49,11 +49,16 @@ function fmridat = rescale(fmridat, meth, varargin)
 %                           this will shrink the tails (and outliers) towards the mean,
 %                           making subsequent algorithms more robust to
 %                           outliers. Affects normality of distribution.
+%     - doublecenter        Double-center voxels and images, so the mean of each voxel and each image is 0
 %
-% Appropriate for multi-session (time series) only:
+% Whole run-level scaling:
+%     - 'session_grand_mean_scaling_spm_style'
+%
+% Appropriate for multi-session (time series):
 %     - session_global_percent_change
 %     - session_global_z
 %     - session_multiplicative
+%     - percentchange
 %
 % See also fmri_data.preprocess
 
@@ -175,7 +180,7 @@ switch meth
 
         fmridat = newobj;
 
-        fmridat.history{end+1} = 'Ranked images (columns) across voxels';
+        fmridat.history{end+1} = 'Converted each image to nearest of 1000 bins';
 
 
     case 'centerimages'
@@ -308,6 +313,7 @@ switch meth
         % divide each column image by its respective ventricle l2norm
         fmridat.dat = bsxfun(@rdivide, fmridat.dat, l2norms(:, 3)') ;
         
+        fmridat.history{end+1} = 'Divided each image by its L2 norm';
         
     case 'session_global_percent_change'
         
@@ -324,6 +330,7 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Rescaled voxels to percent change relative to the grand mean of each run';
         
     case 'session_grand_mean_scaling_spm_style'
         % SPM's default method of global mean scaling
@@ -348,6 +355,7 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Scaled each run to grand mean of 100';
         
     case 'session_global_z'
         
@@ -374,6 +382,8 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Z-scored voxels using pooled std across the brain';
+
     case 'session_multiplicative'
         
         % scale - multiplicative
@@ -439,7 +449,8 @@ switch meth
         title('After scaling')
         drawnow
         
-        
+        fmridat.history{end+1} = 'Intensity-normalized each run with multiplicative scaling';
+
     case 'windsorizevoxels'
         
         whbad = all(fmridat.dat == 0, 2);
@@ -462,6 +473,8 @@ switch meth
         
         fmridat.dat = tanh(zscore(fmridat.dat'))';
         
+        fmridat.history{end+1} = 'Transformed by tanh(zscore(values))';
+
     case 'percentchange'
         % scale each voxel (column) to percent signal change with a mean of 100
         % based on smoothed mean values across space (cols), using iimg_smooth_3d

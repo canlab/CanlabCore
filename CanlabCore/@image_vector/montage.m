@@ -38,14 +38,39 @@ function fig_handle = montage(image_obj, varargin)
 meth = 'fmridisplay';
 % montagetype = 'compact2';  % default. This is passed into canlab_results_fmridisplay
 
+% if user specified a target surface use it. We
+% pass targetsurface explicitly below so we need to remove it fro mvarargin
+% too to not have any redundancy
+wh = find(strcmp(varargin,'targetsurface'));
+if ~isempty(wh)
+    targetsurface = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    targetsurface = [];
+end
+% this isn't really needed but helps suppress a warning
+wh = find(strcmp(varargin,'sourcespace'));
+if ~isempty(wh)
+    sourcespace = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    sourcespace = [];
+end
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             case 'scnmontage', meth = 'scnmontage';
                 
-            case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'full2', 'full hcp', 'full hcp inflated', 'hcp inflated', 'compact2', 'noverbose', 'indexmap'}
+            case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'full2', ...
+                    'MNI152NLin6Asym white', 'MNI152NLin6Asym sphere', 'compact2', ...
+                    'noverbose', 'indexmap'}
                 % ignore these - passed through
-                
+            case {'hcp sphere', 'hcp inflated', 'full hcp', 'full hcp inflated'}
+                if isempty(targetsurface), targetsurface = 'fsLR_32k'; end
+            case {'freesurfer sphere', 'freesurfer white', 'freesurfer inflated'}
+                if isempty(targetsurface), targetsurface = 'freesurfer_164k'; end
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -96,7 +121,9 @@ switch meth
                     end
                 end
             
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                    'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
+                    varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 
             else % just one image, plot on all montages
                 
@@ -109,7 +136,7 @@ switch meth
                     end
                 end
                 
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', varargin{:});
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', 'sourcespace', sourcespace, 'targetsurface', targetsurface, varargin{:});
                 
             end
             

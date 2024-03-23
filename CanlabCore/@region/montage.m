@@ -183,6 +183,28 @@ colors = scn_standard_colors(length(obj));
 dofigure = true;
 doredefinecolors = true;
 
+% if no targetsurface is specified we look to see if there's a target
+% surface suitable given our input options and assign it automatically.
+targetsurface = [];
+wh = find(strcmp(varargin,'targetsurface'));
+if ~isempty(wh)
+    targetsurface = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    targetsurface = [];
+end
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case {'hcp sphere', 'hcp inflated', 'full hcp', 'full hcp inflated'}
+                if isempty(targetsurface), targetsurface = 'fsLR_32k'; end
+            case {'freesurfer sphere', 'freesurfer white', 'freesurfer inflated'}
+                if isempty(targetsurface), targetsurface = 'freesurfer_164k'; end
+        end
+    end
+end
+
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'symmetric')), methodtype = 'symmetric'; end
@@ -306,7 +328,7 @@ switch colortype
                 
                 for i = 1:length(region_groups)
                     
-                    o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
+                    o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', 'targetsurface', targetsurface, varargin{:});
                     drawnow
                     
                 end
@@ -316,7 +338,7 @@ switch colortype
                 
                 for i = 1:length(obj)
                     
-                    o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', varargin{:});
+                    o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', 'targetsurface', targetsurface, varargin{:});
                     drawnow
                     
                 end
@@ -345,7 +367,7 @@ switch colortype
         else
             
             % Just render blobs
-            o2 = addblobs(o2, obj, varargin{:});
+            o2 = addblobs(o2, obj, 'targetsurface', targetsurface, varargin{:});
         end
         
     case 'old'

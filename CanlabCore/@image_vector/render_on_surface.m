@@ -78,6 +78,10 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %       curve in photoshop, but only affects alpha transparency, not colormapping, and therefore does not 
 %       alter the data being shown.
 %
+%    **'sourcespace':**
+%
+%    **'targetsurface':**
+%
 % :Outputs:
 %
 %   **renders colors on surfaces:**
@@ -167,8 +171,13 @@ doindexmap = false;
 splitcolors = {};
 doscaledtrans = 0;
 enhance_contrast = @(x1)(x1);
+sourcespace = [];
+targetsurface = [];
 
-allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap'};
+allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
+allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
+
+allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap', 'sourcespace', 'targetsurface'};
 
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
@@ -310,7 +319,11 @@ else
         nvals = min([256, length(unique(obj.dat))]);
         cm = colormapname;
         cm = [0.5,0.5,0.5; cm]; % add gray
-        colormap(axis_handle,cm)
+        if iscell(axis_handle)
+            cellfun(@(x1)colormap(x1,cm), axis_handle)
+        else
+            colormap(axis_handle,cm);
+        end
         
     elseif custom_colormap
         
@@ -346,6 +359,66 @@ map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
 % blue for split colormap, creating blue outline around orange blobs. SO
 % we need to map separately for pos and neg colored blobs
 % ***
+
+%% add surface projection information if available        
+if ~isempty(sourcespace) && ~isempty(targetsurface)
+    if ~ismember(sourcespace, allowable_sourcespace)
+        warning('Could not find sourcespace %s in allowed sourcespace list. Will not perform source to target projection.', sourcespace);
+        sourcespace = [];
+        targetsurface = [];
+    elseif ~ismember(targetsurface, allowable_targetsurface)
+        warning('Could not find targetsurface %s in allowed sourcespace list. Will not perform source to target projection.', targetsurface);
+        sourcespace = [];
+        targetsurface = [];
+    else
+        for i = 1:length(surface_handles)
+            % our dependence on surface handle's tag property is a hacky
+            % solution here. We really should have a more robust soln
+            assert(any(contains(surface_handles(i).Tag,{'right','Right','RIGHT','left','Left','LEFT'})), ...
+                'All surface objects must have ''left'' or ''right'' in their Tag property for correct surface projection')
+        end
+    
+        switch sourcespace
+            case 'MNI152NLin6Asym'
+                src_white_lh = load(which('MNI152NLin6Asym_white_lh.mat'),'faces','vertices');
+                src_white_rh = load(which('MNI152NLin6Asym_white_rh.mat'),'faces','vertices');
+            case 'MNI152NLin2009cAsym'
+                src_white_lh = load(which('MNI152NLin2009cAsym_white_lh.mat'),'faces','vertices');
+                src_white_rh = load(which('MNI152NLin2009cAsym_white_rh.mat'),'faces','vertices');
+            case 'colin27'
+                src_white_lh = load(which('colin27_white_lh.mat'),'faces','vertices');
+                src_white_rh = load(which('colin27_white_rh.mat'),'faces','vertices');
+            otherwise
+                error('Unsupported source space %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', sourcespace);
+        end
+
+        if doindexmap
+            switch targetsurface
+                case 'fsaverage_164k'
+                    reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k_nearestneighbor.mat',sourcespace)));
+                case 'fsLR_32k'
+                    reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k_nearestneighbor.mat',sourcespace)));
+                otherwise
+                    error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+            end
+        else
+            switch targetsurface
+                case 'fsaverage_164k'
+                    reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k.mat',sourcespace)));
+                case 'fsLR_32k'
+                    reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k.mat',sourcespace)));
+                otherwise
+                    error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+            end
+        end
+    end
+elseif ~isempty(sourcespace) & isempty(targetsurface)
+    warning('Source space specified without target surface. Please specify a targetsurface argument to perform accurate surface projection. You have these options,');
+    warning(sprintf('targetsurface = %s\n', allowable_targetsurface{:}));
+elseif isempty(sourcespace) & ~isempty(targetsurface)    
+    warning('target surface specified without source space. Please specify a sourcespace argument to perform accurate surface projection. You have these options:,')
+    warning(sprintf('sourcespace = %s\n', allowable_sourcespace{:}));
+end
 
 
 % problem with below is that vertices near empty (zero) voxels get interpolated down to zero
@@ -389,22 +462,117 @@ for i = 1:length(surface_handles)
     % For each surface handle entered
     % -----------------------------------------------------------------------
     
-    % Get vertex colors for image (obj) to map
-    % -----------------------------------------------------------------------
-    % Use isocolors to get colormapped values
-    % Convert to index color in split colormap by adding nvals to put in
-    % colored range
-    % isocolors returns nans sometimes even when no NaNs in data
     if doindexmap        
         %c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
         %x,y,z = coordinates
         %c = values to interpolate
-        c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-            surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), 'nearest');
+        if isempty(sourcespace) || isempty(targetsurface)
+            c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), 'nearest');
+        else
+            % project from source space to target surface by 
+            % 1) interpolating to source space specific surface using
+            % nearest neighbor interpolation
+            % 2) applying precomputed nearest neighbor interpolation of source
+            % surface to target surface
+            if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
+                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_lh,1)
+                    % this condition will occur when you have multiple
+                    % surfaces, e.g. a freesurfer surface + subcortical
+                    % structures, and then is fine.
+                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
+                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), 'nearest');
+                else
+                    c_white = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        src_white_lh.vertices(:,1), src_white_lh.vertices(:,2), src_white_lh.vertices(:,3), 'nearest');
+                    c_white = c_white(:); % ensure it's a column vector to satisfy assumption of matmul below
+                    c = zeros(size(reg.vertices_lh,1),1);
+                    for v = 1:size(reg.vertices_lh,1)
+                        c(v) = reg.weights_lh(v,:)*c_white(reg.vertices_lh(v,:));
+                    end
+                end
+            elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
+                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_rh,1)
+                    % this condition will occur when you have multiple
+                    % surfaces, e.g. a freesurfer surface + subcortical
+                    % structures, and then is fine.
+                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
+                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), 'nearest');
+                else
+                    c_white = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        src_white_rh.vertices(:,1), src_white_rh.vertices(:,2), src_white_rh.vertices(:,3), 'nearest');
+                    c_white = c_white(:); % ensure it's a column vector to satisfy assumption of matmul below
+                    c = zeros(size(reg.vertices_rh,1),1);
+                    for v = 1:size(reg.vertices_rh,1)
+                        c(v) = reg.weights_rh(v,:)*c_white(reg.vertices_rh(v,:));
+                    end
+                end
+            else
+                error('Could not determine surface laterality. This should have been precluded by earlier checks when loading source space surface, so it''s quite strange you managed to throw this error.')
+            end
+        end
         c(mod(c,1) > 0) = 0;
         c_colored = c;
     else
-        c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+        % Get vertex colors for image (obj) to map
+        % -----------------------------------------------------------------------
+        % Use isocolors to get colormapped values
+        % Convert to index color in split colormap by adding nvals to put in
+        % colored range
+        % isocolors returns nans sometimes even when no NaNs in data
+
+        % interpolate from mesh grid to the surface vertices intersecting
+        % the grid
+        if isempty(sourcespace) | isempty(targetsurface)
+            c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
+        else
+            % project from source space to target surface by 
+            % 1) interpolating to source space specific surface
+            % 2) applying precomputed barycentric linear interpolation of source
+            % surface to target surface
+            if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
+                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_lh,1)
+                    % this condition will occur when you have multiple
+                    % surfaces, e.g. a freesurfer surface + subcortical
+                    % structures, and then is fine.
+                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
+                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3));
+                else
+                    c_white = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        src_white_lh.vertices(:,1), src_white_lh.vertices(:,2), src_white_lh.vertices(:,3), 'linear');
+                    c_white = c_white(:); % ensure it's a column vector to satisfy assumption of matmul below
+                    c = zeros(size(reg.vertices_lh,1),1);
+                    for v = 1:size(reg.vertices_lh,1)
+                        c(v) = reg.weights_lh(v,:)*c_white(reg.vertices_lh(v,:));
+                    end
+                end
+            elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
+                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_rh,1)
+                    % this condition will occur when you have multiple
+                    % surfaces, e.g. a freesurfer surface + subcortical
+                    % structures, and then is fine.
+                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
+                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3));
+                else
+                    c_white = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                        src_white_rh.vertices(:,1), src_white_rh.vertices(:,2), src_white_rh.vertices(:,3), 'linear');
+                    c_white = c_white(:); % ensure it's a column vector to satisfy assumption of matmul below
+                    c = zeros(size(reg.vertices_rh,1),1);
+                    for v = 1:size(reg.vertices_rh,1)
+                        c(v) = reg.weights_rh(v,:)*c_white(reg.vertices_rh(v,:));
+                    end
+                end
+            else
+                error('Could not determine surface laterality. This should have been precluded by earlier checks when loading source space surface, so it''s quite strange you managed to throw this error.')
+            end
+
+
+        end
+            
         %if doindexmap, c = round(c); end
         
         % doesn't work to fix interpolation error.

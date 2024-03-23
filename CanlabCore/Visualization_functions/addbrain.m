@@ -353,7 +353,7 @@ switch meth
         pname = 'R.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat'; % from Glasser_et_al_2016_HCP
         p1 = add_surface(pname);
         set(p1,'FaceColor',[.5 .5 .5]);
-         p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
+        p2 = add_surface('suit_surface_brainstem_cerebellum.mat');
         set(p2,'FaceColor',[.5 .5 .5]);
         view(90,0);
         axis off;
@@ -444,7 +444,202 @@ switch meth
         axis image;
         lightRestoreSingle(gca);
         material dull;
+
+    case {'hcp sphere left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('S1200.L.sphere.32k_fs_LR.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
             
+    case {'hcp sphere right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan     
+        pname = which('S1200.R.sphere.32k_fs_LR.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'freesurfer sphere left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('fsavg_sphere_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'freesurfer sphere right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan     
+        pname = which('fsavg_sphere_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'freesurfer inflated left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('fsavg_inflated_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'freesurfer inflated right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan     
+        pname = which('fsavg_inflated_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'freesurfer white left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('fsavg_white_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'freesurfer white right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan     
+        pname = which('fsavg_white_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+        
+    case {'MNI152NLin6Asym white left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_white_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin6Asym white right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_white_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'MNI152NLin6Asym midthickness left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_midthickness_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin6Asym midthickness right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_midthickness_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+    case {'MNI152NLin6Asym sphere left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_sphere_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin6Asym sphere right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_sphere_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
     case 'bigbrain'
         
         pname = 'BigBrainSurfaceRight.mat'; 

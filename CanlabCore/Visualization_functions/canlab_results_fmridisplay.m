@@ -165,7 +165,8 @@ if ischar(input_activation)
     
     if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
-            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') 
+            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated' ...
+            || strcmp(input_activation, 'MNI152NLin6Asym white')) 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
         varargin{end + 1} = 'noblobs'; 
@@ -251,6 +252,27 @@ wh = strcmp(varargin, 'full hcp inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp sphere');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer sphere');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym midthickness');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym sphere');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full2');
@@ -659,18 +681,79 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
 
-
         case 'hcp inflated'
-            figure;
             axis off;
             o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'medial');          
             o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'lateral');
             
-            wh_montages = [1 2 3 4];
-            wh_surfaces = [1:8];
+            wh_surfaces = [1:4];
 
+        case 'hcp sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'hcp sphere right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'hcp sphere left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp sphere right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp sphere left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer inflated'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer inflated right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer inflated left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer inflated right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer inflated left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer white'
+            figure;
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer white right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer white left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer white right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer white left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer sphere right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer sphere left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer sphere right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer sphere left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym white'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym white right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym white left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym white right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym white left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym midthickness'
+            figure;
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym sphere right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym sphere left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym sphere right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym sphere left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
 
         otherwise error('illegal montage type. choose full or compact.');
     end

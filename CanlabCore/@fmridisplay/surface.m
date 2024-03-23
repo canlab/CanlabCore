@@ -152,7 +152,122 @@ elseif strcmp(dir, 'hcp inflated left')
         view(270, 0);
     end
    
- 
+elseif strcmp(dir, 'hcp sphere right')
+    h = addbrain('hcp sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'hcp sphere left')
+    h = addbrain('hcp sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer sphere right')
+    h = addbrain('freesurfer sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer sphere left')
+    h = addbrain('freesurfer sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer white right')
+    h = addbrain('freesurfer white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer white left')
+    h = addbrain('freesurfer white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer inflated right')
+    h = addbrain('freesurfer inflated right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer inflated left')
+    h = addbrain('freesurfer inflated left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+elseif strcmp(dir, 'MNI152NLin6Asym white right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym white left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym midthickness right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym midthickness right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym midthickness left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym midthickness left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym sphere right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym sphere left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
 end
 
 if strcmp(h(1).FaceColor,'interp')

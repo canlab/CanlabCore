@@ -1,0 +1,15 @@
+these source files was used for the creation of 
+/CanlabCore/canlab_canonical_brains/Canonical_brains_surfaces/resample*.mat files which 
+containg precomputed mappings (computed by these source files that is) from surfaces 
+generated from volumetric templates (e.g. MNI152NLin2009cAsym) to standard surface 
+templates (e.g. fsaverage 164k).
+
+Surfaces are computed using linear interpolation based on barycentric coordinates, but
+my method for barycentric vertex selection is suspect, so take it with a grain of salt.
+Nevertheless, this code may be useful to document important details about how volumetric
+to surface projections are accomplished when using explicit sourcespace and targetsurface
+arguments with canlab plotting functions, and as a guide for generating new projections
+for new source or target spaces should you desire to do so.
+
+Bogdan
+23/03/24

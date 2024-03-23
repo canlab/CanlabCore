@@ -79,8 +79,16 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %       alter the data being shown.
 %
 %    **'sourcespace':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage.
+%       Supported sourcespaces = {'MNI152NLin2009cAsym','MNI152NLin6Asym','colin27'}
 %
 %    **'targetsurface':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage.
+%       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
 % :Outputs:
 %

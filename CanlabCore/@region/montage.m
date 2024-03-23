@@ -78,6 +78,11 @@ function o2 = montage(obj, varargin)
 %
 %        'full hcp inflated' for full montage with inflated surfaces from
 %        HCP data
+% 
+%        'hcp inflated' same as above but without volumetric slices
+%
+%        'freesurfer inflated' surface plots using freesurfer inflated
+%        surfaces
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
@@ -100,6 +105,18 @@ function o2 = montage(obj, varargin)
 %         The default brain for overlays is based on Keuken et al. 2014
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
+%
+%    **'sourcespace':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage.
+%       Supported sourcespaces = {'MNI152NLin2009cAsym','MNI152NLin6Asym','colin27'}
+%
+%    **'targetsurface':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage.
+%       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %

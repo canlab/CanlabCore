@@ -150,7 +150,7 @@ classdef atlas < image_vector
         atlas_name              % a short description or name of the atlas
         probability_maps        % voxels x regions matrix with probability values for each region
         labels
-        label_descriptions      % a regions x 1 cell array of long-form descriptions for labels
+        label_descriptions = {}      % a regions x 1 cell array of long-form descriptions for labels
         labels_2
         labels_3
         labels_4

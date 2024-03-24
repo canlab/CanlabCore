@@ -105,9 +105,18 @@ if isempty(cmap)
     varargin = [varargin, 'indexmap', cmap];
 end
 
+wh = find(strcmp(varargin,'sourcespace'));
+if ~isempty(wh)
+    sourcespace = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    sourcespace = obj.space_description;
+end
+
 r = atlas2region(obj);
 
-o2 = montage(r, varargin{:});
+o2 = montage(r, 'sourcespace', sourcespace, varargin{:});
 
 
 end % function

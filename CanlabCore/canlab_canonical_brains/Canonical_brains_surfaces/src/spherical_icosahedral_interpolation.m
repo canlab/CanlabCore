@@ -1,6 +1,4 @@
 function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargin)
-%   Not sure if any of this is worth the trouble. We could just use nearest
-%   neighbor for a much faster resampling and probably indistinguishable visually.
 %   My method for selecting the nearest face F to a vertex Vq for
 %   barycentric interpolation is also potentially wrong. It doesn't work in
 %   all instances, and it should, so I've probably mistaken something along
@@ -11,6 +9,11 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
     % C - data in source psace
     % Vq - vertices of target space
     % Fq - faces of target space
+    %
+    % Optional flag: 'nearest'  - performs nearest neighbor interpolation instead of 
+    %      barycentric linear interpolation. Unlike for barycentric interpolation I have
+    %      no reservations about the accuracy of my implementation here. It's a trivial
+    %      application of built in matlab functions.
     %
     % Cq - data in target space
 

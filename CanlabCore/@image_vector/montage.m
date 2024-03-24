@@ -106,7 +106,9 @@ switch meth
             o2 = canlab_results_fmridisplay([], 'noblobs', 'nooutline', varargin{:}); % pass forward args.
         end
         
-        montage_indx = 1:2:2*n;
+        if ~isempty(o2.montage)
+            montage_indx = 1:2:2*n;
+        end
         
         for i = 1:n
             
@@ -123,10 +125,13 @@ switch meth
                     end
                 end
             
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
-                    'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
-                    varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
-                
+                if ~isempty(o2.montage)
+                    o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                        'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
+                        varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
+                else
+                    error('Plotting multivolume data without volumetric montages (e.g. multivolume plotting on surfaces) is not yet supported.')
+                end
             else % just one image, plot on all montages
                 
                 % add title - new in 2021, so use try...catch for now

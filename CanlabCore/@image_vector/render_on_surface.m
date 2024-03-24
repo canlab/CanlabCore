@@ -422,6 +422,11 @@ if ~isempty(sourcespace) && ~isempty(targetsurface)
             rethrow(e);
         end
 
+        assert(length(unique(cellfun(@length, src_sp_lh))) == 1, ...
+            'Left hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
+        assert(length(unique(cellfun(@length, src_sp_rh))) == 1, ...
+            'Right hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
+
         if doindexmap
             switch targetsurface
                 case 'fsaverage_164k'
@@ -490,182 +495,88 @@ end
 
 for i = 1:length(surface_handles)
     %% sampling from vol2surf and inter-surface projections
-    if doindexmap        
-        %c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
-        %x,y,z = coordinates
-        %c = values to interpolate
-        if isempty(sourcespace) || isempty(targetsurface)
+    % The method we use here is what Wu et al. (2018) Neuroimage refer to 
+    % as MNIsurf, but we're just applying the mapping here. They were
+    % computed ahead of time for faster execution.
+
+    % Get vertex colors for image (obj) to map
+    % -----------------------------------------------------------------------
+    % Use isocolors to get colormapped values
+    % Convert to index color in split colormap by adding nvals to put in
+    % colored range
+    % isocolors returns nans sometimes even when no NaNs in data
+
+    % interpolate from mesh grid to the surface vertices intersecting
+    % the grid
+    if isempty(sourcespace) | isempty(targetsurface)
+        c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+            surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
+    else
+        % figure out what surface we're dealing with and grab the appropriate
+        % source surfaces to sample with
+        if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
+            % this is used for mesh interpolation from the volume
+            src_sp = src_sp_lh;
+    
+            % this is used to pull the correct mappings to the target surface 
+            % from our reg struct
+            vertices = 'vertices_lh';
+            weights = 'weights_rh';
+        elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
+            % this is used for mesh interpolation from the volume
+            src_sp = src_sp_rh;
+    
+            % this is used to pull the correct mappings to the target surface 
+            % from our reg struct
+            vertices = 'vertices_rh';
+            weights = 'weights_rh';
+        else
+            error('Could not determine surface laterality. This should have been precluded by earlier checks when loading source space surface, so it''s quite strange you managed to throw this error.')
+        end
+
+        % project from source space to target surface by 
+        % 1) interpolating to source space specific surface
+        % 2) applying precomputed barycentric linear interpolation of source
+        % surface to target surface
+        if size(surface_handles(i).Vertices,1) ~= size(reg.(vertices),1)
+            % if surface vertices dont match the target space
+            % vertices default to grid interpolation over MNIsurf
+            %
+            % this condition will occur with user error but also 
+            % when you have multiple surfaces, e.g. a freesurfer 
+            % surface + subcortical structures, and then this code 
+            % handles the auxillary surfaces.
+            warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
             c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
                 surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
         else
-            % project from source space to target surface by 
-            % 1) interpolating to source space specific surface using
-            % nearest neighbor interpolation
-            % 2) applying precomputed nearest neighbor interpolation of source
-            % surface to target surface
-            if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
-                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_lh,1)
-                    % this condition will occur when you have multiple
-                    % surfaces, e.g. a freesurfer surface + subcortical
-                    % structures, and then is fine.
-                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
-                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
-                else
-                    c_mesh = zeros(size(src_sp_lh{1}.vertices,1), length(src_sp_lh));
-                    for j = 1:length(src_sp_lh)
-                        c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                            src_sp_lh{j}.vertices(:,1), src_sp_lh{j}.vertices(:,2), src_sp_lh{j}.vertices(:,3), interp);
-                    end
-                    if strcmp(interp,'linear')
-                        c_mesh = mean(c_mesh,2);
-                    elseif strcmp(interp,'nearest') | doindexmap
-                        c_mesh = ordered_mode(c_mesh);
-                    else
-                        warning('Unknown interpolation option. Defaulting to mean across srcdepths depths.')
-                        c_mesh = mean(c_mesh,2);
-                    end
-                    c_mesh = c_mesh(:); % ensure it's a column vector to satisfy assumption of matmul below
-
-                    c = zeros(size(reg.vertices_lh,1),1);
-                    for v = 1:size(reg.vertices_lh,1)
-                        c(v) = reg.weights_lh(v,:)*c_mesh(reg.vertices_lh(v,:));
-                    end
-                end
-            elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
-                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_rh,1)
-                    % this condition will occur when you have multiple
-                    % surfaces, e.g. a freesurfer surface + subcortical
-                    % structures, and then is fine.
-                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
-                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
-                else
-                    c_mesh = zeros(size(src_sp_rh{1}.vertices,1), length(src_sp_rh));
-                    for j = 1:length(src_sp_rh)
-                        c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                            src_sp_rh{j}.vertices(:,1), src_sp_rh{j}.vertices(:,2), src_sp_rh{j}.vertices(:,3), interp);
-                    end
-                    if strcmp(interp,'linear')
-                        c_mesh = mean(c_mesh,2);
-                    elseif strcmp(interp,'nearest') | doindexmap
-                        c_mesh = ordered_mode(c_mesh);
-                    else
-                        warning('Unknown interpolation option. Defaulting to mean across srcdepths depths.')
-                        c_mesh = mean(c_mesh,2);
-                    end
-                    c_mesh = c_mesh(:); % ensure it's a column vector to satisfy assumption of matmul below
-
-                    c = zeros(size(reg.vertices_rh,1),1);
-                    for v = 1:size(reg.vertices_rh,1)
-                        c(v) = reg.weights_rh(v,:)*c_mesh(reg.vertices_rh(v,:));
-                    end
-                end
+            % if target vertices and surface vertices match proceed
+            % with MNIsurf vol2surf method
+            c_mesh = zeros(size(src_sp{1}.vertices,1), length(src_sp));
+            for j = 1:length(src_sp)
+                c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
+                    src_sp{j}.vertices(:,1), src_sp{j}.vertices(:,2), src_sp{j}.vertices(:,3), interp);
+            end
+            if strcmp(interp,'linear')
+                c_mesh = mean(c_mesh,2);
+            elseif strcmp(interp,'nearest') | doindexmap
+                c_mesh = ordered_mode(c_mesh);
             else
-                error('Could not determine surface laterality. This should have been precluded by earlier checks when loading source space surface, so it''s quite strange you managed to throw this error.')
+                warning('Unknown interpolation option. Defaulting to mean across srcdepths depths.')
+                c_mesh = mean(c_mesh,2);
+            end
+            c_mesh = c_mesh(:); % ensure it's a column vector to satisfy assumption of matmul below
+
+            c = zeros(size(reg.(vertices),1),1);
+            for v = 1:size(reg.(vertices),1)
+                c(v) = reg.(weights)(v,:)*c_mesh(reg.(vertices)(v,:));
             end
         end
+    end
+    if doindexmap   
         c(mod(c,1) > 0) = 0;
         c_colored = c;
     else
-        % Get vertex colors for image (obj) to map
-        % -----------------------------------------------------------------------
-        % Use isocolors to get colormapped values
-        % Convert to index color in split colormap by adding nvals to put in
-        % colored range
-        % isocolors returns nans sometimes even when no NaNs in data
-
-        % interpolate from mesh grid to the surface vertices intersecting
-        % the grid
-        if isempty(sourcespace) | isempty(targetsurface)
-            %c = isocolors(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, surface_handles(i));
-            % isocolors just ends up being a wrapper for the below data. We
-            % can specify it directly though so we can control
-            % itnerpolation
-            c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
-        else
-            % project from source space to target surface by 
-            % 1) interpolating to source space specific surface
-            % 2) applying precomputed barycentric linear interpolation of source
-            % surface to target surface
-            if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
-                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_lh,1)
-                    % if surface vertices dont match the target space
-                    % vertices default to grid interpolation over MNIsurf
-                    %
-                    % this condition will occur with user error but also 
-                    % when you have multiple surfaces, e.g. a freesurfer 
-                    % surface + subcortical structures, and then this code 
-                    % handles the auxillary surfaces.
-                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
-                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
-                else
-                    % if target vertices and surface vertices match proceed
-                    % with MNIsurf vol2surf method
-                    c_mesh = zeros(size(src_sp_lh{1}.vertices,1), length(src_sp_lh));
-                    for j = 1:length(src_sp_lh)
-                        c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                            src_sp_lh{j}.vertices(:,1), src_sp_lh{j}.vertices(:,2), src_sp_lh{j}.vertices(:,3), interp);
-                    end
-                    if strcmp(interp,'linear')
-                        c_mesh = mean(c_mesh,2);
-                    elseif strcmp(interp,'nearest') | doindexmap
-                        c_mesh = ordered_mode(c_mesh);
-                    else
-                        warning('Unknown interpolation option. Defaulting to mean across srcdepths depths.')
-                        c_mesh = mean(c_mesh,2);
-                    end
-                    c_mesh = c_mesh(:); % ensure it's a column vector to satisfy assumption of matmul below
-
-                    c = zeros(size(reg.vertices_lh,1),1);
-                    for v = 1:size(reg.vertices_lh,1)
-                        c(v) = reg.weights_lh(v,:)*c_mesh(reg.vertices_lh(v,:));
-                    end
-                end
-            elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
-                if size(surface_handles(i).Vertices,1) ~= size(reg.vertices_rh,1)
-                    % if surface vertices dont match the target space
-                    % vertices default to grid interpolation over MNIsurf
-                    %
-                    % this condition will occur with user error but also 
-                    % when you have multiple surfaces, e.g. a freesurfer 
-                    % surface + subcortical structures, and then this code 
-                    % handles the auxillary surfaces.
-                    warning('Size of surface %d does not match size of target surface. Falling back to naive mesh interpolation.',i);
-                    c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                        surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3),interp);
-                else
-                    % if target vertices and surface vertices match proceed
-                    % with MNIsurf vol2surf method
-                    c_mesh = zeros(size(src_sp_rh{1}.vertices,1), length(src_sp_rh));
-                    for j = 1:length(src_sp_rh)
-                        c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-                            src_sp_rh{j}.vertices(:,1), src_sp_rh{j}.vertices(:,2), src_sp_rh{j}.vertices(:,3), interp);
-                    end
-                    if strcmp(interp,'linear')
-                        c_mesh = mean(c_mesh,2);
-                    elseif strcmp(interp,'nearest') | doindexmap
-                        c_mesh = ordered_mode(c_mesh);
-                    else
-                        warning('Unknown interpolation option. Defaulting to mean across srcdepths depths.')
-                        c_mesh = mean(c_mesh,2);
-                    end
-                    c_mesh = c_mesh(:); % ensure it's a column vector to satisfy assumption of matmul below
-
-                    c = zeros(size(reg.vertices_rh,1),1);
-                    for v = 1:size(reg.vertices_rh,1)
-                        c(v) = reg.weights_rh(v,:)*c_mesh(reg.vertices_rh(v,:));
-                    end
-                end
-            else
-                error('Could not determine surface laterality. This should have been precluded by earlier checks when loading source space surface, so it''s quite strange you managed to throw this error.')
-            end
-
-
-        end
-        
         %% conversion from raw-values to colormap values
         %if doindexmap, c = round(c); end
         

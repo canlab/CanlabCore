@@ -72,7 +72,7 @@ for i = 1:length(varargin)
             case {'hcp sphere', 'hcp inflated', 'full hcp', 'full hcp inflated'}
                 if isempty(targetsurface), targetsurface = 'fsLR_32k'; end
             case {'freesurfer sphere', 'freesurfer white', 'freesurfer inflated'}
-                if isempty(targetsurface), targetsurface = 'freesurfer_164k'; end
+                if isempty(targetsurface), targetsurface = 'fsaverage_164k'; end
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end

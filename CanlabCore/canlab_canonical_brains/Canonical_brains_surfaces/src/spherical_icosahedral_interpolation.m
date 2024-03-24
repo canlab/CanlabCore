@@ -129,7 +129,8 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
             vec(i,:) = [nn(i), 1, 1]; % the other two don't matter, we give them zero weight
             %{
                 keyboard
-    
+                % this code will plot the candidate triangles and your target point to inspect
+                % why we're getting an error
                 figure;
                 cla
                 for j = 1:length(second_F_ind)

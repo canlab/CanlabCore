@@ -60,8 +60,8 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
     % our general strategy here involves 3 steps
     % 1) identify nearest neighbor of Vq in V
     % 2) get first-fourth order faces connected to nearest neighbor
-    % 3) project Vq to planes containing faces of (2) to define projVq (one for each face)
-    % 4) convert projVq into barycentric coordinates and find face that contains projVq
+    % 3) project Vq to planes containing faces of (2) to define projVq (one for each face)  [edit: commentd out]
+    % 4) convert projVq into barycentric coordinates and find face that contains projVq  [edit: just using Vq directly now, not sure which is better]
     % 5) perform barycentric interpolation of projVq based on face form (4)
     Cq = zeros(size(Vq,1),1);
     coord = zeros(size(Vq,1),3);
@@ -98,7 +98,9 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
         %Bq = cartesianToBarycentric(TR, second_F_ind(:), projVq);
         Bq = cartesianToBarycentric(TR, second_F_ind(:), repmat(Vq(i,:),length(second_F_ind),1));
         %Bq = cartesianToBarycentric(TR, (1:size(F,1))', repmat(Vq(i,:), size(F,1),1));
-        % get enclosing triangles (two, one on each side of the sphere
+        % you'll likely find the enclosing triangle if you exhaustively search them all with the above code
+        % but it's extremely slow and dumb. There are smarter ways to do it if you can figure them out.
+        % I tried, but what you see here isn't entirely correct.
         enclosing_tri_Bq_ind = find(all(Bq >= 0 & Bq <= 1,2));
         % the triangles won't always inclose points due to numerical
         % interpolation errors, so instead we find nearest triangles

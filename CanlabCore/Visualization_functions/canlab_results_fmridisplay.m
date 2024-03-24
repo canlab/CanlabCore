@@ -50,6 +50,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
 %
 %   **'montagetype':**
+%        Note: for surface plotting MNI surface projection is availabe. See help render_on_surface for additional 
+%        options to specify to enable the necessary transformations. Otherwise naive sampling based on naive surface 
+%        vertex coordinates will be used, which in most cases will not correctly map to your data volume.
 % 
 %        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
 %        'compact'         Midline saggital and two rows of axial slices [the default] 
@@ -61,6 +64,18 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'full hcp inflated' for full montage using hcp inflated surfaces
 %        'hcp inflated'    for a connectome workbench style layout without
 %                          volumetric slices
+%        'freesurfer inflated' connectome workbench style layout (no volumetric slices) with fsaverage 164k surfaces.
+%        '[MNI152NLin2009cAsym|MNI152NLin6Asym] [pial|midthickness|white]
+%                          Connectome workbench style layout (no volumetric slices) using MNI152NLin2009cAsym or MNI152NLin6Asym 
+%                          surfaces sampled at one of three depths. This will work with data that's already in MNI152NLin2009cAsym
+%                          space with naive mesh interpolation (no need for special surface projection transformations), unlike 
+%                          all other surfaces (see help render_on_surface for details on projection options otherwise). When 
+%                          projecting data to other surfaces you need a sampling depth though and these MNI space surfaces can 
+%                          be helpful for deciding on a sampling depth to use in your projections (see srcdepth argument to
+%                          render_on_surface). Simply render on the surface corresponding to your data's template space and
+%                          the desired depth to see what data would be extracted from your volumes with that srcdepth argument 
+%                          (pial, midthickness, white), and then include that with your srcdepth argument when plotting
+%                          your surface data.
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
@@ -88,7 +103,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
 % 
-% Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+% Other inputs to addblobs and render_on_surface (fmridisplay methods) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
 % See help fmridisplay
 % e.g., 'color', [1 0 0]
@@ -165,7 +180,7 @@ if ischar(input_activation)
     
     if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
-            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated' ...
+            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated', ...
             || strcmp(input_activation, 'MNI152NLin6Asym white')) 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
@@ -741,28 +756,28 @@ if ~exist('o2', 'var')
 
         case 'MNI152NLin2009cAsym white'
             axis off;
-            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym white right', 'orientation', 'medial');
-            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym white left', 'orientation', 'medial');          
-            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym white right', 'orientation', 'lateral');
-            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym white left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym white right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym white left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym white right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym white left', 'orientation', 'lateral');
             
             wh_surfaces = [1:4];
 
         case 'MNI152NLin2009cAsym midthickness'
             axis off;
-            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'medial');
-            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'medial');          
-            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'lateral');
-            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness left', 'orientation', 'lateral');
             
             wh_surfaces = [1:4];
 
         case 'MNI152NLin2009cAsym pial'
             axis off;
-            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'medial');
-            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'medial');          
-            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'lateral');
-            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym pial right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym pial left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym pial right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym pial left', 'orientation', 'lateral');
             
             wh_surfaces = [1:4];
 

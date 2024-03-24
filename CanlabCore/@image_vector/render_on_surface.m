@@ -208,7 +208,7 @@ interp = 'linear';
 allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
 allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
 
-allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap', 'sourcespace', 'targetsurface', 'srcdepth'};
+allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap', 'sourcespace', 'targetsurface', 'srcdepth','interp'};
 
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
@@ -256,9 +256,6 @@ for i = 1:length(varargin)
                 end
                 
                 doindexmap = true;
-                interp = 'nearest';
-
-            case 'interp'
                 interp = 'nearest';
                 
             case 'scaledtransparency'

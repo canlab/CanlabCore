@@ -65,17 +65,17 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'hcp inflated'    for a connectome workbench style layout without
 %                          volumetric slices
 %        'freesurfer inflated' connectome workbench style layout (no volumetric slices) with fsaverage 164k surfaces.
-%        '[MNI152NLin2009cAsym|MNI152NLin6Asym] [pial|midthickness|white]
+%        'MNI152NLin[2009c|6]Asym [pial|midthickness|white]
 %                          Connectome workbench style layout (no volumetric slices) using MNI152NLin2009cAsym or MNI152NLin6Asym 
-%                          surfaces sampled at one of three depths. This will work with data that's already in MNI152NLin2009cAsym
-%                          space with naive mesh interpolation (no need for special surface projection transformations), unlike 
-%                          all other surfaces (see help render_on_surface for details on projection options otherwise). When 
-%                          projecting data to other surfaces you need a sampling depth though and these MNI space surfaces can 
-%                          be helpful for deciding on a sampling depth to use in your projections (see srcdepth argument to
-%                          render_on_surface). Simply render on the surface corresponding to your data's template space and
-%                          the desired depth to see what data would be extracted from your volumes with that srcdepth argument 
-%                          (pial, midthickness, white), and then include that with your srcdepth argument when plotting
-%                          your surface data.
+%                          surfaces sampled at one of three depths. This will work with data that's already in the corresponding 
+%                          MNI template space with naive mesh interpolation (no need for special surface projection 
+%                          transformations), unlike all other surfaces (see help render_on_surface for details on projection 
+%                          options otherwise). When projecting data to other surfaces you need a sampling depth though and these 
+%                          MNI space surfaces can be helpful for deciding on a sampling depth to use in your projections (see 
+%                          srcdepth argument to render_on_surface). Simply render on the surface corresponding to your data's 
+%                          template space and the desired depth to see what data would be extracted from your volumes with that 
+%                          srcdepth argument (pial, midthickness, white), and then include that with your srcdepth argument when 
+%                          plotting your surface data.
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %

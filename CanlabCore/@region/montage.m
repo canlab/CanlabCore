@@ -106,16 +106,31 @@ function o2 = montage(obj, varargin)
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
 %
+%  @Optional:Surface Inputs:
+%
 %    **'sourcespace':**
 %       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
 %       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
-%       Neuroimage.
+%       Neuroimage. If you're plotting on surfaces, this is something you absolutely want to do if your sourcespace 
+%       and targetsurface are supported. If you're plotting to volumetric slices this has no effect.
 %       Supported sourcespaces = {'MNI152NLin2009cAsym','MNI152NLin6Asym','colin27'}
+%
+%    **'srcdepth':**
+%       Requires 'sourcespace' specification, and allows further specify desired surface depth to sample volume 
+%       at. Typical options might be 'pial', 'white', or 'midthickness'. Requires that a file named 
+%       '<sourename>_<srcdepth>_lh.mat' and '<sourename>_<srcdepth>_rh.mat' be in your matlab path. The pial surface 
+%       and even midthickness will undersample from deep sulci, but the white surface may conversely suffer from 
+%       partial volume effects if you've masked white matter out of your volumetric data. srcdepth can also be a cell 
+%       array, in which case multiple depths are sampled and averaged (for linear interpolation) or the mode is taken 
+%       (for nearest neighbor interpolation). If there is a modal tie, the default is to use whichever belongs first 
+%       in your srcdepth list. Default: {'midthickness','pial','white'}, i.e. midthickness > pial > white for modal 
+%       tie breaks.
 %
 %    **'targetsurface':**
 %       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
 %       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
-%       Neuroimage.
+%       Neuroimage. If you're plotting on surfaces, this is something you absolutely want to do if your sourcespace 
+%       and targetsurface are supported. If you're plotting to volumetric slices this has no effect.
 %       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'

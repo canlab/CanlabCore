@@ -215,6 +215,61 @@ elseif strcmp(dir, 'freesurfer inflated left')
     else
         view(270, 0);
     end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym white right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym white left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym midthickness right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym midthickness left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym pial right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym pial right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym pial left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym pial left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
 elseif strcmp(dir, 'MNI152NLin6Asym white right')
     % for internal development use
     h = addbrain('MNI152NLin6Asym white right');
@@ -245,6 +300,24 @@ elseif strcmp(dir, 'MNI152NLin6Asym midthickness right')
 elseif strcmp(dir, 'MNI152NLin6Asym midthickness left')
     % for internal development use
     h = addbrain('MNI152NLin6Asym midthickness left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym pial right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym pial right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym pial left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym pial left');
     if strcmp(orn, 'medial')
         view(90, 0);
     else

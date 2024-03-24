@@ -557,6 +557,90 @@ switch meth
         lightRestoreSingle(gca);
         material dull;
         
+    case {'MNI152NLin2009cAsym white left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_white_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin2009cAsym white right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_white_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'MNI152NLin2009cAsym midthickness left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_midthickness_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin2009cAsym midthickness right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_midthickness_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
+    case {'MNI152NLin2009cAsym pial left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_pial_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin2009cAsym pial right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin2009cAsym_pial_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
     case {'MNI152NLin6Asym white left'}
         % Mean for use as a development tool, not intended for actual
         % dispaly
@@ -612,6 +696,35 @@ switch meth
         axis image;
         lightRestoreSingle(gca);
         material dull;
+
+    case {'MNI152NLin6Asym pial left'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_pial_lh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+            
+    case {'MNI152NLin6Asym pial right'}
+        % Mean for use as a development tool, not intended for actual
+        % dispaly
+        % - Bogdan        
+        pname = which('MNI152NLin6Asym_pial_rh.mat');
+        p = add_surface(pname);
+        set(p,'FaceColor',[.5 .5 .5], 'FaceAlpha', 1);
+        
+        view(270, 0);
+        axis off;
+        axis image;
+        lightRestoreSingle(gca);
+        material dull;
+
     case {'MNI152NLin6Asym sphere left'}
         % Mean for use as a development tool, not intended for actual
         % dispaly

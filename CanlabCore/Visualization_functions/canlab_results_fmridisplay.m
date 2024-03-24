@@ -266,10 +266,22 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'freesurfer inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'MNI152NLin2009cAsym white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin2009cAsym midthickness');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin2009cAsym pial');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = strcmp(varargin, 'MNI152NLin6Asym white');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'MNI152NLin6Asym midthickness');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym pial');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'MNI152NLin6Asym sphere');
@@ -727,6 +739,33 @@ if ~exist('o2', 'var')
             
             wh_surfaces = [1:4];
 
+        case 'MNI152NLin2009cAsym white'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym white right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym white left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym white right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym white left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin2009cAsym midthickness'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin2009cAsym pial'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNi152NLin2009cAsym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
         case 'MNI152NLin6Asym white'
             axis off;
             o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym white right', 'orientation', 'medial');
@@ -737,12 +776,20 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:4];
 
         case 'MNI152NLin6Asym midthickness'
-            figure;
             axis off;
             o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'medial');          
             o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym pial'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym pial right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym pial left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym pial right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym pial left', 'orientation', 'lateral');
             
             wh_surfaces = [1:4];
 

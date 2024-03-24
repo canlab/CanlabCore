@@ -97,10 +97,6 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
         %% identify face containing one of the Vq
         %Bq = cartesianToBarycentric(TR, second_F_ind(:), projVq);
         Bq = cartesianToBarycentric(TR, second_F_ind(:), repmat(Vq(i,:),length(second_F_ind),1));
-        %Bq = cartesianToBarycentric(TR, (1:size(F,1))', repmat(Vq(i,:), size(F,1),1));
-        % you'll likely find the enclosing triangle if you exhaustively search them all with the above code
-        % but it's extremely slow and dumb. There are smarter ways to do it if you can figure them out.
-        % I tried, but what you see here isn't entirely correct.
         enclosing_tri_Bq_ind = find(all(Bq >= 0 & Bq <= 1,2));
         % the triangles won't always inclose points due to numerical
         % interpolation errors, so instead we find nearest triangles

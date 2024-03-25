@@ -1,10 +1,18 @@
 function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargin)
 %   My method for selecting the nearest face F to a vertex Vq for
-%   barycentric interpolation is also potentially wrong. It doesn't work in
-%   all instances, and it should, so I've probably mistaken something along
-%   the way, but the results look good enough for government work.
-% Edit: I found an example that could be ported. It's used by MSM and is part of
-% the FSL libraries, but those are just copies of the original code which is here,
+%   barycentric interpolation is probably wrong. It doesn't work in
+%   all instances, and it should. The problem is a pure math problem,
+%   and the algorithmic implementation is a pure CS problem. I'm sure 
+%   there is both a perfect solution and an efficient implementation
+%   I just couldn't figure it out or find an existing implementation to
+%   to copy, but the results of my implementation look good enough for 
+%   government work. The nearest neighbor approach is correct though, so
+%   if in doubt try comparing linear interpolation with nearest neighbor
+%   and if the results look similar you're probably good.
+%
+% Edit: I found an example with logic that that could be ported. It's used by 
+% MSM and is part of the FSL libraries, but those are just copies of the original 
+% code which is here,
 % https://github.com/Washington-University/workbench/blob/master/src/Files/SurfaceResamplingHelper.cxx
 
     % V - vertices of source space

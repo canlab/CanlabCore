@@ -427,6 +427,10 @@ if ~isempty(sourcespace) && ~isempty(targetsurface)
         assert(length(unique(cellfun(@length, src_sp_rh))) == 1, ...
             'Right hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
 
+        % import registration files to transform from source surface (matches volume) to target
+        % surface (does not match volume and may not even match the volume's surface model and
+        % require interpolation). These were precomputed by code which can be found in
+        % CanlabCore/canlab_canonical_brains/Canonical_brains_surfaces/src
         if doindexmap
             switch targetsurface
                 case 'fsaverage_164k'

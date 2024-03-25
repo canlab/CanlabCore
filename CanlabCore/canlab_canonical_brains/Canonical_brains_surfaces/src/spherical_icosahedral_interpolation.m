@@ -3,6 +3,9 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
 %   barycentric interpolation is also potentially wrong. It doesn't work in
 %   all instances, and it should, so I've probably mistaken something along
 %   the way, but the results look good enough for government work.
+% Edit: I found an example that could be ported. It's used by MSM and is part of
+% the FSL libraries, but those are just copies of the original code which is here,
+% https://github.com/Washington-University/workbench/blob/master/src/Files/SurfaceResamplingHelper.cxx
 
     % V - vertices of source space
     % F - faces of source space

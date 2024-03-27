@@ -388,7 +388,10 @@ end % custom posneg or other colormap
 % clim(1) mapped to lowest color, clim(2) to highest color
 % map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
 
-map_function = @(c, x1, x2, y1, y2)  y1 + (c - x1) * (y2 - y1) ./ (x2 - x1);
+% softmax here keeps negative values from extending below the colormap
+% range, which would otherwise make those values gray, since the lowest
+% value on the colormap is a hardcoded grayscale value
+map_function = @(c, x1, x2, y1, y2)  y1 + max((c - x1),0) * (y2 - y1) ./ (x2 - x1);
 
 
 % problem with above is that border gets mapped to low color when interpolating, which is

@@ -1,10 +1,22 @@
 function out = regress(dat, varargin)
 % Multiple regression with an fmri_data object (dat), predicting brain data with a design matrix stored in dat.X (or vice versa)
+% By default, this function will use OLS regression. Robust regression can
+% be specified (see below)
 %
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
 % and the intercept is the last column. Intercept will automatically be
 % added if not detected unless 'nointercept' is specified.
+%
+% Output: Output is a structure with several fields. Key fields include b
+% (beta images) and t (t statistic images). These contain one image for
+% each regressor in the model. The last image is always the model
+% intercept. The first images are the regressors from your design matrix. For
+% example, if your design matrix contains regressors for age and sex, your
+% beta and T images will have 3 images: age, sex, and model intercept. (Note: If
+% you are using voxel-varying covariates (see covdat below), that is
+% automatically added as the second-to-last regressor in the model.) See
+% documentation on other output fields below.
 %
 % Key pointers:
 % - Output structure (regression_results_ols) contains beta and t images in statistic_image objects
@@ -47,7 +59,11 @@ function out = regress(dat, varargin)
 % :Optional Inputs:
 %  **[threshold, 'unc']:**
 %        p-value threshold string indicating threshold type
-%        (see help statistic_image.threshold for options)
+%        (see help statistic_image.threshold for options). This function
+%        does not accept the full range of possible threshold types (e.g.,
+%        you cannot use the 'k' cluster extent option). To apply other
+%        thresholds, save the results from this function and then call
+%        threshold() to apply any other thresholds.
 %
 %  **robust:**
 %        Run a robust regression (default is OLS).  Robust is considerably
@@ -102,7 +118,9 @@ function out = regress(dat, varargin)
 %       objects. These serve as voxel-varying covariates -- each voxel can have
 %       a unique set of covariates. One common use case might be to regress
 %       post-treatment data on group + pre-treatment data. NOTE: this field
-%       only works in 'robust' mode, and is not implemented for OLS regression.
+%       only works in 'robust' mode, and is not implemented for OLS
+%       regression. Results will be added as the second-to-last regressor
+%       in the model (intercept is last).
 %
 % :Outputs:
 %

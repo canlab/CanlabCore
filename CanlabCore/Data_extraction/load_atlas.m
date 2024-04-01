@@ -243,7 +243,7 @@ switch lower(atlas_file_name_or_keyword)
         savefile ='Kragel2019PAG_atlas_object.mat';
         varname = 'atlas_obj';
         
-    case {'tian_3t_fmriprep20'}
+    case {'tian_3t', 'tian_3t_fmriprep20'}
         savefile ='tian_3t_fmriprep20_atlas_object.mat';
         varname = 'atlas_obj';
         

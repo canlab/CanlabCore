@@ -413,44 +413,52 @@ if ~isempty(sourcespace) && ~isempty(targetsurface)
         for i = 1:length(surface_handles)
             % our dependence on surface handle's tag property is a hacky
             % solution here. We really should have a more robust soln
-            assert(any(contains(surface_handles(i).Tag,{'right','Right','RIGHT','left','Left','LEFT'})), ...
-                'All surface objects must have ''left'' or ''right'' in their Tag property for correct surface projection')
-        end
-    
-        try
-            src_sp_lh = cellfun(@(x1)(load(which(sprintf('%s_%s_lh.mat', sourcespace, x1)),'faces','vertices')), srcdepth, 'UniformOutput', false);
-            src_sp_rh = cellfun(@(x1)(load(which(sprintf('%s_%s_rh.mat',sourcespace, x1)),'faces','vertices')), srcdepth, 'UniformOutput', false);
-        catch e
-            fprintf('ERROR: Could not find source surfaces for sourcespace %s', sourcespace);
-            rethrow(e);
-        end
+            if ~any(contains(surface_handles(i).Tag,{'right','Right','RIGHT','left','Left','LEFT'}))
+                warning('All surface objects must have ''left'' or ''right'' in their Tag property for correct surface projection. Defaulting to direct vertex projection.');
+                sourcespace = [];
+                targetsurface = [];
 
-        assert(length(unique(cellfun(@length, src_sp_lh))) == 1, ...
-            'Left hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
-        assert(length(unique(cellfun(@length, src_sp_rh))) == 1, ...
-            'Right hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
-
-        % import registration files to transform from source surface (matches volume) to target
-        % surface (does not match volume and may not even match the volume's surface model and
-        % require interpolation). These were precomputed by code which can be found in
-        % CanlabCore/canlab_canonical_brains/Canonical_brains_surfaces/src
-        if doindexmap
-            switch targetsurface
-                case 'fsaverage_164k'
-                    reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k_nearestneighbor.mat',sourcespace)));
-                case 'fsLR_32k'
-                    reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k_nearestneighbor.mat',sourcespace)));
-                otherwise
-                    error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+                naiveProjection = true;
+            else
+                naiveProjection = false;
             end
-        else
-            switch targetsurface
-                case 'fsaverage_164k'
-                    reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k.mat',sourcespace)));
-                case 'fsLR_32k'
-                    reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k.mat',sourcespace)));
-                otherwise
-                    error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+        end
+        if ~naiveProjection
+            try
+                src_sp_lh = cellfun(@(x1)(load(which(sprintf('%s_%s_lh.mat', sourcespace, x1)),'faces','vertices')), srcdepth, 'UniformOutput', false);
+                src_sp_rh = cellfun(@(x1)(load(which(sprintf('%s_%s_rh.mat',sourcespace, x1)),'faces','vertices')), srcdepth, 'UniformOutput', false);
+            catch e
+                fprintf('ERROR: Could not find source surfaces for sourcespace %s', sourcespace);
+                rethrow(e);
+            end
+    
+            assert(length(unique(cellfun(@length, src_sp_lh))) == 1, ...
+                'Left hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
+            assert(length(unique(cellfun(@length, src_sp_rh))) == 1, ...
+                'Right hemisphere vertex values differ across templates. Cannot average volumetric values across these srcdepth options');
+    
+            % import registration files to transform from source surface (matches volume) to target
+            % surface (does not match volume and may not even match the volume's surface model and
+            % require interpolation). These were precomputed by code which can be found in
+            % CanlabCore/canlab_canonical_brains/Canonical_brains_surfaces/src
+            if doindexmap
+                switch targetsurface
+                    case 'fsaverage_164k'
+                        reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k_nearestneighbor.mat',sourcespace)));
+                    case 'fsLR_32k'
+                        reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k_nearestneighbor.mat',sourcespace)));
+                    otherwise
+                        error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+                end
+            else
+                switch targetsurface
+                    case 'fsaverage_164k'
+                        reg = importdata(which(sprintf('resample_from_%s_to_fsavg_164k.mat',sourcespace)));
+                    case 'fsLR_32k'
+                        reg = importdata(which(sprintf('resample_from_%s_to_fsLR_32k.mat',sourcespace)));
+                    otherwise
+                        error('Unsupported target surface %s. This error should have been precluded by earlier checks. Strange that you''ve made it here', targetsurface);
+                end
             end
         end
     end

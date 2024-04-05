@@ -136,7 +136,7 @@ for i = 1:length(strings_to_find)
     
     % Find which names match
     if doexact == false
-        wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
+        wh = ~cellfun(@isempty, regexp(obj.(mylabelsfield), strings_to_find{i}));
         if strmatch(mylabelsfield, 'label_descriptions')
             wh=wh'; 
         end

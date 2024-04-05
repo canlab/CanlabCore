@@ -30,6 +30,9 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'exact' : If you enter 'exact', function will not look for overlaps in
 % names, and only look for exact string matches.
 %
+% 'regexp'  If you enter 'doregexp', function will treat your string as a
+% regular expression.
+%
 % Examples:
 % 
 % atlasfile = which('Morel_thalamus_atlas_object.mat');

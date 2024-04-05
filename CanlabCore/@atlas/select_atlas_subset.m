@@ -82,6 +82,7 @@ integers_to_find = [];
 doflatten = false;
 condInd = false;
 doexact=false;
+doregexp=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -103,6 +104,8 @@ for i = 1:length(varargin)
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
             case 'exact', doexact = true;
+
+            case 'regexp', doregexp = false;
 
             case 'conditionally_ind', condInd = true;
                 
@@ -135,8 +138,16 @@ to_extract = false(1, k);
 for i = 1:length(strings_to_find)
     
     % Find which names match
-    if doexact == false
+    if doregexp == true
         wh = ~cellfun(@isempty, regexp(obj.(mylabelsfield), strings_to_find{i}));
+        if strmatch(mylabelsfield, 'label_descriptions')
+            wh=wh'; 
+        end
+    
+        to_extract = to_extract | wh;
+
+    elseif doexact == false
+        wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
         if strmatch(mylabelsfield, 'label_descriptions')
             wh=wh'; 
         end

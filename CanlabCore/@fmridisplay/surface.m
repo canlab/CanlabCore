@@ -66,8 +66,12 @@ for i = 1:length(varargin)
     end
 end
 
-axh = axes('Position', ax);
-% axh = axes(ax);
+if isa(ax,'matlab.graphics.axis.Axes')
+    axh = ax;
+    axes(axh);
+else
+    axh = axes('Position', ax);
+end
 if strcmp(dir, 'hires left')
     h = addbrain('hires left');
     if strcmp(orn, 'medial')

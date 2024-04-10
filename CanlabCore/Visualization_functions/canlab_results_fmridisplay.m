@@ -181,7 +181,14 @@ if ischar(input_activation)
     if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
             || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') ...
-            || strcmp(input_activation, 'hcp inflated') || strcmp(input_activation, 'MNI152NLin6Asym white') 
+            || strcmp(input_activation, 'hcp inflated') || strcmp(input_activation, 'freesurfer inflated') ... 
+            || strcmp(input_activation, 'freesurfer sphere') || strcmp(input_activation, 'freesurfer white') ...
+            || strcmp(input_activation, 'MNI152NLin6Asym white') || strcmp(input_activation, 'MNI152NLin6Asym midthickness') ...
+            || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
+            || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
+            || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates subcortex') ...
+            || strcmp(input_activation, 'allslices')
+
         
         % Entered no data map; intention is not to plot blobs, just create underlay
         varargin{end + 1} = 'noblobs'; 
@@ -264,6 +271,12 @@ wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full hcp inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp grayordinates');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp grayordinates subcortex');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp inflated');
@@ -352,6 +365,8 @@ for i = 1:length(varargin)
     if wh(i), o2 = varargin{wh}; end
 end
 varargin(wh) = [];
+
+grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
 
 xyz = [-20 -10 -6 -2 0 2 6 10 20]';
 xyz(:, 2:3) = 0;
@@ -707,6 +722,65 @@ if ~exist('o2', 'var')
             
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
+
+        case 'hcp grayordinates'
+            % saggital
+            f1 = figure();
+            mainLayout = tiledlayout(f1,1,5);
+            surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
+            surfLayout.Layout.Tile = 1; % Position the leftLayout in the first two tiles of the mainLayout
+            surfLayout.Layout.TileSpan = [1, 2]; % Span two tiles
+            
+            % surface
+            ax = {};
+            for j = 1:4, ax{j} = nexttile(surfLayout); end
+            o2 = surface(o2, 'axes', ax{1}, 'direction', 'hcp inflated right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', ax{2}, 'direction', 'hcp inflated left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', ax{3}, 'direction', 'hcp inflated left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', ax{4}, 'direction', 'hcp inflated right', 'orientation', 'lateral');
+            
+
+            volLayout = tiledlayout(mainLayout, 3, 6, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            volLayout.Layout.Tile = 3; % Position the leftLayout in the third tile of the mainLayout
+            volLayout.Layout.TileSpan = [1, 3]; % Span three tiles
+            ax_vol=[];
+            for j = 1:3, for k = 1:6, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:6, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+
+            % coronal
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:6, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+
+            % axial
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:6, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+
+            allaxh = findobj(gcf, 'Type', 'axes');
+
+            wh_montages = [1 2 3];
+            wh_surfaces = [1:4];
+
+        case 'hcp grayordinates subcortex'
+            % saggital
+            f1 = figure();
+            volLayout = tiledlayout(f1, 3, 6, 'TileSpacing', 'tight', 'Padding', 'none');
+            ax_vol=[];
+            for j = 1:3, for k = 1:6, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:6, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+
+            % coronal
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:6, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+
+            % axial
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:6, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+
+            allaxh = findobj(gcf, 'Type', 'axes');
+
+            wh_montages = [1 2 3];
 
         case 'hcp inflated'
             axis off;

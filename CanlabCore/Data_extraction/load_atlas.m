@@ -411,7 +411,7 @@ switch lower(atlas_file_name_or_keyword)
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin2009cAsym','fine',2);
 
     case {'canlab2024_fine_fsl6_2mm', 'canlab2024_fine_fsl6'}
-        savefile='CANLab2024_MNI152NLin6Asym_fine_2mm_atlas_object.mat';
+        savefile='CANLab2024_MNI152NLin6Asym_2mm_atlas_object.mat';
         varname = 'atlas_obj';
         docreate = true;
         create_atlas = @(x1)create_CANLab2024_atlas('MNI152NLin6Asym','fine',2);

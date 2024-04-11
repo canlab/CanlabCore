@@ -108,7 +108,7 @@ for i = 1:length(varargin)
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
             case 'exact', doexact = true;
 
-            case 'regexp', doregexp = false;
+            case 'regexp', doregexp = true;
 
             case 'conditionally_ind', condInd = true;
                 

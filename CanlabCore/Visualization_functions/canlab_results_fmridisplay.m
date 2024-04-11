@@ -62,6 +62,9 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'full2'           for a slightly less full montage that avoids colorbar overlap issues
 %        'full hcp'        for full montage, but with surfaces and volumes from HCP data
 %        'full hcp inflated' for full montage using hcp inflated surfaces
+%        'hcp grayordinates' for 4 surfaces and zoomed in subcortical slices
+%        'hcp grayordinates subcortex'
+%                          for zoomed in subcortical slices
 %        'hcp inflated'    for a connectome workbench style layout without
 %                          volumetric slices
 %        'freesurfer inflated' connectome workbench style layout (no volumetric slices) with fsaverage 164k surfaces.
@@ -368,7 +371,8 @@ varargin(wh) = [];
 
 grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
 
-xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+%xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+xyz = [-40 -20 -10 -2 0 2 10 20 40]';
 xyz(:, 2:3) = 0;
 
 if isempty(input_activation)

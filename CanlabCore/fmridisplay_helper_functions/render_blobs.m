@@ -455,7 +455,6 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myy = currentmap.SPACE.Ymm(:, :, wh_slice(j));
                     mynewx = SPACE.Xmm(:, :, 1);
                     mynewy = SPACE.Ymm(:, :, 1);
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'sagittal' % Y x Z; Xmm is for some reason Y mm coords
                     % myx should have all rows the same, myy should have all
@@ -464,16 +463,29 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myx = squeeze(currentmap.SPACE.Zmm(wh_slice(j), :, :));
                     mynewy = squeeze(SPACE.Xmm(wh_slice(j), :, :));
                     mynewx = squeeze(SPACE.Zmm(wh_slice(j), :, :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'coronal' % X x Z
                     myy = squeeze(currentmap.SPACE.Ymm(:, wh_slice(j), :));
                     myx = squeeze(currentmap.SPACE.Zmm(:, wh_slice(j), :));
                     mynewy = squeeze(SPACE.Ymm(:, wh_slice(j), :));
                     mynewx = squeeze(SPACE.Zmm(:, wh_slice(j), :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
                     
             end
+            Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
+
+            % bogdan: when we plot multiple blobs the interpolation call above
+            % can't adjudicate between them and we get overlaps among 
+            % neighbors that privilege latter calls to render_blobs. Given
+            % the way this is designed, there's no perfect soluiton because
+            % you need to gie render_blobs information on all blobs to
+            % render simultaneously, but blob information is
+            % compartamentalized. We can however improve on the situation
+            % by masking out based on magnitude of partial volume effects,
+            % which is what we do here.
+            slicemask = slicedat;
+            slicemask(slicedat~=0)=1;
+            Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
+            Z(Zmask < 0.5) = 0;
             
             if dosmooth
                 % SMOOTH

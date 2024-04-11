@@ -112,7 +112,17 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 %      **'interp':**
 %         Options to pass to interp2. See help interp2 for valid
-%         interpolation methods
+%         interpolation methods. default: linear
+%
+%      **'partialVolumeThreshold':**
+%         A value between 0 and 1 that determines what minimum partial 
+%         volume fraction to keep when interpolating from voxels to pixels.
+%         If 'nearest' is chosen for 'interp' then partial volume effects 
+%         are computed using linear interpolation. Otherwise the same 
+%         interpolation method is used as specified by 'interp'. This value
+%         can be helpful for titrating the degree of overlap among
+%         neighboring blobs. It's an imperfect solution though.
+%         default: 0.5. 
 %
 %   **Orientation:**
 %         'sagittal', 'coronal', 'axial'
@@ -161,6 +171,7 @@ contourmin = 100*eps;
 outline = 0;
 mylinewidth = 2;
 interpStyle = 'linear';
+partial_vol_thresh = 0.5;
 
 vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
 
@@ -282,6 +293,11 @@ for i = 1:length(varargin)
             
             case {'full','full hcp','full2','nearest'}
                 continue
+
+            case {'partialVolumeThreshold'}
+                partial_vol_thresh = varargin{i+1};
+                assert(partial_vol_thresh <= 1 & partial_vol_thresh > 0,...
+                    'partialVolumeThreshold must be between 0 (exclusive) and 1 (inclusive).');
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -484,8 +500,12 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
             % which is what we do here.
             slicemask = slicedat;
             slicemask(slicedat~=0)=1;
-            Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
-            Z(Zmask < 0.5) = 0;
+            if strcmp(interpStyle,'nearest');
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, 'linear');
+            else
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
+            end
+            Z(Zmask < partial_vol_thresh) = 0;
             
             if dosmooth
                 % SMOOTH
@@ -499,7 +519,11 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % -----------------------------------------------------------
                 
                 Z(isnan(Z)) = 0;
-                [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                if dosmooth
+                    [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                else
+                    [c, h] = contourf(mynewy, mynewx, Zmask, [partial_vol_thresh,partial_vol_thresh]);
+                end
                 
                 if str2double(vstr(1:3))<8.4  % pre R2014b
                     ch = get(h, 'Children');

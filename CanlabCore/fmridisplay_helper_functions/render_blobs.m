@@ -114,7 +114,7 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %         Options to pass to interp2. See help interp2 for valid
 %         interpolation methods. default: linear
 %
-%      **'partialVolumeThreshold':**
+%      **'partialvolumethreshold':**
 %         A value between 0 and 1 that determines what minimum partial 
 %         volume fraction to keep when interpolating from voxels to pixels.
 %         If 'nearest' is chosen for 'interp' then partial volume effects 
@@ -294,7 +294,7 @@ for i = 1:length(varargin)
             case {'full','full hcp','full2','nearest'}
                 continue
 
-            case {'partialVolumeThreshold'}
+            case {'partialvolumethreshold'}
                 partial_vol_thresh = varargin{i+1};
                 assert(partial_vol_thresh <= 1 & partial_vol_thresh > 0,...
                     'partialVolumeThreshold must be between 0 (exclusive) and 1 (inclusive).');
@@ -519,6 +519,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % -----------------------------------------------------------
                 
                 Z(isnan(Z)) = 0;
+                Zmask(isnan(Zmask)) = 0;
                 if dosmooth
                     [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
                 else

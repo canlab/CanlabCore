@@ -71,14 +71,37 @@ end
 new_lbl = valid_lbls{new_ind};
 % note: we remove any label fields below if they're not of the appropriate
 % length to correspond to the original parcellation
-kept_lbl_ind = find((n_unique_lbls <= n_unique_lbls(new_ind)) & ...
-    (n_lbls == length(obj.(labelfield))));
+%kept_lbl_ind = find((n_unique_lbls <= n_unique_lbls(new_ind)) & ...
+%    (n_lbls == length(obj.(labelfield))));
+
+% find labels with valid fields
+kept_lbl_ind = find((n_lbls == length(obj.(labelfield))));
+% keep those with indices that are greater than or equal to the desired label
+kept_lbl_ind = kept_lbl_ind(kept_lbl_ind >= new_ind);
 
 rm_lbl_ind = find(~ismember(1:length(valid_lbls), 1:length(kept_lbl_ind)));
 
 % merge high resolution regions
-[new_lbl_parcels, lbl_exp] = unique(obj.(new_lbl),'stable');
+[new_lbl_parcels, lbl_exp, c] = unique(obj.(new_lbl),'stable');
 new_parcels = cell(1,length(new_lbl_parcels));
+
+% check that higher order labels are nested
+for i = 1:length(lbl_exp) % number of unique labels
+    this_ind = find(i == c);
+    for j = 2:length(kept_lbl_ind)
+        higher_order_lbls = obj.(valid_lbls{kept_lbl_ind(j)});
+        uniq_ho_lbls = unique(higher_order_lbls(this_ind));
+        if length(uniq_ho_lbls) > 1
+            lbls_with_amp = strcat(uniq_ho_lbls,repmat({' & '},1,length(uniq_ho_lbls)));
+            lbls_with_amp = cat(2,lbls_with_amp{:});
+            lbls_with_amp = lbls_with_amp(1:end-3); % drop trailing ampersand
+            obj.(valid_lbls{kept_lbl_ind(j)})(this_ind) = {lbls_with_amp};
+
+            warning('Higher order labels are not nested. Merging select entries of %s into %s', valid_lbls{kept_lbl_ind(j)},lbls_with_amp);
+        end
+    end
+end
+        
 
 % init progress watcher
 n_reg = length(new_lbl_parcels);

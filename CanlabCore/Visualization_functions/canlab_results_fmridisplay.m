@@ -729,7 +729,7 @@ if ~exist('o2', 'var')
 
         case 'hcp grayordinates'
             % saggital
-            f1 = figure();
+            f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
             surfLayout.Layout.Tile = 1; % Position the leftLayout in the first two tiles of the mainLayout
@@ -743,22 +743,23 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', ax{3}, 'direction', 'hcp inflated left', 'orientation', 'medial');
             o2 = surface(o2, 'axes', ax{4}, 'direction', 'hcp inflated right', 'orientation', 'lateral');
             
-
-            volLayout = tiledlayout(mainLayout, 3, 6, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
             volLayout.Layout.Tile = 3; % Position the leftLayout in the third tile of the mainLayout
             volLayout.Layout.TileSpan = [1, 3]; % Span three tiles
             ax_vol=[];
-            for j = 1:3, for k = 1:6, ax_vol(j,k) = nexttile(volLayout); end; end
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
-            for j=1:6, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
 
             % coronal
             o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
-            for j=1:6, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
 
             % axial
             o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
-            for j=1:6, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
 
             allaxh = findobj(gcf, 'Type', 'axes');
 
@@ -767,20 +768,22 @@ if ~exist('o2', 'var')
 
         case 'hcp grayordinates subcortex'
             % saggital
-            f1 = figure();
-            volLayout = tiledlayout(f1, 3, 6, 'TileSpacing', 'tight', 'Padding', 'none');
+            f1 = gcf;
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(f1, n_row, n_col, 'TileSpacing', 'tight', 'Padding', 'none');
             ax_vol=[];
-            for j = 1:3, for k = 1:6, ax_vol(j,k) = nexttile(volLayout); end; end
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
-            for j=1:6, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
 
             % coronal
             o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
-            for j=1:6, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
 
             % axial
             o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
-            for j=1:6, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
 
             allaxh = findobj(gcf, 'Type', 'axes');
 

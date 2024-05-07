@@ -15,6 +15,8 @@ function gen_noise_text_from_R(noise_mat, formats, varargin)
     %
     % Outputs:
     %   Writes the R matrix to text files formatted for specified software use in the directory specified.
+    %
+    % 05/07/2024 Michael Sun, Ph.D.
 
     % Parse input arguments
     p = inputParser;

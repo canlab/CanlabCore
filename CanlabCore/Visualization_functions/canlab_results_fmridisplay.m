@@ -185,6 +185,7 @@ if ischar(input_activation)
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
             || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') ...
             || strcmp(input_activation, 'hcp inflated') || strcmp(input_activation, 'freesurfer inflated') ... 
+            || strcmp(input_activation, 'full no surfaces') ...
             || strcmp(input_activation, 'freesurfer sphere') || strcmp(input_activation, 'freesurfer white') ...
             || strcmp(input_activation, 'MNI152NLin6Asym white') || strcmp(input_activation, 'MNI152NLin6Asym midthickness') ...
             || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
@@ -274,6 +275,9 @@ wh = strcmp(varargin, 'full hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full hcp inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'full no surfaces');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp grayordinates');
@@ -726,6 +730,32 @@ if ~exist('o2', 'var')
             
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
+
+        case 'full no surfaces'
+            % saggital
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % shift_axes(-0.02, -0.04);
+            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+
+            wh_montages = [1 2 3 4];
 
         case 'hcp grayordinates'
             % saggital

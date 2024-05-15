@@ -79,7 +79,7 @@ for f = otherfields
 end
 
 if strcmp(class(dat), 'statistic_image')
-    statfields={'p', 'sig', 'ste'}
+    statfields={'p', 'sig', 'ste'};
 
     for f = statfields
         try

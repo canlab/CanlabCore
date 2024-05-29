@@ -140,7 +140,11 @@ if isa(dat, 'statistic_image')
         if isrow(dat.(myfields{1})), dat.(myfields{1}) = dat.(myfields{1})'; end
         
         if ~isempty(dat.(myfields{1}))
-            dat.(myfields{1})(empty_voxels, :) = [];
+            try
+                dat.(myfields{1})(empty_voxels, :) = [];
+            catch
+                warning(['Cannot remove empty_voxels because ', myfields{1}, ' is misconfigured.'])
+            end
         end
         
     end

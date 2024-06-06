@@ -306,6 +306,7 @@ for i = 1:n
             % clean up
             !rm tmp*resid*nii
             delete(extent_mask.fullpath)
+            !rm RPV.nii
                         
         case {'bfr', 'bonferroni'} % 7/19/2013: added by Wani Woo.
             thresh(i) = input_threshold/size(stats_image_obj.p,1);

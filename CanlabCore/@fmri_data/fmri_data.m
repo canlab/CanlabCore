@@ -438,6 +438,17 @@ classdef fmri_data < image_vector
                         obj.(N{i}) = obj2.(N{i});
                     end
                 end
+
+                % convert dat to single if needed
+                % this is esp relevant for converstion of atlas to fmri_data
+                % because atlas has integer data type by default. this is
+                % to prevent a range of issues that can occur when using
+                % the fmri_data object later on and dat field is an
+                % integer that cannot handle real numbers.
+                if ~isa(obj.dat, "single")
+                    warning('Converting dat field from %s to single format', class(obj.dat))
+                    obj.dat = single(obj.dat);
+                end
                 
                 obj.mask.volInfo = obj2.volInfo;
                 

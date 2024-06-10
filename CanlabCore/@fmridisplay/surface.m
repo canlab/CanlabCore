@@ -352,7 +352,7 @@ if strcmp(h(1).FaceColor,'interp')
 else
     set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
 end
-
+%[
 lightRestoreSingle; 
 axis image;
 axis off; 

@@ -604,12 +604,12 @@ for i = 1:length(surface_handles)
     
         whpos = c > 0;
         %     kpos = 61;   % which block of 256 colors; depends on colormap
-        cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+        cpos = map_function(c(whpos), prctile(datvec(datvec>0),1), clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
         c_colored(whpos) = cpos;
         
         whneg = c < 0;
         %     kneg = 55;   % which block of 256 colors
-        cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
+        cneg = map_function(c(whneg), clim(1), prctile(datvec(datvec<0),99), (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
         c_colored(whneg) = cneg;
     end
             
@@ -689,7 +689,7 @@ for i = 1:length(surface_handles)
             case 'nearest'
                 set(surface_handles(i), 'FaceColor', 'flat');
             otherwise
-                warning('Did not understand interpolation option. Using default surface.FaceColor=''inter''');
+                warning('Did not understand interpolation option. Using default surface.FaceColor=''interp''');
         end
     end
     

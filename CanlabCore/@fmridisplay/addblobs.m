@@ -250,6 +250,9 @@ for i = 1:length(varargin)
                 dosplitcolor = 0;
                  domincolor = 1;
                  mincolor = varargin{i + 1};
+
+            case 'colormap'
+                dosplitcolor = 0;
             
             case 'indexmap'
                 for exclusive = {'color', 'onecolor', 'solid', 'maxcolor','mincolor','splitcolor'}

@@ -1120,7 +1120,11 @@ if length(varargin) > 2
 end
 
 lighting gouraud
+% this screws up layouts in multisurface plots in some cases, but is
+% necessary in others.
 axis vis3d image tight
+% this version appears to work better with minimal problems for now...
+%axis image tight
 material dull
 drawnow
 

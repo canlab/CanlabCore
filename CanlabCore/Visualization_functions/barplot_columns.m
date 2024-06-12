@@ -80,6 +80,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %               one per bar
 %
 %   Display axis, title, widths, and color control
+%        - 'order': 'ascend' or 'descend' by the mean value
 %        - 'x' : followed by x-axis values for bars
 %        - 'noxlim' : Suppress automatic setting of x-limit (e.g., when adding to existing plot)
 %        - 'color' : followed by color for bars (text: 'r' or [r g b]) OR
@@ -142,6 +143,8 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 % barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 1);
 %
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
+%
+%   Edited 06/12/2024 Added 'order' option. - Michael Sun, PhD
 
 % ..
 %    Defaults
@@ -164,6 +167,7 @@ barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
 do95within = 0;
+order = 'none';
 
 nanwarningflag = 1;
 doviolin = 1;
@@ -259,6 +263,9 @@ if length(varargin) > 0
         % Labels
         if strcmp(varargin{i}, 'names'), names = varargin{i + 1}; varargin{i + 1} = []; end
 
+        % Order
+        if strcmp(varargin{i}, 'order'), order = varargin{i + 1}; varargin{i + 1} = []; end
+
         % Covariate options
         if strcmp(varargin{i}, 'covs')
             covs = varargin{i + 1};
@@ -275,6 +282,18 @@ if length(varargin) > 0
 
     end % for
 end % varargin
+
+
+% ----------------------------------------------------
+% > Set Order
+% ----------------------------------------------------
+if strcmp(order, 'ascend') || strcmp(order, 'descend')
+    [~, order_idx] = sort(mean(dat, 1), order);
+    dat = dat(order_idx);
+    names=names(order_idx);
+else
+    % do nothing
+end
 
 % ----------------------------------------------------
 % > Build design matrix X for controlling for covariates

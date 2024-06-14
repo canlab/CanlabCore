@@ -291,6 +291,7 @@ if strcmp(order, 'ascend') || strcmp(order, 'descend')
     [~, order_idx] = sort(mean(dat, 1), order);
     dat = dat(order_idx);
     names=names(order_idx);
+    mycolor=mycolor(order_idx);
 else
     % do nothing
 end

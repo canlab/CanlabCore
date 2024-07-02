@@ -101,11 +101,6 @@ if strcmp(class(dat), 'statistic_image')
     end
 end
 
-out.removed_images = ones(size(dat.removed_images));  % Set all elements to 1
-out.removed_images(wh) = 0;                           % Set specified indices to 0
-
-
-
 end % function
 
 

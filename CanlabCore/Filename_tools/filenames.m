@@ -80,6 +80,12 @@ function files = filenames(pattern, varargin)
     command = shellCommand(pattern, isPCandIsRelative, sortField, sortFieldSeparator);
     if(verbose), disp(command); end
     [status, output] = system(command);
+    
+    if isPCandIsRelative
+        % Replace all instances of X:\ with blank
+        output=strrep(output, 'X:\', '');
+    end
+
     outputString = java.lang.String(deblank(output));
 
     if(outputString.indexOf('Parameter format not correct') ~= -1)
@@ -172,7 +178,7 @@ end
 
 function isAbsolute = isAbsolutePath(pattern)
     isAbsolute = 0;
-    if(ispc() && (~contains(pattern, '\\') || ~contains(pattern, ':\')))                     % contains() is stylistically more readable - Michael 10/19/2021
+    if(ispc() && (contains(pattern, '\\') || contains(pattern, ':\')))                     % contains() is stylistically more readable - Michael 10/19/2021
         isAbsolute = 1;
     elseif(isunix())
         location = strfind(pattern, '/');  

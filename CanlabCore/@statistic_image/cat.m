@@ -1,5 +1,5 @@
 function [obj, obj_codes] = cat(obj, varargin)
-% Merge two or more fmri_data objects, appending additional objects to the one
+% Merge two or more statistic_image objects, appending additional objects to the one
 % entered first.  Resamples to the space of the first object if necessary.
 %
 % :Usage:
@@ -33,7 +33,7 @@ function [obj, obj_codes] = cat(obj, varargin)
 % :Inputs:
 %
 %   **obj:**
-%       An fmri_data object
+%       A statistic_image object
 %
 %
 % :Optional Inputs:
@@ -69,7 +69,7 @@ function [obj, obj_codes] = cat(obj, varargin)
 
 % ..
 %    Programmers' notes:
-%    Created July 2016, Tor Wager
+%    Created July 2024, Michael Sun
 % ..
 
 
@@ -111,10 +111,14 @@ obj2 = replace_empty(obj2,'voxels'); % changed to 'voxels' only. SG 2/23/18
 
 if ~isempty(obj)
     obj2 = resample_space(obj2, obj);
+
+    % Why does resample_space resample the .N field? It shouldn't do that -
+    % MS 7/17/2024
+    obj2.N=unique(obj2.N);
 end
 
 % hcat these attributes
-fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'covariates' 'additional_info' 'dat'};
+fnames = {'source_notes' 'type' 'p' 'p_type' 'ste' 'threshold' 'thr_type' 'sig' 'N' 'dfe' 'image_labels' 'dat'};
 
 for i = 1:length(fnames)
 
@@ -140,7 +144,7 @@ end
 
 
 % vcat these attributes
-fnames = {'files_exist' 'X' 'Y' 'removed_images'};
+fnames = {'files_exist' 'removed_images' 'dat_descrip'};
 
 for i = 1:length(fnames)
     
@@ -149,5 +153,21 @@ for i = 1:length(fnames)
 end
 
 obj.history{end+1} = 'Concatenated another object with this one.';
+
+
+% Clean up certain fields, these can be rescued with
+% threshold(get_wh_image()) on a single image - MS 7/17/2024
+obj.threshold=[];
+obj.thr_type=[];
+obj.sig=[];
+obj.dfe=[];
+
+
+
+
+
+
+
+
 
 end % function

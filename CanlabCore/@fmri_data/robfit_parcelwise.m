@@ -53,6 +53,9 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %   **'plotdiagnostics', [logical flag]:
 %        Create diagnostic plots; default = true.
 %
+%   **'use_BH_fdr', [logical flag]:
+%        Use Benjamini-Hochberg original FDR correction
+%
 %   **'simpleplots', [logical flag]:
 %        Create simple results plots with no surfaces; default = false.
 %
@@ -289,7 +292,7 @@ if remove_outliers
     datmatrix(outliers_uncorr, :) = [];
 
     if doverbose
-        fprintf('Adjustments: Removed %d outlier images\n', sum(outliers_uncorr));
+        fprintf('\nAdjustments: Removed %d outlier images\n', sum(outliers_uncorr));
     end
 
     t = t - sum(outliers_uncorr);
@@ -416,31 +419,43 @@ OUT = struct('regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalu
 
 FDRq = zeros(v, k);
 pthr = zeros(1, k);
+% use_BH_fdr = true;
 
 for i = 1:k
     % for each map
-    if doverbose, fprintf('%s\nApplying MAFDR correction\n', names{i}); end
-    [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
-    
-    if pIO > .99
-        % all P-values 1, mafdr may not be suitable
-        fprintf('Warning:\n%s\nPrior prob of sig P-values is near 1. Using B-H FDR\n', names{i});
+
+    if use_BH_fdr
+
+        if doverbose, fprintf('Using B-H FDR as specified by user\n', names{i}); end
         pthr_i = FDR(pvalues(:, i), .05);
-        
+        if isempty(pthr_i), pthr_i(i) = -Inf; end
+        sig_q05 = pvalues(:, i) < pthr_i;
+
     else
-        % use mafdr
+        % MAFDR
+        if doverbose, fprintf('%s\nApplying MAFDR correction\n', names{i}); end
+        [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
+        sig_q05 = FDRq < 0.05;
         % P-threshold for FDR q < 0.05 for each map
         pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));
-    end
+
+        if pIO > .99
+            % all P-values 1, mafdr may not be suitable
+            fprintf('Warning:\n%s\nPrior prob of sig P-values is near 1. Using B-H FDR\n', names{i});
+            pthr_i = FDR(pvalues(:, i), .05);
+            if isempty(pthr_i), pthr_i(i) = -Inf; end
+            sig_q05 = pvalues(:, i) < pthr_i;
+        end
+
+    end  % Threshold method
     
     if isempty(pthr_i)
-        pthr(i) = Inf;
+        pthr(i) = -Inf;
     else
         pthr(i) = pthr_i;
     end
 end
-
-sig_q05 = FDRq < 0.05;
+if doverbose, fprintf('%s\nP-value for FDR q < 0.05 is %3.6f\n', names{i}, pthr); end
 
 % Other interesting metrics to save
 
@@ -771,9 +786,9 @@ p.addParameter('csf_wm_covs', false, valfcn_scalar);
 p.addParameter('remove_outliers', false, valfcn_scalar);
 p.addParameter('mask', {}, valfcn_atlas); % added by Lukas
 p.addParameter('plotdiagnostics', true, valfcn_scalar);
-
+     
 p.addParameter('simpleplots', false, valfcn_scalar);
-
+p.addParameter('use_BH_fdr', false, valfcn_scalar);
 
 % p.addParameter('atlas', [], @(x) isa(x, 'atlas'));
 

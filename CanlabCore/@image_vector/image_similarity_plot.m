@@ -690,7 +690,7 @@ elseif doaverage
     % Plot (average + error bars)
     % ------------------------------------------------------------
     if ~noplot
-        % groupColors = scn_standard_colors(length(groupValues))';
+        groupColors = scn_standard_colors(length(groupValues))';
         
         % removed to enable use of user-defined colors. SG 2017/2/7
         % gc=groupColors;
@@ -700,10 +700,10 @@ elseif doaverage
         % removed and replaced to debug plotting code below
         % LVO 2023/12/18
         gc = groupColors(1:size(groupValues,2));
-        gc_rep = repmat(gc',1,3);
-        gc_toplot = gc_rep(1,:);
+        gc_rep = repmat(gc',3,1);
+        gc_toplot = gc_rep(:,1);
         for c = 2:size(groupValues,2)
-            gc_toplot = [gc_toplot gc_rep(2,:)];
+            gc_toplot = [gc_toplot;gc_rep(:,2)];
         end
         
         toplot=[];

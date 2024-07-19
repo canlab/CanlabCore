@@ -46,6 +46,9 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %   **noverbose, noprint:**
 %        Suppress printing the tables
 %
+%   **'sort_by_column_name'**
+%       Followed by name to sort on
+%
 % :Outputs:
 %
 %   **results_table_pos, , r, excluded_region_table, table_legend_text:**
@@ -83,6 +86,18 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 % [~, ~, r] = table_of_atlas_regions_covered(ncsthr, 'coverage', 50, 'noverbose');
 %
 % montage(r, 'regioncenters', 'colormap');
+%
+% % Create a table, sort by additional labels 2 field, and edit it before displaying
+% atl = load_atlas('canlab2018_2mm');
+% [results_table_pos, results_table_neg] = table_of_atlas_regions_covered(t_obj_comb_fdr{i}, 'atlas', atl, 'sort_by_column_name', 'labels_2', 'noverbose');
+% results_table_pos.Coverage = [];
+% results_table_pos.mean_in_region = [];
+% results_table_neg.Coverage = [];
+% results_table_neg.mean_in_region = [];
+% results_table_pos.labels_3 = [];
+% results_table_neg.labels_3 = [];
+% disp(results_table_pos)
+% disp(results_table_neg)
 %
 % Note: For a key to labels when using the Glasser 2016 Nature atlas, or the
 % CANlab combined atlas (which uses Glasser), see GlasserTableS1.pdf in the
@@ -131,6 +146,7 @@ end
 percentile_threshold = 25;  % saves regions for which > this percentage of the atlas region is covered by the activation map
 doprint = true;
 atlas_obj = [];
+sort_by_column_name = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -142,6 +158,10 @@ for i = 1:length(varargin)
 
             case {'atlas_obj', 'atlas'}
                 atlas_obj = varargin{i+1}; varargin{i+1} = [];
+
+            case 'sort_by_column_name'
+                sort_by_column_name = true;
+                sort_col_name = varargin{i+1}; varargin{i+1} = [];
 
             case allowable_inputs
                 % skip - handled above
@@ -232,6 +252,19 @@ if ~iscolumn(atlas_obj.labels), atlas_obj.labels = atlas_obj.labels'; end
 
 full_table = table(atlas_obj.labels, atlas_region_coverage, n_atlas, (1:n)',  mean_in_region, max_abs_in_region, 'VariableNames', {'Region' 'Coverage' 'Voxels_in_region' 'Atlas_index_number' 'mean_in_region' 'max_abs_in_region'});
 
+% add extra labels if we have them
+labfields = {'labels_2' 'labels_3' 'labels_4' 'labels_5'};
+for i = 1:length(labfields)
+    labfield = labfields{i};
+
+    if ~isempty(atlas_obj.(labfield)) && length(atlas_obj.(labfield)) == length(atlas_obj.labels)
+        mylab = atlas_obj.(labfield);
+        if ~iscolumn(mylab), mylab = mylab'; end
+        full_table.(labfield) = mylab;
+    end
+end
+
+
 % full_table = sortrows(full_table, {'Coverage' 'Voxels_in_region'}, 'descend');
 
 output_table = full_table;
@@ -249,9 +282,13 @@ atlas_of_regions_covered = select_atlas_subset(atlas_obj, output_table.Atlas_ind
 
 r = atlas2region(atlas_of_regions_covered);
 
-
 output_table = sortrows(output_table, {'Atlas_index_number'}, 'ascend'); % to keep order-matched with region object, below
-[output_table, indx] = sortrows(output_table, {'Coverage' 'Voxels_in_region'}, 'descend'); % indx maps from atlas number to coverage order
+
+if sort_by_column_name
+    [output_table, indx] = sortrows(output_table, {sort_col_name}, 'ascend'); % indx maps from atlas number to coverage order
+else
+    [output_table, indx] = sortrows(output_table, {'Coverage' 'Voxels_in_region'}, 'descend'); % indx maps from atlas number to coverage order
+end
 
 r = r(indx); % This should now be sorted into the same order as the table
 
@@ -263,6 +300,7 @@ for i = 1:length(r)
 
 end
 
+output_table.atlas_mm_coords = cat(1, r(:).mm_center);
 
 % Separate tables and format output
 % ------------------------------------------------------

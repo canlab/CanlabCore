@@ -6,7 +6,7 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %
 %     cm = render_on_surface(obj, han, [optional inputs])
 %
-% - Object can be thresholded or unthresholded statistic_image, or other image_vector object
+% - Object can be thresholded or unthresholded get_data_range_image, or other image_vector object
 % - Uses only the first image in obj
 %
 % ..
@@ -387,12 +387,6 @@ end % custom posneg or other colormap
 % Defining this here preserves the same mapping across different surfaces
 % clim(1) mapped to lowest color, clim(2) to highest color
 % map_function = @(c) 1 + nvals + (c - clim(1)) ./ range(clim) .* nvals;
-
-% softmax here keeps negative values from extending below the colormap
-% range, which would otherwise make those values gray, since the lowest
-% value on the colormap is a hardcoded grayscale value
-map_function = @(c, x1, x2, y1, y2)  y1 + max((c - x1),0) * (y2 - y1) ./ (x2 - x1);
-
 
 % problem with above is that border gets mapped to low color when interpolating, which is
 % blue for split colormap, creating blue outline around orange blobs. SO
@@ -785,9 +779,24 @@ end % main function
 % -----------------------------------------------------------------------
 
 
+function val = map_function(c,x1,x2,y1,y2)
+    if x2 == x1
+        % this occurs when we have a single value. We arbitrarily set it to
+        % the middle value
+        range_val = (y2-y1)/2;
+    else
+        % softmax here keeps negative values from extending below the colormap
+        % range, which would otherwise make those values gray, since the lowest
+        % value on the colormap is a hardcoded grayscale value
+        range_val = max((c-x1),0)*(y2-y1)./(x2-x1);
+    end
+
+    val = y1 + range_val;
+end
+
 function [datvec, clim] = get_data_range(obj, clim)
 
-if isa(obj, 'statistic_image')
+if isa(obj, 'get_data_range_image')
     
     sig = logical(obj.sig);
     dat = obj.dat(sig);

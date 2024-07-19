@@ -427,10 +427,23 @@ if addsurfaceblobs
         
         img = region2imagevec(cl);
         if dosplitcolor
-            [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+
+            if exist('cmaprange', 'var')
+                % Keep the same color mapping as before
+                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, 'cmaprange', cmaprange, varargin{:});
+            else
+                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+            end
+
+%             o2.activation_maps{1}.cmaprange
         else
             if isempty(indexmap)
-                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+                if exist('cmaprange', 'var')
+                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'cmaprange', cmaprange, varargin{:});
+                else
+                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+                end
+
             else
                 try
                 [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');

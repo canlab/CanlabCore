@@ -609,6 +609,7 @@ for i = 1:length(surface_handles)
         
         whneg = c < 0;
         %     kneg = 55;   % which block of 256 colors
+        % NOTE: *** THIS IS NOT WORKING WELL IN SOME CASES -- TAKES c and converts to cneg = all Inf in a problematic example case 
         cneg = map_function(c(whneg), clim(1), prctile(datvec(datvec<0),99), (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
         c_colored(whneg) = cneg;
     end

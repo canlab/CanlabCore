@@ -32,11 +32,33 @@ function fig_handle = montage(image_obj, varargin)
 %
 %    o2 = montage(t, 'trans', 'full');
 %
+%        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
+%        'compact'         Midline saggital and two rows of axial slices [the default] 
+%        'compact2'        A single row showing midline saggital and axial slices
+%        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
+%        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
+%        'regioncenters'   A series of separate axes, each focused on one region
+%        'full2'           for a slightly less full montage that avoids colorbar overlap issues
+%        'full hcp'        for full montage, but with surfaces and volumes from HCP data
+%
+%    See help canlab_results_fmridisplay for more info and options
+%
+%   %% ========== Legend control
+%   There is a 'nolegend' option.
+%   Colorbar legends are created in render_on_surface
+%   You can access and control the handles like this:
+%   set(obj.activation_maps{1}.legendhandle, 'Position', [[0.965 0.0994 0.01 0.4037]]);
+%
+%   %% ========== Colormap range control
+%   Range is set automatically by default, and stored in
+%   obj.activation_maps{wh_to_display}.cmaprange 
+%   You can enter 'cmaprange', followed by inputs in the correct format, to
+%   manually control this.
+%
 % Set all color maps to the same range:
 % o2 = montage(dat, 'trans', 'mincolor', [.5 0 1], 'transvalue', .7, 'cmaprange', [0 3]);
 
 meth = 'fmridisplay';
-% montagetype = 'compact2';  % default. This is passed into canlab_results_fmridisplay
 
 % if user specified a target surface use it. We
 % pass targetsurface explicitly below so we need to remove it fro mvarargin
@@ -66,7 +88,7 @@ for i = 1:length(varargin)
             case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'full2', ...
                     'full no surfaces', 'MNI152NLin6Asym white', 'MNI152NLin6Asym midthickness', 'MNI152NLin6Asym pial', ...
                     'MNI152NLin2009cAsym white', 'MNI152NLin2009cAsym midthickness', 'MNI152NLin2009cAsym pial', ...
-                    'MNI152NLin6Asym sphere', 'compact2', ...
+                    'MNI152NLin6Asym sphere', 'compact2', 'compact3', 'nolegend' ...
                     'noverbose', 'indexmap'}
                 % ignore these - passed through
             case {'hcp sphere', 'hcp inflated', 'full hcp', 'full hcp inflated'}

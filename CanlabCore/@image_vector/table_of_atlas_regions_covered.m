@@ -132,6 +132,8 @@ if (size(obj.dat, 2) > 1)
     error('Use this function with fmri_data or image_vector objects containing only a single image. Use get_wh_image() to select one.')
 end
 
+[results_table_pos, results_table_neg, r, excluded_region_table, atlas_of_regions_covered, region_list, full_table] = deal([]);
+
 % Old method:
 % r = region(obj);
 %
@@ -277,6 +279,13 @@ output_table(~(full_table.Coverage > percentile_threshold), :) = [];
 % so order of regions will not be the same. we need to reorder the table
 % above, extract to match with the table, and re-order table and regions to
 % sort by coverage again.
+
+if isempty(output_table.Atlas_index_number)
+    
+    return
+
+end
+
 
 atlas_of_regions_covered = select_atlas_subset(atlas_obj, output_table.Atlas_index_number);
 

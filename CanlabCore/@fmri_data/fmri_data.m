@@ -312,7 +312,7 @@ classdef fmri_data < image_vector
     properties
         % also inherits the properties of image_vector.
         
-        source_notes = 'Source notes...';
+%         source_notes = 'Source notes...';
         
         X % legacy; temporary, so we can load old objects
         

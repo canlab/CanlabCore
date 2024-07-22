@@ -30,6 +30,9 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'exact' : If you enter 'exact', function will not look for overlaps in
 % names, and only look for exact string matches.
 %
+% 'regexp'  If you enter 'doregexp', function will treat your string as a
+% regular expression.
+%
 % Examples:
 % 
 % atlasfile = which('Morel_thalamus_atlas_object.mat');
@@ -82,6 +85,7 @@ integers_to_find = [];
 doflatten = false;
 condInd = false;
 doexact=false;
+doregexp=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -103,6 +107,8 @@ for i = 1:length(varargin)
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
             case 'exact', doexact = true;
+
+            case 'regexp', doregexp = true;
 
             case 'conditionally_ind', condInd = true;
                 
@@ -135,7 +141,15 @@ to_extract = false(1, k);
 for i = 1:length(strings_to_find)
     
     % Find which names match
-    if doexact == false
+    if doregexp == true
+        wh = ~cellfun(@isempty, regexp(obj.(mylabelsfield), strings_to_find{i}));
+        if strmatch(mylabelsfield, 'label_descriptions')
+            wh=wh'; 
+        end
+    
+        to_extract = to_extract | wh;
+
+    elseif doexact == false
         wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
         if strmatch(mylabelsfield, 'label_descriptions')
             wh=wh'; 

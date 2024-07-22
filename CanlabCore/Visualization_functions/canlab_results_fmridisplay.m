@@ -50,17 +50,36 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
 %
 %   **'montagetype':**
+%        Note: for surface plotting MNI surface projection is available. See help render_on_surface for additional 
+%        options to specify to enable the necessary transformations. Otherwise naive sampling based on naive surface 
+%        vertex coordinates will be used, which in most cases will not correctly map to your data volume.
 % 
 %        'full'            Axial, coronal, and saggital slices, 4 cortical surfaces
 %        'compact'         Midline saggital and two rows of axial slices [the default] 
 %        'compact2'        A single row showing midline saggital and axial slices
+%        'compact3'        One row of axial slices, midline sagg, and 4 HCP surfaces
 %        'multirow'        A series of 'compact2' displays in one figure for comparing different images/maps side by side
 %        'regioncenters'   A series of separate axes, each focused on one region
 %        'full2'           for a slightly less full montage that avoids colorbar overlap issues
 %        'full hcp'        for full montage, but with surfaces and volumes from HCP data
 %        'full hcp inflated' for full montage using hcp inflated surfaces
+%        'hcp grayordinates' for 4 surfaces and zoomed in subcortical slices
+%        'hcp grayordinates subcortex'
+%                          for zoomed in subcortical slices
 %        'hcp inflated'    for a connectome workbench style layout without
 %                          volumetric slices
+%        'freesurfer inflated' connectome workbench style layout (no volumetric slices) with fsaverage 164k surfaces.
+%        'MNI152NLin[2009c|6]Asym [pial|midthickness|white]
+%                          Connectome workbench style layout (no volumetric slices) using MNI152NLin2009cAsym or MNI152NLin6Asym 
+%                          surfaces sampled at one of three depths. This will work with data that's already in the corresponding 
+%                          MNI template space with naive mesh interpolation (no need for special surface projection 
+%                          transformations), unlike all other surfaces (see help render_on_surface for details on projection 
+%                          options otherwise). When projecting data to other surfaces you need a sampling depth though and these 
+%                          MNI space surfaces can be helpful for deciding on a sampling depth to use in your projections (see 
+%                          srcdepth argument to render_on_surface). Simply render on the surface corresponding to your data's 
+%                          template space and the desired depth to see what data would be extracted from your volumes with that 
+%                          srcdepth argument (pial, midthickness, white), and then include that with your srcdepth argument when 
+%                          plotting your surface data.
 %
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
@@ -88,7 +107,7 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
 % 
-% Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+% Other inputs to addblobs and render_on_surface (fmridisplay methods) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
 % See help fmridisplay
 % e.g., 'color', [1 0 0]
@@ -146,6 +165,18 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %    Change colors, removing old blobs and replacing with new ones:
 %    o2 = canlab_results_fmridisplay(d, o2, 'cmaprange', [.3 .45], 'splitcolor', {[0 0 1] [.3 0 .8] [.9 0 .5] [1 1 0]}, 'outlinecolor', [.5 0 .5]);
 %
+%   %% ========== Legend control
+%   There is a 'nolegend' option.
+%   Colorbar legends are created in render_on_surface
+%   You can access and control the handles like this:
+%   set(obj.activation_maps{1}.legendhandle, 'Position', [[0.965 0.0994 0.01 0.4037]]);
+%
+%   %% ========== Colormap range control
+%   Range is set automatically by default, and stored in
+%   obj.activation_maps{wh_to_display}.cmaprange 
+%   You can enter 'cmaprange', followed by inputs in the correct format, to
+%   manually control this.
+%   
 % ..
 %    Tor Wager
 %    1/27/2012
@@ -163,9 +194,18 @@ end
 
 if ischar(input_activation)
     
-    if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'full') ...
+    if strcmp(input_activation, 'compact') || strcmp(input_activation, 'compact2') || strcmp(input_activation, 'compact3') || strcmp(input_activation, 'full') ...
             || strcmp(input_activation, 'multirow') || strcmp(input_activation, 'coronal') || strcmp(input_activation, 'sagittal') ...
-            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') 
+            || strcmp(input_activation, 'full2') || strcmp(input_activation, 'full hcp')  || strcmp(input_activation, 'full hcp inflated') ...
+            || strcmp(input_activation, 'hcp inflated') || strcmp(input_activation, 'freesurfer inflated') ... 
+            || strcmp(input_activation, 'full no surfaces') ...
+            || strcmp(input_activation, 'freesurfer sphere') || strcmp(input_activation, 'freesurfer white') ...
+            || strcmp(input_activation, 'MNI152NLin6Asym white') || strcmp(input_activation, 'MNI152NLin6Asym midthickness') ...
+            || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
+            || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
+            || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates subcortex') ...
+            || strcmp(input_activation, 'allslices')
+
         
         % Entered no data map; intention is not to plot blobs, just create underlay
         varargin{end + 1} = 'noblobs'; 
@@ -250,7 +290,49 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'full hcp inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'full no surfaces');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp grayordinates');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp grayordinates subcortex');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
 wh = strcmp(varargin, 'hcp inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp sphere');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer sphere');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'freesurfer inflated');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin2009cAsym white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin2009cAsym midthickness');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin2009cAsym pial');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym white');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym midthickness');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym pial');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'MNI152NLin6Asym sphere');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full2');
@@ -260,6 +342,9 @@ wh = strcmp(varargin, 'compact');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'compact2');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'compact3');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'coronal');
@@ -304,7 +389,10 @@ for i = 1:length(varargin)
 end
 varargin(wh) = [];
 
-xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
+
+%xyz = [-20 -10 -6 -2 0 2 6 10 20]';
+xyz = [-40 -20 -10 -2 0 2 10 20 40]';
 xyz(:, 2:3) = 0;
 
 if isempty(input_activation)
@@ -555,9 +643,15 @@ if ~exist('o2', 'var')
             
             enlarge_axes(gcf, 1);
             %axh = axes('Position', [0.0 0.08 .15 1]);
-            axh = axes('Position', [-0.02 .75-.3 .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
-            axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
-            
+            %             axh = axes('Position', [-0.02 .75-.3 .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
+            %             axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
+
+            axh = axes('Position', [-0.06 .75-.34 .29 .29]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
+            axh(2) = axes('Position', [-0.02 .854-.27 .29 .29]);
+
+%             set(axh(1), 'Position', [-0.06 .75-.34 .29 .29])
+%             set(axh(2), 'Position', [-0.02 .854-.27 .29 .29])
+
             %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
@@ -568,6 +662,45 @@ if ~exist('o2', 'var')
             
             brighten(.4)
             
+
+        case 'compact3'  % creates a new figure
+            
+            % Axial slices
+            [o2, dat] = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
+            
+            % shift all axes down and right
+            allaxh = o2.montage{1}.axis_handles;
+            for i = 1:length(allaxh)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(2) = pos1(2) - 0.08;
+                pos1(1) = pos1(1) + 0.03;
+                
+                % enlarge a bit
+                pos1(3:4) = pos1(3:4) + .02;
+                
+                set(allaxh(i), 'Position', pos1);
+            end
+            
+            enlarge_axes(gcf, 1);
+
+            % Medial sagg slices
+            axh = axes('Position', [-0.06 .75-.34 .29 .29]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
+            axh(2) = axes('Position', [-0.02 .854-.27 .29 .29]);
+
+            o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
+
+            wh_montages = [1 2];
+            
+            brighten(.4)
+
+            % surfaces
+            o2 = surface(o2, 'axes', [0.1+.1 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.27+.1 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.44+.1 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.61+.1 0.74 .25 .25], 'direction', 'surface right', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:8];
+
         case 'coronal'
             % coronal
             o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
@@ -659,25 +792,210 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
 
+        case 'full no surfaces'
+            % saggital
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
+            % shift_axes(-0.02, -0.04);
+            
+            % coronal
+            axh = axes('Position', [-0.02 0.37 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            % axial
+            axh = axes('Position', [-0.02 0.19 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            axh = axes('Position', [-0.02 0.01 .17 .17]);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            
+            allaxh = findobj(gcf, 'Type', 'axes');
+            disp(length(allaxh));
+            for i = 1:(length(allaxh)-36)
+                pos1 = get(allaxh(i), 'Position');
+                pos1(1) = pos1(1) - 0.03;
+                set(allaxh(i), 'Position', pos1);
+            end
+
+            wh_montages = [1 2 3 4];
+
+        case 'hcp grayordinates'
+            % saggital
+            f1 = gcf;
+            mainLayout = tiledlayout(f1,1,5);
+            surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
+            surfLayout.Layout.Tile = 1; % Position the leftLayout in the first two tiles of the mainLayout
+            surfLayout.Layout.TileSpan = [1, 2]; % Span two tiles
+            
+            % surface
+            ax = {};
+            for j = 1:4, ax{j} = nexttile(surfLayout); end
+            o2 = surface(o2, 'axes', ax{1}, 'direction', 'hcp inflated right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', ax{2}, 'direction', 'hcp inflated left', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', ax{3}, 'direction', 'hcp inflated left', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', ax{4}, 'direction', 'hcp inflated right', 'orientation', 'lateral');
+            
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            volLayout.Layout.Tile = 3; % Position the leftLayout in the third tile of the mainLayout
+            volLayout.Layout.TileSpan = [1, 3]; % Span three tiles
+            ax_vol=[];
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+
+            % coronal
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+
+            % axial
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+
+            allaxh = findobj(gcf, 'Type', 'axes');
+
+            wh_montages = [1 2 3];
+            wh_surfaces = [1:4];
+
+        case 'hcp grayordinates subcortex'
+            % saggital
+            f1 = gcf;
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(f1, n_row, n_col, 'TileSpacing', 'tight', 'Padding', 'none');
+            ax_vol=[];
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+
+            % coronal
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+
+            % axial
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+
+            allaxh = findobj(gcf, 'Type', 'axes');
+
+            wh_montages = [1 2 3];
 
         case 'hcp inflated'
-            figure;
             axis off;
             o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'medial');          
             o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'lateral');
             
-            wh_montages = [1 2 3 4];
-            wh_surfaces = [1:8];
+            wh_surfaces = [1:4];
 
+        case 'hcp sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'hcp sphere right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'hcp sphere left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp sphere right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp sphere left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer inflated'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer inflated right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer inflated left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer inflated right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer inflated left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer white'
+            figure;
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer white right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer white left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer white right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer white left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'freesurfer sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'freesurfer sphere right', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'freesurfer sphere left', 'orientation', 'medial', 'targetsurface', 'fsaverage_164k');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'freesurfer sphere right', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'freesurfer sphere left', 'orientation', 'lateral', 'targetsurface', 'fsaverage_164k');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin2009cAsym white'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym white right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym white left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym white right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym white left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin2009cAsym midthickness'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin2009cAsym pial'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym pial right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin2009cAsym pial left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin2009cAsym pial right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin2009cAsym pial left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym white'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym white right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym white left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym white right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym white left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym midthickness'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym midthickness right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym midthickness left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym pial'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym pial right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym pial left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym pial right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym pial left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
+
+        case 'MNI152NLin6Asym sphere'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'MNI152NLin6Asym sphere right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'MNI152NLin6Asym sphere left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'MNI152NLin6Asym sphere right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'MNI152NLin6Asym sphere left', 'orientation', 'lateral');
+            
+            wh_surfaces = [1:4];
 
         otherwise error('illegal montage type. choose full or compact.');
     end
     
     % wh_montages = [1 2];
 
-else
+else % use existing o2 object to add montages
+
     if doverbose, disp('Using existing fmridisplay object'); end
     
     % Other inputs will be passed into addblobs
@@ -737,7 +1055,7 @@ else
                 %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
                 
                 
-            otherwise error('illegal montage type. choose full or compact when adding to existing montage set.')
+            otherwise error('illegal montage type. choose full, compact, or compact2 when adding to existing montage set.')
         end
         
         wh_montages = existingmons + [1 2];

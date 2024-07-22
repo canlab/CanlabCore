@@ -207,6 +207,7 @@ classdef image_vector
 
     properties
         
+        source_notes = {''};
         dat                             % Image data, a [voxels x images] matrix (single datatype; saves space)
         dat_descrip                     % String description of the dataset
         

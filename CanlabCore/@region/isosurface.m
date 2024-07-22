@@ -1,8 +1,8 @@
-function [surface_handles, colors] = isosurface(r, varargin)
+function [surface_handles, colors, patch_cell] = isosurface(r, varargin)
 % Create a series of surfaces in different colors, one for each region
 % - Options for single color
 %
-% [surface_handles, colors] = isosurface(r, [optional arguments])
+% [surface_handles, colors, patch_cell] = isosurface(r, [optional arguments])
 %
 % optional arguments: 
 % - Any optional inputs to imageCluster, e.g., 'alpha'
@@ -86,7 +86,7 @@ colors = colors(1:length(r));
 cl = region2struct(r);
 
 surface_handles = []; % This appears to be a bug, as it coerces the Patch object into a double. 05/23/2023 MS
-% surface_handles = {};
+patch_cell = {};
 
 for i = 1:k
     
@@ -95,10 +95,11 @@ for i = 1:k
         
         surface_handles(i) = out; % This appears to be a bug, as it
 %         coerces the Patch object into a double. 05/23/2023 MS
-%        surface_handles{i} = out;
+        patch_cell{i} = out;
     catch
         disp('Error imaging isosurface; too few voxels?')
         surface_handles(i) = [];
+        patch_cell{i}=[];
     end
     
 %     % Isocaps, if needed

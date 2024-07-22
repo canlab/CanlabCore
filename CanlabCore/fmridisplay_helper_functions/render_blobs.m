@@ -112,7 +112,17 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 %      **'interp':**
 %         Options to pass to interp2. See help interp2 for valid
-%         interpolation methods
+%         interpolation methods. default: linear
+%
+%      **'partialvolumethreshold':**
+%         A value between 0 and 1 that determines what minimum partial 
+%         volume fraction to keep when interpolating from voxels to pixels.
+%         If 'nearest' is chosen for 'interp' then partial volume effects 
+%         are computed using linear interpolation. Otherwise the same 
+%         interpolation method is used as specified by 'interp'. This value
+%         can be helpful for titrating the degree of overlap among
+%         neighboring blobs. It's an imperfect solution though.
+%         default: 0.5. 
 %
 %   **Orientation:**
 %         'sagittal', 'coronal', 'axial'
@@ -161,6 +171,7 @@ contourmin = 100*eps;
 outline = 0;
 mylinewidth = 2;
 interpStyle = 'linear';
+partial_vol_thresh = 0.5;
 
 vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
 
@@ -198,7 +209,7 @@ for i = 1:length(varargin)
             case 'onecolor', docolormap = 0; % solid-color blobs
             case 'indexmap'
                 for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
-                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
                         sprintf('Cannot evaluate render_blobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));
                 end
@@ -266,7 +277,7 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype' 'sourcespace' 'targetsurface' 'compact3'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
                 % other related functions, including calling functions, and can be ignored here.
@@ -282,6 +293,11 @@ for i = 1:length(varargin)
             
             case {'full','full hcp','full2','nearest'}
                 continue
+
+            case {'partialvolumethreshold'}
+                partial_vol_thresh = varargin{i+1};
+                assert(partial_vol_thresh <= 1 & partial_vol_thresh > 0,...
+                    'partialVolumeThreshold must be between 0 (exclusive) and 1 (inclusive).');
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -455,7 +471,6 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myy = currentmap.SPACE.Ymm(:, :, wh_slice(j));
                     mynewx = SPACE.Xmm(:, :, 1);
                     mynewy = SPACE.Ymm(:, :, 1);
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'sagittal' % Y x Z; Xmm is for some reason Y mm coords
                     % myx should have all rows the same, myy should have all
@@ -464,16 +479,33 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myx = squeeze(currentmap.SPACE.Zmm(wh_slice(j), :, :));
                     mynewy = squeeze(SPACE.Xmm(wh_slice(j), :, :));
                     mynewx = squeeze(SPACE.Zmm(wh_slice(j), :, :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'coronal' % X x Z
                     myy = squeeze(currentmap.SPACE.Ymm(:, wh_slice(j), :));
                     myx = squeeze(currentmap.SPACE.Zmm(:, wh_slice(j), :));
                     mynewy = squeeze(SPACE.Ymm(:, wh_slice(j), :));
                     mynewx = squeeze(SPACE.Zmm(:, wh_slice(j), :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
                     
             end
+            Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
+
+            % bogdan: when we plot multiple blobs the interpolation call above
+            % can't adjudicate between them and we get overlaps among 
+            % neighbors that privilege latter calls to render_blobs. Given
+            % the way this is designed, there's no perfect soluiton because
+            % you need to gie render_blobs information on all blobs to
+            % render simultaneously, but blob information is
+            % compartamentalized. We can however improve on the situation
+            % by masking out based on magnitude of partial volume effects,
+            % which is what we do here.
+            slicemask = slicedat;
+            slicemask(slicedat~=0)=1;
+            if strcmp(interpStyle,'nearest');
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, 'linear');
+            else
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
+            end
+            Z(Zmask < partial_vol_thresh) = 0;
             
             if dosmooth
                 % SMOOTH
@@ -487,7 +519,12 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % -----------------------------------------------------------
                 
                 Z(isnan(Z)) = 0;
-                [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                Zmask(isnan(Zmask)) = 0;
+                if dosmooth
+                    [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                else
+                    [c, h] = contourf(mynewy, mynewx, Zmask, [partial_vol_thresh,partial_vol_thresh]);
+                end
                 
                 if str2double(vstr(1:3))<8.4  % pre R2014b
                     ch = get(h, 'Children');

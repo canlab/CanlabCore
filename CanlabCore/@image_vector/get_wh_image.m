@@ -52,25 +52,53 @@ end
 % above.  these field are all 1D
 
 otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y', 'metadata_table' 'threshold' 'image_labels'};
+
 for f = otherfields
-    field = char(f);
-    
-    if ~isprop(out, field), continue; end
-    
-    sz = size(out.(field));
-    
-    if ~isempty(out.(field)) && sz(1) == datsz(2)
+    try
+        field = char(f);
         
-        out.(field) = out.(field)(wh, :); % these field are all 1D
+        if ~isprop(out, field), continue; end
         
+        sz = size(out.(field));
+        
+        if ~isempty(out.(field)) && sz(1) == datsz(2) % 
+            
+            out.(field) = out.(field)(wh, :); % these field are all 1D
+            
+        end
+        
+        if ~isempty(out.(field)) && sz(2) == datsz(2)
+            
+            out.(field) = out.(field)(:, wh); % these field are all 1D
+            
+        end
+    catch
+        warning(['Field ', field, ' could not be modified']);
     end
     
-    if ~isempty(out.(field)) && sz(2) == datsz(2)
-        
-        out.(field) = out.(field)(:, wh); % these field are all 1D
+end
+
+if strcmp(class(dat), 'statistic_image')
+    statfields={'p', 'sig', 'ste'};
+
+    for f = statfields
+        try
+            field = char(f);
+            
+            if ~isprop(out, field), continue; end
+            
+            sz = size(out.(field));
+            
+            if ~isempty(out.(field)) && sz(2) ~= datsz(2)
+                
+                out.(field) = out.(field)(:, wh); % these field are all 1D
+                
+            end
+        catch
+            warning(['Field ', field, ' could not be modified']);
+        end
         
     end
-    
 end
 
 end % function

@@ -14,12 +14,12 @@ function [sig, pthr] = holm_sidak(pVector, alpha)
 % 1.The P values are ranked from smallest to largest.
 % 2.Set a value for the significance level, alpha. This is often set to 5%.
 % 3.Define k equal to the number of comparisons (length(sortedP) in the code)
-% 4.Start with the smallest P value and set i=k. Ask: Is the smallest P value less than the Šídák corrected value 1-(1-alpha)(1/i)?
+% 4.Start with the smallest P value and set i=k. Ask: Is the smallest P value less than the Šídák corrected value 1-(1-alpha)^(1/i)?
 % 
 %   If No: Conclude that none of the comparisons are statistically significant, and you are done.
 %   If Yes: Conclude that this comparison is statistically significant, and continue.
 % 
-% 5.The second to smallest P value is compared next. Set i=K-1. Is the P value less than 1-(1-alpha)(1/i)?
+% 5.The second to smallest P value is compared next. Set i=K-1. Is the P value less than 1-(1-alpha)^(1/i)?
 % 
 % If No: Conclude that this  comparison (and all with larger P values) is not statistically significant. Exit.
 % 

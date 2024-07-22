@@ -118,7 +118,7 @@ classdef statistic_image < image_vector
 
     properties
 
-        source_notes = {''};
+%         source_notes = {''};
         type        % String with image type: 'generic', 't', 'p', 'robreg'
         p           % Matrix of p-values for images, [voxels x images]
         p_type      % String with source info for p-values

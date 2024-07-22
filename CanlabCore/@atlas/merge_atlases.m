@@ -207,7 +207,12 @@ end
 
 atlas_obj.label_descriptions = [atlas_obj.label_descriptions(:); atlas_obj_to_add.label_descriptions(:)];
 
-atlas_obj.references = strvcat(atlas_obj.references, atlas_obj_to_add.references);
+try
+    atlas_obj.references = strvcat(atlas_obj.references, atlas_obj_to_add.references);
+catch
+    warning('Atlas references are not the same datatype. Attempting automatic conversion to char arrays. Please check resultant reference field.')
+    atlas_obj.references = strvcat(char(atlas_obj.references), char(atlas_obj_to_add.references));
+end
 
 
 end % function

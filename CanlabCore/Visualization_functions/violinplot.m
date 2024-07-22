@@ -690,12 +690,6 @@ function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
 % Enforce cell, no NaNs
 % ------------------------------------------------
 
-manual_pointsize = false;
-if isempty(find(strcmp(varargin{1},'pointsize')))==0
-    pointsize = varargin{1}{find(strcmp(varargin{1},'pointsize'))+1};
-    manual_pointsize = true;
-end
-
 Y = enforce_cell_array(Y);
 
 xvalues = get_violin_points(x, Y);

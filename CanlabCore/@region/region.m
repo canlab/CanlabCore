@@ -259,7 +259,7 @@ classdef region
                 if cs == 3
                     disp('Spaces for data object and mask object line up, but voxel numbers do not. Check.');
                     if doverbose, disp('> Resampling to mask space first.'); end
-                    dataobj = resample_space(dataobj, mask); % resample data to mask space
+                    dataobj = resample_space(dataobj, mask); % resample data to mask spaceo2
                 elseif cs
                     if doverbose, disp('> Resampling to mask space first.'); end
                     dataobj = resample_space(dataobj, mask); % resample data to mask space

@@ -30,6 +30,9 @@ function objout = region2fmri_data(r, reference_obj)
 %       n_inmask: 352328
 %        xyzlist: [352328×3 double]
 %        cluster: [352328×1 double]
+
+% Added data mapping. .dat transferred first, otherwise, .Z, followed by
+% the region number
  
 isbad = false;
 
@@ -37,6 +40,12 @@ if reference_obj.volInfo.dim ~= r(1).dim, isbad = true; end
 if any(reference_obj.volInfo.mat(:) ~= r(1).M(:)), isbad = true; end
 
 if isbad, error('reference_obj must have same mat file and dim as region_object'); end
+
+
+if ~isa(reference_obj, 'fmri_data')
+    % First attempt to cast the reference object into a valid fmri_data object.
+    fmri_data(reference_obj);
+end
 
 % rebuild from reference obj
 reference_obj = replace_empty(reference_obj);
@@ -55,8 +64,13 @@ for i = 1:length(r)
     % get in region_obj space
     wh(wh_not_in_mask) = [];
     
-    reference_obj.dat(find(wh), 1) = i; % code with region number
-    
+    if ~isempty(r(i).dat)
+        reference_obj.dat(find(wh), 1) = r(i).dat; % code with dat
+    elseif ~isempty(r(i).Z)
+        reference_obj.dat(find(wh), 1) = r(i).Z; % code with Z
+    else
+        reference_obj.dat(find(wh), 1) = i; % code with region number
+    end
 end
 
 objout = reference_obj;

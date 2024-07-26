@@ -204,7 +204,7 @@ if ischar(input_activation)
             || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
             || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
             || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates subcortex') ...
-            || strcmp(input_activation, 'allslices')
+            || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') 
 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
@@ -356,6 +356,14 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'allslices');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'leftright inout');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'leftright inout subcortex');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+
+
 % if these are run before coronal/saggital arguments are parsed they will
 % overwrite the blob/regioncenters argument, so run these last.
 wh = strcmp(varargin, 'blobcenters');
@@ -466,6 +474,29 @@ if ~exist('o2', 'var')
            
             
             wh_montages = 1:length(cl);
+
+
+            % for h = 1:numel(axh)
+            %     try
+            %     sagtitleText = ['x=' num2str(xyz(h,1))];
+            %     cortitleText = ['y=' num2str(xyz(h,2))];
+            %     axititleText = ['z=' num2str(xyz(h,3))];
+            % 
+            %     % Easiest, stupidest way to do this without screwing up the
+            %     % positioning:
+            %     subplot(nr,nc,h)
+            %     title(strjoin({sagtitleText, cortitleText, axititleText}, " "));
+            %     % subplot(3,5,h+5)
+            %     % title(cortitleText);
+            %     % subplot(3,5,h+10)
+            %     % title(axititleText);
+            %     catch
+            % 
+            %     end
+            % 
+            % end
+
+
             
         case 'compact'
             % The default
@@ -508,7 +539,8 @@ if ~exist('o2', 'var')
             % brighten(.5)
             sz = get(0, 'screensize');
             set(gcf, 'Color', 'w', 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
-            
+
+         
         case 'multirow' 
             
             % Notes: for some reason, at least in Matlab 2017a, when you
@@ -792,6 +824,7 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3 4];
             wh_surfaces = [1:8];
 
+
         case 'full no surfaces'
             % saggital
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
@@ -879,6 +912,45 @@ if ~exist('o2', 'var')
             allaxh = findobj(gcf, 'Type', 'axes');
 
             wh_montages = [1 2 3];
+
+        case 'leftright inout subcortex'
+            % saggital
+            f1 = gcf;
+            mainLayout = tiledlayout(f1,1,5);
+            surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
+            surfLayout.Layout.Tile = 1; % Position the leftLayout in the first two tiles of the mainLayout
+            surfLayout.Layout.TileSpan = [1, 2]; % Span two tiles
+            
+            % surface
+            ax = {};
+            for j = 1:4, ax{j} = nexttile(surfLayout); end
+            o2 = surface(o2, 'axes', ax{1}, 'direction', 'bigbrain left');          
+            o2 = surface(o2, 'axes', ax{2}, 'direction', 'bigbrain right');
+            o2 = surface(o2, 'axes', ax{3}, 'direction', 'right_cutaway');
+            o2 = surface(o2, 'axes', ax{4}, 'direction', 'left_cutaway');
+            
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            volLayout.Layout.Tile = 3; % Position the leftLayout in the third tile of the mainLayout
+            volLayout.Layout.TileSpan = [1, 3]; % Span three tiles
+            ax_vol=[];
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+
+            % coronal
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+
+            % axial
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+
+            allaxh = findobj(gcf, 'Type', 'axes');
+
+            wh_montages = [1 2 3];
+            wh_surfaces = [1:4];
 
         case 'hcp inflated'
             axis off;
@@ -989,7 +1061,17 @@ if ~exist('o2', 'var')
             
             wh_surfaces = [1:4];
 
-        otherwise error('illegal montage type. choose full or compact.');
+        case 'leftright inout'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'bigbrain left');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'bigbrain right');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'right_cutaway');
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'left_cutaway');
+            
+            wh_surfaces = [1:4];
+
+        otherwise 
+            error('illegal montage type. choose one of the following: blobcenters, regioncenters, compact, multirow, full, full2, compact2, compact3, coronal, saggital, allslices, full hcp, full hcp inflated, full no surfaces, hcp grayordinates, hcp grayordinates subcortex, hcp inflated, hcp sphere, freesurfer inflated, freesurfer white, freesurfer sphere, MNI152NLin2009cAsym white, MNI152NLin2009cAsym midthickness, MNI152NLin2009cAsym pial, MNI152NLin6Asym white, MNI152NLin6Asym midthickness, MNI152NLin6Asym pial, MNI152NLin6Asym sphere, inout leftright, inout leftright subcortex.');
     end
     
     % wh_montages = [1 2];

@@ -68,6 +68,11 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %         will be plotted with the color specified by the 3rd row of your
 %         colormap.
 %
+%      **colormap':**
+%         Followed by an n x 3 matrix of colormap values. These will be map
+%         continuously throughout the data range if no cmaprange is
+%         provided.
+%
 %   **OUTLINING:**
 %
 %      **'outline'**
@@ -181,6 +186,7 @@ indexmap = [];
 mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
+customcolormap = 0;
 
 enhance_contrast = @(x1)(x1);
 
@@ -233,6 +239,21 @@ for i = 1:length(varargin)
                     indexmap=varargin{i+1};
                 catch
                     error('''indexmap'' argument must be followed by an n x 3 matrix of colormap values');
+                end
+            case 'colormap'
+                for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
+                        sprintf('Cannot evaluate render_blobs() with both ''colormap'' and ''%s'' arguments. These are mutually exclusive',...
+                            exclusive{1}));
+                end
+
+                docolormap = 1; 
+                customcolormap = 1;
+                dosplitcolor = 0; 
+                try
+                    cm=varargin{i+1};
+                catch
+                    error('''colormap'' argument must be followed by an n x 3 matrix of colormap values');
                 end
             case 'splitcolor'
                 
@@ -423,11 +444,15 @@ if ~docontour
             sz = sz([1 3]); % contour slice size
     end
     
-    cdat = define_cdat(sz, color);
+    if ~customcolormap
+        cdat = define_cdat(sz, color);
+    end
     
     if docolormap % colors are linear mixture of color and mincolor
         
-        cdat2 = define_cdat(sz, mincolor);
+        if ~customcolormap
+            cdat2 = define_cdat(sz, mincolor);
+        end
         
         if dosplitcolor
             % cdat and cdat2 are for positive values
@@ -593,7 +618,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     
                 elseif ~dosplitcolor
                     % color-mapped
-                    if isempty(indexmap)
+                    if isempty(indexmap) & ~customcolormap
                         Zscaled = Z;
                         Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
                         Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
@@ -607,6 +632,12 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         w = repmat(Zscaled, [1 1 3]);
 
                         slicecdat = (w .* cdat) + (1 - w) .* cdat2;
+                    elseif customcolormap
+                        %w = repmat(Z, [1 1 3]);
+
+                        
+                        w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
+                        slicecdat = reshape(cm(round(w),:),[size(Z),3]);
                     else
                         w = repmat(Z, [1 1 3]);
                         [Zi, Zj] = find(w > 0);
@@ -855,3 +886,19 @@ if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
 end
 
 end % function
+
+
+function val = map_function(c,x1,x2,y1,y2)
+    if x2 == x1
+        % this occurs when we have a single value. We arbitrarily set it to
+        % the middle value
+        range_val = (y2-y1)/2;
+    else
+        % softmax here keeps negative values from extending below the colormap
+        % range, which would otherwise make those values gray, since the lowest
+        % value on the colormap is a hardcoded grayscale value
+        range_val = max((c-x1),0)*(y2-y1)./(x2-x1);
+    end
+
+    val = y1 + range_val;
+end

@@ -67,6 +67,9 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %       is used automatically for volume to surface projection and 'interp'
 %       option is ignored.
 %
+%   **'labels':**
+%       Append cell-array or char/string labels to indexmap.
+%
 %   **'scaledtransparency':**
 %       Transparency is a function of voxel value, lower values are more transparent. This will look very
 %       strange without an underlay. To create an underlay render a two duplicate surfaces and invoke
@@ -177,6 +180,8 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %
 % Sept 2020: add solid-color 'color' option
 % revise surface() method to use this
+%
+% July 2024: Added 'labels' option for indexmap - Michael Sun PhD 07/29/2024
 
 if any(~ishandle(surface_handles))
     error('Some surface_handles are not valid handles');
@@ -257,6 +262,13 @@ for i = 1:length(varargin)
                 
                 doindexmap = true;
                 interp = 'nearest';
+
+            case 'labels'
+                if ~contains('indexmap',varargin(cellfun(@ischar,varargin))),...
+                        warning('''labels'' doesn''t do anything without an ''indexmap'' argument.');
+                end
+                mylabels=varargin{i+1};
+                
                 
             case 'scaledtransparency'
                 doscaledtrans = 1;
@@ -719,7 +731,15 @@ if any(datvec > 0)
     set(bar1axis, 'Visible', 'off');
     
     if doindexmap
-        set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', [], 'FontSize', 18);
+        num_labels=numel(mylabels);
+
+        % Calculate the YTick positions to be centered within each color segment
+        y_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
+        y_positions = (y_positions(1:end-1) + y_positions(2:end)) / 2; % Midpoints
+        
+        % Set the YTick positions and labels
+        set(colorbar1_han, 'YLim', [0 1], 'YTick', y_positions, 'YTickLabel', mylabels, 'FontSize', 18);
+
     else
         minpos = min(datvec(datvec > 0));
         ticklabels = [minpos clim(2)];

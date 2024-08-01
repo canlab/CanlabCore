@@ -730,7 +730,7 @@ if any(datvec > 0)
     colorbar1_han = colorbar(bar1axis);
     set(bar1axis, 'Visible', 'off');
     
-    if doindexmap
+    if doindexmap & exist('mylabels', 'var')
         num_labels=numel(mylabels);
 
         % Calculate the YTick positions to be centered within each color segment

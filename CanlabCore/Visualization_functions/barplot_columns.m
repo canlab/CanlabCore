@@ -62,6 +62,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 %        - 'dolines' : plot lines showing individual effects
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
+%        - 'removeout': Remove outliers at z>1.96 from statistical computations. Not compatible with 'plotout' since that data will be removed from plotting.
 %        - 'number' : plot case numbers instead of points
 %        - 'MarkerSize' : followed by marker size
 %        - 'MarkerAlpha' : followed by marker transparency value (alpha)
@@ -152,6 +153,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 
 dofig = 1;
 doind = 1;
+removeout = 0;
 plotout = 0;
 dorob = 0;
 xdat = [];
@@ -227,6 +229,7 @@ if length(varargin) > 0
 
         % Point plotting, individual lines, and outlier options
         if strcmp(varargin{i},'noind'), doind = 0;  end
+        if strcmp(varargin{i},'removeout'), removeout = 1;  end
         if strcmp(varargin{i},'plotout'), plotout = 1;  end
         if strcmp(varargin{i},'dolines'), dolines = 1;  end
         if strcmp(varargin{i},'number'), donumber = 1;  end
@@ -297,8 +300,6 @@ if strcmp(order, 'ascend') || strcmp(order, 'descend')
     if custom_se == true
         within_ste=within_ste(order_idx);
     end
-else
-    % do nothing
 end
 
 % ----------------------------------------------------
@@ -337,6 +338,24 @@ Std_Error = [];
 % Mean_Value, Std_Error, T, P (for stars), Cohens_d (for table)
 
 for i = 1:ny
+
+
+    if removeout
+        % Remove outliers
+        if plotout
+            warning('Cannot use plotout if removeout is set.');
+        end
+    
+        z = (dat(:,i) - nanmean(dat(:,i))) ./ nanstd(dat(:,i));
+        wh = find(abs(z) >= 1.96);
+        
+        dat(wh,i)=NaN;
+
+        
+    end
+
+
+
 
     if doprinttable
         if ~isempty(names) && length(names) >= i

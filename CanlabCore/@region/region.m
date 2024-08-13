@@ -487,8 +487,12 @@ if isa(mask, 'statistic_image')
     % if size(mask.dat, 1) == mask.volInfo.nvox
     %    error('statistic_image objects should not have data vector (.dat) the length of full image space.')
     % end
-    
-    maskData = maskData .* mask.sig(:, 1);
+
+    % Default threshold 
+    if ~isempty(mask.sig)
+        maskData = maskData .* mask.sig(:, 1);
+        
+    end
     
 end
 

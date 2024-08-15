@@ -112,13 +112,18 @@ for i = 1:num_subjects
     for j = 1:num_regressors
         if p_value_matrix(i, j) < 0.05
             rectangle('Position', [j-0.5, i-0.5, 1, 1], 'EdgeColor', 'black', 'LineWidth', 2);
+             text(j, i, sprintf('%.2f', coeff_matrix(i, j)), 'HorizontalAlignment', 'center', 'Color', 'black');
         end
     end
 end
 hold off;
 
 % Floating Error Bars
-subplot(3,2,2);
+if optionalargs==0
+    subplot(2,2,2);
+else
+    subplot(3,2,2);
+end
 hold on;
 jitterAmount = 0.1;
 for i = 1:num_subjects
@@ -137,7 +142,11 @@ xticklabels(regnames);
 hold off;
 
 % R-squared Heatmap
-subplot(3,2,3:4);
+if optionalargs==0
+    subplot(2,2,3:4);
+else
+    subplot(3,2,3:4);
+end
 imagesc(Rsq);
 bound=max(abs([max(coeff_matrix), min(coeff_matrix)]));
 clim([-1*bound bound])
@@ -147,6 +156,14 @@ colorbar;
 title('Subject-Level Model R2');
 xlabel('Subjects');
 set(gca, 'YTick', 1:2, 'YTickLabel', {'R2 (Ord)', 'R2 (Adj)'});
+% Overlay cell values
+for i = 1:2
+    for j = 1:num_subjects
+        text(j, i, sprintf('%.2f', Rsq(i, j)), 'HorizontalAlignment', 'center', 'Color', 'black');
+    end
+end
+
+if optionalargs==1
 
 % Partial R2 and Effect Size Computation
 for i = 1:num_subjects
@@ -161,10 +178,10 @@ for i = 1:num_subjects
         std_predictors = std(sub_regressors{i}(:, j));
         std_response = std(sub_y{i});
         d_effect_size_matrix(i, j) = (betas(j) * std_predictors) / std_response;
+
+
     end
 end
-
-if optionalargs==1
 
 % Display Partial R2 Heatmap and Effect Sizes
 subplot(3,2,5);
@@ -180,6 +197,7 @@ for i = 1:num_subjects
     for j = 1:num_regressors
         if p_value_matrix(i, j) < 0.05
             rectangle('Position', [j-0.5, i-0.5, 1, 1], 'EdgeColor', 'black', 'LineWidth', 2);
+            text(j, i, sprintf('%.2f', d_effect_size_matrix(i, j)), 'HorizontalAlignment', 'center', 'Color', 'black');
         end
     end
 end
@@ -200,6 +218,7 @@ for i = 1:num_subjects
     for j = 1:num_regressors
         if p_value_matrix(i, j) < 0.05
             rectangle('Position', [j-0.5, i-0.5, 1, 1], 'EdgeColor', 'black', 'LineWidth', 2);
+            text(j, i, sprintf('%.2f', Rsq_partial(i, j)), 'HorizontalAlignment', 'center', 'Color', 'black');
         end
     end
 end

@@ -74,18 +74,22 @@ end
 
 
 if is_indexmap
-        num_labels=numel(mylabels);
-
-        % Calculate the YTick positions to be centered within each color segment
-        x_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
-        x_positions = (x_positions(1:end-1) + x_positions(2:end)) / 2; % Midpoints
-        
-        bar1axis = axes('Position', [.35 -0.35 .38 .42]);
-        colormap(bar1axis, cmap)
-        colorbar_han = colorbar(bar1axis, 'northoutside');
-        set(bar1axis, 'Visible', 'off');
-        colorbar_han.Ticks=x_positions;
-        colorbar_han.TickLabels=mylabels;
+        if exist('mylabels', 'var')
+            num_labels=numel(mylabels);
+    
+            % Calculate the YTick positions to be centered within each color segment
+            x_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
+            x_positions = (x_positions(1:end-1) + x_positions(2:end)) / 2; % Midpoints
+            
+            bar1axis = axes('Position', [.35 -0.35 .38 .42]);
+            colormap(bar1axis, cmap)
+            colorbar_han = colorbar(bar1axis, 'northoutside');
+            set(bar1axis, 'Visible', 'off');
+            colorbar_han.Ticks=x_positions;
+            colorbar_han.TickLabels=mylabels;
+        else
+            warning('No labels input for indexmap')
+        end
 else
 
 for c = 1:length(obj.activation_maps)

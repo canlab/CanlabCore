@@ -69,6 +69,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %           Sig. levels are coded as * = p<.05, ** = p<.01, *** = q<.05 FDR across variables tested in this plot
 %        - 'nostars' : do not plot stars
+%        - 'custom_p' : Custom cell-array to determine p-values if manually generating plots. Don't abuse this.
 %
 %   Robustness options
 %        - 'dorob' : do robust IRLS means and correlations
@@ -146,6 +147,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
 %
 %   Edited 06/12/2024 Added 'order' option. - Michael Sun, PhD
+%   Edited 08/22/2024 Added 'custom_p' option. - Michael Sun, PhD
 
 % ..
 %    Defaults
@@ -161,6 +163,7 @@ dolines = 0;
 dobars = 1;
 dowithin = 0;
 custom_se = false;
+custom_p = false;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
@@ -242,6 +245,7 @@ if length(varargin) > 0
 
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
+        if strcmp(varargin{i}, 'custom_p'), PValues = varargin{i+1}; custom_p = true; end
 
         % Robustness options
         if strcmp(varargin{i},'dorob'), dorob = 1;  end
@@ -422,6 +426,11 @@ for i = 1:ny
 
 end
 
+if custom_p
+    P=[PValues{:}]';
+end
+
+
 dat = y;  % adjusted data, for plot
 
 if dowithin && ~custom_se
@@ -526,8 +535,12 @@ if doviolin
     Y = enforce_cell_array(y);
 
     % Do not plot indiv points here; we will do later if requested. So use 'noind' option.
-    violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
-    legend off
+    try
+        violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
+        legend off
+    catch
+        warning('Default violinplot cannot be plotted.')
+    end
 
 end
 

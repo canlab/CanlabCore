@@ -428,6 +428,8 @@ end
 
 if custom_p
     P=[PValues{:}]';
+    % very low P-values: do not use exactly zero, because of problems
+    P(find(P < 10 * eps)) = 10 * eps;
 end
 
 

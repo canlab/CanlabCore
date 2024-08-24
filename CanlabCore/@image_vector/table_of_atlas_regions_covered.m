@@ -35,7 +35,7 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %        The keyword 'coverage' followed by a percentage threshold. 0 means
 %        that any non-zero voxel in the input data that falls within an atlas
 %        region will be sufficient to include the atlas region in the
-%        table.  
+%        table.
 %        50 means that 50% of the voxels in an atlas region must be
 %        non-zero in the input image.
 %        The default is 25%
@@ -70,7 +70,7 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %        Text string with all covered regions and coverage percentages
 %
 %   **full_table**
-%       Table of all regions, in order of indices in atlas       
+%       Table of all regions, in order of indices in atlas
 %
 % Examples:
 % -----------------------------------------------------------------
@@ -343,7 +343,7 @@ if doprint
 
     fprintf('\nPositive Effects\n\n')
     if ~isempty(results_table_pos)
-        
+
         disp(results_table_pos)
     else
         disp('No regions to display');
@@ -351,7 +351,7 @@ if doprint
 
     fprintf('\nNegative Effects\n\n')
     if ~isempty(results_table_neg)
-        
+
         disp(results_table_neg)
     else
         disp('No regions to display');
@@ -374,5 +374,3 @@ vals = double(vals);
 val = sign(vals(wh)) .* maxabs;
 
 end
-
-

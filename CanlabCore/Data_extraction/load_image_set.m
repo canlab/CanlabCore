@@ -393,6 +393,8 @@ else
             
         case 'list'
             
+            [networknames, imagenames] = deal({});
+
             table_list = list_signatures;
             disp(table_list);
             
@@ -1426,14 +1428,15 @@ function table_list = list_signatures
 
 
 
-pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0]';
-negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0]';
-empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0]';
-physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0]';
-posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0]';
-cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0]';
-regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0]';
-other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1]';
+pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0 0 0 1]';
+negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0 1 0 0]';
+empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
+physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
+posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 1 0]';
+cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0 0 0 0]';
+regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0 0 0 0]';
+reward =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 1 0]';
+other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 0 0]';
 
 keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
     'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'Guilt_behavior' ...
@@ -1441,7 +1444,7 @@ keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_noocci
     'Kragel18Pain' 'Kragel18CogControl' 'Kragel18NegEmotion' 'Reddan18CSplus_vs_CSminus' ...
     'GeuterPaincPDM' 'ZhouVPS' ...
     'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'  ...
-    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood'}';
+    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood' 'Painvalue' 'Moneyvalue' 'Shockintensity'}';
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -1457,7 +1460,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia
     'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
     'Ashar_2017_empathic_distress_marker.nii' ...       
-    'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii' ...    % Yu 2019 Cer Ctx Guilt behavior
+    'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii' ...     % Yu 2019 Cer Ctx Guilt behavior
     'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...  % Kragel 2015 emotion PLS maps
     'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_content_group_emotion_PLS_beta_BSz_10000it.img' ...
@@ -1465,26 +1468,29 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'bPLS_Wholebrain_Pain.nii'  ...                     % Kragel 2018 whole-brain pain cog control neg emotion
+    'bPLS_Wholebrain_Pain.nii'  ...                         % Kragel 2018 whole-brain pain cog control neg emotion
     'bPLS_Wholebrain_Cognitive_Control.nii'  ...
     'bPLS_Wholebrain_Negative_Emotion.nii'  ...
     'IE_ImEx_Acq_Threat_SVM_nothresh.nii.gz' ...
     'Geuter_2020_cPDM_combined_pain_map.nii' ...
     'General_vicarious_pain_pattern_unthresholded.nii' ...  % Zhou 2020 eLife vicarious pain
-    'General_bplsF_unthr.nii'  ...                      % MPA2 general vs. specific aversiveness
+    'General_bplsF_unthr.nii'  ...                          % MPA2 general vs. specific aversiveness
     'Mechanical_bplsF_unthr.nii'  ...
     'Thermal_bplsF_unthr.nii'  ...
     'Sound_bplsF_unthr.nii'  ...
     'Visual_bplsF_unthr.nii'  ...
-    'PlaceboPredict_Anticipation.img'   ...                   % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
-    'PlaceboPredict_PainPeriod.img'    ...                   % During pain [P - C]->behav [P - C]
+    'PlaceboPredict_Anticipation.img'   ...                 % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
+    'PlaceboPredict_PainPeriod.img'    ...                  % During pain [P - C]->behav [P - C]
     'stroop_pattern_wani_121416.nii' ...
-    'craving_wmapN99_boot10K_02-May-2022.img' ...
+    'craving_wmapN99_boot10K_02-May-2022.img' ...           % Kober 2022 Craving NCS signature
     'wmap_onlyDRUGS_l2nGM_N99_20220428.img' ...
-    'wmap_onlyFOOD_l2nGM_N99_20220428.img'
+    'wmap_onlyFOOD_l2nGM_N99_20220428.img' ...
+    'painvalue_weights_fdr05.nii.gz' ...                    % Coll 2022 PNAS decision value pain
+    'moneyvalue_weights_fdr05.nii.gz' ...
+    'shockintensity_weights_fdr05.nii.gz' ...
     }';
 
-table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, other, imagenames);
+table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, reward, other, imagenames);
 
 end % table_list
 

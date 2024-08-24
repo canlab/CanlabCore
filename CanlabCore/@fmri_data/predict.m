@@ -631,6 +631,7 @@ for i = 1:length(varargin)
             case 'MultiClass'
                 doMultiClass = 1;
                 predfun_inputs{end + 1} = varargin{i}; %PK - pass as input to cv_svm
+
             case 'rolling'
                 tsxval_rolling = 1;
                 inval = varargin{i + 1};
@@ -685,6 +686,11 @@ end
 
 if numel(nfolds) > 1 % a vector; assume integers for holdout sets
     % Custom holdout set
+
+    % Ensure that the holdout set is a column vector. Problems arise when
+    % it is not - Michael Sun 07/30/2024
+    nfolds=nfolds(:);
+
     fold_indicator = nfolds;
     u = unique(fold_indicator);
     nfolds = length(u);

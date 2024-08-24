@@ -345,7 +345,29 @@ elseif strcmp(dir, 'MNI152NLin6Asym sphere left')
     else
         view(270, 0);
     end
+
+elseif strcmp(dir, 'bigbrain left')
+    h = addbrain('bigbrain');
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'bigbrain right')
+    h = addbrain('bigbrain');
+    view(137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'left_cutaway')
+    h = addbrain('left_cutaway');
+
+elseif strcmp(dir, 'right_cutaway')
+    h = addbrain('right_cutaway');
+
+else
+    h = addbrain(dir);
+
 end
+
+
+
+
 
 if strcmp(h(1).FaceColor,'interp')
     set(h,'FaceAlpha', 1);

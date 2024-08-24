@@ -288,7 +288,14 @@ classdef region
                 
                  val_descrip = 'Statistic effect value (.dat) for each voxel.';
     
-                 mask = replace_empty(mask);            % after this p and dat now have all in-mask voxels
+                 % mask = replace_empty(mask);            % after this p and dat now have all in-mask voxels
+
+                 try
+                    mask = replace_empty(mask);
+                 catch
+                    warning('Could not call replace_empty() on mask.')
+                 end
+
                  
                  if ~isempty(mask.dat)
                      % Use values from image. These can be more precise and
@@ -463,7 +470,13 @@ end
 % In addition, voxels/images with empty values may be removed.
 % So insert those first.
 % Note: .dat can sometimes have 2+ cols, so use only first one
-mask = replace_empty(mask);
+
+% mask = replace_empty(mask);
+try
+    mask = replace_empty(mask);
+catch
+    warning('Could not call replace_empty() on mask.')
+end
 
 if size(mask.dat, 2) > 1
     disp('Warning: Mask has multiple images, will use first only.');
@@ -476,7 +489,7 @@ elseif size(mask.dat, 1) == mask.volInfo.nvox
     % We have a full-length vector
     maskData = mask.dat(mask.volInfo.wh_inmask(:, 1));
 else
-    error('Illegal size for mask.dat, because it does not match its volInfo structure.')
+    warning('Illegal size for mask.dat, because it does not match its volInfo structure.')
 end
 
 % If statistic_image, we need to consider thresholding
@@ -487,8 +500,12 @@ if isa(mask, 'statistic_image')
     % if size(mask.dat, 1) == mask.volInfo.nvox
     %    error('statistic_image objects should not have data vector (.dat) the length of full image space.')
     % end
-    
-    maskData = maskData .* mask.sig(:, 1);
+
+    % Default threshold 
+    if ~isempty(mask.sig)
+        maskData = maskData .* mask.sig(:, 1);
+        
+    end
     
 end
 

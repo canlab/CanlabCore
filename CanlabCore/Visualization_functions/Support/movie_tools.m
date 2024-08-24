@@ -127,7 +127,7 @@ switch meth
         % transparency, and lines
 
         % defaults
-        mov = []; color = 'k'; bendval = 0;
+        mov = []; color = [0 0 0]; bendval = 0;
         startt = 1; endt1 = 1; handles = [];
         targetaz = []; targetel = [];
 
@@ -144,6 +144,8 @@ switch meth
 
         if length(varargin) > 9, targetaz = varargin{10}; end
         if length(varargin) > 10, targetel = varargin{11}; end
+
+        if ischar(color), error('Enter color as [r g b] value triplet.'); end
 
         mov = movie_lines(startcoords,endcoords,mov,color,bendval,movlength,startt,endt,handles,targetaz,targetel);
 
@@ -482,7 +484,7 @@ p.addParameter('az', [], valfcn_number);
 p.addParameter('el', [], valfcn_number);
 p.addParameter('trans', [], valfcn_number);
 p.addParameter('dotrans', true, valfcn_scalar);
-p.addParameter('handles', [], @ishandle);
+p.addParameter('handles', [], @(x) all(ishandle(x)));
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------

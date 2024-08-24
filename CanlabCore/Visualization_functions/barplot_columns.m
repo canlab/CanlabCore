@@ -62,12 +62,14 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 %        - 'dolines' : plot lines showing individual effects
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
+%        - 'removeout': Remove outliers at z>1.96 from statistical computations. Not compatible with 'plotout' since that data will be removed from plotting.
 %        - 'number' : plot case numbers instead of points
 %        - 'MarkerSize' : followed by marker size
 %        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %           Sig. levels are coded as * = p<.05, ** = p<.01, *** = q<.05 FDR across variables tested in this plot
 %        - 'nostars' : do not plot stars
+%        - 'custom_p' : Custom cell-array to determine p-values if manually generating plots. Don't abuse this.
 %
 %   Robustness options
 %        - 'dorob' : do robust IRLS means and correlations
@@ -145,6 +147,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
 %
 %   Edited 06/12/2024 Added 'order' option. - Michael Sun, PhD
+%   Edited 08/22/2024 Added 'custom_p' option. - Michael Sun, PhD
 
 % ..
 %    Defaults
@@ -152,6 +155,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 
 dofig = 1;
 doind = 1;
+removeout = 0;
 plotout = 0;
 dorob = 0;
 xdat = [];
@@ -159,6 +163,7 @@ dolines = 0;
 dobars = 1;
 dowithin = 0;
 custom_se = false;
+custom_p = false;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
@@ -227,6 +232,7 @@ if length(varargin) > 0
 
         % Point plotting, individual lines, and outlier options
         if strcmp(varargin{i},'noind'), doind = 0;  end
+        if strcmp(varargin{i},'removeout'), removeout = 1;  end
         if strcmp(varargin{i},'plotout'), plotout = 1;  end
         if strcmp(varargin{i},'dolines'), dolines = 1;  end
         if strcmp(varargin{i},'number'), donumber = 1;  end
@@ -239,6 +245,7 @@ if length(varargin) > 0
 
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
+        if strcmp(varargin{i}, 'custom_p'), PValues = varargin{i+1}; custom_p = true; end
 
         % Robustness options
         if strcmp(varargin{i},'dorob'), dorob = 1;  end
@@ -297,8 +304,6 @@ if strcmp(order, 'ascend') || strcmp(order, 'descend')
     if custom_se == true
         within_ste=within_ste(order_idx);
     end
-else
-    % do nothing
 end
 
 % ----------------------------------------------------
@@ -337,6 +342,24 @@ Std_Error = [];
 % Mean_Value, Std_Error, T, P (for stars), Cohens_d (for table)
 
 for i = 1:ny
+
+
+    if removeout
+        % Remove outliers
+        if plotout
+            warning('Cannot use plotout if removeout is set.');
+        end
+    
+        z = (dat(:,i) - nanmean(dat(:,i))) ./ nanstd(dat(:,i));
+        wh = find(abs(z) >= 1.96);
+        
+        dat(wh,i)=NaN;
+
+        
+    end
+
+
+
 
     if doprinttable
         if ~isempty(names) && length(names) >= i
@@ -402,6 +425,13 @@ for i = 1:ny
     end
 
 end
+
+if custom_p
+    P=[PValues{:}]';
+    % very low P-values: do not use exactly zero, because of problems
+    P(find(P < 10 * eps)) = 10 * eps;
+end
+
 
 dat = y;  % adjusted data, for plot
 
@@ -507,8 +537,12 @@ if doviolin
     Y = enforce_cell_array(y);
 
     % Do not plot indiv points here; we will do later if requested. So use 'noind' option.
-    violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
-    legend off
+    try
+        violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
+        legend off
+    catch
+        warning('Default violinplot cannot be plotted.')
+    end
 
 end
 

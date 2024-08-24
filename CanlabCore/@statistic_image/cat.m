@@ -109,13 +109,13 @@ function obj = merge_fcn(obj, obj2)
 obj = replace_empty(obj,'voxels');   % changed to 'voxels' only. SG 2/23/18
 obj2 = replace_empty(obj2,'voxels'); % changed to 'voxels' only. SG 2/23/18
 
-if ~isempty(obj)
-    obj2 = resample_space(obj2, obj);
-
-    % Why does resample_space resample the .N field? It shouldn't do that -
-    % MS 7/17/2024
-    obj2.N=unique(obj2.N);
-end
+% if ~isempty(obj)
+%     obj2 = resample_space(obj2, obj);
+% 
+%     % Why does resample_space resample the .N field? It shouldn't do that -
+%     % MS 7/17/2024
+%     obj2.N=unique(obj2.N);
+% end
 
 % hcat these attributes
 fnames = {'source_notes' 'type' 'p' 'p_type' 'ste' 'threshold' 'thr_type' 'sig' 'N' 'dfe' 'image_labels' 'dat'};

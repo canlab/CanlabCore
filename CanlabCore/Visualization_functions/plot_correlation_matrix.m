@@ -246,9 +246,13 @@ end
 % Handle reordering flag
 if ~isempty(partitions)
     
-    [psort, sort_order] = sort(partitions, 'ascend');
-    
-    if any(psort - partitions)
+    if iscell(partitions)  % cell array of strings
+        [psort, sort_order] = sort(partitions);
+    else
+        [psort, sort_order] = sort(partitions, 'ascend');
+    end
+
+    if iscell(partitions) || any(psort - partitions)
         
         doreorder = true;
         partitions = psort;
@@ -448,10 +452,16 @@ if ~isempty(partitions)
     
     % u = unique(partitions);
     if ~iscolumn(partitions), partitions = partitions'; end
-    
-    st = find(diff([0; partitions])) - 0.5;           % starting and ending values for each partition
-    en = find(diff([partitions; npartitions + 1])) + 0.5;
-    
+
+    if iscell(partitions)
+        [st, en] = get_start_end_cellstr(partitions);
+        partitionlabels = unique(partitions);
+    else
+        % numeric
+        st = find(diff([0; partitions])) - 0.5;           % starting and ending values for each partition
+        en = find(diff([partitions; npartitions + 1])) + 0.5;
+    end
+
     boxwid = k/30;
     boxstart  = 0 - boxwid - .25;
     textstart = boxstart + .3 * boxwid;
@@ -578,3 +588,23 @@ if isempty(fdrthr), fdrthr = -Inf; end
 thr = fdrthr;
 
 end
+
+
+
+    function [st, en] = get_start_end_cellstr(partitions)
+        st = 0.5;
+        en = [];
+
+        % Iterate through the cell array
+        for i = 2:length(partitions)
+            if ~strcmp(partitions{i}, partitions{i-1}) || i == length(partitions)
+                en(end + 1) = i + 0.5;
+
+                if i < length(partitions)
+                    st(end + 1) = i + 0.5;
+                end
+            end
+        end
+
+    end
+

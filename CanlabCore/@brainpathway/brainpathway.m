@@ -582,6 +582,10 @@ classdef brainpathway < handle
         % obj.connectivity.regions.p
         % obj.connectivity.regions.p < 0.05
         % obj.region_atlas.labels
+        %
+        % You can enter partition colors and labels, too, for sidebar:
+        % Using any of the fields in region_atlas, or other labels
+        % b.plot_connectivity('partitions', b.region_atlas.labels_2);
         
             input_args = varargin;
             

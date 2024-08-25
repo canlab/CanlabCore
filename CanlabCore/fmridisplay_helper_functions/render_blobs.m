@@ -900,5 +900,5 @@ function val = map_function(c,x1,x2,y1,y2)
         range_val = max((c-x1),0)*(y2-y1)./(x2-x1);
     end
 
-    val = y1 + range_val;
+    val = min(y1 + range_val,y2); % if value exceeds max, set it to that max
 end

@@ -532,7 +532,7 @@ for i = 1:length(surface_handles)
     if isempty(sourcespace) | isempty(targetsurface)
         c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
             surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
-    else
+    else 
         % figure out what surface we're dealing with and grab the appropriate
         % source surfaces to sample with
         if contains(get(surface_handles(i),'Tag'),{'left','Left','LEFT'})
@@ -808,7 +808,7 @@ function val = map_function(c,x1,x2,y1,y2)
         % softmax here keeps negative values from extending below the colormap
         % range, which would otherwise make those values gray, since the lowest
         % value on the colormap is a hardcoded grayscale value
-        range_val = max((c-x1),0)*(y2-y1)./(x2-x1);
+        range_val = min(max((c-x1),0),x2-x1)*(y2-y1)./(x2-x1);
     end
 
     val = y1 + range_val;

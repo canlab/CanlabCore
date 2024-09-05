@@ -443,7 +443,7 @@ for i = 1:k
             % all P-values 1, mafdr may not be suitable
             fprintf('Warning:\n%s\nPrior prob of sig P-values is near 1. Using B-H FDR\n', names{i});
             pthr_i = FDR(pvalues(:, i), .05);
-            if isempty(pthr_i), pthr_i(i) = -Inf; end
+            if isempty(pthr_i), pthr_i = -Inf; end
             sig_q05 = pvalues(:, i) < pthr_i;
         end
 

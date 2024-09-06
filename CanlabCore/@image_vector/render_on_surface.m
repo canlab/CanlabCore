@@ -530,8 +530,12 @@ for i = 1:length(surface_handles)
     % interpolate from mesh grid to the surface vertices intersecting
     % the grid
     if isempty(sourcespace) | isempty(targetsurface)
+        sh = surface_handles(i);
+        if isa(sh,'double')
+            sh = get(sh);
+        end
         c = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...
-            surface_handles(i).Vertices(:,1), surface_handles(i).Vertices(:,2), surface_handles(i).Vertices(:,3), interp);
+            sh.Vertices(:,1), sh.Vertices(:,2), sh.Vertices(:,3), interp);
     else 
         % figure out what surface we're dealing with and grab the appropriate
         % source surfaces to sample with
@@ -721,13 +725,21 @@ if ~dolegend, return, end
 
 if any(datvec > 0)
     
+    % check for existing colorbars
+    children = get(gcf,'Children');
+    for i = 1:length(children)
+        if isa(children(i),'matlab.graphics.illustration.ColorBar')
+            delete(children(i));
+        end
+    end
+
     bar1axis = axes('Position', [.55 .55 .38 .4]);
     if doindexmap
         colormap(bar1axis, cm(2:end,:));
     else
         colormap(bar1axis, cm(1+(kpos-1)*nvals:kpos*nvals, :));
     end
-    colorbar1_han = colorbar(bar1axis);
+    colorbar1_han = colorbar(bar1axis, 'EastOutside');
     set(bar1axis, 'Visible', 'off');
     
     if doindexmap & exist('mylabels', 'var')
@@ -766,7 +778,7 @@ if any(datvec < 0)
     else
         colormap(bar2axis, cm(1+(kneg-1)*nvals:kneg*nvals, :));
     end
-    colorbar2_han = colorbar(bar2axis);
+    colorbar2_han = colorbar(bar2axis, 'EastOutside');
     set(bar2axis, 'Visible', 'off');
     
     if doindexmap

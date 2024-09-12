@@ -388,13 +388,14 @@ if estimateSimilarity
         % First collect names, assume one name per object
         namefun = @(x) x.image_names;
         mynames = cellfun(namefun, layer1fmri_obj, 'UniformOutput', false);
-        
+
         new_obj = replace_empty(mean(layer1fmri_obj{1}));
         for i = 1:nlayer1
             tmp = replace_empty(mean(layer1fmri_obj{i}));
             new_obj.dat(:, i) = tmp.dat(:, 1);
         end
-        new_obj.image_names = strvcat(mynames{:});
+        % new_obj.image_names = strvcat(mynames{:});
+        new_obj.image_names = char(unique(cellstr(strvcat(mynames{:})),'stable')); % I think this is more appropriate. MS 09122024
         layer1fmri_obj = new_obj;
         
         

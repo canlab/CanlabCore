@@ -383,7 +383,7 @@ end
 
 if doaverage && strcmp(plotstyle, 'polar') && ~any(strcmp(varargin, 'colors'))
    if exist('group', 'var')
-    groupColors = scn_standard_colors(length(unique(group)))';
+    groupColors = scn_standard_colors(length(unique(group, 'stable')))';
    else
     groupColors = {[1 0 0]};  % unicolor. can change line and err with 2nd color entry.
    end
@@ -577,7 +577,7 @@ elseif doaverage
     
     if exist('compareGroups','var') %if we want to do analysis for multiple groups
         
-        groupValues=unique(group);
+        groupValues=unique(group, 'stable');
         g=num2cell(groupValues); %create cell array of group numbers
           
         for i=1:size(z,2) %for each spatial basis do an anova across groups
@@ -625,7 +625,7 @@ elseif doaverage
           
     else
         group=ones(size(r,2),1); %otherwise all data is from same group
-        groupValues=unique(group);
+        groupValues=unique(group, 'stable');
         g=num2cell(groupValues); %creat cell array of group numbers
         
         
@@ -690,8 +690,10 @@ elseif doaverage
     % Plot (average + error bars)
     % ------------------------------------------------------------
     if ~noplot
-        groupColors = scn_standard_colors(length(groupValues))';
-        
+        if isempty(groupColors)
+            groupColors = scn_standard_colors(length(groupValues))';
+        end
+
         % removed to enable use of user-defined colors. SG 2017/2/7
         % gc=groupColors;
         % groupColors=repmat(groupColors',3,1);
@@ -699,11 +701,12 @@ elseif doaverage
         
         % removed and replaced to debug plotting code below
         % LVO 2023/12/18
-        gc = groupColors(1:size(groupValues,2));
+        % Bugfix to this MS 2024/9/11
+        gc = groupColors(1:numel(groupValues));
         gc_rep = repmat(gc',3,1);
         gc_toplot = gc_rep(:,1);
-        for c = 2:size(groupValues,2)
-            gc_toplot = [gc_toplot;gc_rep(:,2)];
+        for c = 2:numel(groupValues)
+            gc_toplot = [gc_toplot;gc_rep(:,c)];
         end
         
         toplot=[];

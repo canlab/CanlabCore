@@ -295,8 +295,9 @@ end % varargin
 % > Set Order
 % ----------------------------------------------------
 if strcmp(order, 'ascend') || strcmp(order, 'descend')
-    [~, order_idx] = sort(mean(dat, 1), order);
-    dat = dat(order_idx);
+    [~, order_idx] = sort(nanmean(dat, 1), order);
+    dat = dat(:, order_idx);
+
     names=names(order_idx);
     if iscell(mycolor) & numel(mycolor)==numel(order_idx)
         mycolor=mycolor(order_idx);

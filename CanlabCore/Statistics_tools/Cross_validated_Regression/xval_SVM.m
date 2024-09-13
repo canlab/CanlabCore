@@ -26,7 +26,9 @@ function S = xval_SVM(varargin)
 % -------------------------------------------------------------------------
 % - Uses Matlab's Stats/ML Toolbox SVM object, fitcsvm, and hyperparameter
 % optimization. Other options, e.g., fitclinear, may be better for some
-% situations (large num. variables)
+% situations (large num. variables). Specify this with the
+% 'highdimensional' keyword. It will not optimize hyperparameters in this
+% case though!
 %
 % - Single-interval accuracy from cross-val and ROC_plot may differ because
 % ROC_plot chooses a new score threshold that maximizes overall balanced
@@ -37,6 +39,8 @@ function S = xval_SVM(varargin)
 % - 5-fold CV (not grouped by id) without repartitioning 
 % - Bayesian optimization, using best estimates from smooth function
 % - maximizes accuracy, so may need large(ish) samples to be effective.
+% - Do not use with high-dimensional data, e.g., full voxel-wise brain images
+%   This is not currently compatible with the 'highdimensional', true option
 %
 % - works on linear classifiers only, but can explore nonlinear models
 % with a small change in the code (now commented out). This could be added
@@ -106,6 +110,11 @@ function S = xval_SVM(varargin)
 %   **'nfolds', [num folds]:**
 %        Set number of cross-validation folds; default = 10.
 %        Enter number of folds.
+%
+%   **'highdimensional', true:**
+%        Use fitclinear for high-dimensional data (many variables/e.g., voxels)
+%        Does not work currently with optimize hyperparameters
+%        Use if standard model gives NaNs or non-sensible output
 %
 % :Outputs:
 %
@@ -211,13 +220,15 @@ function S = xval_SVM(varargin)
 %     v1.4
 %     Add nfolds argument - Michael Sun, 07/07/2022
 % 
+%     v1.5
+%     Use fitclinear for high-dim data, as fitcsvm does not work
 % ..
 
 %% ----------------------------------------------------------------------
 % Version
 % ----------------------------------------------------------------------
 
-ver = 1.2;
+ver = 1.4;
 
 %% ----------------------------------------------------------------------
 % Parse inputs
@@ -256,6 +267,14 @@ if ~exist('nfolds', 'var'), nfolds=10; end
 
 if isempty(id), id = [1:length(Y)]'; end
 if ~iscolumn(id), id = id'; end
+
+% high-dim option
+if highdimensional
+    % use fitclinear
+    % modeloptions = {'ScoreTransform', 'logit'};
+
+    modeloptions = {};
+end
 
 %% Select holdout sets for outer loop
 % - Keep images from the same id together
@@ -307,13 +326,21 @@ if doverbose
     printhdr('Model training and cross-validation without optimization')
     fprintf('Training overall model. ')
     
-    SVMModel = fitcsvm(X, S.Y, S.modeloptions{:}); %#ok<*NODEF>
-    
+    if highdimensional
+
+        SVMModel = fitclinear(X, S.Y, S.modeloptions{:});
+
+    else
+
+        SVMModel = fitcsvm(X, S.Y, S.modeloptions{:}); %#ok<*NODEF>
+
+    end
+
     % non-cross-val accuracy: sanity check. should usually be 100% if training is overfit and n >> p
     label = predict(SVMModel, X);
     
     acc = S.accfun(S.Y, label);
-    fprintf('Accuracy without cross-val: %3.0f%%\n', acc);
+    fprintf('Accuracy without cross-val (should be 100%% for high-dim data): %3.0f%%\n', acc);
     
 end
 
@@ -326,7 +353,7 @@ S.nfolds = length(S.trIdx);
 % not be perfectly correlated) because the sigmoid scaling (Platt scaling) varies across folds.
 % They will diverge more if there is no true signal.
 
-S = crossval(S, X, doverbose);
+S = crossval(S, X, doverbose, highdimensional);
 
 % Summarize accuracy
 % -------------------------------------------------------------------------
@@ -460,7 +487,6 @@ if dorepeats > 1
         
         if doverbose, fprintf('%d ', i), end
         
-
         Sr = S;
         
         % Get new cvpartition (or outer loop if optimizing) 
@@ -476,7 +502,7 @@ if dorepeats > 1
         else
             
             % Cross-validate
-            Sr = crossval(Sr, X, false);
+            Sr = crossval(Sr, X, false, highdimensional);
             
         end
         
@@ -528,7 +554,17 @@ end
 
 %% Fit model on full dataset with selected options (final model if optimizing hyperparams) to get betas
 
-S.SVMModel = fitcsvm(X, S.Y, S.modeloptions{:});
+if highdimensional
+
+    S.SVMModel = fitclinear(X, S.Y, S.modeloptions{:});
+
+else
+
+    S.SVMModel = fitcsvm(X, S.Y, S.modeloptions{:});
+
+end
+
+
 S.w = S.SVMModel.Beta;                                       % Model weights/betas
 
 % Bootstrap betas
@@ -611,7 +647,7 @@ end % main function
 % -------------------------------------------------------------------------
 % -------------------------------------------------------------------------
 
-function S = crossval(S, X, doverbose)
+function S = crossval(S, X, doverbose, highdimensional)
 
 if doverbose, fprintf('..X-val, %d folds...', S.nfolds), end
 
@@ -620,8 +656,16 @@ for i = 1:S.nfolds
     if doverbose, fprintf('%d ', i), end
     
     % Fit to training data for this fold
-    SVM_fold = fitcsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), S.modeloptions{:});
+    if highdimensional
+           
+      SVM_fold = fitclinear(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), S.modeloptions{:});
+
+    else
+
+      SVM_fold = fitcsvm(X(S.trIdx{i}, :), S.Y(S.trIdx{i}), S.modeloptions{:});
     
+    end
+
     % Apply holdout test set for this fold
     [label, score] = predict(SVM_fold, X(S.teIdx{i}, :));   % Get raw scores
     score = score(:, 2);                                    % Decision boundary is symmetrical
@@ -630,8 +674,25 @@ for i = 1:S.nfolds
     
     S.yfit(S.teIdx{i}, 1) = label;                          % Predicted class, cross-val
     
-    SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
+    if highdimensional
+
+        SVM_fold.ScoreTransform = 'logit';
+        [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
+        pscore = pscore(:, 2);
+
+    else
+
+        SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
+        [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
     
+        % which pscores correlate more positively with score? use this one.
+        r = corr([score pscore]);
+        [~, wh] = max(r(1, 2:3));
+
+        pscore = pscore(:, wh);                                  % Platt scaling scores (class probability)
+
+    end
+
     % Note:
     % either scores or pscores appear to be inconsistent in terms of which
     % column is class -1 and which is class 1. Check for instability in
@@ -639,14 +700,6 @@ for i = 1:S.nfolds
     if mean(label(score > 0)) < mean(label(score < 0))
         disp('WARNING!!! Scores for label 1 are < scores for label -1, scores are reversed!!! This should not happen. Check code/implementation.');
     end
-    
-    [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
-    
-    % which pscores correlate more positively with score? use this one.
-     r = corr([score pscore]);
-    [~, wh] = max(r(1, 2:3));
-   
-    pscore = pscore(:, wh);                                  % Platt scaling scores (class probability)
     
     S.class_probability_xval(S.teIdx{i}, 1) = pscore;
     
@@ -1136,7 +1189,8 @@ p.addParameter('dooptimize', true, valfcn_logical);
 p.addParameter('dorepeats', 10, valfcn_number);
 p.addParameter('dobootstrap', true, valfcn_logical);
 p.addParameter('nboot', 1000, valfcn_number);
-p.addParameter('nfolds',10, valfcn_number); % Added by Michael Sun 08/2/2022
+p.addParameter('nfolds',10, valfcn_number);             % Added by Michael Sun 08/2/2022
+p.addParameter('highdimensional', false, @islogical);       % v1.5
 
 p.addParameter('modeloptions', {'KernelFunction', 'linear'}, valfcn_cell);
 

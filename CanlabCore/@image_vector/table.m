@@ -134,6 +134,14 @@ for i = 1:length(varargin)
 end
 
  
+
+cl = region(w); % Convert w to cl; MS bugfix 09172024
+
+if exist()
+
+    atl = load_atlas('canlab2024');
+end
+
 [poscl, negcl, results_table] = table(cl, varargin)
 
 

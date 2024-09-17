@@ -41,6 +41,9 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %   **nolegend:**
 %        omit table legend
 %
+%   **noverbose**:
+%        don't diplay results
+%
 % :Outputs:
 %
 %   Returns region objects for cl with pos and neg effects
@@ -91,6 +94,8 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 % ..
 %    July 2018:  Autolabel update and "new 2018 version", Tor Wager. Also added legend text.
 %    November 2022: Autolabel now accepts 'atlas_obj' argument. Michael Sun
+%    September 2024: add "noverbose" option. Zizhuang Miao
+%    September 2024: add "publication" option based on mine and Zizhuang's code. Michael Sun
 
 
 n_cols = 140;                       % 140 good for HTML reports
@@ -103,6 +108,8 @@ forcenames = false;     % force naming of cl by removing existing names in .shor
 dolegacy = false;
 dosortrows = true;          % sort rows by area
 dolegend = true;
+noverbose = false;
+publication = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -121,6 +128,10 @@ for i = 1:length(varargin)
             case 'nolegend', dolegend = false;
 
             case 'atlas_obj', atl=varargin{i+1};     % Now accepts atlas_obj, MS: 11/3/2022
+            
+            case 'noverbose', dolegend=false; noverbose = true;      % suppress displaying outputs, ZM: 09/03/2024
+
+            case 'publication', dolegend=false; noverbose=true; publication = true;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -145,12 +156,16 @@ if dosep
     
     clear poscl negcl
     
-    fprintf('\n%s\nPositive Effects\n', sep_str)
+    if ~noverbose
+        fprintf('\n%s\nPositive Effects\n', sep_str)
+    end
 else
     %     % just return cl in poscl
     %     poscl = cl;
     %     negcl = [];
-    fprintf('\n%s\nTable of all regions\n', sep_str)
+    if ~noverbose
+        fprintf('\n%s\nTable of all regions\n', sep_str)
+    end
 end
 
 
@@ -190,8 +205,6 @@ if donames && forcenames
     
 end
 
-
-
 % separate again so we return clusters with region names added.
 
 if dosep
@@ -219,6 +232,15 @@ end
 % poscl and negcl are done here, so we have values to be returned.
 % the code below uses overall cl and prints the table.
 
+
+% 2024 Publication Table
+if publication == true
+    [outputT_pos, outputT_neg]=print_publication_table(cl);
+    results_table=vertcat(outputT_pos, outputT_neg);
+    disp(results_table);
+    return
+else
+
 % Legacy table
 % - uses cluster_table
 % -------------------------------------------------------------------------
@@ -238,6 +260,7 @@ elseif isempty(region_table)
     return
     
 else
+
     % build table we want in table format and rename. Reformat a bit.
     % note for beta testing: table will break if regions are missing from
     % region_table.
@@ -298,16 +321,18 @@ else
     
     % Now split into positive and neg sub-tables and display
     
-    if any(ispos)
+    if any(ispos) & (~noverbose)
         disp(results_table_pos)
-    else
+    elseif ~any(ispos) & ~noverbose
         disp('No regions to display');
     end
     
-    fprintf('\nNegative Effects\n')
-    if any(~ispos)
+    if ~noverbose
+        fprintf('\nNegative Effects\n')
+    end
+    if any(~ispos) & (~noverbose)
         disp(results_table_neg)
-    else
+    elseif ~noverbose
         disp('No regions to display');
     end
     
@@ -340,10 +365,10 @@ table_legend_text(end+1) = {'\nNote: Region object r(i).title contains full list
 % print
 canlab_print_legend_text(table_legend_text{:});
 
+end
+
 
 end % main function
-
-
 
 function print_legacy_table(cl, ispos, table_legend_text)
 
@@ -364,8 +389,6 @@ end
 % canlab_print_legend_text(table_legend_text'); % could use disp() here, but canlab function is more flexible
 
 end % function
-
-
 
 function val_table = get_signed_max(cl, myfield, tablevarname)
 % Returns a table with var "MaxZ" nregions x 1, or empty if cl.Z is empty
@@ -407,7 +430,6 @@ vals = double(vals);
 val = sign(vals(wh)) .* maxabs;
 
 end
-
 
 function [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, varargin)   % Now accepts atlas_obj, MS: 11/3/2022
 

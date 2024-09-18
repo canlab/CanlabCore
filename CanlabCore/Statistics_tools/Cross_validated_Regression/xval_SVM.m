@@ -185,6 +185,9 @@ function S = xval_SVM(varargin)
 % 
 % S = xval_SVM(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
 %
+% Train a logistic regression classifier with uniform priors instead of an SVM
+% S = xval_SVM(X, y, ids, ... 'highdimensional', true, 'modeloptions', {'Prior', 'uniform', 'Learner', 'logistic'});
+%
 % :References:
 %   See Mathworks functions
 %
@@ -273,7 +276,9 @@ if highdimensional
     % use fitclinear
     % modeloptions = {'ScoreTransform', 'logit'};
 
-    modeloptions = {};
+    % Remove default kernel function option, fitclinear does not use
+    wh = strcmp(modeloptions, 'KernelFunction')
+    if any(wh), modeloptions([find(wh) find(wh)+1]) = []; end
 end
 
 %% Select holdout sets for outer loop

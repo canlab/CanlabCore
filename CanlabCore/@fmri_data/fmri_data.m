@@ -680,18 +680,30 @@ image_names_out = cellstr(image_names);
 for i = 1:size(image_names, 1)
     
     if was_gzipped(i)
+
+        % modification 9/24 by jcf2:
+        % We expect to have both original .nii.gz and a .nii created by unzip at
+        % this point (note that MATLAB unzip does not delete original .gz), so 
+        % we expect *not* to have to rezip the .nii, as was the case when using
+        % a 'system('unzip ...')' call. Leaving that rezip option in case of a future 
+        % switch, but note 'system('unzip --keep' ...') could also be used to avoid. 
         
-        % Use system to remove unzipped version after zipping.
-        % Will wait for input, and not overwrite, if images exist
-        %         [status, result] = system(['gzip ' image_names(i, :)]);
+        if exist([deblank(image_names_out{i}) '.gz'], 'file')
         
-        try
-            gzip(deblank(image_names(i, :)));
+            % keep original .nii.gz, delete created .nii
             delete(deblank(image_names(i, :)))
-            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
-            
-        catch
-            warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];    
+
+        else
+        
+            % can't find .nii.gz (?!) so need to recreate; still need to delete .nii    
+            try
+                gzip(deblank(image_names(i, :)));
+                delete(deblank(image_names(i, :)))
+                image_names_out{i} = [deblank(image_names_out{i}) '.gz'];    
+            catch
+                warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            end    
             
         end
     end

@@ -95,6 +95,7 @@ doverbose = true;
 verbosestr = 'doverbose';
 doplot = true;
 dobriefplot = true;
+dofd = false;
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -103,9 +104,9 @@ dobriefplot = true;
 % This is a compact way to assign multiple variables. The input argument
 % names and variable names must match, however:
 
-allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot'};
+allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot', 'fd'};
 
-keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot'};
+keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot', 'nofd'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -116,6 +117,9 @@ for i = 1:length(varargin)
             case allowable_inputs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                if strcmp(varargin{i}, 'fd')
+                    dofd = true;
+                end
                 
             case keyword_inputs
                 % Skip, deal with these below
@@ -141,6 +145,9 @@ for i = 1:length(varargin)
 
             case 'fullplot'
                 dobriefplot = false;
+
+            case {'nofd'}
+                dofd = false;
 
         end
     end
@@ -232,23 +239,46 @@ end
 
 if doverbose
     fprintf('Mahalanobis (cov and corr, q<0.05 corrected):\n');
+    fprintf('%3.0f images \n', sum(mahal_cov_outlier_corr | mahal_corr_outlier_corr));
 end
 
-if doverbose
-    fprintf('%3.0f images \n', sum(mahal_cov_outlier_corr | mahal_corr_outlier_corr));
+% -------------------------------------------------------------------------
+% Framewise Displacement
+% -------------------------------------------------------------------------
+
+if dofd
+    % Get FD
+    [~, fd_corr_out, fd_uncorr_out] = framewise_displacement(fd);
+    
+    if doverbose
+        fprintf('Framewise Displacement (before and after >.25mm correction):\n');
+        fprintf('%3.0f images \n', sum(fd_uncorr_out | fd_corr_out));
+    end
 end
 
 % -------------------------------------------------------------------------
 % Summarize
 % -------------------------------------------------------------------------
 
-est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
-est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
+if dofd
+    est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | fd_corr_out | missingvals;
+    est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | fd_uncorr_out | missingvals;
+    
+    % Make indicator table
+    
+    outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, fd_uncorr_out, fd_corr_out, est_outliers_uncorr, est_outliers_corr, ...
+        'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected', 'fd_uncorrected', 'fd_corrected', 'Overall_uncorrected', 'Overall_corrected'});
 
-% Make indicator table
+else
+    est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
+    est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
+    
+    % Make indicator table
+    
+    outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, est_outliers_uncorr, est_outliers_corr, ...
+        'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected' 'Overall_uncorrected' 'Overall_corrected'});
 
-outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, est_outliers_uncorr, est_outliers_corr, ...
-    'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected' 'Overall_uncorrected' 'Overall_corrected'});
+end
 
 outliercounts = sum(table2array(outlier_indicator_table))';
 

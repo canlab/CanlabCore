@@ -35,6 +35,11 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 %   **'notimeseries'**
 %   Suppress time series-specific metrics -- use for 2nd-level contrasts or beta series
 %
+%   **'fd'**
+%   called framewise_displacement() to generate framewise_displacement
+%   indicators. Requires movement matrix to be passed in as an argument.
+%
+%
 % :Outputs:
 %
 %   **est_outliers_uncorr**
@@ -84,6 +89,9 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 % ..
 %    Created 11/6/2021 by Tor Wager, from a combination of other code
 %    (default: based on estimated outliers at 3 standard deviations.)
+%
+%    Updated 10/1/2024 by Michael Sun PhD to add fd argument for
+%    framewise_displacement.
 % ..
 
 % -------------------------------------------------------------------------
@@ -106,7 +114,7 @@ dofd = false;
 
 allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot', 'fd'};
 
-keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot', 'nofd'};
+keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -145,9 +153,6 @@ for i = 1:length(varargin)
 
             case 'fullplot'
                 dobriefplot = false;
-
-            case {'nofd'}
-                dofd = false;
 
         end
     end

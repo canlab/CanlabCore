@@ -18,7 +18,7 @@ function [mvmt_mtx, est_outliers_corr, est_outliers_uncorr] = framewise_displace
 % Outputs:
 %   mvmt_mtx - The input matrix with rotation parameters converted to mm.
 %   est_outliers_corr - Logical vector of estimated outliers after correction (> 0.25 mm).
-%   est_outliers_uncorr - Logical vector of estimated outliers before correction (> 0.25 mm).
+%   est_outliers_uncorr - Logical vector of estimated outliers before correction (apply your own cutoff).
 %
 % References:
 %   - Power et al. (2012), "Spurious but systematic correlations in functional connectivity MRI networks arise from subject motion."
@@ -53,6 +53,6 @@ est_outliers_uncorr = false(T, 1);
 
 % Mark outliers based on threshold
 est_outliers_corr(fwd > 0.25) = true;
-est_outliers_uncorr(fwd > 0.25) = true;
+est_outliers_uncorr = fwd;
 
 end

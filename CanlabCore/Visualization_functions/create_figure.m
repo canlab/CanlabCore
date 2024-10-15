@@ -51,9 +51,9 @@ if length(varargin) > 3
     doresize = varargin{4};
 end
 
-%old = findobj('Tag', tagname);
-%old = old( strcmp( get(old, 'Type'), 'figure' ) );
-old = [];
+old = findobj('Tag', tagname);
+old = old( strcmp( get(old, 'Type'), 'figure' ) );
+% old = [];
 
 if ~isempty(old)
     % Found existing figure window with this tag

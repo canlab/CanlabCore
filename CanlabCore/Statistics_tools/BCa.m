@@ -1,3 +1,5 @@
+% [sig, CI] = BCa(mu_est, bs_est, jk_est, alpha)
+%
 % computes bootstrap bias corrected accelerated bootstrap confidence
 % interval and returns if it includes 0 as a logical vector sig
 % mu_est - estimated parameter from complete sample

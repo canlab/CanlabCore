@@ -546,7 +546,7 @@ for i = 1:length(surface_handles)
             % this is used to pull the correct mappings to the target surface 
             % from our reg struct
             vertices = 'vertices_lh';
-            weights = 'weights_rh';
+            weights = 'weights_lh';
         elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
             % this is used for mesh interpolation from the volume
             src_sp = src_sp_rh;

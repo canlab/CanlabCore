@@ -88,6 +88,12 @@ function p = addbrain(varargin)
 %
 %   **'vmpfc':**
 %
+%   **'disableVis3d':**
+%        Disables terminal invocation of axis vis3d which can sometimes
+%        screw up sizes of brain surfaces. Set to true if you have a
+%        multisurface plot with mismatched sizes of surfaces that should be
+%        of equal size.
+%
 % :CUTAWAY SURFACES:
 %
 %   **'brainbottom':**
@@ -203,6 +209,11 @@ function p = addbrain(varargin)
 
 p = [];
 meth = 'transparent_surface';
+if ismember({'disableVis3d'},varargin(cellfun(@ischar,varargin)))
+    disableVis3d = true;
+else
+    disableVis3d = false;
+end
 
 docolor = 1;
 if length(varargin) > 0
@@ -1081,7 +1092,7 @@ switch meth
         axis off; 
         axis image; 
 %         material dull;
-  
+
     otherwise
         error('Unknown method.');
         
@@ -1120,11 +1131,14 @@ if length(varargin) > 2
 end
 
 lighting gouraud
-% this screws up layouts in multisurface plots in some cases, but is
-% necessary in others.
-axis vis3d image tight
-% this version appears to work better with minimal problems for now...
-%axis image tight
+if ~disableVis3d
+    % this screws up layouts in multisurface plots in some cases, but is
+    % necessary in others.
+    axis vis3d image tight
+else
+    % this version appears to work better with minimal problems for now...
+    axis image tight
+end
 material dull
 drawnow
 

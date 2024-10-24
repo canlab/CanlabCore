@@ -141,7 +141,7 @@ elseif strcmp(dir, 'inflated left')
     end
    
 elseif strcmp(dir, 'hcp inflated right')
-    h = addbrain('hcp inflated right');
+    h = addbrain('hcp inflated right',varargin{:});
     if strcmp(orn, 'medial')
         view(90, 0);
     else
@@ -149,7 +149,7 @@ elseif strcmp(dir, 'hcp inflated right')
     end
     
 elseif strcmp(dir, 'hcp inflated left')
-    h = addbrain('hcp inflated left');
+    h = addbrain('hcp inflated left',varargin{:});
     if strcmp(orn, 'medial')
         view(90, 0);
     else

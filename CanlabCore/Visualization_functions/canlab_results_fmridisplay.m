@@ -938,10 +938,10 @@ if ~exist('o2', 'var')
             t4.Layout.TileSpan = [2,2];
             t4.Layout.Tile = 13;
             axis off;
-            o2 = surface(o2, 'axes', t1, 'direction', 'hcp inflated right', 'orientation', 'medial');     
-            o2 = surface(o2, 'axes', t2, 'direction', 'hcp inflated left', 'orientation', 'lateral');
-            o2 = surface(o2, 'axes', t3, 'direction', 'hcp inflated left', 'orientation', 'medial');     
-            o2 = surface(o2, 'axes', t4, 'direction', 'hcp inflated right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', t1, 'direction', 'hcp inflated right', 'orientation', 'medial','disableVis3d');     
+            o2 = surface(o2, 'axes', t2, 'direction', 'hcp inflated left', 'orientation', 'lateral','disableVis3d');
+            o2 = surface(o2, 'axes', t3, 'direction', 'hcp inflated left', 'orientation', 'medial','disableVis3d');     
+            o2 = surface(o2, 'axes', t4, 'direction', 'hcp inflated right', 'orientation', 'lateral','disableVis3d');
             
             t5 = nexttile();
             t5.Layout.Tile = 21;

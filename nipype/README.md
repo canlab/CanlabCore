@@ -2,8 +2,11 @@
 
 
 This folder should contain interfaces for running canlabCore functions, and
-in particular first level GLM modeling related functions, in nipype. Add it
-to your python path like so,
+in particular first level GLM modeling related functions, in nipype. Note:
+There are example nipype pipelines available in CANlab_help_examples/nipype
+
+Add this library to your python path by invoking this at the top of your
+scripts,
 ```
 import sys
 package_directory = '<path_to_canlabCoreRepo>/nipype/'

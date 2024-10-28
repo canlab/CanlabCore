@@ -9,7 +9,7 @@ import sys
 package_directory = '<path_to_canlabCoreRepo>/CanlabCore/nipype/'
 if package_directory not in sys.path:
     sys.path.insert(0, package_directory)
-import canlabCore
+import canlabCore.preproc as canlabCorePreproc
 ```
 
 These interfaces will run matlab code from canlabCore on data provided

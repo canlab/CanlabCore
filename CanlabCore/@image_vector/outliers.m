@@ -253,7 +253,16 @@ end
 
 if dofd
     % Get FD
-    [~, fd_corr_out, fd_uncorr_out] = framewise_displacement(fd);
+    [~, est_outliers, net_mvmt] = framewise_displacement(fd);
+
+    % identify FD outliers based on statistical distribution
+    mu = nanmean(net_mvmt);
+    sd = nanstd(net_mvmt);
+    fd_cdf = cdf('norm',net_mvmt,mu,sd);
+    fd_p = 2*min(fd_cdf, 1-fd_cdf);
+
+    fd_corr_out = FDR(fd_p, 0.05) & est_outliers;
+    fd_uncorr_out = fd_p < 0.05 | est_outliers;
     
     if doverbose
         fprintf('Framewise Displacement (before and after >.25mm correction):\n');

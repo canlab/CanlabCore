@@ -1,4 +1,4 @@
-function [mvmt_mtx, est_outliers_corr, est_outliers_uncorr] = framewise_displacement(mvmt_mtx)
+function [mvmt_mtx, est_outliers, net_mvmt] = framewise_displacement(mvmt_mtx)
 % FRAMEWISE_DISPLACEMENT Calculate framewise displacement from 6 movement parameters.
 %
 % This function computes the framewise displacement (FD) based on Power et al. (2012, 2019)
@@ -48,11 +48,10 @@ dts = diff(ts);  % This computes T-1 differences
 fwd = [0; sum(abs(dts), 2)];
 
 % Initialize the output logical vectors to mark outliers based on a threshold (> 0.25 mm)
-est_outliers_corr = false(T, 1);
-est_outliers_uncorr = false(T, 1);
+est_outliers = false(T, 1);
 
 % Mark outliers based on threshold
-est_outliers_corr(fwd > 0.25) = true;
-est_outliers_uncorr = fwd;
+est_outliers(fwd > 0.25) = true;
+net_mvmt = fwd
 
 end

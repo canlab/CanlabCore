@@ -261,7 +261,11 @@ if dofd
     fd_cdf = cdf('norm',net_mvmt,mu,sd);
     fd_p = 2*min(fd_cdf, 1-fd_cdf);
 
-    fd_corr_out = FDR(fd_p, 0.05) & est_outliers;
+    fd_corr_out = false(size(fd_p));
+    fdr_thr = FDR(fd_p, 0.05);
+    if ~isempty(fdr_thr)
+        fd_corr_out(fd_p < FDR(fd_p, 0.05) & est_outliers) = true;
+    end
     fd_uncorr_out = fd_p < 0.05 | est_outliers;
     
     if doverbose

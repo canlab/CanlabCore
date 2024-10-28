@@ -53,6 +53,19 @@ function [outputT_pos, outputT_neg] = print_publication_table(image_vec, varargi
 % 
 %    **outputT_neg**
 %        Same table as above, with negative activation.
+% ..
+%    Programmers' notes:
+%
+%    10/28/2024  Zizhuang Miao: Added warnings when the space of the image
+%    vector does not match that of the atlas. It could result in more false
+%    positives in the output table. It is rooted in the way
+%    `autolabel_regions_using_atlas` works, which calls `resample_space`
+%    and `probability_maps_to_region_index` subsequently.
+%    'probability_maps_to_region_index' works in a winner-take-all way such
+%    that as long as a voxel is close to a significant voxel, it can 
+%    become parts of a significant region in the output table. It is not
+%    preferrable and should be avoided. Now a heuristic way is to resample
+%    the image vector as soon as possible (e.g., before running t tests).
 
 narginchk(1, Inf)
 
@@ -130,6 +143,16 @@ if ~isa(image_vec, 'region')
 else
     regions = image_vec;
 end
+
+% check whether the space of the regions and atlas match
+if any(regions.volInfo.dim ~= atlas_thr.volInfo.dim) || ...
+        any(regionsvolInfo.mat ~= atlas_thr.volInfo.mat)
+    warning(['The space of the image vector does not match that of the atlas. ' ...
+        'This can result in false positives in output tables. ' ...
+        'We recommend resampling the image to the atlas ' ...
+        'space as early as possible, not at this stage.']);
+end
+
 r = cell(1, 2);    % a cell object that stores positive and negative regions
 r_relabeled = cell(1, 2);
 outputTables = cell(1, 2);   % a cell that stores output tables

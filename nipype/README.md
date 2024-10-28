@@ -6,7 +6,7 @@ in particular first level GLM modeling related functions, in nipype. Add it
 to your python path like so,
 ```
 import sys
-package_directory = '<path_to_canlabCoreRepo>/CanlabCore/nipype/'
+package_directory = '<path_to_canlabCoreRepo>/nipype/'
 if package_directory not in sys.path:
     sys.path.insert(0, package_directory)
 import canlabCore.preproc as canlabCorePreproc

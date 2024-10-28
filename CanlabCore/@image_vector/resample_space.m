@@ -225,11 +225,15 @@ if isa(obj_out, 'statistic_image')
             % Edited by Zizhuang Miao 10/28/2024
             % nearest neighbor method can limit false positives,
             % so use that as default unless otherwise specified
-            if varargin{:} == 'linear'
-                % if users specify using linear interpolation
-                warning(['Linear interpolation will lead to many false positives. ' ...
-                    'Consider using the default nearest neighbor method.']);
+            if nargin > 2
+                if strcmp(varargin{:}, 'linear')
+                    % if users specify using linear interpolation
+                    warning(['Linear interpolation will lead to many false positives. ' ...
+                        'Consider using the default nearest neighbor method.']);
+                elseif ~strcmp(varargin{:}, 'nearest')
+                    warning('Nearest neighbor is recommended.')
                 resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+                end
             else
                 % default to nearest neighbor
                 warning(['Using nearest neighbor method to resample .sig field. ' ...

@@ -11,12 +11,16 @@ from string import Template
 
 
 class OutliersInputSpec(BaseInterfaceInputSpec):
-    in_file = File(exists=True, mandatory=True)
-    movement_file = File(exists=True, mandatory=False)
-    movement_order = List([1,2,3,4,5,6], usedefault=True)
+    in_file = File(exists=True, mandatory=True, 
+        desc="path to NIFTI like object")
+    movement_file = File(exists=True, mandatory=False,
+        desc="Path to movement file that can be read by readtable() in matlab")
+    movement_order = List([1,2,3,4,5,6], usedefault=True,
+        desc="Indices of movement_file corresponding to rot_x, rot_y, rot_z, trans_x, trans_y, trans_z, in that order")
     movement_radians = Bool(default_value=True, usedefault=True, 
         desc="Are rotations specified in radians?")
-    out_file = File('outliers.csv', usedefault=True)
+    out_file = File('outliers.csv', usedefault=True,
+        desc="File indicate indices of volume to censor")
 
 
 class OutliersOutputSpec(TraitedSpec):
@@ -29,7 +33,9 @@ class Outliers(BaseInterface):
        distance based on covariance and correlation matrices, and images with 
        >25% missing values
 
-       Serves as a substitute for rapidart
+       Serves as a substitute for rapidart. Apply it to preprocessed inputs. In
+       particular make sure no further volumes are discarded (e.g. early acquisitions)
+       after running this or the indices it returns will not match your data
 
        Inputs ::
 
@@ -77,7 +83,8 @@ class Outliers(BaseInterface):
                                  varargin={'fd',fd};
                              end
                              [~,~,outlier_tables] = outliers(fmri_data(in_file), varargin{:});
-                             csvwrite(out_file, outlier_tables.outlier_regressor_matrix_corr);
+                             outlier_ind = find(any(outlier_tables.outlier_regressor_matrix_corr,2))
+                             csvwrite(out_file, outlier_ind);
                              exit;
                           """
         ).substitute(d)

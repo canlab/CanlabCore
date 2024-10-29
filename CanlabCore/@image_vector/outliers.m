@@ -38,6 +38,7 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 %   **'fd'**
 %   called framewise_displacement() to generate framewise_displacement
 %   indicators. Requires movement matrix to be passed in as an argument.
+%   CAUTION!! Rotations must be 1st 3 columns of mvmt_mtx, then translations
 %
 %
 % :Outputs:
@@ -253,23 +254,27 @@ end
 
 if dofd
     % Get FD
-    [~, est_outliers, net_mvmt] = framewise_displacement(fd);
+    % CAUTION!! Rotations must be 1st 3 columns of mvmt_mtx, then translations
+    [fwd, ~, est_outliers] = framewise_displacement(fd);
 
     % identify FD outliers based on statistical distribution
-    mu = nanmean(net_mvmt);
-    sd = nanstd(net_mvmt);
-    fd_cdf = cdf('norm',net_mvmt,mu,sd);
-    fd_p = 2*min(fd_cdf, 1-fd_cdf);
-
-    fd_corr_out = false(size(fd_p));
-    fdr_thr = FDR(fd_p, 0.05);
-    if ~isempty(fdr_thr)
-        fd_corr_out(fd_p < FDR(fd_p, 0.05) & est_outliers) = true;
-    end
-    fd_uncorr_out = fd_p < 0.05 | est_outliers;
+    % mu = nanmean(fwd);
+    % sd = nanstd(fwd);
+    % fd_cdf = cdf('norm', fwd, mu, sd);
+    % fd_p = 2*min(fd_cdf, 1-fd_cdf);
+    % 
+    % fd_corr_out = false(size(fd_p));
+    % fdr_thr = FDR(fd_p, 0.05);
+    % if ~isempty(fdr_thr)
+    %     fd_corr_out(fd_p < FDR(fd_p, 0.05) & est_outliers) = true;
+    % end
+    % fd_uncorr_out = fd_p < 0.05 | est_outliers;
     
+    fd_corr_out = est_outliers;
+    fd_uncorr_out = est_outliers;
+
     if doverbose
-        fprintf('Framewise Displacement (before and after >.25mm correction):\n');
+        fprintf('Framewise Displacement (before and after >.5 mm correction):\n');
         fprintf('%3.0f images \n', sum(fd_uncorr_out | fd_corr_out));
     end
 end

@@ -5,7 +5,7 @@ from nipype.interfaces.base import (
     BaseInterfaceInputSpec,
     File,
 )
-from traits.api import List, Bool
+from traits.api import List, Bool, Float
 import os
 from string import Template
 
@@ -19,6 +19,10 @@ class OutliersInputSpec(BaseInterfaceInputSpec):
         desc="Indices of movement_file corresponding to rot_x, rot_y, rot_z, trans_x, trans_y, trans_z, in that order")
     movement_radians = Bool(default_value=True, usedefault=True, 
         desc="Are rotations specified in radians?")
+    fd_thresh = Float(-1, usedefault=True,
+        desc="Threshold in mm for determining whether \
+	framewise displacement is high enough to censor. Default is \
+	set by image_vector/outliers.m")
     out_file = File('outliers.csv', usedefault=True,
         desc="File indicate indices of volume to censor")
 
@@ -67,6 +71,7 @@ class Outliers(BaseInterface):
                  movement_file=self.inputs.movement_file,
                  movement_order=self.inputs.movement_order,
                  movement_radians=self.inputs.movement_radians,
+                 fd_thresh=self.inputs.fd_thresh,
                  out_file=self.inputs.out_file)
         # This is your MATLAB code template
         script = Template(
@@ -80,7 +85,10 @@ class Outliers(BaseInterface):
                                  if strcmp('$movement_radians','False')
                                      fd(:,1:3) = pi/180*fd(:,1:3);
                                  end
-                                 varargin={'fd',fd};
+                                 varargin=[varargin, {'fd',fd}];
+                             end
+                             if $fd_thresh > 0
+                                 varargin=[varargin, {'fd_thresh', $fd_thresh}];
                              end
                              [~,~,outlier_tables] = outliers(fmri_data(in_file), varargin{:});
                              outlier_ind = find(any(outlier_tables.outlier_regressor_matrix_corr,2))

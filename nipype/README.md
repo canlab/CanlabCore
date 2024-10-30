@@ -33,3 +33,9 @@ here,
 https://www.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html
 
 The use of the MATLABPATH environment variable in particular looks promising
+
+## Developer notes
+
+Don't forget that python is 0-indexed, while matlab is 1-indexed. If your
+interface returns takes or returns indexes into a data structure make sure 
+to adjust the indexing accordingly.

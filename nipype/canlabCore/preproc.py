@@ -91,7 +91,9 @@ class Outliers(BaseInterface):
                                  varargin=[varargin, {'fd_thresh', $fd_thresh}];
                              end
                              [~,~,outlier_tables] = outliers(fmri_data(in_file), varargin{:});
-                             outlier_ind = find(any(outlier_tables.outlier_regressor_matrix_corr,2))
+                             outlier_ind = find(any(outlier_tables.outlier_regressor_matrix_corr,2));
+                             # python-like 0-index
+                             outlier_ind = outlier_ind - 1;
                              csvwrite(out_file, outlier_ind);
                              exit;
                           """

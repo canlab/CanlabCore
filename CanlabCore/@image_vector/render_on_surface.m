@@ -310,7 +310,14 @@ end
 % Deal with possibility of multiple images in object
 % Exclude zeros
 
-[datvec, clim] = get_data_range(obj, clim);
+% Bugfix: Fix edge case when there is no or sparse data in surf_vert_val -
+% MS 11/5/2024
+
+if ~isempty(clim)
+    [datvec, clim] = get_data_range(surf_vert_val, clim);
+else
+    [datvec, clim] = get_data_range(surf_vert_val, [min(surf_vert_val), max(surf_vert_val)]);
+end
 
 % -------------------------------------------------------------------------
 % Define colormap

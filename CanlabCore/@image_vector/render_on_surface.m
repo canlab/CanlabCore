@@ -310,7 +310,14 @@ end
 % Deal with possibility of multiple images in object
 % Exclude zeros
 
-[datvec, clim] = get_data_range(obj, clim);
+% Bugfix: Fix edge case when there is no or sparse data in surf_vert_val -
+% MS 11/5/2024
+
+if ~isempty(clim)
+    [datvec, clim] = get_data_range(surf_vert_val, clim);
+else
+    [datvec, clim] = get_data_range(surf_vert_val, [min(surf_vert_val), max(surf_vert_val)]);
+end
 
 % -------------------------------------------------------------------------
 % Define colormap
@@ -546,7 +553,7 @@ for i = 1:length(surface_handles)
             % this is used to pull the correct mappings to the target surface 
             % from our reg struct
             vertices = 'vertices_lh';
-            weights = 'weights_rh';
+            weights = 'weights_lh';
         elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
             % this is used for mesh interpolation from the volume
             src_sp = src_sp_rh;

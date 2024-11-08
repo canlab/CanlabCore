@@ -357,6 +357,13 @@ classdef fmri_timeseries < fmri_data
                         otherwise, warning(['Unknown input string option:' varargin{i}]);
                     end
                 end
+                if i == 2
+                    image_names=varargin{i};
+                end
+               if i == 3
+                    maskinput=varargin{i};
+                end
+
             end
             
             if nargin > 0

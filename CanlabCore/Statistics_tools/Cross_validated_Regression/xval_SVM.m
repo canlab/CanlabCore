@@ -98,7 +98,7 @@ function S = xval_SVM(varargin)
 %   **'dooptimize', [logical flag]:**
 %        Optimize hyperparameters; default = true. 'nooptimize' to turn off.
 %
-%   **'doprepeats', [num repeats]:**
+%   **'dorepeats', [num repeats]:**
 %        Repeat cross-val with different partitions; default = 10.
 %        Enter number of repeats, 'norepeats' to turn off.
 %
@@ -277,7 +277,7 @@ if highdimensional
     % modeloptions = {'ScoreTransform', 'logit'};
 
     % Remove default kernel function option, fitclinear does not use
-    wh = strcmp(modeloptions, 'KernelFunction')
+    wh = strcmp(modeloptions, 'KernelFunction');
     if any(wh), modeloptions([find(wh) find(wh)+1]) = []; end
 end
 

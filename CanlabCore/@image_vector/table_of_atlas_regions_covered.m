@@ -181,8 +181,11 @@ validateattributes(percentile_threshold, {'double'}, {'scalar' 'nonnegative' 'no
 
 % Load default atlas if needed
 if isempty(atlas_obj)
-    atlasname = 'canlab2023_combined_atlas_MNI152NLin6Asym_1mm.mat';
-    atlaskeyword = 'canlab2023';
+    %     atlasname = 'canlab2023_combined_atlas_MNI152NLin6Asym_1mm.mat';
+    %     atlaskeyword = 'canlab2023';
+
+    atlasname = 'CANLab2024_MNI152NLin2009cAsym_coarse_2mm_atlas_object.mat';
+    atlaskeyword = 'canlab2024';
 
     if isempty(which(atlasname))
 

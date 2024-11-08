@@ -63,7 +63,8 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %        'full2'           for a slightly less full montage that avoids colorbar overlap issues
 %        'full hcp'        for full montage, but with surfaces and volumes from HCP data
 %        'full hcp inflated' for full montage using hcp inflated surfaces
-%        'hcp grayordinates' for 4 surfaces and zoomed in subcortical slices
+%        'hcp grayordinates' for 4 surfaces and 18 zoomed in subcortical slices
+%        'hcp grayordinates compact' for 4 surfaces and 4 zoomed in subcortical slices
 %        'hcp grayordinates subcortex'
 %                          for zoomed in subcortical slices
 %        'hcp inflated'    for a connectome workbench style layout without
@@ -203,7 +204,7 @@ if ischar(input_activation)
             || strcmp(input_activation, 'MNI152NLin6Asym white') || strcmp(input_activation, 'MNI152NLin6Asym midthickness') ...
             || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
             || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
-            || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates subcortex') ...
+            || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates compact') || strcmp(input_activation,'hcp grayordinates subcortex') ...
             || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') 
 
         
@@ -294,6 +295,9 @@ wh = strcmp(varargin, 'full no surfaces');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp grayordinates');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp grayordinates compact');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp grayordinates subcortex');
@@ -912,6 +916,61 @@ if ~exist('o2', 'var')
             allaxh = findobj(gcf, 'Type', 'axes');
 
             wh_montages = [1 2 3];
+
+        case 'hcp grayordinates compact'
+            overlay = canlab_get_underlay_image;
+            grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
+        
+            o2 = fmridisplay('overlay', which(overlay));
+        
+            t0 = tiledlayout(5,5,'Padding','none','TileSpacing','tight');
+            t1 = nexttile();
+            t1.Layout.TileSpan = [2,2];
+            axis off;
+            t2 = nexttile();
+            t2.Layout.TileSpan = [2,2];
+            axis off;
+            t3 = nexttile();
+            t3.Layout.TileSpan = [2,2];
+            t3.Layout.Tile = 11;
+            axis off;
+            t4 = nexttile();
+            t4.Layout.TileSpan = [2,2];
+            t4.Layout.Tile = 13;
+            axis off;
+            o2 = surface(o2, 'axes', t1, 'direction', 'hcp inflated right', 'orientation', 'medial','disableVis3d');     
+            o2 = surface(o2, 'axes', t2, 'direction', 'hcp inflated left', 'orientation', 'lateral','disableVis3d');
+            o2 = surface(o2, 'axes', t3, 'direction', 'hcp inflated left', 'orientation', 'medial','disableVis3d');     
+            o2 = surface(o2, 'axes', t4, 'direction', 'hcp inflated right', 'orientation', 'lateral','disableVis3d');
+            
+            t5 = nexttile();
+            t5.Layout.Tile = 21;
+            axis off
+            t6 = nexttile();
+            t6.Layout.Tile = 22;
+            axis off;
+            t7 = nexttile();
+            t7.Layout.Tile = 23;
+            axis off;
+            t8 = nexttile();
+            t8.Layout.Tile = 24;
+            axis off
+        
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(1,:), 'onerow', 'noverbose', 'existing_axes',t5);
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(3,:), 'onerow', 'noverbose', 'existing_axes',t6);
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(5,:), 'onerow', 'noverbose', 'existing_axes',t7);
+            [o2, dat] = montage(o2, 'axial', 'wh_slice', grayord_xyz(2,:), 'onerow', 'noverbose', 'existing_axes',t8);
+        
+            title(t5,'X = -24','FontSize',10)
+            title(t6,'X = -6','FontSize',10)
+            title(t7,'X = 12','FontSize',10)
+            title(t8, 'Z = -34','FontSize',10)
+            for t = [t5,t6,t7]
+                set(t,'XLim',[-100,30],'YLim',[-70,25]);
+            end
+            set(t8,'XLim',[-60,60],'YLim',[-100,30]);
+        
+            wh_surfaces = [1:4];
 
         case 'leftright inout subcortex'
             % saggital

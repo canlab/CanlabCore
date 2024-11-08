@@ -1,4 +1,6 @@
 function [sig, pthr] = holm_sidak(pVector, alpha)
+% [sig, pthr] = holm_sidak(pVector, alpha)
+%
 % performs Holm-Sidak correction for multiple independent comparisons. Sidak correction is a slightly less conservative bonferonni
 % Holm's method is a step down approach implemented by the while loop iterations. More commonly used in the context of bonferonni
 % rather than Sidak, but equally valid in both cases.

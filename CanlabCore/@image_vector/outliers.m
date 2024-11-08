@@ -35,6 +35,16 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 %   **'notimeseries'**
 %   Suppress time series-specific metrics -- use for 2nd-level contrasts or beta series
 %
+%   **'fd'**
+%   called framewise_displacement() to generate framewise_displacement
+%   indicators. Requires movement matrix to be passed in as an argument.
+%   CAUTION!! Rotations must be 1st 3 columns of mvmt_mtx, then translations
+%
+%   **'fd_thresh'**
+%   Followed by framewise displacement threshold in mm. Values exceeding this threshold 
+%   get flagged as outliers. Default=0.5mm'
+%
+%
 % :Outputs:
 %
 %   **est_outliers_uncorr**
@@ -84,6 +94,9 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 % ..
 %    Created 11/6/2021 by Tor Wager, from a combination of other code
 %    (default: based on estimated outliers at 3 standard deviations.)
+%
+%    Updated 10/1/2024 by Michael Sun PhD to add fd argument for
+%    framewise_displacement.
 % ..
 
 % -------------------------------------------------------------------------
@@ -95,6 +108,8 @@ doverbose = true;
 verbosestr = 'doverbose';
 doplot = true;
 dobriefplot = true;
+dofd = false;
+fd_thresh = 0.5;
 
 % -------------------------------------------------------------------------
 % OPTIONAL INPUTS
@@ -103,7 +118,7 @@ dobriefplot = true;
 % This is a compact way to assign multiple variables. The input argument
 % names and variable names must match, however:
 
-allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot'};
+allowable_inputs = {'madlim' 'doverbose' 'dotimeseries' 'plot', 'fd', 'fd_thresh'};
 
 keyword_inputs = {'noverbose' 'notimeseries' 'noplot' 'fullplot'};
 
@@ -116,6 +131,11 @@ for i = 1:length(varargin)
             case allowable_inputs
                 
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
+                if strcmp(varargin{i}, 'fd')
+                    dofd = true;
+                elseif strcmp(varargin{i}, 'fd_thresh')
+                    fd_thresh = varargin{i+1};
+                end
                 
             case keyword_inputs
                 % Skip, deal with these below
@@ -232,23 +252,49 @@ end
 
 if doverbose
     fprintf('Mahalanobis (cov and corr, q<0.05 corrected):\n');
+    fprintf('%3.0f images \n', sum(mahal_cov_outlier_corr | mahal_corr_outlier_corr));
 end
 
-if doverbose
-    fprintf('%3.0f images \n', sum(mahal_cov_outlier_corr | mahal_corr_outlier_corr));
+% -------------------------------------------------------------------------
+% Framewise Displacement
+% -------------------------------------------------------------------------
+
+if dofd
+    % Get FD
+    % CAUTION!! Rotations must be 1st 3 columns of mvmt_mtx, then translations
+    [fwd, ~, est_outliers] = framewise_displacement(fd, 'thresh', fd_thresh);
+    
+    fd_out = est_outliers;
+
+    if doverbose
+        fprintf('Framewise Displacement (before and after >%0.2f mm correction):\n',fd_thresh);
+        fprintf('%3.0f images \n', sum(fd_out));
+    end
 end
 
 % -------------------------------------------------------------------------
 % Summarize
 % -------------------------------------------------------------------------
 
-est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
-est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
+if dofd
+    est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | fd_out | missingvals;
+    est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | fd_out | missingvals;
+    
+    % Make indicator table
+    
+    outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, fd_out, est_outliers_uncorr, est_outliers_corr, ...
+        'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected', 'fd', 'Overall_uncorrected', 'Overall_corrected'});
 
-% Make indicator table
+else
+    est_outliers_uncorr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_uncorr | mahal_corr_outlier_uncorr | missingvals;
+    est_outliers_corr = global_mean_outliers | global_mean_to_variance_outliers | rmssd_outliers | spatialmad_outliers | mahal_cov_outlier_corr | mahal_corr_outlier_corr | missingvals;
+    
+    % Make indicator table
+    
+    outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, est_outliers_uncorr, est_outliers_corr, ...
+        'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected' 'Overall_uncorrected' 'Overall_corrected'});
 
-outlier_indicator_table = table(global_mean_outliers, global_mean_to_variance_outliers, missingvals, rmssd_outliers, spatialmad_outliers, mahal_cov_outlier_uncorr, mahal_cov_outlier_corr, mahal_corr_outlier_uncorr, mahal_corr_outlier_corr, est_outliers_uncorr, est_outliers_corr, ...
-    'VariableNames', {'global_mean' 'global_mean_to_variance' 'missing_values', 'rmssd_dvars', 'spatial_variability', 'mahal_cov_uncor', 'mahal_cov_corrected', 'mahal_corr_uncor', 'mahal_corr_corrected' 'Overall_uncorrected' 'Overall_corrected'});
+end
 
 outliercounts = sum(table2array(outlier_indicator_table))';
 

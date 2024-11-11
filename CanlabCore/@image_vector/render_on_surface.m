@@ -314,9 +314,9 @@ end
 % MS 11/5/2024
 
 if ~isempty(clim)
-    [datvec, clim] = get_data_range(surf_vert_val, clim);
+    [datvec, clim] = get_data_range(obj, clim);
 else
-    [datvec, clim] = get_data_range(surf_vert_val, [min(surf_vert_val), max(surf_vert_val)]);
+    [datvec, clim] = get_data_range(obj, [min(obj.dat), max(obj.dat)]);
 end
 
 % -------------------------------------------------------------------------

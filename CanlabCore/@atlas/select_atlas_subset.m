@@ -1,6 +1,16 @@
 function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
 %
+% Note, some atlases are probablistic, and this may result in counterintuitive bheavior. If visualizing
+% a probablistic atlas you only see p(region) > p(~region), a winner takes all parcellation scheme where
+% a voxel is labeled as belonging to a region only if the probability is greater than the probability of
+% it belonging to any other region. However, when you extract such a region you additionally get voxels
+% with non-zero probability of belonging to said region even if other region labels are more probable.
+% Consequently the extracted region boundaries will EXCEED those of the region you might have seen
+% when visualizing the complete atlas, which can be confusing. Intelligent use of the probabilistic 
+% labels is ideal, but if you prefer a more intuitive (albeit misleading) solution you should use the
+% 'deterministic' option'
+%
 % Select a subset of regions in an atlas using:
 % - a cell array of one or more strings to search for in labels
 % - a vector of one or more integers indexing regions
@@ -30,8 +40,14 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'exact' : If you enter 'exact', function will not look for overlaps in
 % names, and only look for exact string matches.
 %
-% 'regexp'  If you enter 'doregexp', function will treat your string as a
+% 'regexp' : If you enter 'doregexp', function will treat your string as a
 % regular expression.
+%
+% 'deterministic' : returns a labeled voxel iff p(region) > p(~region).
+% Has no effect unless atlas has its probability_maps property populated,
+% in which case the default behavior is to return all voxels with 
+% p(region) > 0. Note: you probably want to apply a threshold operation too
+% to remove low probability tissue boundary regions.
 %
 % Examples:
 % 
@@ -86,6 +102,7 @@ doflatten = false;
 condInd = false;
 doexact=false;
 doregexp=false;
+deterministic=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -111,6 +128,8 @@ for i = 1:length(varargin)
             case 'regexp', doregexp = true;
 
             case 'conditionally_ind', condInd = true;
+
+            case 'deterministic', deterministic = true;
                 
             otherwise
                 
@@ -223,6 +242,14 @@ for i = 1:length(my_strings)
 end
 
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid p maps
+
+    if deterministic
+        % zero values where p(region) < p(~region)
+        for this_region = find(to_extract)
+            to_zero = any(obj_subset.probability_maps(:,this_region) < obj_subset.probability_maps(:, ~to_extract),2);
+            obj_subset.probability_maps(to_zero,this_region) = 0;
+        end
+    end
 
     obj_subset.probability_maps(:, ~to_extract) = [];
     

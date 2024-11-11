@@ -183,11 +183,24 @@ function S = xval_SVM(varargin)
 % Train the same model without within-person observations (i.e., 1 observation per id):
 % This does single-interval classification only
 % 
-% S = xval_SVM(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
+%   S = xval_SVM(X, Y, (1:length(Y))', 'norepeats', 'nobootstrap');
 %
 % Train a logistic regression classifier with uniform priors instead of an SVM
-% S = xval_SVM(X, y, ids, ... 'highdimensional', true, 'modeloptions', {'Prior', 'uniform', 'Learner', 'logistic'});
+%   S = xval_SVM(X, y, ids, ... 'highdimensional', true, 'modeloptions', {'Prior', 'uniform', 'Learner', 'logistic'});
 %
+% 
+% After getting S...
+% Tests of significance for paired forced-choice classification
+%   [H,P,CI,STATS] = ttest(S.scorediff)
+%   [P,H,STATS] = signtest(S.scorediff)
+% 
+% Overall accuracy for paired forced-choice classification
+%   sum(S.scorediff > 0) ./ size(S.scorediff, 1)
+% 
+% ROC plot for paired forced-choice classification
+%   ROC = roc_plot([s.scores_within_id(:,1); s.scores_within_id(:,2)], logical(s.Y > 0), 'threshold', 0);
+% 
+% 
 % :References:
 %   See Mathworks functions
 %

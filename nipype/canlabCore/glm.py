@@ -58,7 +58,7 @@ class VIFs(BaseInterface):
                  events_only=self.inputs.events_only,
                  from_multireg=self.inputs.from_multireg,
                  vif_threshold=self.inputs.vif_threshold,
-                 sort_by_vif=self.inputs.sort_by_vif
+                 sort_by_vif=self.inputs.sort_by_vif)
 
         # This is your MATLAB code template
         script = Template(

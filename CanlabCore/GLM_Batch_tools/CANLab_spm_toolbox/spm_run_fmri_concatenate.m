@@ -26,7 +26,14 @@ out.spmmat = job.spmmat;
 original_dir = pwd;
 cd(fileparts(job.spmmat{:}));
 
-spm_fmri_concatenate(job.spmmat{1}, job.scan_volumes)
+try
+    spm_fmri_concatenate(job.spmmat{1}, job.scan_volumes)
+catch
+    % custom function for mixed concatenated/block diagonal designs which 
+    % is not supported by spm12 as of 11/17/2024
+    warning('support for timeseries adjustment of mixed multisessoin/block-diagonal matrices is experimental. Please check outputs of spm_fmri_concatenate_multisess carefully before running spm_spm(). In particular pay attention to SPM.xX properties');
+    spm_fmri_concatenate_multisess(job.spmmat{1}, job.scan_volumes)
+end
 
 %out.spmvar = SPM;
 cd(original_dir);

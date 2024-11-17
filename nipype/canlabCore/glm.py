@@ -1,3 +1,72 @@
+from nipype.interfaces.matlab import MatlabCommand
+from nipype.interfaces.base import (
+    TraitedSpec,
+    BaseInterface,
+    BaseInterfaceInputSpec,
+    File,
+)
+from nipype.utils.filemanip import save_json
+import nipype.interfaces.fsl as fsl # for FSLCommand and its input/out specs
+from traits.api import List, Any
+import os
+from string import Template
+
+
+class NVolsInputSpec(fsl.base.FSLCommandInputSpec):
+    in_file = File(
+        exists=True,
+        argstr="%s",
+        mandatory=True,
+        position=1,
+        desc="input file to generate stats of",
+    )
+
+
+class NVolsOutputSpec(TraitedSpec):
+    nvols = Any(desc="nvols output")
+            
+class NVols(fsl.base.FSLCommand):
+    """Use FSL fslnvol command to read out 4d vol count. Based on nipype FSL.ImageStats
+    `FSL info
+    <http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm#fslutils>`_
+
+
+    Examples
+    --------
+
+    >>> from nipype.interfaces.fsl import NVol
+    >>> from nipype.testing import funcfile
+    >>> stats = NVols(in_file=funcfile)
+    >>> stats.cmdline == 'fslvols %s'%funcfile
+    True
+
+
+    """
+
+    input_spec = NVolsInputSpec
+    output_spec = NVolsOutputSpec
+
+    _cmd = "fslnvols"
+
+    def _format_arg(self, name, trait_spec, value):
+        return super()._format_arg(name, trait_spec, value)
+
+    def aggregate_outputs(self, runtime=None, needed_outputs=None):
+        outputs = self._outputs()
+        # local caching for backward compatibility
+        outfile = os.path.join(os.getcwd(), "nvols_result.json")
+        if runtime is None:
+            try:
+                nvols = load_json(outfile)["nvols"]
+            except OSError:
+                return self.run().outputs
+        else:
+            nvols = int(runtime.stdout)
+            save_json(outfile, dict(nvols=nvols))
+        outputs.nvols = nvols
+        return outputs
+
+
 class FMRIConcatInputSpec(BaseInterfaceInputSpec):
     spm_mat_file = File(exists=True, mandatory=True, 
         desc="path to SPM file in main SPM directory (containing the betas)")

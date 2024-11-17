@@ -72,7 +72,7 @@ SPM.nscan = scans;
 
 % Session effects (see spm_fMRI_design.m)
 %--------------------------------------------------------------------------
-n_sess = length(SPM.Sess)
+n_sess = length(SPM.Sess);
 if numel(SPM.xX.iB) == n_sess && all(SPM.xX.iB == (size(SPM.xX.X,2) - fliplr(0:n_sess-1)))
     Xb = [];
     Bn = {};
@@ -98,6 +98,19 @@ if numel(SPM.xX.iB) == n_sess && all(SPM.xX.iB == (size(SPM.xX.X,2) - fliplr(0:n
         while length(const_col) > 0
             SPM.xX.iC(SPM.xX.iC >= max(const_col)) = SPM.xX.iC(SPM.xX.iC >= max(const_col)) - 1;
             SPM.xX.iB(SPM.xX.iB >= max(const_col)) = SPM.xX.iB(SPM.xX.iB >= max(const_col)) - 1;
+            
+            % adjust indices of higher order sessions
+            for j = s:length(SPM.Sess)
+                this_sess_col = SPM.Sess(j).col;
+                bad = ismember(this_sess_col, const_col);
+                
+                SPM.Sess(j).col(bad) = [];
+                SPM.Sess(j).col(SPM.Sess(j).col > const_col) = SPM.Sess(j).col(SPM.Sess(j).col > const_col) - 1;
+
+                if ~isempty(SPM.Sess(j).C.name), SPM.Sess(j).C.name(bad) = []; end
+                if ~isempty(SPM.Sess(j).C.C), SPM.Sess(j).C.C(:,bad) = []; end
+            end
+
             const_col(const_col == max(const_col)) = [];
         end
     end

@@ -7,29 +7,38 @@ from nipype.interfaces.base import (
 )
 from nipype.utils.filemanip import save_json
 import nipype.interfaces.fsl as fsl # for FSLCommand and its input/out specs
-from traits.api import List, Bool, Float, Int, Any
+from traits.api import List, Bool, Float, Int, Any, Either
 import os
 from string import Template
 
 
 '''
-VIFs requires the following folders on your path:
+VIFs requires the following folders on your matlab path:
 
-'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/diagnostics/',
-'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/Visualization_functions',
-'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/OptimizeDesign11/core_functions/'
+CanlabCore/CanlabCore/diagnostics/
+CanlabCore/CanlabCore/Visualization_functions/
+CanlabCore/CanlabCore/OptimizeDesign11/core_functions/
+CanlabCore/CanlabCore/Statistics_tools/
+CanlabCore/CanlabCore/Data_processing_tools/
+CanlabCore/CanlabCore/Misc_utilities/
 '''
 
 class VIFsInputSpec(BaseInterfaceInputSpec):
     spm_mat_file = File(exists=True, mandatory=True, 
         desc="SPM.mat file produced by nipype.interfaces.spm.model.EstimateModel interface")
+        
     events_only = Bool(False, mandatory=False, usedefault=True,
         desc="Produce plots and diagnostics for only events, not nuisance covariantes or other user-specified regressors")
-    from_multireg = Int(None, usedefault=True,
+        
+    from_multireg = Either(None, Int(), 
+        usedefault=True,
         requires=['events_only'],
         desc="followed by an integer to include n columns for the \'regressors\' matrix")
-    vif_threshold = Float(None, usedefault=True, 
+        
+    vif_threshold = Either(None, Float, 
+        usedefault=True, 
         desc="Only regressors with VIF > t will be printed in VIF table")
+        
     sort_by_vif = Bool(False, usedefault=True,
         desc="Sort regressors in VIF table by VIF.")
 
@@ -49,7 +58,7 @@ class VIFs(BaseInterface):
     """
 
     input_spec = VIFsInputSpec
-    output_spec = VIFs
+    output_spec = VIFsOutputSpec
 
     def _run_interface(self, runtime):
         spm_dir = os.path.dirname(self.inputs.spm_mat_file)
@@ -63,25 +72,26 @@ class VIFs(BaseInterface):
         # This is your MATLAB code template
         script = Template(
             """spm_dir = '$spm_dir';
-             varargin = {}
-             if strcmp($events_only,'True')
+             varargin = {};
+             if strcmp('$events_only', 'True')
                 varargin{end+1} = 'events_only';
              end
-             if ~isempty($from_multireg)
+             if ~strcmp('$from_multireg', 'None')
                 varargin{end+1} = 'from_multireg';
-                varargin{end+1} = int(str2num($from_multireg));
+                varargin{end+1} = int(str2num('$from_multireg'));
              end
-             if ~isempty($vif_threshold)
+             if ~strcmp('$vif_threshold', 'None')
                 varargin{end+1} = 'vif_threshold';
-                varargin{end+1} = str2num($vif_threshold);
+                varargin{end+1} = str2num('$vif_threshold');
              end
-             if strcmp($sort_by_vif, 'True')
+             if strcmp('$sort_by_vif', 'True')
                 varargin{end+1} = 'sort_by_vif';
              end
 
-             vifs = scn_spm_design_check(sid_dir, varargin{:});
+             vifs = scn_spm_design_check(spm_dir, varargin{:});
 
-             csvwrite(vifs.csv, vifs);
+             tbl = table(vifs.allvifs(:), 'RowNames', vifs.name);
+             writetable(tbl, 'vifs.csv', 'WriteRowNames', true, 'WriteVariableNames', false);
              exit;
           """
         ).substitute(d)
@@ -109,7 +119,7 @@ class VIFs(BaseInterface):
     def _list_outputs(self):
         outputs = self._outputs().get()
         for item in outputs.keys():
-            outputs[item] = os.path.abspath(self.item)
+            outputs[item] = os.path.abspath(getattr(self,item))
         return outputs
 
 

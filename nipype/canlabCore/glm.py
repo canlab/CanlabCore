@@ -7,9 +7,111 @@ from nipype.interfaces.base import (
 )
 from nipype.utils.filemanip import save_json
 import nipype.interfaces.fsl as fsl # for FSLCommand and its input/out specs
-from traits.api import List, Any
+from traits.api import List, Bool, Float, Int, Any
 import os
 from string import Template
+
+
+'''
+VIFs requires the following folders on your path:
+
+'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/diagnostics/',
+'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/Visualization_functions',
+'/dartfs-hpc/rc/home/m/f0042vm/software/canlab/CanlabCore/CanlabCore/OptimizeDesign11/core_functions/'
+'''
+
+class VIFsInputSpec(BaseInterfaceInputSpec):
+    spm_mat_file = File(exists=True, mandatory=True, 
+        desc="SPM.mat file produced by nipype.interfaces.spm.model.EstimateModel interface")
+    events_only = Bool(False, mandatory=False, usedefault=True,
+        desc="Produce plots and diagnostics for only events, not nuisance covariantes or other user-specified regressors")
+    from_multireg = Int(None, usedefault=True,
+        requires=['events_only'],
+        desc="followed by an integer to include n columns for the \'regressors\' matrix")
+    vif_threshold = Float(None, usedefault=True, 
+        desc="Only regressors with VIF > t will be printed in VIF table")
+    sort_by_vif = Bool(False, usedefault=True,
+        desc="Sort regressors in VIF table by VIF.")
+
+
+class VIFsOutputSpec(TraitedSpec):
+    vifs = File('vifs.csv', exists=True)
+    
+    png = File('Variance_Inflation.png', exists=True)
+    
+    hpfilt = File('High_pass_filter_analysis.png', exists=True)   
+    
+
+
+class VIFs(BaseInterface):
+    """Use canlabCore's diagnostics/scn_spm_design_check to estimate vifs and generate timeseries
+        diagnostic plots.
+    """
+
+    input_spec = VIFsInputSpec
+    output_spec = VIFs
+
+    def _run_interface(self, runtime):
+        spm_dir = os.path.dirname(self.inputs.spm_mat_file)
+        
+        d = dict(spm_dir=spm_dir,
+                 events_only=self.inputs.events_only,
+                 from_multireg=self.inputs.from_multireg,
+                 vif_threshold=self.inputs.vif_threshold,
+                 sort_by_vif=self.inputs.sort_by_vif
+
+        # This is your MATLAB code template
+        script = Template(
+            """spm_dir = '$spm_dir';
+             varargin = {}
+             if strcmp($events_only,'True')
+                varargin{end+1} = 'events_only';
+             end
+             if ~isempty($from_multireg)
+                varargin{end+1} = 'from_multireg';
+                varargin{end+1} = int(str2num($from_multireg));
+             end
+             if ~isempty($vif_threshold)
+                varargin{end+1} = 'vif_threshold';
+                varargin{end+1} = str2num($vif_threshold);
+             end
+             if strcmp($sort_by_vif, 'True')
+                varargin{end+1} = 'sort_by_vif';
+             end
+
+             vifs = scn_spm_design_check(sid_dir, varargin{:});
+
+             csvwrite(vifs.csv, vifs);
+             exit;
+          """
+        ).substitute(d)
+
+        # mfile = True  will create an .m file with your script and executed.
+        # Alternatively
+        # mfile can be set to False which will cause the matlab code to be
+        # passed
+        # as a commandline argument to the matlab executable
+        # (without creating any files).
+        # This, however, is less reliable and harder to debug
+        # (code will be reduced to
+        # a single line and stripped of any comments).
+        mlab = MatlabCommand(script=script, mfile=True)
+        result = mlab.run()
+        
+        
+        self.vifs = os.path.abspath('vifs.csv')
+        self.png = os.path.abspath('Variance_Inflation.png')
+        self.hpfilt = os.path.abspath('High_pass_filter_analysis.png')
+        
+        
+        return result.runtime
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        for item in outputs.keys():
+            outputs[item] = os.path.abspath(self.item)
+        return outputs
+
 
 
 class NVolsInputSpec(fsl.base.FSLCommandInputSpec):

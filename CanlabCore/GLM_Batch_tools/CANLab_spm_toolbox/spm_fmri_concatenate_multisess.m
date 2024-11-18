@@ -91,6 +91,9 @@ if numel(SPM.xX.iB) == n_sess && all(SPM.xX.iB == (size(SPM.xX.X,2) - fliplr(0:n
     for i = 1:length(sess_ind)
         s = sess_ind(i);
         sess_col = SPM.Sess(s).col;
+        % SPM produces intercepts with 'constant' in the name, but 
+        % nipype.interfaces.algorithms.modelgen.SpecifySPMModel will use UR* names
+        % in concatenated designs that use events files.
         const_col = sess_col(contains(SPM.xX.name(sess_col),'constant') | ...
             ~cellfun(@isempty, regexp(SPM.xX.name(sess_col), 'UR\d+')));
         SPM.xX.X(:,const_col) = [];

@@ -2,7 +2,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
 %
 % Note, some atlases are probablistic, and this may result in counterintuitive bheavior. If visualizing
-% a probablistic atlas you only see p(region) > p(~region), a winner takes all parcellation scheme where
+% a probablistic atlas you only see p(region) > p(other region), a winner takes all parcellation scheme where
 % a voxel is labeled as belonging to a region only if the probability is greater than the probability of
 % it belonging to any other region. However, when you extract such a region you additionally get voxels
 % with non-zero probability of belonging to said region even if other region labels are more probable.
@@ -43,7 +43,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'regexp' : If you enter 'doregexp', function will treat your string as a
 % regular expression.
 %
-% 'deterministic' : returns a labeled voxel iff p(region) > p(~region).
+% 'deterministic' : returns a labeled voxel iff p(region) > p(other region).
 % Has no effect unless atlas has its probability_maps property populated,
 % in which case the default behavior is to return all voxels with 
 % p(region) > 0. Note: you probably want to apply a threshold operation too
@@ -244,7 +244,7 @@ end
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid p maps
 
     if deterministic
-        % zero values where p(region) < p(~region)
+        % zero values where p(region) < p(other region)
         for this_region = find(to_extract)
             to_zero = any(obj_subset.probability_maps(:,this_region) < obj_subset.probability_maps(:, ~to_extract),2);
             obj_subset.probability_maps(to_zero,this_region) = 0;

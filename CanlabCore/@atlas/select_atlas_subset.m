@@ -43,7 +43,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'regexp' : If you enter 'doregexp', function will treat your string as a
 % regular expression.
 %
-% 'deterministic' : returns a labeled voxel iff p(region) > p(other region).
+% 'mostprob' : returns a labeled voxel iff p(region) > argmax(p(other region)).
 % Has no effect unless atlas has its probability_maps property populated,
 % in which case the default behavior is to return all voxels with 
 % p(region) > 0. Note: you probably want to apply a threshold operation too
@@ -102,7 +102,7 @@ doflatten = false;
 condInd = false;
 doexact=false;
 doregexp=false;
-deterministic=false;
+mostprob=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -129,7 +129,7 @@ for i = 1:length(varargin)
 
             case 'conditionally_ind', condInd = true;
 
-            case 'deterministic', deterministic = true;
+            case 'deterministic', mostprob = true;
                 
             otherwise
                 
@@ -243,7 +243,7 @@ end
 
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid p maps
 
-    if deterministic
+    if mostprob
         % zero values where p(region) < p(other region)
         for this_region = find(to_extract)
             to_zero = any(obj_subset.probability_maps(:,this_region) < obj_subset.probability_maps(:, ~to_extract),2);

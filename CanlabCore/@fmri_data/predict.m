@@ -107,7 +107,16 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        total model, between model, within model, intercept (same for all 
 %        models), between eigenvectors, between scores, within 
 %        eigenvectors and within scores. Requires 'subjID' option followed 
-%        by size(obj.dat,2) x 1 vector of block labels.
+%        by size(obj.dat,2) x 1 vector of block labels. The model will ideally
+%        be applied fractionally, multiplying subject (study) mean responses 
+%        by the the between component and within-subject (study) response 
+%        variance by the within component. The total model will reflect both
+%        and if effects are in opposition (e.g. Simpson's paradox), the larger
+%        effect (between or within) will dominate. Separating components is
+%        especially important for optimization. In practice, between-subject 
+%        effects in experimental BOLD fMRI has much worse SNR than within 
+%        subject effects, so the total model tends to reflect the within 
+%        effects, hence the default choice of setting between components to 0.
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
@@ -1074,7 +1083,7 @@ end
 function [yfit, vox_weights, intercept] = cv_pls(xtrain, ytrain, xtest, cv_assignment, varargin)
 
 % Choose number of components to save [optional]
-wh = find(strcmp(varargin, 'numcomponents'));
+wh = find(strcmp(varargin, ''));
 if ~isempty(wh) && length(varargin) >= wh + 1
     
     numc = varargin{wh + 1};
@@ -1112,7 +1121,7 @@ pc(:,end) = [];                % remove the last component, which is close to ze
 % [pc, sc, eigval] = princomp(xtrain, 'econ');
 
 % Choose number of components to save [optional]
-wh = find(strcmp(varargin, 'numcomponents'));
+wh = find(strcmp(varargin, ''));
 if ~isempty(wh) && length(varargin) >= wh + 1
     
     numc = varargin{wh + 1};

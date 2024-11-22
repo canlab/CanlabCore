@@ -107,16 +107,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        total model, between model, within model, intercept (same for all 
 %        models), between eigenvectors, between scores, within 
 %        eigenvectors and within scores. Requires 'subjID' option followed 
-%        by size(obj.dat,2) x 1 vector of block labels. The model will ideally
-%        be applied fractionally, multiplying subject (study) mean responses 
-%        by the the between component and within-subject (study) response 
-%        variance by the within component. The total model will reflect both
-%        and if effects are in opposition (e.g. Simpson's paradox), the larger
-%        effect (between or within) will dominate. Separating components is
-%        especially important for optimization. In practice, between-subject 
-%        effects in experimental BOLD fMRI has much worse SNR than within 
-%        subject effects, so the total model tends to reflect the within 
-%        effects.
+%        by size(obj.dat,2) x 1 vector of block labels. 
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)

@@ -88,44 +88,10 @@
 %   sc_w        - scores on within eigenvectors
 %
 %
-% Usage notes: There are several valid ways of using these models. All cases
-% must consider that the underlying model is fit to data that includes 
-% centered within group terms (with fixed group intercepts for each group), and
-% group mean IVs, and that this allows for the two levels to act in discordant
-% ways (e.g. Simpson's paradox). Careless use of these terms can result in 
-% nonsense predictions when the effects are discordant.
-%
-% The first approach makes use of whatever fixed group effects the model 
-% estimates by spliting test data into within-group and between-group variance. 
-% For instance, if your data consists of multiple subjects, each with multiple 
-% trial level contrasts, then compute your average subject contrast and
-% subtract it out of the corresponding single trial data. This produces a 
-% set of mean images (between-group variance) and a set of centered images
-% (within-group variance). It's convenient at this point to replicate your
-% mean images to match the counts of corresponding trials. Next, multiply
-% the between-group images by the between components (Bb) and the 
-% within-group images by the within components (Bw) to obtain your final 
-% predictions (plus/minus an intercept offset). This approach replicates the
-% the underlying MLPCR model, and is likely to be the most accurate, but it
-% requires some extra overhead for prediction.
-%
-% The second method is to simply take the total map (B = Bw+Bb) and multiply 
-% it by your unmanipulated test data. This approach will work when one of
-% Bw or Bb dominates your outcome, and then your predictions will reflect
-% this. If the within-group effects dominate then your predictions within
-% group will be accurate, +/- an offset which you can treat as a random 
-% effect if you like. If the between-group effects dominate then your 
-% predictions will reflect mean differences between groups instead. This
-% can produce surprising results when within and between effects are
-% discordant, e.g. if between effects dominate and are in the opposite 
-% direction from your within effects, then your predictions will be 
-% negatively correlated with your outcomes within-group, but between-group
-% predictions will positively correlate with your outcome. This approach
-% is not recommended, but is essentially what you get from any approach that
-% does not consider the multilevel nature of your data anyway, and so is a
-% potentially useful comparator when considering why the first approach above
-% might or might not outperform non-multilevel modeling approaches like 
-% traditional PCR.
+% Usage notes: The within and between effects are orthogonal by design.
+% Additionally, the between effects should show zero response to within
+% group variance in the training data, but the between model may show
+% responses to both within and between group variance.
 %
 %
 % Version History ::

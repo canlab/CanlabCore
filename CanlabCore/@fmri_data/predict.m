@@ -116,7 +116,7 @@ function [cverr, stats, optout] = predict(obj, varargin)
 %        especially important for optimization. In practice, between-subject 
 %        effects in experimental BOLD fMRI has much worse SNR than within 
 %        subject effects, so the total model tends to reflect the within 
-%        effects, hence the default choice of setting between components to 0.
+%        effects.
 %        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)

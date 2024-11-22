@@ -23,19 +23,6 @@
 % full model. Different results may be obtained with hyperparameter
 % optimization or concensus PCA enabled.
 %
-% Usage notes: within and between models should ideally be multiplied
-% by within and between IV components separately. Say your data is
-% grouped by subject, then subtract the subject mean out of each subject's
-% contrasts, multiply the mean by the between model and the residuals by
-% the within model and add them together. This protects against scenarios
-% like Simpson's paradox where within and between effects might go in
-% opposite directions. With classic PCR, or using the total combined MLPCR
-% model (B in the outputs) the stronger effect will dominate, but with models
-% applied separately to the different data partitions you don't need to
-% worry about obscuring either effect. Of course, this requires you have
-% blocks of test data available as well and can accurately estimate block
-% means in unsean data. The total model is most useful when this is not the
-% case, e.g. testing a model on a single contrast image from a new study.
 %
 % Input ::
 %
@@ -99,6 +86,46 @@
 %   pc_w        - within eigenvectors
 %
 %   sc_w        - scores on within eigenvectors
+%
+%
+% Usage notes: There are several valid ways of using these models. All cases
+% must consider that the underlying model is fit to data that includes 
+% centered within group terms (with fixed group intercepts for each group), and
+% group mean IVs, and that this allows for the two levels to act in discordant
+% ways (e.g. Simpson's paradox). Careless use of these terms can result in 
+% nonsense predictions when the effects are discordant.
+%
+% The first approach makes use of whatever fixed group effects the model 
+% estimates by spliting test data into within-group and between-group variance. 
+% For instance, if your data consists of multiple subjects, each with multiple 
+% trial level contrasts, then compute your average subject contrast and
+% subtract it out of the corresponding single trial data. This produces a 
+% set of mean images (between-group variance) and a set of centered images
+% (within-group variance). It's convenient at this point to replicate your
+% mean images to match the counts of corresponding trials. Next, multiply
+% the between-group images by the between components (Bb) and the 
+% within-group images by the within components (Bw) to obtain your final 
+% predictions (plus/minus an intercept offset). This approach replicates the
+% the underlying MLPCR model, and is likely to be the most accurate, but it
+% requires some extra overhead for prediction.
+%
+% The second method is to simply take the total map (B = Bw+Bb) and multiply 
+% it by your unmanipulated test data. This approach will work when one of
+% Bw or Bb dominates your outcome, and then your predictions will reflect
+% this. If the within-group effects dominate then your predictions within
+% group will be accurate, +/- an offset which you can treat as a random 
+% effect if you like. If the between-group effects dominate then your 
+% predictions will reflect mean differences between groups instead. This
+% can produce surprising results when within and between effects are
+% discordant, e.g. if between effects dominate and are in the opposite 
+% direction from your within effects, then your predictions will be 
+% negatively correlated with your outcomes within-group, but between-group
+% predictions will positively correlate with your outcome. This approach
+% is not recommended, but is essentially what you get from any approach that
+% does not consider the multilevel nature of your data anyway, and so is a
+% potentially useful comparator when considering why the first approach above
+% might or might not outperform non-multilevel modeling approaches like 
+% traditional PCR.
 %
 %
 % Version History ::

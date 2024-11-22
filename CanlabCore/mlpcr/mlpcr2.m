@@ -23,6 +23,20 @@
 % full model. Different results may be obtained with hyperparameter
 % optimization or concensus PCA enabled.
 %
+% Usage notes: within and between models should ideally be multiplied
+% by within and between IV components separately. Say your data is
+% grouped by subject, then subtract the subject mean out of each subject's
+% contrasts, multiply the mean by the between model and the residuals by
+% the within model and add them together. This protects against scenarios
+% like Simpson's paradox where within and between effects might go in
+% opposite directions. With classic PCR, or using the total combined MLPCR
+% model (B in the outputs) the stronger effect will dominate, but with models
+% applied separately to the different data partitions you don't need to
+% worry about obscuring either effect. Of course, this requires you have
+% blocks of test data available as well and can accurately estimate block
+% means in unsean data. The total model is most useful when this is not the
+% case, e.g. testing a model on a single contrast image from a new study.
+%
 % Input ::
 %
 %   X           - n x p data matrix

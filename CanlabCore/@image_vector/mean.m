@@ -99,6 +99,13 @@ if isa(obj, 'fmri_data')
 
     end
 
+
+    copyfield = {'images_per_session','Y','Y_names','Y_descrip',...
+        'covariates','covariate_names','additional_info'};
+    for i = 1:length(copyfield)
+        m.(copyfield{i}) = obj.(copyfield{i});
+    end
+
 else
     if dogroup, error('Grouping only permitted for fmri_data objects...extend code if needed'), end
 
@@ -107,8 +114,7 @@ end
 
 % Copy selected other fields
 % -------------------------------
-copyfield = {'source_notes','images_per_session','Y_names','Y_descrip',...
-    'covariate_names','additional_info','history', 'removed_voxels'};
+copyfield = {'source_notes','history', 'removed_voxels'};
 for i = 1:length(copyfield)
     m.(copyfield{i}) = obj.(copyfield{i});
 end
@@ -206,8 +212,11 @@ for i = 1:length(u)
 
         if isnumeric(tcolumn)
             newt(1, j) = table(nanmean(tcolumn));
-        elseif iscell(tcolumn)
+        elseif iscell(tcolumn) | ischar(tcolumn)
             newt(1, j) = table({char(mode(categorical(cellstr(tcolumn))))});
+        else
+             warning(['No policy for averaging datatype ''' class(tcolumn(1)) ''' in metadata_table. Dropping column ''' t.Properties.VariableNames{j} '''']);
+             newt{1, j} = [];
         end
     end
 
@@ -248,7 +257,7 @@ end
 newv = NaN * zeros(length(u), size(v, 2));
 
 if isempty(v), return, end
-validateattributes(v, {'numeric'})
+assert(isnumeric(v))
 if size(v, 1) ~= length(group_by), error('Variable and group_by vector must be the same length. Check input object fields and grouping variable'); end
 
 

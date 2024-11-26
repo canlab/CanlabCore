@@ -28,7 +28,7 @@ function p = addbrain(varargin)
 % % -----------------------------------------------------------------------
 % 'left' 'hires left' 'surface left' 'hires surface left' ...
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
-% 'transparent_surface' 'foursurfaces' 'flat left'  'flat right' ...
+% 'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'flat left'  'flat right' ...
 % 'bigbrain' {'hires surface left', 'bigbrain left'}
 % ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right', 
 % uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
@@ -119,6 +119,9 @@ function p = addbrain(varargin)
 %
 %   **'foursurfaces':**
 %        Lateral and medial views, with brainstem
+%
+%   **'foursurfaces_hcp':**
+%        Lateral and medial views with HCP pial surfaces, with brainstem
 %
 %   **'BG':**
 %        Basal ganglia
@@ -1071,6 +1074,10 @@ switch meth
     case 'foursurfaces'
         p = run_foursurfaces;
         
+
+    case 'foursurfaces_hcp'
+        p = run_foursurfaces_hcp;
+
     case 'flat left'
         
         pname = which('L.flat.32k.mat'); % from Glasser_et_al_2016_HCP
@@ -1246,6 +1253,79 @@ lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
 
 surfh2 = addbrain('brainstem');
 surfh2 = [surfh2 addbrain('thalamus')];
+set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
+surfh = [surfh surfh2];
+
+all_surf_handles = [all_surf_handles surfh];
+
+% Left medial
+% ------------------------------------------------------------------------
+
+figure(f1);
+axh = subplot(nrows, ncols , 3);
+surfh2 = copyobj(surfh, axh);
+if iscolumn(surfh2), surfh2 = surfh2'; end
+all_surf_handles = [all_surf_handles surfh2];
+
+view(90, 0);
+
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+end
+
+
+
+% Four surface HCP subfunction
+% ---------------------------------------------------------------------
+function all_surf_handles = run_foursurfaces_hcp
+
+all_surf_handles = [];
+f1 = gcf;
+
+nrows = 2;
+ncols = 2;
+
+% Right lateral
+% ------------------------------------------------------------------------
+figure(f1);
+subplot(nrows, ncols , 1);
+surfh = addbrain('surface right');
+set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+view(90, 0)
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+% surfh2 = addbrain('brainstem');
+surfh2 = [addbrain('thalamus')];
+set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
+surfh = [surfh surfh2];
+
+all_surf_handles = [all_surf_handles surfh];
+
+% Right medial
+% ------------------------------------------------------------------------
+
+figure(f1);
+axh = subplot(nrows, ncols , 4);
+surfh2 = copyobj(surfh, axh);
+if iscolumn(surfh2), surfh2 = surfh2'; end
+all_surf_handles = [all_surf_handles surfh2];
+
+view(270, 0);
+
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+% Left lateral
+% ------------------------------------------------------------------------
+
+figure(f1);
+subplot(nrows, ncols , 2);
+surfh = addbrain('surface left');
+set(surfh, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+view(270, 0)
+lightRestoreSingle; axis image; axis off; lighting gouraud; material dull
+
+% surfh2 = addbrain('brainstem');
+surfh2 = [addbrain('thalamus')];
 set(surfh2, 'FaceColor', [.5 .5 .5], 'FaceAlpha', .8);
 surfh = [surfh surfh2];
 

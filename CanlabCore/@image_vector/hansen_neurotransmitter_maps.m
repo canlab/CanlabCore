@@ -221,6 +221,11 @@ if doplot
             
             if exist('compareGroups','var') % added by Lukas: if we want to analyze & plot multiple groups 
                 
+                groupValues = unique(group, 'stable');
+                if size(colors,1) ~= size(groupValues,1)
+                    colors = scn_standard_colors(length(groupValues))';
+                end
+                
                 [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','compareGroups', group);
            
             else
@@ -231,6 +236,11 @@ if doplot
         else
             
             if exist('compareGroups','var') % % added by Lukas: if we want to analyze & plot multiple groups 
+                
+                groupValues = unique(group, 'stable');
+                if size(colors,1) ~= size(groupValues,1)
+                    colors = scn_standard_colors(length(groupValues))';
+                end
                 
                 [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange, 'average', 'compareGroups', group);
 

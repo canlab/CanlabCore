@@ -618,17 +618,36 @@ for i = 1:length(surface_handles)
         
         c_colored = c;
     
-    
-        whpos = c > 0;
-        %     kpos = 61;   % which block of 256 colors; depends on colormap
-        cpos = map_function(c(whpos), prctile(datvec(datvec>0),1), clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
-        c_colored(whpos) = cpos;
-        
-        whneg = c < 0;
-        %     kneg = 55;   % which block of 256 colors
-        % NOTE: *** THIS IS NOT WORKING WELL IN SOME CASES -- TAKES c and converts to cneg = all Inf in a problematic example case 
-        cneg = map_function(c(whneg), clim(1), prctile(datvec(datvec<0),99), (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
-        c_colored(whneg) = cneg;
+        if diff(sign(clim))
+            whpos = c > 0;
+            %     kpos = 61;   % which block of 256 colors; depends on colormap
+            if custom_colormap
+                cpos = map_function(c(whpos), 0, clim(2), (kpos-0.5)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+            else
+                cpos = map_function(c(whpos), 0, clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+            end
+            c_colored(whpos) = cpos;
+            
+            whneg = c < 0;
+            %     kneg = 55;   % which block of 256 colors
+            if custom_colormap
+                cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, (kneg-0.5)*nvals); % map into indices in cool cm range of colormap
+            else
+                cneg = map_function(c(whneg), clim(1), 0, (kneg-1)*nvals+1, (kneg)*nvals); % map into indices in cool cm range of colormap
+            end
+            c_colored(whneg) = cneg;
+        else
+            whpos = c > 0;
+            %     kpos = 61;   % which block of 256 colors; depends on colormap
+            cpos = map_function(c(whpos), prctile(datvec(datvec>0),1), clim(2), (kpos-1)*nvals+1, kpos*nvals); % map into indices in hot cm range of colormap
+            c_colored(whpos) = cpos;
+            
+            whneg = c < 0;
+            %     kneg = 55;   % which block of 256 colors
+            % NOTE: *** THIS IS NOT WORKING WELL IN SOME CASES -- TAKES c and converts to cneg = all Inf in a problematic example case 
+            cneg = map_function(c(whneg), clim(1), prctile(datvec(datvec<0),99), (kneg-1)*nvals+1, kneg*nvals); % map into indices in cool cm range of colormap
+            c_colored(whneg) = cneg;
+        end
     end
             
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later

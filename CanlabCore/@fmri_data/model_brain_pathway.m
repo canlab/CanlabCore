@@ -658,7 +658,7 @@ wh_last = length(stats_report);
 r = stats.simple_correlations;
 [h, p, ci, tstat] = ttest(atanh(r));  % t-test on Fisher's z-transformed latent correlations. Same as fisherz.m
 if any(isnan(h))
-    warning('The latent correlations have values of 1 or -1, which do not seem correct. The following report is calculated after removing the rows (folds) where r = 1 or -1.');
+    warning('The simple correlations have values of 1 or -1, which do not seem correct. The following report is calculated after removing the rows (folds) where r = 1 or -1.');
     r(any(abs(r') == 1),:) = [];
     [h, p, ci, tstat] = ttest(atanh(r));  % t-test on Fisher's z-transformed latent correlations. Same as fisherz.m
 end

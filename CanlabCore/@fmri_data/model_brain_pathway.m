@@ -363,13 +363,13 @@ for k=1:max(indices)
     % Revision 6/4/2021, Phil Kragel and Tor Wager - documentation
     
     % YS: linear combinations of target voxels chosen to covary with X (source)
-    YS_Test_target_one_pathway_one = Ytest_target_one * V_pathway_one;  % Fitted (predicted) latent X, based on observed Y  % V = pattern across Y voxels (target), predicting latent X source
+    YS_Test_target_one_pathway_one = Ytest_target_one * V_pathway_one;  % Fitted (predicted) latent Y, based on observed Y. V = pattern across Y (target), predicting latent X source
     YS_Test_target_one_pathway_two = Ytest_target_one * V_pathway_two;
     YS_Test_target_two_pathway_three = Ytest_target_two * V_pathway_three;
     YS_Test_target_two_pathway_four = Ytest_target_two * V_pathway_four;
     
     % XS: linear combinations of source voxels chosen to covary with Y (target)
-    XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; % Fitted (predicted) latent Y, based on observed X; Z = pattern across X (source) voxels that predicts latent Y target  
+    XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; % Fitted (predicted) latent X, based on observed Y; Z = pattern across X (source), predicting latent Y target  
     XS_Test_source_two_pathway_two = Xtest_source_two * Z_pathway_two;
     XS_Test_source_one_pathway_three = Xtest_source_one * Z_pathway_three;
     XS_Test_source_two_pathway_four = Xtest_source_two * Z_pathway_four;

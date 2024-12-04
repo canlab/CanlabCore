@@ -314,28 +314,45 @@ for k=1:max(indices)
         target_two_test=[to_align_dat_four{un_inds==k}];
     end
     
+    % Revision 12/4/2024, Byeol Kim Lux - change the variable names
+    % %pls models to estimate correlation between latent sources
+    % [~,~,xs_pathway_one, ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
+    % [~,~,xs_pathway_two, ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
+    % [~,~,xs_pathway_three, ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
+    % [~,~,xs_pathway_four, ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
+    % 
+    % Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern across Y voxels (target), predicting latent Y target
+    % V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern across Z voxels (source), predicting latent X source 
+    % 
+    % Z_pathway_two = pinv(source_two_train') * ys_pathway_two;
+    % V_pathway_two = pinv(target_one_train') * xs_pathway_two;   
+    % 
+    % Z_pathway_three = pinv(source_one_train') * ys_pathway_three;
+    % V_pathway_three = pinv(target_two_train') * xs_pathway_three;
+    % 
+    % Z_pathway_four = pinv(source_two_train') * ys_pathway_four;
+    % V_pathway_four = pinv(target_two_train') * xs_pathway_four;
     
-    
-    
-    %pls models to estimate correlation between latent sources
+
+    % T and U correspond to Xscores and Yscores respectively from plsregression
+    % We didn't extract here but P in [X_train = TP' + E] and C in [Y_train = UC' + G]
+    % were calculated inside plsregression.
     [~,~,xs_pathway_one, ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
     [~,~,xs_pathway_two, ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
     [~,~,xs_pathway_three, ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
     [~,~,xs_pathway_four, ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
-    
+
     Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern across Y voxels (target), predicting latent Y target
     V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern across Z voxels (source), predicting latent X source
-    
+
     Z_pathway_two = pinv(source_two_train') * ys_pathway_two;
     V_pathway_two = pinv(target_one_train') * xs_pathway_two;
-    
+
     Z_pathway_three = pinv(source_one_train') * ys_pathway_three;
     V_pathway_three = pinv(target_two_train') * xs_pathway_three;
-    
+
     Z_pathway_four = pinv(source_two_train') * ys_pathway_four;
     V_pathway_four = pinv(target_two_train') * xs_pathway_four;
-    
-    
     
     %correlation of latent dimensions
     Ytest_target_one=target_one_test';
@@ -352,8 +369,7 @@ for k=1:max(indices)
     for i=1:size(Xtest_source_one,2)
         Xtest_source_one(:,i)=Xtest_source_one(:,i)-mean(Xtest_source_one(:,i));
     end
-    
-    
+        
     Xtest_source_two=source_two_test';
     for i=1:size(Xtest_source_two,2)
         Xtest_source_two(:,i)=Xtest_source_two(:,i)-mean(Xtest_source_two(:,i));
@@ -372,7 +388,7 @@ for k=1:max(indices)
 
     % XS = U_hat: Predicted latent timeseries of Target (Y) covarying with Source (X)
     % Linear combination of source test data and spatial patterns of Y (Z)
-    XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; % Fitted (predicted) latent X, based on observed Y; Z = pattern across X (source), predicting latent Y target
+    XS_Test_source_one_pathway_one = Xtest_source_one * Z_pathway_one; 
     XS_Test_source_two_pathway_two = Xtest_source_two * Z_pathway_two;
     XS_Test_source_one_pathway_three = Xtest_source_one * Z_pathway_three;
     XS_Test_source_two_pathway_four = Xtest_source_two * Z_pathway_four;

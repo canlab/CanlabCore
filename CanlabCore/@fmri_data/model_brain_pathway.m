@@ -314,36 +314,14 @@ for k=1:max(indices)
         target_two_test=[to_align_dat_four{un_inds==k}];
     end
     
-    % Revision 12/4/2024, Byeol Kim Lux - change the variable names
     % %pls models to estimate correlation between latent sources
-    % [~,~,xs_pathway_one, ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
-    % [~,~,xs_pathway_two, ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
-    % [~,~,xs_pathway_three, ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
-    % [~,~,xs_pathway_four, ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
-    % 
-    % Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern across Y voxels (target), predicting latent Y target
-    % V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern across Z voxels (source), predicting latent X source 
-    % 
-    % Z_pathway_two = pinv(source_two_train') * ys_pathway_two;
-    % V_pathway_two = pinv(target_one_train') * xs_pathway_two;   
-    % 
-    % Z_pathway_three = pinv(source_one_train') * ys_pathway_three;
-    % V_pathway_three = pinv(target_two_train') * xs_pathway_three;
-    % 
-    % Z_pathway_four = pinv(source_two_train') * ys_pathway_four;
-    % V_pathway_four = pinv(target_two_train') * xs_pathway_four;
-    
-
-    % T and U correspond to Xscores and Yscores respectively from plsregression
-    % We didn't extract here but P in [X_train = TP' + E] and C in [Y_train = UC' + G]
-    % were calculated inside plsregression.
     [~,~,xs_pathway_one, ys_pathway_one] = plsregress(source_one_train',target_one_train',ndim);
     [~,~,xs_pathway_two, ys_pathway_two] = plsregress(source_two_train',target_one_train',ndim);
     [~,~,xs_pathway_three, ys_pathway_three] = plsregress(source_one_train',target_two_train',ndim);
     [~,~,xs_pathway_four, ys_pathway_four] = plsregress(source_two_train',target_two_train',ndim);
 
-    Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern across Y voxels (target), predicting latent Y target
-    V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern across Z voxels (source), predicting latent X source
+    Z_pathway_one = pinv(source_one_train') * ys_pathway_one;  % Z = pattern for source (X)
+    V_pathway_one = pinv(target_one_train') * xs_pathway_one;  % V = pattern for target (Y)
 
     Z_pathway_two = pinv(source_two_train') * ys_pathway_two;
     V_pathway_two = pinv(target_one_train') * xs_pathway_two;

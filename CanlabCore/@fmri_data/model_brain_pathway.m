@@ -1,4 +1,4 @@
-function stats = model_brain_pathway_working2(obj,source_one,source_two,target_one,target_two,varargin)
+function stats = model_brain_pathway(obj,source_one,source_two,target_one,target_two,varargin)
 % Models connections between a pair of brain regions using partial least squares regression
 %
 % Overview:

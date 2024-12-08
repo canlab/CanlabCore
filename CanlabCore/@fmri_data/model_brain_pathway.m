@@ -86,7 +86,9 @@ function stats = model_brain_pathway_working2(obj,source_one,source_two,target_o
 %   **'Align'**
 %      Perform hyperalignment, requires input 'Indices' to be specified
 %      with each index corresponding to a subject
-%
+% 
+%   **'noroi'**
+%      It does not save the masked ROI data from the input, which significantly reduces the size of the output.
 % 
 % :Outputs:
 %
@@ -105,10 +107,10 @@ function stats = model_brain_pathway_working2(obj,source_one,source_two,target_o
 %           - PLS_bootstrap_stats_V: statistic image for PLS regression coefficients
 %           - Z_pathway_one/four: estimated patterns in source regions that covary with their target region
 %           - V_pathway_one/four: estimated patterns in target regions that covary with their source region
-%           - source_one_obj: resampled and masked fmri data object for source one
-%           - source_two_obj: resampled and masked fmri data object for source two
-%           - target_one_obj: resampled and masked fmri data object for target one
-%           - target_two_obj: resampled and masked fmri data object for target one
+%           - source_one_obj (optional): resampled and masked fmri data object for source one
+%           - source_two_obj (optional): resampled and masked fmri data object for source two
+%           - target_one_obj (optional): resampled and masked fmri data object for target one
+%           - target_two_obj (optional): resampled and masked fmri data object for target one
 %
 %
 % :Examples:
@@ -189,6 +191,12 @@ if any(strcmp(varargin,'nboot'))
     nboot  = varargin{find(strcmp(varargin,'nboot'))+1}; % Get number of bootstrap iterations
 else
     do_boot=false; % Default: no bootstrapping
+end
+
+if any(strcmp(varargin,'noroi'))
+    do_roi=false; 
+else
+    do_roi=true; % Default: save masked ROI data
 end
 
 % Default 10-fold cross-validation unless custom indices are provided
@@ -611,11 +619,12 @@ end
 
 
 %% Output data objects
-stats.source_one_obj=source_one_obj;
-stats.source_two_obj=source_two_obj;
-stats.target_one_obj=target_one_obj;
-stats.target_two_obj=target_two_obj;
-
+if do_roi
+    stats.source_one_obj=source_one_obj;
+    stats.source_two_obj=source_two_obj;
+    stats.target_one_obj=target_one_obj;
+    stats.target_two_obj=target_two_obj;
+end
 %% Add results report with narrative text
 stats = add_results_report(stats);
 

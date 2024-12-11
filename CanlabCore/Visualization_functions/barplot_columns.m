@@ -415,7 +415,7 @@ for i = 1:ny
     % ----------------------------------------------------
     % > Use partialcor to remove covariates if requested
     %   Return y, adjusted y-values
-    % ----------------------------------------------------
+    % ---------------------------------------------------wid-
 
     if ~isempty(covs) && wh_reg
 
@@ -511,7 +511,7 @@ elseif dobars
         % each bar a different color
 
         for i = 1:length(xvals)
-            handles.bar_han{i} = bar(xvals(i), Mean_Value(i), 'FaceColor', mycolor{i});
+            handles.bar_han{i} = bar(xvals(i), Mean_Value(i), barwidth, 'FaceColor', mycolor{i});
 
             handles.errorbar_han{i} = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor{i} ./ 2, 'LineWidth', 3);
 

@@ -2,7 +2,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 % :Usage:
 % ::
 %
-%    [graphics handles, adjusted data, x-data] = barplot_columns(dat, [other optional arguments])
+%    [graphics handles, adjusted data, x-data, statstable, order_idx] = barplot_columns(dat, [other optional arguments])
 %
 % This function makes a barplot of columns of data, with standard error
 % bars.  Optional arguments include removing continuous covariates before plotting,
@@ -138,7 +138,7 @@ function [handles, dat, xdat, statstable, order_idx] = barplot_columns(dat, vara
 %    barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
 %    title('barplot\_columns.m parallel coords', 'FontSize', 16)
 %
-% Covariate(s): Renove regressors (covs) "group":
+% Covariate(s): Remove regressors (covs) "group":
 % barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 0);
 %
 % Covariate(s): Leave in regressor (cov) # 1 "group" and sort points by its values:
@@ -428,7 +428,11 @@ for i = 1:ny
 end
 
 if custom_p
-    P=[PValues{:}]';
+    if iscell(PValues)
+        P=[PValues{:}]';
+    else
+        P=PValues';
+    end
     % very low P-values: do not use exactly zero, because of problems
     P(find(P < 10 * eps)) = 10 * eps;
 end

@@ -538,6 +538,13 @@ if flip_maps
 
 end
 
+% added by Byeol on 12/12/2024
+stats.T_pathway_one = xs_pathway_one;
+stats.U_pathway_one = ys_pathway_one;
+
+stats.T_pathway_four = xs_pathway_four;
+stats.U_pathway_four = ys_pathway_four;
+
 % Compute latent weights (Z) for source regions and pattern weights (V) for
 % target regions with updated T and U.
 % Reminder: Z = pinv(X) * U, V = pinv(Y) * T [Voxels x 1]
@@ -546,6 +553,7 @@ stats.V_pathway_one = pinv(target_one_obj.dat') * xs_pathway_one;
 
 stats.Z_pathway_four = pinv(source_two_obj.dat') * ys_pathway_four;
 stats.V_pathway_four = pinv(target_two_obj.dat') * xs_pathway_four;
+
 
 % Perform bootstrap resampling if specified
 if do_boot    

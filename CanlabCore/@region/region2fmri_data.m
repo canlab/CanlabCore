@@ -44,7 +44,7 @@ if isbad, error('reference_obj must have same mat file and dim as region_object'
 
 if ~isa(reference_obj, 'fmri_data')
     % First attempt to cast the reference object into a valid fmri_data object.
-    fmri_data(reference_obj);
+    reference_obj=fmri_data(reference_obj);
 end
 
 % rebuild from reference obj

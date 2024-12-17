@@ -65,9 +65,9 @@ for i = 1:length(r)
     wh(wh_not_in_mask) = [];
     
     if ~isempty(r(i).dat)
-        reference_obj.dat(find(wh), 1) = r(i).dat; % code with dat
+        reference_obj.dat(find(wh), 1) = r(i).dat'; % code with dat
     elseif ~isempty(r(i).Z)
-        reference_obj.dat(find(wh), 1) = r(i).Z; % code with Z
+        reference_obj.dat(find(wh), 1) = r(i).Z'; % code with Z
     else
         reference_obj.dat(find(wh), 1) = i; % code with region number
     end

@@ -229,10 +229,11 @@ region_table.Properties.VariableDescriptions{2} = ['Voxels: Number of contiguous
 region_table.Properties.VariableDescriptions{3} = 'Region_Vol_mm: Volume of contiguous region in cubic mm.';
 region_table.Properties.VariableDescriptions{4} = 'Atlas_regions_covered: Number of reference atlas regions covered at least 25%% by the region. This relates to whether the region covers multiple reference atlas regions';
 region_table.Properties.VariableDescriptions{5} = 'Modal_label: Best reference atlas label, defined as reference region with highest number of in-region voxels. Regions covering >25%% of >5 regions labeled as "Multiple regions"';
-region_table.Properties.VariableDescriptions{6} = 'Perc_covered_by_label: Percentage of the region covered by the label.';
-region_table.Properties.VariableDescriptions{7} = 'Ref_region_perc: Percentage of the label region within the target region.';
-region_table.Properties.VariableDescriptions{8} = 'modal_atlas_index: Index number of label region in reference atlas';
-region_table.Properties.VariableDescriptions{9} = 'all_regions_covered: All regions covered >5%% in descending order of importance';
+region_table.Properties.VariableDescriptions{6} = 'Modal_label_Description: Description of Labels.';
+region_table.Properties.VariableDescriptions{7} = 'Perc_covered_by_label: Percentage of the region covered by the label.';
+region_table.Properties.VariableDescriptions{8} = 'Ref_region_perc: Percentage of the label region within the target region.';
+region_table.Properties.VariableDescriptions{9} = 'modal_atlas_index: Index number of label region in reference atlas';
+region_table.Properties.VariableDescriptions{10} = 'all_regions_covered: All regions covered >5%% in descending order of importance';
 
 % %%%% for compatibility with canlab_print_legend_text
 coverage_descrip = {sprintf('For example, if a region is labeled ''TE1a'' and Perc_covered_by_label = 8, Ref_region_perc = 38, and Atlas_regions_covered = 17, this means that 8%%%% of the region''s voxels are labeled TE1a, which is the highest percentage among reference label regions. 38%%%% of the region TE1a is covered by the region. However, the region covers at least 25%%%% of 17 distinct labeled reference regions.\n')};

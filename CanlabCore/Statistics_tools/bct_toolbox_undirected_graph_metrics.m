@@ -79,7 +79,7 @@ r(isnan(r)) = 0;
 bu_matrix = weight_conversion(threshold_proportional(r, thresh), 'binarize');
 
 % Make weighted matrix based on Fisher transform
-z = rToZ(r);
+z = fisherz(r);
 z(isinf(z)) = max(z(~isinf(z))); % correlations of 1.00 get transformed to Inf, which causes BCT to crash in some functions. Replace w/ max value. Note that this code does not correctly handle case of r = -1.00, as this is very unlikely.
 wu_matrix = z;
 
@@ -96,6 +96,7 @@ graph_prop = table();
 
 graph_prop.community = modularity_und(bu_matrix, 1);           % C: communities from adjacency matrix
 graph_prop.core_w = core_periphery_dir(wu_matrix, 1)';         % Core-periphery
+graph_prop.eigenvector_centrality_bin = eigenvector_centrality_und(bu_matrix);         % Core-periphery
 
 graph_prop.degree = degrees_und(bu_matrix)';                   % Node degree
 graph_prop.betweenness_bin = betweenness_bin(double(bu_matrix))';  % note: logical did not work in some cases...

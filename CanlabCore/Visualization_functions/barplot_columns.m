@@ -499,9 +499,20 @@ hold on
 
 if dolineplot
 
-    handles.line_han = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
-    handles.errorbar_han = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
-    set(handles.errorbar_han, 'LineWidth', 2, 'Color', mycolor);
+    if iscell(mycolor)
+       for i = 1:length(xvals)
+        handles.line_han{i} = plot(xvals, Mean_Value, 'o-', 'Color', mycolor{i}, 'MarkerFaceColor', mycolor{i}, 'MarkerSize', 8);
+        handles.errorbar_han{i} = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
+        set(handles.errorbar_han{i}, 'LineWidth', 2, 'Color', mycolor{i});
+       end
+
+
+    else
+
+        handles.line_han = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
+        handles.errorbar_han = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
+        set(handles.errorbar_han, 'LineWidth', 2, 'Color', mycolor);
+    end
 
 elseif dobars
 

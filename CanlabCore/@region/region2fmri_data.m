@@ -44,7 +44,7 @@ if isbad, error('reference_obj must have same mat file and dim as region_object'
 
 if ~isa(reference_obj, 'fmri_data')
     % First attempt to cast the reference object into a valid fmri_data object.
-    fmri_data(reference_obj);
+    reference_obj=fmri_data(reference_obj);
 end
 
 % rebuild from reference obj
@@ -65,9 +65,9 @@ for i = 1:length(r)
     wh(wh_not_in_mask) = [];
     
     if ~isempty(r(i).dat)
-        reference_obj.dat(find(wh), 1) = r(i).dat; % code with dat
+        reference_obj.dat(find(wh), 1) = r(i).dat'; % code with dat
     elseif ~isempty(r(i).Z)
-        reference_obj.dat(find(wh), 1) = r(i).Z; % code with Z
+        reference_obj.dat(find(wh), 1) = r(i).Z'; % code with Z
     else
         reference_obj.dat(find(wh), 1) = i; % code with region number
     end

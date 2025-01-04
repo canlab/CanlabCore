@@ -1,0 +1,69 @@
+{\rtf1\mac\ansicpg10000\cocoartf824\cocoasubrtf420
+{\fonttbl\f0\fswiss\fcharset77 Helvetica;\f1\fswiss\fcharset77 CenturyGothic-BoldItalic;}
+{\colortbl;\red255\green255\blue255;\red0\green6\blue240;}
+\margl1440\margr1440\vieww5880\viewh19560\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs36 \cf0 Inverse Logit Hemodynamic Response Estimation Toolbox
+\fs24 \
+\
+
+\f1\i\b\fs28 Version:
+\f0\i0\b0\fs24 \
+12/12/06, Last Edit: 12/12/06\
+\
+
+\f1\i\b\fs28 Authors:
+\f0\i0\b0\fs24 \
+Martin Lindquist, Dept. of Statistics, Columbia University\
+Tor Wager, Dept. of Psychology, Columbia University\
+\
+
+\f1\i\b\fs28 Reference:
+\f0\i0\b0\fs24 \
+\
+\pard\pardeftab720\sa360\ql\qnatural
+{\field{\*\fldinst{HYPERLINK "http://www.columbia.edu/cu/psychology/tor/Papers/Model_hrf-1.doc"}}{\fldrslt \cf0 \ul \ulc2 Lindquist, M. and Wager, T. D.\'ca (in press). Validity and Power in Hemodynamic Response Modeling:\'ca A comparison study and a new approach.\'ca \ulnone Human Brain Mapping (2007); early version available online.}}\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+\cf0 \
+
+\f1\i\b\fs28 Purpose:\
+\
+
+\f0\i0\b0\fs24 This toolbox will estimate parameters for a flexible hemodynamic response function (HRF) using three superimposed inverse logit functions. The HRF is fit using seven parameters, and can capture a variety of HRF shapes, including sustained activations.  \
+\
+Main inputs include a data timeseries and indicator (stick) function for the onsets of events.
+\f1\i\b\fs28 \
+\
+
+\f0\i0\b0\fs24 The function can be used with ROI timeseries or incorporated into whole-brain HRF-estimation tools.
+\f1\i\b\fs28 \
+\
+
+\f0\i0\b0\fs24 \
+
+\f1\i\b\fs28 Main Functions:\
+
+\f0\i0\b0\fs24 \
+(Specific help for each function is available by typing\
+>> help myfunctionname \
+at the >> matlab prompt.)\
+\
+Example.m\
+-------------------------------------------------------------------------------------------------\
+Example script that loads example timeseries data and fits the model.  Plots results.\
+\
+Anneal_Logit.m\
+-------------------------------------------------------------------------------------------------\
+Main function for fitting inverse logit (IL) HRF estimate to timeseries.\
+Simulated annealing is built into function as a solution-finder.\
+\
+Get_Logit.m\
+-------------------------------------------------------------------------------------------------\
+Create HRF estimate from IL parameters\
+\
+cost.m\
+-------------------------------------------------------------------------------------------------\
+Least-squares cost function for the IL model\
+\
+}

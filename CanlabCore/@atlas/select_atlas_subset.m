@@ -203,7 +203,7 @@ end
 to_extract(integers_to_find) = true;
 
 if ~any(to_extract)
-    error('No regions identified to extract.');
+    warning('No regions identified to extract.');
 end
 
 % -------------------------------------------------------------------------

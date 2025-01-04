@@ -1,4 +1,4 @@
-function out = spm_run_fmri_est(job)
+function out = spm_run_fmri_concatenate(job)
 % Estimate parameters of a specified model
 % SPM job execution function
 % takes a harvested job data structure and call SPM functions to perform

@@ -89,7 +89,14 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
 
-            case {'atlas'}, atlas_obj = load_atlas(varargin{i+1});
+            case {'atlas'}
+                if isa(varargin{i+1}, 'atlas')
+                    atlas_obj = varargin{i+1};
+                elseif isa(varargin, 'char') | isa(varargin, 'string') 
+                    atlas_obj = load_atlas(varargin{i+1});
+                else
+                    error(['Cannot handle atlas input, input is of class: ', class(varargin{i+1})]);
+                end
             
             case {'doneg'}, nTables = 2;
             
@@ -112,12 +119,19 @@ if isempty(atlas_obj)
     atlas_obj = load_atlas('canlab2024');
 end
 
-% threshold atlas
-atlas_thr = atlas_obj.threshold(thr);
+% threshold atlas only if it has probability maps
+if ~isempty(atlas_obj.probability_maps)
+    atlas_thr = atlas_obj.threshold(thr);
+else
+    disp('Atlas has no probability maps. Defaulting to no probability thresholding.');
+    atlas_thr = atlas_obj;
+end
 
 % find network labels for all regions
 % iterate over labels and find corresponding network labels from canlab2018
 % cr. Michael Sun
+% NOTE THIS ONLY WORKS FOR ATLASES WITH THE Ctx PREFIX e.g., canlab2018 or
+% canlab2023/2024 or Glasser!
 
 disp('Generating Network Column ...');
 

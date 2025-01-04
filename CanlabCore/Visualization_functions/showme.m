@@ -26,8 +26,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     %    roi - Region of interest data object
     %
     % Example: 
-    %    [o1, o2, o3, 04, roi] = lookat('insula');
-    %    [o1, o2, o3, 04, roi] = lookat('insula', 'showSurfaces', true, 'inflation', 'inflated', 'showVolumes', true, 'volRadius', 10, 'showFlatmap', true, 'showSlabs', true, 'sourcespace', 'MNI152NLin2009cAsym', 'atlas', load_atlas('canlab2024'));
+    %    [o1, o2, o3, 04, roi] = showme('insula');
+    %    [o1, o2, o3, 04, roi] = showme('insula', 'showSurfaces', true, 'inflation', 'inflated', 'showVolumes', true, 'volRadius', 10, 'showFlatmap', true, 'showSlabs', true, 'sourcespace', 'MNI152NLin2009cAsym', 'atlas', load_atlas('canlab2024'));
     %   
     %   % Then, mask with your own data
     %   tthr=threshold(output, .05, 'fdr');
@@ -49,6 +49,9 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     addParameter(parser, 'showSlabs', true);
     addParameter(parser, 'sourcespace', 'MNI152NLin2009cAsym');
     addParameter(parser, 'atlas', load_atlas('canlab2024'));
+    addParameter(parser, 'labels', {});
+    addParameter(parser, 'colormap', []);
+    addParameter(parser, 'noplot', false);
     parse(parser, varargin{:});
     showSurfaces = parser.Results.showSurfaces;
     inflation = parser.Results.inflation;
@@ -63,56 +66,79 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     
     atl = parser.Results.atlas;
 
+    % atl.probability_maps=[]; % Show deterministic maps only.
+
+    mylabels = format_strings_for_legend(parser.Results.labels);
+
+    cmap = parser.Results.colormap;
+
+    noplot = parser.Results.noplot;
+
+    if noplot==true
+        display('noplot is toggled. Plotting suppressed.')
+        showSurfaces=false;
+        showVolumes=false;
+        showFlatmap=false;
+        showSlabs=false;
+        [o1 o2 o3 o4] = deal([]); 
+    end
+
     img=[];
-    % pain_pathways=load_atlas('painpathways')
-    % atl=pain_pathways;
-    % atl=[];
+    if isa(lbl, 'region')
+        roi=lbl;
+    elseif isa(lbl, 'atlas')
+        roi=lbl;
 
-    % If Region
+    else     % If string/text:
+        disp(lbl)
+        lbl=cellstr(lbl);
+    
+        labels = {'labels', 'labels_2', 'labels_3', 'labels_4', 'labels_5', 'label_descriptions'};
+        roi = {};
+        
+        % for i = 1:length(labels)
+        for r = 1:numel(lbl)
+            for i = 1:length(labels)
+                try
+                    roi{end+1} = atlas2region(atl.select_atlas_subset(lbl(r), labels{i}, 'flatten'));
+                    roi{end}.Z=repmat(r, 1, roi{end}.numVox);
+                    break; % Exit the loop if successful
+                catch
+                    if i == length(labels)
+                        error('No regions identified in atlas based on search term');
+                    end
+                    warning('No regions identified in %s, trying next', labels{i});
+                end
+            end
+        end
 
-
-    % If string/text:
+        roi=[roi{:}];
+    end
 
     if isempty(img)
         img=fmri_data;
         img.dat=zeros(numel(img.dat),1);
     end
 
-    % if isempty(atl)
-    %     atl=load_atlas('canlab2024');
-    % end
-
-    % tbl(contains(tbl.Network, net_word), :);
-    % reg = atl.select_atlas_subset(lbl).threshold(0.2);
-
-    disp(lbl)
-    lbl=cellstr(lbl);
     
-    labels = {'labels', 'labels_2', 'labels_3', 'labels_4', 'labels_5', 'label_descriptions'};
-    roi = [];
-    
-    for i = 1:length(labels)
-        try
-            roi = atl.select_atlas_subset(lbl, labels{i});
-            break; % Exit the loop if successful
-        catch
-            if i == length(labels)
-                error('No regions identified in atlas based on search term');
-            end
-            warning('No regions identified in %s, trying next', labels{i});
-        end
+    if isa(roi, 'atlas')
+        num_regions=numel(roi.labels);
+        mm_center = atlas2region(roi).mm_center;
+    else
+        mm_center = roi.mm_center;
+        num_regions=numel(roi);
     end
 
-
-    
-    mm_center = atlas2region(roi).mm_center;
     mm_center = [mm_center-volRadius; mm_center-(volRadius/2); mm_center; mm_center+(volRadius/2); mm_center+volRadius];
-    
 
+    if isempty(cmap)
+        cmap = hsv(num_regions);
+    end
     
-    figure;
+    
     % Show surfaces
     if showSurfaces
+        figure;
         o1 = fmridisplay();
         [~, axh] = create_figure('volumetric_slices', 1, 5, false, true);
         
@@ -180,16 +206,27 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
                 o1 = surface(o1, 'axes', [0.7 0.14 .25 .25], 'direction', 'hcp sphere right', 'orientation', 'lateral', 'sourcespace', sourcespace);
         end
         
+        o1=addblobs(o1, roi, 'indexmap', cmap, 'trans', 'transvalue', .5, 'interp', 'nearest');
+
         % colors = scn_standard_colors(2);
-        num_regions=numel(roi.labels);
-        o1=addblobs(o1,roi, 'indexmap', lines(num_regions), 'trans', 'transvalue', .5, 'interp', 'nearest');
 
-        drawnow, snapnow;
+        % Calculate the YTick positions to be centered within each color segment
+        x_positions = linspace(0, 1, numel(mylabels) + 1); % +1 for the edges
+        x_positions = (x_positions(1:end-1) + x_positions(2:end)) / 2; % Midpoints
+        
+        bar1axis = axes('Position', [.35 -0.30 .38 .42]);
+        % bar1axis = axes('Position', [0 0 0 0]);
+        colormap(bar1axis, cmap)
+        colorbar_han = colorbar(bar1axis, 'northoutside');
+        set(bar1axis, 'Visible', 'off');
+        colorbar_han.Ticks=x_positions;
+        colorbar_han.TickLabels=mylabels;
 
-
+        % drawnow, snapnow;
     end
 
     if showVolumes
+        figure;
         % Show volumetric slices
 
         o2 = fmridisplay();
@@ -215,8 +252,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
         o2 = montage(o2,'axial','wh_slice', mm_center, 'existing_axes', axh(11:15), 'existing_figure');
 
         % colors = scn_standard_colors(2);
-        num_regions=numel(roi.labels);
-        o2=addblobs(o2, roi, 'indexmap', lines(num_regions), 'trans', 'transvalue', .5, 'interp', 'nearest');
+        % num_regions=numel(roi.labels);
+        o2=addblobs(o2, roi, 'indexmap', cmap, 'trans', 'transvalue', .5, 'interp', 'nearest');
 
         drawnow, snapnow;
 

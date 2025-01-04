@@ -838,56 +838,78 @@ slicecdat = slicecdat + slicecdat2;
 
 end % function
 
-
-
-
-
-
-
 function cmaprange = get_default_cmaprange(currentmap, varargin)
 
-mapd = currentmap.mapdata(:);
-mapd = mapd(mapd ~= 0 & ~isnan(mapd));
+    % Extract and preprocess map data
+    mapd = currentmap.mapdata(:);
+    mapd = mapd(mapd ~= 0 & ~isnan(mapd)); % Remove zeros and NaNs
 
-if any(isinf(mapd))
-    warning('Some image values are Inf. Expect erratic behavior/errors.');
-    whinf = isinf(mapd);
-    mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf)));
-end
+    % Handle edge case: empty mapd
+    if isempty(mapd)
+        warning('No valid data values in currentmap. Returning default colormap range.');
+        cmaprange = [0, 1]; % Default range for empty data
+        return;
+    end
 
-% Default for non-splitcolor
-cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+    % Handle edge case: Inf values
+    if any(isinf(mapd))
+        warning('Some image values are Inf. Replacing Inf with max finite value.');
+        whinf = isinf(mapd);
+        mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf))); % Replace Inf with max finite value
+    end
 
-% cmaprange = double([prctile(mapd(mapd < 0), 10) prctile(mapd(mapd > 0), 90)]); % Match defaults for region.surface in render_on_surface.m
-        
-% adjust defaults if splitcolor is entered, without pre-defined cmaprange
+    % Handle edge case: constant or nearly constant mapd
+    if numel(unique(mapd)) == 1
+        % All values are constant
+        constant_value = unique(mapd);
+        warning('All non-zero, non-NaN values in mapd are constant. Using default colormap range.');
+        cmaprange = [constant_value - 0.1, constant_value + 0.1]; % Default range for constant values
+        return;
+    end
 
-prct_splitcolor = 20;
-if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    
-    % auto-determine colormap range cmaprange
-    
-    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-    
-    while numel(unique(cmaprange)) < 4
-        
-        prct_splitcolor = prct_splitcolor - 5;
-        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-        
-        if prct_splitcolor == 0
-            %             warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
-            cmaprange([2 3]) = cmaprange([1 4])*0.9;
-            break;
+    % Default colormap range for non-splitcolor
+    cmaprange = double([prctile(mapd, 10), prctile(mapd, 90)]);
+
+    % Handle splitcolor logic
+    prct_splitcolor = 20; % Starting percentile range for splitcolor
+    if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
+
+        % Compute splitcolor colormap range
+        cmaprange = double([
+            safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
+            safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
+            safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
+            safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
+        ]);
+
+        % Handle edge case: insufficient variability in splitcolor
+        while numel(unique(cmaprange)) < 4
+            prct_splitcolor = prct_splitcolor - 5;
+            if prct_splitcolor <= 0
+                warning('Splitcolor logic failed due to insufficient data variability. Adjusting colormap range.');
+                cmaprange([2, 3]) = cmaprange([1, 4]) * 0.9; % Compress middle range
+                break;
+            end
+            % Recalculate cmaprange with reduced prct_splitcolor
+            cmaprange = double([
+                safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
+                safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
+                safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
+                safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
+            ]);
         end
-        
     end
 end
 
-end % function
+% Safe percentile function to handle empty data
+function p = safe_prctile(data, percentile)
+    if isempty(data)
+        p = 0; % Return 0 for empty data. Maybe this should be NaN? - MS
+    else
+        p = prctile(data, percentile); % Calculate percentile normally
+    end
+end
+
 
 
 function val = map_function(c,x1,x2,y1,y2)

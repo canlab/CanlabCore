@@ -60,6 +60,7 @@ midViolin = 'fullviolin'; % The other option is 'face2face'
 % Parse optional inputs
 p = inputParser;
 addParameter(p, 'Colors', defaultColors, @(x) ismatrix(x) && size(x,2) == 3);
+addParameter(p, 'IndColors', defaultColors, @(x) ismatrix(x) && size(x,2) == 3);
 addParameter(p, 'Offset', offset, @isscalar);
 addParameter(p, 'DensityScaleFactor', densityScaleFactor, @isscalar);
 addParameter(p, 'PlotLines', plotLines, @islogical);
@@ -71,6 +72,7 @@ parse(p, varargin{:});
 
 % Extract parsed results
 colors = p.Results.Colors;
+indcolors = p.Results.IndColors;
 offset = p.Results.Offset;
 densityScaleFactor = p.Results.DensityScaleFactor;
 plotLines = p.Results.PlotLines;
@@ -93,7 +95,8 @@ for i = 1:nGroups
     if plotLines && i > 1
         for j = 1:length(dataGroups{i})
             prevData = dataGroups{i-1};
-            line([i-1, i] + [offset, -offset], [prevData(j), currentData(j)], 'Color', colors(i,:), 'LineWidth', 1);
+            % line([i-1, i] + [offset, -offset], [prevData(j), currentData(j)], 'Color', colors(i,:), 'LineWidth', 1);
+            line([i-1, i] + [offset, -offset], [prevData(j), currentData(j)], 'Color', indcolors(j,:), 'LineWidth', 1);
         end
     end
     
@@ -130,11 +133,12 @@ for i = 1:nGroups
 
     
         if i ~= 1 && i ~= nGroups
-            scatter(timePoint + offset, currentData, 36, colors(i,:), 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
-            scatter(timePoint - offset, currentData, 36, colors(i,:), 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
+            % Plot middle-groups
+            scatter(timePoint + offset, currentData, 36, indcolors, 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
+            scatter(timePoint - offset, currentData, 36, indcolors, 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
         else
-
-            scatter(timePoint + (i==1)*offset - (i==nGroups)*offset, currentData, 36, colors(i,:), 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
+            % Plot edge-groups
+            scatter(timePoint + (i==1)*offset - (i==nGroups)*offset, currentData, 36, indcolors, 'filled', 'MarkerEdgeColor', 'k', 'MarkerFaceAlpha', 1, 'jitter','on', 'jitterAmount',0.04);
         end
 
 

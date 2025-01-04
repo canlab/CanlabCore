@@ -44,34 +44,34 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %        Generally 1st-level contrast images, with one image per participant
 %
 % :Optional Inputs:
-%   **names:**
+%   **'names':**
 %        followed by cell array of names for each regressor
 %
-%   **'doplot', [logical flag]:
-%        Create plots; default = true. 'noplot' to turn off.
+%   **'doplot', [logical flag]:**
+%        Create plots; default = true. enter 'noplot', true or 'doplot', false to turn off.
 %
-%   **'plotdiagnostics', [logical flag]:
+%   **'plotdiagnostics', [logical flag]:**
 %        Create diagnostic plots; default = true.
 %
-%   **'use_BH_fdr', [logical flag]:
+%   **'use_BH_fdr', [logical flag]:**
 %        Use Benjamini-Hochberg original FDR correction
 %
-%   **'simpleplots', [logical flag]:
+%   **'simpleplots', [logical flag]:**
 %        Create simple results plots with no surfaces; default = false.
 %
-%   **'doverbose', [logical flag]:
-%        Verbose output; default = true. 'noverbose' to turn off.
+%   **'doverbose', [logical flag]:**
+%        Verbose output; default = true. enter 'noverbose', true or 'doverbose', false to turn off.
 %
-%   **'csf_wm_covs', [logical flag]:
+%   **'csf_wm_covs', [logical flag]:**
 %        Add global WM and CSF from standard MNI-space masks as covariates
 %        default = false 
 % 
-%   **'remove_outliers', [logical flag]:
+%   **'remove_outliers', [logical flag]:**
 %        Remove outliers identified based on mahalanobis distance on either 
 %        cov or corr across images at p < 0.05 uncorrected 
 %        default = false 
 %
-%   **'mask', [atlas_object]
+%   **'mask', [atlas_object]**
 %       Perform analysis in parcels defined by a custom atlas object
 %       canlab_2018 atlas, or in any different atlas or a subset thereof
 %           NOTE: in this case, the output will not contain 489 parcels but
@@ -79,7 +79,7 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %
 %   **'atlas', [atlas_object]
 %
-% :Outputs:
+% :Outputs: (For an atlas with 489 regions and 2 predictors, including intercept)
 %
 %   **OUT:**
 %                  betas: [489×2 double]    Parcels x Predictors regression slopes
@@ -120,6 +120,12 @@ function OUT = robfit_parcelwise(imgs, varargin)
 % % Parcel-wise
 % OUT = robfit_parcelwise(imgs);
 %
+% Add names and context:
+% OUT = robfit_parcelwise(imgs, 'names', {'Pred 1: Age' 'Pred 2: Optimism'}, 'analysis_name', 'My analysis');
+%
+% Use B-H correction and simple plots
+% OUT = robfit_parcelwise(diff_obj, 'plotdiagnostics', true, 'use_BH_fdr', true, 'simpleplots', true);
+%
 % % Post-run interactive visualization, etc.
 % o2 = canlab_results_fmridisplay(get_wh_image(t, 2), 'montagetype', 'full', 'noverbose');
 % o2 = removeblobs(o2);
@@ -151,7 +157,7 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %    
 %    Added mask option, Lukas Van Oudenhove, Feb 2023
 %    Additional design diagnostic checking, Tor Wager, Dec 2023
-%
+%    Fixed documentation and small bugs, added correction for pvalues == 0  Tor Wager, Jan 2025
 % ..
 
 % --------------------------------------------
@@ -172,6 +178,9 @@ for i = 1:length(fn)
     str = sprintf('%s = ARGS.(''%s'');', fn{i}, fn{i});
     eval(str)
 end
+
+if noplot, doplots = false; end
+if noverbose, doverbose = false; end
 
 % --------------------------------------------
 % set up images and parcels
@@ -322,7 +331,7 @@ for i = 1:size(X, 2)
 end
 
 if any(wh_noncentered)
-    warning('SOME PREDICTORS ARE NOT CENTERED - THE INTERCEPT MAP WILL NOT BE INTERPRETABLE AS THE MEAN PARTICIPANT, AND DEPENDS ON CODING OF REGRESSORS');
+    warning('SOME PREDICTORS ARE NOT CENTERED - THE INTERCEPT MAP WILL NOT BE INTERPRETABLE AS THE MEAN PARTICIPANT, AND DEPENDS ON CODING OF REGRESSORS. THIS MAY BE WHAT YOU WANT IF YOU ARE INCLUDING GLOBAL NUISANCE VARIABLES LIKE CSF AND WM');
     pause(2)
 end
 
@@ -411,7 +420,13 @@ for i = 1:v
     
 end % loop through nodes
 
-OUT = struct('regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
+% fix pvalues that are exactly zero - can happen with highly powered
+% analyses. make sure they have valid t-scores
+wh = find(pvalues == 0 & ~isnan(tscores) & ~isinf(tscores));
+minp = min(pvalues(pvalues > 0));
+pvalues(wh) = minp;
+
+OUT = struct(analysis_name, analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction
@@ -427,9 +442,10 @@ for i = 1:k
     if use_BH_fdr
 
         if doverbose, fprintf('Using B-H FDR as specified by user\n', names{i}); end
+
         pthr_i = FDR(pvalues(:, i), .05);
         if isempty(pthr_i), pthr_i(i) = -Inf; end
-        sig_q05 = pvalues(:, i) < pthr_i;
+        sig_q05(:, i) = pvalues(:, i) < pthr_i;
 
     else
         % MAFDR
@@ -444,7 +460,7 @@ for i = 1:k
             fprintf('Warning:\n%s\nPrior prob of sig P-values is near 1. Using B-H FDR\n', names{i});
             pthr_i = FDR(pvalues(:, i), .05);
             if isempty(pthr_i), pthr_i = -Inf; end
-            sig_q05 = pvalues(:, i) < pthr_i;
+            sig_q05(:, i) = pvalues(:, i) < pthr_i;
         end
 
     end  % Threshold method
@@ -454,7 +470,9 @@ for i = 1:k
     else
         pthr(i) = pthr_i;
     end
-end
+
+end % for each map
+
 if doverbose, fprintf('%s\nP-value for FDR q < 0.05 is %3.6f\n', names{i}, pthr); end
 
 % Other interesting metrics to save
@@ -780,6 +798,7 @@ valfcn_atlas = @(x) isa(x, 'atlas'); % added by Lukas
 
 % p.addParameter('color', [.9 .2 0], valfcn_xyz);
 p.addParameter('names', {}, @iscell); % can be scalar or vector
+p.addParameter('analysis_name', 'Regression analysis', @ischar); 
 p.addParameter('doverbose', true, valfcn_scalar);
 p.addParameter('doplots', true, valfcn_scalar);
 p.addParameter('csf_wm_covs', false, valfcn_scalar);
@@ -789,6 +808,9 @@ p.addParameter('plotdiagnostics', true, valfcn_scalar);
      
 p.addParameter('simpleplots', false, valfcn_scalar);
 p.addParameter('use_BH_fdr', false, valfcn_scalar);
+
+p.addParameter('noplot', false, valfcn_scalar);
+p.addParameter('noverbose', false, valfcn_scalar);
 
 % p.addParameter('atlas', [], @(x) isa(x, 'atlas'));
 

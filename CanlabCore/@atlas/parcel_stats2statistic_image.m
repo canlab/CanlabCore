@@ -78,6 +78,14 @@ placeholder_vec = ones(atlas_obj.volInfo.n_inmask, k);
 all_parcel_idx = double(atlas_obj.dat);
 u = unique(all_parcel_idx); u(u == 0) = [];
 
+if size(tscores, 2) ~= size(sig, 2)
+    error('Number of images (columns) in tscores and sig do not match')
+end
+
+if size(tscores, 2) ~= size(pvalues, 2)
+    error('Number of images (columns) in tscores and pvalues do not match')
+end
+
 % initialize variables with correct size
 
 t_obj = statistic_image('dat', single(0 .* placeholder_vec), ...

@@ -644,6 +644,7 @@ m = cell(1, n_runs);
 
 for i = 1:n_runs
 
+    dat.dat = single(dat.dat);  % enforce single - ad hoc fix to prevent warnings due to upstream format
     m{i} = mean(get_wh_image(dat, find(Xi(:, i))));
 
 end

@@ -406,6 +406,10 @@ if any(wh)
     if iscolumn(networknames), networknames = networknames'; end
 end
 
+% Make sure they are not in table format
+if istable(networknames)
+    networknames = table2array(networknames);
+end
 
 
 % Deal with space and empty voxels so they line up

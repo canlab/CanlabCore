@@ -210,6 +210,15 @@ function p = addbrain(varargin)
 % and updating some atlases. Move towards all regions being precisely
 % defined and usable as ROIs as well as display items.
 
+% NOTES:
+% Zona Incerta (ZI)
+% https://pmc.ncbi.nlm.nih.gov/articles/PMC7555067/
+% spm_orthviews('Reposition', [-12 -8 -5])
+% spm_orthviews('Reposition', [12 -8 -5])
+% spm_orthviews('Reposition', [7 -2 -1])
+% https://osf.io/c8p5n/  % Maps available - nii
+% e.g., SNSX32NLin2020Asym_space-MNI152NLin2009bAsym_hemi-L_desc-cZI_mask.nii
+
 p = [];
 meth = 'transparent_surface';
 if ismember({'disableVis3d'},varargin(cellfun(@ischar,varargin)))

@@ -270,14 +270,14 @@ end
 if ~exist('modeldir','var')
     modeldir = pwd;
 end
-if ~exist(modeldir,'dir')
-    error(['No such directory: ' modeldir])
-else
+% if ~exist(modeldir,'dir')
+%     error(['No such directory: ' modeldir])
+% else
     % make absolute (unsure if necessary)
 
     % This is a bug on discovery
 %     modeldir = filenames(modeldir,'absolute','char');
-end
+% end
 
 
 % SUBLEVS
@@ -380,7 +380,11 @@ else
     if ~exist('sublevs','var')
         diary(diaryname), fprintf('> No subject levels specified: looking for all subject level analyses in:\n\t%s\n',modeldir); diary off
 %         spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'),'absolute');
-        spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'));
+%         spmfiles = filenames(fullfile(modeldir,'*/SPM.mat'));
+
+        spmfiles = dir(filenames(fullfile(modeldir,'*', filesep, 'SPM.mat')));
+        spmfiles=fullfile({spmfiles.folder}', {spmfiles.name}');
+
         if isempty(spmfiles)
             diary(diaryname), fprintf('> ERROR: No subject level analyses found.\n'), diary off
             cd(STARTINGDIR)
@@ -390,7 +394,18 @@ else
         sublevs = unique(sublevs);
         spmfile = spmfiles{1};
     else
-        spmfile = fullfile(sublevs{1},'SPM.mat');
+        % spmfile = fullfile(sublevs{1},'SPM.mat');
+        files = dir(fullfile(sublevs{1},'SPM.mat'));
+        if numel(files) == 1
+            spmfile = fullfile({files.folder}', {files.name}');
+        else
+            spmfiles = fullfile({files.folder}', {files.name}');
+        end
+        for i=1:numel(spmfiles), [sublevs{i}] = fileparts(spmfiles{i}); end %#ok
+        sublevs = unique(sublevs);
+        spmfile = spmfiles{1};
+
+
     end
     
     diary(diaryname)
@@ -400,12 +415,15 @@ else
     end
     diary off
     
-    if exist(spmfile,'file')
-        load(spmfile)
-    else
-        diary(diaryname), fprintf('> ERROR: No such file: %s\n',spmfile); diary off
-        cd(STARTINGDIR)
-        return
+    if exist('spmfile','var')
+        if exist(spmfile,'file')
+    
+            load(spmfile)
+        else
+            diary(diaryname), fprintf('> ERROR: No such file: %s\n',spmfile); diary off
+            cd(STARTINGDIR)
+            return
+        end
     end
     
     % connames, connums, P

@@ -426,7 +426,7 @@ wh = find(pvalues == 0 & ~isnan(tscores) & ~isinf(tscores));
 minp = min(pvalues(pvalues > 0));
 pvalues(wh) = minp;
 
-OUT = struct(analysis_name, analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
+OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction

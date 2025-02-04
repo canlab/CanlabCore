@@ -3,7 +3,7 @@ function [beta, t, pvals, convals, con_t, con_pvals, sigma, Phi, df, stebeta, co
 %
 % :Usage:
 % ::
-%     [beta, t, pvals, convals, con_t, con_pvals, sigma, Phi, df, stebeta, conste, F] = fit_fgls(y, X, c, p)
+%     [beta, t, pvals, convals, con_t, con_pvals, sigma, Phi, df, stebeta, conste, F] = fit_gls(y, X, c, p)
 %
 % :Inputs:
 %   **y:**     Dependent variable (T x 1 vector)

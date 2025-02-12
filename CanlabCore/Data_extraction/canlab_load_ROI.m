@@ -70,7 +70,8 @@ function [r, atlas_obj, default_color, region_file, image_file] = canlab_load_RO
 % 'SNr'        Substantia Nigra reticularis     % Pauli 2017 BioArxiv subcortical atlas
 % 'VTA'        Ventral tegmental area           % Pauli 2017 BioArxiv subcortical atlas
 % 'rn'         Red nucleus; Keuken 2014
-% 'pbn'        Parabrachial complex; Fairhurst, Merle, Katja Wiech, Paul Dunckley, and Irene Tracey. 2007. ?Anticipatory Brainstem Activity Predicts Neural Processing of Pain in Humans.? Pain 128 (1-2):101?10.
+% 'pbn'        Parabrachial complex; New: Bianciardi M, Strong C, Toschi N, Edlow BL, Fischl B, Brown EN, Rosen BR, Wald LL. A probabilistic template of human mesopontine tegmental nuclei from in vivo 7T MRI. Neuroimage. 2018 Apr 15;170:222-230. doi: 10.1016/j.neuroimage.2017.04.070. Epub 2017 May 3. PMID: 28476663; PMCID: PMC5670016.                                                                                                                           '
+% 'pbn_old'    Parabrachial complex; Old: OLD: Fairhurst, Merle, Katja Wiech, Paul Dunckley, and Irene Tracey. 2007. ?Anticipatory Brainstem Activity Predicts Neural Processing of Pain in Humans.? Pain 128 (1-2):101?10.
 % 'lc'         Locus coeruleus; Keren 2009, 2SD image
 % 'rvm_old'    Hand-drawn rostral ventral medulla (Tor) in anatomical rvm
 % 'rvm'        Rostral ventral medulla from Brooks et al. 2016(??)
@@ -507,6 +508,22 @@ switch region_name
         % -----------------------------------------------------------
         
     case 'pbn'
+
+        % Code to create this region:
+        % atl = load_atlas('canlab2024');
+        % pbn = select_atlas_subset(atl, {'PB_'}, 'flatten')
+        % pbn = threshold(pbn, .5)
+        % pbn_2024 = atlas2region(pbn);
+        % save(which('coordinate_brainstem_rois_2018_tor.mat'), '-append', 'pbn_2024');
+        % orthviews(pbn_2024)
+
+        region_file = which('coordinate_brainstem_rois_2018_tor.mat'); % old region_file = which('pbn_cl.mat');
+        var_name = 'pbn_2024';                     % Variable name(s) of interest in file
+        image_file = [];
+        default_color = [1 .5 0];
+
+
+    case 'pbn_old'
         region_file = which('coordinate_brainstem_rois_2018_tor.mat'); % old region_file = which('pbn_cl.mat');
         var_name = 'pbn_regions';                     % Variable name(s) of interest in file
          image_file = [];

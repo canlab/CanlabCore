@@ -216,7 +216,10 @@ for i = 1:length(u)
             newt(1, j) = table({char(mode(categorical(cellstr(tcolumn))))});
         else
              warning(['No policy for averaging datatype ''' class(tcolumn(1)) ''' in metadata_table. Dropping column ''' t.Properties.VariableNames{j} '''']);
-             newt{1, j} = [];
+             
+             % newt{1, j} = [];
+             % newt(1, j) = NaN;
+             newt(1, j) = table(NaN);
         end
     end
 

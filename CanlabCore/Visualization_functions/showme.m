@@ -10,6 +10,7 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     %    lbl - Cell array of region labels to be plotted
     %    varargin - Additional parameters for customization (e.g., showSurfaces, sourcespace, inflation, showVolumes, volRadius, showFlatmap, showSlabs, atlas)
     %        'showSurfaces' - Boolean flag to display surfaces (default: true)
+    %        'labels' - Cell string array to label surfaces (default: {})
     %        'inflation' - Type of surface inflation ('none', 'inflated', 'sphere', default: 'inflated')
     %        'showVolumes' - Boolean flag to display volumetric slices (default: true)
     %        'volRadius' - Radius for volumetric display in mm (default: 8)
@@ -45,8 +46,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     addParameter(parser, 'inflation', 'inflated');
     addParameter(parser, 'showVolumes', true);
     addParameter(parser, 'volRadius', 8);
-    addParameter(parser, 'showFlatmap', true);
-    addParameter(parser, 'showSlabs', true);
+    addParameter(parser, 'showFlatmap', false);
+    addParameter(parser, 'showSlabs', false);
     addParameter(parser, 'sourcespace', 'MNI152NLin2009cAsym');
     addParameter(parser, 'atlas', load_atlas('canlab2024'));
     addParameter(parser, 'labels', {});
@@ -80,8 +81,9 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
         showVolumes=false;
         showFlatmap=false;
         showSlabs=false;
-        [o1 o2 o3 o4] = deal([]); 
     end
+
+    [o1 o2 o3 o4] = deal([]); 
 
     img=[];
     if isa(lbl, 'region')
@@ -138,9 +140,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     
     % Show surfaces
     if showSurfaces
-        figure;
         o1 = fmridisplay();
-        [~, axh] = create_figure('volumetric_slices', 1, 5, false, true);
+        [~, axh] = create_figure('surface_plots', 1, 5, false, true);
         
         % Retrieve all axes handles in the figure
         allAxesHandles = findall(gcf, 'Type', 'axes');
@@ -186,7 +187,13 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
                 o1 = surface(o1, 'axes', [0.3 0.44 .25 .25], 'direction', 'hcp sphere left', 'orientation', 'lateral', 'sourcespace', sourcespace);
                 o1 = surface(o1, 'axes', [0.5 0.44 .25 .25], 'direction', 'hcp sphere left', 'orientation', 'medial', 'sourcespace', sourcespace);
                 o1 = surface(o1, 'axes', [0.7 0.44 .25 .25], 'direction', 'hcp sphere right', 'orientation', 'lateral', 'sourcespace', sourcespace);
-
+            
+            case 'leftright inout'
+                o1 = canlab_results_fmridisplay([], 'montagetype', 'leftright inout');
+                % render_on_surface(roi, o1);
+            % case 'left_cutaway'
+            %     o1 = canlab_results_fmridisplay([], 'montagetype', 'inout leftright');
+            %     render_on_surface(roi, o1);
             otherwise
 
                 o1 = surface(o1, 'axes', [0.1 0.74 .25 .25], 'direction', 'surface left', 'orientation', 'medial', 'sourcespace', sourcespace);
@@ -222,11 +229,10 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
         colorbar_han.Ticks=x_positions;
         colorbar_han.TickLabels=mylabels;
 
-        % drawnow, snapnow;
+        drawnow, snapnow;
     end
 
     if showVolumes
-        figure;
         % Show volumetric slices
 
         o2 = fmridisplay();
@@ -253,7 +259,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
 
         % colors = scn_standard_colors(2);
         % num_regions=numel(roi.labels);
-        o2=addblobs(o2, roi, 'indexmap', cmap, 'trans', 'transvalue', .5, 'interp', 'nearest');
+        % o2=addblobs(o2, roi, 'indexmap', cmap, 'trans', 'transvalue', .5, 'interp', 'nearest');
+        o2=addblobs(o2, roi, 'indexmap', cmap, 'interp', 'nearest');
 
         drawnow, snapnow;
 

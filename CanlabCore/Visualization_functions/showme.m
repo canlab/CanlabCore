@@ -1,13 +1,15 @@
 function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
-    % showme- Looks up and visualizes regions of interest on
-    % surfaces, volumes, flatmaps, and coronal slabs. Searches for terms
-    % through each level of an atlas's labels. If atlas not specified, will
-    % default to canlab2024.
+    % Visualizes one or more regions of interest by name from an atlas-class object
+    % - Display on surfaces, volumes, flatmaps, and/or coronal slabs. 
+    % - Searches for terms through each level of an atlas's labels in .labels, .labels2, etc
+    % - If atlas not specified, will default to canlab2024.
     %
     % Syntax:  [o1, o2, o3, o4, roi] = showme(lbl, varargin)
     %
     % Inputs:
     %    lbl - Cell array of region labels to be plotted
+    %           - Each element is a string label defined in .labels in an atlas object
+    %
     %    varargin - Additional parameters for customization (e.g., showSurfaces, sourcespace, inflation, showVolumes, volRadius, showFlatmap, showSlabs, atlas)
     %        'showSurfaces' - Boolean flag to display surfaces (default: true)
     %        'labels' - Cell string array to label surfaces (default: {})
@@ -17,18 +19,18 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     %        'showFlatmap' - Boolean flag to display flatmap (default: true)
     %        'showSlabs' - Boolean flag to display coronal slabs (default: true)
     %        'sourcespace' - Source space for the surfaces (default: 'MNI152NLin2009cAsym')
-    %        'atlas' - Atlas data structure (default: load_atlas('canlab2024'))
+    %        'atlas' - Atlas data structure (default: load_atlas('canlab2024'); see load_atlas for options)
     %
     % Outputs:
     %    o1 - Handle to the surface display object
     %    o2 - Handle to the volumetric slices display object
     %    o3 - Handle to the flatmap 
     %    o4 - Handle to the flatmap 
-    %    roi - Region of interest data object
+    %    roi - Region(s) of interest in a region-class object
     %
     % Example: 
-    %    [o1, o2, o3, 04, roi] = showme('insula');
-    %    [o1, o2, o3, 04, roi] = showme('insula', 'showSurfaces', true, 'inflation', 'inflated', 'showVolumes', true, 'volRadius', 10, 'showFlatmap', true, 'showSlabs', true, 'sourcespace', 'MNI152NLin2009cAsym', 'atlas', load_atlas('canlab2024'));
+    %    [o1, o2, o3, o4, roi] = showme('insula');
+    %    [o1, o2, o3, o4, roi] = showme('insula', 'showSurfaces', true, 'inflation', 'inflated', 'showVolumes', true, 'volRadius', 10, 'showFlatmap', true, 'showSlabs', true, 'sourcespace', 'MNI152NLin2009cAsym', 'atlas', load_atlas('canlab2024'));
     %   
     %   % Then, mask with your own data
     %   tthr=threshold(output, .05, 'fdr');
@@ -39,6 +41,7 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     %
     % Author: Michael Sun, Ph.D. 7/24/2024
 
+    % Tor Wager - updated help, 2/14/2025
 
     % Parse optional inputs
     parser = inputParser;
@@ -87,9 +90,9 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
 
     img=[];
     if isa(lbl, 'region')
-        roi=lbl;
+        roi = lbl;
     elseif isa(lbl, 'atlas')
-        roi=lbl;
+        roi = lbl;
 
     else     % If string/text:
         disp(lbl)

@@ -195,7 +195,7 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
                 end
             end
 
-        case {'SPM5', 'SPM8', 'SPM12'} %added keepdt to retain original dt if requested : luk(ea)
+        case {'SPM5', 'SPM8', 'SPM12', 'SPM25'} %added keepdt to retain original dt if requested : luk(ea)
             %Outputs float32 by default otherwise keeps original data type
             %if 'keepdt' is used as optional input.
             if isfield(volInfo, 'dt') && spm_type(volInfo.dt(1), 'intt') && ~keepdt

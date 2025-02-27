@@ -133,6 +133,7 @@ for i = 1:length(varargin)
                 eval([varargin{i} ' = varargin{i+1}; varargin{i+1} = [];']);
                 if strcmp(varargin{i}, 'fd')
                     dofd = true;
+                    
                 elseif strcmp(varargin{i}, 'fd_thresh')
                     fd_thresh = varargin{i+1};
                 end

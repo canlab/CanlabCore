@@ -72,6 +72,7 @@
 %    % But if you just have one matrix, no need to set up, so this is just as fast:
 %    tic , [y, pI, S, I] = hpfilter(data{1}, HPDESIGN.TR, HPDESIGN.HP,HPDESIGN.spersess, [], 1);, toc
 %
+% See also use_spm_filter for a function that returns regressors
 % ..
 %    tor wager
 %    Modified 5/12/06 to include dummy images for each session

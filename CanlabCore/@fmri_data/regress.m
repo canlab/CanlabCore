@@ -619,6 +619,8 @@ end
 % ---------------------------------------------------------------------
 
 tic
+s = warning;
+warningwason = strcmp(s(1).state, 'on');
 warning off
 
 if brain_is_outcome
@@ -991,7 +993,10 @@ elseif do_display && doverbose
     
 end
 
+% reset warning state if needed
+if warningwason
 warning on
+end
 
 % ---------------------------------------------------------------------
 % Subfunctions

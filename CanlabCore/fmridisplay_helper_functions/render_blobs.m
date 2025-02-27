@@ -215,6 +215,7 @@ for i = 1:length(varargin)
             case 'onecolor', docolormap = 0; % solid-color blobs
             case 'indexmap'
                 for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
+                    
                     assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
                         sprintf('Cannot evaluate render_blobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));
@@ -314,7 +315,7 @@ for i = 1:length(varargin)
                 k = varargin{i+1};
                 enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
             
-            case {'full','full hcp','full2','nearest'}
+            case {'full','full hcp','full2','nearest', 'interp', 'MNI152NLin2009cAsym'}
                 continue
 
             case {'partialvolumethreshold'}

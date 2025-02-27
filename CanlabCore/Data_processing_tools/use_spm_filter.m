@@ -12,6 +12,9 @@ function [S,KL,KH] = use_spm_filter(TR,dims,LChoice,HChoice,HParam,varargin)
 %        Gaussian parameter in seconds
 %   **K{s}.HChoice:**
 %        High-pass filtering {'specify' 'none'}
+%
+% dim of filter = length of time series to be filtered, in elements
+%
 % ..
 %    05/22/01 Tor Wager
 % ..

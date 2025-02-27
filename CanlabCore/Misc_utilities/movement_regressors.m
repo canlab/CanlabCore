@@ -1,7 +1,9 @@
-function data_obj = movement_regressors(data_obj)
-% Create a set of movement regressors with quadratic/derivative
-% transformations, and identify high-movement outlier images.
+function [mvmt_matrix mvmt_regs_24] = movement_regressors(mvmt_file)
+% Read movement parameter file and create a set of movement regressors with quadratic/derivative transformations
 %
+% - To identify high-movement outlier images, see framewise_displacement.m and outliers.m')
+% 
+
 % Power (2012) framewise displacement: Uses the average absolute deviation across 6 movement parameters.
 % Power 2012: "Spurious but systematic correlations in functional connectivity MRInetworks arisefrom subject motion"
 % "FDi = |Δdix| + |Δdiy| + |Δdiz| + |Δαi| + |Δβi| + |Δγi|, where Δdix = d(i − 1)x − dix, 
@@ -20,19 +22,23 @@ function data_obj = movement_regressors(data_obj)
 % spike criteria: FD > .25mm OR abs(zscore(DVARS)) > 3, and the following 4 volumes (following ~2 sec)
 % bandpass filter, passband = [.01 .1] Hz
 
-mvmt = importdata(mvmt_file);
+mvmt_matrix = importdata(mvmt_file);
 
 % fill out 24 movement-related parameters per run
 % ----------------------------------------------------------------
-mvmt2 = zscore(mvmt) .^ 2;
-mvmt3 = [zeros(1, 6); diff(zscore(mvmt))];
+mvmt = zscore(mvmt_matrix);
+mvmt2 = mvmt .^ 2;
+mvmt3 = [zeros(1, 6); diff(mvmt)];
 mvmt4 = zscore(mvmt3) .^ 2;
 
-% simple geometric mean across translation and rotation; not absolute movement, which varies by voxel
-% ----------------------------------------------------------------
-geo_displacement = [0; sum(diff(mvmt) .^ 2, 2) .^ .5];
+mvmt_regs_24 = [zscore(mvmt) mvmt2 mvmt3 mvmt4];
 
-% adjust outliers: add geo displacement
+% % simple geometric mean across translation and rotation; not absolute movement, which varies by voxel
+% % ----------------------------------------------------------------
+% geo_displacement = [0; sum(diff(mvmt) .^ 2, 2) .^ .5];
+% 
+% % adjust outliers: add geo displacement
+% 
+% high_movement_timepoints(geo_displacement > 0.25) = true;
 
-est_outliers_corr(geo_displacement > 0.25) = true;
-est_outliers_uncorr(geo_displacement > 0.25) = true;
+end

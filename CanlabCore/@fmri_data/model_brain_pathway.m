@@ -72,6 +72,14 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %
 % :Optional inputs:
 %
+%   **'plot'**
+%      Create bar plots of output pathway strength
+%
+%   **'names'**
+%      Followed by cell array of pathway names
+%      e.g., {'Path1' 'Offtarget1' 'Offtarget2' 'Path2'}
+%      e.g., {'L LGN->L V1' 'L LGN->L A1' 'L MGN->L V1' 'L MGN->L A1'};
+%
 %   **'nboot'**
 %      Followed by the number of bootstrap samples to conduct for
 %      estimating voxel-wise significance of V and Z weights
@@ -94,11 +102,24 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %
 %   **stats:**
 %        Structure including:
-%           - simple_correlations: correlations results of cross-validated connectivity analysis that used region averages
+%           - simple_correlations: correlations results of cross-validated
+%           connectivity analysis that used region averages. Pathways are
+%           columns 1 and 4.  Off-target pathways are columns 2 and 3.
 %           - latent_correlations: correlations among PLS-optimized latent timeseries (T_hat and U_hat)
 %           - latent_timeseries: cross-validated time series of the latent scores 
 %             latent_timeseries_source: T_hat = Y_test * V
 %             latent_timeseries_target: U_hat = X_test * Z
+%
+%           - Overall cross-validated correlations and dot products for
+%           multi-level analysis.  If you run this on a series of
+%           individual subjects, each with their own latent pattern, then
+%           you can use these as summary statistics for 2nd-level group
+%           analyses:
+%             stats.path1_overall_xval_r = Correlation between path 1 source and target
+%             stats.path2_overall_xval_r = Correlation between path 2 source and target
+%             stats.path1_overall_xval_dot = Dot product between path 1 source and target
+%             stats.path2_overall_xval_dot = Dot product between path 2 source and target
+%
 %           - latent_correlation_interaction_ttest: T-test on Fisher-transformed latent_correlation contrasting on-target vs. off-target on two pathways
 %             simple_correlation_interaction_ttest: T-test on Fisher-transformed simple_correlation contrasting on-target vs. off-target on two pathways
 %             latent_correlation_pathway_*_ttest: T-test on Fisher-transformed latent_correlation contrasting on-target vs. off-target on pathway one or two
@@ -112,14 +133,22 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %           - target_one_obj (optional): resampled and masked fmri data object for target one
 %           - target_two_obj (optional): resampled and masked fmri data object for target one
 %
-%
 % :Examples:
 % ::
 %
+% % Example 1: Time series
+% % ----------------------------------------------------------
+% See canlab_help_MPathI_multivariate_pathway.mlx
+% Walkthrough on canlab.github.io
+%
+%
+% % Example 2: Multi-subject toy image series example
+% % ----------------------------------------------------------
 % % Load multi-subject image object (toy example, 6 images per subject)
 % imgs = load_image_set('bmrk3'); 
 %
 % % Define ROIs
+% atlas_obj = load_atlas('canlab2018_2mm');
 % vpl = select_atlas_subset(atlas_obj, {'VPL'}, 'flatten');
 % pbn = select_atlas_subset(atlas_obj, {'pbn'}, 'flatten');
 % cea = select_atlas_subset(atlas_obj, {'Amygdala_CM'}, 'flatten');
@@ -156,6 +185,7 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 % 10/25/2022 Byeol Lux & Tor Wager - update documentation and add latent_timeseries_pathway
 % 12/08/2024 Byeol: Updated some variable names to better align with the Kragel 2021 Neuron paper 
 %                   (refer to supplementary figures 1) and enhanced the documentation.
+% 2/23/2025 Tor Wager - update documentation and help examples, and 'plot' option
 %
 % Notes for future development:
 % - could use xval_stratified_holdout_leave_whole_subject_out in future versions for cross-validation
@@ -179,24 +209,41 @@ function stats = model_brain_pathway(obj,source_one,source_two,target_one,target
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % ..
+
 %% Get defaults and initialize user inputs
-if any(strcmp(varargin,'Align'))
-    do_alignment=true;
+
+if any(strcmp(varargin, 'names'))
+    pathwaynames = varargin{find(strcmp(varargin, 'names'))+1};
+    if ~iscell(pathwaynames), error('Enter names of pathways in cell array, {''Path1'' ''Offtarget1'' ''Offtarget2'' ''Path2''}'); end
+
 else
-    do_alignment=false;
+    pathwaynames = {'Path1' 'Offtarget1' 'Offtarget2' 'Path2'};
+end
+stats.pathwaynames = pathwaynames;
+
+if any(strcmp(varargin, 'plot'))
+    do_plot = true;
+else
+    do_plot = false;
+end
+
+if any(strcmp(varargin,'Align'))
+    do_alignment = true;
+else
+    do_alignment = false;
 end
 
 if any(strcmp(varargin,'nboot'))
-    do_boot=true;
+    do_boot = true;
     nboot  = varargin{find(strcmp(varargin,'nboot'))+1}; % Get number of bootstrap iterations
 else
-    do_boot=false; % Default: no bootstrapping
+    do_boot = false; % Default: no bootstrapping
 end
 
 if any(strcmp(varargin,'noroi'))
-    do_roi=false; 
+    do_roi = false; 
 else
-    do_roi=true; % Default: save masked ROI data
+    do_roi = true; % Default: save masked ROI data
 end
 
 % Default 10-fold cross-validation unless custom indices are provided
@@ -447,20 +494,20 @@ stats.latent_correlations = [latent_correlation_pathway_one(:,1) latent_correlat
 % Conduct t-tests on latent correlation coefficients for specific contrasts.
 % Test whether on-target pathways are more functionally connected than off-target pathways.
 
-% Interaction contrast [1 -1 -1 1]
+% Interaction contrast [1 -1 -1 1], on-target > off-target
 [~,p,~,stats.simple_correlation_interaction_ttest]=ttest(atanh(stats.simple_correlations(:,1))-atanh(stats.simple_correlations(:,2))-atanh(stats.simple_correlations(:,3))+atanh(stats.simple_correlations(:,4)));
 stats.simple_correlation_interaction_ttest.p=p; % simple region average analysis
 [~,p,~,stats.latent_correlation_interaction_ttest]=ttest(atanh(stats.latent_correlations(:,1))-atanh(stats.latent_correlations(:,2))-atanh(stats.latent_correlations(:,3))+atanh(stats.latent_correlations(:,4)));
 stats.latent_correlation_interaction_ttest.p=p; % MPathI
 
 % Pathway-specific contrasts: Pathway one (X1-Y1)
-% Pathway one: [1 -1 0 0]
+% Pathway one: [1 -1 0 0] on-target vs. off-target
 [~,p,~,stats.simple_correlation_pathway_one_ttest]=ttest(atanh(stats.simple_correlations(:,1))-atanh(stats.simple_correlations(:,2)));
 stats.simple_correlation_pathway_one_ttest.p=p; % simple region average analysis
 [~,p,~,stats.latent_correlation_pathway_one_ttest]=ttest(atanh(stats.latent_correlations(:,1))-atanh(stats.latent_correlations(:,2)));
 stats.latent_correlation_pathway_one_ttest.p=p; % MPathI
 
-% Pathway two: [0 0 -1 1]
+% Pathway two: [0 0 -1 1] on-target vs. off-target
 [~,p,~,stats.simple_correlation_pathway_two_ttest]=ttest(atanh(stats.simple_correlations(:,4))-atanh(stats.simple_correlations(:,3)));
 stats.simple_correlation_pathway_two_ttest.p=p; % simple region average analysis
 [~,p,~,stats.latent_correlation_pathway_two_ttest]=ttest(atanh(stats.latent_correlations(:,4))-atanh(stats.latent_correlations(:,3)));
@@ -537,6 +584,13 @@ if flip_maps
 %     stats.latent_timeseries(:, 2) = stats.latent_timeseries(:, 2) * sign(corr(mean(xl_pathway_four,2),mean(source_two_obj.dat,2)));
 
 end
+
+% added by Tor, 2/23/2025
+stats.path1_overall_xval_r = corr(stats.latent_timeseries_source(:, 1), stats.latent_timeseries_target(:, 1));
+stats.path2_overall_xval_r = corr(stats.latent_timeseries_source(:, 4), stats.latent_timeseries_target(:, 4));
+
+stats.path1_overall_xval_dot = dot(stats.latent_timeseries_source(:, 1), stats.latent_timeseries_target(:, 1));
+stats.path2_overall_xval_dot = dot(stats.latent_timeseries_source(:, 4), stats.latent_timeseries_target(:, 4));
 
 % added by Byeol on 12/12/2024
 stats.T_pathway_one = xs_pathway_one;
@@ -628,15 +682,40 @@ end
 
 %% Output data objects
 if do_roi
+
     stats.source_one_obj=source_one_obj;
     stats.source_two_obj=source_two_obj;
     stats.target_one_obj=target_one_obj;
     stats.target_two_obj=target_two_obj;
+
 end
 %% Add results report with narrative text
 stats = add_results_report(stats);
 
+%% Optional plot
+if do_plot
+
+    colors = {[.3 .4 1] [.4 .5 .6] [.6 .5 .4] [1 .7 .3]};
+
+    % Plot the correlations among region averages:
+    disp('Simple ROI correlations')
+    create_figure('Simple ROI correlations');
+
+    barplot_columns(stats.simple_correlations, 'names', pathwaynames, 'colors', colors, 'nofigure');
+    title('Simple ROI correlations')
+
+    % Plot the correlations among PLS-optimized latent timeseries:
+    disp('MPathI correlations')
+    create_figure('MPathI correlations');
+
+    barplot_columns(stats.latent_correlations, 'names', pathwaynames, 'colors', colors, 'nofigure');
+    title('MPathI correlations')
+
 end
+
+
+end % main function
+
 
 
 %% subfunctions for finding patterns across voxels associated with latent scores in each brain region

@@ -1,22 +1,10 @@
 function out = regress(dat, varargin)
 % Multiple regression with an fmri_data object (dat), predicting brain data with a design matrix stored in dat.X (or vice versa)
-% By default, this function will use OLS regression. Robust regression can
-% be specified (see below)
 %
 % Regress dat.X on dat.dat at each voxel, and return voxel-wise statistic
 % images. Each column of dat.X is a predictor in a multiple regression,
 % and the intercept is the last column. Intercept will automatically be
 % added if not detected unless 'nointercept' is specified.
-%
-% Output: Output is a structure with several fields. Key fields include b
-% (beta images) and t (t statistic images). These contain one image for
-% each regressor in the model. The last image is always the model
-% intercept. The first images are the regressors from your design matrix. For
-% example, if your design matrix contains regressors for age and sex, your
-% beta and T images will have 3 images: age, sex, and model intercept. (Note: If
-% you are using voxel-varying covariates (see covdat below), that is
-% automatically added as the second-to-last regressor in the model.) See
-% documentation on other output fields below.
 %
 % Key pointers:
 % - Output structure (regression_results_ols) contains beta and t images in statistic_image objects
@@ -59,11 +47,7 @@ function out = regress(dat, varargin)
 % :Optional Inputs:
 %  **[threshold, 'unc']:**
 %        p-value threshold string indicating threshold type
-%        (see help statistic_image.threshold for options). This function
-%        does not accept the full range of possible threshold types (e.g.,
-%        you cannot use the 'k' cluster extent option). To apply other
-%        thresholds, save the results from this function and then call
-%        threshold() to apply any other thresholds.
+%        (see help statistic_image.threshold for options)
 %
 %  **robust:**
 %        Run a robust regression (default is OLS).  Robust is considerably
@@ -118,9 +102,7 @@ function out = regress(dat, varargin)
 %       objects. These serve as voxel-varying covariates -- each voxel can have
 %       a unique set of covariates. One common use case might be to regress
 %       post-treatment data on group + pre-treatment data. NOTE: this field
-%       only works in 'robust' mode, and is not implemented for OLS
-%       regression. Results will be added as the second-to-last regressor
-%       in the model (intercept is last).
+%       only works in 'robust' mode, and is not implemented for OLS regression.
 %
 % :Outputs:
 %
@@ -246,8 +228,10 @@ function out = regress(dat, varargin)
 %    Edited by Luke Chang, 3/26/2013 to add optional input to not add an intercept - allows for more flexible modeling options
 %    Code completely refactored by Luke Chang 2/24/25
 %    Verbose option updated by Tor, 7/2015
-%    Help, some outputs, robust % update: added by Tor, 5/2021
-% ..
+%    Help, some outputs, robust % update: added by Tor, 5/2021      
+% 
+% ..Edited by Ke Bo 2/25/2025 to add an option input to include fit general least square regression with AR model. AR order can be defined by users.  
+% . Example:  Out= regress(fmri_data,'AR',3);
 
 % ..
 %    ---------------------------------------------------------------------
@@ -267,6 +251,9 @@ analysis_name = '';
 C = [];
 grandmeanscale = false;
 covdat = [];   % covariates for each vox. initialize to empty (no voxel-varying covariates)
+
+do_AR = false;
+ar_order = 0;  % default AR order (0 means not used)
 
 % ---------------------------------------------------------------------
 % Parse Inputs
@@ -299,6 +286,18 @@ for varg = 1:length(varargin)
             varargin{varg} = {};
         end
         
+        if strcmpi(varargin{varg}, 'AR')
+            do_AR = true;
+            % Check if the next argument is numeric (AR order)
+            if (varg < length(varargin)) && isnumeric(varargin{varg+1})
+                ar_order = varargin{varg+1};
+                varargin{varg+1} = [];
+            else
+                 ar_order = 1; % default AR(1) if none specified
+            end
+                varargin{varg} = [];
+        end
+
         if strcmpi('brainony',varargin{varg}) | strcmpi('brain_is_predictor',varargin{varg}) %#ok<*OR2>
             brain_is_outcome = 0;
             varargin{varg} = {};
@@ -641,7 +640,63 @@ if brain_is_outcome
         end
     end
     
-    if do_robust 
+
+    if do_AR
+            if doverbose
+                fprintf('\nRunning in GLS Mode with AR(%d)\n', ar_order);
+            end
+        
+            v = size(dat.dat, 1);  % number of voxels
+            [n, k] = size(X);
+            
+            % Pre-allocate outputs
+            b = zeros(k, v);
+            t = zeros(k, v);
+            p = zeros(k, v);
+            sigma = zeros(1, v);
+            dfe = zeros(1, v);
+            stderr = zeros(k, v);
+            Phi_all = cell(1, v);
+            
+            % Pre-allocate contrast arrays if contrasts are provided
+            if ~isempty(C)
+                nc = size(C, 2);
+                con_vals = zeros(nc, v);
+                con_t = zeros(nc, v);
+                con_p = zeros(nc, v);
+            end
+        
+            % Loop over voxels and apply GLS via fit_gls2
+            for i = 1:v
+                y_voxel = dat.dat(i, :)';  % Voxel time-series as column vector
+                [beta_i, t_i, pvals_i, con_vals_i, con_t_i, con_pvals_i, sigma_i, Phi_i, df_i, stderr_i, ~, ~] = ...
+                    fit_gls2(y_voxel, X, C, ar_order);
+                
+                b(:, i) = beta_i;
+                t(:, i) = t_i;
+                p(:, i) = pvals_i;
+                sigma(:,i) = sigma_i;
+                dfe(:,i) = df_i;
+                stderr(:, i) = stderr_i;
+                Phi_all{i} = Phi_i;
+                
+                if ~isempty(C)
+                    con_vals(:, i) = con_vals_i;
+                    con_t(:, i) = con_t_i;
+                    con_p(:, i) = con_pvals_i;
+                end
+                
+                if doverbose && mod(i, 100) == 0
+                    fprintf('\b\b\b\b%03d%%', round(100 * i/v));
+                end
+            end
+        
+            % Compute residuals (if you need them for output)
+            r = dat.dat' - X * b;
+        
+        % Continue with your existing robust or OLS branches
+
+    elseif do_robust 
         % Robust - Regress stim/behavior(X) on brain (Y)
         %need to loop through voxels - Slow!
         

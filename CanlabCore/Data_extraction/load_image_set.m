@@ -103,6 +103,15 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        Meta-analysis maps for 5 basic categories.
 %        'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'
 %
+%        'marg' or 'transmodal' or 'principalgradient': 2016 PNAS Margulies
+%                    MNI152NLin2009cAsym_margulies_grad1.nii.gz
+%        'margfsl' : MNI152NLin6Asym_margulies_grad1.nii.gz
+%
+%        'transcriptomic_gradients':
+%               Principal transcriptomic gradients from
+%               Hawrylycz et al. An anatomically comprehensive atlas of the adult human brain transcriptome. (2012) Nature
+%               Vogel et al. "Deciphering the functional specialization of whole-brain spatiomolecular gradients in the adult brain" (2024) PNAS
+%               [transcriptomic_grads transcriptomic_names] = load_image_set('transcriptomic_gradients');
 %
 % 'Signature' patterns and predictive models
 % ------------------------------------------------------------------------
@@ -134,6 +143,11 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
 %                                                Neurosynth, unthresholded, 2013
+%
+%        'neurosynth_topics_forwardinference' 'neurosynth_topics_reverseinference'
+%                   54 topic maps from Yarkoni & Poldrack 2014 topic modeling analysis
+%                   Selected from 100 topics for psychological relevance
+%                   and given ChatGPT-based summary topic labels by Ke et al. 2024, Nat Neurosci
 %
 %        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable
 %                   representations of pain, cog control, emotion. From
@@ -354,6 +368,14 @@ else
         case {'neurosynth', 'neurosynth_featureset1'}
             [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
             
+        case {'neurosynth_topics_forwardinference' 'neurosynth_topics_fi'}
+
+            [image_obj, networknames, imagenames] = load_neurosynth_topics_fi;
+
+        case {'neurosynth_topics_reverseinference' 'neurosynth_topics_ri'}
+
+            [image_obj, networknames, imagenames] = load_neurosynth_topics_ri;
+
         case {'pain_cog_emo', 'kragel18'}
             [image_obj, networknames, imagenames] = load_kragel18;
             
@@ -391,6 +413,17 @@ else
             
             [image_obj, networknames, imagenames] = load_ncs;
             
+        case {'marg', 'transmodal', 'principalgradient'}
+            
+            [image_obj, networknames, imagenames] = load_marg;
+
+        case {'transcriptomic_gradients'}
+            [image_obj, networknames, imagenames] = load_transcriptomic_gradients;
+
+        case {'margfsl'}
+            
+            [image_obj, networknames, imagenames] = load_margfsl;
+
         case 'list'
             
             [networknames, imagenames] = deal({});
@@ -1129,11 +1162,13 @@ datfilename = 'Hansen_2022_PET_tracer_maps_masked.mat';
 fullfilename = which(datfilename);    
 
 load(fullfilename)
-    image_obj=obj_masked_zscored;
-    imagenames=image_obj.image_names;
-    imagenames=cellstr(imagenames);
-    networknames=image_obj.metadata_table(:,1);
-    
+image_obj=obj_masked_zscored;
+imagenames=image_obj.image_names;
+imagenames=cellstr(imagenames);
+networknames=image_obj.metadata_table(:,1);
+
+networknames = networknames.target'; % format to cell for uniformity with other map sets
+
 end % function
 
 
@@ -1191,7 +1226,51 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% Margulies 2016 PNAS principal gradient 1
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_marg
 
+imagenames =     {'MNI152NLin2009cAsym_margulies_grad1.nii.gz'};
+
+networknames = {'PrincipalGradient1'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+% ------------------------------------------------------------------------
+% Margulies 2016 PNAS principal gradient 1
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_margfsl
+
+imagenames =     {'MNI152NLin6Asym_margulies_grad1.nii.gz'};
+
+networknames = {'PrincipalGradient1'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+% ------------------------------------------------------------------------
+% 2012 Allen Brain Project transcriptomic_gradients
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_transcriptomic_gradients
+
+imagenames =     {'transcritptomic_gradients_MNI152NLin6Asym.nii.gz'};
+
+networknames = {'Allen_genePC1' 'Allen_genePC2' 'Allen_genePC3'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
 
 
 % ------------------------------------------------------------------------
@@ -1200,8 +1279,6 @@ end % function
 
 
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
-
-
 
 % Load Yarkoni_2013_Neurosynth_featureset1
 % ------------------------------------------------------------------------
@@ -1237,6 +1314,40 @@ networknames = imagenames';
 networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'UniformOutput', false);
 
 end % function
+
+% ------------------------------------------------------------------------
+% Neurosynth topic maps - forward inference 
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_neurosynth_topics_fi
+
+ns = load(which('neurosynth_data_obj.mat'));
+
+image_obj = ns.topic_obj_forwardinference;
+
+networknames = ns.topic_obj_forwardinference.metadata_table.("Topic name_Summary")';
+
+imagenames = cellstr(image_obj.image_names);
+
+end % function
+
+
+% ------------------------------------------------------------------------
+% Neurosynth topic maps - reverse inference 
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_neurosynth_topics_ri
+
+ns = load(which('neurosynth_data_obj.mat'));
+
+image_obj = ns.topic_obj_reverseinference;
+
+networknames = image_obj.metadata_table.("Topic name_Summary")';
+
+imagenames = cellstr(image_obj.image_names);
+
+end % function
+
+            
+
 
 
 % ------------------------------------------------------------------------

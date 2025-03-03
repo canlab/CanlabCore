@@ -1,5 +1,5 @@
-function [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps] = neurosynth_feature_labels(test_dat, varargin)
-% Calculates top term match with Neurosynth 2013 feature set (or topic maps)
+function [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps, all_correlation_table] = neurosynth_feature_labels(test_dat, varargin)
+% Calculates top term match with Neurosynth 2013 feature set or topic maps
 %
 % :Usage:
 % ::
@@ -37,6 +37,16 @@ function [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom
 %        independent images (i.e., different component maps).
 %
 % :Optional Inputs:
+%   **'topics_fi'**
+%        Load forward-inference topic maps from Yarkoni & Poldrack 2014,
+%        with 54 selected psychological topics by Ke et al. 2024, instead
+%        of the default term maps
+%
+%   **'topics_ri'**
+%        Load reverse-inference topic maps from Yarkoni & Poldrack 2014,
+%        with 54 selected psychological topics by Ke et al. 2024, instead
+%        of the default term maps
+%
 %   **'display_output'**
 %        Followed by true or false; default is true
 %
@@ -79,12 +89,17 @@ function [image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom
 % % regulation task, and identifies the most similar Neurosynth feature maps:
 % test_dat = load_image_set('emotionreg');
 % [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_dat, 'images_are_replicates', true);
-
+%
+% % This example suppresses the long verbose list of term names
+% [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_map, 'images_are_replicates', false, 'noverbose');
+%
+% % These examples load and use topic maps instead of term maps
+% [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_map, 'topics_fi', 'noverbose');
+% [image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_map, 'topics_ri', 'noverbose');
 
 % cd('/Users/tor/Google_Drive/CanlabDataRepository/Neuroimaging_Autolabeler')
 % p = genpath(pwd)
 % addpath(p)
-
 
 % ..
 %    Programmers' notes:
@@ -108,7 +123,8 @@ display_output = true;
 images_are_replicates = false;               % images in test_dat are replicates of same underlying task for, e.g., diff subjects
 topk = 10;                                   % take top and bottom k for each test image
 verbosestr = 'verbose';                      % print loaded neurosynth image names (long list)
-
+load_forward_topics = false;
+load_reverse_topics = false;
 
 % optional inputs with default values
 for i = 1:length(varargin)
@@ -123,6 +139,12 @@ for i = 1:length(varargin)
                 
             case 'noverbose', verbosestr = 'noverbose'; 
                 
+            case 'topics_fi', load_forward_topics = true;
+                if load_reverse_topics, error('Cannot specify forward and reverse topic maps in same function call'), end
+
+            case 'topics_ri', load_reverse_topics = true;
+                if load_forward_topics, error('Cannot specify forward and reverse topic maps in same function call'), end
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -137,8 +159,19 @@ end
 % feature_dat = feature_dat.dat;
 % words = feature_dat.Y_names;
 
-[feature_dat, words] = load_image_set('neurosynth',verbosestr);
-words = words';
+if load_forward_topics
+    [feature_dat, words] = load_image_set('neurosynth_topics_fi',verbosestr);
+    words = words';
+
+elseif load_reverse_topics
+    [feature_dat, words] = load_image_set('neurosynth_topics_ri',verbosestr);
+    words = words';
+
+else
+    % terms
+    [feature_dat, words] = load_image_set('neurosynth',verbosestr);
+    words = words';
+end
 
 
 % Reslice
@@ -196,7 +229,7 @@ for i = 1:ntest                             % note: ntest always == 1 if images_
     words_low = test_words(lowindx);
     words_high = test_words(highindx);
     
-    top_feature_tables{i} = table(testr_low, words_low, testr_high, words_high);
+    top_feature_tables{i} = table(testr_low, words_low, testr_high, words_high, 'VariableNames', {'r_lowest' 'Term_or_Topic_lowest' 'r_highest' 'Term_or_Topic_highest'});
     
 end
 
@@ -229,7 +262,7 @@ if display_output
         else
             imgPrintName = spm_file(test_dat.fullpath(i, :),'short70');
         end
-        fprintf('Input image %i\n%s\n%s\n', i, imgPrintName, ustr);
+        fprintf('Test image %i\n%s\n%s\n', i, imgPrintName, ustr);
         
         disp(top_feature_tables{i})
         
@@ -241,5 +274,8 @@ end
 feature_dat.dat = feature_dat.dat(:, indx); % resort to order them
 top_ns_maps = get_wh_image(feature_dat, highindx);
 bottom_ns_maps = get_wh_image(feature_dat, lowindx);
+
+% Return full table
+all_correlation_table = table(words, image_by_feature_correlations', 'VariableNames', {'Term_or_Topic' 'r'});
 
 end % main function

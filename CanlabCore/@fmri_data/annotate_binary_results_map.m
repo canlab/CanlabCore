@@ -137,6 +137,7 @@ disp('Allen brain project transcriptomic gradients')
 
 axis_handles = plotMatrixKernelDensity(vals, minPlotVal, maxPlotVal, seaborn_colors(), transcriptomic_names);
 xlabeltext = 'Transcriptomic gradient value (z-score)';
+set(gcf, 'Tag', 'transcriptomics')
 
 % add surfaces and vertical lines at 0
 for i = 1:length(transcriptomic_names)
@@ -168,6 +169,7 @@ disp('Neuromaps PET neurochemical tracer maps')
 
 axis_handles = plotMatrixKernelDensity(vals, minPlotVal, maxPlotVal, seaborn_colors(size(vals, 2)), neurochemnames);
 xlabel('Neurochemical binding value (z-score)');
+set(gcf, 'Tag', 'neurotransmitters')
 
 drawnow; snapnow;
 

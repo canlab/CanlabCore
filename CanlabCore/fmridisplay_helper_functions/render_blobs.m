@@ -243,9 +243,11 @@ for i = 1:length(varargin)
                 end
             case 'colormap'
                 for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
+                    
                     assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
                         sprintf('Cannot evaluate render_blobs() with both ''colormap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));
+                    
                 end
 
                 docolormap = 1; 

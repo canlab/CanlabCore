@@ -661,7 +661,7 @@ if ~exist('o2', 'var')
             wh_surfaces = [1 2 3 4];
 
         case 'compact2'  % creates a new figure
-            %subplot(2, 1, 1);
+
             [o2, dat] = montage(o2, 'axial', 'slice_range', [-32 50], 'onerow', 'spacing', 8, 'noverbose');
             
             % shift all axes down and right
@@ -678,22 +678,11 @@ if ~exist('o2', 'var')
             end
             
             enlarge_axes(gcf, 1);
-            %axh = axes('Position', [0.0 0.08 .15 1]);
-            %             axh = axes('Position', [-0.02 .75-.3 .17 .17]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
-            %             axh(2) = axes('Position', [.022 .854-.3 .17 .17]);
-
             axh = axes('Position', [-0.06 .75-.34 .29 .29]);  % [-0.02 0.15+shiftvals(i) .17 .17]);
             axh(2) = axes('Position', [-0.02 .854-.27 .29 .29]);
 
-%             set(axh(1), 'Position', [-0.06 .75-.34 .29 .29])
-%             set(axh(2), 'Position', [-0.02 .854-.27 .29 .29])
-
-            %o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
             o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
-            %ss = get(0, 'ScreenSize');
-            %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ]) % this line messes p the
-            %images, makes it too big an overlapping
             wh_montages = [1 2];
             
             brighten(.4)

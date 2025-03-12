@@ -34,6 +34,16 @@ function objout = region2fmri_data(r, reference_obj)
 % Added data mapping. .dat transferred first, otherwise, .Z, followed by
 % the region number
  
+if nargin < 2
+    % no reference object
+    % use new 2025 simple build from scratch
+
+    objout = region2fmri_data2025(r);
+
+    return % skip everything below
+
+end
+
 isbad = false;
 
 if reference_obj.volInfo.dim ~= r(1).dim, isbad = true; end
@@ -44,7 +54,7 @@ if isbad, error('reference_obj must have same mat file and dim as region_object'
 
 if ~isa(reference_obj, 'fmri_data')
     % First attempt to cast the reference object into a valid fmri_data object.
-    reference_obj=fmri_data(reference_obj);
+    reference_obj = fmri_data(reference_obj);
 end
 
 % rebuild from reference obj
@@ -77,3 +87,78 @@ objout = reference_obj;
 
 end % main function
 
+
+
+
+function out_obj = region2fmri_data2025(r)
+
+dim = r(1).dim;
+nvox = prod(dim);
+
+vol = zeros(dim);
+
+xyz = cat(2, r.XYZ);
+
+% remove redundant xyz
+[xyz, indx] = unique(xyz', 'rows', 'stable');
+xyz = xyz';
+
+% Z must be row vector or this will not work
+% note: if there are redundant voxels xyz in regions(k), this function will pick the .Z field value
+% for the first one
+vals = cat(2, r.Z);
+vals = vals(indx);
+
+ind = sub2ind(dim, xyz(1, :)', xyz(2, :)', xyz(3, :)');
+
+mat = r(1).M;
+
+vol(ind) = vals;
+vol_vec = vol(:);           % valued
+mask_indx = vol_vec ~= 0;   % logical
+
+% Define volinfo
+% -------------------------------------
+
+volInfo = struct();
+
+volInfo.fname = 'Created from region object';
+volInfo.dim = dim;
+volInfo.dt = [2 0];
+volInfo.pinfo = [1 0 352]';
+volInfo.mat = mat;
+volInfo.n = [1 1];
+volInfo.descrip = 'Created from region object';
+volInfo.private = [];
+volInfo.nvox = nvox;
+volInfo.image_indx = mask_indx; %true(nvox, 1);
+volInfo.wh_inmask = find(mask_indx);
+volInfo.n_inmask = length(volInfo.wh_inmask);
+volInfo.xyzlist = xyz';
+volInfo.cluster = spm_clusters(xyz);
+
+% define mask
+% -------------------------------------
+
+mask = fmri_mask_image;
+mask.dat = single(mask_indx(mask_indx) ~= 0);
+% mask.volInfo = volInfo; % May need to define more, not sure
+
+% define object
+% -------------------------------------
+out_obj = fmri_data;
+
+out_obj.mask = mask;
+
+out_obj.mask_descrip = 'Copied from region() object';
+out_obj.source_notes = 'Copied from region() object';
+out_obj.dat = vals'; vol_vec(mask_indx);
+out_obj.volInfo = volInfo;
+out_obj.removed_voxels = 0;
+out_obj.removed_images = 0;
+out_obj.image_names = '';
+out_obj.fullpath = '';
+out_obj.files_exist = 0;
+out_obj.history = {'created from region object'};
+
+end % region2fmridata2025 function

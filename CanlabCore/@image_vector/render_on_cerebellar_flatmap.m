@@ -186,8 +186,13 @@ end
 
 % cmap = colormap_tor([.5 0 1], [1 1 0]);
 
-mymax = prctile(abs(C.cdata), 95);
-suit_plotflatmap(C.cdata, 'cmap', color_map, 'cscale',[-mymax mymax]);
+% use data unless we have entered one
+if isempty(cscale)
+    mymax = prctile(abs(C.cdata), 95);
+    cscale = [-mymax mymax];
+end
+
+suit_plotflatmap(C.cdata, 'cmap', color_map, 'cscale', cscale);
 
 % f = gifti(giiname)
 % mymax = prctile(abs(f.cdata), 95);
@@ -232,6 +237,8 @@ defaultColorMap = colormap_tor([0 0 1], [1 1 0], [0.5 0.5 0.5], [0 0.5 1], [1 0.
 addParameter(p, 'color_map', defaultColorMap, @(x) isnumeric(x) && size(x,2)==3);
 
 addParameter(p, 'verbose', false, @(x) islogical(x) && isscalar(x));
+
+addParameter(p, 'cscale', [], @(x) isnumeric(x));
 
 parse(p, varargin{:});
 ARGS = p.Results;

@@ -33,7 +33,7 @@ function [handles, r, subctx_fmri_data_obj] = render_cifti_on_brain(cifti_filena
 % fmri_data object for subcortical volume structures
 %
 % :Dependencies:
-% You need Wash U HCP CIFTI tools on your matlab path. 
+% You need Wash U HCP CIFTI tools on your matlab path.
 % See https://github.com/Washington-University/HCPpipelines
 %
 % For cerebellar flatmap rendering, you need Diedrichsen's SUIT toolbox on
@@ -134,7 +134,7 @@ end
 % % Get models array and number of models
 % models = cifti_struct.diminfo{1}.models;
 
-% Find surface models we will render specially 
+% Find surface models we will render specially
 wh_left = find(strcmp(model_names, 'CORTEX_LEFT'));
 wh_right = find(strcmp(model_names, 'CORTEX_RIGHT'));
 
@@ -146,8 +146,8 @@ create_figure('cifti surfaces');
 set(gcf, 'Position', [20 groot().ScreenSize(4)*.25 groot().ScreenSize(3)*.6 groot().ScreenSize(4)*.6]);
 
 xstart = 0.01;
-cortexystart = 0.5; 
-cortexwid = 0.95/4; 
+cortexystart = 0.5;
+cortexwid = 0.95/4;
 spacegap = 0.01;
 
 set(gca, 'Position', [xstart cortexystart cortexwid .95-cortexystart]);
@@ -200,7 +200,8 @@ r = cifti_struct_2_region_obj(cifti_struct, 'which_image', which_image);
 % --------------------------------------------------
 [o2, wh_montages] = make_slice_montage;
 
-o2 = addblobs(o2, r, 'colormap', color_map, 'wh_montages', wh_montages);
+cscale = get(ax(1), 'CLim'); % get color from previous axes so it matches
+o2 = addblobs(o2, r, 'colormap', color_map, 'wh_montages', wh_montages, 'cmaprange', cscale);
 
 % New figure with separate subcortical regions
 % montage(r, 'colormap', color_map, 'regioncenters');
@@ -212,11 +213,11 @@ sax_ystart = .28;
 
 sax = axes('Position', [.22 sax_ystart .25 .25]);
 
-subctx_han = addbrain('subcortex'); 
-set(subctx_han, 'FaceAlpha', 1, 'FaceColor', [.5 .5 .5]); 
-view(90, 1); 
+subctx_han = addbrain('subcortex');
+set(subctx_han, 'FaceAlpha', 1, 'FaceColor', [.5 .5 .5]);
+view(90, 1);
 lightRestoreSingle
-surface(r, 'surface_handles', subctx_han, 'colormap', color_map, 'nolegend');
+surface(r, 'surface_handles', subctx_han, 'colormap', color_map, 'nolegend', 'cmaprange', cscale);
 axis image
 
 % surface() creates its own hybrid colormap to render gray and colored
@@ -256,11 +257,14 @@ end
 
 try
 
-sax(3) = axes('Position', [.75 sax_ystart .25 .25]);
-render_on_cerebellar_flatmap(subctx_fmri_data_obj, 'color_map', color_map);
+    sax(3) = axes('Position', [.75 sax_ystart .25 .25]);
 
-set(sax(3), 'XLim', [-98 98], 'YLim', [-80 75]);
-axis off
+    if isempty(which('spm_dartel_norm.m')), error('Start SPM or add DARTEL toolbox to path to find spm_dartel_norm.m'), end
+
+    render_on_cerebellar_flatmap(subctx_fmri_data_obj, 'color_map', color_map, 'cscale', cscale);
+
+    set(sax(3), 'XLim', [-98 98], 'YLim', [-80 75]);
+    axis off
 
 catch
     disp('Error rendering on cerebellum, render_on_cerebellar_flatmap. You may need SUIT and cb surface files on your matlab path')
@@ -318,15 +322,15 @@ end
 function [model_names, model_types] = listModelNames(cifti_struct)
 % listModelNames returns a cell array of model names from the cifti structure.
 
-    models = cifti_struct.diminfo{1}.models;
+models = cifti_struct.diminfo{1}.models;
 
-    numModels = numel(models);
-    [model_names, model_types] = deal(cell(numModels, 1));
+numModels = numel(models);
+[model_names, model_types] = deal(cell(numModels, 1));
 
-    for i = 1:numModels
-        model_names{i} = models{i}.struct;
-        model_types{i} = models{i}.type;
-    end
+for i = 1:numModels
+    model_names{i} = models{i}.struct;
+    model_types{i} = models{i}.type;
+end
 
 end % listModelNames
 
@@ -340,7 +344,7 @@ function han = render_surface_patch(surface_struct, color_map, view_angle)
 %     'FaceColor', 'flat', 'EdgeColor', 'none');
 
 han = patch('Faces',surface_struct.faces,'Vertices',surface_struct.vertices,'FaceColor', [.5 .5 .5], ...
-'EdgeColor','none','SpecularStrength', .2, 'FaceAlpha', 1, 'SpecularExponent', 200);
+    'EdgeColor','none','SpecularStrength', .2, 'FaceAlpha', 1, 'SpecularExponent', 200);
 
 material dull
 

@@ -28,6 +28,13 @@ function [density_vals, xValues] = kernelDensitySmoothedHistogram(vals, minPlotV
         error('Input "vals" must be a vector.');
     end
 
+    if nargin < 2
+        
+        minPlotVal = min(vals);
+        maxPlotVal = max(vals);
+
+    end
+
     % Parse optional parameters.
     p = inputParser;
     addParameter(p, 'bandwidth', [], @(x) isnumeric(x) && isscalar(x));

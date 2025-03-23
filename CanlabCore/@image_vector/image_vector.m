@@ -39,16 +39,27 @@ classdef image_vector
 % function with the same name as the object class (e.g., fmri_data). This
 % will create an object with image data and image space information attached.
 %
-% Use fmri_data instead of image_vector to load image data:
+% RECOMMENDED: Use fmri_data instead of image_vector to load image data:
 % data_obj = fmri_data(image_names);
 %
 % ...where image_names is a character array or 1 x n cell array of strings
 %
+% EXAMPLE: Create an object from a Nifti .nii file (or analyze .img file)
+% fname = which('brainmask_canlab.nii')
+% obj = image_vector(fname);
+% 
 % You can also manually construct an object by entering its constituent
-% fields. For the object to be valid, these much match one another in size/space/etc, and you
+% fields in key, value pairs. 
+% For the object to be valid, these much match one another in size/space/etc, and you
 % may get errors later if they do not match. 
 %
-% For example, this code first loads a sample atlas object and then creates an image_vector object
+% EXAMPLE: Here we create a empty image_vector object assign the image in fname
+% to the .fullpath property. the image_vector constructor will read in the 
+% image stored in fname  
+% 
+% obj = image_vector('fullpath', fname, 'history', {'loaded from file.'});
+%
+% EXAMPLE: The code below first loads a sample atlas object and then creates an image_vector object
 % from its fields. Then, we re-cast it as an fmri_data object, which is
 % generally more useful and has more associated methods.
 %
@@ -56,6 +67,12 @@ classdef image_vector
 % obj_with_region_indices = image_vector('dat', single(obj.dat), 'volInfo', obj.volInfo, 'removed_voxels', obj.removed_voxels, 'removed_images', obj.removed_images, 'image_names', obj.image_names, 'noverbose');
 % obj_with_region_indices = fmri_data(obj_with_region_indices);
 % orthviews(obj_with_region_indices)
+%
+% You can also enter a structure, and image_vector will parse input fields from the structure
+% % Here we use a structure to define a custom .dat field that overwrites the
+% % one read from the file in fname
+% s = struct('dat', [1:576094]', 'source_notes', {'example object'}, 'fullpath', fname);
+% obj = image_vector(s);
 %
 % -------------------------------------------------------------------------
 % Properties and methods
@@ -242,8 +259,8 @@ classdef image_vector
             % instance
             
             % ---------------------------------
-            % Create empty image_vector object, and return if no additional
-            % arguments
+            % Create empty image_vector object with default values
+            % and return if no additional arguments
             % ---------------------------------
             
             obj.dat = [];
@@ -267,8 +284,24 @@ classdef image_vector
             control_args = {};
             
             for i = 1:length(varargin)
-                if ischar(varargin{i})
-                    
+
+                if isstruct(varargin{i})
+                % Parse input fields from structure
+                
+                    input_struct = varargin{i};
+
+                    % Overwrite defaults with any matching fields from input_struct
+                    for i = 1:length(valid_names)
+
+                        if isfield(input_struct, valid_names{i})
+                            obj.(valid_names{i}) = input_struct.(valid_names{i});
+                        end
+
+                    end
+
+                elseif ischar(varargin{i})
+                % Parse input fields from key value pairs
+
                     % known control strings (ignore but pass in)
                     if strcmp(varargin{i}, 'noverbose')
                         control_args{end + 1} = varargin{i};
@@ -295,11 +328,17 @@ classdef image_vector
                             
                         end
                         
+                    elseif contains(varargin{i}, '.nii') && exist(varargin{i}, 'file')
+                        % Special case, this is a file. Assign to fullpath
+                        % field so this can be read into the object.
+                        obj.fullpath = varargin{i};
+
                     else
                         warning('inputargs:BadInput', sprintf('Unknown field: %s', varargin{i}));
                         
                     end
                 end % string input
+
             end % process inputs
             
             % load data, if we don't have data yet
@@ -308,9 +347,19 @@ classdef image_vector
             
             obj = check_image_filenames(obj, control_args{:});
             
-            if isempty(obj.dat) && any(obj.files_exist)
+            if any(obj.files_exist)
+                obj_with_custom_fields = obj;
                 obj = read_from_file(obj);
                 
+                % Overwrite data we loaded with any matching fields from input_struct
+                for i = 1:length(valid_names)
+
+                    if ~isempty(obj_with_custom_fields.(valid_names{i}))
+                        obj.(valid_names{i}) = obj_with_custom_fields.(valid_names{i});
+                    end
+
+                end
+
             elseif isempty(obj.dat)
                 disp('Warning: .dat is empty and files cannot be found.  No image data in object.');
             end
@@ -322,3 +371,31 @@ classdef image_vector
     
 end  % classdef
 
+
+function ARGS = parse_input_args(varargin)
+
+% Use inputParser for keyword/value pair inputs
+p = inputParser;
+
+% Define validation functions
+validate_dat       = @(x) isnumeric(x);
+validate_fullpath  = @(x) ischar(x) || iscell(x);
+validate_history   = @(x) iscell(x);
+validate_imgNames  = @(x) ischar(x) || iscell(x);
+validate_removed   = @(x) isnumeric(x);
+validate_volInfo   = @(x) isstruct(x);
+
+% Add optional parameters with defaults
+p.addParameter('dat', [],       validate_dat);
+p.addParameter('fullpath', {},  validate_fullpath);
+p.addParameter('history', {},   validate_history);
+p.addParameter('image_names', {}, validate_imgNames);
+p.addParameter('removed_images', [], validate_removed);
+p.addParameter('removed_voxels', [], validate_removed);
+p.addParameter('volInfo', struct(), validate_volInfo);
+
+% Parse the inputs
+p.parse(varargin{:});
+ARGS = p.Results;
+
+end % inputParser

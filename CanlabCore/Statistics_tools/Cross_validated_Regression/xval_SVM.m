@@ -119,7 +119,7 @@ function S = xval_SVM(varargin)
 % :Outputs:
 %
 %   **S:**
-%        Structure with model output
+%        A predictive model object  (converted from structure with model output)
 %        of them (partially consistent with this function).
 %                           Y: Actual (obs) outcome - should be 1, -1 for SVM analysis
 %                        yfit: Predicted outcome - should be 1, -1 for SVM analysis
@@ -236,15 +236,18 @@ function S = xval_SVM(varargin)
 %     v1.4
 %     Add nfolds argument - Michael Sun, 07/07/2022
 % 
-%     v1.5
+%     v1.5 (Tor)
 %     Use fitclinear for high-dim data, as fitcsvm does not work
+%
+%     v1.6 (Tor)
+%     Cast output as predictive model object 
 % ..
 
 %% ----------------------------------------------------------------------
 % Version
 % ----------------------------------------------------------------------
 
-ver = 1.4;
+ver = 1.6;
 
 %% ----------------------------------------------------------------------
 % Parse inputs
@@ -334,7 +337,9 @@ end
 % -------------------------------------------------------------------------
 
 % [S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot);
-[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot, 'nfolds', nfolds);  % MS 6/16/2022: Crashes if you can't do 10-fold.
+[S.trIdx, S.teIdx] = xval_stratified_holdout_leave_whole_subject_out(S.Y, S.id, 'doverbose', doverbose, 'doplot', doplot, ...
+    'nfolds', nfolds, 'downsample_to_balanced_classes', true);  % MS 6/16/2022: Crashes if you can't do 10-fold.
+
 drawnow, snapnow
 
 % Fit the overall a priori model: SVM with linear kernel
@@ -608,6 +613,7 @@ if dobootstrap
         
     end
     
+
     % Inference
     % (from fmri_data.predict)
     
@@ -650,6 +656,11 @@ end
 % X = X(indx, :); Y = Y(indx); id = id(indx);
 % S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats');
 
+% Recast as object
+% Future: this could be done earlier, and more subfunctions converted to
+% object methods, which would be contingent on the type of model run.
+
+S = predictive_model(S);
 
 end % main function
 

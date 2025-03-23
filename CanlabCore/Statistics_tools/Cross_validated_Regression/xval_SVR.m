@@ -199,6 +199,9 @@ function S = xval_SVR(varargin)
 %             Have a look at the data and add data plots. Sorted by cases
 %   ver 1.2   Cosmetic documentation and look updates
 %
+%   ver 1.3 (Tor)
+%       Cast output as predictive model object
+%  
 %   Future:
 %             Enforce [1 -1] inputs
 %             Troubleshoot prediction vs. class probability reversals
@@ -211,7 +214,7 @@ function S = xval_SVR(varargin)
 % Version
 % ----------------------------------------------------------------------
 
-ver = 1.2;
+ver = 1.3;
 
 %% ----------------------------------------------------------------------
 % Parse inputs
@@ -594,6 +597,13 @@ end
 % indx = randperm(size(X, 1));
 % X = X(indx, :); Y = Y(indx); id = id(indx);
 % S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats');
+
+
+% Recast as object
+% Future: this could be done earlier, and more subfunctions converted to
+% object methods, which would be contingent on the type of model run.
+
+S = predictive_model(S);
 
 
 end % main function

@@ -14,6 +14,15 @@ classdef predictive_model
     %   **id:**
     %        [1000×1 double] Grouping variable for within-participant observations.
     %
+    %   **class_labels:**
+    %        Cell array with strings specifying class names, e.g., {'No pain' 'Pain'}
+    %
+    %   **Y_name:**
+    %        String specifying name of outcome variable, e.g., {'Pain_at_MRI'}
+    %
+    %   **X_name:**
+    %        String specifying name of predictor variable, e.g., {'fMRI pattern response'}
+    %
     %   **modeloptions:**
     %        Cell array with strings specifying model options, e.g., {'KernelFunction','linear'}.
     %
@@ -152,6 +161,8 @@ classdef predictive_model
         Y                       % [1000×1 double]
         id                      % [1000×1 double]
         class_labels = {}; 
+        Y_name = {};
+        X_name = {};
         modeloptions            % Cell array, e.g., {'KernelFunction','linear'}
         accfun                  % Function handle, e.g., @(Y,yfit)100.*nansum(Y==yfit)./sum(~isnan(Y))
         trIdx        = {};           % {1×10 cell} of logical vectors
@@ -325,6 +336,7 @@ classdef predictive_model
                 error('predictive_model:InvalidProperty', '%s must be a cell array of strings.', name);
             validateFunctionHandle = @(x, name) validateattributes(x, {'function_handle'}, {}, mfilename, name);
             validateCell = @(x, name) validateattributes(x, {'cell'}, {}, mfilename, name);
+            validateChar = @(x, name) validateattributes(x, {'char'}, {}, mfilename, name);
 
             % Validate Y
             if ~isempty(obj.Y)
@@ -337,7 +349,15 @@ classdef predictive_model
             end
 
             if ~isempty(obj.class_labels)
-                validateCell(obj.class_labels, 'class_labels');
+                validateCellOfStrings(obj.class_labels, 'class_labels');
+            end
+
+            if ~isempty(obj.Y_name)
+                validateChar(obj.Y_name, 'Y_name');
+            end
+
+            if ~isempty(obj.X_name)
+                validateChar(obj.X_name, 'X_name');
             end
 
             % Validate modeloptions

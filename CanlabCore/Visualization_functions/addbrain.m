@@ -1085,7 +1085,8 @@ switch meth
         camzoom(1.3)
 
         set(p, 'FaceAlpha', 1);
-        drawnow
+        % drawnow
+        pause(.005) % Using pause as opposed to drawnow appears to help make this code run faster - MS 03252025
 
         create_figure('multi_surface2', 2, 2);
         p = [p addbrain('insula surfaces')];
@@ -1171,7 +1172,8 @@ else
     axis image tight
 end
 material dull
-drawnow
+% drawnow
+pause(.005)  % Using pause as opposed to drawnow appears to help make this code run faster - MS 03252025
 
 %view(135,30)
 

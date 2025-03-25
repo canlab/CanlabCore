@@ -118,6 +118,7 @@ function stats = clusterdata_permtest(data, varargin)
 %
 %       **stats.linkage_tree:** The linkage tree (hierarchical clustering tree) computed during the clustering analysis.
 %
+% -------------------------------------------------------------------------
 % :Examples:
 % ::
 %
@@ -131,9 +132,38 @@ function stats = clusterdata_permtest(data, varargin)
 % % Test k = 2 - 7 clusters with 100 random permutations and make a plot of the results: 
 % [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclustnew(X, [2:7], [], 100);
 %
+% -------------------------------------------------------------------------
 % % Generate null data with no true clusters, and estimate:
 % X = randn(n_per_cluster*3, n_vars);
 % stats = clusterdata_permtest(X, 'k', [2:7]);
+%
+% -------------------------------------------------------------------------
+% % Load an fmri_data object and cluster the images:
+% % Note: you may want to choose the number of dimensions separately.
+%
+% obj = load_image_set('emotionreg')
+% stats1 = clusterdata_permtest(obj.dat', 'k', [2:7], 'reducedims', true);
+%
+% -------------------------------------------------------------------------
+% % Here is a more interesting example of fmri image clustering:
+% obj = load_image_set('kragel270')
+% obj = rescale(obj, 'zscoreimages'); % images are not on the same scale, so adjust
+% plot(obj);
+% stats = clusterdata_permtest(obj.dat', 'k', [2:20], 'reducedims', true, 'ndims', 25);
+% 
+% % Plot the image spatial correlation matrix:
+% [cluster_labels_sorted, order_indx] = sort(stats.best_cluster_labels, 'ascend');
+% X = X(:, order_indx);
+% OUT = plot_correlation_matrix(X, 'doimage', true, 'docircles', false, 'partitions', cluster_labels_sorted);
+% % OUT = plot_correlation_matrix(X, 'doimage', true, 'docircles', false, 'partitions', cluster_labels_sorted, 'partitioncolors', seaborn_colors(max(cluster_labels_sorted)));
+%
+% % Summarize the relationship between the clusters and original study membership
+% indic1 = condf2indic(obj.metadata_table.Studynumber);
+% indic2 = condf2indic(stats.best_cluster_labels);
+% xtab = indic1' * indic2;
+% figure; imagesc(xtab);
+% xlabel('Clusters'); ylabel('Original studies'); colorbar; 
+% colormap(colormap_tor([1 1 1], [1 1 0], [1 .5 0]));
 %
 % :References:
 %   the basic method has been used in these studies (among others):
@@ -228,6 +258,7 @@ if reducedims
     wh_ndims = find(strcmp(varargin, 'ndims'));
     if ~isempty(wh_ndims), varargin(wh_ndims + 1) = {ndims}; end
 
+    if verbose, fprintf('Reduced dimensionality to %3.0f dims\n', ndims); end
 end
 
 stats.inputs = struct('k', k, 'distancemetric', distancemetric, 'linkagemethod', linkagemethod, 'reducedims', reducedims, 'ndims', ndims, 'nperm', nperm, 'verbose', verbose);
@@ -240,13 +271,28 @@ stats.cluster_quality_descrip = 'Mean silhouette value';
 numk = numel(k);
 null_mean_silhouette_value = zeros(nperm, numk);
 
+if verbose
+    % progress bar
+    fprintf('Permutations: %03d%%', 0)
+end
+
 for i = 1:nperm
+
+    if verbose
+        if mod(i, 5) == 0
+            fprintf('\b\b\b\b%03d%%', 100 * i ./ nperm)
+        end
+    end
 
     data_permuted = permute_X_columns(data);
 
     % generate a vector of quality scores for each value of k
     [~, ~, ~, null_mean_silhouette_value(i, :)] = cluster_dataset(data_permuted, 'k', k, varargin{:});
 
+end
+
+if verbose
+    fprintf(' done! \n')
 end
 
 % -------------------------------------------------------------------------
@@ -445,6 +491,8 @@ function [best_cluster_id, best_k, cluster_id, mean_silhouette_value, silhouette
 %         cluster_dataset(X, 'distancemetric', 'euclidean', 'linkagemethod', 'ward', ...
 %                         'k', 2:7, 'reducedims', true, 'ndims', []);
 
+verbose = true;
+
 % Parse input arguments using inputParser and validateattributes.
 p = inputParser;
 
@@ -481,7 +529,12 @@ ndims = ARGS.ndims;
 if reducedims
     % If ndims is empty, determine the number of dimensions using barttest at p < 0.05.
     if isempty(ndims)
-        ndims = barttest(X, 0.05);
+        
+        try
+            ndims = barttest(X, 0.05);
+        catch
+            ndims = NaN;
+        end
 
         % sometimes this may not work
         % if it doesn't, pick dims with eigenvalues > 1 as a heuristic
@@ -491,6 +544,8 @@ if reducedims
             ndims = sum(latent > 1);
 
         end
+
+        % if verbose, fprintf('Reducing dims: %3.0f\n', ndims); end
 
     end
     % Perform PCA retaining the specified number of dimensions.

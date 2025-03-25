@@ -1,4 +1,4 @@
-function output = clusterdata_permtest(data, varargin)
+function stats = clusterdata_permtest(data, varargin)
 % Cluster a dataset and evaluate clustering quality using permutation testing.
 %
 % This function performs hierarchical clustering on the input dataset X.
@@ -22,7 +22,14 @@ function output = clusterdata_permtest(data, varargin)
 %
 % :Usage:
 % ::
-%     output = testclustnew(data, k_values, nperm, [optional inputs])
+%     stats = clusterdata_permtest(data, ['k', # clusters to test, 'nperm,' n_permutations, etc.])
+%     stats = clusterdata_permtest(X, 'k', [2:7], 'verbose', false);
+%     stats = clusterdata_permtest(X, 'k', [2:7]);
+%     stats = clusterdata_permtest(X, 'doplot', false);
+%     stats = clusterdata_permtest(X, 'linkage', 'average');
+%     stats = clusterdata_permtest(X, 'reducedims', true);
+%     stats = clusterdata_permtest(X, 'reducedims', true, 'ndims', 3);
+%     stats = clusterdata_permtest(X, 'k', [2:7], 'reducedims', true, 'ndims', 3, 'doplot', false, 'verbose', false);
 %
 % :Inputs:
 %
@@ -60,52 +67,88 @@ function output = clusterdata_permtest(data, varargin)
 %   **'verbose':** [logical]
 %        Flag to control verbose output. Default = true.
 %
-% :Outputs:
-%
-%   **best_cluster_id:**
-%        A numeric vector containing the cluster assignment (for best_k) for each observation.
-%
-%   **best_k:**
-%        The number of clusters with the maximum average silhouette value.
-%
-%   **cluster_id:**
-%        A matrix where each column corresponds to the cluster assignments for each value in k.
-%
-%   **mean_silhouette_value:**
-%        A vector of the mean silhouette values for each clustering solution in k.
-%
-%   **silhouette_values:**
-%        A matrix of silhouette values for each observation (rows) and each k (columns).
+%   **'doplot':** [logical]
+%        Flag to control plot output. Default = true.
 %
 % :Outputs:
 %
-%   **output:**
-%        A structure containing:
-%           - k_values: the tested k values.
-%           - actual_quality: vector of clustering quality metrics for the actual data.
-%           - null_quality: matrix of clustering quality metrics from permutations
-%                           (size: length(k_values) x nperm).
-%           - z_scores: vector of Z-scores representing the separation between
-%                       actual and null distributions.
-%           - recommended_k: the value of k with the maximum Z-score.
+% :Outputs:
+%
+%   **stats:** A structure containing the results of the cluster-based permutation test.
+%
+%       **stats.inputs:** A structure recording the input parameters used in the analysis.
+%           - **k:** Vector of candidate numbers of clusters tested.
+%           - **distancemetric:** A string specifying the distance metric used.
+%           - **linkagemethod:** A string specifying the linkage method for clustering.
+%           - **reducedims:** Indicator (flag or value) of whether dimensionality reduction was performed.
+%           - **ndims:** Number of dimensions retained after reduction.
+%           - **nperm:** Total number of permutations performed.
+%           - **verbose:** Logical flag indicating whether verbose output was enabled.
+%
+%       **stats.cluster_quality_descrip:** A string describing the quality metric used (e.g., 'Mean silhouette value').
+%
+%       **stats.cluster_quality:** A vector of the mean silhouette values computed for each candidate k.
+%
+%       **stats.cluster_quality_null_mean:** A vector of the mean silhouette values obtained from the null (permutation) distribution for each candidate k.
+%
+%       **stats.cluster_quality_null_std:** A vector of the standard deviations of the null silhouette values for each candidate k.
+%
+%       **stats.cluster_quality_pseudoZ:** A vector of pseudo-Z scores for each candidate k, computed as:
+%             (mean silhouette value - null mean) ./ null std.
+%
+%       **stats.P_val:** A vector of p-values for each candidate k, computed as one minus the proportion of permutations 
+%             where the observed mean silhouette value exceeded the null distribution value.
+%
+%       **stats.max_pseudoZ:** The maximum pseudo-Z value found across candidate k values.
+%
+%       **stats.wh_best_k:** The index corresponding to the candidate k that produced the maximum pseudo-Z value.
+%
+%       **stats.best_k:** The candidate number of clusters (k) that yielded the maximum pseudo-Z value.
+%
+%       **stats.output_table:** A table summarizing the cluster quality metrics across candidate k values.
+%           - The table rows are: 'Quality (q)', 'Null q mean', 'Null q std', 'Pseudo-Z', and 'P-value'.
+%           - The table columns correspond to the candidate k values (converted to strings).
+%           - The table includes a description ('Cluster quality by number of clusters (k)').
+%
+%       **stats.best_cluster_labels:** The cluster labels (for each observation) corresponding to the best candidate k.
+%
+%       **stats.all_cluster_labels:** A matrix of cluster labels for all candidate k values.
+%
+%       **stats.silhouette_values:** The silhouette values for each observation (used in computing cluster quality).
+%
+%       **stats.linkage_tree:** The linkage tree (hierarchical clustering tree) computed during the clustering analysis.
 %
 % :Examples:
 % ::
-%     data = rand(100, 5);
-%     k_vals = 2:10;
-%     nperm = 100;
-%     results = testclustnew(data, k_vals, nperm, 'verbose', true, 'distance', 'sqEuclidean');
+%
+% rng('default');  % For reproducibility
+% n_per_cluster = 33; n_vars = 10;
+% X = [gallery('uniformdata',[n_per_cluster n_vars],12); ...
+%     gallery('uniformdata',[n_per_cluster n_vars],13)+1.2; ...
+%     gallery('uniformdata',[n_per_cluster n_vars],14)+2.5];
+% y = [ones(n_per_cluster,1); 2*(ones(n_per_cluster,1)); 3*(ones(n_per_cluster,1))]; % Actual classes
+% 
+% % Test k = 2 - 7 clusters with 100 random permutations and make a plot of the results: 
+% [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclustnew(X, [2:7], [], 100);
+%
+% % Generate null data with no true clusters, and estimate:
+% X = randn(n_per_cluster*3, n_vars);
+% stats = clusterdata_permtest(X, 'k', [2:7]);
 %
 % :References:
-%   (Add any relevant references here.)
+%   the basic method has been used in these studies (among others):
+%   Wager, Scott, & Zubieta 2007, PNAS
+%   Wager et al. 2008, Neuron
+%   Atlas et al. 2014, Pain
 %
 % :See also:
 %   kmeans, confusionmat, randperm, testclustnew (original function by Chris Summerfield)
 %
+
 % -------------------------------------------------------------------------
 %     Author and copyright information:
 %
-%     Copyright (C) 2025  Your Name
+%     Copyright (C) 2025  Tor Wager
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -121,100 +164,195 @@ function output = clusterdata_permtest(data, varargin)
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % -------------------------------------------------------------------------
 
-% defaults
-k_values = 2:ceil(size(data, 2)/2);
-nperm = 100;
-reducedims = size(data, 2) > size(data, 1) ./ 2; % true if there are <2x as many cases as variables
-verbose = true;
+% -------------------------------------------------------------------------
+% Defaults and inputs
+% -------------------------------------------------------------------------
 
+% defaults not otherwise specified below
+
+k = 2:ceil(size(data, 2)/2);
+reducedims = size(data, 2) > size(data, 1) ./ 2; % true if there are <2x as many cases as variables
 
 % Parse input arguments using inputParser and validateattributes.
 p = inputParser;
 % Required argument: data matrix X.
-p.addRequired('X', @(x) validateattributes(x, {'numeric'}, {'nonempty'}));
+p.addRequired('data', @(x) validateattributes(x, {'numeric'}, {'nonempty'}));
 
 % Optional parameters:
 p.addParameter('distancemetric', 'euclidean', @(x) validateattributes(x, {'char','string'}, {'nonempty'}));
 p.addParameter('linkagemethod', 'ward', @(x) validateattributes(x, {'char','string'}, {'nonempty'}));
-p.addParameter('k', k_values, @(x) validateattributes(x, {'numeric'}, {'vector'}));
-p.addParameter('reducedims', true, @(x) validateattributes(x, {'logical'}, {'scalar'}));
-p.addParameter('ndims', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));
-p.addParameter('verbose', true,  {'logical'}, {'scalar'});
+p.addParameter('k', k, @(x) validateattributes(x, {'numeric'}, {'vector'}));
+p.addParameter('reducedims', reducedims, @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('ndims', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));  % empty = choose from data in subfunction
+p.addParameter('verbose', true,  @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('doplot', true,  @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('nperm', 100, @(x) validateattributes(x, {'numeric'}, {'scalar'}));
 
-p.parse(X, varargin{:});
+p.parse(data, varargin{:});
 ARGS = p.Results;
  
-% Distribute parsed parameters.
-distancemetric = ARGS.distancemetric;
-linkagemethod = ARGS.linkagemethod;
-k = ARGS.k;
-reducedims = ARGS.reducedims;
-ndims = ARGS.ndims;
+% Distribute parsed parameters back out to variables:
+fn = fieldnames(ARGS);
+
+for i = 1:length(fn)
+    str = sprintf('%s = ARGS.(''%s'');', fn{i}, fn{i});
+    eval(str)
+end
+
+% -------------------------------------------------------------------------
+% Defaults and inputs
+% -------------------------------------------------------------------------
 
 if verbose
-    fprintf('Evaluating clustering quality for k values: %s\n', mat2str(k_values));
+    fprintf('Evaluating clustering quality for k values: %s\n', mat2str(k));
     fprintf('Number of permutations: %d\n', nperm);
 end
 
+% Cluster with real data
+% If we are not permuting, we are done. If we are permuting, repeat with permuted data
+% best_cluster_id, best_k, cluster_id are preliminary pre-permutation
+% values that will be returned or replaced after permutation
+% -------------------------------------------------------------------------
+stats = struct;
+[stats.best_cluster_labels, ~, all_cluster_labels, mean_silhouette_value, silhouette_values, linkage_tree, ndims] = cluster_dataset(data, varargin{:});
 
+% Keep same ndims for permutation if we are reducing dimensionality
+% This avoids problem with permuted data being incommensurate in
+% dimensionality with real solution, as permutation disrupts the covariance
+% structure. This only matters if reducedims = true, and is ignored
+% otherwise
 
-% Plot a dendrogram for the best clustering solution.
-figure; 
-dendrogram(Z, 'ClusterIndices', best_cluster_id);
+if reducedims
 
+    % add to varargin so we can pass this in; replace default/entered value
+    wh_ndims = find(strcmp(varargin, 'ndims'));
+    if ~isempty(wh_ndims), varargin(wh_ndims + 1) = {ndims}; end
 
-
-
-
-
-numK = numel(k_values);
-actual_quality = zeros(numK, 1);
-null_quality = zeros(numK, nperm);
-
-% Loop over each k value.
-for i = 1:numK
-    k = k_values(i);
-    % Perform clustering using kmeans. Replicates ensure stability.
-    [~, ~, sumd] = kmeans(data, k, 'Distance', distanceMetric, 'Replicates', 5);
-    actual_quality(i) = sum(sumd);
-    
-    % Permutation testing: shuffle the rows of data.
-    for p = 1:nperm
-        permutedData = data(randperm(size(data,1)), :);
-        [~, ~, sumd_perm] = kmeans(permutedData, k, 'Distance', distanceMetric, 'Replicates', 5);
-        null_quality(i, p) = sum(sumd_perm);
-    end
-    
-    if verbose
-        fprintf('k = %d: Actual quality = %.3f\n', k, actual_quality(i));
-    end
 end
 
-% Compute Z-scores for each k: (actual - mean(null))/std(null)
-z_scores = zeros(numK, 1);
-for i = 1:numK
-    mu_null = mean(null_quality(i, :));
-    sigma_null = std(null_quality(i, :));
-    z_scores(i) = (actual_quality(i) - mu_null) / sigma_null;
+stats.inputs = struct('k', k, 'distancemetric', distancemetric, 'linkagemethod', linkagemethod, 'reducedims', reducedims, 'ndims', ndims, 'nperm', nperm, 'verbose', verbose);
+stats.cluster_quality_descrip = 'Mean silhouette value';
+
+% -------------------------------------------------------------------------
+% Cluster with permuted data
+% -------------------------------------------------------------------------
+
+numk = numel(k);
+null_mean_silhouette_value = zeros(nperm, numk);
+
+for i = 1:nperm
+
+    data_permuted = permute_X_columns(data);
+
+    % generate a vector of quality scores for each value of k
+    [~, ~, ~, null_mean_silhouette_value(i, :)] = cluster_dataset(data_permuted, 'k', k, varargin{:});
+
 end
 
-% Determine the recommended k: maximum Z-score.
-[~, bestIdx] = max(z_scores);
-recommended_k = k_values(bestIdx);
+% -------------------------------------------------------------------------
+% Save output
+% -------------------------------------------------------------------------
 
-% Create output structure.
-output = struct;
-output.k_values = k_values;
-output.actual_quality = actual_quality;
-output.null_quality = null_quality;
-output.z_scores = z_scores;
-output.recommended_k = recommended_k;
+nullmean = mean(null_mean_silhouette_value);
+nullstd = std(null_mean_silhouette_value);
+
+stats.cluster_quality = mean_silhouette_value;
+stats.cluster_quality_null_mean = nullmean;
+stats.cluster_quality_null_std = nullstd;
+stats.cluster_quality_pseudoZ = (mean_silhouette_value - nullmean) ./ nullstd;
+stats.P_val = 1 - sum(mean_silhouette_value > null_mean_silhouette_value) ./ nperm;
+
+[stats.max_pseudoZ, stats.wh_best_k] = max(stats.cluster_quality_pseudoZ);
+stats.best_k = k(stats.wh_best_k);
 
 if verbose
-    fprintf('Recommended number of clusters: %d (Z-score = %.3f)\n', recommended_k, z_scores(bestIdx));
+    fprintf('Recommended number of clusters: %d (Z-score = %.3f)\n', stats.best_k, stats.max_pseudoZ);
 end
 
+
+% build table
+knames = arrayfun(@num2str, stats.inputs.k, 'UniformOutput', false);
+t = array2table(mean_silhouette_value(:).');
+t.Properties.VariableNames = knames;
+
+t(2, :) = array2table(nullmean(:).');
+t(3, :) = array2table(nullstd(:).');
+t(4, :) = array2table(stats.cluster_quality_pseudoZ(:).');
+t(5, :) = array2table(stats.P_val(:).');
+t.Properties.RowNames = {'Quality (q)' 'Null q mean' 'Null q std' 'Pseudo-Z' 'P-value'}';
+
+stats.output_table = t;
+t.Properties.Description = 'Cluster quality by number of clusters (k)';
+
+if verbose
+    disp(' ')
+    disp(t.Properties.Description)
+    disp(t)
 end
+
+% add additional output
+stats.best_cluster_labels = all_cluster_labels(:, stats.wh_best_k);
+stats.all_cluster_labels = all_cluster_labels;
+stats.silhouette_values = silhouette_values;
+stats.linkage_tree = linkage_tree;
+
+if doplot
+
+% Plot a dendrogram for the best clustering solution.
+create_figure('cluster_plots', 1, 2); 
+
+dendrogram(gca, stats.linkage_tree, 'ClusterIndices', stats.best_cluster_labels, 'Parent', gca);
+
+subplot(1, 2, 2);
+
+n = size(data, 1);
+v = length(unique(stats.best_cluster_labels));  % Number of unique classes
+
+% Run t-SNE to reduce data to two dimensions.
+Ytsne = tsne(data);
+
+% Get a color palette with v colors using seaborn_colors from CANlab tools.
+colors = seaborn_colors(v);  % palette is a v×3 matrix
+
+% Create a color for each observation based on its label.
+pointColors = colors(stats.best_cluster_labels, :);
+pointColors = cat(1, pointColors{:});
+
+% Compute marker size proportional to the number of observations.
+% (Using an inverse relationship so that larger n yields smaller markers.)
+markerSize = 300 / sqrt(n);
+
+% Create the scatter plot.
+scatter(Ytsne(:,1), Ytsne(:,2), markerSize, pointColors, 'filled');
+
+% Label the dimensions.
+xlabel('t-SNE Dimension 1');
+ylabel('t-SNE Dimension 2');
+
+% Set the axis font size.
+set(gca, 'FontSize', 18);
+
+% Add a title.
+title('t-SNE Visualization');
+
+end
+
+
+end % main function
+
+
+% -------------------------------------------------------------------------
+% 
+% -------------------------------------------------------------------------
+% SUBFUNCTIONS
+% -------------------------------------------------------------------------
+% 
+% -------------------------------------------------------------------------
+
+
+% -------------------------------------------------------------------------
+% PARSE INPUTS
+% -------------------------------------------------------------------------
 
 function ARGS = parse_inputs(varargin)
     p = inputParser;
@@ -233,8 +371,11 @@ end
 
 
 
+% -------------------------------------------------------------------------
+% cluster_dataset
+% -------------------------------------------------------------------------
 
-function [best_cluster_id, best_k, cluster_id, mean_silhouette_value, silhouette_values, Z] = cluster_dataset(X, varargin)
+function [best_cluster_id, best_k, cluster_id, mean_silhouette_value, silhouette_values, Z, ndims] = cluster_dataset(X, varargin)
 % cluster_dataset Perform hierarchical clustering on dataset X.
 %
 % This function performs hierarchical clustering on the input dataset X.
@@ -273,7 +414,7 @@ function [best_cluster_id, best_k, cluster_id, mean_silhouette_value, silhouette
 %
 %   **'reducedims':** [logical]
 %        If true, perform dimensionality reduction via PCA before clustering.
-%        Default = true.
+%        Default = data-dependent (see main function above).
 %
 %   **'ndims':** [numeric scalar]
 %        The number of dimensions to retain if 'reducedims' is true.
@@ -306,15 +447,26 @@ function [best_cluster_id, best_k, cluster_id, mean_silhouette_value, silhouette
 
 % Parse input arguments using inputParser and validateattributes.
 p = inputParser;
+
+k = 2:ceil(size(X, 2)/2);
+reducedims = size(X, 2) > size(X, 1) ./ 2; % true if there are <2x as many cases as variables
+
 % Required argument: data matrix X.
 p.addRequired('X', @(x) validateattributes(x, {'numeric'}, {'nonempty'}));
 
 % Optional parameters:
 p.addParameter('distancemetric', 'euclidean', @(x) validateattributes(x, {'char','string'}, {'nonempty'}));
 p.addParameter('linkagemethod', 'ward', @(x) validateattributes(x, {'char','string'}, {'nonempty'}));
-p.addParameter('k', 2:7, @(x) validateattributes(x, {'numeric'}, {'vector'}));
-p.addParameter('reducedims', true, @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('k', k, @(x) validateattributes(x, {'numeric'}, {'vector'}));
+p.addParameter('reducedims', reducedims, @(x) validateattributes(x, {'logical'}, {'scalar'}));
 p.addParameter('ndims', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));
+
+% these are not used but keep them because we pass them in from main
+% function for convenience
+p.addParameter('doplot', false,  @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('verbose', true,  @(x) validateattributes(x, {'logical'}, {'scalar'}));
+p.addParameter('nperm', 100, @(x) validateattributes(x, {'numeric'}, {'scalar'}));
+
 p.parse(X, varargin{:});
 ARGS = p.Results;
  
@@ -330,6 +482,16 @@ if reducedims
     % If ndims is empty, determine the number of dimensions using barttest at p < 0.05.
     if isempty(ndims)
         ndims = barttest(X, 0.05);
+
+        % sometimes this may not work
+        % if it doesn't, pick dims with eigenvalues > 1 as a heuristic
+        if isnan(ndims)
+
+            [~, ~, latent] = pca(X, 'Economy', true);
+            ndims = sum(latent > 1);
+
+        end
+
     end
     % Perform PCA retaining the specified number of dimensions.
     [~, X_to_cluster] = pca(X, 'Economy', true, 'NumComponents', ndims);
@@ -360,3 +522,27 @@ best_cluster_id = cluster_id(:, wh_best);
 
 
 end  % cluster_dataset
+
+
+% -------------------------------------------------------------------------
+% permute_X_columns
+% -------------------------------------------------------------------------
+
+% Randomly permute each column of the 2-D matrix X independently
+function X_permuted = permute_X_columns(X)
+
+[n, k] = size(X);
+
+% Preallocate the output matrix of the same size as X
+X_permuted = zeros(n, k);
+
+% Loop through each column
+for col = 1:k
+
+    % Randomly permute the rows for the current column
+    X_permuted(:,col) = X(randperm(n), col);
+
+end
+
+end % permute
+

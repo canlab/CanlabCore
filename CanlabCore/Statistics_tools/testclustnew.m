@@ -85,6 +85,7 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 % n_per_cluster = 33; n_vars = 10;
 % 
 % rng('default');  % For reproducibility
+% n_per_cluster = 33; n_vars = 10;
 % X = [gallery('uniformdata',[n_per_cluster n_vars],12); ...
 %     gallery('uniformdata',[n_per_cluster n_vars],13)+1.2; ...
 %     gallery('uniformdata',[n_per_cluster n_vars],14)+2.5];
@@ -93,7 +94,8 @@ function [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclust
 % % Test k = 2 - 7 clusters with 100 random permutations and make a plot of the results: 
 % [bestpval,bestmyclass,bestnames,bestX,where,clustnames,stats]=testclustnew(X, [2:7], [], 100);
 
-
+disp('This function is deprecated.  Use clusterdata_permtest')
+pause(4)
 
 if length(varargin)>0,r=varargin{1}; else r = 2; end % inputs
 if length(varargin)>1,nperm=varargin{2}; else nperm = 1000; end

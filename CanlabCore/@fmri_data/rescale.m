@@ -339,6 +339,11 @@ switch meth
         % not implemented yet because tor decided to use spm_global on images for comparison; this could be done though...
         % see help spm_global
         nscan = fmridat.images_per_session;  % num images per session
+
+        if isempty(nscan)
+            nscan = size(fmridat.dat, 2);  % single run with all images
+        end
+
         I = intercept_model(nscan);
         for i = 1:size(I, 2)
             

@@ -969,6 +969,13 @@ if length(networknames) == 1 % 4-d, expand
     
 end
 
+% load metadata if we can find it
+metadatafilename = 'Wager_2008_emo_reg_vs_look_neg_metadata_table.mat';
+if exist(metadatafilename, 'file')
+    tmp = load(metadatafilename);
+    image_obj.metadata_table = tmp.metadata_table;
+end
+
 end % function
 
 

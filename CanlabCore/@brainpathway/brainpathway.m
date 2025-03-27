@@ -400,9 +400,10 @@ classdef brainpathway < handle
             % When voxel_dat is set/updated, ...
             % ------------------------------------------------------------
             
-            % resample space if needed
+            % resample space if needed (this needs more work)
             % obj.listeners = addlistener(obj,'voxel_dat', 'PreSet',  @(src, evt) resample_space(obj, src, evt));
-            
+            % obj.listeners = addlistener(obj, 'voxel_dat', 'PreSet', @(src,evt) obj.attach_voxel_dat(img_obj, src, evt));
+
             % update region_dat
             obj.listeners = addlistener(obj,'voxel_dat', 'PostSet',  @(src, evt) obj.update_region_data(obj, src, evt));
 
@@ -589,13 +590,15 @@ classdef brainpathway < handle
         
             input_args = varargin;
             
+            regions_only = any(strcmpi(input_args, 'regions'));
+
             S = struct('r', obj.connectivity.regions.r, 'p', obj.connectivity.regions.p, 'sig', obj.connectivity.regions.p < 0.05);
             
             Xlabels = format_strings_for_legend(obj.region_atlas.labels);
                     
             figtitle = 'brainpathway_connectivity_view';
             
-            if isempty(obj.connectivity.nodes)
+            if regions_only || isempty(obj.connectivity.nodes)
                 create_figure(figtitle);
             else
                 create_figure(figtitle, 1, 2);
@@ -626,7 +629,7 @@ classdef brainpathway < handle
             
             title('Region connectivity')
             
-            if isempty(obj.connectivity.nodes) || isempty(obj.connectivity.nodes.r)
+            if regions_only || isempty(obj.connectivity.nodes) || isempty(obj.connectivity.nodes.r)
                 return
             end
             

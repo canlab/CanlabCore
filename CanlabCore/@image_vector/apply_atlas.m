@@ -95,6 +95,8 @@ function [parcel_means, parcel_pattern_expression] = apply_atlas(dat, parcels, v
 %
 % ..
 
+error('apply_atlas is deprecated. Use apply_parcellation method for atlas objects instead. see also brainpathway object')
+
 [parcel_means, parcel_pattern_expression] = deal([]);
 
 dopatternexpression = 0;

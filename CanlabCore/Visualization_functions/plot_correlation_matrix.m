@@ -199,7 +199,7 @@ end
 
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
-special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels'};
+special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels', 'regions'};
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -237,6 +237,8 @@ for i = 1:length(varargin)
             case {'names', 'labels'}, var_names = varargin{i+1}; varargin{i+1} = [];
                 
             case allowable_inputs   % do nothing
+                
+            case 'regions' % do nothing
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end

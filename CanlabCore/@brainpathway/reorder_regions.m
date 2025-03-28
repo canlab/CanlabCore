@@ -65,9 +65,6 @@ function b = reorder_regions(b, varargin)
 % Date: March 2025
 % License: GNU General Public License v3 or later
 
-disp('THIS FUNCTION IS DEPRECATED. USE REORDER_REGIONS() METHOD')
-pause(4)
-
     % Parse optional inputs.
     p = inputParser;
     addParameter(p, 'wh_order', [], @(x) isnumeric(x) && isvector(x));
@@ -86,21 +83,26 @@ pause(4)
 
         indx = wh_order;
 
+        % Reorder the atlas object.
+        b.region_atlas = reorder_atlas_regions(b.region_atlas, indx);
+
     elseif sortByNodeClusters && ~isempty(b.node_clusters)
         [~, indx] = sort(b.node_clusters, 'ascend');
 
+        % Reorder the atlas object.
+        b.region_atlas = reorder_atlas_regions(b.region_atlas, indx);
+
     elseif ~isempty(labelgroups) && ~isempty(compare_property)
+
         % Use the reorder_atlas_regions function on the region_atlas property.
-        indx = reorder_atlas_regions(b.region_atlas, [], 'labelgroups', labelgroups, 'compare_property', compare_property);
+        [b.region_atlas, indx] = reorder_atlas_regions(b.region_atlas, [], 'labelgroups', labelgroups, 'compare_property', compare_property);
 
     else
-        % Default: retain current order (based on the atlas labels).
-        indx = (1:numel(b.region_atlas.labels))';
+        % do nothing
+        % indx = (1:numel(b.region_atlas.labels))';
+        return
 
     end
-    
-    % Reorder the atlas object.
-    b.region_atlas = reorder_atlas_regions(b.region_atlas, indx);
 
     % Reorder region data columns.
     b.region_dat = b.region_dat(:, indx);

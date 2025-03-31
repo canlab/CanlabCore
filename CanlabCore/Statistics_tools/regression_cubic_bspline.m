@@ -363,7 +363,8 @@ if input_params.doplot
 
     subplot(1, 2, 1)
     X_to_plot = X_expanded ./ max(abs(X_expanded)); % normalize for plot
-    imagesc(X_to_plot); colormap gray; set(gca, 'YDir', 'reverse'); axis tight
+    imagesc(X_to_plot); et(gca, 'YDir', 'reverse'); axis tight
+    colormap(colormap_tor([0 0 1], [1 1 0], [.2 .5 1], [.5 .5 .5], [1 .5 .2]))
     title('Design matrix with expanded regressors')
 
     names_to_plot = strrep(new_names, '_b', ' b');

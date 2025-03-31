@@ -10,6 +10,15 @@ function b2 = degree_calc(b2)
 
 node_cluster_numbers = unique(b2.node_clusters);
 
+% if every node cluster is a unique region, can't compute degree between and within groups
+% in this case, reassign to one big group
+
+if length(node_cluster_numbers) == size(b2.region_dat, 2) 
+    disp('No node clusters assigned yet or each region is its own cluster.  Assigning all to one group')
+
+    b2.node_clusters = ones(1, length(node_cluster_numbers));
+end
+
 u = unique(b2.node_clusters);
 k = length(u);
 
@@ -36,7 +45,16 @@ b2.graph_properties.regions.between_hubs = cat(1, bt_hubs{:});
 % b2.graph_properties.regions.within_hubs(:, i) = wi_hub_vec;
 % b2.graph_properties.regions.between_hubs(:, i) = bt_hub_vec;
 
-b2.graph_properties.regions.descrip = 'weighted degree, mean correlation';
+b2.graph_properties.degree_descrip = 'weighted degree, mean correlation';
+
+            if b2.verbose
+
+                fprintf('Calculated within- and between-network degree using %3.0f networks in obj.node_clusters\n', length(unique(b2.node_clusters)))
+                fprintf('Updated region table with network degree in obj.graph_properties.regions\n')
+                
+
+            end
+
 
 end % main function
 

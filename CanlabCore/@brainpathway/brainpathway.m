@@ -565,7 +565,7 @@ classdef brainpathway < handle
             % Clusters regions based on obj.region_dat and updates
             % obj.node_clusters
             
-            n_clusters = max(8, num_regions(obj.region_atlas));
+            n_clusters = min(8, num_regions(obj.region_atlas));
             
             if length(varargin) > 0
                 n_clusters = varargin{1};
@@ -573,6 +573,11 @@ classdef brainpathway < handle
             
             obj.node_clusters = (clusterdata(obj.region_dat', 'linkage', 'ward', 'maxclust', n_clusters))';
             
+            if obj.verbose
+                fprintf('Clustered regions using ward linkage, max clusters = %3.0f\n', n_clusters)
+                fprintf('Idenfied %3.0f clusters and assigned integer labels to obj.node_clusters\n', length(unique(obj.node_clusters)))
+            end
+
         end
         
         

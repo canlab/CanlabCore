@@ -1,102 +1,196 @@
-% Define validation functions for each object property
+function obj = validate_object(obj)
+% validate_object Validate the properties of an fmri_data object.
+%
+% :Usage:
+% ::
+%     obj.validate_object()
+%
+% :Description:
+%     Checks that key properties of the fmri_data object are correctly sized and
+%     of the correct type. In particular, the method validates:
+%
+%       - The number of rows in obj.dat equals (obj.volInfo.n_inmask - sum(obj.removed_voxels)).
+%       - If obj.images_per_session is non-empty, its values sum to (number of columns in obj.dat - sum(obj.removed_images)).
+%       - obj.removed_voxels is empty, a scalar zero, or a vector of ones/zeros (numeric or logical)
+%         with length equal to obj.volInfo.n_inmask.
+%       - obj.removed_images is empty, a scalar zero, or a vector of ones/zeros (numeric or logical).
+%
+%     Additionally, the volInfo structure is validated:
+%
+%       - volInfo.fname is a non-empty character array.
+%       - volInfo.dim is a 1×3 integer vector.
+%       - volInfo.dt is a 1×2 numeric integer vector.
+%       - volInfo.pinfo is a 3×1 numeric vector.
+%       - volInfo.mat is a 4×4 numeric matrix.
+%       - volInfo.n is a 1×2 numeric integer vector.
+%       - volInfo.descrip is a non-empty character array.
+%       - volInfo.private is either empty or a 1×1 nifti object.
+%       - volInfo.nvox is a scalar integer.
+%       - volInfo.image_indx is a logical column vector with length equal to nvox.
+%       - volInfo.wh_inmask is a numeric column vector with length equal to n_inmask.
+%       - volInfo.n_inmask is a scalar integer.
+%       - volInfo.xyzlist is a numeric matrix of size [n_inmask × 3].
+%       - volInfo.cluster is a numeric column vector with length equal to nvox.
+%
+% :Example:
+% ::
+%     fmri_obj.validate_object();
+%
+% Author: Your Name
+% Date: YYYY-MM-DD
+% License: GNU General Public License v3 or later
 
-% X: should be numeric (empty allowed)
-validate_X = @(x) validateattributes(x, {'numeric'}, {});
-
-% mask: must be a 1×1 fmri_mask_image object
-validate_mask = @(x) isa(x, 'fmri_mask_image');
-
-% mask_descrip: must be a char string
-validate_mask_descrip = @(x) ischar(x);
-
-% images_per_session: should be numeric (empty allowed)
-validate_images_per_session = @(x) validateattributes(x, {'numeric'}, {});
-
-% Y: should be numeric (empty allowed)
-validate_Y = @(x) validateattributes(x, {'numeric'}, {});
-
-% Y_names: must be a char array
-validate_Y_names = @(x) ischar(x);
-
-% Y_descrip: must be a char string
-validate_Y_descrip = @(x) ischar(x);
-
-% covariates: should be numeric (empty allowed)
-validate_covariates = @(x) validateattributes(x, {'numeric'}, {});
-
-% covariate_names: must be a cell array of char strings
-validate_covariate_names = @(x) iscell(x) && all(cellfun(@ischar, x));
-
-% covariates_descrip: must be a char string
-validate_covariates_descrip = @(x) ischar(x);
-
-% history_descrip: must be a char string
-validate_history_descrip = @(x) ischar(x);
-
-% additional_info: must be a structure (empty struct allowed)
-validate_additional_info = @(x) isstruct(x);
-
-% metadata_table: must be a table
-validate_metadata_table = @(x) isa(x, 'table');
-
-% source_notes: must be a char string
-validate_source_notes = @(x) ischar(x);
-
-% dat: should be numeric (e.g., single, double; empty allowed)
-validate_dat = @(x) validateattributes(x, {'numeric'}, {});
-
-% dat_descrip: should be a char string or empty
-validate_dat_descrip = @(x) ischar(x) || isempty(x);
-
-% volInfo: must be a struct or empty
-validate_volInfo = @(x) (isstruct(x) || isempty(x));
-
-% removed_voxels: should be numeric (scalar or vector)
-validate_removed_voxels = @(x) validateattributes(x, {'numeric'}, {});
-
-% removed_images: should be numeric (scalar or vector)
-validate_removed_images = @(x) validateattributes(x, {'numeric'}, {});
-
-% image_names: must be a char array (not a cell array)
-validate_image_names = @(x) ischar(x);
-
-% fullpath: must be a char array (not a cell array)
-validate_fullpath = @(x) ischar(x);
-
-% files_exist: must be a logical array
-validate_files_exist = @(x) islogical(x);
-
-% history: must be a cell array of char strings
-validate_history = @(x) iscell(x) && all(cellfun(@ischar, x));
-
-prop_names = {'X', 'mask', 'mask_descrip', 'images_per_session', 'Y', 'Y_names', 'Y_descrip', 'covariates', 'covariate_names', 'covariates_descrip', 'history_descrip', 'additional_info', 'metadata_table', 'source_notes', 'dat', 'dat_descrip', 'volInfo', 'removed_voxels', 'removed_images', 'image_names', 'fullpath', 'files_exist', 'history'};
+% -------------------------------------------------------------------------
+% Check specific sizes of variables that must add up
+% -------------------------------------------------------------------------
 
 
-p = inputParser;
-p.addParameter('X', [], validate_X);
-p.addParameter('mask', [], validate_mask);
-p.addParameter('mask_descrip', '', validate_mask_descrip);
-p.addParameter('images_per_session', [], validate_images_per_session);
-p.addParameter('Y', [], validate_Y);
-p.addParameter('Y_names', '', validate_Y_names);
-p.addParameter('Y_descrip', '', validate_Y_descrip);
-p.addParameter('covariates', [], validate_covariates);
-p.addParameter('covariate_names', {''}, validate_covariate_names);
-p.addParameter('covariates_descrip', '', validate_covariates_descrip);
-p.addParameter('history_descrip', '', validate_history_descrip);
-p.addParameter('additional_info', struct(), validate_additional_info);
-p.addParameter('metadata_table', table(), validate_metadata_table);
-p.addParameter('source_notes', '', validate_source_notes);
-p.addParameter('dat', [], validate_dat);
-p.addParameter('dat_descrip', '', validate_dat_descrip);
-p.addParameter('volInfo', struct(), validate_volInfo);
-p.addParameter('removed_voxels', 0, validate_removed_voxels);
-p.addParameter('removed_images', 0, validate_removed_images);
-p.addParameter('image_names', '', validate_image_names);
-p.addParameter('fullpath', '', validate_fullpath);
-p.addParameter('files_exist', false, validate_files_exist);
-p.addParameter('history', {''}, validate_history);
+%% Validate dimensions of obj.dat relative to volInfo and removed_voxels
+% Compute expected number of voxels after removal.
+if isempty(obj.removed_voxels)
+    removedVoxels = 0;
 
-p.parse(varargin{:});
-ARGS = p.Results;
+elseif isscalar(obj.removed_voxels) && obj.removed_voxels == 0
+    removedVoxels = 0;
+
+else
+
+    % Validate removed_voxels if not empty or scalar zero.
+    validateattributes(obj.removed_voxels, {'numeric','logical'}, ...
+        {'vector', 'numel', obj.volInfo.n_inmask}, mfilename, 'removed_voxels');
+    removedVoxels = sum(obj.removed_voxels(:));
+
+end
+
+expectedVoxels = obj.volInfo.n_inmask - removedVoxels;
+actualVoxels = size(obj.dat, 1);
+
+if actualVoxels ~= expectedVoxels
+    error('fmri_data:InvalidDimensions', ...
+        'Number of rows in obj.dat (%d) must equal volInfo.n_inmask (%d) minus sum(removed_voxels) (%d).', ...
+        actualVoxels, obj.volInfo.n_inmask, removedVoxels);
+end
+
+%% Validate images_per_session relative to obj.dat and removed_images
+numImages = size(obj.dat, 2);
+
+if isempty(obj.removed_images)
+    removedImages = 0;
+elseif isscalar(obj.removed_images) && obj.removed_images == 0
+    removedImages = 0;
+else
+    validateattributes(obj.removed_images, {'numeric','logical'}, {'vector'}, mfilename, 'removed_images');
+    removedImages = sum(obj.removed_images(:));
+end
+
+if ~isempty(obj.images_per_session)
+
+    validateattributes(obj.images_per_session, {'numeric'}, {'vector'}, mfilename, 'images_per_session');
+
+    if sum(obj.images_per_session) ~= (numImages - removedImages)
+        error('fmri_data:InvalidDimensions', ...
+            'Sum of images_per_session (%d) must equal (number of columns in obj.dat (%d) minus sum(removed_images) (%d)).', ...
+            sum(obj.images_per_session), numImages, removedImages);
+    end
+end
+
+% -------------------------------------------------------------------------
+% Validate volInfo structure fields
+% -------------------------------------------------------------------------
+
+volInfo = obj.volInfo;
+
+% fname: non-empty char array.
+validateattributes(volInfo.fname, {'char'}, {'nonempty'}, mfilename, 'volInfo.fname');
+
+% dim: 1x3 integer vector.
+validateattributes(volInfo.dim, {'numeric'}, {'size',[1,3], 'integer'}, mfilename, 'volInfo.dim');
+
+% dt: 1x2 numeric integer vector.
+validateattributes(volInfo.dt, {'numeric'}, {'size',[1,2], 'integer'}, mfilename, 'volInfo.dt');
+
+% pinfo: 3x1 numeric vector.
+validateattributes(volInfo.pinfo, {'numeric'}, {'size',[3,1]}, mfilename, 'volInfo.pinfo');
+
+% mat: 4x4 numeric matrix.
+validateattributes(volInfo.mat, {'numeric'}, {'size',[4,4]}, mfilename, 'volInfo.mat');
+
+% n: 1x2 numeric integer vector.
+validateattributes(volInfo.n, {'numeric'}, {'size',[1,2], 'integer'}, mfilename, 'volInfo.n');
+
+% descrip: non-empty char array.
+validateattributes(volInfo.descrip, {'char'}, {'nonempty'}, mfilename, 'volInfo.descrip');
+
+% private: empty or 1x1 nifti class object.
+if ~isempty(volInfo.private)
+    validateattributes(volInfo.private, {'nifti'}, {'scalar'}, mfilename, 'volInfo.private');
+end
+
+% nvox: scalar integer.
+validateattributes(volInfo.nvox, {'numeric'}, {'scalar','integer'}, mfilename, 'volInfo.nvox');
+
+% image_indx: logical column vector, length must equal nvox.
+validateattributes(volInfo.image_indx, {'logical'}, {'column'}, mfilename, 'volInfo.image_indx');
+if numel(volInfo.image_indx) ~= volInfo.nvox
+    error('fmri_data:InvalidDimensions', ...
+        'volInfo.image_indx must have length equal to volInfo.nvox (%d).', volInfo.nvox);
+end
+
+% wh_inmask: numeric column vector, length must equal n_inmask.
+validateattributes(volInfo.wh_inmask, {'numeric'}, {'column'}, mfilename, 'volInfo.wh_inmask');
+if numel(volInfo.wh_inmask) ~= volInfo.n_inmask
+    error('fmri_data:InvalidDimensions', ...
+        'volInfo.wh_inmask must have length equal to volInfo.n_inmask (%d).', volInfo.n_inmask);
+end
+
+% n_inmask: scalar integer.
+validateattributes(volInfo.n_inmask, {'numeric'}, {'scalar','integer'}, mfilename, 'volInfo.n_inmask');
+
+% xyzlist: numeric matrix with size [n_inmask x 3].
+validateattributes(volInfo.xyzlist, {'numeric'}, {'size',[volInfo.n_inmask,3]}, mfilename, 'volInfo.xyzlist');
+
+% cluster: numeric column vector, length must equal nvox.
+validateattributes(volInfo.cluster, {'numeric'}, {'column'}, mfilename, 'volInfo.cluster');
+
+if numel(volInfo.cluster) ~= volInfo.n_inmask
+    error('fmri_data:InvalidDimensions', ...
+        'volInfo.cluster must have length equal to volInfo.nvox (%d).', volInfo.nvox);
+end
+
+
+
+% -------------------------------------------------------------------------
+% Validate the fields in image_metadata
+% -------------------------------------------------------------------------
+
+% For logical flag fields: they must be a logical scalar if not NaN.
+logicalFields = {'is_timeseries', 'is_single_trial_series', 'is_first_level_maps', ...
+    'is_MNI_space', 'is_HP_filtered', 'covariates_removed'};
+
+for i = 1:length(logicalFields)
+    val = obj.image_metadata.(logicalFields{i});
+    % If not NaN, check that the value is logical.
+    if ~isnan(val)
+        validateattributes(val, {'logical'}, {'scalar'}, mfilename, logicalFields{i});
+    end
+end
+
+% For numeric fields: they must be a numeric scalar (NaN is acceptable).
+numericFields = {'TR_in_sec', 'HP_filter_cutoff_sec'};
+for i = 1:length(numericFields)
+    val = obj.image_metadata.(numericFields{i});
+    validateattributes(val, {'numeric'}, {'scalar'}, mfilename, numericFields{i});
+end
+
+
+
+%% If all validations pass, print a confirmation (if verbose mode is enabled)
+if isprop(obj, 'verbose') && obj.verbose
+    fprintf('fmri_data object validated successfully.\n');
+end
+
+
+
+end % main function
+
 

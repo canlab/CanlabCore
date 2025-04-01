@@ -4,7 +4,7 @@
 % :Usage:
 % ::
 %
-%     [dat, maskInfo] = iimg_get_data(mask, imageNames, varargin)
+%     [dat, maskInfo, image_info_struct] = iimg_get_data(mask, imageNames, varargin)
 %
 % :Inputs:
 %
@@ -30,14 +30,41 @@
 %        Skip expanding the list of volumes for 4-D filenames.  The
 %        expansion is the default, and is compatible with spm2 and spm5/8,
 %        but is not needed for spm5 and above.
+%
+% :Outputs:
+%
+%   **dat**
+%       A data matrix of images x voxels in the mask
 % 
+%   **maskInfo**
+%       A volInfo struct (see iimg_read_img), a copy of the maskInfo passed in 
+%
+%   **image_info_struct:**  
+%        A structure with the following fields:
+%
+%        **fullpath:**  
+%             A character array containing the full file path (from the first element of imgInfo.fname).
+%
+%        **image_names:**  
+%             A character array of file names (with extensions only) for all image volumes.
+%
+%        **wh_image_files:**  
+%             A logical matrix where each row corresponds to an element of imgInfo and each column 
+%             corresponds to a unique file name (in order of appearance). A true value indicates that 
+%             the image volume's file name matches that unique file name.
+%
+%        **images_per_session:**  
+%             A numeric vector where each element indicates the number of images (volumes) 
+%             corresponding to each unique file name, effectively representing the number of 
+%             images per 4D session.
+%
 % :Examples:
 % ::
 %
-%    [dat, volInfo] = iimg_get_data('graymask.img', imgs);
+%    [dat, volInfo, image_info_struct] = iimg_get_data('graymask.img', imgs);
 %
 %    xyz = [20 20 20; 25 25 25; 30 30 30; 5 5 5];
-%    [dat, volInfo] = iimg_get_data(xyz, imgs);
+%    [dat, volInfo, image_info_struct] = iimg_get_data(xyz, imgs);
 %
 % Example of image reading
 %
@@ -65,7 +92,7 @@
 %          voldat3D = iimg_reconstruct_vols(data, maskInfo, 'outname',
 %                                                  'test_run1_pca2.img');
 
-function [dat, maskInfo] = iimg_get_data(mask, imageNames, varargin)
+function [dat, maskInfo, image_info_struct] = iimg_get_data(mask, imageNames, varargin)
 docheck = 1;
 verbose = 0;
 dosingle = 0;
@@ -80,7 +107,7 @@ for i = 1:length(varargin)
             case 'noverbose'             % nothing more to do
             case 'single', dosingle = 1; % varargin{i+1};
             case 'noexpand', doexpand = 0;
-                
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -88,7 +115,7 @@ end
 
 % get mask info structure and image info
 % ------------------------------------------------------------
-if verbose, fprintf('loading mask. '); tic, end
+if verbose, fprintf('iimg_get_data: loading mask. '); tic, end
 
 if isstruct(mask)
     maskInfo = mask;
@@ -128,7 +155,7 @@ if docheck
     if verbose, fprintf('\nchecking that dimensions and voxel sizes of volumes are the same. '); end
     % anybad = iimg_check_volinfo(maskInfo, imgInfo(1));
     anybad = iimg_check_volinfo(maskInfo, imgInfo);
-    
+
     if anybad
         disp('Reslice images so dimensions and vox sizes match.');
         disp('Try using the function scn_map_image for an easy way to do this.');
@@ -157,9 +184,101 @@ else
 
 end
 
+% Get full image names, filenames (only), and images_per_session (images
+% per 4D image)
+image_info_struct = spm_vol2fileinfo(imgInfo);
+
+
+
 if verbose, toc, end
 % Notes:
 % This is faster for lists with many voxels (like 200,000)
 % but is slower for 44,000 voxels
 %tic, dat2 = spm_read_vols(spm_vol(imageNames));, toc
+
+end % Main function
+
+
+
+
+function image_info_struct = spm_vol2fileinfo(imgInfo)
+% extract information from the output of a call to spm_vol
+% Get full image names, filenames (only), and images_per_session (images
+% per 4D image)
+% spm_vol2fileinfo - Extract file and session information from SPM volume structure.
+%
+% :Usage:
+% ::
+%     image_info_struct = spm_vol2fileinfo(imgInfo)
+%
+% :Inputs:
+%
+%   **imgInfo:**  
+%        A structure array produced by spm_vol (Statistical Parametric Mapping). Each element 
+%        of imgInfo represents an image volume and contains, among other fields, the full file 
+%        path in the field 'fname'.
+%
+% :Outputs:
+%
+%   **image_info_struct:**  
+%        A structure with the following fields:
+%
+%        **fullpath:**  
+%             A character array containing the full file path (from the first element of imgInfo.fname).
+%
+%        **image_names:**  
+%             A character array of file names (with extensions only) for all image volumes.
+%
+%        **wh_image_files:**  
+%             A logical matrix where each row corresponds to an element of imgInfo and each column 
+%             corresponds to a unique file name (in order of appearance). A true value indicates that 
+%             the image volume's file name matches that unique file name.
+%
+%        **images_per_session:**  
+%             A numeric vector where each element indicates the number of images (volumes) 
+%             corresponding to each unique file name, effectively representing the number of 
+%             images per 4D session.
+%
+% :Example:
+% ::
+%     % Load SPM volume information for a 4D image file:
+%     imgInfo = spm_vol('functional_image.nii');
+%
+%     % Extract file and session information:
+%     image_info_struct = spm_vol2fileinfo(imgInfo);
+%     
+%     % Display the extracted information:
+%     disp(image_info_struct);
+%
+% :See also:
+%     spm_vol
+
+image_info_struct = struct();
+image_info_struct.fullpath = char(imgInfo.fname);
+
+n = numel(imgInfo);
+fullPathsCell = {imgInfo.fname}';
+
+fileNames = cell(n,1);
+for i = 1:n
+    [~, name, ext] = fileparts(fullPathsCell{i});
+    fileNames{i} = [name, ext];
 end
+
+% Get unique file names in the order of appearance
+uniqueFileNames = unique(fileNames, 'stable');
+
+% Create a logical matrix: each row corresponds to an element in fullPathsCell,
+% and each column corresponds to one of the unique file names.
+logicalMatrix = false(n, numel(uniqueFileNames));
+for j = 1:numel(uniqueFileNames)
+    logicalMatrix(:, j) = strcmp(fileNames, uniqueFileNames{j});
+end
+
+image_info_struct.image_names = char(fileNames{:});
+image_info_struct.wh_image_files = logicalMatrix;
+image_info_struct.images_per_session = sum(logicalMatrix);
+
+end % spm_vol2f...
+
+

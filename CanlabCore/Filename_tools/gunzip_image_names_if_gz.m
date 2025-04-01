@@ -1,5 +1,5 @@
-function [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names)
-% image_names = gunzip_image_names_if_gz(image_names)
+function [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names, varargin)
+% image_names = gunzip_image_names_if_gz(image_names, ['verbose', true/false])
 %
 % - Unzips images if they had .gz extension, and returns list of unzipped file names.
 % - If unzipped file names are entered, returns names.
@@ -10,6 +10,13 @@ function [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names)
 % 7/18/18 Added was_gzipped output for re-zipping
 
 % Handle .gz by unzipping if needed
+
+% Parse optional inputs.
+p = inputParser;
+addParameter(p, 'verbose', false, @(x) islogical(x) && isscalar(x));
+parse(p, varargin{:});
+
+verbose = p.Results.verbose;
 
 wascell = false;
 was_gzipped = []; % do not pre-allocate because cell/char handled diff below
@@ -36,8 +43,10 @@ for i = 1:size(image_names, 1)
     unzipped_file = regexprep(my_image, '.gz', '');
     
     if exist(unzipped_file, 'file')
-        %fprintf('Found zipped .gz file, but unzipped file \n%s \nalready exists. Using that file.\n', unzipped_file);
-        
+        if verbose
+            fprintf('Found zipped .gz file, but unzipped file \n   %s \n   already exists. Using that file.\n', unzipped_file);
+        end
+
         image_names_cell{i, 1} = unzipped_file;
         
         % don't flag for re-zipping
@@ -49,6 +58,10 @@ for i = 1:size(image_names, 1)
         
         if strcmp(ext, '.gz')
             
+            if verbose
+                fprintf('Unzipping .gz file %s\n', my_image);
+            end
+
             was_gzipped(i, 1) = true;
             
             %         image_names_cell(i, 1) = gunzip(my_image);

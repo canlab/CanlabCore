@@ -335,6 +335,18 @@ classdef fmri_data < image_vector
         
         metadata_table = table(); % a table for storing image-level metadata. Numbers of rows should be the number of images in .dat
         
+        % Define a structure "image_metadata" with default values for the fmri_data object.
+        image_metadata = struct( ...
+            'is_timeseries',           NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_single_trial_series',  NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_first_level_maps',     NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_MNI_space',            NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_HP_filtered',          NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'covariates_removed',      NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'TR_in_sec',               NaN, ...  % Numeric value (real number in seconds) or NaN if not set
+            'HP_filter_cutoff_sec',    NaN);     % Numeric value (real number in seconds) or NaN if not set
+
+
     end % properties
     
     methods
@@ -373,7 +385,7 @@ classdef fmri_data < image_vector
             % DEFAULT INPUTS
             % -----------------------------------
             
-            verbose = 1;
+            verbose = true;
             verbosestr = 'verbose';
             sample2mask = 0;
             
@@ -385,7 +397,7 @@ classdef fmri_data < image_vector
                     switch varargin{i}
                         
                         case 'verbose', varargin{i} = []; % nothing else needed
-                        case 'noverbose', verbose = 0; verbosestr = 'noverbose'; varargin{i} = [];
+                        case 'noverbose', verbose = false; verbosestr = 'noverbose'; varargin{i} = [];
                         case 'sample2mask', sample2mask = 1; varargin{i} = [];
                             
                         case 'native_image_space' % do nothing, for convenience in calling scripts
@@ -407,7 +419,7 @@ classdef fmri_data < image_vector
                     return
                 end
                 
-                verbose = 0; 
+                verbose = false; 
                 verbosestr = 'noverbose';
                 
             elseif isempty(image_names)
@@ -458,9 +470,9 @@ classdef fmri_data < image_vector
                 
             else
                 % It's a file. Unzip if needed and check that image_names exist
-                
+
                 % Handle .gz by unzipping if needed
-                [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names);
+                [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names, 'verbose', false);
                 
             end
             
@@ -524,8 +536,17 @@ classdef fmri_data < image_vector
                 for i = 1:size(image_names, 1)
                     
                     iinames{i} = expand_4d_filenames(image_names(i, :));
+
+                    images_per_session(i) = size(iinames{i}, 1);
+                    
                 end
                 iinames = char(iinames{:});
+
+                % define structure for metadata
+                image_info_struct.image_names = image_names;
+                image_info_struct.fullpath = iinames;
+                image_info_struct.images_per_session = images_per_session;
+
                 imgdat = zeros(length(maskobj.volInfo.wh_inmask), size(iinames, 1), 'single');
                 
                 if isempty(iinames)
@@ -566,11 +587,11 @@ classdef fmri_data < image_vector
                 switch spm('Ver')
                     
                     case {'SPM25' 'SPM12','SPM8', 'SPM5'}
-                        imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
+                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
                         
                     case {'SPM2', 'SPM99'}
                         % legacy, for old SPM
-                        imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr);
+                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr);
                         
                     otherwise
                         error('Unknown version of SPM! Update code, check path, etc.');
@@ -580,10 +601,12 @@ classdef fmri_data < image_vector
                 
             end % read data, depending on mask sampling
             
+
             % re-zip images if they were originally zipped
             % add .gz back to file names.
             if any(was_gzipped)
                 
+                if verbose, disp('Re-zipping image files.'), end
                 image_names = re_zip_images(image_names, was_gzipped);
                 
             end
@@ -592,7 +615,10 @@ classdef fmri_data < image_vector
             obj = create(obj, 'mask', maskobj, verbosestr);
             
             % append data
-            obj = create(obj, 'dat', imgdat, 'image_names', image_names, verbosestr);
+            obj = create(obj, 'dat', imgdat, 'image_names', image_info_struct.image_names, ...
+                'fullpath', image_info_struct.fullpath, 'images_per_session', image_info_struct.images_per_session, verbosestr);
+            
+            % clear to save memory space
             clear imgdat
             
             % append description info
@@ -604,6 +630,23 @@ classdef fmri_data < image_vector
             
             obj.volInfo = maskobj.volInfo;
             
+            % Add metadata table info
+            if isprop(obj, 'metadata_table') && ~isempty(obj.images_per_session)  && exist('image_info_struct', 'var')
+
+                [~, imageNumber] = find(image_info_struct.wh_image_files);
+                obj.metadata_table = addvars(obj.metadata_table, imageNumber, 'Before', 1, 'NewVariableNames', 'imageNumber');
+
+                nimgs = size(image_info_struct.wh_image_files, 2);
+                volNumber = cell(1, nimgs);
+                for i = 1:nimgs
+                    volNumber{i} = [1:obj.images_per_session(i)]';
+                end
+                volNumber = cat(1, volNumber{:});
+
+                obj.metadata_table = addvars(obj.metadata_table, volNumber, 'After', 1, 'NewVariableNames', 'volumeNumber');
+
+            end
+
             obj.history(end+1) = {sprintf('Sampled to space of %s', maskobj.space_defining_image_name)};
             obj.history(end+1) = {['Masked with ' mask_image_name]};
             

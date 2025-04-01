@@ -26,7 +26,7 @@ if isa(obj, 'fmri_data')
     
 end
 
-if isa(obj, 'statistic_object')
+if isa(obj, 'statistic_image')
     
     obj.sig = logical(obj.sig);
     
@@ -34,4 +34,21 @@ if isa(obj, 'statistic_object')
     
 end
 
+if ~isprop(obj, 'image_metadata')
+
+    % Define a structure "image_metadata" with default values for the fmri_data object.
+    image_metadata = struct( ...
+        'is_timeseries',           NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'is_single_trial_series',  NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'is_first_level_maps',     NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'is_MNI_space',            NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'is_HP_filtered',          NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'covariates_removed',      NaN, ...  % Logical flag: true, false, or NaN (unknown)
+        'TR_in_sec',               NaN, ...  % Numeric value (real number in seconds) or NaN if not set
+        'HP_filter_cutoff_sec',    NaN);     % Numeric value (real number in seconds) or NaN if not set
+
 end
+
+
+end % main function
+

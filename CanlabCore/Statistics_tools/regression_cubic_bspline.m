@@ -79,20 +79,13 @@ function out = regression_cubic_bspline(X, y, varargin)
 %          'verbose', true, 'doplot', true);
 %
 %    % Example 2: Two regressors ("age" and "practice hours")
-%    % In this example, practice hours vary from 5 to 200.
-%    rng(0);
-%    N = 100;
-%    age = linspace(20, 80, N)';
-%    practice_hours = linspace(5, 200, N)';
-%    memory = -0.02*(age - 30).^2 + 0.05*practice_hours + 50 + randn(N, 1)*3;
-%    X = [age, practice_hours];
 %
 %    % Case A: Only age is expanded:
-%    out1 = regression_cubic_bspline(X, memory, 'expand_cols', [true, false], ...
+%    out1 = regression_cubic_bspline([age practice], memory, 'expand_cols', [true, false], ...
 %           'names', {'age', 'practice_hours'}, 'verbose', true, 'doplot', true);
 %
 %    % Case B: Both age and practice hours are expanded:
-%    out2 = regression_cubic_bspline(X, memory, 'expand_cols', [true, true], ...
+%    out2 = regression_cubic_bspline([age practice], memory, 'expand_cols', [true, true], ...
 %           'names', {'age', 'practice_hours'}, 'verbose', true, 'doplot', true);
 %
 % :References:
@@ -363,7 +356,7 @@ if input_params.doplot
 
     subplot(1, 2, 1)
     X_to_plot = X_expanded ./ max(abs(X_expanded)); % normalize for plot
-    imagesc(X_to_plot); et(gca, 'YDir', 'reverse'); axis tight
+    imagesc(X_to_plot); set(gca, 'YDir', 'reverse'); axis tight
     colormap(colormap_tor([0 0 1], [1 1 0], [.2 .5 1], [.5 .5 .5], [1 .5 .2]))
     title('Design matrix with expanded regressors')
 

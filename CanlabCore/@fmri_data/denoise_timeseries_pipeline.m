@@ -255,7 +255,13 @@ if doPlot
 
 end
 
-%% Step 12: Save the Denoised Object (if requested)
+%% Step 12: Set metadata and save the Denoised Object (if requested)
+
+obj.image_metadata.is_timeseries = true;
+obj.image_metadata.is_HP_filtered = true;
+obj.image_metadata.covariates_removed = true;
+obj.image_metadata.TR_in_sec = TR;
+obj.image_metadata.HP_filter_cutoff_sec = HP_cutoff_sec;
 
 obj_denoised = enforce_variable_types(obj_denoised);
 

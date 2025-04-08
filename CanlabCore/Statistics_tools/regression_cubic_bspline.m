@@ -9,7 +9,10 @@ function out = regression_cubic_bspline(X, y, varargin)
 % :Inputs:
 %
 %    **X** : [NxM double]
-%         Matrix of predictor variables.
+%         Numeric matrix of predictor variables.
+%           or
+%         table object with numeric predictor variables.
+%         column names will be used as predictor names.
 %
 %    **y** : [Nx1 double]
 %         Vector of outcome values.
@@ -106,7 +109,7 @@ function out = regression_cubic_bspline(X, y, varargin)
 %% Input Parsing and Validation
 p = inputParser;
 
-addRequired(p, 'X', @(z) validateattributes(z, {'numeric'}, {'2d', 'nonempty'}));
+addRequired(p, 'X', @(z) validateattributes(z, {'table' 'numeric'}, {'2d', 'nonempty'}));
 
 addRequired(p, 'y', @(z) validateattributes(z, {'numeric'}, {'column'}));
 
@@ -123,6 +126,11 @@ parse(p, X, y, varargin{:});
 input_params = p.Results;
 
 [n_rows, n_cols] = size(X);
+
+if istable(X)
+    names = X.Properties.VariableNames;
+    X = table2array(X);
+end
 
 validateattributes(y, {'numeric'}, {'numel', n_rows});
 

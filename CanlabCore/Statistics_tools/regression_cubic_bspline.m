@@ -128,7 +128,7 @@ input_params = p.Results;
 [n_rows, n_cols] = size(X);
 
 if istable(X)
-    names = X.Properties.VariableNames;
+    input_params.names = X.Properties.VariableNames;
     X = table2array(X);
 end
 
@@ -445,6 +445,14 @@ x_col = x_col(:);
 
 N = length(x_col);
 
+% When your data are skewed, it is often preferable to choose knot points 
+% based on percentiles of the data rather than using linear spacing across 
+% the range. Using percentiles tailors the knot placement to the actual 
+% density of the data, ensuring that there are more knots where the data 
+% are concentrated and fewer where there are sparse observations. This 
+% approach can lead to a better fit in regions with high data density and 
+% helps avoid overfitting in areas with few observations. 
+
 k1 = prctile(x_col, 33);
 k2 = prctile(x_col, 66);
 
@@ -452,14 +460,56 @@ if verbose
     fprintf('    Chosen interior knots at %.3f and %.3f.\n', k1, k2);
 end
 
+% In standard practice, the boundary knots of a B‑spline basis are set to 
+% the minimum and maximum values of the data to ensure the spline “covers” 
+% the range of the data. Typically, these boundary knots are then augmented 
+% (i.e., repeated a number of times equal to the spline order) to produce a 
+% clamped spline that has desirable boundary properties (such as 
+% interpolating the endpoints).
+% 
+% However, there are cases where one might choose knots that extend slightly beyond the data range, such as when the analyst wishes to avoid boundary effects or when known characteristics of the underlying process suggest that the data are only a subset of the full range of variability. Extending the knot sequence beyond the range of the data can improve extrapolation or stabilize the spline near the edges, but it also may introduce artifacts if the extrapolated behavior is not justified by the data.
+
 knots_vec = [min(x_col), k1, k2, max(x_col)];
 order = 4;
 knots = augknt(knots_vec, order);
 
+% ties in data will break the construction of the spline collocation vectors (regressors)
+% if there are no unique knot points. 
+% if the data are not truly continuous and there are mulitple exact repeats of data values
+% this will break the spline basis construction. add a bit of noise in this
+% case
+if length(unique(x_col)) < size(x_col, 1)
+    x_col = x_col + 0.001 * range(x_col) * unifrnd(-1, 1, size(x_col, 1), 1);
+end
+
+% we could also use unique values instead, and reconstruct X_sorted
+
 [x_sorted, sort_idx] = sort(x_col);
-X_sorted = spcol(knots, order, x_sorted);
+X_sorted = spcol(knots, order, x_sorted);  % Create B-spline collocation basis
 
 basis = zeros(N, size(X_sorted, 2));
 basis(sort_idx, :) = X_sorted;
 
 end
+
+% Notes:
+% repeated values (ties) will break the spline construction
+% Error using spcol (line 121)
+% Point multiplicity should not exceed the given order 4.
+% This error means that in constructing your B-spline basis functions 
+% (using a cubic spline, which has order 4), one of the knots (or input 
+% data points) is duplicated too many times. In B-spline theory, the maximum 
+% number of times (multiplicity) a knot can appear is limited by the order 
+% of the spline. For a cubic B-spline (order 4), the knot multiplicity must 
+% not exceed 4. 
+% If your input data or knot vector contains a particular value more than 
+% 4 times, spcol will throw this error.
+% A common cause is having duplicate or nearly-identical data points when 
+% generating the knot vector or control points. You should review your inputs 
+% to ensure there are no unintended duplicates that inflate the knot 
+% multiplicity.
+
+% Even if your knots are distinct, you need to ensure that:
+% 	•	The knot vector is properly constructed (including repeated endpoints as needed for a cubic spline),
+% 	•	The evaluation points fall within the active support of the spline functions,
+% 	•	And the spacing of the knots allows for nonzero basis functions over the domain of interest.

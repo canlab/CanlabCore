@@ -1,10 +1,10 @@
-function out = regression_cubic_bspline(X, y, varargin)
+function [out, residuals] = regression_cubic_bspline(X, y, varargin)
 % regression_cubic_bspline - Fit a cubic B-spline regression model to one or more outcome variables with column expansion.
 %
 % :Usage:
 % ::
 %
-%    out = regression_cubic_bspline(X, y, [optional inputs])
+%    [output_struct, residuals] = regression_cubic_bspline(X, y, [optional inputs])
 %
 % :Inputs:
 %
@@ -38,6 +38,10 @@ function out = regression_cubic_bspline(X, y, varargin)
 %         Names for each column of X.
 %         *Default:* {} (if empty, columns are named 'Column_1', 'Column_2', etc.).
 %
+%    **names**: [cell array of strings] 
+%         Names of regressors in the final design matrix.
+%         *Default:* {} (if empty, columns are named 'Column_1', 'Column_2', etc.). 
+%
 %    **'verbose'** : [logical scalar]
 %         Flag to print progress information.
 %         *Default:* true.
@@ -58,6 +62,10 @@ function out = regression_cubic_bspline(X, y, varargin)
 %         - **partial_residuals**: [1xM cell] Partial residuals for each original regressor.
 %         - **F_test_table**: [table] F-statistics for each original regressor, with columns:
 %               Regessor, F_stat, df1, df2, and p_value.
+%               Rows are outcome variables in y, if y has more than 1 column.
+%         - **P_values**: [table] P-value table for each original regressor, with columns:
+%               Regessor, F_stat, df1, df2, and p_value.
+%               Rows are outcome variables in y, if y has more than 1 column.
 %         - **knot_pts**: [structure] Knot points used for each expanded column of X.
 %         - **basis_sets**: [structure] B-spline basis matrices for each expanded column of X.
 %         - **expanded_regs**: [vector] Indices of regressors (columns of X) that were expanded.
@@ -66,6 +74,8 @@ function out = regression_cubic_bspline(X, y, varargin)
 %               (before adding the intercept).
 %         - **input_params**: [structure] All input parameters passed to the function.
 %         - **names**: [cell array of strings] Names of regressors in the final design matrix.
+%         - **R2**: [1xK double] R-squared for each column of y (overall model fit).
+%         - **R2_adj**: [1xK double] Adjusted R-squared for each column of y.
 %
 % :Examples:
 %
@@ -100,6 +110,8 @@ function out = regression_cubic_bspline(X, y, varargin)
 %    % Case B: Both age and practice hours are expanded:
 %    out2 = regression_cubic_bspline([age practice], memory, 'expand_cols', [true, true], ...
 %           'names', {'age', 'practice_hours'}, 'verbose', true, 'doplot', true);
+%
+% :More examples of working with output:
 %
 % :References:
 %
@@ -307,7 +319,7 @@ residuals = y - y_hat;
 n_obs = n_rows;
 df2 = n_obs - size(X_expanded, 2);
 
-RSS_full    = sum(residuals.^2);  % Residual sums of squares for all outcomes
+RSS_full    = sum(residuals .^ 2, 1);  % Residual sums of squares for all outcomes
 
 % Reduced models and stats
 
@@ -341,6 +353,21 @@ F_stats = cat(1, F_stat{:})'; % F stats, outcomes x original regressors
 
 P_values = cat(1, p_values{:})'; % all P values, outcomes x original regressors
 
+% adjust for P-values very close to zero
+P_values(P_values < 100 * eps) = 100 * eps;
+
+[partial_r2_mat, adj_r2_mat] = compute_partial_r2_sets(RSS_full, RSS_reduced, X_reduced, df2, n_rows);
+
+
+% ---- Overall R² and Adjusted R² ----
+y_mean = mean(y, 1);  % mean for each column
+ss_total = sum((y - y_mean).^2, 1);  % total sum of squares per column
+
+full_model_R2 = 1 - RSS_full ./ ss_total;
+n = size(y, 1);
+p = size(X, 2);  % includes intercept
+R2_adj = 1 - (1 - full_model_R2) .* (n - 1) ./ (n - p);
+
 % -------------------------------------------------------------------------
 % Table for first outcome variable
 % (typical use case is 1 outcome variable)
@@ -351,133 +378,103 @@ df2s = df2 * ones(size(df1s));
 
 outcome_num = 1;
 
+% for first outcome variable only
 F_test_table = table(F_reg_names', F_stats(outcome_num, :)', df1s, df2s, P_values(outcome_num, :)', ...
     'VariableNames', {'Regressor', 'F_stat', 'df1', 'df2', 'p_value'});
 
-if input_params.verbose
-    % Print for first outcome only
-
-    fprintf('F-test for regressor %d (%s): F = %.3f, df1 = %d, df2 = %d, p = %.4f\n', ...
-        i, names{i}, F_stat{i}(outcome_num), df1{i}, df2, p_values{i}(outcome_num));
-end
-
-
-%%
 % -------------------------------------------------------------------------
-% Partial Regression Plots and F-tests for Each Original Regressor
+% Partial Regression Plots for Each Original Regressor and Actual vs.
+% Predicted
 % -------------------------------------------------------------------------
 % First outcome only!
 % Visualizes the unique contribution of one independent variable to the dependent variable, controlling for all other variables in the model.
-	% •	X-axis: Adjusted predictor: The residuals obtained from regressing the independent variable of interest X_i on all other independent variables.
-	% •	Y-axis: Adjusted data: The residuals obtained from regressing the dependent variable Y on all independent variables except X_i.
+% •	X-axis: Adjusted predictor: The residuals obtained from regressing the independent variable of interest X_i on all other independent variables.
+% •	Y-axis: Adjusted data: The residuals obtained from regressing the dependent variable Y on all independent variables except X_i.
 
-    % partial_residuals = cell(1, n_cols);
 
-for i = 1 : n_cols
+if input_params.doplot
 
-    % % Compute variables for partial residual plots and output
-    % % ---------------------------------------------------------
-    % % Compute the fitted effect for the original regressor using its associated columns
-    % effect_i = X_expanded(:, orig_idx{i}) * beta(orig_idx{i}, outcome_num);
-    % 
-    % % The fit line for the partial regression plot is the sum of the regressor's effect
-    % % and the intercept (last column of beta)
-    % fit_line = effect_i + beta(end, outcome_num);
-    % 
-    % % adjusted predictor for other covariates, adding in the intercept
-    % beta_adj_pred = X_reduced{i} \ X(:, i);  % betas for column X predicted by other regressors (expanded, without regressors for i)
-    % adj_pred{i} = X(:, i) - X_reduced{i} * beta_adj_pred + beta_adj_pred(end);
-    % 
-    % partial_residuals{i} = effect_i + residuals(:, outcome_num) + beta(end, outcome_num);
+    for i = 1 : n_cols
 
-    if input_params.doplot
-        % % For partial regression, plot the original regressor vs. the outcome.
-        % % Compute the fit line using all associated expanded columns times beta, plus the intercept.
-        % orig_regressor = X(:, i);
-        % adj_regressor = adj_pred{i};
-        % 
-        % % Sort for plotting the fit line
-        % % [x_sorted, sort_idx] = sort(orig_regressor);
-        % % fit_line_sorted = fit_line(sort_idx);
-        % 
-        % [x_sorted, sort_idx] = sort(adj_regressor);
-        % % x_sorted = adj_regressor(sort_idx);
-        % fit_line_sorted = fit_line(sort_idx);
-        % 
-        % figure(fig_han(i))
-        % subplot(1, 2, 2)
-        % % h_partial = create_figure(sprintf('Partial Regression Plot for %s', names{i}));
-        % hold on
-        % 
-        % % scatter(orig_regressor, y, 'filled')
-        % scatter(adj_regressor, partial_residuals{i}, 'filled')
-        % plot(x_sorted, fit_line_sorted, 'r-', 'LineWidth', 1.5)
-        % 
-        % hold off
-        % xlabel([names{i} ' (Adjusted)']);
-        % ylabel('Outcome (Adjusted)');
-        % title(sprintf('Partial Regression Plot for %s', names{i}));
-
-        % [y_res, X_i_res_orig, fit_line] 
+        % [y_res, X_i_res_orig, fit_line]
         plot_partial_residuals(X_expanded, X, y(:, outcome_num), orig_idx, i, names, fig_han);
 
     end % doplot
 
+    % Plot Actual vs. Predicted if Requested
 
+    create_figure('Design matrix and fits', 1, 2);
 
-    %% Plot Actual vs. Predicted if Requested
-    if input_params.doplot
+    subplot(1, 2, 1)
+    X_to_plot = X_expanded ./ max(abs(X_expanded)); % normalize for plot
+    imagesc(X_to_plot); set(gca, 'YDir', 'reverse'); axis tight
+    colormap(colormap_tor([0 0 1], [1 1 0], [.2 .5 1], [.5 .5 .5], [1 .5 .2]))
+    title('Design matrix with expanded regressors')
 
-        h_actual = create_figure('Design matrix and fits', 1, 2);
+    names_to_plot = strrep(new_names, '_b', ' b');
+    set(gca, 'XTick', 1:length(new_names), 'XTickLabelRotation', 45, 'XtickLabel', names_to_plot)
+    ylabel('Observation')
 
-        subplot(1, 2, 1)
-        X_to_plot = X_expanded ./ max(abs(X_expanded)); % normalize for plot
-        imagesc(X_to_plot); set(gca, 'YDir', 'reverse'); axis tight
-        colormap(colormap_tor([0 0 1], [1 1 0], [.2 .5 1], [.5 .5 .5], [1 .5 .2]))
-        title('Design matrix with expanded regressors')
+    subplot(1, 2, 2)
+    hold on
 
-        names_to_plot = strrep(new_names, '_b', ' b');
-        set(gca, 'XTick', 1:length(new_names), 'XTickLabelRotation', 45, 'XtickLabel', names_to_plot)
-        ylabel('Observation')
+    scatter(y_hat(:, outcome_num), y(:, outcome_num), 'filled')
+    lims = [min(min(y_hat(:, outcome_num)), min(y(:, outcome_num))), max(max(y_hat(:, outcome_num)), max(y(:, outcome_num)))];
+    plot(lims, lims, 'r--', 'LineWidth', 1.5)
 
-        subplot(1, 2, 2)
-        hold on
+    hold off
+    xlabel('Predicted y\_hat')
+    ylabel('Actual y')
+    title('Actual vs. Predicted (Cubic B-spline Regression)')
 
-        scatter(y_hat(:, outcome_num), y(:, outcome_num), 'filled')
-        lims = [min(min(y_hat(:, outcome_num)), min(y(:, outcome_num))), max(max(y_hat(:, outcome_num)), max(y(:, outcome_num)))];
-        plot(lims, lims, 'r--', 'LineWidth', 1.5)
-
-        hold off
-        xlabel('Predicted y\_hat')
-        ylabel('Actual y')
-        title('Actual vs. Predicted (Cubic B-spline Regression)')
-
-    end  % plot
-
-end % outcome_num
+end  % plot
 
 
 %% Assemble Output Structure
+
+
+% Convert to tables
+beta = array2table(beta', 'VariableNames', new_names);
+F_stats = array2table(F_stats, 'VariableNames', input_params.names);
+P_values = array2table(P_values, 'VariableNames', input_params.names);
+partial_R2 = array2table(partial_r2_mat', 'VariableNames', input_params.names);
+adj_R2 = array2table(adj_r2_mat', 'VariableNames', input_params.names);
+
 out = struct();
 
 out.X                 = X_expanded;
 out.beta              = beta;
 out.y_hat             = y_hat;
 % out.partial_residuals = partial_residuals;
+
+out.full_model_R2 = full_model_R2;
+out.R2_adj = R2_adj;
+
 out.F_stats = F_stats;
 out.P_values = P_values;
-out.F_test_table           = F_test_table;
+out.partial_R2 = partial_R2;
+
+out.adj_R2 = adj_R2;
+out.F_test_table      = F_test_table;
 out.knot_pts          = knot_pts;
 out.basis_sets        = basis_sets;
 out.expanded_regs     = expanded_regs;
 out.mapping_matrix    = mapping_matrix;
+out.was_expanded = sum(out.mapping_matrix, 2) > 1;
 out.input_params      = input_params;
 out.names             = new_names;
 
 
 if input_params.verbose
 
+    disp(' ')
     fprintf('Cubic B-spline regression completed. Model fitted with %d regressors.\n', size(X_expanded, 2));
+
+    if size(y, 2) > 1  % multiple outcomes
+        fprintf('Completed separate regressions for %3.0f outcomes (columns of y)\n', size(y, 2))
+        disp('Showing regression table for first outcome: ')
+        disp(' ')
+    end
 
     disp(out.F_test_table)
 end
@@ -586,6 +583,46 @@ end
 % 	•	The evaluation points fall within the active support of the spline functions,
 % 	•	And the spacing of the knots allows for nonzero basis functions over the domain of interest.
 
+
+function [partial_r2_mat, adj_r2_mat] = compute_partial_r2_sets(RSS_full, RSS_reduced, X_reduced, df2, n)
+% Compute partial R² and adjusted partial R² across multiple outcomes and regressor sets.
+%
+% Inputs:
+%   RSS_full        - 1 x k vector of residual sums of squares (full model), for k outcomes
+%   RSS_reduced     - 1 x n cell, each a 1 x k vector of RSS for each reduced model
+%   X_full          - [n x p_full] matrix: full model design matrix
+%   X_reduced   - 1 x n cell, each a [n x p_i] matrix for reduced models
+%   df1_all         - 1 x n vector of degrees of freedom added in each test
+%   n               - number of observations
+%
+% Outputs:
+%   partial_r2_mat  - [n x k] matrix of partial R² values
+%   adj_r2_mat      - [n x k] matrix of adjusted partial R² values
+
+% df1_all = cat(2, df1_all{:});     % Expand from cell array
+
+n_sets = length(X_reduced);       % Number of regressor sets tested
+k = length(RSS_full);             % Number of outcomes
+% df2 = n - size(X_full, 2);        % df for full model
+
+partial_r2_mat = zeros(n_sets, k);
+adj_r2_mat = zeros(n_sets, k);
+
+mse_full = RSS_full ./ df2;
+
+for i = 1:n_sets
+
+    rss_r = RSS_reduced{i};                 % 1 x k vector
+    df0 = n - size(X_reduced{i}, 2);        % df for reduced model
+    mse_reduced = rss_r / df0;
+
+    partial_r2_mat(i, :) = (rss_r - RSS_full) ./ rss_r;
+    adj_r2_mat(i, :)     = 1 - mse_full ./ mse_reduced;
+end
+
+end % subfunction
+
+
 function [y_res, X_i_res_orig, fit_line] = plot_partial_residuals(X_expanded, X_original, y, orig_idx, i, names, fig_han)
 
 % Subfunction to plot partial residual plots correctly
@@ -610,7 +647,7 @@ b_partial = X_i_res \ y_res;
 fit_line = X_i_res * b_partial;
 
 % Note: For a smooth estimate another option is to re-fit to partial residuals using the spline
-% basis set. 
+% basis set.
 
 
 % Plotting the partial residual plot

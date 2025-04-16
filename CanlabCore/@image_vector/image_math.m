@@ -25,6 +25,9 @@ function [obj_out, varargout] = image_math(obj1, varargin)
 %   **{'subtract', 'minus'}:**
 %        Keyword to perform image-wise subtraction of images
 %                              in obj1 and obj2
+%   **{'average', 'mean'}:**
+%        Keyword to perform image-wise mean of images
+%                              obj1 and obj2
 %   **{'cat', 'concatenate'}:**
 %        Concatenate obj1 and obj2 image-wise.  Requires same
 %                              number of voxels in both image sets.  Returns effects
@@ -63,6 +66,8 @@ function [obj_out, varargout] = image_math(obj1, varargin)
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % ..
+%       04/16/2025 -- Added 'mean' or 'average' options. - Michael Sun,
+%       Ph.D.
 
 % ..
 % DEFAULTS AND INPUTS
@@ -82,6 +87,7 @@ for i = 1:length(varargin)
             
             case {'add', 'plus'}, keyword = 'plus'; varargin{i} = [];
             case {'subtract', 'minus'}, keyword = 'minus'; varargin{i} = [];
+            case {'average', 'mean'}, keyword = 'average'; varargin{i} = [];
             case {'cat', 'concatenate'}, keyword = 'cat'; varargin{i} = [];
                 
             case 'power', keyword = 'power'; varargin{i+1} = my_exponent;
@@ -115,7 +121,7 @@ switch keyword
             error('Input Data is not an image_vector object')
         end 
         
-    case {'plus', 'minus', 'cat'}
+    case {'plus', 'minus', 'average', 'cat'}
         n1 = size(obj1.dat, 2);
         n2 = size(obj2.dat, 2);
         
@@ -204,6 +210,18 @@ switch keyword
         obj_out.image_names = [];
         obj_out.fullpath = [];
         obj_out.files_exist = false;
+
+    case 'average'
+        obj_out = obj1;
+        obj_out.dat = (obj_out.dat + obj2.dat) ./ 2;
+        obj_out.history{end+1} = 'Image-wise mean operation by image_math';
+        obj_out.dat_descrip = cell(1, 3);
+        obj_out.dat_descrip{1} = 'Names of images added in next cells, 1st set plus 2nd';
+        obj_out.dat_descrip{2} = obj1.fullpath;
+        obj_out.dat_descrip{3} = obj2.fullpath;
+        obj_out.image_names = [];
+        obj_out.fullpath = [];
+        obj_out.files_exist = false;
         
     case 'cat'
         
@@ -246,5 +264,3 @@ end % switch keyword; operation
 
 
 end % main function
-
-

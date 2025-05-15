@@ -32,6 +32,9 @@ function [h, L, MX, MED, pointloc, bw, F, U] = violinplot(Y,varargin)
 %   **linewidth=2:**
 %        Linewidth for boundary of violin plot
 %
+%   **vwidth=1:**
+%        Violin widths.
+%
 %   **facealpha=0.5:**
 %        Alpha value (transparency)
 %
@@ -180,6 +183,7 @@ plotmedian=0;
 dopoints = true;
 doweights = false;
 x = [];
+vwidth = 1;
 %_____________________
 
 %convert single columns to cells:
@@ -199,6 +203,9 @@ if isempty(find(strcmp(varargin,'edgecolor')))==0
 end
 if isempty(find(strcmp(varargin,'linewidth')))==0
     lw = varargin{find(strcmp(varargin,'linewidth'))+1};
+end
+if isempty(find(strcmp(varargin,'vwidth')))==0
+    vwidth = varargin{find(strcmp(varargin,'vwidth'))+1};
 end
 if isempty(find(strcmp(varargin,'facealpha')))==0
     alp = varargin{find(strcmp(varargin,'facealpha'))+1};
@@ -289,7 +296,7 @@ for i=1:size(Y,2)
     end
         
     
-    f=f/max(f)*0.3; %normalize
+    f=f/max(f)*0.3*vwidth; %normalize
     F(:,i)=f;
     U(:,i)=u;
     MED(:,i)=nanmedian(Y{i});
@@ -471,7 +478,7 @@ end
 % WANI ADDED nopoints OPTION (11/12/15)
 if dopoints
     %[~, pointloc] = plot_violin_points(x, Y, U, F, lc, fc, b, varargin);
-    pointloc = plot_violin_points(x, Y, lc, fc, varargin);
+    pointloc = plot_violin_points(x, Y, lc, fc, vwidth, varargin);
 end
 
 % SHOW MEAN/MEDIAN LINE ABOVE THE POINTS, SO DO THIS AGAIN (WANI)
@@ -675,7 +682,7 @@ end %of function
 
 
 
-function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
+function linehandles = plot_violin_points(x, Y, lc, fc, vwidth, varargin)
 % x = vector of x positions for each "column"
 % Y = cell array of input data, one cell per "column"
 % U, F = outputs from ksdensity, normalized, or [] to recalculate
@@ -692,7 +699,7 @@ function linehandles = plot_violin_points(x, Y, lc, fc, varargin)
 
 Y = enforce_cell_array(Y);
 
-xvalues = get_violin_points(x, Y);
+xvalues = get_violin_points(x, Y, vwidth);
 
 manual_pointsize = false;
 if isempty(find(strcmp(varargin{1},'pointsize')))==0
@@ -704,8 +711,8 @@ linehandles = [];
 
 for i = 1:size(Y, 2)
     
-    myfillcolor = lc(i, :); % line color for this plot
-    mylinecolor = fc(i, :); % line color for this plot
+    myfillcolor = fc(i, :); % line color for this plot
+    mylinecolor = lc(i, :); % line color for this plot
     
     myY = Y{i};     % data points
     
@@ -747,7 +754,7 @@ end % function
 
 
 
-function xvalues = get_violin_points(x, Y)
+function xvalues = get_violin_points(x, Y, vwidth)
 % x = vector of x positions for each "column"
 % Y = cell array of input data, one cell per "column"
 %
@@ -789,7 +796,7 @@ for i = 1:k
         [f, u, bb]=ksdensity(Y{i});
     end
     
-    f=f/max(f)*0.3; %normalize
+    f=f/max(f)*0.3*vwidth; %normalize
     F(:,i) = f;
     U(:,i) = u;
     

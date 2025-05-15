@@ -109,10 +109,12 @@ if numel(SPM.xX.iB) == n_sess && all(SPM.xX.iB == (size(SPM.xX.X,2) - fliplr(0:n
                 bad = ismember(this_sess_col, const_col);
                 
                 SPM.Sess(j).col(bad) = [];
-                SPM.Sess(j).col(SPM.Sess(j).col > const_col) = SPM.Sess(j).col(SPM.Sess(j).col > const_col) - 1;
+                for this_const_col = fliplr(const_col)
+                    SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) = SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) - 1;
+                end
 
-                if ~isempty(SPM.Sess(j).C.name), SPM.Sess(j).C.name(bad) = []; end
-                if ~isempty(SPM.Sess(j).C.C), SPM.Sess(j).C.C(:,bad) = []; end
+                if ~isempty(SPM.Sess(j).C.name), SPM.Sess(j).C.name(~cellfun(@isempty, regexp(SPM.Sess(j).C.name, 'UR\d+'))) = []; end
+                if ~isempty(SPM.Sess(j).C.C), SPM.Sess(j).C.C(:,~cellfun(@isempty, regexp(SPM.Sess(j).C.name, 'UR\d+'))) = []; end
             end
 
             const_col(const_col == max(const_col)) = [];

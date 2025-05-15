@@ -30,13 +30,13 @@ function [sig, pthr] = holm_sidak(pVector, alpha)
 
 [sortedP, argsort] = sort(pVector, 'descend'); % pValues sorted from largest to smallest, and indices mapping pVector to sortedP
 
-sig = zeros(length(sortedP),1);
+sig = false(length(sortedP),1);
 
 pthr = 1 - (1-alpha)^(1/length(sortedP)); % max P-value for sig results. Anything below this is signficant.
 
 while sortedP(end) < 1 - (1-alpha)^(1/length(sortedP))
 
-    sig(argsort(end)) = 1;
+    sig(argsort(end)) = true;
     sortedP(end) = [];
     argsort(end) = [];
 

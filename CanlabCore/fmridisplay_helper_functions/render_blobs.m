@@ -640,7 +640,6 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     elseif customcolormap
                         %w = repmat(Z, [1 1 3]);
 
-                        
                         w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
                         slicecdat = reshape(cm(round(w),:),[size(Z),3]);
                     else

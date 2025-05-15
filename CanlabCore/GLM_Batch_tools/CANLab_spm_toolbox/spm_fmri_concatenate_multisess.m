@@ -100,18 +100,18 @@ if numel(SPM.xX.iB) == n_sess && all(SPM.xX.iB == (size(SPM.xX.X,2) - fliplr(0:n
         SPM.xX.name(const_col) = [];
         SPM.xX.iC(const_col) = [];
         while length(const_col) > 0
-            SPM.xX.iC(SPM.xX.iC >= max(const_col)) = SPM.xX.iC(SPM.xX.iC >= max(const_col)) - 1;
-            SPM.xX.iB(SPM.xX.iB >= max(const_col)) = SPM.xX.iB(SPM.xX.iB >= max(const_col)) - 1;
+            this_const_col = max(const_col);
+            SPM.xX.iC(SPM.xX.iC >= this_const_col) = SPM.xX.iC(SPM.xX.iC >= this_const_col) - 1;
+            SPM.xX.iB(SPM.xX.iB >= this_const_col) = SPM.xX.iB(SPM.xX.iB >= this_const_col) - 1;
             
             % adjust indices of higher order sessions
             for j = s:length(SPM.Sess)
                 this_sess_col = SPM.Sess(j).col;
-                bad = ismember(this_sess_col, const_col);
                 
+                bad = ismember(this_sess_col, this_const_col);
                 SPM.Sess(j).col(bad) = [];
-                for this_const_col = fliplr(const_col)
-                    SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) = SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) - 1;
-                end
+
+                SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) = SPM.Sess(j).col(SPM.Sess(j).col > this_const_col) - 1;
 
                 if ~isempty(SPM.Sess(j).C.name), SPM.Sess(j).C.name(~cellfun(@isempty, regexp(SPM.Sess(j).C.name, 'UR\d+'))) = []; end
                 if ~isempty(SPM.Sess(j).C.C), SPM.Sess(j).C.C(:,~cellfun(@isempty, regexp(SPM.Sess(j).C.name, 'UR\d+'))) = []; end

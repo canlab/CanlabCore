@@ -531,6 +531,18 @@ classdef fmri_data < image_vector
                 % Read data in mask space; map images to mask
                 % ------------------------------------------------
                 
+                % Get wh_image files and images_per_session
+                % Edit 5/16/2025 by Tor to make compatible with non-sample2mask option
+                % Get unique file names in the order of appearance
+                n_unique_files = size(image_names, 1);
+                if n_unique_files > 1
+                    uniqueFileNames = unique(image_names, 'stable');
+                else
+                    uniqueFileNames = image_names;
+                end
+
+                logicalMatrix = cell(1, n_unique_files);
+
                 if verbose, fprintf('Expanding image filenames if necessary\n'); end
                 
                 for i = 1:size(image_names, 1)
@@ -539,6 +551,8 @@ classdef fmri_data < image_vector
 
                     images_per_session(i) = size(iinames{i}, 1);
                     
+                    logicalMatrix{i} = ones(images_per_session(i), 1);
+
                 end
                 iinames = char(iinames{:});
 
@@ -553,6 +567,21 @@ classdef fmri_data < image_vector
                     disp('Images do not exist!'); disp(image_names); error('Exiting');
                 end
                 
+                % Get wh_image files and images_per_session
+                % Edit 5/16/2025 by Tor to make compatible with non-sample2mask option
+
+                % Create a logical matrix: each row corresponds to an element in fullPathsCell,
+                % and each column corresponds to one of the unique file names.
+                % logicalMatrix = false(size(iinames, 1), n_unique_files);
+                % for j = 1:size(uniqueFileNames, 1)
+                %     logicalMatrix(:, j) = strcmp(image_names, uniqueFileNames(j, :));
+                % end
+                logicalMatrix = blkdiag(logicalMatrix{:});
+
+                image_info_struct.wh_image_files = logicalMatrix;
+                % image_info_struct.images_per_session = sum(logicalMatrix);
+
+
                 % Now extract the actual data from the mask
                 if verbose
                     fprintf('Sampling %3.0f images to mask space: %04d', size(iinames, 1), 0)

@@ -33,6 +33,8 @@ function [m, varargout] = mean(obj, varargin)
 
 % Programmers' notes:
 % - Tor: Average available valid data in each voxel (June 2017)
+% - Michael Sun, PhD: Zero may actually be data, so NaN-ing them can be
+% destructive, so add a flag 'treat_zero_as_data' 04/21/2025
 
 fname = [];
 fpath = pwd;
@@ -42,6 +44,7 @@ doplot = false;
 dogroup = false;
 group_by = [];
 u = [];
+treat_zero_as_data = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -59,6 +62,7 @@ for i = 1:length(varargin)
                 group_by = varargin{i+1};
                 group_by = categorical(group_by);  % this should work for strings or numeric arrays
                 u = unique(group_by);
+            case {'treat_zero_as_data'}, treat_zero_as_data = 1;
 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -68,8 +72,15 @@ end
 
 % get missing values and replace with NaNs, so we average only valid data in each
 % voxel
-wh = obj.dat == 0; % NaNs are already OK | isnan(obj.dat);
-obj.dat(wh) = NaN;
+% wh = obj.dat == 0; % NaNs are already OK | isnan(obj.dat);
+% obj.dat(wh) = NaN;
+
+% This is potentially dangerous as 0 may be data - Michael Sun 05/28/2025
+if ~treat_zero_as_data
+    wh = obj.dat == 0; % NaNs are already OK | isnan(obj.dat);
+    obj.dat(wh) = NaN;
+end
+
 
 % return output in the same format as input object
 
@@ -95,7 +106,13 @@ if isa(obj, 'fmri_data')
     
         m.metadata_table = obj.metadata_table;
 
-        m = average_metadata_table(m, group_by, u); % can handle single-group case (empty grouping var) or separate groups. Need to do this even if group_by = [] so we end up with 1 row
+        % m = average_metadata_table(m, group_by, u); % can handle single-group case (empty grouping var) or separate groups. Need to do this even if group_by = [] so we end up with 1 row
+
+        try
+            m = average_metadata_table(m, group_by, u); % can handle single-group case (empty grouping var) or separate groups. Need to do this even if group_by = [] so we end up with 1 row
+        catch
+            warning('Warning: Error Constructing Metadata Table')
+        end
 
     end
 

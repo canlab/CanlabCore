@@ -74,6 +74,11 @@ mvmt2 = mvmt .^ 2;
 mvmt3 = [zeros(1, 6); diff(mvmt)];
 mvmt4 = zscore(mvmt3) .^ 2;
 
+% mvmt2 = zscore(mvmt) .^ 2;                  % Square the Z-scored data
+% % mvmt3 = [zeros(1, 6); diff(zscore(mvmt))];  % Append zeroes as the first row
+% mvmt3 = [zeros(1, size(mvmt, 2)); diff(zscore(mvmt))];  
+% mvmt4 = zscore(mvmt3) .^ 2;                 % 
+
 mvmt_regs_24 = [zscore(mvmt) mvmt2 mvmt3 mvmt4];
 
 names = {'mvmt_x' 'mvmt_y' 'mvmt_z' 'mvmt_roll' 'mvmt_pitch' 'mvmt_yaw' };
@@ -91,5 +96,43 @@ mvmt_table = array2table(mvmt_regs_24, 'VariableNames', names);
 % % adjust outliers: add geo displacement
 % 
 % high_movement_timepoints(geo_displacement > 0.25) = true;
+
+%% New Code
+
+% T = size(mvmt, 1);  % Number of time points
+% % len = length(names);  % Number of files
+% 
+% % FDM = zeros(T, len);  % Preallocate forward displacement matrix
+% radius = 50;  % Radius for rotation adjustment (in mm)
+% 
+% % for i = 1:len
+%     % Read each file (assumed to contain motion parameters)
+%     % ts = readmatrix(names{i});
+% 
+% 
+%     % This requires a file with X motion correction parameters from *_LR*.txt
+%     % Select the first 6 columns (translation and rotation) xyz-rpyaw
+%     ts = ts(:, 1:6);
+% 
+%     % Adjust rotation columns (4-6) using the formula for arc length
+%     ts(:, 4:6) = (2 * radius * pi / 360) * ts(:, 4:6);
+% 
+%     % Calculate the difference between consecutive time points
+%     dts = diff(ts);
+% 
+%     % Compute forward displacement as the sum of absolute differences
+%     fwd = sum(abs(dts), 2);
+% 
+%     % Store the forward displacement in FDM, ensuring it fits in the matrix
+%     if length(fwd) == (T - 1)
+%         FDM(2:T, i) = fwd;  % Start from the second row, as fwd is one element shorter
+%     end
+% % end
+% 
+% % Display the FDM matrix
+% disp(FDM);
+
+
+
 
 end

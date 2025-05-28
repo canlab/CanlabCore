@@ -47,7 +47,7 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     parser = inputParser;
     addParameter(parser, 'showSurfaces', true);
     addParameter(parser, 'inflation', 'inflated');
-    addParameter(parser, 'showVolumes', true);
+    addParameter(parser, 'showVolumes', false);
     addParameter(parser, 'volRadius', 8);
     addParameter(parser, 'showFlatmap', false);
     addParameter(parser, 'showSlabs', false);
@@ -110,7 +110,8 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
                     break; % Exit the loop if successful
                 catch
                     if i == length(labels)
-                        error('No regions identified in atlas based on search term');
+                        % error('No regions identified in atlas based on search term');
+                        warning(['No regions identified in atlas based on search term: ', lbl{r}, '...Skipping.']);
                     end
                     warning('No regions identified in %s, trying next', labels{i});
                 end

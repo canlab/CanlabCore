@@ -1269,7 +1269,7 @@ end % function
 % ------------------------------------------------------------------------
 function [image_obj, networknames, imagenames] = load_transcriptomic_gradients
 
-imagenames =     {'transcritptomic_gradients_MNI152NLin6Asym.nii.gz'};
+imagenames =     {'transcriptomic_gradients_MNI152NLin6Asym.nii.gz'};
 
 networknames = {'Allen_genePC1' 'Allen_genePC2' 'Allen_genePC3'};
 

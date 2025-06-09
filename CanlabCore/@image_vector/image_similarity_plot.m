@@ -546,7 +546,7 @@ if ~doaverage
                     [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange);
                     % Make legend
                     if ~isempty(obj.image_names)
-                        han = makelegend(obj.image_names, groupColors);
+                        han = makelegend(obj.image_names, groupColors, 'nofig', 1);
                     end
                 end
                 
@@ -794,11 +794,11 @@ elseif doaverage
                                 end
                             end
                         end
-                        han = makelegend(names,groupColors(1:(g*2)));
+                        han = makelegend(names,groupColors(1:(g*2)), 'nofig', 1);
                         
                     else
                         [hh,hhfill] = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors(1:2), 'nofigure', 'bicolor');
-                        han = makelegend({'positive' 'negative'},groupColors(1:2));
+                        han = makelegend({'positive' 'negative'},groupColors(1:2), 'nofig', 1);
                         
                     end
                         
@@ -820,9 +820,9 @@ elseif doaverage
                 % Make legend
                 if numel(groupValues)>1
                     if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
-                        han = makelegend(num2cell(string(groupValues)), gc);
+                        han = makelegend(num2cell(string(groupValues)), gc, 'nofig', 1);
                     else
-                        han = makelegend(cellstr(groupValues), gc);
+                        han = makelegend(cellstr(groupValues), gc, 'nofig', 1);
                     end
                 end
                 

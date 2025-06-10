@@ -183,6 +183,12 @@ function o2 = canlab_results_fmridisplay(input_activation, varargin)
 %    1/27/2012
 % ..
 
+% Toggle coordinates visibility
+coordinates = 0;
+if any(strcmp(varargin, 'coordinates'))
+    coordinates = 1;
+end
+
 if ~which('fmridisplay.m')
     disp('fmridisplay is not on path.  it is in canlab tools, which must be on your path!')
     return
@@ -205,7 +211,8 @@ if ischar(input_activation)
             || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
             || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
             || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates compact') || strcmp(input_activation,'hcp grayordinates subcortex') ...
-            || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') 
+            || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') ...
+            || strcmp(input_activation, 'subcortex full') || strcmp(input_activation, 'subcortex 3d') || strcmp(input_activation, 'subcortex slices') 
 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
@@ -366,6 +373,14 @@ if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 wh = strcmp(varargin, 'leftright inout subcortex');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
+wh = strcmp(varargin, 'subcortex full');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'subcortex 3d');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'subcortex slices');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 
 % if these are run before coronal/saggital arguments are parsed they will
@@ -413,8 +428,6 @@ if isempty(input_activation)
     dooutline = false;
 end
 
-
-
 if ~exist('o2', 'var')
     
     % set up fmridisplay
@@ -444,63 +457,61 @@ if ~exist('o2', 'var')
     switch montagetype
         
         case {'blobcenters', 'regioncenters'}
-            %Make a series of montages at center of each region and add blobs to that:
-            
-            if ~exist('cl', 'var'), error('Must enter region object to use blobcenters option.'); end
-            
+            % Make a series of montages at center of each region and add blobs to that
+
+            if ~exist('cl', 'var')
+                error('Must enter region object to use blobcenters option.');
+            end
+        
             xyz = cat(1, cl.mm_center);
-            
-            %           onerowstr = [];
-            %           if length(cl) < 20, onerowstr = 'onerow'; end
-            
-            
-            % Make a grid - determine subplots
+        
             nr = floor(sqrt(length(cl)));
             nc = ceil(length(cl) ./ nr);
-            
+        
             [~, axh] = create_figure('fmridisplay_regioncenters', nr, nc, false, true); 
-            
-            set(axh,'Visible','off'); % turn off axis grid for all axes
-             
+            set(axh, 'Visible', 'off');
+        
             for i = 1:length(cl)
-                
-                %axh(i) = subplot(nr, nc, i);
-                %axes(axh(i))
-                
                 if i == 1
-                    [o2, dat] = montage(o2, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
+                    [o2, dat] = montage(o2, orientation, ...
+                        'wh_slice', xyz(i,:), ...
+                        'onerow', 'existing_axes', axh(i), ...
+                        'existing_figure', 'noverbose');
                 else
-                    o2 = montage(o2, 'volume_data', dat, orientation, 'wh_slice', xyz(i, :), 'onerow', 'existing_axes', axh(i), 'existing_figure', 'noverbose');
+                    o2 = montage(o2, 'volume_data', dat, orientation, ...
+                        'wh_slice', xyz(i,:), ...
+                        'onerow', 'existing_axes', axh(i), ...
+                        'existing_figure', 'noverbose');
+                end
+        
+                if coordinates
+                    for i = 1:length(axh)
+                        axpos = get(axh(i), 'Position');
+                
+                        % Bottom center of axis
+                        box_x = axpos(1) + axpos(3)/2 - 0.05;
+                        box_y = axpos(2) - 0.045;
+                
+                        % Keep within figure bounds
+                        if box_y < 0
+                            box_y = 0.005;
+                        end
+                
+                        coordstr = sprintf('x=%.0f y=%.0f z=%.0f', xyz(i,1), xyz(i,2), xyz(i,3));
+                        annotation(gcf, 'textbox', [box_x, box_y, 0.1, 0.04], ...
+                            'String', coordstr, ...
+                            'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', ...
+                            'VerticalAlignment', 'top', ...
+                            'FontSize', max(6, 10 - round(length(axh)/10)), ...
+                            'Interpreter', 'none');
+                    end
                 end
 
+
             end
-            
-           
-            
+        
             wh_montages = 1:length(cl);
-
-
-            % for h = 1:numel(axh)
-            %     try
-            %     sagtitleText = ['x=' num2str(xyz(h,1))];
-            %     cortitleText = ['y=' num2str(xyz(h,2))];
-            %     axititleText = ['z=' num2str(xyz(h,3))];
-            % 
-            %     % Easiest, stupidest way to do this without screwing up the
-            %     % positioning:
-            %     subplot(nr,nc,h)
-            %     title(strjoin({sagtitleText, cortitleText, axititleText}, " "));
-            %     % subplot(3,5,h+5)
-            %     % title(cortitleText);
-            %     % subplot(3,5,h+10)
-            %     % title(axititleText);
-            %     catch
-            % 
-            %     end
-            % 
-            % end
-
-
             
         case 'compact'
             % The default
@@ -530,6 +541,47 @@ if ~exist('o2', 'var')
             axh5 = axes('Position', [.12 0.54 .17 .17]);
             o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-46 50], 'onerow', 'spacing', 12, 'noverbose', 'existing_axes', axh5);
             
+
+            % --- Apply coordinate titles if coordinates flag is on ---
+            if coordinates
+                label_map = containers.Map({'sagittal', 'coronal', 'axial'}, {'x', 'y', 'z'});
+            
+                for m = 1:numel(o2.montage)
+                    mon = o2.montage{m};
+                    if ~isfield(mon, 'axis_handles') || isempty(mon.axis_handles)
+                        continue;
+                    end
+            
+                    if ~isfield(mon, 'orientation') || ~isKey(label_map, mon.orientation)
+                        continue;
+                    end
+                    label = label_map(mon.orientation);
+            
+                    for i = 1:numel(mon.axis_handles)
+                        ax = mon.axis_handles(i);
+                        if isgraphics(ax)
+                            mm_coord = getappdata(ax, 'mm_coord');
+                            if isempty(mm_coord), continue; end
+            
+                            % Get axis position in normalized figure units
+                            axpos = get(ax, 'Position');  % [x y w h]
+                            ann_x = axpos(1) + axpos(3) * 0.5;   % horizontal center
+                            ann_y = axpos(2) + axpos(4) + 0.01;  % just above axis
+            
+                            % Ensure we're in bounds
+                            if ann_x >= 0 && ann_x <= 1 && ann_y >= 0 && ann_y <= 1
+                                annotation(gcf, 'textbox', [ann_x - 0.05, ann_y, 0.1, 0.03], ...
+                                    'String', sprintf('%s=%.0f', label, mm_coord), ...
+                                    'HorizontalAlignment', 'center', ...
+                                    'VerticalAlignment', 'bottom', ...
+                                    'EdgeColor', 'none', ...
+                                    'FontSize', 14);
+                            end
+                        end
+                    end
+                end
+            end
+
             wh_montages = [1 2 4 5];
             
             % Lines
@@ -543,7 +595,6 @@ if ~exist('o2', 'var')
             % brighten(.5)
             sz = get(0, 'screensize');
             set(gcf, 'Color', 'w', 'Position', [sz(3).*.1 sz(4).*.9 sz(3).*.6 sz(4).*.6]);
-
          
         case 'multirow' 
             
@@ -594,35 +645,132 @@ if ~exist('o2', 'var')
                 drawnow
                 
             end
+
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
             
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
             
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    % Determine coordinate label (x/y/z)
+                    switch this_montage.orientation
+                        case 'sagittal', label_prefix = 'x=';
+                        case 'coronal',  label_prefix = 'y=';
+                        case 'axial',    label_prefix = 'z=';
+                        otherwise,       label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        % Axis position in normalized units (relative to figure)
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.005;
+            
+                        % Skip if outside [0, 1] bounds (annotation cannot handle this)
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || ...
+                           any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', ...
+                            'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', ...
+                            'FontSize', 10);
+                    end
+                end
+            end
+
         case 'full'
-            % saggital
+            % --- Saggital ---
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
+            sag_coords = xyz(:, 1);  % x-coordinates for saggital
 
-            % coronal
+            % --- Coronal ---
+            sr_cor = [-40 50];
+            cor_coords = (sr_cor(1):8:sr_cor(2))';
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', sr_cor, 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
-            % axial
+            % --- Axial 1 ---
+            sr_axi1 = [-40 50];
+            axi_coords1 = (sr_axi1(1):8:sr_axi1(2))';
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', sr_axi1, 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
 
+            % --- Axial 2 ---
+            sr_axi2 = [-44 50];
+            axi_coords2 = (sr_axi2(1):8:sr_axi2(2))';
             axh = axes('Position', [-0.02 0.01 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-44 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
-            
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', sr_axi2, 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
+
             allaxh = findobj(gcf, 'Type', 'axes');
-            disp(length(allaxh));
             for i = 1:(length(allaxh)-36)
                 pos1 = get(allaxh(i), 'Position');
                 pos1(1) = pos1(1) - 0.03;
                 set(allaxh(i), 'Position', pos1);
             end
 
-            % surface
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+            
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',                label_prefix = 'y=';
+                        case 'axial',                  label_prefix = 'z=';
+                        otherwise,                     label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+            
+                        % 💡 Use slightly lower label height for sagittal to stay under surface views
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        else
+                            ann_y = pos(2) + pos(4) - 0.01;
+                        end
+            
+                        % Clamp to visible range
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
+
+            % - Surfaces ---
             o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
-            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0.5 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.7 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'lateral');
 
@@ -649,6 +797,51 @@ if ~exist('o2', 'var')
                 pos1 = get(allaxh(i), 'Position');
                 pos1(1) = pos1(1) - 0.03;
                 set(allaxh(i), 'Position', pos1);
+            end
+
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',  label_prefix = 'y=';
+                        case 'axial',    label_prefix = 'z=';
+                        otherwise,       label_prefix = '';
+                    end
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.005;
+
+                        % Adjust position for sagittal slices to avoid surface overlap
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        end
+
+                        % Ensure annotation is within visible bounds
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 14, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
             end
 
             % surface
@@ -683,6 +876,54 @@ if ~exist('o2', 'var')
 
             o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',  label_prefix = 'y=';
+                        case 'axial',    label_prefix = 'z=';
+                        otherwise,       label_prefix = '';
+                    end
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.40;
+
+                        % Adjust position for sagittal slices to avoid surface overlap
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4)  - 0.05;
+                        end
+
+
+                        % Skip if outside [0, 1] bounds (annotation cannot handle this)
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || ...
+                           any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
             wh_montages = [1 2];
             
             brighten(.4)
@@ -714,6 +955,54 @@ if ~exist('o2', 'var')
 
             o2 = montage(o2, 'volume_data', dat, 'saggital', 'slice_range', [-2 2], 'spacing', 4, 'onerow', 'noverbose', 'existing_axes', axh);
 
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',  label_prefix = 'y=';
+                        case 'axial',    label_prefix = 'z=';
+                        otherwise,       label_prefix = '';
+                    end
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.50;
+
+                        % Adjust position for sagittal slices to avoid surface overlap
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4)  - 0.05;
+                        end
+
+
+                        % Skip if outside [0, 1] bounds (annotation cannot handle this)
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || ...
+                           any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
             wh_montages = [1 2];
             
             brighten(.4)
@@ -727,27 +1016,117 @@ if ~exist('o2', 'var')
             wh_surfaces = [1:8];
 
         case 'coronal'
-            % coronal
             o2 = montage(o2, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
-             wh_montages = 1;
+            wh_montages = 1;
 
-        case  'saggital'
-            o2 = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-            
-             wh_montages = 1;
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.51;
+
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('y=%.0f', coords(a)), 'FitBoxToText', 'on', ...
+                            'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
+        case {'saggital', 'sagittal'}
+            o2 = montage(o2, montagetype, 'wh_slice', xyz, 'onerow', 'noverbose');
+            wh_montages = 1;
+
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) - 0.55;
+
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('x=%.0f', coords(a)), 'FitBoxToText', 'on', ...
+                            'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
 
         case 'allslices'
-            
+
+            % --- Sagittal montage ---
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
             shift_axes(-0.02, -0.04);
-            
+            sag_coords = xyz(:, 1);  % x-coordinates
+        
+            % --- Coronal montage ---
+            sr = [-40 50];
+            cor_coords = (sr(1):8:sr(2))';
             axh = axes('Position', [-0.02 0.37 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'coronal', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
-            
-            % axial
+            o2 = montage(o2, 'volume_data', dat, 'coronal', ...
+                'slice_range', sr, 'onerow', 'spacing', 8, ...
+                'noverbose', 'existing_axes', axh);
+        
+            % --- Axial montage ---
+            sr = [-40 50];
+            axi_coords = (sr(1):8:sr(2))';
             axh = axes('Position', [-0.02 0.19 .17 .17]);
-            o2 = montage(o2, 'volume_data', dat, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose', 'existing_axes', axh);
-            
+            o2 = montage(o2, 'volume_data', dat, 'axial', ...
+                'slice_range', sr, 'onerow', 'spacing', 8, ...
+                'noverbose', 'existing_axes', axh);
+        
+            % --- Apply coordinate titles if flag is on ---
+            if coordinates && isprop(o2, 'montage')
+                coord_labels = {'x', 'y', 'z'};
+                coord_sets = {sag_coords, cor_coords, axi_coords};
+        
+                for m = 1:min(3, numel(o2.montage))
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || isempty(this_montage.axis_handles)
+                        continue;
+                    end
+        
+                    axlist = this_montage.axis_handles;
+                    coords = coord_sets{m};
+                    label = coord_labels{m};
+        
+                    for i = 1:min(numel(axlist), numel(coords))
+                        title(axlist(i), sprintf('%s=%.0f', label, coords(i)), 'FontSize', 10);
+                    end
+                end
+            end
+        
             wh_montages = [1 2 3];
             
         case 'full hcp'
@@ -772,6 +1151,53 @@ if ~exist('o2', 'var')
                 pos1 = get(allaxh(i), 'Position');
                 pos1(1) = pos1(1) - 0.03;
                 set(allaxh(i), 'Position', pos1);
+            end
+
+
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+            
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',                label_prefix = 'y=';
+                        case 'axial',                  label_prefix = 'z=';
+                        otherwise,                     label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+            
+                        % 💡 Use slightly lower label height for sagittal to stay under surface views
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        else
+                            ann_y = pos(2) + pos(4) - 0.01;
+                        end
+            
+                        % Clamp to visible range
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
             end
 
             % surface
@@ -808,6 +1234,52 @@ if ~exist('o2', 'var')
                 set(allaxh(i), 'Position', pos1);
             end
 
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+            
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',                label_prefix = 'y=';
+                        case 'axial',                  label_prefix = 'z=';
+                        otherwise,                     label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+            
+                        % 💡 Use slightly lower label height for sagittal to stay under surface views
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        else
+                            ann_y = pos(2) + pos(4) - 0.01;
+                        end
+            
+                        % Clamp to visible range
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
             % surface
             o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hcp inflated right', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hcp inflated left', 'orientation', 'medial');          
@@ -842,6 +1314,52 @@ if ~exist('o2', 'var')
                 set(allaxh(i), 'Position', pos1);
             end
 
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+            
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',                label_prefix = 'y=';
+                        case 'axial',                  label_prefix = 'z=';
+                        otherwise,                     label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+            
+                        % 💡 Use slightly lower label height for sagittal to stay under surface views
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        else
+                            ann_y = pos(2) + pos(4) - 0.01;
+                        end
+            
+                        % Clamp to visible range
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
             wh_montages = [1 2 3 4];
 
         case 'hcp grayordinates'
@@ -868,15 +1386,22 @@ if ~exist('o2', 'var')
             ax_vol=[];
             for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
-            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+            for j=1:n_col
+                set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]);
+                title(ax_vol(1,j), sprintf('x=%.0f', grayord_xyz(j,1)), 'FontSize', 10);
+            end
 
-            % coronal
             o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
-            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+            for j=1:n_col
+                set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]);
+                title(ax_vol(2,j), sprintf('y=%.0f', grayord_xyz(j,2)), 'FontSize', 10);
+            end
 
-            % axial
             o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
-            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
+            for j=1:n_col
+                set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]);
+                title(ax_vol(3,j), sprintf('z=%.0f', grayord_xyz(j,3)), 'FontSize', 10);
+            end
 
             allaxh = findobj(gcf, 'Type', 'axes');
 
@@ -903,6 +1428,49 @@ if ~exist('o2', 'var')
             for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
 
             allaxh = findobj(gcf, 'Type', 'axes');
+
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',  label_prefix = 'y=';
+                        case 'axial',    label_prefix = 'z=';
+                        otherwise,       label_prefix = '';
+                    end
+
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+                        ann_y = pos(2) + pos(4) + .12;
+
+                        if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || any([ann_x, ann_y] < 0)
+                            continue;
+                        end
+
+                        fig_handle = ancestor(ax, 'figure');
+                        if isempty(fig_handle) || ~ishandle(fig_handle)
+                            continue;
+                        end
+
+                        annotation(fig_handle, 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
 
             wh_montages = [1 2 3];
 
@@ -966,39 +1534,44 @@ if ~exist('o2', 'var')
             f1 = gcf;
             mainLayout = tiledlayout(f1,1,5);
             surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
-            surfLayout.Layout.Tile = 1; % Position the leftLayout in the first two tiles of the mainLayout
-            surfLayout.Layout.TileSpan = [1, 2]; % Span two tiles
-            
-            % surface
+            surfLayout.Layout.Tile = 1;
+            surfLayout.Layout.TileSpan = [1, 2];
+
             ax = {};
             for j = 1:4, ax{j} = nexttile(surfLayout); end
             o2 = surface(o2, 'axes', ax{1}, 'direction', 'bigbrain left');          
             o2 = surface(o2, 'axes', ax{2}, 'direction', 'bigbrain right');
             o2 = surface(o2, 'axes', ax{3}, 'direction', 'right_cutaway');
             o2 = surface(o2, 'axes', ax{4}, 'direction', 'left_cutaway');
-            
+
             n_col = size(grayord_xyz,1);
             n_row = size(grayord_xyz,2);
             volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
-            volLayout.Layout.Tile = 3; % Position the leftLayout in the third tile of the mainLayout
-            volLayout.Layout.TileSpan = [1, 3]; % Span three tiles
+            volLayout.Layout.Tile = 3;
+            volLayout.Layout.TileSpan = [1, 3];
             ax_vol=[];
             for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
-            for j=1:n_col, set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]); end
+            for j=1:n_col
+                set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]);
+                title(ax_vol(1,j), sprintf('x=%.0f', grayord_xyz(j,1)), 'FontSize', 10);
+            end
 
-            % coronal
             o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
-            for j=1:n_col, set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]); end
+            for j=1:n_col
+                set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]);
+                title(ax_vol(2,j), sprintf('y=%.0f', grayord_xyz(j,2)), 'FontSize', 10);
+            end
 
-            % axial
             o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
-            for j=1:n_col, set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]); end
-
-            allaxh = findobj(gcf, 'Type', 'axes');
+            for j=1:n_col
+                set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]);
+                title(ax_vol(3,j), sprintf('z=%.0f', grayord_xyz(j,3)), 'FontSize', 10);
+            end
 
             wh_montages = [1 2 3];
             wh_surfaces = [1:4];
+
 
         case 'hcp inflated'
             axis off;
@@ -1138,7 +1711,7 @@ else % use existing o2 object to add montages
             case 'full'
             % saggital
             [o2, dat] = montage(o2, 'saggital', 'wh_slice', xyz, 'onerow', 'noverbose');
-            shift_axes(-0.02, -0.04);
+            shift_axes(-0.02, -0.04);        
 
             % coronal
             axh = axes('Position', [-0.02 0.37 .17 .17]);
@@ -1159,6 +1732,52 @@ else % use existing o2 object to add montages
                 set(allaxh(i), 'Position', pos1);
             end
 
+            % --- Coordinate Annotation Overlay ---
+            if coordinates
+                for m = 1:numel(o2.montage)
+                    this_montage = o2.montage{m};
+                    if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                        continue;
+                    end
+            
+                    axlist = this_montage.axis_handles;
+                    coords = this_montage.slice_mm_coords;
+            
+                    switch this_montage.orientation
+                        case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                        case 'coronal',                label_prefix = 'y=';
+                        case 'axial',                  label_prefix = 'z=';
+                        otherwise,                     label_prefix = '';
+                    end
+            
+                    for a = 1:min(numel(axlist), numel(coords))
+                        ax = axlist(a);
+                        if ~isgraphics(ax), continue; end
+            
+                        pos = get(ax, 'Position');
+                        ann_x = pos(1) + pos(3)/2 - 0.025;
+            
+                        % 💡 Use slightly lower label height for sagittal to stay under surface views
+                        if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                            ann_y = pos(2) + pos(4) - 0.5;
+                        else
+                            ann_y = pos(2) + pos(4) - 0.01;
+                        end
+            
+                        % Clamp to visible range
+                        if ann_x < 0 || ann_x > 1 || ann_y < 0 || ann_y > 1
+                            continue;
+                        end
+            
+                        annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                            'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                            'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                            'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                            'VerticalAlignment', 'bottom');
+                    end
+                end
+            end
+
             % surface
             o2 = surface(o2, 'axes', [0.1 0.74 .25 .25], 'direction', 'hires left', 'orientation', 'medial');
             o2 = surface(o2, 'axes', [0.3 0.74 .25 .25], 'direction', 'hires right', 'orientation', 'medial');            
@@ -1171,7 +1790,47 @@ else % use existing o2 object to add montages
                 [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6, 'noverbose');
                 axh = axes('Position', [0.05 0.4 .1 .5]);
                 o2 = montage(o2, 'volume_data', dat, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh, 'noverbose');
+
+                % --- Apply coordinate titles if coordinates flag is on ---
+                if coordinates
+                    label_map = containers.Map({'sagittal', 'coronal', 'axial'}, {'x', 'y', 'z'});
                 
+                    for m = 1:numel(o2.montage)
+                        mon = o2.montage{m};
+                        if ~isfield(mon, 'axis_handles') || isempty(mon.axis_handles)
+                            continue;
+                        end
+                
+                        if ~isfield(mon, 'orientation') || ~isKey(label_map, mon.orientation)
+                            continue;
+                        end
+                        label = label_map(mon.orientation);
+                
+                        for i = 1:numel(mon.axis_handles)
+                            ax = mon.axis_handles(i);
+                            if isgraphics(ax)
+                                mm_coord = getappdata(ax, 'mm_coord');
+                                if isempty(mm_coord), continue; end
+                
+                                % Get axis position in normalized figure units
+                                axpos = get(ax, 'Position');  % [x y w h]
+                                ann_x = axpos(1) + axpos(3) * 0.5;   % horizontal center
+                                ann_y = axpos(2) + axpos(4) + 0.01;  % just above axis
+                
+                                % Ensure we're in bounds
+                                if ann_x >= 0 && ann_x <= 1 && ann_y >= 0 && ann_y <= 1
+                                    annotation(gcf, 'textbox', [ann_x - 0.05, ann_y, 0.1, 0.03], ...
+                                        'String', sprintf('%s=%.0f', label, mm_coord), ...
+                                        'HorizontalAlignment', 'center', ...
+                                        'VerticalAlignment', 'bottom', ...
+                                        'EdgeColor', 'none', ...
+                                        'FontSize', 14);
+                                end
+                            end
+                        end
+                    end
+                end
+
             case 'compact2'
                 [o2, dat] = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 8, 'noverbose');
                 enlarge_axes(gcf, 1);
@@ -1183,8 +1842,56 @@ else % use existing o2 object to add montages
 
                 %ss = get(0, 'ScreenSize');
                 %set(gcf, 'Position', [round(ss(3)/12) round(ss(4)*.9) round(ss(3)*.8) round(ss(4)/5.5) ])
-                
-                
+
+    
+                % --- Coordinate Annotation Overlay ---
+                if coordinates
+                    for m = 1:numel(o2.montage)
+                        this_montage = o2.montage{m};
+    
+                        if ~isfield(this_montage, 'axis_handles') || ~isfield(this_montage, 'slice_mm_coords')
+                            continue;
+                        end
+    
+                        axlist = this_montage.axis_handles;
+                        coords = this_montage.slice_mm_coords;
+    
+                        switch this_montage.orientation
+                            case {'saggital', 'sagittal'}, label_prefix = 'x=';
+                            case 'coronal',  label_prefix = 'y=';
+                            case 'axial',    label_prefix = 'z=';
+                            otherwise,       label_prefix = '';
+                        end
+    
+                        for a = 1:min(numel(axlist), numel(coords))
+                            ax = axlist(a);
+                            if ~isgraphics(ax), continue; end
+    
+                            pos = get(ax, 'Position');
+                            ann_x = pos(1) + pos(3)/2 - 0.025;
+                            ann_y = pos(2) + pos(4) - 0.40;
+    
+                            % Adjust position for sagittal slices to avoid surface overlap
+                            if any(strcmp(this_montage.orientation, {'saggital', 'sagittal'}))
+                                ann_y = pos(2) + pos(4)  - 0.05;
+                            end
+    
+    
+                            % Skip if outside [0, 1] bounds (annotation cannot handle this)
+                            if any([ann_x, ann_y, ann_x + 0.05, ann_y + 0.03] > 1) || ...
+                               any([ann_x, ann_y] < 0)
+                                continue;
+                            end
+    
+                            annotation(get(ax, 'Parent'), 'textbox', [ann_x, ann_y, 0.05, 0.03], ...
+                                'String', sprintf('%s%.0f', label_prefix, coords(a)), ...
+                                'FitBoxToText', 'on', 'EdgeColor', 'none', ...
+                                'HorizontalAlignment', 'center', 'FontSize', 10, ...
+                                'VerticalAlignment', 'bottom');
+                        end
+                    end
+                end                     
+                    
             otherwise error('illegal montage type. choose full, compact, or compact2 when adding to existing montage set.')
         end
         
@@ -1201,6 +1908,89 @@ else % use existing o2 object to add montages
     end
     
 end
+
+% Safely extract axis handles
+% sag_axes = getfield(o2.montage{1}, 'axis_handles', {});
+% cor_axes = getfield(o2.montage{2}, 'axis_handles', {});
+% axi_axes = getfield(o2.montage{3}, 'axis_handles', {});
+% 
+% % Determine how many titles we can safely assign
+% n_sag = min(numel(sag_axes), size(xyz, 1));
+% n_cor = min(numel(cor_axes), size(xyz, 1));
+% n_axi = min(numel(axi_axes), size(xyz, 1));
+% 
+% % Apply titles to each montage view
+% for i = 1:n_sag
+%     title(sag_axes(i), sprintf('x=%.0f', xyz(i,1)), 'FontSize', 10);
+% end
+% for i = 1:n_cor
+%     title(cor_axes(i), sprintf('y=%.0f', xyz(i,2)), 'FontSize', 10);
+% end
+% for i = 1:n_axi
+%     title(axi_axes(i), sprintf('z=%.0f', xyz(i,3)), 'FontSize', 10);
+% end
+
+
+% if coordinates && exist('xyz', 'var') && ~isempty(xyz)
+%     n_sag = numel(sag_axes);
+%     n_cor = numel(cor_axes);
+%     n_axi = numel(axi_axes);
+% 
+%     for i = 1:n_sag
+%         title(sag_axes(i), sprintf('x=%.0f', xyz(i,1)), 'FontSize', 10);
+%     end
+%     for i = 1:n_cor
+%         title(cor_axes(i), sprintf('y=%.0f', xyz(i,2)), 'FontSize', 10);
+%     end
+%     for i = 1:n_axi
+%         title(axi_axes(i), sprintf('z=%.0f', xyz(i,3)), 'FontSize', 10);
+%     end
+% end
+
+% if coordinates && isfield(o2, 'montage')
+%     coord_labels = {'x', 'y', 'z', 'z'};  % label for each montage
+% 
+%     for m = 1:numel(o2.montage)
+%         if ~isfield(o2.montage{m}, 'axis_handles'), continue; end
+% 
+%         axlist = o2.montage{m}.axis_handles;
+%         coords = slice_coords{m};
+%         lab = coord_labels{m};
+% 
+%         for i = 1:min(numel(axlist), numel(coords))
+%             title(axlist(i), sprintf('%s=%.0f', lab, coords(i)), 'FontSize', 10);
+%         end
+%     end
+% end
+
+
+
+
+
+
+% % Only apply coordinate titles if 'coordinates' is specified
+% allax = findobj(gcf, 'Type', 'axes');
+% % Sort by vertical position (bottom to top) and then flip for montage order
+% [~, sortIdx] = sort(arrayfun(@(h) h.Position(2), allax));
+% ax_sorted = allax(sortIdx);
+% ax_sorted = flipud(ax_sorted);  % match montage order
+% 
+% if coordinates
+%     num_coords = size(xyz, 1);
+%     for i = 1:min(num_coords, numel(ax_sorted))
+%         ax = ax_sorted(i);
+%         try
+%             if num_coords <= numel(axh)
+%                 subplot_handle = axh(i); % assumes axh already sorted
+%                 axes(subplot_handle);
+%                 title(['x=' num2str(xyz(i,1)) ', y=' num2str(xyz(i,2)) ', z=' num2str(xyz(i,3))]);
+%             end
+%         catch
+%             % Fail silently
+%         end
+%     end
+% end
+
 
 % Now we can add blobs
 % --------------------------------------------
@@ -1244,6 +2034,20 @@ end
             set(allaxh(i), 'Position', pos1);
         end
     end % shift_axes
+
+    function [xn, yn] = ds2nfu(ax, xd, yd)
+        % Helper function for 'coordinates' argument - Michael Sun, PhD
+        % 06/09/2025
+
+        % Convert data space (xd, yd) into normalized figure units (xn, yn)
+        axpos = get(ax, 'Position');
+        xlim = get(ax, 'XLim');
+        ylim = get(ax, 'YLim');
+    
+        xn = axpos(1) + (xd - xlim(1)) / diff(xlim) * axpos(3);
+        yn = axpos(2) + (yd - ylim(1)) / diff(ylim) * axpos(4);
+    end
+
 
 
 end  % function

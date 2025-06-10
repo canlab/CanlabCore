@@ -173,7 +173,8 @@ switch meth
                 
             end
             
-            drawnow
+            % drawnow
+            pause(0.005)
             
         end
         

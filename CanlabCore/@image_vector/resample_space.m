@@ -90,15 +90,16 @@ if ~isa(obj, 'atlas')
     % -----------------------------------------------------------------------
     
 else % if  isa(obj, 'atlas')
-    
     if ~isempty(obj.probability_maps)
-
         n_prob_imgs = size(obj.probability_maps, 2);
-        
+    
+        voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
         obj_out.probability_maps = [];
+    
+        resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        resampled_dat = resampled_dat(:);
         
         % Use probability images if available
-        
         for i = 1:n_prob_imgs
             
             voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
@@ -110,6 +111,8 @@ else % if  isa(obj, 'atlas')
             obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
             
         end
+    
+        obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
         
         % rebuild .dat from probability images - done below
         %     if n_prob_imgs
@@ -117,7 +120,7 @@ else % if  isa(obj, 'atlas')
         %     end
         
         % if no prob images, need to be careful about how to resample integer vector data
-    
+        
     else
         
         % integer_vec = zeros(Vto.n_inmask, 1);
@@ -158,6 +161,7 @@ else % if  isa(obj, 'atlas')
     obj_out = probability_maps_to_region_index(obj_out);
     
 end % atlas object
+
 
 if isa(obj_out, 'statistic_image')
     % Rebuild fields specific to statistic_images

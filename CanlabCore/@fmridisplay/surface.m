@@ -360,6 +360,38 @@ elseif strcmp(dir, 'left_cutaway')
 elseif strcmp(dir, 'right_cutaway')
     h = addbrain('right_cutaway');
 
+elseif strcmp(dir, 'brainstem left')
+    h = addbrain('midbrain_group');
+    h = [h addbrain('rvm')];
+    h = [h addbrain('lc')];
+    h = [h addbrain('brainstem')];
+    h = [h addbrain('thalamus_group')];
+    h = [h addbrain('pbn')];
+    h = [h addbrain('rn')];
+    h = [h addbrain('pag')];
+    % h = [surface_handles addbrain('caudate')];
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'brainstem right')
+    h = addbrain('midbrain_group');
+    h = [h addbrain('rvm')];
+    h = [h addbrain('lc')];
+    h = [h addbrain('brainstem')];
+    h = [h addbrain('thalamus_group')];
+    h = [h addbrain('pbn')];
+    h = [h addbrain('rn')];
+    h = [h addbrain('pag')];
+    % h = [surface_handles addbrain('caudate')];
+    view(137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'caudate left')
+    h = addbrain('caudate');
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'caudate right')
+    h = addbrain('caudate');
+    view(137, 18); lightRestoreSingle;
+
 else
     h = addbrain(dir);
 

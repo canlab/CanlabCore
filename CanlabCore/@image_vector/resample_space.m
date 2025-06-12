@@ -125,7 +125,8 @@ else % if  isa(obj, 'atlas')
         
         % integer_vec = zeros(Vto.n_inmask, 1);
         
-        n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
+        % n_index_vals = length(unique(obj.dat(obj.dat ~= 0))); % I don't think drawing from the data field is appropriate, since it can be set in a variety of ways such that different regions get the same value?
+        n_index_vals = length(obj.labels); % Instead, simply count the number of label entries. - MS
         
         % create a set of pseudo-"probabilities" for each region, resampled. Then
         % we can take the max prob, so that each voxel gets assigned to the best-matching parcel.

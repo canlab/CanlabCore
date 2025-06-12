@@ -212,7 +212,7 @@ if ischar(input_activation)
             || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
             || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates compact') || strcmp(input_activation,'hcp grayordinates subcortex') ...
             || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') ...
-            || strcmp(input_activation, 'subcortex full') || strcmp(input_activation, 'subcortex 3d') || strcmp(input_activation, 'subcortex slices') 
+            || strcmp(input_activation, 'subcortex full') || strcmp(input_activation, 'subcortex compact') || strcmp(input_activation, 'subcortex 3d') || strcmp(input_activation, 'subcortex slices') 
 
         
         % Entered no data map; intention is not to plot blobs, just create underlay
@@ -374,6 +374,9 @@ wh = strcmp(varargin, 'leftright inout subcortex');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'subcortex full');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'subcortex compact');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'subcortex 3d');
@@ -1477,6 +1480,7 @@ if ~exist('o2', 'var')
         case 'hcp grayordinates compact'
             overlay = canlab_get_underlay_image;
             grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
+            % grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-24,-17,-10,6,10]';
         
             o2 = fmridisplay('overlay', which(overlay));
         
@@ -1499,6 +1503,62 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', t2, 'direction', 'hcp inflated left', 'orientation', 'lateral','disableVis3d');
             o2 = surface(o2, 'axes', t3, 'direction', 'hcp inflated left', 'orientation', 'medial','disableVis3d');     
             o2 = surface(o2, 'axes', t4, 'direction', 'hcp inflated right', 'orientation', 'lateral','disableVis3d');
+            
+            t5 = nexttile();
+            t5.Layout.Tile = 21;
+            axis off
+            t6 = nexttile();
+            t6.Layout.Tile = 22;
+            axis off;
+            t7 = nexttile();
+            t7.Layout.Tile = 23;
+            axis off;
+            t8 = nexttile();
+            t8.Layout.Tile = 24;
+            axis off
+        
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(1,:), 'onerow', 'noverbose', 'existing_axes',t5);
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(3,:), 'onerow', 'noverbose', 'existing_axes',t6);
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz(5,:), 'onerow', 'noverbose', 'existing_axes',t7);
+            [o2, dat] = montage(o2, 'axial', 'wh_slice', grayord_xyz(2,:), 'onerow', 'noverbose', 'existing_axes',t8);
+        
+            title(t5,'X = -24','FontSize',10)
+            title(t6,'X = -6','FontSize',10)
+            title(t7,'X = 12','FontSize',10)
+            title(t8, 'Z = -34','FontSize',10)
+            % title(t8, 'Z = -24','FontSize',10)
+            for t = [t5,t6,t7]
+                set(t,'XLim',[-100,30],'YLim',[-70,25]);
+            end
+            set(t8,'XLim',[-60,60],'YLim',[-100,30]);
+        
+            wh_surfaces = [1:4];
+
+        case 'subcortex compact'
+            overlay = canlab_get_underlay_image;
+            grayord_xyz = [-24,-12,-6,6,12,24; -36,-17,-12,-5,0,14; -50,-34,-17,-10,6,10]';
+        
+            o2 = fmridisplay('overlay', which(overlay));
+        
+            t0 = tiledlayout(5,5,'Padding','none','TileSpacing','tight');
+            t1 = nexttile();
+            t1.Layout.TileSpan = [2,2];
+            axis off;
+            t2 = nexttile();
+            t2.Layout.TileSpan = [2,2];
+            axis off;
+            t3 = nexttile();
+            t3.Layout.TileSpan = [2,2];
+            t3.Layout.Tile = 11;
+            axis off;
+            t4 = nexttile();
+            t4.Layout.TileSpan = [2,2];
+            t4.Layout.Tile = 13;
+            axis off;
+            o2 = surface(o2, 'axes', t1, 'direction', 'caudate left');     
+            o2 = surface(o2, 'axes', t2, 'direction', 'caudate right');
+            o2 = surface(o2, 'axes', t3, 'direction', 'brainstem left');     
+            o2 = surface(o2, 'axes', t4, 'direction', 'brainstem right');
             
             t5 = nexttile();
             t5.Layout.Tile = 21;
@@ -1572,6 +1632,82 @@ if ~exist('o2', 'var')
             wh_montages = [1 2 3];
             wh_surfaces = [1:4];
 
+
+        case 'subcortex full'
+            % saggital
+            f1 = gcf;
+            mainLayout = tiledlayout(f1,1,5);
+            surfLayout = tiledlayout(mainLayout, 2, 2, 'Parent', mainLayout, 'TileSpacing', 'compact', 'Padding', 'none');
+            surfLayout.Layout.Tile = 1;
+            surfLayout.Layout.TileSpan = [1, 2];
+
+            ax = {};
+            for j = 1:4, ax{j} = nexttile(surfLayout); end
+            o2 = surface(o2, 'axes', ax{1}, 'direction', 'caudate left');          
+            o2 = surface(o2, 'axes', ax{2}, 'direction', 'caudate right');
+            o2 = surface(o2, 'axes', ax{3}, 'direction', 'brainstem left');
+            o2 = surface(o2, 'axes', ax{4}, 'direction', 'brainstem right');
+
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            volLayout.Layout.Tile = 3;
+            volLayout.Layout.TileSpan = [1, 3];
+            ax_vol=[];
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:n_col
+                set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]);
+                title(ax_vol(1,j), sprintf('x=%.0f', grayord_xyz(j,1)), 'FontSize', 10);
+            end
+
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:n_col
+                set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]);
+                title(ax_vol(2,j), sprintf('y=%.0f', grayord_xyz(j,2)), 'FontSize', 10);
+            end
+
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:n_col
+                set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]);
+                title(ax_vol(3,j), sprintf('z=%.0f', grayord_xyz(j,3)), 'FontSize', 10);
+            end
+
+            wh_montages = [1 2 3];
+            wh_surfaces = [1:4];
+
+
+        case 'subcortex slices'
+            f1 = gcf;
+            mainLayout = tiledlayout(f1,1,5);
+
+            n_col = size(grayord_xyz,1);
+            n_row = size(grayord_xyz,2);
+            volLayout = tiledlayout(mainLayout, n_row, n_col, 'Parent', mainLayout, 'TileSpacing', 'tight', 'Padding', 'none');
+            volLayout.Layout.Tile = 3;
+            volLayout.Layout.TileSpan = [1, 3];
+            ax_vol=[];
+            for j = 1:n_row, for k = 1:n_col, ax_vol(j,k) = nexttile(volLayout); end; end
+            [o2, dat] = montage(o2, 'saggital', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes',ax_vol(1,:));
+            for j=1:n_col
+                set(ax_vol(1,j),'XLim',[-100,30],'YLim',[-70,25]);
+                title(ax_vol(1,j), sprintf('x=%.0f', grayord_xyz(j,1)), 'FontSize', 10);
+            end
+
+            o2 = montage(o2, 'volume_data', dat, 'coronal', 'wh_slice', grayord_xyz, 'onerow','noverbose', 'existing_axes', ax_vol(2,:));
+            for j=1:n_col
+                set(ax_vol(2,j),'XLim',[-40,40],'YLim',[-70,25]);
+                title(ax_vol(2,j), sprintf('y=%.0f', grayord_xyz(j,2)), 'FontSize', 10);
+            end
+
+            o2 = montage(o2, 'volume_data', dat, 'axial', 'wh_slice', grayord_xyz, 'onerow', 'noverbose', 'existing_axes', ax_vol(3,:));
+            for j=1:n_col
+                set(ax_vol(3,j),'XLim',[-60,60],'YLim',[-100,30]);
+                title(ax_vol(3,j), sprintf('z=%.0f', grayord_xyz(j,3)), 'FontSize', 10);
+            end
+
+            wh_montages = [1 2 3];
+            wh_surfaces = [1:4];
 
         case 'hcp inflated'
             axis off;
@@ -1689,6 +1825,15 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'right_cutaway');
             o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'left_cutaway');
             
+            wh_surfaces = [1:4];
+
+        case 'subcortex 3d'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'caudate left');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'caudate right');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'brainstem left');
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'brainstem right');
+
             wh_surfaces = [1:4];
 
         otherwise 

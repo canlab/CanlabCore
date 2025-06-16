@@ -209,7 +209,7 @@ if ischar(input_activation)
             || strcmp(input_activation, 'freesurfer sphere') || strcmp(input_activation, 'freesurfer white') ...
             || strcmp(input_activation, 'MNI152NLin6Asym white') || strcmp(input_activation, 'MNI152NLin6Asym midthickness') ...
             || strcmp(input_activation, 'MNI152NLin6Asym pial') || strcmp(input_activation, 'MNI152NLin2009cAsym white') ...
-            || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') ...
+            || strcmp(input_activation, 'MNI152NLin2009cAsym midthickness') || strcmp(input_activation, 'MNI152NLin2009cAsym pial') || strcmp(input_activation,'hcp') ...
             || strcmp(input_activation,'hcp grayordinates') || strcmp(input_activation,'hcp grayordinates compact') || strcmp(input_activation,'hcp grayordinates subcortex') ...
             || strcmp(input_activation, 'allslices') || strcmp(input_activation, 'leftright inout') || strcmp(input_activation, 'leftright inout subcortex') ...
             || strcmp(input_activation, 'subcortex full') || strcmp(input_activation, 'subcortex compact') || strcmp(input_activation, 'subcortex 3d') || strcmp(input_activation, 'subcortex slices') 
@@ -299,6 +299,9 @@ wh = strcmp(varargin, 'full hcp inflated');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'full no surfaces');
+if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
+
+wh = strcmp(varargin, 'hcp');
 if any(wh), montagetype = varargin{find(wh)}; varargin(wh) = []; end
 
 wh = strcmp(varargin, 'hcp grayordinates');
@@ -1716,6 +1719,15 @@ if ~exist('o2', 'var')
             o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'hcp inflated right', 'orientation', 'lateral');
             o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'hcp inflated left', 'orientation', 'lateral');
             
+            wh_surfaces = [1:4];
+
+        case 'hcp'
+            axis off;
+            o2 = surface(o2, 'axes', [0 0.5 .45 .45], 'direction', 'surface right', 'orientation', 'medial');
+            o2 = surface(o2, 'axes', [0.4 0.5 .45 .45], 'direction', 'surface left', 'orientation', 'medial');          
+            o2 = surface(o2, 'axes', [0.4 0 .45 .45], 'direction', 'surface right', 'orientation', 'lateral');
+            o2 = surface(o2, 'axes', [0 0 .45 .45], 'direction', 'surface left', 'orientation', 'lateral');
+
             wh_surfaces = [1:4];
 
         case 'hcp sphere'

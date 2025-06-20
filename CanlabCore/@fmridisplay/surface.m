@@ -387,11 +387,13 @@ elseif strcmp(dir, 'brainstem right')
 elseif strcmp(dir, 'caudate left')
     h = addbrain('caudate');
     h = [h addbrain('put')];
+    h = [h addbrain('gp')];
     view(-137, 18); lightRestoreSingle;
 
 elseif strcmp(dir, 'caudate right')
     h = addbrain('caudate');
     h = [h addbrain('put')];
+    h = [h addbrain('gp')];
     view(137, 18); lightRestoreSingle;
 
 else

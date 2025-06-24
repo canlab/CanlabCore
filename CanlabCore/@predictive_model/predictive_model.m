@@ -480,7 +480,7 @@ classdef predictive_model
 
             % Validate classification_d_within (numeric scalar)
             if ~isempty(obj.d_within)
-                validateattributes(obj.classification_d_within, {'numeric'}, {'scalar'}, mfilename, 'classification_d_within');
+                validateattributes(obj.d_within, {'numeric'}, {'scalar'}, mfilename, 'd_within');
             end
 
             if doverbose

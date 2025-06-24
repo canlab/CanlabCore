@@ -332,8 +332,14 @@ classdef predictive_model
             validateNumericVector = @(x, name) validateattributes(x, {'numeric'}, {'vector'}, mfilename, name);
             validateNumericScalar = @(x, name) validateattributes(x, {'numeric'}, {'scalar'}, mfilename, name);
             validateLogicalScalar = @(x, name) validateattributes(x, {'logical'}, {'scalar'}, mfilename, name);
-            validateCellOfStrings = @(x, name) (iscell(x) && all(cellfun(@(c) ischar(c) || isstring(c), x))) || ...
-                error('predictive_model:InvalidProperty', '%s must be a cell array of strings.', name);
+            % validateCellOfStrings = @(x, name) (iscell(x) && all(cellfun(@(c) ischar(c) || isstring(c), x))) || ...
+            %     error('predictive_model:InvalidProperty', '%s must be a cell array of strings.', name);
+            % This line expects modeloptions to be a cell array of strings, but it should actually accept key-value pairs (alternating strings and values), 
+            % as required by SVM functions. To fix this, modify the validation logic as below to allow cell arrays containing both strings (option names) and 
+            % their corresponding values, or temporarily comment out the validation line for modeloptions. Byeol 2025/06/24
+            validateModeloptionsCell = @(x, name) (iscell(x) && all(cellfun(@(c,idx) mod(idx,2)==1 && (ischar(c)||isstring(c)) || mod(idx,2)==0, x, num2cell(1:numel(x))))) || ...
+                error('predictive_model:InvalidProperty', '%s must be a cell array with alternating strings and values.', name);
+
             validateFunctionHandle = @(x, name) validateattributes(x, {'function_handle'}, {}, mfilename, name);
             validateCell = @(x, name) validateattributes(x, {'cell'}, {}, mfilename, name);
             validateChar = @(x, name) validateattributes(x, {'char'}, {}, mfilename, name);
@@ -362,7 +368,7 @@ classdef predictive_model
 
             % Validate modeloptions
             if ~isempty(obj.modeloptions)
-                validateCellOfStrings(obj.modeloptions, 'modeloptions');
+                validateModeloptionsCell(obj.modeloptions, 'modeloptions');
             end
 
             % Validate accfun

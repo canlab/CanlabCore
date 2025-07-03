@@ -347,6 +347,7 @@ if doplot
 % Plot a dendrogram for the best clustering solution.
 create_figure('cluster_plots', 1, 2); 
 
+% ClusterIndices option has been available in Matlab since R2024b
 dendrogram(gca, stats.linkage_tree, 'ClusterIndices', stats.best_cluster_labels, 'Parent', gca);
 
 subplot(1, 2, 2);

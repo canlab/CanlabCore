@@ -90,37 +90,43 @@ if ~isa(obj, 'atlas')
     % -----------------------------------------------------------------------
     
 else % if  isa(obj, 'atlas')
+    if ~isempty(obj.probability_maps)
+        n_prob_imgs = size(obj.probability_maps, 2);
     
-    n_prob_imgs = size(obj.probability_maps, 2);
-    
-    obj_out.probability_maps = [];
-    
-    % Use probability images if available
-    
-    for i = 1:n_prob_imgs
-        
         voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
-        
+        obj_out.probability_maps = [];
+    
         resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-        
         resampled_dat = resampled_dat(:);
         
+        % Use probability images if available
+        for i = 1:n_prob_imgs
+            
+            voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
+            
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            
+            resampled_dat = resampled_dat(:);
+            
+            obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
+            
+        end
+    
         obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
         
-    end
-    
-    % rebuild .dat from probability images - done below
-    %     if n_prob_imgs
-    %         obj_out = probability_maps_to_region_index(obj_out);
-    %     end
-    
-    % if no prob images, need to be careful about how to resample integer vector data
-    
-    if ~n_prob_imgs
+        % rebuild .dat from probability images - done below
+        %     if n_prob_imgs
+        %         obj_out = probability_maps_to_region_index(obj_out);
+        %     end
+        
+        % if no prob images, need to be careful about how to resample integer vector data
+        
+    else
         
         % integer_vec = zeros(Vto.n_inmask, 1);
         
-        n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
+        % n_index_vals = length(unique(obj.dat(obj.dat ~= 0))); % I don't think drawing from the data field is appropriate, since it can be set in a variety of ways such that different regions get the same value?
+        n_index_vals = length(obj.labels); % Instead, simply count the number of label entries. - MS
         
         % create a set of pseudo-"probabilities" for each region, resampled. Then
         % we can take the max prob, so that each voxel gets assigned to the best-matching parcel.

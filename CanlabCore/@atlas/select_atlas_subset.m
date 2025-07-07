@@ -43,7 +43,7 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % 'regexp' : If you enter 'doregexp', function will treat your string as a
 % regular expression.
 %
-% 'mostprob' : returns a labeled voxel iff p(region) > argmax(p(other region)).
+% 'deterministic' or 'mostprob' : returns a labeled voxel iff p(region) > argmax(p(other region)).
 % Has no effect unless atlas has its probability_maps property populated,
 % in which case the default behavior is to return all voxels with 
 % p(region) > 0. Note: you probably want to apply a threshold operation too
@@ -129,7 +129,7 @@ for i = 1:length(varargin)
 
             case 'conditionally_ind', condInd = true;
 
-            case 'deterministic', mostprob = true;
+            case {'mostprob', 'deterministic'}, mostprob = true;
                 
             otherwise
                 

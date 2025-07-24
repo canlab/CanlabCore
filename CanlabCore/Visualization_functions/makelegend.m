@@ -106,28 +106,37 @@ for i = 1:num_entries
     else
         mycolor = colors(i,:);
     end
-    
+
     if isstr(mycolor)
-        
+
         % h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor(1), 'MarkerSize', 48, 'Visible', 'off'); %'LineWidth',3);
-        h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor(1), 'MarkerSize', 48, 'Visible', 'on'); %'LineWidth',3);
-    
+        h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor(1), 'MarkerSize', 48, 'Visible', 'on', 'HandleVisibility', 'off'); %'LineWidth',3);
+
     else
         % h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor,  'MarkerSize', 48, 'Visible', 'off'); %'LineWidth',12);
-        h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor,  'MarkerSize', 48, 'Visible', 'on'); %'LineWidth',12);
+        h(i) = plot(0,0, 'ks', 'MarkerFaceColor',mycolor,  'MarkerSize', 48, 'Visible', 'on', 'HandleVisibility', 'off'); %'LineWidth',12);
 
 
     end
+
+
+%% Here's a simpler and more straightforward alternative approach
+% h(i) = plot(nan, nan, 's', ...
+%     'MarkerFaceColor', mycolor, ...
+%     'MarkerEdgeColor', mycolor, ...
+%     'MarkerSize', 12);
+
+
 end
 
 han = legend(h,names);
-
+% set(han, 'Color', 'white');  % Ensure the legend background is not transparent
 
 
 % Set the visibility of plot markers to 'off' after creating the legend
-for i = 1:num_entries
-    set(h(i), 'Visible', 'off');
-end
+% for i = 1:num_entries
+%     set(h(i), 'Visible', 'off');
+% end
 
 
 % if num_entries < 4
@@ -135,6 +144,21 @@ end
 % else
 %     set(han, 'Position', [.25 .30 .45 .45]);
 % end
+
+% Re-enable handle visibility for legend use
+for i = 1:num_entries
+    set(h(i), 'HandleVisibility', 'on');
+end
+
+han = legend(h, names);
+
+% Leave them visible (so legend displays correctly), but hide them from axes
+for i = 1:num_entries
+    set(h(i), 'XData', NaN, 'YData', NaN);  % Invisible in axes, still visible in legend
+end
+
+set(gcf, 'Renderer', 'painters');
+
 
 axis off
 

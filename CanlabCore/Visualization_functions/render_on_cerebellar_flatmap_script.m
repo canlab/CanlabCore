@@ -8,6 +8,15 @@
 % Diedrichsen, J. & Zotow, E. (2015). Surface-based display of volume-averaged cerebellar data. PLoS One, 7, e0133402.
 % https://www.diedrichsenlab.org/imaging/suit_flatmap.htm
 
+% WITH SPM25 !!!
+% NOTE: To use SUIT with SPM25, change line 68 or suit_map2surf.m to include SPM25, like this: case {'SPM12b','SPM12','SPM25'}
+% Change line 70 of suit_plotflatmap to do the same, like so:
+% if ~strcmp(spmVer,'SPM12') && ~strcmp(spmVer,'SPM25')
+
+
+% Add SUIT to path
+cd('/Users/f003vz1/Dartmouth College Dropbox/Tor Wager/Matlab_code_external/spm12/toolbox/suit')
+g = genpath(pwd); addpath(g);
 
 % g = gifti('FLAT.surf.gii')
 % figure; han = patch('Faces',g.faces,'Vertices',g.vertices);
@@ -23,18 +32,32 @@ placebo603 = fmri_data(fname);
 fname = which('full_pla_rrating_pperm_tfce_FWE05.nii.gz');
 placebocorr603 = fmri_data(fname);
 
+try
 gunzip(pain603.fullpath);
 pain603fname = strrep(pain603.fullpath, '.gz', '');
+catch
+    pain603fname = pain603.fullpath;
+    %may not have been in gzip format
+end
 
+try
 gunzip(placebo603.fullpath);
 placebo603fname = strrep(placebo603.fullpath, '.gz', '');
+catch
+    placebo603fname = pain603.fullpath;
+    %may not have been in gzip format
+end
 
+try
 gunzip(placebocorr603.fullpath);
 placebocorr603fname = strrep(placebocorr603.fullpath, '.gz', '');
+catch
+    placebocorr603fname = pain603.fullpath;
+    %may not have been in gzip format
+end
 
 
-
-targetniifile = '/home/bogdan/Downloads/full_pla_g_unthresh.nii';
+% targetniifile = '/home/bogdan/Downloads/full_pla_g_unthresh.nii';
 
 % targetniifile = fullfile(pwd, 'nps.nii');
 
@@ -44,7 +67,51 @@ targetniifile = placebocorr603fname;
 
 target_obj = load_image_set('nps');
 
-%%
+%% Using the render_on_cerebellar_flatmap object
+
+% If your paths are configured correctly and you have the template files on
+% them, then the easiest way to render an image vector (e.g.,
+% t-statistic_image object, fmri_data object with one image) onto a
+% cerebellar flat map is with the object method:
+
+create_figure('cerebellum', 1, 3)
+
+render_on_cerebellar_flatmap(pain603)
+title('Pain')
+axis off
+
+% Move and rename the temporary GIFTI file created by the script so we can save it: 
+movefile(giftiname, 'pain_plameta_n603_gifti.nii')
+
+subplot(1, 3, 2)
+
+render_on_cerebellar_flatmap(placebo603)
+title('Placebo')
+axis off
+
+% Move and rename the temporary GIFTI file created by the script so we can save it: 
+movefile(giftiname, 'placebo_plameta_n603_gifti.nii')
+
+
+subplot(1, 3, 3)
+
+render_on_cerebellar_flatmap(placebocorr603)
+title('Placebo (correlation)')
+axis off
+
+% Move and rename the temporary GIFTI file created by the script so we can save it: 
+movefile(giftiname, 'placebocorr_plameta_n603_gifti.nii')
+
+% Save the fmri_data object files for reference
+save plameta_group_map_objects_FWE05 placebocorr603 placebo603 pain603
+
+% Save the figure
+saveas(gcf, 'Plameta_cblm_flatmap.fig')
+saveas(gcf, 'Plameta_cblm_flatmap.png')
+%% Step-by-step
+
+% This script below implements the steps that are contained in the object
+% method. It can be helpful for debugging, or to see the steps.
 
 % Turn target object into a temporary .nii file
 % ------------------------------
@@ -53,7 +120,8 @@ if size(target_obj.dat, 2) > 1
 end
 
 target_obj.fullpath = fullfile(pwd, 'tmp_target_nii.nii');
-write(target_obj);
+%write(target_obj);
+write(target_obj, 'overwrite');
 
 targetniifile = fullfile(pwd, 'tmp_target_nii.nii');
 fprintf('created %s\n', targetniifile)

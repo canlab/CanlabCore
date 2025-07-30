@@ -57,6 +57,8 @@ function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
 % 'insula'                        'Faillenot_insular_atlas.mat'
 % 'painpathways'                  'pain_pathways_atlas_obj.mat'
 % 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
+% 'painpathways2024'              'pain_pathways2024_atlas_obj.mat'
+% 'painpathways2024_finegrained'  'pain_pathways2024_atlas_obj.mat'
 % 'tian_3t_[fmriprep20|fsl6]'      
 %                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
 % 'delavega'                      'delaVega2017_neurosynth_atlas_object'
@@ -238,6 +240,14 @@ switch lower(atlas_file_name_or_keyword)
     case 'painpathways_finegrained'
         savefile = 'pain_pathways_atlas_obj.mat';
         varname = 'pain_pathways_finegrained';
+
+    case 'painpathways2024'
+        savefile = 'pain_pathways2024_atlas_obj.mat';
+        varname = 'pain_pathways2024';
+        
+    case 'painpathways2024_finegrained'
+        savefile = 'pain_pathways2024_atlas_obj.mat';
+        varname = 'pain_pathways2024_finegrained';
         
     case 'kragel2019pag'
         savefile ='Kragel2019PAG_atlas_object.mat';

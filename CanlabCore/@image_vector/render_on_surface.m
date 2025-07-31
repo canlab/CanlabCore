@@ -92,27 +92,32 @@ function [cm, colorbar1_han, colorbar2_han] = render_on_surface(obj, surface_han
 %       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
 %       Neuroimage. This is something you absolutely want to do if your sourcespace and targetsurface are
 %       supported.
-%       Supported sourcespaces = {'MNI152NLin2009cAsym','MNI152NLin6Asym','colin27'}
+%       Supported sourcespaces = {'colin27', 'MNI152NLin2009cAsym','MNI152NLin6Asym'}
+%
+%       colin27 is an individual person's brain (Colin's) scanned on 27 occasions.
+%       MNI152NLin6Asym is the template used in SPM and FSL software for years, the default from the early 2000s through 2025.
+%       MNI152NLin2009cAsym is a higher-resolution template that is generally preferred to the 152NLin6.
 %
 %    **'srcdepth':**
-% 	Requires 'sourcespace' specification, and allows further specify desired surface depth to sample volume 
-%       at. Typical options might be 'pial', 'white', or 'midthickness'. Requires that a file named 
-%       '<sourename>_<srcdepth>_lh.mat' and '<sourename>_<srcdepth>_rh.mat' be in your matlab path. The pial surface 
-%       and even midthickness will undersample from deep sulci, but the white surface may conversely suffer from 
-%       partial volume effects if you've masked white matter out of your volumetric data. srcdepth can also be a cell 
-%       array, in which case multiple depths are sampled and averaged (for linear interpolation) or the mode is taken 
-%       (for nearest neighbor interpolation). If there is a modal tie, the default is to use whichever belongs first 
-%       in your srcdepth list. Default: {'midthickness','pial','white'}, i.e. midthickness > pial > white for modal 
+% 	Requires 'sourcespace' specification, and allows further specify desired surface depth to sample volume
+%       at. Typical options might be 'pial', 'white', or 'midthickness'. Requires that a file named
+%       '<sourename>_<srcdepth>_lh.mat' and '<sourename>_<srcdepth>_rh.mat' be in your matlab path. The pial surface
+%       and even midthickness will undersample from deep sulci, but the white surface may conversely suffer from
+%       partial volume effects if you've masked white matter out of your volumetric data. srcdepth can also be a cell
+%       array, in which case multiple depths are sampled and averaged (for linear interpolation) or the mode is taken
+%       (for nearest neighbor interpolation). If there is a modal tie, the default is to use whichever belongs first
+%       in your srcdepth list. Default: {'midthickness','pial','white'}, i.e. midthickness > pial > white for modal
 %       tie breaks.
 %
 %    **'targetsurface':**
-%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the
 %       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
 %       Neuroimage. This is something you absolutely want to do if your sourcespace and targetsurface are
 %       supported.
 %       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
-%   
+%       fsaverage_164k is a high-resolution surface template created from surfaces aligned to freesurfer
+%       fsLR_32k is a standard-resolution cortical surface template created from surfaces aligned to freesurfer. This is generally used by the Human Connectome Project (HCP)
 %
 % :Outputs:
 %
@@ -554,6 +559,7 @@ for i = 1:length(surface_handles)
             % from our reg struct
             vertices = 'vertices_lh';
             weights = 'weights_lh';
+
         elseif contains(get(surface_handles(i),'Tag'),{'right','Right','RIGHT'})
             % this is used for mesh interpolation from the volume
             src_sp = src_sp_rh;
@@ -584,6 +590,7 @@ for i = 1:length(surface_handles)
         else
             % if target vertices and surface vertices match proceed
             % with MNIsurf vol2surf method
+            
             c_mesh = zeros(size(src_sp{1}.vertices,1), length(src_sp));
             for j = 1:length(src_sp)
                 c_mesh(:,j) = interp3(mesh_struct.X, mesh_struct.Y, mesh_struct.Z, mesh_struct.voldata, ...

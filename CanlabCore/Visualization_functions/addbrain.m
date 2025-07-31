@@ -30,8 +30,7 @@ function p = addbrain(varargin)
 % 'right' 'hires right' 'surface right' 'hires surface right' ...
 % 'transparent_surface' 'foursurfaces' 'foursurfaces_hcp' 'flat left'  'flat right' ...
 % 'bigbrain' {'hires surface left', 'bigbrain left'}
-% ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right',
-% uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
+% ['fsavg_left' or 'inflated left'], 'fsavg_right' or 'inflated right', uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. (https://doi.org/10.1002/hbm.24213)
 %
 % % Macro subcortical surfaces
 % % -----------------------------------------------------------------------
@@ -52,52 +51,52 @@ function p = addbrain(varargin)
 %
 % Available keywords:
 %
-% :CORTICAL SURFACES:
-%
-%   **'transparent_surface':**
-%        the default.  2 mm res SPM2 brain surface
-%
-%   **'hires':**
-%        a high-resolution cortical surface (from Caret segmentation)
-%        of the Colin27 single-subject brain
-%
-%   **'hires left':**
-%        hi-resolution left medial with cerebellum (Caret seg)
-%
-%   **'hires right':**
-%        same, right hem
-%
-%   **'surface left':**
-%        hi-resolution left cortical surface with cerebellum, defaults in medial view
-%
-%        Pial surface with MSM alignment based on the Human Connectome Project
-%        Reference: Glasser et al. 2016 Nature
-%        Surface template: L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat';
-%
-%   **'surface right':**
-%        same, right hem
-%
-%   **'hcp inflated left': same as the above but using inflated surfaces
-%
-%   **'hcp inflated right': same as the above but using inflated surfaces
-%
-%   **'left':**
-%        2 mm resolution left hem, no cerebellum
-%
-%   **'right':**
-%
-%   **'vmpfc':**
-%
 %   **'disableVis3d':**
 %        Disables terminal invocation of axis vis3d which can sometimes
 %        screw up sizes of brain surfaces. Set to true if you have a
 %        multisurface plot with mismatched sizes of surfaces that should be
 %        of equal size.
 %
-% :CUTAWAY SURFACES:
+% :CORTICAL SURFACES:
 %
-%   **'brainbottom':**
-%       Bottom of brain and head
+%   **'hires left', 'hires right':**
+%        hi-resolution left medial with cerebellum (Caret seg)
+%        segmented from MNI-space template avg152T1.img after cleanup and 
+%        thresholding to extract cortical ribbon by Tor Wager
+%        'surf_spm2_brain_left.mat', 'surf_spm2_brain_right.mat' 
+%
+%   **'surface left', 'surface right':**
+%        hi-resolution left cortical surface with cerebellum, defaults in medial view
+%        Pial surface with MSM alignment based on the Human Connectome Project
+%        Partially inflated
+%        Reference: Glasser et al. 2016 Nature
+%        Surface template: L.pial_MSMAll_2_d41_WRN_DeDrift.32k.mat';
+%        NOTE: if you render on this surface, use *******
+%
+%   **'hcp inflated left', 'hcp inflated right':** 
+%        Midthickness surface with MSM alignment based on the Human Connectome Project
+%        Very inflated
+%        Reference: Glasser et al. 2016 Nature
+%        Surface template: 'S12000.L.inflated_MSMAll.32k_fsl_LR.mat', 'S12000.R.inflated_MSMAll.32k_fsl_LR.mat'
+%
+%   **'fsavg_left', 'inflated left', 'fsavg_right' or 'inflated right':**
+%       uses freesurfer inflated brain with Thomas Yeo group's RF_ANTs mapping from MNI to Freesurfer. 
+%       (https://doi.org/10.1002/hbm.24213)
+%       'surf_freesurf_inflated_Left.mat', 'surf_freesurf_inflated_Right.mat'
+%       Rendering onto these will be approximately correct with volume data mapped to 
+%       'MNI152NLin6Asym' or'MNI152NLin2009cAsym' templates and direct mapping, but less accurate 
+%       than template and surface-specific transformations  
+%
+%   **'flat left':**
+%       Flat map in 32k fsaverage (freesurfer) space, from Glasser_et_al_2016_HCP ('L.flat.32k.mat')
+%
+%   **'flat right':**
+%       Flat map in 32k fsaverage (freesurfer) space, from Glasser_et_al_2016_HCP ('R.flat.32k.mat')
+%
+%   **'hires surface left'/'bigbrain left', 'hires surface right'/'bigbrain right'**
+%       Surfaces from the "BigBrain" single-subject atlas
+%
+% :CUTAWAY SURFACES:
 %
 %   **'cutaway':**
 %       A canonical surface cutaway
@@ -105,12 +104,28 @@ function p = addbrain(varargin)
 %       pre-2020 used surface_cutaway.m
 %
 %   **'left_cutaway'**      These surfaces use the Keuken 2014 7T MNI surface
-%   **'right_cutaway' **
+%   **'right_cutaway' **    These surfaces use the Keuken 2014 7T MNI surface
 %   **'right_cutaway_x8' -- like right_cutaway but x=8
-%   **'left_insula_slab'**
+%   **'left_insula_slab'**  
 %   **'right_insula_slab'**
 %   **'accumbens_slab'**
 %
+% :LEGACY CORTICAL SURFACES (not recommended):
+%   **'transparent_surface':**
+%        2 mm res SPM2 brain surface
+%
+%   **'hires':**
+%        a high-resolution cortical surface (from Caret segmentation)
+%        of the Colin27 single-subject brain
+%
+%   **'left':**
+%        2 mm resolution left hem, no cerebellum
+%
+%   **'right':**
+%        2 mm resolution left hem, no cerebellum
+%
+%   **'brainbottom':**
+%       Bottom of brain and head
 %
 % :COMPOSITES:
 %

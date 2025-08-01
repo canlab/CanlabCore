@@ -55,6 +55,29 @@ function [R, N] = canlab_compute_similarity_matrix(dat, varargin)
 %   **N:**
 %       [k x k] matrix of number of observations used for each pair
 %
+% % Example using Hansen neurotransmitter maps: 
+% % -----------------------------------------------------------------------
+% obj = load_image_set('hansen22');
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true); 
+% title('Pairwise deletion of zeros')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'complete_cases', true);
+% title('Complete cases')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'treat_zero_as_data', true);
+% title('Treat zeros as data')
+% 
+% % Use plot_correlation_matrix to create a different plot style
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', false); 
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target);
+% 
+% % Sort the matrix using clustering and re-plot
+% [R_sorted, perm_order] = canlab_sort_distance_matrix(R, 'correlation_matrix', true);
+% plot_correlation_matrix(R_sorted, 'input_is_r', true, 'names', obj.metadata_table.target(perm_order));
+% 
+% % Use auto-reordering within plot_correlation_matrix
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target, 'reorder_by_clustering');
+%
 % :Author:
 %   2025, Tor Wager. GPL v3.
 

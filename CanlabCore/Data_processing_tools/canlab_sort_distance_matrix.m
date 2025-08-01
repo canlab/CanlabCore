@@ -33,10 +33,33 @@ function [D_sorted, perm] = canlab_sort_distance_matrix(D, varargin)
 %     R = corr(randn(100, 20));
 %     [R_sorted, perm] = canlab_sort_distance_matrix(R, 'correlation_matrix', true);
 %
+% % Example using Hansen neurotransmitter maps: 
+% % -----------------------------------------------------------------------
+% obj = load_image_set('hansen22');
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true); 
+% title('Pairwise deletion of zeros')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'complete_cases', true);
+% title('Complete cases')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'treat_zero_as_data', true);
+% title('Treat zeros as data')
+% 
+% % Use plot_correlation_matrix to create a different plot style
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', false); 
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target);
+% 
+% % Sort the matrix using clustering and re-plot
+% [R_sorted, perm_order] = canlab_sort_distance_matrix(R, 'correlation_matrix', true);
+% plot_correlation_matrix(R_sorted, 'input_is_r', true, 'names', obj.metadata_table.target(perm_order));
+% 
+% % Use auto-reordering within plot_correlation_matrix
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target, 'reorder_by_clustering');
+%
 % :See also:
 %   squareform, linkage, optimalleaforder, corr
 %
-
+% By Bogdan Petre, additions by Tor Wager
 
 % --------------------------
 % Parse inputs
@@ -63,6 +86,13 @@ end
 % --------------------------
 % Convert to condensed vector form
 % --------------------------
+% sometimes small values are not exactly 0
+diagD = abs(diag(D));
+
+if any(diagD > eps) && all(diagD < 10000 * eps) % all very small but not exactly 0
+    D = D .* (1 - eye(size(D, 1)));  % Ok to zero them out
+end
+
 dVec = squareform(D);
 
 % --------------------------

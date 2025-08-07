@@ -3,7 +3,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 % - Similarity options: dot product, cosine similarity, and correlation
 % - Columns are often images, e.g., from fmri_data.dat for fmri_data objects
-% - weights are pattern weights from one or more 'signature' patterns (each pattern is a column)
+% - weights are pattern weights from one or more 'signature' patterns or binary masks (each pattern is a column)
 %
 % - Assumes dat and pattern_weights matrices have equal rows (voxels) and include valid voxels
 % - Removes empty column data column-wise (image-wise) in case some images have uneven voxel coverage
@@ -49,9 +49,18 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 %
 %   **treat_zero_as_data**
-%       In some certain situations, zero value within data.obj could be
-%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
-%       rather than missing value) or binary map.
+%       The default behavior is to calculate image similarity on complete cases pairwise. 
+%       Complete cases means a voxel has a valid value (non-zero, non-NaN) for both images being correlated. 
+%       Otherwise, values that are zero in one image and non-zero and another will be 
+%       part of the correlation and will have a strong influence on the correlation value.
+%       Zero is treated as a missing value by convention (as per SPM
+%       standards).
+%
+%       In some situations, e.g., when correlating binary masks (1/0 for both) or correlating 
+%       a binary mask with another image, the zero value within data.obj could be
+%       meaningful. Here data.obj is a thresholded map (0 means value under-threshold 
+%       rather than being a missing value) or binary map. In this case, you
+%       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
 % :Outputs:
 %   **similarity_output**
@@ -78,9 +87,11 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % ---------------------------------------------------
 % Pattern pattern_weights can have zeros, which may be valid values in voxels,
 % i.e., with binary masks
-% Data images with values of zero or NaN are considered out-of-mask, as they
-% are not valid values. That is, 0 is often treated as a missing data value in images,
-% with the exception of "signatures" and binary pattern masks.
+% By default, data images with values of zero or NaN are considered out-of-mask, as they
+% are not valid values. That is, 0 is typically treated as a missing data value in images
+% This can be changed by setting ['treat_zero_as_data', true].  
+% This function does not exlude 0 voxels from the pattern_mask input, where it is assumed 
+% that 0 is a meaninful value (for a neuromarker or binary mask). 
 % Thus, this function treats values of 0 in DATA images, not pattern masks,
 % as missing values, and excludes these voxels from both image and
 % mask when calculating similarity.
@@ -98,7 +109,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 % Dot product is affected by voxel size, coverage in image and mask, scale
 % in general.
 % Cosine similarity is affected by coverage in image
-% If we remove voxels from analysis that are not in image (NaN or zero) first,
+% If we remove voxels from analysis that are not in data image (NaN or zero) first,
 % then cosine similarity is unaffected by coverage, in the sense that the
 % upper bound is 1.
 % Correlation is affected by coverage in image and mean level in image. If
@@ -136,7 +147,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run cosine sim instead
 doignoremissing = false; % ignore warnings for missing voxels
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
-treat_zero_as_data=false; % Treat zero value as missing data.
+treat_zero_as_data = false; % Treat zero value as missing data.
 
 if any(strcmp(varargin, 'ignore_missing'))
     doignoremissing = true;
@@ -189,10 +200,14 @@ similarity_output = NaN .* zeros(k, npatt);
 % Missing/excluded values image-wise
 % ---------------------------------
 
-if treat_zero_as_data==true
+if treat_zero_as_data 
+
     badvals = isnan(dat);
+
 else
+
     badvals = dat == 0 | isnan(dat);  % Matrix. not used for binary overlap (SG).
+
 end
 
 
@@ -204,7 +219,7 @@ end
 
 % if ~docorr && ~docosine
 if strcmp(sim_metric,'dotproduct')
-    % dot product. No need to remove missing voxels because dotproduct is
+    % dot product. No need to remove missing (zero-valued) voxels because dotproduct is
     % the same either way.
     
     similarity_output = dotproduct(dat, pattern_weights);
@@ -216,9 +231,9 @@ else
         
         switch sim_metric
             case 'corr'
-                
                
                     similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
+
             case 'cosine'
                 
                 similarity_output(:, i) = cosine_similarity(dat, pattern_weights(:, i), badvals);
@@ -245,11 +260,13 @@ end % pattern sim calculation
 % ---------------------------------
 
 if any(strcmp(varargin,'weighted')) % if we want to weight data based on similarity to group mean
+
     mean_dat = mean(dat,2); %sample mean
     distances = squareform(pdist([dat,mean_dat]')); %use other measures?
     weights=1./distances(1:end-1,end);
     weights=weights-min(weights)+1e-12; %min0
     weights=weights./mean(weights); % scale so weights are positive with mean value one
+
 else %
     weights=ones(size(dat,2),1); %just use a weight of one
 end
@@ -272,9 +289,15 @@ if doprintwarnings && any(badvals(:)) && ~doignoremissing && ~strcmp(sim_metric,
         bad_in_mask = sum(bad_in_mask);  % how many bad values are in mask, across images
         
         if any(bad_in_mask)
-            fprintf('Warning: Some images have zero values in some of the %3.0f voxels in weight mask. These will be excluded from similarity analysis image-wise.\n', sum(inmask));
-            disp('Number of zero or NaN values within weight mask, by input image:');
-            
+            if treat_zero_as_data
+                fprintf('Warning: Some data images have zero values in some of the %3.0f valid voxels in weight mask. \nThese are treated as data, affecting similarity values (dot product or cosine sim effectively excludes these voxels but correlation metric is influenced)\n', sum(inmask));
+                disp('Number of zero or NaN values within weight mask, by input image:');
+
+            else % zeros are excluded
+                fprintf('Warning: Some data images have zero values in some of the %3.0f valid voxels in weight mask. \nThese voxels are excluded from similarity analysis image-wise.\n', sum(inmask));
+                disp('Number of zero or NaN values within weight mask, by input image:');
+            end
+
             for j = 1:length(bad_in_mask)
                 fprintf('%3.0f ', bad_in_mask(j));
             end

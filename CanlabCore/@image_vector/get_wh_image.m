@@ -32,6 +32,7 @@ if min(wh) < 0 || max(wh) > size(dat.dat, 2)
 end
 
 out = dat;
+out.images_per_session = []; % eliminate any values here, as we're selecting images
 
 % for each field, if the field is of the same size as dat, select the 'wh'
 % column

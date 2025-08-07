@@ -1,5 +1,5 @@
 function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
-% Associations between images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
+% Associations between data images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
 % - Similarity metric is point-biserial correlations or cosine-similarity
 %
 % Usage:
@@ -149,9 +149,18 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %
 %
 %   **treat_zero_as_data**
-%       In some certain situations, zero value within data.obj could be
-%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
-%       rather than missing value) or binary map.
+%       The default behavior is to calculate image similarity on complete cases pairwise. 
+%       Complete cases means a voxel has a valid value (non-zero, non-NaN) for both images being correlated. 
+%       Otherwise, values that are zero in one image and non-zero and another will be 
+%       part of the correlation and will have a strong influence on the correlation value.
+%       Zero is treated as a missing value by convention (as per SPM
+%       standards).
+%
+%       In some situations, e.g., when correlating binary masks (1/0 for both) or correlating 
+%       a binary mask with another image, the zero value within data.obj could be
+%       meaningful. Here data.obj is a thresholded map (0 means value under-threshold 
+%       rather than being a missing value) or binary map. In this case, you
+%       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
 % :Outputs:
 %
@@ -286,7 +295,7 @@ sim_metric = 'corr'; % default: correlation
 % doCosine = 0; %do cosine similarity
 plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
-treat_zero_as_data=0; % Treat zero value as missing data.
+treat_zero_as_data = 0; % Treat zero value as missing data.
 Error_STD=0;
 
 
@@ -348,10 +357,10 @@ for i = 1:length(varargin)
                 plotstyle = varargin{i + 1}; varargin{i + 1} = [];
                 
             case 'treat_zero_as_data'   
-                treat_zero_as_data=1;
+                treat_zero_as_data = 1;
 
             case 'Error_STD'
-                Error_STD=1;
+                Error_STD = 1;
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -414,6 +423,7 @@ end
 
 % Deal with space and empty voxels so they line up
 % ------------------------------------------------------------------------
+% mask contains the pattern image (signature or binary mask) to apply.
 
 mask = replace_empty(mask); % add zeros back in
 
@@ -473,7 +483,7 @@ switch sim_metric
             % r(im, :) = corr_matrix(double(mask.dat(:,im)), double(obj.dat));
             
             if treat_zero_as_data==1
-                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data');
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data'); % mask contains the pattern image (signature or binary mask) to apply.
             else  
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');
             end

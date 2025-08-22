@@ -18,7 +18,7 @@ function out = regress(obj, varargin)
 % Key pointers - Input options:
 % - There is an option for robust regression, specified using the 'robust' flag
 % - There is an option for autoregressive (AR) time series modeling, specified using the 'AR' keyword
-% - There is an option for voxel-varying covariates, e.g., post-treatment controlling for pre-treatment in same voxel. 'robust' mode only - not in OLS  
+% - There is an option for voxel-varying covariates, e.g., post-treatment controlling for pre-treatment in same voxel. 'robust' mode only - not in OLS
 % - For first-level time series models (only), the grandmeanscale option is recommended to increase homogeneity in scale across participants
 % - The regress( ) method does not use covariates field of fmri_data(). You must include covariates manually in obj.X.
 %
@@ -173,7 +173,7 @@ function out = regress(obj, varargin)
 % of no interest. In this case we will extract and add mean CSF as a
 % covariate. We find that mean gray matter, white matter, and CSF are all
 % highly correlated. But there is likely no real signal in CSF, so much of
-% what it captures likely reflects image-wide confounds and noise. 
+% what it captures likely reflects image-wide confounds and noise.
 %
 % gwcsf = obj.extract_gray_white_csf;
 % obj.X(:, 2) = gwcsf(:, 3);  % add mean CSF as a covariate
@@ -528,6 +528,13 @@ if do_resid && add_voxelwise_intercept
 
 end
 
+if do_resid && add_voxelwise_intercept
+
+    wh_int = intercept(X, 'which'); % final value of which column is intercept
+    if isempty(wh_int), error('no intercept in X. This is incompatible with add_voxelwise_intercept option.'), end
+
+end
+
 % Predictor centering
 % ---------------------------------------------------------------------
 
@@ -651,7 +658,7 @@ obj.dat = double(obj.dat);
 if grandmeanscale
 
     % Scale grand mean to 100; approximates what SPM and other packages do. Assumes mask and overall brain size are consistent across replicates (e.g., participants, in a first-level analysis
-    % Scale run-wise, using obj.images_per_session to rescale each run to a grand mean of 100 
+    % Scale run-wise, using obj.images_per_session to rescale each run to a grand mean of 100
     obj = obj.rescale('session_grand_mean_scaling_spm_style');
 
     % obj.dat = obj.dat .* 100 / nanmean(obj.dat(:));
@@ -1230,6 +1237,3 @@ end
     end
 
 end % Main Function
-
-
-

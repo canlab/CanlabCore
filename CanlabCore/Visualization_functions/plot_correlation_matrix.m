@@ -63,9 +63,12 @@ function OUT = plot_correlation_matrix(X, varargin)
 %   'circles'                                  docircles = true; doimage = false;    
 %   'notext'                                   dotext = false;
 %   'fdr' 'FDR'                                dofdr = true; 
-%   'nocalc' 'input_rmatrix'                   docalc = false; 
+%   'input_is_r' 'input_rmatrix'                   docalc = false; 
 %                
 %   'names', 'labels'   var_names = varargin{i+1}; varargin{i+1} = [];
+%
+%   **'reorder_by_clustering'**                 Reorder using clustering dendrogram (separate function)
+%
 %   Partitions: Note: partition labels MUST be sorted (ascending sequential) for this to work right.
 %   'partitions'                                followed by k-length integer vector of partitions to plot with color bars
 %   'partitioncolors'                           followed by cell array of strings for colors
@@ -100,11 +103,13 @@ function OUT = plot_correlation_matrix(X, varargin)
 % :Examples:
 % ::
 % % Generate some simulated data (N = 50 cases) and plot correlations: 
+% % -----------------------------------------------------------------------
 % S = toeplitz([1 .6 .3 .1 0 0]);
 % X = mvnrnd([0 0 0 0 0 0], S, 50);
 % var_names = {'A' 'B' 'C' 'D' 'E' 'F'};
 % OUT = plot_correlation_matrix(X, 'var_names', var_names);
 %
+% % -----------------------------------------------------------------------
 % % Also, e.g.:
 %   OUT = plot_correlation_matrix(X, 'var_names', var_names, 'colorlimit', [-.5 .5]);
 %
@@ -114,6 +119,29 @@ function OUT = plot_correlation_matrix(X, varargin)
 % % Can do full or partial correlations, Spearman or Pearson's
 % % FDR correction across pairwise tests if desired.
 % OUT = plot_correlation_matrix(X, 'doimage', true, 'docircles', false, 'dospearman', true, 'dopartial', true, 'dofdr', true);
+%
+% % Example using Hansen neurotransmitter maps: 
+% % -----------------------------------------------------------------------
+% obj = load_image_set('hansen22');
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true); 
+% title('Pairwise deletion of zeros')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'complete_cases', true);
+% title('Complete cases')
+% 
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', true, 'treat_zero_as_data', true);
+% title('Treat zeros as data')
+% 
+% % Use plot_correlation_matrix to create a different plot style
+% [R, N] = canlab_compute_similarity_matrix(obj.dat, 'doplot', false); 
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target);
+% 
+% % Sort the matrix using clustering and re-plot
+% [R_sorted, perm_order] = canlab_sort_distance_matrix(R, 'correlation_matrix', true);
+% plot_correlation_matrix(R_sorted, 'input_is_r', true, 'names', obj.metadata_table.target(perm_order));
+% 
+% % Use auto-reordering within plot_correlation_matrix
+% plot_correlation_matrix(R, 'input_is_r', true, 'names', obj.metadata_table.target, 'reorder_by_clustering');
 %
 % :References:
 %   None - basic stats functions.
@@ -139,6 +167,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 % -------------------------------------------------------------------------
 
 skip_calculation = false;  % not a valid input option. Used if structure with .r .sig .p entered instead of X
+input_is_r = false;
 
 p_thr = .05;
 dofdr = false;
@@ -156,6 +185,7 @@ partitions = [];
 partitioncolors = {};
 partitionlabels = {};
 doreorder = false;      % Reorder columns to sort by partition labels; udpated below
+reorder_by_clustering = false;
 
 % names
 var_names = {};
@@ -199,7 +229,7 @@ end
 
 allowable_inputs = {'var_names' 'p_thr' 'dospearman' 'dopartial' 'dofdr' 'dofigure' 'doimage' 'docircles' 'dotext' 'colorlimit' 'text_x_offset' 'text_y_offset' 'text_fsize' 'text_nonsig_color' 'text_sig_color' 'partitions' 'partitioncolors' 'partitionlabels'};
 
-special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels', 'regions'};
+special_commands = {'spearman', 'Spearman', 'rank', 'dorank' 'partial', 'Partial', 'partialcorr' 'image' 'circles' 'notext' 'fdr' 'FDR' 'nocalc' 'input_rmatrix' 'nofigure' 'names', 'labels', 'regions', 'input_is_r', 'input_rmatrix', 'reorder_by_clustering'};
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -225,14 +255,17 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
 
+            % special commands - do something other than assign the next
+            % input to the var with the same name
+            case {'input_is_r', 'input_rmatrix'},            skip_calculation = true; input_is_r = true;
             case {'spearman', 'Spearman', 'rank', 'dorank'}, dospearman = true; 
             case {'partial', 'Partial', 'partialcorr'},      dopartial = true; 
             case {'image'},                                  doimage = true; docircles = false; 
             case {'circles'},                                docircles = true; doimage = false;    
             case {'notext'},                                 dotext = false;
-            case {'fdr' 'FDR'},                              dofdr = true; 
-            % case {'nocalc' 'input_rmatrix'},                 docalc = false; 
+            case {'fdr' 'FDR'},                              dofdr = true;  
             case {'nofigure'},                               dofigure = false; hold on;
+            case 'reorder_by_clustering',                    reorder_by_clustering = true;
                 
             case {'names', 'labels'}, var_names = varargin{i+1}; varargin{i+1} = [];
                 
@@ -246,6 +279,8 @@ for i = 1:length(varargin)
 end
 
 % Handle reordering flag
+% This function can reorder by partitions, or automatically based on
+% clustering/dendrogram. The latter is done later.
 if ~isempty(partitions)
     
     if iscell(partitions)  % cell array of strings
@@ -267,8 +302,19 @@ end
     
     
 % Process variables that depend on values optional inputs: 
+if input_is_r
+    % Fill in placeholder p and sig
+    r = X;
+    p = ones(size(X));
+    sig = zeros(size(X));
+    k = size(r, 2);
 
-if isstruct(X)
+    if doreorder
+        r = r(sort_order, sort_order);
+    end
+
+
+elseif isstruct(X)
     % X can be a structure compatible with output of ttest3d. 
     % It must have the fields 'r', 'p', and 'sig', each with a k x k matrix
     % r = correlation values
@@ -406,6 +452,25 @@ end
 OUT.r = r;
 OUT.p = p;
 OUT.sig = sig;
+
+% Reorder automatically based on clustering
+if reorder_by_clustering
+
+    [r, perm_order] = canlab_sort_distance_matrix(r, 'correlation_matrix', true);
+
+    OUT.r = OUT.r(perm_order, perm_order);
+    OUT.p = OUT.p(perm_order, perm_order);
+    OUT.sig = OUT.sig(perm_order, perm_order);
+
+    p = p(perm_order, perm_order);
+    sig = sig(perm_order, perm_order);
+    var_names = var_names(perm_order);
+
+    OUT.reorder_note = 'Note: Variables were re-ordered based on clustering dendrogram using canlab_sort_distance_matrix. Reordered names saved in .var_names field.';
+    disp(OUT.reorder_note);
+
+end
+
 
 if ~skip_calculation
     

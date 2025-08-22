@@ -1165,14 +1165,17 @@ end % function
 % PET TRACERS
 % ------------------------------------------------------------------------
 function [image_obj, networknames, imagenames] = load_hansen22
-datfilename = 'Hansen_2022_PET_tracer_maps_masked.mat';
+% datfilename = 'Hansen_2022_PET_tracer_maps_masked.mat';
+datfilename = 'Hansen_2022_PET_tracer_maps_masked_combined.mat';
+
 fullfilename = which(datfilename);    
 
 load(fullfilename)
-image_obj=obj_masked_zscored;
-imagenames=image_obj.image_names;
-imagenames=cellstr(imagenames);
-networknames=image_obj.metadata_table(:,1);
+% image_obj=obj_masked_zscored;
+image_obj = obj_masked_zscored_averaged;
+imagenames = image_obj.image_names;
+imagenames = cellstr(imagenames);
+networknames = image_obj.metadata_table(:, 1);
 
 networknames = networknames.target'; % format to cell for uniformity with other map sets
 

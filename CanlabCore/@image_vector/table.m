@@ -154,8 +154,11 @@ for i = 1:length(varargin)
 end
 
  
-
-cl = region(w); % Convert w to cl; MS bugfix 09172024
+if strcmp(class(w), 'atlas')
+    cl = atlas2region(w);
+else
+    cl = region(w); % Convert w to cl; MS bugfix 09172024
+end
 
 if dosubdivide
 

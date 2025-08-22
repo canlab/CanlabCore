@@ -41,6 +41,10 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %   **nolegend:**
 %        omit table legend
 %
+%   **min:**
+%        show the minimum data value. By default, this is the max (e.g.,
+%        max Z). Minimum will be useful for, e.g., when data is p values.
+%
 %   **noverbose**:
 %        don't diplay results
 %
@@ -110,6 +114,7 @@ dosortrows = true;          % sort rows by area
 dolegend = true;
 noverbose = false;
 publication = false;
+show_min = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -132,6 +137,8 @@ for i = 1:length(varargin)
             case 'noverbose', dolegend=false; noverbose = true;      % suppress displaying outputs, ZM: 09/03/2024
 
             case 'publication', dolegend=false; noverbose=true; publication = true;
+
+            case 'min', show_min = true;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -286,8 +293,12 @@ else
     XYZ = table(round(cat(1, cl.mm_center)), 'VariableNames', {'XYZ'});
     
     % Z = get_max_Z(cl);
-    Z = get_signed_max(cl, 'Z', 'maxZ');  % use function because may be empty, handle if so
-    
+    if show_min % show minimum value
+        Z = get_min(cl, 'Z', 'minVal');  % use function because may be empty, handle if so
+    else % default behavior: max Z / signed max
+        Z = get_signed_max(cl, 'Z', 'minP');  % use function because may be empty, handle if so
+    end
+
     results_table = [Region Volume XYZ Z Atlas_coverage];
     results_table.region_index = (1:size(region_table, 1))';
     
@@ -350,12 +361,16 @@ end
 table_legend_text = strrep(table_legend_text, 'Modal_label', 'Region');
 table_legend_text = strrep(table_legend_text, 'Region_Vol_mm', 'Volume');
 
-if isempty(cl(1).Z_descrip)
-    myzdescrip = 'MaxZ: Unknown quantity; label in .Z_descrip field in region object.';
-    
+if show_min
+    myzdescrip = 'MinVal: Minimum value over cl.Z';
 else
-    myzdescrip = ['MaxZ: Signed max over ' cl(1).Z_descrip];
-
+    if isempty(cl(1).Z_descrip)
+        myzdescrip = 'MaxZ: Unknown quantity; label in .Z_descrip field in region object.';
+        
+    else
+        myzdescrip = ['MaxZ: Signed max over ' cl(1).Z_descrip];
+    
+    end
 end
 
 table_legend_text = [table_legend_text(1:2) myzdescrip table_legend_text(3:end)];
@@ -421,6 +436,26 @@ else
 end
 
 end % function
+
+function val_table = get_min(cl, myfield, tablevarname)
+% Returns a table with one column named tablevarname,
+% containing the minimum of cl(i).(myfield) for each cluster.
+
+myv = NaN(numel(cl), 1);
+
+for i = 1:numel(cl)
+    if ~isempty(cl(i).(myfield))
+        vals = double(cl(i).(myfield));
+        myv(i) = min(vals);
+    end
+end
+
+if all(isnan(myv))
+    val_table = [];
+else
+    val_table = table(myv, 'VariableNames', {tablevarname});
+end
+end
 
 function val = signedmax(vals)
 

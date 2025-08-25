@@ -62,6 +62,8 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %       rather than being a missing value) or binary map. In this case, you
 %       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
+%   **exclude_zero_mask_values**
+%
 % :Outputs:
 %   **similarity_output**
 %       Matrix of similarity measures.
@@ -138,7 +140,6 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   than missing data
 %
 
-
 % ---------------------------------
 % Defaults and optional inputs
 % ---------------------------------
@@ -148,6 +149,7 @@ sim_metric = 'dotproduct'; % Default: Correlation. SG. docosine = false;   % run
 doignoremissing = false; % ignore warnings for missing voxels
 doprintwarnings = true;  % print warnings regarding missing voxels, etc.
 treat_zero_as_data = false; % Treat zero value as missing data.
+exclude_zero_mask_values = false;
 
 if any(strcmp(varargin, 'ignore_missing'))
     doignoremissing = true;
@@ -181,6 +183,10 @@ if any(strcmp(varargin, 'treat_zero_as_data'))
     treat_zero_as_data = true;
 end
 
+if any(strcmp(varargin, 'exclude_zero_mask_values'))
+    exclude_zero_mask_values = true;
+end
+
 % if docosine && docorr, error('Choose either cosine_similarity or correlation, or no optional inputs for dot product'); end
 
 % ---------------------------------
@@ -210,7 +216,15 @@ else
 
 end
 
+if exclude_zero_mask_values
+    
+    badvals_mask = pattern_weights == 0 | isnan(pattern_weights);
+    
+else
 
+    badvals_mask = isnan(pattern_weights);
+
+end
 
 
 % ---------------------------------
@@ -232,7 +246,7 @@ else
         switch sim_metric
             case 'corr'
                
-                    similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
+                similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals, badvals_mask);
 
             case 'cosine'
                 
@@ -377,12 +391,12 @@ end
 end % function
 
 
-function r = image_correlation(dat, pattern_weights, badvals, varargin)
+function r = image_correlation(dat, pattern_weights, badvals, badvals_mask)
 
 
 for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions in each image
     
-    inmask = ~badvals(:, i);
+    inmask = ~badvals(:, i) & ~badvals_mask(:, i);
             
     r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
         

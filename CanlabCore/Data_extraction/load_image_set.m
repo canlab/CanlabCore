@@ -96,7 +96,7 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 %
-%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 36 maps with
+%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 30 maps with
 %        different combinations of tracers and neurotransmitter receptors
 %
 %        'emometa' 'emotionmeta' '2015emotionmeta' : 2015 Wager/Kang et al.

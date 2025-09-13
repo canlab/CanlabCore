@@ -16,7 +16,7 @@ function [region_obj, results_table, varargout] = table(w, varargin)
 % :Usage:
 % ::
 %
-%    [poscl, negcl] = table(cl, [optional inputs])
+%    [region_obj, results_table] = table(cl, [optional inputs])
 %
 % - By default, region.table() separates clusters into subregions with positive
 %   and negative values. Thus, the number of rows may not match the original number of regions. 
@@ -29,6 +29,13 @@ function [region_obj, results_table, varargout] = table(w, varargin)
 %
 %   **atlas_obj**
 %       Any atlas-class object, e.g., loaded by load_atlas().
+%       This will be used to make the table.
+%
+%   **subdivide**
+%       This will subdivide the clusters by anatomical atlas regions, so
+%       that each row of the table is a unique labeled region. This can
+%       result in very long tables of all the regions covered even
+%       partially by an activated area in an input object.
 %
 %   **k:**
 %        Print only regions with k or more contiguous voxels
@@ -94,12 +101,19 @@ function [region_obj, results_table, varargout] = table(w, varargin)
 %   table(r);                                       % Print a table of results using new region names
 %
 %   [rpos, rneg] = table(r);                        % Print and table and return region object separated into regions with positive vs. negative statistic values (from .Z field)
+%
+%   Use the CANlab 2024 atlas, and subdivide the regions based on it
+%   atl = load_atlas('canlab2024');
+%   [region_obj, results_table] = table(obj, 'subdivide', 'atlas_obj', atl);
 
 % ..
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
 % ..
 %    July 2018:  Autolabel update and "new 2018 version", Tor Wager. Also added legend text.
+%    Jan 2025: Tor Wager - added atlas input and subdivide functionality.
+%    Work in progress.
+
 
 n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap
@@ -111,6 +125,7 @@ forcenames = false;     % force naming of cl by removing existing names in .shor
 dolegacy = false;
 dosortrows = true;          % sort rows by area
 dolegend = true;
+dosubdivide = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -128,18 +143,46 @@ for i = 1:length(varargin)
                 
             case 'nolegend', dolegend = false;
                 
+            case 'atlas_obj', atl = varargin{i + 1}; 
+
+            case 'subdivide'
+                dosubdivide = true;
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
 end
 
  
-[poscl, negcl, results_table] = table(cl, varargin)
+if strcmp(class(w), 'atlas')
+    cl = atlas2region(w);
+else
+    cl = region(w); % Convert w to cl; MS bugfix 09172024
+end
+
+if dosubdivide
+
+    if ~exist('atl', 'var')
+        atl = load_atlas('canlab2024');
+    end
+
+    % label of all regions covered
+    [w_atlas, w_region_obj] = subdivide_by_atlas(w, atl);
+
+    % Make a table of labeled regions with significant voxels in the image
+
+    [region_obj, results_table] = autolabel_regions_using_atlas(w_region_obj, atl);
+
+    % for testing
+    % montage(region_obj(10:20), 'regioncenters');
+
+else
+
+    [poscl, negcl, results_table] = table(cl, varargin{:});
+    region_obj = [poscl negcl];
+
+end
 
 
-[w_atlas, w_region_obj] = subdivide_by_atlas(w, atl);
+end % function
 
-% Make a table of labeled regions with significant voxels in the weight map
-
-[region_obj, region_table] = autolabel_regions_using_atlas(w_region_obj, atl);
-region_table = region_table(:, 1:3);

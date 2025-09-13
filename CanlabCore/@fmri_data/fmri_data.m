@@ -312,7 +312,7 @@ classdef fmri_data < image_vector
     properties
         % also inherits the properties of image_vector.
         
-        source_notes = 'Source notes...';
+%         source_notes = 'Source notes...';
         
         X % legacy; temporary, so we can load old objects
         
@@ -335,6 +335,18 @@ classdef fmri_data < image_vector
         
         metadata_table = table(); % a table for storing image-level metadata. Numbers of rows should be the number of images in .dat
         
+        % Define a structure "image_metadata" with default values for the fmri_data object.
+        image_metadata = struct( ...
+            'is_timeseries',           NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_single_trial_series',  NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_first_level_maps',     NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_MNI_space',            NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'is_HP_filtered',          NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'covariates_removed',      NaN, ...  % Logical flag: true, false, or NaN (unknown)
+            'TR_in_sec',               NaN, ...  % Numeric value (real number in seconds) or NaN if not set
+            'HP_filter_cutoff_sec',    NaN);     % Numeric value (real number in seconds) or NaN if not set
+
+
     end % properties
     
     methods
@@ -373,7 +385,7 @@ classdef fmri_data < image_vector
             % DEFAULT INPUTS
             % -----------------------------------
             
-            verbose = 1;
+            verbose = true;
             verbosestr = 'verbose';
             sample2mask = 0;
             
@@ -385,7 +397,7 @@ classdef fmri_data < image_vector
                     switch varargin{i}
                         
                         case 'verbose', varargin{i} = []; % nothing else needed
-                        case 'noverbose', verbose = 0; verbosestr = 'noverbose'; varargin{i} = [];
+                        case 'noverbose', verbose = false; verbosestr = 'noverbose'; varargin{i} = [];
                         case 'sample2mask', sample2mask = 1; varargin{i} = [];
                             
                         case 'native_image_space' % do nothing, for convenience in calling scripts
@@ -407,7 +419,7 @@ classdef fmri_data < image_vector
                     return
                 end
                 
-                verbose = 0; 
+                verbose = false; 
                 verbosestr = 'noverbose';
                 
             elseif isempty(image_names)
@@ -438,6 +450,17 @@ classdef fmri_data < image_vector
                         obj.(N{i}) = obj2.(N{i});
                     end
                 end
+
+                % convert dat to single if needed
+                % this is esp relevant for converstion of atlas to fmri_data
+                % because atlas has integer data type by default. this is
+                % to prevent a range of issues that can occur when using
+                % the fmri_data object later on and dat field is an
+                % integer that cannot handle real numbers.
+                if ~isa(obj.dat, "single")
+                    warning('Converting dat field from %s to single format', class(obj.dat))
+                    obj.dat = single(obj.dat);
+                end
                 
                 obj.mask.volInfo = obj2.volInfo;
                 
@@ -447,9 +470,9 @@ classdef fmri_data < image_vector
                 
             else
                 % It's a file. Unzip if needed and check that image_names exist
-                
+
                 % Handle .gz by unzipping if needed
-                [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names);
+                [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names, 'verbose', false);
                 
             end
             
@@ -508,19 +531,57 @@ classdef fmri_data < image_vector
                 % Read data in mask space; map images to mask
                 % ------------------------------------------------
                 
+                % Get wh_image files and images_per_session
+                % Edit 5/16/2025 by Tor to make compatible with non-sample2mask option
+                % Get unique file names in the order of appearance
+                n_unique_files = size(image_names, 1);
+                if n_unique_files > 1
+                    uniqueFileNames = unique(image_names, 'stable');
+                else
+                    uniqueFileNames = image_names;
+                end
+
+                logicalMatrix = cell(1, n_unique_files);
+
                 if verbose, fprintf('Expanding image filenames if necessary\n'); end
                 
                 for i = 1:size(image_names, 1)
                     
                     iinames{i} = expand_4d_filenames(image_names(i, :));
+
+                    images_per_session(i) = size(iinames{i}, 1);
+                    
+                    logicalMatrix{i} = ones(images_per_session(i), 1);
+
                 end
                 iinames = char(iinames{:});
+
+                % define structure for metadata
+                image_info_struct.image_names = image_names;
+                image_info_struct.fullpath = iinames;
+                image_info_struct.images_per_session = images_per_session;
+
                 imgdat = zeros(length(maskobj.volInfo.wh_inmask), size(iinames, 1), 'single');
                 
                 if isempty(iinames)
                     disp('Images do not exist!'); disp(image_names); error('Exiting');
                 end
                 
+                % Get wh_image files and images_per_session
+                % Edit 5/16/2025 by Tor to make compatible with non-sample2mask option
+
+                % Create a logical matrix: each row corresponds to an element in fullPathsCell,
+                % and each column corresponds to one of the unique file names.
+                % logicalMatrix = false(size(iinames, 1), n_unique_files);
+                % for j = 1:size(uniqueFileNames, 1)
+                %     logicalMatrix(:, j) = strcmp(image_names, uniqueFileNames(j, :));
+                % end
+                logicalMatrix = blkdiag(logicalMatrix{:});
+
+                image_info_struct.wh_image_files = logicalMatrix;
+                % image_info_struct.images_per_session = sum(logicalMatrix);
+
+
                 % Now extract the actual data from the mask
                 if verbose
                     fprintf('Sampling %3.0f images to mask space: %04d', size(iinames, 1), 0)
@@ -554,12 +615,12 @@ classdef fmri_data < image_vector
                 % Now extract the actual data from the mask
                 switch spm('Ver')
                     
-                    case {'SPM12','SPM8', 'SPM5'}
-                        imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
+                    case {'SPM25' 'SPM12','SPM8', 'SPM5'}
+                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
                         
                     case {'SPM2', 'SPM99'}
                         % legacy, for old SPM
-                        imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr);
+                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr);
                         
                     otherwise
                         error('Unknown version of SPM! Update code, check path, etc.');
@@ -569,10 +630,12 @@ classdef fmri_data < image_vector
                 
             end % read data, depending on mask sampling
             
+
             % re-zip images if they were originally zipped
             % add .gz back to file names.
             if any(was_gzipped)
                 
+                if verbose, disp('Re-zipping image files.'), end
                 image_names = re_zip_images(image_names, was_gzipped);
                 
             end
@@ -581,7 +644,10 @@ classdef fmri_data < image_vector
             obj = create(obj, 'mask', maskobj, verbosestr);
             
             % append data
-            obj = create(obj, 'dat', imgdat, 'image_names', image_names, verbosestr);
+            obj = create(obj, 'dat', imgdat, 'image_names', image_info_struct.image_names, ...
+                'fullpath', image_info_struct.fullpath, 'images_per_session', image_info_struct.images_per_session, verbosestr);
+            
+            % clear to save memory space
             clear imgdat
             
             % append description info
@@ -593,6 +659,23 @@ classdef fmri_data < image_vector
             
             obj.volInfo = maskobj.volInfo;
             
+            % Add metadata table info
+            if isprop(obj, 'metadata_table') && ~isempty(obj.images_per_session)  && exist('image_info_struct', 'var')
+
+                [~, imageNumber] = find(image_info_struct.wh_image_files);
+                obj.metadata_table = addvars(obj.metadata_table, imageNumber, 'Before', 1, 'NewVariableNames', 'imageNumber');
+
+                nimgs = size(image_info_struct.wh_image_files, 2);
+                volNumber = cell(1, nimgs);
+                for i = 1:nimgs
+                    volNumber{i} = [1:obj.images_per_session(i)]';
+                end
+                volNumber = cat(1, volNumber{:});
+
+                obj.metadata_table = addvars(obj.metadata_table, volNumber, 'After', 1, 'NewVariableNames', 'volumeNumber');
+
+            end
+
             obj.history(end+1) = {sprintf('Sampled to space of %s', maskobj.space_defining_image_name)};
             obj.history(end+1) = {['Masked with ' mask_image_name]};
             
@@ -669,18 +752,30 @@ image_names_out = cellstr(image_names);
 for i = 1:size(image_names, 1)
     
     if was_gzipped(i)
+
+        % modification 9/24 by jcf2:
+        % We expect to have both original .nii.gz and a .nii created by unzip at
+        % this point (note that MATLAB unzip does not delete original .gz), so 
+        % we expect *not* to have to rezip the .nii, as was the case when using
+        % a 'system('unzip ...')' call. Leaving that rezip option in case of a future 
+        % switch, but note 'system('unzip --keep' ...') could also be used to avoid. 
         
-        % Use system to remove unzipped version after zipping.
-        % Will wait for input, and not overwrite, if images exist
-        %         [status, result] = system(['gzip ' image_names(i, :)]);
+        if exist([deblank(image_names_out{i}) '.gz'], 'file')
         
-        try
-            gzip(deblank(image_names(i, :)));
+            % keep original .nii.gz, delete created .nii
             delete(deblank(image_names(i, :)))
-            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];
-            
-        catch
-            warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            image_names_out{i} = [deblank(image_names_out{i}) '.gz'];    
+
+        else
+        
+            % can't find .nii.gz (?!) so need to recreate; still need to delete .nii    
+            try
+                gzip(deblank(image_names(i, :)));
+                delete(deblank(image_names(i, :)))
+                image_names_out{i} = [deblank(image_names_out{i}) '.gz'];    
+            catch
+                warning('Error writing .gz images. Check permissions (or maybe using Git Annex?');
+            end    
             
         end
     end

@@ -1,4 +1,4 @@
-function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Runc,T,method,mode)
+function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Runc,T,method,mode, varargin)
 % HRF estimation on fmri_data class object
 %
 % HRF estimation function for a single voxel;
@@ -9,7 +9,7 @@ function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Run
 % :Inputs:
 %
 %   **obj**
-%        fMRI object 
+%        fMRI object or cell-array of fMRI-objects
 %
 %   **TR**
 %        time resolution
@@ -98,12 +98,83 @@ function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Run
 %    Created by Martin Lindquist on 04/11/14
 % ..
 
+% Added varargin to pass in a custom design matrix. - Michael Sun, Ph.D.
+% 02/09/2024
 
 fprintf('HRF estimation\n')
 
+if iscell(obj)
+
+    for i = numel(obj)
+        
+        
+        [params_obj{i}, hrf_obj{i}, params_obj_dat{i}, hrf_obj_dat{i}] = hrf_fit(obj{i},TR,Runc,T,method,mode, varargin);
+
+
+    end
+
+end
+
+
+
+
+
+% SPM=[];
+if ~isempty(varargin)
+    fprintf('Using passed in design matrix\n')
+    % SPM = varargin{1};
+    % 
+    % if ischar(SPM) || isstr(SPM)
+    %     load(SPM);
+    % end
+    % 
+    % scan_nums=numel(SPM.Sess);
+
+    % If you've got concatenated runs, you'll have to find a way to
+    % identify which run your object is located in your SPM design matrix.
+    % dat=spmify(obj, SPM, scan_num);
+    % obj.dat=dat;
+    DX=varargin{1};
+    % task_regressors=varargin{2}; % Identify the columns of your task-regressors in DX.
+
+end
+
 %fhan = @(tc) hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
 
-fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode);
+if ~isempty(varargin)
+    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, varargin{:});
+else
+    [~,~,~,~,info]=hrf_fit_one_voxel(obj.dat(1,:)',TR,Runc,T,method,mode);
+    fhan = @(tc) hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, info.DX, 'invertedDX', info.PX);
+end
+
+if isstruct(obj)
+    SPM=obj;
+    fnames=unique({SPM.xY.VY.fname})';
+
+    for i=1:numel(fnames)
+        
+        if contains(fnames{i}, '/') && ispc
+            % PC Path conversion from Unix
+            if strcmp(fnames{i}(1,1:2), '\\')
+                d{i}=fmri_data(strrep(fnames{i}, '/', '\'));
+            else
+                d{i}=fmri_data(['\',strrep(fnames{i}, '/', '\')]);
+            end
+
+        else
+            d{i}=fmri_data(fnames{i});
+        end
+    end
+
+
+    hrf_fit(obj)
+
+
+end
+
+
+
 
 narg_to_request = length(Runc) * 2;
 myoutargs = cell(1, narg_to_request);
@@ -155,11 +226,17 @@ params_obj = myoutargs(numstim+1 : end); % Estimated amplitude, height, and widt
 end
 
 
-function varargout = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode)
+function varargout = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, varargin)
 % parse outputs into separate row vectors (for matrix_eval_function)
 % outputs must be row vectors
 
-[h, fit, e, param] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
+if isempty(varargin)
+    [~, ~, ~, ~, info] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode);
+    [h, fit, e, param] = hrf_fit_one_voxel_meval(tc,TR,Runc,T,method,mode, info.DX, 'invertedDX', info.PX);
+else
+    % Use a passed-in custom design-matrix - Michael Sun, Ph.D. 02/13/2024
+    [h, fit, e, param] = hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin{:});
+end    
 
 varargout = {};
 for i = 1:size(h, 2)
@@ -169,6 +246,7 @@ end
 for i = 1:size(param, 2) % 
     varargout{end+1} = param(:, i)';
 end
+
 
 end
 

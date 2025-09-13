@@ -23,6 +23,7 @@
 % full model. Different results may be obtained with hyperparameter
 % optimization or consensus PCA enabled.
 %
+%
 % Input ::
 %
 %   X           - n x p data matrix
@@ -85,6 +86,12 @@
 %   pc_w        - within eigenvectors
 %
 %   sc_w        - scores on within eigenvectors
+%
+%
+% Usage notes: The within and between effects are orthogonal by design.
+% Additionally, the between effects should show zero response to within
+% group variance in the training data, but the between model may show
+% responses to both within and between group variance.
 %
 %
 % Version History ::

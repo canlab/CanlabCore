@@ -36,6 +36,7 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %        mahalanobis distance (see above) across global mean for slices and
 %        spatial STD for slices, as in scn_session_spike_id.
 %        Outliers at 3 SD based on timeseries added to obj.covariates.
+%        SEE ALSO: outliers(obj) method
 %
 %   **outliers_rmssd:**
 %        Identify outlier time points for each session based on
@@ -105,7 +106,7 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %    DATA_CAT.images_per_session = sz;
 %    DATA_CAT.removed_images = 0;
 %
-%    DATA_CAT = preprocess(DATA_CAT, 'remove_csf');
+%    DATA_CAT = preprocess(DATA_CAT, 'remove_white_csf');
 %
 %    For a 2nd-level image dataset, Regress out and rescale by CSF values
 %    Plot before and after

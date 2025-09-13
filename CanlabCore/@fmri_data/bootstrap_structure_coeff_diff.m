@@ -9,7 +9,10 @@ function [r1_obj, r2_obj, rdiff_obj] = bootstrap_structure_coeff_diff(obj, patte
 % % Re-threshold maps and display again:
 % r1_obj = threshold(r1_obj, .05, 'unc');
 % rdiff_obj = threshold(rdiff_obj, .05, 'unc');
+%
+% THIS FUNCTION IS DEPRECATED - SEE STRUCTURE_COEFFICIENT_MAP()
 
+error('THIS FUNCTION IS DEPRECATED - SEE STRUCTURE_COEFFICIENT_MAP()')
 
 obj.dat = double(obj.dat);  % superstition
 

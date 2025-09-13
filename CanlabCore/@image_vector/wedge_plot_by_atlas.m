@@ -1,4 +1,4 @@
-function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(obj_to_plot, varargin)
+function [hh, output_values_by_region, labels, atlas_obj, colorband_colors, atlastab] = wedge_plot_by_atlas(obj_to_plot, varargin)
 % Plot a data object or 'signature' pattern divided into local regions
 % based on atlas objects.
 %
@@ -20,7 +20,7 @@ function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = we
 % uniformly negative (blue) or mixed (purple).
 %
 %
-% 'Data mode':
+% 'Data mode': (default)
 % Size of wedges: absolute value of the pattern mean within a parcel
 % Color of wedges: sign of the pattern mean within a parcel
 %
@@ -36,8 +36,10 @@ function [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = we
 %
 % colorband_colors: cell array of colors for each atlas
 %
-% Examples:
+% atlastab: Table object with regions and values
 %
+% Examples:
+% % ------------------------------------------------------------------------
 % Load sig
 % nps = load_image_set('npsplus');
 % nps = get_wh_image(nps, 1);
@@ -304,9 +306,72 @@ if any(strcmp(varargin,'montage'))
     end
 end
 
+%% Table
 
+atlastab = table((1:length(labels{1}))', labels{1}', output_values_by_region{1}', 'VariableNames', {'LabelIndx' 'Label' 'Value1'});
 
-%% todo add legends
+for i = 2:length(labels)
+
+%     atlastab.(sprintf('Label%3.0f', i)) = labels{2}';
+    atlastab.(sprintf('Value%3.0f', i)) = output_values_by_region{i}';
+
+end
+
+%% Surface (with legend)
+
+if any(strcmp(varargin,'surfaces'))
+
+    show_surfaces(labels, atlas_obj, colorband_colors)
+
+end
 
 
 end % function
+
+
+
+
+function show_surfaces(labels, atlas_obj, colorband_colors)
+
+
+create_figure('atlas_surface', 2, 2);
+hh = addbrain('hires right');
+set(hh, 'FaceAlpha', 1); lighting gouraud; lightFollowView; lightRestoreSingle;
+
+for i = 1:length(labels{1})
+    r = atlas2region(select_atlas_subset(atlas_obj{1}, i));
+    hh = cluster_surf(r, 'colors', colorband_colors{1}(i), 2, hh);
+    drawnow
+end
+
+% copy and rotate to lateral surface
+subplot(2, 2, 2)
+h2 = copyobj(hh, gca);
+view(90, 0);
+lightRestoreSingle;
+axis image; material dull;
+axis off
+
+subplot(2, 2, 3)
+hh = addbrain('hires left');
+set(hh, 'FaceAlpha', 1); lighting gouraud; lightFollowView; lightRestoreSingle;
+
+for i = 1:length(labels{1})
+    r = atlas2region(select_atlas_subset(atlas_obj{1}, i));
+    hh = cluster_surf(r, 'colors', colorband_colors{1}(i), 2, hh);
+    drawnow
+end
+
+% copy and rotate to lateral surface
+subplot(2, 2, 4)
+h2 = copyobj(hh, gca);
+view(270, 0);
+lightRestoreSingle;
+axis image; material dull;
+axis off
+
+han = makelegend(labels{1}, colorband_colors{1});
+set(gca, 'FontSize', 16)
+
+end
+

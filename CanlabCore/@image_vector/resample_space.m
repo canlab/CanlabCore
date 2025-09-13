@@ -42,6 +42,8 @@ function obj = resample_space(obj, sampleto, varargin)
 %   5/18/2021   Tor removed line: obj_out = replace_empty(obj_out); for
 %   statistic_image objects, as it was causing a voxel mismatch...incorrect
 %   removed_voxels due to partially built object
+%   10/28/2024   Zizhuang changed the default method to resample .sig field
+%   to nearest neighbor, and add related warnings
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -88,37 +90,43 @@ if ~isa(obj, 'atlas')
     % -----------------------------------------------------------------------
     
 else % if  isa(obj, 'atlas')
+    if ~isempty(obj.probability_maps)
+        n_prob_imgs = size(obj.probability_maps, 2);
     
-    n_prob_imgs = size(obj.probability_maps, 2);
-    
-    obj_out.probability_maps = [];
-    
-    % Use probability images if available
-    
-    for i = 1:n_prob_imgs
-        
         voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
-        
+        obj_out.probability_maps = [];
+    
         resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-        
         resampled_dat = resampled_dat(:);
         
+        % Use probability images if available
+        for i = 1:n_prob_imgs
+            
+            voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
+            
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            
+            resampled_dat = resampled_dat(:);
+            
+            obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
+            
+        end
+    
         obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
         
-    end
-    
-    % rebuild .dat from probability images - done below
-    %     if n_prob_imgs
-    %         obj_out = probability_maps_to_region_index(obj_out);
-    %     end
-    
-    % if no prob images, need to be careful about how to resample integer vector data
-    
-    if ~n_prob_imgs
+        % rebuild .dat from probability images - done below
+        %     if n_prob_imgs
+        %         obj_out = probability_maps_to_region_index(obj_out);
+        %     end
+        
+        % if no prob images, need to be careful about how to resample integer vector data
+        
+    else
         
         % integer_vec = zeros(Vto.n_inmask, 1);
         
-        n_index_vals = length(unique(obj.dat(obj.dat ~= 0)));
+        % n_index_vals = length(unique(obj.dat(obj.dat ~= 0))); % I don't think drawing from the data field is appropriate, since it can be set in a variety of ways such that different regions get the same value?
+        n_index_vals = length(obj.labels); % Instead, simply count the number of label entries. - MS
         
         % create a set of pseudo-"probabilities" for each region, resampled. Then
         % we can take the max prob, so that each voxel gets assigned to the best-matching parcel.
@@ -204,10 +212,43 @@ if isa(obj_out, 'statistic_image')
         % Can't interpolate logical vectors
         if ~isempty(obj.sig)
             
+            % ---------------------------------------------
+            % Added by Zizhuang Miao 10/28/2024
+            % the default linear interpolation during resampling
+            % could render .sig field in statistic images invalid,
+            % because it could make many voxels with an original .sig = 0 into
+            % having a .sig = 1 as long as it is close to a significant voxel
+            % generally we won't recommend resampling .sig field
+            % give a warning on that
+            warning(['Resampling voxel significance can cause false positives or negatives. ' ...
+                'Consider resampling data before running statistical analysis.']);
+            % ---------------------------------------------
+
             sig(obj.volInfo.wh_inmask, i) = double(obj.sig(:, i));
-            
             voldata = iimg_reconstruct_vols(sig(:, i), obj.volInfo);
-            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+
+            % -----------------------------------------
+            % Edited by Zizhuang Miao 10/28/2024
+            % nearest neighbor method can limit false positives,
+            % so use that as default unless otherwise specified
+            if nargin > 2
+                if strcmp(varargin{:}, 'linear')
+                    % if users specify using linear interpolation
+                    warning(['Linear interpolation will lead to many false positives. ' ...
+                        'Consider using the default nearest neighbor method.']);
+                elseif ~strcmp(varargin{:}, 'nearest')
+                    warning('Nearest neighbor is recommended.')
+                resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+                end
+            else
+                % default to nearest neighbor
+                warning(['Using nearest neighbor method to resample .sig field. ' ...
+                    'This can limit false positives, but can also cause a mismatch ' ...
+                    'between .sig and other fields like .p.'])
+                resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, 'nearest');
+            end
+            % ------------------------------------------
+
             resampled_dat = resampled_dat(:);
             resampled_dat(isnan(resampled_dat)) = 0;
             obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask));

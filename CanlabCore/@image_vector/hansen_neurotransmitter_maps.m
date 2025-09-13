@@ -30,7 +30,17 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %        image_similarity_plot)
 %   
 %    **doAverage:**
-%      Plot average correlation from the input images
+%        Plot average correlation from the input images, over all subjects
+%        or per group in case 'comparGroups' is specified
+%
+%    **compareGroups**
+%        Perform multiple one-way ANOVAs with group as a factor (one for
+%        each spatial basis); requires group as subsequent input
+%
+%    **group**
+%        Indicates group membership for each image as vector, categorical,
+%        or string array
+%
 % :Outputs:
 %
 %   **stats:**
@@ -113,6 +123,11 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %    Ke:Add function to input group of image_obj and plot mean correlation.
 %    e.g group of bootsrap sample. In this case, the error bar is displayed
 %    by standard deviation.
+%
+%    Lukas: Added group/ANOVA functionality from image_similarity_plot to
+%    this function, and debugged plotting for multiple groups in
+%    image_similarity_plot
+%
 % ..
 
 % -------------------------------------------------------------------------
@@ -135,7 +150,7 @@ doAverage=0;
 
 allowable_inputs = {'colors' 'doplot' 'similarity_metric' 'dofixrange'};
 
-keyword_inputs = {'noplot' 'nofigure' 'cosine_similarity','doAverage'};
+keyword_inputs = {'noplot' 'nofigure' 'cosine_similarity' 'doAverage' 'compareGroups'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -168,8 +183,13 @@ for i = 1:length(varargin)
 
             case 'cosine_similarity'
                 similarity_metric = 'cosine_similarity';
+                
             case 'doAverage'
                 doAverage=1;
+                
+            case 'compareGroups'
+                compareGroups = true;
+                group = varargin{i+1};
 
         end
     end
@@ -198,11 +218,39 @@ if doplot
 
     if doAverage==1
         if isempty(dofixrange)
-             [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
+            
+            if exist('compareGroups','var') % added by Lukas: if we want to analyze & plot multiple groups 
+                
+                groupValues = unique(group, 'stable');
+                if size(colors,1) ~= size(groupValues,1)
+                    colors = scn_standard_colors(length(groupValues))';
+                end
+                
+                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','compareGroups', group);
+           
+            else
+                
+                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'average','Error_STD');
+            end
+            
         else
+            
+            if exist('compareGroups','var') % % added by Lukas: if we want to analyze & plot multiple groups 
+                
+                groupValues = unique(group, 'stable');
+                if size(colors,1) ~= size(groupValues,1)
+                    colors = scn_standard_colors(length(groupValues))';
+                end
+                
+                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange, 'average', 'compareGroups', group);
 
-              [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
+            else
+                
+                [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(fmri_data_obj, 'mapset', ntmaps, similarity_metric, 'plotstyle', 'polar', 'networknames', ntmaps.metadata_table.target, 'colors', colors, 'nofigure', 'dofixrange', dofixrange,'average','Error_STD');
+            end
+            
         end
+        
     else
         if isempty(dofixrange)
     

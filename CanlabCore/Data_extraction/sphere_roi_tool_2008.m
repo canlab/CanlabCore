@@ -38,6 +38,19 @@
 % note: the snr in the sphere is mean signal for all voxels over time,
 % divided by the *spatial* sd, ignoring variance over time
 %
+% Example: Make spheres from two coordinates of interest and plot them:
+% x1 = [-4 -31 54];  % motor coordinates for inter-effector regions Gordon 2023 Nature
+% x2 = [-58 4 8];
+% 
+% overlay = canlab_get_underlay_image();
+% [cl, all_data] = sphere_roi_tool_2008(overlay, 5, [x1; x2], 'useexisting');
+% r = cluster2region(cl);
+% 
+% create_figure; p = addbrain('foursurfaces_hcp');
+% surface(r, 'surface_handles', p)
+% table(r)
+% 
+% 
 % Tor Wager, 2008; Update 2011 for automatic coords
 
 function [cl, all_data] = sphere_roi_tool_2008(imgs, varargin)

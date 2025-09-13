@@ -150,13 +150,13 @@ classdef atlas < image_vector
         atlas_name              % a short description or name of the atlas
         probability_maps        % voxels x regions matrix with probability values for each region
         labels
-        label_descriptions      % a regions x 1 cell array of long-form descriptions for labels
+        label_descriptions = {}      % a regions x 1 cell array of long-form descriptions for labels
         labels_2
         labels_3
         labels_4
         labels_5
         references
-        space_description = '';
+        space_description = ''; % set this to something compatable with the allowed_sourcespace from render_on_surface for automatic projections to supported surfaces when plotting.
         property_descriptions = { ...
             'atlas_name: a short description or name of the atlas' ...
             'probability_maps: voxels x regions matrix with probability values for each region' ...
@@ -385,7 +385,7 @@ classdef atlas < image_vector
                 % Now extract the actual data from the mask
                 switch spm('Ver')
                     
-                    case {'SPM12','SPM8', 'SPM5'}
+                    case {'SPM25', 'SPM12','SPM8', 'SPM5'}
                         imgdat = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
                         
                     case {'SPM2', 'SPM99'}

@@ -87,9 +87,36 @@ function o2 = montage(obj, varargin)
 % Tor Wager, Feb 2018.  
 % This function simply invokes the region montage method.
 
+
+cmap = [];
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'indexmap'
+                cmap = varargin{i+1};
+        end
+    end
+end
+
+if isempty(cmap)
+    nregions = num_regions(obj);
+    cmap = scn_standard_colors(nregions);
+    cmap = cell2mat(cmap');
+    varargin = [varargin, 'indexmap', cmap];
+end
+
+wh = find(strcmp(varargin,'sourcespace'));
+if ~isempty(wh)
+    sourcespace = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    sourcespace = obj.space_description;
+end
+
 r = atlas2region(obj);
 
-o2 = montage(r, varargin{:});
+o2 = montage(r, 'sourcespace', sourcespace, varargin{:});
 
 
 end % function

@@ -5,6 +5,8 @@ function write(obj, varargin)
 % obj.dat should contain data, with one COLUMN for each 3-D frame in the
 % 4-D image to be written.
 %
+% Also writes .metadata_table in .csv format
+%
 % :Usage:
 % ::
 %
@@ -36,6 +38,10 @@ function write(obj, varargin)
 %
 %   **overwrite:**
 %        Force overwrite of existing file. Use with caution!
+%
+%   **'nan':**
+%        By default, out-of-brain voxels are indicated by 0. With this
+%        flag, out-of-brain voxels are indicated by NaN.
 %
 % :Examples:
 % ::
@@ -131,15 +137,42 @@ if any(strcmp(varargin, 'mni'))
 end
 
 % Keep original dt option -- added Luk[ea]
+% Write NaNs instead of 0s -- added Yoni
 
-if any(strcmp(varargin,'keepdt'))
-    iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath, 'keepdt');
-else
-    iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath);
-end
+opts = {};
+if any(strcmp(varargin,'keepdt')), opts{end+1} = 'keepdt'; end
+if any(strcmp(varargin,'nan')), opts{end+1} = 'nan'; end
 
+iimg_reconstruct_vols(obj.dat, obj.volInfo, 'outname', obj.fullpath, opts{:});
 
 fprintf('Writing: \n%s\n', obj.fullpath);
+
+
+
+
+% Write metadata if we have it
+% -------------------------------------------------------------------------
+if isprop(obj, 'metadata_table') && ~isempty(obj.metadata_table)
+
+    [dirbase, fbase] = fileparts(obj.fullpath);
+    metadatafilename = fullfile(dirbase, [fbase '.metadata.csv']);
+
+    if exist(metadatafilename, 'file') && ~any(strcmp(varargin, 'overwrite'))
+
+        error(sprintf('write() error: Metadata file already exists. Use ''overwrite'' option to force overwrite.'));
+
+    end
+
+    fprintf('Writing metadata_table in: \n%s\n', metadatafilename);
+
+    % writetable(obj.metadata_table, 'filename', metadatafilename)
+    writetable(obj.metadata_table, metadatafilename)
+
+end % metadata table write
+
+
+end % main function
+
 
 
 

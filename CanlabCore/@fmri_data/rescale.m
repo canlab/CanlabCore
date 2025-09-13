@@ -28,6 +28,12 @@ function fmridat = rescale(fmridat, meth, varargin)
 %                           *Note: these methods must exclude invalid (0 or
 %                           NaN) voxels image-wise. Some images (but not others) in an
 %                           object may be missing some voxels.
+%     - prctileimages       - Convert image values to percentile scores. This
+%                           normalizes the range and distribution of all
+%                           images. It is like ranking but MUCH faster for
+%                           images with many elements.
+%                           - Normalize each image by number of valid values, so images in set
+%                           will be on the same scale if some are missing voxels
 %
 %     - l2norm_images       divide each image by its l2 norm, multiply by sqrt(n valid voxels)
 %     - divide_by_csf_l2norm  divide each image by CSF l2 norm. requires MNI space images for ok results!
@@ -43,11 +49,16 @@ function fmridat = rescale(fmridat, meth, varargin)
 %                           this will shrink the tails (and outliers) towards the mean,
 %                           making subsequent algorithms more robust to
 %                           outliers. Affects normality of distribution.
+%     - doublecenter        Double-center voxels and images, so the mean of each voxel and each image is 0
 %
-% Appropriate for multi-session (time series) only:
+% Whole run-level scaling:
+%     - 'session_grand_mean_scaling_spm_style'
+%
+% Appropriate for multi-session (time series):
 %     - session_global_percent_change
 %     - session_global_z
 %     - session_multiplicative
+%     - percentchange
 %
 % See also fmri_data.preprocess
 
@@ -131,6 +142,47 @@ switch meth
         
         fmridat.history{end+1} = 'Ranked images (columns) across voxels';
         
+
+    case 'prctileimages'
+
+        res = 0.1;  
+        
+        newobj = fmridat;
+
+        for i = 1:size(fmridat.dat, 2)
+
+            d = fmridat.dat(:,i);
+
+            % Consider missing voxels, and exclude case-wise (image-wise)
+            ismissing = d == 0 | isnan(d);
+            d(ismissing) = NaN;
+
+            if ~all(d == 0 | isnan(d))
+
+                x = [-Inf prctile(d, 0:res:100)];
+
+                for j = 1:length(x) - 1
+
+                    wh = d <= x(j + 1) & d > x(j);
+                    newobj.dat(wh, i) = j;
+
+                end % bins
+
+                % normalize by number of valid values, so images in set
+                % will be on the same scale if some are missing voxels
+                d = d ./ length(d(~ismissing));
+
+            end % if image has values
+
+        end % images
+
+        newobj.dat(isnan(newobj.dat)) = 0; % Replace with 0 for compatibility with image format
+
+        fmridat = newobj;
+
+        fmridat.history{end+1} = 'Converted each image to nearest of 1000 bins';
+
+
     case 'centerimages'
         
         % center images (observations)
@@ -261,6 +313,7 @@ switch meth
         % divide each column image by its respective ventricle l2norm
         fmridat.dat = bsxfun(@rdivide, fmridat.dat, l2norms(:, 3)') ;
         
+        fmridat.history{end+1} = 'Divided each image by its L2 norm';
         
     case 'session_global_percent_change'
         
@@ -277,6 +330,7 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Rescaled voxels to percent change relative to the grand mean of each run';
         
     case 'session_grand_mean_scaling_spm_style'
         % SPM's default method of global mean scaling
@@ -285,6 +339,11 @@ switch meth
         % not implemented yet because tor decided to use spm_global on images for comparison; this could be done though...
         % see help spm_global
         nscan = fmridat.images_per_session;  % num images per session
+
+        if isempty(nscan)
+            nscan = size(fmridat.dat, 2);  % single run with all images
+        end
+
         I = intercept_model(nscan);
         for i = 1:size(I, 2)
             
@@ -301,6 +360,7 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Scaled each run to grand mean of 100';
         
     case 'session_global_z'
         
@@ -327,6 +387,8 @@ switch meth
             fmridat.dat(:, wh) = y;
         end
         
+        fmridat.history{end+1} = 'Z-scored voxels using pooled std across the brain';
+
     case 'session_multiplicative'
         
         % scale - multiplicative
@@ -392,7 +454,8 @@ switch meth
         title('After scaling')
         drawnow
         
-        
+        fmridat.history{end+1} = 'Intensity-normalized each run with multiplicative scaling';
+
     case 'windsorizevoxels'
         
         whbad = all(fmridat.dat == 0, 2);
@@ -415,6 +478,8 @@ switch meth
         
         fmridat.dat = tanh(zscore(fmridat.dat'))';
         
+        fmridat.history{end+1} = 'Transformed by tanh(zscore(values))';
+
     case 'percentchange'
         % scale each voxel (column) to percent signal change with a mean of 100
         % based on smoothed mean values across space (cols), using iimg_smooth_3d

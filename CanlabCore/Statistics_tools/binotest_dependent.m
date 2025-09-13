@@ -86,14 +86,14 @@ B = X(:, 2);
 % -------------------------------------------------------------------------
 % Test if Data is in Correct Format
 % -------------------------------------------------------------------------
-if k > 2, error('NOT IMPLEMENTED FOR MORE THAN 2 DEP OBSERVATIONS PER UNIT'); end
+% if k > 2, error('NOT IMPLEMENTED FOR MORE THAN 2 DEP OBSERVATIONS PER UNIT'); end
 
 u = unique(X(:));
 if any(u ~= 1 & u ~= 0), error('X MUST HAVE VALUES OF 1 OR 0 ONLY.'); end
 
-if N < 20
-    warning(['Running dependent binomial test requires many subjects to approximate normal distribution.  You are only using ' num2str(length(unique(subject_id))) ' subjects.  Interpret results with caution.'])
-end
+% if N < 20
+%     warning(['Running dependent binomial test requires many subjects to approximate normal distribution.  You are only using ' num2str(length(unique(subject_id))) ' subjects.  Interpret results with caution.'])
+% end
 
 % -------------------------------------------------------------------------
 % Calculate Variance and Covariance

@@ -27,6 +27,7 @@ function [surface_handles, ax] = canlab_canonical_brain_surface_cutaways(method_
 %   **method_keyword:** One of the following:
 %     'left_cutaway'
 %     'right_cutaway'
+%     'right_cutaway_x8' % like right_cutaway but x=8
 %     'left_insula_slab'
 %     'right_insula_slab'
 %     'accumbens_slab'
@@ -124,6 +125,26 @@ switch method_keyword
         set_slab_view_properties(p, [-137 14])
         
         surface_handles = [p p3];
+
+
+    case 'right_cutaway_x8'
+
+        anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'));        
+        [isosurf, isocap] = deal({});
+        [p, ~, isosurf{1}, isocap{1}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
+        [p2, ~, isosurf{2}, isocap{2}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [8 Inf], 'yLim', [-30 Inf]);
+        
+        p = draw_isosurface_patches(isosurf, isocap, [.5 .5 .5]);
+        
+        p3 = addbrain('limbic hires');
+        alpha 1
+        delete(p3(3)); p3(3) = [];
+        set(p3, 'FaceAlpha', .6, 'FaceColor', [.5 .5 .5]);
+        
+        set_slab_view_properties(p, [-137 14])
+        
+        surface_handles = [p p3];
+        
         
     case 'left_insula_slab'
         

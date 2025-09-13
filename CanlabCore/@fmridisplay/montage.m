@@ -257,18 +257,35 @@ if doverbose, fprintf('Ready. \n'), end
 
 figure(slices_fig_h) % note: this is slow for repeated calls...
 
-for i = 1:length(slice_vox_coords)
+% for i = 1:length(slice_vox_coords)
+% 
+%     axes(newax(i));
+% 
+%     wh_slice = slice_vox_coords(i);
+% 
+%     Z = display_slice(dat, wh_slice, obj.SPACE, myview, lightenstr);
+% 
+%     hold on
+% 
+%     axis off
+% end
 
+
+
+for i = 1:length(slice_vox_coords)
     axes(newax(i));
     
     wh_slice = slice_vox_coords(i);
-    
     Z = display_slice(dat, wh_slice, obj.SPACE, myview, lightenstr);
     
-    hold on
+    % ✅ Store the actual mm coordinate for this axis
+    setappdata(newax(i), 'mm_coord', slice_mm_coords(i));
     
+    hold on
     axis off
 end
+
+
 
 % register info in fmridisplay object
 

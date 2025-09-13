@@ -250,10 +250,13 @@ for i = 1:length(varargin)
                 dosplitcolor = 0;
                  domincolor = 1;
                  mincolor = varargin{i + 1};
+
+            case 'colormap'
+                dosplitcolor = 0;
             
             case 'indexmap'
                 for exclusive = {'color', 'onecolor', 'solid', 'maxcolor','mincolor','splitcolor'}
-                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
                         sprintf('Cannot evaluate addblobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));
                 end
@@ -424,14 +427,37 @@ if addsurfaceblobs
         
         img = region2imagevec(cl);
         if dosplitcolor
-            render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+
+            if exist('cmaprange', 'var')
+                % Keep the same color mapping as before
+                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, 'cmaprange', cmaprange, varargin{:});
+            else
+                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
+            end
+
+%             o2.activation_maps{1}.cmaprange
         else
             if isempty(indexmap)
-                render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+                if exist('cmaprange', 'var')
+                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'cmaprange', cmaprange, varargin{:});
+                else
+                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
+                end
+
             else
-                render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
+                try
+                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
+                catch
+                    keyboard
+                end
             end
         end
+        if ismember('legendhandle',fieldnames(obj.activation_maps{wh_to_display}))
+            % if we plot multiple surfaces then their legends will overlap.
+            % We only need to keep the exteriormost one
+            delete(obj.activation_maps{wh_to_display}.legendhandle);    
+        end
+        obj.activation_maps{wh_to_display}.legendhandle = [bar1axis, bar2axis];
 
     end
 end

@@ -1,4 +1,4 @@
-function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
+function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, TR, varargin)
     % Helper script to create condition vectors for hrf_fit_one_voxel()
     % Michael Sun, Ph.D.
     % - Takes fmri_data() object or the number of TRs in a 4D object.
@@ -22,6 +22,12 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
         SPIKES=1;
         SPIKETRAINS=0;
     end
+
+    if ~isempty(varargin)
+        SPIKETRAINS=1;
+    else
+        SPIKES=1;
+    end
     
     if strcmp(class(fmri_d), 'fmri_data')
         n=size(fmri_d.dat,2);
@@ -42,13 +48,17 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations)
     for c = 1:nconds
         % Extract the times for the current condition
         % current_times = eval([conditions{c} '_times{sub}{j}']);
-        current_times=onsets{c};
-        current_dur=durations{c};
+        current_times=onsets{c}/TR;
+        current_dur=durations{c}/TR;
         
         % Remove the onset times that didn't get recorded. 
         % Note: Add 0.5TRs to correct for slice-timing correction if needed
         % current_times = ceil(current_times(current_times < n) + 0.5);
         current_times = ceil(current_times(current_times < n));
+        % Correct any onsets that start at 0;
+        if any(current_times==0)
+            current_times(find(current_times==0))=1;
+        end
         
         % Model events as a single impulse
         if SPIKES == 1

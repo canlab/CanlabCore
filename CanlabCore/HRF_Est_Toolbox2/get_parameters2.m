@@ -17,7 +17,7 @@ n = round(length(t)*0.8);
 h = hdrf(p);
 
 %if (p > t(end)*0.6*delta), warning('Late time to peak'), end;
-if (p > t(end)*0.8), warning('Late time to peak'), end;
+% if (p > t(end)*0.8), warning('Late time to peak'), end;
 
 if (h >0)
     v = (hdrf >= h/2);    

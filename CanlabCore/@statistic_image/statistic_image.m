@@ -118,6 +118,7 @@ classdef statistic_image < image_vector
 
     properties
 
+%         source_notes = {''};
         type        % String with image type: 'generic', 't', 'p', 'robreg'
         p           % Matrix of p-values for images, [voxels x images]
         p_type      % String with source info for p-values
@@ -127,7 +128,7 @@ classdef statistic_image < image_vector
         sig         % Logical matrix of which voxels are significant, [voxels x images]
         N           % Sample size
         dfe         % Error degrees of freedom for test
-        image_labels ={''}; % Semantic labels for each image, cell array
+        image_labels = {''}; % Semantic labels for each image, cell array
     end
     
     methods

@@ -1,6 +1,16 @@
 function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
 %
+% Note, some atlases are probablistic, and this may result in counterintuitive bheavior. If visualizing
+% a probablistic atlas you only see p(region) > p(other region), a winner takes all parcellation scheme where
+% a voxel is labeled as belonging to a region only if the probability is greater than the probability of
+% it belonging to any other region. However, when you extract such a region you additionally get voxels
+% with non-zero probability of belonging to said region even if other region labels are more probable.
+% Consequently the extracted region boundaries will EXCEED those of the region you might have seen
+% when visualizing the complete atlas, which can be confusing. Intelligent use of the probabilistic 
+% labels is ideal, but if you prefer a more intuitive (albeit misleading) solution you should use the
+% 'deterministic' option'
+%
 % Select a subset of regions in an atlas using:
 % - a cell array of one or more strings to search for in labels
 % - a vector of one or more integers indexing regions
@@ -14,14 +24,30 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 % Options:
 % 'flatten' : Flatten integer vector in .dat to a single 1/0 mask. Good for
 % creating masks from combinations of regions, or adding a set to another
-% atlas as a single atlas region. .probability_maps reduced to single max
-% map
+% atlas as a single atlas region. .probability_maps is reestimated as
+% posterior probability of union of constituent regions under conditional 
+% independence assumption. If probability maps don't sum to 1 across voxels
+% then conditional independence assumption is violated and we default to
+% using the maximum probability instead.
+%
+% 'conditionally_ind' : If specified then 'flatten' assumes conditional
+% independence even when probabilities don't sum to 1. Does nothing
+% otherwise.
 %
 % 'labels_2' : If you enter any field name in the object, e.g., labels_2,
 % the function will search for keyword matches here instead of in obj.labels.
 %
 % 'exact' : If you enter 'exact', function will not look for overlaps in
 % names, and only look for exact string matches.
+%
+% 'regexp' : If you enter 'doregexp', function will treat your string as a
+% regular expression.
+%
+% 'deterministic' or 'mostprob' : returns a labeled voxel iff p(region) > argmax(p(other region)).
+% Has no effect unless atlas has its probability_maps property populated,
+% in which case the default behavior is to return all voxels with 
+% p(region) > 0. Note: you probably want to apply a threshold operation too
+% to remove low probability tissue boundary regions.
 %
 % Examples:
 % 
@@ -73,7 +99,10 @@ function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
 strings_to_find = [];
 integers_to_find = [];
 doflatten = false;
+condInd = false;
 doexact=false;
+doregexp=false;
+mostprob=false;
 
 % for entry of optional field to search for keywords
 myfields = fieldnames(obj);
@@ -95,6 +124,12 @@ for i = 1:length(varargin)
 
                  %             case 'xxx', xxx = varargin{i+1}; varargin{i+1} = [];
             case 'exact', doexact = true;
+
+            case 'regexp', doregexp = true;
+
+            case 'conditionally_ind', condInd = true;
+
+            case {'mostprob', 'deterministic'}, mostprob = true;
                 
             otherwise
                 
@@ -125,7 +160,15 @@ to_extract = false(1, k);
 for i = 1:length(strings_to_find)
     
     % Find which names match
-    if doexact == false
+    if doregexp == true
+        wh = ~cellfun(@isempty, regexp(obj.(mylabelsfield), strings_to_find{i}));
+        if strmatch(mylabelsfield, 'label_descriptions')
+            wh=wh'; 
+        end
+    
+        to_extract = to_extract | wh;
+
+    elseif doexact == false
         wh = ~cellfun(@isempty, strfind(obj.(mylabelsfield), strings_to_find{i}));
         if strmatch(mylabelsfield, 'label_descriptions')
             wh=wh'; 
@@ -144,7 +187,7 @@ for i = 1:length(strings_to_find)
 end
 
 % -------------------------------------------------------------------------
-% Check for problems
+% Check for problesum ms
 % -------------------------------------------------------------------------
 
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) ~= k  
@@ -160,7 +203,7 @@ end
 to_extract(integers_to_find) = true;
 
 if ~any(to_extract)
-    error('No regions identified to extract.');
+    warning('No regions identified to extract.');
 end
 
 % -------------------------------------------------------------------------
@@ -200,6 +243,14 @@ end
 
 if ~isempty(obj.probability_maps) && size(obj.probability_maps, 2) == k  % valid p maps
 
+    if mostprob
+        % zero values where p(region) < p(other region)
+        for this_region = find(to_extract)
+            to_zero = any(obj_subset.probability_maps(:,this_region) < obj_subset.probability_maps(:, ~to_extract),2);
+            obj_subset.probability_maps(to_zero,this_region) = 0;
+        end
+    end
+
     obj_subset.probability_maps(:, ~to_extract) = [];
     
     obj_subset = probability_maps_to_region_index(obj_subset);
@@ -229,7 +280,36 @@ if doflatten
     % -------------------------------------------------------------------
     obj_subset.dat = single(obj_subset.dat > 0);
     
-    obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
+    % this is wrong. Consider, you could have a voxel that has 50% 
+    % probability of being voxel A and 50% probability of being voxel B.
+    % the max value is %50, but the probability that it's one or the other
+    % must be 100%. Let's check if it's safe to assume conditional 
+    % independence instead.
+    %
+    % We don't know if the atlas labels are exhaustive, but if the sum of
+    % atlas label probabilities exceeds 1 we can conclude that P(A,B) ~=
+    % P(A) + P(B), because the total density must sum to 1 to be a valid
+    % probability measure. We check if probabilities exceed 1 with some
+    % tolerance to deal with floating point errors.
+    hasdata = any(obj.probability_maps,2);
+    tol = 1e-7;
+    if ~condInd
+        if all(sum(obj.probability_maps(hasdata,:), 2) - 1 < tol)
+            condInd = true;
+        end
+    end
+    if condInd
+        obj_subset.probability_maps = sum(obj_subset.probability_maps, 2);
+    else
+        % we have evidence that probabilities are not conditionally
+        % independent
+        warning('Probabilities don''t sum to 1, so cannot assume condition independence. New map will use maximum probability instead of sum of probabilities.')
+        obj_subset.probability_maps = max(obj_subset.probability_maps, [], 2);
+    end
+
+    if any(sum(obj_subset.probability_maps(hasdata,:), 2) - 1 > tol)
+        warning('Max subset cumulative probability = %0.2f. Conditional independence assumption was probably violated.', max(sum(obj_subset.probability_maps(hasdata,:), 2)));
+    end
     
     % Add labels for combined mask
     

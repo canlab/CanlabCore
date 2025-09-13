@@ -96,13 +96,22 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %        'bgloops_cortex' : Cortical regions most closely associated with
 %                           the Pauli 5-region striatal clusters
 %
-%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 36 maps with
+%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 30 maps with
 %        different combinations of tracers and neurotransmitter receptors
 %
 %        'emometa' 'emotionmeta' '2015emotionmeta' : 2015 Wager/Kang et al.
 %        Meta-analysis maps for 5 basic categories.
 %        'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'
 %
+%        'marg' or 'transmodal' or 'principalgradient': 2016 PNAS Margulies
+%                    MNI152NLin2009cAsym_margulies_grad1.nii.gz
+%        'margfsl' : MNI152NLin6Asym_margulies_grad1.nii.gz
+%
+%        'transcriptomic_gradients':
+%               Principal transcriptomic gradients from
+%               Hawrylycz et al. An anatomically comprehensive atlas of the adult human brain transcriptome. (2012) Nature
+%               Vogel et al. "Deciphering the functional specialization of whole-brain spatiomolecular gradients in the adult brain" (2024) PNAS
+%               [transcriptomic_grads transcriptomic_names] = load_image_set('transcriptomic_gradients');
 %
 % 'Signature' patterns and predictive models
 % ------------------------------------------------------------------------
@@ -134,6 +143,11 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %
 %        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
 %                                                Neurosynth, unthresholded, 2013
+%
+%        'neurosynth_topics_forwardinference' 'neurosynth_topics_reverseinference'
+%                   54 topic maps from Yarkoni & Poldrack 2014 topic modeling analysis
+%                   Selected from 100 topics for psychological relevance
+%                   and given ChatGPT-based summary topic labels by Ke et al. 2024, Nat Neurosci
 %
 %        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable
 %                   representations of pain, cog control, emotion. From
@@ -354,6 +368,14 @@ else
         case {'neurosynth', 'neurosynth_featureset1'}
             [image_obj, networknames, imagenames] = load_neurosynth_featureset1;
             
+        case {'neurosynth_topics_forwardinference' 'neurosynth_topics_fi'}
+
+            [image_obj, networknames, imagenames] = load_neurosynth_topics_fi;
+
+        case {'neurosynth_topics_reverseinference' 'neurosynth_topics_ri'}
+
+            [image_obj, networknames, imagenames] = load_neurosynth_topics_ri;
+
         case {'pain_cog_emo', 'kragel18'}
             [image_obj, networknames, imagenames] = load_kragel18;
             
@@ -391,8 +413,21 @@ else
             
             [image_obj, networknames, imagenames] = load_ncs;
             
+        case {'marg', 'transmodal', 'principalgradient'}
+            
+            [image_obj, networknames, imagenames] = load_marg;
+
+        case {'transcriptomic_gradients'}
+            [image_obj, networknames, imagenames] = load_transcriptomic_gradients;
+
+        case {'margfsl'}
+            
+            [image_obj, networknames, imagenames] = load_margfsl;
+
         case 'list'
             
+            [networknames, imagenames] = deal({});
+
             table_list = list_signatures;
             disp(table_list);
             
@@ -934,6 +969,13 @@ if length(networknames) == 1 % 4-d, expand
     
 end
 
+% load metadata if we can find it
+metadatafilename = 'Wager_2008_emo_reg_vs_look_neg_metadata_table.mat';
+if exist(metadatafilename, 'file')
+    tmp = load(metadatafilename);
+    image_obj.metadata_table = tmp.metadata_table;
+end
+
 end % function
 
 
@@ -1123,15 +1165,20 @@ end % function
 % PET TRACERS
 % ------------------------------------------------------------------------
 function [image_obj, networknames, imagenames] = load_hansen22
-datfilename = 'Hansen_2022_PET_tracer_maps_masked.mat';
+% datfilename = 'Hansen_2022_PET_tracer_maps_masked.mat';
+datfilename = 'Hansen_2022_PET_tracer_maps_masked_combined.mat';
+
 fullfilename = which(datfilename);    
 
 load(fullfilename)
-    image_obj=obj_masked_zscored;
-    imagenames=image_obj.image_names;
-    imagenames=cellstr(imagenames);
-    networknames=image_obj.metadata_table(:,1);
-    
+% image_obj=obj_masked_zscored;
+image_obj = obj_masked_zscored_averaged;
+imagenames = image_obj.image_names;
+imagenames = cellstr(imagenames);
+networknames = image_obj.metadata_table(:, 1);
+
+networknames = networknames.target'; % format to cell for uniformity with other map sets
+
 end % function
 
 
@@ -1189,7 +1236,51 @@ image_obj = fmri_data(imagenames, [], 'noverbose');
 end % function
 
 
+% ------------------------------------------------------------------------
+% Margulies 2016 PNAS principal gradient 1
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_marg
 
+imagenames =     {'MNI152NLin2009cAsym_margulies_grad1.nii.gz'};
+
+networknames = {'PrincipalGradient1'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+% ------------------------------------------------------------------------
+% Margulies 2016 PNAS principal gradient 1
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_margfsl
+
+imagenames =     {'MNI152NLin6Asym_margulies_grad1.nii.gz'};
+
+networknames = {'PrincipalGradient1'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
+
+
+% ------------------------------------------------------------------------
+% 2012 Allen Brain Project transcriptomic_gradients
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_transcriptomic_gradients
+
+imagenames =     {'transcriptomic_gradients_MNI152NLin6Asym.nii.gz'};
+
+networknames = {'Allen_genePC1' 'Allen_genePC2' 'Allen_genePC3'};
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
+
+end % function
 
 
 % ------------------------------------------------------------------------
@@ -1198,8 +1289,6 @@ end % function
 
 
 function [image_obj, networknames, imagenames] = load_neurosynth_featureset1
-
-
 
 % Load Yarkoni_2013_Neurosynth_featureset1
 % ------------------------------------------------------------------------
@@ -1235,6 +1324,40 @@ networknames = imagenames';
 networknames = cellfun(@(x) strrep(x, '_pFgA_z.nii', ''), networknames, 'UniformOutput', false);
 
 end % function
+
+% ------------------------------------------------------------------------
+% Neurosynth topic maps - forward inference 
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_neurosynth_topics_fi
+
+ns = load(which('neurosynth_data_obj.mat'));
+
+image_obj = ns.topic_obj_forwardinference;
+
+networknames = ns.topic_obj_forwardinference.metadata_table.("Topic name_Summary")';
+
+imagenames = cellstr(image_obj.image_names);
+
+end % function
+
+
+% ------------------------------------------------------------------------
+% Neurosynth topic maps - reverse inference 
+% ------------------------------------------------------------------------
+function [image_obj, networknames, imagenames] = load_neurosynth_topics_ri
+
+ns = load(which('neurosynth_data_obj.mat'));
+
+image_obj = ns.topic_obj_reverseinference;
+
+networknames = image_obj.metadata_table.("Topic name_Summary")';
+
+imagenames = cellstr(image_obj.image_names);
+
+end % function
+
+            
+
 
 
 % ------------------------------------------------------------------------
@@ -1426,14 +1549,15 @@ function table_list = list_signatures
 
 
 
-pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0]';
-negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0]';
-empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0]';
-physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0]';
-posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0]';
-cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0]';
-regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0]';
-other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1]';
+pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0 0 0 1]';
+negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0 1 0 0]';
+empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
+physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
+posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 1 0]';
+cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0 0 0 0]';
+regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0 0 0 0]';
+reward =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 1 0]';
+other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 0 0]';
 
 keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
     'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'Guilt_behavior' ...
@@ -1441,7 +1565,7 @@ keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_noocci
     'Kragel18Pain' 'Kragel18CogControl' 'Kragel18NegEmotion' 'Reddan18CSplus_vs_CSminus' ...
     'GeuterPaincPDM' 'ZhouVPS' ...
     'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'  ...
-    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood'}';
+    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood' 'Painvalue' 'Moneyvalue' 'Shockintensity'}';
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -1457,7 +1581,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'FM_pain_wholebrain.nii' ...                        % 2017 Lopez-Sola fibromyalgia
     'Ashar_2017_empathic_care_marker.nii' ...           % 2017 Ashar et al. Empathic care and distress
     'Ashar_2017_empathic_distress_marker.nii' ...       
-    'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii' ...    % Yu 2019 Cer Ctx Guilt behavior
+    'Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii' ...     % Yu 2019 Cer Ctx Guilt behavior
     'mean_3comp_amused_group_emotion_PLS_beta_BSz_10000it.img' ...  % Kragel 2015 emotion PLS maps
     'mean_3comp_angry_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_content_group_emotion_PLS_beta_BSz_10000it.img' ...
@@ -1465,26 +1589,29 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'mean_3comp_neutral_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_sad_group_emotion_PLS_beta_BSz_10000it.img' ...
     'mean_3comp_surprised_group_emotion_PLS_beta_BSz_10000it.img' ...
-    'bPLS_Wholebrain_Pain.nii'  ...                     % Kragel 2018 whole-brain pain cog control neg emotion
+    'bPLS_Wholebrain_Pain.nii'  ...                         % Kragel 2018 whole-brain pain cog control neg emotion
     'bPLS_Wholebrain_Cognitive_Control.nii'  ...
     'bPLS_Wholebrain_Negative_Emotion.nii'  ...
     'IE_ImEx_Acq_Threat_SVM_nothresh.nii.gz' ...
     'Geuter_2020_cPDM_combined_pain_map.nii' ...
     'General_vicarious_pain_pattern_unthresholded.nii' ...  % Zhou 2020 eLife vicarious pain
-    'General_bplsF_unthr.nii'  ...                      % MPA2 general vs. specific aversiveness
+    'General_bplsF_unthr.nii'  ...                          % MPA2 general vs. specific aversiveness
     'Mechanical_bplsF_unthr.nii'  ...
     'Thermal_bplsF_unthr.nii'  ...
     'Sound_bplsF_unthr.nii'  ...
     'Visual_bplsF_unthr.nii'  ...
-    'PlaceboPredict_Anticipation.img'   ...                   % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
-    'PlaceboPredict_PainPeriod.img'    ...                   % During pain [P - C]->behav [P - C]
+    'PlaceboPredict_Anticipation.img'   ...                 % Wager 2011 prediction of placebo brain [P - C]->behav [P - C]
+    'PlaceboPredict_PainPeriod.img'    ...                  % During pain [P - C]->behav [P - C]
     'stroop_pattern_wani_121416.nii' ...
-    'craving_wmapN99_boot10K_02-May-2022.img' ...
+    'craving_wmapN99_boot10K_02-May-2022.img' ...           % Kober 2022 Craving NCS signature
     'wmap_onlyDRUGS_l2nGM_N99_20220428.img' ...
-    'wmap_onlyFOOD_l2nGM_N99_20220428.img'
+    'wmap_onlyFOOD_l2nGM_N99_20220428.img' ...
+    'painvalue_weights_fdr05.nii.gz' ...                    % Coll 2022 PNAS decision value pain
+    'moneyvalue_weights_fdr05.nii.gz' ...
+    'shockintensity_weights_fdr05.nii.gz' ...
     }';
 
-table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, other, imagenames);
+table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, reward, other, imagenames);
 
 end % table_list
 

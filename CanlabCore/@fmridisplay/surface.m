@@ -66,8 +66,12 @@ for i = 1:length(varargin)
     end
 end
 
-axh = axes('Position', ax);
-% axh = axes(ax);
+if isa(ax,'matlab.graphics.axis.Axes')
+    axh = ax;
+    axes(axh);
+else
+    axh = axes('Position', ax);
+end
 if strcmp(dir, 'hires left')
     h = addbrain('hires left');
     if strcmp(orn, 'medial')
@@ -99,8 +103,8 @@ elseif strcmp(dir, 'right')
 elseif strcmp(dir, 'flat right')
     h = addbrain('flat right');
     
-elseif strcmp(dir, 'flat right')
-    h = addbrain('right');
+elseif strcmp(dir, 'flat left')
+    h = addbrain('flat left');
     
 elseif strcmp(dir, 'surface left')
     h = addbrain('surface left');
@@ -118,16 +122,299 @@ elseif strcmp(dir, 'surface right')
     else
         view(270, 0);
     end
+
+    
+elseif strcmp(dir, 'inflated right')
+    h = addbrain('inflated right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'inflated left')
+    h = addbrain('inflated left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
    
- 
+elseif strcmp(dir, 'hcp inflated right')
+    h = addbrain('hcp inflated right',varargin{:});
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'hcp inflated left')
+    h = addbrain('hcp inflated left',varargin{:});
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+   
+elseif strcmp(dir, 'hcp sphere right')
+    h = addbrain('hcp sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'hcp sphere left')
+    h = addbrain('hcp sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer sphere right')
+    h = addbrain('freesurfer sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer sphere left')
+    h = addbrain('freesurfer sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer white right')
+    h = addbrain('freesurfer white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer white left')
+    h = addbrain('freesurfer white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'freesurfer inflated right')
+    h = addbrain('freesurfer inflated right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'freesurfer inflated left')
+    h = addbrain('freesurfer inflated left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym white right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym white left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym midthickness right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym midthickness left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym midthickness left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin2009cAsym pial right')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym pial right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin2009cAsym pial left')
+    % for internal development use
+    h = addbrain('MNI152NLin2009cAsym pial left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym white right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym white right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym white left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym white left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym midthickness right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym midthickness right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym midthickness left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym midthickness left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym pial right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym pial right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym pial left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym pial left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'MNI152NLin6Asym sphere right')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym sphere right');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+    
+elseif strcmp(dir, 'MNI152NLin6Asym sphere left')
+    % for internal development use
+    h = addbrain('MNI152NLin6Asym sphere left');
+    if strcmp(orn, 'medial')
+        view(90, 0);
+    else
+        view(270, 0);
+    end
+
+elseif strcmp(dir, 'bigbrain left')
+    h = addbrain('bigbrain');
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'bigbrain right')
+    h = addbrain('bigbrain');
+    view(137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'left_cutaway')
+    h = addbrain('left_cutaway');
+
+elseif strcmp(dir, 'right_cutaway')
+    h = addbrain('right_cutaway');
+
+elseif strcmp(dir, 'brainstem left')
+    h = addbrain('midbrain_group');
+    h = [h addbrain('rvm')];
+    h = [h addbrain('lc')];
+    h = [h addbrain('brainstem')];
+    h = [h addbrain('thalamus_group')];
+    h = [h addbrain('pbn')];
+    h = [h addbrain('rn')];
+    h = [h addbrain('pag')];
+    % h = [surface_handles addbrain('caudate')];
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'brainstem right')
+    h = addbrain('midbrain_group');
+    h = [h addbrain('rvm')];
+    h = [h addbrain('lc')];
+    h = [h addbrain('brainstem')];
+    h = [h addbrain('thalamus_group')];
+    h = [h addbrain('pbn')];
+    h = [h addbrain('rn')];
+    h = [h addbrain('pag')];
+    % h = [surface_handles addbrain('caudate')];
+    view(137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'caudate left')
+    h = addbrain('caudate');
+    h = [h addbrain('put')];
+    h = [h addbrain('gp')];
+    h = [h addbrain('nacc')];
+    h = [h addbrain('sn')];
+    view(-137, 18); lightRestoreSingle;
+
+elseif strcmp(dir, 'caudate right')
+    h = addbrain('caudate');
+    h = [h addbrain('put')];
+    h = [h addbrain('gp')];
+    h = [h addbrain('nacc')];
+    h = [h addbrain('sn')];
+    view(137, 18); lightRestoreSingle;
+
+else
+    h = addbrain(dir);
+
 end
+
+
+
+
 
 if strcmp(h(1).FaceColor,'interp')
     set(h,'FaceAlpha', 1);
 else
     set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
 end
-
+%[
 lightRestoreSingle; 
 axis image;
 axis off; 

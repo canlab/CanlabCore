@@ -1,8 +1,8 @@
-function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
+function [handles, dat, xdat, statstable, order_idx, pairwise_results] = barplot_columns(dat, varargin)
 % :Usage:
 % ::
 %
-%    [graphics handles, adjusted data, x-data] = barplot_columns(dat, [other optional arguments])
+%    [graphics handles, adjusted data, x-data, statstable, order_idx] = barplot_columns(dat, [other optional arguments])
 %
 % This function makes a barplot of columns of data, with standard error
 % bars.  Optional arguments include removing continuous covariates before plotting,
@@ -62,12 +62,22 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %        - 'dolines' : plot lines showing individual effects
 %        - 'noind' : do not plot individual scores
 %        - 'plotout': circle potential outliers at z>1.96 in red
+%        - 'removeout': Remove outliers at z>1.96 from statistical computations. Not compatible with 'plotout' since that data will be removed from plotting.
 %        - 'number' : plot case numbers instead of points
 %        - 'MarkerSize' : followed by marker size
 %        - 'MarkerAlpha' : followed by marker transparency value (alpha)
 %        - 'stars', 'dostars' : plot stars for significance above each column (default)
 %           Sig. levels are coded as * = p<.05, ** = p<.01, *** = q<.05 FDR across variables tested in this plot
 %        - 'nostars' : do not plot stars
+%        - 'custom_p' : Custom cell-array to determine p-values if manually generating plots. Don't abuse this.
+%        - 'pairwisetest' : Conducts pairwise statistical comparisons between all columns.
+%                   Performs uncorrected t-tests (either paired or unpaired depending on data shape):
+%                   - Paired t-tests are used when both columns have the same number of non-NaN elements.
+%                   - Unpaired t-tests are used when column lengths differ or missing data prevents alignment.
+%                   Effect sizes (Cohen's d), t-statistics, and p-values are printed to the console and
+%                   returned in a table (`pairwise_results`) in the base workspace.
+%                   Significant results (p < .05) are visualized on the plot using bracket connectors
+%                   with stars (*, **, ***) placed above the bar pairs.
 %
 %   Robustness options
 %        - 'dorob' : do robust IRLS means and correlations
@@ -80,6 +90,7 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %               one per bar
 %
 %   Display axis, title, widths, and color control
+%        - 'order': 'ascend' or 'descend' by the mean value
 %        - 'x' : followed by x-axis values for bars
 %        - 'noxlim' : Suppress automatic setting of x-limit (e.g., when adding to existing plot)
 %        - 'color' : followed by color for bars (text: 'r' or [r g b]) OR
@@ -135,20 +146,26 @@ function [handles, dat, xdat, statstable] = barplot_columns(dat, varargin)
 %    barplot_columns(Y, 'nofig', 'noviolin', 'colors', {[1 .5 0] [0 .5 1]}, 'dolines')
 %    title('barplot\_columns.m parallel coords', 'FontSize', 16)
 %
-% Covariate(s): Renove regressors (covs) "group":
+% Covariate(s): Remove regressors (covs) "group":
 % barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 0);
 %
 % Covariate(s): Leave in regressor (cov) # 1 "group" and sort points by its values:
 % barplot_columns(mydata, figtitle, 'colors', DAT.colors, 'dolines', 'nofig', 'names', DAT.conditions, 'covs', group, 'wh_reg', 1);
 %
 % See also: lineplot_columns, barplot_colored, line_plot_multisubject, violinplot
+%
+%   Edited 06/12/2024 Added 'order' option. - Michael Sun, PhD
+%   Edited 08/22/2024 Added 'custom_p' option. - Michael Sun, PhD
+%   Edited 06/10/2025 Added 'pairwisetest' option. - Michael Sun, PhD
 
 % ..
 %    Defaults
 % ..
 
+dashes = '---------------------------------------------';
 dofig = 1;
 doind = 1;
+removeout = 0;
 plotout = 0;
 dorob = 0;
 xdat = [];
@@ -156,6 +173,7 @@ dolines = 0;
 dobars = 1;
 dowithin = 0;
 custom_se = false;
+custom_p = false;
 donumber = 0;
 dojitter = 1; % jitter is for numbers only
 mycolor = [.8 .8 .8];
@@ -164,6 +182,10 @@ barwidth = .8;
 dolineplot = 0;
 do95CI = 0;
 do95within = 0;
+order = 'none';
+dopairwise = false;
+pairwise_results = [];
+order_idx = [];
 
 nanwarningflag = 1;
 doviolin = 1;
@@ -177,6 +199,7 @@ dostars = true;
 handles = [];
 doprinttable = 1;
 skipallplots = false;
+
 
 % ----------------------------------------------------
 % > handle table input - save names
@@ -223,6 +246,7 @@ if length(varargin) > 0
 
         % Point plotting, individual lines, and outlier options
         if strcmp(varargin{i},'noind'), doind = 0;  end
+        if strcmp(varargin{i},'removeout'), removeout = 1;  end
         if strcmp(varargin{i},'plotout'), plotout = 1;  end
         if strcmp(varargin{i},'dolines'), dolines = 1;  end
         if strcmp(varargin{i},'number'), donumber = 1;  end
@@ -235,6 +259,10 @@ if length(varargin) > 0
 
         if strcmp(varargin{i}, 'stars') || strcmp(varargin{i}, 'dostars'), dostars = true; end
         if strcmp(varargin{i}, 'nostars'), dostars = false; end
+        if strcmp(varargin{i}, 'custom_p'), PValues = varargin{i+1}; custom_p = true; end
+        if strcmpi(varargin{i}, 'pairwisetest'), dopairwise = true; end
+
+
 
         % Robustness options
         if strcmp(varargin{i},'dorob'), dorob = 1;  end
@@ -259,6 +287,9 @@ if length(varargin) > 0
         % Labels
         if strcmp(varargin{i}, 'names'), names = varargin{i + 1}; varargin{i + 1} = []; end
 
+        % Order
+        if strcmp(varargin{i}, 'order'), order = varargin{i + 1}; varargin{i + 1} = []; end
+
         % Covariate options
         if strcmp(varargin{i}, 'covs')
             covs = varargin{i + 1};
@@ -275,6 +306,23 @@ if length(varargin) > 0
 
     end % for
 end % varargin
+
+
+% ----------------------------------------------------
+% > Set Order
+% ----------------------------------------------------
+if strcmp(order, 'ascend') || strcmp(order, 'descend')
+    [~, order_idx] = sort(nanmean(dat, 1), order);
+    dat = dat(:, order_idx);
+
+    names=names(order_idx);
+    if iscell(mycolor) & numel(mycolor)==numel(order_idx)
+        mycolor=mycolor(order_idx);
+    end
+    if custom_se == true
+        within_ste=within_ste(order_idx);
+    end
+end
 
 % ----------------------------------------------------
 % > Build design matrix X for controlling for covariates
@@ -312,6 +360,24 @@ Std_Error = [];
 % Mean_Value, Std_Error, T, P (for stars), Cohens_d (for table)
 
 for i = 1:ny
+
+
+    if removeout
+        % Remove outliers
+        if plotout
+            warning('Cannot use plotout if removeout is set.');
+        end
+    
+        z = (dat(:,i) - nanmean(dat(:,i))) ./ nanstd(dat(:,i));
+        wh = find(abs(z) >= 1.96);
+        
+        dat(wh,i)=NaN;
+
+        
+    end
+
+
+
 
     if doprinttable
         if ~isempty(names) && length(names) >= i
@@ -366,7 +432,7 @@ for i = 1:ny
     % ----------------------------------------------------
     % > Use partialcor to remove covariates if requested
     %   Return y, adjusted y-values
-    % ----------------------------------------------------
+    % ---------------------------------------------------wid-
 
     if ~isempty(covs) && wh_reg
 
@@ -376,7 +442,76 @@ for i = 1:ny
 
     end
 
+    if dopairwise
+        fprintf('\n%s\nPairwise t-tests (uncorrected)\n%s\n', dashes, dashes);
+        combs = nchoosek(1:ny, 2);
+        pairwise_p = NaN(size(combs, 1), 1);
+        pairwise_t = NaN(size(combs, 1), 1);
+        pairwise_d = NaN(size(combs, 1), 1);
+        pairwise_labels = strings(size(combs, 1), 1);
+    
+        for i = 1:size(combs, 1)
+            c1 = combs(i, 1);
+            c2 = combs(i, 2);
+            y1 = dat(:, c1);
+            y2 = dat(:, c2);
+        
+            % Remove NaNs
+            [~, y1c, y2c] = nanremove(y1, y2);
+        
+            % Determine whether to do paired or unpaired test
+            is_paired = isequal(length(y1c), length(y2c));
+        
+            if is_paired
+                [~, p, ~, st] = ttest(y1c, y2c);
+                d = mean(y1c - y2c) / std(y1c - y2c);  % Cohen's d for paired
+            else
+                [~, p, ~, st] = ttest2(y1, y2);  % use full original vectors w/ nans
+                pooled_sd = sqrt(((std(y1, 'omitnan')^2 + std(y2, 'omitnan')^2) / 2));
+                d = (nanmean(y1) - nanmean(y2)) / pooled_sd;  % Cohen's d for unpaired
+            end
+        
+            pairwise_p(i) = p;
+            pairwise_t(i) = st.tstat;
+            pairwise_d(i) = d;
+        
+            label1 = sprintf('Col %d', c1);
+            label2 = sprintf('Col %d', c2);
+            if ~isempty(names)
+                label1 = names{c1};
+                label2 = names{c2};
+            end
+            pairwise_labels(i) = sprintf('%s vs. %s', label1, label2);
+        
+            if is_paired
+                test_type = 'paired';
+            else
+                test_type = 'unpaired';
+            end
+            
+            fprintf('%-30s t = % 5.2f, p = % .4f, d = % 5.2f (%s)\n', ...
+                pairwise_labels(i), st.tstat, p, d, test_type);
+        end
+    
+        pairwise_results = table(pairwise_labels, pairwise_t, pairwise_p, pairwise_d, ...
+            'VariableNames', {'Comparison', 'T', 'P', 'Cohens_d'});
+    
+        % Optionally: assign this to base workspace or attach to statstable
+        assignin('base', 'pairwise_results', pairwise_results);
+    end
+
 end
+
+if custom_p
+    if iscell(PValues)
+        P=[PValues{:}]';
+    else
+        P=PValues';
+    end
+    % very low P-values: do not use exactly zero, because of problems
+    P(find(P < 10 * eps)) = 10 * eps;
+end
+
 
 dat = y;  % adjusted data, for plot
 
@@ -398,7 +533,6 @@ end
 % ----------------------------------------------------
 % > Print Table
 % ----------------------------------------------------
-dashes = '---------------------------------------------';
 if doprinttable
     fprintf(1, '\n%s\nTests of column means against zero\n%s\n', dashes, dashes);
 end
@@ -439,9 +573,20 @@ hold on
 
 if dolineplot
 
-    handles.line_han = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
-    handles.errorbar_han = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
-    set(handles.errorbar_han, 'LineWidth', 2, 'Color', mycolor);
+    if iscell(mycolor)
+       for i = 1:length(xvals)
+        handles.line_han{i} = plot(xvals, Mean_Value, 'o-', 'Color', mycolor{i}, 'MarkerFaceColor', mycolor{i}, 'MarkerSize', 8);
+        handles.errorbar_han{i} = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
+        set(handles.errorbar_han{i}, 'LineWidth', 2, 'Color', mycolor{i});
+       end
+
+
+    else
+
+        handles.line_han = plot(xvals, Mean_Value, 'o-', 'Color', mycolor, 'MarkerFaceColor', mycolor, 'MarkerSize', 8);
+        handles.errorbar_han = errorbar(xvals, Mean_Value, Std_Error, Std_Error);
+        set(handles.errorbar_han, 'LineWidth', 2, 'Color', mycolor);
+    end
 
 elseif dobars
 
@@ -451,7 +596,7 @@ elseif dobars
         % each bar a different color
 
         for i = 1:length(xvals)
-            handles.bar_han{i} = bar(xvals(i), Mean_Value(i), 'FaceColor', mycolor{i});
+            handles.bar_han{i} = bar(xvals(i), Mean_Value(i), barwidth, 'FaceColor', mycolor{i});
 
             handles.errorbar_han{i} = errorbar(xvals(i), Mean_Value(i), Std_Error(i), 'Color', mycolor{i} ./ 2, 'LineWidth', 3);
 
@@ -482,8 +627,12 @@ if doviolin
     Y = enforce_cell_array(y);
 
     % Do not plot indiv points here; we will do later if requested. So use 'noind' option.
-    violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
-    legend off
+    try
+        violinplot(Y, 'noind', 'facecolor', mycolor, 'edgecolor', mycolor.*.75, 'mc', mycolor.*.5, 'x', xvals, 'medc', [], varargin{:});
+        legend off
+    catch
+        warning('Default violinplot cannot be plotted.')
+    end
 
 end
 
@@ -671,6 +820,67 @@ if dostars
     handles.star_handles = star_plot(P, xvals, mymarkersize);
 
 end
+
+
+
+% --- Add pairwise comparison brackets and stars ---
+if dopairwise
+    % Get current Y limits
+    yl = ylim();
+    
+    % Use actual plot data (mean + error bars) for upper reference
+    y_max_plot = max(Mean_Value(:) + Std_Error(:), [], 'omitnan');
+    
+    % Start brackets a bit above plot
+    y_start = y_max_plot + 0.05 * range(yl);
+    y_spacing = 0.05 * range(yl);
+    
+    bracket_level = 1;
+    top_star_y = y_start;  % track highest Y value used
+    
+    for i = 1:size(combs, 1)
+        if pairwise_p(i) < 0.05
+            col1 = combs(i, 1);
+            col2 = combs(i, 2);
+            x1 = xvals(col1);
+            x2 = xvals(col2);
+            x_middle = mean([x1, x2]);
+    
+            % Compute Y coordinate for this bracket
+            y_bracket = y_start + (bracket_level - 1) * y_spacing;
+            y_star = y_bracket + y_spacing + 0.01 * range(yl);
+            top_star_y = max(top_star_y, y_star);
+    
+            % Draw bracket
+            bracket_height = y_spacing * 0.6;  % shorter verticals
+            top_y = y_bracket + bracket_height;
+            
+            % Draw bracket manually: left vertical, top horizontal, right vertical
+            plot([x1 x1], [y_bracket, top_y], 'k', 'LineWidth', 1.5);  % left vertical
+            plot([x1 x2], [top_y, top_y],   'k', 'LineWidth', 1.5);    % top line
+            plot([x2 x2], [top_y, y_bracket], 'k', 'LineWidth', 1.5);  % right vertical
+    
+            % Significance stars
+            if pairwise_p(i) < 0.001
+                star_text = '***';
+            elseif pairwise_p(i) < 0.01
+                star_text = '**';
+            else
+                star_text = '*';
+            end
+    
+            text(x_middle, y_star, star_text, ...
+                 'HorizontalAlignment', 'center', ...
+                 'FontSize', 16, 'FontWeight', 'bold');
+    
+            bracket_level = bracket_level + 1;
+        end
+    end
+    
+    % Now safely extend ylim to include topmost star
+    ylim([yl(1), top_star_y + 0.05 * range(yl)]);
+end
+
 
 end % main function
 

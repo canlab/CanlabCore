@@ -109,7 +109,9 @@ function obj = merge_fcn(obj, obj2)
 obj = replace_empty(obj,'voxels');   % changed to 'voxels' only. SG 2/23/18
 obj2 = replace_empty(obj2,'voxels'); % changed to 'voxels' only. SG 2/23/18
 
-obj2 = resample_space(obj2, obj);
+if ~isempty(obj)
+    obj2 = resample_space(obj2, obj);
+end
 
 % hcat these attributes
 fnames = {'source_notes' 'Y_descrip' 'covariates_descrip' 'covariates' 'additional_info' 'dat'};

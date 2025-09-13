@@ -40,6 +40,7 @@ for i = 1:length(varargin)
             
             case 'always_replace', always_replace = true; varargin{i} = [];
             case 'noreplace', doreplacevoxels = false; varargin{i} = [];
+            case 'noverbose', doverbose = false; varargin{i} = [];
                 
             otherwise , warning(['Unknown input string option:' varargin{i}]);
         end
@@ -50,11 +51,12 @@ end
 % Subset
 % -------------------------------------------------------------------------
 
-if ~isempty(varargin) && any(cellfun(@isvector, varargin) || cellfun(@iscell, varargin))
+if ~isempty(varargin) && any(cellfun(@isvector, varargin) | cellfun(@iscell, varargin))
     
     if doverbose, disp('Getting atlas subset with select_atlas_subset'); end
     
-    atlas_obj_to_add = select_atlas_subset(atlas_obj_to_add, varargin{:});
+    args = varargin(cellfun(@isvector, varargin) | cellfun(@iscell, varargin));
+    atlas_obj_to_add = select_atlas_subset(atlas_obj_to_add, args{:});
     
 end
 
@@ -135,7 +137,20 @@ if has_pmaps && toadd_has_pmaps
         atlas_obj_to_add.probability_maps(wh, :) = 0;
     end
     
-    atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
+    % concatenating sparse matrices first is much faster than converting to full and the
+    % concatenating full matrices so instead of doing a double conversion
+    % and concatenating, try concatenating sparse matricies if either of
+    % them are sparse and then converting to full
+    %atlas_obj.probability_maps = [full(atlas_obj.probability_maps) full(atlas_obj_to_add.probability_maps)];
+    if issparse(atlas_obj.probability_maps) || issparse(atlas_obj_to_add.probability_maps)
+        if ~issparse(atlas_obj.probability_maps)
+            atlas_obj.probability_maps = sparse(double(atlas_obj.probability_maps));
+        end
+        if ~issparse(atlas_obj_to_add.probability_maps)
+            atlas_obj_to_add.probability_maps = sparse(double(atlas_obj_to_add.probability_maps));
+        end
+    end
+    atlas_obj.probability_maps = full([atlas_obj.probability_maps atlas_obj_to_add.probability_maps]);
     
     atlas_obj = probability_maps_to_region_index(atlas_obj);
     
@@ -192,7 +207,12 @@ end
 
 atlas_obj.label_descriptions = [atlas_obj.label_descriptions(:); atlas_obj_to_add.label_descriptions(:)];
 
-atlas_obj.references = strvcat(atlas_obj.references, atlas_obj_to_add.references);
+try
+    atlas_obj.references = strvcat(atlas_obj.references, atlas_obj_to_add.references);
+catch
+    warning('Atlas references are not the same datatype. Attempting automatic conversion to char arrays. Please check resultant reference field.')
+    atlas_obj.references = strvcat(char(atlas_obj.references), char(atlas_obj_to_add.references));
+end
 
 
 end % function

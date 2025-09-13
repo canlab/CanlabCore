@@ -41,6 +41,13 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 %   **nolegend:**
 %        omit table legend
 %
+%   **min:**
+%        show the minimum data value. By default, this is the max (e.g.,
+%        max Z). Minimum will be useful for, e.g., when data is p values.
+%
+%   **noverbose**:
+%        don't diplay results
+%
 % :Outputs:
 %
 %   Returns region objects for cl with pos and neg effects
@@ -91,6 +98,8 @@ function [poscl, negcl, results_table] = table(cl, varargin)
 % ..
 %    July 2018:  Autolabel update and "new 2018 version", Tor Wager. Also added legend text.
 %    November 2022: Autolabel now accepts 'atlas_obj' argument. Michael Sun
+%    September 2024: add "noverbose" option. Zizhuang Miao
+%    September 2024: add "publication" option based on mine and Zizhuang's code. Michael Sun
 
 
 n_cols = 140;                       % 140 good for HTML reports
@@ -103,6 +112,9 @@ forcenames = false;     % force naming of cl by removing existing names in .shor
 dolegacy = false;
 dosortrows = true;          % sort rows by area
 dolegend = true;
+noverbose = false;
+publication = false;
+show_min = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -121,6 +133,12 @@ for i = 1:length(varargin)
             case 'nolegend', dolegend = false;
 
             case 'atlas_obj', atl=varargin{i+1};     % Now accepts atlas_obj, MS: 11/3/2022
+            
+            case 'noverbose', dolegend=false; noverbose = true;      % suppress displaying outputs, ZM: 09/03/2024
+
+            case 'publication', dolegend=false; noverbose=true; publication = true;
+
+            case 'min', show_min = true;
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -145,12 +163,16 @@ if dosep
     
     clear poscl negcl
     
-    fprintf('\n%s\nPositive Effects\n', sep_str)
+    if ~noverbose
+        fprintf('\n%s\nPositive Effects\n', sep_str)
+    end
 else
     %     % just return cl in poscl
     %     poscl = cl;
     %     negcl = [];
-    fprintf('\n%s\nTable of all regions\n', sep_str)
+    if ~noverbose
+        fprintf('\n%s\nTable of all regions\n', sep_str)
+    end
 end
 
 
@@ -167,6 +189,11 @@ end
 
 % Now accepts atlas_obj, MS: 11/3/2022
 if exist('atl','var')
+
+    if isempty(atl.label_descriptions)
+        atl.label_descriptions = atl.labels';
+    end
+
     [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, atl);
 else
     [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy);
@@ -184,8 +211,6 @@ if donames && forcenames
     cl = cluster_names(cl);
     
 end
-
-
 
 % separate again so we return clusters with region names added.
 
@@ -214,6 +239,15 @@ end
 % poscl and negcl are done here, so we have values to be returned.
 % the code below uses overall cl and prints the table.
 
+
+% 2024 Publication Table
+if publication == true
+    [outputT_pos, outputT_neg]=print_publication_table(cl);
+    results_table=vertcat(outputT_pos, outputT_neg);
+    disp(results_table);
+    return
+else
+
 % Legacy table
 % - uses cluster_table
 % -------------------------------------------------------------------------
@@ -233,6 +267,7 @@ elseif isempty(region_table)
     return
     
 else
+
     % build table we want in table format and rename. Reformat a bit.
     % note for beta testing: table will break if regions are missing from
     % region_table.
@@ -258,8 +293,12 @@ else
     XYZ = table(round(cat(1, cl.mm_center)), 'VariableNames', {'XYZ'});
     
     % Z = get_max_Z(cl);
-    Z = get_signed_max(cl, 'Z', 'maxZ');  % use function because may be empty, handle if so
-    
+    if show_min % show minimum value
+        Z = get_min(cl, 'Z', 'minVal');  % use function because may be empty, handle if so
+    else % default behavior: max Z / signed max
+        Z = get_signed_max(cl, 'Z', 'minP');  % use function because may be empty, handle if so
+    end
+
     results_table = [Region Volume XYZ Z Atlas_coverage];
     results_table.region_index = (1:size(region_table, 1))';
     
@@ -293,16 +332,18 @@ else
     
     % Now split into positive and neg sub-tables and display
     
-    if any(ispos)
+    if any(ispos) & (~noverbose)
         disp(results_table_pos)
-    else
+    elseif ~any(ispos) & ~noverbose
         disp('No regions to display');
     end
     
-    fprintf('\nNegative Effects\n')
-    if any(~ispos)
+    if ~noverbose
+        fprintf('\nNegative Effects\n')
+    end
+    if any(~ispos) & (~noverbose)
         disp(results_table_neg)
-    else
+    elseif ~noverbose
         disp('No regions to display');
     end
     
@@ -320,12 +361,16 @@ end
 table_legend_text = strrep(table_legend_text, 'Modal_label', 'Region');
 table_legend_text = strrep(table_legend_text, 'Region_Vol_mm', 'Volume');
 
-if isempty(cl(1).Z_descrip)
-    myzdescrip = 'MaxZ: Unknown quantity; label in .Z_descrip field in region object.';
-    
+if show_min
+    myzdescrip = 'MinVal: Minimum value over cl.Z';
 else
-    myzdescrip = ['MaxZ: Signed max over ' cl(1).Z_descrip];
-
+    if isempty(cl(1).Z_descrip)
+        myzdescrip = 'MaxZ: Unknown quantity; label in .Z_descrip field in region object.';
+        
+    else
+        myzdescrip = ['MaxZ: Signed max over ' cl(1).Z_descrip];
+    
+    end
 end
 
 table_legend_text = [table_legend_text(1:2) myzdescrip table_legend_text(3:end)];
@@ -335,10 +380,10 @@ table_legend_text(end+1) = {'\nNote: Region object r(i).title contains full list
 % print
 canlab_print_legend_text(table_legend_text{:});
 
+end
+
 
 end % main function
-
-
 
 function print_legacy_table(cl, ispos, table_legend_text)
 
@@ -359,8 +404,6 @@ end
 % canlab_print_legend_text(table_legend_text'); % could use disp() here, but canlab function is more flexible
 
 end % function
-
-
 
 function val_table = get_signed_max(cl, myfield, tablevarname)
 % Returns a table with var "MaxZ" nregions x 1, or empty if cl.Z is empty
@@ -394,6 +437,26 @@ end
 
 end % function
 
+function val_table = get_min(cl, myfield, tablevarname)
+% Returns a table with one column named tablevarname,
+% containing the minimum of cl(i).(myfield) for each cluster.
+
+myv = NaN(numel(cl), 1);
+
+for i = 1:numel(cl)
+    if ~isempty(cl(i).(myfield))
+        vals = double(cl(i).(myfield));
+        myv(i) = min(vals);
+    end
+end
+
+if all(isnan(myv))
+    val_table = [];
+else
+    val_table = table(myv, 'VariableNames', {tablevarname});
+end
+end
+
 function val = signedmax(vals)
 
 vals = double(vals);
@@ -402,7 +465,6 @@ vals = double(vals);
 val = sign(vals(wh)) .* maxabs;
 
 end
-
 
 function [cl, region_table, table_legend_text, dolegacy] = autolabel_regions(cl, dolegacy, varargin)   % Now accepts atlas_obj, MS: 11/3/2022
 

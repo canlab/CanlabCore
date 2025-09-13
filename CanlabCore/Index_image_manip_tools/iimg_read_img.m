@@ -225,7 +225,7 @@ if(reading_data)
             % spm_defaults is a script
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
 
-        case {'SPM5', 'SPM8', 'SPM12'}
+        case {'SPM5', 'SPM8', 'SPM12', 'SPM25'}
             % spm_defaults is a function
             spm_defaults()
 

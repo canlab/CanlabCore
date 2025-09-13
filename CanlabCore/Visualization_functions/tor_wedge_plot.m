@@ -181,9 +181,13 @@ if ~docolorband
     colorband_colors = scn_standard_colors(n_categories);
 end
     
+if istable(text_labels)
+    text_labels = table2array(text_labels);
+end
+
 % Error checks
 
-if any(size(outer_circle_radius)) > 1, error('''outer_circle_radius'' input should be followed by a scalar value.'); end
+if any(size(outer_circle_radius) > 1), error('''outer_circle_radius'' input should be followed by a scalar value.'); end % Lukas corrected syntax error causing the check to always return false
 
 
 % --------------------------------------------------------------------------

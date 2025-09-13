@@ -44,32 +44,42 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %        Generally 1st-level contrast images, with one image per participant
 %
 % :Optional Inputs:
-%   **names:**
+%   **'names':**
 %        followed by cell array of names for each regressor
 %
-%   **'doplot', [logical flag]:
-%        Create plots; default = true. 'noplot' to turn off.
+%   **'doplot', [logical flag]:**
+%        Create plots; default = true. enter 'noplot', true or 'doplot', false to turn off.
 %
-%   **'doverbose', [logical flag]:
-%        Verbose output; default = true. 'noverbose' to turn off.
+%   **'plotdiagnostics', [logical flag]:**
+%        Create diagnostic plots; default = true.
 %
-%   **'csf_wm_covs', [logical flag]:
+%   **'use_BH_fdr', [logical flag]:**
+%        Use Benjamini-Hochberg original FDR correction
+%
+%   **'simpleplots', [logical flag]:**
+%        Create simple results plots with no surfaces; default = false.
+%
+%   **'doverbose', [logical flag]:**
+%        Verbose output; default = true. enter 'noverbose', true or 'doverbose', false to turn off.
+%
+%   **'csf_wm_covs', [logical flag]:**
 %        Add global WM and CSF from standard MNI-space masks as covariates
 %        default = false 
 % 
-%   **'remove_outliers', [logical flag]:
+%   **'remove_outliers', [logical flag]:**
 %        Remove outliers identified based on mahalanobis distance on either 
 %        cov or corr across images at p < 0.05 uncorrected 
 %        default = false 
 %
-%   **'mask', [atlas_object]
-%       Perform analysis in a subset of parcels rather than all parcels in
+%   **'mask', [atlas_object]**
+%       Perform analysis in parcels defined by a custom atlas object
 %       canlab_2018 atlas, or in any different atlas or a subset thereof
 %           NOTE: in this case, the output will not contain 489 parcels but
 %           a different number
 %
+%   **'atlas', [atlas_object]
 %
-% :Outputs:
+% :Outputs: (For an atlas with 489 regions and 2 predictors, including intercept)
 %
 %   **OUT:**
 %                  betas: [489×2 double]    Parcels x Predictors regression slopes
@@ -77,8 +87,9 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %                pvalues: [489×2 double]    Parcels x Predictors p-values
 %              nsubjects: [489×1 double]    Number of subjects analyzed
 %                maskvol: [489×1 double]    Vector of parcels run (1) or missing (0)
-%                weights: [489×30 double]   Parcels x Subjects robust regression weights
+%                weights: [489×30 double]   Parcels x Subjects robust regression weights (low weight = outlier)
 %                    dfe: [489×1 double]    error df for each parcel
+%              datmatrix: [489 x n double]  Input data, averaged within parcels, for each subject
 %            pthr_FDRq05: [0.0081 0.0128]   P-thresholds for FDR q < .05 for each predictor (map)
 %                sig_q05: [489×2 logical]   Parcels x predictors q < 0.05
 %         cohens_d_fdr05: [0.4834 0.4458]   Min Cohen's d detectable at FDR q < 0.05
@@ -110,6 +121,12 @@ function OUT = robfit_parcelwise(imgs, varargin)
 % % Parcel-wise
 % OUT = robfit_parcelwise(imgs);
 %
+% Add names and context:
+% OUT = robfit_parcelwise(imgs, 'names', {'Pred 1: Age' 'Pred 2: Optimism'}, 'analysis_name', 'My analysis');
+%
+% Use B-H correction and simple plots
+% OUT = robfit_parcelwise(diff_obj, 'plotdiagnostics', true, 'use_BH_fdr', true, 'simpleplots', true);
+%
 % % Post-run interactive visualization, etc.
 % o2 = canlab_results_fmridisplay(get_wh_image(t, 2), 'montagetype', 'full', 'noverbose');
 % o2 = removeblobs(o2);
@@ -125,6 +142,9 @@ function OUT = robfit_parcelwise(imgs, varargin)
 % run with global covariates and removing outliers based on Mahalanobis distance:
 % OUT = robfit_parcelwise(imgs2, 'csf_wm_covs', 'remove_outliers');
 %
+% Omit diagnostics plots - helpful to abbreviate output in some reports
+% OUT = robfit_parcelwise(imgs2, 'plotdiagnostics', false);
+%
 % :References:
 %   None listed yet.
 %
@@ -137,7 +157,8 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %    Created by Tor Wager, Feb 2021
 %    
 %    Added mask option, Lukas Van Oudenhove, Feb 2023
-%
+%    Additional design diagnostic checking, Tor Wager, Dec 2023
+%    Fixed documentation and small bugs, added correction for pvalues == 0  Tor Wager, Jan 2025
 % ..
 
 % --------------------------------------------
@@ -146,10 +167,11 @@ function OUT = robfit_parcelwise(imgs, varargin)
 % names = {};
 % doverbose = true;
 % doplots = true;
+% plotdiagnostics = true; % only applies if doplots = true
 
 ARGS = parse_inputs(varargin{:});
 
-% If you want to distribute arguments back out to variables, use this:
+% Distribute arguments back out to variables:
 
 fn = fieldnames(ARGS);
 
@@ -157,6 +179,9 @@ for i = 1:length(fn)
     str = sprintf('%s = ARGS.(''%s'');', fn{i}, fn{i});
     eval(str)
 end
+
+if noplot, doplots = false; end
+if noverbose, doverbose = false; end
 
 % --------------------------------------------
 % set up images and parcels
@@ -167,9 +192,15 @@ if isempty(which('mafdr')), error('Sorry, you need the Matlab bioinformatics too
 
 % Load parcel atlas and initalize object
 if ~isempty(ARGS.mask)
-    b = brainpathway(ARGS.mask,'noverbose'); % added by Lukas
+
+
+        b = brainpathway(ARGS.mask,'noverbose'); % added by Lukas
+
+
 else
-    b = brainpathway('noverbose');
+
+        b = brainpathway('noverbose');
+
 end
 
 % Make image space match atlas space
@@ -217,11 +248,12 @@ else
     X = intercept(X, 'end');
 end
 
+% Now done later
 % Check for non-centered predictors (excluding the intercept)
-if any(abs(mean(X)) > (100 * eps) & any(abs(X - mean(X)) > 100 * eps, 1))
-    warning('SOME PREDICTORS ARE NOT CENTERED - THE INTERCEPT MAP WILL NOT BE INTERPRETABLE AS THE GROUP MEAN');
-    pause(2)
-end
+% if any(abs(mean(X)) > (100 * eps) & any(abs(X - mean(X)) > 100 * eps, 1))
+%     warning('SOME PREDICTORS ARE NOT CENTERED - THE INTERCEPT MAP WILL NOT BE INTERPRETABLE AS THE MEAN PARTICIPANT, AND DEPENDS ON CODING OF REGRESSORS');
+%     pause(2)
+% end
 
 k = size(X, 2); % number of maps to estimate - one per regressor
 
@@ -270,7 +302,7 @@ if remove_outliers
     datmatrix(outliers_uncorr, :) = [];
 
     if doverbose
-        fprintf('Adjustments: Removed %d outlier images\n', sum(outliers_uncorr));
+        fprintf('\nAdjustments: Removed %d outlier images\n', sum(outliers_uncorr));
     end
 
     t = t - sum(outliers_uncorr);
@@ -285,9 +317,30 @@ if remove_outliers
     
 end
 
+
+
 % --------------------------------------------
-% Plot design matrix
+% Plot and check design matrix
 % --------------------------------------------
+
+% Check for non-centered predictors (excluding the intercept)
+wh_noncentered = abs(mean(X)) > (100 * eps) & any(abs(X - mean(X)) > 100 * eps, 1);
+
+for i = 1:size(X, 2)
+%     wh_effectscode(i) = all(X(:, i) == -1 | X(:, i) == 0 | X(:, i) == 1);
+    nlevels(i) = length(unique(X(:, i)));
+end
+
+if any(wh_noncentered)
+    warning('SOME PREDICTORS ARE NOT CENTERED - THE INTERCEPT MAP WILL NOT BE INTERPRETABLE AS THE MEAN PARTICIPANT, AND DEPENDS ON CODING OF REGRESSORS. THIS MAY BE WHAT YOU WANT IF YOU ARE INCLUDING GLOBAL NUISANCE VARIABLES LIKE CSF AND WM');
+    pause(2)
+end
+
+% summary_table
+vifs = [getvif(X) NaN];
+reg_table = table(names', nanmean(X)', nlevels', vifs', 'VariableNames', {'Name' 'Mean' 'Levels' 'VIF'}); 
+disp('Summary of regressors:')
+disp(reg_table)
 
 if doplots && k > 2
     
@@ -343,10 +396,14 @@ for i = 1:v
         w = naninsert(wasnan, stats.w);
         
     else
-        % empty voxel: not enough data
-        disp('THIS CODE SHOULD NEVER RUN B/C EXCLUDING BAD VOXELS ABOVE');
+        % empty voxel/region: not enough data
+        %         disp('THIS CODE SHOULD NEVER RUN B/C EXCLUDING BAD VOXELS ABOVE');
+        % but sometimes missing regions, maybe if data are
+        %         resampled to mask/atlas space and there are missing vox
+
         bb = NaN .* ones(k, 1);
-        stats = struct('t', bb, 'p', ones(k, 1));
+        stats = struct('t', bb, 'p', ones(k, 1), 'dfe', NaN);
+        N = length(wasnan);
         w = NaN .* ones(N, 1);
         
     end
@@ -364,7 +421,13 @@ for i = 1:v
     
 end % loop through nodes
 
-OUT = struct('betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
+% fix pvalues that are exactly zero - can happen with highly powered
+% analyses. make sure they have valid t-scores
+wh = find(pvalues == 0 & ~isnan(tscores) & ~isinf(tscores));
+minp = min(pvalues(pvalues > 0));
+pvalues(wh) = minp;
+
+OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction
@@ -372,30 +435,46 @@ OUT = struct('betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects'
 
 FDRq = zeros(v, k);
 pthr = zeros(1, k);
+% use_BH_fdr = true;
 
 for i = 1:k
     % for each map
-    [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
-    
-    if pIO > .99
-        % all P-values 1, mafdr may not be suitable
-        disp('Warning: Prior prob of sig P-values is near 1. Using B-H FDR');
+
+    if use_BH_fdr
+
+        if doverbose, fprintf('Using B-H FDR as specified by user\n', names{i}); end
+
         pthr_i = FDR(pvalues(:, i), .05);
-        
+        if isempty(pthr_i), pthr_i(i) = -Inf; end
+        sig_q05(:, i) = pvalues(:, i) < pthr_i;
+
     else
-        % use mafdr
+        % MAFDR
+        if doverbose, fprintf('%s\nApplying MAFDR correction\n', names{i}); end
+        [FDRq(:, i), ~, pIO] = mafdr(pvalues(:, i));
+        sig_q05 = FDRq < 0.05;
         % P-threshold for FDR q < 0.05 for each map
         pthr_i = max(pvalues(FDRq(:, i) < 0.05, i));
-    end
+
+        if pIO > .99
+            % all P-values 1, mafdr may not be suitable
+            fprintf('Warning:\n%s\nPrior prob of sig P-values is near 1. Using B-H FDR\n', names{i});
+            pthr_i = FDR(pvalues(:, i), .05);
+            if isempty(pthr_i), pthr_i = -Inf; end
+            sig_q05(:, i) = pvalues(:, i) < pthr_i;
+        end
+
+    end  % Threshold method
     
     if isempty(pthr_i)
-        pthr(i) = Inf;
+        pthr(i) = -Inf;
     else
         pthr(i) = pthr_i;
     end
-end
 
-sig_q05 = FDRq < 0.05;
+end % for each map
+
+if doverbose, fprintf('%s\nP-value for FDR q < 0.05 is %3.6f\n', names{i}, pthr); end
 
 % Other interesting metrics to save
 
@@ -456,6 +535,7 @@ OUT.nsubjects_obj = parcel_data2fmri_data(b.region_atlas, nsubjects);
 resultstable = table;
 resultstable.Properties.Description = 'Parcel-wise robust regression';
 resultstable.maxT = max(OUT.tscores)';
+resultstable.minT = min(OUT.tscores)';
 resultstable.minP = min(OUT.pvalues)';
 
 resultstable.sig05 = sum(OUT.pvalues < 0.05)';
@@ -496,6 +576,11 @@ if doverbose
     
 end
 
+if doplots && simpleplots
+    OUT.t_obj.image_labels = names;
+    montage(OUT.t_obj, 'noverbose');
+end
+
 for i = 1:k
     
     if doverbose
@@ -504,10 +589,15 @@ for i = 1:k
     
     if doplots && ~isinf(OUT.pthr_FDRq05(i)) % if we have some results to show
         
-        canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
-        
-        set(gcf, 'Name', names{i}, 'NumberTitle', 'off');
-        
+        if simpleplots
+%             o2 = canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'compact2', 'noverbose');
+%             o2 = title_montage(o2, 1, names{i});
+        else
+            canlab_results_fmridisplay(get_wh_image(OUT.t_obj, i), 'montagetype', 'full', 'noverbose');
+            set(gcf, 'Name', names{i}, 'NumberTitle', 'off');
+        end
+
+           
     end
     
     if doverbose
@@ -532,12 +622,48 @@ for i = 1:k
 
 end
 
+% --------------------------------------------
+% Prediction of low weights
+% --------------------------------------------
+X = scale(table2array(OUT.ind_quality_dat(:, 2:end)), 1);
+X = [X scale(OUT.ind_quality_dat.global_GM, 1) .^ 2];      % add quadratic for GM
+y = OUT.ind_quality_dat.Global_Weight_Mean;
+
+[b, ~, stat] = glmfit(X, y);
+yhat = [ones(size(X, 1), 1) X] * b;
+r2 = corr(y, yhat) .^ 2;
+
+names = OUT.ind_quality_dat.Properties.VariableNames(2:end);
+names = format_strings_for_legend(names);
+names(end+1) = {'GlobalGM^2'};
+lowweighttable = glm_table(stat, names, b, 1);
+
+OUT.predicting_weights_from_image_metrics = lowweighttable;
+
+if doverbose
+    fprintf('\nPrediction of rob reg weights: Neg coeff means + predictor values -> low weights\n');
+    disp(lowweighttable)
+
+
+    whbadweights = y < 0.85;
+    disp('Cases with mean rob reg weight < 0.85 (low weights), possible bad data:');
+    
+    if ~isempty(imgs.metadata_table)
+        bad_t = (imgs.metadata_table(whbadweights, :));
+        bad_t = addvars(bad_t, y(whbadweights), 'Before', 1, 'NewVariableNames', 'Global_weight');
+        bad_t = sortrows(bad_t, 'Global_weight', 'ascend');
+        disp(bad_t)
+    else
+        find(whbadweights)'
+    end
+
+end % verbose
 
 % --------------------------------------------
 % Additional diagnostic info
 % --------------------------------------------
     
-if doplots
+if doplots && plotdiagnostics
     
     % --------------------------------------------
     % Mask Figure
@@ -550,7 +676,7 @@ if doplots
     % --------------------------------------------
     % Data Figure
     % --------------------------------------------
-    plot(imgs);
+    plot(imgs, 'noorthviews');
     
     drawnow, snapnow;
     
@@ -560,7 +686,7 @@ if doplots
     
     create_figure('weights and metrics', 2, 2);
     xlabel('Image'); ylabel('Weights');
-    errorbar(mean(OUT.weights), std(OUT.weights), 'bo', 'MarkerFaceColor', [0 0 .5])
+    errorbar(mean(OUT.weights), std(OUT.weights), 'bo', 'MarkerFaceColor', [0 0 .5]);
     title('Mean weights across parcels (s.d. error bars) per image');
     axis tight; 
     
@@ -571,35 +697,68 @@ if doplots
     colorbar;
     axis tight; set(gca, 'YDir', 'Reverse');
     
-    
     subplot(2, 2, 3);
-    xlabel('Image'); ylabel('Z(Weights)');
-    errorbar(zscore(mean(OUT.weights)), ste(OUT.weights), 'bo-', 'MarkerFaceColor', [0 0 .5], 'LineWidth', 2)
-    title('Mean weights (s.e. error bars) and quality metrics');
-    plot(zscore(OUT.individual_metrics.gm_L1norm), 'LineWidth', 2);
-    plot(zscore(OUT.individual_metrics.csf_L1norm), 'LineWidth', 2);
-    plot(zscore(ds), 'LineWidth', 2);
-    plot(zscore(dscov), 'LineWidth', 2);
-    legend({'Z(Weights)' 'Z(GM L1 norm)' 'Z(CSF L1 norm)' 'Mahal corr dist' 'Mahal cov dist'});
-    axis tight; 
-    
-    % mark off who are outliers
-    wh_out = find(OUT.outliers_uncorr);
-    for i = 1:length(wh_out)
-        
-        hh = plot_vertical_line(wh_out(i));
-        set(hh, 'Color', 'r', 'LineStyle', '--');
-        
-        if i == 1
-                legend({'Z(Weights)' 'Z(GM L1 norm)' 'Z(CSF L1 norm)' 'Mahal corr dist' 'Mahal cov dist' 'Mah. outliers p<.05 uncor'});
-        end
-    end
-    
+
+    lineh = plot(yhat, y, 'ko'); refline
+    xlabel('Predicted rob reg weights'), ylabel('Rob reg weights')
+    hold on;
+    plot(yhat(OUT.outliers_uncorr), y(OUT.outliers_uncorr), 'o', 'MarkerFaceColor', 'r');
+
+    title(sprintf('Pred rob reg weights from image diagnostics, r^2 = %3.2f', r2));
+
+
+    % This was messy and IMO not that useful (Tor), so replaced
+%     han = [];
+%     xlabel('Image'); ylabel('Z(Weights)');
+%     han(1) = plot(zscore(mean(OUT.weights)), 'bo-', 'MarkerFaceColor', [0 0 .5], 'LineWidth', 2)
+%     title('Mean weights and quality metrics');
+% 
+%     han(2) = plot(zscore(OUT.individual_metrics.gm_L1norm), 'LineWidth', 2);
+%     han(3) = plot(zscore(OUT.individual_metrics.csf_L1norm), 'LineWidth', 2);
+%     han(4) = plot(zscore(ds), 'LineWidth', 2);
+%     han(5) = plot(zscore(dscov), 'LineWidth', 2);
+%     axis tight; 
+%     
+%     % mark off who are outliers
+%     wh_out = find(OUT.outliers_uncorr);
+%     for i = 1:length(wh_out)
+% 
+%         if i == 1
+%             han(end) = plot_vertical_line(wh_out(i));
+%             set(han(end), 'Color', 'r', 'LineStyle', '--');
+%         else
+%             hh = plot_vertical_line(wh_out(i));
+%             set(hh, 'Color', 'r', 'LineStyle', '--');
+% 
+%         end
+%     end
+% 
+%     % legend at end so we don't get the outlier lines
+%     legend(han, {'Z(Weights)' 'Z(GM L1 norm)' 'Z(CSF L1 norm)' 'Mahal corr dist' 'Mahal cov dist' 'Mah. outliers p<.05 uncor'});
+%     
+
+
     subplot(2, 2, 4)
     plot_correlation_matrix(datmatrix, 'dofigure', false);
     title('inter-parcel correlations across images');
+    xlabel('high values -> spatial corr, similar data values across parcels')
     drawnow, snapnow;
     
+
+    % --------------------------------------------
+    % Weights and diagnostics detail
+    % --------------------------------------------
+    create_figure('plotmatrix');
+    [hh, ax, bigax] = plotmatrix(table2array(OUT.ind_quality_dat));
+    names = OUT.ind_quality_dat.Properties.VariableNames;
+    names = format_strings_for_legend(names);
+    for i = 1:length(names), title(ax(1, i), names{i}); end
+    for i = 1:length(names), ylabel(ax(i, 1), names{i}); end
+
+
+
+
+
     
 end % doplots
 
@@ -616,7 +775,7 @@ p = inputParser;
 % ----------------------------------------------------------------------
 
 valfcn_scalar = @(x) validateattributes(x, {'numeric' 'logical'}, {'nonempty', 'scalar'});
-valfcn_atlas = @(x) isa(x,'atlas'); % added by Lukas
+valfcn_atlas = @(x) isa(x, 'atlas'); % added by Lukas
 
 % valfcn_number = @(x) validateattributes(x, {'numeric'}, {'nonempty'}); % scalar or vector
 %
@@ -640,13 +799,21 @@ valfcn_atlas = @(x) isa(x,'atlas'); % added by Lukas
 
 % p.addParameter('color', [.9 .2 0], valfcn_xyz);
 p.addParameter('names', {}, @iscell); % can be scalar or vector
+p.addParameter('analysis_name', 'Regression analysis', @ischar); 
 p.addParameter('doverbose', true, valfcn_scalar);
 p.addParameter('doplots', true, valfcn_scalar);
 p.addParameter('csf_wm_covs', false, valfcn_scalar);
 p.addParameter('remove_outliers', false, valfcn_scalar);
 p.addParameter('mask', {}, valfcn_atlas); % added by Lukas
+p.addParameter('plotdiagnostics', true, valfcn_scalar);
+     
+p.addParameter('simpleplots', false, valfcn_scalar);
+p.addParameter('use_BH_fdr', false, valfcn_scalar);
 
+p.addParameter('noplot', false, valfcn_scalar);
+p.addParameter('noverbose', false, valfcn_scalar);
 
+% p.addParameter('atlas', [], @(x) isa(x, 'atlas'));
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------

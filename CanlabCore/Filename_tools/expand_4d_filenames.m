@@ -112,7 +112,7 @@ function [n] = num_frames(img_name)
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
 
-        case {'SPM5', 'SPM8','SPM12'}
+        case {'SPM5', 'SPM8','SPM12', 'SPM25'}
             V = spm_vol(img_name);
             n = length(V);
 

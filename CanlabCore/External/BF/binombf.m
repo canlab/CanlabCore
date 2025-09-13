@@ -1,6 +1,6 @@
 function bf10 = binombf(k,n,p)
 %
-% bf10 = binombf(r,n,p)
+% bf10 = binombf(k,n,p)
 %
 % Calculates Bayes factor for binomial test with k successes, n trials and base probability p.
 % This is based on the Bayes Factor example on Wikipedia (http://en.wikipedia.org/wiki/Bayes_factor).

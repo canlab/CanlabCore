@@ -95,7 +95,7 @@ previmgs = dat.removed_images;
 
 % if removed_voxels is [], replace
 if isempty(dat.removed_voxels), dat.removed_voxels = false(size(empty_voxels)); end
-if isempty(dat.removed_images), dat.removed_voxels = false(size(empty_images)); end
+if isempty(dat.removed_images), dat.removed_images = false(size(empty_images)); end
 
 % keep overall list
 dat.removed_voxels = dat.removed_voxels | empty_voxels;
@@ -140,7 +140,11 @@ if isa(dat, 'statistic_image')
         if isrow(dat.(myfields{1})), dat.(myfields{1}) = dat.(myfields{1})'; end
         
         if ~isempty(dat.(myfields{1}))
-            dat.(myfields{1})(empty_voxels, :) = [];
+            try
+                dat.(myfields{1})(empty_voxels, :) = [];
+            catch
+                warning(['Cannot remove empty_voxels because ', myfields{1}, ' is misconfigured.'])
+            end
         end
         
     end

@@ -1,4 +1,4 @@
-function [r,str,sig,ploth] = plot_correlation_samefig(xvec,yvec,varargin)
+function [r,str,sig,ploth,rp] = plot_correlation_samefig(xvec,yvec,varargin)
 % :Usage:
 % ::
 %
@@ -61,7 +61,7 @@ robopt = 'IRLS';    %'IRLS' or 'MCD'
 xvec = double(xvec);
 yvec = double(yvec);
 
-r = [];, str=[];sig=[]; hh=[];
+r = [];, str=[];sig=[]; hh=[];, p=[];
 
 if length(varargin) > 0, mylabels = varargin{1};  else  mylabels = [];  end
 if length(varargin) > 1, mycol = varargin{2};  else  mycol = 'ko'; end

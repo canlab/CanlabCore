@@ -1,4 +1,4 @@
-function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p)
+function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p, varargin)
 % function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runs,T,p)
 %
 % Fits GLM using canonical hrf (with option of using time and dispersion derivatives)';
@@ -26,39 +26,73 @@ function [hrf, fit, e, param, info] = Fit_Canonical_HRF(tc, TR, Run, T, p)
 % Created by Martin Lindquist on 10/02/09
 % Last edited: 05/17/13 (ML)
 
+% Edited to allow passing in custom design matrix e.g., from SPM. Will
+% assume that the first regressor columns of the design matrix pertain to
+% the regressors in Run: Michael Sun, Ph.D. 02/20/2024
+
+[h, dh, dh2] = CanonicalBasisSet(TR);
 %tc = tc';
 d = length(Run);
 len = length(Run{1});
+% Generate a design matrix
 t=1:TR:T;
 
-X = zeros(len,p*d);
-param = zeros(3,d);
-
-[h, dh, dh2] = CanonicalBasisSet(TR);
-
-for i=1:d,
-    v = conv(Run{i},h);
-    X(:,(i-1)*p+1) = v(1:len);
-
-    if (p>1)
-        v = conv(Run{i},dh);
-        X(:,(i-1)*p+2) = v(1:len);
+% Import your own design matrix
+if ~isempty(varargin)
+    X=varargin{1};
+    if numel(varargin)>1
+        for i = 1:numel(varargin)
+            if strcmpi(varargin{i}, 'invertedDX')
+                PX=varargin{i+1};
+                b=PX*tc;
+            end 
+        end
+    end
+    if ~exist('b', 'var')
+        b = pinv(X)*tc;
     end
 
-    if (p>2)
-        v = conv(Run{i},dh2);
-        X(:,(i-1)*p+3) = v(1:len);
-    end
-end
+    e = tc-X*b;
+    fit = X*b;
     
-X = [(zeros(len,1)+1) X];
+    % Be careful here. if p>1, make sure Run includes derivatives so there
+    % are p*task regressors.
+    b = reshape(b(1:numel(Run)),p,d)'; % Extract my own regressors
+    bc = zeros(d,1);
 
-b = pinv(X)*tc;
-e = tc-X*b;
-fit = X*b;
-
-b = reshape(b(2:end),p,d)';
-bc = zeros(d,1);
+else
+   
+    % Constructing the Design Matrix X:
+    X = zeros(len,p*d);
+    param = zeros(3,d);
+    
+    for i=1:d,
+        v = conv(Run{i},h);
+        X(:,(i-1)*p+1) = v(1:len);
+    
+        % Computing the first derivative
+        if (p>1)
+            v = conv(Run{i},dh);
+            X(:,(i-1)*p+2) = v(1:len);
+        end
+    
+        % Computing the second derivative
+        if (p>2)
+            v = conv(Run{i},dh2);
+            X(:,(i-1)*p+3) = v(1:len);
+        end
+    end
+    
+    % This line adds an intercept
+    X = [(zeros(len,1)+1) X];
+    PX = pinv(X);
+    b = PX*tc;
+    e = tc-X*b;
+    fit = X*b;
+   
+    b = reshape(b(2:end),p,d)';
+    bc = zeros(d,1);
+end
 
 for i=1:d,
     if (p == 1)
@@ -71,8 +105,8 @@ for i=1:d,
         bc(i) = sign(b(i,1))*sqrt((b(i,1))^2 + (b(i,2))^2 + (b(i,3))^2);
         H = [h dh dh2];
     end    
-
 end
+
 
 hrf = H*b';
 
@@ -80,10 +114,12 @@ for i=1:d,
     param(:,i) = get_parameters2(hrf(:,i),1:length(t));
 end;
 
+
 info ={};
 info.b = b;
 info.bc = bc;
-info.X = X;
+info.DX = X;
+info.PX = PX;
 info.H =H;
 
 end

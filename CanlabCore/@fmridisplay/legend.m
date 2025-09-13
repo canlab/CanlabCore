@@ -12,6 +12,10 @@ function obj = legend(obj, varargin)
 % ..
 %    Tor Wager
 %    8/17/2016 - pkragel updated to accomodate split colormap
+%
+%    Michael Sun
+%    07/29/2024 - Updated to allowfor indexmap labelling
+
 % ..
 %
 % Notes: scaleanchors is min and max values for pos and neg range (for
@@ -21,6 +25,8 @@ function obj = legend(obj, varargin)
 doverbose = true;
 donewfig = false;
 
+is_indexmap=false;
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -29,8 +35,15 @@ for i = 1:length(varargin)
             case 'noverbose', doverbose = false;
                 
             case 'indexmap'
-                warning('Legend plotting not yet supported for indexed colormaps')
-                return;
+                % warning('Legend plotting not yet supported for indexed colormaps')
+                is_indexmap=true;
+                cmap=varargin{i+1};
+
+            case 'labels'
+                if ~contains('indexmap',varargin(cellfun(@ischar,varargin))),...
+                        warning('''labels'' doesn''t do anything without an ''indexmap'' argument.');
+                end
+                mylabels=varargin{i+1};
                 
             % otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -57,6 +70,27 @@ else
     myfontsize = 14;
     
 end
+
+
+
+if is_indexmap
+        if exist('mylabels', 'var')
+            num_labels=numel(mylabels);
+    
+            % Calculate the YTick positions to be centered within each color segment
+            x_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
+            x_positions = (x_positions(1:end-1) + x_positions(2:end)) / 2; % Midpoints
+            
+            bar1axis = axes('Position', [.35 -0.35 .38 .42]);
+            colormap(bar1axis, cmap)
+            colorbar_han = colorbar(bar1axis, 'northoutside');
+            set(bar1axis, 'Visible', 'off');
+            colorbar_han.Ticks=x_positions;
+            colorbar_han.TickLabels=mylabels;
+        else
+            warning('No labels input for indexmap')
+        end
+else
 
 for c = 1:length(obj.activation_maps)
     
@@ -193,6 +227,8 @@ for c = 1:length(obj.activation_maps)
     axis tight
     set(gca, 'XLim', [min(scaleanchors) max(scaleanchors)], 'XTick', myxtick, 'XTickLabel', mylabels);
      
+end
+
 end
 
 

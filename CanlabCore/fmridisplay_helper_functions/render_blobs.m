@@ -68,6 +68,11 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %         will be plotted with the color specified by the 3rd row of your
 %         colormap.
 %
+%      **colormap':**
+%         Followed by an n x 3 matrix of colormap values. These will be map
+%         continuously throughout the data range if no cmaprange is
+%         provided.
+%
 %   **OUTLINING:**
 %
 %      **'outline'**
@@ -112,7 +117,17 @@ function [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, mym
 %
 %      **'interp':**
 %         Options to pass to interp2. See help interp2 for valid
-%         interpolation methods
+%         interpolation methods. default: linear
+%
+%      **'partialvolumethreshold':**
+%         A value between 0 and 1 that determines what minimum partial 
+%         volume fraction to keep when interpolating from voxels to pixels.
+%         If 'nearest' is chosen for 'interp' then partial volume effects 
+%         are computed using linear interpolation. Otherwise the same 
+%         interpolation method is used as specified by 'interp'. This value
+%         can be helpful for titrating the degree of overlap among
+%         neighboring blobs. It's an imperfect solution though.
+%         default: 0.5. 
 %
 %   **Orientation:**
 %         'sagittal', 'coronal', 'axial'
@@ -161,6 +176,7 @@ contourmin = 100*eps;
 outline = 0;
 mylinewidth = 2;
 interpStyle = 'linear';
+partial_vol_thresh = 0.5;
 
 vstr = version; % 7/21/15 stephan: ask for MATLAB version to plot contours in old versions
 
@@ -170,6 +186,7 @@ indexmap = [];
 mincolor = [0 0 1];
 maxcolor = color;     % for output (affects legend). must be same as color
 dosplitcolor = 0;
+customcolormap = 0;
 
 enhance_contrast = @(x1)(x1);
 
@@ -198,7 +215,8 @@ for i = 1:length(varargin)
             case 'onecolor', docolormap = 0; % solid-color blobs
             case 'indexmap'
                 for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
-                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin))),...
+                    
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
                         sprintf('Cannot evaluate render_blobs() with both ''indexmap'' and ''%s'' arguments. These are mutually exclusive',...
                             exclusive{1}));
                 end
@@ -222,6 +240,23 @@ for i = 1:length(varargin)
                     indexmap=varargin{i+1};
                 catch
                     error('''indexmap'' argument must be followed by an n x 3 matrix of colormap values');
+                end
+            case 'colormap'
+                for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
+                    
+                    assert(~contains(exclusive{1},varargin(cellfun(@ischar,varargin) & ~cellfun(@isempty,varargin))),...
+                        sprintf('Cannot evaluate render_blobs() with both ''colormap'' and ''%s'' arguments. These are mutually exclusive',...
+                            exclusive{1}));
+                    
+                end
+
+                docolormap = 1; 
+                customcolormap = 1;
+                dosplitcolor = 0; 
+                try
+                    cm=varargin{i+1};
+                catch
+                    error('''colormap'' argument must be followed by an n x 3 matrix of colormap values');
                 end
             case 'splitcolor'
                 
@@ -256,7 +291,7 @@ for i = 1:length(varargin)
                 
                 % contour options
             case 'contour', docontour = 1;
-            case 'outline', docontour = 1; outline = 1;
+            case 'outline', outline = 1; docontour=1; % outline has no impact if docontour is false
             case 'outline_color', edgecolor = varargin{i + 1}; % Wani added this.
             case 'fill', dofill = 1; % Wani added this: With this option, we can fill the blob and color outline at the same time. This doesn't work with 'splitcolor', though.
             case 'linewidth', mylinewidth = varargin{i + 1};
@@ -266,7 +301,9 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', 'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype'}
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', ...
+                    'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype' 'sourcespace' 'targetsurface' 'compact3', ...
+                    'disableVis3d'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
                 % other related functions, including calling functions, and can be ignored here.
@@ -279,7 +316,47 @@ for i = 1:length(varargin)
             case 'transcontrast'
                 k = varargin{i+1};
                 enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
+            
+            case {'full','full hcp','full2','nearest', 'interp', 'MNI152NLin2009cAsym'}
+                continue
 
+            case { 'compact', ...
+                    'compact2', ...
+                    'compact3', ...
+                    'full', ...
+                    'multirow', ...
+                    'coronal', ...
+                    'sagittal', ...
+                    'full2', ...
+                    'full hcp', ...
+                    'full hcp inflated', ...
+                    'hcp inflated', ...
+                    'freesurfer inflated', ...
+                    'full no surfaces', ...
+                    'freesurfer sphere', ...
+                    'freesurfer white', ...
+                    'MNI152NLin6Asym white', ...
+                    'MNI152NLin6Asym midthickness', ...
+                    'MNI152NLin6Asym pial', ...
+                    'MNI152NLin2009cAsym white', ...
+                    'MNI152NLin2009cAsym midthickness', ...
+                    'MNI152NLin2009cAsym pial', ...
+                    'hcp grayordinates', ...
+                    'hcp grayordinates compact', ...
+                    'hcp grayordinates subcortex', ...
+                    'allslices', ...
+                    'leftright inout', ...
+                    'leftright inout subcortex', ...
+                    'subcortex full', ...
+                    'subcortex compact', ...
+                    'subcortex 3d', ...
+                    'subcortex slices'}
+                continue
+
+            case {'partialvolumethreshold'}
+                partial_vol_thresh = varargin{i+1};
+                assert(partial_vol_thresh <= 1 & partial_vol_thresh > 0,...
+                    'partialVolumeThreshold must be between 0 (exclusive) and 1 (inclusive).');
                 
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
@@ -405,11 +482,15 @@ if ~docontour
             sz = sz([1 3]); % contour slice size
     end
     
-    cdat = define_cdat(sz, color);
+    if ~customcolormap
+        cdat = define_cdat(sz, color);
+    end
     
     if docolormap % colors are linear mixture of color and mincolor
         
-        cdat2 = define_cdat(sz, mincolor);
+        if ~customcolormap
+            cdat2 = define_cdat(sz, mincolor);
+        end
         
         if dosplitcolor
             % cdat and cdat2 are for positive values
@@ -453,7 +534,6 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myy = currentmap.SPACE.Ymm(:, :, wh_slice(j));
                     mynewx = SPACE.Xmm(:, :, 1);
                     mynewy = SPACE.Ymm(:, :, 1);
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'sagittal' % Y x Z; Xmm is for some reason Y mm coords
                     % myx should have all rows the same, myy should have all
@@ -462,16 +542,33 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     myx = squeeze(currentmap.SPACE.Zmm(wh_slice(j), :, :));
                     mynewy = squeeze(SPACE.Xmm(wh_slice(j), :, :));
                     mynewx = squeeze(SPACE.Zmm(wh_slice(j), :, :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle);
                     
                 case 'coronal' % X x Z
                     myy = squeeze(currentmap.SPACE.Ymm(:, wh_slice(j), :));
                     myx = squeeze(currentmap.SPACE.Zmm(:, wh_slice(j), :));
                     mynewy = squeeze(SPACE.Ymm(:, wh_slice(j), :));
                     mynewx = squeeze(SPACE.Zmm(:, wh_slice(j), :));
-                    Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
                     
             end
+            Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
+
+            % bogdan: when we plot multiple blobs the interpolation call above
+            % can't adjudicate between them and we get overlaps among 
+            % neighbors that privilege latter calls to render_blobs. Given
+            % the way this is designed, there's no perfect soluiton because
+            % you need to gie render_blobs information on all blobs to
+            % render simultaneously, but blob information is
+            % compartamentalized. We can however improve on the situation
+            % by masking out based on magnitude of partial volume effects,
+            % which is what we do here.
+            slicemask = slicedat;
+            slicemask(slicedat~=0)=1;
+            if strcmp(interpStyle,'nearest');
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, 'linear');
+            else
+                Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
+            end
+            Z(Zmask < partial_vol_thresh) = 0;
             
             if dosmooth
                 % SMOOTH
@@ -485,7 +582,12 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 % -----------------------------------------------------------
                 
                 Z(isnan(Z)) = 0;
-                [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                Zmask(isnan(Zmask)) = 0;
+                if dosmooth
+                    [c, h] = contourf(mynewy, mynewx, abs(Z), [contourmin, contourmin]);
+                else
+                    [c, h] = contourf(mynewy, mynewx, Zmask, [partial_vol_thresh,partial_vol_thresh]);
+                end
                 
                 if str2double(vstr(1:3))<8.4  % pre R2014b
                     ch = get(h, 'Children');
@@ -500,7 +602,15 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                 else
                     
                     % new matlab graphics:
-                    set(h, 'FaceColor', color);
+%                     set(h, 'FaceColor', color);
+
+                    % Michael Sun Adjustment 12/8/2023 to make contours
+                    % more flexible:
+                    set(h, 'LineWidth', mylinewidth, 'EdgeColor', edgecolor);
+                    if ~dofill
+                        set(h, 'Fill', 'off')
+                    end
+
                     
                 end
                 
@@ -546,7 +656,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                     
                 elseif ~dosplitcolor
                     % color-mapped
-                    if isempty(indexmap)
+                    if isempty(indexmap) & ~customcolormap
                         Zscaled = Z;
                         Zscaled(Zscaled ~= 0 & Zscaled > max(cmaprange)) = max(cmaprange);
                         Zscaled(Zscaled ~= 0 & Zscaled < min(cmaprange)) = min(cmaprange);
@@ -560,6 +670,11 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         w = repmat(Zscaled, [1 1 3]);
 
                         slicecdat = (w .* cdat) + (1 - w) .* cdat2;
+                    elseif customcolormap
+                        %w = repmat(Z, [1 1 3]);
+
+                        w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
+                        slicecdat = reshape(cm(round(w),:),[size(Z),3]);
                     else
                         w = repmat(Z, [1 1 3]);
                         [Zi, Zj] = find(w > 0);
@@ -758,53 +873,91 @@ slicecdat = slicecdat + slicecdat2;
 
 end % function
 
-
-
-
-
-
-
 function cmaprange = get_default_cmaprange(currentmap, varargin)
 
-mapd = currentmap.mapdata(:);
-mapd = mapd(mapd ~= 0 & ~isnan(mapd));
+    % Extract and preprocess map data
+    mapd = currentmap.mapdata(:);
+    mapd = mapd(mapd ~= 0 & ~isnan(mapd)); % Remove zeros and NaNs
 
-if any(isinf(mapd))
-    warning('Some image values are Inf. Expect erratic behavior/errors.');
-    whinf = isinf(mapd);
-    mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf)));
-end
+    % Handle edge case: empty mapd
+    if isempty(mapd)
+        warning('No valid data values in currentmap. Returning default colormap range.');
+        cmaprange = [0, 1]; % Default range for empty data
+        return;
+    end
 
-% Default for non-splitcolor
-cmaprange = double([prctile(mapd, 10) prctile(mapd, 90)]);
+    % Handle edge case: Inf values
+    if any(isinf(mapd))
+        warning('Some image values are Inf. Replacing Inf with max finite value.');
+        whinf = isinf(mapd);
+        mapd(whinf) = sign(mapd(whinf)) .* max(abs(mapd(~whinf))); % Replace Inf with max finite value
+    end
 
-% cmaprange = double([prctile(mapd(mapd < 0), 10) prctile(mapd(mapd > 0), 90)]); % Match defaults for region.surface in render_on_surface.m
-        
-% adjust defaults if splitcolor is entered, without pre-defined cmaprange
+    % Handle edge case: constant or nearly constant mapd
+    if numel(unique(mapd)) == 1
+        % All values are constant
+        constant_value = unique(mapd);
+        warning('All non-zero, non-NaN values in mapd are constant. Using default colormap range.');
+        cmaprange = [constant_value - 0.1, constant_value + 0.1]; % Default range for constant values
+        return;
+    end
 
-prct_splitcolor = 20;
-if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
-    
-    % auto-determine colormap range cmaprange
-    
-    cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-        prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-        prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-    
-    while numel(unique(cmaprange)) < 4
-        
-        prct_splitcolor = prct_splitcolor - 5;
-        cmaprange = double([prctile(mapd(mapd < 0), prct_splitcolor) ...
-            prctile(mapd(mapd < 0), 100-prct_splitcolor) prctile(mapd(mapd > 0), prct_splitcolor) ...
-            prctile(mapd(mapd > 0), 100-prct_splitcolor) ]);
-        
-        if prct_splitcolor == 0
-            %             warning('The values are likely to be constant. With this data, ''splitcolor'' option does not work');
-            cmaprange([2 3]) = cmaprange([1 4])*0.9;
-            break;
+    % Default colormap range for non-splitcolor
+    cmaprange = double([prctile(mapd, 10), prctile(mapd, 90)]);
+
+    % Handle splitcolor logic
+    prct_splitcolor = 20; % Starting percentile range for splitcolor
+    if any(strcmp(varargin, 'splitcolor')) && ~any(strcmp(varargin, 'cmaprange'))
+
+        % Compute splitcolor colormap range
+        cmaprange = double([
+            safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
+            safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
+            safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
+            safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
+        ]);
+
+        % Handle edge case: insufficient variability in splitcolor
+        while numel(unique(cmaprange)) < 4
+            prct_splitcolor = prct_splitcolor - 5;
+            if prct_splitcolor <= 0
+                warning('Splitcolor logic failed due to insufficient data variability. Adjusting colormap range.');
+                cmaprange([2, 3]) = cmaprange([1, 4]) * 0.9; % Compress middle range
+                break;
+            end
+            % Recalculate cmaprange with reduced prct_splitcolor
+            cmaprange = double([
+                safe_prctile(mapd(mapd < 0), prct_splitcolor), ...
+                safe_prctile(mapd(mapd < 0), 100 - prct_splitcolor), ...
+                safe_prctile(mapd(mapd > 0), prct_splitcolor), ...
+                safe_prctile(mapd(mapd > 0), 100 - prct_splitcolor)
+            ]);
         end
-        
     end
 end
 
-end % function
+% Safe percentile function to handle empty data
+function p = safe_prctile(data, percentile)
+    if isempty(data)
+        p = 0; % Return 0 for empty data. Maybe this should be NaN? - MS
+    else
+        p = prctile(data, percentile); % Calculate percentile normally
+    end
+end
+
+
+
+function val = map_function(c,x1,x2,y1,y2)
+    if x2 == x1
+        % this occurs when we have a single value. We arbitrarily set it to
+        % the middle value
+        range_val = (y2-y1)/2;
+    else
+        % softmax here keeps negative values from extending below the colormap
+        % range, which would otherwise make those values gray, since the lowest
+        % value on the colormap is a hardcoded grayscale value
+        range_val = max((c-x1),0)*(y2-y1)./(x2-x1);
+    end
+
+    val = min(y1 + range_val,y2); % if value exceeds max, set it to that max
+end

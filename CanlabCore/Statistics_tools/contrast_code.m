@@ -4,7 +4,8 @@ function [vec, outnames] = contrast_code(vec)
 %
 %     [vec,outnames] = contrast_code(vec)
 %
-% Changes values to 1, -1, or 0 for contrast coding
+% Attempts to change values to 1, -1, or 0 for contrast coding
+% Success depends on inputs. Check output
 
 outnames = [];
 
@@ -17,6 +18,13 @@ if iscell(vec) && ~isempty(vec)
     end
     
 elseif ~isempty(vec)
+
+    if all(vec == 0 | vec == 1) % dummy codes
+
+        vec(vec == 0) = -1;
+
+    else
+
     wh = find(vec > 0);
 
     vec(wh) = 1;
@@ -24,6 +32,8 @@ elseif ~isempty(vec)
     wh = find(vec < 0);
 
     vec(wh) = -1;
+
+    end
 
 end
 

@@ -30,7 +30,7 @@ end
 function outarray = pwn_expand(inarray, dim, diff)
     sznandims = size(inarray);
     sznandims(dim) = abs(diff);
-    if isnumeric(inarray)
+    if isnumeric(inarray) | islogical(inarray)
         nanfill=NaN(sznandims);
     elseif iscell(inarray)
         nanfill=num2cell(NaN(sznandims));

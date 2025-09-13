@@ -1,9 +1,12 @@
-function [model, models]=plotHRF(HRF, t, varargin)
+function [model, models]=plotHRF(HRF, varargin)
     % Generates a plot from an HRF Structure given a specified fit type and a region name.
     % Michael Sun, Ph.D.
     % - Takes HRF Structure object generated from EstimateHRF_inAtlas()
-    % - t is a cellstring for fit type e.g., 'FIR', 'IL', or 'CHRF'
-    % - r is a cellstring for region label from atlas.labels. e.g., 'ACC', or a cell-array of regions to compare relative to each other e.g., {'ACC', 'DLPFC'}  
+    % - d is for selecting which data to plot, default is to aggregate them
+    % all. Putting a vector plots each file separately in order e.g., [1 2 3]
+    % - 'fit', t is a cellstring for fit type e.g., 'FIR', 'sFIR', 'IL', 'CHRF0', 'CHRF1', 'CHRF2'
+    % - 'conditions', c is a cellstring for condition names or stems to plot e.g., {'*hot*, *warm*'}
+    % - 'regions', r is a cellstring for region label from atlas.labels. e.g., 'ACC', or a cell-array of regions to compare relative to each other e.g., {'ACC', 'DLPFC'}  
     %
     % *Usage:
     % ::
@@ -14,71 +17,115 @@ function [model, models]=plotHRF(HRF, t, varargin)
     % detectPeaksandTroughs()
 
     % Flags to keep track of whether a cell array or atlas object is found
-    isCellArrayFound = false;
+    % isCellArrayFound = false;
+
     isAtlasFound = false;
+    isRegsFound = false;
+    isCondFound = false;
+    isFitFound = false;
+
     r=[];
 
+
+
+    % Get the list of conditions from HRF_PARAMS
+    conds = HRF.CondNames;
+
     for k = 1:length(varargin)
-        if ischar(varargin{k})
-            r=varargin{k};
-
-            if ~ismember(r, HRF.region)
-                error('Invalid region specified.');
+        if strcmpi(varargin{k}, 'atlas')
+            if isa(varargin{k+1}, 'atlas')
+                at=varargin{k+1};
+            else
+                error('Passed in atlas not an atlas.');
             end
-    
-        elseif iscell(varargin{k})
-            r=varargin{k};
-            isCellArrayFound = true;
-        elseif isa(varargin{k}, 'atlas')  % assuming 'atlas' is a class you're checking for
-            at=varargin{k};
             isAtlasFound = true;
-        else
-            disp(['Input argument ' num2str(k) ' unknown.']);
         end
-    end
 
-    if isempty(r) && ~isCellArrayFound
-        r=HRF.region;
-    end
-
-    if ~isAtlasFound
-        if isempty(HRF.atlas)
-            at=load_atlas('canlab2018_2mm');
-        else
-            at=HRF.atlas;
-            % at=load_atlas('canlab2018_2mm');
-        end
-    end
-
-
-    if ~ismember(t, HRF.types)
-        error('Invalid type specified.');
-    end
-
-    if iscell(r)
-        for i = 1:numel(r)
-            if ~ismember(r{i}, HRF.region)
-                error('Invalid region specified.');
+        if strcmpi(varargin{k}, 'regions')
+            if ischar(varargin{k+1})
+                r=varargin{k+1};
+                % Find the indices of the specified region and type
+                reg = find(ismember(HRF.region, r));
+    
+                if ~ismember(r, HRF.region)
+                    error('Invalid region specified.');
+                end
+        
+            elseif iscell(varargin{k+1})
+                r=varargin{k+1};
+                isRegsFound = true;
             end
+
         end
 
-        % disp(r)
-        % at.get_region_volumes
-    else
-        r={r};
+        if strcmpi(varargin{k}, 'conditions')
+            if ischar(varargin{k+1})
+                conds=varargin{k+1};
+
+                if ~ismember(conds, HRF.CondNames)
+                    error('Invalid condition specified.');
+                end
+        
+            elseif iscell(varargin{k+1})
+                conds=varargin{k+1};
+                isCondFound = true;
+            else
+                disp(['Input argument for condition unknown.']);
+            end
+
+        end
+
+        if strcmpi(varargin{k}, 'fit')
+            if ischar(varargin{k+1})
+                t=varargin{k+1};
+                typ = find(ismember(HRF.types, t));     
+                disp(['Plotting ', t])
+
+                if ~ismember(t, HRF.types)
+                    error('Invalid fit-type specified.');
+                else
+                    isFitFound = true;
+                end
+            elseif iscell(varargin{k+1})
+                %% FIX THIS PART
+                t=varargin{k+1};
+                isFitFound = true;
+            else
+                disp(['Input argument for fit-type unknown.']);
+            end
+
+        end
+    end
+
+    if isAtlasFound == false
+       at=HRF.atlas;
+    end
+
+    if isRegsFound == false
+        reg=1:numel(HRF.region);
+    end
+
+    if isCondFound == false
+        c=HRF.CondNames;
+    end
+
+    if isFitFound == false
+        % Default to the first fit-type;
+        typ=1;
     end
 
 
+    % end
+    % 
+    % if isempty(r) && ~isCellArrayFound
+    %     r=HRF.region;
+    % end
 
-    % Find the indices of the specified region and type
-    reg = find(ismember(HRF.region, r));
-    typ = find(ismember(HRF.types, t));
+
 
     % disp(reg)
     % disp(typ)
 
-    % Get the list of conditions from HRF_PARAMS
-    conds = HRF.params.CondNames;
 
     % % Initialize a cell array to store the model matrices
     % array3D = cell(1, length(conds));
@@ -118,6 +165,9 @@ function [model, models]=plotHRF(HRF, t, varargin)
     % Loop through each condition and plot
     for cond = 1:numel(conds)
         subplot(numel(conds), 1, cond);
+
+        fieldname=fieldnames(HRF.fit{typ}{1});
+        fld=char(fieldname(find(contains(fieldname, conds{cond}))));
         
         if numel(reg)==1
             model=HRF.fit{typ}{reg}.(conds{cond}).model;
@@ -150,7 +200,8 @@ function [model, models]=plotHRF(HRF, t, varargin)
 
             hline(0);
 
-            if isfield(HRF.fit{typ}{reg}, conds{cond}) && isfield(HRF.fit{typ}{reg}.(conds{cond}), 'models')
+
+            if isfield(HRF.fit{typ}{reg}, conds{cond}) && isfield(HRF.fit{typ}{reg}.(fld), 'models')
                 models=HRF.fit{typ}{reg}.(conds{cond}).models;
 
                 % Plot all underlying sublines
@@ -164,22 +215,24 @@ function [model, models]=plotHRF(HRF, t, varargin)
 
             region=format_strings_for_legend(r(1));
             region=region{1};
-            title({['Condition ', conds{cond}, ' Fit-type: ', t, ' Region: ', region]}, 'Interpreter', 'none');
+            title({['Condition ', conds{cond}, ' Fit-type: ', strjoin(HRF.types(typ)), ' Regions: ', strjoin(HRF.region(reg))], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
                 
 
         else
             h=[]; % Linehandles for legend and labels
-            for i = 1:numel(reg)
-                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(r(i), 'exact').get_region_volumes;
-                if isfield(HRF.fit{typ}{i}, conds{cond}) && isfield(HRF.fit{typ}{i}.(conds{cond}), 'models')
-                    models{i}=HRF.fit{typ}{i}.(conds{cond}).models/regionVoxNum;
+            for i = reg
+                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(reg(i), 'exact').get_region_volumes;
+                if isfield(HRF.fit{typ}{i}, fld) && isfield(HRF.fit{typ}{i}.(fld), 'models')
+                    models{i}=HRF.fit{typ}{i}.(fld).models/regionVoxNum;
                 end
 
-                model{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum;
+                
+
+                model{i}=HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum;
 
                 % Plot Standard Error if possible
                 try
-                    se{i}=HRF.fit{typ}{reg(i)}.(conds{cond}).wse/regionVoxNum;
+                    se{i}=HRF.fit{typ}{reg(i)}.(fld).wse/regionVoxNum;
     
                     % Plot error shade:
                     x = 1:length(model{i});
@@ -197,20 +250,20 @@ function [model, models]=plotHRF(HRF, t, varargin)
                     
                 end
 
-                h(i)=plot(HRF.fit{typ}{reg(i)}.(conds{cond}).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(r(i))));
+                h(i)=plot(HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(HRF.region(i))));
                 hline(0);
-                title({['Condition ', conds{cond}, ' Fit-type: ', t, ' Regions: ', strjoin(r)], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
+                title({['Condition ', conds{cond}, ' Fit-type: ', strjoin(HRF.types(typ)), ' Regions: ', strjoin(HRF.region(reg))], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
                 
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'left', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'right', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'center', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
-                label(h(end), format_strings_for_legend(r(i)), 'location', 'top', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'left', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'right', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'center', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
+                label(h(end), format_strings_for_legend(HRF.region(i)), 'location', 'top', 'FontWeight', 'bold', 'Margin', 3, 'HorizontalAlignment', 'right', 'FontSize', 14);
 
                 hold on;
             end
             % region_labels = format_strings_for_legend(r);
             % legend(region_labels);
-            legend(h, format_strings_for_legend(r));
+            legend(h, format_strings_for_legend(HRF.region(reg)));
         end
     end
 
@@ -246,8 +299,8 @@ function plotRegionalHrfSummaries(HRF, regs)
     % plot time-to-peak, height, width, start_time, and end_time of every
     % peaks_voxnormed and trough_voxnormed for a region
 
-    create_figure(['Regional HRF summaries for ', HRF.params.CondNames{c}]);
-    for c = 1:numel(HRF.params.CondNames)
+    create_figure(['Regional HRF summaries for ', HRF.CondNames{c}]);
+    for c = 1:numel(HRF.CondNames)
         
 
         handles = [];
@@ -315,17 +368,17 @@ function plotRegionalHrfSummaries(HRF, regs)
                 minw=[];
                 maxw=[];
 
-                for p=1:numel(HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed)
+                for p=1:numel(HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed)
 
                     % meant=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t);
-                    meant=[meant, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).time_to_peak];
+                    meant=[meant, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).time_to_peak];
 
                     % standard error time-to-peak
                     % stet=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t));
     
                     % mean height
                     % meanh=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h);
-                    meanh=[meanh, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).height];
+                    meanh=[meanh, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).height];
 
                     % height standard error
                     % steh=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h));
@@ -335,22 +388,22 @@ function plotRegionalHrfSummaries(HRF, regs)
                     % maximum width
                     % maxw=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).w_times(:,2))-meant;
                     
-                    minw=[minw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).start_time];
-                        maxw=[maxw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).peaks_voxnormed(p).end_time];
+                    minw=[minw, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).start_time];
+                        maxw=[maxw, HRF.fit{1}{r}.(HRF.CondNames{c}).peaks_voxnormed(p).end_time];
 
                 end
 
-                for t=1:numel(HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed)
+                for t=1:numel(HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed)
 
                     % meant=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t);
-                    meant=[meant, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).time_to_peak];
+                    meant=[meant, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).time_to_peak];
 
                     % standard error time-to-peak
                     % stet=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).t));
     
                     % mean height
                     % meanh=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h);
-                    meanh=[meanh, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).height];
+                    meanh=[meanh, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).height];
 
                     % height standard error
                     % steh=std(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h)/sqrt(numel(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).h));
@@ -360,15 +413,15 @@ function plotRegionalHrfSummaries(HRF, regs)
                     % maximum width
                     % maxw=mean(dat{i}(dat{i}.condition==conds{c} & dat{i}.region==regs{r}, :).w_times(:,2))-meant;
                     
-                    minw=[minw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).start_time];
-                        maxw=[maxw, HRF.fit{1}{r}.(HRF.params.CondNames{c}).troughs_voxnormed(t).end_time];
+                    minw=[minw, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).start_time];
+                        maxw=[maxw, HRF.fit{1}{r}.(HRF.CondNames{c}).troughs_voxnormed(t).end_time];
 
                 end
 
                 % handles(end+1)=errorbar(meant, meanh, steh, steh, stet, stet, 'o', 'Color', maxDifferentColors(r,:));
                 [~,vox,~,~]=get_region_volumes(at);
                 vox=vox(r);
-                se=barplot_get_within_ste(HRF.fit{1}{r}.(HRF.params.CondNames{c}).models);
+                se=barplot_get_within_ste(HRF.fit{1}{r}.(HRF.CondNames{c}).models);
                 se=se/vox;
 
                 se=repmat(se, 1, numel(meant));
@@ -413,7 +466,7 @@ function plotRegionalHrfSummaries(HRF, regs)
         xticklabels([0:5:45]*0.46)
         xlabel('Time to Peak (seconds)');
         % title({[signames{i}, ' Condition: ', conds{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
-        title({['Condition: ', HRF.params.CondNames{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
+        title({['Condition: ', HRF.CondNames{c}], 'HRF Summary Statistics', 'With Standard Errors, Stimulus offset is demarcated'})
 
     end
 end

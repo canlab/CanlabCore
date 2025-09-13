@@ -1,4 +1,4 @@
-function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode)
+function [h, fit, e, param, info] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode, varargin)
 % function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,type,mode)
 %
 % HRF estimation function for a single voxel;
@@ -25,8 +25,32 @@ function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode)
 % fit   - estimated time course
 % e     - residual time course
 % param - estimated amplitude, height and width
+% info  - Design Matrix, Pseudoinverse information, Misc.
 %
 % Created by Martin Lindquist on 04/11/14
+%
+%   Added a varargin to accept a design matrix to modulate the model fit.
+%   - Michael Sun, Ph.D. 02/09/2024
+
+
+if ~isempty(varargin)
+    % Load in SPM structure if passed in
+    % timecourse tc must now be gKWY to match SPM output.
+    % Filtered Design Matrix SPM.xX.xKXs.X must be passed in instead of
+    % allowing Fit_* to generate its own design matrix.
+
+    % if ischar(varargin{1}) || isstring(varargin{1})
+    %     load(varargin{1})
+    % elseif isstruct(varargin{1})
+    % 
+    %     SPM=varargin{1};
+    % end
+    % 
+    % SPM.xX.xKXs.X
+
+    % SPM_DX=varargin{1};
+
+end
 
 
 if (strcmp(method,'IL')),
@@ -41,7 +65,13 @@ if (strcmp(method,'IL')),
                 % Please note that when using simulated annealing approach you
                 % may need to perform some tuning before use.
 
-            [h, fit, e, param] = Fit_Logit2(tc,TR,Runc,T,mode);
+            if ~isempty(varargin)
+                disp('IL-function with custom Design Matrix not yet implemented')
+                [h, fit, e, param] = Fit_Logit2(tc,TR,Runc,T,mode);
+            else
+                [h, fit, e, param] = Fit_Logit2(tc,TR,Runc,T,mode);
+            end
+
             param(2:3,:) = param(2:3,:).*TR;
 
 
@@ -56,7 +86,16 @@ elseif (strcmp(method,'FIR')),
                 % 1 - smooth FIR
             
             % [h, fit, e, param] = Fit_sFIR(tc,TR,Runc,T,mode);
-            [h, fit, e, param] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode);
+            
+            if ~isempty(varargin)
+                [h, fit, e, param, info] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode, varargin{:});
+
+            else
+                [h, fit, e, param, info] = Fit_sFIR_epochmodulation(tc,TR,Runc,T,mode);
+            end
+
+
+
             param(2:3,:) = param(2:3,:).*TR;
 
 
@@ -69,8 +108,16 @@ elseif (strcmp(method,'CHRF')),
                 % 1 - HRF + temporal derivative
                 % 2 - HRF + temporal and dispersion derivative
             
-            p = mode + 1;            
-            [h, fit, e, param] = Fit_Canonical_HRF(tc,TR,Runc,T,p);
+            p = mode + 1;
+
+
+            if ~isempty(varargin)
+                [h, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runc,T,p, varargin{:});
+            else
+                [h, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runc,T,p);
+            end
+
+
             param(2:3,:) = param(2:3,:).*TR;
 
 else

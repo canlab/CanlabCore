@@ -1,5 +1,5 @@
 function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
-% Associations between images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
+% Associations between data images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
 % - Similarity metric is point-biserial correlations or cosine-similarity
 %
 % Usage:
@@ -7,22 +7,29 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %
 %    [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, 'average');
 %
-% This is a method for an image_vector object that compares the spatial
+% - This is a method for an image_vector object that compares the spatial
 % similarity of input image(s) to a specified set of a priori spatial basis maps.
-% It returns similarity values (Pearson's r) to each a priori basis map,
-% and a plot that shows these values.  If multiple images are entered, the
-% 'average' function can return a plot with standard error bars and
-% statistics on the significance of the correlation with each basis map
+% It returns similarity values (Pearson's r by default) to each a priori basis map,
+% and a plot that shows these values.
+% - If multiple images are entered, the 'average' function can return a plot with
+% standard error bars and statistics on the significance of the correlation with each basis map
 % (across input images) and the differences (inhomogeneity) in similarity across basis
-% maps.  If a grouping variable is entered, statistics are calculated for
+% maps.
+% - If a grouping variable is entered, statistics are calculated for
 % multivariate differences across the groups of input images. Such
 % differences are assessed treating the basis maps as variables and input
-% images as cases.  The basis sets are "NPSplus" (the default), which
-% includes the NPS map from Wager et al. 2013, Romantic Rejection
+% images as cases.
+% - There are many basis map sets ("mapset" in code) that can be specified by keyword.
+% e.g., "NPSplus" includes the NPS map from Wager et al. 2013, Romantic Rejection
 % classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
 % pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
 % networks from the Buckner Lab's 1000-person resting-state analyses and
 % "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.
+% - Be thoughtful about how your code is treating zero-valued voxels, which
+% are typically missing data in brain images. The main calculations here
+% are done by canlab_pattern_similarity.m, which treats zeros as missing in
+% data images but not pattern basis maps (which can be binary or other
+% 'signatures'. See "help canlab_pattern_similarity".
 %
 % ..
 %     Author and copyright information:
@@ -55,6 +62,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        Useful if obj contains one image per subject and you want
 %        to test similarity with maps statistically.
 %        Default behavior is to plot each individual image.
+%
 %   **Error_STD**
 %       Default setting for error shading plot used standard error of
 %       average images. However, in some cases, standard error is not
@@ -93,19 +101,20 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %        also 'fm','fibro'
 %
 %   **pain_pdm**
-%          11 high-dimensional pain mediator maps. PDM1-10 are individual, 
-%          orthogonal maps. The Joint PDM is a weighted combination of the 
+%          11 high-dimensional pain mediator maps. PDM1-10 are individual,
+%          orthogonal maps. The Joint PDM is a weighted combination of the
 %          other 10 PDMs.
-% 
+%
 %
 %   **End of mapset options**
-%   
+%
 % 	**compareGroups**
 %        Perform multiple one-way ANOVAs with group as a factor (one for
 %        each spatial basis); requires group as subsequent input
 %
 %   **group**
-%        Indicates group membership for each image
+%        Indicates group membership for each image as vector, categorical,
+%        or string array
 %
 %   **plotstyle:**
 %            'wedge' [default] or 'polar'
@@ -147,9 +156,18 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %
 %
 %   **treat_zero_as_data**
-%       In some certain situations, zero value within data.obj could be
-%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
-%       rather than missing value) or binary map.
+%       The default behavior is to calculate image similarity on complete cases pairwise.
+%       Complete cases means a voxel has a valid value (non-zero, non-NaN) for both images being correlated.
+%       Otherwise, values that are zero in one image and non-zero and another will be
+%       part of the correlation and will have a strong influence on the correlation value.
+%       Zero is treated as a missing value by convention (as per SPM
+%       standards).
+%
+%       In some situations, e.g., when correlating binary masks (1/0 for both) or correlating
+%       a binary mask with another image, the zero value within data.obj could be
+%       meaningful. Here data.obj is a thresholded map (0 means value under-threshold
+%       rather than being a missing value) or binary map. In this case, you
+%       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
 % :Outputs:
 %
@@ -192,7 +210,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'polar');
 % stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'plotstyle', 'polar', 'average');
 % stats = image_similarity_plot(testimgs, 'cosine_similarity', 'bucknerlab', 'plotstyle', 'polar', 'average', 'colors', {[1 .5 0]});
-% 
+%
 %    % corrdat is an fmri_data object with 18 images from searchlight
 %    % correlation in it.  Then:
 %    stats = image_similarity_plot_bucknermaps(corrdat, 'average');
@@ -227,7 +245,7 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 % 2018/1/9  tor: changed default colors for compat with wedge plot,
 % debugged wedge plot with average option.
 % 2018/1/16 Stephan: added pain PDM mediators as mapsets
-% 
+%
 % 2022/03/31 Ke Bo
 %   - added option for treating zero value in the map as real value rather
 %   than missing data
@@ -240,6 +258,9 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %   - Group Variable can now accept categorical
 %   - Plot labels and tables now include significance stars
 %   - 'notable' option now suppresses all tables.
+% 2023/12/19 Lukas Van Oudenhove
+%   - debugged and improved wedge and polarplot code for multiple
+%       groups, see notes in code below for details
 
 % PRELIMINARIES
 % ------------------------------------------------------------------------
@@ -281,9 +302,9 @@ sim_metric = 'corr'; % default: correlation
 % doCosine = 0; %do cosine similarity
 plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
-treat_zero_as_data=0; % Treat zero value as missing data.
+treat_zero_as_data = 0; % Default of 0 means treat zero value as missing data.
 Error_STD=0;
-
+exclude_zero_mask_values = 0; % default so that 0 mask/pattern expression values are NOT excluded
 
 % optional inputs with default values
 % -----------------------------------
@@ -291,62 +312,66 @@ Error_STD=0;
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-            
+
             case 'average'
                 doaverage = true;
                 bicolor = true;  % if wedge, bicolor only, no lines.
-               
+
             case 'noaverage'
                 force_noaverage = true;
-                
+
             case 'cosine_similarity', sim_metric = 'cosine';
 %               case 'cosine_similarity', sim_metric = 'corr';
-                  
+
             case 'binary_overlap', sim_metric = 'overlap';
-                
+
             case {'bucknerlab', 'bucknerlab_wholebrain' 'bucknerlab_wholebrain_plus' ...
                     'kragelemotion' 'allengenetics' ...
                     'pauli' 'bgloops' 'pauli17' 'bgloops17' 'fm' 'fibro' 'fibromyalgia' ...
                     'bgloops_cortex' 'painsig' 'pain_pdm' 'pdm' }
-                
+
                 mapset = varargin{i};
-                
+
             case 'mapset'
                 %mapset = 'custom';
                 mapset = varargin{i + 1}; varargin{i + 1} = [];
-                
+
                 %case 'basistype', basistype = varargin{i+1}; varargin{i+1} = [];
             case 'compareGroups'
                 compareGroups = true;
                 group = varargin{i+1};
-                
+
             case 'noplot'; noplot = true;
-                
+
             case 'nofigure', dofigure = false;
-                
+
             case {'fixedrange', 'dofixrange'}
                 dofixRange = 1;
                 fixedrange = varargin{i+1};
-                
+
             case 'colors'
                 groupColors = varargin{i + 1}; varargin{i + 1} = [];
-                
+
             case 'bicolor'
                 bicolor = true;
-                
+
             case 'networknames' % do nothing, handle later
-                
+
             case 'notable'
                 printTable = false;
-                
+
             case 'plotstyle'
                 plotstyle = varargin{i + 1}; varargin{i + 1} = [];
-                
-            case 'treat_zero_as_data'   
-                treat_zero_as_data=1;
+
+            case 'treat_zero_as_data'
+                treat_zero_as_data = 1;
 
             case 'Error_STD'
-                Error_STD=1;
+                Error_STD = 1;
+
+            case 'exclude_zero_mask_values'
+                exclude_zero_mask_values = 1;
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -363,12 +388,12 @@ end
 % by default.
 
 % This change in default behavior is problematic for some applications,
-% e.g., riverplots. 
+% e.g., riverplots.
 if n_obs > 1 && strcmp(plotstyle, 'wedge') && ~force_noaverage
-    
+
     % We have a wedge plot with multiple obs/images. Default to 'average'
     % mode, not multi-line-plot. For polar plots, do multi line plot.
-    
+
     doaverage = 1;
     bicolor = true;  % if wedge, bicolor only, no lines.
 end
@@ -378,11 +403,11 @@ end
 
 if doaverage && strcmp(plotstyle, 'polar') && ~any(strcmp(varargin, 'colors'))
    if exist('group', 'var')
-    groupColors=scn_standard_colors(length(unique(group)))';
+    groupColors = scn_standard_colors(length(unique(group, 'stable')))';
    else
     groupColors = {[1 0 0]};  % unicolor. can change line and err with 2nd color entry.
    end
-    
+
 end
 
 % Load image set: Most of the hard work
@@ -396,15 +421,20 @@ wh = strcmp(varargin, 'networknames');
 if any(wh)
     wh_names = find(wh) + 1;
     networknames = varargin{wh_names(1)};
-    
+
     % Must be row vector of cells
     if iscolumn(networknames), networknames = networknames'; end
 end
 
+% Make sure they are not in table format
+if istable(networknames)
+    networknames = table2array(networknames);
+end
 
 
 % Deal with space and empty voxels so they line up
 % ------------------------------------------------------------------------
+% mask contains the pattern image (signature or binary mask) to apply.
 
 mask = replace_empty(mask); % add zeros back in
 
@@ -448,7 +478,7 @@ switch sim_metric
         % matrices. The call to corr.m below is replaced with a custom correlation
         % function.
         % r = corr(double(obj.dat), double(mask.dat))';
-        
+
         % vector to matrix correlation formula - anonymous function.
         % a is an N x 1 vector, b is an N x k matrix
         % corr_matrix = @(a, b) ((a-mean(a))' * (b-mean(b)) ./ (length(a) - 1))' ./ (std(a)*std(b)');
@@ -458,21 +488,23 @@ switch sim_metric
         % assumed to be missing. This is a special case for image data, as
         % 0 is assumed to be a missing value.
         % See help canlab_pattern_similarity for more detail.
-        
+
         for im = 1:n_obs2
-            
+
             % r(im, :) = corr_matrix(double(mask.dat(:,im)), double(obj.dat));
-            
-            if treat_zero_as_data==1
-                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data');
-            else  
+
+            if treat_zero_as_data==1 && exclude_zero_mask_values == 1
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data', 'exclude_zero_mask_values'); 
+            elseif treat_zero_as_data==1 && exclude_zero_mask_values==0
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data'); % mask contains the pattern image (signature or binary mask) to apply.
+            else
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');
             end
         end
-        
+
     case 'cosine'
         % Cosine similarity
-        
+
         for im = 1:n_obs2
             %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
             %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
@@ -481,55 +513,55 @@ switch sim_metric
             %
             if treat_zero_as_data==1
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity','treat_zero_as_data');
-            else  
+            else
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'cosine_similarity');
             end
-            
+
         end
-        
+
     case 'overlap'
         % binary overlap
         for im = 1:n_obs2
 %             r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
             if treat_zero_as_data==1
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap','treat_zero_as_data');
-            else  
+            else
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'binary_overlap');
             end
         end
-        
+
 end
 
 stats.r = r;
 
 
 if ~doaverage
-    
+
     if ~noplot
-        
+
         switch plotstyle
             case 'wedge'
                 % --------------------------------------------------
-               
+
                 if ~dofixRange
                     outercircleradius = min(1, max(abs(r)) + .1*max(abs(r)));
                 else
                     outercircleradius = fixedrange;
                 end
-                
+
                 if bicolor
                     % plot negative values in the complementary color
-                    %groupColors(2) = {[1 1 1] - groupColors{1}};
+                    % groupColors(2) = {[1 1 1] - groupColors{1}};
                     hh = tor_wedge_plot(r, networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
-                    
+
                 else
-                    
+
                     hh = tor_wedge_plot(r, networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure');
                 end
-                
+
             case 'polar'
                 % --------------------------------------------------
-                
+
                 if ~dofixRange
                     % Plot values for each image in obj
                     [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg');
@@ -537,13 +569,13 @@ if ~doaverage
                     [hh, hhfill] = tor_polar_plot({r}, groupColors, {networknames}, 'nonneg','fixedrange',fixedrange);
                     % Make legend
                     if ~isempty(obj.image_names)
-                        han = makelegend(obj.image_names, groupColors);
+                        han = makelegend(obj.image_names, groupColors, 'nofig', 1);
                     end
                 end
-                
+
         end % plotstyle
     end % doplot
-    
+
     % print similarity matrix
     if printTable
         fprintf('\n');
@@ -556,33 +588,33 @@ if ~doaverage
                 print_matrix(r, {'Name' 'Percent Overlap'}, networknames);
         end
     end
-    
+
 % ------------------------------------------------------------
 % ------------------------------------------------------------
 
 elseif doaverage
     % Average across replicates (usually participants) and plot means with
     % error regions (shading)
-    
+
     if strcmp(sim_metric,'corr')
         z=fisherz(r'); %transform values
     else
         z=r'; % may need other transformations for other metrics here (SG 2017/09/07)
     end
-    
+
     if exist('compareGroups','var') %if we want to do analysis for multiple groups
-        
-        groupValues=unique(group);
+
+        groupValues=unique(group, 'stable');
         g=num2cell(groupValues); %create cell array of group numbers
-          
+
         for i=1:size(z,2) %for each spatial basis do an anova across groups
-            
-            [p table_group{i} st]=anova1(z(:,i), group, 'off'); %get anova table
+
+            [p, table_group{i}, st]=anova1(z(:,i), group, 'off'); %get anova table
             [c,~] = multcompare(st, 'Display', 'off'); %perform multiple comparisons
             multcomp_group{i}=[g(c(:,1)), g(c(:,2)), num2cell(c(:,3:end)), pValueToStars(c(:,end))]; %format table for output
-            
+
         end
-        
+
         if printTable
             for i=1:size(z,2)
                 disp(['Between-group comparisons for ' networknames{i} ':']);
@@ -617,36 +649,36 @@ elseif doaverage
                 disp(' ');
             end
         end
-          
+
     else
         group=ones(size(r,2),1); %otherwise all data is from same group
-        groupValues=unique(group);
+        groupValues=unique(group, 'stable');
         g=num2cell(groupValues); %creat cell array of group numbers
-        
-        
+
+
     end % Compare groups
-    
-    
+
+
     % Perform test of uniformity for each group
     % ------------------------------------------------------------
 
     for g=1:length(groupValues)
-        
+
         r_group=r(:,group==groupValues(g));
         z_group=z(group==groupValues(g),:);
-        
+
         stats(g).r = r_group;
-        
+
         % Plot mean and se of values
         m(:,g) = nanmean(r_group')';
 
 
-        se(:,g) = ste(r_group')'; 
+        se(:,g) = ste(r_group')';
 
         if Error_STD==1
                     se(:,g) = std(r_group')';  %% Special case for bootstrap data
         end
-        
+
         %[h, p, ci, stat] = ttest(r');
         [h, p, ci, stat] = ttest(z_group);
         if strcmp(sim_metric,'corr')
@@ -660,85 +692,166 @@ elseif doaverage
         stats(g).t = stat.tstat';
         stats(g).df = stat.df';
         starCellArray = pValueToStars(stats(g).p);
-        
+
         %perform repeated measures anova  (two way anova with subject as the
         %row factor
         [~, stats(g).table_spatial, st]=anova2(z_group(~any(isnan(z_group')),:),1,'off');
         [c,~] = multcompare(st,'Display','off');
         stats(g).multcomp_spatial=[networknames(c(:,1))', networknames(c(:,2))', num2cell(c(:,3:end))];
-        
-        
+
+
         if printTable
             disp(['Table of correlations Group:' num2str(g)]);
             disp('--------------------------------------');
             disp(stats(g).descrip)
-            
+
             print_matrix([m(:,g) stats(g).t stats(g).p stats(g).sig], {'R_avg' 'T' 'P' 'sig'}, networknames, '%3.4f', starCellArray);
-    
+
             disp(' ');
         end
 
         networknames=strcat(networknames, starCellArray');
+
     end %groups
-    
+
     % Plot (average + error bars)
     % ------------------------------------------------------------
     if ~noplot
-        % groupColors = scn_standard_colors(length(groupValues))'; %
+        if isempty(groupColors)
+            groupColors = scn_standard_colors(length(groupValues))';
+        end
+
         % removed to enable use of user-defined colors. SG 2017/2/7
-        gc=groupColors;
-        groupColors=repmat(groupColors',3,1);
-        groupColors={groupColors{:}};
-        
+        % gc=groupColors;
+        % groupColors=repmat(groupColors',3,1);
+        % groupColors={groupColors{:}};
+
+        % removed and replaced to debug plotting code below
+        % LVO 2023/12/18
+        % Bugfix to this MS 2024/9/11
+        gc = groupColors(1:numel(groupValues));
+        gc_rep = repmat(gc',3,1);
+        gc_toplot = gc_rep(:,1);
+        for c = 2:numel(groupValues)
+            gc_toplot = [gc_toplot;gc_rep(:,c)];
+        end
+
         toplot=[];
-        
+
         for i=1:length(groupValues)
             toplot=[toplot m(:,i)+se(:,i) m(:,i) m(:,i)-se(:,i)];
         end
-        
-        if dofigure, create_figure('tor_polar'); end
-        
+
+%         if dofigure, create_figure('tor_polar'); end
+
         switch plotstyle
             case 'wedge'
+
+                if dofigure, create_figure(); end
+
                 % --------------------------------------------------
+                % debugged this section LVO 2023/12/19
+                % PROBLEMS with previous version
+                % - r_group as first argument in tor_wedge_plot on line 732
+                %   represents results for second group only (cfr. loop
+                %   over groups line 635-685), hence for loop over groups
+                %   needed
+                % - groupColors input for 'colors' option is not compatible
+                %   with 'bicolor' option
+                % - outercircleradius was defined twice, but main issue is
+                %   that this should not be a range, but one value,
+                %   which is checked on line 186 of tor_wedge_plot.m,
+                %   but there is a syntax error there
+                %
+                % Separate plot for each group, otherwise not clear, can be
+                % combined in multi-panel figure as outercircleradius is
+                % the same, created single legend
 
                 if ~dofixRange
-                    outercircleradius = min(1, max(m) + .1*max(m));
+                    outercircleradius = (max(max(m)) - min(min(m)))*0.8;
                 else
-                    outercircleradius = fixedrange;
+                    outercircleradius = (max(fixedrange) - min(fixedrange));
                 end
-                
-                if ~dofixRange
-                    outercircleradius = min(1, max(abs(toplot(:))) + .1*max(abs(toplot(:))));
-                else
-                    outercircleradius = fixedrange;
-                end
-                
+
+%                 if ~dofixRange
+%                     outercircleradius = min(1, max(abs(toplot(:))) + .1*max(abs(toplot(:))));
+%                 else
+%                     outercircleradius = fixedrange;
+%                 end
+
                 if bicolor
-                    hh = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors, 'nofigure', 'bicolor');
+
+                    if exist('compareGroups','var')
+
+                        hh = cell(1,size(groupValues,2));
+                        hhfill = cell(1,size(groupValues,2));
+                        names = cell(1,g*2);
+                        for g = 1:size(groupValues,2)
+                            if g == 1
+                                [hh{g},hhfill{g}] = tor_wedge_plot(stats(g).r', networknames, 'outer_circle_radius', outercircleradius, 'colors', gc, 'nofigure', 'bicolor');
+                                ax = gca;
+                                if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                                    ax.Title.String = num2str(groupValues(g));
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{g} = ['positive group ' num2str(groupValues(g))];
+                                    names{g+1} = ['negative group ' num2str(groupValues(g))];
+                                else
+                                    ax.Title.String = groupValues(g);
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{g} = ['positive group ' groupValues(g)];
+                                    names{g+1} = ['negative group ' groupValues(g)];
+                                end
+                            else
+                                [hh{g},hhfill{g}] = tor_wedge_plot(stats(g).r', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors((g*2)-1:(g*2)), 'bicolor');
+                                ax = gca;
+                                if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                                    ax.Title.String = num2str(groupValues(g));
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{(g*2)-1} = ['positive group ' num2str(groupValues(g))];
+                                    names{g*2} = ['negative group ' num2str(groupValues(g))];
+                                else
+                                    ax.Title.String = groupValues(g);
+                                    ax.Title.Position = [0 0.33 0];
+                                    names{(g*2)-1} = ['positive group ' groupValues(g)];
+                                    names{g*2} = ['negative group ' groupValues(g)];
+                                end
+                            end
+                        end
+                        han = makelegend(names,groupColors(1:(g*2)), 'nofig', 1);
+
+                    else
+                        [hh,hhfill] = tor_wedge_plot(r_group', networknames, 'outer_circle_radius', outercircleradius, 'colors', groupColors(1:2), 'nofigure', 'bicolor');
+                        han = makelegend({'positive' 'negative'},groupColors(1:2), 'nofig', 1);
+
+                    end
+
                 else
                     error('bicolor is set to 1 by default - this should not happen. debug me.');
                 end
-                
+
             case 'polar'
                 % --------------------------------------------------
-                
+
+                if dofigure, create_figure('tor_polar'); end
+
                 if ~dofixRange
-                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg');
+                    [hh, hhfill] = tor_polar_plot({toplot}, gc_toplot, {networknames}, 'nonneg');
                 else
-                    [hh, hhfill] = tor_polar_plot({toplot}, groupColors, {networknames}, 'nonneg', 'fixedrange',fixedrange);
+                    [hh, hhfill] = tor_polar_plot({toplot}, gc_toplot, {networknames}, 'nonneg', 'fixedrange', fixedrange);
                 end
 
                 % Make legend
                 if numel(groupValues)>1
-                    % if ~isempty(obj.image_names)
-                        han = makelegend(cellstr(groupValues), gc);
-                    % end
+                    if ~iscategorical(groupValues) && ~isstring(groupValues) % groupValues is a double
+                        han = makelegend(num2cell(string(groupValues)), gc, 'nofig', 1);
+                    else
+                        han = makelegend(cellstr(groupValues), gc, 'nofig', 1);
+                    end
                 end
-                
+
                 set(hh{1}(1:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
                 set(hh{1}(3:3:end), 'LineWidth', 1); %'LineStyle', ':', 'LineWidth', 2);
-                
+
                 set(hh{1}(2:3:end), 'LineWidth', 4);
                 if numel(groupValues)>1
                     set(hhfill{1}([3:3:end]), 'FaceAlpha', .7, 'FaceColor', 'w');
@@ -747,26 +860,26 @@ elseif doaverage
                 end
                 set(hhfill{1}([2:3:end]), 'FaceAlpha', 0);
                 set(hhfill{1}([1:3:end]), 'FaceAlpha', .3);
-                
+
                 handle_inds=1:3:length(hh{1});
                 for g=1:length(groupValues)
                     stats(g).line_handles = hh{1}(handle_inds(g):handle_inds(g)+2);
                     stats(g).fill_handles = hhfill{1}(handle_inds(g):handle_inds(g)+2);
                 end
-                
+
                 % doaverage
-                
+
                 kk = size(toplot, 1);
                 mytextsize = 30 ./ (kk.^.3);
                 hhtext = findobj(gcf, 'Type', 'text'); set(hhtext, 'FontSize', mytextsize);
 
-                
+
             otherwise
                 error('Unknown plottype');
-                
+
         end % switch plotstyle
     end
-    
+
 end % doaverage
 
 % Fill in additional info
@@ -934,7 +1047,7 @@ else
         w(:,i) = get_w(svmobj{i})';
         b0(i) = svmobj{i}.b0;
         dist_from_hyplane(:,i) = z(test_ind,:) * w(:,i) + b0(i);
-        
+
     end
 end
 end
@@ -961,4 +1074,3 @@ function star = convertPValue(p)
         star = '';
     end
 end
-

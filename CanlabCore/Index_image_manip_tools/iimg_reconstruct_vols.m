@@ -17,6 +17,10 @@ function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
 %   **'slice':**
 %        followed by slice number of single-slice data in image
 %
+%   **'nan':**
+%        By default, out-of-brain voxels are indicated by 0. With this
+%        flag, out-of-brain voxels are indicated by NaN.
+%
 % :Example of image reading:
 %
 %   1) Get volume info from first volume of a 3-D or 4-D image
@@ -53,6 +57,7 @@ function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
     keepdt = 0;
     slice_number = NaN;
     descrip = 'Created by iimg_reconstruct_vols';
+    doNaN = 0;
 
     % This stuff is now handled by scn_write_plane...
     % Do not force spm scaling factors and get rid of private, which may
@@ -76,6 +81,9 @@ function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
                     
                 case 'keepdt'
                     keepdt = 1;
+
+                case 'nan'
+                    doNaN = 1;
             end
         end
     end
@@ -107,6 +115,11 @@ function voldata = iimg_reconstruct_vols(dat, volInfo, varargin)
         else
             voldata(:, :, :, i) = reshape(dat(:, i), volInfo.dim(1:3));
         end
+    end
+
+    % make zeros into Nans?
+    if doNaN
+        voldata(voldata==0) = NaN;
     end
 
     if is_writing_file
@@ -182,7 +195,7 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
                 end
             end
 
-        case {'SPM5', 'SPM8', 'SPM12'} %added keepdt to retain original dt if requested : luk(ea)
+        case {'SPM5', 'SPM8', 'SPM12', 'SPM25'} %added keepdt to retain original dt if requested : luk(ea)
             %Outputs float32 by default otherwise keeps original data type
             %if 'keepdt' is used as optional input.
             if isfield(volInfo, 'dt') && spm_type(volInfo.dt(1), 'intt') && ~keepdt

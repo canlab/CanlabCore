@@ -29,8 +29,11 @@ function cluster_orthviews(varargin)
 %   **'unique':**
 %        to display in unique colors for each cluster
 %
-%   **'overlay':**
+%   **'overlay' or 'underlay':**
 %        followed by name of image, to use a custom anatomical overlay
+%        e.g.,
+%        cluster_orthviews('underlay', 'mni152');
+%        cluster_orthviews('underlay', 'icbm2009c_0.5mm');
 %
 %   **'bivalent':**
 %        to plot increases in solid colors specified by colors cell
@@ -59,7 +62,17 @@ function cluster_orthviews(varargin)
 % :Options for matching colors across left/right hemispheres (region objects only):
 % all_colors = match_colors_left_right(r);
 % orthviews(r, all_colors);
-
+%
+% Examples:
+% Show a PAG region in transparent green from the Canlab 2023 atlas
+% ------------------------------------------------------------------
+% atl = load_atlas('canlab2023');
+% pag = select_atlas_subset(atl, {'PAG'});
+% cluster_orthviews('overlay', 'icbm2009c_0.5mm');  % Requires template NOT in github! you must download!
+% cluster_orthviews('add', pag, 'trans', 'color', {[.3 1 .3]});
+% spm_orthviews('xhairs', 'off');
+% spm_orthviews('reposition', atlas2region(pag).mm_center);
+% spm_orthviews('zoom', 20)
 
 % Programmers' notes
 %
@@ -73,10 +86,6 @@ function cluster_orthviews(varargin)
 
     spm('Defaults','fmri')
     
-    % overlay = which('scalped_single_subj_T1.img');
-    % overlay = which('SPM8_colin27T1_seg.img');  % spm8 seg cleaned up
-%     overlay = which('keuken_2014_enhanced_for_underlay.img');
-                overlay = which('spm152.nii');
 
     donew = 1;  % new fig
     docopy = 0;  % copy to new axis
@@ -92,31 +101,42 @@ function cluster_orthviews(varargin)
     
     cl = [];
     cols = [];
+    overlay = []; % use default
 
     for i = 1:length(varargin)
         if iscell(varargin{i})
             
             cols = varargin{i}; % colors
             
-        elseif isstruct(varargin{i}) || strcmp(class(varargin{i}), 'region') 
+        elseif isstruct(varargin{i}) || strcmp(class(varargin{i}), 'region') || strcmp(class(varargin{i}), 'atlas')
             
-            cl{end+1} = varargin{i};
-            
+            if strcmp(class(varargin{i}), 'atlas')
+                cl{end+1} = atlas2region(varargin{i});
+            else
+                cl{end+1} = varargin{i};
+            end
+
         elseif ischar(varargin{i})
             
             switch(varargin{i})
                 case 'add'
                     donew = 0;
+
                 case 'copy'
                     docopy = 1;
+
                 case 'unique'
                     douniquecolors = 1;
-                case 'overlay'
+
+                case {'overlay', 'underlay'}
                     overlay = deblank(varargin{i+1});
+
                 case 'bivalent'
                     dobiv = 1;
+
                 case 'trans'
                     dotrans = 1;
+
                 case 'solid'
                     dosolid = 1;
                     
@@ -136,26 +156,28 @@ function cluster_orthviews(varargin)
         end
     end
 
-    if ischar(overlay)
-        [path, name, ext] = fileparts(overlay);
-        if(isempty(path))
-            overlay = which(overlay);
-        end
-    elseif isempty(overlay)
-        overlay = which('spm2_single_subj_T1_scalped.img');  % spm2
-    end
+    overlay = canlab_get_underlay_image(overlay);
 
-    if isempty(overlay)
-        
-        disp('No valid overlay image specified, and I cannot find the default one.');
-        error('The default is SPM8_colin27T1_seg.img, and should be on your path.');
-        
-    end
+%     if ischar(overlay)
+%         [path, name, ext] = fileparts(overlay);
+%         if(isempty(path))
+%             overlay = which(overlay);
+%         end
+%     elseif isempty(overlay)
+%         overlay = which('spm2_single_subj_T1_scalped.img');  % spm2
+%     end
+% 
+%     if isempty(overlay)
+%         
+%         disp('No valid overlay image specified, and I cannot find the default one.');
+%         error('The default is SPM8_colin27T1_seg.img, and should be on your path.');
+%         
+%     end
     
     if isempty(cl)
         if skipempty
             % do nothing
-        else
+        elseif donew
              spm_check_registration(overlay); 
         end
         
@@ -199,8 +221,10 @@ function cluster_orthviews(varargin)
 
         else
             % we have color mapping mapping
-            cluster_orthviews(cl{1}, 'overlay', overlay);
-            
+%             cluster_orthviews(cl{1}, 'overlay', overlay);
+            cluster_orthviews(cl{1}, varargin{:});
+            donew = false;
+
             try
                 Zvals = cat(2,cl{1}.Z); 
             catch

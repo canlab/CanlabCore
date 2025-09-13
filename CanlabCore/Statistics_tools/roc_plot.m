@@ -233,9 +233,9 @@ for i = 1:length(varargin)
             case 'dependent'
                 doDependent = 1;
                 subject_id = varargin{i + 1};
-                if(~ismatrix(subject_id) || ~isnumeric(subject_id) || length(input_values)~=length(subject_id))
-                    error('Make sure ''dependent'' flag is followed by valid subject_id vector')
-                end
+%                 if(~ismatrix(subject_id) || ~isnumeric(subject_id) || length(input_values)~=length(subject_id))
+%                     error('Make sure ''dependent'' flag is followed by valid subject_id vector')
+%                 end
                 
                 disp('ROC for single interval classification of paired observations.')
                 

@@ -160,6 +160,8 @@ valfcn_xyz = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'size', [1 3]}
 
 valfcn_logical = @(x) validateattributes(x, {'numeric'}, {'nonempty', 'scalar', '>=', 0, '<=', 1}); % could enter numeric 0,1 or logical
 
+valfcn_fmridata = @(x) isempty(x) || isa(x, 'fmri_data') ;
+valfcn_imagevec = @(x) isempty(x) || isa(x, 'image_vector') ;
 
 % Required inputs 
 % ----------------------------------------------------------------------
@@ -295,6 +297,20 @@ end
 % -------------------------------------------------------------------------
 
 validateattributes(X,{'numeric'},{'2d'},'plot_correlation_matrix','X', 1);
+
+classes = {'numeric'};
+attributes = {'size',[4,6,2]};
+
+A = rand(3,5,2);
+validateattributes(A,classes,attributes)
+
+% make sure input has a value of 1 or 2
+A = 2
+classes = {'numeric'};
+attributes = {'scalar', 'integer', '<=',2,'>=', 1};
+validateattributes(A,classes,attributes)
+
+
 
 logical_args = {'dofdr' 'false' 'dospearman' 'dofigure' 'doimage' 'docircles' 'dotext'};
 for i = 1:length(logical_args)

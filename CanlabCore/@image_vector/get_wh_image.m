@@ -32,6 +32,7 @@ if min(wh) < 0 || max(wh) > size(dat.dat, 2)
 end
 
 out = dat;
+out.images_per_session = []; % eliminate any values here, as we're selecting images
 
 % for each field, if the field is of the same size as dat, select the 'wh'
 % column
@@ -52,25 +53,53 @@ end
 % above.  these field are all 1D
 
 otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 'Y', 'metadata_table' 'threshold' 'image_labels'};
+
 for f = otherfields
-    field = char(f);
-    
-    if ~isprop(out, field), continue; end
-    
-    sz = size(out.(field));
-    
-    if ~isempty(out.(field)) && sz(1) == datsz(2)
+    try
+        field = char(f);
         
-        out.(field) = out.(field)(wh, :); % these field are all 1D
+        if ~isprop(out, field), continue; end
         
+        sz = size(out.(field));
+        
+        if ~isempty(out.(field)) && sz(1) == datsz(2) % 
+            
+            out.(field) = out.(field)(wh, :); % these field are all 1D
+            
+        end
+        
+        if ~isempty(out.(field)) && sz(2) == datsz(2)
+            
+            out.(field) = out.(field)(:, wh); % these field are all 1D
+            
+        end
+    catch
+        warning(['Field ', field, ' could not be modified']);
     end
     
-    if ~isempty(out.(field)) && sz(2) == datsz(2)
-        
-        out.(field) = out.(field)(:, wh); % these field are all 1D
+end
+
+if strcmp(class(dat), 'statistic_image')
+    statfields={'p', 'sig', 'ste'};
+
+    for f = statfields
+        try
+            field = char(f);
+            
+            if ~isprop(out, field), continue; end
+            
+            sz = size(out.(field));
+            
+            if ~isempty(out.(field)) && sz(2) ~= datsz(2)
+                
+                out.(field) = out.(field)(:, wh); % these field are all 1D
+                
+            end
+        catch
+            warning(['Field ', field, ' could not be modified']);
+        end
         
     end
-    
 end
 
 end % function

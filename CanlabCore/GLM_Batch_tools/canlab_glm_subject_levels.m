@@ -232,7 +232,7 @@ allowablefields = {...
 actualfields = fieldnames(DSGN);
 for i = 1:numel(actualfields)
     if isempty(strmatch(actualfields{i},allowablefields,'exact'))
-        error('UNRECOGNIZED DSGN FIELD: DSGN.%s', actualfields{i})
+        warning('UNRECOGNIZED DSGN FIELD: DSGN.%s', actualfields{i})
     end
 end
 
@@ -404,6 +404,8 @@ diary(diaryname), fprintf('STARTED: %s\n',STARTTIME), diary off
 
 % make working directory
 wd = regexprep(diaryname,'\.log$','');
+% add uuid to avoid collisions when parallelizing
+wd = fullfile(wd, char(java.util.UUID.randomUUID));
 mkdir(wd)
 
 

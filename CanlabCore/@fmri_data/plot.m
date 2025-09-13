@@ -177,7 +177,7 @@ dorunmeanmontages = true;
 
 allowable_inputs = {'plotmethod' 'doorthviews' 'dooutliers' 'dorunmeanmontages'};
 
-keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'montage' 'montages' 'means_for_unique_Y'};
+keyword_inputs = {'noorthviews' 'nooutliers' 'norunmontages' 'nomontages' 'montage' 'montages' 'means_for_unique_Y'};
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
 
@@ -210,7 +210,7 @@ for i = 1:length(varargin)
 
             case 'nooutliers', dooutliers = false;
 
-            case 'norunmontages', dorunmeanmontages = false;
+            case {'norunmontages', 'nomontages'}, dorunmeanmontages = false;
 
             case {'montage' 'montages'}, plotmethod = 'montages'; % montages only
 
@@ -231,7 +231,7 @@ end
 switch plotmethod
     %  ==============================================================
     case 'data'
-        %  ==============================================================
+    %  ==============================================================
 
         if isempty(fmridat.dat)
             warning('No data in .dat field.');
@@ -385,7 +385,7 @@ switch plotmethod
         drawnow
 
         % ---------------------------------------------------------------
-        % Global mean vs. time
+        % Global mean vs. image series (i.e., time)
         % ---------------------------------------------------------------
         if size(fmridat.dat,2) > 1
 
@@ -644,6 +644,7 @@ m = cell(1, n_runs);
 
 for i = 1:n_runs
 
+    dat.dat = single(dat.dat);  % enforce single - ad hoc fix to prevent warnings due to upstream format
     m{i} = mean(get_wh_image(dat, find(Xi(:, i))));
 
 end
@@ -680,6 +681,19 @@ for i = 1:n_runs
 
 end
 
+% fix axis limits
+myax = subplot(n_runs, 1, 1);
+mypos = get(myax, 'Position');
+
+for i = 1:n_runs
+
+    myax = subplot(n_runs, 1, i);
+    myaxpos = get(myax, 'Position');
+    myaxpos(4) = mypos(4);
+    set(myax, 'Position', myaxpos);
+end
+
+colormap gray
 drawnow
 
 

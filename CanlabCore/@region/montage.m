@@ -76,6 +76,14 @@ function o2 = montage(obj, varargin)
 %        'full hcp' for full montage, but with surfaces and volumes from
 %        HCP data
 %
+%        'full hcp inflated' for full montage with inflated surfaces from
+%        HCP data
+% 
+%        'hcp inflated' same as above but without volumetric slices
+%
+%        'freesurfer inflated' surface plots using freesurfer inflated
+%        surfaces
+%
 %        'compact' [default] for single-figure parasagittal and axials slices.
 %
 %        'compact2': like 'compact', but fewer axial slices.
@@ -97,6 +105,33 @@ function o2 = montage(obj, varargin)
 %         The default brain for overlays is based on Keuken et al. 2014
 %         For legacy SPM8 single subject, enter as arguments:
 %         'overlay', which('SPM8_colin27T1_seg.img')
+%
+%  @Optional:Surface Inputs:
+%
+%    **'sourcespace':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage. If you're plotting on surfaces, this is something you absolutely want to do if your sourcespace 
+%       and targetsurface are supported. If you're plotting to volumetric slices this has no effect.
+%       Supported sourcespaces = {'MNI152NLin2009cAsym','MNI152NLin6Asym','colin27'}
+%
+%    **'srcdepth':**
+%       Requires 'sourcespace' specification, and allows further specify desired surface depth to sample volume 
+%       at. Typical options might be 'pial', 'white', or 'midthickness'. Requires that a file named 
+%       '<sourename>_<srcdepth>_lh.mat' and '<sourename>_<srcdepth>_rh.mat' be in your matlab path. The pial surface 
+%       and even midthickness will undersample from deep sulci, but the white surface may conversely suffer from 
+%       partial volume effects if you've masked white matter out of your volumetric data. srcdepth can also be a cell 
+%       array, in which case multiple depths are sampled and averaged (for linear interpolation) or the mode is taken 
+%       (for nearest neighbor interpolation). If there is a modal tie, the default is to use whichever belongs first 
+%       in your srcdepth list. Default: {'midthickness','pial','white'}, i.e. midthickness > pial > white for modal 
+%       tie breaks.
+%
+%    **'targetsurface':**
+%       If specified together with a targetsurface then nonlinear mapping between the source volume and the 
+%       target surface is performed according to the MNIsurf procedure described in Wu, Ngo, Greve et al. (2018)
+%       Neuroimage. If you're plotting on surfaces, this is something you absolutely want to do if your sourcespace 
+%       and targetsurface are supported. If you're plotting to volumetric slices this has no effect.
+%       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
 % Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
 %
@@ -180,6 +215,28 @@ colors = scn_standard_colors(length(obj));
 dofigure = true;
 doredefinecolors = true;
 
+% if no targetsurface is specified we look to see if there's a target
+% surface suitable given our input options and assign it automatically.
+targetsurface = [];
+wh = find(strcmp(varargin,'targetsurface'));
+if ~isempty(wh)
+    targetsurface = varargin{wh + 1};
+    varargin{wh+1} = [];
+    varargin{wh} = [];
+else
+    targetsurface = [];
+end
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case {'hcp sphere', 'hcp inflated', 'full hcp', 'full hcp inflated'}
+                if isempty(targetsurface), targetsurface = 'fsLR_32k'; end
+            case {'freesurfer sphere', 'freesurfer white', 'freesurfer inflated'}
+                if isempty(targetsurface), targetsurface = 'fsaverage_164k'; end
+        end
+    end
+end
+
 if any(strcmp(varargin, 'map')), methodtype = 'map'; end
 if any(strcmp(varargin, 'nosymmetric')), methodtype = 'map'; end
 if any(strcmp(varargin, 'symmetric')), methodtype = 'symmetric'; end
@@ -187,7 +244,7 @@ if any(strcmp(varargin, 'old')), methodtype = 'old'; end
 if any(strcmp(varargin, 'nofigure')), dofigure = false; end
 if any(strcmp(varargin, 'indexmap'))
     colors = varargin{find(strcmp(varargin,'indexmap'))+1};
-    colors = mat2cell(colors,repmat(1,1,length(colors)),3)';
+    colors = mat2cell(colors,repmat(1,1,size(colors,1)),3)';
     colortype = 'indexmap';
     
     if any(strcmp(varargin,'symmetric'))
@@ -241,9 +298,15 @@ end
 
 if ~exist('o2', 'var') || ~isa(o2, 'fmridisplay')
     
-    if dofigure && ~(one_blob_per_slice) % regioncenters will create a new figure anyway
+    any_compact_mode = any(cellfun(@(x) ischar(x) && contains(x, 'compact'), varargin));
+
+    if dofigure && ~(one_blob_per_slice) && any_compact_mode
+        % regioncenters will create a new figure anyway
+        % any_compact_mode stops figure creation if 'compact' keyword
+        % entered
         create_figure('fmridisplay'); axis off
     end
+    
     % TW: I think the above is unnecessary because canlab_results_fmridisplay
     % will create a figure anyway if needed. and w/o this can pass in
     % nofigure control string. but needs refactoring to work better.
@@ -283,7 +346,13 @@ switch colortype
             end
             
             if dozoom
-                zoom_in_on_regions(o2, obj, 'axial');  % hard-coded for now, could change orientation...must make flexible in canlab_results_fmridisplay
+                wh = find(cellfun(@ischar,varargin));
+                wh = wh(ismember(varargin(wh),{'axial','saggital','coronal'}));
+                if any(wh)
+                    zoom_in_on_regions(o2, obj, varargin{wh});
+                else
+                    zoom_in_on_regions(o2, obj, 'axial'); 
+                end
             end
             
             drawnow
@@ -297,7 +366,7 @@ switch colortype
                 
                 for i = 1:length(region_groups)
                     
-                    o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', varargin{:});
+                    o2 = addblobs(o2, region_groups{i}, 'color', colors{i}, 'noverbose', 'targetsurface', targetsurface, varargin{:});
                     drawnow
                     
                 end
@@ -307,7 +376,7 @@ switch colortype
                 
                 for i = 1:length(obj)
                     
-                    o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', varargin{:});
+                    o2 = addblobs(o2, obj(i), 'color', colors{i}, 'noverbose', 'targetsurface', targetsurface, varargin{:});
                     drawnow
                     
                 end
@@ -336,7 +405,7 @@ switch colortype
         else
             
             % Just render blobs
-            o2 = addblobs(o2, obj, varargin{:});
+            o2 = addblobs(o2, obj, 'targetsurface', targetsurface, varargin{:});
         end
         
     case 'old'

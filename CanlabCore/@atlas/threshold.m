@@ -244,6 +244,8 @@ end
 % each regoin. N is the fragment index, frag1 is the largest and subsequent
 % parcels are in order of size.
 function obj = spin_off_frag(obj)
+    obj = obj.replace_empty();
+    
     new_obj = obj;
     new_obj.probability_maps = [];
 

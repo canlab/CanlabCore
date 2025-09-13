@@ -51,6 +51,11 @@
 %   **doplot:**
 %        Plot output/holdout sets
 %
+%   **downsample_to_balanced_classes:**
+%        True or false [default]. Remove training cases (undersample) to
+%        keep training and test sets balanced on outcome, for SVMs and
+%        other algorithms that work best with balanced training sets.
+%
 % :Outputs:
 %
 %   **out1:**
@@ -120,18 +125,34 @@ end
 % Keep subject together (all images in same train/test)
 [group_together, wh] = unique(id,'stable');
 
+ % Y is categorical (vs. continuous)...deal with stratification and plots differently if so
+class_labels = unique(Y);  % Unique outcome labels or values
+nclasses = length(class_labels);
 
-% Gid: group, subject-wise. Assumes all obs for a subject have same Y value.
+is_cat = length(nclasses) < 3;
+
+% Gid: group, subject-wise. Assumes all obs for a subject have same Y value
+% for stratification purposes. If they do not (e.g., Y=1 and Y=-1 for each
+% of a pair of obs per subject), the CV partition could be non-random
+% depending on the order you have entered cases, so check carefully. Future
+% versions may want to check for this and turn off stratification in
+% cvpartition in this case.
+
+% prep vectors of which obs belong to which group
+class_by_group = count_class_by_group(id, Y, group_together);
+
 Yid = Y(wh);
 
- % Y is categorical (vs. continuous)...deal with stratification and plots differently if so
-is_cat = length(unique(Y)) < 3;
 
 % Partition subject-wise, and then re-assign observations to folds
 % This keeps all subjects together.
 % nfolds defined in input parser, default = 10
 
 if is_cat
+    % by itself, this will keep cases in each class approximately
+    % proportional to the base rate of the two classes. We need more below
+    % to under/oversample cases if we want balanced classes in each
+    % training fold.
     cvpart = cvpartition(Yid, 'k', nfolds, 'Stratify', true);
     
 else
@@ -151,6 +172,12 @@ for i = 1:nfolds
     
     teIdx{i} = ismember(id, group_together(cvpart.test(i)));
     
+end
+
+% Down-sample (or up, in future) largest class to make them equal, if
+% requested
+if downsample_to_balanced_classes
+    trIdx = undersample_to_smallest_class(trIdx, nfolds, id, group_together, Y, doverbose);
 end
 
 testmat = cat(2, teIdx{:});
@@ -276,6 +303,7 @@ p.addRequired('id', valfcn_number);
 p.addParameter('doverbose', true);
 p.addParameter('doplot', true);
 p.addParameter('nfolds', 10, valfcn_scalar);
+p.addParameter('downsample_to_balanced_classes', false);
 
 % Parse inputs and distribute out to variable names in workspace
 % ----------------------------------------------------------------------
@@ -303,5 +331,225 @@ for j=1:n_bins %make the bins
     
 end
 
+end % scores to bins
+
+
+
+    function class_by_group = count_class_by_group(id, Y, group_together)
+
+        class_labels = unique(Y);  % Unique outcome labels or values
+        nclasses = length(class_labels);
+        ngroups = length(group_together);
+
+        group_indic = condf2indic(id, 'integers', ngroups);
+
+        class_by_group = zeros(ngroups, nclasses);
+
+        for j = 1:nclasses
+            for i = 1:length(group_together)
+                is_class = Y == class_labels(j);
+
+                class_by_group(i, j) = sum(group_indic(:, i) & is_class);
+
+            end
+        end
+
+    end % count_class_by_group
+
+
+% ************
+% function trIdx = undersample_to_smallest_class(trIdx, nfolds, id, group_together, Yid, Y)
+% 
+% for i = 1:nfolds
+% 
+%     ytrain = Y(trIdx{i});
+%     classes = unique(ytrain);
+%     idtrain = id(trIdx{i});
+% 
+%     % Count number obs in each class
+%     for j = 1:length(classes), count(j) = sum(ytrain == classes(j)); end
+% 
+%     [maxCount, class_to_downsample] = max(count);
+%     [minCount, smallest_class] = min(count);
+% 
+%     if maxCount == minCount, continue; end  % we are already balanced
+% 
+%     class_by_group = count_class_by_group(idtrain, ytrain, group_together);
+% 
+%     class_diffs_by_group = diff(class_by_group')';
+% 
+%     if class_to_downsample == 1
+%         eligible_groups = group_together(class_diffs_by_group < 0); % indices of which groups have more obs for the larger class 
+% 
+%     else % 2 is greater
+% 
+%         eligible_groups = group_together(class_diffs_by_group > 0); 
+%     end
+% 
+%     rp = randperm(length(eligible_groups)); % random permutation - choose among eligible groups randomly
+%     eligible_groups = eligible_groups(rp);
+% 
+%     % cumulative sum of differences in cases by group, for eligible groups
+%     diffcount = class_diffs_by_group(eligible_groups);
+%     diffcount = cumsum(diffcount(rp));
+% 
+%     wh_groups_to_remove = abs(diffcount) <= abs(diff(count));
+%     groups_to_remove = eligible_groups(wh_groups_to_remove);
+% 
+%     indx = ismember(id, groups_to_remove);
+% 
+%     trIdx{i}(indx) = 0;  % remove them
+% 
+%    % REPORT COUNT
+%        ytrain = Y(trIdx{i});
+%     classes = unique(ytrain);
+%     idtrain = id(trIdx{i});
+% 
+%     % Count number obs in each class
+%     for j = 1:length(classes), count(j) = sum(ytrain == classes(j)); end
+%     [ count class_to_downsample]
+% 
+% 
+% end % folds
+% 
+% end % function
+
+
+function trIdx = undersample_to_smallest_class(trIdx, nfolds, id, group_together, Y, doverbose)
+% undersample_to_smallest_class undersamples the largest class within each fold.
+%
+% :Usage:
+% ::
+%     trIdx = undersample_to_smallest_class(trIdx, nfolds, id, group_together, Y, doverbose)
+%
+% :Inputs:
+%
+%   **trIdx:**
+%        Cell array of logical vectors indicating which observations are in-fold.
+%
+%   **nfolds:**
+%        Number of folds.
+%
+%   **id:**
+%        Numeric vector of group identifiers for each observation.
+%
+%   **group_together:**
+%        A vector of group numbers that should be considered together.
+%
+%   **Yid:**
+%        (Legacy input; not used in current implementation.)
+%
+%   **Y:**
+%        Vector of class labels for each observation.
+%
+% :Outputs:
+%
+%   **trIdx:**
+%        Updated cell array of logical vectors where, for each fold, groups
+%        from the largest class have been removed until the classes are approximately balanced.
+%
+% :Examples:
+% ::
+%     trIdx = undersample_to_smallest_class(trIdx, nfolds, id, group_together, Yid, Y);
+%
+% :References:
+%   See also count_class_by_group.
+%
+% :See also:
+%   count_class_by_group
+%
+% -------------------------------------------------------------------------
+
+if doverbose
+    disp('Undersampling largest class to keep numbers of observations balanced in each training fold')
 end
+
+
+for i = 1:nfolds
+    % Get indices for observations in the current fold.
+    fold_idx = find(trIdx{i});
+    ytrain = Y(fold_idx);
+    classes = unique(ytrain);
+    idtrain = id(fold_idx);
+
+    % Reinitialize count for current fold.
+    count = zeros(length(classes), 1);
+    for j = 1:length(classes)
+        count(j) = sum(ytrain == classes(j));
+    end
+
+    [maxCount, class_to_downsample] = max(count);
+    [minCount, smallest_class] = min(count);
+
+    % If the classes are already balanced, do nothing.
+    if maxCount == minCount
+        continue;
+    end
+
+    % Count observations by group for each class.
+    % The function count_class_by_group should return a matrix with rows corresponding
+    % to each group in group_together and columns corresponding to classes.
+    class_by_group = count_class_by_group(idtrain, ytrain, group_together);
+
+    % Ensure we have exactly two classes.
+    if size(class_by_group, 2) ~= 2
+        error('undersample_to_smallest_class currently supports only two classes.');
+    end
+
+    % Compute the difference between counts for class2 and class1 for each group.
+    % A positive value means more observations in class2; negative means more in class1.
+    class_diffs_by_group = class_by_group(:,2) - class_by_group(:,1);
+
+    % Determine which groups are eligible for removal.
+    % If the largest class is the first class, we want groups with negative differences.
+    if class_to_downsample == 1
+        eligible_idx = find(class_diffs_by_group < 0);
+    else % largest class is the second class
+        eligible_idx = find(class_diffs_by_group > 0);
+    end
+
+    % Map eligible indices to group numbers.
+    eligible_groups = group_together(eligible_idx);
+
+    % Randomize the order of eligible groups.
+    rp = randperm(length(eligible_groups));
+    eligible_groups = eligible_groups(rp);
+
+    % Get the differences for these eligible groups (in randomized order)
+    diffcount = class_diffs_by_group(ismember(group_together, eligible_groups));
+    % Compute the cumulative sum of differences.
+    diffcount = cumsum(diffcount);
+
+    % Determine the threshold for removal based on the overall class imbalance.
+    overall_diff = abs(diff(count));
+
+    % Identify groups to remove: remove groups until the cumulative difference
+    % is less than or equal to the overall difference.
+    wh_groups_to_remove = abs(diffcount) <= overall_diff;
+    groups_to_remove = eligible_groups(wh_groups_to_remove);
+
+    % Remove observations in the current fold that belong to the groups to remove.
+    remove_idx = fold_idx(ismember(idtrain, groups_to_remove));
+    trIdx{i}(remove_idx) = false;
+
+
+    if doverbose
+
+        % (Optional) Report counts after removal.
+        ytrain_after = Y(trIdx{i});
+        new_count = zeros(length(classes), 1);
+        for j = 1:length(classes)
+            new_count(j) = sum(ytrain_after == classes(j));
+        end
+        fprintf('Fold %d: before removal: %s, after removal: %s\n', i, mat2str(count'), mat2str(new_count'));
+
+    end
+
+end
+
+end % function undersample
+
+
+
+
 

@@ -64,6 +64,9 @@ end
 % initialize, exclude the intercept
 vif = [];  %ones(1, length(wh));
 
+% Turn warnings off for rank deficient in case of perfect colin
+warning('off', 'MATLAB:rankDeficientMatrix'); % Suppress rank deficiency warnings
+
 intcpt = ones(n, 1);
 
 for i = wh
@@ -103,6 +106,9 @@ for i = wh
     
     
 end  % regressor
+
+warning('on', 'MATLAB:rankDeficientMatrix'); % Suppress rank deficiency warnings
+
 
 if doplot
     

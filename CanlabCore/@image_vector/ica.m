@@ -4,12 +4,50 @@ function icadat = ica(fmridat_obj, varargin)
 %   - icadat is also an fmri_data object, with .dat field voxels x components
 %
 % :Notes:
+%   - Spatial component maps are saved in columns of icadat.dat, or rows of icadat.dat'
 %   - icasig = W * mixedsig
 %   - icasig = icadat.dat' = W * fmridat_obj.dat'
 %
-% A is scaled version of fmridat_obj.dat' * icadat.dat
+% W is the separation matrix, the inverse of the mixing matrix
+% A is the mixing matrix, the inverse of the separation matrix
 % 
-% A and W are stored in additional_info field of icadat
+% A and W are stored in additional_info field of icadat in cells {1} and {2}, respectively
+% A = ica_obj.additional_info{1};
+% W = ica_obj.additional_info{2};
+%
+% Model:
+% D = A * S, where:
+%   D = [n x v] dataset, images x voxels in fmridat_obj.dat'
+%   A = [n x k] mixing matrix (the inverse of the separation matrix if n = k)
+
+%   W = [k x n] separation matrix, (the inverse of the mixing matrix if n = k)
+%               W' is a matrix whose columns are image series, e.g., time
+%               series. They reflect the expression of each component
+%               across images and can be used to analyze differences across
+%               image groups (conditions, time, etc.)
+%   S = [k x v] components matrix, with k components. S = icadat.dat'
+%               S = W * D;
+%
+% - Each image in D is a mixture of maps S defined by a row of A
+% - Each column of A defines the expression of one map in S across images (e.g., time, or other image series)
+%
+% Reconstructed data:
+% D_recon = A * S;
+% figure; plot(D(:), D_recon(:), 'k.')
+%   A is related to D * S' (fmridat_obj.dat' * icadat.dat)';
+%
+% Dual regression / back-reconstruction:
+% B = pinv(S') * D';  % dual regression step 1, each data image n regressed on k spatial maps S; B = k x n
+% B = pinv(icadat.dat) * fmridat_obj.dat;
+%   Note: fmridat_obj can be a different image object here, e.g., an independent dataset
+%   If fmridat_obj is the same dataset used to derive ICA components S, B is very similar to W
+%
+% S_hat = pinv(B') * fmridat_obj.dat';  % dual regression step 2
+%   S_obj = fmridat_obj;
+%   S_obj.dat = S_hat';
+%   montage(get_wh_image(S_obj, 1:4));
+
+figure; plot(B(:), W(:), 'k.')
 
 nic = 30;
 if length(varargin) > 0, nic = varargin{1}; end

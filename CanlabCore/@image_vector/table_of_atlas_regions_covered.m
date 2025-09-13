@@ -35,7 +35,7 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %        The keyword 'coverage' followed by a percentage threshold. 0 means
 %        that any non-zero voxel in the input data that falls within an atlas
 %        region will be sufficient to include the atlas region in the
-%        table.  
+%        table.
 %        50 means that 50% of the voxels in an atlas region must be
 %        non-zero in the input image.
 %        The default is 25%
@@ -45,6 +45,9 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %
 %   **noverbose, noprint:**
 %        Suppress printing the tables
+%
+%   **'sort_by_column_name'**
+%       Followed by name to sort on
 %
 % :Outputs:
 %
@@ -67,7 +70,7 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 %        Text string with all covered regions and coverage percentages
 %
 %   **full_table**
-%       Table of all regions, in order of indices in atlas       
+%       Table of all regions, in order of indices in atlas
 %
 % Examples:
 % -----------------------------------------------------------------
@@ -83,6 +86,18 @@ function [results_table_pos, results_table_neg, r, excluded_region_table, atlas_
 % [~, ~, r] = table_of_atlas_regions_covered(ncsthr, 'coverage', 50, 'noverbose');
 %
 % montage(r, 'regioncenters', 'colormap');
+%
+% % Create a table, sort by additional labels 2 field, and edit it before displaying
+% atl = load_atlas('canlab2018_2mm');
+% [results_table_pos, results_table_neg] = table_of_atlas_regions_covered(t_obj_comb_fdr{i}, 'atlas', atl, 'sort_by_column_name', 'labels_2', 'noverbose');
+% results_table_pos.Coverage = [];
+% results_table_pos.mean_in_region = [];
+% results_table_neg.Coverage = [];
+% results_table_neg.mean_in_region = [];
+% results_table_pos.labels_3 = [];
+% results_table_neg.labels_3 = [];
+% disp(results_table_pos)
+% disp(results_table_neg)
 %
 % Note: For a key to labels when using the Glasser 2016 Nature atlas, or the
 % CANlab combined atlas (which uses Glasser), see GlasserTableS1.pdf in the
@@ -117,6 +132,8 @@ if (size(obj.dat, 2) > 1)
     error('Use this function with fmri_data or image_vector objects containing only a single image. Use get_wh_image() to select one.')
 end
 
+[results_table_pos, results_table_neg, r, excluded_region_table, atlas_of_regions_covered, region_list, full_table] = deal([]);
+
 % Old method:
 % r = region(obj);
 %
@@ -131,6 +148,7 @@ end
 percentile_threshold = 25;  % saves regions for which > this percentage of the atlas region is covered by the activation map
 doprint = true;
 atlas_obj = [];
+sort_by_column_name = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -142,6 +160,10 @@ for i = 1:length(varargin)
 
             case {'atlas_obj', 'atlas'}
                 atlas_obj = varargin{i+1}; varargin{i+1} = [];
+
+            case 'sort_by_column_name'
+                sort_by_column_name = true;
+                sort_col_name = varargin{i+1}; varargin{i+1} = [];
 
             case allowable_inputs
                 % skip - handled above
@@ -159,8 +181,11 @@ validateattributes(percentile_threshold, {'double'}, {'scalar' 'nonnegative' 'no
 
 % Load default atlas if needed
 if isempty(atlas_obj)
-    atlasname = 'canlab2023_combined_atlas_MNI152NLin6Asym_1mm.mat';
-    atlaskeyword = 'canlab2023';
+    %     atlasname = 'canlab2023_combined_atlas_MNI152NLin6Asym_1mm.mat';
+    %     atlaskeyword = 'canlab2023';
+
+    atlasname = 'CANLab2024_MNI152NLin2009cAsym_coarse_2mm_atlas_object.mat';
+    atlaskeyword = 'canlab2024';
 
     if isempty(which(atlasname))
 
@@ -232,6 +257,19 @@ if ~iscolumn(atlas_obj.labels), atlas_obj.labels = atlas_obj.labels'; end
 
 full_table = table(atlas_obj.labels, atlas_region_coverage, n_atlas, (1:n)',  mean_in_region, max_abs_in_region, 'VariableNames', {'Region' 'Coverage' 'Voxels_in_region' 'Atlas_index_number' 'mean_in_region' 'max_abs_in_region'});
 
+% add extra labels if we have them
+labfields = {'labels_2' 'labels_3' 'labels_4' 'labels_5'};
+for i = 1:length(labfields)
+    labfield = labfields{i};
+
+    if ~isempty(atlas_obj.(labfield)) && length(atlas_obj.(labfield)) == length(atlas_obj.labels)
+        mylab = atlas_obj.(labfield);
+        if ~iscolumn(mylab), mylab = mylab'; end
+        full_table.(labfield) = mylab;
+    end
+end
+
+
 % full_table = sortrows(full_table, {'Coverage' 'Voxels_in_region'}, 'descend');
 
 output_table = full_table;
@@ -245,13 +283,21 @@ output_table(~(full_table.Coverage > percentile_threshold), :) = [];
 % above, extract to match with the table, and re-order table and regions to
 % sort by coverage again.
 
+if isempty(output_table.Atlas_index_number)
+    return
+end
+
 atlas_of_regions_covered = select_atlas_subset(atlas_obj, output_table.Atlas_index_number);
 
 r = atlas2region(atlas_of_regions_covered);
 
-
 output_table = sortrows(output_table, {'Atlas_index_number'}, 'ascend'); % to keep order-matched with region object, below
-[output_table, indx] = sortrows(output_table, {'Coverage' 'Voxels_in_region'}, 'descend'); % indx maps from atlas number to coverage order
+
+if sort_by_column_name
+    [output_table, indx] = sortrows(output_table, {sort_col_name}, 'ascend'); % indx maps from atlas number to coverage order
+else
+    [output_table, indx] = sortrows(output_table, {'Coverage' 'Voxels_in_region'}, 'descend'); % indx maps from atlas number to coverage order
+end
 
 r = r(indx); % This should now be sorted into the same order as the table
 
@@ -263,6 +309,7 @@ for i = 1:length(r)
 
 end
 
+output_table.atlas_mm_coords = cat(1, r(:).mm_center);
 
 % Separate tables and format output
 % ------------------------------------------------------
@@ -299,7 +346,7 @@ if doprint
 
     fprintf('\nPositive Effects\n\n')
     if ~isempty(results_table_pos)
-        
+
         disp(results_table_pos)
     else
         disp('No regions to display');
@@ -307,7 +354,7 @@ if doprint
 
     fprintf('\nNegative Effects\n\n')
     if ~isempty(results_table_neg)
-        
+
         disp(results_table_neg)
     else
         disp('No regions to display');
@@ -330,5 +377,3 @@ vals = double(vals);
 val = sign(vals(wh)) .* maxabs;
 
 end
-
-

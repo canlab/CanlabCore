@@ -80,6 +80,12 @@ function files = filenames(pattern, varargin)
     command = shellCommand(pattern, isPCandIsRelative, sortField, sortFieldSeparator);
     if(verbose), disp(command); end
     [status, output] = system(command);
+    
+    if isPCandIsRelative
+        % Replace all instances of X:\ with blank
+        output=strrep(output, 'X:\', '');
+    end
+
     outputString = java.lang.String(deblank(output));
 
     if(outputString.indexOf('Parameter format not correct') ~= -1)
@@ -140,14 +146,22 @@ function command = shellCommand(pattern, isPCandIsRelative, sortField, sortField
         % 10/26/2023 -- Michael Sun Edits for PC users:
 
         [pathstr, name, ext] = fileparts(pattern);
-        filePattern = [name, ext];
-        psCommand = sprintf('Get-ChildItem -Path "%s" -Filter "%s" -Recurse | Select-Object -ExpandProperty FullName', escapeForShell(pathstr), escapeForShell(filePattern));
+
+        % 1) build the PS pipeline, using single‑quotes around the two args
+        psCommand = sprintf( ...
+          'Get-ChildItem -Path ''%s'' -Filter ''%s'' -Recurse | Select-Object -ExpandProperty FullName', ...
+           pathstr, filePattern);
         
-        if(~isempty(sortField))
-            psCommand = [psCommand ' | Sort-Object'];
+        % 2) optionally add Sort
+        if ~isempty(sortField)
+            psCommand = [ psCommand ' | Sort-Object' ];
         end
         
-        command = sprintf('powershell -Command "%s"', psCommand);
+        % 3) wrap it in a double-quoted -Command string
+        command = sprintf('powershell -NoProfile -Command "%s"', psCommand);
+        
+        % 4) run it
+        [status, stdout] = system(command);
 
     else
         error('What kinda system you got?');
@@ -172,7 +186,7 @@ end
 
 function isAbsolute = isAbsolutePath(pattern)
     isAbsolute = 0;
-    if(ispc() && (~contains(pattern, '\\') || ~contains(pattern, ':\')))                     % contains() is stylistically more readable - Michael 10/19/2021
+    if(ispc() && (contains(pattern, '\\') || contains(pattern, ':\')))                     % contains() is stylistically more readable - Michael 10/19/2021
         isAbsolute = 1;
     elseif(isunix())
         location = strfind(pattern, '/');  

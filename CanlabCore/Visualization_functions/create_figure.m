@@ -53,6 +53,7 @@ end
 
 old = findobj('Tag', tagname);
 old = old( strcmp( get(old, 'Type'), 'figure' ) );
+% old = [];
 
 if ~isempty(old)
     % Found existing figure window with this tag

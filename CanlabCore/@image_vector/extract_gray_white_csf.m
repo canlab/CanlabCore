@@ -101,6 +101,7 @@ for i = 1:length(masks)
         
         full_data_objects{i} = remove_empty(masked_obj);
 
+        full_data_objects{i}.dat = single(full_data_objects{i}.dat);
     end
            
     % get means

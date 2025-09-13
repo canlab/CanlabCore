@@ -304,7 +304,7 @@ plotstyle = 'wedge'; % or 'polar'
 bicolor = false;
 treat_zero_as_data = 0; % Default of 0 means treat zero value as missing data.
 Error_STD=0;
-
+exclude_zero_mask_values = 0; % default so that 0 mask/pattern expression values are NOT excluded
 
 % optional inputs with default values
 % -----------------------------------
@@ -368,6 +368,10 @@ for i = 1:length(varargin)
 
             case 'Error_STD'
                 Error_STD = 1;
+
+            case 'exclude_zero_mask_values'
+                exclude_zero_mask_values = 1;
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
@@ -489,7 +493,9 @@ switch sim_metric
 
             % r(im, :) = corr_matrix(double(mask.dat(:,im)), double(obj.dat));
 
-            if treat_zero_as_data==1
+            if treat_zero_as_data==1 && exclude_zero_mask_values == 1
+                r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data', 'exclude_zero_mask_values'); 
+            elseif treat_zero_as_data==1 && exclude_zero_mask_values==0
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation','treat_zero_as_data'); % mask contains the pattern image (signature or binary mask) to apply.
             else
                 r(im, :) = canlab_pattern_similarity(obj.dat, mask.dat(:, im), 'correlation');

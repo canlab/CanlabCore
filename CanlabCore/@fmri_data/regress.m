@@ -519,6 +519,8 @@ else
     % No intercept or exogenous variables are outcome
 
     X = obj.X;
+    intercept_string= 'No intercept included in model';
+
 end
 
 if do_resid && add_voxelwise_intercept
@@ -604,7 +606,11 @@ if ~isempty(C) && ~(size(C, 1) == size(X, 2))
     % Do this *after* adding intercept to X if needed
 
     disp('Contrasts entered, but size(C, 1) does not equal size(X, 2).');
-    disp('Must have a contrast entry for each column of X (including the intercept)');
+    if do_intercept
+        disp('Must have a contrast entry for each column of X (including the intercept)');
+    else
+        disp('Must have a contrast entry for each column of X');
+    end
     error('Quitting.')
 
 end

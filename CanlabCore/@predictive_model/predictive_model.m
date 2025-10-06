@@ -484,7 +484,7 @@ classdef predictive_model
                 validateattributes(obj.d_singleinterval, {'numeric'}, {'scalar'}, mfilename, 'regression_d_singleinterval');
             end
 
-            % Validate classification_d_within (numeric scalar)
+            % Validate d_within (numeric scalar)
             if ~isempty(obj.d_within)
                 validateattributes(obj.d_within, {'numeric'}, {'scalar'}, mfilename, 'd_within');
             end

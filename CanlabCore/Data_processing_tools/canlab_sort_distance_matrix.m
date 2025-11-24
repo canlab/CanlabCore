@@ -1,5 +1,6 @@
 function [D_sorted, perm] = canlab_sort_distance_matrix(D, varargin)
 % canlab_sort_distance_matrix: Reorder distance or correlation matrix so similar items are adjacent
+% - uses clustering and sorts based on the leaf ordering in the dendrogram
 %
 % :Usage:
 % ::

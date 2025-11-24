@@ -732,6 +732,8 @@ switch lower(keyword)
         wh = 15;
     case 'cpdm'
         wh = 27;
+    case 'vifs'
+        wh = 43;
         
     otherwise
         wh = find(strcmp(keyword, table_list.keyword));
@@ -1549,15 +1551,15 @@ function table_list = list_signatures
 
 
 
-pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0 0 0 1]';
-negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0 1 0 0]';
-empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
-physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 0 0]';
-posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 1 0]';
-cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0 0 0 0]';
-regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0 0 0 0]';
-reward =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 1 0]';
-other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 0 0]';
+pain =      [1 1 1 1 0 0 0 0 0 0   1 1 0 0 0   0 0 0 0 0 0 0   1 0 0 0   1 0   1 1 1 0 0    0 0 0 0 0 0 0 0 1 0]';
+negemo =    [0 0 0 0 1 1 0 0 0 0   0 0 0 1 1   0 1 0 1 0 1 0   0 0 1 1   0 0   1 0 0 1 1    0 0 0 0 0 0 1 0 0 1]';
+empathy =   [0 0 0 0 0 0 1 1 0 0   0 0 1 1 0   0 0 0 0 0 0 0   0 0 0 0   0 1   0 0 0 0 0    0 0 0 0 0 0 0 0 0 0]';
+physio =    [0 0 0 0 0 0 0 0 1 1   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 0 0 0]';
+posemo =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   1 0 1 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 0 0 0 0 1 0 0]';
+cogcontrol =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 1 0 0   0 0   0 0 0 0 0    0 0 1 0 0 0 0 0 0 0]';
+regulation =[0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    1 1 0 0 0 0 0 0 0 0]';
+reward =    [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 0 0 0   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 1 0 0]';
+other =     [0 0 0 0 0 0 0 0 0 0   0 0 0 0 0   0 0 0 0 1 0 1   0 0 0 0   0 0   0 0 0 0 0    0 0 0 1 1 1 0 0 0 0]';
 
 keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_nooccip' 'GSR' 'Heart' ...
     'FM-Multisens' 'FM-pain' 'Empathic_Care' 'Empathic_Dist' 'Guilt_behavior' ...
@@ -1565,7 +1567,7 @@ keyword = {'NPS' 'NPSpos' 'NPSneg' 'SIIPS' 'PINES' 'Rejection' 'VPS' 'VPS_noocci
     'Kragel18Pain' 'Kragel18CogControl' 'Kragel18NegEmotion' 'Reddan18CSplus_vs_CSminus' ...
     'GeuterPaincPDM' 'ZhouVPS' ...
     'General aversive' 'Mech pain' 'Thermal pain' 'Aversive Sound' 'Aversive Visual'  ...
-    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood' 'Painvalue' 'Moneyvalue' 'Shockintensity'}';
+    'PlaceboPvsC_Antic' 'PlaceboPvsC_Pain' 'stroop' 'NCS' 'NCSdrugs' 'NCSfood' 'Painvalue' 'Moneyvalue' 'Shockintensity' 'VIFS'}';
 
 imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS   - somatic pain
     'NPSp_Lopez-Sola_2017_PAIN.img' ...                 % 2017 Lopez-Sola positive NPS regions only
@@ -1609,6 +1611,7 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
     'painvalue_weights_fdr05.nii.gz' ...                    % Coll 2022 PNAS decision value pain
     'moneyvalue_weights_fdr05.nii.gz' ...
     'shockintensity_weights_fdr05.nii.gz' ...
+    'VIFS.nii' % visually induced fear
     }';
 
 table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, reward, other, imagenames);

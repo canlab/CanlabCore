@@ -43,12 +43,12 @@ fnames = fieldnames(dat);
 datsz = size(dat.dat);
 
 for f=fnames'
-    
+
     field = char(f);
     if isequal( size(out.(field)) , datsz )
-        
+
         out.(field) = out.(field)(:,wh);
-        
+
     end
 end
 
@@ -60,26 +60,26 @@ otherfields = {'image_names', 'fullpath', 'files_exist', 'removed_images', 'X', 
 for f = otherfields
     try
         field = char(f);
-        
+
         if ~isprop(out, field), continue; end
-        
+
         sz = size(out.(field));
-        
-        if ~isempty(out.(field)) && sz(1) == datsz(2) % 
-            
+
+        if ~isempty(out.(field)) && sz(1) == datsz(2) %
+
             out.(field) = out.(field)(wh, :); % these field are all 1D
-            
+
         end
-        
+
         if ~isempty(out.(field)) && sz(2) == datsz(2)
-            
+
             out.(field) = out.(field)(:, wh); % these field are all 1D
-            
+
         end
     catch
         warning(['Field ', field, ' could not be modified']);
     end
-    
+
 end
 
 if strcmp(class(dat), 'statistic_image')
@@ -88,24 +88,21 @@ if strcmp(class(dat), 'statistic_image')
     for f = statfields
         try
             field = char(f);
-            
+
             if ~isprop(out, field), continue; end
-            
+
             sz = size(out.(field));
-            
+
             if ~isempty(out.(field)) && sz(2) ~= datsz(2)
-                
+
                 out.(field) = out.(field)(:, wh); % these field are all 1D
-                
+
             end
         catch
             warning(['Field ', field, ' could not be modified']);
         end
-        
+
     end
 end
 
 end % function
-
-
-        

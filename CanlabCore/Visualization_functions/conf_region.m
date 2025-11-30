@@ -70,7 +70,7 @@ function [ax,ci,cen,ub,lb,S,e,lam,Fm,Fc,F,pval, msb] = conf_region(X,varargin)
 %    %create_figure('test');
 %    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1),ci(2,2));
 %
-%    % plot standard deviation - for boostrapping, or for individual cases
+%    % plot standard deviation - for bootstrapping, or for individual cases
 %    [h,h2] = plot_ellipse(cen(1),cen(2),theta,ci(1,1)*sqrt(N),ci(2,2)*sqrt(N));
 %
 % :Example: Render individual subject conf regions

@@ -1,4 +1,4 @@
-function [surface_handles, colors] = isosurface(atlas_obj, varargin)
+function [surface_handles, colors, patch_handles] = isosurface(atlas_obj, varargin)
 % Create a series of surfaces in different colors, one for each region
 % - Options for single color
 %
@@ -31,7 +31,7 @@ function [surface_handles, colors] = isosurface(atlas_obj, varargin)
 
 r = atlas2region(atlas_obj);
 
-[surface_handles, colors] = isosurface(r, varargin{:});
+[surface_handles, colors, patch_handles] = isosurface(r, varargin{:});
 
 
 end % function

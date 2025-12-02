@@ -157,6 +157,12 @@ for i = 1:length(varargin)
                 donotfill = 1;
             case {'whole'}
                 dowhole = 1;
+            case {'labels'}
+                % if ~contains('colors',varargin(cellfun(@ischar,varargin))),...
+                %         warning('''labels'' doesn''t do anything without a ''colors'' argument.');
+                % end
+                mylabels=varargin{i+1};
+                
         end
     end
 end
@@ -375,16 +381,16 @@ for jj = 1:rnum
         if ~docontour
             y = size(vZ{jj},1); x = size(vZ{jj},2);
             if ~donotfill
-                %for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
-                %for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
+                % for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
+                % for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', [.2 .2 .2], 'linewidth', 1.5, 'linestyle', '-'); end
                 
                 % black lines
                 for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', [.2 .2 .2], 'linewidth', 1, 'linestyle', '-'); end
                 for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', [.2 .2 .2], 'linewidth', 1, 'linestyle', '-'); end
 
                 % white lines
-%                 for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
-%                 for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
+                % for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
+                % for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', 'w', 'linewidth', 1, 'linestyle', '-'); end
             else
                 for i = 1:x, line([i+.5,i+.5], [0 y+.5], 'color', repmat(.2, 1, 3), 'linewidth', 1.5, 'linestyle', '-'); end
                 for i = 1:y, line([0 x+.5], [i+.5,i+.5], 'color', repmat(.2, 1, 3), 'linewidth', 1.5, 'linestyle', '-'); end
@@ -425,7 +431,23 @@ for jj = 1:rnum
     end
     if docolorbar
         hh = colorbar('southoutside');
-        set(hh, 'fontSize', 25, 'lineWidth', 3);
+        
+        if exist('mylabels', 'var')
+            num_labels=numel(mylabels);
+    
+            % Calculate the YTick positions to be centered within each color segment
+            y_positions = linspace(0, 1, num_labels + 1); % +1 for the edges
+            y_positions = (y_positions(1:end-1) + y_positions(2:end)) / 2; % Midpoints
+            
+            % Set the YTick positions and labels
+            set(hh, 'YLim', [0 1], 'YTick', y_positions, 'YTickLabel', mylabels, 'FontSize', 18);
+
+        else
+            set(hh, 'fontSize', 25, 'lineWidth', 3);
+        end
+
+
+
     end
     
     info{jj}.vZ = vZ{jj};

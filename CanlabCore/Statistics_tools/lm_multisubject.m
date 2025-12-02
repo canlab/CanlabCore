@@ -58,7 +58,7 @@ end
 
 % Initialize Variables
 num_subjects = numel(model);
-regnames = model{1}.CoefficientNames(2:end); % Exclude intercept
+regnames = format_strings_for_legend(model{1}.CoefficientNames(2:end)); % Exclude intercept
 num_regressors = numel(regnames);
 
 % Pre-allocate matrices
@@ -147,6 +147,7 @@ if optionalargs==0
 else
     subplot(3,2,3:4);
 end
+
 imagesc(Rsq);
 bound=max(abs([max(coeff_matrix), min(coeff_matrix)]));
 clim([-1*bound bound])

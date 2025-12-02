@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = extract_data(obj, data_obj, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_counts, parcel_stes] = extract_data(obj, data_obj, varargin)
 % Atlas object-class method that extracts and averages data stored in an
 % fmri_data object [data_obj] basd on atlas regions.
 %
@@ -137,9 +137,9 @@ else
     data_obj = resample_space(data_obj, obj);
 end
 
-[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = deal([]);
+[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_counts, parcel_stes] = deal([]);
 
-[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg] = apply_parcellation(data_obj, obj, varargin{:});
+[parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_counts, parcel_stes] = apply_parcellation(data_obj, obj, varargin{:});
 
 end % function
 

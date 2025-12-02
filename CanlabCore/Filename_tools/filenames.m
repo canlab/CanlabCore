@@ -146,6 +146,7 @@ function command = shellCommand(pattern, isPCandIsRelative, sortField, sortField
         % 10/26/2023 -- Michael Sun Edits for PC users:
 
         [pathstr, name, ext] = fileparts(pattern);
+        filePattern = [name, ext];
 
         % 1) build the PS pipeline, using single‑quotes around the two args
         psCommand = sprintf( ...

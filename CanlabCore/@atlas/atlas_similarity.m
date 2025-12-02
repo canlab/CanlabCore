@@ -198,7 +198,7 @@ end
 
 % Re-label regions covering many atlas regions
 % ---------------------------------------------------
-Atlas_regions_covered = sum(coverage25_index)';
+Atlas_regions_covered = sum(coverage25_index, 1)';
 
 wh = Atlas_regions_covered > 5;
 modal_label(wh) = {'Multiple regions'};

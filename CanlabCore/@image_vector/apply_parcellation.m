@@ -1,4 +1,4 @@
-function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_count] = apply_parcellation(dat, parcels, varargin)
+function [parcel_means, parcel_pattern_expression, parcel_valence, rmsv_pos, rmsv_neg, voxel_count, parcel_ste] = apply_parcellation(dat, parcels, varargin)
 % Computes the mean value / pattern expression for each parcels specified in a data object
 %
 % Usage:
@@ -273,6 +273,44 @@ parcels.removed_images = false(size(parcels.removed_images));
 %matrix products will give us the mean now...
 parcel_means = dat.dat' * parcels.dat;
 
+
+if isa(dat, 'statistic_image') & ~isempty(dat.ste)
+    % Computing Parcel Standard Error: parcel_ste
+    
+    % Convert to double if needed
+    ste = double(dat.ste);  % [n_voxels x 1]
+    
+    % Squared SEs (i.e., variances)
+    voxel_variance = ste .^ 2;
+    
+    % Count how many voxels in each parcel
+    voxel_counts = sum(parcels.dat ~= 0, 1);  % [1 × n_parcels]
+
+    % Step 1: Define valid voxels based on data integrity
+    valid_voxels = isfinite(dat.ste) & isfinite(dat.dat) & any(parcels.dat ~= 0, 2);
+    
+    % Step 2: Masked parcels and voxel variances
+    parcels_masked = parcels.dat(valid_voxels, :);             % [valid_voxels x n_parcels]
+    voxel_variance = double(dat.ste(valid_voxels)).^2;         % [valid_voxels x 1]
+    n_parcels = size(parcels_masked, 2);                        % number of parcels
+    
+    % Step 3: Initialize output
+    parcel_ste = NaN(1, n_parcels);
+    
+    % Step 4: Loop over parcels to compute standard error
+    for i = 1:n_parcels
+        mask = parcels_masked(:, i) ~= 0;                      % logical mask for current parcel
+        if any(mask)
+            % Compute standard error of the mean for voxels in this parcel
+            parcel_ste(i) = sqrt(mean(voxel_variance(mask)));
+        end
+    end
+
+else
+
+    parcel_ste = [];
+
+end
 
 % Parcel valence
 % -------------------------------------------------------------------------

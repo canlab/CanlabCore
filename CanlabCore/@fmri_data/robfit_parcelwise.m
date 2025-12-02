@@ -412,6 +412,8 @@ for i = 1:v
     betas(i, :) = bb';
     tscores(i, :) = stats.t';
     pvalues(i, :) = stats.p';
+
+    sevalues(i, :) = stats.se;
     
     dfe(i, 1) = stats.dfe;
     nsubjects(i, 1) = sum(~wasnan);
@@ -427,7 +429,7 @@ wh = find(pvalues == 0 & ~isnan(tscores) & ~isinf(tscores));
 minp = min(pvalues(pvalues > 0));
 pvalues(wh) = minp;
 
-OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
+OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'stes', sevalues, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction

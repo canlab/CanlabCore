@@ -78,7 +78,10 @@ function info = roi_contour_map(dat, varargin)
 %   **'whole':**
 %        Default is dividing the data into contiguous regions and
 %        show only one region that has the most voxels. This option
-%        akes this function not to divide into contiguous regions. 
+%        makes this function not to divide into contiguous regions. 
+%
+%   **'clim':**
+%        Color limit boundaries. 
 %
 %   **'colors' or 'color':**
 %        you can specify your own colormap. 
@@ -125,6 +128,7 @@ donotfill = 0;
 dowhole = 0;
 outline_color_pos = 'r';
 outline_color_neg = 'b';
+clim = 0;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -157,6 +161,8 @@ for i = 1:length(varargin)
                 donotfill = 1;
             case {'whole'}
                 dowhole = 1;
+            case {'clim'}
+                clim = varargin{i+1};
             case {'labels'}
                 % if ~contains('colors',varargin(cellfun(@ischar,varargin))),...
                 %         warning('''labels'' doesn''t do anything without a ''colors'' argument.');
@@ -331,7 +337,12 @@ for jj = 1:rnum
     end
     
     lim_max(jj) = max(max(vZ{jj}));
-    lim_min(jj) = min(min(vZ{jj}));    
+    lim_min(jj) = min(min(vZ{jj})); 
+
+    if clim
+        lim_max(jj) = max(clim);
+        lim_min(jj) = min(clim); 
+    end   
 end
 
 if usesamerange

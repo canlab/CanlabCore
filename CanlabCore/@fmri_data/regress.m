@@ -484,7 +484,7 @@ if do_intercept && brain_is_outcome
         X = intercept(obj.X, 'add');
         variable_names{end + 1} = 'Intercept';
         wh_int = intercept(X, 'which');
-        obj.X = repmat(1, size(obj.dat, 2), wh_int);
+        obj.X(:, end+1) = repmat(1, size(obj.dat, 2), 1);
         X = obj.X;
 
     else

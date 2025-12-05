@@ -447,7 +447,11 @@ for i = 1:k
         if doverbose, fprintf('Using B-H FDR as specified by user\n', names{i}); end
 
         pthr_i = FDR(pvalues(:, i), .05);
-        if isempty(pthr_i), pthr_i(i) = -Inf; end
+        if isempty(pthr_i)
+            % No FDR-significant p-values; set threshold so that nothing passes
+            pthr_i = -Inf;    % or pthr_i = 0;
+        end
+        
         sig_q05(:, i) = pvalues(:, i) < pthr_i;
 
     else

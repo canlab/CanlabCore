@@ -394,7 +394,7 @@ else
     elseif diff(sign(clim))
         
         % Default colormap for objects with - and + values
-        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:});
+        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:}, 'gray_buffer', gray_buffer);
         
     else
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle);
@@ -946,12 +946,21 @@ for i = 1:length(varargin)
             case 'gray_buffer'
                 if varargin{i+1}
                     graybuffer = 20; % for border - fade to gray in lowest k values
+                    gray_buffer_idx = i;
                 else
                     graybuffer = 0;
+                    gray_buffer_idx = i;
                 end
         end
     end
 end
+
+if gray_buffer_idx
+    varargin(gray_buffer_idx+1) = [];
+    varargin(gray_buffer_idx) = [];
+end
+
+
 
 % Default addblobs - orange/pink
 hihot = [1 1 0]; % max pos, most extreme values

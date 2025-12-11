@@ -30,6 +30,9 @@ function conj = conjunction(si1, si2, direction, type)
 % values of the two input maps. Default to "values" to prevent crashing
 % previous scripts using this function.
 % 
+%   Fixed bug where .sig was not being masked between si1 and si2, leading
+%   to an overly liberal conjunction map.
+%   Michael Sun Ph.D., 12/11/2025
 
 if nargin == 2
     type = "values"; % default: average of two maps
@@ -105,5 +108,19 @@ elseif strcmp(type, 'values')    % output a value map
         conj.sig = pos_conj.sig;
         conj.dat(conj.dat < 0) = 0;
     end
+
+    % *** enforce true conjunction in dat ***
+    switch sign(direction)
+        case 0    % both pos and neg
+            mask = conj.sig ~= 0;
+        case -1   % only neg
+            mask = conj.sig < 0;       % or neg_conj.sig ~= 0
+        otherwise % only pos
+            mask = conj.sig > 0;       % or pos_conj.sig ~= 0
+    end
+
+    % zero out voxels that are not in the conjunction
+    conj.dat(~mask) = 0;
+
 end
     

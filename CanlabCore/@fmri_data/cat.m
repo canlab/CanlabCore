@@ -72,6 +72,11 @@ function [obj, obj_codes] = cat(obj, varargin)
 %    Created July 2016, Tor Wager
 % ..
 
+if isempty(obj) & ~isempty(varargin)
+    obj = varargin{1};
+    obj_codes = ones(size(obj.dat, 2), 1);
+    return;
+end
 
 if isempty(varargin)
     

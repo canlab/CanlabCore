@@ -26,15 +26,19 @@ ivec.dat = zeros(size(ivec.dat));
 
 for i = 1:length(r)
     
-    ivec_tmp = region2imagevec(r(i));
-    
-    %ivec_tmp = replace_empty(ivec_tmp);
-    
+    ivec_tmp = region2imagevec(r(i)); % For some reason this operation appends data to ivec_tmp.
+    ivec_tmp = replace_empty(ivec_tmp);
+    ivec_tmp.dat = [];
+
     whvox = ivec.volInfo.image_indx(ivec.volInfo.wh_inmask) & ivec_tmp.volInfo.image_indx(ivec.volInfo.wh_inmask);
     
     %ivec.dat(whvox) = ivec.dat(whvox) + i * double(ivec_tmp.dat ~= 0); % code with region number
     
-    ivec.dat(whvox) = i; % code with region number
+    if isempty(ivec_tmp.dat) % Currently this will always be true. A future update should make it so we can port data over from region to atlas.
+        ivec.dat(whvox) = i; % code with region number
+    else
+        ivec.dat(whvox) = ivec_tmp.dat; 
+    end
     
     
 end

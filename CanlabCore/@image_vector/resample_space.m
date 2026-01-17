@@ -93,11 +93,11 @@ else % if  isa(obj, 'atlas')
     if ~isempty(obj.probability_maps)
         n_prob_imgs = size(obj.probability_maps, 2);
     
-        voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
+        % voldata = iimg_reconstruct_vols(obj.probability_maps(:, 1), obj.volInfo); % commented out - Byeol, 01/15/2026
         obj_out.probability_maps = [];
-    
-        resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-        resampled_dat = resampled_dat(:);
+        
+        % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        % resampled_dat = resampled_dat(:);
         
         % Use probability images if available
         for i = 1:n_prob_imgs

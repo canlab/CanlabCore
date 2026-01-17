@@ -1,4 +1,4 @@
-function [outputT_pos, outputT_neg] = print_publication_table(image_vec, varargin)
+function [outputT_pos, outputT_neg, region_output] = print_publication_table(image_vec, varargin)
 % This function is designed to generate an fMRI activation table for use in
 % main texts of papers.
 % 
@@ -84,6 +84,7 @@ nTables = 1;    % the number of tables to produce
 verbosestr = "";
 legendstr = "";
 thr = 0;
+doneg = false;
 
 for i = 1:length(varargin)
     if ischar(varargin{i})
@@ -98,7 +99,7 @@ for i = 1:length(varargin)
                     error(['Cannot handle atlas input, input is of class: ', class(varargin{i+1})]);
                 end
             
-            case {'doneg'}, nTables = 2;
+            case {'doneg'}, doneg = true;
             
             case {'noverbose'}, verbosestr = ", 'noverbose'";
 
@@ -117,6 +118,7 @@ end
 if isempty(atlas_obj)
     % atlas_obj = load_atlas('canlab2023');
     atlas_obj = load_atlas('canlab2024');
+    atlas_obj.probability_maps=[];
 end
 
 % threshold atlas only if it has probability maps
@@ -171,10 +173,21 @@ r_relabeled = cell(1, 2);
 outputTables = cell(1, 2);   % a cell that stores output tables
 [r{1}, r{2}] = posneg_separate(regions);
 
+if ~doneg
+    % Just print the positive activation table
+    r=r(1);
+end
+
+r = r(~cellfun(@isempty, r)); % Only keep cells with something to display
+
+if isempty(r)
+    warning('Empty region tables. No regions to display.');
+end
+
 % -------------------------------------------------------------------------
 % CREATE AND CONCATENATE TABLES
 % -------------------------------------------------------------------------
-for t = 1:nTables
+for t = 1:numel(r)
     % first, use `autolabel_...` to get each blob and names of atlas regions
     [r_relabeled{t}, atlasT, ~, atlasR] ...
         = autolabel_regions_using_atlas(r{t}, atlas_thr);
@@ -236,7 +249,11 @@ for t = 1:nTables
         {'Voxels', 'Atlas_regions_covered', 'modal_label', ...
         'modal_label_descriptions', 'Perc_covered_by_label', ...
         'Ref_region_perc', 'modal_atlas_index'});
-   
+
+    for row=1:numel(atlasT.all_regions_covered)
+        region_output{t}{row}=apply_mask(image_vec, select_atlas_subset(atlas_thr, atlasT.all_regions_covered{row}));
+    end
+  
     % remove all underlines in region names, and put them as a long string
     atlasT.all_regions_covered = cellfun(@(x) strjoin(x, ', '), ...
         format_strings_for_legend(atlasT.all_regions_covered), ...

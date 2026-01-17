@@ -154,7 +154,7 @@ addbrain_allowable_args = {'vmpfc' 'nacc' 'BST' 'cau' 'caudate' 'put' 'GP' 'GPe'
     'MNI152NLin6Asym sphere left','MNI152NLin6Asym sphere right','disableVis3d'};
 
 render_on_surface_allowable_args = {'clim' 'cmaprange' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap' ...
-    'summer' 'cool' 'hot' 'bone' 'copper' 'prism' 'hsv' 'winter' 'nolegend','sourcespace', 'targetsurface', 'MNI152NLin6Asym', 'fsLR_32k', 'MNI152NLin2009cAsym', 'fsaverage_164k'};
+    'summer' 'cool' 'hot' 'bone' 'copper' 'prism' 'hsv' 'winter' 'nolegend','sourcespace', 'targetsurface', 'MNI152NLin6Asym', 'fsLR_32k', 'MNI152NLin2009cAsym', 'fsaverage_164k', 'gray_buffer'};
 
 % optional inputs with default values
 for i = 1:length(varargin)

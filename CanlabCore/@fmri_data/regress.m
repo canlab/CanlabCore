@@ -463,28 +463,6 @@ if nuniquevals < 2^10
     mywarnings{end+1} = sprintf('Number of unique values in dataset is low (%d, %3.2f bits), indicating possible restriction of bit rate. For comparison, Int16 has 65,536 unique values', nuniquevals, log2(nuniquevals));
 end
 
-% Check of obj.X exists and is correct format
-% ---------------------------------------------------------------------
-
-if brain_is_outcome
-    if isempty(obj.X)
-        error('Make sure you include a design matrix in obj.X')
-    end
-    if size(obj.dat, 2) ~= size(obj.X, 1)
-        error('obj.dat must have same number of columns as obj.X has rows.')
-    end
-    if isa(obj.X,'design_matrix')
-        obj.X = obj.X.dat;
-    end
-else % Check if obj.Y exists and is in correct format if running brainony
-    if isempty(obj.Y)
-        error('Make sure you include a vector in obj.Y.')
-    end
-    if size(obj.dat, 2) ~= size(obj.Y, 1)
-        error('obj.dat must have same number of columns as obj.Y has rows.')
-    end
-end
-
 % Check if Rank Deficient
 % ---------------------------------------------------------------------
 
@@ -505,7 +483,9 @@ if do_intercept && brain_is_outcome
         if doverbose, mywarnings{end+1} = 'No intercept detected, adding intercept to last column of design matrix'; end
         X = intercept(obj.X, 'add');
         variable_names{end + 1} = 'Intercept';
-        %         wh_int = intercept(X, 'which');
+        wh_int = intercept(X, 'which');
+        obj.X(:, end+1) = repmat(1, size(obj.dat, 2), 1);
+        X = obj.X;
 
     else
         intercept_string = sprintf('Intercept detected in column %1.0f of obj.X', wh_int);
@@ -521,6 +501,28 @@ else
     X = obj.X;
     intercept_string= 'No intercept included in model';
 
+end
+
+% Check of obj.X exists and is correct format
+% ---------------------------------------------------------------------
+
+if brain_is_outcome
+    if isempty(obj.X)
+        error('Make sure you include a design matrix in obj.X')
+    end
+    if size(obj.dat, 2) ~= size(obj.X, 1)
+        error('obj.dat must have same number of columns as obj.X has rows.')
+    end
+    if isa(obj.X,'design_matrix')
+        obj.X = obj.X.dat;
+    end
+else % Check if obj.Y exists and is in correct format if running brainony
+    if isempty(obj.Y)
+        error('Make sure you include a vector in obj.Y.')
+    end
+    if size(obj.dat, 2) ~= size(obj.Y, 1)
+        error('obj.dat must have same number of columns as obj.Y has rows.')
+    end
 end
 
 if do_resid && add_voxelwise_intercept
@@ -1105,7 +1107,7 @@ out.t.removed_voxels = obj.removed_voxels;
 out.t.removed_images = false;  % this image does not have the same dims as the original dataset
 out.t.image_labels = variable_names;
 
-out.t = enforce_variable_types(out.t);
+% out.t = enforce_variable_types(out.t); % The remove_empty in this can cause some problems for regress
 
 if doverbose
     fprintf('Thresholding t images at %3.6f %s\n', inputargs{1}, inputargs{2});

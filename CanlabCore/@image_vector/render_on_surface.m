@@ -214,11 +214,12 @@ sourcespace = [];
 srcdepth = {'midthickness','pial','white'}; % default depth to sample a surface from
 targetsurface = [];
 interp = 'linear';
+gray_buffer = true;
 
 allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
 allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
 
-allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap', 'sourcespace', 'targetsurface', 'srcdepth','interp'};
+allowable_keyword_value_pairs = {'clim' 'color' 'colormap' 'colormapname' 'axis_handle' 'pos_colormap' 'neg_colormap', 'sourcespace', 'targetsurface', 'srcdepth','interp','gray_buffer'};
 
 
 % optional inputs with default values - each keyword entered will create a variable of the same name
@@ -288,6 +289,7 @@ for i = 1:length(varargin)
                 
                 % eliminate this here because we may have passed many irrelevant values in in surface() call
                 %otherwise, warning(['Unknown input string option:' varargin{i}]);
+
         end
     end
 end
@@ -363,7 +365,7 @@ if ~isempty(pos_colormap) ||  ~isempty(neg_colormap)
     % Skip colormap generator, already
     % found the range of colors for pos/neg values to split around 0 here.
     % this sets the colormap for axis_handle
-    [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :));
+    [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, pos_colormap(1, :), pos_colormap(end, :), neg_colormap(1, :), neg_colormap(end, :), 'gray_buffer', gray_buffer);
     
     % colormapname = [neg_colormap; pos_colormap];   % colormapname is either name or [nvals x 3] matrix
     % nvals = size(colormapname, 1);                 % needs to match for color and gray maps to work right
@@ -392,7 +394,7 @@ else
     elseif diff(sign(clim))
         
         % Default colormap for objects with - and + values
-        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:});
+        [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, splitcolors{:}, 'gray_buffer', gray_buffer);
         
     else
         [cm, kpos, kneg] = split_colormap(nvals, colormapname, axis_handle);
@@ -936,13 +938,35 @@ function [cm, kpos, kneg] = hotcool_split_colormap(nvals, clim, axis_handle, var
 % lowcool = [0 0 1];
 % hicool = [.4 .3 .4];
 
+graybuffer = 20;  % for border - fade to gray in lowest k values
+
+for i = 1:length(varargin)
+    if ischar(varargin{i})
+        switch varargin{i}
+            case 'gray_buffer'
+                if varargin{i+1}
+                    graybuffer = 20; % for border - fade to gray in lowest k values
+                    gray_buffer_idx = i;
+                else
+                    graybuffer = 0;
+                    gray_buffer_idx = i;
+                end
+        end
+    end
+end
+
+if gray_buffer_idx
+    varargin(gray_buffer_idx+1) = [];
+    varargin(gray_buffer_idx) = [];
+end
+
+
+
 % Default addblobs - orange/pink
 hihot = [1 1 0]; % max pos, most extreme values
 lowhot = [1 .4 .5]; % [.8 .3 0]; % min pos
 hicool = [0 .8 .8]; % [.3 .6 .9]; % max neg
 lowcool = [0 0 1]; % min neg, most extreme values
-
-graybuffer = 20;  % for border - fade to gray in lowest k values
 
 if ~isempty(varargin)
     if length(varargin) < 4

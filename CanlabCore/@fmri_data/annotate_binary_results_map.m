@@ -1,4 +1,4 @@
-function annotate_binary_results_map(test_map)
+function RESULTS = annotate_binary_results_map(test_map)
 % Annotate a binary results map with several types of gradients and networks
 %
 % - Transmodal vs. unimodal:  Principal gradient of functional connectivity
@@ -126,6 +126,8 @@ end
 
 drawnow; snapnow;
 
+RESULTS.transuni_vals = [vals, vals_negative];
+
 
 %% Allen brain project transcriptomic gradients
 
@@ -159,6 +161,9 @@ end
 
 drawnow; snapnow;
 
+RESULTS.transcriptomic_vals = [vals, vals_negative];
+
+
 %% Hansen Neuromaps PET neurochemical tracer maps
 
 disp('Neuromaps PET neurochemical tracer maps')
@@ -182,6 +187,9 @@ plot_colored_bars(stats.r, stats.networknames, seaborn_colors(size(vals, 2)));
 set(gca, 'Position', [0.6162    0.110    0.2888    0.8150])
 set(gca, 'YDir', 'reverse')
 
+RESULTS.hansen_vals = [vals, vals_negative];
+
+
 %% Neurosynth topic and term maps
 
 disp('Neurosynth topic and term maps')
@@ -194,13 +202,15 @@ ns = load(which('neurosynth_data_obj.mat'));
 %                   and given ChatGPT-based summary topic labels by Ke et al. 2024, Nat Neurosci
 
 disp('Neurosynth topics - forward inference maps')
-[image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps, all_ns_r_table] = neurosynth_feature_labels(test_mapz, 'topics_fi', 'images_are_replicates', false, 'noverbose');
+[image_by_feature_correlations, top_feature_tables1, top_ns_maps, bottom_ns_maps, all_ns_r_table] = neurosynth_feature_labels(test_mapz, 'topics_fi', 'images_are_replicates', false, 'noverbose');
 
 disp('Neurosynth topics - reverse inference maps')
-[image_by_feature_correlations, top_feature_tables, top_ns_maps, bottom_ns_maps, all_ns_r_table] = neurosynth_feature_labels(test_mapz, 'topics_ri', 'images_are_replicates', false, 'noverbose');
+[image_by_feature_correlations, top_feature_tables2, top_ns_maps, bottom_ns_maps, all_ns_r_table] = neurosynth_feature_labels(test_mapz, 'topics_ri', 'images_are_replicates', false, 'noverbose');
 
 disp('Neurosynth terms- reverse inference maps')
-[image_by_feature_correlations, top_feature_tables] = neurosynth_feature_labels(test_mapz, 'images_are_replicates', false, 'noverbose');
+[image_by_feature_correlations, top_feature_tables3] = neurosynth_feature_labels(test_mapz, 'images_are_replicates', false, 'noverbose');
+
+RESULTS.neurosynth_vals = {top_feature_tables1, top_feature_tables2, top_feature_tables3};
 
 %% Yeo/Buckner lab 
 
@@ -219,6 +229,8 @@ drawnow; snapnow;
 [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(test_mapz, 'atlases', {'yeo17networks'}, 'colors', seaborn_colors(34));
 
 drawnow; snapnow;
+
+RESULTS.networks = output_values_by_region;
 
 end  % main function
 

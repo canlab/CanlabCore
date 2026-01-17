@@ -2906,9 +2906,9 @@ bounded by voxels of 0 or NaN (non-data values)</li>
 </table>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">);</span>
 <span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;coronal&#39;</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;vertical&#39;</span><span class="p">);</span>
-<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;saggital&#39;</span><span class="p">,</span> <span class="s">&#39;slices_per_row&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;spacing&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;vertical&#39;</span><span class="p">);</span>
+<span class="n">fastmontage</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="s">&#39;sagittal&#39;</span><span class="p">,</span> <span class="s">&#39;slices_per_row&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -4098,7 +4098,7 @@ columns in its .dat field.</p>
 <tr class="field-odd field"><th class="field-name" colspan="2">Optional Inputs:</th></tr>
 <tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><dl class="first last docutils">
 <dt><strong>orientation:</strong></dt>
-<dd><p class="first last">can be followed by &#8216;saggital&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</p>
+<dd><p class="first last">can be followed by &#8216;sagittal&#8217;, &#8216;axial&#8217;, or &#8216;coronal&#8217;</p>
 </dd>
 <dt><strong>slice_mm:</strong></dt>
 <dd><p class="first last">is followed by the mm coord of the slice to display; default = 0</p>
@@ -4145,7 +4145,7 @@ slices(dat, &#39;orientation&#39;, &#39;axial&#39;);
 slices(dat, &#39;slice&#39;, -5);                 % display sagg at x = -5
 o = slices(dat, &#39;names&#39;, terms); % use &#39;terms&#39; var as names
 
-o2 = slices(all_chi2_images, &#39;orientation&#39;, &#39;saggital&#39;, &#39;slice&#39;, 0);
+o2 = slices(all_chi2_images, &#39;orientation&#39;, &#39;sagittal&#39;, &#39;slice&#39;, 0);
 </pre></div>
 </div>
 </dd></dl>

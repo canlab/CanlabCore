@@ -1,4 +1,4 @@
-function [obj_out, statstab] = normalize_gm_shift_scale(obj, varargin)
+function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 % Normalize gray-matter voxel intensities across subjects in an fmri_data
 % object by:
 %   (1) Removing a subject-specific additive shift estimated from CSF/WM

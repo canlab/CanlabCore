@@ -1,7 +1,7 @@
-function cVIF = compute_cVIF(X, c)
+function cVIF_values = cVIF(X, c)
 % compute_cVIF  Calculate contrast-based variance inflation factor (cVIF)
 %
-%   cVIF = compute_cVIF(X, c)
+%   cVIF_values = cVIF(X, c)
 %
 %   This function computes the contrast-based variance inflation factor
 %   (cVIF) for one or more contrasts of parameter estimates in a general
@@ -20,7 +20,7 @@ function cVIF = compute_cVIF(X, c)
 %   between regressors are set to zero.
 %
 %   Usage:
-%       cVIF = compute_cVIF(X, c);
+%       cVIF_values = compute_cVIF(X, c);
 %
 %   Inputs:
 %   -------
@@ -36,14 +36,14 @@ function cVIF = compute_cVIF(X, c)
 %
 %   Outputs:
 %   --------
-%   cVIF : [K × 1] vector
+%   cVIF_values : [K × 1] vector
 %       Contrast-based variance inflation factor for each contrast (one
 %       value per row of c). Values > 1 indicate variance inflation due to
 %       collinearity among regressors in X.
 %
 %   Example:
 %   --------
-%       % Suppose X is an N×P design matrix and we want cVIF for a
+%       % Suppose X is an N×P design matrix and we want cVIF_values for a
 %       % condition-difference contrast [0 1 -1 0 ...]
 %       c  = [0 1 -1 0];
 %       v  = compute_cVIF(X, c);
@@ -53,18 +53,18 @@ function cVIF = compute_cVIF(X, c)
 %        ons = create_random_onsets(100, 3, [.2 .2 .2 .2], 2);
 %        [X,d,out,handles] = plotDesign(ons,[], 1.3);
 %        getvif(X)
-%        cVIF(X, [1 1 -1 -1 0])
-%        cVIF(X, [.5 .5 -.5 -.5 0])
+%        cVIF_values(X, [1 1 -1 -1 0])
+%        cVIF_values(X, [.5 .5 -.5 -.5 0])
 %        C = create_orthogonal_contrast_set(4)
 %        C = [C [0 0 0]'];
-%        cVIF(X, C)
+%        cVIF_values(X, C)
 %       
 %       % Create a perfectly colinear design matrix and test
 %        X = [X(:, 1) -X(:, 1)]
 %        getvif(X)
-%        cVIF(X, [1 -1])
-%        cVIF(X, [-.5 .5])
-%        cVIF(X, [1 1])
+%        cVIF_values(X, [1 -1])
+%        cVIF_values(X, [-.5 .5])
+%        cVIF_values(X, [1 1])
 % 
 %   Notes:
 %   ------
@@ -161,9 +161,9 @@ v_den = diag(V_den);
 if any(v_den <= 0)
     warning('compute_cVIF:NonPositiveDenominator', ...
         ['One or more best-case contrast variances are non-positive. ', ...
-         'cVIF may be unreliable for those contrasts.']);
+         'cVIF_values may be unreliable for those contrasts.']);
 end
 
-cVIF = v_num ./ v_den;
+cVIF_values = v_num ./ v_den;
 
 end % function

@@ -1,6 +1,4 @@
 function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, varargin)
-% NORMALIZE_GM_SHIFT_SCALE
-%
 % Normalize gray-matter voxel intensities across subjects by:
 % (1) Removing a subject-specific additive shift estimated from CSF/WM medians
 % (2) Correcting a subject-specific multiplicative scale estimated from MADs
@@ -63,9 +61,10 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 %   - GM is assumed to contain signal of interest; CSF and WM are assumed to
 %     contain no true task/contrast signal.
 %   - Shift and scale parameters are estimated across subjects using tissue
-%     summaries and then applied voxelwise within GM.
+%     summaries and then applied voxelwise to whole image
+%   - values within GM are adjusted for individual differences in mean and scale of WM+CSF.
 %
-%   Author:  (adapted for CANlab-style documentation)
+%   Author:  Tor Wager + ChatGPT5.2
 %   Date:    2025-12-09
 %
 
@@ -74,7 +73,7 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 % -------------------------------------------------------------------------
 
 p = inputParser;
-p.addRequired('Y', @(x) isnumeric(x) && ndims(x) == 2);
+p.addRequired('Y', @(x) isnumeric(x) && ismatrix(x));
 p.addRequired('gm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('wm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('csf_mask', @(x) islogical(x) && isvector(x));
@@ -88,17 +87,17 @@ trim_pct  = p.Results.trim_pct;
 
 [Y, gm_mask, wm_mask, csf_mask] = check_and_resolve_dims(Y, gm_mask, wm_mask, csf_mask);
 
-[V, S] = size(Y);
+[~, S] = size(Y);
 
 % -------------------------------------------------------------------------
 % Preallocate summary statistics
 % -------------------------------------------------------------------------
 
-m_gm  = nan(S, 1);
+m_gm  = nan(S, 1); % Median values per subject
 m_wm  = nan(S, 1);
 m_csf = nan(S, 1);
 
-r_gm  = nan(S, 1);
+r_gm  = nan(S, 1); % Spatial MAD per subject
 r_wm  = nan(S, 1);
 r_csf = nan(S, 1);
 
@@ -133,7 +132,7 @@ y_mean = m_gm;                       % S x 1
 beta_mean = X_mean \ y_mean;         % 3 x 1 OLS
 
 % Nuisance shift component: gamma_1 * m_CSF + gamma_2 * m_WM
-mu_nuis = beta_mean(2) * m_csf + beta_mean(3) * m_wm;   % S x 1
+mu_nuis = beta_mean(2) * m_csf + beta_mean(3) * m_wm;   % S x 1, fitted mean gray matter per subject
 
 % -------------------------------------------------------------------------
 % Scale model: r_GM ~ r_CSF + r_WM  or  log(r_GM) ~ log(r_CSF) + log(r_WM)
@@ -171,6 +170,7 @@ else
 end
 
 % Reference scale: median fitted GM scale
+% Group median will be normalized to this value
 sigma_ref = median(sigma_hat(~isnan(sigma_hat) & isfinite(sigma_hat)));
 
 scale_factor = sigma_ref ./ sigma_hat;       % S x 1
@@ -181,24 +181,25 @@ scale_factor = sigma_ref ./ sigma_hat;       % S x 1
 
 Z = Y;  % initialize output
 
-gm_idx = gm_mask(:);
+% gm_idx = gm_mask(:);
 
 for s = 1:S
 
     if isnan(scale_factor(s)) || ~isfinite(scale_factor(s))
         % If something went wrong for this subject, leave as-is
+        warning('normalize_gm_shift_scale: Scale factor is infinite for image %3.0f!', s)
         continue;
     end
 
     y_s = Y(:, s);
 
-    % Shift-correct within GM
-    y_s_gm = y_s(gm_idx) - mu_nuis(s);
+    % Shift-correct to adjust GM values (whole image)
+    y_s = y_s - mu_nuis(s);
 
     % Scale-correct within GM
-    y_s_gm = scale_factor(s) * y_s_gm;
+    y_s = scale_factor(s) * y_s;
 
-    Z(gm_idx, s) = y_s_gm;
+    Z(:, s) = y_s;
 
 end
 

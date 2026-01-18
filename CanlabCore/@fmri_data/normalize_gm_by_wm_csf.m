@@ -19,11 +19,11 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %         and non-GM voxels left unchanged except that they are not further
 %         processed
 %       * a MATLAB table containing all values from the STATS output of
-%         NORMALIZE_GM_SHIFT_SCALE, appended to the existing
+%         normalize_gm_shift_scale, appended to the existing
 %         metadata_table.
 %
 % USAGE
-%   [obj_out, statstab] = gm_shift_scale_normalize(obj, ...
+%   [obj_out, statstab] = normalize_gm_by_wm_csf(obj, ...
 %                                'log_scale', false, 'trim_pct', 5, ...
 %                                'mask_files', masks_cell);
 %
@@ -68,7 +68,26 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %   - If you prefer to hard-mask to GM (retain only GM voxels in .dat),
 %     you can add an additional step to subset voxels by the GM mask.
 %
-%   Author:  (adapted for CANlab-style documentation)
+% Examples:
+%
+% imgs = load_image_set('emotionreg');
+%
+% % T-test on un-normalized data:
+% t = ttest(imgs)
+% histogram(t)
+% set(gcf, 'Tag', 'unnormalized');
+%
+% % Normalize and re-run t-test
+% imgs_normalized = normalize_gm_by_wm_csf(imgs);
+% t2 = ttest(imgs_normalized)
+% histogram(t2)
+%
+% % Compare the t-values:
+% figure; plot(t.dat, t2.dat, '.');
+% hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
+% ylabel('t-values after normalization'); xlabel('t-values before normalization');
+% 
+%   Author:  Tor Wager + ChatGPT5.2
 %   Date:    2025-12-09
 %
 
@@ -92,6 +111,13 @@ p.parse(obj, varargin{:});
 log_scale  = p.Results.log_scale;
 trim_pct   = p.Results.trim_pct;
 mask_files = p.Results.mask_files;
+
+% make sure we have full paths
+for i = 1:length(mask_files)
+    if isempty(fileparts(mask_files{i}))
+        mask_files{i} = which(mask_files{i});
+    end
+end
 
 % -------------------------------------------------------------------------
 % Basic checks

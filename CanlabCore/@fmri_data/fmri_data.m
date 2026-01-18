@@ -306,6 +306,7 @@
 % Stephan Geuter, 5/16/17: Processing of masks in line 270 had been
 % changed, masks were ignored. modified check in line 270 to include
 % masking again
+% Tor, 1/18/26: check for full path names in image files and get them if needed
 
 classdef fmri_data < image_vector
     
@@ -470,6 +471,19 @@ classdef fmri_data < image_vector
                 
             else
                 % It's a file. Unzip if needed and check that image_names exist
+
+                % Make full path if needed
+                % make sure we have full paths
+                tmp_names = [];
+                for i = 1:size(image_names, 1)
+                    if isempty(fileparts(image_names(i, :)))
+                        tmp_name = which(image_names(i, :));
+                    else
+                        tmp_name = image_names(i, :);
+                    end
+                    tmp_names = strvcat(tmp_names, tmp_name);
+                end
+                image_names = tmp_names;
 
                 % Handle .gz by unzipping if needed
                 [image_names, was_gzipped] = gunzip_image_names_if_gz(image_names, 'verbose', false);

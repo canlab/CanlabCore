@@ -123,7 +123,47 @@ function out = fitlme_voxelwise(obj, tbl, spec, varargin)
 %   **out.formula, out.input_parameters, out.warnings:**
 %       metadata about the analysis
 %
+% Examples:
+% -----------------------------------------------
+% % Run on BMRK3 pain dataset, 6 temperatures for each of 33 subjects
+% % Random intercept/random slope, random effect of temperature
+%
+% fmri_data_file = which('bmrk3_6levels_pain_dataset.mat');
+% load(fmri_data_file)
+%
+% % Create metadata_table with images x variables matrix with names
+% t = table(image_obj.additional_info.subject_id, image_obj.additional_info.temperatures, 'VariableNames', {'subject_id', 'temperature'});
+% image_obj.metadata_table = t;
+%
+% % Run fitlme on every voxel using Wilkinson notation to refer to the table:
+% out = fitlme_voxelwise(image_obj, image_obj.metadata_table, 'Y ~ 1 + temperature + (1 + temperature | subject_id)', .005, 'unc');
+% t_obj_temp_fitlme = get_wh_image(out.t, 2);
+% 
+% % Compare t-values for fitlme against two-stage summary statistics approach
+% % First, create an object with a linear contrast across temps for each person:
+% C = [-5 -3 -1 1 3 5]';
+% C_subj = repmat({C}, 1, 33);
+% C_subj_matrix = blkdiag(C_subj{:});
+% contrast_dat = image_obj.dat * C_subj_matrix;
+% contrast_obj = image_obj;
+% contrast_obj.dat = contrast_dat;
+% contrast_obj.removed_images = false(33, 1);
+% contrast_obj.dat_descrip = '.dat contains one linear contrast across temperatures for each of 33 subjects';
+%
+% % Fit 2SSS approach and get t (one sample t-test)
+% t_obj_temp_2sss = ttest(contrast_obj);
+% t_obj_temp_2sss = threshold(t_obj_temp_2sss, 0.005, 'unc');
+% create_figure; axis off; montage(t_obj_temp_2sss, 'onerow')
+%
+% % Compare t-maps in a scatterplot
+% figure; plot(t_obj_temp_2sss.dat, t_obj_temp_fitlme.dat, '.');
+% hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
+% ylabel('t-values after normalization'); xlabel('t-values before normalization');
+%
+% or:
+% h = image_scatterplot(t_obj_temp_2sss, t_obj_temp_fitlme, 'pvaluebox', 0.001, 'colorpoints');
 
+% 
 % -------------------------------------------------------------------------
 % Basic checks
 % -------------------------------------------------------------------------
@@ -146,7 +186,7 @@ if ~isprop(obj, 'dat') || isempty(obj.dat)
     error('obj.dat is missing or empty.');
 end
 
-Ymat = obj.dat;            % [nVox x nObs]
+Ymat = double(obj.dat);            % [nVox x nObs], use double
 [nVox, nObs] = size(Ymat);
 
 if height(tbl) ~= nObs
@@ -410,6 +450,7 @@ end
 
 if doverbose
     fprintf('Running voxelwise LME: %d voxels, %d observations.\n', nVox, nObs);
+    tic
 end
 
 if doparallel
@@ -418,17 +459,22 @@ if doparallel
     parfor v = 1:nVox
         [betas(:,v), tvals(:,v), pvals(:,v), SE(:,v), DFmat(:,v), ...
          sigma(1,v), res_v, ...
-         con_vals(:,v), con_t(:,v), con_p(:,v), con_se(:,v), con_df(:,v), ...
-         mask(v)] = fit_lme_one_voxel( ...
+         con_vals(:,v), con_t(:,v), con_p(:,v), con_se(:,v), con_df(:,v), mask(v)] ...
+         = fit_lme_one_voxel( ...
                         Ymat(v,:)', tbl, formula, fitmethod, C, nC, nFixed);
         if do_resid
             R(:,v) = res_v;
         end
     end
 else
+    if doverbose
+            fprintf('  Serial run of %3.0f voxels: %3.0f%%', nVox, 0)
+    end
+            
     for v = 1:nVox
-        if doverbose && mod(v, max(1, round(nVox/20))) == 0
-            fprintf('  voxel %d / %d (%.0f%%)\n', v, nVox, 100*v/nVox);
+        
+        if doverbose && rem(v, round(nVox/100)) == 0
+            fprintf('\b\b\b\b%3.0f%%', round(100*v/nVox));
         end
         
         [betas(:,v), tvals(:,v), pvals(:,v), SE(:,v), DFmat(:,v), ...
@@ -444,6 +490,7 @@ end
 
 if doverbose
     fprintf('Voxelwise LME finished. Successful fits: %d / %d voxels.\n', sum(mask), nVox);
+    toc
 end
 
 % -------------------------------------------------------------------------

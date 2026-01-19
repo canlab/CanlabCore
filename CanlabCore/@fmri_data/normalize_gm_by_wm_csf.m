@@ -87,6 +87,9 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 % hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
 % ylabel('t-values after normalization'); xlabel('t-values before normalization');
 % 
+% % or:
+% h = image_scatterplot(t, t2, 'pvaluebox', 0.005, 'colorpoints');
+%
 %   Author:  Tor Wager + ChatGPT5.2
 %   Date:    2025-12-09
 %

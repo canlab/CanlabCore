@@ -161,14 +161,14 @@ else
         h.scatter = plot(h.ax, x, y, '.', 'Color', neutral);
 
         % Highlight rules
-        dark_pink   = [0.9 0.00 0.6];
-        green = [0.20 0.7 0.2];
+        color1   = [0.9 0.00 0.6];
+        color2 = [0.68 0.72 0.90];
 
         idx_pink =  (x > 0 & y > x) | (x < 0 & y < x);
         idx_orng =  (y > 0 & x > y) | (y < 0 & x < y);
 
-        plot(h.ax, x(idx_pink), y(idx_pink), '.', 'Color', dark_pink);
-        plot(h.ax, x(idx_orng), y(idx_orng), '.', 'Color', green);
+        plot(h.ax, x(idx_pink), y(idx_pink), '.', 'Color', color1);
+        plot(h.ax, x(idx_orng), y(idx_orng), '.', 'Color', color2);
     else
         h.scatter = plot(h.ax, x, y, '.');
     end

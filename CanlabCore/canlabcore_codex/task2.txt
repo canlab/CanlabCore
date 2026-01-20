@@ -1,0 +1,13 @@
+Write a matlab live script that describes the potential benefits of removing image-wide zero-point and scaling differences by regressing out global CSF and white matter in a second-level (group) analysis, and documents the function fitlme_voxelwise.m.
+This will be a walkthrough of the function normalize_gm_by_wm_csf.m.
+
+The live script will be called "Normalizing_images_by_CSF_and_WM_covariates"
+
+First, write a brief introduction that explains what the function does.
+
+Then, use the example code in the function help to construct a worked example.
+Use code blocks to separate sections and use header level 2 and 3 as needed to make a clear, step-by-step example.  Include first an example of checking for global shifts in GM, WM, and CSF using fmri_data/extract_gray_white_csf for fmri_data objects.  Add an example of this to the script.
+
+For each part of the example code, explain the output and what it means, e.g., when comparing t-values using image_scatterplot, explain what the pink and green values are, and that the pink values here mean that the statistical sensitivity and power are superior in these voxels after normalization.
+
+

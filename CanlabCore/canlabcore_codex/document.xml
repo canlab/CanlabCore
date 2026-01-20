@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="title"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Normalizing images by CSF and WM covariates</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>This live script explains how normalize_gm_by_wm_csf reduces image-wide zero-point shifts and scaling differences by modeling gray matter intensities as a function of global white matter and CSF values. This can improve sensitivity in second-level analyses by removing global nuisance variance before group modeling (including mixed effects analyses with fitlme_voxelwise).</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="heading"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Why normalize using WM and CSF</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Global shifts in gray matter can arise from scanner drift, acquisition differences, or preprocessing artifacts. By estimating subject-level additive shifts (from CSF and WM medians) and multiplicative scaling (from GM, WM, and CSF MADs), normalize_gm_by_wm_csf aligns global intensity distributions across subjects without changing spatial patterns within gray matter.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>This normalization is especially helpful when you plan to compare group-level maps or fit second-level models, because it reduces between-subject variance unrelated to neural signal. The normalized images can then be analyzed with standard t-tests or with voxelwise mixed effects models such as fitlme_voxelwise.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="heading"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Check for global GM, WM, and CSF shifts</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>First, extract global summaries from gray matter, white matter, and CSF to assess image-wide shifts.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[% Load example data
+imgs = load_image_set('emotionreg');
+
+% Extract mean GM, WM, and CSF values for each image
+% values is N_images x 3 for GM, WM, and CSF
+[values, components] = extract_gray_white_csf(imgs);
+
+% Quick diagnostic plot of tissue means
+figure; plot(values, 'o-');
+legend({'GM', 'WM', 'CSF'}, 'Location', 'best');
+xlabel('Image'); ylabel('Mean intensity');
+title('Global tissue means by image');]]></w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>The values matrix reports one mean per tissue class for each image. Large offsets or scaling differences across images indicate global shifts that can inflate between-subject variance in group-level analyses.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>The components output contains the top five components within each tissue class and can be used to diagnose structured noise. For normalization, the key signal is in the global GM, WM, and CSF summaries.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="heading"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Normalize GM using WM and CSF covariates</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Run normalization and compare the statistical results before and after.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[% T-test on un-normalized data
+t = ttest(imgs);
+histogram(t);
+set(gcf, 'Tag', 'unnormalized');
+
+% Normalize and re-run t-test
+imgs_normalized = normalize_gm_by_wm_csf(imgs);
+t2 = ttest(imgs_normalized);
+histogram(t2);
+
+% Compare the t-values
+figure; plot(t.dat, t2.dat, '.');
+hold on; plot([-10 10], [-10 10], '--', 'Color', 'k');
+ylabel('t-values after normalization'); xlabel('t-values before normalization');
+
+% or:
+h = image_scatterplot(t, t2, 'pvaluebox', 0.005, 'colorpoints');]]></w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="heading2"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Interpreting the comparison</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>In the scatterplot comparison, points above the diagonal indicate voxels with larger t-values after normalization. When using image_scatterplot with colorpoints, green points indicate voxels that are significant in both maps, while pink points indicate voxels that become significant (or show stronger effects) after normalization. In this example, pink points highlight voxels where statistical sensitivity and power improve after removing global shifts and scaling differences.</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="heading"/><w:jc w:val="left"/></w:pPr><w:r><w:t>Link to voxelwise mixed effects models</w:t></w:r></w:p><w:p><w:pPr><w:pStyle w:val="text"/><w:jc w:val="left"/></w:pPr><w:r><w:t>After normalization, you can pass the normalized fmri_data object into fitlme_voxelwise for flexible group-level modeling. This preserves voxelwise signal patterns while reducing nuisance variance tied to global GM, WM, and CSF values.</w:t></w:r></w:p></w:body></w:document>

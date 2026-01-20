@@ -131,6 +131,8 @@ if isempty(obj.dat)
         'The fmri_data object has an empty .dat field.');
 end
 
+obj = replace_empty(obj);
+
 [V, S] = size(obj.dat);
 
 % -------------------------------------------------------------------------

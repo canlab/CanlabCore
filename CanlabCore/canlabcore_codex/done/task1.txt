@@ -1,0 +1,28 @@
+Write a matlab live script that documents the function fitlme_voxelwise.m.
+This will be a walkthrough of the function.
+
+The live script will be called "Voxelwise maps using flexible linear mixed effects models"
+
+First, write a brief introduction that explains what the function does.
+
+Then, use the example code in the function help to construct a worked example.
+Use code blocks to separate sections and use header level 2 and 3 as needed to make a clear, step-by-step example.
+
+Embed the fixed png figures as examples so users running the live script can check the output.
+
+For this .mlx file, specifically:
+(1) Explain how the metadata table works and how the function uses fitlme to work with table variables by name, with the full power of the mixed effects model
+Also explain the importance of correcting degrees of freedom, e.g., with Satterthwaite approximation, and that dfe ought to usually be close to the sample size, not the total number of observations.
+
+Embed the file mixedfx_tmap.png
+
+(2) Explain how the two-stage summary statistics approach accomplishes the same basic goal by creating within-person contrasts for each person.
+
+(3) Explain the comparison between the 2sss and fitlme approach.
+
+Embed the file
+fitlme_2sss_t_comparison.png
+Explain how the green points show t-values that are significant for both maps but with a higher significance level (i.e., stronger t-value) for the 2sss approach, whether positive or negative.
+this shows how the two analyses are doing similar things, and how the summary stats approach can be more powerful in some cases, particularly when all the subjects are estimated about equally precisely.
+
+  

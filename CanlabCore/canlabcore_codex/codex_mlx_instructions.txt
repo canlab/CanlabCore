@@ -1,0 +1,47 @@
+How to efficiently write .mlx files (MATLAB Live Scripts)
+
+Goal
+- Create or update a .mlx quickly while keeping content readable and reproducible.
+
+Key constraints
+- Use .mlx filenames without spaces (use underscores).
+- Store outputs in canlabcore_codex.
+- Default to ASCII-only text unless the file already uses Unicode.
+
+Fast creation workflow (preferred)
+1) Choose a template .mlx
+   - Reuse an existing .mlx in the repo as a template to preserve required XML parts.
+   - Example: Voxelwise_maps_using_flexible_linear_mixed_effects.mlx
+
+2) Treat .mlx as a ZIP
+   - .mlx is a zip archive with MATLAB XML contents.
+   - Extract or replace matlab/document.xml (content) and matlab/output.xml (outputs).
+
+3) Generate document.xml
+   - Use WordprocessingML styles:
+     - title for the top title
+     - heading for H2
+     - heading2 for H3 (optional)
+     - text for paragraphs
+     - code for code blocks with <![CDATA[...]]>
+   - Keep one paragraph per logical block.
+
+4) Keep output.xml minimal
+   - Set evaluationState to manual and an empty outputArray.
+   - This keeps the live script clean and avoids embedding large outputs.
+
+5) Use a small script to rebuild the .mlx
+   - Read the template zip, replace document.xml and output.xml, and write a new .mlx.
+   - This avoids manual XML editing and preserves the required metadata files.
+
+6) Embed reference images as code blocks
+   - In the live script, use MATLAB code to imread and image() display PNGs.
+   - Example:
+     img = imread(fullfile('canlabcore_codex', 'reference.png'));
+     image(img); axis image off;
+
+Notes
+- Include brief, human-readable comments for non-obvious code blocks.
+- When referencing example code in a function help, copy it verbatim where possible.
+- If a required image is missing, create a placeholder or request it explicitly.
+- Read the example .mlx to figure out how to embed figures (e.g., pngs) if they are asked for.

@@ -1,0 +1,15 @@
+For each of the following topics, search the CanlabCore files for functions related to the topic.  Create a Markdown page that first summarizes the topic, and then describes each of the related functions, including a brief description of the function name, what it does, and (briefly) what its major options are. Include separate sections for object methods and for stand-alone functions, with clear subheaders for each. Title the markdown page based on the topic, without spaces.  Store all output in the topics_md folder.
+
+Here are the topics:
+
+1. Regression with the general linear model, including regression and mixed effects
+2. Cross-validation, including setting up tools and running cross-validated multivariate classification and regression
+3. Clustering 
+4. Extracting brain data from regions of interest
+5. Working with atlas objects
+6. Annotating images with spatial similarity,
+  including tools for calculating similiarity with resting-state networks,neurochemical
+  binding maps, neurosynth maps, meta-analysis maps, and others
+7. Thresholding images
+
+Expand the markdown on regression with igls, rigls, glmfit_multilevel, create_orthogonal_contrast_set, getvif, cvif.  Organize them so that methods for the same object are grouped together, and functions with similar purposes are grouped together.

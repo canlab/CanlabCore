@@ -288,8 +288,8 @@ else
     %     cluster_orthviews_showcenters(cl,'coronal',overlay);
     %     save_figure('cluster_slices_coronal');
     %
-    %     cluster_orthviews_showcenters(cl,'saggital',overlay);
-    %     save_figure('cluster_slices_saggital');
+    %     cluster_orthviews_showcenters(cl,'sagittal',overlay);
+    %     save_figure('cluster_slices_sagittal');
 end
 
 diary off

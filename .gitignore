@@ -16,3 +16,4 @@ classifier_compare.ipynb
 CanlabCore/Visualization_functions/violinplot.m
 CanlabCore/Visualization_functions/violinplot.m
 ~*
+CanlabCore/Sample_datasets/Pinel_sample_fMRI_time_series/swrsub-sid001567_task-pinel_acq-s1p2_run-03_bold.nii

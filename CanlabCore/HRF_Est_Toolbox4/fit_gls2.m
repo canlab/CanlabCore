@@ -1,84 +1,101 @@
 function [beta, t, pvals, convals, con_t, con_pvals, sigma, Phi, df, stebeta, conste, F] = fit_gls2(y, X, c, p)
-% Fit a linear model using FGLS with an AR(p) model
+% Fit a linear model using FGLS with an AR(p) innovations model.
 %
-% :Usage:
-% ::
-%     [beta, t, pvals, convals, con_t, con_pvals, sigma, Phi, df, stebeta, conste, F] = fit_fgls(y, X, c, p)
+% Inputs:
+%   y : (T x 1) dependent variable
+%   X : (T x K) design matrix
+%   c : (K x Q) contrast matrix (each column is a contrast). Can be [].
+%   p : AR order
 %
-% :Inputs:
-%   **y:**     Dependent variable (T x 1 vector)
-%   **X:**     Design matrix (T x param matrix)
-%   **c:**     Contrast vector(s) (param x # contrasts matrix)
-%   **p:**     Order of AR model for innovations.
-%
-% :Outputs:
-%   **beta:**  Coefficient estimates
-%   **t:**     t-values for coefficients
-%   **pvals:** p-values for coefficients
-%   **convals, conste, con_t, con_pvals:** Contrast-related outputs
-%   **sigma:** Residual standard deviation
-%   **Phi:**   AR coefficients of residuals
-%   **df:**    Degrees of freedom using Satterthwaite approximation
-%   **stebeta:** Standard errors of coefficients
-%   **F:**     F-statistic for the model
+% Outputs:
+%   beta      : (K x 1) coefficients
+%   t, pvals  : (K x 1) t-stats and p-values for beta
+%   convals   : (Q x 1) contrast estimates
+%   con_t     : (Q x 1) contrast t-stats
+%   con_pvals : (Q x 1) contrast p-values
+%   sigma     : residual std estimate (SSE/df)^0.5
+%   Phi       : (p x 1) AR coefficients (standard sign convention)
+%   df        : residual df = T - rank(X)
+%   stebeta   : (K x 1) SE of beta
+%   conste    : (Q x 1) SE of contrasts
+%   F         : optional F-stat for joint test c' * beta = 0 (if c provided)
 
 % Ensure inputs are double
 y = double(y);
 X = double(X);
 
-% Step 1: Estimate coefficients using FGLS
-[beta,~, EstCoeffCov] = fgls(X, y, InnovMdl="AR", ARLags=p, Intercept=false);
+T = size(X, 1);
+K = size(X, 2);
 
-if size(beta, 1) ~= size(X, 2)
+% --- Step 1: FGLS estimation (AR(p) innovations) ---
+[beta, ~, EstCoeffCov] = fgls(X, y, InnovMdl="AR", ARLags=p, Intercept=false);
+
+% If fgls returned a reduced parameter vector (e.g., due to rank issues),
+% try to align dimensions defensively.
+beta = beta(:);
+
+if size(beta, 1) ~= K
+    % Attempt: keep nonzero entries (matches your original logic)
     beta = beta(beta ~= 0);
-    nonZeroRows = any(EstCoeffCov ~= 0, 2); 
-    nonZeroCols = any(EstCoeffCov ~= 0, 1); 
+
+    nonZeroRows = any(EstCoeffCov ~= 0, 2);
+    nonZeroCols = any(EstCoeffCov ~= 0, 1);
     EstCoeffCov = EstCoeffCov(nonZeroRows, nonZeroCols);
 end
 
-
-% Step 2: Calculate residuals and AR(p) coefficients
+% --- Step 2: residuals and AR coefficients (for debugging/return only) ---
 resid = y - X * beta;
 
-% Convert residuals to AR coefficients (optional for debugging)
-%Phi = arma2ar(resid, zeros(1, p)); % AR coefficients using arma2ar
-Phi = aryule(resid, p); % AR coefficients using aryule
+% aryule returns polynomial A = [1 a1 ... ap] for A(z)*x = e.
+% Usual AR form is x_t = sum(phi_k x_{t-k}) + e_t, with phi = -a.
+A = aryule(resid, p);
+Phi = -A(2:end).';
+Phi = Phi(:);
 
-
-% Step 3: Compute standard errors, t-values, and residual variance
+% --- Step 3: SEs, t-stats ---
 stebeta = sqrt(diag(EstCoeffCov));
 t = beta ./ stebeta;
-sigma = sqrt(var(resid)); % Residual standard deviation
 
-% Step 4: Contrast analysis
-convals = [];
-conste = [];
-con_t = [];
-con_pvals = [];
-F = [];
+% --- Step 4: residual df (THIS is the df for first-level GLM t-tests) ---
+df = T - rank(X);
+df = max(df, 1);
 
-if ~isempty(c)
-    % Contrast values
-    convals = (c' * beta);
-    conste = sqrt(diag(c' * EstCoeffCov * c));
-    con_t = convals ./ conste;
-    con_pvals = 2 * (1 - tcdf(abs(con_t), size(X, 1) - size(X, 2)));
-end
+% Residual variance estimate (consistent with df)
+SSE = sum(resid.^2);
+sigma = sqrt(SSE / df);
 
-% Step 5: Degrees of freedom (Satterthwaite approximation)
-df = (trace(EstCoeffCov)^2) / trace(EstCoeffCov * EstCoeffCov);
-
-% Step 6: Model F-statistic (optional)
-if nargout > 6
-    SSE = sum(resid.^2);
-    SST = sum((y - mean(y)).^2);
-    SSM = SST - SSE;
-    dfSSM = size(c, 2) - 1; % Degrees of freedom for contrasts
-    F = (SSM / dfSSM) / (SSE / df);
-end
-
-% Step 7: p-values for coefficients
+% --- Step 5: coefficient p-values ---
 pvals = 2 * (1 - tcdf(abs(t), df));
 
+% --- Step 6: contrasts (if provided) ---
+convals   = [];
+conste    = [];
+con_t     = [];
+con_pvals = [];
+F         = [];
+
+if ~isempty(c)
+    c = double(c);
+    % Contrast estimate and SE
+    convals = (c' * beta);
+    conste  = sqrt(diag(c' * EstCoeffCov * c));
+    con_t   = convals ./ conste;
+
+    % Use the SAME df as above (residual df)
+    con_pvals = 2 * (1 - tcdf(abs(con_t), df));
+
+    % Optional joint F-test for H0: c' * beta = 0
+    % Works best when c has multiple columns (Q > 1).
+    Q = size(c, 2);
+    if Q >= 1
+        CVC = c' * EstCoeffCov * c;
+        % Guard against singularity
+        if rcond(CVC) > 1e-12
+            F = (convals' / CVC * convals) / Q;
+        else
+            F = NaN;
+        end
+    end
 end
 
+end

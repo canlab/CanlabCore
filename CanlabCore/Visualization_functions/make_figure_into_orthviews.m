@@ -5,7 +5,7 @@ function [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews()
 %    [hh1,hh2,hh3,hl,a1,a2,a3] = make_figure_into_orthviews
 %
 % Copies a surface rendering or glass brain into three separate view
-% panels, one saggital, one axial, and one coronal
+% panels, one sagittal, one axial, and one coronal
 %
 % returns handles to objects in each view and hl light handles
 %

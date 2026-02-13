@@ -1,0 +1,4 @@
+[codespell]
+skip = .git,*.pdf,*.svg,*.js,_build,*.html,*.rtf,External
+# 
+ignore-words-list = ons,ans,fpr,ttests,myu,whos,ser,htmp,fwe,dout

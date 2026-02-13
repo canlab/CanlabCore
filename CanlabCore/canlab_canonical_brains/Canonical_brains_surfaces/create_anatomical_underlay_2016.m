@@ -71,9 +71,9 @@ for i = 1:n
     o2 = fmridisplay('overlay', which(imgs{i}));
     
     
-    % saggital
+    % sagittal
     axh = axes('Position', [-0.02 0.15+shiftvals(i) .17 .17]);
-    o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
+    o2 = montage(o2, 'sagittal', 'wh_slice', [0 0 0], 'onerow', 'noverbose', 'existing_axes', axh);
     drawnow
     
     % axial

@@ -455,7 +455,7 @@ end
 % % % CV(1) (leave-one-out cross-validation)
 % % % it estimates "half-sample" xval
 % %
-% % bootfun = @(Y, X) xval_regression_boostrap_wrapper(Y, X);
+% % bootfun = @(Y, X) xval_regression_bootstrap_wrapper(Y, X);
 % % STATS_FINAL.bootstrap.covs_only_r_rsq = bootstrp(200, bootfun, my_outcomes_orig{1}, covs{1});
 % % STATS_FINAL.bootstrap.covs_only_summary = [mean(STATS_FINAL.bootstrap.covs_only_r_rsq) std(STATS_FINAL.bootstrap.covs_only_r_rsq) ];
 % % STATS_FINAL.bootstrap.covs_only_summary_descrip = 'mean std of bootstrapped values'

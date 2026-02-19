@@ -122,7 +122,7 @@ function scnlab_pca_denoise_session(image_names, basename, nuisX, designX, varar
 
     subplot(nk, 1, 1);
     title('Components with task fits');
-    print('-dpsc2', '-append', 'qc_report');
+    % print('-dpsc2', '-append', 'qc_report');
 
     %% Must select components to exclude here. If we have nuisance (movement,
     % physio) and task-related stuff, show this now.
@@ -173,7 +173,7 @@ function scnlab_pca_denoise_session(image_names, basename, nuisX, designX, varar
     xlabel('Time'); ylabel('Voxels');
     title('Adjusted data');
 
-    print('-dpsc2', '-append', 'qc_report');
+    % print('-dpsc2', '-append', 'qc_report');
     scn_export_papersetup(600);
     saveas(gcf, [basename 'pca_session'], 'png');
 
@@ -194,7 +194,7 @@ function scnlab_pca_denoise_session(image_names, basename, nuisX, designX, varar
     xlabel('Time');
         axis tight
     title([basename ' Removed Components in Red']);
-    print('-dpsc2', '-append', 'qc_report');
+    % print('-dpsc2', '-append', 'qc_report');
     scn_export_papersetup(600);
     saveas(gcf, [basename 'pca_removed'], 'png');
 

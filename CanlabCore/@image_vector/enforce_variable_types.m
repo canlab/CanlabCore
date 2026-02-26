@@ -8,7 +8,14 @@ function obj = enforce_variable_types(obj)
 % display/computation functions.
 
 obj = remove_empty(obj);
-obj.dat = single(obj.dat);
+% EDITED: force the .dat field of a statistic_image to be double
+% to enbale more accurate estimates of p values
+% (Zizhuang Miao, 02/26/2026)
+if isa(obj, 'statistic_image') && strcmp(obj.type, 'T')
+    obj.dat = double(obj.dat);
+else
+    obj.dat = single(obj.dat);
+end
 
 obj.volInfo.wh_inmask = uint32(obj.volInfo.wh_inmask);  % 4 billion positive valued integers
 obj.volInfo.xyzlist = uint16(obj.volInfo.xyzlist);
@@ -30,7 +37,9 @@ if isa(obj, 'statistic_image')
     
     obj.sig = logical(obj.sig);
     
-    obj.p = single(obj.p);
+    if ~strcmp(obj.type, 'T')
+        obj.p = single(obj.p);
+    end
     
 end
 

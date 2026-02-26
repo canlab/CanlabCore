@@ -256,6 +256,11 @@ classdef statistic_image < image_vector
                         error('If forcing object type = ''T'', enter dfe in call to object constructor.')
                     end
                     
+                    % force the t values to be in double-precision to
+                    % enable more accurate p value estimates (Zizhuan Miao
+                    % 02/26/2026)
+                    obj.dat = double(obj.dat);
+                    
                     obj.p = 2 * (1 - tcdf(abs(obj.dat), obj.dfe));
                     obj.p_type = '2-tailed P-value from input dfe';
                     

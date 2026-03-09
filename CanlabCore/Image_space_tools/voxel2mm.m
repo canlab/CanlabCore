@@ -21,16 +21,18 @@ function XYZmm = voxel2mm(XYZ,m)
 % ..
 %    Verified that this works 10/27/01.
 %    Tor Wager, 10/27/01
+%    3/8/26 - cosmetic changes to code/explanation only
 % ..
 
-if isempty(XYZ), XYZmm = [];, return, end
+if isempty(XYZ), XYZmm = []; return, end
 
-% add one to multiply by the constant shift (offset from edge) in mat
+% add one for the origin -- constant shift (offset from edge) in mat
+% x_world = M * [x_i y_i z_i 1]';  
 % -------------------------------------------------------------------
-XYZ(4,:) = 1;	
+XYZ(4, :) = 1;	
 
 XYZmm = m * XYZ;
 
-XYZmm = XYZmm(1:3,:);
+XYZmm = XYZmm(1:3, :);
 
 return

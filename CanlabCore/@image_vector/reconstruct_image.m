@@ -1,6 +1,8 @@
 function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
 % Reconstruct a 3-D or 4-D image from image_vector object obj
 %
+% [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
+%
 % voldata is and X x Y x Z x Images matrix
 % vectorized_voldata is the same, with all voxels vectorized
 %
@@ -16,7 +18,7 @@ function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj
 %   **voldata:**
 %        3-D recon volume
 %   **vectorized_voldata:**
-%        volume in column vetor, iimg_xxx function format
+%        volume in column vector, iimg_xxx function format
 %   **xyz_coord_struct:**
 %        has fields with coordinate information in mm (world) space
 %          - x, y, z : vectors of coordinates in mm for each of the 3
@@ -55,9 +57,16 @@ if nargout > 2
     % disp('Returning coordinates in mm and meshgrid matrices.');
     
     % return xyz mm coordinates for full volume
-    xyzmin = voxel2mm([1 1 1]', obj.volInfo.mat);
-    xyzmax = voxel2mm(obj.volInfo.dim', obj.volInfo.mat); 
+    % TW: 3/8/2026: Previous code introduced a slight error because min mm
+    % coord in Nifti convention defined by voxel2mm(0 0 0) not (1 1 1).
+    % This will affect uses of these coords to interpolate, but have not
+    % much effect on bounding/display
+    % xyzmin = voxel2mm([1 1 1]', obj.volInfo.mat);
+    % xyzmax = voxel2mm(obj.volInfo.dim', obj.volInfo.mat); 
    
+    xyzmin = voxel2mm([0 0 0]', obj.volInfo.mat);
+    xyzmax = voxel2mm(obj.volInfo.dim' - 1, obj.volInfo.mat); 
+
     %voxsize = diag(obj.volInfo.mat(1:3, 1:3));
     
     % rotate and flip for compatibility with addbrain.m direction
@@ -73,12 +82,37 @@ if nargout > 2
 
     % reverse dims 2 and 1 because dim 1 is y
     % * NOTE: x and y probably need to be reversed here, but needs thorough testing to make sure everything works *
-    x = linspace(xyzmin(1), xyzmax(1), dims(1))';
-    y = linspace(xyzmin(2), xyzmax(2), dims(2))';
-    z = linspace(xyzmin(3), xyzmax(3), dims(3))';
+    % x = linspace(xyzmin(1), xyzmax(1), dims(1))';
+    % y = linspace(xyzmin(2), xyzmax(2), dims(2))';
+    % z = linspace(xyzmin(3), xyzmax(3), dims(3))';
+    % 
+    % [X, Y, Z] = meshgrid(x, y, z);
     
+    % The more robust strategy is:
+	% 1.	Define voxel indices explicitly (1..dim in MATLAB).
+	% 2.	Convert to SPM/NIfTI voxel-center coordinates (0..dim-1).
+	% 3.	Apply the affine transform.
+	% 4.	Reshape to grid form.
+
+    % Define voxel coordinate vectors (MATLAB indexing)
+    x = 1:obj.volInfo.dim(1); % propagate reversal of x and y for compat?
+    y = 1:obj.volInfo.dim(2);
+    z = 1:obj.volInfo.dim(3);
+
+    % Create voxel meshgrid
     [X, Y, Z] = meshgrid(x, y, z);
-    
+
+    % Convert to SPM/NIfTI voxel-center coordinates
+    ijk = [X(:)-1 Y(:)-1 Z(:)-1]';
+
+    % Transform to mm coordinates using affine
+    XYZmm = obj.volInfo.mat * [ijk; ones(1, size(ijk,2))];
+
+    % Reshape mm coordinates
+    Xmm = reshape(XYZmm(1,:), size(X));
+    Ymm = reshape(XYZmm(2,:), size(Y));
+    Zmm = reshape(XYZmm(3,:), size(Z));
+
     xyz_coord_struct = struct('voldata', vout, 'x', x, 'y', y, 'z', z, 'X', X, 'Y', Y, 'Z', Z);
 
 end

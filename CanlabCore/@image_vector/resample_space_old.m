@@ -1,4 +1,4 @@
-function obj = resample_space(obj, sampleto, varargin)
+function obj = resample_space_old(obj, sampleto, varargin)
 % Resample the images in an fmri_data object (obj) to the space of another
 % image (sampleto; e.g., a mask image). Works for all image_vector objects.
 % The object includes only voxels in the in-mask region in the target
@@ -44,9 +44,6 @@ function obj = resample_space(obj, sampleto, varargin)
 %   removed_voxels due to partially built object
 %   10/28/2024   Zizhuang changed the default method to resample .sig field
 %   to nearest neighbor, and add related warnings
-%   3/9/2026    Tor Wager changed sampling method to match SPM style,
-%   correcting bug with 1-voxel shift in-plane, using affine transformation
-%   matrix T instead to map all voxels. 
 % ..
 
 n_imgs = size(obj.dat, 2);
@@ -55,24 +52,18 @@ if ischar(sampleto)
     sampleto = fmri_data(sampleto);
 end
 
-% -------------------------------------------------------------------------
-% Define mapping from obj to target
-% -------------------------------------------------------------------------
+Vto = sampleto.volInfo;
+SPACEto = define_sampling_space(Vto, 1);
 
-S = define_space_mapping(obj, sampleto); % S = space_mapper_struct
-
-% 
-% Vto = sampleto.volInfo;
-% SPACEto = define_sampling_space(Vto, 1);
-% 
-% Vfrom = obj.volInfo;
-% SPACEfrom = define_sampling_space(Vfrom, 1);
+Vfrom = obj.volInfo;
+SPACEfrom = define_sampling_space(Vfrom, 1);
 
 obj_out = obj;
 obj_out.dat = [];
-obj_out.volInfo = sampleto.volInfo;
+obj_out.volInfo = Vto;
 
-obj = replace_empty(obj, 'voxels');  % to make sure vox line up; % changed to 'voxels' only. SG 2/23/18
+obj = replace_empty(obj,'voxels');  % to make sure vox line up
+% changed to 'voxels' only. SG 2/23/18
 
 if ~isa(obj, 'atlas')
     
@@ -83,14 +74,11 @@ if ~isa(obj, 'atlas')
         
         voldata = iimg_reconstruct_vols(obj.dat(:, i), obj.volInfo);
         
-        % old, using define_sampling_space, 1-vox in-plane shift. Tor Wager 3/2026
-        % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
         
-        resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
         resampled_dat = resampled_dat(:);
         
-        obj_out.dat(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
+        obj_out.dat(:, i) = resampled_dat(Vto.wh_inmask);
         
     end
     
@@ -108,18 +96,19 @@ else % if  isa(obj, 'atlas')
         % voldata = iimg_reconstruct_vols(obj.probability_maps(:, 1), obj.volInfo); % commented out - Byeol, 01/15/2026
         obj_out.probability_maps = [];
         
+        % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+        % resampled_dat = resampled_dat(:);
+        
         % Use probability images if available
         for i = 1:n_prob_imgs
             
             voldata = iimg_reconstruct_vols(obj.probability_maps(:, i), obj.volInfo);
             
-            % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
             
-            resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
             resampled_dat = resampled_dat(:);
             
-            obj_out.probability_maps(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
+            obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
             
         end
     
@@ -132,7 +121,7 @@ else % if  isa(obj, 'atlas')
         
         % if no prob images, need to be careful about how to resample integer vector data
         
-    else % atlas object, probability maps empty
+    else
         
         % integer_vec = zeros(Vto.n_inmask, 1);
         
@@ -142,7 +131,7 @@ else % if  isa(obj, 'atlas')
         % create a set of pseudo-"probabilities" for each region, resampled. Then
         % we can take the max prob, so that each voxel gets assigned to the best-matching parcel.
         
-        pseudo_prob = zeros(sampleto.volInfo.n_inmask, n_index_vals);
+        pseudo_prob = zeros(Vto.n_inmask, n_index_vals);
         
         for i = 1:n_index_vals
             
@@ -152,18 +141,20 @@ else % if  isa(obj, 'atlas')
             
             voldata = iimg_reconstruct_vols(myintegervec, obj.volInfo);
             
-            % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
             
-            resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
             resampled_dat = resampled_dat(:);
-            resampled_dat = resampled_dat(sampleto.volInfo.wh_inmask);    % take relevant voxels only
-
+            resampled_dat = resampled_dat(Vto.wh_inmask);    % take relevant voxels only
+            % resampled_dat(~(round(resampled_dat) == i)) = 0; % take only values that round to integer
+            
             pseudo_prob(:, i) = resampled_dat;
-
+            %integer_vec = integer_vec + round(resampled_dat);
+            
         end
         
         obj_out.probability_maps = pseudo_prob;
+        
+        % obj_out.dat = integer_vec; % will be rounded later, but should be rounded already here...
         
     end % rebuild integers
     
@@ -201,11 +192,9 @@ if isa(obj_out, 'statistic_image')
             p(obj.volInfo.wh_inmask, i) = obj.p(:, i);
             
             voldata = iimg_reconstruct_vols(p(:, i), obj.volInfo);
-            % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-            resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
             resampled_dat = resampled_dat(:);
-            obj_out.p(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
+            obj_out.p(:, i) = resampled_dat(Vto.wh_inmask);
         end
         
         if ~isempty(obj.ste)
@@ -213,11 +202,9 @@ if isa(obj_out, 'statistic_image')
             ste(obj.volInfo.wh_inmask, i) = obj.ste(:, i);
             
             voldata = iimg_reconstruct_vols(ste(:, i), obj.volInfo);
-            % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-            resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
             resampled_dat = resampled_dat(:);
-            obj_out.ste(:, i) = resampled_dat(sampleto.volIn.wh_inmask);
+            obj_out.ste(:, i) = resampled_dat(Vto.wh_inmask);
             
         end
         
@@ -251,42 +238,40 @@ if isa(obj_out, 'statistic_image')
                         'Consider using the default nearest neighbor method.']);
                 elseif ~strcmp(varargin{:}, 'nearest')
                     warning('Nearest neighbor is recommended.')
-                % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-                resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
+                resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
                 end
             else
                 % default to nearest neighbor
                 warning(['Using nearest neighbor method to resample .sig field. ' ...
                     'This can limit false positives, but can also cause a mismatch ' ...
                     'between .sig and other fields like .p.'])
-                % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, 'nearest');
-                resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, 'nearest');
-
-            end % if input interp method
+                resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, 'nearest');
+            end
             % ------------------------------------------
 
             resampled_dat = resampled_dat(:);
             resampled_dat(isnan(resampled_dat)) = 0;
             obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask));
-        end % .sig field for statistic_image
+        end
         
-    end % image loop k
+    end
     
         if ~isempty(obj.N)
             
             N(obj.volInfo.wh_inmask, 1) = obj.N(:, 1);
             
             voldata = iimg_reconstruct_vols(N, obj.volInfo);
-            % resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
-            resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
-
+            resampled_dat = interp3(SPACEfrom.Xmm, SPACEfrom.Ymm, SPACEfrom.Zmm, voldata, SPACEto.Xmm, SPACEto.Ymm, SPACEto.Zmm, varargin{:});
             resampled_dat = resampled_dat(:);
             obj_out.N = resampled_dat(Vto.wh_inmask);
             
-        end % N field for statistic_image
+        end
+        
+%     if ~isempty(obj.p), obj_out.p = p(Vto.wh_inmask, :); end
+%     if ~isempty(obj.ste), obj_out.ste = ste(Vto.wh_inmask, :); end
+%     if ~isempty(obj.sig), obj_out.sig = sig(Vto.wh_inmask, :); end
     
-end % statistic_image case
+end
 
 % End special object subtypes
 % -----------------------------------------------------------------------

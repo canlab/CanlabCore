@@ -674,6 +674,7 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         %w = repmat(Z, [1 1 3]);
 
                         w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
+                        w(isnan(w)) = 1; % replace NaN indices (from NaN Z values) with 1 to avoid indexing errors
                         slicecdat = reshape(cm(round(w),:),[size(Z),3]);
                     else
                         w = repmat(Z, [1 1 3]);
@@ -950,8 +951,8 @@ end
 function val = map_function(c,x1,x2,y1,y2)
     if x2 == x1
         % this occurs when we have a single value. We arbitrarily set it to
-        % the middle value
-        range_val = (y2-y1)/2;
+        % the middle value. Use ones(size(c)) to preserve the shape of c.
+        range_val = (y2-y1)/2 * ones(size(c));
     else
         % softmax here keeps negative values from extending below the colormap
         % range, which would otherwise make those values gray, since the lowest

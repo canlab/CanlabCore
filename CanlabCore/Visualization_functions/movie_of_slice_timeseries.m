@@ -56,7 +56,8 @@ function movie_of_slice_timeseries(imgs, slicenumber, moviename, orientation)
         title(sprintf('Image %3.0f: %s', i, ff), 'FontSize', 24)
 
         % mov = add_a_frame(mov, H);
-        writeVideo(mov, H);
+        frame = getframe(H);
+        writeVideo(mov, frame);
     end
 
     tmp = close(mov); %#ok;
@@ -77,7 +78,7 @@ function [mov, nframes, axh] = setup_movie(mov, movlength, moviename)
         
 %         frame_rate = 1/tr;
         mov = VideoWriter(moviename);
-        mov.Quality
+        mov.Quality = 75;
         mov.FrameRate = fps;
         open(mov);
         
@@ -96,7 +97,8 @@ function mov = add_a_frame(mov, H)
 
     lightRestoreSingle(H);
     try
-        mov = addframe(mov, H);
+        frame = getframe(H);
+        writeVideo(mov, frame);
     catch
         disp('Cannot write frame.  Failed to set stream format??')
         mov = close(mov);

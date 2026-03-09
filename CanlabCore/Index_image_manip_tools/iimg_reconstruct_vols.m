@@ -232,18 +232,18 @@ function write_file(voldata, volInfo, outname, descrip, varargin)
         % write one slice for a series of images
         slice_number = varargin{1};
 
-        filenames = [];
+        filenames_cell = cell(nimgs, 1);
         for i = 1:nimgs
-            filenames = char(filenames, make_img_filename(outname, i));
+            filenames_cell{i} = make_img_filename(outname, i);
         end
-        filenames = filenames(2:end, :);
+        filenames = char(filenames_cell);
 
         % Note: pinfo is set to [1 0 0] for new images; no rescaling of
         % images.
         scn_write_plane(filenames, voldata, slice_number, volInfo);
 
     else
-        warning('off'); % empty images return many warnings
+        warnstate = warning('off', 'all'); % empty images return many warnings
         for i = 1:nimgs
             [volInfo.fname, volInfo.n(1)] = make_img_filename(outname, i);
             volInfo.descrip = descrip;
@@ -254,7 +254,7 @@ function write_file(voldata, volInfo, outname, descrip, varargin)
 
             spm_write_vol(volInfo, squeeze(voldata(:, :, :, i)));
         end
-        warning('on');
+        warning(warnstate);
     end
 end
 
@@ -278,7 +278,10 @@ function [name, n] = make_img_filename(name, imagenum)
         t = t(1);
         n1 = ext((t+1):end);
         if ~isempty(n1),
-            n = str2num(n1);
+            n = str2double(n1);
+            if isnan(n)
+                n = imagenum;  % Fall back to imagenum for non-numeric values
+            end
             ext = ext(1:(t-1));
         end
     else

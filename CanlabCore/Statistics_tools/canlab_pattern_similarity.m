@@ -396,10 +396,17 @@ function r = image_correlation(dat, pattern_weights, badvals, badvals_mask)
 
 for i = 1:size(dat, 2)    % Loop because we may have different voxel exclusions in each image
     
-    inmask = ~badvals(:, i) & ~badvals_mask(:, i);
+    % inmask = ~badvals(:, i) & ~badvals_mask(:, i);
+
+    % pick column i if available, otherwise use the single column (col 1)
+    col = i;
+    if size(badvals_mask, 2) < i
+        col = 1;
+    end
+
+    inmask = ~badvals(:, i) & ~badvals_mask(:, col);
             
     r(i, 1) = corr(pattern_weights(inmask), dat(inmask, i));  % Correlation, excluding out-of-image pattern_weights image-wise
-        
    
 end
 

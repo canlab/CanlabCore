@@ -122,5 +122,8 @@ elseif strcmp(type, 'values')    % output a value map
     % zero out voxels that are not in the conjunction
     conj.dat(~mask) = 0;
 
+    % Delete p values because leaving them is misleading.
+    conj.p = 'Conjunction Image, p-values not valid';
+
 end
     

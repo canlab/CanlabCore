@@ -213,6 +213,17 @@ classdef statistic_image < image_vector
                         
                     end
                 end % string input
+
+                if contains(class(varargin{i}), 'fmri_data')
+                    tmp = varargin{i};
+                    obj.dat = tmp.dat;
+                    obj.volInfo = tmp.volInfo;
+                    obj.image_names = tmp.image_names;
+                    obj.fullpath = tmp.fullpath;
+                    obj.files_exist = tmp.files_exist;
+                    obj.history = tmp.history;
+                end
+
             end % process inputs
             
             % load data, if we don't have data yet

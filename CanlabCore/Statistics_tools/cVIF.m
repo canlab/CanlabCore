@@ -80,7 +80,7 @@ function cVIF_values = cVIF(X, c)
 %   Unintended bias in the pursuit of collinearity solutions in fMRI
 %   analysis. Imaging Neuroscience, 3, 1–24.
 %
-%   See also: pinv, cov
+%   See also: pinv, cov, vif, getvif
 
 % -------------------------------------------------------------------------
 % Validate inputs

@@ -275,9 +275,7 @@ end
 p = inputParser;
 p.addRequired('obj');
 p.addParameter('similarity_metric','correlation',...
-    @(x) ismember(x, {'correlation','cosine_similarity','dot_product', ...
-                      'dice','absolute_agreement','concordance_correlation', ...
-                      'standardized_abs_deviation','mean_shift_z','scale_shift_z'}));
+    @(x) ismember(x,{'correlation','cosine_similarity','dot_product','dice','absolute_agreement','concordance_correlation'}));
 p.addParameter('treat_zero_as_data', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('complete_cases', false, @(x) islogical(x) || isnumeric(x));
 

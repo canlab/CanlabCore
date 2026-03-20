@@ -70,7 +70,7 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 %            active voxels. Treats zeros as valid data.
 %            Expected range: [0, 1].
 %
-%        'absolute_agreement'
+%        'normalized_absolute_agreement'
 %            Bray–Curtis similarity based on normalized L1 difference:
 %
 %                1 - sum(|a - b|) / sum(|a| + |b|)
@@ -131,8 +131,10 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 %        the median of the remaining images.
 %
 %   **d:**
-%        Cohen's d effect size for the group. Values > 0 indicate good group
+%        Cohen's d effect size for the group. Higher values indicate good group
 %        agreement. The expected effect size under random noise is 0.
+%        Note this is not a true Cohen's d for underlying metrics that
+%        are bounded, and is in these cases a "pseudo-d".
 %
 %   **low_agreement:**
 %        Logical vector of images whose jackknife similarity is >3 MAD below the median,
@@ -142,6 +144,76 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 %
 %   **Nvox:**
 %        [k × 1] number of voxels used in each similarity calculation.
+%
+% :Recommendations on using metrics to evaluate participant-level
+% contrast images subjected to group analysis:
+%
+% For a single metric, standardized absolute deviation is the most
+% appealing as a single metric for agreement across independent
+% contrast images. It is sensitive to pattern noise and random
+% shifts in location or scale of individual contrast images.
+% Sensitivity to all three metrics is preserved in the group effect
+% sizes (Cohen''s d). This metric is best interpreted as a
+% normalized L1 deviation from the out-of-sample group reference,
+% analogous to the average absolute residual in a voxelwise group
+% model. This metric is also most similar to the error in a
+% voxel-wise group analysis, averaged across voxels.
+%
+% Cosine similarity is our second choice for agreement across
+% independent contrast images (i.e., participants). Like
+% correlation, it is sensitive to pattern noise in images, and also
+% sensitive to random shifts in the image location (global
+% activation or deactivation) in a way that correlation is not.
+% Note, however, that it is sensitive to changes in the location of
+% the entire image, i.e., the level of global activation or
+% deactivation across an entire set of contrast images, and global
+% activation in contrast images can increase cosine similarity.
+% This property introduces interpretational ambiguity, as higher
+% values may be a function of whole-dataset global values rather
+% than agreement. Like correlation, the absolute magnitude is
+% interpretable, and unlike correlation, group effect sizes
+% (Cohen''s d) within a set of contrast images remain sensitive to
+% both pattern noise and random shifts in image location. Thus, the
+% overall d value — which reflects both the mean level of agreement
+% and the spread across individual images — can be interpreted,
+% with higher values reflecting greater inter-image agreement.
+%
+% Correlation is also sensible as a single metric for agreement
+% across independent contrast images. It is sensitive to pattern
+% noise, but not to global shifts in location or scale or random
+% shifts in location or scale of individual contrast images. The
+% former two properties are a strength, whereas the latter two are
+% a drawback, as agreement should decrease with these types of
+% random shifts. In addition, though the magnitude of correlation
+% is interpretable, group effect sizes are surprisingly insensitive
+% even to pattern noise across the entire dataset. Because
+% correlation removes mean and scale, global pattern noise can
+% reduce similarity uniformly across all images. This reduces
+% within-group variance relative to the mean similarity,
+% artificially inflating effect size (d). Thus, correlation group
+% effect size should be used with caution.
+%
+% As a suite of metrics, correlation, mean shift z and scale shift
+% z form a coherent set. Each is preferentially sensitive to a
+% different type of inter-participant noise. Correlation is
+% sensitive to pattern noise, mean shift z to inter-image variation
+% in location (global mean), and scale shift z to to inter-image
+% variation in scale (multiplicative noise factors). They thus
+% provide an orthogonal decomposition of agreement into pattern
+% similarity (correlation), location shifts (mean_shift_z), and
+% scale shifts (scale_shift_z). Both mean shift z and scale shift z
+% are sensitive to these noise sources in both mean raw values and
+% group effect sizes (d).
+%
+% Other measures have both some desirable properties and some
+% drawbacks. Dot product and normalized absolute agreement
+% (Bray-Curtis) are sensitive to global whole-dataset location
+% shifts and have no superior properties to other metrics. Lin's
+% Concordance Correlation performs most similiarly to cosine
+% similarity, sensitive to random image-level location shifts and
+% pattern noise, but like correlation has the drawback of
+% insensitivity to pattern noise at the whole-dataset effect size
+% level.
 %
 % :Examples:
 % ::
@@ -165,6 +237,12 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 % :Author:
 %   2026, Tor Wager. GPL v3.
 %
+<<<<<<< Updated upstream
+=======
+% See also:
+% jackknife_similarity_unit_test.m
+
+>>>>>>> Stashed changes
 % Programmers' Notes:
 % This function follows conventions used in canlab_compute_similarity_matrix.
 % The jackknife reference is recomputed for each image to avoid circularity.
@@ -194,7 +272,13 @@ end
 p = inputParser;
 p.addRequired('obj');
 p.addParameter('similarity_metric','correlation',...
+<<<<<<< Updated upstream
     @(x) ismember(x,{'correlation','cosine_similarity','dot_product','dice','absolute_agreement'}));
+=======
+    @(x) ismember(x, {'correlation','cosine_similarity','dot_product', ...
+                      'dice','normalized_absolute_agreement','concordance_correlation', ...
+                      'standardized_abs_deviation','mean_shift_z','scale_shift_z'}));
+>>>>>>> Stashed changes
 p.addParameter('treat_zero_as_data', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('complete_cases', false, @(x) islogical(x) || isnumeric(x));
 
@@ -221,6 +305,21 @@ else
     dat = obj;
 end
 
+<<<<<<< Updated upstream
+=======
+% -------------------------------------------------------------------------
+% Preprocess
+% -------------------------------------------------------------------------
+
+% Data integrity check: ensure no empty / zero-norm images
+img_L1 = sum(abs(dat), 1, 'omitnan');
+
+if any(~isfinite(img_L1)) || any(img_L1 == 0)
+    error(['jackknife_similarity: invalid images detected. ' ...
+        'Some images have zero L1 norm or contain only NaN/zero values.']);
+end
+
+>>>>>>> Stashed changes
 % Dice requires binary data
 if strcmp(sim_metric,'dice')
 
@@ -244,6 +343,47 @@ sim_values = nan(k,1);
 Nvox = zeros(k,1);
 
 % -------------------------------------------------------------------------
+<<<<<<< Updated upstream
+=======
+% Stability constant and summaries
+% -------------------------------------------------------------------------
+
+% dat_valid = dat(~isnan(dat));
+% global_abs_scale = median(abs(dat_valid));
+% if isempty(global_abs_scale) || global_abs_scale == 0
+%     global_abs_scale = 1;
+% end
+% epsilon = eps; % 1e-6 * global_abs_scale;
+
+% The role for epsilon:
+% prevent division by zero or numerical explosions when across-image spread is
+% nearly zero, without materially changing ordinary cases. A tiny fraction of
+% the global absolute scale is more sensible than an arbitrary constant like
+% eps or 1e-8, because it stays in the same measurement units as the images.
+
+if strcmpi(sim_metric, 'scale_shift_z') || strcmpi(sim_metric, 'mean_shift_z') || strcmpi(sim_metric, 'standardized_abs_deviation')
+
+    % robust within-image scale after centering
+    img_scale = mad(dat);
+    global_scale = median(img_scale);
+
+    img_mean = mean(dat,1,'omitnan')';
+    % 
+    % % Global normalization scales (do NOT depend on across-image variability)
+    % 
+    % img_centered = dat - img_mean';
+    % img_scale = median(abs(img_centered),1,'omitnan')';
+    % 
+    % global_scale = mad(img_scale);   % stable reference scale
+    % 
+    % % % also useful for mean shift normalization:
+    % % global_mean_scale = mean(abs(img_mean), 'omitnan');
+
+end
+
+
+% -------------------------------------------------------------------------
+>>>>>>> Stashed changes
 % Main loop
 % -------------------------------------------------------------------------
 
@@ -289,6 +429,17 @@ for j = 1:k
         continue
     end
 
+<<<<<<< Updated upstream
+=======
+    % if strcmp(sim_metric,'standardized_abs_deviation')
+    %     ref_scale = row_mad_omitnan(dat(:, others));
+    %     s = ref_scale(valid);
+    % else
+    %     ref_scale = [];
+    % end
+
+
+>>>>>>> Stashed changes
     switch sim_metric
 
         case 'correlation'
@@ -315,7 +466,7 @@ for j = 1:k
             % b = b ~= 0;
             sim_values(j) = 2 * sum(a & b) / (sum(a) + sum(b));
 
-        case 'absolute_agreement'
+        case 'normalized_absolute_agreement'
             % sim_values(j) = 1 - sum(abs(a - b)) ./ sum(abs(a + b));
             % sim_values(j) = 1 - sum(abs(a - b)) / sum(abs(a) + abs(b)); % different than above for signed data
 
@@ -343,6 +494,35 @@ for j = 1:k
                 sim_values(j) = 2 * cab / denom;
             end
 
+<<<<<<< Updated upstream
+=======
+        case 'standardized_abs_deviation'
+
+            % Mean absolute voxelwise deviation, standardized by leave-one-out
+            % voxelwise MAD, then transformed so higher = better agreement.
+            shift = mean(abs(a - b) ./ global_scale);
+            sim_values(j) = 1 ./ (1 + shift);
+
+        case 'mean_shift_z'
+
+            others_mu = img_mean(others);
+            mu_center = mean(others_mu, 'omitnan');
+            % mu_spread = scalar_std_omitnan(others_mu);
+
+            shift = abs(img_mean(j) - mu_center) ./ global_scale; %(mu_spread + epsilon);
+            
+            sim_values(j) = 1 ./ (1 + shift);
+
+        case 'scale_shift_z'
+
+            others_scale = img_scale(others);
+            scale_center = mean(others_scale, 'omitnan');
+            % scale_spread = scalar_std_omitnan(others_scale);
+
+            shift = abs(img_scale(j) - scale_center) ./ global_scale; % (scale_spread + epsilon);
+            sim_values(j) = 1 ./ (1 + shift);
+
+>>>>>>> Stashed changes
         otherwise
             error('Unsupported similarity metric.');
     end
@@ -423,4 +603,27 @@ if verbose
 
 end
 
+<<<<<<< Updated upstream
 end % jackknife_similarity
+=======
+end % jackknife_similarity
+
+
+% -------------------------------------------------------------------------
+% Helpers
+% -------------------------------------------------------------------------
+
+function m = row_mad_omitnan(X)
+medx = median(X,2,'omitnan');
+m = median(abs(X - medx),2,'omitnan');
+end
+
+% function s = scalar_std_omitnan(x)
+% x = x(~isnan(x));
+% if numel(x)<2
+%     s = NaN;
+% else
+%     s = std(x);
+% end
+% end
+>>>>>>> Stashed changes

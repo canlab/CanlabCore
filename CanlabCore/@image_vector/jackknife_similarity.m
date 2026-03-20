@@ -95,6 +95,101 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 %            when agreement in absolute voxel values is important.
 %            Expected range: [-1, 1].
 %
+%        'standardized_abs_deviation'
+%            Image-level agreement metric based on voxelwise absolute
+%            deviation from a leave-one-out reference image. For each image i:
+%
+%                ref(v,-i) = median(X(v, others))
+%                shift(i)  = mean_v |X(v,i) - ref(v,-i)| / global_scale
+%                sim(i)    = 1 / (1 + shift(i))
+%
+%            where global_scale is the mean within-image MAD (median absolute
+%            deviation after centering each image by its mean). This provides
+%            a stable intrinsic normalization that does not depend on
+%            between-image variability.
+%
+%            Interpretation:
+%            This metric quantifies the average absolute deviation of each
+%            image from the group reference, normalized by a fixed estimate of
+%            within-image scale. It is closely related to the mean absolute
+%            residual in a voxelwise group model and can be interpreted as a
+%            normalized L1 error across voxels.
+%
+%            Sensitivity:
+%            - Sensitive to spatial pattern noise (voxelwise deviations)
+%            - Sensitive to additive shifts in image intensity (location)
+%            - Sensitive to multiplicative changes in image scale
+%
+%            Unlike metrics that normalize by across-image variability, this
+%            formulation does not "absorb" structured noise, and therefore
+%            agreement decreases appropriately when images are degraded.
+%
+%            Expected range:
+%                (0, 1], with 1 indicating perfect agreement.
+%
+%
+%        'mean_shift_z'
+%            Image-level agreement metric based on deviations in global mean
+%            intensity across images. For each image i:
+%
+%                mu(i)    = mean(X(:,i))
+%                shift(i) = |mu(i) - mean(mu(others))| / global_scale
+%                sim(i)   = 1 / (1 + shift(i))
+%
+%            where global_scale is the mean within-image MAD, providing a
+%            common normalization across images.
+%
+%            Interpretation:
+%            This metric measures how much an image's overall mean intensity
+%            deviates from the rest of the dataset, expressed relative to the
+%            typical within-image voxelwise scale. It isolates global location
+%            shifts independent of spatial pattern or scale differences.
+%
+%            Sensitivity:
+%            - Sensitive to additive shifts in image intensity (global mean)
+%            - Relatively insensitive to multiplicative scale changes
+%            - Insensitive to voxelwise pattern noise when mean is preserved
+%
+%            This metric provides a direct measure of inter-image variability
+%            in baseline activation levels and is useful for detecting
+%            systematic global offsets across participants.
+%
+%            Expected range:
+%                (0, 1], with 1 indicating no deviation from group mean.
+%
+%
+%        'scale_shift_z'
+%            Image-level agreement metric based on deviations in within-image
+%            scale (dispersion) across images. Each image is first centered:
+%
+%                Xc(:,i) = X(:,i) - mean(X(:,i))
+%
+%            Then a robust scale estimate is computed:
+%
+%                s(i)     = MAD(Xc(:,i))
+%                shift(i) = |s(i) - mean(s(others))| / global_scale
+%                sim(i)   = 1 / (1 + shift(i))
+%
+%            where global_scale is the mean within-image MAD across all images.
+%
+%            Interpretation:
+%            This metric quantifies how much an image's voxelwise variability
+%            (after removing its mean) differs from the rest of the dataset.
+%            It isolates multiplicative scaling effects independent of global
+%            mean shifts.
+%
+%            Sensitivity:
+%            - Sensitive to multiplicative changes in image scale
+%            - Relatively insensitive to additive shifts in mean intensity
+%            - Insensitive to pattern noise when overall scale is preserved
+%
+%            This metric is useful for detecting images with unusually high or
+%            low variance, which may reflect preprocessing differences,
+%            normalization issues, or noise amplification.
+%
+%            Expected range:
+%                (0, 1], with 1 indicating no deviation in scale.
+%
 %   **'treat_zero_as_data'** (logical):
 %        Treat zeros as valid data instead of missing values.
 %        Default = false.
@@ -237,12 +332,9 @@ function [sim_values, d, low_agreement, Nvox] = jackknife_similarity(obj, vararg
 % :Author:
 %   2026, Tor Wager. GPL v3.
 %
-<<<<<<< Updated upstream
-=======
 % See also:
 % jackknife_similarity_unit_test.m
 
->>>>>>> Stashed changes
 % Programmers' Notes:
 % This function follows conventions used in canlab_compute_similarity_matrix.
 % The jackknife reference is recomputed for each image to avoid circularity.
@@ -272,13 +364,9 @@ end
 p = inputParser;
 p.addRequired('obj');
 p.addParameter('similarity_metric','correlation',...
-<<<<<<< Updated upstream
-    @(x) ismember(x,{'correlation','cosine_similarity','dot_product','dice','absolute_agreement'}));
-=======
     @(x) ismember(x, {'correlation','cosine_similarity','dot_product', ...
                       'dice','normalized_absolute_agreement','concordance_correlation', ...
                       'standardized_abs_deviation','mean_shift_z','scale_shift_z'}));
->>>>>>> Stashed changes
 p.addParameter('treat_zero_as_data', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('complete_cases', false, @(x) islogical(x) || isnumeric(x));
 
@@ -305,8 +393,6 @@ else
     dat = obj;
 end
 
-<<<<<<< Updated upstream
-=======
 % -------------------------------------------------------------------------
 % Preprocess
 % -------------------------------------------------------------------------
@@ -319,7 +405,6 @@ if any(~isfinite(img_L1)) || any(img_L1 == 0)
         'Some images have zero L1 norm or contain only NaN/zero values.']);
 end
 
->>>>>>> Stashed changes
 % Dice requires binary data
 if strcmp(sim_metric,'dice')
 
@@ -337,14 +422,12 @@ if ~treat_zero_as_data
     dat(dat==0) = NaN;
 end
 
-[nvox, k] = size(dat);
+[~, k] = size(dat);
 
 sim_values = nan(k,1);
 Nvox = zeros(k,1);
 
 % -------------------------------------------------------------------------
-<<<<<<< Updated upstream
-=======
 % Stability constant and summaries
 % -------------------------------------------------------------------------
 
@@ -383,7 +466,6 @@ end
 
 
 % -------------------------------------------------------------------------
->>>>>>> Stashed changes
 % Main loop
 % -------------------------------------------------------------------------
 
@@ -429,8 +511,6 @@ for j = 1:k
         continue
     end
 
-<<<<<<< Updated upstream
-=======
     % if strcmp(sim_metric,'standardized_abs_deviation')
     %     ref_scale = row_mad_omitnan(dat(:, others));
     %     s = ref_scale(valid);
@@ -438,8 +518,6 @@ for j = 1:k
     %     ref_scale = [];
     % end
 
-
->>>>>>> Stashed changes
     switch sim_metric
 
         case 'correlation'
@@ -494,8 +572,6 @@ for j = 1:k
                 sim_values(j) = 2 * cab / denom;
             end
 
-<<<<<<< Updated upstream
-=======
         case 'standardized_abs_deviation'
 
             % Mean absolute voxelwise deviation, standardized by leave-one-out
@@ -522,7 +598,6 @@ for j = 1:k
             shift = abs(img_scale(j) - scale_center) ./ global_scale; % (scale_spread + epsilon);
             sim_values(j) = 1 ./ (1 + shift);
 
->>>>>>> Stashed changes
         otherwise
             error('Unsupported similarity metric.');
     end
@@ -603,9 +678,6 @@ if verbose
 
 end
 
-<<<<<<< Updated upstream
-end % jackknife_similarity
-=======
 end % jackknife_similarity
 
 
@@ -613,10 +685,10 @@ end % jackknife_similarity
 % Helpers
 % -------------------------------------------------------------------------
 
-function m = row_mad_omitnan(X)
-medx = median(X,2,'omitnan');
-m = median(abs(X - medx),2,'omitnan');
-end
+% function m = row_mad_omitnan(X)
+% medx = median(X,2,'omitnan');
+% m = median(abs(X - medx),2,'omitnan');
+% end
 
 % function s = scalar_std_omitnan(x)
 % x = x(~isnan(x));
@@ -626,4 +698,4 @@ end
 %     s = std(x);
 % end
 % end
->>>>>>> Stashed changes
+

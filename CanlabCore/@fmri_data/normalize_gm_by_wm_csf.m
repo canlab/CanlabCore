@@ -24,7 +24,7 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %
 % USAGE
 %   [obj_out, statstab] = normalize_gm_by_wm_csf(obj, ...
-%                                'log_scale', false, 'trim_pct', 5, ...
+%                                'do_scale', true, 'log_scale', false, 'trim_pct', 5, ...
 %                                'mask_files', masks_cell);
 %
 % INPUTS
@@ -33,6 +33,13 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %               - S = number of images/subjects
 %
 % OPTIONAL NAME/VALUE INPUTS
+%   'do_scale'  : logical (default = true)
+%                 - Passed to NORMALIZE_GM_SHIFT_SCALE.
+%                 - If true: estimate and apply multiplicative scale
+%                   normalization.
+%                 - If false: skip scale estimation and apply shift-only
+%                   normalization.
+%
 %   'log_scale' : logical (default = false)
 %                 - Passed to NORMALIZE_GM_SHIFT_SCALE.
 %                 - If true: log-scale regression for scale model
@@ -92,7 +99,6 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %
 %   Author:  Tor Wager + ChatGPT5.2
 %   Date:    2025-12-09
-%
 
 % -------------------------------------------------------------------------
 % Parse inputs
@@ -106,11 +112,13 @@ default_masks = {'gray_matter_mask_sparse.img', ...
                  'canonical_ventricles.img'};
 
 p.addParameter('log_scale', false, @(x) islogical(x) && isscalar(x));
+p.addParameter('do_scale',  true,  @(x) islogical(x) && isscalar(x));
 p.addParameter('trim_pct',  5,     @(x) isnumeric(x) && isscalar(x) && x >= 0 && x < 50);
 p.addParameter('mask_files', default_masks, @(x) iscell(x) && numel(x) == 3);
 
 p.parse(obj, varargin{:});
 
+do_scale   = p.Results.do_scale;
 log_scale  = p.Results.log_scale;
 trim_pct   = p.Results.trim_pct;
 mask_files = p.Results.mask_files;
@@ -169,6 +177,7 @@ end
 Y = obj.dat;  % V x S
 
 [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, ...
+                                     'do_scale',  do_scale, ...
                                      'log_scale', log_scale, ...
                                      'trim_pct',  trim_pct);
 
@@ -188,13 +197,18 @@ obj_out.dat = Z;          % normalized data
 % Metadata table: append stats columns
 if istable(obj.metadata_table)
     mt_in = obj.metadata_table;
-    if height(mt_in) ~= S
+    if isempty(mt_in) && height(mt_in) == 0
+        % Treat an empty metadata table like a missing one
+        obj_out.metadata_table = statstab;
+    elseif height(mt_in) ~= S
         warning('gm_shift_scale_normalize:MetadataHeightMismatch', ...
             ['metadata_table height (%d) does not match number of images (%d). ', ...
-             'Stats table will still be appended; please verify correspondence.'], ...
+             'Returning stats table only; please verify correspondence.'], ...
              height(mt_in), S);
+        obj_out.metadata_table = statstab;
+    else
+        obj_out.metadata_table = [mt_in statstab];
     end
-    obj_out.metadata_table = [mt_in statstab];
 else
     % If no metadata_table, create a new one from stats
     obj_out.metadata_table = statstab;
@@ -246,12 +260,21 @@ for k = 1:numel(fn)
             vars.(newname) = val(:, j);
         end
 
-    % Case 5: 1 x K vector (e.g., beta_mean, lambda) -> replicate as K columns
+    % Case 5: 1 x K vector -> replicate as K columns
     elseif ndims(val) == 2 && sz(1) == 1 && sz(2) > 1
         K = sz(2);
         for j = 1:K
             newname = sprintf('%s_%d', fname, j);
             vars.(newname) = repmat(val(1, j), S, 1);
+        end
+
+    % Case 6: K x 1 vector not matching subjects (e.g., beta_mean, beta_scale)
+    % -> replicate each entry across subjects as its own column
+    elseif ndims(val) == 2 && sz(2) == 1 && sz(1) > 1 && sz(1) ~= S
+        K = sz(1);
+        for j = 1:K
+            newname = sprintf('%s_%d', fname, j);
+            vars.(newname) = repmat(val(j, 1), S, 1);
         end
 
     else

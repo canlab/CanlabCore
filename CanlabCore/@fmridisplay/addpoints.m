@@ -11,7 +11,7 @@ function obj = addpoints(obj, xyz, varargin)
 % - enter xyz as n x 3 list of coordinates in mm to plot (world space)
 % - Points or text labels or both
 % - Flexible slice spacing, colors, marker sizes/styles, axis layout (one row/standard square)
-% - axial, saggital, or coronal orientation handled automatically
+% - axial, sagittal, or coronal orientation handled automatically
 % - Multiple different sets of points can be plotted in different colors/text labels
 %
 % :Optional Inputs:
@@ -178,7 +178,7 @@ for i = 1:length(axhan)
             case 'axial'
                 whcol = 3;
                 
-            case {'sagg', 'sagittal', 'saggital'}
+            case {'sagg', 'sagittal', 'sagittal'}
                 
                 whcol = 1;
                 

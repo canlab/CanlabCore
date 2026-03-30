@@ -217,7 +217,7 @@ if isa(obj_out, 'statistic_image')
             resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
 
             resampled_dat = resampled_dat(:);
-            obj_out.ste(:, i) = resampled_dat(sampleto.volIn.wh_inmask);
+            obj_out.ste(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
             
         end
         
@@ -268,7 +268,9 @@ if isa(obj_out, 'statistic_image')
 
             resampled_dat = resampled_dat(:);
             resampled_dat(isnan(resampled_dat)) = 0;
-            obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask));
+            % obj_out.sig(:, i) = logical(resampled_dat(Vto.wh_inmask)); % Vto no longer exists - Michael Sun, 03/30/2026
+            obj_out.sig(:, i) = logical(resampled_dat(obj_out.volInfo.wh_inmask));
+
         end % .sig field for statistic_image
         
     end % image loop k
@@ -282,7 +284,8 @@ if isa(obj_out, 'statistic_image')
             resampled_dat = interp3(S.y_vox_orig, S.x_vox_orig, S.z_vox_orig, voldata, S.y_vox_query, S.x_vox_query, S.z_vox_query, varargin{:});
 
             resampled_dat = resampled_dat(:);
-            obj_out.N = resampled_dat(Vto.wh_inmask);
+            % obj_out.N = resampled_dat(Vto.wh_inmask); % Vto no longer exists - Michael Sun, 03/30/2026
+            obj_out.N = resampled_dat(obj_out.volInfo.wh_inmask); 
             
         end % N field for statistic_image
     

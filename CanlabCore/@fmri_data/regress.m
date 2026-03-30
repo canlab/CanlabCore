@@ -1167,7 +1167,11 @@ if ~isempty(C)
     out.con_t.removed_images = false;  % this image does not have the same dims as the original dataset
     out.con_t.image_labels = contrast_names;
 
-    out.con_t = enforce_variable_types(out.con_t);
+    % out.con_t = enforce_variable_types(out.con_t); 
+    % Michael Sun 03/25/2026: This can introduce
+    % problems in that if one of the contrasts has no differences, then
+    % that image will get removed, which will lead to problems with
+    % thresholding in the next line.
 
     if doverbose
         fprintf('Thresholding t images at %3.6f %s\n', inputargs{1}, inputargs{2});

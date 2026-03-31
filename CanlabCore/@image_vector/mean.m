@@ -142,10 +142,12 @@ if dogroup, m.history{end} = 'Averaged images by group'; end
 
 % Selective average by group of other fields
 % -------------------------------
-u = [];
-m.Y = average_var_by_group(m.Y, group_by, u);                       % can handle single-group case (empty grouping var) or separate groups
-m.covariates = average_var_by_group(m.covariates, group_by, u);     % can handle single-group case (empty grouping var) or separate groups
-m.X = average_var_by_group(m.X, group_by, u);     % can handle single-group case (empty grouping var) or separate groups
+if contains(class(m), 'fmri_data')
+    u = [];
+    m.Y = average_var_by_group(m.Y, group_by, u);                       % can handle single-group case (empty grouping var) or separate groups
+    m.covariates = average_var_by_group(m.covariates, group_by, u);     % can handle single-group case (empty grouping var) or separate groups
+    m.X = average_var_by_group(m.X, group_by, u);     % can handle single-group case (empty grouping var) or separate groups
+end
 
 % Recast if needed
 % -------------------------------

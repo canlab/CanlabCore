@@ -123,7 +123,7 @@ else % if  isa(obj, 'atlas')
             
         end
     
-        obj_out.probability_maps(:, i) = resampled_dat(Vto.wh_inmask);
+        obj_out.probability_maps(:, i) = resampled_dat(sampleto.volInfo.wh_inmask);
         
         % rebuild .dat from probability images - done below
         %     if n_prob_imgs

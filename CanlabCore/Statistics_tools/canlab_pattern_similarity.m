@@ -63,6 +63,7 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
 %
 %   **exclude_zero_mask_values**
+%       Excludes zero values in pattern_weights input
 %
 % :Outputs:
 %   **similarity_output**
@@ -139,6 +140,8 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   - added option for treating zero value in the map as real value rather
 %   than missing data
 %
+% 2026/01/13 Lukas Van Oudenhove
+%   - fixed a bug in main function and subfunction for sim_metric = corr
 
 % ---------------------------------
 % Defaults and optional inputs
@@ -216,16 +219,6 @@ else
 
 end
 
-if exclude_zero_mask_values
-    
-    badvals_mask = pattern_weights == 0 | isnan(pattern_weights);
-    
-else
-
-    badvals_mask = isnan(pattern_weights);
-
-end
-
 
 % ---------------------------------
 % Main similarity calculation
@@ -245,6 +238,16 @@ else
         
         switch sim_metric
             case 'corr'
+                
+                if exclude_zero_mask_values
+    
+                    badvals_mask = pattern_weights(:,i) == 0 | isnan(pattern_weights(:,i));
+    
+                else
+
+                    badvals_mask = isnan(pattern_weights(:,i));
+
+                end
                
                 similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals, badvals_mask);
 

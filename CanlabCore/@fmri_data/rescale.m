@@ -16,6 +16,18 @@ function fmridat = rescale(fmridat, meth, varargin)
 %     - centervoxels        subtract voxel means
 %     - zscorevoxels        subtract voxel means, divide by voxel std. dev
 %     - rankvoxels          replace values in each voxel with rank across images
+%     - zeropreservequantile  zero-preserving quantile harmonization across
+%                           images, per-voxel. For each voxel, ranks the
+%                           images and maps each rank to its quantile
+%                           position relative to the proportion of negative
+%                           values: q0 = (rank-0.5)/N - prop_neg. Exact
+%                           zeros are preserved as zero. Useful for
+%                           cross-study harmonization where the sign of the
+%                           contrast carries meaning.
+%                           Optional name/value: 'jitter', sd (default 0)
+%                           adds randn*(sd/N) to break the discrete grid
+%                           and 'seed', s for reproducibility.
+%                           Requires >1 image (column).
 %
 %                           *Note: these methods must exclude invalid (0 or
 %                           NaN) voxels image-wise. Some images (but not others) in an
@@ -62,6 +74,11 @@ function fmridat = rescale(fmridat, meth, varargin)
 %
 % See also fmri_data.preprocess
 
+% Ensure history is a cell so {end+1} indexing works for any input object
+if ~isprop(fmridat, 'history') || ~iscell(fmridat.history)
+    fmridat.history = {};
+end
+
 switch meth
     
     case 'centervoxels'
@@ -70,14 +87,11 @@ switch meth
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = NaN;
         
-        m = nanmean(fmridat.dat');
+        m = mean(fmridat.dat', 'omitnan');
         fmridat.dat = (fmridat.dat' - m)';  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
-        
-        % Old - this does not handle different missing voxels in different images
-        fmridat.dat = scale(fmridat.dat', 1)';
-        
+
         fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
-        
+
         fmridat.history{end+1} = 'Centered voxels (rows) across images';
         
     case 'zscorevoxels'
@@ -86,8 +100,8 @@ switch meth
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = NaN;
         
-        m = nanmean(fmridat.dat');
-        s = nanstd(fmridat.dat');
+        m = mean(fmridat.dat', 'omitnan');
+        s = std(fmridat.dat', 'omitnan');
         fmridat.dat = ((fmridat.dat' - m) ./ s)';  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
         
         fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
@@ -98,25 +112,33 @@ switch meth
         fmridat.history{end+1} = 'Z-scored voxels (rows) across images';
         
     case 'rankvoxels'
-        for i = 1:size(fmridat.dat, 1) % for each voxel
-            
-            d = fmridat.dat(i, :)';
-            
-            % Consider missing voxels, and exclude case-wise (image-wise)
-            ismissing = d == 0 | isnan(d);
-            d(ismissing) = NaN;
-            
-            if ~all(d == 0)
-                fmridat.dat(i, ~ismissing) = rankdata(d(~ismissing))';
-            end
-            
-        end
-        
+
+        % Vectorized: tiedrank operates column-wise, so transpose so each
+        % voxel is a column. NaNs are handled natively by tiedrank (returned
+        % as NaN ranks). Treat 0 as missing.
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
-        fmridat.dat(ismissing) = 0; % Replace with 0 for compatibility with image format
-        
+        d = fmridat.dat;
+        d(ismissing) = NaN;
+
+        d = tiedrank(d')';   % rank across images, per voxel
+
+        d(isnan(d)) = 0;     % Replace with 0 for compatibility with image format
+        fmridat.dat = d;
+
         fmridat.history{end+1} = 'Ranked voxels (rows) across images';
-        
+
+    case 'zeropreservequantile'
+
+        if size(fmridat.dat, 2) < 2
+            error(['rescale:zeropreservequantile requires more than one image ', ...
+                   '(column) in fmridat.dat. Per-voxel rank harmonization is ', ...
+                   'undefined for a single image/study.']);
+        end
+
+        fmridat.dat = local_zeropreserve_quantile(fmridat.dat, varargin{:});
+
+        fmridat.history{end+1} = 'Zero-preserving quantile harmonization per-voxel across images';
+
     case 'rankimages'
         dat = zeros(size(fmridat.dat));
         
@@ -129,9 +151,9 @@ switch meth
             d(ismissing) = NaN;
             
             if ~all(d == 0)
-                d(~ismissing, i) = rankdata(d(~ismissing));
+                d(~ismissing) = rankdata(d(~ismissing));
             end
-            
+
             dat(:, i) = d;
             
         end
@@ -145,42 +167,39 @@ switch meth
 
     case 'prctileimages'
 
-        res = 0.1;  
-        
-        newobj = fmridat;
+        res = 0.1;
 
-        for i = 1:size(fmridat.dat, 2)
+        dat_in  = fmridat.dat;                   % broadcast variable
+        dat_out = zeros(size(dat_in));           % sliced output
 
-            d = fmridat.dat(:,i);
+        parfor i = 1:size(dat_in, 2)
+
+            d = dat_in(:, i);
 
             % Consider missing voxels, and exclude case-wise (image-wise)
             ismissing = d == 0 | isnan(d);
             d(ismissing) = NaN;
 
-            if ~all(d == 0 | isnan(d))
+            if ~all(isnan(d))
 
-                x = [-Inf prctile(d, 0:res:100)];
-
-                for j = 1:length(x) - 1
-
-                    wh = d <= x(j + 1) & d > x(j);
-                    newobj.dat(wh, i) = j;
-
-                end % bins
+                edges = prctile(d, 0:res:100);    % 1001 percentile edges
+                edges(1) = -Inf;                  % open the lower tail
+                edges(end) = Inf;                 % open the upper tail
+                bins = discretize(d, edges);      % integer bin index 1..1000
 
                 % normalize by number of valid values, so images in set
                 % will be on the same scale if some are missing voxels
-                d = d ./ length(d(~ismissing));
+                nValid = sum(~ismissing);
+                dat_out(:, i) = bins ./ nValid;
 
             end % if image has values
 
         end % images
 
-        newobj.dat(isnan(newobj.dat)) = 0; % Replace with 0 for compatibility with image format
+        dat_out(isnan(dat_out)) = 0;  % Replace with 0 for compatibility with image format
+        fmridat.dat = dat_out;
 
-        fmridat = newobj;
-
-        fmridat.history{end+1} = 'Converted each image to nearest of 1000 bins';
+        fmridat.history{end+1} = 'Converted each image to percentile bins (1000 bins, normalized by valid voxel count)';
 
 
     case 'centerimages'
@@ -191,7 +210,7 @@ switch meth
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = NaN;
         
-        m = nanmean(fmridat.dat);
+        m = mean(fmridat.dat, 'omitnan');
         fmridat.dat = (fmridat.dat - m);  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
         
         fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
@@ -207,8 +226,8 @@ switch meth
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = NaN;
         
-        m = nanmean(fmridat.dat);
-        s = nanstd(fmridat.dat);
+        m = mean(fmridat.dat, 'omitnan');
+        s = std(fmridat.dat, 'omitnan');
         fmridat.dat = (fmridat.dat - m) ./ s;  % Note: Sizes are wrong without repmat, but Matlab 2020b at least figures this out.
         
         fmridat.dat(ismissing) = 0;  % Replace with 0 for compatibility with image format
@@ -225,12 +244,12 @@ switch meth
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = NaN;
         
-        imagemeans = nanmean(fmridat.dat);
+        imagemeans = mean(fmridat.dat, 'omitnan');
         [v, n] = size(fmridat.dat);
         imagemeanmatrix = repmat(imagemeans, v, 1);
         dat_doublecent = fmridat.dat - imagemeanmatrix;
         
-        voxelmeans = nanmean(dat_doublecent, 2);
+        voxelmeans = mean(dat_doublecent, 2, 'omitnan');
         voxelmeanmatrix = repmat(voxelmeans, 1, n);
         dat_doublecent = dat_doublecent - voxelmeanmatrix;
         fmridat.dat = dat_doublecent;
@@ -268,9 +287,11 @@ switch meth
         end
         
         x(ismissing) = 0;  % Replace with 0 for compatibility with image format
-                
+
         fmridat.dat = x;
-    
+
+        fmridat.history{end+1} = 'Divided each image by its L1 norm';
+
     case 'l2norm_images'
         
         % Vector L2 norm / sqrt(length) of vector
@@ -336,7 +357,6 @@ switch meth
         % SPM's default method of global mean scaling
         % useful for replicating SPM analyses or comparing SPM's scaling to
         % other methods.
-        % not implemented yet because tor decided to use spm_global on images for comparison; this could be done though...
         % see help spm_global
         nscan = fmridat.images_per_session;  % num images per session
 
@@ -457,16 +477,19 @@ switch meth
         fmridat.history{end+1} = 'Intensity-normalized each run with multiplicative scaling';
 
     case 'windsorizevoxels'
-        
+
         whbad = all(fmridat.dat == 0, 2);
-        nok = sum(~whbad);
-        
-        fprintf('windsorizing %3.0f voxels to 3 std: %05d', 0);
-        for i = 1:nok
-            if mod(i, 100) == 0, fprintf('\b\b\b\b\b%05d', i); end
+        goodIdx = find(~whbad);
+        nok = numel(goodIdx);
+
+        fprintf('windsorizing %d voxels to 3 std: %05d', nok, 0);
+        for k = 1:nok
+            if mod(k, 100) == 0, fprintf('\b\b\b\b\b%05d', k); end
+            i = goodIdx(k);
             fmridat.dat(i, :) = trimts(fmridat.dat(i, :)', 3, [])';
         end
-        
+        fprintf('\n');
+
         fmridat.history{end+1} = 'Windsorized each voxel data series to 3 sd';
         
     case 'tanh'
@@ -494,17 +517,11 @@ switch meth
         
         fmridat.history{end+1} = 'Rescaled to mean 100, voxelwise % signal change with 16 mm fwhm smoothing of divisor mean';
         
-    case 'correly'
-        
-        % correl with y
-        % provides implicit feature selection when using algorithms that
-        % are scale-dependent (e.g., SVM, PCA)
-        
     case 'csf_mean_var'
         
         [~,~,tissues] = extract_gray_white_csf(fmridat);
-        csfStd = nanstd(tissues{3}.dat);
-        csfMean = nanmean(tissues{3}.dat);
+        csfStd = std(tissues{3}.dat, 'omitnan');
+        csfMean = mean(tissues{3}.dat, 'omitnan');
         
         fmridat = fmridat.remove_empty;
         dat = fmridat.dat;
@@ -517,7 +534,75 @@ switch meth
         
     otherwise
         error('Unknown scaling method.')
-        
+
 end
+
+end
+
+% =========================================================================
+% Subfunction: zero-preserving quantile harmonization per-voxel
+% =========================================================================
+function dat_out = local_zeropreserve_quantile(dat, varargin)
+% Per-voxel zero-preserving quantile transform.
+%
+%   dat is V x S (voxels x images/subjects).
+%   For each voxel v:
+%     - Take the S values across images
+%     - Skip NaNs
+%     - Compute tiedrank, then q = (rank - 0.5)/N
+%     - Subtract prop_neg = (# strictly negative)/N
+%     - Optional sub-grid jitter: add randn*(jitter/N) before zero override
+%     - Force values that were exactly 0 back to exactly 0
+%
+% Optional name/value:
+%   'jitter' - scalar >= 0, default 0. Sub-grid Gaussian noise factor.
+%   'seed'   - scalar, default []. RNG seed for reproducibility.
+
+p = inputParser;
+addParameter(p, 'jitter', 0, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+addParameter(p, 'seed', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));
+parse(p, varargin{:});
+jitter_sd = p.Results.jitter;
+seed      = p.Results.seed;
+
+if jitter_sd > 0 && ~isempty(seed)
+    rng(seed);
+end
+
+[nV, nS] = size(dat);
+dat_out  = nan(nV, nS);
+
+for v = 1:nV
+
+    x = dat(v, :);
+    valid = ~isnan(x);
+    nv = sum(valid);
+    if nv == 0
+        continue;
+    end
+
+    xv = x(valid);
+    rv = tiedrank(xv);              % 1..nv (handles ties)
+    q  = (rv - 0.5) ./ nv;          % standard quantile positions
+    prop_neg = sum(xv < 0) / nv;    % proportion strictly negative
+    q0 = q - prop_neg;              % distance from zero on quantile scale
+
+    % optional sub-grid jitter (BEFORE zero override)
+    if jitter_sd > 0
+        q0 = q0 + randn(size(q0)) * (jitter_sd / nv);
+    end
+
+    % preserve exact zeros
+    iszero = (xv == 0);
+    if any(iszero)
+        q0(iszero) = 0;
+    end
+
+    dat_out(v, valid) = q0;
+
+end
+
+% Replace NaNs with 0 for compatibility with image format
+dat_out(isnan(dat_out)) = 0;
 
 end

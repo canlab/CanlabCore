@@ -16,6 +16,18 @@ function fmridat = rescale(fmridat, meth, varargin)
 %     - centervoxels        subtract voxel means
 %     - zscorevoxels        subtract voxel means, divide by voxel std. dev
 %     - rankvoxels          replace values in each voxel with rank across images
+%     - zeropreservequantile  zero-preserving quantile harmonization across
+%                           images, per-voxel. For each voxel, ranks the
+%                           images and maps each rank to its quantile
+%                           position relative to the proportion of negative
+%                           values: q0 = (rank-0.5)/N - prop_neg. Exact
+%                           zeros are preserved as zero. Useful for
+%                           cross-study harmonization where the sign of the
+%                           contrast carries meaning.
+%                           Optional name/value: 'jitter', sd (default 0)
+%                           adds randn*(sd/N) to break the discrete grid
+%                           and 'seed', s for reproducibility.
+%                           Requires >1 image (column).
 %
 %                           *Note: these methods must exclude invalid (0 or
 %                           NaN) voxels image-wise. Some images (but not others) in an
@@ -114,9 +126,21 @@ switch meth
         
         ismissing = fmridat.dat == 0 | isnan(fmridat.dat);
         fmridat.dat(ismissing) = 0; % Replace with 0 for compatibility with image format
-        
+
         fmridat.history{end+1} = 'Ranked voxels (rows) across images';
-        
+
+    case 'zeropreservequantile'
+
+        if size(fmridat.dat, 2) < 2
+            error(['rescale:zeropreservequantile requires more than one image ', ...
+                   '(column) in fmridat.dat. Per-voxel rank harmonization is ', ...
+                   'undefined for a single image/study.']);
+        end
+
+        fmridat.dat = local_zeropreserve_quantile(fmridat.dat, varargin{:});
+
+        fmridat.history{end+1} = 'Zero-preserving quantile harmonization per-voxel across images';
+
     case 'rankimages'
         dat = zeros(size(fmridat.dat));
         
@@ -517,7 +541,75 @@ switch meth
         
     otherwise
         error('Unknown scaling method.')
-        
+
 end
+
+end
+
+% =========================================================================
+% Subfunction: zero-preserving quantile harmonization per-voxel
+% =========================================================================
+function dat_out = local_zeropreserve_quantile(dat, varargin)
+% Per-voxel zero-preserving quantile transform.
+%
+%   dat is V x S (voxels x images/subjects).
+%   For each voxel v:
+%     - Take the S values across images
+%     - Skip NaNs
+%     - Compute tiedrank, then q = (rank - 0.5)/N
+%     - Subtract prop_neg = (# strictly negative)/N
+%     - Optional sub-grid jitter: add randn*(jitter/N) before zero override
+%     - Force values that were exactly 0 back to exactly 0
+%
+% Optional name/value:
+%   'jitter' - scalar >= 0, default 0. Sub-grid Gaussian noise factor.
+%   'seed'   - scalar, default []. RNG seed for reproducibility.
+
+p = inputParser;
+addParameter(p, 'jitter', 0, @(x) isnumeric(x) && isscalar(x) && x >= 0);
+addParameter(p, 'seed', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x)));
+parse(p, varargin{:});
+jitter_sd = p.Results.jitter;
+seed      = p.Results.seed;
+
+if jitter_sd > 0 && ~isempty(seed)
+    rng(seed);
+end
+
+[nV, nS] = size(dat);
+dat_out  = nan(nV, nS);
+
+for v = 1:nV
+
+    x = dat(v, :);
+    valid = ~isnan(x);
+    nv = sum(valid);
+    if nv == 0
+        continue;
+    end
+
+    xv = x(valid);
+    rv = tiedrank(xv);              % 1..nv (handles ties)
+    q  = (rv - 0.5) ./ nv;          % standard quantile positions
+    prop_neg = sum(xv < 0) / nv;    % proportion strictly negative
+    q0 = q - prop_neg;              % distance from zero on quantile scale
+
+    % optional sub-grid jitter (BEFORE zero override)
+    if jitter_sd > 0
+        q0 = q0 + randn(size(q0)) * (jitter_sd / nv);
+    end
+
+    % preserve exact zeros
+    iszero = (xv == 0);
+    if any(iszero)
+        q0(iszero) = 0;
+    end
+
+    dat_out(v, valid) = q0;
+
+end
+
+% Replace NaNs with 0 for compatibility with image format
+dat_out(isnan(dat_out)) = 0;
 
 end

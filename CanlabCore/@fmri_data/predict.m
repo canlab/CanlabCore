@@ -1074,7 +1074,7 @@ end
 function [yfit, vox_weights, intercept] = cv_pls(xtrain, ytrain, xtest, cv_assignment, varargin)
 
 % Choose number of components to save [optional]
-wh = find(strcmp(varargin, ''));
+wh = find(strcmp(varargin, 'numcomponents'));
 if ~isempty(wh) && length(varargin) >= wh + 1
     
     numc = varargin{wh + 1};
@@ -1112,7 +1112,7 @@ pc(:,end) = [];                % remove the last component, which is close to ze
 % [pc, sc, eigval] = princomp(xtrain, 'econ');
 
 % Choose number of components to save [optional]
-wh = find(strcmp(varargin, ''));
+wh = find(strcmp(varargin, 'numcomponents'));
 if ~isempty(wh) && length(varargin) >= wh + 1
     
     numc = varargin{wh + 1};

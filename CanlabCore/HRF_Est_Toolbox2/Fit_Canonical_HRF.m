@@ -57,7 +57,13 @@ if ~isempty(varargin)
     
     % Be careful here. if p>1, make sure Run includes derivatives so there
     % are p*task regressors.
-    b = reshape(b(1:numel(Run)),p,d)'; % Extract my own regressors
+    % b = reshape(b(1:numel(Run)),p,d)'; % Extract my own regressors
+
+    if numel(b) < p*d
+        error('Not enough beta weights to reshape into %d x %d.', d, p);
+    end
+    b = reshape(b(1:p*d), p, d)';
+    
     bc = zeros(d,1);
 
 else

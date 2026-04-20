@@ -165,6 +165,7 @@ function [HRF, tc] = extractHRF(HRF_OBJ, CondNames, varargin)
                     HRF{r}.(CondNames{c}).model_voxnormed=tc{r}{c}/regionVoxNum;
                     [HRF{r}.(CondNames{c}).peaks_voxnormed, HRF{r}.(CondNames{c}).troughs_voxnormed]=detectPeaksTroughs(tc{r}{c}'/regionVoxNum, false);
                 catch
+                    error("Error generating Peaks and Troughs. Check if Matlab Signal Processing Toolbox is Installed.")
                     % disp(t);
                     disp(c);
                     disp(rois{r});

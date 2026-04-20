@@ -65,6 +65,14 @@ if (strcmp(method,'IL')),
                 % Please note that when using simulated annealing approach you
                 % may need to perform some tuning before use.
 
+            if numel(T) > 1
+                if all(abs(T(:) - T(1)) < 1e-8)
+                    T = T(1);
+                else
+                    error('Multiple time windows not yet implemented for IL: T values must be identical within tolerance.');
+                end
+            end
+
             if ~isempty(varargin)
                 disp('IL-function with custom Design Matrix not yet implemented')
                 [h, fit, e, param] = Fit_Logit2(tc,TR,Runc,T,mode);
@@ -110,6 +118,13 @@ elseif (strcmp(method,'CHRF')),
             
             p = mode + 1;
 
+            if numel(T) > 1
+                if all(abs(T(:) - T(1)) < 1e-8)
+                    T = T(1);
+                else
+                    error('Multiple time windows not yet implemented for CHRF: T values must be identical within tolerance.');
+                end
+            end
 
             if ~isempty(varargin)
                 [h, fit, e, param, info] = Fit_Canonical_HRF(tc,TR,Runc,T,p, varargin{:});

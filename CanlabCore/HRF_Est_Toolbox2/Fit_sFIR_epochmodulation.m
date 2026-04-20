@@ -291,7 +291,7 @@ else
         % disp(pen) % Check what this looks like.
         cov_num = size(DX,2)-size(pen, 2);
     
-        pen=pad(pad(pen, cov_num)',cov_num)';
+        pen=canlab_pad(canlab_pad(pen, cov_num)',cov_num)';
     
         % multiply a 0 penalty with NX.
     

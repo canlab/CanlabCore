@@ -44,7 +44,9 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAM
         isSPM=true;
     end
 
-
+    if ~exist('isSPM')
+        isSPM = false;
+    end
 
     if isSPM
         % if isstruct(varargin{1})
@@ -64,16 +66,22 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAM
 
     else
         % Step 1. Preprocess
-        for d=1:numel(fmri_d)
-            [preproc_dat{d}]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R{d}, 'hpf', PREPROC_PARAMS.hpf, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
+        if numel(fmri_d) == 1
+            preproc_dat=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R, 'hpf', PREPROC_PARAMS.hpf, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
             % Step 2. Smooth
-            preproc_dat{d}=preprocess(preproc_dat{d}, 'smooth', PREPROC_PARAMS.smooth);
+            preproc_dat=preprocess(preproc_dat, 'smooth', PREPROC_PARAMS.smooth);
+        else
+
+            for d=1:numel(fmri_d)
+                [preproc_dat{d}]=canlab_connectivity_preproc(fmri_d, PREPROC_PARAMS.R{d}, 'hpf', PREPROC_PARAMS.hpf, PREPROC_PARAMS.TR, 'average_over', 'no_plots');
+                % Step 2. Smooth
+                preproc_dat{d}=preprocess(preproc_dat{d}, 'smooth', PREPROC_PARAMS.smooth);
+            end
+
         end
     
         % Step 3. fitHRF to each ROI's worth of data
         [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile);
-
-
     end
 
 
@@ -276,9 +284,8 @@ end
 % end
 
 
-function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile, varargin)
+function [tc, HRF] = roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile, varargin)
 
-    % Make directories for files if needed
     if ~isempty(fileparts(outfile))
         disp(fileparts(outfile));
         if ~exist(fileparts(outfile), 'dir')
@@ -286,150 +293,288 @@ function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile, vara
         end
     end
 
-    % Make sure CondNames are valid before continuing:
-    HRF.atlas=at;
-    HRF.region=rois;
-    HRF.types=HRF_PARAMS.types;
+    HRF_PARAMS.CondNames = matlab.lang.makeValidName(HRF_PARAMS.CondNames);
 
-    if iscell(preproc_dat)
-        for c=1:numel(preproc_dat)
-            HRF.name{c}=preproc_dat{c}.image_names;
-    
-            % Initialize 'tc' and 'temp_HRF_fit' cell arrays
-            tc{c} = cell(1, numel(HRF_PARAMS.types));
-            temp_HRF_fit{c} = cell(1, numel(HRF_PARAMS.types));
-        end
-    else
-        HRF.name=preproc_dat.image_names;
+    HRF.atlas = at;
+    HRF.region = rois;
+    HRF.types = HRF_PARAMS.types;
 
-        % Initialize 'tc' and 'temp_HRF_fit' cell arrays
-        tc = cell(1, numel(HRF_PARAMS.types));
-        temp_HRF_fit = cell(1, numel(HRF_PARAMS.types));
+    % Force data into cell form for consistent indexing
+    if ~iscell(preproc_dat)
+        preproc_dat = {preproc_dat};
     end
 
-    % Carve up SPM's design matrix for each image
-    % if ~isempty(varargin)
-    %     if ischar(varargin{1}) || isstring(varargin{1})
-    %         load(varargin{1});
-    %     elseif isstruct(varargin{1})
-    %         SPM=varargin{1};
-    %     end
+    nData  = numel(preproc_dat);
+    nTypes = numel(HRF_PARAMS.types);
+    nCond  = numel(HRF_PARAMS.CondNames);
 
-        
-    %     DX=cell(1,numel(SPM.nscan));
-    %     if numel(preproc_dat) == numel(SPM.nscan)
-    %         for d=1:numel(preproc_dat)
-    %             % Check if the SPM file accounts for the same number of scans
-    % 
-    %             % HRF_PARAMS.CondNames
-    %             % Use regexp to search for the pattern
-    %             % hot_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_heat_start']));
-    %             % warm_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_warm_start']));
-    %             % imgcue_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_imagine_cue']));
-    %             % imag_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_imagine_start']));
-    % 
-    %             R_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*R.*']));
-    %             constant_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*constant']));
-    %             sess_cols = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*']));
-    % 
-    % 
-    %             % Find indices of matches
-    %             indices = [find(sess_cols)];
-    %             % indices = [find(hot_matches) find(warm_matches) find(imgcue_matches) find(imag_matches)];
-    %             % indices = [find(R_matches) find(constant_matches)];
-    %             task_regressors{d} = [find(sess_cols & (~R_matches & ~constant_matches))];
-    % 
-    %             % Each design matrix needs task regressors, covariates, and
-    %             % intercept
-    %             DX{d}=SPM.xX.xKXs.X(SPM.Sess(d).row, indices);
-    % 
-    %         end
-    %         customDX=1;
-    %     end
-    % 
-    % 
-    % end
+    HRF.name = cell(1, nData);
+    tc       = cell(nData, nTypes);
+    HRF.fit  = cell(nData, nTypes);
+    HRF_OBJ  = cell(nData, nTypes);
+    PARAM_OBJ = cell(nData, nTypes);
 
-    HRF_PARAMS.CondNames=matlab.lang.makeValidName(HRF_PARAMS.CondNames);
+    for d = 1:nData
+        HRF.name{d} = preproc_dat{d}.image_names;
+    end
+
+    if numel(HRF_PARAMS.T) == 1
+        HRF_PARAMS.T = repmat(HRF_PARAMS.T, 1, nCond);
+    end
 
 
-
-    % Initialize the parallel pool if it's not already running
     if isempty(gcp('nocreate'))
         parpool;
     end
 
+    parfor d = 1:nData
+    % for d = 1:nData
 
-    % Write out the images for later post-analyses
-    % [~, fname, ~]=fileparts(preproc_dat.image_names);
-    % fname=outfile
+        data = preproc_dat{d};
 
-    HRF_OBJ=cell(1,numel(preproc_dat));
-    PARAM_OBJ=cell(1,numel(preproc_dat));
+        local_HRF_OBJ   = cell(1, nTypes);
+        local_PARAM_OBJ = cell(1, nTypes);
 
-    parfor d=1:numel(preproc_dat)
-    % for d=1:numel(preproc_dat)
-
-        if iscell(preproc_dat)
-            data=preproc_dat{d};
-        end
-
-        for t=1:numel(HRF_PARAMS.types)
-
+        for t = 1:nTypes
 
             warning('off', 'all');
+
             switch HRF_PARAMS.types{t}
                 case 'IL'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'IL', 0);
+
                 case 'FIR'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'FIR', 0);
+
                 case 'sFIR'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 1);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'FIR', 1);
+
                 case 'CHRF0'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'CHRF', 0);
+
                 case 'CHRF1'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 1);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'CHRF', 1);
+
                 case 'CHRF2'
-                    [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition{d}, HRF_PARAMS.T, HRF_PARAMS.types{t}, 2);
+                    [~, ~, local_PARAM_OBJ{t}, local_HRF_OBJ{t}] = ...
+                        hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition, HRF_PARAMS.T, 'CHRF', 2);
 
                 otherwise
-                    error('No valid fit-type. Choose IL, FIR/sFIR or CHRF0/CHRF1/CHRF2')
+                    error('No valid fit-type. Choose IL, FIR/sFIR or CHRF0/CHRF1/CHRF2');
             end
 
-            
-            for c=1:numel(HRF_PARAMS.Condition)
-    
-                HRF_OBJ{d}{c}.fullpath=sprintf([outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_fit.nii']);
-                PARAM_OBJ{d}{c}.fullpath=sprintf([outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_params.nii']);
+            % write each condition-specific image for this type
+            for c = 1:nCond
+                local_HRF_OBJ{t}{c}.fullpath = [outfile ...
+                    '_type-' HRF_PARAMS.types{t} ...
+                    '_condition-' HRF_PARAMS.CondNames{c} '_fit.nii'];
+
+                local_PARAM_OBJ{t}{c}.fullpath = [outfile ...
+                    '_type-' HRF_PARAMS.types{t} ...
+                    '_condition-' HRF_PARAMS.CondNames{c} '_params.nii'];
+
                 try
-                    write(HRF_OBJ{d}{c}, 'overwrite');
-                    write(PARAM_OBJ{d}{c}, 'overwrite');
+                    write(local_HRF_OBJ{t}{c}, 'overwrite');
+                    write(local_PARAM_OBJ{t}{c}, 'overwrite');
                 catch
                     warning('Not able to write one or more files.');
                 end
-    
             end
-    
-            % HRF_local{d} = cell(1, numel(rois));
-            % tc_local{d} = cell(1, numel(rois));
+        end
 
+        HRF_OBJ(d, :)   = local_HRF_OBJ;
+        PARAM_OBJ(d, :) = local_PARAM_OBJ;
+    end
+
+    % Extract ROI HRFs: one entry per data x type, with ALL conditions
+    for d = 1:nData
+        for t = 1:nTypes
+            [HRF.fit{d,t}, tc{d,t}] = extractHRF( ...
+                HRF_OBJ{d,t}, ...
+                HRF_PARAMS.CondNames, ...
+                'atlas', at, ...
+                'regions', rois);
         end
     end
 
-    % Generate an HRF and tc for every datafile and concatenate them
-    % together.
-
-    for d=1:numel(HRF_OBJ)
-        for t=1:numel(HRF_OBJ{d})
-            [HRF.fit{d,t}, tc{d,t}]=extractHRF(d{1}, [SPM.Sess(i).U.name], at, rois);
-        end
-    end
-
-    % This results in an HRF struct: HRF(d, t, r, c), tc(d,t,r,c)
-    
+    HRF.CondNames = HRF_PARAMS.CondNames;
 
     delete(gcp('nocreate'));
 end
+
+
+
+
+% function [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile, varargin)
+% 
+%     % Make directories for files if needed
+%     if ~isempty(fileparts(outfile))
+%         disp(fileparts(outfile));
+%         if ~exist(fileparts(outfile), 'dir')
+%             mkdir(fileparts(outfile));
+%         end
+%     end
+% 
+%     % Make sure CondNames are valid before continuing:
+%     HRF.atlas=at;
+%     HRF.region=rois;
+%     HRF.types=HRF_PARAMS.types;
+% 
+%     if iscell(preproc_dat)
+%         for c=1:numel(preproc_dat)
+%             HRF.name{c}=preproc_dat{c}.image_names;
+% 
+%             % Initialize 'tc' and 'temp_HRF_fit' cell arrays
+%             tc{c} = cell(1, numel(HRF_PARAMS.types));
+%             temp_HRF_fit{c} = cell(1, numel(HRF_PARAMS.types));
+%         end
+%     else
+%         HRF.name=preproc_dat.image_names;
+% 
+%         % Initialize 'tc' and 'temp_HRF_fit' cell arrays
+%         tc = cell(1, numel(HRF_PARAMS.types));
+%         temp_HRF_fit = cell(1, numel(HRF_PARAMS.types));
+%     end
+% 
+%     % Carve up SPM's design matrix for each image
+%     % if ~isempty(varargin)
+%     %     if ischar(varargin{1}) || isstring(varargin{1})
+%     %         load(varargin{1});
+%     %     elseif isstruct(varargin{1})
+%     %         SPM=varargin{1};
+%     %     end
+% 
+% 
+%     %     DX=cell(1,numel(SPM.nscan));
+%     %     if numel(preproc_dat) == numel(SPM.nscan)
+%     %         for d=1:numel(preproc_dat)
+%     %             % Check if the SPM file accounts for the same number of scans
+%     % 
+%     %             % HRF_PARAMS.CondNames
+%     %             % Use regexp to search for the pattern
+%     %             % hot_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_heat_start']));
+%     %             % warm_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_warm_start']));
+%     %             % imgcue_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_imagine_cue']));
+%     %             % imag_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(i), '\).*_imagine_start']));
+%     % 
+%     %             R_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*R.*']));
+%     %             constant_matches = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*constant']));
+%     %             sess_cols = ~cellfun(@isempty, regexp(SPM.xX.name, ['Sn\(', num2str(d), '\).*']));
+%     % 
+%     % 
+%     %             % Find indices of matches
+%     %             indices = [find(sess_cols)];
+%     %             % indices = [find(hot_matches) find(warm_matches) find(imgcue_matches) find(imag_matches)];
+%     %             % indices = [find(R_matches) find(constant_matches)];
+%     %             task_regressors{d} = [find(sess_cols & (~R_matches & ~constant_matches))];
+%     % 
+%     %             % Each design matrix needs task regressors, covariates, and
+%     %             % intercept
+%     %             DX{d}=SPM.xX.xKXs.X(SPM.Sess(d).row, indices);
+%     % 
+%     %         end
+%     %         customDX=1;
+%     %     end
+%     % 
+%     % 
+%     % end
+% 
+%     HRF_PARAMS.CondNames=matlab.lang.makeValidName(HRF_PARAMS.CondNames);
+% 
+% 
+% 
+%     % Initialize the parallel pool if it's not already running
+%     if isempty(gcp('nocreate'))
+%         parpool;
+%     end
+% 
+% 
+%     % Write out the images for later post-analyses
+%     % [~, fname, ~]=fileparts(preproc_dat.image_names);
+%     % fname=outfile
+% 
+%     HRF_OBJ=cell(1,numel(preproc_dat));
+%     PARAM_OBJ=cell(1,numel(preproc_dat));
+% 
+%     parfor d=1:numel(preproc_dat)
+%     % for d=1:numel(preproc_dat)
+% 
+%         if iscell(preproc_dat)
+%             data=preproc_dat{d};
+%         else
+%             data = preproc_dat;
+%         end
+% 
+%         for t=1:numel(HRF_PARAMS.types)
+% 
+%             warning('off', 'all');
+%             switch HRF_PARAMS.types{t}
+%                 case 'IL'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+%                 case 'FIR'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, HRF_PARAMS.types{t}, 0);
+%                 case 'sFIR'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'FIR', 1);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'FIR', 1);
+%                 case 'CHRF0'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 0);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 0);
+%                 case 'CHRF1'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 1);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 1);
+%                 case 'CHRF2'
+%                     % [~, ~, PARAM_OBJ{d}, HRF_OBJ{d}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 2);
+%                     [~, ~, PARAM_OBJ{d,t}, HRF_OBJ{d,t}] = hrf_fit(data, HRF_PARAMS.TR, HRF_PARAMS.Condition(d), HRF_PARAMS.T, 'CHRF', 2);
+% 
+%                 otherwise
+%                     error('No valid fit-type. Choose IL, FIR/sFIR or CHRF0/CHRF1/CHRF2')
+%             end
+% 
+%             for c=1:numel(HRF_PARAMS.Condition)
+% 
+%                 HRF_OBJ{d}{c}.fullpath=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_fit.nii'];
+%                 PARAM_OBJ{d}{c}.fullpath=[outfile, '_type-', HRF_PARAMS.types{t}, '_condition-', HRF_PARAMS.CondNames{c}, '_params.nii'];
+%                 try
+%                     write(HRF_OBJ{d}{c}, 'overwrite');
+%                     write(PARAM_OBJ{d}{c}, 'overwrite');
+%                 catch
+%                     warning('Not able to write one or more files.');
+%                 end
+% 
+%             end
+% 
+%             % HRF_local{d} = cell(1, numel(rois));
+%             % tc_local{d} = cell(1, numel(rois));
+% 
+%         end
+%     end
+% 
+%     % Generate an HRF and tc for every datafile and concatenate them
+%     % together.
+% 
+%     for d=1:numel(HRF_OBJ)
+%         for t=1:numel(HRF_OBJ{d})
+%             if exist('SPM')
+%                 [HRF.fit{d,t}, tc{d,t}]=extractHRF(HRF_OBJ{d}, [SPM.Sess(i).U.name], 'atlas', at, 'regions', rois);
+%             else
+%                 [HRF.fit{d,t}, tc{d,t}]=extractHRF(HRF_OBJ{d},  HRF_PARAMS.CondNames(d), 'atlas', at, 'regions', rois);
+%             end
+%         end
+%     end
+% 
+%     % This results in an HRF struct: HRF(d, t, r, c), tc(d,t,r,c)
+% 
+%     HRF.CondNames = HRF_PARAMS.CondNames;    
+% 
+%     delete(gcp('nocreate'));
+% end
 
 function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, at, outfile)
 
@@ -475,8 +620,8 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
 
     CondNames=cell(1, numel(HRF_PARAMS.types));
 
-    % parfor t=1:numel(HRF_PARAMS.types)
-    for t=1:numel(HRF_PARAMS.types)
+    parfor t=1:numel(HRF_PARAMS.types)
+    % for t=1:numel(HRF_PARAMS.types)
 
 
         % First check to see if valid images have already been generated. Then
@@ -538,13 +683,11 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
         end
     end
 
-    HRF.CondNames=CondNames{1};
-
     % This will return an HRF_OBJ that is sectioned by:
     % HRF Type (t), Run(d), Region (r), Condition (c)
 
     % Rearrange HRF_OBJ{t, d, c} and PARAM_OBJ{t, d, c}
-
+    HRF.CondNames=CondNames{1};
 
 
     % Generate an HRF and tc for every HRF_OBJ datafile (type x session x Condition) and concatenate them
@@ -557,7 +700,11 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
         HRF_struct.CondNames=HRF.CondNames{d};
         tic
         for t=1:numel(HRF.types)
-            [HRF_struct.fit{t}, tc{d}{t}]=extractHRF(HRF_OBJ{t}{d}, [SPM.Sess(d).U.name], at, rois);
+            if exist('SPM')
+               [HRF_struct.fit{t}, tc{d}{t}]=extractHRF(HRF_OBJ{t}{d}, [SPM.Sess(d).U.name], at, rois);
+            else
+               [HRF_struct.fit{t}, tc{d}{t}]=extractHRF(HRF_OBJ{t}{d}, HRF.CondNames{d}, at, rois); 
+            end
         end
         toc
 
@@ -565,6 +712,8 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=roiTS_fitHRF_SPM(SPM, HRF_PARAMS, rois, a
     end
 
     HRF=HRF_arr;
+
+
 
      % This results in an HRF struct: HRF(d, t, r, c), tc(d,t,r,c)
 

@@ -54,6 +54,12 @@ if isstring(SPM) || ischar(SPM)
 
 end
 
+if strcmp(method, 'sFIR')
+    method = 'FIR';
+    mode = 1;
+end
+
+
 if isstruct(SPM)
     fnames=unique({SPM.xY.VY.fname})';
 

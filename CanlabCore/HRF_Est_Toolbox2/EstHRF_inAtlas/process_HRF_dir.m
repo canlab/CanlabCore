@@ -44,8 +44,21 @@ function [HRF_data_lvl2, HRF_data, tc_data]=process_HRF_dir(basedir, at)
             % Assuming each .mat file contains variables named 'HRF' and 'tc'
             HRF_data{s}{k} = data.HRF;
             tc_data{s}{k} = data.tc;
+
+            if numel(data.HRF)>1
+                HRF_data_lvl2{s}{k}=HRF_avg(HRF_data{s}{k}, at, 'conditions', {'heat_start', 'warm_start', 'imagine_cue', 'imagine_start'});
+
+            end
+
         end
 
-        HRF_data_lvl2{s}=HRF_avg(HRF_data{s}, at);
+
+        % What if each HRF_data is a cell array of sessions?
+        if isstruct(HRF_data{s})
+            HRF_data_lvl2{s}=HRF_avg(HRF_data{s}, at, 'conditions', {'heat_start', 'warm_start', 'imagine_cue', 'imagine_start'});
+        end
+
     end
+
+
 end

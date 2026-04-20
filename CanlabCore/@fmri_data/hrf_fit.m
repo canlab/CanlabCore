@@ -115,6 +115,20 @@ if iscell(obj)
 
 end
 
+switch method
+    case 'sFIR'
+        method = 'FIR';
+        mode = 1;
+    case 'CHRF0'
+        method = 'CHRF';
+        mode = 0;
+    case 'CHRF1'
+        method = 'CHRF';
+        mode = 1;
+    case 'CHRF2'
+        method = 'CHRF';
+        mode = 2;
+end
 
 
 

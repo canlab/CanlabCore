@@ -6,6 +6,10 @@
 function avgHRF = HRF_avg(HRF_cell_array, varargin)
     % Check if all HRFs have the same atlas
 
+    % Detect if the HRF_cell array is sessions or runs?
+
+
+
     % Suppress all warnings for now, since they'll mostly flood the screen
     % with Invalid Heights from findpeaks()
     warning('off', 'all');
@@ -53,6 +57,7 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
             % else
             %     disp(['Input argument for condition unknown.']);
             % end
+            end
         end
 
         if strcmpi(varargin{k}, 'fit')
@@ -74,7 +79,11 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
     end
 
     if ~hasAtlas
-        first_atlas = HRF_cell_array{1}.atlas;
+        try
+            first_atlas = HRF_cell_array{1}.atlas;
+        catch
+            first_atlas=load_atlas('canlab2023');
+        end
         all_same_atlas = true;
 
         for i = 2:numel(HRF_cell_array)
@@ -118,7 +127,7 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
         if all_same_conds
             avgHRF.CondNames=first_conds;
         else
-            error('HRF Structures have different .CondNames values.\n');
+            avgerror('HRF Structures have different .CondNames values.\n');
         end
     end
 
@@ -150,9 +159,8 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
         
         for regionIndex = 1:numRegions
 
-            
+            avgVector_across_conditions=[];
             for conditionIndex = 1:numConditions
-                avgVector_across_conditions=[];
                 models3d=[];
 
                 % condName = avgHRF.CondNames{conditionIndex};
@@ -172,7 +180,8 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
                     conditionName=char(fields(contains(fields, avgHRF.CondNames{conditionIndex}))); 
 
                     modelVector = HRF_cell_array{dataIndex}.fit{fitIndex}{regionIndex}.(conditionName).model;
-                    models = [models; modelVector]; % Concatenate the vectors
+                    [a, b]=padwithnan(models, modelVector, 2);
+                    models = [a; b]; % Concatenate the vectors
 
                     phaseStructs = HRF_cell_array{dataIndex}.fit{fitIndex}{regionIndex}.(conditionName).phases;
                     numPhases = numel(phaseStructs);
@@ -189,7 +198,8 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
                 
                 % Compute the average vector for the current condition, region, and fit
                 avgVector = mean(models, 1);
-                avgVector_across_conditions=[avgVector_across_conditions; avgVector];
+                [a, b]=padwithnan(avgVector_across_conditions, avgVector, 2);
+                avgVector_across_conditions=[a; b];
 
                 % Compute the standard deviation for the current condition, region, and fit
                 stdVector = std(models, 0, 1); % second parameter = 0 normalizes by N-1, which is typically desired when estimating the population standard deviation from a sample
@@ -275,7 +285,7 @@ function avgHRF = HRF_avg(HRF_cell_array, varargin)
             end
         end
         % Calculate the within-subject SE for each time point NOT DONE
-        % within_subject_SE= squeeze(std(avgVector_across_conditions, 0, 1)) / sqrt(size(models, 1));
+        within_subject_SE= squeeze(std(avgVector_across_conditions, 0, 1)) / sqrt(size(models, 1));
 
     end
 end

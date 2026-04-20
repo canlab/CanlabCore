@@ -87,9 +87,8 @@ function OUT = robfit_parcelwise(imgs, varargin)
 %                pvalues: [489×2 double]    Parcels x Predictors p-values
 %              nsubjects: [489×1 double]    Number of subjects analyzed
 %                maskvol: [489×1 double]    Vector of parcels run (1) or missing (0)
-%                weights: [489×30 double]   Parcels x Subjects robust regression weights (low weight = outlier)
+%                weights: [489×30 double]   Parcels x Subjects robust regression weights
 %                    dfe: [489×1 double]    error df for each parcel
-%              datmatrix: [489 x n double]  Input data, averaged within parcels, for each subject
 %            pthr_FDRq05: [0.0081 0.0128]   P-thresholds for FDR q < .05 for each predictor (map)
 %                sig_q05: [489×2 logical]   Parcels x predictors q < 0.05
 %         cohens_d_fdr05: [0.4834 0.4458]   Min Cohen's d detectable at FDR q < 0.05
@@ -412,8 +411,6 @@ for i = 1:v
     betas(i, :) = bb';
     tscores(i, :) = stats.t';
     pvalues(i, :) = stats.p';
-
-    sevalues(i, :) = stats.se;
     
     dfe(i, 1) = stats.dfe;
     nsubjects(i, 1) = sum(~wasnan);
@@ -429,7 +426,7 @@ wh = find(pvalues == 0 & ~isnan(tscores) & ~isinf(tscores));
 minp = min(pvalues(pvalues > 0));
 pvalues(wh) = minp;
 
-OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'stes', sevalues, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
+OUT = struct('analysis_name', analysis_name, 'regressors', reg_table, 'betas', betas, 'tscores', tscores, 'pvalues', pvalues, 'nsubjects', nsubjects, 'maskvol', maskvol, 'weights', weights, 'dfe', dfe, 'datmatrix', datmatrix); % @lukasvo76 added datmatrix to OUT struct for flexible plotting
 
 %% --------------------------------------------
 % FDR correction
@@ -447,11 +444,7 @@ for i = 1:k
         if doverbose, fprintf('Using B-H FDR as specified by user\n', names{i}); end
 
         pthr_i = FDR(pvalues(:, i), .05);
-        if isempty(pthr_i)
-            % No FDR-significant p-values; set threshold so that nothing passes
-            pthr_i = -Inf;    % or pthr_i = 0;
-        end
-        
+        if isempty(pthr_i), pthr_i(i) = -Inf; end
         sig_q05(:, i) = pvalues(:, i) < pthr_i;
 
     else

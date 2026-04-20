@@ -401,6 +401,10 @@ else
         else
             spmfiles = fullfile({files.folder}', {files.name}');
         end
+
+        % 04/16/2025 MS: for acceptmap, just select the last two files
+        spmfiles = spmfiles([end-1:end]);
+
         for i=1:numel(spmfiles), [sublevs{i}] = fileparts(spmfiles{i}); end %#ok
         sublevs = unique(sublevs);
         spmfile = spmfiles{1};

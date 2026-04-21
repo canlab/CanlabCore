@@ -61,25 +61,46 @@ function fig_handle = montage(image_obj, varargin)
 meth = 'fmridisplay';
 
 % if user specified a target surface use it. We
-% pass targetsurface explicitly below so we need to remove it fro mvarargin
+% pass targetsurface explicitly below so we need to remove it from varargin
 % too to not have any redundancy
+
+
+% wh = find(strcmp(varargin,'targetsurface'));
+% if ~isempty(wh)
+%     targetsurface = varargin{wh + 1};
+%     varargin{wh+1} = [];
+%     varargin{wh} = [];
+% else
+%     targetsurface = [];
+% end
+% % this isn't really needed but helps suppress a warning
+% wh = find(strcmp(varargin,'sourcespace'));
+% if ~isempty(wh)
+%     sourcespace = varargin{wh + 1};
+%     varargin{wh+1} = [];
+%     varargin{wh} = [];
+% else
+%     sourcespace = [];
+% end
+
+% Fix above to actually delete cells instead of emptying contents:
 wh = find(strcmp(varargin,'targetsurface'));
 if ~isempty(wh)
     targetsurface = varargin{wh + 1};
-    varargin{wh+1} = [];
-    varargin{wh} = [];
+    varargin(wh:wh+1) = [];   % <-- delete cells, don’t set contents to []
 else
     targetsurface = [];
 end
-% this isn't really needed but helps suppress a warning
+
 wh = find(strcmp(varargin,'sourcespace'));
 if ~isempty(wh)
     sourcespace = varargin{wh + 1};
-    varargin{wh+1} = [];
-    varargin{wh} = [];
+    varargin(wh:wh+1) = [];   % <-- same
 else
     sourcespace = [];
 end
+
+
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
@@ -207,6 +228,7 @@ switch meth
             
             % drawnow
             pause(0.005)
+            drawnow limitrate;
             
         end
         

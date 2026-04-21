@@ -32,7 +32,7 @@ popout = parser.Results.popout;
 
 
 % Create figure
-figure;
+% figure;
 
 % Add brain surface
 p = addbrain(surface_keyword);
@@ -46,42 +46,46 @@ centroid = cell(numel(r), 1);
 counter = 1;
 cmap = colormap_func(numel(r));
 for i = 1:numel(r)
-    [~,~,surface_handles] = isosurface(r(i), 'nomatchleftright', 'color', cmap(i,:));
-    centroid{i} = mean(surface_handles{1}.Vertices);
-
-    % Format string for legend
-    if ~isempty(r)
-        label_text = format_strings_for_legend([num2str(counter), '. ', r(i).shorttitle]);
-    else
-        label_text = format_strings_for_legend([num2str(counter)]);
-    end
-
-    % Default font arguments including color mapping
-    default_font_arguments = {'FontSize', 12, 'FontWeight', 'bold', 'Color', cmap(i,:)};
-
-    % Combine default and user-provided font arguments
-    font_arguments = combineFontArguments(default_font_arguments, user_font_arguments);
+    try
+        [~,~,surface_handles] = isosurface(r(i), 'nomatchleftright', 'color', cmap(i,:));
+        centroid{i} = mean(surface_handles{1}.Vertices);
     
-    set(surface_handles{1}, 'FaceAlpha', 0.5);
-
-    % Adjust the text position if popout is enabled
-    % Very hacky way to do this.
-    text_coords = centroid{i};
-    if popout
-        % Get current view direction vector
-        cam_pos = get(gca, 'CameraPosition');
-        cam_tgt = get(gca, 'CameraTarget');
-        view_dir = cam_tgt - cam_pos;
-        view_dir = view_dir / norm(view_dir); % Normalize the direction vector
+        % Format string for legend
+        if ~isempty(r)
+            label_text = format_strings_for_legend([num2str(counter), '. ', r(i).shorttitle]);
+        else
+            label_text = format_strings_for_legend([num2str(counter)]);
+        end
+    
+        % Default font arguments including color mapping
+        default_font_arguments = {'FontSize', 12, 'FontWeight', 'bold', 'Color', cmap(i,:)};
+    
+        % Combine default and user-provided font arguments
+        font_arguments = combineFontArguments(default_font_arguments, user_font_arguments);
         
-        % Use a fixed significant offset to move text to the front in the view direction
-        offset = -1000; % Adjust this value as needed to ensure text visibility
-        text_coords = text_coords + view_dir * offset;
-    end
+        set(surface_handles{1}, 'FaceAlpha', 0.5);
+        % set(surface_handles{1}, 'FaceAlpha', 0.0);
     
-    
-    text(text_coords(1), text_coords(2), text_coords(3), label_text, font_arguments{:});
+        % Adjust the text position if popout is enabled
+        % Very hacky way to do this.
+        text_coords = centroid{i};
+        if popout
+            % Get current view direction vector
+            cam_pos = get(gca, 'CameraPosition');
+            cam_tgt = get(gca, 'CameraTarget');
+            view_dir = cam_tgt - cam_pos;
+            view_dir = view_dir / norm(view_dir); % Normalize the direction vector
+            
+            % Use a fixed significant offset to move text to the front in the view direction
+            offset = -1000; % Adjust this value as needed to ensure text visibility
+            text_coords = text_coords + view_dir * offset;
+        end
+        
+        
+        text(text_coords(1), text_coords(2), text_coords(3), label_text, font_arguments{:});
+    catch
 
+    end
     counter = counter + 1;
 end
 

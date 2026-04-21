@@ -201,11 +201,17 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         
         weight_y = Y{s};
         
-        if ~isempty(cov_val)
+        cov_val = [];
+        disp(class(cov_val));
+        disp(size(cov_val));
+        if iscell(cov_val), disp(class(cov_val{1})); end
+
+        if has_cov && ~isempty(cov_val{s})
             weight_dat = [X{s} cov_val{s}];
         else
             weight_dat = X{s};
         end
+
         
         % Dim reduction
         % --------------------------------------------------------------------------------
@@ -229,7 +235,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
  
                 
     STATS.Y_orig = Y_orig;
-    if ~isempty(cov_val)
+    if iscell(cov_val) && ~isempty(cov_val{s})
         STATS.note = 'covariates were added to predictive model'; %, if covs %removed in Y_orig stored here, if covs were entered';
     else
         STATS.note = 'no covariates entered';
@@ -308,7 +314,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                     case 'nested_choose_ndims', dochoose_ndims = 1;
 
                         % Covariates
-                    case {'cov_val', 'covs', 'cov'}, cov_val = varargin{i+1};
+                    case {'cov_val', 'covs', 'cov'}, cov_val = varargin{i+1}; varargin{i+1} = [];
 
                         % Shrinkage/regularization parameters
                     case {'lassopath', 'ridgek', 'regparams'}, regparams = varargin{i+1}; varargin{i + 1} = [];
@@ -326,6 +332,24 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                 end
             end
         end
+
+        % ---- FORCE cov_val into canonical form: 1xN cell ----
+        if isempty(cov_val)
+            if ~iscell(cov_val), cov_val = {cov_val}; end
+            if numel(cov_val) == 1 && N > 1
+                cov_val = repmat(cov_val, 1, N);
+            end
+        elseif ~iscell(cov_val)
+            cov_val = {cov_val};               % wrap numeric matrix into a cell
+        end
+
+        has_cov = ~isempty(cov_val) && iscell(cov_val) && any(~cellfun(@isempty, cov_val));
+
+        
+        if numel(cov_val) == 1 && N > 1
+            cov_val = repmat(cov_val, 1, N);   % broadcast if single cov matrix given
+        end
+        % ----------------------------------------------------
 
         if verbose
             fprintf('xval_regression_multisubject\nVerbose mode (enter ''lowverbose'' to minimize or ''noverbose'' to turn off verbose output)\n')
@@ -425,7 +449,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
 
             clear num_dims
             for i = 1:N
-                if ~isempty(cov_val)
+                if iscell(cov_val) && ~isempty(cov_val{s})
                     num_dims(i) = min(size(X{i}, 1) - 2, size(X{i}, 2) + size(cov_val{i}, 2) - 2);
                 else
                     num_dims(i) = min(size(X{i}, 1) - 2, size(X{i}, 2) - 2);
@@ -512,7 +536,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         train_y = Y{s};
         train_y(holdout_set{wh_fold}) = [];
 
-        if ~isempty(cov_val)
+        if has_cov && ~isempty(cov_val{s})
             train_dat = [X{s} cov_val{s}];
         else
             train_dat = X{s};
@@ -521,7 +545,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                     % This is for the version where covs are always added after
             % pcsquash; but if covs are not meaningful, can increase
             % error!
-% %         if ~isempty(cov_val)
+% %         if iscell(cov_val) && ~isempty(cov_val{s})
 % %             train_covs = cov_val{s};
 % %             test_covs = train_covs(holdout_set{wh_fold}, :);
 % %             train_covs(holdout_set{wh_fold}, :) = [];              % leave out the missing observation(s)
@@ -573,7 +597,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
             title('Pred err as a function of prediction rescaling');
             drawnow
 
-            if ~isempty(cov_val)
+            if iscell(cov_val) && ~isempty(cov_val{s})
                 if dosave, diary('xval_regression_multisubject_output.txt'); end
 
                 disp('Test of whether predicted values are related to covariates:');

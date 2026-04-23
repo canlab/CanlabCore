@@ -1,7 +1,7 @@
 function [whsl, plate] = display_slices(dat, varargin)
 % Creates 3 separate montage views - ax, cor, sagg in a special figure window
 %
-% - By default, a figure with axial, coronal, and saggital montages are
+% - By default, a figure with axial, coronal, and sagittal montages are
 % created.  But it's also easy to create nicer-looking separate figures with
 % only one view.
 % - Also easy to select slices: Enter 'startslice' and 'endslice', each followed by values, to display
@@ -20,7 +20,7 @@ function [whsl, plate] = display_slices(dat, varargin)
 %
 % :Inputs:
 %
-% **'axial', 'saggital', 'sagittal', 'coronal':**
+% **'axial', 'sagittal', 'sagittal', 'coronal':**
 %   Keywords to control view
 % 
 % **'spacing'**
@@ -60,14 +60,14 @@ function [whsl, plate] = display_slices(dat, varargin)
 %
 %     display_slices(dat);
 %     display_slices(dat, 'coronal');
-%     display_slices(dat, 'saggital', 'spacing', 10); % 10 mm spacing
-%     display_slices(dat, 'saggital', 'spacing', 10, 'vertical');
-%     display_slices(dat, 'saggital', 'slices_per_row', 12);
+%     display_slices(dat, 'sagittal', 'spacing', 10); % 10 mm spacing
+%     display_slices(dat, 'sagittal', 'spacing', 10, 'vertical');
+%     display_slices(dat, 'sagittal', 'slices_per_row', 12);
 %     display_slices(dat, 'axial', 'slices_per_row', 20, 'spacing', 4, 'startslice', -10, 'endslice', 10); % z = -10 to 10 mm, 4 mm spacing
 %
 % Make a montage of a subset of slices and make it fill the figure:
 % create_figure('sagg')
-% display_slices(dat, 'saggital', 'slices_per_row', 4, 'spacing', 3, 'startslice', -20, 'endslice', 20)
+% display_slices(dat, 'sagittal', 'slices_per_row', 4, 'spacing', 3, 'startslice', -20, 'endslice', 20)
 % set(gca, 'Position', [.05 .05 .9 1]);
 % colormap gray
 %
@@ -96,7 +96,7 @@ for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
             % reserved keywords
-            case {'axial', 'saggital', 'sagittal', 'coronal'}, myview = varargin{i};
+            case {'axial', 'sagittal', 'sagittal', 'coronal'}, myview = varargin{i};
             case 'spacing', spacing = varargin{i + 1};
             case 'vertical', stackorient = 1;
             case 'slices_per_row', s = varargin{i + 1};
@@ -127,7 +127,7 @@ if do3views
     fh = create_figure('slice_display');
     axis off
     ax1 = axes('OuterPosition', [.05 .05 .20 .90], 'Position', [.05 .05 .20 .90]);
-    display_slices(dat, 'saggital', 'spacing', 8, 'vertical');
+    display_slices(dat, 'sagittal', 'spacing', 8, 'vertical');
     
     ax2 = axes('OuterPosition', [.229 .05 .8 .150]); %[.20 .05 .8 .30]);
     set(ax2, 'Position', get(ax2, 'OuterPosition'));
@@ -160,7 +160,7 @@ end
 switch myview
     case 'axial'
         wh_col = 3;
-    case {'saggital', 'sagittal'}
+    case {'sagittal', 'sagittal'}
         wh_col = 1;
     case 'coronal'
         wh_col = 2;
@@ -240,7 +240,7 @@ if dotight
            subvol = abs(vdat(:, :, whsl));
            sumabsval = sum(sum(subvol, 1), 2);
            
-       case {'saggital', 'sagittal'}
+       case {'sagittal', 'sagittal'}
            subvol = abs(vdat(whsl, :, :));
            sumabsval = sum(sum(subvol, 2), 3);
            
@@ -285,7 +285,7 @@ for j = 1:nrows
             case 'axial'
                 stacked{i} = vdat(:, :, i);
                 stacked{i} = rot90(stacked{i});
-            case {'saggital', 'sagittal'}
+            case {'sagittal', 'sagittal'}
                 stacked{i} = squeeze(vdat(i, :, :));
                 stacked{i} = rot90(stacked{i});
             case 'coronal'
@@ -361,7 +361,7 @@ function vdat = eliminate_empty_areas(vdat, myview)
     nullvox = vdat == 0 | isnan(vdat);
     bottom = all(nullvox, 3);
     
-    if strcmp(myview, 'saggital') || strcmp(myview, 'sagittal')
+    if strcmp(myview, 'sagittal') || strcmp(myview, 'sagittal')
         % skip
     else
         nullx = squeeze(all(bottom, 2));

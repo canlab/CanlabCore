@@ -36,7 +36,7 @@ function colors2 = cluster_orthviews_classes(cl,classes,overlay,myview,domontage
 %
 %    classes = c.ClusterSolution.classes;
 %    overlay = EXPT.overlay;
-%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'saggital', 0);
+%    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'sagittal', 0);
 %    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'axial', 0);
 %    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, 'coronal', 0);
 %    cluster_orthviews_classes(cl,c.ClusterSolution.classes, EXPT.overlay, [], 0);

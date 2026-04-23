@@ -393,7 +393,10 @@ nframes = movlength .* fps;
 switch(FRAMESTYLE)
     case 'avi' % write to avi format directly
         if isempty(mov)
-            mov = avifile('mymovie.avi','Quality',75,'Compression','None','Fps',fps);
+            mov = VideoWriter('mymovie.avi');
+            mov.Quality = 75;
+            mov.FrameRate = fps;
+            open(mov);
         end
 
     case 'matlab' % matlab movie format
@@ -425,7 +428,8 @@ switch(FRAMESTYLE)
         drawnow
 
         try
-            mov = addframe(mov,H);
+            frame = getframe(H);
+            writeVideo(mov, frame);
         catch
             disp('Cannot write frame.  Failed to set stream format??')
             mov = close(mov);

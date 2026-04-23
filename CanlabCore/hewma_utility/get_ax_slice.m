@@ -39,16 +39,10 @@ function slice_data = get_ax_slice(imgs, slice_num)
 
     % Transverse slice
     %==========================================================
-    C = [1 0 0 0;0 1 0 0;0 0 1 0;0 0 0 1];
-    DIM = V(1).dim(1:2);
+    mat = spm_matrix([0 0 slice_num]);
 
-    C(3,4) = slice_num;
-    %C(3,4)=-p;
-
-    % img = rot90(spm_slice_vol(V,C,DIM,0));
-    % img = spm_slice_vol(V,inv(C),DIM,0);
     for i=1:length(V)
-        slice_data(:,:,i) = spm_slice_vol(V(i), C, DIM, 0);
+        slice_data(:,:,i) = spm_slice_vol(V(i), mat, V(i).dim(1:2), 0);
     end
 
     slice_data = squeeze(slice_data);

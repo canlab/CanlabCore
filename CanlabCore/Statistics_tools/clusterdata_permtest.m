@@ -172,7 +172,8 @@ function stats = clusterdata_permtest(data, varargin)
 %   Atlas et al. 2014, Pain
 %
 % :See also:
-%   kmeans, confusionmat, randperm, testclustnew (original function by Chris Summerfield)
+%   kmeans, confusionmat, testclustnew (original function by Chris Summerfield), 
+%   canlab_sort_distance_matrix
 %
 
 % -------------------------------------------------------------------------

@@ -645,16 +645,13 @@ function in = scn_mat_conform(in)
     end
     
     switch spm('Ver')
-        case 'SPM8'
-            % no analyze field; flip is always 1
-
         case {'SPM5', 'SPM2', 'SPM99'}
             if defaults.analyze.flip
                 disp('Warning: Setting defaults.analyze.flip to 0.  No flipping.')
                 defaults.analyze.flip = 0;
             end
         otherwise
-            warning('Unknown version of SPM. Results may be erratic.')
+            % SPM8+: no analyze field; flip is always 1
     end
 
 end

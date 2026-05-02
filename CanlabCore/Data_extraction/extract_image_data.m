@@ -96,23 +96,12 @@ function [imgdat, volInfo, cl] = extract_image_data(imgs_to_extract_from, mask_i
     %%
     clear imgdat
     switch spm('Ver')
-
-
-        case {'SPM12', 'SPM8', 'SPM5'}
-
-
-            imgdat = iimg_get_data(volInfo, imgs_to_extract_from, 'single', 'verbose', 'noexpand');
-
-
         case {'SPM2', 'SPM99'}
-            % legacy, for old SPM
-
-
+            % legacy SPM
             imgdat = iimg_get_data(volInfo, imgs_to_extract_from, 'single', 'verbose');
-
-
         otherwise
-            error('Unknown version of SPM! Update code, check path, etc.');
+            % SPM5+, including any future versions
+            imgdat = iimg_get_data(volInfo, imgs_to_extract_from, 'single', 'verbose', 'noexpand');
     end
 
 

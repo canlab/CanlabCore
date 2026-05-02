@@ -21,16 +21,12 @@ end
 
 % Now extract the actual data from the mask
 switch spm('Ver')
-    
-    case {'SPM8', 'SPM5','SPM12', 'SPM25'}
-        obj.dat = iimg_get_data(obj.volInfo, obj.fullpath, 'single', 'noexpand')';
-        
     case {'SPM2', 'SPM99'}
-        % legacy, for old SPM
+        % legacy SPM
         obj.dat = iimg_get_data(obj.volInfo, obj.fullpath, 'single')';
-        
     otherwise
-        error('Unknown version of SPM! Update code, check path, etc.');
+        % SPM5+, including any future versions
+        obj.dat = iimg_get_data(obj.volInfo, obj.fullpath, 'single', 'noexpand')';
 end
 
 

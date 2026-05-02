@@ -102,22 +102,18 @@ function [n] = num_frames(img_name)
     % %         end
     % %     else
     
-    switch(spm('ver'))
+    switch spm('Ver')
         case 'SPM2'
             V = spm_vol(img_name);
-            
             fp   = fopen(img_name);
             fseek(fp,0,'eof');
             Len  = ftell(fp);
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
-
-        case {'SPM5', 'SPM8','SPM12', 'SPM25'}
+        otherwise
+            % SPM5+, including any future versions
             V = spm_vol(img_name);
             n = length(V);
-
-        otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
     end
     %     end
     

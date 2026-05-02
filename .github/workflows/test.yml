@@ -36,6 +36,12 @@ jobs:
         uses: matlab-actions/setup-matlab@v2
         with:
           release: ${{ matrix.matlab-release }}
+          # README lists Statistics and Signal Processing as required.
+          # Without these, functions like nanmean / filtfilt fall back to
+          # SPM's bundled compat shims, which is fragile.
+          products: |
+            Statistics_and_Machine_Learning_Toolbox
+            Signal_Processing_Toolbox
           cache: true
 
       - name: Run unit tests
@@ -49,7 +55,7 @@ jobs:
             % isfile, etc.) and break matlab.unittest discovery.
             addpath('spm');
             cd CanlabCore/CanlabCore/Unit_tests;
-            results = run_all_tests('JUnit', fullfile(getenv('GITHUB_WORKSPACE'), 'test-results.xml'));
+            results = canlab_run_all_tests('JUnit', fullfile(getenv('GITHUB_WORKSPACE'), 'test-results.xml'));
             if any([results.Failed]); error('CanlabCore:tests:failed', '%d failed, %d incomplete', sum([results.Failed]), sum([results.Incomplete])); end
 
       - name: Upload test results

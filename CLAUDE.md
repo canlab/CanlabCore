@@ -92,10 +92,22 @@ parcel_means = apply_parcellation(imgs, atl); % images x parcels
 ## Conventions worth knowing
 
 - **First argument is always the object** (`function out = method(obj, varargin)`); methods are typically called as `method(obj, ...)` rather than `obj.method(...)`, though both work.
-- **`varargin` keyword pairs** are the universal option style — most methods use a hand-rolled `for i=1:length(varargin), switch varargin{i}, case 'foo', foo = varargin{i+1};` loop rather than `inputParser`. Match that pattern when adding options.
+- **`varargin` keyword pairs** are the universal option style. Existing methods use a hand-rolled `for i=1:length(varargin), switch varargin{i}, case 'foo', foo = varargin{i+1};` loop. **New functions should use `inputParser` instead** — see the next section.
 - **Many methods accept either a filename, an `fmri_data`, or another `image_vector` subclass** as their "image-like" argument and dispatch via `isa(...)`. Preserve that polymorphism when editing.
 - **Spatial alignment is not implicit.** Methods that combine two image objects generally either error or call `resample_space(a, b)` first; if you write a new combiner, do the same — don't assume two objects share `volInfo`.
 - **`.asv` files are MATLAB autosave artifacts** and are gitignored; ignore them. A few committed `*_old.m` files are intentional legacy fallbacks (e.g. `region2imagevec_old.m`, `predictive_model_old.m`) — don't delete them without checking callers.
+
+## When writing new functions
+
+These rules apply to new code. Existing code does not need to be retrofitted.
+
+1. **Name stand-alone functions `canlab_<function_name>`.** This namespaces the function so it does not collide with future external toolboxes the user may add to their path. Class methods (files inside `@class/`) are exempt — they're already namespaced by the class.
+
+2. **Match the documentation format in `CanlabCore/Misc_utilities/documentation_template.m`.** That template defines the section ordering (Usage, Inputs, Outputs, Examples, References, etc.) and comment style readthedocs expects. Open it before writing the help block; copy the structure rather than improvising.
+
+3. **Use `inputParser` for variable input arguments**, following the `INPUT PARSER TEMPLATE` section of `documentation_template.m`. Retain the explanatory comments inside that block — they're a teaching scaffold for future readers, not noise. Implement the `'plot'`, `'verbose'`, `'doplot'`, and `'doverbose'` parameters whenever the function has plotting or chatter that the caller might want to suppress.
+
+4. **Include a runnable example in the help block** that loads or creates a test dataset (e.g. `load_image_set('emotionreg')`, `sim_data`, or a synthetic array) and demonstrates the function with a few of the most common options. The example should be copy-pasteable: someone with CanlabCore on their path should be able to highlight it and run it.
 
 ## Documentation pointers
 

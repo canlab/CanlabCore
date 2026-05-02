@@ -44,7 +44,10 @@ jobs:
           command: |
             addpath(genpath('CanlabCore'));
             addpath(genpath('Neuroimaging_Pattern_Masks'));
-            addpath(genpath('spm'));
+            % NB: addpath, not genpath — SPM ships compat shims under
+            % external/fieldtrip/compat that shadow MATLAB builtins (flip,
+            % isfile, etc.) and break matlab.unittest discovery.
+            addpath('spm');
             cd CanlabCore/CanlabCore/Unit_tests;
             results = run_all_tests('JUnit', fullfile(getenv('GITHUB_WORKSPACE'), 'test-results.xml'));
             if any([results.Failed]); error('CanlabCore:tests:failed', '%d failed, %d incomplete', sum([results.Failed]), sum([results.Incomplete])); end

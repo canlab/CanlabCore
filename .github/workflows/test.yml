@@ -29,8 +29,8 @@ jobs:
           repository: canlab/Neuroimaging_Pattern_Masks
           path: Neuroimaging_Pattern_Masks
 
-      - name: Clone SPM (current release)
-        run: git clone --depth=1 https://github.com/spm/spm.git "${GITHUB_WORKSPACE}/spm"
+      - name: Clone SPM25
+        run: git clone --depth=1 --branch 25.01.02 https://github.com/spm/spm.git "${GITHUB_WORKSPACE}/spm"
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2

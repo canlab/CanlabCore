@@ -28,6 +28,18 @@ addpath(genpath(canlabcore_root));
 
 suite = TestSuite.fromFolder(this_dir, 'IncludingSubfolders', true);
 
+% Diagnostic: show what was discovered, on disk vs. in suite.
+fprintf('\n[run_all_tests] this_dir = %s\n', this_dir);
+on_disk = dir(fullfile(this_dir, '**', 'test_*.m'));
+fprintf('[run_all_tests] %d test_*.m files on disk:\n', numel(on_disk));
+for k = 1:numel(on_disk)
+    fprintf('    %s\n', fullfile(on_disk(k).folder, on_disk(k).name));
+end
+fprintf('[run_all_tests] %d items in suite before filtering:\n', numel(suite));
+for k = 1:numel(suite)
+    fprintf('    %s  (BaseFolder=%s)\n', suite(k).Name, suite(k).BaseFolder);
+end
+
 % Drop anything under old_to_integrate/ — those are legacy scripts pending
 % rewrite, not matlab.unittest tests.
 if ~isempty(suite)

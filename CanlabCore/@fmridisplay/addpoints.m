@@ -1,12 +1,8 @@
 function obj = addpoints(obj, xyz, varargin)
-% Plots points on fmridisplay objects (e.g., montages of slices)
+% addpoints Plot points (coordinate locations) on fmridisplay montages.
 %
-% :Usage:
-% ::
-%
-%     newax = addpoints(obj, xyz, varargin)
-%
-% Registers handles with the object (referred to as obj)
+% Plots points on fmridisplay objects (e.g., montages of slices) and
+% registers their graphics handles with the object (referred to as obj).
 %
 % - enter xyz as n x 3 list of coordinates in mm to plot (world space)
 % - Points or text labels or both
@@ -14,39 +10,70 @@ function obj = addpoints(obj, xyz, varargin)
 % - axial, saggital, or coronal orientation handled automatically
 % - Multiple different sets of points can be plotted in different colors/text labels
 %
-% :Optional Inputs:
-% 
-% Takes all inputs of plot_points_on_slice.  See help for additional
-% documentation of options.  
-%
-%   **{'text', 'textcodes'}:**
-%        cell array of text values corresponding to points
-%
-%   **{'condf' 'colorcond'}:**
-%        vector of integers to define color conditions
-%
-%   **'close_enough':**
-%        mm within which to plot; defined automatically based on slice distance if not entered
-%
-%   **'color':**
-%        string, 'b', or vector, [1 0 0], to define colors; cell if condf is used, e.g., {'b' 'g'}
-%
-%   **{'marker', 'MarkerStyle'}:**
-%        e.g., 'o', 'v', 's'
-%
-%   **{'MarkerSize', 'markersize'}:**
-%
-%   **{'MarkerFaceColor', 'markerfacecolor'}:**
-%        see color above
-%
-% :Examples:
-%
-% Plot points (i.e., coordinate locations) for xyz coords:
+% :Usage:
 % ::
 %
-%    o2 = addpoints(o2, DB.xyz, 'MarkerFaceColor', 'b', 'Marker', 'o', 'MarkerSize', 4);
-%    o2 = addpoints(o2, DB.xyz, 'text', DB.textcodes, 'condf', DB.condf, 'color', {'b' 'g'});
-%    o2 = removepoints(o2);
+%     obj = addpoints(obj, xyz, varargin)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An fmridisplay object with one or more montages attached.
+%
+%   **xyz:**
+%        n x 3 list of coordinates in mm to plot (world space).
+%
+% :Optional Inputs:
+%
+% Takes all inputs of plot_points_on_slice. See help for additional
+% documentation of options.
+%
+%   **{'text', 'textcodes'}:**
+%        cell array of text values corresponding to points.
+%
+%   **{'condf' 'colorcond'}:**
+%        vector of integers to define color conditions.
+%
+%   **'close_enough':**
+%        mm within which to plot; defined automatically based on slice
+%        distance if not entered.
+%
+%   **'color':**
+%        string, 'b', or vector, [1 0 0], to define colors; cell if
+%        condf is used, e.g., {'b' 'g'}.
+%
+%   **{'marker', 'MarkerStyle'}:**
+%        e.g., 'o', 'v', 's'.
+%
+%   **{'MarkerSize', 'markersize'}:**
+%        Marker size (numeric).
+%
+%   **{'MarkerFaceColor', 'markerfacecolor'}:**
+%        see color above.
+%
+%   **{'wh_montages', 'wh_montage', 'which_montages', 'which montages'}:**
+%        Followed by a vector of montage indices to plot to. Default:
+%        all montages.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input fmridisplay object with new graphics handles
+%        appended to obj.montage{i}.plotted_point_handles for each
+%        affected montage.
+%
+% :Examples:
+% ::
+%
+%     % Plot points (i.e., coordinate locations) for xyz coords:
+%     o2 = addpoints(o2, DB.xyz, 'MarkerFaceColor', 'b', 'Marker', 'o', 'MarkerSize', 4);
+%     o2 = addpoints(o2, DB.xyz, 'text', DB.textcodes, 'condf', DB.condf, 'color', {'b' 'g'});
+%     o2 = removepoints(o2);
+%
+% :See also:
+%   - fmridisplay
+%   - removepoints
+%   - plot_points_on_slice
 
 wh_montage = 1:length(obj.montage); % select which montages; default = all
 

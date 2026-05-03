@@ -1,38 +1,77 @@
 function r = atlas2region(atlas_obj, varargin)
-% Convert an atlas object to a region object
-% r = atlas2region(atlas_obj)
+% atlas2region Convert an atlas object to a region object.
 %
-% Note: There are multiple potential ways this can work.
-% The default is to use uses the atlas_obj.dat field, 
-% which has one label per voxel. For some atlases, a region may have no
-% voxels with the max probability label. 
-% 
-% 'use_probabilities'  uses atlas_obj.probability maps if available, 
-% which guarantees at least one region per atlas region. If atlas.probability_maps is
-% empty, however, the function defaults to using index labels.
-% Note: this can be slow for large atlases.
+% By default, uses the atlas_obj.dat field, which has one label per voxel.
+% For some atlases, a region may have no voxels with the max-probability
+% label.
 %
-% Another default is to parse regions with each label into contiguous
-% regions. This can result in multiple contiguous regions in the region object (r)
-% for a single atlas region. (e.g., those in left and right hemispheres, if
-% they are given the same label in the atlas).
+% The default is to parse regions with each label into contiguous
+% regions, which can result in multiple contiguous regions in the region
+% object (r) for a single atlas region (e.g., separate left- and right-
+% hemisphere regions sharing the same atlas label).
 %
-% 'nocontiguous' (or 'unique_mask_values') is an option that suppresses the 
-% parsing, creating one region per label/atlas region.
-% If atlas.probability_maps is empty or 'use_labels' is specified,
-% the function defaults to 'nocontiguous'.
+% :Usage:
+% ::
 %
-% Examples:
-% r = atlas2region(atlas_obj);                       % Use indices in dat.dat, one region per atlas region.
-% r = atlas2region(atlas_obj, 'use_probabilities');  % Use probability_maps if available  
-% r = atlas2region(atlas_obj, 'nocontiguous');       % One region per atlas region
+%     r = atlas2region(atlas_obj, [optional inputs])
 %
-% Tor Wager, Jan 2018
-
-% Programmers' notes:
-% 9/24/21: region labels were wrong in some cases, if atlas object has been
-    % altered to remove some regions. Tor fixed this to use region.val
-    % mode.
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object.
+%
+% :Optional Inputs:
+%
+%   **'use_probabilities':**
+%        Use atlas_obj.probability_maps if available, which guarantees at
+%        least one region per atlas region. If atlas.probability_maps is
+%        empty, the function defaults to using index labels. Note: this
+%        can be slow for large atlases.
+%
+%   **'nocontiguous' or 'unique_mask_values':**
+%        Suppress contiguous-region parsing, creating one region per
+%        label/atlas region. If atlas.probability_maps is empty or
+%        'use_labels' is specified, the function defaults to
+%        'nocontiguous'.
+%
+%   **image_vector object:**
+%        If passed in, image values are extracted into the region .val and
+%        .Z fields.
+%
+%   **'noverbose':**
+%        Suppress warnings and progress messages.
+%
+% :Outputs:
+%
+%   **r:**
+%        A region-class object array with fields populated from the
+%        atlas labels and (if provided) extracted image values.
+%
+% :Examples:
+% ::
+%
+%     % Use indices in dat.dat, one region per atlas region:
+%     r = atlas2region(atlas_obj);
+%
+%     % Use probability_maps if available:
+%     r = atlas2region(atlas_obj, 'use_probabilities');
+%
+%     % One region per atlas region (no contiguous parsing):
+%     r = atlas2region(atlas_obj, 'nocontiguous');
+%
+% :See also:
+%   - region
+%   - select_atlas_subset
+%   - region2atlas
+%
+% ..
+%    Tor Wager, Jan 2018
+%
+%    Programmers' notes:
+%    9/24/21: region labels were wrong in some cases, if atlas object has
+%    been altered to remove some regions. Tor fixed this to use region.val
+%    mode.
+% ..
     
 % Defaults and inputs
 % ----------------------------------------------------------------------------

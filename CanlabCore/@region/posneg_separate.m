@@ -1,29 +1,50 @@
 function [pcl, ncl] = posneg_separate(cl, varargin)
+% posneg_separate Split a region object into positive- and negative-valued sub-regions.
+%
 % Separate a region object (cl) into clusters with positive and negative
-% peak values, based on values in .val or .Z field (default = val)
-% If a region has both positive and negative values, it will be included in
-% both sets pcl (positive) and ncl (negative), with only positive-valued and
-% negative-valued subsets included in each, respectively.
+% peak values, based on values in the .val or .Z field (default: .val).
+% If a region has both positive and negative values, it will be included
+% in both sets pcl (positive) and ncl (negative), with only the
+% positive-valued and negative-valued subsets included in each,
+% respectively. Mixed regions are then re-parsed into contiguous blobs.
 %
 % :Usage:
 % ::
 %
-%    [pcl, ncl] = posneg_separate(cl, ['Z'])
+%     [pcl, ncl] = posneg_separate(cl, ['Z'])
 %
-% Returns pcl and ncl, region structures with positive- and negative-valued
-% peaks, respectively, copied from the original cl input.
+% :Inputs:
 %
-% :Optional Input:
+%   **cl:**
+%        A region-class object array.
 %
-%   **Z:**
-%        To use .Z field
+% :Optional Inputs:
 %
-% :Note: You may have to use reparse_continguous to get this to work right.
+%   **'Z':**
+%        Use the .Z field instead of .val for separating positive and
+%        negative values.
+%
+% :Outputs:
+%
+%   **pcl:**
+%        Region-class object array containing positive-valued sub-regions.
+%
+%   **ncl:**
+%        Region-class object array containing negative-valued sub-regions.
+%
+% :Notes:
+%
+% You may have to use reparse_continguous to get this to work right.
+%
+% :Examples:
 % ::
 %
-%    r = reparse_continguous(r);
-%    [pcl, ncl] = posneg_separate(r);
+%     r = reparse_continguous(r);
+%     [pcl, ncl] = posneg_separate(r);
 %
+% :See also:
+%   - reparse_continguous
+%   - region.table_simple
 
 reparseflag = 0;  % need to reparse if mixed clusters
 myfield = 'val';

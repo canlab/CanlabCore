@@ -1,10 +1,46 @@
 function [robfitstatus] = canlab_glm_group_levels_run1input(wd, c)
-% child process of canlab_glm_group_levels
-% (see canlab_glm_README.txt for an overview)
+% canlab_glm_group_levels_run1input Worker process that runs robfit for one input contrast.
+%
+% :Usage:
+% ::
+%
+%     robfitstatus = canlab_glm_group_levels_run1input(wd, c)
+%
+% Child process of canlab_glm_group_levels. Loads the saved environment
+% file env_<NNNN>.mat for contrast index c from the working
+% directory wd, switches to the group-level model directory, and
+% calls robfit(EXPT, includedcons(c), 0, EXPT.mask) for that single
+% contrast. See canlab_glm_README.txt for an overview of the
+% canlab_glm_* batch tools.
+%
+% This function is normally called automatically by
+% canlab_glm_group_levels (including in parallel/cluster modes); it is
+% rarely invoked directly by users.
 %
 % ..
 %    Copyright (C) 2013  Luka Ruzic
 % ..
+%
+% :Inputs:
+%
+%   **wd:**
+%        Working directory containing the saved environment file
+%        env_<NNNN>.mat for the contrast.
+%
+%   **c:**
+%        Integer index into includedcons (1-based) selecting which
+%        contrast's robfit job to run. Used to locate
+%        env_<NNNN>.mat.
+%
+% :Outputs:
+%
+%   **robfitstatus:**
+%        Status code: 1 on success, -1 on error.
+%
+% :See also:
+%   - canlab_glm_group_levels
+%   - canlab_glm_subject_levels
+%   - robfit
 
 load(fullfile(wd,sprintf('env_%04d',c)));
 %% PREP

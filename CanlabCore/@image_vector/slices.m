@@ -1,14 +1,23 @@
 function o = slices(obj, varargin)
-% Create a montage of single-slice results for every image in an image_vector object
+% slices Create a montage of single-slice results for every image in an image_vector object.
+%
+% obj is an image_vector, fmri_data, or statistic_image object with
+% multiple images (only the first 64 will display), which are stored as
+% columns in its .dat field.
+%
+% This function uses fmridisplay objects, and may be memory-intensive
+% for older computers.
 %
 % :Usage:
 % ::
 %
 %    o = slices(obj, 'orientation', [orientation], 'slice', [slice_mm], 'nimages', [nimgs])
 %
-% obj is an image_vector, fmri_data, or statistic_image object with
-% multiple images (only the first 64 will display), which are stored as
-% columns in its .dat field.
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data / statistic_image object whose
+%        columns of .dat are the images to display.
 %
 % :Optional Inputs:
 %
@@ -31,16 +40,16 @@ function o = slices(obj, varargin)
 %   **outline:**
 %        is followed by a color vector for outline around blobs.
 %
-% The output, o, is an fmridisplay object.
+% :Outputs:
 %
-% This function uses fmridisplay objects, and may be memory-intensive for
-% older computers.
+%   **o:**
+%        An fmridisplay object holding the composite montage.
 %
-% *Common Errors:*
+% Common Errors:
 %
-% This function uses the volInfo.cluster field. If you create a mask in an
-% ad hoc way, this field may not be updated.  use this to fix:
-%   - mask = reparse_contiguous(mask);
+% This function uses the volInfo.cluster field. If you create a mask in
+% an ad hoc way, this field may not be updated. Use this to fix:
+%   mask = reparse_contiguous(mask);
 %
 % :Examples:
 % ::
@@ -51,6 +60,12 @@ function o = slices(obj, varargin)
 %    o = slices(dat, 'names', terms); % use 'terms' var as names
 %
 %    o2 = slices(all_chi2_images, 'orientation', 'saggital', 'slice', 0);
+%
+% :See also:
+%   - fmridisplay
+%   - montage
+%   - region
+%   - reparse_contiguous
 %
 % ..
 %    Copyright 2011, Tor Wager

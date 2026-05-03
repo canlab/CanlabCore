@@ -1,23 +1,63 @@
 function underlay = canlab_get_underlay_image(varargin)
-% Get the name of an anatomical image to use as the underlay for orthviews and other displays
+% canlab_get_underlay_image Resolve an anatomical underlay image filename to a full path.
 %
-% No inputs: Use the default underlay
+% :Usage:
+% ::
 %
-% Or enter an argument with one of these strings:
+%     underlay = canlab_get_underlay_image
+%     underlay = canlab_get_underlay_image(keyword_or_filename)
 %
-% 'spm2'                      'spm2_single_subj_T1_scalped.img'
-% 'colin'                     'SPM8_colin27T1_seg.img'
-% 'keuken'                    'keuken_2014_enhanced_for_underlay.img'
-% 'icbm2009c', 'fmriprep20'   'fmriprep20_template.nii.gz'
-% 'icbm2009c_0.5mm'           'tpl-MNI152NLin2009bAsym_res-1_T1w.nii.gz'
-% 'mni152_1mm'                'MNI152NLin6Asym_T1_1mm.nii.gz'
-% 'mni152_withskull'          'MNI152NLin6Asym_T1_1mm.nii.gz'
-% 'mni152'                    'spm152.nii'
-% ...or your custom underlay filename.
+% Returns the full path to an anatomical image to be used as the
+% underlay for orthviews and other displays. With no inputs, the
+% current default underlay ('fmriprep20_template.nii.gz') is returned.
+% Otherwise, a known keyword or a custom filename can be provided.
 %
-% Examples:
-% underlay = canlab_get_underlay_image
-% underlay = canlab_get_underlay_image('icbm2009c_0.5mm')
+% If the requested file is not found on the path, the function tries
+% several fallback resolutions (deblank, basename only, stripping or
+% adding a .gz extension) before giving up with a warning.
+%
+% :Inputs:
+%
+%   None required. Optionally:
+%
+%   **keyword_or_filename:**
+%        One of the keywords below, or a custom underlay filename. If
+%        empty, the default underlay is used.
+%
+% :Optional Inputs:
+%
+%   The single varargin argument may be one of the following keywords:
+%
+%   ::
+%
+%     'spm2'                      'spm2_single_subj_T1_scalped.img'
+%     'colin'                     'SPM8_colin27T1_seg.img'
+%     'keuken'                    'keuken_2014_enhanced_for_underlay.img'
+%     'icbm2009c', 'fmriprep20'   'fmriprep20_template.nii.gz'
+%     'icbm2009c_0.5mm'           'tpl-MNI152NLin2009bAsym_res-1_T1w.nii.gz'
+%     'mni152_1mm'                'MNI152NLin6Asym_T1_1mm.nii.gz'
+%     'mni152_withskull'          'MNI152NLin6Asym_T1_1mm.nii.gz'
+%     'mni152'                    'spm152.nii'
+%
+%   ...or your custom underlay filename.
+%
+% :Outputs:
+%
+%   **underlay:**
+%        Full path to the resolved underlay image on disk. Empty (and a
+%        warning is printed) if no matching file can be found on the
+%        MATLAB path.
+%
+% :Examples:
+% ::
+%
+%     underlay = canlab_get_underlay_image;
+%     underlay = canlab_get_underlay_image('icbm2009c_0.5mm');
+%
+% :See also:
+%   - canlab_results_fmridisplay
+%   - fmridisplay
+%   - which
 
 current_default = 'fmriprep20_template.nii.gz';
 

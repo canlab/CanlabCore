@@ -1,88 +1,105 @@
+% region Class for groups of voxels defined as anatomical or functional regions.
+%
 % 'region' is a class of objects that contains information on groups of
-% voxels ("regions") defined in various ways (contiguous voxels above a
-% threshold in an analysis, based on atlases, etc.)
+% voxels ('regions') defined in various ways (contiguous voxels above a
+% threshold in an analysis, based on atlases, etc.).
 %
-% the region class replaces the "clusters" structure in the scnlab toolbox,
-% and all or almost all of the "clusters" functions should work for regions
-% structures as well.  The advantage of 'region' is that the class
-% definition can help constrain the use and provide additional error
-% checking, etc.
+% The region class replaces the 'clusters' structure in the scnlab
+% toolbox, and all or almost all of the 'clusters' functions should work
+% for region objects as well. The advantage of 'region' is that the
+% class definition can help constrain the use and provide additional
+% error checking, etc.
 %
-% Defining a region and initializing:
+% :Usage:
+% ::
 %
-% *Usage:*
-%   - r = region(obj1, [obj2], [keywords] )
-%     - obj1: [fmri_data/statistic_image object to define regions]
-%             Can also be char array of image filename
-%     - obj2: Optional: fmri_data/statistic_image object to extract data from
-%     - keywords: Optional: 'unique_mask_values' or 'contiguous_regions'
-%     - 'noverbose' : suppress verbose output
+%     r = region(obj1, [obj2], [keywords])
+%     cl = region;   % generates an empty object
 %
-%   - cl = region;  % generates an empty structure
-%                   % You can add fields yourself if you want to, but best to
-%                   define based on existing file name or image_vector object
+% :Inputs:
 %
-% Define regions based on continuous voxel values (in this example image,
-% there is only one set of contiguous voxels, so 1 region...)
+%   **obj1:**
+%        An fmri_data/statistic_image object used to define regions, or
+%        a char array of an image filename.
 %
-%   - mask_image = which('brainmask.nii');
-%   - cl = region(mask_image);
+%   **obj2:**
+%        Optional fmri_data/statistic_image object to extract data from.
+%        Voxel values from obj2 are then stored in the region's .dat
+%        field.
 %
-% *Inputs:*
+%   **keywords:**
+%        Optional string keyword controlling how voxels are grouped into
+%        a region. There are two ways to define which voxels are grouped
+%        into a 'region', which becomes an element of the region
+%        variable cl:
 %
-% There are two ways to define which voxels are grouped into a 'region',
-% which becomes an element of the region variable cl.
+%        - 'contiguous_regions' (default): group by contiguous blobs.
+%        - 'unique_mask_values': group by unique values in mask .dat field.
 %
-% enter 'contiguous_regions' -> group by contiguous blobs
+%        Note: 'contiguous_regions' uses contiguity/clustering information
+%        stored in mask.volInfo.cluster, which may not have veridical
+%        contiguity info if you have manipulated it or incorporated
+%        anatomical information in working with the mask object, or if
+%        you have borrowed the volInfo structure from another source in
+%        creating it.
 %
-% or    'unique_mask_values' -> group by unique values in mask .dat field
+%   **'noverbose':**
+%        Suppress verbose output.
 %
-% *Note:* 'contiguous_regions' uses contiguity/clustering information stored
-% in mask.volInfo.cluster, which may not have veridical contiguity info if
-% you have manipulated it or incorporated anatomical information in working with
-% the mask object, or if you have borrowed the volInfo structure from
-% another source in creating it.
+% :Outputs:
 %
-% *Examples:*
+%   **r (or cl):**
+%        A region-class object array.
 %
-% Define regions based on continuous values in an anatomical mask:
-%   - mask_image = which('atlas_labels_combined.img');
-%   - cl = region(mask_image, 'unique_mask_values');
+% :Examples:
+% ::
 %
-% Resample mask_image to space of data_comb fmri_data object, and extract
-% averages.  Space is defined by data_comb.
-%   - cl = extract_roi_averages(data_comb, mask_image, 'unique_mask_values');
+%     % Define regions based on continuous voxel values in an anatomical mask:
+%     mask_image = which('atlas_labels_combined.img');
+%     cl = region(mask_image, 'unique_mask_values');
 %
-% Define regions based on unique voxels values in mask_image, and extract
-% data stored in data_comb object, resampled to space of mask_image.
-% Space is defined by mask_image:
-%   - cl = region(mask_image, data_comb, 'unique_mask_values');
+%     % Define a single region from a brain mask:
+%     mask_image = which('brainmask.nii');
+%     cl = region(mask_image);
 %
-% Reslice mask to space of functional images and define regions based on
-% mask values in the functional space (good for extracting data, etc.)
-%   - mask_image = which('anat_lbpa_thal.img');
-%   - mask = fmri_mask_image(mask_image);
-%   - mask = resample_to_image_space(mask, image_names(1, :));
-%   - cl = region(mask);
+%     % Resample mask_image to space of data_comb fmri_data object, and
+%     % extract averages. Space is defined by data_comb.
+%     cl = extract_roi_averages(data_comb, mask_image, 'unique_mask_values');
 %
-% *Methods*
+%     % Define regions based on unique voxel values in mask_image, and
+%     % extract data stored in data_comb object, resampled to space of
+%     % mask_image. Space is defined by mask_image:
+%     cl = region(mask_image, data_comb, 'unique_mask_values');
 %
-% Try typing methods(cl)
+%     % Reslice mask to space of functional images and define regions
+%     % based on mask values in the functional space (good for extracting
+%     % data, etc.):
+%     mask_image = which('anat_lbpa_thal.img');
+%     mask = fmri_mask_image(mask_image);
+%     mask = resample_to_image_space(mask, image_names(1, :));
+%     cl = region(mask);
 %
-% methods for 'regions' include:
+% :Methods:
 %
-% Visualization methods:
-%     montage, orthviews, surf, etc.
+% Try typing methods(cl). Methods for region objects include
+% visualization methods (montage, orthviews, surf, etc.) and conversion
+% methods (region2atlas, region2fmri_data, etc.).
 %
-% *Programmers' Notes:*
+% :See also:
+%   - atlas
+%   - fmri_data
+%   - statistic_image
+%   - extract_roi_averages
+%   - cluster2region
 %
-% 8/3/2015 : Tor Wager: Fixed bug when applying region to thresholded
-% statistic_image object.  Did not consider thresholding.
-%
-% 5/24/2017: Tor and Phil Kragel: first attempt to make compatible with
-% use of enforce_variable_types method.
-%
-% 7/2018 : Tor - check for empty mask and skip data extraction if so
+% ..
+%    Programmers' Notes:
+%    8/3/2015 : Tor Wager: Fixed bug when applying region to thresholded
+%    statistic_image object. Did not consider thresholding.
+%    5/24/2017: Tor and Phil Kragel: first attempt to make compatible with
+%    use of enforce_variable_types method.
+%    7/2018 : Tor - check for empty mask and skip data extraction if so.
+% ..
 
 classdef region
     

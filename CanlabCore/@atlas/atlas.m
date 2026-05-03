@@ -1,146 +1,215 @@
-% atlas: Subclass of image_vector designed for brain atlases and parcellations
+% atlas Subclass of image_vector designed for brain atlases and parcellations.
 %
-% 'atlas' is a data class containing information about brain atlases and parcellations
-% stored in a structure-like object.  It inherits the properties and
-% methods of fmri_data and image_vector objects.
+% 'atlas' is a data class containing information about brain atlases and
+% parcellations stored in a structure-like object. It inherits the
+% properties and methods of fmri_data and image_vector objects.
 %
 % 'atlas' objects are a class of objects specially designed for brain
 % atlases. They have properties (fields) for probabilistic maps and a data
 % field (.dat) that contains integer codes for thresholded/maximum
-% probability labels. There is also a "labels" property with the text
+% probability labels. There is also a 'labels' property with the text
 % labels for each region, and additional description and label fields for
-% additional annotation. These can hold, e.g., hierarchical labels at different 
-% levels of spatial resolution. A "reference" property holds information
-% about associated publications.
+% additional annotation. These can hold, e.g., hierarchical labels at
+% different levels of spatial resolution. A 'reference' property holds
+% information about associated publications.
 %
 % Atlas objects have specialized methods for selecting regions by name or
-% number (including groups of regions with similar names). Because it is a 
-% subclass of the image_vector object, it inherits all of its  methods as 
+% number (including groups of regions with similar names). Because it is a
+% subclass of the image_vector object, it inherits all of its methods as
 % well (montage, surface, apply_mask, write, descriptives, flip,
-% image_similarity_plot, image_math, etc.
+% image_similarity_plot, image_math, etc.).
 %
 % The function load_atlas in the CANlab toolbox loads a number of named
-% atlases included with the toolbox.  Type >> help load_atlas for a list of
+% atlases included with the toolbox. Type 'help load_atlas' for a list of
 % named atlases.
-% 
-% Creating an atlas object requires either images with probability maps (a 4-d image) 
-% Or an integer-valued image with one integer per atlas region. 
-% For full functionality, the atlas also requires both probability maps and 
-% text labels, one per region, in a cell array. But some functionality will
-% work without these.
 %
-% Basic usage for creating a new atlas image:
-% obj = atlas(image_names, ['mask',maskinput], [other optional inputs]) 
+% Creating an atlas object requires either images with probability maps (a
+% 4-d image) or an integer-valued image with one integer per atlas region.
+% For full functionality, the atlas also requires both probability maps
+% and text labels, one per region, in a cell array. But some functionality
+% will work without these.
 %
-% maskinput     :   Name of mask image to use.  Default: 'brainmask.nii', a
-%                   brain mask that is distributed with SPM software
-%                   Alternative in CANlab tools: which('gray_matter_mask.img')
-% 'noverbose'   :   Suppress verbose output
-% 'sample2mask' :   Sample images to mask space. Default: Sample mask to
-%                   image space, use native image space
+% :Usage:
+% ::
 %
+%     obj = atlas
+%     obj = atlas(image_names, ['mask', maskinput], [other optional inputs])
 %
-% Creating class instances
-% -----------------------------------------------------------------------
+% :Inputs:
+%
+%   **image_names:**
+%        Character/cell array of image filenames, an image_vector object,
+%        or empty. Probability maps (4-D), an integer-valued parcellation
+%        image, or an existing image_vector are accepted.
+%
+% :Optional Inputs:
+%
+%   **'mask', maskinput:**
+%        Name of mask image to use. Default: 'brainmask.nii', a brain mask
+%        distributed with SPM software. Alternative in CANlab tools:
+%        which('gray_matter_mask.img').
+%
+%   **'sample2mask':**
+%        Sample images to mask space. Default: sample mask to image space,
+%        use native image space.
+%
+%   **'noverbose':**
+%        Suppress verbose output.
+%
+%   **'atlas_name':**
+%        Followed by a short description or name of the atlas.
+%
+%   **'labels':**
+%        Followed by a cell array of text strings, one per region.
+%
+%   **'label_descriptions':**
+%        Followed by a regions x 1 cell array of long-form descriptions.
+%
+%   **'labels_2', 'labels_3', 'labels_4', 'labels_5':**
+%        Additional cell arrays of labels, one per region, often used for
+%        hierarchical labels at different levels of granularity.
+%
+%   **'references':**
+%        Followed by a string matrix of associated publications.
+%
+%   **'space_description':**
+%        Followed by a string describing the atlas space/template.
+%        Setting this to a value supported by render_on_surface
+%        (e.g., 'MNI152NLin2009cAsym') enables automatic projection to
+%        supported surfaces when plotting.
+%
+% :Outputs:
+%
+%   **obj:**
+%        An atlas-class object with fields populated from the input
+%        images and optional arguments.
+%
+% :Creating class instances:
+%
 % You can create an empty object by using:
-% obj = atlas
-% - obj is the object.
-% - It will be created with a standard brain mask, brainmask.nii
-% - This image should be placed on your Matlab path
-% - The space information is stored in obj.volInfo
-% - Data is stored in obj.dat, in a [voxels x images] matrix
+% ::
+%
+%     obj = atlas
+%
+% - It will be created with a standard brain mask, brainmask.nii.
+% - This image should be placed on your Matlab path.
+% - The space information is stored in obj.volInfo.
+% - Data is stored in obj.dat, in a [voxels x images] matrix.
 % - You can replace or append data to the obj.dat field.
 %
-% You can create an atlas object with extacted image data.
-% - Let "imgs" be a string array or cell array of image names
-% - This command creates an object with your (4-D) image data:
-% - fmri_dat = atlas(imgs);
+% You can create an atlas object with extracted image data:
+% ::
+%
+%     fmri_dat = atlas(imgs);
+%
+% - imgs is a string array or cell array of image names.
 % - Only values in the standard brain mask, brainmask.nii, will be included.
 % - This saves memory by reducing the number of voxels saved dramatically.
 %
-% You can specify any mask you'd like to extract data from.
-% - Let "maskimagename" be a string array with a mask image name.
-% - this command creates the object with data saved in the mask:
-% - fmri_dat = atlas(imgs, maskimagename);
-% - The mask information is saved in fmri_dat.mask
+% You can specify any mask you would like to extract data from:
+% ::
 %
-% e.g., this extracts data from images within the standard brain mask:
-% dat = atlas(imgs, which('brainmask.nii'));
+%     fmri_dat = atlas(imgs, maskimagename);
 %
-% Properties and methods
-% -----------------------------------------------------------------------
-% Properties are data fields associated with an object.
-% Try typing the name of an object (class instance) you create to see its
-% properties, and a link to its methods (things you can run specifically
-% with this object type). For example: After creating an atlas object 
+% e.g., to extract data from images within the standard brain mask:
+% ::
+%
+%     dat = atlas(imgs, which('brainmask.nii'));
+%
+% :Properties and methods:
+%
+% Properties are data fields associated with an object. Try typing the
+% name of an object (class instance) you create to see its properties,
+% and a link to its methods. For example: After creating an atlas object
 % called fmri_dat, as above, type fmri_dat to see its properties.
 %
-% There are many other methods that you can apply to atlas objects to
-% do different things.
+% There are many other methods that you can apply to atlas objects to do
+% different things.
+%
 % - Try typing methods(atlas) for a list.
 % - You always pass in an atlas object as the first argument.
 % - Methods include utilities for many functions - e.g.,:
 % - resample_space(fmri_dat) resamples the voxels
-% - write(fmri_dat) writes an image file to disk (careful not to overwrite by accident!)
+% - write(fmri_dat) writes an image file to disk
 % - regress runs multiple regression
 % - predict runs cross-validated machine learning/prediction algorithms
 %
 % Specialized methods unique to atlas objects include:
-% atlas                               Construct a new atlas object given Analyze/Nifti image(s)
-% 
+%
+%   - atlas: Construct a new atlas object given Analyze/Nifti image(s)
+%
 % Utilities for manipulating atlases:
-% merge_atlases                       Add all or some regions from an atlas object to another atlas object (with/without replacing existing labeled voxels)
-% probability_maps_to_region_index    Use dat.probability_maps to rebuild integer vector of index labels (dat.dat)
-% remove_atlas_region                 Removes region(s) from atlas, by names or index values 
-% reorder_atlas_regions               Reorder a set of regions in an atlas object
-% select_atlas_subset                 Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
-% split_atlas_by_hemisphere           Divide regions that are bilateral into separate left- and right-hemisphere regions
-% split_atlas_into_contiguous_regions Divide regions with multiple contiguous blobs into separate labeled regions for each blob
-% threshold                           Threshold atlas object based on values in obj.probability_maps property
-% 
-% % Extracting information and converting to other object types:
-% extract_data                        Extract atlas parcel means and local pattern responses from a set of data images
-% atlas2region                        Convert an atlas object to a region object 
-% check_properties                    Check properties and enforce some variable types 
-% get_region_volumes                  Get the volume (and raw voxel count) of each region in an atlas object
-% num_regions                         Count number of regions in atlas object, even with incomplete data 
-% 
+%
+%   - merge_atlases: Add regions from an atlas object to another atlas object
+%   - probability_maps_to_region_index: Rebuild integer index labels from probability_maps
+%   - remove_atlas_region: Remove region(s) by names or index values
+%   - reorder_atlas_regions: Reorder a set of regions in an atlas object
+%   - select_atlas_subset: Select regions by name or integer code
+%   - split_atlas_by_hemisphere: Divide bilateral regions into L and R
+%   - split_atlas_into_contiguous_regions: Split contiguous blobs into separate regions
+%   - threshold: Threshold atlas based on values in obj.probability_maps
+%
+% Extracting information and converting to other object types:
+%
+%   - extract_data: Extract atlas parcel means and local pattern responses
+%   - atlas2region: Convert an atlas object to a region object
+%   - check_properties: Check properties and enforce variable types
+%   - get_region_volumes: Get volume and voxel count of each region
+%   - num_regions: Count regions in atlas object, even with incomplete data
+%
 % Manipulating labels for atlas regions:
-% atlas_add_L_R_to_labels             Removes some strings indicating lateralization from atlas labels and adds new _L and _R suffixes for lateralized regions
-% atlas_similarity                    Annotate regions in an atlas object with labels from another atlas object
-% 
+%
+%   - atlas_add_L_R_to_labels: Add _L/_R suffixes for lateralized regions
+%   - atlas_similarity: Annotate regions with labels from another atlas
+%
 % Visualization:
-% isosurface                          Create a series of surfaces in different colors, one for each region
-% montage                             Display an atlas object on a standard slice montage 
 %
-% Attaching additional data
-% -----------------------------------------------------------------------
-% The atlas object has a number of fields for appending specific types of data.
+%   - isosurface: Create a series of surfaces in different colors per region
+%   - montage: Display an atlas object on a standard slice montage
 %
-% - You can replace data in the atlas.dat field. However, should always contain one column vector of integers. 
+% :Attaching additional data:
+%
+% The atlas object has a number of fields for appending specific types of
+% data.
+%
+% - You can replace data in the atlas.dat field. However, it should always
+%   contain one column vector of integers.
 % - Attach custom descriptions in several fields to document your object.
-% - The "history" field stores a cell array of strings with the processing
-% history of the object. Some methods add to this history automatically.
+% - The 'history' field stores a cell array of strings with the processing
+%   history of the object. Some methods add to this history automatically.
 %
+% :Examples:
+% ::
 %
-% Examples:
-% -----------------------------------------------------------------------
-% parcellation_file = 'CIT168toMNI152_prob_atlas_bilat_1mm.nii';  %'prob_atlas_bilateral.nii';
-% labels = {'Put' 'Cau' 'NAC' 'BST_SLEA' 'GPe' 'GPi' 'SNc' 'RN' 'SNr' 'PBP' 'VTA' 'VeP' 'Haben' 'Hythal' 'Mamm_Nuc' 'STN'};
-% dat = atlas(which(parcellation_file), 'labels', labels, ...
-%               'space_description', 'MNI152 space', ...
-%               'references', 'Pauli 2018 Bioarxiv: CIT168 from Human Connectome Project data', 'noverbose');
-% % Display:
-% orthviews(dat);
-% figure; montage(dat);
+%     parcellation_file = 'CIT168toMNI152_prob_atlas_bilat_1mm.nii';
+%     labels = {'Put' 'Cau' 'NAC' 'BST_SLEA' 'GPe' 'GPi' 'SNc' 'RN' ...
+%               'SNr' 'PBP' 'VTA' 'VeP' 'Haben' 'Hythal' 'Mamm_Nuc' 'STN'};
+%     dat = atlas(which(parcellation_file), 'labels', labels, ...
+%                 'space_description', 'MNI152 space', ...
+%                 'references', 'Pauli 2018 Bioarxiv: CIT168 from HCP data', ...
+%                 'noverbose');
 %
-% % Convert to region object and display:
-% r = atlas2region(dat);
-% orthviews(r)
-% montage(r);
-
-% Programmers' notes:
-% Tor Wager, 1/14/18 : Created from hybrid of image_vector (parent) and some fmri_data code
+%     % Display:
+%     orthviews(dat);
+%     figure; montage(dat);
+%
+%     % Convert to region object and display:
+%     r = atlas2region(dat);
+%     orthviews(r)
+%     montage(r);
+%
+% :See also:
+%   - load_atlas
+%   - image_vector
+%   - fmri_data
+%   - region
+%   - atlas2region
+%
+% ..
+%    Programmers' notes:
+%    Tor Wager, 1/14/18: Created from hybrid of image_vector (parent) and
+%    some fmri_data code.
+% ..
 
 classdef atlas < image_vector
     

@@ -1,11 +1,39 @@
 function obj = check_properties(obj)
-% Check properties for a statistic-image object. Fill in empty fields if
-% needed.
+% check_properties Check and fill in empty properties for a statistic_image object.
 %
-% obj = check_properties(obj)
+% Fill in empty fields (.p, .ste, .sig) of a statistic_image object if
+% needed, expanding stored data to the full in-mask voxel grid using
+% volInfo.wh_inmask.
+%
 % ***under construction, do not use yet***
-
-% 2018 July : Created by Tor Wager
+%
+% :Usage:
+% ::
+%
+%     obj = check_properties(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        A statistic_image object whose .p, .ste, and/or .sig fields may
+%        be empty. The function references obj.volInfo.nvox and
+%        obj.volInfo.wh_inmask to expand fields onto the full image grid.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with empty fields populated to the full voxel
+%        grid (default values: p = 1, ste = Inf, sig = 0 for voxels
+%        outside the mask).
+%
+% :See also:
+%   - statistic_image
+%   - replace_empty
+%   - validateattributes
+%
+% ..
+%    2018 July : Created by Tor Wager
+% ..
 
     obj_out = replace_empty(obj_out);
     k = size(obj_out.dat, 2);

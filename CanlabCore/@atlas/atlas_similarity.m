@@ -1,91 +1,105 @@
 function [region_table, table_legend_text, all_regions_covered, x_counts, x_dice, x_atlas_coverage, all_regions_covered_cell] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
-% Annotate regions in an atlas object with labels from another atlas object
-% Take regions in an atlas object (atlas_to_parse) and annotate them with labels and quantitative
-% coverage stats from another atlas (ref_atlas_obj)
+% atlas_similarity Annotate regions in an atlas object with labels from another atlas object.
 %
-% [region_table, table_legend_text, coverage25_labels, coverage25_index, x_counts, x_dice, x_atlas_coverage] = atlas_similarity(atlas_to_parse, ref_atlas_obj)
+% Take regions in an atlas object (atlas_to_parse) and annotate them with
+% labels and quantitative coverage stats from another atlas
+% (ref_atlas_obj). Computes Dice similarities, cross-counts, modal labels,
+% and coverage matrices for each target region.
 %
-% Dice: Compute similarities (cross-counts and Dice coeffs) between parcels in two atlases
-% matrix of [atlas1] x [atlas2]
+% :Usage:
+% ::
 %
-% Mode: Labels each region in a target atlas (atlas 1) with best-matching (modal) label
-% in a reference atlas (atlas 2). 
-% - modal_atlas_index is the reference atlas index number for each target region
-% - modal_atlas_label is the reference atlas label for each target region, or "No
-% region identified" if the target region does not match any reference
-% atlas region.
+%     [region_table, table_legend_text, all_regions_covered, x_counts, ...
+%      x_dice, x_atlas_coverage, all_regions_covered_cell] = ...
+%        atlas_similarity(atlas_to_parse, ref_atlas_obj)
 %
-% Coverage: Return matrix of coverage of reference atlas regions for each
-% target region. For each target (row), values are the proportion of
-% reference region (column) covered. 
-% - modal_atlas_coverage is the proportion of reference atlas voxels
-% covered by the best-matching region
+% :Inputs:
 %
-% all_regions_covered: String matrix list of all reference regions covered by the target region down to 25% coverage, sorted in descending order of coverage
-% all_regions_covered_cell: Cell array of all regions covered
+%   **atlas_to_parse:**
+%        Atlas-class object whose regions are to be annotated.
 %
-% See table_legend_text output for description of table entries.
-% to print legend: canlab_print_legend_text(table_legend_text{:})
+%   **ref_atlas_obj:**
+%        Reference atlas-class object providing the labels and
+%        coordinates against which atlas_to_parse is annotated.
 %
-% Tor Wager, July 2018
-
-
-
-% Notes:
-% - Updated Feb 2020 by Tor Wager - added all_regions_covered_cell
-
-% Percent of voxels in each atlas region covered by the blob
-% Intersection / size of atlas region
-
-% note: vox counts can be zero if regions are (1) outside mask, or (2)
-% empty after reslicing to the atlas space
-
-% "coverage" : which atlas regions are covered by the blob? (up to specified % of voxels
-% in the atlas region). Large atlas regions/networks will not have high
-% coverage unless the blob(s) activate most of the atlas region/network. 
-% 
+% :Outputs:
 %
-% "mode" : what single atlas region best encloses the target blob?
-% if blob covers 2 regions completely, the larger is the best match 
+%   **region_table:**
+%        MATLAB table with one row per region in atlas_to_parse, with
+%        columns describing region size, modal reference label, coverage,
+%        and a list of all reference regions covered.
 %
-% "similarity" : jaccard/dice: prioritizes complete coverage of atlas region.
-% larger regions will tend to not show up unless the blob
-% covers them completely.
+%   **table_legend_text:**
+%        Cell array of strings describing the columns of region_table
+%        and the references used. Print with canlab_print_legend_text.
 %
-% could do multi-resolution match with jaccard. small regions would be
-% selected if they match, but larger/more general regions would be selected
-% if the blob description matches them best.
-% e.g., a big region that covers the whole basal ganglia would be labeled
-% "BG".  "Mode" would pick the largest subregion. "Coverage" would identify
-% multiple subregions. 
-
-%   Notes - from Matlab
-%   -----
-%   [1]  The Dice similarity coefficient of two sets A and B is
-%   expressed as
+%   **all_regions_covered:**
+%        Cell array of char matrices listing all reference regions
+%        covered by each target region down to 25% coverage, sorted in
+%        descending order of coverage.
 %
-%      dice(A,B) = 2 * |intersection(A,B)| / (|A| + |B|)
+%   **x_counts:**
+%        [n_target x n_ref] matrix of cross-counts (intersection voxel
+%        counts) between target and reference regions.
 %
-%   where |A| represents the cardinal of set A. It can also be expressed in
-%   terms of true positives (TP), false positives (FP) and false negatives
-%   (FN) as
+%   **x_dice:**
+%        [n_target x n_ref] matrix of Dice similarity coefficients.
 %
-%      dice(A,B) = 2 * TP / (2 * TP + FP + FN)
+%   **x_atlas_coverage:**
+%        [n_target x n_ref] matrix giving, for each target region (row),
+%        the proportion of each reference region (column) covered.
 %
-%   [2]  The Dice index is related to the Jaccard index according to
+%   **all_regions_covered_cell:**
+%        Cell array of cell arrays of all reference region labels covered
+%        by each target region, useful for programmatic access.
 %
-%      dice(A,B) = 2 * jaccard(A,B) / (1 + jaccard(A,B))
+% :Notes:
 %
-%   [1]  The Jaccard similarity coefficient of two sets A and B (also known
-%     as intersection over union or IoU) is expressed as
-% 
-%      jaccard(A,B) = |intersection(A,B)| / |union(A,B)|
-% 
-%     where |A| represents the cardinal of set A. It can also be expressed in
-%     terms of true positives (TP), false positives (FP) and false negatives
-%     (FN) as
-% 
-%        jaccard(A,B) = TP / (TP + FP + FN)
+% - 'Coverage': which atlas regions are covered by the blob (up to a
+%   specified percent of voxels in the atlas region). Large atlas
+%   regions/networks will not have high coverage unless the blob(s)
+%   activate most of the atlas region/network.
+% - 'Mode': what single atlas region best encloses the target blob?
+%   If blob covers 2 regions completely, the larger is the best match.
+% - 'Similarity' (jaccard/dice): prioritizes complete coverage of atlas
+%   region. Larger regions tend not to show up unless the blob covers
+%   them completely.
+% - Multi-resolution matching with Jaccard could select small regions
+%   when they match well, but larger/more general regions when the blob
+%   description matches them best. For example, a big region that covers
+%   the whole basal ganglia would be labeled 'BG'. Mode would pick the
+%   largest subregion. Coverage would identify multiple subregions.
+% - Voxel counts can be zero if regions are (1) outside mask, or (2)
+%   empty after reslicing to the atlas space.
+%
+% Dice similarity coefficient of two sets A and B:
+% ::
+%
+%     dice(A,B) = 2 * |intersection(A,B)| / (|A| + |B|)
+%               = 2 * TP / (2 * TP + FP + FN)
+%               = 2 * jaccard(A,B) / (1 + jaccard(A,B))
+%
+% Jaccard similarity coefficient (intersection over union):
+% ::
+%
+%     jaccard(A,B) = |intersection(A,B)| / |union(A,B)|
+%                  = TP / (TP + FP + FN)
+%
+% :Examples:
+% ::
+%
+%     [region_table, table_legend_text] = atlas_similarity(atlas_to_parse, ref_atlas_obj);
+%     canlab_print_legend_text(table_legend_text{:});
+%
+% :See also:
+%   - get_region_volumes
+%   - select_atlas_subset
+%   - atlas2region
+%
+% ..
+%    Tor Wager, July 2018
+%    Updated Feb 2020 by Tor Wager - added all_regions_covered_cell.
+% ..
 
 coverage_thresh = .25;      % percent of reference atlas region that must be covered to include it in lists
 % Note: if you change this, the help and figure legend and variable names will be wrong/misleading.

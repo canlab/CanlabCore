@@ -1,17 +1,58 @@
-
-% fmri_data.subs
-
+% expand_into_atlas_subregions Expand a single-image data object into k images, one per atlas region.
+%
+% Take an image object (one image) and an integer-valued parcellation /
+% atlas whose values indicate k regions, and expand the image object into
+% a set of k images with the original values only for voxels in the kth
+% region, and zero elsewhere. Useful for breaking a pattern mask into
+% local atlas-defined subregions.
+%
 % This is different from fmri_data.apply_parcellation, which returns
 % averages or weighted averages per image for a set of images in a data
-% object.  apply_parcellation can be used to return local pattern responses
-% for any parcellation, but it does not return vectors with the local
-% weights themselves. 
+% object. apply_parcellation can be used to return local pattern
+% responses for any parcellation, but it does not return vectors with
+% the local weights themselves.
+%
+% NOTE: This file is a script-style template (no function declaration).
+% It currently expects the variable 'nps' to exist in the workspace as
+% the target image object, and uses BN_Atlas_274_noCb_uint16.nii as the
+% parcellation. Adapt as needed before running.
+%
+% :Usage:
+% ::
+%
+%     % Set up nps (an fmri_data / image_vector object), then run:
+%     expand_into_atlas_subregions
+%
+% :Inputs (workspace variables):
+%
+%   **nps:**
+%        Single-image image_vector / fmri_data object holding the
+%        pattern to be split by region.
+%
+% :Outputs (workspace variables):
+%
+%   **target_obj:**
+%        The expanded object with one column per non-empty atlas region,
+%        each containing the original pattern values restricted to that
+%        region (zero elsewhere). target_obj.additional_info holds the
+%        retained region names.
+%
+%   **r:**
+%        A region object built from the expanded data, with one element
+%        per contiguous region. region_names tracks the parent atlas
+%        label for each region in r.
+%
+% :See also:
+%   - fmri_data.apply_parcellation
+%   - select_voxels_by_value
+%   - region
+%   - canlab_pattern_similarity
+%
+% ..
+%    Programmers' notes:
+%    fmri_data.subs
+% ..
 
-% expand into atlas subregions
-% Take an image object (one image) and an integer-valued parcellation/atlas whose values
-% indicate k regions, and expand the image object into a set of k images with
-% the original values only for voxels in the kth region, and zero
-% elsewhere. Useful for breaking a pattern mask into local atlas-defined subregions.
 
 
 % define target image obj to sample to : nps

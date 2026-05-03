@@ -1,89 +1,138 @@
 function canlab_glm_subject_levels(dsgnarg, varargin)
-% Performs lower level GLM analysis with SPM:
-%   1. specifies model
-%   2. estimates model
-%   3. generates contrast images for model
-%   4. creates directory with named links to spmT and con maps
-%   5. publishes analyses with scn_spm_design_check
+% canlab_glm_subject_levels Run lower (single-subject) level GLM analyses with SPM.
 %
 % :Usage:
 % ::
 %
-%     canlab_glm_subject_levels(DSGN [options])
+%     canlab_glm_subject_levels(DSGN, [options])
+%     canlab_glm_subject_levels('README')
 %
-% DSGN struct - defines the model and analysis parameters
+% Performs single-subject GLM analysis with SPM. For each subject the
+% function:
 %
-% canlab_glm_subject_levels('README') to see description
+%   1. Specifies the model.
+%   2. Estimates the model.
+%   3. Generates contrast images for the model.
+%   4. Creates a directory with named links to spmT and con maps.
+%   5. Publishes analyses with scn_spm_design_check.
 %
-% :Options:
-%
-%   **'README':**
-%        prints canlab_glm_README, an overview of canlab_glm_{subject,group}_levels
-%
-%   **'dsgninfo':**
-%        prints description of DSGN structure
-%
-%   **'subjects', subject_list:**
-%        ignore DSGN.subjects, use cell array subject_list
-%
-%   **'overwrite':**
-%        turn on overwriting of existing analyses (DEFAULT: skip existing)
-%
-%   **'onlycons':**
-%        only run contrast job (no model specification or estimation)
-%        note: will overwrite existing contrasts
-%        note: to not run contrasts, simply do not include a contrasts field in DSGN
-%
-%   **'addcons':**
-%        only run contrasts that aren't already in SPM.mat
-%        option to canlab_spm_contrast_job
-%
-%   **'nodelete':**
-%        do not delete existing contrasts (consider using addcons, above)
-%        option to canlab_spm_contrast_job
-%
-%   **'nolinks':**
-%        will not make directory with named links to contrast images
-%
-%   **'noreview':**
-%        will not run scn_spm_design_check
-%
-%   **'dream':**
-%        if you're running on the dream cluster, this option will cause
-%        all subjects to be run in parallel (submitted with matlab DCS and
-%        the Sun Grid Engine)
-%        Note: currently only works with MATLAB R2009a
-%
-%   **'email', address:**
-%        send notification email to address when done running
-%
-% Model specification and estimation done by canlab_spm_fmri_model_job
-%
-% Contrasts are specified by canlab_spm_contrast_job_luka
-% see that function for more info.
+% Model specification and estimation are done by canlab_spm_fmri_model_job.
+% Contrasts are specified by canlab_spm_contrast_job_luka; see that
+% function for more information. Use canlab_glm_subject_levels('README')
+% to print an overview, and canlab_glm_subject_levels('dsgninfo') to
+% print a description of the DSGN structure.
 %
 % ..
 %     -------------------------------------------------------------------------
 %     Copyright (C) 2013  Luka Ruzic
-% 
+%
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
 %     the Free Software Foundation, either version 3 of the License, or
 %     (at your option) any later version.
-% 
+%
 %     This program is distributed in the hope that it will be useful,
 %     but WITHOUT ANY WARRANTY; without even the implied warranty of
 %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %     GNU General Public License for more details.
-% 
+%
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
 %     Programmers' notes:
-%       
+%
 %           Added support for reading help documentation in Windows -
 %           Michael Sun 09/13/2022
 % ..
+%
+% :Inputs:
+%
+%   **DSGN:**
+%        Struct that defines the model and analysis parameters, or the
+%        path to a .mat file containing such a struct. Use
+%        canlab_glm_subject_levels('dsgninfo') for a description of
+%        the DSGN structure. Alternatively, pass the literal string
+%        'README' to print canlab_glm_README, or 'dsgninfo' to print
+%        canlab_glm_dsgninfo.
+%
+% :Optional Inputs:
+%
+%   **'README':**
+%        Prints canlab_glm_README, an overview of
+%        canlab_glm_{subject,group}_levels.
+%
+%   **'dsgninfo':**
+%        Prints description of DSGN structure.
+%
+%   **'subjects', subject_list:**
+%        Ignore DSGN.subjects; use cell array subject_list instead.
+%
+%   **'overwrite':**
+%        Turn on overwriting of existing analyses (default: skip
+%        existing).
+%
+%   **'onlycons':**
+%        Only run contrast job (no model specification or estimation).
+%        Note: will overwrite existing contrasts. To not run contrasts,
+%        simply do not include a contrasts field in DSGN.
+%
+%   **'addcons':**
+%        Only run contrasts that aren't already in SPM.mat. Option to
+%        canlab_spm_contrast_job.
+%
+%   **'nodelete':**
+%        Do not delete existing contrasts (consider using addcons,
+%        above). Option to canlab_spm_contrast_job.
+%
+%   **'nolinks':**
+%        Do not make directory with named links to contrast images.
+%
+%   **'noreview':**
+%        Do not run scn_spm_design_check.
+%
+%   **'dream':**
+%        If you're running on the dream cluster, this option will cause
+%        all subjects to be run in parallel (submitted with matlab DCS
+%        and the Sun Grid Engine). Note: currently only works with
+%        MATLAB R2009a.
+%
+%   **'parallel':**
+%        Run subjects in parallel locally.
+%
+%   **'nocatch':**
+%        Do not wrap subject-level errors in try/catch.
+%
+%   **'email', address:**
+%        Send notification email to address when done running.
+%
+% :Outputs:
+%
+%   None returned to the workspace. Side effects include written SPM.mat
+%   files, contrast images, log files in the canlab_glm_logs folder,
+%   and (optionally) a directory of named links to contrast images and
+%   published HTML reports from scn_spm_design_check.
+%
+% :Examples:
+% ::
+%
+%     % Print the overview README
+%     canlab_glm_subject_levels('README')
+%
+%     % Print description of the DSGN structure
+%     canlab_glm_subject_levels('dsgninfo')
+%
+%     % Run a single-subject analysis from an existing DSGN struct
+%     canlab_glm_subject_levels(DSGN)
+%
+%     % Override DSGN.subjects with a custom list and overwrite existing
+%     canlab_glm_subject_levels(DSGN, 'subjects', {'sub-01','sub-02'}, 'overwrite')
+%
+% :See also:
+%   - canlab_glm_group_levels
+%   - canlab_glm_publish_subject_levels
+%   - canlab_spm_fmri_model_job
+%   - canlab_spm_contrast_job_luka
+%   - scn_spm_design_check
 
 STARTTIME = datestr(now,31);
 STARTINGDIR = pwd;

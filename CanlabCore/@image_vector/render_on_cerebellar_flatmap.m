@@ -1,17 +1,24 @@
 function giftiname = render_on_cerebellar_flatmap(target_obj, varargin)
-% Render an object with a single image onto a standard cerebellar flat map.
+% render_on_cerebellar_flatmap Render an image onto a standard cerebellar flat map.
+%
+% Renders an object with a single image onto the Diedrichsen & Zotow
+% (2015) cerebellar flat map using the SUIT toolbox.
 %
 % - requires SPM, the SUIT toolbox, and some standard templates on your Matlab path.
 % - saves a Gifti .gii image of your map, called <image_name>.cblm_surf.gii
 %
-% Diedrichsen, J. & Zotow, E. (2015). Surface-based display of volume-averaged cerebellar data. PLoS One, 7, e0133402.
-% https://www.diedrichsenlab.org/imaging/suit_flatmap.htm
+% :Usage:
+% ::
+%
+%    giftiname = render_on_cerebellar_flatmap(target_obj, [optional inputs])
 %
 % :Inputs:
 %
+%   **target_obj:**
+%        A CANlab fmri_data object you want to visualize. Must contain
+%        only a single image.
+%
 % :Optional Inputs:
-%   **'target_obj':**
-%        A CANlab fmri_data object you want to visualize
 %
 %   **'newfigure':** [numeric scalar]
 %        Create a new figure; default = uses existing axes
@@ -20,38 +27,61 @@ function giftiname = render_on_cerebellar_flatmap(target_obj, varargin)
 %        An n-by-3 colormap matrix used for rendering.
 %        Default = colormap_tor([0 0 1], [1 1 0], [0.5 0.5 0.5], [0 0.5 1], [1 0.5 0]).
 %
-% Some examples:
-% 
-% Pain-related activation from 2021 Spisak Placebo meta N = 603 maps
-% fname = which('full_pain_g_pperm_FWE05.nii.gz');
-% pain603 = fmri_data(fname);
-% render_on_cerebellar_flatmap(pain603)
+%   **'cscale':** [1 x 2 numeric]
+%        Color limits for the flat-map plot. Default: [-q95, q95] of
+%        absolute surface data.
 %
-% target_obj = load_image_set('nps');
-% render_on_cerebellar_flatmap(target_obj)
+%   **'verbose':** [logical]
+%        Verbose output flag (default false).
 %
-% transgrad = cifti_read('transcriptomic_gradients.dscalar.nii');
-% r = cifti_struct_2_region_obj(cifti_struct, 'which_image', 3); % 3rd gradient
-% subctx_fmri_data_obj = region2fmri_data(r);
-% render_on_cerebellar_flatmap(subctx_fmri_data_obj, 'color_map', colormap('summer'))
-% render_on_cerebellar_flatmap(subctx_fmri_data_obj)
-
-
-% Some other examples:
-% fname = which('full_pla_g_pperm_tfce_FWE05.nii.gz');
-% placebo603 = fmri_data(fname);
-% 
-% fname = which('full_pla_rrating_pperm_tfce_FWE05.nii.gz');
-% placebocorr603 = fmri_data(fname);
-% 
-% gunzip(pain603.fullpath);
-% pain603fname = strrep(pain603.fullpath, '.gz', '');
-% 
-% gunzip(placebo603.fullpath);
-% placebo603fname = strrep(placebo603.fullpath, '.gz', '');
-% 
-% gunzip(placebocorr603.fullpath);
-% placebocorr603fname = strrep(placebocorr603.fullpath, '.gz', '');
+% :Outputs:
+%
+%   **giftiname:**
+%        Full path to the saved Gifti .gii image of the cerebellar
+%        surface map (<image_name>.cblm_surf.gii).
+%
+% :Examples:
+% ::
+%
+%    % Pain-related activation from 2021 Spisak Placebo meta N = 603 maps
+%    fname = which('full_pain_g_pperm_FWE05.nii.gz');
+%    pain603 = fmri_data(fname);
+%    render_on_cerebellar_flatmap(pain603)
+%
+%    target_obj = load_image_set('nps');
+%    render_on_cerebellar_flatmap(target_obj)
+%
+%    transgrad = cifti_read('transcriptomic_gradients.dscalar.nii');
+%    r = cifti_struct_2_region_obj(cifti_struct, 'which_image', 3); % 3rd gradient
+%    subctx_fmri_data_obj = region2fmri_data(r);
+%    render_on_cerebellar_flatmap(subctx_fmri_data_obj, 'color_map', colormap('summer'))
+%    render_on_cerebellar_flatmap(subctx_fmri_data_obj)
+%
+%    % Some other examples:
+%    % fname = which('full_pla_g_pperm_tfce_FWE05.nii.gz');
+%    % placebo603 = fmri_data(fname);
+%    %
+%    % fname = which('full_pla_rrating_pperm_tfce_FWE05.nii.gz');
+%    % placebocorr603 = fmri_data(fname);
+%    %
+%    % gunzip(pain603.fullpath);
+%    % pain603fname = strrep(pain603.fullpath, '.gz', '');
+%    %
+%    % gunzip(placebo603.fullpath);
+%    % placebo603fname = strrep(placebo603.fullpath, '.gz', '');
+%    %
+%    % gunzip(placebocorr603.fullpath);
+%    % placebocorr603fname = strrep(placebocorr603.fullpath, '.gz', '');
+%
+% :References:
+%   Diedrichsen, J. & Zotow, E. (2015). Surface-based display of
+%   volume-averaged cerebellar data. PLoS One, 7, e0133402.
+%   https://www.diedrichsenlab.org/imaging/suit_flatmap.htm
+%
+% :See also:
+%   - suit_reslice_dartel
+%   - suit_map2surf
+%   - suit_plotflatmap
 
 %%
 % -------------------------------------------------------------------------

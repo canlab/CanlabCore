@@ -1,31 +1,47 @@
 function DAT = extract_measures_batch(data_obj)
-% Extracts a set of measures relevant for pattern-based and network-based analyses
+% extract_measures_batch Aggregate pattern- and network-based measures from an fmri_data object.
 %
-% DAT = extract_measures_batch(data_obj)
-% 
-% This is a method called extract_measures_batch for fmri_objects.  
-% It Extracts a set of measures relevant for pattern-based and network-based analyses. 
-% The idea is to aggregate these across studies, and pull relevant measures from the set 
-% for particular analyses.  It returns the following structure:
+% :Usage:
+% ::
 %
-% Tor Wager, August 2018
+%     DAT = extract_measures_batch(data_obj)
 %
-% 
-% DAT = 
+% Extracts a set of measures relevant for pattern-based and
+% network-based analyses from an fmri_data object. The intent is to
+% aggregate these consistently across studies so that downstream code
+% can pull whatever subset is relevant for a given analysis.
+%
+% :Inputs:
+%
+%   **data_obj:**
+%        fmri_data object containing one or more images (e.g., a single
+%        subject's preprocessed time series, or a group-level set of
+%        contrast images).
+%
+% :Outputs:
+%
+%   **DAT:**
+%        Struct with the fields described below. Tabular fields are
+%        MATLAB table objects. To inspect column names use
+%        DAT.(field).Properties.VariableNames; table2array(...)
+%        is useful for extracting numeric data matrices.
+%
+% :DAT structure:
+%
 % 
 %   struct with fields:
 % 
 %        extracted_on_date: '05-Sep-2018_02_49? 	Date information was extracted
 %              image_names: 'wrrest_mb8_r1.nii? 	Original image names (no paths)
-%                 fullpath: [914×119 char]          Full path names for all volumes (for provenance)
-%              mahalanobis: [914×5 table]           Mahalanobis distances (for weighting/nuisance)and outlier ID logical
-%                    rmssd: [1×1 struct] 			Root mean square successive differences and outlier ID logical
-%     gray_white_csf_table: [914×5 table]           Global avg gray, white, CSF, and 5 principal components	 for each; for nuisance
-%                  npsplus: [1×1 struct] 			Multivariate pattern responses for CANlab measures (NPS, more)
-%            kragelemotion: [1×1 struct]            Multivariate pattern responses for Kragel 2015 emotion classification
-%                 kragel18: [1×1 struct] 			Multivariate PLS pattern responses for Kragel 2018 Nat Neurosci and subregions
-%                 pain_pdm: [1×1 struct] 			Multivariate pattern responses for Geuter et al.?s Prin. Dirs of Medation (10 patterns, and combined)
-%                  PARCELS: [1×1 struct] 			Parcellations: Averages for each parcel, and local pattern responses (selected)
+%                 fullpath: [914ï¿½119 char]          Full path names for all volumes (for provenance)
+%              mahalanobis: [914ï¿½5 table]           Mahalanobis distances (for weighting/nuisance)and outlier ID logical
+%                    rmssd: [1ï¿½1 struct] 			Root mean square successive differences and outlier ID logical
+%     gray_white_csf_table: [914ï¿½5 table]           Global avg gray, white, CSF, and 5 principal components	 for each; for nuisance
+%                  npsplus: [1ï¿½1 struct] 			Multivariate pattern responses for CANlab measures (NPS, more)
+%            kragelemotion: [1ï¿½1 struct]            Multivariate pattern responses for Kragel 2015 emotion classification
+%                 kragel18: [1ï¿½1 struct] 			Multivariate PLS pattern responses for Kragel 2018 Nat Neurosci and subregions
+%                 pain_pdm: [1ï¿½1 struct] 			Multivariate pattern responses for Geuter et al.?s Prin. Dirs of Medation (10 patterns, and combined)
+%                  PARCELS: [1ï¿½1 struct] 			Parcellations: Averages for each parcel, and local pattern responses (selected)
 %
 % Tables:
 % Some variables are in Matlab table objects, e.g., DAT.mahalanobis. 
@@ -82,28 +98,28 @@ function DAT = extract_measures_batch(data_obj)
 % 
 %   struct with fields:
 % 
-%      dotproduct: [1×1 struct] % These are different similarity metrics
-%      cosine_sim: [1×1 struct]
-%     correlation: [1×1 struct]
+%      dotproduct: [1ï¿½1 struct] % These are different similarity metrics
+%      cosine_sim: [1ï¿½1 struct]
+%     correlation: [1ï¿½1 struct]
 %
 %     similarity_metric: 'dotproduct'
 %         image_scaling: 'none'
-%        signaturenames: {1×14 cell}
+%        signaturenames: {1ï¿½14 cell}
 %        conditionnames: {'C__1'}
-%                   NPS: [914×1 table]  % Each of these is a table object with a different signature
-%                NPSpos: [914×1 table]
-%                NPSneg: [914×1 table]
-%                 SIIPS: [914×1 table]
-%                 PINES: [914×1 table]
-%             Rejection: [914×1 table]
-%                   VPS: [914×1 table]
-%           VPS_nooccip: [914×1 table]
-%                   GSR: [914×1 table]
-%                 Heart: [914×1 table]
-%          FM_Multisens: [914×1 table]
-%               FM_pain: [914×1 table]
-%         Empathic_Dist: [914×1 table]
-%         Empathic_Care: [914×1 table]
+%                   NPS: [914ï¿½1 table]  % Each of these is a table object with a different signature
+%                NPSpos: [914ï¿½1 table]
+%                NPSneg: [914ï¿½1 table]
+%                 SIIPS: [914ï¿½1 table]
+%                 PINES: [914ï¿½1 table]
+%             Rejection: [914ï¿½1 table]
+%                   VPS: [914ï¿½1 table]
+%           VPS_nooccip: [914ï¿½1 table]
+%                   GSR: [914ï¿½1 table]
+%                 Heart: [914ï¿½1 table]
+%          FM_Multisens: [914ï¿½1 table]
+%               FM_pain: [914ï¿½1 table]
+%         Empathic_Dist: [914ï¿½1 table]
+%         Empathic_Care: [914ï¿½1 table]
 %         
 % Access them and build a matrix like this:
 % 
@@ -124,8 +140,8 @@ function DAT = extract_measures_batch(data_obj)
 % 
 %   struct with fields:
 % 
-%     canlab2018_2mm: [1×1 struct]  % ~500-region atlas composite from multiple published atlases and named ROIs
-%      yeo17networks: [1×1 struct]  % 16 unique rsfMRI networks, separated into left and right hemispheres
+%     canlab2018_2mm: [1ï¿½1 struct]  % ~500-region atlas composite from multiple published atlases and named ROIs
+%      yeo17networks: [1ï¿½1 struct]  % 16 unique rsfMRI networks, separated into left and right hemispheres
 %      
 % DAT.PARCELS.yeo17networks
 % 
@@ -133,13 +149,13 @@ function DAT = extract_measures_batch(data_obj)
 % 
 %   struct with fields:
 % 
-%        parcel_obj: [1×1 atlas]    % Original atlas object, with region labels, etc.
-%             means: [1×1 struct]   % .dat has a time x parcels matrix of mean data from each parcel
-%               NPS: [1×1 struct]   % Local pattern expression for the NPS in each parcel
-%             SIIPS: [1×1 struct]
-%             PINES: [1×1 struct]
-%               VPS: [1×1 struct]
-%     Empathic_Care: [1×1 struct]     
+%        parcel_obj: [1ï¿½1 atlas]    % Original atlas object, with region labels, etc.
+%             means: [1ï¿½1 struct]   % .dat has a time x parcels matrix of mean data from each parcel
+%               NPS: [1ï¿½1 struct]   % Local pattern expression for the NPS in each parcel
+%             SIIPS: [1ï¿½1 struct]
+%             PINES: [1ï¿½1 struct]
+%               VPS: [1ï¿½1 struct]
+%     Empathic_Care: [1ï¿½1 struct]     
 %
 % EXAMPLE
 % -------------------------------------------------------------------------

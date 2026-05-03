@@ -86,8 +86,6 @@ Voxel-wise inference, prediction, and multivariate analyses.
 | `signtest` | `@fmri_data` | Voxelwise non-parametric sign test |
 | `regress` | `@fmri_data` | Voxelwise multiple regression (uses `obj.X`) |
 | `robfit_parcelwise` | `@fmri_data` | Robust regression at parcel level |
-| `predict` | `@fmri_data` | Cross-validated multivariate prediction |
-| `predict_test_suite` | `@fmri_data` | Battery of `predict` sanity checks |
 | `searchlight` | `@image_vector` | Spherical-searchlight prediction/classification |
 | `searchlightLukas` | `@image_vector` | Variant of searchlight |
 | `ica` | `@image_vector` | Spatial ICA |
@@ -95,6 +93,16 @@ Voxel-wise inference, prediction, and multivariate analyses.
 | `mahal` | `@image_vector` | Mahalanobis distance per image vs. set |
 | `fitlme_voxelwise` | `@fmri_data` | Voxelwise mixed-effects model |
 | `rsa_regression` | `@fmri_data` | Representational-similarity regression |
+| `hrf_fit` | `@fmri_data` | HRF estimation per voxel |
+| `test_generalizability` | `@fmri_data` | Cross-cohort generalization test |
+| `canlab_connectivity_preproc` | `@fmri_data` | Connectivity-prep pipeline (despike / nuisance / bandpass) |
+
+## Multivariate prediction
+
+| Method | From | One-liner |
+|---|---|---|
+| `predict` | `@fmri_data` | Cross-validated multivariate prediction |
+| `predict_test_suite` | `@fmri_data` | Battery of `predict` sanity checks |
 | `evaluate_spatial_scale` | `@fmri_data` | Spatial-scale evaluation for patterns |
 | `bootstrap_structure_coeff_diff` | `@fmri_data` | Bootstrap diff in structure coefficients |
 | `structure_coefficient_map` | `@fmri_data` | Per-voxel structure coefficient map |
@@ -103,9 +111,6 @@ Voxel-wise inference, prediction, and multivariate analyses.
 | `model_brain_pathway` | `@fmri_data` | Pathway-modeling on connectivity |
 | `model_mpathi` | `@fmri_data` | Multi-pathway model |
 | `dual_regression` | `@fmri_data` | Dual regression on group ICA components |
-| `hrf_fit` | `@fmri_data` | HRF estimation per voxel |
-| `test_generalizability` | `@fmri_data` | Cross-cohort generalization test |
-| `canlab_connectivity_preproc` | `@fmri_data` | Connectivity-prep pipeline (despike / nuisance / bandpass) |
 
 ## Tables
 
@@ -127,7 +132,6 @@ meta-analytic maps for interpretation.
 |---|---|---|
 | `image_similarity_plot` | `@image_vector` | Cosine/correlation similarity vs. a basis set |
 | `image_similarity_plot_bucknermaps` | `@image_vector` | Convenience wrapper for Buckner-network maps |
-| `jackknife_similarity` | `@image_vector` | Leave-one-out spatial similarity |
 | `annotate_binary_results_map` | `@fmri_data` | Annotate a thresholded map with atlas/signature labels |
 | `annotate_continuous_neuroimage_maps` | `@fmri_data` | Annotation for continuous (unthresholded) maps |
 | `neurosynth_feature_labels` | `@fmri_data` | Look up Neurosynth feature labels |
@@ -150,6 +154,14 @@ Pulling values out of images, by mask / atlas / parcellation / coordinate.
 | `normalize_gm_by_wm_csf` | `@fmri_data` | Normalize GM signal by WM/CSF |
 | `runRestMetrics` | `@fmri_data` | Resting-state derived metrics |
 
+## Data processing
+
+Workflows for transforming and processing data objects
+
+| `denoise_timeseries_pipeline` | `@fmri_data` | End-to-end denoising for timeseries data |
+| `preprocess` | `@image_vector` | Many preprocessing options (filter / outliers / scale) |
+| `rescale` | `@fmri_data` | Per-image / per-voxel rescaling |
+
 ## Quality control
 
 Diagnosing and cleaning a dataset before analysis.
@@ -160,12 +172,9 @@ Diagnosing and cleaning a dataset before analysis.
 | `qc_metrics_second_level` | `@image_vector` | QC metrics across a 2nd-level set |
 | `outliers` | `@image_vector` | Detect outlier images |
 | `outliers_xval` | `@image_vector` | Outlier detection with cross-validated threshold |
-| `preprocess` | `@image_vector` | Many preprocessing options (filter / outliers / scale) |
-| `rescale` | `@fmri_data` | Per-image / per-voxel rescaling |
 | `windsorize` | `@fmri_data` | Voxel-wise windsorization |
-| `denoise_timeseries_pipeline` | `@fmri_data` | End-to-end denoising for timeseries data |
 | `sim_data` | `@fmri_data` | Simulate fmri_data for testing |
-| `validate_object` | `@fmri_data` | Sanity-check internal invariants |
+| `jackknife_similarity` | `@image_vector` | Leave-one-out spatial similarity |
 
 ## Misc utilities
 
@@ -182,3 +191,4 @@ I/O, type management, provenance, threshold helpers.
 | `threshold` | `@image_vector` | Threshold values (typically used on statistic_image) |
 | `create` | `@fmri_data` | Internal helper to assemble fields into an object |
 | `unstack_by_condition` | `@image_vector` | Split into sub-objects by a condition vector |
+| `validate_object` | `@fmri_data` | Sanity-check internal invariants |

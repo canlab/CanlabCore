@@ -1,53 +1,92 @@
 function [r1_obj, r2_obj, rdiff_obj] = structure_coefficient_map(obj, pattern1, varargin)
-% Calculate structure coefficient map (aka model encoding map) for linear model pattern1 using data in obj
+% structure_coefficient_map Voxelwise structure coefficient (model encoding) map for a linear pattern.
 %
-% [r1_obj, r2_obj, rdiff_obj] = structure_coefficient_map(obj, pattern1, varargin)
+% :Usage:
+% ::
 %
-% pattern1 is an fmri_data object with model weights for a linear multivariate model
+%     r1_obj = structure_coefficient_map(obj, pattern1)
+%     [r1_obj, r2_obj, rdiff_obj] = structure_coefficient_map(obj, pattern1, ...
+%         'pattern2', pattern2, 'montage', 'nboot', 1000)
 %
-% obj is an fmri_data object with a dataset to calculate structure
-% coefficients. For valid statistics, images should be independent (e.g., 1
-% per participant).
+% Calculate a structure-coefficient map (aka model encoding map) for the
+% linear multivariate model pattern1 using the data in obj. When
+% a second pattern is supplied via 'pattern2', also returns its
+% structure coefficient map and the difference map between the two.
 %
-% Optional inputs:
-% 'pattern2' followed by 2nd model to compare
-% 'montage'     Plot montage(s) of results
-% 'doplots'     Plot montage(s) of results
-% 'nboot'       followed by num bootstrap samples, default 100 (just for
-% testing purposes). Recommended: 5000 or more for final analysis
+% :Inputs:
 %
-% Example: Single model
-% ---------------------------------------------------------
-% ncs = load_image_set('ncs');
-% obj = load(which('anic_2021_all_current_v20220831.mat'));
-% obj = load_image_set('emotionreg');
-% r1_obj = structure_coefficient_map(obj, ncs);
+%   **obj:**
+%        fmri_data object containing the dataset to calculate structure
+%        coefficients on. For valid statistics, images should be
+%        independent (e.g., one per participant).
 %
+%   **pattern1:**
+%        fmri_data object containing model weights for a linear
+%        multivariate model.
 %
-% Example: Comparison of two models
-% ---------------------------------------------------------
-% nps = load_image_set('nps');
-% vps = load_image_set('vps');
-% obj = load_image_set('emotionreg');
+% :Optional Inputs:
 %
-% pattern1 = nps;  pattern2 = vps;
-% [ncs_obj, nps_obj, diff_obj] = structure_coefficient_map(obj, ncs, 'pattern2', nps, 'montage', 'nboot', 1000);
+%   **'pattern2', pattern2:**
+%        Second fmri_data model to compare against pattern1. Enables
+%        the difference map output rdiff_obj.
 %
-% % Re-threshold maps and display again:
-% r1_obj = threshold(r1_obj, .05, 'unc');
-% rdiff_obj = threshold(rdiff_obj, .05, 'unc');
+%   **'montage':**
+%        Plot montage(s) of results. (Equivalent to 'doplots', 1.)
 %
-
-% SEE ALSO
-% anic_2021_all_current_v20220831.mat
-% get_model_encoding_map.m
-% anic_model_encoding_mpa2.m
-% prep_3_create_model_encoding_maps.m
-% create_model_encoding_maps.m
-% method:
-% bootstrap_structure_coeff_diff.m
+%   **'doplots':**
+%        Plot montage(s) of results.
 %
-% notes structure coeffs source reconstruction.rtfd
+%   **'nboot', N:**
+%        Number of bootstrap samples; default 100 (testing only).
+%        Recommended: 5000 or more for final analysis.
+%
+% :Outputs:
+%
+%   **r1_obj:**
+%        statistic_image for the structure coefficient map of pattern1.
+%
+%   **r2_obj:**
+%        statistic_image for the structure coefficient map of pattern2
+%        (only when 'pattern2' is supplied).
+%
+%   **rdiff_obj:**
+%        statistic_image for the difference map (pattern1 - pattern2).
+%
+% :Examples:
+% ::
+%
+%     % Single model
+%     ncs = load_image_set('ncs');
+%     obj = load(which('anic_2021_all_current_v20220831.mat'));
+%     obj = load_image_set('emotionreg');
+%     r1_obj = structure_coefficient_map(obj, ncs);
+%
+%     % Comparison of two models
+%     nps = load_image_set('nps');
+%     vps = load_image_set('vps');
+%     obj = load_image_set('emotionreg');
+%
+%     pattern1 = nps;  pattern2 = vps;
+%     [ncs_obj, nps_obj, diff_obj] = structure_coefficient_map( ...
+%         obj, ncs, 'pattern2', nps, 'montage', 'nboot', 1000);
+%
+%     % Re-threshold maps and display again:
+%     r1_obj = threshold(r1_obj, .05, 'unc');
+%     rdiff_obj = threshold(rdiff_obj, .05, 'unc');
+%
+% :See also:
+%   - get_model_encoding_map
+%   - bootstrap_structure_coeff_diff (deprecated predecessor)
+%   - structure_coefficients
+%   - anic_model_encoding_mpa2, prep_3_create_model_encoding_maps,
+%     create_model_encoding_maps
+%   - anic_2021_all_current_v20220831.mat (example dataset)
+%
+% ..
+%    Programmers' notes:
+%    See "structure coeffs source reconstruction.rtfd" for derivation
+%    notes.
+% ..
 
 % ----------------------------------------------------------------------
 % Parse inputs

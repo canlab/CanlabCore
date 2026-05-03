@@ -1,19 +1,52 @@
 function [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2, varargin)
-% Activate all figures associated with an fmridisplay object, or a subset for specific montage(s) 
+% activate_figures Activate figures associated with an fmridisplay object.
 %
-% Usage:
-% [all_fig_han, all_axis_han, is_valid_handle] = activate_figures(o2, wh_montages)
+% Activate all figures associated with an fmridisplay object, or a subset
+% for specific montage(s).
 %
-% Inputs:
-% o2                      % an fmridisplay object with montages attached
-% Outputs:
-% figure_handles = {};    % cell array of handles for unique figures associated with fmridisplay object
-% figure_numbers = [];    % vector of figure numbers for unique figures associated with fmridisplay object
-% all_axis_han = [];      % vector of all axis handles associated with montages/figure elements
-% is_valid_handle = [];   % vector of which handles are valid (not deleted)
+% :Usage:
+% ::
 %
-% Limitations:
-% No support for surfaces yet; montages only
+%     [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2)
+%     [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2, wh_montages)
+%
+% :Inputs:
+%
+%   **o2:**
+%        An fmridisplay object with montages attached.
+%
+% :Optional Inputs:
+%
+%   **wh_montages:**
+%        Vector of montage indices to activate. Default: all montages
+%        (1:length(o2.montage)). A warning is issued and the function
+%        returns early if any requested index exceeds the number of
+%        montages.
+%
+% :Outputs:
+%
+%   **figure_handles:**
+%        Cell array of handles for unique figures associated with the
+%        fmridisplay object.
+%
+%   **figure_numbers:**
+%        Vector of figure numbers for unique figures associated with
+%        the fmridisplay object.
+%
+%   **all_axis_han:**
+%        Vector of all axis handles associated with montages/figure
+%        elements.
+%
+%   **is_valid_handle:**
+%        Vector of which handles are valid (not deleted).
+%
+% :Limitations:
+%
+%   No support for surfaces yet; montages only.
+%
+% :See also:
+%   - fmridisplay
+%   - montage
 
 % Initialize outputs
 % ----------------------------------------------------

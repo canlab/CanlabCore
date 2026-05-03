@@ -1,13 +1,24 @@
 function [obj, varargout] = preprocess(obj, meth, varargin)
-% Preprocesses data in an image_vector (e.g., fmri_data) object; many options for filtering and outlier id
+% preprocess Preprocess data in an image_vector (e.g., fmri_data) object: filtering and outlier id.
 %
-% Data is observations (i.e., voxels, subjects) x images, so operating on the columns operates on
-% images, and operating on the rows operates on voxels (or variables more
-% generally) across images.
+% Data is observations (i.e., voxels, subjects) x images, so operating
+% on the columns operates on images, and operating on the rows operates
+% on voxels (or variables more generally) across images.
+%
+% :Usage:
+% ::
+%
+%     [obj, varargout] = preprocess(obj, meth, [optional inputs])
 %
 % :Inputs:
 %
-%   **meth:** Options
+%   **obj:**
+%        An image_vector / fmri_data object.
+%
+%   **meth:**
+%        String specifying the preprocessing method. See :Methods: below.
+%
+% :Methods:
 %
 %   **resid:**
 %        Residualize voxels with respect to covariates
@@ -47,9 +58,9 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %        [obj, rmssd, wh_outliers_rmssd] = preprocess(obj, 'outliers_rmssd');
 %
 %   **smooth:**
-%         Smoothed images with Gaussian filter
-%           - obj = preprocess(obj, 'smooth', FWHM in mm)
-%           - Enter smoothing kernel in mm, as a scalar or [sx sy sz] triple
+%        Smoothed images with Gaussian filter
+%          - obj = preprocess(obj, 'smooth', FWHM in mm)
+%          - Enter smoothing kernel in mm, as a scalar or [sx sy sz] triple
 %
 %   **interp_images:**
 %        Interpolate all voxels in a series of images specified
@@ -59,10 +70,10 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %   **remove_white_csf:**
 %        Note: Enter 'components' keyword to use 1st 5 comps of WM and CSF,
 %        or no keyword to use only WM and CSF mean global signal.
-%        Extract data values for gray, white, CSF
-%        Regress gray matter mean on first 5 components of white-matter and CSF
-%        Remove the fitted values from the images image-wise
-%        This adjusts for variations in overall image intensity that are explainable by variations in white-matter and CSF
+%        Extract data values for gray, white, CSF.
+%        Regress gray matter mean on first 5 components of white-matter and CSF.
+%        Remove the fitted values from the images image-wise.
+%        This adjusts for variations in overall image intensity that are explainable by variations in white-matter and CSF.
 %        By default, uses a highly eroded standard mask for gray/white/CSF,
 %        that avoids mixing signal components coming from gray matter.
 %        Requires that images be registered in MNI space to work
@@ -70,37 +81,58 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %        This effectively removes a scalar multiple of each white/CSF regressor from
 %        all voxels in each image set.
 %        Estimating parameters for each voxel independently would add a lot of
-%        variability.  this way, we estimate the overall location of the image
+%        variability. This way, we estimate the overall location of the image
 %        (shift up/down from zero in gray matter) that is predictable from
 %        gray/white variables, and remove that.
-%        we can apply this to any data - time series, contrast images, beta
+%        We can apply this to any data - time series, contrast images, beta
 %        images, signature response values.
 %
 %   **remove_csf:**
-%        Same as remove_white_csf, but use only CSF predictors
+%        Same as remove_white_csf, but use only CSF predictors.
 %        This is because work, e.g., that of John Gore, suggests there is likely
 %        real signal in WM, so removing it can cause real signal to be
-%        removed
+%        removed.
 %        Note: Enter 'components' keyword to use 1st 5 comps of CSF,
 %        or no keyword to use only CSF mean global signal.
 %
 %   **rescale_by_csf:**
-%       This attempts to model and remove scale inhomogeneity across
-%       images.  It estimates the relationship between the spatial median abs.
-%       deviation (MAD) for CSF voxels and for GM voxels. The proportion of the GM deviation 
-%       for each image fitted by CSF is divided out. 
+%        This attempts to model and remove scale inhomogeneity across
+%        images. It estimates the relationship between the spatial median abs.
+%        deviation (MAD) for CSF voxels and for GM voxels. The proportion of the GM deviation
+%        for each image fitted by CSF is divided out.
+%
+% :Optional Inputs:
+%
+%   **'plot':**
+%        For 'outliers' / 'outliers_rmssd' / 'remove_white_csf' /
+%        'remove_csf' / 'rescale_by_csf', creates diagnostic plots.
+%
+%   **'components':**
+%        For 'remove_white_csf' / 'remove_csf', use top 5 components of
+%        WM/CSF instead of mean global signal.
+%
+% :Outputs:
+%
+%   **obj:**
+%        Modified image_vector / fmri_data object with the requested
+%        preprocessing applied. obj.history is updated to reflect the
+%        operation.
+%
+%   **varargout:**
+%        For 'outliers_rmssd', varargout{1} = rmssd vector and
+%        varargout{2} = logical outlier vector.
 %
 % :Examples:
 % ::
 %
-%   % two complementary ways to get and plot outliers:
-% ---------------------------------------------------------------------
+%    % two complementary ways to get and plot outliers:
+%    % ---------------------------------------------------------------------
 %    dat = preprocess(dat, 'outliers', 'plot');
 %    subplot(5, 1, 5); % go to new panel...
 %    dat = preprocess(dat, 'outliers_rmssd', 'plot');
 %
-%    Concatenate a set of image objects and then regress out white/CSF components
-% ---------------------------------------------------------------------
+%    % Concatenate a set of image objects and then regress out white/CSF components
+%    % ---------------------------------------------------------------------
 %    DATA_CAT = cat(DATA_OBJ{:});
 %    for i = 1:size(DATA_OBJ, 2), sz(i) = size(DATA_OBJ{i}.dat, 2); end
 %    DATA_CAT.images_per_session = sz;
@@ -108,14 +140,22 @@ function [obj, varargout] = preprocess(obj, meth, varargin)
 %
 %    DATA_CAT = preprocess(DATA_CAT, 'remove_white_csf');
 %
-%    For a 2nd-level image dataset, Regress out and rescale by CSF values
-%    Plot before and after
-% ---------------------------------------------------------------------
-% obj = load_image_set('emotionreg');
-% histogram(obj, 'by_tissue_type', 'byimage');
-% obj = preprocess(obj, 'remove_csf');
-% obj = preprocess(obj, 'rescale_by_csf');
-% history(obj)
+%    % For a 2nd-level image dataset, regress out and rescale by CSF values.
+%    % Plot before and after
+%    % ---------------------------------------------------------------------
+%    obj = load_image_set('emotionreg');
+%    histogram(obj, 'by_tissue_type', 'byimage');
+%    obj = preprocess(obj, 'remove_csf');
+%    obj = preprocess(obj, 'rescale_by_csf');
+%    history(obj)
+%
+% :See also:
+%   - extract_gray_white_csf
+%   - hpfilter
+%   - mahal
+%   - intercept_model
+%   - iimg_smooth_3d
+%   - canlab_connectivity_preproc
 
 switch meth
     

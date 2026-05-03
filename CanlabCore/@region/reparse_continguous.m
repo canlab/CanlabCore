@@ -1,10 +1,35 @@
 function clout = reparse_continguous(cl)
-% Re-define regions in region object based on contiguous blobs
+% reparse_continguous Re-define regions in a region object based on contiguous blobs.
+%
+% Convert the input region object to an image_vector representation,
+% then re-build a region-class object array using contiguous-region
+% parsing. If the input regions carry .all_data, the per-voxel data is
+% redistributed across the new contiguous regions and re-averaged into
+% .dat for each new region.
 %
 % :Usage:
 % ::
 %
-%    clout = reparse_continguous(cl)
+%     clout = reparse_continguous(cl)
+%
+% :Inputs:
+%
+%   **cl:**
+%        A region-class object array, typically resulting from
+%        operations that may have produced regions with non-contiguous
+%        voxels (e.g., posneg_separate).
+%
+% :Outputs:
+%
+%   **clout:**
+%        A new region-class object array with one element per
+%        contiguous blob, with .all_data and .dat re-distributed where
+%        possible.
+%
+% :See also:
+%   - region2imagevec
+%   - posneg_separate
+%   - region
 %
 % ..
 %    NEEDS SOME ADDITIONAL WORK/CHECKING

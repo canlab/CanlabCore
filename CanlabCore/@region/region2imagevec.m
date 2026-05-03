@@ -1,17 +1,46 @@
 function [ivecobj, orig_idx_vec]  = region2imagevec(r, varargin)
-% Convert a region object to an image_vector object, replacing the voxels
-% and reconstructing as much info as possible. Optional: Resample to the
-% space of another image_vector object specified by the first additional input.
+% region2imagevec Convert a region object to an image_vector object.
 %
-% The .dat field of the new "ivecobj" is made from the r.all_data field.
-% if this is empty, uses r.val field, then r.Z as a backup.
-% Mask information is available in ivecobj.volInfo.
+% Convert a region object to an image_vector object, replacing the
+% voxels and reconstructing as much info as possible. Optionally,
+% resample to the space of another image_vector object specified by the
+% first additional input.
+%
+% The .dat field of the new ivecobj is built from the r.all_data field;
+% if empty, uses r.val, then r.Z as a backup. Mask information is
+% available in ivecobj.volInfo.
 %
 % :Usage:
 % ::
 %
-%    [ivecobj, orig_idx] = region2imagevec(r, [image_vector object to resample space to])
+%     [ivecobj, orig_idx] = region2imagevec(r, [image_vector object to resample to])
 %
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array.
+%
+% :Optional Inputs:
+%
+%   **image_vector object:**
+%        If supplied, the resulting ivecobj is resampled to this
+%        object's space.
+%
+% :Outputs:
+%
+%   **ivecobj:**
+%        An image_vector-class object reconstructed from r, with .dat,
+%        .volInfo, and contiguous-cluster information populated.
+%
+%   **orig_idx_vec:**
+%        Vector of original region indices for each voxel in
+%        ivecobj.dat (useful when later reconstructing per-region
+%        information).
+%
+% :See also:
+%   - region2atlas
+%   - region2fmri_data
+%   - resample_space
 
 % Alt code - would need to expand for all regions
 % ivecobj = image_vector;

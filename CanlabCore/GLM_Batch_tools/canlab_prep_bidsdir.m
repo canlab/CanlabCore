@@ -1,52 +1,88 @@
 function canlab_prep_bidsdir(bidsdir, varargin)
-    % CANLAB_PREP_BIDSDIR Convert a BIDS directory for canlab_glm_subject_levels compatibility
+    % canlab_prep_bidsdir Convert a BIDS directory for canlab_glm_subject_levels compatibility.
     %
-    % This function 'canlabulates' a directory, making it compatible for 
-    % canlab_glm_subject_levels first-level analyses. It creates symbolic links
-    % instead of copying files, ensuring no redundant space usage while keeping
-    % the original BIDS directory intact. Optionally, you can create a BIDS
-    % structure outside the original BIDS directory by specifying 'outdir'.
+    % :Usage:
+    % ::
     %
-    % Usage:
-    %   canlab_prep_bidsdir(bidsdir, 'datatype', datatypestring, 'noise', noisestring, 'outdir', outdir)
+    %     canlab_prep_bidsdir(bidsdir, 'datatype', datatypestring, ...
+    %         'noise', noisestring, 'outdir', outdir)
     %
-    % Examples:
-    %   Clone T1 for CAT12 analysis:
-    %   canlab_prep_bidsdir(raw_bidsdir, 'datatype', anat, 'outdir', outdir)
-    %   
-    %   Clone funcs for CANlab First-Level Analyses:
-    %   canlab_prep_bidsdir(fmriprep_bidsdir, 'datatype', func, 'taskdir', raw_bidsdir, 'outdir', outdir)
+    % This function 'canlabulates' a directory, making it compatible
+    % for canlab_glm_subject_levels first-level analyses. It creates
+    % symbolic links instead of copying files, ensuring no redundant
+    % space usage while keeping the original BIDS directory intact.
+    % Optionally, you can create a BIDS structure outside the original
+    % BIDS directory by specifying 'outdir'.
     %
-    % Required Argument:
-    %   bidsdir       - Full filepath to the BIDS-directory of your study.
-    %                   e.g., 'F:\Dropbox (Dartmouth College)\Tor Pinel datasets\Pinel_localizer\data\pinel_localizer_Dartmouth_S2019'
+    % :Notes:
+    %    - For symbolic link creation on Windows, you must run MATLAB
+    %      as administrator.
+    %    - Always ensure you have backup copies of your data before
+    %      performing directory operations.
     %
-    % Optional Key-Value Arguments:
-    %   'datatype'    - Data type ('func' or 'anat') filename identifiers (with wildcards) to pull from 
-    %                   every subject. Default: 'func'.
-    %   'filename'    - The filename identifiers (with wildcards) based on datatype.
-    %                   Default: '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz' for 'func' and *T1w.nii.gz' for 'anat'.
+    % Function by Michael Sun, Ph.D. 11/29/2022. Updated: 10/19/2023.
     %
-    %   'noise'       - Confound filename identifiers (with wildcards) to pull from 
-    %                   every subject. Default: '*desc-confounds_timeseries.tsv'.
+    % :Inputs:
     %
-    %   'taskdir'      - Full filepath of the root BIDS directory where the task files reside.
-    %                   By default, it's the same as the input BIDS
-    %                   directory, but more likely than not, it is the root
-    %                   BIDS directory (non-derivative).
+    %   **bidsdir:**
+    %        Full filepath to the BIDS directory of your study, e.g.,
+    %        'F:\Dropbox (Dartmouth College)\Tor Pinel datasets\
+    %        Pinel_localizer\data\pinel_localizer_Dartmouth_S2019'.
     %
-    %   'task'        - Task filename identifiers (with wildcards) to pull from 
-    %                   every subject. This likely has to pull from the original BIDS directory so set that. Default: '*_events.tsv'.
+    % :Optional Inputs:
     %
-    %   'outdir'      - Full filepath of the directory where the new structure with symbolic links will be created.
-    %                   By default, it's the same as the input BIDS directory.
+    %   **'datatype':**
+    %        Data type ('func' or 'anat') filename identifiers (with
+    %        wildcards) to pull from every subject. Default: 'func'.
     %
-    % Notes:
-    %   - For symbolic link creation on Windows, you must run Matlab as administrator.
-    %   - Always ensure you have backup copies of your data before performing directory operations.
+    %   **'filename':**
+    %        The filename identifiers (with wildcards) based on
+    %        datatype. Default:
+    %        '*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz' for
+    %        'func' and '*T1w.nii.gz' for 'anat'.
     %
-    % Function by Michael Sun, Ph.D. 11/29/2022
-    % Updated: 10/19/2023
+    %   **'noise':**
+    %        Confound filename identifiers (with wildcards) to pull
+    %        from every subject. Default:
+    %        '*desc-confounds_timeseries.tsv'.
+    %
+    %   **'taskdir':**
+    %        Full filepath of the root BIDS directory where the task
+    %        files reside. By default, it's the same as the input BIDS
+    %        directory, but more likely than not, it is the root BIDS
+    %        directory (non-derivative).
+    %
+    %   **'task':**
+    %        Task filename identifiers (with wildcards) to pull from
+    %        every subject. This likely has to pull from the original
+    %        BIDS directory, so set that. Default: '*_events.tsv'.
+    %
+    %   **'outdir':**
+    %        Full filepath of the directory where the new structure
+    %        with symbolic links will be created. By default, it's the
+    %        same as the input BIDS directory.
+    %
+    % :Outputs:
+    %
+    %   None returned to the workspace. Side effects: creates a
+    %   directory tree under outdir containing symbolic links to
+    %   the requested data, noise, and task files (with one
+    %   subdirectory per BIDS run for func data).
+    %
+    % :Examples:
+    % ::
+    %
+    %     % Clone T1 for CAT12 analysis
+    %     canlab_prep_bidsdir(raw_bidsdir, 'datatype', 'anat', ...
+    %         'outdir', outdir);
+    %
+    %     % Clone funcs for CANlab first-level analyses
+    %     canlab_prep_bidsdir(fmriprep_bidsdir, 'datatype', 'func', ...
+    %         'taskdir', raw_bidsdir, 'outdir', outdir);
+    %
+    % :See also:
+    %   - canlab_glm_subject_levels
+    %   - canlab_glm_group_levels
 
     % Create an input parser object
     p = inputParser;

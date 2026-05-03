@@ -1,6 +1,32 @@
 function atlas_obj = atlas_add_L_R_to_labels(atlas_obj)
-% Removes some strings indicating lateralization from atlas labels and adds new _L and _R suffixes for lateralized regions.
-% - strings replaced are L_ R_ Left_ Right_ _L _R _Left _Right
+% atlas_add_L_R_to_labels Standardize lateralization suffixes on atlas labels.
+%
+% Remove some strings indicating lateralization from atlas labels and add
+% new _L and _R suffixes for lateralized regions. The strings stripped from
+% the labels are: L_ R_ Left_ Right_ _L _R _Left _Right. New suffixes are
+% determined by the modal sign of the x-coordinate for voxels in each
+% region (negative = left, positive = right). Regions whose proportional
+% L/R asymmetry is below 0.5 are left without a suffix.
+%
+% :Usage:
+% ::
+%
+%     atlas_obj = atlas_add_L_R_to_labels(atlas_obj)
+%
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object whose .labels field will be modified.
+%
+% :Outputs:
+%
+%   **atlas_obj:**
+%        Atlas object with relabeled .labels (with _L/_R suffixes added
+%        as appropriate).
+%
+% :See also:
+%   - split_atlas_by_hemisphere
+%   - atlas2region
 
 labels = atlas_obj.labels;
 

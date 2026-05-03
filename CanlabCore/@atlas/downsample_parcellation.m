@@ -1,28 +1,50 @@
 function new_atlas_obj = downsample_parcellation(obj, varargin)
-% An atlas_obj has multiple label fields meant to label nested parcellations
-% at different levels of granularity. labels is the default which must
-% contain unique entries and correspond to the number of unique indices
-% in the (voxelwise) parcellation index map, but labels_2 ... labels_5
-% may contain non-unique entries corresponding to coarser parcellations.
-% This function remaps indices and probability maps to correspond to one
-% of these coarser parcellations. It is a lossy operations and all labels
-% of finer parcellation than the selected level will be discarded.
+% downsample_parcellation Remap an atlas to a coarser nested parcellation.
 %
-% Input ::
-%     obj - an atlas_object. Must have at least one of labels_2 ...
-%                 labels_5 defined
-%     varargin - either a vector of new labels to use, a string or leave empty. 
-%                  If you provide a vector, its length should equal number of
-%                  regions in original atlas, with redundant labels for regions
-%                  you want to combine in the downsampled atlas.
-%                  If you provide a string, it should be one of 
-%                  {'labels_2', 'labels_3', 'labels_4', 'labels_5'} which will
-%                  then be used as the downsampling vector.
-%                  If you don't provide anything the contents of labels_2 is used
-%                  by default.
+% An atlas object has multiple label fields meant to label nested
+% parcellations at different levels of granularity. 'labels' is the
+% default which must contain unique entries and correspond to the number
+% of unique indices in the (voxelwise) parcellation index map, but
+% labels_2 ... labels_5 may contain non-unique entries corresponding to
+% coarser parcellations. This function remaps indices and probability
+% maps to correspond to one of these coarser parcellations. It is a lossy
+% operation and all labels of finer parcellation than the selected level
+% will be discarded.
 %
-% Output ::
-%     atlas_obj - a new atlas object, reindexed according to labelfield
+% :Usage:
+% ::
+%
+%     new_atlas_obj = downsample_parcellation(obj, [labelfield_or_vector], ['concat_label_descriptions'])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An atlas-class object. Must have at least one of labels_2 ...
+%        labels_5 defined.
+%
+% :Optional Inputs:
+%
+%   **labelfield_or_vector:**
+%        Either a cell-array vector of new labels (whose length must
+%        equal the number of regions in the original atlas, with
+%        redundant labels for regions to be combined), or a string from
+%        {'labels_2', 'labels_3', 'labels_4', 'labels_5'} naming the
+%        downsampling level. If omitted, 'labels_2' is used by default.
+%
+%   **'concat_label_descriptions':**
+%        Concatenate label_descriptions of merged regions (separated by
+%        semicolons) instead of replacing them.
+%
+% :Outputs:
+%
+%   **new_atlas_obj:**
+%        A new atlas-class object, reindexed and relabeled according to
+%        the requested coarser parcellation.
+%
+% :See also:
+%   - select_atlas_subset
+%   - merge_atlases
+%   - num_regions
 
 fprintf('Downsampling %s parcels\n', obj.atlas_name);
 

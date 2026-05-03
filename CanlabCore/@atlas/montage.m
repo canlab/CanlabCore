@@ -1,91 +1,116 @@
 function o2 = montage(obj, varargin)
-% This function displays an atlas object on a standard slice montage
-% Call with 'nosymmetric' or 'colors' ... to match colors with wedge plots
-% 
+% montage Display an atlas object on a standard slice montage.
+%
+% Convert the atlas object to a region object and forward to
+% region/montage. By default, regions are colored with a standard color
+% map; pass 'sourcespace' to override the source-space description used
+% for surface projection.
+%
 % :Usage:
 % ::
 %
-%    montage(obj, [optional inputs])
+%     montage(obj, [optional inputs])
 %
-% - takes all optional inputs to canlab_results_fmridisplay and addblobs method
+% Takes all optional inputs to canlab_results_fmridisplay and the
+% addblobs method.
 %
-% :Input:
+% :Inputs:
 %
 %   **obj:**
-%        a region object
+%        An atlas-class object.
 %
-% :Optional Inputs:  - see help canlab_results_fmridisplay
+% :Optional Inputs:
 %
-%   **o2***
-%        An existing fmridisplay object, with no keyword strings
+%   See help canlab_results_fmridisplay for the full list. Common
+%   options include:
 %
-%   **symmetric** [default]
-%       Mirror left/right blobs with same colors
-%       See match_colors_left_right
+%   **o2:**
+%        An existing fmridisplay object, with no keyword strings.
 %
-%   **nosymmetric**
-%       Standard color map, no L/R color-matching for symmetry 
-%       Call with 'nosymmetric' to match colors with wedge plots
+%   **'symmetric' [default]:**
+%        Mirror left/right blobs with same colors. See
+%        match_colors_left_right.
+%
+%   **'nosymmetric':**
+%        Standard color map, no L/R color-matching for symmetry. Call
+%        with 'nosymmetric' to match colors with wedge plots.
 %
 %   **'noblobs':**
-%        do not display blobs
+%        Do not display blobs.
 %
 %   **'nooutline':**
-%        do not display blob outlines
+%        Do not display blob outlines.
 %
 %   **'addmontages':**
-%        when entering existing fmridisplay obj, add new montages
+%        When entering existing fmridisplay obj, add new montages.
 %
 %   **'noremove':**
-%        do not remove current blobs when adding new ones
+%        Do not remove current blobs when adding new ones.
 %
-%   **'outlinecolor:**
-%        followed by new outline color
+%   **'outlinecolor':**
+%        Followed by new outline color.
 %
 %   **'splitcolor':**
-%        followed by 4-cell new split colormap colors (help fmridisplay or edit code for defaults as example)
+%        Followed by a 4-cell new split colormap colors (help
+%        fmridisplay or edit code for defaults as example).
 %
 %   **'montagetype':**
-%        'full' for full montages of axial and sagg slices.
-%
+%        'full' for full montages of axial and saggital slices.
 %        'full hcp' for full montage, but with surfaces and volumes from
-%        HCP data
-%
-%        'compact' [default] for single-figure parasagittal and axials slices.
-%
+%        HCP data.
+%        'compact' [default] for single-figure parasagittal and axial slices.
 %        'compact2': like 'compact', but fewer axial slices.
-%
-%        'multirow': followed by number of rows
-%           e.g., o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%        'multirow': followed by number of rows, e.g.,
+%        o2 = canlab_results_fmridisplay([], 'multirow', 2).
 %
 %   **'noverbose':**
-%        suppress verbose output, good for scripts/publish to html, etc.
+%        Suppress verbose output, good for scripts/publish to html, etc.
 %
 %   **'overlay':**
-%        specify anatomical image for montage (not surfaces), followed by
-%        image name
-%        e.g., o2 = canlab_results_fmridisplay([], 'overlay', 'icbm152_2009_symmetric_for_underlay.img')';
+%        Specify anatomical image for montage (not surfaces), followed
+%        by image name, e.g., o2 = canlab_results_fmridisplay([], ...
+%        'overlay', 'icbm152_2009_symmetric_for_underlay.img').
+%        The default brain for overlays is based on Keuken et al. 2014.
+%        For legacy SPM8 single subject, enter as arguments: 'overlay',
+%        which('SPM8_colin27T1_seg.img').
 %
-%         The default brain for overlays is based on Keuken et al. 2014
-%         For legacy SPM8 single subject, enter as arguments:
-%         'overlay', which('SPM8_colin27T1_seg.img')
+%   **'indexmap':**
+%        Followed by a colormap (n x 3) to use as the indexed colormap
+%        for atlas regions. Defaults to scn_standard_colors(num_regions).
 %
-% Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+%   **'sourcespace':**
+%        Followed by a source-space identifier used by the surface
+%        rendering routines (e.g., 'MNI152NLin2009cAsym'). Defaults to
+%        obj.space_description.
 %
-% See help fmridisplay and region/montage
-% e.g., 'color', [1 0 0]
+% Other inputs to addblobs (fmridisplay method) are allowed, e.g.,
+% 'cmaprange', [-2 2], 'trans'.
 %
+% :Outputs:
 %
-% Examples:
+%   **o2:**
+%        An fmridisplay object with the atlas regions rendered on slices
+%        and (optionally) surfaces.
 %
-% o2 = canlab_results_fmridisplay([], 'noverbose');
-% o2 = montage(r, o2);      % symmetric colors left/right
-% o2 = removeblobs(o2);
-% o2 = montage(r, o2, 'map');
-
-% PROGRAMMERS' NOTES:
-% Tor Wager, Feb 2018.  
-% This function simply invokes the region montage method.
+% :Examples:
+% ::
+%
+%     o2 = canlab_results_fmridisplay([], 'noverbose');
+%     o2 = montage(r, o2);      % symmetric colors left/right
+%     o2 = removeblobs(o2);
+%     o2 = montage(r, o2, 'map');
+%
+% :See also:
+%   - region/montage
+%   - canlab_results_fmridisplay
+%   - fmridisplay
+%   - atlas2region
+%
+% ..
+%    Programmer Notes:
+%    Tor Wager, Feb 2018. This function simply invokes the region montage
+%    method.
+% ..
 
 
 cmap = [];

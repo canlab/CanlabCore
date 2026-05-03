@@ -1,5 +1,5 @@
 function dat = flip(dat, varargin)
-% Flips images stored in an object left-to-right
+% flip Flip images stored in an image_vector object left-to-right.
 %
 % Operates on a single-image (3-D) object only. The slice loop below
 % iterates over Z planes of a 3-D volume; calling it on a multi-image
@@ -7,10 +7,29 @@ function dat = flip(dat, varargin)
 % this method now errors instead. To flip a multi-image object, reduce
 % it to a single image first (e.g. mean(obj), or get_wh_image(obj, k)).
 %
+% :Usage:
+% ::
+%
+%     dat = flip(dat, ['mirror'])
+%
+% :Inputs:
+%
+%   **dat:**
+%        A single-image image_vector (or subclass) object. Errors if the
+%        object contains more than one image.
+%
 % :Optional Inputs:
 %
-%   Input 'mirror' to make a symmetrical image, averaging the left
-%   and right hemispheres
+%   **'mirror':**
+%        Make a symmetrical image, averaging the left and right
+%        hemispheres after flipping.
+%
+% :Outputs:
+%
+%   **dat:**
+%        The input object with image data flipped left-to-right (and
+%        averaged with the original if 'mirror' was specified). The
+%        volInfo / mask is rebuilt around the new non-zero values.
 %
 % :Examples:
 % ::
@@ -18,6 +37,11 @@ function dat = flip(dat, varargin)
 %    dat = flip(dat)
 %    dat = flip(dat, 'mirror')
 %    dat = flip(mean(obj))         % flip the group-mean of a multi-image object
+%
+% :See also:
+%   - reconstruct_image
+%   - rebuild_volinfo_from_dat
+%   - replace_empty
 %
 % ..
 %    Tor. may 2012

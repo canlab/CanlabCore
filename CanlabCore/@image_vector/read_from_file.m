@@ -1,13 +1,42 @@
 function obj = read_from_file(obj)
-% Reads data from image filenames into obj.dat
+% read_from_file Read image data from disk into the .dat field of an image_vector object.
 %
-% Try obj = check_image_filenames(obj) first.
+% Loads voxel data from the files listed in obj.fullpath into obj.dat.
+% If obj.volInfo is empty, it is created from the first image. Try
+% check_image_filenames(obj) first to make sure obj.fullpath points to
+% valid files on disk.
 %
-% This is automatically called if you create a new image_vector object with
-% names but do not directly enter data. e.g., the commands below will load data:
-%   - name = 'salientmap.nii';
-%   - img = image_vector('image_names', name);
-% 
+% This is automatically called if you create a new image_vector object
+% with names but do not directly enter data.
+%
+% :Usage:
+% ::
+%
+%     obj = read_from_file(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data object with .fullpath populated.
+%        If .volInfo is empty, it will be created from the first image.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with .dat populated as single-precision values
+%        and .volInfo populated if it was empty.
+%
+% :Examples:
+% ::
+%
+%     name = 'salientmap.nii';
+%     img = image_vector('image_names', name);
+%     % read_from_file is called automatically inside the constructor.
+%
+% :See also:
+%   - check_image_filenames
+%   - iimg_read_img
+%   - iimg_get_data
 
 % disp('Reading image data into object .dat field.');
 

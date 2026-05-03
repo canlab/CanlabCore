@@ -1,13 +1,40 @@
 function cl = merge(cl, wh_merge)
-% Merge two or more regions together in a region object.
-% Combines fields from all clusters in the named series with the first one
-% in the series.
+% merge Merge two or more regions together within a region object.
+%
+% Combine the regions indexed by wh_merge into a single region (the
+% first one in wh_merge), updating fields as appropriate: text fields
+% are concatenated with ' MERGED WITH ' separators, voxel-list fields
+% (XYZ, XYZmm, Z, threshold, all_data) are concatenated horizontally,
+% the .val field is concatenated vertically, and per-region averages
+% (timeseries, contrastdata, dat) are weighted-averaged by voxel count.
+% Center and mm_center are recomputed and the merged regions other
+% than the first are removed from the array.
 %
 % :Usage:
 % ::
 %
-%    wh_merge = [3 4];
-%    cl = merge(cl, wh_merge)
+%     wh_merge = [3 4];
+%     cl = merge(cl, wh_merge)
+%
+% :Inputs:
+%
+%   **cl:**
+%        A region-class object array.
+%
+%   **wh_merge:**
+%        Vector of indices into cl identifying the regions to merge.
+%        The first entry receives the merged result; the remaining
+%        entries are deleted from cl.
+%
+% :Outputs:
+%
+%   **cl:**
+%        Region object array with the merged region in position
+%        wh_merge(1) and the other merged elements removed.
+%
+% :See also:
+%   - region
+%   - reparse_continguous
 %
 % ..
 %    Tor Wager, April 2011

@@ -1,26 +1,64 @@
 function [names, isfile, isdir, hasduplicates] = canlab_list_files(varargin)
-% [names, isfile, isdir, hasduplicates]  = canlab_list_files(dir1, dir2, dir3, etc.)
+% canlab_list_files Build a list of file paths by concatenating subfolder names with optional cell expansion.
 %
-% Lists files in a series of subfolders in a particular order.
-% Enter as many dirs as you want, which are subfolders.
-% If a dir is a cell array of names, this function will look in all combos
-% of those cells with other dir strings, in order.
-% dir1...n strings are concatenated in order.
+% :Usage:
+% ::
 %
-% Returns:
-% Vector of whether each name in names is an existing file, and whether
-% each is an existing directory
+%     [names, isfile, isdir, hasduplicates] = canlab_list_files(dir1, dir2, dir3, ...)
 %
-% e.g.,
-% subjects = {'nsf1' 'nsf2' 'NSF909'};
-% names = canlab_list_files(subjects, 'Structural', 'SPGR', 'wspgr.img')
-% names = canlab_list_files(pwd, subjects, 'Structural', 'SPGR', 'wspgr.img')
-% 
-% Return list of whether each is an existing file or dir
-% [names, isfile, isdir, hasduplicates] = canlab_list_files(pwd, subjects, 'Structural', 'SPGR', 'wspgr.img')
+% Lists files in a series of subfolders, in a particular order. Enter
+% as many dirs as you want; they are treated as nested subfolders and
+% concatenated in order with fullfile.
 %
-% Make string matrix:
-% names = char(names{:});
+% If any dir argument is a cell array of names, this function will
+% expand it: it will produce one output entry for every combination of
+% that cell with the other dir strings (in order). This is convenient
+% for building per-subject file lists.
+%
+% :Inputs:
+%
+%   **dir1, dir2, ...:**
+%        Each argument is either a string (treated as a single
+%        subfolder/filename appended to all current paths) or a cell
+%        array of strings (treated as alternatives, each one expanding
+%        the current list of paths). Strings are concatenated in order
+%        with fullfile.
+%
+% :Outputs:
+%
+%   **names:**
+%        Cell array of constructed paths.
+%
+%   **isfile:**
+%        Numeric/logical column vector; whether each entry in names is
+%        an existing file (per exist(name, 'file')).
+%
+%   **isdir:**
+%        Numeric/logical column vector; whether each entry in names is
+%        an existing directory (per exist(name, 'dir')).
+%
+%   **hasduplicates:**
+%        Logical scalar; true if any entries in names are
+%        duplicates of one another.
+%
+% :Examples:
+% ::
+%
+%     subjects = {'nsf1' 'nsf2' 'NSF909'};
+%     names = canlab_list_files(subjects, 'Structural', 'SPGR', 'wspgr.img');
+%     names = canlab_list_files(pwd, subjects, 'Structural', 'SPGR', 'wspgr.img');
+%
+%     % Return list of whether each is an existing file or dir
+%     [names, isfile, isdir, hasduplicates] = ...
+%         canlab_list_files(pwd, subjects, 'Structural', 'SPGR', 'wspgr.img');
+%
+%     % Convert the resulting cell array to a char string matrix
+%     names = char(names{:});
+%
+% :See also:
+%   - filenames
+%   - dir
+%   - fullfile
 
 d = varargin;
 

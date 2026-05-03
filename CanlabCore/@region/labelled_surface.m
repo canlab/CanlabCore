@@ -1,22 +1,63 @@
 function [centroid, p] = labelled_surface(r, varargin)
-% labelled_surface - Plots labelled surfaces with centroids and text annotations
-% 
-% Syntax:  [centroid, p] = labelled_surface(r, varargin)
+% labelled_surface Plot labelled surfaces with centroids and text annotations.
 %
-% Inputs:
-%    r - Cell array of surfaces to be plotted
-%    varargin - Additional parameters for customization (e.g., surface_keyword, colormap, font_arguments)
+% Render a region object as transparent isosurfaces on top of a brain
+% surface, label each region with its short title and a sequential
+% number, and return per-region centroid coordinates and the underlying
+% brain surface handle. The text label is offset toward the camera if
+% 'popout' is requested.
 %
-% Outputs:
-%    centroid - Cell array of centroid coordinates for each surface
-%    p - Handle to the brain surface plot
+% :Usage:
+% ::
 %
-% Example: 
-%    [centroid, p] = labelled_surface(r, 'surface_keyword', 'left_cutaway', 'colormap', @jet, 'font_arguments', {'FontSize', 12, 'FontWeight', 'bold'}, 'popout', true);
+%     [centroid, p] = labelled_surface(r, [optional inputs])
 %
-% See also: addbrain, isosurface, format_strings_for_legend
-
-% Author: Michael Sun, Ph.D. 05/16/2024
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array whose elements will be rendered.
+%
+% :Optional Inputs:
+%
+%   **'surface_keyword':**
+%        Keyword passed to addbrain to draw the underlying brain
+%        surface. Default: 'transparent_surface'.
+%
+%   **'colormap':**
+%        Function handle returning an [n x 3] colormap. Default:
+%        @colorcube.
+%
+%   **'font_arguments':**
+%        Cell array of additional name/value pairs forwarded to text(),
+%        e.g., {'FontSize', 12, 'FontWeight', 'bold'}.
+%
+%   **'popout':**
+%        Logical; if true, text labels are pushed toward the camera so
+%        they are visible above the surface. Default: false.
+%
+% :Outputs:
+%
+%   **centroid:**
+%        Cell array of centroid coordinates for each rendered surface.
+%
+%   **p:**
+%        Handle to the underlying brain surface plot.
+%
+% :Examples:
+% ::
+%
+%     [centroid, p] = labelled_surface(r, 'surface_keyword', 'left_cutaway', ...
+%         'colormap', @jet, 'font_arguments', ...
+%         {'FontSize', 12, 'FontWeight', 'bold'}, 'popout', true);
+%
+% :See also:
+%   - addbrain
+%   - isosurface
+%   - format_strings_for_legend
+%
+% ..
+%    Author: Michael Sun, Ph.D. 05/16/2024
+% ..
 
 % Parse optional inputs
 parser = inputParser;

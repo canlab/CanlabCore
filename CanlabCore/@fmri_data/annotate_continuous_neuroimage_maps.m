@@ -1,8 +1,70 @@
-
-
-% there are different procedures for smooth maps, which can be resampled to the
-% object, and atlases, which can have very small values and are high-res,
-% so better to sample the data images to them.
+% annotate_continuous_neuroimage_maps Annotate an fmri_data object against continuous reference maps.
+%
+% :Usage:
+% ::
+%
+%     % This file is currently a script that operates on a variable
+%     % named `obj` already in the workspace; it is not yet wrapped as
+%     % a callable method. Run it from a context where `obj` is defined:
+%     obj = load_image_set('emotionreg');
+%     annotate_continuous_neuroimage_maps;
+%
+% Annotates each image in obj by computing spatial correlations
+% with a curated set of continuous-valued reference maps and a few
+% Neurosynth feature batteries. The reference batteries currently
+% covered are:
+%
+%   - Margulies principal gradient of functional connectivity
+%     (transmodal vs. unimodal axis).
+%   - Allen Brain transcriptomic gradients.
+%   - Hansen Neuromaps PET neurochemical tracer maps.
+%   - Neurosynth topics (forward and reverse inference) and term maps
+%     (reverse inference).
+%   - Yeo / Buckner resting-state network similarity, plotted against
+%     the Yeo / Schaefer 17-network atlas.
+%
+% :Inputs:
+%
+%   **obj:**
+%        fmri_data object in the caller workspace whose images are to
+%        be annotated. Must be present before this script is run.
+%
+% :Outputs:
+%
+%   **t:**
+%        MATLAB table accumulated in the caller workspace
+%        containing one row per image and one column per annotation
+%        battery (transmodal gradient values, transcriptomic PCs,
+%        neurochemical tracer correlations, top Neurosynth
+%        topics / terms, etc.).
+%
+%   Several figures are also created (Yeo / Buckner network plot,
+%   wedge plot by Yeo17 networks).
+%
+% :Subfunctions:
+%
+%   - prep_and_extract_values_continuous_reference_maps resamples a
+%     reference map (or stack of reference maps) to the test object's
+%     space, z-scores image-wise, and returns per-image correlations
+%     with the test object.
+%   - plot_colored_bars renders a horizontal bar plot with one
+%     colour per network from a vector of values and labels.
+%
+% :Notes:
+%
+%   - There are different procedures for smooth maps (which can be
+%     resampled to the test object) and atlases (which can have very
+%     small values and are high-resolution, so it is better to resample
+%     the data images to them).
+%   - This file does not currently begin with a function declaration
+%     and therefore behaves as a MATLAB script rather than a callable
+%     method on the fmri_data class. The doc block above describes the
+%     intended usage; converting to a proper method is a separate task.
+%
+% :See also:
+%   - neurosynth_feature_labels, neurosynth_lexical_plot
+%   - image_similarity_plot, image_similarity_plot_bucknermaps
+%   - wedge_plot_by_atlas
 
 %% Transmodal vs. unimodal:  Principal gradient of functional connectivity
 

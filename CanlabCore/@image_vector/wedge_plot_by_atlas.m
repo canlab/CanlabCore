@@ -1,87 +1,127 @@
 function [hh, output_values_by_region, labels, atlas_obj, colorband_colors, atlastab] = wedge_plot_by_atlas(obj_to_plot, varargin)
-% Plot a data object or 'signature' pattern divided into local regions
-% based on atlas objects.
+% wedge_plot_by_atlas Plot a data object or 'signature' pattern divided into local regions based on atlas objects.
 %
-% [hh, output_values_by_region, labels] = wedge_plot_by_atlas(obj, varargin)
+% Renders one wedge plot per atlas, where each wedge corresponds to a
+% region in the atlas. In 'data mode' (default), wedge size is the
+% absolute value of the parcel mean and color encodes the sign. In
+% 'signature mode', wedge size is normalized local pattern expression
+% and color encodes pattern valence (cosine similarity to a unit vector).
 %
+% :Usage:
+% ::
 %
-% 'signature' : signature mode; changes the statistic that is plotted
-% 'atlases' : followed by atlas names as in a cell array defined in load_atlas.m
-% 'colors'  : followed by 2-element cell with colors for negative and positive values, respectively
-% 'montage' : create montage figure for each atlas
-% 'colorband_colors' : followed by cell array (length = number of atlases) with arrays of colors for each region
+%     [hh, output_values_by_region, labels, atlas_obj, colorband_colors, atlastab] = wedge_plot_by_atlas(obj_to_plot, [optional inputs])
 %
-% 'Signature mode':
-% Size of wedges: Pattern energy, related to root mean squared weights in each region
-%                 Normalized local pattern expression (sqrt(w''*w)/(vol_in_mm+1000)
+% :Inputs:
 %
-% Color of wedges: Proportional to valence, cosine similarity to unit
-% vector. A measure of whether weights are uniformly positive (red),
-% uniformly negative (blue) or mixed (purple).
+%   **obj_to_plot:**
+%        An image_vector / fmri_data / statistic_image object containing
+%        the data or signature pattern to plot.
 %
+% :Optional Inputs:
 %
-% 'Data mode': (default)
-% Size of wedges: absolute value of the pattern mean within a parcel
-% Color of wedges: sign of the pattern mean within a parcel
+%   **'signature':**
+%        signature mode; changes the statistic that is plotted
 %
-% Outputs:
-% ------------------------------------------------------------------------
-% output_values_by_region: Cell array, one cell per atlas, with a matrix of
-% images x regions in atlas. Values depend on whether you use 'signature
-% mode' or 'data mode'.
+%   **'atlases':**
+%        followed by atlas names as in a cell array defined in load_atlas.m
 %
-% labels: region names for each atlas
+%   **'colors':**
+%        followed by 2-element cell with colors for negative and positive values, respectively
 %
-% atlas_obj: cell array of atlas objects
+%   **'montage':**
+%        create montage figure for each atlas
 %
-% colorband_colors: cell array of colors for each atlas
+%   **'colorband_colors':**
+%        followed by cell array (length = number of atlases) with arrays of colors for each region
 %
-% atlastab: Table object with regions and values
+%   **'surfaces':**
+%        Render the regions on cortical surfaces with a legend.
 %
-% Examples:
-% % ------------------------------------------------------------------------
-% Load sig
-% nps = load_image_set('npsplus');
-% nps = get_wh_image(nps, 1);
-% sig_to_plot = nps;
+%   'Signature mode':
+%   Size of wedges: Pattern energy, related to root mean squared weights in each region
+%                   Normalized local pattern expression (sqrt(w''*w)/(vol_in_mm+1000)
 %
-% Plot:
-%  hh = wedge_plot_by_atlas(sig_to_plot, 'signature')
-%  hh = wedge_plot_by_atlas(sig_to_plot,'signature','colors',{[0 0 1],[1 0 0]},'montage')
+%   Color of wedges: Proportional to valence, cosine similarity to unit
+%   vector. A measure of whether weights are uniformly positive (red),
+%   uniformly negative (blue) or mixed (purple).
 %
+%   'Data mode' (default):
+%   Size of wedges: absolute value of the pattern mean within a parcel
+%   Color of wedges: sign of the pattern mean within a parcel
 %
-% Try with VPS:
-% [sigs, signames] = load_image_set('npsplus');
-% sig_to_plot = get_wh_image(sigs, 7); signames{7}
-% hh = wedge_plot_by_atlas(sig_to_plot, 'signature')
-%  hh = wedge_plot_by_atlas(sig_to_plot,'signature','colors',{[0 0 1],[1 0 0]},'montage')
+% :Outputs:
 %
-% Try some data:
-% imgs = load_image_set('emotionreg');
-% hh = wedge_plot_by_atlas(imgs, 'atlases', {'cit168' 'brainstem'});
+%   **hh:**
+%        Cell array of wedge-plot handles, one cell per atlas.
 %
-% Try custom colors, mirroring clusters across L/R hem networks:
-% [colors1, colors2] = deal(scn_standard_colors(16));
-% colors = {};
-% indx = 1;
-% for i = 1:length(colors1)
-%     colors{indx} = colors1{i}; colors{indx + 1} = colors2{i}; indx = indx + 2;
-% end
-% [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(imgs, 'atlases', {'yeo17networks'}, 'montage', 'colorband_colors', colors);
-
-% Notes on pattern valence
-% ------------------------------------------------------------------
-% built into apply_parcellation
+%   **output_values_by_region:**
+%        Cell array, one cell per atlas, with a matrix of images x
+%        regions in atlas. Values depend on whether you use 'signature
+%        mode' or 'data mode'.
 %
-% Define pattern valence as similarity with unit vector (all positive,
-% identical weights)
+%   **labels:**
+%        region names for each atlas
 %
-% If x is a vector of pattern weights,
-% The cosine similarity with the unit vector is a measure of how uniform
-% the weights are, on a scale of 1 to -1.  1 indicates that the pattern
-% computes the region average (all weights identical and positive). -1
-% indicates that the pattern computes the negative region average (all
-% weights identical and negative).
+%   **atlas_obj:**
+%        cell array of atlas objects
+%
+%   **colorband_colors:**
+%        cell array of colors for each atlas
+%
+%   **atlastab:**
+%        Table object with regions and values
+%
+% :Examples:
+% ::
+%
+%    % Load sig
+%    nps = load_image_set('npsplus');
+%    nps = get_wh_image(nps, 1);
+%    sig_to_plot = nps;
+%
+%    % Plot:
+%     hh = wedge_plot_by_atlas(sig_to_plot, 'signature')
+%     hh = wedge_plot_by_atlas(sig_to_plot,'signature','colors',{[0 0 1],[1 0 0]},'montage')
+%
+%    % Try with VPS:
+%    [sigs, signames] = load_image_set('npsplus');
+%    sig_to_plot = get_wh_image(sigs, 7); signames{7}
+%    hh = wedge_plot_by_atlas(sig_to_plot, 'signature')
+%     hh = wedge_plot_by_atlas(sig_to_plot,'signature','colors',{[0 0 1],[1 0 0]},'montage')
+%
+%    % Try some data:
+%    imgs = load_image_set('emotionreg');
+%    hh = wedge_plot_by_atlas(imgs, 'atlases', {'cit168' 'brainstem'});
+%
+%    % Try custom colors, mirroring clusters across L/R hem networks:
+%    [colors1, colors2] = deal(scn_standard_colors(16));
+%    colors = {};
+%    indx = 1;
+%    for i = 1:length(colors1)
+%        colors{indx} = colors1{i}; colors{indx + 1} = colors2{i}; indx = indx + 2;
+%    end
+%    [hh, output_values_by_region, labels, atlas_obj, colorband_colors] = wedge_plot_by_atlas(imgs, 'atlases', {'yeo17networks'}, 'montage', 'colorband_colors', colors);
+%
+% :Notes on pattern valence:
+%
+%   built into apply_parcellation
+%
+%   Define pattern valence as similarity with unit vector (all positive,
+%   identical weights).
+%
+%   If x is a vector of pattern weights, the cosine similarity with the
+%   unit vector is a measure of how uniform the weights are, on a scale
+%   of 1 to -1. 1 indicates that the pattern computes the region average
+%   (all weights identical and positive). -1 indicates that the pattern
+%   computes the negative region average (all weights identical and
+%   negative).
+%
+% :See also:
+%   - apply_parcellation
+%   - tor_wedge_plot
+%   - load_atlas
+%   - get_region_volumes
 
 
 

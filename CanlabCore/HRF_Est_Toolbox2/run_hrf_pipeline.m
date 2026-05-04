@@ -45,15 +45,31 @@ if ~exist(events_tsv, 'file'), error('Events file not found: %s', events_tsv); e
 TR = opts.TR;
 if isempty(TR), TR = tr_from_hdr; end
 
-signal_source = lower(string(opts.SignalSource));
-if signal_source == "mean"
+signal_source = lower(char(opts.SignalSource));
+signature_meta = struct();
+fits_by_signature = struct();
+
+if strcmpi(signal_source, 'mean')
     [tc, ~, ~] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
-    signature_meta = [];
-elseif signal_source == "signature"
-    [tc, signature_meta] = hrf_extract_signature_timeseries(fmri_nii, ...
+elseif strcmpi(signal_source, 'signature')
+    [all_tc, signature_meta] = hrf_extract_all_signature_timeseries(fmri_nii, ...
         'SimilarityMetric', opts.SimilarityMetric, ...
-        'ImageSet', opts.ImageSet, ...
-        'SignatureName', opts.SignatureName);
+        'ImageSet', opts.ImageSet);
+
+    sig_names = signature_meta.available_signatures;
+    if ~isempty(opts.SignatureName)
+        sel = find(strcmp(sig_names, char(opts.SignatureName)), 1);
+        if isempty(sel)
+            error('Requested SignatureName "%s" not found.', char(opts.SignatureName));
+        end
+        sig_names = sig_names(sel);
+        all_tc = all_tc(:, sel);
+    end
+
+    tc = all_tc(:, 1);
+    signature_meta.selected_signature = sig_names{1};
+    signature_meta.selected_signatures = sig_names;
+    signature_meta.n_signatures = numel(sig_names);
 else
     error('Unknown SignalSource: %s. Use ''mean'' or ''signature''.', char(opts.SignalSource));
 end
@@ -66,7 +82,17 @@ else
 end
 
 Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
-fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models);
+if strcmpi(signal_source, 'signature')
+    for si = 1:numel(signature_meta.selected_signatures)
+        sig = signature_meta.selected_signatures{si};
+        sig_idx = find(strcmp(signature_meta.available_signatures, sig), 1);
+        sig_tc = all_tc(:, sig_idx);
+        fits_by_signature.(sig) = hrf_fit_all_models(sig_tc, TR, Runc, opts.WindowSeconds, opts.Models);
+    end
+    fits = fits_by_signature.(signature_meta.selected_signature);
+else
+    fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models);
+end
 
 results = struct();
 results.timeseries = tc;
@@ -78,6 +104,7 @@ results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...
     'fmri_nii', fmri_nii, 'events_tsv', events_tsv, 'mask_nii', char(opts.MaskNii), ...
     'signal_source', char(opts.SignalSource));
 results.signature_meta = signature_meta;
+results.fits_by_signature = fits_by_signature;
 
 if ~isempty(opts.OutputMat)
     save(char(opts.OutputMat), 'results');

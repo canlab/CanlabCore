@@ -86,3 +86,16 @@ disp(results_sig.signature_meta)
 ```
 
 If `SignatureName` is omitted, the first signature from `apply_all_signatures` is used.
+
+## Quick plotting helper for new results structure
+
+```matlab
+% Basic: one model, selected conditions
+plot_hrf_results(results, 'Model', 'sfir', 'Conditions', [4 9 10 11]);
+
+% Signature-specific (when SignalSource='signature')
+plot_hrf_results(results_sig, 'Model', 'sfir', 'Signature', 'NPS', 'Conditions', [1 2 3]);
+```
+
+`results_sig.signature_meta` now includes selected and available signature names, and
+`results_sig.fits_by_signature` stores fitted models for each signature.

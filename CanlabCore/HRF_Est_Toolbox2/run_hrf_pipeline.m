@@ -33,6 +33,10 @@ p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
+p.addParameter('SignatureNames', {}, @(x) iscell(x) || isstring(x));
+p.addParameter('MaxSignatures', inf, @(x) isscalar(x) && x >= 1);
+p.addParameter('UseParallel', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('MapNames', {}, @(x) iscell(x) || isstring(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
@@ -53,6 +57,7 @@ if isempty(TR), TR = tr_from_hdr; end
 
 signal_source = lower(strtrim(char(opts.SignalSource)));
 if strcmp(signal_source, 'signatures'), signal_source = 'signature'; end
+if strcmp(signal_source, 'maps'), signal_source = 'imageset'; end
 signature_meta = struct('signal_source', signal_source);
 fits_by_signature = struct();
 
@@ -83,13 +88,39 @@ elseif strcmpi(signal_source, 'signature')
             'ImageSet', opts.ImageSet);
 
         sig_names = signature_meta.available_signatures;
+        if ~isempty(opts.SignatureNames)
+            req = cellstr(string(opts.SignatureNames));
+            [tf, idx] = ismember(req, sig_names);
+            sig_names = sig_names(idx(tf));
+            all_tc = all_tc(:, idx(tf));
+        end
+        if isfinite(opts.MaxSignatures)
+            n_keep = min(numel(sig_names), opts.MaxSignatures);
+            sig_names = sig_names(1:n_keep);
+            all_tc = all_tc(:, 1:n_keep);
+        end
         tc = all_tc(:, 1);
         signature_meta.selected_signature = sig_names{1};
         signature_meta.selected_signatures = sig_names;
         signature_meta.n_signatures = numel(sig_names);
     end
+
+elseif strcmpi(signal_source, 'imageset')
+    [all_tc, signature_meta] = hrf_extract_imageset_timeseries(fmri_nii, char(opts.ImageSet), ...
+        'MapNames', opts.MapNames, ...
+        'SimilarityMetric', opts.SimilarityMetric);
+    sig_names = signature_meta.available_signatures;
+    if isfinite(opts.MaxSignatures)
+        n_keep = min(numel(sig_names), opts.MaxSignatures);
+        sig_names = sig_names(1:n_keep);
+        all_tc = all_tc(:, 1:n_keep);
+    end
+    tc = all_tc(:, 1);
+    signature_meta.selected_signature = sig_names{1};
+    signature_meta.selected_signatures = sig_names;
+    signature_meta.n_signatures = numel(sig_names);
 else
-    error('Unknown SignalSource: %s. Use ''mean'' or ''signature''.', char(opts.SignalSource));
+    error('Unknown SignalSource: %s. Use ''mean'', ''signature'', or ''imageset''.', char(opts.SignalSource));
 end
 
 E = hrf_load_events_tsv(events_tsv);
@@ -100,12 +131,27 @@ else
 end
 
 Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
-if strcmpi(signal_source, 'signature')
-    for si = 1:numel(signature_meta.selected_signatures)
-        sig = signature_meta.selected_signatures{si};
-        sig_idx = find(strcmp(signature_meta.available_signatures, sig), 1);
-        sig_tc = all_tc(:, sig_idx);
-        fits_by_signature.(sig) = hrf_fit_all_models(sig_tc, TR, Runc, opts.WindowSeconds, opts.Models);
+if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset')
+    siglist = signature_meta.selected_signatures;
+    nSig = numel(siglist);
+    fit_cells = cell(1, nSig);
+    use_parallel = logical(opts.UseParallel) && license('test', 'Distrib_Computing_Toolbox');
+
+    if use_parallel
+        if isempty(gcp('nocreate'))
+            parpool;
+        end
+        parfor si = 1:nSig
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, opts.WindowSeconds, opts.Models);
+        end
+    else
+        for si = 1:nSig
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, opts.WindowSeconds, opts.Models);
+        end
+    end
+
+    for si = 1:nSig
+        fits_by_signature.(siglist{si}) = fit_cells{si};
     end
     fits = fits_by_signature.(signature_meta.selected_signature);
 else

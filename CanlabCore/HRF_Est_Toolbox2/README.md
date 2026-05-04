@@ -105,3 +105,75 @@ plot_hrf_results(results_sig, 'Model', 'sfir', 'Signature', 'NPS', 'Conditions',
 
 
 `plot_hrf_results` now supports condition names (cellstr) and draws standard-error style shading when multiple signature fits are available.
+
+## Speeding up all-signature fitting
+
+If fitting all signatures is slow, you can:
+
+```matlab
+results_sig = run_hrf_pipeline( ...
+    fmri_nii, events_tsv, ...
+    'TR', 0.8, ...
+    'SignalSource', 'signature', ...
+    'ImageSet', 'all', ...
+    'UseParallel', true, ...           % parfor across signatures
+    'MaxSignatures', 10, ...           % only fit first 10 signatures
+    'SignatureNames', {'NPS','SIIPS'}  % or fit an explicit subset
+    );
+```
+
+For fastest runs, pass a single `SignatureName` (e.g., `'NPS'`) so the pipeline skips full all-signature loading/fitting.
+
+## Apply canonical brain map sets (Buckner, Margulies, Hansen)
+
+You can use `SignalSource='imageset'` to apply maps from `load_image_set` directly:
+
+```matlab
+% Buckner 7-network maps
+res_buckner = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'SignalSource', 'imageset', 'ImageSet', 'bucknerlab_wholebrain', ...
+    'TR', 0.8, 'UseParallel', true);
+
+% Margulies principal gradient
+res_marg = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'SignalSource', 'imageset', 'ImageSet', 'marg', 'TR', 0.8);
+
+% Hansen receptor maps (subset)
+res_hansen = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'SignalSource', 'imageset', 'ImageSet', 'hansen22', ...
+    'MapNames', {'D1', '5HT1a'}, 'TR', 0.8);
+```
+
+## Study-level pipeline (multiple images/subjects)
+
+```matlab
+study = run_hrf_study_pipeline(fmri_files, events_files, subject_ids, ...
+    'TR', 0.8, 'SignalSource', 'imageset', 'ImageSet', 'bucknerlab_wholebrain');
+
+% Long-format subject summary table
+study.summary
+
+% Visualize separated by subject
+plot_hrf_study_by_subject(study, 'Model', 'sfir', 'Condition', 'pain');
+```
+
+## Multilevel time-unfolding significance testing
+
+```matlab
+study = run_hrf_study_pipeline(fmri_files, events_files, subject_ids, ...
+    'TR', 0.8, 'SignalSource', 'mean');
+
+% Subject-level mean extracted timeseries (subjects x time)
+study.mean_timeseries
+
+% Within-subject condition contrast, then group-level test across time bins
+stats = hrf_time_unfolding_stats(study, ...
+    'Model', 'sfir', ...
+    'ConditionA', 'pain', ...
+    'ConditionB', 'neutral', ...
+    'Alpha', 0.05);
+
+plot_hrf_time_unfolding_stats(stats);
+```
+
+Optional between-group testing is available by supplying `Group` labels (two-group t-test per time bin).

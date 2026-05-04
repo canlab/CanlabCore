@@ -50,15 +50,13 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, TR
         % current_times = eval([conditions{c} '_times{sub}{j}']);
         current_times=onsets{c}/TR;
         current_dur=durations{c}/TR;
-        
-        % Remove the onset times that didn't get recorded. 
-        % Note: Add 0.5TRs to correct for slice-timing correction if needed
-        % current_times = ceil(current_times(current_times < n) + 0.5);
-        current_times = ceil(current_times(current_times < n));
+
+        valid = current_times < n;
+        current_times = ceil(current_times(valid));
+        current_dur = ceil(current_dur(valid));
+
         % Correct any onsets that start at 0;
-        if any(current_times==0)
-            current_times(find(current_times==0))=1;
-        end
+        current_times(current_times < 1) = 1;
         
         % Model events as a single impulse
         if SPIKES == 1
@@ -67,8 +65,10 @@ function Condition=generateConditionTS(fmri_d, conditions, onsets, durations, TR
         
         % Model event epochs as trains of events
         if SPIKETRAINS == 1
-            for i = 1:numel(current_times)    
-                Condition{c}(current_times(i):current_times(i)+(current_dur(i))) = 1;
+            for i = 1:numel(current_times)
+                start_idx = current_times(i);
+                end_idx = min(n, current_times(i) + max(0, current_dur(i)));
+                Condition{c}(start_idx:end_idx) = 1;
             end
         end
     end

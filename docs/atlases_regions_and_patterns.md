@@ -159,11 +159,13 @@ v2.0 is distributed via the
 The **Levinson-Bari Limbic Brainstem Atlas** is a probabilistic, openly
 licensed atlas of brainstem limbic structures including VTA, dorsal
 raphe, locus coeruleus, NTS, and PAG.
-[Levinson, S. et al. (2023). A structural connectivity atlas of limbic brainstem nuclei. Frontiers in Neuroimaging, 2, 1665947.](https://doi.org/10.3389/fnimg.2023.1665947) <!-- TODO: verify final DOI for Levinson-Bari atlas; cite preprint if needed -->
+[Levinson, S., Miller, M., Iftekhar, A., Justo, M., Arriola, D., Wei, W., Hazany, S., Avecillas-Chasin, J.M., Kuhn, T.P., Horn, A. et al. (2023). A structural connectivity atlas of limbic brainstem nuclei. Frontiers in Neuroimaging, 1, 1009399.](https://doi.org/10.3389/fnimg.2022.1009399)
 
-The **Kragel 2019 PAG** atlas is a 7T-derived sub-parcellation of the
-periaqueductal gray.
-[Kragel, P.A. et al. (2019). A human colliculus-pulvinar-amygdala pathway encodes negative emotion. Neuron, 103(3), 513-525.](https://doi.org/10.1016/j.neuron.2019.05.041) <!-- TODO: verify whether the kragel2019pag atlas comes from this Neuron paper or a separate Kragel 2019 PAG-focused report -->
+The **Kragel 2019 PAG** atlas (`kragel2019pag` keyword) is a 7T-derived
+sub-parcellation of the periaqueductal gray into dorsal, lateral, and
+ventrolateral columns via unsupervised k-means clustering of voxel
+positions.
+[Kragel, P.A., Bianciardi, M., Hartley, L., Matthewson, G., Choi, J.-K., Quigley, K.S., Wald, L.L., Wager, T.D., Barrett, L.F., & Satpute, A.B. (2019). Functional involvement of human periaqueductal gray and other midbrain nuclei in cognitive control. Journal of Neuroscience, 39(31), 6180-6189.](https://doi.org/10.1523/JNEUROSCI.2043-18.2019)
 
 ### 7T high-resolution
 
@@ -242,7 +244,7 @@ are grouped here by anatomy.
 |---|---|---|
 | `nacc`, `nac` | Nucleus accumbens | [Pauli et al. 2018](https://doi.org/10.1038/sdata.2018.63) (CIT168) |
 | `amygdala` | Amygdala | [Tyszka & Pauli 2016](https://doi.org/10.1002/hbm.23289) (CIT168) |
-| `hipp` | Hippocampus | SPM Anatomy Toolbox via canlab2018 <!-- TODO: confirm anatomy toolbox citation, e.g. Eickhoff 2005 --> |
+| `hipp` | Hippocampus | [Eickhoff et al. 2005](https://doi.org/10.1016/j.neuroimage.2004.12.034) (SPM Anatomy Toolbox via canlab2018) |
 | `BST`, `BNST`, `SLEA` | Bed nucleus of stria terminalis / sublenticular extended amygdala | [Pauli et al. 2018](https://doi.org/10.1038/sdata.2018.63) |
 
 ### Basal ganglia

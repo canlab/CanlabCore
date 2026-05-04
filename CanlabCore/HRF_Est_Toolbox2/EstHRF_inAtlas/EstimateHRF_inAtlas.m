@@ -82,6 +82,8 @@ function [tc, HRF, HRF_OBJ, PARAM_OBJ]=EstimateHRF_inAtlas(fmri_d, PREPROC_PARAM
     
         % Step 3. fitHRF to each ROI's worth of data
         [tc, HRF]=roiTS_fitHRF(preproc_dat, HRF_PARAMS, rois, at, outfile);
+        HRF_OBJ = [];
+        PARAM_OBJ = [];
     end
 
 

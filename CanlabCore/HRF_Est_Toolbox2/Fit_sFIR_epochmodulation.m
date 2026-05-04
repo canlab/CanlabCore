@@ -153,7 +153,7 @@ if ~isempty(varargin)
                 fit = DX_cov*b;
                 e = tc - DX_cov*b;
                 DXinfo.DX=DX_cov;
-                DXinfo.PX=DX_cov;
+                DXinfo.PX=PX;
             else
                 fit = 'DX_cov not passed in';
                 e = 'DX_cov not passed in';
@@ -234,6 +234,7 @@ else
     
     numstim = length(Run);
     len = length(Run{1});
+    if isscalar(T), T = repmat(T, 1, numstim); end
     
     Runs = zeros(len,numstim);
     for i=1:numstim

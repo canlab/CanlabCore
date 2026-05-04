@@ -39,3 +39,50 @@ results = run_hrf_pipeline( ...
 - `events.tsv` must include: `onset`, `duration`, `trial_type`.
 - If TR is not passed, the pipeline attempts to use NIfTI header `PixelDimensions(4)`.
 - Model wrappers call legacy toolbox methods (`Fit_Logit2`, `Fit_sFIR`, `Fit_Canonical_HRF`, `Fit_Spline`, `Fit_NLgamma`).
+
+## Trial averaging + condition comparison
+
+```matlab
+% Run full pipeline first
+results = run_hrf_pipeline(fmri_nii, events_tsv, 'TR', 0.8);
+
+% Average one condition across trials (20 s window)
+pain = hrf_average_condition_trials(results.timeseries, results.events, 'pain', 0.8, 20, 'BaselineSeconds', 2);
+neutral = hrf_average_condition_trials(results.timeseries, results.events, 'neutral', 0.8, 20, 'BaselineSeconds', 2);
+
+% Compare conditions
+cmp = hrf_compare_conditions(pain, neutral, 'Alpha', 0.05);
+
+% Plot means with SEM
+figure;
+subplot(1,2,1); hold on;
+plot(pain.time, pain.mean, 'r', 'LineWidth', 1.5);
+plot(neutral.time, neutral.mean, 'b', 'LineWidth', 1.5);
+legend({'pain','neutral'}); xlabel('Seconds'); ylabel('Signal');
+title('Condition-averaged responses');
+
+subplot(1,2,2);
+plot(cmp.time, cmp.mean_diff, 'k', 'LineWidth', 1.5); hold on;
+yline(0,'--');
+xlabel('Seconds'); ylabel('Pain - Neutral');
+title(sprintf('Mean difference (AUC diff = %.3f)', cmp.auc.diff));
+```
+
+
+## Signature-based (interpretable) time-series
+
+You can now estimate HRFs from a signature-expression time series (via `apply_all_signatures`) instead of a mean BOLD time series:
+
+```matlab
+results_sig = run_hrf_pipeline( ...
+    fmri_nii, events_tsv, ...
+    'TR', 0.8, ...
+    'SignalSource', 'signature', ...
+    'SimilarityMetric', 'dot_product', ...
+    'ImageSet', 'all', ...
+    'SignatureName', 'NPS');
+
+disp(results_sig.signature_meta)
+```
+
+If `SignatureName` is omitted, the first signature from `apply_all_signatures` is used.

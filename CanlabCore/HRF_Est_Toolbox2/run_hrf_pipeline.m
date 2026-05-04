@@ -29,6 +29,10 @@ p.addParameter('Conditions', {}, @(x) iscellstr(x) || isstring(x));
 p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
 p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @iscell);
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
+p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
+p.addParameter('SimilarityMetric', 'dot_product', @(x) ischar(x) || isstring(x));
+p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
+p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
@@ -37,9 +41,22 @@ events_tsv = char(events_tsv);
 if ~exist(fmri_nii, 'file'), error('fMRI file not found: %s', fmri_nii); end
 if ~exist(events_tsv, 'file'), error('Events file not found: %s', events_tsv); end
 
-[tc, tr_from_hdr, n_tp] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
+[~, tr_from_hdr, n_tp] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
 TR = opts.TR;
 if isempty(TR), TR = tr_from_hdr; end
+
+signal_source = lower(string(opts.SignalSource));
+if signal_source == "mean"
+    [tc, ~, ~] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
+    signature_meta = [];
+elseif signal_source == "signature"
+    [tc, signature_meta] = hrf_extract_signature_timeseries(fmri_nii, ...
+        'SimilarityMetric', opts.SimilarityMetric, ...
+        'ImageSet', opts.ImageSet, ...
+        'SignatureName', opts.SignatureName);
+else
+    error('Unknown SignalSource: %s. Use ''mean'' or ''signature''.', char(opts.SignalSource));
+end
 
 E = hrf_load_events_tsv(events_tsv);
 if isempty(opts.Conditions)
@@ -58,7 +75,9 @@ results.conditions = cond_names;
 results.stick_functions = Runc;
 results.fits = fits;
 results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...
-    'fmri_nii', fmri_nii, 'events_tsv', events_tsv, 'mask_nii', char(opts.MaskNii));
+    'fmri_nii', fmri_nii, 'events_tsv', events_tsv, 'mask_nii', char(opts.MaskNii), ...
+    'signal_source', char(opts.SignalSource));
+results.signature_meta = signature_meta;
 
 if ~isempty(opts.OutputMat)
     save(char(opts.OutputMat), 'results');

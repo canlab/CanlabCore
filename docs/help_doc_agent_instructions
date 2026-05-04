@@ -1,0 +1,50 @@
+This instruction set is for creating a set of help documents in markdown format that describe canlab core tools. Format all documents so they will render well when used on the web at canlab.github.io.
+
+1. Object methods
+Create a markdown page in docs called Object_methods.md.  This will serve as an organizational page for the types of objects available and their methods.  This page will link to other pages, each an .md file, describing object methods for each object class.
+
+In Object_methods.md:
+- Briefly describe what objects and methods are ("things you can do with objects") and the major classes of objects.  Pull from documentation in major functions, including class constructors and online help docs at canlab.github.io, to create the description.
+
+- Include a table of object classes with a brief description of what they are and links to pages describing each.
+
+- Include links to the existing Walkthroughs and Tutorials pages on canlab.github.io and point to them in a visible way.
+
+- For each object class page, create a markdown file called <class_name>_methods.md in docs/.  For example, for @fmri_data class, fmri_data_methods.md.  For each object class, first start with a description of what the object class is for, what kind of data it stores, and what kinds of  methods can be done with them in general. Keep this brief (about 2 paragraphs). Then provide a table of the properties of the object and a one-line description of what each property is. Keep this table compact. Then describe the methods in a table.
+
+- Populate the description of methods as follows.
+Look at all the methods and come up with a list of them organized into groups. Some suggested groups are below, but you can alter these if needed. Make a list of these areas and the functions belonging to each group, and save in fmri_data_methods.md.
+
+Groups of methods:
+- Basic Image math and operations
+- Display and visualization
+- Resampling and interpolation
+- Statistics and machine learning
+- Tables
+- Annotation with spatial similarity
+- Data extraction
+- Quality control
+- Misc utilities
+
+If there is an existing markdown file in docs/, e.g., fmri_data_methods.md, default to the organization and assignment of methods to categories there, because it may be manually edited.
+
+Interoperability and converting among object types. Create a page called recasting_objects.md. Here write an explanation of how to convert objects of one class to another. Link to this page in an appropriate place in Object_methods.md.
+
+2. Interacting with neuroimaging atlases and patterns
+
+Make a page called atlases_regions_and_patterns.md.  In this page, describe the types of atlases that are available and how to load them. Explain how Canlab Core uses neuroimaging atlases, parcellations, and multivariate signatures available on Github in https://github.com/canlab/Neuroimaging_Pattern_Masks.  For the atlases, Refer to load_atlas.m for a list of these atlases. For each atlas, try to find the original authoritative scientific paper and include a reference to it and a hyperlink to the paper on the publisher's site. Use information on
+https://sites.google.com/dartmouth.edu/canlab-brainpatterns/home, and also search the web as needed. link to the page as well.
+
+Describe how a number of named regions are available to use as masks from which to extract data or run other processes like region-level multivariate prediction, connectivity, or parcel-wise GLM analyses. For these named regions, refer to canlab_load_ROI.m for a list of regions and write a section with a table describing these.
+
+4. Sample datasets
+
+Make a page called sample_datasets.md.  Describe the built-in test datasets available with CanlabCore. Say most are in the Sample_datasets/ folder. Refer to and use material from this website, as well as the contents of CanlabCore:
+https://canlab.github.io/_pages/canlab_help_2c_loading_datasets/canlab_help_2c_loading_datasets.html
+
+Some datasets may be newer additions and not described in the website.
+Describe load_image_set(), which includes a registry of datasets that users can access by name. Make a table that describes all the datasets in the registry in load_image_set. For each dataset, try to find the original authoritative scientific paper and include a reference to it and a hyperlink to the paper on the publisher's site. Pay attention to which involve group-level image data (the 'emotionreg' dataset in Wager_et_al_2008_Neuron_EmotionReg) and which are time series data (Pinel_sample_fMRI_time_series).
+
+3. Description of toolbox subfolders
+
+Make a page called toolbox_folders.md in docs/.  include a table that lists each folder in CanlabCore and describes the contents in 1-3 lines.

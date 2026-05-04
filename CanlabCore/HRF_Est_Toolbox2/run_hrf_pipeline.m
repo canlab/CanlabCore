@@ -36,6 +36,12 @@ p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
+% Convenience: if a signature name is provided, force signature mode
+if strcmpi(char(opts.SignalSource), 'mean') && ~isempty(char(opts.SignatureName))
+    warning('SignatureName provided while SignalSource=''mean''. Switching SignalSource to ''signature''.');
+    opts.SignalSource = 'signature';
+end
+
 fmri_nii = char(fmri_nii);
 events_tsv = char(events_tsv);
 if ~exist(fmri_nii, 'file'), error('fMRI file not found: %s', fmri_nii); end
@@ -45,31 +51,43 @@ if ~exist(events_tsv, 'file'), error('Events file not found: %s', events_tsv); e
 TR = opts.TR;
 if isempty(TR), TR = tr_from_hdr; end
 
-signal_source = lower(char(opts.SignalSource));
-signature_meta = struct();
+signal_source = lower(strtrim(char(opts.SignalSource)));
+if strcmp(signal_source, 'signatures'), signal_source = 'signature'; end
+signature_meta = struct('signal_source', signal_source);
 fits_by_signature = struct();
 
 if strcmpi(signal_source, 'mean')
     [tc, ~, ~] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
 elseif strcmpi(signal_source, 'signature')
-    [all_tc, signature_meta] = hrf_extract_all_signature_timeseries(fmri_nii, ...
-        'SimilarityMetric', opts.SimilarityMetric, ...
-        'ImageSet', opts.ImageSet);
-
-    sig_names = signature_meta.available_signatures;
     if ~isempty(opts.SignatureName)
-        sel = find(strcmp(sig_names, char(opts.SignatureName)), 1);
-        if isempty(sel)
-            error('Requested SignatureName "%s" not found.', char(opts.SignatureName));
+        % Fast/safe path for one signature to avoid loading unavailable images in image_set='all'
+        image_set = char(opts.ImageSet);
+        sig_name = char(opts.SignatureName);
+        if strcmpi(image_set, 'all') && strcmpi(sig_name, 'NPS')
+            image_set = 'npsplus';
         end
-        sig_names = sig_names(sel);
-        all_tc = all_tc(:, sel);
-    end
+        [tc, one_meta] = hrf_extract_signature_timeseries(fmri_nii, ...
+            'SimilarityMetric', opts.SimilarityMetric, ...
+            'ImageSet', image_set, ...
+            'SignatureName', sig_name);
+        all_tc = tc;
+        signature_meta.available_signatures = {one_meta.selected_signature};
+        signature_meta.selected_signature = one_meta.selected_signature;
+        signature_meta.selected_signatures = {one_meta.selected_signature};
+        signature_meta.n_signatures = 1;
+        signature_meta.similarity_metric = one_meta.similarity_metric;
+        signature_meta.image_set = one_meta.image_set;
+    else
+        [all_tc, signature_meta] = hrf_extract_all_signature_timeseries(fmri_nii, ...
+            'SimilarityMetric', opts.SimilarityMetric, ...
+            'ImageSet', opts.ImageSet);
 
-    tc = all_tc(:, 1);
-    signature_meta.selected_signature = sig_names{1};
-    signature_meta.selected_signatures = sig_names;
-    signature_meta.n_signatures = numel(sig_names);
+        sig_names = signature_meta.available_signatures;
+        tc = all_tc(:, 1);
+        signature_meta.selected_signature = sig_names{1};
+        signature_meta.selected_signatures = sig_names;
+        signature_meta.n_signatures = numel(sig_names);
+    end
 else
     error('Unknown SignalSource: %s. Use ''mean'' or ''signature''.', char(opts.SignalSource));
 end
@@ -92,6 +110,11 @@ if strcmpi(signal_source, 'signature')
     fits = fits_by_signature.(signature_meta.selected_signature);
 else
     fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models);
+    fits_by_signature.mean = fits;
+    signature_meta.selected_signature = 'mean_bold';
+    signature_meta.selected_signatures = {'mean_bold'};
+    signature_meta.available_signatures = {'mean_bold'};
+    signature_meta.n_signatures = 1;
 end
 
 results = struct();

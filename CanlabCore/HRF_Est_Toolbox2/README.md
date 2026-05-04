@@ -86,12 +86,15 @@ disp(results_sig.signature_meta)
 ```
 
 If `SignatureName` is omitted, the first signature from `apply_all_signatures` is used.
+Note: if you pass `SignatureName` while `SignalSource` is left at default (`'mean'`), the pipeline now auto-switches to signature mode and warns you.
+
 
 ## Quick plotting helper for new results structure
 
 ```matlab
 % Basic: one model, selected conditions
 plot_hrf_results(results, 'Model', 'sfir', 'Conditions', [4 9 10 11]);
+plot_hrf_results(results, 'Model', 'sfir', 'Conditions', {'pain','neutral'});
 
 % Signature-specific (when SignalSource='signature')
 plot_hrf_results(results_sig, 'Model', 'sfir', 'Signature', 'NPS', 'Conditions', [1 2 3]);
@@ -99,3 +102,6 @@ plot_hrf_results(results_sig, 'Model', 'sfir', 'Signature', 'NPS', 'Conditions',
 
 `results_sig.signature_meta` now includes selected and available signature names, and
 `results_sig.fits_by_signature` stores fitted models for each signature.
+
+
+`plot_hrf_results` now supports condition names (cellstr) and draws standard-error style shading when multiple signature fits are available.

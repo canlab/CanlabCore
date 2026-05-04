@@ -30,7 +30,7 @@ p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
 p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @iscell);
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
 p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
-p.addParameter('SimilarityMetric', 'dot_product', @(x) ischar(x) || isstring(x));
+p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, events_tsv, varargin{:});

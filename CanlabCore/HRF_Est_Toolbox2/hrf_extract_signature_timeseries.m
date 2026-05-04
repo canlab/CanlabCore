@@ -3,13 +3,13 @@ function [tc, meta] = hrf_extract_signature_timeseries(fmri_nii, varargin)
 % Uses apply_all_signatures on an fmri_data object.
 %
 % Name/value
-%   'SimilarityMetric' : dot_product (default), cosine_similarity, correlation
+%   'SimilarityMetric' : dotproduct (default), cosine_similarity, correlation
 %   'ImageSet'         : all (default), or a named signature set accepted by apply_all_signatures
 %   'SignatureName'    : optional specific signature to return; default = first available
 
 p = inputParser;
 p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x));
-p.addParameter('SimilarityMetric', 'dot_product', @(x) ischar(x) || isstring(x));
+p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, varargin{:});
@@ -39,7 +39,10 @@ elseif ~ismember(selected_name, sig_names)
 end
 
 sig_struct = S.(selected_name);
-if isstruct(sig_struct)
+if istable(sig_struct)
+    vn = sig_struct.Properties.VariableNames;
+    tc = sig_struct.(vn{1});
+elseif isstruct(sig_struct)
     f = fieldnames(sig_struct);
     tc = sig_struct.(f{1});
 else

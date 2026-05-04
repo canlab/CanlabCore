@@ -3,7 +3,7 @@ function [TC, meta] = hrf_extract_all_signature_timeseries(fmri_nii, varargin)
 
 p = inputParser;
 p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x));
-p.addParameter('SimilarityMetric', 'dot_product', @(x) ischar(x) || isstring(x));
+p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, varargin{:});
 opts = p.Results;
@@ -43,11 +43,18 @@ meta = struct('available_signatures', {names}, ...
 end
 
 function v = local_get_signal(sig_struct)
-if isstruct(sig_struct)
+if istable(sig_struct)
+    vn = sig_struct.Properties.VariableNames;
+    v = sig_struct.(vn{1});
+elseif isstruct(sig_struct)
     f = fieldnames(sig_struct);
     v = sig_struct.(f{1});
 else
     v = sig_struct;
+end
+if istable(v)
+    vn = v.Properties.VariableNames;
+    v = v.(vn{1});
 end
 v = v(:);
 end

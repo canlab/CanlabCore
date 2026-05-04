@@ -106,7 +106,7 @@ function [model, models]=plotHRF(HRF, varargin)
     end
 
     if isCondFound == false
-        c=HRF.CondNames;
+        conds=HRF.CondNames;
     end
 
     if isFitFound == false
@@ -220,19 +220,18 @@ function [model, models]=plotHRF(HRF, varargin)
 
         else
             h=[]; % Linehandles for legend and labels
-            for i = reg
-                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(reg(i), 'exact').get_region_volumes;
+            for kk = 1:numel(reg)
+                i = reg(kk);
+                [~, regionVoxNum, ~, ~]=at.select_atlas_subset(HRF.region(i), 'exact').get_region_volumes;
                 if isfield(HRF.fit{typ}{i}, fld) && isfield(HRF.fit{typ}{i}.(fld), 'models')
                     models{i}=HRF.fit{typ}{i}.(fld).models/regionVoxNum;
                 end
 
-                
-
-                model{i}=HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum;
+                model{i}=HRF.fit{typ}{i}.(fld).model/regionVoxNum;
 
                 % Plot Standard Error if possible
                 try
-                    se{i}=HRF.fit{typ}{reg(i)}.(fld).wse/regionVoxNum;
+                    se{i}=HRF.fit{typ}{i}.(fld).wse/regionVoxNum;
     
                     % Plot error shade:
                     x = 1:length(model{i});
@@ -250,7 +249,7 @@ function [model, models]=plotHRF(HRF, varargin)
                     
                 end
 
-                h(i)=plot(HRF.fit{typ}{reg(i)}.(fld).model/regionVoxNum, '-', 'Color', colors(i,:), 'DisplayName', char(format_strings_for_legend(HRF.region(i))));
+                h(i)=plot(HRF.fit{typ}{i}.(fld).model/regionVoxNum, '-', 'Color', colors(kk,:), 'DisplayName', char(format_strings_for_legend(HRF.region(i))));
                 hline(0);
                 title({['Condition ', conds{cond}, ' Fit-type: ', strjoin(HRF.types(typ)), ' Regions: ', strjoin(HRF.region(reg))], ['Error: ', 'within-subject SE']}, 'Interpreter', 'none');
                 

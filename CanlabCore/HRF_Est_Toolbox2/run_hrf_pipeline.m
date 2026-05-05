@@ -37,6 +37,8 @@ p.addParameter('SignatureNames', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('MaxSignatures', inf, @(x) isscalar(x) && x >= 1);
 p.addParameter('UseParallel', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('MapNames', {}, @(x) iscell(x) || isstring(x));
+p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas'));
+p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
@@ -58,6 +60,7 @@ if isempty(TR), TR = tr_from_hdr; end
 signal_source = lower(strtrim(char(opts.SignalSource)));
 if strcmp(signal_source, 'signatures'), signal_source = 'signature'; end
 if strcmp(signal_source, 'maps'), signal_source = 'imageset'; end
+if strcmp(signal_source, 'roi'), signal_source = 'atlas'; end
 signature_meta = struct('signal_source', signal_source);
 fits_by_signature = struct();
 
@@ -105,6 +108,22 @@ elseif strcmpi(signal_source, 'signature')
         signature_meta.n_signatures = numel(sig_names);
     end
 
+
+elseif strcmpi(signal_source, 'atlas')
+    if isempty(opts.AtlasObj)
+        error('SignalSource=''atlas'' requires AtlasObj input (atlas object).');
+    end
+    [all_tc, signature_meta] = hrf_extract_roi_timeseries(fmri_nii, opts.AtlasObj, 'Regions', opts.Regions);
+    sig_names = signature_meta.available_signatures;
+    if isfinite(opts.MaxSignatures)
+        n_keep = min(numel(sig_names), opts.MaxSignatures);
+        sig_names = sig_names(1:n_keep);
+        all_tc = all_tc(:, 1:n_keep);
+    end
+    tc = all_tc(:, 1);
+    signature_meta.selected_signature = sig_names{1};
+    signature_meta.selected_signatures = sig_names;
+    signature_meta.n_signatures = numel(sig_names);
 elseif strcmpi(signal_source, 'imageset')
     [all_tc, signature_meta] = hrf_extract_imageset_timeseries(fmri_nii, char(opts.ImageSet), ...
         'MapNames', opts.MapNames, ...
@@ -120,7 +139,7 @@ elseif strcmpi(signal_source, 'imageset')
     signature_meta.selected_signatures = sig_names;
     signature_meta.n_signatures = numel(sig_names);
 else
-    error('Unknown SignalSource: %s. Use ''mean'', ''signature'', or ''imageset''.', char(opts.SignalSource));
+    error('Unknown SignalSource: %s. Use ''mean'', ''signature'', ''imageset'', or ''atlas''.', char(opts.SignalSource));
 end
 
 E = hrf_load_events_tsv(events_tsv);
@@ -131,7 +150,7 @@ else
 end
 
 Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
-if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset')
+if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || strcmpi(signal_source, 'atlas')
     siglist = signature_meta.selected_signatures;
     nSig = numel(siglist);
     fit_cells = cell(1, nSig);

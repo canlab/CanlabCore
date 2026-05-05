@@ -177,3 +177,32 @@ plot_hrf_time_unfolding_stats(stats);
 ```
 
 Optional between-group testing is available by supplying `Group` labels (two-group t-test per time bin).
+
+## Efficient ROI- and pattern-based HRF fitting
+
+Yes—this is often more efficient than voxelwise fitting. You can now do:
+
+```matlab
+% 1) Atlas ROI means (SignalSource='atlas')
+at = load_atlas('canlab2018');
+res_roi = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'TR', 0.8, 'SignalSource', 'atlas', ...
+    'AtlasObj', at, 'Regions', {'ACC','vmPFC'});
+
+% 2) Pattern/map expression (SignalSource='imageset')
+res_maps = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'TR', 0.8, 'SignalSource', 'imageset', ...
+    'ImageSet', 'bucknerlab_wholebrain', 'UseParallel', true);
+```
+
+## Fast montage animation over time (betas or thresholded t maps)
+
+```matlab
+% Animate a 4D image quickly by skipping frames
+hrf_make_montage_animation(fmri_nii, 'timeseries.mp4', ...
+    'FrameStep', 3, 'FPS', 10, 'TitlePrefix', 'BOLD');
+
+% Thresholded t-map animation (if your img is already t-values)
+hrf_make_montage_animation(tmap_4d, 'tvals_thresh.mp4', ...
+    'Threshold', 2.0, 'FrameStep', 2, 'FPS', 12, 'TitlePrefix', 't-value');
+```

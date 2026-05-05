@@ -121,7 +121,7 @@ for i=1:d,
 end;
 
 
-info ={};
+info = struct();
 info.b = b;
 info.bc = bc;
 info.DX = X;

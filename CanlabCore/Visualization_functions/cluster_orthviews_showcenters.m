@@ -145,7 +145,7 @@ function axish = get_orth_axishandles
     axish(other_axes) = [];
     poss(other_axes, :) = [];
 
-    % sort into order:  axial, coronal, saggital
+    % sort into order:  axial, coronal, sagittal
     ssum = sum(poss(:, 1:2), 2);
     [ssum, ind] = sort(ssum);
     axish = axish(ind);

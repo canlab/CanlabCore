@@ -16,7 +16,7 @@ function varargout = scn_stats_helper_functions(meth, varargin)
 %           unweighted; with AR model if specified as last input
 %
 %       **'boot':**
-%           Boostrapping of GLS
+%           Bootstrapping of GLS
 %
 %       **'signperm':**
 %           Sign permutation test for intercept of GLS
@@ -1263,7 +1263,7 @@ stats.gls_p = stats.p;
 [final_boot_samples, alphaaccept] = get_boot_samples_needed(stats.p, whpvals_for_boot, targetu, bootsamples, verbose); % uses whpvals_for_boot, returns Be
 
 
-% set up boostrap beta-generating function
+% set up bootstrap beta-generating function
 % generic for multiple cols of Y (outcomes), multiple cols. of X
 % (predictors), weights equal or not (W)
 % much faster if X is intercept only!

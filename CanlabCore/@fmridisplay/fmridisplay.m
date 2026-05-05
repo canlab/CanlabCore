@@ -29,17 +29,17 @@
 % obj = montage(obj, 'spacing', 4);
 % obj = addblobs(obj, cl, 'trans', 'color', [0 0 1], 'smooth');
 %
-% Add axial and parasaggital montages to the same figure:
+% Add axial and parasagittal montages to the same figure:
 % o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 6);
 % axh = axes('Position', [0.03 0.45 .1 .5]);
-% o2 = montage(o2, 'saggital', 'wh_slice', [0 0 0], 'existing_axes', axh);
+% o2 = montage(o2, 'sagittal', 'wh_slice', [0 0 0], 'existing_axes', axh);
 %
 % Add blue outlines only:
 % obj = addblobs(obj, cl, 'outline', 'color', [0 0 1]);
 %
 % Sagittal images and blobs:
 % o2 = fmridisplay;
-% o2 = montage(o2, 'saggital', 'slice_range', [-20 20], 'onerow');
+% o2 = montage(o2, 'sagittal', 'slice_range', [-20 20], 'onerow');
 % o2 = addblobs(o2, cl);
 % legend(o2, 'figure')
 % o2 = addblobs(o2, cl, 'contour', 'color', [0 1 0]);
@@ -50,7 +50,7 @@
 %
 % Overlapping sagittal and axial images with outlines
 % o2 = fmridisplay;
-% o2 = montage(o2, 'saggital', 'slice_range', [-10 10], 'onerow');
+% o2 = montage(o2, 'sagittal', 'slice_range', [-10 10], 'onerow');
 % enlarge_axes(gcf, 1.2);
 % o2 = montage(o2, 'axial', 'slice_range', [-40 50], 'onerow', 'spacing', 4);
 % o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]});
@@ -61,7 +61,7 @@
 % o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'trans');
 % o2 = addblobs(o2, cl, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'cmaprange', [-2 2], 'transvalue', .85);
 %
-% o2 = montage(o2, 'saggital', 'slice_range', [-6 6], 'onerow');
+% o2 = montage(o2, 'sagittal', 'slice_range', [-6 6], 'onerow');
 % o2 = montage(o2, 'axial', 'slice_range', [-20 30], 'onerow', 'spacing', 8);
 % xyz = a list of [x y z] coordinates, one coord per row
 % o2 = montage(o2, 'axial', 'wh_slice', xyz, 'onerow');

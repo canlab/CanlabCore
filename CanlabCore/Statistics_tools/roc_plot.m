@@ -595,7 +595,7 @@ if doplot
     ROC.line_handle = han;
 end
 
-% Boostrap, if asked for
+% Bootstrap, if asked for
 % -------------------------------------------------------------------------
 if doboot
     

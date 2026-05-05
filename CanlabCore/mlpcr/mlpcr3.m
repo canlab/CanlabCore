@@ -21,7 +21,7 @@
 % If the defaults are used then the result is identical to PCR, only you 
 % get both within and between subject predictive models in addition to the 
 % full model. Different results may be obtained with hyperparameter
-% optimization or concensus PCA enabled.
+% optimization or consensus PCA enabled.
 %
 % Input ::
 %
@@ -52,9 +52,9 @@
 %                   default if you wish to treat trait differences as
 %                   noise.
 %
-%   'cpca'      - followed by 0/1 to indicate whether or not concensus PCA
+%   'cpca'      - followed by 0/1 to indicate whether or not consensus PCA
 %                   (Westerhuis, et al. 1998) should be used in place of 
-%                   standard pca. If concensus PCA is enabled eigenvectors 
+%                   standard pca. If consensus PCA is enabled eigenvectors 
 %                   will be selected such that variance is explained 
 %                   equally across all blocks. Otherwise eigenvectors will 
 %                   best represent blocks with the most observations.
@@ -64,7 +64,7 @@
 %                   and will consequently fight against CPCA. A future 
 %                   update may fix this, and if so this note should be 
 %                   removed.
-%                 Note 2: In principle concensus PCA could be implemened
+%                 Note 2: In principle consensus PCA could be implemened
 %                   for traditional PCR too. It just hasn't been.
 %
 %   'randInt'   - Fit a random intercept model. Default=false
@@ -129,7 +129,7 @@
 %   (allowing the user to force retention of one or the other even if
 %   eigenvalue rank doesn't justify it)
 % - passthrough options to higher level cv_mlpcr, cv_mlpcr_bt and
-%   cv_mlpcr_wi scripts. Concensus PCA should also use concensus cv_err,
+%   cv_mlpcr_wi scripts. Consensus PCA should also use consensus cv_err,
 %   cv_mlpcr_wi and cv_mlpcr_bt should have within and between priority
 %   (respectively) by default.
 
@@ -224,7 +224,7 @@ function [B, Bb, Bw, pc_b, sc_b, pc_w, sc_w, b] = mlpcr3(X,Y,varargin)
         end
         
         
-        % Get concensus PCA solution, which weighs each block equally
+        % Get consensus PCA solution, which weighs each block equally
         % requires Matlab 2016b or later perform operation across all
         %   columns like this with sf
         [pc_w,~,~] = svd((sf.*Xw)', 'econ');

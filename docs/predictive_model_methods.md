@@ -1,7 +1,6 @@
 # `predictive_model` methods, organized by area
 
-`predictive_model` is a container for the artifacts of a fitted
-multivariate predictive model: the outcome `Y`, predictions `yfit`,
+`predictive_model` is an object that specifies a multivariate predictive model and its artifacts: the outcome `Y`, predictions `yfit`,
 weight maps `w`, bootstrap statistics, cross-validation indices and
 errors, the underlying MATLAB classification/regression model object,
 and effect-size summaries. It is intended as an output type for
@@ -15,6 +14,7 @@ called; see the table below for which ones are implemented today. Type
 `methods(my_obj)` in MATLAB for the live list on any instance.
 
 ## Properties
+Some properties' values are defined before model fitting. These specify input data, objective function, hyperparameters, and cross-validation scheme. Other properties' values are defined after model estimation, including cross-validation predictions, accuracy, etc.
 
 | Property | Description |
 |---|---|
@@ -24,7 +24,7 @@ called; see the table below for which ones are implemented today. Type
 | `Y_name` | Name of outcome variable |
 | `X_name` | Name of predictor variable |
 | `modeloptions` | Cell of fitter options, e.g. `{'KernelFunction','linear'}` |
-| `accfun` | Function handle computing accuracy from `(Y, yfit)` |
+| `accfun` | Objective function; function handle computing accuracy from `(Y, yfit)` |
 | `accfun_descrip` | Text description of `accfun` |
 | `trIdx` | Cell of training-fold logical indices |
 | `teIdx` | Cell of test-fold logical indices |

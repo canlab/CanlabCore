@@ -50,18 +50,17 @@ Listed in roughly the order most users encounter them. Click a class name for th
 
 | Class | Description |
 |---|---|
-| **[`fmri_data`](fmri_data_methods.md)** | The workhorse. Holds fMRI / PET / contrast images plus optional predictor matrix `.X`, outcome vector `.Y`, covariates, and metadata. Most analysis methods (`predict`, `regress`, `ica`, `searchlight`, `ttest`, `signtest`) live here. |
+| **[`fmri_data`](fmri_data_methods.md)** | The workhorse. This object holds fMRI / PET / images plus additional metadata table and auxiliary data and metadata. The idea is a complete analysis-ready package in a single object. Images can be time series, trial-level, contrast images, or others, with metadata fields to mark image semantics. Most analysis methods (`predict`, `regress`, `ica`, `searchlight`, `ttest`, `signtest`) live here. |
 | **[`image_vector`](image_vector_methods.md)** | Abstract superclass. You rarely create one directly, but most of the methods you call on an `fmri_data`, `statistic_image`, or `atlas` are inherited from here (`apply_mask`, `resample_space`, `montage`, `surface`, `extract_roi_averages`, etc.). |
 | **[`statistic_image`](statistic_image_methods.md)** | Stat maps (t / p / effect-size) with thresholding state. Produced by `ttest`, `regress`, etc. The `threshold` method re-thresholds without losing the underlying values. |
-| **[`atlas`](atlas_methods.md)** | Brain atlases / parcellations. Has `.probability_maps`, `.labels`, `.label_descriptions`, `.references`. Methods include `select_atlas_subset`, `merge_atlases`, `downsample_parcellation`, `atlas2region`, `apply_atlas`. Use `load_atlas` to load by keyword. |
-| **[`region`](region_methods.md)** | List of contiguous clusters / ROIs as a unit of analysis. Produced by `region(t)` from a thresholded `statistic_image`. Consumed by `montage`, `table`, `surface`, `extract_data`. |
-| **[`fmridisplay`](fmridisplay_methods.md)** | Container holding figure handles for slice montages and surfaces. Built by `canlab_results_fmridisplay`; lets you swap blob layers in / out without re-rendering the anatomy underneath. |
+| **[`atlas`](atlas_methods.md)** | Brain atlases / parcellations. Includes both winner-take-all labels for each parcel and probabilistic maps, region labels ( `.labels`), `.references`, and other metadata. Makes it easy to extract or analyze data within named atlas regions or on region/parcel averages. Methods include `select_atlas_subset`, `merge_atlases`, `downsample_parcellation`, `atlas2region`. Use `load_atlas` to load by keyword. |
+| **[`region`](region_methods.md)** | Vector storing information about a set of contiguous clusters / ROIs as a unit of analysis, with one element per region. Designed to hold a compact representation of thresholded maps, including data, voxel coordinates and locations, and facilitate rendering on brains and tables. Produced by `region(t)` from a thresholded `statistic_image`. Consumed by `montage`, `table`, `surface`, `extract_data`. |
+| **[`fmridisplay`](fmridisplay_methods.md)** | Container holding figure handles for slice montages and surfaces. Built by invoking methods like `montage` or with preconfigured sets in `canlab_results_fmridisplay`; lets you swap blob layers in / out without re-rendering the anatomy underneath. |
 | **[`brainpathway`](brainpathway_methods.md)** | Connectivity / pathway-modeling object for one subject. The `brainpathway_multisubject` extension is documented on the same page. |
 | **[`fmri_timeseries`](fmri_timeseries_methods.md)** | Specialized container for raw timeseries data. |
-| **[`canlab_dataset`](canlab_dataset_methods.md)** | Generic subject x variable behavioral / clinical data container with its own `glm`, `mediation`, `scatterplot`, `get_var`, `add_vars` methods. |
+| **[`canlab_dataset`](canlab_dataset_methods.md)** | Generic subject x variable behavioral / clinical data container with its own `glm`, `mediation`, `scatterplot`, `get_var`, `add_vars`, 'write' (to text file) and plotting methods. Designed for two-level datasets (within-person, between-person) common in cognitive neuroscience |
 | **[`fmri_glm_design_matrix`](fmri_glm_design_matrix_methods.md)** | Holds GLM design matrices (X) for first-level fMRI analyses. Methods like `build`, `add`, `replace_basis_set`. |
-| **[`predictive_model`](predictive_model_methods.md)** | Holds artifacts of a fitted multivariate prediction model — cross-validated predictions, weight maps, performance summaries. |
-| **[`fmri_mask_image`](fmri_mask_image_methods.md)** | Binary mask container. Mostly legacy; many newer methods accept an `fmri_data` or plain `image_vector` as a mask directly. |
+| **[`predictive_model`](predictive_model_methods.md)** | Holds a multivariate prediction model and its artifacts — setup variables, cross-validated predictions, weight maps, performance summaries. |
 
 ## Cross-cutting topics
 

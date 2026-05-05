@@ -5,12 +5,19 @@ function results = canlab_run_all_tests(varargin)
 %   results = canlab_run_all_tests('JUnit', 'test-results.xml')
 %   results = canlab_run_all_tests('Tag', 'Core')              % run only tagged tests
 %   results = canlab_run_all_tests('Tag', '~RequiresMasks')    % skip a tag
+%   results = canlab_run_all_tests('Walkthroughs', 'only')     % only walkthrough tests
+%   results = canlab_run_all_tests('Walkthroughs', 'include')  % unit + walkthrough
 %
 %   Discovers test files matching canlab_test_*.m anywhere under this
 %   folder (excluding old_to_integrate/) and runs them via matlab.unittest.
 %   Adds the parent CanlabCore tree to the path before running. Returns a
 %   matlab.unittest.TestResult array suitable for both interactive use and
 %   CI; in CI, throw on failure with assertSuccess(results).
+%
+%   Walkthrough integration tests live under walkthroughs/ and are
+%   slow (they run end-to-end help scripts from the CANlab_help_examples
+%   repo). They are SKIPPED by default. Pass 'Walkthroughs', 'only' to run
+%   only walkthroughs, or 'Walkthroughs', 'include' to run both tiers.
 %
 %   Note on filename pattern: test files are namespaced as canlab_test_*
 %   to avoid colliding with other toolboxes a user might have on their
@@ -21,6 +28,7 @@ function results = canlab_run_all_tests(varargin)
 p = inputParser;
 p.addParameter('JUnit', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Tag', '', @(x) ischar(x) || isstring(x));
+p.addParameter('Walkthroughs', 'skip', @(x) any(strcmpi(x, {'skip', 'only', 'include'})));
 p.parse(varargin{:});
 
 import matlab.unittest.TestSuite
@@ -38,12 +46,22 @@ addpath(genpath(canlabcore_root));
 % concrete subclass of TestSuite), so we initialize with Test.empty rather
 % than TestSuite.empty — mixing the abstract empty with concrete Tests
 % errors during horzcat.
+walkthrough_mode = lower(char(p.Results.Walkthroughs));
 matches = dir(fullfile(this_dir, '**', 'canlab_test_*.m'));
 suite = matlab.unittest.Test.empty;
 for k = 1:numel(matches)
     fpath = fullfile(matches(k).folder, matches(k).name);
     if contains(fpath, [filesep 'old_to_integrate' filesep])
         continue
+    end
+    is_walkthrough = contains(fpath, [filesep 'walkthroughs' filesep]);
+    switch walkthrough_mode
+        case 'skip'
+            if is_walkthrough, continue, end
+        case 'only'
+            if ~is_walkthrough, continue, end
+        case 'include'
+            % run everything
     end
     suite = [suite, TestSuite.fromFile(fpath)]; %#ok<AGROW>
 end

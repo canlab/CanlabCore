@@ -48,3 +48,43 @@ Describe load_image_set(), which includes a registry of datasets that users can 
 3. Description of toolbox subfolders
 
 Make a page called toolbox_folders.md in docs/.  include a table that lists each folder in CanlabCore and describes the contents in 1-3 lines.
+
+5. Editorial style for class and method descriptions
+
+The following stylistic guidance should be applied when writing or revising class introductions, class-table descriptions in Object_methods.md, and per-class methods pages. These rules came out of editorial passes on the first round of pages and capture how class descriptions should read.
+
+5a. Lead with purpose, not structure.
+
+When describing an object class, start with what it is FOR (the user's reason to reach for it) before what fields it has. Prefer "complete analysis-ready package for fMRI / PET / contrast images, with metadata fields to mark image semantics" over "Holds .dat plus optional .X, .Y, covariates, and metadata." Listing fields is fine inside the properties table; the prose intro should answer "why would I use this object?"
+
+5b. Use both-and framing for dual-natured objects.
+
+When an object holds two related representations (e.g., atlas: both winner-take-all integer labels AND probabilistic maps; predictive_model: both setup variables AND fitted-model artifacts; statistic_image: both raw stats AND a .sig threshold state), say so explicitly with "both X and Y." Don't pick one half and bury the other in the property list.
+
+5c. Be lifecycle-aware for stateful objects.
+
+For objects whose properties evolve through stages (predictive_model has pre-fit setup vs. post-fit artifacts; brainpathway has region-level vs. node-level data; fmri_data with .removed_voxels / .removed_images), introduce the properties section with a brief paragraph distinguishing the stages. The properties table itself stays per-property; the framing paragraph above it explains what changes and when.
+
+5d. Document multiple construction paths.
+
+When an object can be built more than one way (e.g., fmridisplay can be built by canlab_results_fmridisplay or by invoking display methods like montage or surface on an image_vector), name the paths explicitly. Don't pick one and call it "the" constructor.
+
+5e. Add domain framing where it helps.
+
+For classes that exist because of a research design pattern, name the pattern. Example: canlab_dataset is "designed for two-level datasets (within-person, between-person) common in cognitive neuroscience." That single sentence does more than enumerating its methods. Use this for canlab_dataset, fmri_glm_design_matrix, brainpathway, and similar where the "why" is non-obvious from the field list.
+
+5f. Curate the index table.
+
+The class table in Object_methods.md is a curated front door, not an exhaustive enumeration. Legacy classes that users should not reach for first (fmri_mask_image is the example; many newer methods accept fmri_data or image_vector as a mask directly) belong on their own per-class page but should NOT appear in the Object_methods.md class table. Mention legacy classes only in the per-class pages and only with a "(legacy; use X instead)" note. Order the index table by how often a typical user encounters the class, not alphabetically.
+
+5g. Property descriptions: name what it IS before what it DOES.
+
+In properties tables, lead with the role / semantic label, then the mechanics. Prefer "Objective function; function handle computing accuracy from (Y, yfit)" over "Function handle computing accuracy from (Y, yfit)." For the mechanically-named property (accfun), the role label (objective function) is what helps the reader understand why it exists.
+
+5h. When listing methods inline in prose, pick a small representative set.
+
+For each class's intro paragraph, list 4-7 representative method names, not 12. The full method list is in the per-class page. The intro inline list is for orientation: it should show users what KIND of operations this class supports, not be a complete index. Example: "Most analysis methods (predict, regress, ica, searchlight, ttest, signtest) live here."
+
+5i. Cross-link liberally between related pages.
+
+Every per-class page should link to: (a) Object_methods.md as the parent index, (b) recasting_objects.md for conversions, (c) any related class page (e.g., fmri_data_methods.md links to image_vector_methods.md because most methods are inherited from there). The reading flow should be: index -> per-class -> related-class, never a dead end.

@@ -1,0 +1,59 @@
+This instruction set is for creating a set of help documents in markdown format that describe canlab core tools. Format all documents so they will render well when used on the web at canlab.github.io.
+
+In this task, we will create a set of .md pages for selected object methods and key functions There are 3 phases: 1: Build code maps.  2: Build .md markdown files for each method, including the associated code map. 3: Modify object class methods .md pages to link to the new pages. 
+
+Phase 1
+Read the file canlab_template_codemap.pptx.  This is a code map that specifies the flow of data through a set of functions. I will give you a list of functions below.
+For each function in the list below, create a native powerpoint file with editable powerpoint-native objects, including text boxes and arrows, that provide a graphical code map of the function and its subfunctions, inputs, outputs, and key variables. Use pptxgenjs, or a preferred skill if there is a better option available. Use the slide in template_codemap.pptx as a template, keeping the font, color scheme, and style consistent with the template.  Name the new pptx file with the object class name and method name followed by _codemap, i.e., “<class>_<method>_codemap.pptx”, for example ”fmri_data_regress_codemap.pptx”.  If a .pptx file of the name already exists, read it and consider whether it needs updates, and make any updates needed instead of recreating it from scratch. If you create or modify the file, save the pptx file in docs/code_maps_pptx/.  Then save a .png file of the new codemap with the same name but ending in .png in the folder docs/code_maps_png/.   Crop out extra white space from the .png. 
+The functions you should run this pipeline for are the following methods for the @fmri_data class:
+annotate_binary_results_map
+apply_parcellation
+canlab_connectivity_preproc
+denoise_timeseries_pipeline
+descriptives
+dual_regression
+evaluate_spatial_scale
+extract_gray_white_csf
+extract_measures_batch
+extract_roi_averages
+fitlme_voxelwise
+hansen_neurotransmitter_maps
+image_similarity_plot
+jackknife_similarity
+model_brain_pathway
+model_mpathi
+normalize_gm_by_wm_csf
+outliers
+pca
+qc_metrics_second_level
+robfit_parcelwise
+regress
+rsa_regression
+table
+table_of_atlas_regions_covered
+ttest
+ttest_table_and_lateralization_test
+wedge_plot_by_atlas
+predict
+
+Then run this pipeline for the following methods for the @statistic_image class:
+threshold
+
+Then run this pipeline for the following methods for the @atlas class:
+select_atlas_subset
+
+Then run this pipeline for the following stand-alone functions:
+xval_select_holdout_set
+xval_classify
+xval_svm
+xval_svr
+
+Phase 2.
+For each method or stand-alone function you have created a code map for, create a .md file that describes the function. Start by copying the help from the Matlab help block at the beginning of the method/function file and modifying it to look good in markdown. Insert a link to the code map after the help block. Save the file in docs/individual_functions/ with the naming convention <class>_<method>.md, e.g., fmri_data_regress.md, or <function_name>.md for stand-alone functions. 
+
+Phase 3.
+Then, modify the appropriate <class>_methods.md file (e.g., fmri_data_methods.md for fmri_data methods) to replace the method name in the table with a hyperlink to the new page for the corresponding method. For methods associated with a child class of the @image_vector class, modify the <class>_methods.md file for both the image_vector class and the child class (e.g., fmri_data, statistic_image, etc.).
+
+ 
+
+

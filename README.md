@@ -2,6 +2,7 @@ CanlabCore
 ==========
 
 [![tests](https://github.com/canlab/CanlabCore/actions/workflows/test.yml/badge.svg)](https://github.com/canlab/CanlabCore/actions/workflows/test.yml)
+[![tests-walkthroughs](https://github.com/canlab/CanlabCore/actions/workflows/tests-walkthroughs.yml/badge.svg)](https://github.com/canlab/CanlabCore/actions/workflows/tests-walkthroughs.yml)
 
 This repository contains core tools for MRI/fMRI/PET analysis from the Cognitive and Affective Neuorscience Lab (Tor Wager, PI) and our collaborators.  Many of these functions are needed to run other toolboxes, e.g., the CAN lab’s multilevel mediation and Martin Lindquist’s hemodynamic response estimation toolboxes. A brief introduction to the toolbox can be found <a href = "http://canlab.github.io">here</a>. 
 

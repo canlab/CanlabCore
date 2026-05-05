@@ -13,9 +13,11 @@ toolboxes a user may have on their MATLAB path.
 
 ```matlab
 cd CanlabCore/Unit_tests
-results = canlab_run_all_tests;                          % full suite
-results = canlab_run_all_tests('Tag', 'Core');           % only tagged 'Core'
-results = canlab_run_all_tests('JUnit', 'results.xml');  % also write JUnit XML
+results = canlab_run_all_tests;                                    % unit suite (default)
+results = canlab_run_all_tests('Tag', 'Core');                     % only tagged 'Core'
+results = canlab_run_all_tests('JUnit', 'results.xml');            % also write JUnit XML
+results = canlab_run_all_tests('Walkthroughs', 'only');            % run only walkthrough tests
+results = canlab_run_all_tests('Walkthroughs', 'include');         % unit + walkthrough
 ```
 
 `canlab_run_all_tests` adds the parent `CanlabCore/` tree to the MATLAB
@@ -37,12 +39,25 @@ Unit_tests/
 ├── region/                           tests of @region construction and methods
 ├── atlas/                            tests of @atlas
 ├── workflows/                        end-to-end pipeline smoke tests
+├── walkthroughs/                     Tier B integration tests (canlab_help_* scripts)
 └── old_to_integrate/                 legacy ad-hoc scripts pending rewrite as proper tests
 ```
 
 `old_to_integrate/` is excluded from discovery by `canlab_run_all_tests`.
 Files there should be ported into one of the other folders as proper
 `matlab.unittest` tests (and renamed to `canlab_test_*.m`) over time.
+
+`walkthroughs/` contains thin wrappers around the `canlab_help_*`
+walkthrough scripts that live in the
+[CANlab_help_examples](https://github.com/canlab/CANlab_help_examples)
+repository. Each wrapper provides a `WorkingFolderFixture` (clean cwd)
+and `close all force` setup, then evals the corresponding help script
+under `evalc`. Reaching the end of the script counts as a pass; we don't
+verify pixel content or numerical results. These are slower and depend
+on `CANlab_help_examples` being on the MATLAB path, so they are
+**skipped by default** and run on a nightly schedule via
+`.github/workflows/tests-walkthroughs.yml`. Pass `'Walkthroughs', 'only'`
+or `'Walkthroughs', 'include'` to `canlab_run_all_tests` to opt in.
 
 ## Writing a new test
 

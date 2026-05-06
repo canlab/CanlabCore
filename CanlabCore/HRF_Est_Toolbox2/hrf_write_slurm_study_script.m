@@ -30,6 +30,7 @@ p.addParameter('ManifestFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('WorkerFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ConfigMat', '', @(x) ischar(x) || isstring(x));
 p.addParameter('CanlabRoot', local_default_canlab_root(), @(x) ischar(x) || isstring(x));
+p.addParameter('ExtraMatlabPaths', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('PipelineArgs', {}, @(x) iscell(x));
 p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
@@ -72,6 +73,7 @@ writetable(manifest, paths.manifest_file);
 
 config = struct();
 config.canlab_root = char(opts.CanlabRoot);
+config.extra_matlab_paths = local_to_cell(opts.ExtraMatlabPaths);
 config.subject_ids = subject_ids(:);
 config.fmri_files = fmri_files(:);
 config.events_files = events_files(:);
@@ -140,6 +142,12 @@ fprintf(fid, 'manifest_file = strrep(''%s'', ''\\'', filesep);\n', local_matlab_
 fprintf(fid, 'config_mat = strrep(''%s'', ''\\'', filesep);\n', local_matlab_string(config_mat));
 fprintf(fid, 'load(config_mat, ''config'');\n');
 fprintf(fid, 'addpath(genpath(config.canlab_root));\n');
+fprintf(fid, 'if isfield(config, ''extra_matlab_paths'')\n');
+fprintf(fid, '    for path_idx = 1:numel(config.extra_matlab_paths)\n');
+fprintf(fid, '        extra_path = local_cell_at(config.extra_matlab_paths, path_idx);\n');
+fprintf(fid, '        if ~isempty(extra_path), addpath(genpath(strrep(extra_path, ''\\'', filesep))); end\n');
+fprintf(fid, '    end\n');
+fprintf(fid, 'end\n');
 fprintf(fid, 'task_id = str2double(getenv(''SLURM_ARRAY_TASK_ID''));\n');
 fprintf(fid, 'if isnan(task_id) || task_id < 1, task_id = str2double(getenv(''TASK_ID'')); end\n');
 fprintf(fid, 'if isnan(task_id) || task_id < 1, task_id = 1; end\n');

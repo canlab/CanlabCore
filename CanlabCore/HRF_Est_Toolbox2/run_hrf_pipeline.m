@@ -28,6 +28,7 @@ p.addParameter('MaskNii', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) ischar(x) || iscellstr(x) || isstring(x));
 p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
 p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @(x) iscell(x) || isstring(x));
+p.addParameter('ModelDependencyPolicy', 'skip', @(x) ischar(x) || isstring(x));
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
 p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
@@ -180,6 +181,7 @@ if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || 
     fit_cells = cell(1, nSig);
     window_seconds = opts.WindowSeconds;
     models = opts.Models;
+    model_dependency_policy = opts.ModelDependencyPolicy;
     use_parallel = logical(opts.UseParallel) && license('test', 'Distrib_Computing_Toolbox');
 
     if use_parallel
@@ -187,11 +189,13 @@ if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || 
             parpool;
         end
         parfor si = 1:nSig
-            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models);
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models, ...
+                'DependencyPolicy', model_dependency_policy);
         end
     else
         for si = 1:nSig
-            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models);
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models, ...
+                'DependencyPolicy', model_dependency_policy);
         end
     end
 
@@ -201,7 +205,8 @@ if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || 
     selected_idx = find(strcmp(siglist, signature_meta.selected_signature), 1);
     fits = fit_cells{selected_idx};
 else
-    fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models);
+    fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models, ...
+        'DependencyPolicy', opts.ModelDependencyPolicy);
     fits_by_signature.mean = fits;
     signature_meta.selected_signature = 'mean_bold';
     signature_meta.selected_signatures = {'mean_bold'};

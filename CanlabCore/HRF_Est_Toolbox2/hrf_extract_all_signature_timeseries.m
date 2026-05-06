@@ -2,7 +2,7 @@ function [TC, meta] = hrf_extract_all_signature_timeseries(fmri_nii, varargin)
 %HRF_EXTRACT_ALL_SIGNATURE_TIMESERIES Extract all signature-expression time series.
 
 p = inputParser;
-p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x));
+p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x) || isa(x, 'fmri_data'));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.parse(fmri_nii, varargin{:});
@@ -15,7 +15,11 @@ if ~exist('apply_all_signatures', 'file')
     error('apply_all_signatures not found on path. Add CanlabCore dependencies first.');
 end
 
-dat = fmri_data(char(fmri_nii));
+if isa(fmri_nii, 'fmri_data')
+    dat = fmri_nii;
+else
+    dat = fmri_data(char(fmri_nii));
+end
 S = apply_all_signatures(dat, 'similarity_metric', char(opts.SimilarityMetric), 'image_set', char(opts.ImageSet));
 
 if ~isfield(S, 'signaturenames') || isempty(S.signaturenames)
@@ -33,8 +37,7 @@ for i = 1:n_sig
     if numel(v) ~= n_tp
         error('Signature time series length mismatch for %s.', names{i});
     end
-    v = v(:);
-    TC(:, i) = (v - mean(v)) ./ std(v);
+    TC(:, i) = local_zscore(v);
 end
 
 meta = struct('available_signatures', {names}, ...
@@ -57,4 +60,14 @@ if istable(v)
     v = v.(vn{1});
 end
 v = v(:);
+end
+
+function y = local_zscore(y)
+y = y(:);
+s = std(y);
+if s == 0 || isnan(s)
+    y = zeros(size(y));
+else
+    y = (y - mean(y)) ./ s;
+end
 end

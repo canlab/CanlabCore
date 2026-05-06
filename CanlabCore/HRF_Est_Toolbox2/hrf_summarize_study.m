@@ -3,6 +3,7 @@ function T = hrf_summarize_study(results, subject_ids)
 rows = {};
 for s = 1:numel(results)
     r = results{s};
+    if isempty(r) || ~isfield(r, 'fits'), continue; end
     models = fieldnames(r.fits);
     for m = 1:numel(models)
         mdl = models{m};
@@ -13,5 +14,9 @@ for s = 1:numel(results)
         end
     end
 end
-T = cell2table(rows, 'VariableNames', {'subject','model','condition','amplitude','time_to_peak','width'});
+if isempty(rows)
+    T = cell2table(cell(0, 6), 'VariableNames', {'subject','model','condition','amplitude','time_to_peak','width'});
+else
+    T = cell2table(rows, 'VariableNames', {'subject','model','condition','amplitude','time_to_peak','width'});
+end
 end

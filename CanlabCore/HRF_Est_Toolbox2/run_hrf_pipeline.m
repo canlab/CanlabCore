@@ -25,20 +25,32 @@ p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x));
 p.addRequired('events_tsv', @(x) ischar(x) || isstring(x));
 p.addParameter('TR', [], @(x) isempty(x) || (isscalar(x) && x > 0));
 p.addParameter('MaskNii', '', @(x) ischar(x) || isstring(x));
-p.addParameter('Conditions', {}, @(x) iscellstr(x) || isstring(x));
+p.addParameter('Conditions', {}, @(x) ischar(x) || iscellstr(x) || isstring(x));
 p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
-p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @iscell);
+p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @(x) iscell(x) || isstring(x));
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
 p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
-p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
+p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x) || isa(x, 'image_vector'));
 p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
-p.addParameter('SignatureNames', {}, @(x) iscell(x) || isstring(x));
+p.addParameter('SignatureNames', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('MaxSignatures', inf, @(x) isscalar(x) && x >= 1);
 p.addParameter('UseParallel', false, @(x) islogical(x) || isnumeric(x));
+<<<<<<< Updated upstream
 p.addParameter('MapNames', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas'));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x));
+=======
+p.addParameter('MapNames', {}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('WriteWholeBrain', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('WholeBrainOutputPrefix', '', @(x) ischar(x) || isstring(x));
+p.addParameter('WholeBrainMode', 'FIR', @(x) ischar(x) || isstring(x));
+p.addParameter('WholeBrainPThresh', [], @(x) isempty(x) || (isscalar(x) && x > 0 && x < 1));
+p.addParameter('WholeBrainThreshType', 'unc', @(x) ischar(x) || isstring(x));
+p.addParameter('WholeBrainWriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('WholeBrainChunkSize', 50000, @(x) isscalar(x) && x >= 1);
+p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
+>>>>>>> Stashed changes
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
@@ -53,9 +65,12 @@ events_tsv = char(events_tsv);
 if ~exist(fmri_nii, 'file'), error('fMRI file not found: %s', fmri_nii); end
 if ~exist(events_tsv, 'file'), error('Events file not found: %s', events_tsv); end
 
-[~, tr_from_hdr, n_tp] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
+[tr_from_hdr, n_tp] = local_get_tr_and_ntp(fmri_nii);
 TR = opts.TR;
 if isempty(TR), TR = tr_from_hdr; end
+if isempty(TR) || TR <= 0
+    error('Could not infer TR from NIfTI header. Pass ''TR'' explicitly.');
+end
 
 signal_source = lower(strtrim(char(opts.SignalSource)));
 if strcmp(signal_source, 'signatures'), signal_source = 'signature'; end
@@ -67,6 +82,10 @@ fits_by_signature = struct();
 if strcmpi(signal_source, 'mean')
     [tc, ~, ~] = hrf_extract_timeseries_from_nii(fmri_nii, char(opts.MaskNii));
 elseif strcmpi(signal_source, 'signature')
+    dat_for_maps = fmri_data(fmri_nii, 'noverbose');
+    if isa(opts.ImageSet, 'image_vector')
+        error('SignalSource=''signature'' expects ImageSet to be a named signature set. Use SignalSource=''imageset'' for an image_vector map set.');
+    end
     if ~isempty(opts.SignatureName)
         % Fast/safe path for one signature to avoid loading unavailable images in image_set='all'
         image_set = char(opts.ImageSet);
@@ -74,7 +93,7 @@ elseif strcmpi(signal_source, 'signature')
         if strcmpi(image_set, 'all') && strcmpi(sig_name, 'NPS')
             image_set = 'npsplus';
         end
-        [tc, one_meta] = hrf_extract_signature_timeseries(fmri_nii, ...
+        [tc, one_meta] = hrf_extract_signature_timeseries(dat_for_maps, ...
             'SimilarityMetric', opts.SimilarityMetric, ...
             'ImageSet', image_set, ...
             'SignatureName', sig_name);
@@ -86,7 +105,7 @@ elseif strcmpi(signal_source, 'signature')
         signature_meta.similarity_metric = one_meta.similarity_metric;
         signature_meta.image_set = one_meta.image_set;
     else
-        [all_tc, signature_meta] = hrf_extract_all_signature_timeseries(fmri_nii, ...
+        [all_tc, signature_meta] = hrf_extract_all_signature_timeseries(dat_for_maps, ...
             'SimilarityMetric', opts.SimilarityMetric, ...
             'ImageSet', opts.ImageSet);
 
@@ -96,6 +115,9 @@ elseif strcmpi(signal_source, 'signature')
             [tf, idx] = ismember(req, sig_names);
             sig_names = sig_names(idx(tf));
             all_tc = all_tc(:, idx(tf));
+        end
+        if isempty(sig_names)
+            error('No signatures matched the requested SignatureNames.');
         end
         if isfinite(opts.MaxSignatures)
             n_keep = min(numel(sig_names), opts.MaxSignatures);
@@ -125,10 +147,14 @@ elseif strcmpi(signal_source, 'atlas')
     signature_meta.selected_signatures = sig_names;
     signature_meta.n_signatures = numel(sig_names);
 elseif strcmpi(signal_source, 'imageset')
-    [all_tc, signature_meta] = hrf_extract_imageset_timeseries(fmri_nii, char(opts.ImageSet), ...
+    dat_for_maps = fmri_data(fmri_nii, 'noverbose');
+    [all_tc, signature_meta] = hrf_extract_imageset_timeseries(dat_for_maps, opts.ImageSet, ...
         'MapNames', opts.MapNames, ...
         'SimilarityMetric', opts.SimilarityMetric);
     sig_names = signature_meta.available_signatures;
+    if isempty(sig_names)
+        error('No maps were available from the requested ImageSet/MapNames.');
+    end
     if isfinite(opts.MaxSignatures)
         n_keep = min(numel(sig_names), opts.MaxSignatures);
         sig_names = sig_names(1:n_keep);
@@ -146,14 +172,18 @@ E = hrf_load_events_tsv(events_tsv);
 if isempty(opts.Conditions)
     cond_names = unique(E.trial_type, 'stable');
 else
-    cond_names = cellstr(opts.Conditions);
+    cond_names = cellstr(string(opts.Conditions));
 end
 
 Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
 if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || strcmpi(signal_source, 'atlas')
     siglist = signature_meta.selected_signatures;
     nSig = numel(siglist);
+    sigfields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(siglist));
+    signature_meta.selected_signature_fields = sigfields;
     fit_cells = cell(1, nSig);
+    window_seconds = opts.WindowSeconds;
+    models = opts.Models;
     use_parallel = logical(opts.UseParallel) && license('test', 'Distrib_Computing_Toolbox');
 
     if use_parallel
@@ -161,18 +191,19 @@ if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || 
             parpool;
         end
         parfor si = 1:nSig
-            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, opts.WindowSeconds, opts.Models);
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models);
         end
     else
         for si = 1:nSig
-            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, opts.WindowSeconds, opts.Models);
+            fit_cells{si} = hrf_fit_all_models(all_tc(:, si), TR, Runc, window_seconds, models);
         end
     end
 
     for si = 1:nSig
-        fits_by_signature.(siglist{si}) = fit_cells{si};
+        fits_by_signature.(sigfields{si}) = fit_cells{si};
     end
-    fits = fits_by_signature.(signature_meta.selected_signature);
+    selected_idx = find(strcmp(siglist, signature_meta.selected_signature), 1);
+    fits = fit_cells{selected_idx};
 else
     fits = hrf_fit_all_models(tc, TR, Runc, opts.WindowSeconds, opts.Models);
     fits_by_signature.mean = fits;
@@ -194,7 +225,48 @@ results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...
 results.signature_meta = signature_meta;
 results.fits_by_signature = fits_by_signature;
 
+if logical(opts.WriteWholeBrain) || ~isempty(char(opts.WholeBrainOutputPrefix))
+    wholebrain_prefix = char(opts.WholeBrainOutputPrefix);
+    if isempty(wholebrain_prefix)
+        wholebrain_prefix = local_default_wholebrain_prefix(fmri_nii);
+    end
+
+    write_thresholded_t = logical(opts.WholeBrainWriteThresholdedT) || ~isempty(opts.WholeBrainPThresh);
+    results.wholebrain = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...
+        'TR', TR, ...
+        'MaskNii', char(opts.MaskNii), ...
+        'Conditions', cond_names, ...
+        'WindowSeconds', opts.WindowSeconds, ...
+        'Mode', opts.WholeBrainMode, ...
+        'OutputPrefix', wholebrain_prefix, ...
+        'PThresh', opts.WholeBrainPThresh, ...
+        'ThreshType', opts.WholeBrainThreshType, ...
+        'WriteThresholdedT', write_thresholded_t, ...
+        'ChunkSize', opts.WholeBrainChunkSize, ...
+        'ScaleMode', opts.WholeBrainScaleMode);
+end
+
 if ~isempty(opts.OutputMat)
     save(char(opts.OutputMat), 'results');
 end
+end
+
+function [TR, n_tp] = local_get_tr_and_ntp(fmri_nii)
+info = niftiinfo(fmri_nii);
+if numel(info.ImageSize) < 4
+    error('Expected 4D fMRI image, got %d dimensions.', numel(info.ImageSize));
+end
+n_tp = info.ImageSize(4);
+TR = [];
+if isfield(info, 'PixelDimensions') && numel(info.PixelDimensions) >= 4
+    TR = info.PixelDimensions(4);
+end
+end
+
+function prefix = local_default_wholebrain_prefix(fmri_nii)
+[p, f, e] = fileparts(fmri_nii);
+if strcmpi(e, '.gz')
+    [~, f] = fileparts(f);
+end
+prefix = fullfile(p, [f '_hrf_wholebrain']);
 end

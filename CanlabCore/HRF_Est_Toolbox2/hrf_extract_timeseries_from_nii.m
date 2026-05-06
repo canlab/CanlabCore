@@ -29,5 +29,10 @@ vox_by_time = reshape(V, [], n_tp);
 mask_lin = mask(:);
 masked = vox_by_time(mask_lin, :);
 tc = mean(masked, 1)';
-tc = (tc - mean(tc)) ./ std(tc);
+s = std(tc);
+if s == 0 || isnan(s)
+    tc = zeros(size(tc));
+else
+    tc = (tc - mean(tc)) ./ s;
+end
 end

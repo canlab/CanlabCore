@@ -8,7 +8,7 @@ function [tc, meta] = hrf_extract_signature_timeseries(fmri_nii, varargin)
 %   'SignatureName'    : optional specific signature to return; default = first available
 
 p = inputParser;
-p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x));
+p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x) || isa(x, 'fmri_data'));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x));
 p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
@@ -22,7 +22,11 @@ if ~exist('apply_all_signatures', 'file')
     error('apply_all_signatures not found on path. Add CanlabCore dependencies first.');
 end
 
-dat = fmri_data(char(fmri_nii));
+if isa(fmri_nii, 'fmri_data')
+    dat = fmri_nii;
+else
+    dat = fmri_data(char(fmri_nii));
+end
 S = apply_all_signatures(dat, 'similarity_metric', char(opts.SimilarityMetric), ...
     'image_set', char(opts.ImageSet));
 
@@ -50,7 +54,12 @@ else
 end
 
 tc = tc(:);
-tc = (tc - mean(tc)) ./ std(tc);
+s = std(tc);
+if s == 0 || isnan(s)
+    tc = zeros(size(tc));
+else
+    tc = (tc - mean(tc)) ./ s;
+end
 
 meta = struct();
 meta.selected_signature = selected_name;

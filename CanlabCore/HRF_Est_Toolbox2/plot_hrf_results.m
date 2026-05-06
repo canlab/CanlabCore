@@ -24,10 +24,11 @@ end
 
 if ~isempty(opts.Signature) && isfield(results, 'fits_by_signature')
     sig = char(opts.Signature);
-    if ~isfield(results.fits_by_signature, sig)
+    sig_field = local_signature_field(results, sig);
+    if isempty(sig_field)
         error('Signature %s not found in results.fits_by_signature', sig);
     end
-    fit_struct = results.fits_by_signature.(sig);
+    fit_struct = results.fits_by_signature.(sig_field);
     ttl = sprintf('%s model HRF by condition (%s signature)', upper(model_name), sig);
 else
     fit_struct = results.fits;
@@ -71,4 +72,28 @@ legend(ax, format_strings_for_legend(results.conditions(cond_idx)), 'Interpreter
 title(ax, ttl, 'Interpreter', 'none');
 xlabel(ax, 'HRF time bins'); ylabel(ax, 'Response (a.u.)');
 hline(0, 'k-');
+end
+
+function sig_field = local_signature_field(results, sig)
+sig_field = '';
+if isfield(results.fits_by_signature, sig)
+    sig_field = sig;
+    return
+end
+
+candidate = matlab.lang.makeValidName(sig);
+if isfield(results.fits_by_signature, candidate)
+    sig_field = candidate;
+    return
+end
+
+if isfield(results, 'signature_meta') && isfield(results.signature_meta, 'selected_signatures') && ...
+        isfield(results.signature_meta, 'selected_signature_fields')
+    names = cellstr(string(results.signature_meta.selected_signatures));
+    fields = cellstr(string(results.signature_meta.selected_signature_fields));
+    idx = find(strcmp(names, sig), 1);
+    if ~isempty(idx) && idx <= numel(fields) && isfield(results.fits_by_signature, fields{idx})
+        sig_field = fields{idx};
+    end
+end
 end

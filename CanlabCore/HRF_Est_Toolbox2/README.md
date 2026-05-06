@@ -240,6 +240,10 @@ Submit the generated script from the cluster shell:
 sbatch /path/to/hrf_outputs/run_hrf_study.sbatch
 ```
 
+If you update the manifest, subject list, or generator options, rerun
+`hrf_write_slurm_study_script` before submitting so the manifest, worker, and
+`.sbatch` file stay in sync.
+
 After the array completes:
 
 ```matlab

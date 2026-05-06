@@ -28,7 +28,13 @@ K = 8;                         % Number of b-spline basis (This cxan be set to s
 norder = 4;                    % Order of b-spline basis (This cxan be set to specification)
 
 % Create design matrix
+try
 basis = create_bspline_basis([0,tlen], K+3, norder);    
+catch
+error('No create_bspline_basis function. This requires FDA package. Please clone and add to path: https://github.com/markgewhite/fda')
+end
+
+
 B = eval_basis((1:tlen),basis);
 B = B(:,3:end-1);
 

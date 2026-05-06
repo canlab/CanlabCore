@@ -36,11 +36,8 @@ p.addParameter('SignatureName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('SignatureNames', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('MaxSignatures', inf, @(x) isscalar(x) && x >= 1);
 p.addParameter('UseParallel', false, @(x) islogical(x) || isnumeric(x));
-<<<<<<< Updated upstream
-p.addParameter('MapNames', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas'));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x));
-=======
 p.addParameter('MapNames', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('WriteWholeBrain', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainOutputPrefix', '', @(x) ischar(x) || isstring(x));
@@ -50,7 +47,6 @@ p.addParameter('WholeBrainThreshType', 'unc', @(x) ischar(x) || isstring(x));
 p.addParameter('WholeBrainWriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainChunkSize', 50000, @(x) isscalar(x) && x >= 1);
 p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
->>>>>>> Stashed changes
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 

@@ -58,7 +58,7 @@ require a graphics environment (won't fully work in headless `matlab -batch`).
 | `isosurface` | `@image_vector` | 3-D isosurface from voxel volume |
 | `pattern_surf_plot_mip` | `@image_vector` | Axial maximum-intensity-projection surface |
 | `riverplot` | `@fmri_data` | Riverplot visualization |
-| `wedge_plot_by_atlas` | `@image_vector` | Polar/wedge plot by atlas region |
+| [`wedge_plot_by_atlas`](individual_functions/fmri_data_wedge_plot_by_atlas.md) | `@image_vector` | Polar/wedge plot by atlas region |
 | `plot_current_orthviews_coord` | `@image_vector` | Print MNI of current orthviews crosshair |
 | `saveplots` | `@fmri_data` | Save the current plots to disk |
 
@@ -82,35 +82,35 @@ Voxel-wise inference, prediction, and multivariate analyses.
 
 | Method | From | One-liner |
 |---|---|---|
-| `ttest` | `@fmri_data` | Voxelwise one-sample t-test → statistic_image |
+| [`ttest`](individual_functions/fmri_data_ttest.md) | `@fmri_data` | Voxelwise one-sample t-test → statistic_image |
 | `signtest` | `@fmri_data` | Voxelwise non-parametric sign test |
-| `regress` | `@fmri_data` | Voxelwise multiple regression (uses `obj.X`) |
-| `robfit_parcelwise` | `@fmri_data` | Robust regression at parcel level |
+| [`regress`](individual_functions/fmri_data_regress.md) | `@fmri_data` | Voxelwise multiple regression (uses `obj.X`) |
+| [`robfit_parcelwise`](individual_functions/fmri_data_robfit_parcelwise.md) | `@fmri_data` | Robust regression at parcel level |
 | `searchlight` | `@image_vector` | Spherical-searchlight prediction/classification |
 | `searchlightLukas` | `@image_vector` | Variant of searchlight |
 | `ica` | `@image_vector` | Spatial ICA |
-| `pca` | `@image_vector` | Spatial PCA |
+| [`pca`](individual_functions/fmri_data_pca.md) | `@image_vector` | Spatial PCA |
 | `mahal` | `@image_vector` | Mahalanobis distance per image vs. set |
-| `fitlme_voxelwise` | `@fmri_data` | Voxelwise mixed-effects model |
-| `rsa_regression` | `@fmri_data` | Representational-similarity regression |
+| [`fitlme_voxelwise`](individual_functions/fmri_data_fitlme_voxelwise.md) | `@fmri_data` | Voxelwise mixed-effects model |
+| [`rsa_regression`](individual_functions/fmri_data_rsa_regression.md) | `@fmri_data` | Representational-similarity regression |
 | `hrf_fit` | `@fmri_data` | HRF estimation per voxel |
 | `test_generalizability` | `@fmri_data` | Cross-cohort generalization test |
-| `canlab_connectivity_preproc` | `@fmri_data` | Connectivity-prep pipeline (despike / nuisance / bandpass) |
+| [`canlab_connectivity_preproc`](individual_functions/fmri_data_canlab_connectivity_preproc.md) | `@fmri_data` | Connectivity-prep pipeline (despike / nuisance / bandpass) |
 
 ## Multivariate prediction
 
 | Method | From | One-liner |
 |---|---|---|
-| `predict` | `@fmri_data` | Cross-validated multivariate prediction |
+| [`predict`](individual_functions/fmri_data_predict.md) | `@fmri_data` | Cross-validated multivariate prediction |
 | `predict_test_suite` | `@fmri_data` | Battery of `predict` sanity checks |
-| `evaluate_spatial_scale` | `@fmri_data` | Spatial-scale evaluation for patterns |
+| [`evaluate_spatial_scale`](individual_functions/fmri_data_evaluate_spatial_scale.md) | `@fmri_data` | Spatial-scale evaluation for patterns |
 | `bootstrap_structure_coeff_diff` | `@fmri_data` | Bootstrap diff in structure coefficients |
 | `structure_coefficient_map` | `@fmri_data` | Per-voxel structure coefficient map |
 | `structure_coefficients` | `@fmri_data` | Structure coefficients |
 | `get_model_encoding_map` | `@fmri_data` | Encoding map for a fitted model |
-| `model_brain_pathway` | `@fmri_data` | Pathway-modeling on connectivity |
-| `model_mpathi` | `@fmri_data` | Multi-pathway model |
-| `dual_regression` | `@fmri_data` | Dual regression on group ICA components |
+| [`model_brain_pathway`](individual_functions/fmri_data_model_brain_pathway.md) | `@fmri_data` | Pathway-modeling on connectivity |
+| [`model_mpathi`](individual_functions/fmri_data_model_mpathi.md) | `@fmri_data` | Multi-pathway model |
+| [`dual_regression`](individual_functions/fmri_data_dual_regression.md) | `@fmri_data` | Dual regression on group ICA components |
 
 ## Tables
 
@@ -118,10 +118,10 @@ Producing tabular reports from images and stat maps.
 
 | Method | From | One-liner |
 |---|---|---|
-| `table` | `@image_vector` | Atlas-labeled table of regions in a stat map |
-| `table_of_atlas_regions_covered` | `@image_vector` | Coverage table against an atlas |
+| [`table`](individual_functions/fmri_data_table.md) | `@image_vector` | Atlas-labeled table of regions in a stat map |
+| [`table_of_atlas_regions_covered`](individual_functions/fmri_data_table_of_atlas_regions_covered.md) | `@image_vector` | Coverage table against an atlas |
 | `print_publication_table` | `@image_vector` | Pre-formatted publication-style results table |
-| `ttest_table_and_lateralization_test` | `@fmri_data` | Combined t-table + L/R lateralization test |
+| [`ttest_table_and_lateralization_test`](individual_functions/fmri_data_ttest_table_and_lateralization_test.md) | `@fmri_data` | Combined t-table + L/R lateralization test |
 
 ## Annotation with spatial similarity
 
@@ -130,13 +130,13 @@ meta-analytic maps for interpretation.
 
 | Method | From | One-liner |
 |---|---|---|
-| `image_similarity_plot` | `@image_vector` | Cosine/correlation similarity vs. a basis set |
+| [`image_similarity_plot`](individual_functions/fmri_data_image_similarity_plot.md) | `@image_vector` | Cosine/correlation similarity vs. a basis set |
 | `image_similarity_plot_bucknermaps` | `@image_vector` | Convenience wrapper for Buckner-network maps |
-| `annotate_binary_results_map` | `@fmri_data` | Annotate a thresholded map with atlas/signature labels |
+| [`annotate_binary_results_map`](individual_functions/fmri_data_annotate_binary_results_map.md) | `@fmri_data` | Annotate a thresholded map with atlas/signature labels |
 | `annotate_continuous_neuroimage_maps` | `@fmri_data` | Annotation for continuous (unthresholded) maps |
 | `neurosynth_feature_labels` | `@fmri_data` | Look up Neurosynth feature labels |
 | `neurosynth_lexical_plot` | `@fmri_data` | Lexical plot of Neurosynth labels |
-| `hansen_neurotransmitter_maps` | `@image_vector` | Hansen neurotransmitter map similarity |
+| [`hansen_neurotransmitter_maps`](individual_functions/fmri_data_hansen_neurotransmitter_maps.md) | `@image_vector` | Hansen neurotransmitter map similarity |
 
 ## Data extraction
 
@@ -146,19 +146,19 @@ Pulling values out of images, by mask / atlas / parcellation / coordinate.
 |---|---|---|
 | `apply_mask` | `@image_vector` | Restrict object to voxels in a mask |
 | `apply_atlas` | `@image_vector` | Mean-or-pattern expression per atlas region |
-| `apply_parcellation` | `@image_vector` | Mean-or-pattern expression per parcel |
-| `extract_roi_averages` | both | Average per contiguous region (or mask values) |
-| `extract_gray_white_csf` | `@image_vector` | Mean + top-5 components in GM, WM, CSF |
-| `extract_measures_batch` | `@fmri_data` | Batch-extract multiple measures at once |
+| [`apply_parcellation`](individual_functions/fmri_data_apply_parcellation.md) | `@image_vector` | Mean-or-pattern expression per parcel |
+| [`extract_roi_averages`](individual_functions/fmri_data_extract_roi_averages.md) | both | Average per contiguous region (or mask values) |
+| [`extract_gray_white_csf`](individual_functions/fmri_data_extract_gray_white_csf.md) | `@image_vector` | Mean + top-5 components in GM, WM, CSF |
+| [`extract_measures_batch`](individual_functions/fmri_data_extract_measures_batch.md) | `@fmri_data` | Batch-extract multiple measures at once |
 | `get_xyzmm_coordinates` | `@image_vector` | Voxel indices → MNI mm coordinates |
-| `normalize_gm_by_wm_csf` | `@fmri_data` | Normalize GM signal by WM/CSF |
+| [`normalize_gm_by_wm_csf`](individual_functions/fmri_data_normalize_gm_by_wm_csf.md) | `@fmri_data` | Normalize GM signal by WM/CSF |
 | `runRestMetrics` | `@fmri_data` | Resting-state derived metrics |
 
 ## Data processing
 
 Workflows for transforming and processing data objects
 
-| `denoise_timeseries_pipeline` | `@fmri_data` | End-to-end denoising for timeseries data |
+| [`denoise_timeseries_pipeline`](individual_functions/fmri_data_denoise_timeseries_pipeline.md) | `@fmri_data` | End-to-end denoising for timeseries data |
 | `preprocess` | `@image_vector` | Many preprocessing options (filter / outliers / scale) |
 | `rescale` | `@fmri_data` | Per-image / per-voxel rescaling |
 
@@ -168,13 +168,13 @@ Diagnosing and cleaning a dataset before analysis.
 
 | Method | From | One-liner |
 |---|---|---|
-| `descriptives` | `@image_vector` | Print summary stats for the dataset |
-| `qc_metrics_second_level` | `@image_vector` | QC metrics across a 2nd-level set |
-| `outliers` | `@image_vector` | Detect outlier images |
+| [`descriptives`](individual_functions/fmri_data_descriptives.md) | `@image_vector` | Print summary stats for the dataset |
+| [`qc_metrics_second_level`](individual_functions/fmri_data_qc_metrics_second_level.md) | `@image_vector` | QC metrics across a 2nd-level set |
+| [`outliers`](individual_functions/fmri_data_outliers.md) | `@image_vector` | Detect outlier images |
 | `outliers_xval` | `@image_vector` | Outlier detection with cross-validated threshold |
 | `windsorize` | `@fmri_data` | Voxel-wise windsorization |
 | `sim_data` | `@fmri_data` | Simulate fmri_data for testing |
-| `jackknife_similarity` | `@image_vector` | Leave-one-out spatial similarity |
+| [`jackknife_similarity`](individual_functions/fmri_data_jackknife_similarity.md) | `@image_vector` | Leave-one-out spatial similarity |
 
 ## Misc utilities
 
@@ -188,7 +188,7 @@ I/O, type management, provenance, threshold helpers.
 | `enforce_variable_types` | `@image_vector` | Cast `.dat` and friends to canonical types |
 | `history` | `@image_vector` | Show the `.history` provenance log |
 | `isempty` | `@image_vector` | True iff `.dat` is empty |
-| `threshold` | `@image_vector` | Threshold values (typically used on statistic_image) |
+| [`threshold`](individual_functions/statistic_image_threshold.md) | `@image_vector` | Threshold values (typically used on statistic_image) |
 | `create` | `@fmri_data` | Internal helper to assemble fields into an object |
 | `unstack_by_condition` | `@image_vector` | Split into sub-objects by a condition vector |
 | `validate_object` | `@fmri_data` | Sanity-check internal invariants |

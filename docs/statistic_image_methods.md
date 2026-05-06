@@ -56,7 +56,7 @@ following:
 
 | Method | From | One-liner |
 |---|---|---|
-| `threshold` | `@statistic_image` | Threshold based on statistical p-values, FDR, extent, etc. (reversible; override) |
+| [`threshold`](individual_functions/statistic_image_threshold.md) | `@statistic_image` | Threshold based on statistical p-values, FDR, extent, etc. (reversible; override) |
 | `multi_threshold` | `@statistic_image` | Multiple-threshold visualization for nested significance |
 | `conjunction` | `@statistic_image` | Conjunction of two thresholded statistic_images (positive and negative separately) |
 | `estimateBayesFactor` | `@statistic_image` | Voxel-wise Bayes Factors for t-tests, correlations, or proportions |
@@ -65,7 +65,7 @@ following:
 
 | Method | From | One-liner |
 |---|---|---|
-| `table` | `@statistic_image` | Print a table of labeled regions from a thresholded statistic_image (override) |
+| [`table`](individual_functions/fmri_data_table.md) | `@statistic_image` | Print a table of labeled regions from a thresholded statistic_image (override) |
 
 ## Misc utilities
 

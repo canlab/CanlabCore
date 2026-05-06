@@ -70,6 +70,17 @@ Listed in roughly the order most users encounter them. Click a class name for th
 - **[Sample datasets](sample_datasets.md)** — the small datasets that ship with CanlabCore plus the `load_image_set` keyword registry, with paper citations.
 - **[Toolbox folder map](toolbox_folders.md)** — what lives in each subfolder of `CanlabCore/`.
 
+## Cross-validation helpers (stand-alone)
+
+A small set of stand-alone helpers that are not class methods but are used by `predict` and other multivariate workflows.
+
+| Function | One-liner |
+|---|---|
+| [`xval_select_holdout_set`](individual_functions/xval_select_holdout_set.md) | Build holdout sets balanced on outcome and nuisance covariates |
+| [`xval_classify`](individual_functions/xval_classify.md) | k-fold cross-validated linear discriminant classification (`fitcdiscr`) |
+| [`xval_SVM`](individual_functions/xval_SVM.md) | Repeated-CV SVM classification with bootstrap weight inference (`fitcsvm`) |
+| [`xval_SVR`](individual_functions/xval_SVR.md) | Repeated-CV support-vector regression with bootstrap weight inference (`fitrsvm`) |
+
 ## Conventions
 
 - **State management.** Many methods rely on the "removed voxels / removed images" bookkeeping. If you are manipulating `.dat` directly, call `replace_empty(obj)` to expand to the full padded voxel space before reasoning about voxel positions, and `remove_empty(obj)` before doing math across `.dat` rows. See the relevant section of [`fmri_data_methods.md`](fmri_data_methods.md).

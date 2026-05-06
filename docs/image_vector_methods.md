@@ -72,7 +72,7 @@ require a graphics environment.
 | `render_on_cerebellar_flatmap` | `@image_vector` | Cerebellar SUIT flatmap rendering |
 | `isosurface` | `@image_vector` | 3-D isosurface from voxel volume |
 | `pattern_surf_plot_mip` | `@image_vector` | Axial maximum-intensity-projection surface |
-| `wedge_plot_by_atlas` | `@image_vector` | Polar/wedge plot by atlas region |
+| [`wedge_plot_by_atlas`](individual_functions/fmri_data_wedge_plot_by_atlas.md) | `@image_vector` | Polar/wedge plot by atlas region |
 | `plot_current_orthviews_coord` | `@image_vector` | Print MNI of current orthviews crosshair |
 
 ## Resampling and interpolation
@@ -97,7 +97,7 @@ Voxel-wise inference, prediction, and multivariate analyses.
 | `searchlight` | `@image_vector` | Spherical-searchlight prediction/classification |
 | `searchlightLukas` | `@image_vector` | Variant of searchlight |
 | `ica` | `@image_vector` | Spatial ICA |
-| `pca` | `@image_vector` | Spatial PCA |
+| [`pca`](individual_functions/fmri_data_pca.md) | `@image_vector` | Spatial PCA |
 | `mahal` | `@image_vector` | Mahalanobis distance per image vs. set |
 
 ## Tables
@@ -106,8 +106,8 @@ Producing tabular reports from images and stat maps.
 
 | Method | From | One-liner |
 |---|---|---|
-| `table` | `@image_vector` | Atlas-labeled table of regions in a stat map |
-| `table_of_atlas_regions_covered` | `@image_vector` | Coverage table against an atlas |
+| [`table`](individual_functions/fmri_data_table.md) | `@image_vector` | Atlas-labeled table of regions in a stat map |
+| [`table_of_atlas_regions_covered`](individual_functions/fmri_data_table_of_atlas_regions_covered.md) | `@image_vector` | Coverage table against an atlas |
 | `print_publication_table` | `@image_vector` | Pre-formatted publication-style results table |
 
 ## Annotation with spatial similarity
@@ -117,9 +117,9 @@ meta-analytic maps for interpretation.
 
 | Method | From | One-liner |
 |---|---|---|
-| `image_similarity_plot` | `@image_vector` | Cosine/correlation similarity vs. a basis set |
+| [`image_similarity_plot`](individual_functions/fmri_data_image_similarity_plot.md) | `@image_vector` | Cosine/correlation similarity vs. a basis set |
 | `image_similarity_plot_bucknermaps` | `@image_vector` | Convenience wrapper for Buckner-network maps |
-| `hansen_neurotransmitter_maps` | `@image_vector` | Hansen neurotransmitter map similarity |
+| [`hansen_neurotransmitter_maps`](individual_functions/fmri_data_hansen_neurotransmitter_maps.md) | `@image_vector` | Hansen neurotransmitter map similarity |
 
 ## Data extraction
 
@@ -128,9 +128,9 @@ Pulling values out of images, by mask / atlas / parcellation / coordinate.
 | Method | From | One-liner |
 |---|---|---|
 | `apply_mask` | `@image_vector` | Restrict object to voxels in a mask |
-| `apply_parcellation` | `@image_vector` | Mean-or-pattern expression per parcel |
-| `extract_roi_averages` | `@image_vector` | Average per contiguous region (or mask values) |
-| `extract_gray_white_csf` | `@image_vector` | Mean + top-5 components in GM, WM, CSF |
+| [`apply_parcellation`](individual_functions/fmri_data_apply_parcellation.md) | `@image_vector` | Mean-or-pattern expression per parcel |
+| [`extract_roi_averages`](individual_functions/fmri_data_extract_roi_averages.md) | `@image_vector` | Average per contiguous region (or mask values) |
+| [`extract_gray_white_csf`](individual_functions/fmri_data_extract_gray_white_csf.md) | `@image_vector` | Mean + top-5 components in GM, WM, CSF |
 | `get_xyzmm_coordinates` | `@image_vector` | In-mask voxel indices to MNI mm coordinates |
 
 ## Data processing
@@ -147,11 +147,11 @@ Diagnosing and cleaning a dataset before analysis.
 
 | Method | From | One-liner |
 |---|---|---|
-| `descriptives` | `@image_vector` | Print summary stats for the dataset |
-| `qc_metrics_second_level` | `@image_vector` | QC metrics across a 2nd-level set |
-| `outliers` | `@image_vector` | Detect outlier images |
+| [`descriptives`](individual_functions/fmri_data_descriptives.md) | `@image_vector` | Print summary stats for the dataset |
+| [`qc_metrics_second_level`](individual_functions/fmri_data_qc_metrics_second_level.md) | `@image_vector` | QC metrics across a 2nd-level set |
+| [`outliers`](individual_functions/fmri_data_outliers.md) | `@image_vector` | Detect outlier images |
 | `outliers_xval` | `@image_vector` | Outlier detection with cross-validated threshold |
-| `jackknife_similarity` | `@image_vector` | Leave-one-out spatial similarity |
+| [`jackknife_similarity`](individual_functions/fmri_data_jackknife_similarity.md) | `@image_vector` | Leave-one-out spatial similarity |
 
 ## Misc utilities
 
@@ -165,5 +165,5 @@ I/O, type management, provenance, threshold helpers.
 | `enforce_variable_types` | `@image_vector` | Cast `.dat` and friends to canonical types |
 | `history` | `@image_vector` | Show the `.history` provenance log |
 | `isempty` | `@image_vector` | True iff `.dat` is empty |
-| `threshold` | `@image_vector` | Threshold values (typically used on statistic_image) |
+| [`threshold`](individual_functions/statistic_image_threshold.md) | `@image_vector` | Threshold values (typically used on statistic_image) |
 | `unstack_by_condition` | `@image_vector` | Split into sub-objects by a condition vector |

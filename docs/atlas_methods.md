@@ -55,7 +55,7 @@ parcellation.
 | `merge_atlases` | `@atlas` | Add regions from one atlas to another, with replace/no-replace options |
 | `remove_atlas_region` | `@atlas` | Remove region(s) by name or integer index |
 | `reorder_atlas_regions` | `@atlas` | Reorder atlas regions, optionally grouping by label patterns |
-| `select_atlas_subset` | `@atlas` | Select a subset of regions by name or integer code |
+| [`select_atlas_subset`](individual_functions/atlas_select_atlas_subset.md) | `@atlas` | Select a subset of regions by name or integer code |
 | `split_atlas_by_hemisphere` | `@atlas` | Divide bilateral regions into separate L and R regions |
 | `split_atlas_into_contiguous_regions` | `@atlas` | Split each labeled region into separate contiguous blobs |
 | `downsample_parcellation` | `@atlas` | Remap to a coarser nested parcellation using `labels_2`...`labels_5` |

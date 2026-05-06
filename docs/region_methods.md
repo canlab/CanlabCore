@@ -72,9 +72,9 @@ MATLAB for the live list on any instance.
 
 | Method | From | One-liner |
 |---|---|---|
-| `table` | `@region` | Print and return a labeled table of all regions (positive and negative) |
+| [`table`](individual_functions/fmri_data_table.md) | `@region` | Print and return a labeled table of all regions (positive and negative) |
 | `table_simple` | `@region` | Simple one-row-per-region results table (useful after atlas subdivision) |
-| `table_of_atlas_regions_covered` | `@region` | Tabulate atlas parcels covered by the regions |
+| [`table_of_atlas_regions_covered`](individual_functions/fmri_data_table_of_atlas_regions_covered.md) | `@region` | Tabulate atlas parcels covered by the regions |
 | `ttest_table_by_condition` | `@region` | Per-region means + stats tables for an `fmri_data` object across conditions |
 | `autolabel_regions_using_atlas` | `@region` | Auto-label regions using an atlas object |
 

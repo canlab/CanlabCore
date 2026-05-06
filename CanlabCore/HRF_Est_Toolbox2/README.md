@@ -240,9 +240,12 @@ Submit the generated script from the cluster shell:
 sbatch /path/to/hrf_outputs/run_hrf_study.sbatch
 ```
 
-If you update the manifest, subject list, or generator options, rerun
-`hrf_write_slurm_study_script` before submitting so the manifest, worker, and
-`.sbatch` file stay in sync.
+If you update the subject list or generator options, rerun
+`hrf_write_slurm_study_script` before submitting so the manifest, worker,
+config `.mat`, and `.sbatch` file stay in sync. The generated `.sbatch`
+also defaults `SLURM_ARRAY_TASK_ID` to `1`, so you can run it with
+`bash run_hrf_study.sbatch` inside an interactive allocation for a quick
+task-1 smoke test.
 
 After the array completes:
 

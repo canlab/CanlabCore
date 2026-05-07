@@ -24,7 +24,7 @@ Sources of documentation for this toolbox:
 1. **[canlab.github.io](https://canlab.github.io/)** — top-level entry point with Setup, Repositories, Philosophy, and Batch system for 2nd-level analysis.
 2.  **[Walkthroughs](https://canlab.github.io/walkthroughs/)** — step-by-step analysis tutorials with code. "How to do stuff with Canlab tools".
 3. **[Tutorials](https://canlab.github.io/tutorials/)** — longer-form tutorials with more equations and theoretical explanation.
-4. **[Object methods reference](docs/Object_methods.md)** in this repository — class-by-class index (`fmri_data`, `image_vector`, `statistic_image`, `atlas`, `region`, ...) with per-method pages, runnable examples, sample figures, and per-function code maps.
+4. **[Object methods reference](docs/Object_methods.md)** class-by-class index (`fmri_data`, `image_vector`, `statistic_image`, `atlas`, `region`, ...) of object methods with per-function code maps, runnable examples and sample figures for selected functions. The fastest way to learn the API.
 5. **[CANlab_help_examples](https://github.com/canlab/CANlab_help_examples)** repository — runnable MATLAB scripts (`example_help_files/`) and HTML output with figures (`published_html/`) for specific functions and workflows published in Walkthroughs and Tutorials (plus some extra stuff). This repo also contains the code for the second-level Batch script system described on canlab.github.io.
 6. Function-by-function help documents and examples are provided in each function. In Matlab type >>help <function_name>
 7. Older function-by-function help docs are in <a href = http://canlabcore.readthedocs.org/en/latest/>help pages on Readthedocs</a>.

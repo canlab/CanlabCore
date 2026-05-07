@@ -1,6 +1,39 @@
 function voxel_data_series = plot_current_orthviews_coord(dat)
-% Retrieves and plots the image data series at the current crosshairs in spm_orthviews
+% plot_current_orthviews_coord Retrieve and plot the image data series at the current SPM orthviews crosshairs.
 %
+% Looks up the voxel under the current spm_orthviews crosshair, finds its
+% row in the image_vector data, and plots the values across images
+% (e.g., across subjects, contrasts, or time points). If the voxel is
+% outside the in-mask voxel list, prints a notice in the figure.
+%
+% :Usage:
+% ::
+%
+%     voxel_data_series = plot_current_orthviews_coord(dat)
+%
+% :Inputs:
+%
+%   **dat:**
+%        An image_vector / fmri_data / statistic_image object with a
+%        valid .volInfo and .xyzlist.
+%
+% :Outputs:
+%
+%   **voxel_data_series:**
+%        A 1 x n_images vector of values from dat.dat at the orthviews
+%        coordinate, or [] if the coordinate is outside the in-mask
+%        voxels or no valid volInfo is available.
+%
+% :Examples:
+% ::
+%
+%     orthviews(dat);
+%     y = plot_current_orthviews_coord(dat);
+%
+% :See also:
+%   - orthviews
+%   - spm_orthviews
+%   - mm2voxel
 
 voxel_data_series = [];
 

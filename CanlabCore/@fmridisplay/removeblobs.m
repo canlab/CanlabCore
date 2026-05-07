@@ -1,4 +1,34 @@
 function obj = removeblobs(obj)
+% removeblobs Remove all rendered blobs from an fmridisplay object.
+%
+% Deletes blob graphics handles (and any associated legend handles) from
+% every entry in obj.activation_maps, removes those entries from the
+% object, and erases blobs from any registered surface objects via
+% addbrain('eraseblobs', ...).
+%
+% :Usage:
+% ::
+%
+%     obj = removeblobs(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An fmridisplay object with one or more activation_maps and/or
+%        surfaces attached.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The same fmridisplay object with deleted graphics handles and
+%        with cleared entries removed from .activation_maps. Surfaces
+%        in .surface are kept but have their blob colorings erased.
+%
+% :See also:
+%   - fmridisplay
+%   - addblobs
+%   - removepoints
+%   - addbrain
 
 to_remove = [];
 

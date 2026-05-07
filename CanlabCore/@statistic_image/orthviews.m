@@ -1,26 +1,52 @@
 function cl = orthviews(image_obj, varargin)
-% Orthviews display (SPM) for CANlab object
+% orthviews Orthviews display (SPM) for a statistic_image object.
+%
+% Displays each image in a statistic_image as an SPM orthviews panel,
+% honoring the .sig field so only suprathreshold voxels are shown.
 %
 % :Usage:
 % ::
 %
-%    cl = orthviews(image_object)
-%
-%    % OR
-%
-%    cl = orthviews(image_object, handle_number of existing orthviews)
+%     cl = orthviews(image_object)
+%     cl = orthviews(image_object, handle_number of existing orthviews)
 %
 % :Features:
-% - Uses cluster_orthviews.m
-% - Will take inputs to cluster_orthviews
-% - e.g., orthviews(pstat, 'unique', 'solid');
 %
-% Output is clusters structure (see also region.m)
+%   - Uses cluster_orthviews.m
+%   - Will take inputs to cluster_orthviews
+%   - e.g., orthviews(pstat, 'unique', 'solid');
 %
-% Pass in 'largest_region' to center the orthviews on the largest region in the  image
+% Output is clusters structure (see also region.m).
 %
+% :Inputs:
 %
-% :Example:
+%   **image_obj:**
+%        A statistic_image object. Each column of .dat is rendered in a
+%        separate orthviews panel; .sig is used as a mask if non-empty.
+%
+% :Optional Inputs:
+%
+%   **'handle' / 'han' / 'input_handle':**
+%        Followed by the handle number(s) of an existing orthviews
+%        figure to display into instead of opening a new one.
+%
+%   **'largest_region':**
+%        Center the orthviews crosshair on the largest region in the
+%        first image.
+%
+%   **'overlay':**
+%        Followed by a filename to use as the underlay image. Default:
+%        which('fmriprep20_template.nii.gz').
+%
+%   Additional optional arguments are passed through to cluster_orthviews.
+%
+% :Outputs:
+%
+%   **cl:**
+%        Cell array of clusters structures, one per displayed image
+%        (see also region.m).
+%
+% :Examples:
 % ::
 %
 %    % T-test, Construct a stats_image object, threshold and display:
@@ -43,7 +69,10 @@ function cl = orthviews(image_obj, varargin)
 %    statsimg = threshold(statsimg, .000001, 'unc');
 %    orthviews(statsimg, 'handle', 2);
 %
-% :See also: statistic_image.multi_threshold
+% :See also:
+%   - statistic_image.multi_threshold
+%   - cluster_orthviews
+%   - region
 
 input_handle = [];
 cl = [];

@@ -1,54 +1,39 @@
 function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, varargin)
-% Associations between data images in object and set of 'spatial basis function' images (e.g., 'signatures' or pre-defined maps)
-% - Similarity metric is point-biserial correlations or cosine-similarity
+% image_similarity_plot Plot associations between data images and a set of spatial basis maps.
 %
-% Usage:
+% Compares one or more input images to a specified set of a priori
+% spatial basis maps (e.g., 'signatures' or pre-defined maps) and
+% visualizes the similarity values as either a wedge or polar plot.
+%
+% - Similarity metric is point-biserial correlation (Pearson's r) by
+%   default; cosine similarity and binary overlap are also available.
+% - If multiple images are entered, the 'average' option returns a plot
+%   with standard error bars and statistics on the significance of the
+%   correlation with each basis map (across input images) and the
+%   differences (inhomogeneity) in similarity across basis maps.
+% - If a grouping variable is entered, statistics are calculated for
+%   multivariate differences across the groups of input images. Such
+%   differences are assessed treating the basis maps as variables and
+%   input images as cases.
+% - There are many basis map sets ("mapset" in code) that can be
+%   specified by keyword. E.g., "NPSplus" includes the NPS map from
+%   Wager et al. 2013, Romantic Rejection classifier (Woo 2015),
+%   Negative emotion map (Chang 2015), and vicarious pain (Krishnan et
+%   al. 2016). Other sets are "bucknerlab" including 7 cortical [only]
+%   networks from the Buckner Lab's 1000-person resting-state analyses
+%   and "kragelemotion", including 7 emotion-predictive maps from
+%   Kragel 2015.
+% - Be thoughtful about how your code is treating zero-valued voxels,
+%   which are typically missing data in brain images. The main
+%   calculations here are done by canlab_pattern_similarity.m, which
+%   treats zeros as missing in data images but not pattern basis maps
+%   (which can be binary or other 'signatures'). See
+%   "help canlab_pattern_similarity".
+%
+% :Usage:
 % ::
 %
 %    [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plot(obj, 'average');
-%
-% - This is a method for an image_vector object that compares the spatial
-% similarity of input image(s) to a specified set of a priori spatial basis maps.
-% It returns similarity values (Pearson's r by default) to each a priori basis map,
-% and a plot that shows these values.
-% - If multiple images are entered, the 'average' function can return a plot with
-% standard error bars and statistics on the significance of the correlation with each basis map
-% (across input images) and the differences (inhomogeneity) in similarity across basis
-% maps.
-% - If a grouping variable is entered, statistics are calculated for
-% multivariate differences across the groups of input images. Such
-% differences are assessed treating the basis maps as variables and input
-% images as cases.
-% - There are many basis map sets ("mapset" in code) that can be specified by keyword.
-% e.g., "NPSplus" includes the NPS map from Wager et al. 2013, Romantic Rejection
-% classifier (Woo 2015), Negative emotion map (Chang 2015), and vicarious
-% pain (Krishnan et al. 2016).  Other sets are "bucknerlab" including 7 cortical [only]
-% networks from the Buckner Lab's 1000-person resting-state analyses and
-% "kragelemotion", including 7 emotion-predictive maps from Kragel 2015.
-% - Be thoughtful about how your code is treating zero-valued voxels, which
-% are typically missing data in brain images. The main calculations here
-% are done by canlab_pattern_similarity.m, which treats zeros as missing in
-% data images but not pattern basis maps (which can be binary or other
-% 'signatures'. See "help canlab_pattern_similarity".
-%
-% ..
-%     Author and copyright information:
-%
-%     Copyright (C) 2015 Tor Wager, stats added by Phil Kragel
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
 %
 % :Inputs:
 %
@@ -221,46 +206,65 @@ function [stats, hh, hhfill, table_group, multcomp_group] = image_similarity_plo
 %    stats = image_similarity_plot(fmri_data(img), 'cosine_similarity', 'bucknerlab', 'colors', color);
 %
 % :See also:
+%   - tor_polar_plot
+%   - tor_wedge_plot
+%   - canlab_pattern_similarity
+%   - load_image_set
 %
-% tor_polar_plot, tor_wedge_plot
-
 % ..
+%    Author and copyright information:
+%
+%    Copyright (C) 2015 Tor Wager, stats added by Phil Kragel
+%
+%    This program is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    This program is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
-% List dates and changes here, and author of changes
-% 11/30/2015 (Phil Kragel)
-%   -   added anova (rm) comparing means across spatial bases
-%   -   added anova (1-way) comparing means across groups for each spatial
-%       basis (e.g., for each buckner network)
-% 12/15/2015 (Phil Kragel)
-%   - added option to omit plotting
-% 5/10/2016 (Phil Kragel)
-%   - added option to use cosine similarity instead of Pearson
-% 8/21/2017 (Stephan Geuter)
-%   - fixed header for printing similarity table
-% 2017/09/07 Stephan Geuter
-%   - added option for percent overlap of binary masks (see also
-%   canlab_pattern_similarity.m and riverplot.m
-%   Changed metric selection to string format.
-% 2018/1/9  tor: changed default colors for compat with wedge plot,
-% debugged wedge plot with average option.
-% 2018/1/16 Stephan: added pain PDM mediators as mapsets
+%    11/30/2015 (Phil Kragel)
+%      -   added anova (rm) comparing means across spatial bases
+%      -   added anova (1-way) comparing means across groups for each spatial
+%          basis (e.g., for each buckner network)
+%    12/15/2015 (Phil Kragel)
+%      - added option to omit plotting
+%    5/10/2016 (Phil Kragel)
+%      - added option to use cosine similarity instead of Pearson
+%    8/21/2017 (Stephan Geuter)
+%      - fixed header for printing similarity table
+%    2017/09/07 Stephan Geuter
+%      - added option for percent overlap of binary masks (see also
+%      canlab_pattern_similarity.m and riverplot.m
+%      Changed metric selection to string format.
+%    2018/1/9  tor: changed default colors for compat with wedge plot,
+%    debugged wedge plot with average option.
+%    2018/1/16 Stephan: added pain PDM mediators as mapsets
 %
-% 2022/03/31 Ke Bo
-%   - added option for treating zero value in the map as real value rather
-%   than missing data
-% 2023/03/02 Ke Bo
-%   - added option for compute error bar using standard deviation rather
-%   than standard error. This will suit for the dataset including bootstrap
-%   samples.
-% 2023/10/23 Michael Sun
-%   - Groups are now plotted with different colors, and includes legend
-%   - Group Variable can now accept categorical
-%   - Plot labels and tables now include significance stars
-%   - 'notable' option now suppresses all tables.
-% 2023/12/19 Lukas Van Oudenhove
-%   - debugged and improved wedge and polarplot code for multiple
-%       groups, see notes in code below for details
+%    2022/03/31 Ke Bo
+%      - added option for treating zero value in the map as real value rather
+%      than missing data
+%    2023/03/02 Ke Bo
+%      - added option for compute error bar using standard deviation rather
+%      than standard error. This will suit for the dataset including bootstrap
+%      samples.
+%    2023/10/23 Michael Sun
+%      - Groups are now plotted with different colors, and includes legend
+%      - Group Variable can now accept categorical
+%      - Plot labels and tables now include significance stars
+%      - 'notable' option now suppresses all tables.
+%    2023/12/19 Lukas Van Oudenhove
+%      - debugged and improved wedge and polarplot code for multiple
+%        groups, see notes in code below for details
+% ..
 
 % PRELIMINARIES
 % ------------------------------------------------------------------------

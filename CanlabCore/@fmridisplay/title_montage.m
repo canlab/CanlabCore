@@ -1,10 +1,40 @@
 function [o2, title_handle] = title_montage(o2, wh_montage, title_str)
-% Add a title to a montage figure registered in an fmridisplay object o2
+% title_montage Add a title to a montage registered in an fmridisplay object.
 %
-% [o2, title_handle] = title_montage(o2, wh_montage, title_str)
+% Adds a title to a montage figure registered in an fmridisplay object o2.
+% Underscores in title_str are replaced with spaces before display.
 %
-% wh_montage is an integer that specifies the image axis to add the title to
-% it is usually 5 for standard canlab 2020 double-row montages.
+% :Usage:
+% ::
+%
+%     [o2, title_handle] = title_montage(o2, wh_montage, title_str)
+%
+% :Inputs:
+%
+%   **o2:**
+%        An fmridisplay object with one or more montages attached.
+%
+%   **wh_montage:**
+%        An integer that specifies the image axis (montage index) to
+%        add the title to. It is usually 5 for standard canlab 2020
+%        double-row montages.
+%
+%   **title_str:**
+%        Title string to display. Underscores are replaced with spaces.
+%
+% :Outputs:
+%
+%   **o2:**
+%        The fmridisplay object, with .montage{wh_montage}.title set
+%        to title_str.
+%
+%   **title_handle:**
+%        Handle to the title graphics object, or [] if the target axis
+%        handle was invalid (e.g., figure was closed).
+%
+% :See also:
+%   - fmridisplay
+%   - montage
 
 title_handle = [];
 

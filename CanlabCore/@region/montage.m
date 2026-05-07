@@ -1,19 +1,28 @@
 function o2 = montage(obj, varargin)
-% This function displays a region object on a standard slice montage
+% montage Display a region object on a standard slice montage.
+%
+% Render a region object on a slice montage (and optionally surfaces)
+% via canlab_results_fmridisplay and addblobs. Supports per-region
+% colors, colormaps, indexed colormaps for parcellations, symmetric
+% L/R coloring, and one-blob-per-slice 'regioncenters' layouts.
 %
 % :Usage:
 % ::
 %
-%    montage(obj, [optional inputs])
+%     o2 = montage(obj, [optional inputs])
 %
-% - takes all optional inputs to canlab_results_fmridisplay and addblobs method
+% Takes all optional inputs to canlab_results_fmridisplay and the
+% addblobs method.
 %
-% :Input:
+% :Inputs:
 %
 %   **obj:**
-%        a region object
+%        A region-class object array.
 %
-% :Optional Inputs:  - see help canlab_results_fmridisplay
+% :Optional Inputs:
+%
+%   See help canlab_results_fmridisplay for the full list. Common
+%   options include:
 %
 %   **o2***
 %        An existing fmridisplay object, with no keyword strings
@@ -133,76 +142,76 @@ function o2 = montage(obj, varargin)
 %       and targetsurface are supported. If you're plotting to volumetric slices this has no effect.
 %       Supported targetsurface = {'fsLR_32k', 'fsaverage_164k'}
 %
-% Other inputs to addblobs (fmridisplay method) are allowed, e.g., 'cmaprange', [-2 2], 'trans'
+% Other inputs to addblobs (fmridisplay method) are allowed, e.g.,
+% 'cmaprange', [-2 2], 'trans'. See help fmridisplay (e.g., 'color', [1
+% 0 0]).
 %
-% See help fmridisplay
-% e.g., 'color', [1 0 0]
+% :Outputs:
 %
+%   **o2:**
+%        An fmridisplay object with the regions rendered. Pass this back
+%        in to add or remove blobs.
 %
 % :Examples:
-% -------------------------------------------------------------------------
 % ::
-% Example 1: 
-% % Complete group analysis of a standard dataset
-% % Do analysis and prep results region object:
 %
-%   img_obj = load_image_set('emotionreg');         % Load a dataset
-%   t = ttest(img_obj, .005, 'unc');                % Do a group t-test
-%   t = threshold(t, .005, 'unc', 'k', 10);         % Re-threshold with extent threshold of 10 contiguous voxels
-%   r = region(t);                                  % Turn t-map into a region object with one element per contig region
+%     % Example 1: Complete group analysis of a standard dataset
+%     img_obj = load_image_set('emotionreg');         % Load a dataset
+%     t = ttest(img_obj, .005, 'unc');                % Do a group t-test
+%     t = threshold(t, .005, 'unc', 'k', 10);         % Re-threshold with extent threshold of 10 contiguous voxels
+%     r = region(t);                                  % Turn t-map into a region object with one element per contig region
 %
-%   Label regions and print a table:
-%   [r, region_table, table_legend_text] =
-%   autolabel_regions_using_atlas(r);               % Label regions. Can be skipped because 'table' below attempts to do this automatically
-%   table(r);                                       % Print a table of results using new region names
+%     % Label regions and print a table:
+%     [r, region_table, table_legend_text] = autolabel_regions_using_atlas(r);
+%     table(r);                                       % Print a table of results using new region names
 %
-%   Display montages in several styles:
+%     % Display montages in several styles:
+%     montage(r)                                                % A unique color per blob (the default)
+%     montage(r, 'colormap')                                    % Color-map voxels by statistic values
+%     montage(r, 'color', [1 0 0])                              % All blobs in red
+%     montage(r, 'colormap', 'full')                            % 'full' montage type, with surfaces
+%     montage(r, 'colormap', 'regioncenters')                   % 'regioncenters' montage type
 %
-%   montage(r)                                          % A unique color per blob (the default)
-%   montage(r, 'colormap')                              % A color-map voxels according to statistic values/intensity
-%   montage(r, 'color', [1 0 0])                        % All blobs in red
-%   montage(r, 'colormap', 'full')                      % montage type is 'full', with surfaces
-%   montage(r, 'colormap', 'regioncenters')             % montage type is 'regioncenters', with slices located at the center of each blob (zooms in on blobs)
-%   
-%   Use colormap, but with blue colors. see addblobs for more options:
-%    montage(r, 'colormap', 'maxcolor', [0 0 1], 'mincolor', [.6 .5 .8], 'regioncenters');   
+%     % Use colormap with blue colors:
+%     montage(r, 'colormap', 'maxcolor', [0 0 1], 'mincolor', [.6 .5 .8], 'regioncenters');
 %
-%  Pass out "o2", an fmridisplay object that has blobs registered, so you
-%  can remove them and reuse them:
+%     % Reuse o2:
+%     o2 = montage(r, 'regioncenters', 'colormap');
+%     o2 = removeblobs(o2);
+%     o2 = montage(r, o2, 'regioncenters', 'color', [1 0 0]);
 %
-%  o2 = montage(r, 'regioncenters', 'colormap');
-%  o2 = removeblobs(o2);
-%  o2 = montage(r, o2, 'regioncenters', 'color', [1 0 0]);
+%     % Example 2: Extend by creating custom fmridisplay object
+%     o2 = canlab_results_fmridisplay([], 'noverbose');
+%     o2 = montage(r, o2);                                       % symmetric colors left/right
+%     o2 = removeblobs(o2);
+%     o2 = montage(r, o2, 'map');
 %
-% Example 2: 
-% % Extend previous results by creating custom fmridisplay object
-% % and adding blobs to that.
+%     % Example 3: Display Glasser 2016 cortical parcellation
+%     create_figure('slices'); axis off
+%     o2 = canlab_results_fmridisplay([], 'multirow', 2);
+%     brighten(.6)
+%     hcp152t1 = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
+%     r = region(fmri_data(hcp152t1), 'unique_mask_values');
+%     o2 = montage(r, o2, 'wh_montages', 3:4);
+%     o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
 %
-%   o2 = canlab_results_fmridisplay([], 'noverbose');
-%   o2 = montage(r, o2);      % symmetric colors left/right
-%   o2 = removeblobs(o2);
-%   o2 = montage(r, o2, 'map');
-% 
-% Example 3: 
-% % create a custom fmridisplay object and display regions from a standard
-% parcellation (Glasser 2016 Nature cortical parcellation)
-% 
-%   create_figure('slices'); axis off
-%   o2 = canlab_results_fmridisplay([], 'multirow', 2);
-%   brighten(.6)
-%   hcp152t1 = which('HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii');
-%   r = region(fmri_data(hcp152t1), 'unique_mask_values');
-%   o2 = montage(r, o2, 'wh_montages', 3:4);
-%   o2 = montage(r(1:20), o2, 'wh_montages', 1:2, 'color', [1 .5 0]);
+%     % Use a different montage type:
+%     o2 = montage(r, 'compact2', 'nosymmetric');
 %
-%   % Use a different montage type in canlab_results_fmridisplay:
-%   o2 = montage(r, 'compact2', 'nosymmetric');
+%     % Plot one region blob per slice on a series of montages:
+%     o2 = montage(r, 'regioncenters', 'nosymmetric');
 %
-% % Plot one region blob per slice on a series of montages.  
-%   o2 = montage(r, 'regioncenters', 'nosymmetric');
-
-% edited: Tor, 1/2018, unique color option/default
-%         Tor  7/2018 .added documentation
+% :See also:
+%   - atlas/montage
+%   - canlab_results_fmridisplay
+%   - fmridisplay
+%   - addblobs
+%   - match_colors_left_right
+%
+% ..
+%    edited: Tor, 1/2018, unique color option/default
+%            Tor, 7/2018, added documentation
+% ..
 
 % Defaults and inputs
 % -----------------------------------------------------------------------

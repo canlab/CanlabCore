@@ -1,34 +1,61 @@
 function obj = check_image_filenames(obj, varargin)
-% Check whether images listed in obj.fullpath actually exist
+% check_image_filenames Check whether images listed in obj.fullpath actually exist on disk.
 %
-% :Usage:
-% ::
+% Behavior:
 %
-%     obj = check_image_filenames(obj, ['noverbose'])
-%
-% :Behavior:
 %    - If there are no file names, do nothing.
 %    - If file names are entered and full path is not, attempt to find full
 %      path.
 %    - If full path info is entered, check to see if files exist.
 %      Return output in obj.files_exist, and print a warning if only some exist.
 %
-% Image names should be stored in .fullpath
-% abbreviated image names may be stored in image_names.
+% Image names should be stored in .fullpath; abbreviated image names may
+% be stored in image_names.
 %
-% :Note:
-% 
-% fullpath should have full path to each volume in a string matrix, with
-% trailing [,volume#] for 4-D images as per SPM style expanded list.
+% Note: fullpath should have full path to each volume in a string matrix,
+% with trailing [,volume#] for 4-D images as per SPM style expanded list.
+% image_names should have image name only for each volume.
 %
-% image_names should have image name only for each volume
+% :Usage:
+% ::
+%
+%     obj = check_image_filenames(obj, ['noverbose'])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data object with .image_names and/or
+%        .fullpath fields.
+%
+% :Optional Inputs:
+%
+%   **'noverbose':**
+%        Suppress informational messages.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with .fullpath populated (if found),
+%        .image_names normalized, and .files_exist populated as a
+%        logical column vector indicating whether each listed file
+%        exists. .history is updated.
+%
+% :Examples:
+% ::
+%
+%     obj = check_image_filenames(obj);
+%     obj = check_image_filenames(obj, 'noverbose');
+%
+% :See also:
+%   - read_from_file
+%   - expand_4d_filenames
 %
 % ..
 %    May still be debugging issues with 3-D vs. 4-D files
-% ..
 %
-% Tor Wager: 7/2018 Added support for .gz file checking, avoiding spm_vol
-% warning
+%    Tor Wager: 7/2018 Added support for .gz file checking, avoiding
+%    spm_vol warning
+% ..
 
 verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin)))); % if 'noverbose' is entered, suppress output
 

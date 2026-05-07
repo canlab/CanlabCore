@@ -1,20 +1,50 @@
 function atlas_out = split_atlas_into_contiguous_regions(atlas_obj)
-% Divide regions with multiple contiguous blobs into separate labeled regions for each blob
+% split_atlas_into_contiguous_regions Split labeled regions into separate contiguous blobs.
 %
-% Take an atlas object whose labeled regions contain multiple contiguous blobs and divide each
-% contiguous blob into a separate labeled region.
-% - Note: This version eliminates probability maps - handling them not implemented yet
+% Take an atlas object whose labeled regions contain multiple contiguous
+% blobs and divide each contiguous blob into a separate labeled region.
+% New labels are formed by appending _L, _R, or _M suffixes (based on
+% the modal x-coordinate sign and proportional asymmetry) to the
+% original region label.
 %
-% July 2018, Tor Wager
+% :Usage:
+% ::
 %
-% "split_atlas" method use cases:
-% split_atlas_by_hemisphere: We have a defined set of bilateral regions that 
-% we want to "hard-split" into left and right. Multiple discontiguous regions 
-% with the same label will be kept together. 
+%     atlas_out = split_atlas_into_contiguous_regions(atlas_obj)
 %
-% split_atlas_into_contiguous_regions: We want to (1) keep contiguous blobs together 
-% that may cross the midline, and (2) separate contiguous blobs with the
-% same label into separate labeled regions.
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object.
+%
+% :Outputs:
+%
+%   **atlas_out:**
+%        Atlas-class object with each contiguous blob promoted to its
+%        own labeled region.
+%
+% :Notes:
+%
+% This version eliminates probability maps; handling them is not
+% implemented yet.
+%
+% 'split_atlas' method use cases:
+%
+% - split_atlas_by_hemisphere: We have a defined set of bilateral
+%   regions that we want to 'hard-split' into left and right. Multiple
+%   discontiguous regions with the same label will be kept together.
+% - split_atlas_into_contiguous_regions: We want to (1) keep contiguous
+%   blobs together that may cross the midline, and (2) separate
+%   contiguous blobs with the same label into separate labeled regions.
+%
+% :See also:
+%   - split_atlas_by_hemisphere
+%   - reparse_continguous
+%   - region2atlas
+%
+% ..
+%    July 2018, Tor Wager
+% ..
 
 [n_regions, n_regions_with_data, missing_regions] = num_regions(atlas_obj);
 

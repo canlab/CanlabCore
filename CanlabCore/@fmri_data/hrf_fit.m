@@ -1,30 +1,51 @@
 function [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = hrf_fit(obj,TR,Runc,T,method,mode, varargin)
-% HRF estimation on fmri_data class object
+% hrf_fit Voxelwise HRF estimation on an fmri_data object.
 %
-% HRF estimation function for a single voxel;
+% :Usage:
+% ::
 %
-% Implemented methods include: IL-model (Deterministic/Stochastic), FIR
-% (Regular/Smooth), and HRF (Canonical/+ temporal/+ temporal & dispersion)
+%     [params_obj, hrf_obj, params_obj_dat, hrf_obj_dat] = ...
+%         hrf_fit(obj, TR, Runs, T, method, mode)
+%
+% HRF estimation routine that runs voxelwise on an fmri_data object.
+% Implemented methods include: IL-model (deterministic / stochastic),
+% FIR (regular / smooth), and HRF (canonical, + temporal,
+% + temporal & dispersion).
 %
 % :Inputs:
 %
-%   **obj**
-%        fMRI object or cell-array of fMRI-objects
+%   **obj:**
+%        fMRI object or cell array of fMRI objects.
 %
-%   **TR**
-%        time resolution
+%   **TR:**
+%        Time resolution (s).
 %
-%   **Runs**
-%        expermental design
+%   **Runs:**
+%        Experimental design (onsets / regressors), passed through to
+%        the underlying single-voxel fit routines.
 %
-%   **T**
-%        length of estimated HRF ij seconds
+%   **T:**
+%        Length of the estimated HRF in seconds.
 %
-%   **type**
-%        Model type: 'FIR', 'IL', or 'CHRF'
+%   **method:**
+%        Model type: 'FIR', 'IL', or 'CHRF'.
 %
-%   **mode**
-%        Mode
+%   **mode:**
+%        Mode selector for the chosen method (see :Model Types: below).
+%
+% :Outputs:
+%
+%   **params_obj:**
+%        fmri_data / statistic_image with fitted HRF parameters per voxel.
+%
+%   **hrf_obj:**
+%        fmri_data with the estimated HRF time courses per voxel.
+%
+%   **params_obj_dat:**
+%        Raw parameter matrix (.dat) corresponding to params_obj.
+%
+%   **hrf_obj_dat:**
+%        Raw HRF time-course matrix corresponding to hrf_obj.
 %
 % :Model Types:
 %

@@ -1,12 +1,33 @@
 function transparency_change(o2, multval)
-% Change the transparency of blobs in an fmridisplay object
+% transparency_change Scale the transparency of all blobs in an fmridisplay object.
+%
+% Multiplies the AlphaData of every blob graphics handle in
+% o2.activation_maps by multval, clipping any resulting values above 1.
+% Values < 1 make blobs more transparent, > 1 make blobs more opaque.
+%
+% :Usage:
+% ::
+%
+%     transparency_change(o2, multval)
 %
 % :Inputs:
 %
-%   **multval:**
-%        multiply transparency values by this.
+%   **o2:**
+%        An fmridisplay object with one or more activation_maps
+%        containing blobhandles.
 %
-% values < 1 makes blobs more transparent, > 1 makes blobs more opaque
+%   **multval:**
+%        Scalar to multiply transparency values by. Values < 1 make
+%        blobs more transparent, > 1 make blobs more opaque.
+%
+% :Outputs:
+%
+%   None. Blob graphics objects in o2 are modified in place.
+%
+% :See also:
+%   - fmridisplay
+%   - addblobs
+%   - removeblobs
 
 for m = 1:length(o2.activation_maps)
     

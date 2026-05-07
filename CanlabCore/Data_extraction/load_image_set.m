@@ -1,15 +1,26 @@
 function [image_obj, networknames, imagenames] = load_image_set(image_names_or_keyword, varargin)
-% Locate a series of images on the path and load them into an fmri_data
-% object.  Useful for loading sets of canonical masks or patterns.
+% load_image_set Locate a series of images on the path and load them into an fmri_data object.
 %
-% - Checks whether images exist on path
-% - Returns full image names with path names
-% - Returns formatted networknames for plot labels
-%
-% Usage:
+% :Usage:
 % ::
 %
-%    [imgs, names] = load_image_set(image_names_or_keyword)
+%     [image_obj, networknames, imagenames] = load_image_set(image_names_or_keyword, [optional inputs])
+%
+% Useful for loading sets of canonical masks or predictive 'signature'
+% patterns. The function:
+%
+%   - Checks whether images exist on the MATLAB path.
+%   - Returns full image names with path names.
+%   - Returns formatted networknames for plot labels.
+%
+% This function is a central registry that resolves a keyword (e.g.,
+% 'emotionreg', 'npsplus', 'kragel18') to a known image set on the
+% MATLAB path and returns the loaded images. If a string that is not a
+% recognized keyword is passed, it is treated as a list of filenames and
+% loaded directly. Some image sets are stored in the CANlab
+% Neuroimaging_Pattern_Masks repository, some in MasksPrivate, and other
+% (unlisted) datasets can be loaded if you have a load_<dataset>.m file
+% in your path (this is intended for extensions in other libraries).
 %
 % ..
 %     Author and copyright information:
@@ -33,219 +44,274 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 % :Inputs:
 %
 %   **image_names_or_keyword:**
-%        A string matrix with images to load, or a keyword.
-%        keywords load pre-defined image sets, as indicated below.
-%        NOTE: you will need to have these images on your Matlab path!
-%        Some are in the CANlab Neuroimaging_Pattern_Masks repository,
-%        some in Masks_Private repository, other (unlisted) datasets can be
-%        loaded if you have a load_<dataset>.m file in your path. This is
-%        for simplified extensions to this method by other libraries.
+%        A character/string keyword (see :Available Keywords: below)
+%        identifying a registered image set, a string matrix or cell
+%        array of image filenames to load, or an existing fmri_data /
+%        atlas object (in which case names are extracted from the input).
+%        NOTE: you will need to have the requested images on your MATLAB
+%        path! Some are in the CANlab Neuroimaging_Pattern_Masks
+%        repository, some in MasksPrivate, and other (unlisted) datasets
+%        can be loaded if you have a load_<dataset>.m file in your path.
 %
-% Sample test datasets - one image per subject
-% ------------------------------------------------------------------------
-%       'list' : List of signatures (enter any keyword from list as input)
-%                Note: returns table as 1st output instead of image_obj
+% :Optional Inputs:
 %
-% Sample test datasets - one image per subject
-% ------------------------------------------------------------------------
-%        'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008.
-%                       Each image is a contrast image for the contrast [reappraise negative vs. look negative]
+%   **'noverbose':**
+%        Suppress printing of all loaded image names. Default is to print
+%        all image names.
 %
-%        'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat (non-painful and painful).
-%                  NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
-%                  on figshare (see canlab.github.io/walkthroughs)
+%   **'verbose':**
+%        Print loaded image names (default).
 %
-%        'kragel18_alldata' : 270 subject maps from Kragel 2018;
-%                             These are saved in kragel_2018_nat_neurosci_270_subjects_test_images.mat
-%                             if not found, will attempt to download from Neurovault using
-%                             retrieve_neurovault_collection().
+%   **'md5check':**
+%        Perform md5 hash check if supported for the requested dataset.
+%        If verbosity is enabled, md5 check results will be returned to
+%        stdout. (Only honored by custom load_<dataset>.m functions in
+%        other extension repositories.)
 %
-% Sample test datasets - one image per trial (single trial datasets)
-% ------------------------------------------------------------------------
-%     A set of single-trial datasets for pain studies have been compiled by Bogdan Petre and stored here:
-%     https://github.com/canlab/canlab_single_trials
-%
-%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3pain'), and you can enter
-%     any of these names as keywords, or 'all_single_trials' to load all of
-%     them. The canlab_single_trials repo must be on your matlab path.
-%     Each study file loads as an fmri_data object, with a metadata_table field
-%     that stores trial info in a Matlab table-class object.
-%
-%     Single-trial datasets include:
-%     % 'nsf' 'bmrk3pain' 'bmrk3warm' 'bmrk4' 'exp' 'ie' 'ie2' 'ilcp'
-%     'romantic' 'scebl' 'stephan'
-%
-%     Each contains a single-trial object from a differnt study.
-%
-% Parcellations and large-scale networks/patterns
-% ------------------------------------------------------------------------
-%        'bucknerlab': 7 network parcellation from Yeo et al., cortex only
-%
-%        'bucknerlab_wholebrain': 7 networks in cortex, BG, cerebellum
-%
-%        'bucknerlab_wholebrain_plus': 7 networks in cortex, BG, cerebellum + SPM Anatomy Toolbox regions + brainstem
-%
-%        'allengenetics': Five maps from the Allen Brain Project human gene expression maps
-%                         from Luke Chang (unpublished)
-%
-%        'bgloops', 'pauli' : 5-basal ganglia parcels and 5 associated cortical
-%                             networks from Pauli et al. 2016
-%
-%        'bgloops17', 'pauli17' : 17-parcel striatal regions only from Pauli et al. 2016
-%
-%        'bgloops_cortex' : Cortical regions most closely associated with
-%                           the Pauli 5-region striatal clusters
-%
-%        'pet_nr_map', 'hansen22' 'pet' 'receptorbinding' :     2022_Hansen_PET_tracer_maps, 30 maps with
-%        different combinations of tracers and neurotransmitter receptors
-%
-%        'emometa' 'emotionmeta' '2015emotionmeta' : 2015 Wager/Kang et al.
-%        Meta-analysis maps for 5 basic categories.
-%        'Anger' 'Disgust' 'Fear' 'Happy' 'Sad'
-%
-%        'marg' or 'transmodal' or 'principalgradient': 2016 PNAS Margulies
-%                    MNI152NLin2009cAsym_margulies_grad1.nii.gz
-%        'margfsl' : MNI152NLin6Asym_margulies_grad1.nii.gz
-%
-%        'transcriptomic_gradients':
-%               Principal transcriptomic gradients from
-%               Hawrylycz et al. An anatomically comprehensive atlas of the adult human brain transcriptome. (2012) Nature
-%               Vogel et al. "Deciphering the functional specialization of whole-brain spatiomolecular gradients in the adult brain" (2024) PNAS
-%               [transcriptomic_grads transcriptomic_names] = load_image_set('transcriptomic_gradients');
-%
-% 'Signature' patterns and predictive models
-% ------------------------------------------------------------------------
-%        'list'     : Return list of signatures in a table
-%        'all'      : Load all signatures in table registry (see 'list')
-%        'nps'      : Wager et al. 2013 Neurologic Pain Signature
-%        'vps'      : Krishnan et et al. 2016 Vicarious Pain Signature
-%        'rejection': Woo et et al. 2014 Romantic Rejection
-%        'siips'    : Woo et et al. 2017 Stimulus intensity-independent pain Signature
-%        'pines'    : Chang et et al. 2015 Picture-induced negative emotion Signature
-%        'gsr'      : Eisenbarth et al. 2016 Stress-induced skin conductance
-%        'hr'       : Eisenbarth et al. 2016 Stress-induced heart rate
-%        'multisensory' : Lopez-sola et al. 2016 Fibromyalgia multisensory pattern
-%        'fmpain'   : Lopez-sola et al. 2016 Fibromyalgia pain-period pattern
-%        'plspain'  : Kragel el al. 2018 PLS pain-related
-%        'cpdm'     : Geuter et al. 2020 multivariate mediation pain-related
-%
-%        'npsplus'  : Wager lab published multivariate patterns:
-%                   NPS (incl NPSpos & NPSpos), SIIPS, PINES, Romantic Rejection, VPS, more
-%
-%        'painsig'  : NPS (incl NPSpos & NPSpos) and SIIPS only
-%
-%        'fibromyalgia':  patterns used to predict FM from Lopez Sola et al.:
-%                         NPSp, FM-pain, FM-multisensory
-%
-%        'guilt'    : a multivariate fMRI pattern related to guilt behavior
-%                   Yu, Koban et al. 2019, Cerebral Cortex
-%                   Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii.gz
-%
-%        'neurosynth', 'neurosynth_featureset1': 525 "Reverse inference" z-score maps from Tal Yarkoni's
-%                                                Neurosynth, unthresholded, 2013
-%
-%        'neurosynth_topics_forwardinference' 'neurosynth_topics_reverseinference'
-%                   54 topic maps from Yarkoni & Poldrack 2014 topic modeling analysis
-%                   Selected from 100 topics for psychological relevance
-%                   and given ChatGPT-based summary topic labels by Ke et al. 2024, Nat Neurosci
-%
-%        'pain_cog_emo', 'kragel18': Partial least squares maps for generalizable
-%                   representations of pain, cog control, emotion. From
-%                   Kragel et al. 2018, Nature Neuroscience
-%
-%        'pain_pdm', 'pdm': High-dimensional mediators of pain. 10
-%        individual PDM maps and a combined PDM, which is a weighted
-%        combination of the 10. From Geuter et al. (2020) Cerebral Cortex
-%        (see cpdm above)
-%
-%        'kragelemotion': 7 emotion-predictive models from Kragel & LaBar 2015
-%
-%        'kragelschemas': 20 visual emotion-schemas from Kragel et al. 2019
-%
-%        {'reddanCSplus' 'threat'}: Reddan et al. 2018 Neuron CS+ vs. CS- classifier map
-%        'zhouvps':  Zhou et al. 2020 eLife generalized vicarious pain signature  
-%
-%        'multiaversive', 'mpa2': Ceko et al. multiple predictive patterns
-%        for aversive experience: General, Mechanical pain,
-%        Aversive Sounds, Thermal pain, Visual aversive images
-%
-%        'stroop': Silvestrini et al. 2020 Stroop-demand SVM. stroop_pattern_wani_121416.nii
-%
-%        'ncs':     drug and food craving signature(s)
-%                   Koban et al, Nature Neuroscience 2022
-%                   craving_wmapN99_boot10K_02-May-2022.img
-%                   wmap_onlyDRUGS_l2nGM_N99_20220428.img
-%                   wmap_onlyFOOD_l2nGM_N99_20220428.img
-%
-%       'pifonem': Murillo .. Ashar J Pain 2026 - Picture Induced Fear of
-%                  Neck Movement (PiFoneM). In ppl with acute and chronic
-%                  whiplash, predicts fear of neck movements
-%
-%
-% :Optional inputs:
-%
-%   **noverbose:**
-%       Suppress printing of all loaded image names. Default is to print
-%       all image names.
-%
-%  **md5check:**
-%       Perform md5 hash check if supported for dataset. If verbosity is
-%       enabled md5 check results will be returned to stdout.
-%
-%  **forcedl:**
-%       Force download without prompting for permission if dataset is
-%       missing.
+%   **'forcedl':**
+%        Force download without prompting for permission if dataset is
+%        missing. (Only honored by custom load_<dataset>.m functions in
+%        other extension repositories.)
 %
 % :Outputs:
 %
 %   **image_obj:**
-%        fmri_data object with the maps loaded
+%        fmri_data object with the maps loaded.
 %
 %   **networknames:**
-%        cell array of names based on the image names or custom titles
+%        Cell array of names based on the image names or custom titles.
 %
 %   **imagenames:**
-%        cell array of names of images loaded
+%        Cell array of names of images loaded.
+%
+% :Available Keywords:
+%
+%   The list below maps each keyword (or family of keywords) to the
+%   underlying image set it loads. Keywords are matched case-sensitively.
+%   Unrecognized strings are treated as filenames.
+%
+%   ::
+%
+%     Sample test datasets - one image per subject
+%     --------------------------------------------------------------------
+%       'list' : List of signatures (enter any keyword from list as input)
+%                Note: returns table as 1st output instead of image_obj
+%
+%       'emotionreg' : N = 30 emotion regulation sample dataset from Wager et al. 2008.
+%                      Each image is a contrast image for the contrast
+%                      [reappraise negative vs. look negative].
+%
+%       'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat
+%                         (non-painful and painful).
+%                         NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
+%                         on figshare (see canlab.github.io/walkthroughs).
+%
+%       'kragel18_alldata' : 270 subject maps from Kragel 2018;
+%                            These are saved in
+%                            kragel_2018_nat_neurosci_270_subjects_test_images.mat.
+%                            If not found, will attempt to download from
+%                            Neurovault using
+%                            retrieve_neurovault_collection().
+%
+%     Sample test datasets - one image per trial (single trial datasets)
+%     --------------------------------------------------------------------
+%     A set of single-trial datasets for pain studies have been compiled
+%     by Bogdan Petre and stored here:
+%     https://github.com/canlab/canlab_single_trials
+%
+%     Each dataset has a name (e.g., 'nsf', 'exp', 'bmrk3pain'), and you
+%     can enter any of these names as keywords, or 'all_single_trials' to
+%     load all of them. The canlab_single_trials repo must be on your
+%     MATLAB path. Each study file loads as an fmri_data object, with a
+%     metadata_table field that stores trial info in a MATLAB table-class
+%     object.
+%
+%     Single-trial datasets include:
+%       'nsf' 'bmrk3pain' 'bmrk3warm' 'bmrk4' 'exp' 'ie' 'ie2' 'ilcp'
+%       'romantic' 'scebl' 'stephan'
+%
+%     Each contains a single-trial object from a different study.
+%
+%     Parcellations and large-scale networks/patterns
+%     --------------------------------------------------------------------
+%       'bucknerlab' : 7 network parcellation from Yeo et al., cortex only.
+%
+%       'bucknerlab_wholebrain' : 7 networks in cortex, BG, cerebellum.
+%
+%       'bucknerlab_wholebrain_plus' : 7 networks in cortex, BG,
+%                                      cerebellum + SPM Anatomy Toolbox
+%                                      regions + brainstem.
+%
+%       'allengenetics' : Five maps from the Allen Brain Project human
+%                         gene expression maps from Luke Chang
+%                         (unpublished).
+%
+%       'bgloops', 'pauli' : 5 basal ganglia parcels and 5 associated
+%                            cortical networks from Pauli et al. 2016.
+%
+%       'bgloops17', 'pauli17' : 17-parcel striatal regions only from
+%                                Pauli et al. 2016.
+%
+%       'bgloops_cortex' : Cortical regions most closely associated with
+%                          the Pauli 5-region striatal clusters.
+%
+%       'pet_nr_map', 'hansen22', 'pet', 'receptorbinding' :
+%                          2022_Hansen_PET_tracer_maps, 30 maps with
+%                          different combinations of tracers and
+%                          neurotransmitter receptors.
+%
+%       'emometa', 'emotionmeta', '2015emotionmeta' :
+%                          2015 Wager/Kang et al. Meta-analysis maps for
+%                          5 basic categories: 'Anger' 'Disgust' 'Fear'
+%                          'Happy' 'Sad'.
+%
+%       'marg' or 'transmodal' or 'principalgradient' :
+%                          2016 PNAS Margulies
+%                          MNI152NLin2009cAsym_margulies_grad1.nii.gz.
+%
+%       'margfsl' : MNI152NLin6Asym_margulies_grad1.nii.gz.
+%
+%       'transcriptomic_gradients' :
+%                          Principal transcriptomic gradients from
+%                          Hawrylycz et al. An anatomically comprehensive
+%                          atlas of the adult human brain transcriptome.
+%                          (2012) Nature; and Vogel et al. "Deciphering
+%                          the functional specialization of whole-brain
+%                          spatiomolecular gradients in the adult brain"
+%                          (2024) PNAS.
+%                          Example:
+%                          [transcriptomic_grads transcriptomic_names] = ...
+%                              load_image_set('transcriptomic_gradients');
+%
+%     'Signature' patterns and predictive models
+%     --------------------------------------------------------------------
+%       'list'     : Return list of signatures in a table.
+%       'all'      : Load all signatures in table registry (see 'list').
+%       'nps'      : Wager et al. 2013 Neurologic Pain Signature.
+%       'vps'      : Krishnan et al. 2016 Vicarious Pain Signature.
+%       'rejection': Woo et al. 2014 Romantic Rejection.
+%       'siips'    : Woo et al. 2017 Stimulus intensity-independent pain
+%                    Signature.
+%       'pines'    : Chang et al. 2015 Picture-induced negative emotion
+%                    Signature.
+%       'gsr'      : Eisenbarth et al. 2016 Stress-induced skin
+%                    conductance.
+%       'hr'       : Eisenbarth et al. 2016 Stress-induced heart rate.
+%       'multisensory' : Lopez-sola et al. 2016 Fibromyalgia multisensory
+%                        pattern.
+%       'fmpain'   : Lopez-sola et al. 2016 Fibromyalgia pain-period
+%                    pattern.
+%       'plspain'  : Kragel et al. 2018 PLS pain-related.
+%       'cpdm'     : Geuter et al. 2020 multivariate mediation pain-related.
+%
+%       'npsplus'  : Wager lab published multivariate patterns:
+%                    NPS (incl NPSpos & NPSneg), SIIPS, PINES, Romantic
+%                    Rejection, VPS, more.
+%
+%       'painsig'  : NPS (incl NPSpos & NPSneg) and SIIPS only.
+%
+%       'fibromyalgia' : Patterns used to predict FM from Lopez Sola et al.:
+%                        NPSp, FM-pain, FM-multisensory.
+%
+%       'guilt'    : A multivariate fMRI pattern related to guilt behavior.
+%                    Yu, Koban et al. 2019, Cerebral Cortex.
+%                    Yu_guilt_SVM_sxpo_sxpx_EmotionForwardmask.nii.gz.
+%
+%       'neurosynth', 'neurosynth_featureset1' :
+%                    525 'Reverse inference' z-score maps from Tal
+%                    Yarkoni's Neurosynth, unthresholded, 2013.
+%
+%       'neurosynth_topics_forwardinference',
+%       'neurosynth_topics_reverseinference' :
+%                    54 topic maps from Yarkoni & Poldrack 2014 topic
+%                    modeling analysis. Selected from 100 topics for
+%                    psychological relevance and given ChatGPT-based
+%                    summary topic labels by Ke et al. 2024,
+%                    Nat Neurosci.
+%
+%       'pain_cog_emo', 'kragel18' :
+%                    Partial least squares maps for generalizable
+%                    representations of pain, cog control, emotion. From
+%                    Kragel et al. 2018, Nature Neuroscience.
+%
+%       'pain_pdm', 'pdm' :
+%                    High-dimensional mediators of pain. 10 individual
+%                    PDM maps and a combined PDM, which is a weighted
+%                    combination of the 10. From Geuter et al. (2020)
+%                    Cerebral Cortex (see cpdm above).
+%
+%       'kragelemotion' : 7 emotion-predictive models from
+%                         Kragel & LaBar 2015.
+%
+%       'kragelschemas' : 20 visual emotion-schemas from Kragel et al.
+%                         2019.
+%
+%       {'reddanCSplus' 'threat'} : Reddan et al. 2018 Neuron CS+ vs. CS-
+%                                   classifier map.
+%
+%       'zhouvps' : Zhou et al. 2020 eLife generalized vicarious pain
+%                   signature.
+%
+%       'multiaversive', 'mpa2' :
+%                   Ceko et al. multiple predictive patterns for aversive
+%                   experience: General, Mechanical pain, Aversive
+%                   Sounds, Thermal pain, Visual aversive images.
+%
+%       'stroop'  : Silvestrini et al. 2020 Stroop-demand SVM.
+%                   stroop_pattern_wani_121416.nii.
+%
+%       'ncs'     : Drug and food craving signature(s).
+%                   Koban et al, Nature Neuroscience 2022.
+%                   craving_wmapN99_boot10K_02-May-2022.img
+%                   wmap_onlyDRUGS_l2nGM_N99_20220428.img
+%                   wmap_onlyFOOD_l2nGM_N99_20220428.img
+%
+%       'pifonem' : Murillo .. Ashar J Pain 2026 - Picture Induced Fear
+%                   of Neck Movement (PiFoneM). In ppl with acute and
+%                   chronic whiplash, predicts fear of neck movements.
 %
 % :Examples:
 % ::
 %
-%  % Example 1: Load NPS (private) and several other signatures
-% % -------------------------------------------------------------------------
-% imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
-%     'Rating_Weights_LOSO_2.nii'  ...  % PINES
-%     'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
-%     'bmrk4_VPS_unthresholded.nii'};
+%     % Example 1: Load NPS (private) and several other signatures
+%     % ----------------------------------------------------------------
+%     imagenames = {'weights_NSF_grouppred_cvpcr.img' ...  % NPS
+%         'Rating_Weights_LOSO_2.nii'  ...                 % PINES
+%         'dpsp_rejection_vs_others_weights_final.nii' ... % rejection
+%         'bmrk4_VPS_unthresholded.nii'};
 %
-% [obj, netnames, imgnames] = load_image_set(imagenames);
+%     [obj, netnames, imgnames] = load_image_set(imagenames);
 %
-% The above loads a subset of the same images as:
+%     % The above loads a subset of the same images as:
+%     [obj, netnames, imgnames] = load_image_set('npsplus');
 %
-% [obj, netnames, imgnames] = load_image_set('npsplus');
+%     % Example 2: Apply the PLS signatures from Kragel et al. 2018 to
+%     % the emotion regulation dataset
+%     % ----------------------------------------------------------------
+%     % Load PLS signatures from Kragel et al. 2018
+%     [obj, names] = load_image_set('pain_cog_emo');
+%     bpls_wholebrain = get_wh_image(obj, [8 16 24]);
+%     names_wholebrain = names([8 16 24]);
+%     bpls_subregions = get_wh_image(obj, [1:6 9:14 17:22]);
+%     names_subregions = names([1:6 9:14 17:22]);
 %
-% % Example 2: Apply the PLS signatures from Kragel et al. 2018 to the emotion regulation dataset
-% % -------------------------------------------------------------------------
-% % Load PLS signatures from Kragel et al. 2018
-% [obj, names] = load_image_set('pain_cog_emo');
-% bpls_wholebrain = get_wh_image(obj, [8 16 24]);
-% names_wholebrain = names([8 16 24]);
-% bpls_subregions = get_wh_image(obj, [1:6 9:14 17:22]);
-% names_subregions = names([1:6 9:14 17:22]);
+%     % Load test data: Emotion regulation from Wager et al. 2008
+%     test_data_obj = load_image_set('emotionreg');
 %
-% % Load test data: Emotion regulation from Wager et al. 2008
-% test_data_obj = load_image_set('emotionreg');
-%
-% %  Make plots
-% % Yellow: positive associations. Blue: Negative associations.  Plot shows mean +- std. error for each pattern of interest
-%
-% create_figure('Kragel Pain-Cog-Emo maps', 1, 2);
-% stats = image_similarity_plot(test_data_obj, 'average', 'mapset', bpls_wholebrain, 'networknames', names_wholebrain, 'nofigure');
-% subplot(1, 2, 2)
-% stats = image_similarity_plot(test_data_obj, 'average', 'mapset', bpls_subregions, 'networknames', names_subregions, 'nofigure');
+%     % Make plots
+%     % Yellow: positive associations. Blue: Negative associations.
+%     % Plot shows mean +- std. error for each pattern of interest
+%     create_figure('Kragel Pain-Cog-Emo maps', 1, 2);
+%     stats = image_similarity_plot(test_data_obj, 'average', 'mapset', ...
+%         bpls_wholebrain, 'networknames', names_wholebrain, 'nofigure');
+%     subplot(1, 2, 2)
+%     stats = image_similarity_plot(test_data_obj, 'average', 'mapset', ...
+%         bpls_subregions, 'networknames', names_subregions, 'nofigure');
 %
 % :See also:
-%
-% image_similarity_plot, fmri_data
+%   - image_similarity_plot
+%   - fmri_data
+%   - load_atlas
 
 % ..
 %    Programmers' notes:

@@ -184,7 +184,7 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
     end
 
     % alter data type if needed
-    switch(spm('Ver'))
+    switch spm('Ver')
         case 'SPM2'
             if spm_type(volInfo.dim(4), 'swapped')
                 disp('Swapped datatypes are supported by SPM2 but not SPM5. Un-swapping.');
@@ -194,16 +194,13 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
                     volInfo.dim(4) = spm_type('float');
                 end
             end
-
-        case {'SPM5', 'SPM8', 'SPM12', 'SPM25'} %added keepdt to retain original dt if requested : luk(ea)
-            %Outputs float32 by default otherwise keeps original data type
-            %if 'keepdt' is used as optional input.
+        otherwise
+            % SPM5+, including any future versions.
+            % Outputs float32 by default; pass 'keepdt' as optional input to
+            % retain original data type (luk(ea)).
             if isfield(volInfo, 'dt') && spm_type(volInfo.dt(1), 'intt') && ~keepdt
                volInfo.dt(1) = spm_type('float32');
             end
-            
-        otherwise 
-            error('Unrecognized SPM type.  Please update code or use SPM2/5/8/12!');
     end
 end
 

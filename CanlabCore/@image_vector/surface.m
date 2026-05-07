@@ -1,18 +1,63 @@
 function [all_surf_handles, pcl, ncl] = surface(obj, varargin)
-% Render image data on brain surfaces; options for cutaways and canonical surfaces
+% surface Render image_vector data on brain surfaces; cutaways and canonical surfaces.
 %
-% *Usage:*
-%   [all_surf_handles, pcl, ncl] = surface(obj)
-%   [all_surf_handles, pcl, ncl] = surface(r, ['cutaways', any optional inputs to surface_cutaway])
-% 
 % This function uses region.surface to create surface figures.
 % See help region.surface for options.
+%
+% :Usage:
+% ::
+%
+%     [all_surf_handles, pcl, ncl] = surface(obj)
+%     [all_surf_handles, pcl, ncl] = surface(obj, 'cutaways', [optional inputs to surface_cutaway])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector, fmri_data, statistic_image, or atlas object.
+%        If multiple images are present, the mean is plotted.
+%
+% :Optional Inputs:
+%
+%   All optional inputs are passed through to region.surface and on to
+%   surface_cutaway / mediation_brain_surface_figs. Common options:
+%
+%   **'cutaway':**
+%        Render with cutaway surfaces (uses surface_cutaway).
+%
+%   **'foursurfaces':**
+%        Render four canonical surface views.
+%
+%   **'pos_colormap', cm / 'neg_colormap', cm:**
+%        Colormaps for positive / negative values.
+%
+%   **'ycut_mm', value:**
+%        Y position (mm) of cutaway plane.
+%
+%   **'existingfig':**
+%        Use the current figure rather than creating a new one.
+%
+%   **'surface_handles', handles:**
+%        Plot onto an existing set of surface handles.
+%
+%   **'color_upperboundpercentile', pct / 'color_lowerboundpercentile', pct:**
+%        Percentile bounds for color scaling.
+%
+% :Outputs:
+%
+%   **all_surf_handles:**
+%        Handles to surface objects created.
+%
+%   **pcl:**
+%        Region object for positive-valued clusters.
+%
+%   **ncl:**
+%        Region object for negative-valued clusters.
 %
 % :Examples:
 % ::
 %
 %    % Create an initial surface plot from an fmri_data object:
-%    han = surface(regionmasks{2});  
+%    han = surface(regionmasks{2});
 %
 %    % Now add a second region in green:
 %    cluster_surf(region(regionmasks{2}), {[0 1 0]}, han, 5);
@@ -27,9 +72,17 @@ function [all_surf_handles, pcl, ncl] = surface(obj, varargin)
 %    all_surf_handles = mediation_brain_surface_figs([]);
 %    surface(t2, 'cutaway', 'surface_handles', all_surf_handles, 'color_upperboundpercentile', 95, 'color_lowerboundpercentile', 5, 'neg_colormap', colormap_tor([0 0 1], [.2 0 .5]));
 %
-
-% :Programmers' notes: 
-% 9-8-2020 fixed weird bug that broke this somehow. Maybe someone deleted a line of code and committed?
+% :See also:
+%   - region.surface
+%   - surface_cutaway
+%   - mediation_brain_surface_figs
+%   - render_on_surface
+%   - montage
+%
+% ..
+%    Programmers' notes:
+%    9-8-2020 fixed weird bug that broke this somehow. Maybe someone deleted a line of code and committed?
+% ..
 
 if size(obj.dat, 2) > 1
     obj = mean(obj);

@@ -1,21 +1,52 @@
 function dat = remove_empty(dat, varargin)
-% remove vox: logical vector of custom voxels to remove, VOX x 1
+% remove_empty Remove empty (zero/NaN) voxels and images from an image_vector object.
 %
-% remove im: logical vector of custom images to remove, 1 x IMAGES
-%
-% indices of removed data will be stored in removed_voxels and
-% removed_images fields, to preserve ability to later reconstruct into 3D images
+% Identifies empty voxels (rows whose values are all 0 or NaN across
+% images) and empty images (columns whose values are all 0 or NaN
+% across voxels), and removes them from .dat. Indices of removed data
+% are stored in removed_voxels and removed_images fields, preserving the
+% ability to later reconstruct into 3-D images. Optional logical vectors
+% can specify additional custom voxels / images to remove.
 %
 % :Usage:
 % ::
 %
 %    dat = remove_empty(dat, [logical vector of custom voxels to remove], [logical vector of imgs to remove])
 %
-% Indicator vectors stored in:
-% removed_images
-% removed_voxels
+% :Inputs:
 %
-% :See also: replace_empty
+%   **dat:**
+%        An image_vector / fmri_data / statistic_image / atlas object.
+%
+% :Optional Inputs:
+%
+%   **remove_vox:**
+%        Logical vector of custom voxels to remove, VOX x 1.
+%
+%   **remove_im:**
+%        Logical vector of custom images to remove, 1 x IMAGES.
+%
+% :Outputs:
+%
+%   **dat:**
+%        The input object with empty (and any custom-specified) voxels
+%        and images removed from .dat. The .removed_voxels and
+%        .removed_images bookkeeping fields are updated. For
+%        statistic_image, the .p / .ste / .sig (and .N, .dfe if
+%        non-scalar) fields are pruned in parallel; for atlas, the
+%        .probability_maps are pruned.
+%
+% :Examples:
+% ::
+%
+%     dat = remove_empty(dat);
+%     dat = remove_empty(dat, my_voxels_to_remove);
+%     dat = remove_empty(dat, [], my_images_to_remove);
+%
+% :See also:
+%   - replace_empty
+%   - rebuild_volinfo_from_dat
+%   - reparse_contiguous
 
 % force logical
 dat.removed_images = logical(dat.removed_images);

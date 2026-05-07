@@ -1,38 +1,60 @@
 function result = winnerTakeAll(input_data)
-% winnerTakeAll Identifies the indices of maximum values in each row of the input data from an image_vector object.
+% winnerTakeAll Identify the column index of the maximum value in each voxel of an image_vector object.
 %
-% Usage:
-%   result = winnerTakeAll(input_data)
+% For each voxel (row of input_data.dat), returns the column index
+% (image) holding the maximum value across images. Useful for selecting
+% the most significant (largest) feature across multiple conditions or
+% variables for each observation. Indices for voxels whose maximum is
+% non-positive are set to 0.
 %
-% Inputs:
-%   input_data - A image_vector object containing the data 
-%                from which the max indices are to be found. If the input is a 
-%                'statistic_image', it will be thresholded at p < 0.1 (uncorrected) 
-%                before finding the max indices.
+% :Usage:
+% ::
 %
-% Outputs:
-%   result - A structure identical to the input 'input_data', but with its 'dat' field 
-%            replaced by a column vector of indices corresponding to the maximum values 
-%            in each row of the original data matrix. Indices corresponding to rows where 
-%            the maximum value is less than or equal to 0 are set to 0.
+%    result = winnerTakeAll(input_data)
 %
-% Example:
-%   dat = fmri_data('results.nii'); % A 5x10 matrix of random data
-%   result = winnerTakeAll(dat);
-%   % result.dat will contain the indices of the max values in each row
+% :Inputs:
 %
-% Notes:
-%   - If the input is a 'statistic_image', its 'dat' field is multiplied by the 'sig' 
-%     field after thresholding.
-%   - Rows with all non-positive values in 'dat' will have a max index of 0 in 'result.dat'.
-%   - This function is useful for selecting the most significant (largest) feature 
-%     across multiple conditions or variables for each observation.
+%   **input_data:**
+%        An image_vector object containing the data from which the max
+%        indices are to be found. If the input is a 'statistic_image',
+%        it will be thresholded at p < 0.1 (uncorrected) before finding
+%        the max indices.
 %
-% Created by: Michael Sun, PhD
-% Date: 08/30/2024
-% Version: 1.0
+% :Outputs:
 %
-% See also: max, threshold
+%   **result:**
+%        A structure identical to the input 'input_data', but with its
+%        'dat' field replaced by a column vector of indices corresponding
+%        to the maximum values in each row of the original data matrix.
+%        Indices corresponding to rows where the maximum value is less
+%        than or equal to 0 are set to 0.
+%
+% :Examples:
+% ::
+%
+%    dat = fmri_data('results.nii'); % A 5x10 matrix of random data
+%    result = winnerTakeAll(dat);
+%    % result.dat will contain the indices of the max values in each row
+%
+% :Notes:
+%
+%   - If the input is a 'statistic_image', its 'dat' field is multiplied
+%     by the 'sig' field after thresholding.
+%   - Rows with all non-positive values in 'dat' will have a max index
+%     of 0 in 'result.dat'.
+%   - This function is useful for selecting the most significant
+%     (largest) feature across multiple conditions or variables for each
+%     observation.
+%
+% :See also:
+%   - max
+%   - threshold
+%
+% ..
+%    Created by: Michael Sun, PhD
+%    Date: 08/30/2024
+%    Version: 1.0
+% ..
 
     if isa(input_data, 'statistic_image')
         input_data = threshold(input_data, .1, 'unc');

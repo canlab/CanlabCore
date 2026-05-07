@@ -1,6 +1,5 @@
 function [dat, mask] = apply_mask(dat, mask, varargin)
-% Apply a mask image (image filename or fmri_mask_image object) to an image_vector object
-% stored in dat.
+% apply_mask Apply a mask image (filename or fmri_mask_image object) to an image_vector object.
 %
 % This can be used to:
 %  - Mask an image_vector or fmri_data object with a mask
@@ -10,7 +9,26 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 % The mask or weight map does not have to be in the same space as the dat;
 % it will be resampled to the space of the data in dat.
 %
-% To extract pattern expression values for each ROI within a mask use extract_roi_averages()
+% To extract pattern expression values for each ROI within a mask use
+% extract_roi_averages().
+%
+% :Usage:
+% ::
+%
+%     [dat, mask] = apply_mask(dat, mask, [optional inputs])
+%
+% :Inputs:
+%
+%   **dat:**
+%        An image_vector (or subclass, e.g., fmri_data, statistic_image)
+%        object containing one or more images.
+%
+%   **mask:**
+%        A mask image filename, an fmri_mask_image object, or any
+%        image_vector-class object whose .dat field contains the mask
+%        weights. The mask is resampled to the data space if needed.
+%        If passed as a statistic_image, the .sig field is used to set
+%        non-significant voxels to zero before masking.
 %
 % :Optional Inputs:
 %
@@ -43,6 +61,18 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %        use with pattern expression only. scales expression by product of
 %        l2 norms (norm(mask)*norm(dat))
 %
+% :Outputs:
+%
+%   **dat:**
+%        Either (a) the input data object with out-of-mask voxels removed,
+%        or (b) when 'pattern_expression' / 'correlation' /
+%        'cosine_similarity' is requested, a vector / structure of
+%        similarity values returned by canlab_pattern_similarity.
+%
+%   **mask:**
+%        The mask after resampling to the data space and removal of empty
+%        voxels, returned for inspection.
+%
 % :Examples:
 % ::
 %
@@ -52,11 +82,11 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %     [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing')
 %     [pattern_exp_values] = apply_mask(dat, weight map image, 'pattern_expression', 'ignore_missing','correlation')
 %
-%
 % :See also:
-%
-% extract_roi_averages, to get individual region averages / local pattern expression
-% apply_nps, which does whole-pattern and local regional expression
+%   - extract_roi_averages (individual region averages / local pattern expression)
+%   - apply_nps (whole-pattern and local regional expression)
+%   - canlab_pattern_similarity
+%   - resample_space
 %
 % ..
 %    Notes:
@@ -64,7 +94,6 @@ function [dat, mask] = apply_mask(dat, mask, varargin)
 %    12/15/13:  Luke Chang - added correlation option for pattern-expression
 %    5/10/2016: Phil Kragel - added cosine similarity
 %    8/2/2018: Tor Wager - if mask is a statistic_image object, apply .sig field
-%
 % ..
 
 dopatternexpression = 0; % set options

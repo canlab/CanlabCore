@@ -113,6 +113,7 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 % 
 % % Cluster maps based on similarity and assign colors based on clusters
 % obj = remove_empty(obj);
+% obj.dat(isnan(obj.dat)) = 0;  % this particular object has NaNs; fix
 % stats = clusterdata_permtest(obj.dat', 'k', [2:7], 'reducedims', true, 'ndims', 25);
 % c = stats.best_cluster_labels;
 % 

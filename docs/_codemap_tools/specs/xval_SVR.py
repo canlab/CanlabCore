@@ -13,17 +13,18 @@ def build() -> Slide:
     )
 
     s.use([
-        "Pass S = xval_SVR(X, Y, id, ...). X is observations × features; Y is the continuous outcome; id keeps subjects together.",
-        "Toggle 'doOptimize', true for Bayesian hyperparameter optimization (5-fold inner CV).",
-        "'doRepeats', N repeats outer CV with new random splits to stabilize accuracy estimates.",
-        "'highdimensional', true switches to fitrlinear for voxel-scale brain data (no hyperopt).",
+        "S = xval_SVR(X, Y, id, ...).",
+        "X = obs × features, Y = continuous, id groups subjects.",
+        "'doOptimize' true → Bayesian hyperopt (5-fold inner CV).",
+        "'doRepeats', N → repeat outer CV with new splits.",
+        "'highdimensional' true → fitrlinear (voxel-scale).",
     ])
 
     s.notes([
-        "Linear regressors only; nonlinear models are commented-out hooks in the source.",
-        "Optimizing hyperparameters AND repeating CV gives nested CV — slow but unbiased.",
-        "Default loss is mean squared error; correlation between Y and yfit is the headline accuracy metric.",
-    ], y=3.40, h=1.80)
+        "Linear regressors only; nonlinear hooks are commented out.",
+        "Hyperopt + repeated CV = nested CV. Slow but unbiased.",
+        "MSE for loss; correlation(Y, yfit) is the headline accuracy.",
+    ], y=3.65, h=1.55)
 
     s.legend(x=0.30, y=5.60)
 

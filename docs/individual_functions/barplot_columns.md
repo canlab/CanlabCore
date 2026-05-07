@@ -30,9 +30,9 @@ with optional outlier circling. Sig. stars use `*=p<.05`, `**=p<.01`,
 ```matlab
 rng(7);
 Y = [randn(20,1)+1, randn(20,1)+0.3, randn(20,1)-0.5];
-colors = seaborn_colors(8);
+colors = seaborn_colors(3);     % 3 maximally-distinct hues from the palette
 barplot_columns(Y, 'nofig', 'names', {'Cond A', 'Cond B', 'Cond C'}, ...
-                'colors', colors(1:3));
+                'colors', colors);
 ```
 
 ![barplot_columns sample](../class_method_pngs/barplot_columns_sample.png)

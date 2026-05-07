@@ -431,9 +431,9 @@ function test_barplot_columns(tc)
 % docs/individual_functions/barplot_columns.md
 rng(7);
 Y = [randn(20,1)+1, randn(20,1)+0.3, randn(20,1)-0.5];
-colors = seaborn_colors(8);
+colors = seaborn_colors(3);
 [handles, ~, ~, statstable] = barplot_columns(Y, 'nofig', ...
-    'names', {'Cond A', 'Cond B', 'Cond C'}, 'colors', colors(1:3));
+    'names', {'Cond A', 'Cond B', 'Cond C'}, 'colors', colors);
 tc.verifyClass(handles, 'struct');
 tc.verifyClass(statstable, 'table');
 tc.verifyEqual(height(statstable), 3);

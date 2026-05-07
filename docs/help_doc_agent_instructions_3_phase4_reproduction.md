@@ -225,3 +225,122 @@ Or as part of the full suite, exactly as CI does it:
 ```matlab
 results = canlab_run_all_tests;
 ```
+
+## 13. Phase 4 follow-up tweaks (2026-05-07)
+
+A round of doc tweaks landed after Phase 4c. Each one is reproducible from
+the existing tooling — the recipes below are the authoritative version of
+what each tweak required, in case any of them need to be redone.
+
+### 13.1 Code-map text overflow (xval_SVM, xval_SVR)
+
+**Symptom.** "Use:" and "Notes:" prose columns on the left of the
+generated code map .png overflow downward, crashing into the Notes header
+mid-bullet and into the legend at the bottom.
+
+**Root cause.** The code-map slide template gives "Use:" a 2.55 × 2.65 in
+text box (top-left) and "Notes:" a 2.10 × 1.50 in box at y = 3.40, with
+the legend at y = 5.60. At 10.5 pt that is roughly 30–40 chars per line.
+Long bullets (≥ 2 lines) overflow past their box and visually merge with
+adjacent sections.
+
+**Fix recipe.**
+
+1. Edit the spec under `docs/_codemap_tools/specs/<name>.py` and shorten
+   each "use" / "notes" bullet to fit on 1 line (≤ ~50 chars). Compress
+   wording — drop articles, replace prose with arrow → notation, etc.
+2. Optionally adjust `s.notes(..., y=3.65, h=1.55)` to give a little extra
+   bottom margin, but the *real* fix is shortening text.
+3. Rebuild:
+
+   ```bash
+   cd docs/_codemap_tools
+   PYTHONPATH=. python3 build_all.py xval_SVM xval_SVR
+   ```
+
+   `build_all.py` accepts spec-name patterns and only re-renders the
+   matching codemaps + .pngs.
+
+### 13.2 Hansen neurotransmitter maps: input is .mat, not NIfTIs
+
+**Symptom.** The code map showed "Hansen 2022 PET tracer NIfTIs" as the
+input file box, implying the function reads per-tracer NIfTI files. In
+fact the maps live in a single pre-processed .mat file (`hansen22.mat`)
+loaded internally via `load_image_set('hansen22')`.
+
+**Fix recipe.**
+
+1. In `docs/_codemap_tools/specs/fmri_data_hansen_neurotransmitter_maps.py`
+   change the file-box label from `"Hansen 2022\nPET tracer NIfTIs"` to
+   `"hansen22.mat\n(load_image_set)"`.
+2. Rebuild that codemap with `python3 build_all.py
+   fmri_data_hansen_neurotransmitter_maps`.
+3. In `docs/individual_functions/fmri_data_hansen_neurotransmitter_maps.md`:
+   - Add a paragraph after the lead summary explicitly stating that the
+     reference maps come from `hansen22.mat` (loaded by name internally),
+     not from per-tracer NIfTI files.
+   - Add a "Sample output" section embedding the manually-supplied PNG
+     `class_method_pngs/hansen_neurotransmitter_maps_sample.png` *without*
+     a code block.
+   - Update the `Notes` bullet about path requirements to specify
+     `hansen22.mat` and `gray_matter_mask.nii`.
+
+### 13.3 New stand-alone pages: roc_plot, canlab_force_directed_graph, clusterdata_permtest
+
+Three new `.md` pages were added under `docs/individual_functions/`:
+
+- `roc_plot.md` — code example renders an ROC curve from two synthetic
+  Gaussian populations (no real data needed, deterministic via `rng(42)`).
+- `canlab_force_directed_graph.md` — code example uses
+  `load_image_set('hansen22')` + `clusterdata_permtest` + the
+  force-directed graph helper. The PNG was supplied manually by the user
+  (`class_method_pngs/canlab_force_directed_graph_sample.png`); the
+  Quick example reproduces it.
+- `clusterdata_permtest.md` — code example clusters three well-separated
+  Gaussian blobs in 10-D so the function picks `k = 3`. PNG shows the
+  default dendrogram + t-SNE plot.
+
+**Sample-PNG runner.** A new
+`docs/_codemap_tools/phase4c_extras_runner.m` mirrors the Phase 4b
+runner pattern: addpath setup, `save_first_fig` helper, one `try` block
+per example. Re-run with:
+
+```bash
+/Applications/MATLAB_R2026a.app/bin/matlab -batch \
+    "run('docs/_codemap_tools/phase4c_extras_runner.m')"
+```
+
+**Pitfall — `roc_plot('plothistograms')`.** The `'plothistograms'` flag
+overlays the histogram axes on top of the ROC axes in the same figure,
+so `exportgraphics` captures both axes superimposed. Drop the flag for a
+clean ROC-only export, OR capture each axes separately.
+
+**Updates to `docs/Object_methods.md`.** Add the three new pages to:
+
+- "Cross-validation helpers (stand-alone)" — `roc_plot`
+- "Visualization helpers (stand-alone)" — `canlab_force_directed_graph`,
+  `clusterdata_permtest`
+
+### 13.4 barplot_columns: 3 distinct hues, not 3 adjacent ones
+
+**Symptom.** `seaborn_colors(8); colors(1:3)` returns three *adjacent*
+colors from the 24-color HUSL palette — all warm tones (pink-red /
+mustard / olive). Visually monotone.
+
+**Root cause.** `seaborn_colors(N)` evenly samples N colors *across* the
+24-color HUSL palette. Asking for 8 and slicing `(1:3)` gives a contiguous
+band of similar hues. Asking for 3 directly gives evenly-spaced
+maximally-distinct hues.
+
+**Fix recipe.**
+
+1. In the docs Quick example
+   (`docs/individual_functions/barplot_columns.md`) change
+   `colors = seaborn_colors(8)` + `'colors', colors(1:3)` →
+   `colors = seaborn_colors(3)` + `'colors', colors`.
+2. Update the matching test in
+   `CanlabCore/Unit_tests/canlab_test_help_examples.m`
+   (`test_barplot_columns`) so the unit test mirrors the docs example.
+3. Re-render the PNG by running the code block manually or via a small
+   script that does the same call and `exportgraphics` to
+   `class_method_pngs/barplot_columns_sample.png`.

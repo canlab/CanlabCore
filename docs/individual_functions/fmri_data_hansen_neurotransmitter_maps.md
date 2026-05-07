@@ -11,6 +11,21 @@ Hansen et al. 2022 (*Nature Neuroscience*). Returns a stats structure plus
 a polar plot grouped by neurotransmitter system. Optional inputs support
 group comparisons via one-way ANOVA with Tukey-Kramer multiple comparisons.
 
+The reference maps are NOT loaded from individual NIfTI files. They live in
+a single `.mat` file (`hansen22.mat`) of pre-processed, gray-matter-masked
+maps that ships with `Neuroimaging_Pattern_Masks` and is loaded by name via
+`load_image_set('hansen22')` — the function does this for you internally,
+so you do not pass any tracer files.
+
+## Sample output
+
+![Hansen neurotransmitter polar plot](../class_method_pngs/hansen_neurotransmitter_maps_sample.png)
+
+Each spoke is one Hansen tracer map; the radius is the similarity (correlation
+or cosine) between the tracer and the input map(s). Spokes are ordered by
+neurotransmitter family (serotonin, dopamine, GABA, …) so related tracers
+sit adjacent on the polar plot.
+
 ## Code map
 
 ![hansen_neurotransmitter_maps code map](../code_maps_png/fmri_data_hansen_neurotransmitter_maps_codemap.png)
@@ -66,8 +81,10 @@ metric is correlation; switch with `'cosine_similarity'`. Inherited from
   cortical/subcortical gray-matter overlap only.
 - When `'compareGroups'` is supplied without `'doAverage'`, the ANOVA path is
   not taken — pair the two flags.
-- Requires `Neuroimaging_Pattern_Masks` on the path (`hansen22` image set
-  and `gray_matter_mask.nii`).
+- Requires `Neuroimaging_Pattern_Masks` on the path (`hansen22.mat` image
+  set and `gray_matter_mask.nii`). The Hansen maps are read from
+  `hansen22.mat` via `load_image_set('hansen22')`, not from per-tracer
+  NIfTI files.
 
 ## Example: profile the PINES negative-affect signature
 

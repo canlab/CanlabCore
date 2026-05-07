@@ -34,8 +34,9 @@ def build() -> Slide:
         ("isim", "func", "image_similarity_plot\n(mapset = 'hansen')"),
     ], x=spine_x, y0=y0, row_gap=gap, box_h=0.65, bold_ids=["hansen"])
 
-    # Hansen tracer maps loaded from disk (top-right of spine)
-    s.box("hansen_files", "file", "Hansen 2022\nPET tracer NIfTIs",
+    # Hansen tracer maps - prepped .mat distributed with CanlabCore,
+    # loaded by name via load_image_set('hansen22'). NOT individual NIfTIs.
+    s.box("hansen_files", "file", "hansen22.mat\n(load_image_set)",
           x=spine_x + 2.60, y=y0, h=0.65, w=2.50, font_size=10.0)
     s.connect_line("hansen_files", "isim", src_side="bottomleft", dst_side="topright")
 

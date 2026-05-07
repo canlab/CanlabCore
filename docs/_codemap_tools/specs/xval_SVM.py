@@ -13,17 +13,18 @@ def build() -> Slide:
     )
 
     s.use([
-        "Pass S = xval_SVM(X, Y, id, ...). X is observations × features; Y is the binary outcome; id keeps each subject's images together.",
-        "Toggle 'doOptimize', true for Bayesian hyperparameter optimization (5-fold inner CV).",
-        "'doRepeats', N repeats the outer CV with N random splits to stabilize accuracy estimates.",
-        "'highdimensional', true switches to fitclinear (no hyperopt) for voxel-scale brain data.",
+        "S = xval_SVM(X, Y, id, ...).",
+        "X = obs × features, Y = binary, id groups subjects.",
+        "'doOptimize' true → Bayesian hyperopt (5-fold inner CV).",
+        "'doRepeats', N → repeat outer CV with new splits.",
+        "'highdimensional' true → fitclinear (voxel-scale).",
     ])
 
     s.notes([
-        "ROC accuracy and single-interval CV accuracy may differ — ROC_plot picks an optimal score threshold.",
-        "Linear classifiers only; nonlinear models exist as commented-out hooks in the source.",
-        "Optimizing hyperparameters AND repeating CV gives nested CV — slow but appropriate for unbiased estimates.",
-    ], y=3.40, h=1.80)
+        "ROC and single-interval CV accuracy can differ; ROC_plot picks an optimal threshold.",
+        "Linear classifiers only; nonlinear hooks are commented out.",
+        "Hyperopt + repeated CV = nested CV. Slow but unbiased.",
+    ], y=3.65, h=1.55)
 
     s.legend(x=0.30, y=5.60)
 

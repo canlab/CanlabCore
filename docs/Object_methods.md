@@ -83,6 +83,7 @@ A small set of stand-alone helpers that are not class methods but are used by `p
 | [`xval_classify`](individual_functions/xval_classify.md) | k-fold cross-validated linear discriminant classification (`fitcdiscr`) |
 | [`xval_SVM`](individual_functions/xval_SVM.md) | Repeated-CV SVM classification with bootstrap weight inference (`fitcsvm`) |
 | [`xval_SVR`](individual_functions/xval_SVR.md) | Repeated-CV support-vector regression with bootstrap weight inference (`fitrsvm`) |
+| [`roc_plot`](individual_functions/roc_plot.md) | ROC curve, accuracy stats, and Gaussian SDT fit for a binary classifier |
 
 ## Visualization helpers (stand-alone)
 
@@ -96,6 +97,8 @@ Functions that are not class methods but are widely used to render brains, regio
 | [`barplot_columns`](individual_functions/barplot_columns.md) | Bar plot of column means with errors and per-column tests |
 | [`image_scatterplot`](individual_functions/image_scatterplot.md) | Voxelwise scatterplot comparing two image objects, with optional density / p-value overlays |
 | [`plot_correlation_matrix`](individual_functions/plot_correlation_matrix.md) | Heatmap or circle-plot of a correlation matrix with significance markers |
+| [`canlab_force_directed_graph`](individual_functions/canlab_force_directed_graph.md) | Force-directed network plot of variable inter-correlations with optional 3-D brain view |
+| [`clusterdata_permtest`](individual_functions/clusterdata_permtest.md) | Hierarchical clustering with permutation-based selection of `k` |
 
 These can be used with fmri_data, statistic_image, and other objects to create a variety of figures and tables.
 ![object types flowchart](overview_pngs/canlab_visualization_options.png)

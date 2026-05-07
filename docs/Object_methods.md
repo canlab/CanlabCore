@@ -2,6 +2,8 @@
 
 CanlabCore is built around a small set of MATLAB classes that wrap neuroimaging data. Each class has **properties** (the data fields it stores — image values, masks, design matrices, region labels, etc.) and **methods** (the things you can do with that data — plot it, threshold it, run a t-test, render it on a brain surface, save it to disk). This page is the entry point to per-class documentation.
 
+![object types flowchart](overview_pngs/CANlab_object_types_flowchart.png)
+
 The design philosophy is interactive analysis with simple commands. A typical group analysis is a handful of one-liners:
 
 ```matlab
@@ -13,6 +15,7 @@ r    = region(t);                        % connect blobs -> region object
 table(r);                                % atlas-labeled results table
 montage(r);                              % brain montage
 ```
+![object types flowchart](overview_pngs/CANlab_ttest_flowchart.png)
 
 Most user-facing image classes inherit from a common abstract base, `image_vector`, which stores image data as a flat `[voxels x images]` matrix in a `.dat` field with the inverse mapping back to 3-D space in `.volInfo`. This is what lets generic statistical / ML code operate on `.dat` while the class methods handle the spatial reconstruction transparently.
 

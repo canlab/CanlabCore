@@ -62,19 +62,54 @@ end
 % Helpers (local)
 % =====================================================================
 
-function skip_on_graphics_error(tc, ME)
-%   If an error looks like missing graphics (OpenGL, X display, JVM),
+function skip_on_environment_error(tc, ME)
+%   If an error reflects a missing CI capability (graphics, interactive
+%   input, or an optional dataset that ships under separate licensing),
 %   skip the test on this runner instead of failing. Otherwise rethrow.
+%
+%   Categories handled:
+%     - Graphics: OpenGL / X display / JVM not available (headless runner).
+%     - Interactive input: e.g. load_atlas('canlab2024') triggers
+%       bianciardi_create_atlas_obj, which prompts for confirmation when
+%       atlas source files are not on the path. The runner reports
+%       'MATLAB:services:MissingRequiredCapability' for any input() call
+%       in batch mode.
+%     - Missing data files: NPS+ signature image
+%       (weights_NSF_grouppred_cvpcr.img) and the Neurosynth feature set
+%       (Yarkoni_2013_Neurosynth_featureset1.mat) are required by some
+%       help examples but are NOT shipped with Neuroimaging_Pattern_Masks
+%       or CanlabCore on CI checkouts.
 gfx_ids = {'MATLAB:graphics:opengl:Unavailable', ...
            'MATLAB:graphics:initialize'};
+input_ids = {'MATLAB:services:MissingRequiredCapability', ...
+             'MATLAB:UndefinedFunction'};
 msg = lower(ME.message);
-if any(strcmp(ME.identifier, gfx_ids)) || ...
-        contains(msg, 'opengl') || contains(msg, 'display') || ...
-        contains(msg, 'java') || contains(msg, 'jvm')
+
+is_gfx = any(strcmp(ME.identifier, gfx_ids)) || ...
+         contains(msg, 'opengl') || contains(msg, 'display') || ...
+         contains(msg, 'java') || contains(msg, 'jvm');
+is_input = any(strcmp(ME.identifier, input_ids)) && ...
+           contains(msg, 'support for user input');
+is_missing_data = contains(msg, 'cannot find images') || ...
+                  contains(msg, 'find and add the file') || ...
+                  contains(msg, 'not found in matlab path') || ...
+                  contains(msg, 'no such file or directory');
+
+if is_gfx
     tc.assumeFail(['needs graphics environment: ' ME.message]);
+elseif is_input
+    tc.assumeFail(['needs interactive input not available in CI: ' ME.message]);
+elseif is_missing_data
+    tc.assumeFail(['needs an optional data file not on the CI path: ' ME.message]);
 else
     rethrow(ME);
 end
+end
+
+
+function skip_on_graphics_error(tc, ME)
+% Backwards-compatible alias - delegates to the broader environment check.
+skip_on_environment_error(tc, ME);
 end
 
 
@@ -84,33 +119,50 @@ end
 
 function test_atlas_methods_isosurface_montage(tc)
 % docs/atlas_methods.md
+% load_atlas('canlab2024') pulls in the Bianciardi brainstem atlas, which
+% prompts for user input when its (separately-licensed) source files are
+% missing - skip on CI rather than fail.
 tc.applyFixture(matlab.unittest.fixtures.CurrentFolderFixture(tempdir));
-obj = load_atlas('canlab2024');
-create_figure('fig'); isosurface(obj);
-view(135, 30); lightFollowView;
-create_figure('fig2'); axis off; montage(obj);
-tc.verifyNotEmpty(obj.labels);
+try
+    obj = load_atlas('canlab2024');
+    create_figure('fig'); isosurface(obj);
+    view(135, 30); lightFollowView;
+    create_figure('fig2'); axis off; montage(obj);
+    tc.verifyNotEmpty(obj.labels);
+catch ME
+    skip_on_environment_error(tc, ME);
+end
 end
 
 
 function test_atlas_select_atlas_subset(tc)
 % docs/individual_functions/atlas_select_atlas_subset.md
-obj = load_atlas('canlab2024');
-thal = select_atlas_subset(obj, {'Thal'});
-tc.verifyNotEmpty(thal.labels);
-tc.verifyClass(thal, 'atlas');
-create_figure('fig'); isosurface(thal);
+% Same Bianciardi prompt issue as the atlas_methods test above.
+try
+    obj = load_atlas('canlab2024');
+    thal = select_atlas_subset(obj, {'Thal'});
+    tc.verifyNotEmpty(thal.labels);
+    tc.verifyClass(thal, 'atlas');
+    create_figure('fig'); isosurface(thal);
+catch ME
+    skip_on_environment_error(tc, ME);
+end
 end
 
 
 function test_annotate_binary_results_map(tc)
 % docs/individual_functions/fmri_data_annotate_binary_results_map.md
+% Requires Yarkoni_2013_Neurosynth_featureset1.mat, not on the CI path.
 obj = tc.TestData.imgs;
 t = ttest(obj, .005, 'uncorrected');
 t.dat = single(t.dat > 3);
 t = fmri_data(t);
-RESULTS = annotate_binary_results_map(t);
-tc.verifyNotEmpty(RESULTS);
+try
+    RESULTS = annotate_binary_results_map(t);
+    tc.verifyNotEmpty(RESULTS);
+catch ME
+    skip_on_environment_error(tc, ME);
+end
 end
 
 
@@ -131,8 +183,14 @@ end
 
 function test_image_similarity_plot(tc)
 % docs/individual_functions/fmri_data_image_similarity_plot.md
+% Requires the NPS+ signature image (weights_NSF_grouppred_cvpcr.img),
+% not on the CI path.
 imgs = tc.TestData.imgs;
-image_similarity_plot(imgs, 'mapset', 'npsplus', 'average');
+try
+    image_similarity_plot(imgs, 'mapset', 'npsplus', 'average');
+catch ME
+    skip_on_environment_error(tc, ME);
+end
 end
 
 
@@ -233,13 +291,18 @@ end
 
 function test_statistic_image_riverplot(tc)
 % docs/individual_functions/statistic_image_riverplot.md
+% load_image_set('npsplus') needs the NPS+ signature images, not on CI.
 imgs = tc.TestData.imgs;
-layer1 = load_image_set('npsplus'); layer1 = get_wh_image(layer1, 1:4);
-layer2 = ttest(imgs); layer2 = threshold(layer2, .005, 'unc');
-layer2 = fmri_data(layer2);
-layer1.image_names = char({'NPS','SIIPS','GenS','VPS'});
-layer2.image_names = char({'EmoReg group t'});
-riverplot(layer1, 'layer2', layer2);
+try
+    layer1 = load_image_set('npsplus'); layer1 = get_wh_image(layer1, 1:4);
+    layer2 = ttest(imgs); layer2 = threshold(layer2, .005, 'unc');
+    layer2 = fmri_data(layer2);
+    layer1.image_names = char({'NPS','SIIPS','GenS','VPS'});
+    layer2.image_names = char({'EmoReg group t'});
+    riverplot(layer1, 'layer2', layer2);
+catch ME
+    skip_on_environment_error(tc, ME);
+end
 end
 
 

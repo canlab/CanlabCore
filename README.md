@@ -8,6 +8,8 @@ This repository contains core tools for MRI/fMRI/PET analysis from the Cognitive
 
 The tools include object-oriented tools for doing neuroimaging analysis with simple commands and scripts that provide high-level functionality for neuroimaging analysis.  For example, there is an "fmri_data" object type that contains neuroimaging datasets (both PET and fMRI data are ok, despite the name). If you have created and object called my_fmri_data_obj, then plot(my_fmri_data_obj) will generate a series of plots specific to neuroimaging data, including an interactive brain viewer (courtesy of SPM software).  predict(my_fmri_data_obj) will perform cross-validated multivariate prediction of outcomes based on brain data.  ica(my_fmri_data_obj) will perform independent components analysis on the data, and so forth.
 
+📖 **[Object methods reference →](docs/Object_methods.md)** — class-by-class index of every method, with runnable examples and sample figures. The fastest way to learn the API.
+
 The repository also includes other useful toolboxes, including:
 - fMRI design optimization using a genetic algorithm (OptimizeGA)
 - fMRI hemodynamic response function estimation (HRF_Est_Toolbox2)
@@ -19,8 +21,9 @@ Getting help and additional information:
 ------------------------------------------------------------
 Sources of documentation for this toolbox:
 
-1.  For function-by-function help documents on the Core Tools objects and functions, see the <a href = http://canlabcore.readthedocs.org/en/latest/>help pages on Readthedocs</a>.
-2.  For brief, documented code examples of some specific functions, and a batch script system that uses the CanlabCore object-oriented tools for second-level neuroimaging analysis, see <a href='https://github.com/canlab/CANlab_help_examples'>CANlab_help_examples github repository</a>
+1.  **[Object methods reference](docs/Object_methods.md)** in this repository — class-by-class index (`fmri_data`, `image_vector`, `statistic_image`, `atlas`, `region`, ...) with per-method pages, runnable examples, sample figures, and per-function code maps.
+2.  For function-by-function help documents on the Core Tools objects and functions, see the <a href = http://canlabcore.readthedocs.org/en/latest/>help pages on Readthedocs</a>.
+3.  For brief, documented code examples of some specific functions, and a batch script system that uses the CanlabCore object-oriented tools for second-level neuroimaging analysis, see <a href='https://github.com/canlab/CANlab_help_examples'>CANlab_help_examples github repository</a>
 
 For more information on fMRI analysis generally, see <a href = "https://leanpub.com/principlesoffmri">Martin and Tor's online book</a> and our free Coursera videos and classes <a href = "https://www.coursera.org/learn/functional-mri">Principles of fMRI Part 1</a> and <a href = "https://www.coursera.org/learn/functional-mri-2">Part 2 </a>.
 

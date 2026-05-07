@@ -12,6 +12,7 @@ figure; ax = axes; hold on;
 colors = lines(numel(study.results));
 for s = 1:numel(study.results)
     r = study.results{s};
+    if isempty(r), continue; end
     if isempty(opts.Condition)
         c = 1;
     else

@@ -18,6 +18,7 @@ subj_n = numel(study.results);
 % Build subject x time arrays
 for s = 1:subj_n
     r = study.results{s};
+    if isempty(r), continue; end
     h = r.fits.(model_name).hrf;
     if isempty(opts.ConditionA)
         cA = 1;

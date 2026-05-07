@@ -97,6 +97,9 @@ Functions that are not class methods but are widely used to render brains, regio
 | [`image_scatterplot`](individual_functions/image_scatterplot.md) | Voxelwise scatterplot comparing two image objects, with optional density / p-value overlays |
 | [`plot_correlation_matrix`](individual_functions/plot_correlation_matrix.md) | Heatmap or circle-plot of a correlation matrix with significance markers |
 
+These can be used with fmri_data, statistic_image, and other objects to create a variety of figures and tables.
+![object types flowchart](overview_pngs/canlab_visualization_options.png)
+
 ## Conventions
 
 - **State management.** Many methods rely on the "removed voxels / removed images" bookkeeping. If you are manipulating `.dat` directly, call `replace_empty(obj)` to expand to the full padded voxel space before reasoning about voxel positions, and `remove_empty(obj)` before doing math across `.dat` rows. See the relevant section of [`fmri_data_methods.md`](fmri_data_methods.md).

@@ -19,6 +19,20 @@ unique to `@atlas/` are documented here in detail. Use `methods(my_atlas)` in
 MATLAB for the live list; `load_atlas` returns named atlases distributed with
 CANlab.
 
+## Quick example
+
+Render the 489-region CANlab2024 cortical/subcortical atlas as a 3-D isosurface,
+then a slice montage:
+
+```matlab
+obj = load_atlas('canlab2024');
+create_figure('fig'); isosurface(obj);
+view(135, 30); lightFollowView;
+create_figure('fig2');  axis off; montage(obj);
+```
+
+![atlas_methods sample](class_method_pngs/atlas_methods_sample.png)
+
 ## Properties
 
 `atlas` inherits all `image_vector` and `fmri_data` properties (e.g., `.dat`,
@@ -68,7 +82,7 @@ parcellation.
 
 | Method | From | One-liner |
 |---|---|---|
-| `montage` | `@atlas` | Display atlas regions on a standard slice montage (forwards to `region/montage`) |
+| [`montage`](individual_functions/fmri_data_montage.md) | `@atlas` | Display atlas regions on a standard slice montage (forwards to `region/montage`) |
 | `isosurface` | `@atlas` | Render each atlas region as a colored 3-D isosurface |
 
 ## Statistics

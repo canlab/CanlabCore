@@ -11,6 +11,19 @@ which neurotransmitter receptor systems it overlaps with, which Neurosynth
 topics and terms describe it, and how it aligns with canonical resting-state
 networks.
 
+## Quick example
+
+Build a binary results map from the emotion-regulation sample and annotate it:
+
+```matlab
+obj = load_image_set('emotionreg'); t = ttest(obj, .005, 'uncorrected');
+t.dat = single(t.dat > 3);   % binarize t-statistic map
+t = fmri_data(t);            % recast
+RESULTS = annotate_binary_results_map(t);
+```
+
+![annotate_binary_results_map sample](../class_method_pngs/fmri_data_annotate_binary_results_map_sample.png)
+
 ## Code map
 
 ![annotate_binary_results_map code map](../code_maps_png/fmri_data_annotate_binary_results_map_codemap.png)

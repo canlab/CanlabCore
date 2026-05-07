@@ -46,13 +46,13 @@ require a graphics environment (won't fully work in headless `matlab -batch`).
 |---|---|---|
 | `plot` | `@fmri_data` | Custom multi-panel QC plot for an fmri_data object |
 | `histogram` | `@image_vector` | Histogram of `.dat` values, per image |
-| `montage` | `@image_vector` | Slice montage on canonical anatomy |
+| [`montage`](individual_functions/fmri_data_montage.md) | `@image_vector` | Slice montage on canonical anatomy |
 | `slices` | `@image_vector` | One-slice-per-image montage |
 | `display_slices` | `@image_vector` | 3-pane (ax/cor/sag) compact slice view |
 | `slice_movie` | `@image_vector` | Movie of slices through the volume |
-| `rmssd_movie` | `@image_vector` | Movie of frame-to-frame RMSSD |
-| `orthviews` | `@image_vector` | SPM-style orthviews (requires SPM graphics) |
-| `surface` | `@image_vector` | Render on cortical surface |
+| [`rmssd_movie`](individual_functions/fmri_data_rmssd_movie.md) | `@image_vector` | Movie of frame-to-frame RMSSD |
+| [`orthviews`](individual_functions/fmri_data_orthviews.md) | `@image_vector` | SPM-style orthviews (requires SPM graphics) |
+| [`surface`](individual_functions/fmri_data_surface.md) | `@image_vector` | Render on cortical surface |
 | `render_on_surface` | `@image_vector` | Lower-level surface render with options |
 | `render_on_cerebellar_flatmap` | `@image_vector` | Cerebellar SUIT flatmap rendering |
 | `isosurface` | `@image_vector` | 3-D isosurface from voxel volume |
@@ -90,7 +90,7 @@ Voxel-wise inference, prediction, and multivariate analyses.
 | `searchlightLukas` | `@image_vector` | Variant of searchlight |
 | `ica` | `@image_vector` | Spatial ICA |
 | [`pca`](individual_functions/fmri_data_pca.md) | `@image_vector` | Spatial PCA |
-| `mahal` | `@image_vector` | Mahalanobis distance per image vs. set |
+| [`mahal`](individual_functions/fmri_data_mahal.md) | `@image_vector` | Mahalanobis distance per image vs. set |
 | [`fitlme_voxelwise`](individual_functions/fmri_data_fitlme_voxelwise.md) | `@fmri_data` | Voxelwise mixed-effects model |
 | [`rsa_regression`](individual_functions/fmri_data_rsa_regression.md) | `@fmri_data` | Representational-similarity regression |
 | `hrf_fit` | `@fmri_data` | HRF estimation per voxel |
@@ -131,7 +131,7 @@ meta-analytic maps for interpretation.
 | Method | From | One-liner |
 |---|---|---|
 | [`image_similarity_plot`](individual_functions/fmri_data_image_similarity_plot.md) | `@image_vector` | Cosine/correlation similarity vs. a basis set |
-| `image_similarity_plot_bucknermaps` | `@image_vector` | Convenience wrapper for Buckner-network maps |
+| [`image_similarity_plot_bucknermaps`](individual_functions/fmri_data_image_similarity_plot_bucknermaps.md) | `@image_vector` | Convenience wrapper for Buckner-network maps |
 | [`annotate_binary_results_map`](individual_functions/fmri_data_annotate_binary_results_map.md) | `@fmri_data` | Annotate a thresholded map with atlas/signature labels |
 | `annotate_continuous_neuroimage_maps` | `@fmri_data` | Annotation for continuous (unthresholded) maps |
 | `neurosynth_feature_labels` | `@fmri_data` | Look up Neurosynth feature labels |

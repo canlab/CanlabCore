@@ -10,6 +10,17 @@ optionally with a cluster-extent constraint and/or a mask. Thresholding is
 the `.sig` indicator is updated, so you can re-threshold the same object
 many times without re-running the test that produced it.
 
+## Quick example
+
+```matlab
+imgs = load_image_set('emotionreg');
+t = ttest(imgs);
+t = threshold(t, .005, 'unc', 'k', 10);
+create_figure('thr'); axis off; montage(t);
+```
+
+![threshold sample](../class_method_pngs/statistic_image_threshold_sample.png)
+
 ## Code map
 
 ![threshold code map](../code_maps_png/statistic_image_threshold_codemap.png)

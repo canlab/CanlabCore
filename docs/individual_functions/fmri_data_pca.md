@@ -10,6 +10,15 @@ object whose images are the eigenmaps (canonical brain patterns), and the
 variance explained by each component. Useful for unsupervised exploration,
 denoising, and as a precursor to PCR / ICA pipelines.
 
+## Quick example
+
+```matlab
+imgs = load_image_set('emotionreg');
+[scores, eigenmap_obj, explained] = pca(imgs, 'k', 5);
+```
+
+![pca sample](../class_method_pngs/fmri_data_pca_sample.png)
+
 ## Code map
 
 ![pca code map](../code_maps_png/fmri_data_pca_codemap.png)

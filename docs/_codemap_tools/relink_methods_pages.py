@@ -45,10 +45,35 @@ METHOD_TO_PAGE: dict[str, str] = {
     "jackknife_similarity": "fmri_data_jackknife_similarity",
     "hansen_neurotransmitter_maps": "fmri_data_hansen_neurotransmitter_maps",
     "image_similarity_plot": "fmri_data_image_similarity_plot",
+    "image_similarity_plot_bucknermaps": "fmri_data_image_similarity_plot_bucknermaps",
     "table_of_atlas_regions_covered": "fmri_data_table_of_atlas_regions_covered",
     "wedge_plot_by_atlas": "fmri_data_wedge_plot_by_atlas",
+    # Phase 4b additions — display / extraction methods
+    "montage": "fmri_data_montage",
+    "orthviews": "fmri_data_orthviews",
+    "mahal": "fmri_data_mahal",
+    "rmssd_movie": "fmri_data_rmssd_movie",
+    "surface": "fmri_data_surface",
     # @atlas
     "select_atlas_subset": "atlas_select_atlas_subset",
+}
+
+# @statistic_image-specific overrides (different page than @image_vector default)
+STATISTIC_IMAGE_METHODS: dict[str, str] = {
+    "threshold": "statistic_image_threshold",
+    "table": "statistic_image_table",
+    "riverplot": "statistic_image_riverplot",
+    "multi_threshold": "statistic_image_multi_threshold",
+}
+
+# @region-specific overrides
+REGION_METHODS: dict[str, str] = {
+    "table": "region_table",
+    "surface": "region_surface",
+    "labelled_surface": "region_labelled_surface",
+    "isosurface": "region_isosurface",
+    "montage": "region_montage",
+    "table_of_atlas_regions_covered": "region_table_of_atlas_regions_covered",
 }
 
 # Methods that have a class-specific override page rather than the shared one.
@@ -69,16 +94,24 @@ FILES = [
     "region_methods.md",
 ]
 
-# A table row looks like:    | `methodname` | `@class` | description |
-# We want to replace just the first cell.
+# A METHOD-table row looks like:    | `methodname` | `@class` | description |
+# (or `both`).  Property rows look like:  | `propname` | description |  with no `@class` cell, so we exclude them by requiring the second cell to contain "`@" or "both".
 ROW_PATTERN = re.compile(
-    r"^(\| )(`(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)`)( \| )",
+    r"^(\| )(`(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)`)( \| (?:`@[^`]+`|both) \| )",
     re.MULTILINE,
 )
 
 
 def link_for(method: str, file_basename: str) -> str | None:
     """Return the individual_functions/<page>.md basename, or None to skip."""
+    # Per-class overrides (statistic_image and region have their own pages
+    # for some methods that also exist on @image_vector).
+    if file_basename == "statistic_image_methods.md":
+        if method in STATISTIC_IMAGE_METHODS:
+            return STATISTIC_IMAGE_METHODS[method]
+    if file_basename == "region_methods.md":
+        if method in REGION_METHODS:
+            return REGION_METHODS[method]
     if method == "table":
         return TABLE_PAGE
     if method == "threshold":

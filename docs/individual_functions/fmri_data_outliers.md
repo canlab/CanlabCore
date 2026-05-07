@@ -12,6 +12,18 @@ indicators at uncorrected and corrected thresholds plus a tidy set of
 tables suitable for inclusion as nuisance regressors in a first- or
 second-level GLM.
 
+## Quick example
+
+Run on the emotion-regulation sample (a 2nd-level set, so we skip the
+time-series-only criteria with `'notimeseries'`):
+
+```matlab
+obj = load_image_set('emotionreg');
+[est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(obj, 'notimeseries');
+```
+
+![outliers sample](../class_method_pngs/fmri_data_outliers_sample.png)
+
 ## Code map
 
 ![outliers code map](../code_maps_png/fmri_data_outliers_codemap.png)

@@ -49,15 +49,15 @@ following:
 
 | Method | From | One-liner |
 |---|---|---|
-| `orthviews` | `@statistic_image` | Orthviews honoring `.sig` so only suprathreshold voxels show (override) |
-| `riverplot` | `@statistic_image` | Riverplot of relationships among images in the object |
+| [`orthviews`](individual_functions/fmri_data_orthviews.md) | `@statistic_image` | Orthviews honoring `.sig` so only suprathreshold voxels show (override) |
+| [`riverplot`](individual_functions/statistic_image_riverplot.md) | `@statistic_image` | Riverplot of relationships among images in the object |
 
 ## Statistics
 
 | Method | From | One-liner |
 |---|---|---|
 | [`threshold`](individual_functions/statistic_image_threshold.md) | `@statistic_image` | Threshold based on statistical p-values, FDR, extent, etc. (reversible; override) |
-| `multi_threshold` | `@statistic_image` | Multiple-threshold visualization for nested significance |
+| [`multi_threshold`](individual_functions/statistic_image_multi_threshold.md) | `@statistic_image` | Multiple-threshold visualization for nested significance |
 | `conjunction` | `@statistic_image` | Conjunction of two thresholded statistic_images (positive and negative separately) |
 | `estimateBayesFactor` | `@statistic_image` | Voxel-wise Bayes Factors for t-tests, correlations, or proportions |
 
@@ -65,7 +65,7 @@ following:
 
 | Method | From | One-liner |
 |---|---|---|
-| [`table`](individual_functions/fmri_data_table.md) | `@statistic_image` | Print a table of labeled regions from a thresholded statistic_image (override) |
+| [`table`](individual_functions/statistic_image_table.md) | `@statistic_image` | Print a table of labeled regions from a thresholded statistic_image (override) |
 
 ## Misc utilities
 

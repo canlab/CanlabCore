@@ -13,6 +13,16 @@ dot product, Dice, Bray–Curtis, Lin's CCC, plus three normalized
 deviation metrics that decompose pattern, mean, and scale shifts) and
 returns a Cohen's-d effect size for the group as a whole.
 
+## Quick example
+
+```matlab
+imgs = load_image_set('emotionreg');
+[sim_values, d, low_agreement, Nvox] = jackknife_similarity(imgs, ...
+    'similarity_metric', 'correlation', 'doplot', true);
+```
+
+![jackknife_similarity sample](../class_method_pngs/fmri_data_jackknife_similarity_sample.png)
+
 ## Code map
 
 ![jackknife_similarity code map](../code_maps_png/fmri_data_jackknife_similarity_codemap.png)

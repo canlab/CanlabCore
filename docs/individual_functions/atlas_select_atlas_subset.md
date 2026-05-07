@@ -11,6 +11,18 @@ specific ROI (e.g. amygdala, VPL thalamus, default-mode network) from a
 larger parcellation, or to build a custom mask from a combination of
 parcels.
 
+## Quick example
+
+Pull the thalamic regions out of CANlab2024 and render them as a 3-D isosurface:
+
+```matlab
+obj = load_atlas('canlab2024');
+thal = select_atlas_subset(obj, {'Thal'});
+create_figure('fig'); isosurface(thal);
+```
+
+![select_atlas_subset sample](../class_method_pngs/atlas_select_atlas_subset_sample.png)
+
 ## Code map
 
 ![select_atlas_subset code map](../code_maps_png/atlas_select_atlas_subset_codemap.png)

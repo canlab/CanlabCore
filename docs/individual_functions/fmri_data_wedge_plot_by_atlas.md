@@ -15,6 +15,18 @@ valence (uniformly positive = red, uniformly negative = blue, mixed =
 purple) — useful for visualising the spatial structure of a CANLab
 signature.
 
+## Quick example
+
+Wedge plot of the emotion-regulation group t-map split by the Yeo 17 networks:
+
+```matlab
+imgs = load_image_set('emotionreg');
+t = ttest(imgs); t = threshold(t, .005, 'unc');
+[hh, vals] = wedge_plot_by_atlas(t, 'atlases', {'yeo17networks'});
+```
+
+![wedge_plot_by_atlas sample](../class_method_pngs/fmri_data_wedge_plot_by_atlas_sample.png)
+
 ## Code map
 
 ![wedge_plot_by_atlas code map](../code_maps_png/fmri_data_wedge_plot_by_atlas_codemap.png)

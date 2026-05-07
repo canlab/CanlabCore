@@ -12,6 +12,17 @@ contrast images load on the Buckner Lab resting-state networks, the NPS,
 or Kragel's emotion classifiers. With `'average'`, returns SE bars and
 inferential statistics across input images.
 
+## Quick example
+
+Compare the emotion-regulation contrast images against the NPS-plus signature panel:
+
+```matlab
+imgs = load_image_set('emotionreg');
+image_similarity_plot(imgs, 'mapset', 'npsplus', 'average');
+```
+
+![image_similarity_plot sample](../class_method_pngs/fmri_data_image_similarity_plot_sample.png)
+
 ## Code map
 
 ![image_similarity_plot code map](../code_maps_png/fmri_data_image_similarity_plot_codemap.png)

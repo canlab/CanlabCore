@@ -139,6 +139,10 @@ end
 
 labels = design_info.labels;
 meta_table = design_info.metadata_table;
+meta_table.N = repmat(size(X, 1), height(meta_table), 1);
+meta_table.dfe = repmat(dfe, height(meta_table), 1);
+meta_table.TR = repmat(TR, height(meta_table), 1);
+meta_table.mode = repmat(string(upper(char(opts.Mode))), height(meta_table), 1);
 
 b_obj = statistic_image;
 b_obj.type = sprintf('%s HRF beta', upper(char(opts.Mode)));
@@ -307,6 +311,8 @@ function paths = local_write_outputs(out, prefix, overwrite, write_thresholded_t
 paths = struct();
 paths.beta = [prefix '_beta.nii'];
 paths.t = [prefix '_t.nii'];
+paths.se = [prefix '_se.nii'];
+paths.p = [prefix '_p.nii'];
 paths.metadata = [prefix '_metadata.csv'];
 
 write_args = {'fname', paths.beta};
@@ -316,6 +322,23 @@ write(out.b, write_args{:});
 write_args = {'fname', paths.t};
 if overwrite, write_args{end + 1} = 'overwrite'; end
 write(out.t, write_args{:});
+
+se_obj = out.b;
+se_obj.type = 'HRF beta standard error';
+se_obj.dat = out.b.ste;
+se_obj.dat_descrip = 'Whole-brain HRF beta standard error maps';
+write_args = {'fname', paths.se};
+if overwrite, write_args{end + 1} = 'overwrite'; end
+write(se_obj, write_args{:});
+
+p_obj = out.t;
+p_obj.type = 'p';
+p_obj.dat = out.t.p;
+p_obj.p = out.t.p;
+p_obj.dat_descrip = 'Whole-brain HRF two-tailed p-value maps';
+write_args = {'fname', paths.p};
+if overwrite, write_args{end + 1} = 'overwrite'; end
+write(p_obj, write_args{:});
 
 writetable(out.metadata_table, paths.metadata);
 

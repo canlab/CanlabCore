@@ -30,6 +30,8 @@ p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
 p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelDependencyPolicy', 'skip', @(x) ischar(x) || isstring(x));
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
+p.addParameter('OutputMatVersion', '-v7.3', @(x) ischar(x) || isstring(x));
+p.addParameter('SaveWholeBrainInMat', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SignalSource', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('ImageSet', 'all', @(x) ischar(x) || isstring(x) || isa(x, 'image_vector'));
@@ -48,6 +50,7 @@ p.addParameter('WholeBrainThreshType', 'unc', @(x) ischar(x) || isstring(x));
 p.addParameter('WholeBrainWriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainChunkSize', 50000, @(x) isscalar(x) && x >= 1);
 p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('ReuseWholeBrainOutput', false, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
 
@@ -233,22 +236,54 @@ if logical(opts.WriteWholeBrain) || ~isempty(char(opts.WholeBrainOutputPrefix))
     end
 
     write_thresholded_t = logical(opts.WholeBrainWriteThresholdedT) || ~isempty(opts.WholeBrainPThresh);
-    results.wholebrain = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...
-        'TR', TR, ...
-        'MaskNii', char(opts.MaskNii), ...
-        'Conditions', cond_names, ...
-        'WindowSeconds', opts.WindowSeconds, ...
-        'Mode', opts.WholeBrainMode, ...
-        'OutputPrefix', wholebrain_prefix, ...
-        'PThresh', opts.WholeBrainPThresh, ...
-        'ThreshType', opts.WholeBrainThreshType, ...
-        'WriteThresholdedT', write_thresholded_t, ...
-        'ChunkSize', opts.WholeBrainChunkSize, ...
-        'ScaleMode', opts.WholeBrainScaleMode);
+    if logical(opts.ReuseWholeBrainOutput) && local_has_wholebrain_outputs(wholebrain_prefix)
+        results.wholebrain = local_load_wholebrain_outputs(wholebrain_prefix);
+        fprintf('Reusing existing whole-brain HRF outputs: %s_*.nii\n', wholebrain_prefix);
+    else
+        results.wholebrain = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...
+            'TR', TR, ...
+            'MaskNii', char(opts.MaskNii), ...
+            'Conditions', cond_names, ...
+            'WindowSeconds', opts.WindowSeconds, ...
+            'Mode', opts.WholeBrainMode, ...
+            'OutputPrefix', wholebrain_prefix, ...
+            'PThresh', opts.WholeBrainPThresh, ...
+            'ThreshType', opts.WholeBrainThreshType, ...
+            'WriteThresholdedT', write_thresholded_t, ...
+            'ChunkSize', opts.WholeBrainChunkSize, ...
+            'ScaleMode', opts.WholeBrainScaleMode);
+    end
 end
 
 if ~isempty(opts.OutputMat)
-    save(char(opts.OutputMat), 'results');
+    local_save_results_mat(char(opts.OutputMat), results, opts);
+end
+end
+
+function tf = local_has_wholebrain_outputs(prefix)
+tf = exist([prefix '_beta.nii'], 'file') == 2 && exist([prefix '_t.nii'], 'file') == 2;
+end
+
+function wholebrain = local_load_wholebrain_outputs(prefix)
+wholebrain = hrf_load_wholebrain_stats(prefix);
+end
+
+function local_save_results_mat(output_mat, results, opts)
+save_version = char(opts.OutputMatVersion);
+results_to_save = results;
+if ~logical(opts.SaveWholeBrainInMat) && isfield(results_to_save, 'wholebrain')
+    results_to_save.wholebrain_paths = results_to_save.wholebrain.paths;
+    if isfield(results_to_save.wholebrain, 'metadata_table')
+        results_to_save.wholebrain_metadata_table = results_to_save.wholebrain.metadata_table;
+    end
+    results_to_save = rmfield(results_to_save, 'wholebrain');
+end
+
+results = results_to_save;
+if isempty(save_version)
+    save(output_mat, 'results');
+else
+    save(output_mat, 'results', save_version);
 end
 end
 

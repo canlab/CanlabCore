@@ -34,6 +34,8 @@ results = run_hrf_pipeline( ...
 - `hrf_build_stick_functions.m` - converts events to condition-wise sticks.
 - `hrf_fit_all_models.m` - unified interface to model fitting.
 - `hrf_write_slurm_study_script.m` - writes a SLURM array script, manifest, and MATLAB worker for study-wide whole-brain HRF fitting.
+- `hrf_load_wholebrain_stats.m` - rebuilds beta/T `statistic_image` objects from written NIfTI + metadata sidecars.
+- `hrf_analyze_second_level_inputs.m` - analyzes signature/imageset score CSVs across subjects from `second_level_inputs.csv`.
 
 ## Notes
 
@@ -163,6 +165,9 @@ Use `'UseParallelSubjects', true` to run subjects in a local MATLAB parallel poo
 clusters, the same per-file call is suitable for a SLURM array job.
 Use `'WholeBrainOutputDir', '/path/to/hrf_outputs'` with `'WriteWholeBrain', true`
 to write subject-specific beta/T outputs into one second-level input directory.
+Use `'ReuseWholeBrainOutputs', true` to reuse existing
+`*_beta.nii`/`*_t.nii` files in that directory instead of refitting the
+whole-brain 4D maps.
 
 ## Study-wide whole-brain maps plus all signatures/imagesets
 
@@ -185,6 +190,7 @@ study = run_hrf_study_pipeline(fmri_files, events_files, subject_ids, ...
     'Models', {'sfir'}, ...
     'WriteWholeBrain', true, ...
     'WholeBrainOutputDir', output_dir, ...
+    'ReuseWholeBrainOutputs', true, ...
     'WholeBrainPThresh', 0.005, ...
     'WholeBrainThreshType', 'unc', ...
     'UseParallelSubjects', true);
@@ -214,7 +220,7 @@ second_level_inputs = hrf_collect_wholebrain_outputs(output_dir, ...
 ```
 
 For a cluster, generate a SLURM array job that runs the same per-subject work.
-Each array task writes beta/T maps, metadata, and beta/T map-score CSVs:
+Each array task writes beta/T/SE/P maps, metadata, and beta/T map-score CSVs:
 
 ```matlab
 slurm_paths = hrf_write_slurm_study_script(fmri_files, events_files, subject_ids, ...
@@ -263,11 +269,26 @@ also defaults `SLURM_ARRAY_TASK_ID` to `1`, so you can run it with
 `bash run_hrf_study.sbatch` inside an interactive allocation for a quick
 task-1 smoke test.
 
+`run_hrf_pipeline` saves result MAT files with `-v7.3` by default. When
+whole-brain maps are written, the MAT file stores paths and metadata instead
+of embedding the large 4D `statistic_image` objects unless
+`'SaveWholeBrainInMat', true` is supplied. This keeps cluster result MAT files
+loadable while the NIfTI outputs remain the source of truth for 4D maps.
+
 After the array completes:
 
 ```matlab
 second_level_inputs = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs', ...
     'OutputCsv', '/path/to/hrf_outputs/second_level_inputs.csv');
+
+analysis = hrf_analyze_second_level_inputs(second_level_inputs, ...
+    'Object', 'beta', ...
+    'ConditionA', 'pain', ...
+    'ConditionB', 'neutral', ...
+    'OutputSummaryCsv', '/path/to/hrf_outputs/beta_score_group_summary.csv');
+
+% Strongest significant signature/map effects across subjects
+analysis.interpretation
 ```
 
 ## Whole-brain 4D HRF beta and T maps
@@ -284,6 +305,8 @@ results = run_hrf_pipeline(fmri_nii, events_tsv, ...
 % Written files:
 %   /path/to/sub-01_hrf_beta.nii
 %   /path/to/sub-01_hrf_t.nii
+%   /path/to/sub-01_hrf_se.nii
+%   /path/to/sub-01_hrf_p.nii
 %   /path/to/sub-01_hrf_t_thresh.nii
 %   /path/to/sub-01_hrf_metadata.csv
 ```
@@ -293,6 +316,16 @@ The whole-brain output is also available in memory:
 ```matlab
 beta_obj = results.wholebrain.b;  % statistic_image, .dat = beta maps
 t_obj = results.wholebrain.t;     % statistic_image, .dat = T maps, .p/.ste/.sig set
+```
+
+You can also reconstruct the same object structure later without the result
+MAT file:
+
+```matlab
+wholebrain = hrf_load_wholebrain_stats('/path/to/sub-01_hrf');
+
+beta_obj = wholebrain.b;  % .ste and .p restored from _se.nii/_p.nii
+t_obj = wholebrain.t;
 ```
 
 Apply signatures or image sets after writing/fitting the 4D maps:
@@ -322,6 +355,21 @@ input_table = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs', ...
     'OutputCsv', '/path/to/hrf_outputs/second_level_inputs.csv');
 ```
 
+Analyze signature/imageset map scores across subjects:
+
+```matlab
+analysis = hrf_analyze_second_level_inputs(input_table, ...
+    'Object', 'beta', ...
+    'ConditionA', 'pain', ...
+    'ConditionB', 'neutral', ...
+    'LagSeconds', 6, ...
+    'Alpha', 0.05);
+
+analysis.subject_table   % one row per subject x lag x signature/map
+analysis.summary         % group mean/SEM/t/p per lag x signature/map
+analysis.interpretation  % strongest significant effects
+```
+
 ## Multilevel time-unfolding significance testing
 
 ```matlab
@@ -334,6 +382,7 @@ study.mean_timeseries
 % Within-subject condition contrast, then group-level test across time bins
 stats = hrf_time_unfolding_stats(study, ...
     'Model', 'sfir', ...
+    'Unit', 'subject', ...
     'ConditionA', 'pain', ...
     'ConditionB', 'neutral', ...
     'Alpha', 0.05);
@@ -341,11 +390,37 @@ stats = hrf_time_unfolding_stats(study, ...
 plot_hrf_time_unfolding_stats(stats);
 ```
 
-Optional between-group testing is available by supplying `Group` labels (two-group t-test per time bin).
+Duplicate subject IDs are averaged before testing by default, so runs are
+summarized at the subject level. Use `'Unit', 'run'` to test run-level rows
+instead. Empty or failed results are skipped with warnings by default; use
+`'MissingPolicy', 'error'` to stop on the first missing model/condition/result.
+
+Signature-specific study-level testing and plotting use the same signature
+names stored in `results.fits_by_signature`:
+
+```matlab
+stats_nps = hrf_time_unfolding_stats(study, ...
+    'Model', 'sfir', ...
+    'Signature', 'NPS', ...
+    'ConditionA', 'pain', ...
+    'ConditionB', 'neutral', ...
+    'Unit', 'subject');
+
+plot_hrf_time_unfolding_stats(stats_nps);
+
+plot_hrf_study_by_subject(study, ...
+    'Model', 'sfir', ...
+    'Signature', 'NPS', ...
+    'Condition', 'pain', ...
+    'Unit', 'subject');
+```
+
+Optional between-group testing is available by supplying `Group` labels
+(two-group t-test per time bin).
 
 ## Efficient ROI- and pattern-based HRF fitting
 
-Yes—this is often more efficient than voxelwise fitting. You can now do:
+Yes - this is often more efficient than voxelwise fitting. You can now do:
 
 ```matlab
 % 1) Atlas ROI means (SignalSource='atlas')

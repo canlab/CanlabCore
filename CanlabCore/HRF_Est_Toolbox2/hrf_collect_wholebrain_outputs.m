@@ -6,6 +6,8 @@ function T = hrf_collect_wholebrain_outputs(root_dir, varargin)
 % Looks recursively for files written by hrf_fit_wholebrain_stats:
 %   *_beta.nii
 %   *_t.nii
+%   *_se.nii
+%   *_p.nii
 %   *_t_thresh.nii
 %   *_metadata.csv
 % and optional map-score files written by hrf_apply_maps_to_wholebrain:
@@ -26,6 +28,8 @@ for i = 1:numel(beta_files)
     beta_path = fullfile(beta_files(i).folder, beta_files(i).name);
     prefix = erase(beta_path, '_beta.nii');
     t_path = [prefix '_t.nii'];
+    se_path = [prefix '_se.nii'];
+    p_path = [prefix '_p.nii'];
     t_thresh_path = [prefix '_t_thresh.nii'];
     metadata_path = [prefix '_metadata.csv'];
     beta_scores_path = [prefix '_beta_map_scores.csv'];
@@ -35,11 +39,12 @@ for i = 1:numel(beta_files)
     subject = local_subject_from_name(prefix_name);
 
     rows(end + 1, :) = {subject, prefix, beta_path, local_existing(t_path), ...
+        local_existing(se_path), local_existing(p_path), ...
         local_existing(t_thresh_path), local_existing(metadata_path), ...
         local_existing(beta_scores_path), local_existing(t_scores_path)}; %#ok<AGROW>
 end
 
-var_names = {'subject', 'prefix', 'beta_file', 't_file', 'thresholded_t_file', ...
+var_names = {'subject', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
     'metadata_file', 'beta_scores_file', 't_scores_file'};
 if isempty(rows)
     T = cell2table(cell(0, numel(var_names)), 'VariableNames', var_names);

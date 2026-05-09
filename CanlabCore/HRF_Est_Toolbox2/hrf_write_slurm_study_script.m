@@ -92,6 +92,11 @@ save(paths.config_mat, 'config');
 
 local_write_worker(paths.worker_file, paths.manifest_file, paths.config_mat);
 local_write_sbatch(paths.script_file, paths.worker_file, n, log_dir, opts);
+
+paths.message = sprintf(['Successfully wrote HRF SLURM study files for %d task(s):\n' ...
+    '  sbatch:   %s\n  worker:   %s\n  manifest: %s\n  config:   %s'], ...
+    n, paths.script_file, paths.worker_file, paths.manifest_file, paths.config_mat);
+fprintf('%s\n', paths.message);
 end
 
 function paths = local_default_paths(output_dir, opts)

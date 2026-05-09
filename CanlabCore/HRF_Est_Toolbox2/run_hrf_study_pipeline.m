@@ -25,17 +25,20 @@ if ~isempty(study_opts.wholebrain_output_dir) && ~exist(study_opts.wholebrain_ou
 end
 
 wholebrain_output_dir = study_opts.wholebrain_output_dir;
+reuse_wholebrain_outputs = study_opts.reuse_wholebrain_outputs;
 
 if study_opts.use_parallel_subjects
     if isempty(gcp('nocreate'))
         parpool;
     end
     parfor i = 1:n
-        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, pipeline_args, wholebrain_output_dir);
+        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, ...
+            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
     end
 else
     for i = 1:n
-        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, pipeline_args, wholebrain_output_dir);
+        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, ...
+            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
     end
 end
 
@@ -75,7 +78,8 @@ end
 end
 
 function [opts, pipeline_args] = local_parse_study_options(varargin)
-opts = struct('use_parallel_subjects', false, 'continue_on_error', true, 'wholebrain_output_dir', '');
+opts = struct('use_parallel_subjects', false, 'continue_on_error', true, ...
+    'wholebrain_output_dir', '', 'reuse_wholebrain_outputs', false);
 pipeline_args = varargin;
 i = 1;
 while i <= numel(pipeline_args)
@@ -94,13 +98,17 @@ while i <= numel(pipeline_args)
                 opts.wholebrain_output_dir = char(pipeline_args{i + 1});
                 pipeline_args(i:i+1) = [];
                 continue
+            case {'reusewholebrainoutputs', 'reusewholebrainoutput'}
+                opts.reuse_wholebrain_outputs = logical(pipeline_args{i + 1});
+                pipeline_args(i:i+1) = [];
+                continue
         end
     end
     i = i + 1;
 end
 end
 
-function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, pipeline_args, wholebrain_output_dir)
+function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs)
 result = [];
 err_msg = '';
 try
@@ -108,6 +116,9 @@ try
     if ~isempty(wholebrain_output_dir)
         prefix = fullfile(wholebrain_output_dir, [local_file_label(subject_id) '_hrf']);
         args = [args, {'WholeBrainOutputPrefix', prefix}];
+    end
+    if reuse_wholebrain_outputs
+        args = [args, {'ReuseWholeBrainOutput', true}];
     end
     result = run_hrf_pipeline(fmri_file, events_file, args{:});
 catch ME

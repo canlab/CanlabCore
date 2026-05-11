@@ -36,6 +36,7 @@ results = run_hrf_pipeline( ...
 - `hrf_write_slurm_study_script.m` - writes a SLURM array script, manifest, and MATLAB worker for study-wide whole-brain HRF fitting.
 - `hrf_load_wholebrain_stats.m` - rebuilds beta/T `statistic_image` objects from written NIfTI + metadata sidecars.
 - `hrf_analyze_second_level_inputs.m` - analyzes signature/imageset score CSVs across subjects from `second_level_inputs.csv`.
+- `hrf_second_level_inputs_to_study.m` - converts collected beta/T map-score CSVs into a study-like structure for `hrf_time_unfolding_stats`.
 
 ## Notes
 
@@ -318,6 +319,15 @@ beta_obj = results.wholebrain.b;  % statistic_image, .dat = beta maps
 t_obj = results.wholebrain.t;     % statistic_image, .dat = T maps, .p/.ste/.sig set
 ```
 
+`Models` and `WholeBrainMode` refer to different things. `Models` controls the
+1D curve fitters (`logit`, `sfir`, `canonical`, `spline`, `nlgamma`) used for
+mean, signature, image-set, or atlas time series. `WholeBrainMode` controls the
+4D condition-lag maps written by `hrf_fit_wholebrain_stats` and is currently
+`FIR` or `sFIR`. If a NIfTI filename contains `canonical` or another curve
+model name, that comes from the requested output prefix rather than from the
+whole-brain map writer. The written metadata table records the actual
+whole-brain mode for each volume.
+
 You can also reconstruct the same object structure later without the result
 MAT file:
 
@@ -369,6 +379,32 @@ analysis.subject_table   % one row per subject x lag x signature/map
 analysis.summary         % group mean/SEM/t/p per lag x signature/map
 analysis.interpretation  % strongest significant effects
 ```
+
+Use map-score CSVs with `hrf_time_unfolding_stats`:
+
+```matlab
+input_table = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs');
+
+study_scores = hrf_second_level_inputs_to_study(input_table, ...
+    'Object', 'beta');
+
+stats_nps = hrf_time_unfolding_stats(study_scores, ...
+    'Model', 'mapscore', ...
+    'Signature', 'sig_all_NPS', ...
+    'ConditionA', 'pain', ...
+    'ConditionB', 'neutral', ...
+    'Unit', 'subject', ...
+    'Alpha', 0.05);
+
+plot_hrf_time_unfolding_stats(stats_nps);
+```
+
+Here `mapscore` is deliberately not called `sfir` or `canonical`: it is a
+curve over condition-lag maps after applying a spatial signature or image set.
+Column names such as `sig_all_NPS` mean "signature set `all`, signature `NPS`."
+Rows in the score CSV identify the HRF condition and lag. These values are
+therefore NPS expression of HRF beta/T maps, not an NPS time series computed
+directly from the original 4D BOLD volumes.
 
 ## Multilevel time-unfolding significance testing
 

@@ -30,7 +30,8 @@ fig = figure('Color', 'w', 'Visible', 'off');
 for t = 1:opts.FrameStep:size(dat.dat, 2)
     clf(fig);
     this = get_wh_image(dat, t);
-    montage(this);
+    % montage(this);
+    montage(this, 'hcp');
     title(sprintf('%s %d', char(opts.TitlePrefix), t), 'Interpreter', 'none');
     frame = getframe(fig);
     writeVideo(vw, frame);

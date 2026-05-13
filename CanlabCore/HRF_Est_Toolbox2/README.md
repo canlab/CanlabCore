@@ -32,11 +32,14 @@ results = run_hrf_pipeline( ...
 - `hrf_extract_timeseries_from_nii.m` - 4D NIfTI to z-scored timeseries.
 - `hrf_load_events_tsv.m` - BIDS events loader/validator.
 - `hrf_build_stick_functions.m` - converts events to condition-wise sticks.
+- `hrf_resolve_condition_patterns.m` - shared exact/wildcard/regex condition matching.
 - `hrf_fit_all_models.m` - unified interface to model fitting.
+- `plot_hrf_by_condition.m` - single subject/run plotting by condition with explicit source/model labels and fit SE when available.
 - `hrf_write_slurm_study_script.m` - writes a SLURM array script, manifest, and MATLAB worker for study-wide whole-brain HRF fitting.
 - `hrf_load_wholebrain_stats.m` - rebuilds beta/T `statistic_image` objects from written NIfTI + metadata sidecars.
 - `hrf_analyze_second_level_inputs.m` - analyzes signature/imageset score CSVs across subjects from `second_level_inputs.csv`.
 - `hrf_second_level_inputs_to_study.m` - converts collected beta/T map-score CSVs into a study-like structure for `hrf_time_unfolding_stats`.
+- `hrf_input_table_to_study.m` - rebuilds a study/results structure from `second_level_inputs.csv`, including whole-brain objects and optional map-score curves.
 
 ## Notes
 
@@ -44,6 +47,10 @@ results = run_hrf_pipeline( ...
 - If TR is not passed, the pipeline attempts to use NIfTI header `PixelDimensions(4)`.
 - Model wrappers call legacy toolbox methods (`Fit_Logit2`, `Fit_sFIR`, `Fit_Canonical_HRF`, `Fit_Spline`, `Fit_NLgamma`).
 - `canonical` and `nlgamma` require SPM on the MATLAB path; `spline` requires the FDA package (`create_bspline_basis`, `eval_basis`). By default, unavailable optional models are skipped with a warning. Use `'ModelDependencyPolicy', 'error'` to fail fast instead.
+- Subject/run-level fit uncertainty is stored in `.se`, `.t`, `.p`, `.dfe`,
+  and `.uncertainty_source` for linear fits (`sfir`, `canonical`, `spline`).
+  Nonlinear fits (`logit`, `nlgamma`) currently store the curve but not a
+  model-based SE/p curve.
 
 ## Trial averaging + condition comparison
 
@@ -73,6 +80,38 @@ xlabel('Seconds'); ylabel('Pain - Neutral');
 title(sprintf('Mean difference (AUC diff = %.3f)', cmp.auc.diff));
 ```
 
+## Condition Wildcards And Regex
+
+Any HRF toolbox function with `Condition`, `Conditions`, `ConditionA`, or
+`ConditionB` accepts exact names, wildcards, or regex patterns. Exact names are
+preferred when they exist. Wildcards use `*` and `?`; regex can be written as
+`'regex:<pattern>'`, `'/<pattern>/'`, or a pattern containing common regex
+operators such as `.*`, `|`, `[]`, `()`, `^`, `$`, or `+`.
+
+When one condition pattern matches multiple condition names, those conditions
+are averaged and the plotted label records what was averaged:
+
+```matlab
+% Average pain_hot and pain_warm into one fitted curve.
+plot_hrf_by_condition(results, ...
+    'Model', 'sfir', ...
+    'Conditions', {'pain_*', 'neutral'});
+
+% Same idea with regex.
+stats = hrf_time_unfolding_stats(study, ...
+    'Model', 'sfir', ...
+    'ConditionA', 'regex:^pain_', ...
+    'ConditionB', 'neutral');
+
+% Build a model with grouped event sticks from the beginning.
+results = run_hrf_pipeline(fmri_nii, events_tsv, ...
+    'Conditions', {'pain_*', 'neutral'}, ...
+    'Models', {'sfir'});
+```
+
+`results.condition_groups` stores the original condition names that contributed
+to each grouped condition.
+
 
 ## Signature-based (interpretable) time-series
 
@@ -97,19 +136,40 @@ Note: if you pass `SignatureName` while `SignalSource` is left at default (`'mea
 ## Quick plotting helper for new results structure
 
 ```matlab
-% Basic: one model, selected conditions
-plot_hrf_results(results, 'Model', 'sfir', 'Conditions', [4 9 10 11]);
-plot_hrf_results(results, 'Model', 'sfir', 'Conditions', {'pain','neutral'});
+% Single subject/run fitted curves by condition.
+% For sfir/canonical/spline fits, ribbons are model-based SE from the run.
+plot_hrf_by_condition(results, 'Model', 'sfir', 'Conditions', {'pain','neutral'});
 
-% Signature-specific (when SignalSource='signature')
-plot_hrf_results(results_sig, 'Model', 'sfir', 'Signature', 'NPS', 'Conditions', [1 2 3]);
+% Raw event-locked trial means from the selected 1D time series.
+% Ribbons are SEM across repeated events/trials within the run.
+plot_hrf_by_condition(results, ...
+    'PlotType', 'trialmean', ...
+    'Conditions', {'pain','neutral'}, ...
+    'BaselineSeconds', 2);
+
+% Signature-specific fitted curves (when SignalSource='signature')
+plot_hrf_by_condition(results_sig, ...
+    'Model', 'sfir', ...
+    'Signature', 'NPS', ...
+    'Conditions', {'pain','neutral'});
+
+% Across a study, one curve per subject for a selected condition.
+% Ribbons are within-run fit SE; duplicate runs are averaged by subject.
+plot_hrf_study_by_subject(study, ...
+    'Model', 'sfir', ...
+    'Condition', 'pain', ...
+    'Unit', 'subject');
 ```
 
 `results_sig.signature_meta` now includes selected and available signature names, and
 `results_sig.fits_by_signature` stores fitted models for each signature.
 
-
-`plot_hrf_results` now supports condition names (cellstr) and draws standard-error style shading when multiple signature fits are available.
+`plot_hrf_results` is kept as a backward-compatible wrapper around
+`plot_hrf_by_condition`. It no longer uses across-signature variability as a
+standard-error ribbon because that is not subject-level fit uncertainty. Plot
+titles now explicitly label the curve source, selected model
+(`sfir`, `canonical`, `nlgamma`, etc.), and whether the ribbon is within-run
+model SE, trial SEM, or unavailable.
 
 ## Speeding up all-signature fitting
 
@@ -365,6 +425,42 @@ input_table = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs', ...
     'OutputCsv', '/path/to/hrf_outputs/second_level_inputs.csv');
 ```
 
+Rebuild a `study.results` structure from the collected file index:
+
+```matlab
+study = hrf_input_table_to_study(input_table);
+
+% One subject/run in the familiar run_hrf_pipeline-style shape
+results = study.results{1};
+wholebrain = results.wholebrain;
+```
+
+Use the reconstructed whole-brain object for animation:
+
+```matlab
+hrf_animate_wholebrain_stats(study.results{1}.wholebrain, ...
+    'Object', 't', ...
+    'Condition', 'pain', ...
+    'OutputFile', '/path/to/sub-01_pain_tmaps.mp4');
+```
+
+Use the reconstructed whole-brain object to apply signatures or image sets.
+This writes score CSVs that can later be plotted or analyzed across subjects:
+
+```matlab
+for i = 1:numel(study.results)
+    if ~study.wholebrain_success(i), continue; end
+
+    prefix = input_table.prefix{i};
+    hrf_apply_maps_to_wholebrain(study.results{i}.wholebrain, ...
+        'Object', 'beta', ...
+        'SignatureSets', {'all'}, ...
+        'ImageSets', {'bucknerlab_wholebrain'}, ...
+        'SimilarityMetric', 'dotproduct', ...
+        'OutputCsv', [prefix '_beta_map_scores.csv']);
+end
+```
+
 Analyze signature/imageset map scores across subjects:
 
 ```matlab
@@ -385,8 +481,15 @@ Use map-score CSVs with `hrf_time_unfolding_stats`:
 ```matlab
 input_table = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs');
 
-study_scores = hrf_second_level_inputs_to_study(input_table, ...
+study_scores = hrf_input_table_to_study(input_table, ...
+    'LoadWholeBrain', false, ...
     'Object', 'beta');
+
+plot_hrf_study_by_subject(study_scores, ...
+    'Model', 'mapscore', ...
+    'Signature', 'sig_all_NPS', ...
+    'Condition', 'pain', ...
+    'Unit', 'subject');
 
 stats_nps = hrf_time_unfolding_stats(study_scores, ...
     'Model', 'mapscore', ...
@@ -405,6 +508,13 @@ Column names such as `sig_all_NPS` mean "signature set `all`, signature `NPS`."
 Rows in the score CSV identify the HRF condition and lag. These values are
 therefore NPS expression of HRF beta/T maps, not an NPS time series computed
 directly from the original 4D BOLD volumes.
+
+Map-score curves can look more jagged than `run_hrf_pipeline` 1D HRF fits
+because each point is a spatial pattern score from a separate condition-lag
+beta/T image. The score CSV does not contain subject-level SE for those
+pattern scores. Use `hrf_time_unfolding_stats` for across-subject mean/SEM and
+p-values, or refit the source 1D mean/signature/ROI time series with
+`run_hrf_pipeline` when you need within-run fit SE and p-values.
 
 ## Multilevel time-unfolding significance testing
 

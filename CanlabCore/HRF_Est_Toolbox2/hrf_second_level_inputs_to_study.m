@@ -127,6 +127,10 @@ for s = 1:numel(score_cols)
     fit.(model_name).lag_seconds = lag_seconds(:);
     fit.(model_name).source_score = score_cols{s};
     fit.(model_name).source_file = score_file;
+    fit.(model_name).se = [];
+    fit.(model_name).p = [];
+    fit.(model_name).p_type = '';
+    fit.(model_name).uncertainty_source = 'not stored in map-score CSV; use group-level stats across subjects or refit source time series';
     fits_by_signature.(score_fields{s}) = fit;
 end
 

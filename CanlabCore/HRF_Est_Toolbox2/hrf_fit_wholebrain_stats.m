@@ -74,7 +74,8 @@ else
     cond_names = cellstr(string(opts.Conditions));
 end
 
-Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
+[Runc, condition_groups] = hrf_build_stick_functions(E, cond_names, TR, n_tp);
+cond_names = {condition_groups.label};
 [X, design_info] = local_build_fir_design(Runc, cond_names, TR, opts.WindowSeconds, opts.Mode, opts.Nuisance);
 
 if size(X, 1) ~= size(data_obj.dat, 2)
@@ -186,6 +187,7 @@ out.design_info = design_info;
 out.design_info.penalty = pen;
 out.metadata_table = meta_table;
 out.conditions = cond_names;
+out.condition_groups = condition_groups;
 out.TR = TR;
 out.dfe = dfe;
 out.N = size(X, 1);

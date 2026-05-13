@@ -16,7 +16,8 @@ unit_txt = '';
 if isfield(stats, 'unit')
     unit_txt = sprintf(' | unit=%s, n=%d', stats.unit, stats.n_subjects);
 end
-title(sprintf('%s: %s - %s%s%s', upper(stats.model), stats.conditionA, stats.conditionB, sig_txt, unit_txt), 'Interpreter', 'none');
+title(sprintf('%s: %s - %s%s%s', upper(stats.model), local_condition_label(stats, 'A'), ...
+    local_condition_label(stats, 'B'), sig_txt, unit_txt), 'Interpreter', 'none');
 
 ax(2) = subplot(2,1,2); hold on;
 plot(x, stats.p_value, 'k-');
@@ -25,4 +26,23 @@ sig_idx = stats.significant & ~isnan(stats.p_value);
 stem(x(sig_idx), stats.p_value(sig_idx), 'g.');
 ylabel('p-value'); xlabel('Time bin');
 title('Time-unfolding significance');
+end
+
+function label = local_condition_label(stats, which_condition)
+switch upper(which_condition)
+    case 'A'
+        label = stats.conditionA;
+        field = 'conditionA_matched';
+    case 'B'
+        label = stats.conditionB;
+        field = 'conditionB_matched';
+end
+if isfield(stats, field) && ~isempty(stats.(field))
+    matches = cellstr(string(stats.(field)));
+    if numel(matches) > 1
+        label = sprintf('%s (mean of %d: %s)', label, numel(matches), strjoin(matches, ', '));
+    elseif isempty(label)
+        label = matches{1};
+    end
+end
 end

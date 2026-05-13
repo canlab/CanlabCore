@@ -24,7 +24,7 @@ opts.ConditionA = char(opts.ConditionA);
 opts.ConditionB = char(opts.ConditionB);
 opts.Signature = char(opts.Signature);
 
-[D_runs, run_subject_ids, skipped] = local_collect_contrasts(study, opts, model_name, missing_policy);
+[D_runs, run_subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, missing_policy);
 if isempty(D_runs)
     error('No valid HRF fits found for model "%s". Skipped %d result(s).', model_name, numel(skipped));
 end
@@ -44,6 +44,8 @@ stats.significant = P(:) < opts.Alpha;
 stats.alpha = opts.Alpha;
 stats.conditionA = char(opts.ConditionA);
 stats.conditionB = char(opts.ConditionB);
+stats.conditionA_matched = matchedA;
+stats.conditionB_matched = matchedB;
 stats.model = model_name;
 stats.signature = char(opts.Signature);
 stats.unit = unit;
@@ -71,10 +73,12 @@ if ~isempty(group_labels)
 end
 end
 
-function [D, subject_ids, skipped] = local_collect_contrasts(study, opts, model_name, missing_policy)
+function [D, subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, missing_policy)
 D = [];
 subject_ids = {};
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
+matchedA = {};
+matchedB = {};
 
 for s = 1:numel(study.results)
     subject_id = local_subject_id(study, s);
@@ -95,20 +99,24 @@ for s = 1:numel(study.results)
     end
 
     h = fit_struct.(model_name).hrf;
-    cA = local_condition_index(r, opts.ConditionA, 1);
-    if isempty(cA)
+    try
+        specA = local_condition_spec(r, opts.ConditionA, 'first');
+    catch
         skipped = local_skip(skipped, s, subject_id, sprintf('missing ConditionA %s', opts.ConditionA), missing_policy);
         continue
     end
 
-    y = h(:, cA)';
+    y = local_mean_omitnan(h(:, specA.indices), 2)';
+    matchedA = local_merge_matches(matchedA, specA.matched_conditions);
     if ~isempty(opts.ConditionB)
-        cB = local_condition_index(r, opts.ConditionB, []);
-        if isempty(cB)
+        try
+            specB = local_condition_spec(r, opts.ConditionB, 'first');
+        catch
             skipped = local_skip(skipped, s, subject_id, sprintf('missing ConditionB %s', opts.ConditionB), missing_policy);
             continue
         end
-        y = y - h(:, cB)';
+        y = y - local_mean_omitnan(h(:, specB.indices), 2)';
+        matchedB = local_merge_matches(matchedB, specB.matched_conditions);
     end
 
     if isempty(D)
@@ -248,12 +256,23 @@ for t = 1:n_tp
 end
 end
 
-function idx = local_condition_index(r, condition_name, default_idx)
-if isempty(condition_name)
-    idx = default_idx;
-else
-    idx = find(strcmp(r.conditions, condition_name), 1);
+function spec = local_condition_spec(r, condition_name, default_mode)
+if nargin < 3, default_mode = 'first'; end
+specs = hrf_resolve_condition_patterns(r.conditions, condition_name, 'DefaultMode', default_mode);
+spec = specs(1);
+if isfield(r, 'condition_groups') && ~isempty(r.condition_groups) && isscalar(spec.indices)
+    idx = spec.indices(1);
+    if idx <= numel(r.condition_groups) && isfield(r.condition_groups, 'matched_conditions')
+        spec.matched_conditions = r.condition_groups(idx).matched_conditions;
+        if isfield(r.condition_groups, 'display_label')
+            spec.display_label = r.condition_groups(idx).display_label;
+        end
+    end
 end
+end
+
+function out = local_merge_matches(existing, new_matches)
+out = unique([existing(:); new_matches(:)], 'stable');
 end
 
 function [fit_struct, ok, reason] = local_fit_struct(r, signature_name)

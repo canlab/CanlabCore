@@ -175,7 +175,8 @@ else
     cond_names = cellstr(string(opts.Conditions));
 end
 
-Runc = hrf_build_stick_functions(E, cond_names, TR, n_tp);
+[Runc, condition_groups] = hrf_build_stick_functions(E, cond_names, TR, n_tp);
+cond_names = {condition_groups.label};
 if strcmpi(signal_source, 'signature') || strcmpi(signal_source, 'imageset') || strcmpi(signal_source, 'atlas')
     siglist = signature_meta.selected_signatures;
     nSig = numel(siglist);
@@ -221,6 +222,7 @@ results = struct();
 results.timeseries = tc;
 results.events = E;
 results.conditions = cond_names;
+results.condition_groups = condition_groups;
 results.stick_functions = Runc;
 results.fits = fits;
 results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...

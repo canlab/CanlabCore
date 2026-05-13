@@ -120,13 +120,14 @@ if ~isempty(condition)
     if ~any(strcmp('condition', S.Properties.VariableNames))
         error('Score table is missing condition column.');
     end
-    S = S(strcmp(cellstr(string(S.condition)), condition), :);
-end
-
-for r = 1:height(S)
-    for c = 1:numel(score_cols)
-        rows(end + 1, :) = {subject, local_condition_name(S, r), local_lag_index(S, r), ...
-            local_lag_seconds(S, r), score_cols{c}, S.(score_cols{c})(r)}; %#ok<AGROW>
+    spec = local_condition_spec(S, condition);
+    rows = local_averaged_condition_rows(S, score_cols, subject, spec);
+else
+    for r = 1:height(S)
+        for c = 1:numel(score_cols)
+            rows(end + 1, :) = {subject, local_condition_name(S, r), local_lag_index(S, r), ...
+                local_lag_seconds(S, r), score_cols{c}, S.(score_cols{c})(r)}; %#ok<AGROW>
+        end
     end
 end
 end
@@ -136,26 +137,48 @@ if ~any(strcmp('condition', S.Properties.VariableNames))
     error('Score table is missing condition column.');
 end
 
-A = S(strcmp(cellstr(string(S.condition)), conditionA), :);
-B = S(strcmp(cellstr(string(S.condition)), conditionB), :);
+specA = local_condition_spec(S, conditionA);
+specB = local_condition_spec(S, conditionB);
+cond = cellstr(string(S.condition));
+A = S(ismember(cond, specA.matched_conditions), :);
+B = S(ismember(cond, specB.matched_conditions), :);
 rows = {};
 if isempty(A) || isempty(B)
     return
 end
 
-lags = intersect(A.lag_index, B.lag_index, 'stable');
+lags = intersect(local_to_numeric(A.lag_index), local_to_numeric(B.lag_index), 'stable');
 for li = 1:numel(lags)
-    a = A(A.lag_index == lags(li), :);
-    b = B(B.lag_index == lags(li), :);
+    a = A(local_to_numeric(A.lag_index) == lags(li), :);
+    b = B(local_to_numeric(B.lag_index) == lags(li), :);
     if isempty(a) || isempty(b), continue; end
-    a = a(1, :);
-    b = b(1, :);
     for c = 1:numel(score_cols)
-        rows(end + 1, :) = {subject, sprintf('%s_minus_%s', conditionA, conditionB), ...
+        rows(end + 1, :) = {subject, sprintf('%s_minus_%s', specA.display_label, specB.display_label), ...
             local_lag_index(a, 1), local_lag_seconds(a, 1), score_cols{c}, ...
-            a.(score_cols{c})(1) - b.(score_cols{c})(1)}; %#ok<AGROW>
+            local_mean_omitnan(a.(score_cols{c})) - local_mean_omitnan(b.(score_cols{c}))}; %#ok<AGROW>
     end
 end
+end
+
+function rows = local_averaged_condition_rows(S, score_cols, subject, spec)
+rows = {};
+cond = cellstr(string(S.condition));
+S = S(ismember(cond, spec.matched_conditions), :);
+if isempty(S), return; end
+lags = unique(local_to_numeric(S.lag_index), 'stable');
+for li = 1:numel(lags)
+    one_lag = S(local_to_numeric(S.lag_index) == lags(li), :);
+    for c = 1:numel(score_cols)
+        rows(end + 1, :) = {subject, spec.display_label, local_lag_index(one_lag, 1), ...
+            local_lag_seconds(one_lag, 1), score_cols{c}, local_mean_omitnan(one_lag.(score_cols{c}))}; %#ok<AGROW>
+    end
+end
+end
+
+function spec = local_condition_spec(S, condition)
+available = unique(cellstr(string(S.condition)), 'stable');
+specs = hrf_resolve_condition_patterns(available, condition, 'DefaultMode', 'first');
+spec = specs(1);
 end
 
 function S = local_filter_lags(S, lag_seconds)
@@ -278,6 +301,14 @@ end
 function x = local_numeric_column(x)
 if iscell(x)
     x = cell2mat(x);
+end
+end
+
+function x = local_to_numeric(x)
+if isnumeric(x)
+    x = double(x);
+else
+    x = str2double(string(x));
 end
 end
 

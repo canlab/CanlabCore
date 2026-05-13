@@ -23,6 +23,7 @@ p.parse(stats_input, varargin{:});
 opts = p.Results;
 
 [obj, metadata_table] = local_get_object(stats_input, opts.Object, opts.MetadataTable);
+[obj, metadata_table] = local_average_condition_pattern(obj, metadata_table, char(opts.Condition));
 wh = local_select_volumes(obj, metadata_table, char(opts.Condition));
 movie_file = char(opts.OutputFile);
 
@@ -57,6 +58,47 @@ end
 close(fig);
 end
 
+function [obj, metadata_table] = local_average_condition_pattern(obj, metadata_table, condition)
+if isempty(condition) || isempty(metadata_table) || ~any(strcmp('condition', metadata_table.Properties.VariableNames))
+    return
+end
+
+available = unique(cellstr(string(metadata_table.condition)), 'stable');
+specs = hrf_resolve_condition_patterns(available, condition, 'DefaultMode', 'first');
+spec = specs(1);
+if numel(spec.matched_conditions) < 2 || ~any(strcmp('lag_index', metadata_table.Properties.VariableNames))
+    return
+end
+
+cond = cellstr(string(metadata_table.condition));
+keep = ismember(cond, spec.matched_conditions);
+lags = unique(metadata_table.lag_index(keep), 'stable');
+new_dat = nan(size(obj.dat, 1), numel(lags));
+new_labels = cell(numel(lags), 1);
+new_rows = cell(numel(lags), width(metadata_table));
+var_names = metadata_table.Properties.VariableNames;
+
+for lag_i = 1:numel(lags)
+    wh = keep & metadata_table.lag_index == lags(lag_i);
+    new_dat(:, lag_i) = local_mean_omitnan(obj.dat(:, wh), 2);
+    row = metadata_table(find(wh, 1), :);
+    if any(strcmp('condition', var_names)), row.condition = string(spec.display_label); end
+    label = sprintf('%s_lag%03d', spec.label, lags(lag_i));
+    if any(strcmp('image_label', var_names)), row.image_label = string(label); end
+    new_labels{lag_i} = label;
+    new_rows(lag_i, :) = table2cell(row);
+end
+
+obj.dat = new_dat;
+if isa(obj, 'statistic_image')
+    obj.image_labels = new_labels;
+    obj.sig = true(size(new_dat));
+    obj.p = [];
+    obj.ste = [];
+end
+metadata_table = cell2table(new_rows, 'VariableNames', var_names);
+end
+
 function [obj, metadata_table] = local_get_object(stats_input, which_obj, metadata_table)
 if isstruct(stats_input) && isfield(stats_input, 'b') && isfield(stats_input, 't')
     switch lower(char(which_obj))
@@ -87,12 +129,22 @@ if isempty(condition)
 end
 
 if ~isempty(metadata_table) && any(strcmp('condition', metadata_table.Properties.VariableNames))
-    wh = find(strcmp(cellstr(string(metadata_table.condition)), condition));
+    specs = hrf_resolve_condition_patterns(unique(cellstr(string(metadata_table.condition)), 'stable'), condition, 'DefaultMode', 'first');
+    wh = find(ismember(cellstr(string(metadata_table.condition)), specs(1).matched_conditions));
 elseif isa(obj, 'statistic_image') && ~isempty(obj.image_labels)
     wh = find(contains(cellstr(string(obj.image_labels)), condition));
 else
     error('Condition selection needs metadata_table.condition or statistic_image.image_labels.');
 end
+end
+
+function m = local_mean_omitnan(X, dim)
+if nargin < 2, dim = 1; end
+valid = ~isnan(X);
+den = sum(valid, dim);
+X(~valid) = 0;
+m = sum(X, dim) ./ den;
+m(den == 0) = NaN;
 end
 
 function ttl = local_frame_title(obj, metadata_table, idx)

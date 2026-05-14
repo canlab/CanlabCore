@@ -2,6 +2,7 @@ function ax = plot_hrf_by_condition(results, varargin)
 %PLOT_HRF_BY_CONDITION Plot one subject/run HRF curves by condition.
 %
 % ax = plot_hrf_by_condition(results, 'Model', 'sfir')
+% ax = plot_hrf_by_condition(results, 'Model', {'fir','sfir','canonical'})
 % ax = plot_hrf_by_condition(results, 'Model', 'mapscore', 'Signature', 'sig_all_NPS')
 %
 % PlotType='fit' plots fitted HRF/model curves. If the fit contains .se and
@@ -11,7 +12,7 @@ function ax = plot_hrf_by_condition(results, varargin)
 
 p = inputParser;
 p.addRequired('results', @isstruct);
-p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
+p.addParameter('Model', 'sfir', @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('Conditions', [], @(x) isempty(x) || isnumeric(x) || iscell(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Signature', '', @(x) ischar(x) || isstring(x));
@@ -26,14 +27,14 @@ p.addParameter('LineWidth', 1.8, @(x) isscalar(x) && x > 0);
 p.parse(results, varargin{:});
 opts = p.Results;
 
-model_name = char(opts.Model);
+model_names = local_model_names(opts.Model);
 plot_type = lower(char(opts.PlotType));
 condition_specs = local_condition_specs(results, opts);
 
 figure; ax = axes; hold(ax, 'on');
 switch plot_type
     case 'fit'
-        local_plot_fit(ax, results, model_name, condition_specs, opts);
+        local_plot_fit(ax, results, model_names, condition_specs, opts);
     case {'trialmean', 'trial_mean', 'trials'}
         local_plot_trial_mean(ax, results, condition_specs, opts);
     otherwise
@@ -42,56 +43,66 @@ end
 hline(0, 'k-');
 end
 
-function local_plot_fit(ax, results, model_name, condition_specs, opts)
+function local_plot_fit(ax, results, model_names, condition_specs, opts)
 [fit_struct, source_label, sig_label] = local_fit_struct(results, opts.Signature);
-if ~isfield(fit_struct, model_name)
-    error('Model %s not available in selected fit structure.', model_name);
-end
-
-fit = local_fit_with_uncertainty(results, fit_struct.(model_name), model_name, opts);
-y_mat = fit.hrf;
-x = local_fit_time(fit, results, size(y_mat, 1));
 colors = lines(numel(condition_specs));
-legend_labels = cell(1, numel(condition_specs));
-has_se = isfield(fit, 'se') && ~isempty(fit.se) && all(size(fit.se) == size(y_mat));
-has_p = isfield(fit, 'p') && ~isempty(fit.p) && all(size(fit.p) == size(y_mat));
-plotted_se = false;
+line_styles = {'-', '--', ':', '-.'};
+legend_labels = {};
+plotted_se = false(1, numel(model_names));
+used_models = {};
+for m = 1:numel(model_names)
+    model_name = model_names{m};
+    if ~isfield(fit_struct, model_name)
+        error('Model %s not available in selected fit structure.', model_name);
+    end
 
-for k = 1:numel(condition_specs)
-    cidx = condition_specs(k).indices;
-    y = local_mean_omitnan(y_mat(:, cidx), 2);
-    if logical(opts.ShowSE) && has_se
-        se = local_combine_condition_se(y_mat(:, cidx), fit.se(:, cidx));
-        if any(~isnan(se))
-            fill(ax, [x; flipud(x)], [y + se; flipud(y - se)], colors(k, :), ...
-                'FaceAlpha', opts.SEAlpha, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-            plotted_se = true;
+    fit = local_fit_with_uncertainty(results, fit_struct.(model_name), model_name, opts);
+    y_mat = fit.hrf;
+    x = local_fit_time(fit, results, size(y_mat, 1));
+    has_se = isfield(fit, 'se') && ~isempty(fit.se) && all(size(fit.se) == size(y_mat));
+    has_p = isfield(fit, 'p') && ~isempty(fit.p) && all(size(fit.p) == size(y_mat));
+    style = line_styles{mod(m - 1, numel(line_styles)) + 1};
+    used_models{end + 1} = model_name; %#ok<AGROW>
+
+    for k = 1:numel(condition_specs)
+        cidx = condition_specs(k).indices;
+        y = local_mean_omitnan(y_mat(:, cidx), 2);
+        if logical(opts.ShowSE) && has_se
+            se = local_combine_condition_se(y_mat(:, cidx), fit.se(:, cidx));
+            if any(~isnan(se))
+                fill(ax, [x; flipud(x)], [y + se; flipud(y - se)], colors(k, :), ...
+                    'FaceAlpha', opts.SEAlpha ./ max(numel(model_names), 1), ...
+                    'EdgeColor', 'none', 'HandleVisibility', 'off');
+                plotted_se(m) = true;
+            end
+        end
+        plot(ax, x, y, 'LineWidth', opts.LineWidth, 'Color', colors(k, :), ...
+            'LineStyle', style);
+        if logical(opts.ShowP) && has_p && isscalar(cidx)
+            sig = fit.p(:, cidx) < opts.Alpha;
+            if any(sig)
+                yrange = max(y_mat(:)) - min(y_mat(:));
+                if yrange == 0 || isnan(yrange), yrange = 1; end
+                ymark = y(sig) + 0.04 .* yrange;
+                plot(ax, x(sig), ymark, '.', 'Color', colors(k, :), ...
+                    'MarkerSize', 12, 'HandleVisibility', 'off');
+            end
+        end
+        if isscalar(model_names)
+            legend_labels{end + 1} = condition_specs(k).display_label; %#ok<AGROW>
+        else
+            legend_labels{end + 1} = sprintf('%s | %s', condition_specs(k).display_label, model_name); %#ok<AGROW>
         end
     end
-    plot(ax, x, y, 'LineWidth', opts.LineWidth, 'Color', colors(k, :));
-    if logical(opts.ShowP) && has_p && isscalar(cidx)
-        sig = fit.p(:, cidx) < opts.Alpha;
-        if any(sig)
-            yrange = max(y_mat(:)) - min(y_mat(:));
-            if yrange == 0 || isnan(yrange), yrange = 1; end
-            ymark = y(sig) + 0.04 .* yrange;
-            plot(ax, x(sig), ymark, '.', 'Color', colors(k, :), ...
-                'MarkerSize', 12, 'HandleVisibility', 'off');
-        end
-    end
-    legend_labels{k} = condition_specs(k).display_label;
 end
 
 legend(ax, format_strings_for_legend(legend_labels), 'Interpreter', 'none');
-title(ax, local_fit_title(model_name, source_label, sig_label, fit, plotted_se), 'Interpreter', 'none');
+title(ax, local_fit_title(used_models, source_label, sig_label, any(plotted_se)), 'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
-ylabel(ax, local_ylabel(model_name, source_label));
+ylabel(ax, local_ylabel(used_models, source_label));
 end
 
 function local_plot_trial_mean(ax, results, condition_specs, opts)
-if ~isfield(results, 'timeseries') || isempty(results.timeseries)
-    error('PlotType=''trialmean'' requires results.timeseries.');
-end
 if ~isfield(results, 'events') || isempty(results.events)
     error('PlotType=''trialmean'' requires results.events.');
 end
@@ -99,11 +110,12 @@ if ~isfield(results, 'settings') || ~isfield(results.settings, 'TR') || ...
         ~isfield(results.settings, 'window_seconds')
     error('PlotType=''trialmean'' requires results.settings.TR and results.settings.window_seconds.');
 end
+[tc, source_label] = local_trial_timeseries(results, opts.Signature);
 
 colors = lines(numel(condition_specs));
 legend_labels = cell(1, numel(condition_specs));
 for k = 1:numel(condition_specs)
-    avg = hrf_average_condition_trials(results.timeseries, results.events, condition_specs(k).matched_conditions, ...
+    avg = hrf_average_condition_trials(tc, results.events, condition_specs(k).matched_conditions, ...
         results.settings.TR, results.settings.window_seconds, ...
         'BaselineSeconds', opts.BaselineSeconds);
     x = avg.time;
@@ -117,10 +129,39 @@ for k = 1:numel(condition_specs)
 end
 
 legend(ax, format_strings_for_legend(legend_labels), 'Interpreter', 'none');
-title(ax, sprintf('model=trialmean, source=%s, ribbon=within-run trial SEM', local_source_label(results)), ...
+title(ax, sprintf('model=trialmean, source=%s, ribbon=within-run trial SEM', source_label), ...
     'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
 ylabel(ax, 'Observed signal');
+end
+
+function [tc, source_label] = local_trial_timeseries(results, signature)
+source_label = local_source_label(results);
+sig = char(signature);
+if ~isempty(sig)
+    sig_field = local_timeseries_signature_field(results, sig);
+    if ~isempty(sig_field)
+        tc = results.timeseries_by_signature.(sig_field);
+        source_label = sprintf('%s, %s', source_label, sig);
+        return
+    end
+    if isfield(results, 'signature_meta') && isfield(results.signature_meta, 'selected_signature') && ...
+            strcmp(char(results.signature_meta.selected_signature), sig) && ...
+            isfield(results, 'timeseries') && ~isempty(results.timeseries)
+        tc = results.timeseries;
+        source_label = sprintf('%s, %s', source_label, sig);
+        return
+    end
+    error(['PlotType=''trialmean'' requested Signature %s, but matching time series were not stored. ' ...
+        'Rerun run_hrf_pipeline so results.timeseries_by_signature is saved, or omit Signature for the selected time series.'], sig);
+end
+
+if isfield(results, 'timeseries') && ~isempty(results.timeseries)
+    tc = results.timeseries;
+else
+    error(['PlotType=''trialmean'' requires results.timeseries or results.timeseries_by_signature. ' ...
+        'Map-score-only studies rebuilt from CSVs do not contain event-level time series.']);
+end
 end
 
 function condition_specs = local_condition_specs(results, opts)
@@ -178,7 +219,7 @@ function fit = local_fit_with_uncertainty(results, fit, model_name, opts)
 if local_has_fit_se(fit) || ~logical(opts.ShowSE) || ~logical(opts.RecomputeSE)
     return
 end
-if ~ismember(lower(model_name), {'sfir', 'canonical', 'spline'})
+if ~ismember(lower(model_name), {'fir', 'sfir', 'canonical', 'spline'})
     return
 end
 if ~isempty(char(opts.Signature)) && ~local_is_selected_signature(results, char(opts.Signature))
@@ -290,29 +331,22 @@ elseif isfield(results, 'signature_meta') && isfield(results.signature_meta, 'ob
 end
 end
 
-function ttl = local_fit_title(model_name, source_label, sig_label, fit, has_se)
+function ttl = local_fit_title(model_names, source_label, sig_label, has_se)
 if isempty(sig_label)
     sig_part = '';
 else
     sig_part = sprintf(', score/signature=%s', sig_label);
 end
 if has_se
-    se_part = sprintf(', ribbon=within-run SE (%s)', local_uncertainty_label(fit));
+    se_part = ', ribbon=within-run SE';
 else
     se_part = ', ribbon=none (SE unavailable)';
 end
-ttl = sprintf('model=%s, source=%s%s%s', model_name, source_label, sig_part, se_part);
+ttl = sprintf('model=%s, source=%s%s%s', strjoin(model_names, ' + '), source_label, sig_part, se_part);
 end
 
-function label = local_uncertainty_label(fit)
-label = 'model covariance';
-if isfield(fit, 'uncertainty_source') && ~isempty(fit.uncertainty_source)
-    label = fit.uncertainty_source;
-end
-end
-
-function ylab = local_ylabel(model_name, source_label)
-if strcmpi(model_name, 'mapscore') || contains(lower(source_label), 'map score')
+function ylab = local_ylabel(model_names, source_label)
+if any(strcmpi(model_names, 'mapscore')) || contains(lower(source_label), 'map score')
     ylab = 'Pattern expression / map score';
 else
     ylab = 'Fitted response amplitude';
@@ -338,6 +372,43 @@ if isfield(results, 'signature_meta') && isfield(results.signature_meta, 'select
     fields = cellstr(string(results.signature_meta.selected_signature_fields));
     idx = find(strcmp(names, sig), 1);
     if ~isempty(idx) && idx <= numel(fields) && isfield(results.fits_by_signature, fields{idx})
+        sig_field = fields{idx};
+    end
+end
+end
+
+function model_names = local_model_names(model_input)
+model_names = cellstr(string(model_input));
+model_names = cellfun(@(s) lower(strtrim(s)), model_names, 'UniformOutput', false);
+model_names = model_names(~cellfun(@isempty, model_names));
+if isempty(model_names)
+    error('Model must contain at least one model name.');
+end
+model_names = unique(model_names, 'stable');
+end
+
+function sig_field = local_timeseries_signature_field(results, sig)
+sig_field = '';
+if ~isfield(results, 'timeseries_by_signature') || isempty(results.timeseries_by_signature)
+    return
+end
+if isfield(results.timeseries_by_signature, sig)
+    sig_field = sig;
+    return
+end
+
+candidate = matlab.lang.makeValidName(sig);
+if isfield(results.timeseries_by_signature, candidate)
+    sig_field = candidate;
+    return
+end
+
+if isfield(results, 'signature_meta') && isfield(results.signature_meta, 'selected_signatures') && ...
+        isfield(results.signature_meta, 'selected_signature_fields')
+    names = cellstr(string(results.signature_meta.selected_signatures));
+    fields = cellstr(string(results.signature_meta.selected_signature_fields));
+    idx = find(strcmp(names, sig), 1);
+    if ~isempty(idx) && idx <= numel(fields) && isfield(results.timeseries_by_signature, fields{idx})
         sig_field = fields{idx};
     end
 end

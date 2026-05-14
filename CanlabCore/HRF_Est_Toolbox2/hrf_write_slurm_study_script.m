@@ -79,7 +79,9 @@ config.fmri_files = fmri_files(:);
 config.events_files = events_files(:);
 config.output_prefixes = manifest.output_prefix(:);
 config.output_mats = manifest.output_mat(:);
-config.pipeline_args = opts.PipelineArgs;
+[pipeline_args, pipeline_note] = local_normalize_pipeline_args(opts.PipelineArgs);
+config.pipeline_args = pipeline_args;
+config.pipeline_note = pipeline_note;
 config.signature_sets = local_to_cell(opts.SignatureSets);
 config.image_sets = local_to_cell(opts.ImageSets);
 config.score_objects = local_to_cell(opts.ScoreObjects);
@@ -96,7 +98,63 @@ local_write_sbatch(paths.script_file, paths.worker_file, n, log_dir, opts);
 paths.message = sprintf(['Successfully wrote HRF SLURM study files for %d task(s):\n' ...
     '  sbatch:   %s\n  worker:   %s\n  manifest: %s\n  config:   %s'], ...
     n, paths.script_file, paths.worker_file, paths.manifest_file, paths.config_mat);
+if ~isempty(pipeline_note)
+    paths.message = sprintf('%s\n%s', paths.message, pipeline_note);
+end
 fprintf('%s\n', paths.message);
+end
+
+function [pipeline_args, note] = local_normalize_pipeline_args(pipeline_args)
+note = '';
+if isempty(pipeline_args), return; end
+
+models = local_arg_value(pipeline_args, 'Models');
+has_wholebrain_mode = local_has_arg(pipeline_args, 'WholeBrainMode');
+if ~isempty(models)
+    model_names = lower(cellstr(string(models)));
+    if ~has_wholebrain_mode && any(strcmp(model_names, 'sfir'))
+        pipeline_args = [pipeline_args, {'WholeBrainMode', 'sFIR'}];
+        note = sprintf(['Note: PipelineArgs included Models={... ''sfir'' ...} but no WholeBrainMode, ' ...
+            'so the SLURM worker will write whole-brain maps with WholeBrainMode=''sFIR''.']);
+    elseif ~has_wholebrain_mode && any(strcmp(model_names, 'fir'))
+        pipeline_args = [pipeline_args, {'WholeBrainMode', 'FIR'}];
+        note = sprintf(['Note: PipelineArgs included Models={... ''fir'' ...} but no WholeBrainMode, ' ...
+            'so the SLURM worker will write whole-brain maps with WholeBrainMode=''FIR''.']);
+    end
+
+    nonlinear = intersect(model_names, {'canonical', 'nlgamma', 'spline'}, 'stable');
+    if ~isempty(nonlinear)
+        extra = sprintf(['Note: Models={%s} affects the 1D extracted-signal fits saved in the MAT results. ' ...
+            'The 4D whole-brain NIfTI writer currently supports FIR/sFIR map modes only; use ' ...
+            '''WholeBrainMode'',''sFIR'' or ''WholeBrainMode'',''FIR'' to choose those maps.'], ...
+            strjoin(nonlinear, ', '));
+        if isempty(note), note = extra; else, note = sprintf('%s\n%s', note, extra); end
+    end
+end
+end
+
+function tf = local_has_arg(args, name)
+tf = false;
+for i = 1:2:numel(args)
+    if ischar(args{i}) || isstring(args{i})
+        if strcmpi(char(args{i}), name)
+            tf = true;
+            return
+        end
+    end
+end
+end
+
+function value = local_arg_value(args, name)
+value = [];
+for i = 1:2:numel(args)
+    if ischar(args{i}) || isstring(args{i})
+        if strcmpi(char(args{i}), name) && i < numel(args)
+            value = args{i + 1};
+            return
+        end
+    end
+end
 end
 
 function paths = local_default_paths(output_dir, opts)

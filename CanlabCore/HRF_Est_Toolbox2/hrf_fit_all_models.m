@@ -25,6 +25,11 @@ if any(models == "logit")
     fits.logit = package_fit(h, fit, e, param, len, 7, tc, TR, Runc);
     fits.logit.uncertainty_source = 'not available for nonlinear logit fit';
 end
+if any(models == "fir")
+    [h, fit, e, param] = run_fit(@() Fit_sFIR(tc, TR, Runc, window_seconds, 0), suppress_warnings);
+    fits.fir = package_fit(h, fit, e, param, len, window_seconds, tc, TR, Runc);
+    fits.fir = add_linear_uncertainty(fits.fir, 'fir', tc, TR, Runc, window_seconds);
+end
 if any(models == "sfir")
     [h, fit, e, param] = run_fit(@() Fit_sFIR(tc, TR, Runc, window_seconds, 1), suppress_warnings);
     fits.sfir = package_fit(h, fit, e, param, len, window_seconds, tc, TR, Runc);
@@ -49,7 +54,7 @@ end
 end
 
 function models = local_filter_available_models(models, dependency_policy)
-valid_models = ["logit", "sfir", "canonical", "spline", "nlgamma"];
+valid_models = ["logit", "fir", "sfir", "canonical", "spline", "nlgamma"];
 models = models(:)';
 unknown = setdiff(models, valid_models);
 if ~isempty(unknown)
@@ -146,6 +151,8 @@ end
 function s = add_linear_uncertainty(s, model_name, tc, TR, Runc, window_seconds)
 try
     switch model_name
+        case 'fir'
+            [X, PX, hrf_lift, coef_idx_by_condition] = local_fir_uncertainty_design(Runc, TR, window_seconds);
         case 'sfir'
             [X, PX, hrf_lift, coef_idx_by_condition] = local_sfir_uncertainty_design(Runc, TR, window_seconds);
         case 'canonical'
@@ -193,15 +200,9 @@ end
 end
 
 function [X, PX, hrf_lift, coef_idx_by_condition] = local_sfir_uncertainty_design(Runc, TR, window_seconds)
+[X, ~, hrf_lift, coef_idx_by_condition] = local_fir_uncertainty_design(Runc, TR, window_seconds);
 numstim = numel(Runc);
-t = 1:TR:window_seconds;
-tlen = numel(t);
-len = numel(Runc{1});
-Runs = zeros(len, numstim);
-for i = 1:numstim
-    Runs(:, i) = Runc{i}(:);
-end
-X = tor_make_deconv_mtx3(Runs, tlen, 1);
+tlen = size(hrf_lift, 1);
 
 C = (1:tlen)' * ones(1, tlen);
 h = sqrt(1 / (7 / TR));
@@ -216,6 +217,19 @@ for i = 1:numstim
 end
 
 PX = (X' * X + pen) \ X';
+end
+
+function [X, PX, hrf_lift, coef_idx_by_condition] = local_fir_uncertainty_design(Runc, TR, window_seconds)
+numstim = numel(Runc);
+t = 1:TR:window_seconds;
+tlen = numel(t);
+len = numel(Runc{1});
+Runs = zeros(len, numstim);
+for i = 1:numstim
+    Runs(:, i) = Runc{i}(:);
+end
+X = tor_make_deconv_mtx3(Runs, tlen, 1);
+PX = pinv(X);
 hrf_lift = eye(tlen);
 coef_idx_by_condition = cell(1, numstim);
 for i = 1:numstim

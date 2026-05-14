@@ -3,21 +3,39 @@ function ax = plot_hrf_study_by_subject(study, varargin)
 
 p = inputParser;
 p.addRequired('study', @isstruct);
-p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
+p.addParameter('Model', 'sfir', @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Signature', '', @(x) ischar(x) || isstring(x));
+p.addParameter('PlotType', 'fit', @(x) ischar(x) || isstring(x));
 p.addParameter('Unit', 'subject', @(x) ischar(x) || isstring(x));
 p.addParameter('ShowSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEAlpha', 0.10, @(x) isscalar(x) && x >= 0 && x <= 1);
+p.addParameter('ShowGroupMean', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('ShowGroupSE', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('GroupLineWidth', 2.5, @(x) isscalar(x) && x > 0);
+p.addParameter('BaselineSeconds', 0, @(x) isscalar(x) && x >= 0);
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.parse(study, varargin{:});
 opts = p.Results;
 opts.Condition = char(opts.Condition);
 opts.Signature = char(opts.Signature);
-opts.Model = char(opts.Model);
+opts.Models = local_model_names(opts.Model);
+opts.Model = opts.Models{1};
+opts.PlotType = lower(char(opts.PlotType));
 opts.Unit = char(opts.Unit);
 
-[Y_runs, SE_runs, run_subject_ids, condition_name, x, skipped] = local_collect_curves(study, opts);
+switch opts.PlotType
+    case 'fit'
+        if numel(opts.Models) > 1
+            ax = local_plot_multiple_models(study, opts);
+            return
+        end
+        [Y_runs, SE_runs, run_subject_ids, condition_name, x, skipped] = local_collect_curves(study, opts);
+    case {'trialmean', 'trial_mean', 'trials'}
+        [Y_runs, SE_runs, run_subject_ids, condition_name, x, skipped] = local_collect_trial_means(study, opts);
+    otherwise
+        error('Unknown PlotType: %s. Use ''fit'' or ''trialmean''.', opts.PlotType);
+end
 if isempty(Y_runs)
     error('No valid HRF curves found. Skipped %d result(s).', numel(skipped));
 end
@@ -35,8 +53,74 @@ for s = 1:size(Y, 1)
     end
     plot(ax, x, y, 'Color', colors(s, :), 'DisplayName', subject_ids{s});
 end
+if logical(opts.ShowGroupMean)
+    group_mean = local_mean_omitnan(Y, 1)';
+    group_se = local_sem_omitnan(Y, 1)';
+    if logical(opts.ShowGroupSE) && size(Y, 1) > 1 && any(~isnan(group_se))
+        fill(ax, [x; flipud(x)], [group_mean + group_se; flipud(group_mean - group_se)], ...
+            [0 0 0], 'FaceAlpha', min(opts.SEAlpha * 2, 0.25), ...
+            'EdgeColor', 'none', 'HandleVisibility', 'off');
+    end
+    plot(ax, x, group_mean, 'k-', 'LineWidth', opts.GroupLineWidth, 'DisplayName', 'Group mean');
+end
 legend(ax, 'Interpreter', 'none');
-title(ax, local_title(opts, condition_name, SE), 'Interpreter', 'none');
+title(ax, local_title(opts, condition_name, SE, Y), 'Interpreter', 'none');
+xlabel(ax, 'Seconds after event onset');
+ylabel(ax, local_ylabel(opts));
+hline(0, 'k-');
+end
+
+function ax = local_plot_multiple_models(study, opts)
+figure; ax = axes; hold(ax, 'on');
+colors = lines(numel(opts.Models));
+all_skipped = struct('index', {}, 'subject', {}, 'reason', {});
+condition_name = char(opts.Condition);
+plotted = false(1, numel(opts.Models));
+
+for m = 1:numel(opts.Models)
+    model_opts = opts;
+    model_opts.Model = opts.Models{m};
+    [Y_runs, SE_runs, run_subject_ids, this_condition, x, skipped] = local_collect_curves(study, model_opts);
+    all_skipped = [all_skipped, skipped]; %#ok<AGROW>
+    if isempty(Y_runs)
+        continue
+    end
+    if isempty(condition_name) || strcmp(condition_name, char(opts.Condition))
+        condition_name = this_condition;
+    end
+    [Y, ~, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
+    model_color = colors(m, :);
+    subject_color = model_color + (1 - model_color) * 0.55;
+
+    if logical(opts.ShowGroupMean)
+        group_mean = local_mean_omitnan(Y, 1)';
+        group_se = local_sem_omitnan(Y, 1)';
+        if logical(opts.ShowGroupSE) && size(Y, 1) > 1 && any(~isnan(group_se))
+            fill(ax, [x; flipud(x)], [group_mean + group_se; flipud(group_mean - group_se)], ...
+                model_color, 'FaceAlpha', min(opts.SEAlpha * 2, 0.20), ...
+                'EdgeColor', 'none', 'HandleVisibility', 'off');
+        end
+        for s = 1:size(Y, 1)
+            plot(ax, x, Y(s, :)', '-', 'Color', subject_color, ...
+                'LineWidth', 0.75, 'HandleVisibility', 'off');
+        end
+        plot(ax, x, group_mean, '-', 'Color', model_color, ...
+            'LineWidth', opts.GroupLineWidth, 'DisplayName', opts.Models{m});
+    else
+        for s = 1:size(Y, 1)
+            plot(ax, x, Y(s, :)', '-', 'Color', model_color, ...
+                'DisplayName', sprintf('%s | %s', opts.Models{m}, subject_ids{s}));
+        end
+    end
+    plotted(m) = true;
+end
+
+if ~any(plotted)
+    error('No valid HRF curves found for requested models. Skipped %d result(s).', numel(all_skipped));
+end
+
+legend(ax, 'Interpreter', 'none');
+title(ax, local_multi_model_title(opts, condition_name), 'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
 ylabel(ax, local_ylabel(opts));
 hline(0, 'k-');
@@ -98,6 +182,72 @@ for s = 1:numel(study.results)
         SE(end + 1, :) = se; %#ok<AGROW>
     else
         skipped = local_skip(skipped, s, subject_id, 'HRF length mismatch', missing_policy);
+        continue
+    end
+    subject_ids{end + 1, 1} = subject_id; %#ok<AGROW>
+end
+end
+
+function [Y, SE, subject_ids, condition_name, x, skipped] = local_collect_trial_means(study, opts)
+Y = [];
+SE = [];
+subject_ids = {};
+condition_pattern = char(opts.Condition);
+condition_name = condition_pattern;
+x = [];
+skipped = struct('index', {}, 'subject', {}, 'reason', {});
+missing_policy = lower(char(opts.MissingPolicy));
+
+for s = 1:numel(study.results)
+    subject_id = local_subject_id(study, s);
+    r = study.results{s};
+    if isempty(r)
+        skipped = local_skip(skipped, s, subject_id, 'empty result', missing_policy);
+        continue
+    end
+    if ~isfield(r, 'events') || isempty(r.events)
+        skipped = local_skip(skipped, s, subject_id, 'missing events for trialmean plot', missing_policy);
+        continue
+    end
+    if ~isfield(r, 'settings') || ~isfield(r.settings, 'TR') || ~isfield(r.settings, 'window_seconds')
+        skipped = local_skip(skipped, s, subject_id, 'missing TR/window_seconds for trialmean plot', missing_policy);
+        continue
+    end
+
+    [tc, ok, reason] = local_trial_timeseries(r, opts.Signature);
+    if ~ok
+        skipped = local_skip(skipped, s, subject_id, reason, missing_policy);
+        continue
+    end
+
+    try
+        condition_spec = local_condition_spec(r, condition_pattern);
+        if isempty(condition_name) || strcmp(condition_name, condition_pattern)
+            condition_name = condition_spec.display_label;
+        end
+        avg = hrf_average_condition_trials(tc, r.events, condition_spec.matched_conditions, ...
+            r.settings.TR, r.settings.window_seconds, 'BaselineSeconds', opts.BaselineSeconds);
+    catch err
+        skipped = local_skip(skipped, s, subject_id, err.message, missing_policy);
+        continue
+    end
+
+    y = avg.mean(:)';
+    se = avg.sem(:)';
+    this_x = avg.time(:);
+    if isempty(Y)
+        Y = y;
+        SE = se;
+        x = this_x;
+    elseif size(Y, 2) == numel(y)
+        if numel(this_x) ~= numel(x) || any(abs(this_x(:) - x(:)) > eps(max(abs(x(:))) + 1))
+            skipped = local_skip(skipped, s, subject_id, 'trialmean time axis mismatch', missing_policy);
+            continue
+        end
+        Y(end + 1, :) = y; %#ok<AGROW>
+        SE(end + 1, :) = se; %#ok<AGROW>
+    else
+        skipped = local_skip(skipped, s, subject_id, 'trialmean length mismatch', missing_policy);
         continue
     end
     subject_ids{end + 1, 1} = subject_id; %#ok<AGROW>
@@ -208,20 +358,39 @@ if n_runs > 1
 end
 end
 
-function ttl = local_title(opts, condition_name, SE)
+function ttl = local_title(opts, condition_name, SE, Y)
 sig = char(opts.Signature);
 if isempty(sig)
     sig = 'selected signal';
 end
-ribbon_txt = 'ribbon=none (SE unavailable)';
+parts = {};
 if any(~isnan(SE(:)))
-    if strcmpi(opts.Unit, 'subject')
-        ribbon_txt = 'ribbon=within-subject/run SE';
+    if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
+        if strcmpi(opts.Unit, 'subject')
+            parts{end + 1} = 'within-subject/run trial SEM';
+        else
+            parts{end + 1} = 'within-run trial SEM';
+        end
     else
-        ribbon_txt = 'ribbon=within-run SE';
+        if strcmpi(opts.Unit, 'subject')
+            parts{end + 1} = 'within-subject/run SE';
+        else
+            parts{end + 1} = 'within-run SE';
+        end
     end
 end
-if strcmpi(opts.Model, 'mapscore')
+if logical(opts.ShowGroupSE) && size(Y, 1) > 1
+    parts{end + 1} = 'group SEM';
+end
+if isempty(parts)
+    ribbon_txt = 'ribbon=none (SE unavailable)';
+else
+    ribbon_txt = sprintf('ribbon=%s', strjoin(parts, ' + '));
+end
+if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
+    ttl = sprintf('model=trialmean, unit=%s, condition=%s, source=%s, %s', ...
+        lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+elseif strcmpi(opts.Model, 'mapscore')
     ttl = sprintf('model=mapscore, unit=%s, condition=%s, score=%s, %s', ...
         lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
 else
@@ -230,11 +399,76 @@ else
 end
 end
 
+function ttl = local_multi_model_title(opts, condition_name)
+sig = char(opts.Signature);
+if isempty(sig)
+    sig = 'selected signal';
+end
+parts = {};
+if logical(opts.ShowGroupSE)
+    parts{end + 1} = 'group SEM';
+end
+if logical(opts.ShowGroupMean)
+    parts{end + 1} = 'thin lines=subjects/runs';
+end
+if isempty(parts)
+    ribbon_txt = 'ribbon=none';
+else
+    ribbon_txt = strjoin(parts, ', ');
+end
+ttl = sprintf('models=%s, unit=%s, condition=%s, source=%s, %s', ...
+    strjoin(opts.Models, ' + '), lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+end
+
 function ylab = local_ylabel(opts)
+if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
+    ylab = 'Observed signal';
+    return
+end
 if strcmpi(opts.Model, 'mapscore')
     ylab = 'Pattern expression / map score';
 else
     ylab = 'Fitted response amplitude';
+end
+end
+
+function model_names = local_model_names(model_input)
+model_names = cellstr(string(model_input));
+model_names = cellfun(@(s) lower(strtrim(s)), model_names, 'UniformOutput', false);
+model_names = model_names(~cellfun(@isempty, model_names));
+if isempty(model_names)
+    error('Model must contain at least one model name.');
+end
+model_names = unique(model_names, 'stable');
+end
+
+function [tc, ok, reason] = local_trial_timeseries(r, signature_name)
+tc = [];
+ok = false;
+reason = '';
+if ~isempty(signature_name)
+    sig_field = local_signature_struct_field(r, signature_name, 'timeseries_by_signature');
+    if ~isempty(sig_field)
+        tc = r.timeseries_by_signature.(sig_field);
+        ok = true;
+        return
+    end
+    if isfield(r, 'signature_meta') && isfield(r.signature_meta, 'selected_signature') && ...
+            strcmp(char(r.signature_meta.selected_signature), signature_name) && ...
+            isfield(r, 'timeseries') && ~isempty(r.timeseries)
+        tc = r.timeseries;
+        ok = true;
+        return
+    end
+    reason = sprintf('missing time series for signature %s', signature_name);
+    return
+end
+
+if isfield(r, 'timeseries') && ~isempty(r.timeseries)
+    tc = r.timeseries;
+    ok = true;
+else
+    reason = 'missing timeseries for trialmean plot';
 end
 end
 
@@ -267,13 +501,21 @@ ok = true;
 end
 
 function sig_field = local_signature_field(r, sig)
+sig_field = local_signature_struct_field(r, sig, 'fits_by_signature');
+end
+
+function sig_field = local_signature_struct_field(r, sig, struct_field)
 sig_field = '';
-if isfield(r.fits_by_signature, sig)
+if ~isfield(r, struct_field) || isempty(r.(struct_field))
+    return
+end
+S = r.(struct_field);
+if isfield(S, sig)
     sig_field = sig;
     return
 end
 candidate = matlab.lang.makeValidName(sig);
-if isfield(r.fits_by_signature, candidate)
+if isfield(S, candidate)
     sig_field = candidate;
     return
 end
@@ -282,7 +524,7 @@ if isfield(r, 'signature_meta') && isfield(r.signature_meta, 'selected_signature
     names = cellstr(string(r.signature_meta.selected_signatures));
     fields = cellstr(string(r.signature_meta.selected_signature_fields));
     idx = find(strcmp(names, sig), 1);
-    if ~isempty(idx) && idx <= numel(fields) && isfield(r.fits_by_signature, fields{idx})
+    if ~isempty(idx) && idx <= numel(fields) && isfield(S, fields{idx})
         sig_field = fields{idx};
     end
 end

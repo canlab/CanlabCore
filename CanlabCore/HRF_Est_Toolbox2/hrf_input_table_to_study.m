@@ -16,10 +16,12 @@ function study = hrf_input_table_to_study(second_level_inputs, varargin)
 p = inputParser;
 p.addRequired('second_level_inputs', @(x) istable(x) || ischar(x) || isstring(x));
 p.addParameter('LoadWholeBrain', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('LoadResultMat', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('IncludeMapScores', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('ScoreColumns', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelName', 'mapscore', @(x) ischar(x) || isstring(x));
+p.addParameter('ApproxSEFromT', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('NoVerbose', true, @(x) islogical(x) || isnumeric(x));
 p.parse(second_level_inputs, varargin{:});
@@ -31,6 +33,7 @@ results = cell(n, 1);
 subject_ids = cell(n, 1);
 success = false(n, 1);
 wholebrain_success = false(n, 1);
+resultmat_success = false(n, 1);
 mapscore_success = false(n, 1);
 errors = cell(n, 1);
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
@@ -45,6 +48,17 @@ for i = 1:n
     subject_ids{i} = local_table_value(inputs, i, 'subject');
     r = struct();
     row_errors = {};
+
+    if logical(opts.LoadResultMat)
+        [mat_result, ok, reason] = local_load_result_mat_row(inputs, i);
+        if ok
+            r = mat_result;
+            resultmat_success(i) = true;
+        else
+            skipped = local_skip(skipped, i, subject_ids{i}, reason, missing_policy);
+            row_errors{end + 1} = reason; %#ok<AGROW>
+        end
+    end
 
     if logical(opts.LoadWholeBrain)
         [wholebrain, ok, reason] = local_load_wholebrain_row(inputs, i, opts);
@@ -69,7 +83,7 @@ for i = 1:n
 
     if ~isempty(fieldnames(r))
         results{i} = r;
-        success(i) = wholebrain_success(i) || mapscore_success(i);
+        success(i) = resultmat_success(i) || wholebrain_success(i) || mapscore_success(i);
     end
     errors{i} = strjoin(row_errors, ' | ');
 end
@@ -78,6 +92,7 @@ study = struct();
 study.results = results;
 study.subject_ids = subject_ids;
 study.success = success;
+study.resultmat_success = resultmat_success;
 study.wholebrain_success = wholebrain_success;
 study.mapscore_success = mapscore_success;
 study.errors = errors;
@@ -114,6 +129,7 @@ try
         'Object', opts.Object, ...
         'ScoreColumns', opts.ScoreColumns, ...
         'ModelName', opts.ModelName, ...
+        'ApproxSEFromT', opts.ApproxSEFromT, ...
         'MissingPolicy', local_nested_missing_policy(missing_policy));
 catch err
     if strcmp(missing_policy, 'error')
@@ -141,6 +157,43 @@ switch lower(object_name)
         varname = 't_scores_file';
     otherwise
         error('Unknown Object: %s. Use ''beta'' or ''t''.', object_name);
+end
+end
+
+function [result, ok, reason] = local_load_result_mat_row(inputs, row)
+result = struct();
+ok = false;
+reason = '';
+
+mat_file = local_table_value(inputs, row, 'result_mat_file');
+if isempty(mat_file)
+    prefix = local_table_value(inputs, row, 'prefix');
+    if ~isempty(prefix)
+        mat_file = [prefix '_results.mat'];
+    end
+end
+if isempty(mat_file) || exist(mat_file, 'file') ~= 2
+    reason = 'missing result_mat_file for run-level time series';
+    return
+end
+
+try
+    S = load(mat_file, 'results');
+    if isfield(S, 'results')
+        result = S.results;
+    else
+        tmp = load(mat_file);
+        names = fieldnames(tmp);
+        if isempty(names)
+            reason = sprintf('empty result MAT file %s', mat_file);
+            return
+        end
+        result = tmp.(names{1});
+    end
+    result.result_mat_file = mat_file;
+    ok = true;
+catch err
+    reason = sprintf('could not load result MAT file %s: %s', mat_file, err.message);
 end
 end
 
@@ -178,16 +231,43 @@ end
 end
 
 function r = local_merge_mapscore_result(r, score_result)
-r.fits = score_result.fits;
-r.fits_by_signature = score_result.fits_by_signature;
-r.signature_meta = score_result.signature_meta;
+if ~isfield(r, 'fits') || isempty(r.fits)
+    r.fits = score_result.fits;
+end
+if ~isfield(r, 'fits_by_signature') || isempty(r.fits_by_signature)
+    r.fits_by_signature = score_result.fits_by_signature;
+else
+    r.fits_by_signature = local_merge_fit_structs(r.fits_by_signature, score_result.fits_by_signature);
+end
+if ~isfield(r, 'signature_meta') || isempty(r.signature_meta)
+    r.signature_meta = score_result.signature_meta;
+else
+    r.mapscore_signature_meta = score_result.signature_meta;
+end
 r.mapscore_source = score_result.signature_meta.source_file;
-r.conditions = score_result.conditions;
+if ~isfield(r, 'conditions') || isempty(r.conditions)
+    r.conditions = score_result.conditions;
+end
 if isfield(r, 'settings')
     r.settings.mapscore_model_name = score_result.settings.model_name;
     r.settings.mapscore_object = score_result.settings.object;
 else
     r.settings = score_result.settings;
+end
+end
+
+function out = local_merge_fit_structs(out, incoming)
+fields = fieldnames(incoming);
+for i = 1:numel(fields)
+    f = fields{i};
+    if ~isfield(out, f) || isempty(out.(f))
+        out.(f) = incoming.(f);
+        continue
+    end
+    model_names = fieldnames(incoming.(f));
+    for j = 1:numel(model_names)
+        out.(f).(model_names{j}) = incoming.(f).(model_names{j});
+    end
 end
 end
 

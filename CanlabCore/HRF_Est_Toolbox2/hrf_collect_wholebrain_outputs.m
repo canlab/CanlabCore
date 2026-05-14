@@ -13,6 +13,8 @@ function T = hrf_collect_wholebrain_outputs(root_dir, varargin)
 % and optional map-score files written by hrf_apply_maps_to_wholebrain:
 %   *_beta_map_scores.csv
 %   *_t_map_scores.csv
+% and optional result MAT files written by run_hrf_pipeline:
+%   *_results.mat
 
 p = inputParser;
 p.addRequired('root_dir', @(x) ischar(x) || isstring(x));
@@ -34,6 +36,7 @@ for i = 1:numel(beta_files)
     metadata_path = [prefix '_metadata.csv'];
     beta_scores_path = [prefix '_beta_map_scores.csv'];
     t_scores_path = [prefix '_t_map_scores.csv'];
+    result_mat_path = [prefix '_results.mat'];
 
     [~, prefix_name] = fileparts(prefix);
     subject = local_subject_from_name(prefix_name);
@@ -41,11 +44,12 @@ for i = 1:numel(beta_files)
     rows(end + 1, :) = {subject, prefix, beta_path, local_existing(t_path), ...
         local_existing(se_path), local_existing(p_path), ...
         local_existing(t_thresh_path), local_existing(metadata_path), ...
-        local_existing(beta_scores_path), local_existing(t_scores_path)}; %#ok<AGROW>
+        local_existing(beta_scores_path), local_existing(t_scores_path), ...
+        local_existing(result_mat_path)}; %#ok<AGROW>
 end
 
 var_names = {'subject', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
-    'metadata_file', 'beta_scores_file', 't_scores_file'};
+    'metadata_file', 'beta_scores_file', 't_scores_file', 'result_mat_file'};
 if isempty(rows)
     T = cell2table(cell(0, numel(var_names)), 'VariableNames', var_names);
 else

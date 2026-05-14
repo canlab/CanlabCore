@@ -12,7 +12,7 @@ function results = run_hrf_pipeline(fmri_nii, events_tsv, varargin)
 %   'MaskNii'         : optional mask NIfTI; if omitted uses whole-brain mean
 %   'Conditions'      : cellstr of trial_type names to fit (default: all)
 %   'WindowSeconds'   : HRF estimation window, seconds (default 30)
-%   'Models'          : subset of {'logit','sfir','canonical','spline','nlgamma'}
+%   'Models'          : subset of {'logit','fir','sfir','canonical','spline','nlgamma'}
 %                       (default all)
 %   'OutputMat'       : optional .mat path to save results
 %
@@ -27,7 +27,7 @@ p.addParameter('TR', [], @(x) isempty(x) || (isscalar(x) && x > 0));
 p.addParameter('MaskNii', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) ischar(x) || iscellstr(x) || isstring(x));
 p.addParameter('WindowSeconds', 30, @(x) isscalar(x) && x > 0);
-p.addParameter('Models', {'logit','sfir','canonical','spline','nlgamma'}, @(x) iscell(x) || isstring(x));
+p.addParameter('Models', {'logit','fir','sfir','canonical','spline','nlgamma'}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelDependencyPolicy', 'skip', @(x) ischar(x) || isstring(x));
 p.addParameter('OutputMat', '', @(x) ischar(x) || isstring(x));
 p.addParameter('OutputMatVersion', '-v7.3', @(x) ischar(x) || isstring(x));
@@ -230,6 +230,10 @@ results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...
     'signal_source', char(opts.SignalSource));
 results.signature_meta = signature_meta;
 results.fits_by_signature = fits_by_signature;
+if exist('all_tc', 'var')
+    results.all_timeseries = all_tc;
+    results.timeseries_by_signature = local_timeseries_by_signature(all_tc, signature_meta);
+end
 
 if logical(opts.WriteWholeBrain) || ~isempty(char(opts.WholeBrainOutputPrefix))
     wholebrain_prefix = char(opts.WholeBrainOutputPrefix);
@@ -307,4 +311,24 @@ if strcmpi(e, '.gz')
     [~, f] = fileparts(f);
 end
 prefix = fullfile(p, [f '_hrf_wholebrain']);
+end
+
+function ts_by_signature = local_timeseries_by_signature(all_tc, signature_meta)
+ts_by_signature = struct();
+if ~isfield(signature_meta, 'selected_signatures') || isempty(signature_meta.selected_signatures)
+    return
+end
+
+sig_names = cellstr(string(signature_meta.selected_signatures));
+if isfield(signature_meta, 'selected_signature_fields') && ...
+        numel(signature_meta.selected_signature_fields) >= numel(sig_names)
+    sig_fields = cellstr(string(signature_meta.selected_signature_fields));
+else
+    sig_fields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(sig_names));
+end
+
+n = min(numel(sig_fields), size(all_tc, 2));
+for i = 1:n
+    ts_by_signature.(sig_fields{i}) = all_tc(:, i);
+end
 end

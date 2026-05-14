@@ -10,13 +10,15 @@ function study = hrf_second_level_inputs_to_study(second_level_inputs, varargin)
 %
 % The converted "fits" are map-score curves over condition x lag, not
 % subject-level HRF model fits. The default model name is therefore
-% "mapscore".
+% "mapscore". For beta map-score CSVs, matching t map-score CSVs are used
+% by default to derive approximate score SE as abs(beta_score / t_score).
 
 p = inputParser;
 p.addRequired('second_level_inputs', @(x) istable(x) || ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('ScoreColumns', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelName', 'mapscore', @(x) ischar(x) || isstring(x));
+p.addParameter('ApproxSEFromT', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.parse(second_level_inputs, varargin{:});
 opts = p.Results;
@@ -50,6 +52,7 @@ for i = 1:n
 
     try
         S = readtable(score_file, 'TextType', 'string');
+        Tscore = local_read_t_score_table(inputs, i, opts);
         score_cols = local_score_columns(S, opts.ScoreColumns);
         if isempty(score_cols)
             reason = 'no numeric score columns';
@@ -58,7 +61,7 @@ for i = 1:n
             continue
         end
 
-        results{i} = local_score_table_to_result(S, score_cols, model_name, ...
+        results{i} = local_score_table_to_result(S, Tscore, score_cols, model_name, ...
             char(opts.Object), score_file);
         success(i) = true;
         all_score_names = [all_score_names, score_cols(:)']; %#ok<AGROW>
@@ -100,25 +103,51 @@ switch lower(object_name)
 end
 end
 
-function result = local_score_table_to_result(S, score_cols, model_name, object_name, score_file)
+function Tscore = local_read_t_score_table(inputs, row, opts)
+Tscore = table();
+if ~logical(opts.ApproxSEFromT) || ~strcmpi(char(opts.Object), 'beta')
+    return
+end
+t_score_file = local_table_value(inputs, row, 't_scores_file');
+if isempty(t_score_file) || exist(t_score_file, 'file') ~= 2
+    return
+end
+Tscore = readtable(t_score_file, 'TextType', 'string');
+end
+
+function result = local_score_table_to_result(S, Tscore, score_cols, model_name, object_name, score_file)
 conditions = local_condition_values(S);
 condition_names = unique(conditions, 'stable');
 lag_index = local_lag_index_values(S, conditions);
 lag_names = unique(lag_index, 'stable');
 lag_seconds = local_lag_seconds_by_index(S, lag_index, lag_names);
+t_conditions = {};
+t_lag_index = [];
+if ~isempty(Tscore)
+    t_conditions = local_condition_values(Tscore);
+    t_lag_index = local_lag_index_values(Tscore, t_conditions);
+end
 
 score_fields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(score_cols));
 fits_by_signature = struct();
 
 for s = 1:numel(score_cols)
     H = nan(numel(lag_names), numel(condition_names));
+    T = nan(numel(lag_names), numel(condition_names));
     values = S.(score_cols{s});
+    t_values = local_t_values(Tscore, score_cols{s});
     for c = 1:numel(condition_names)
         for l = 1:numel(lag_names)
             wh = strcmp(conditions, condition_names{c}) & lag_index == lag_names(l);
             H(l, c) = local_mean_omitnan(values(wh));
+            if ~isempty(t_values)
+                T(l, c) = local_t_mean_for_bin(t_values, t_conditions, t_lag_index, ...
+                    conditions, lag_index, condition_names{c}, lag_names(l), wh);
+            end
         end
     end
+
+    [SE, P, p_type, uncertainty_source] = local_approx_uncertainty(H, T, S);
 
     fit = struct();
     fit.(model_name) = struct();
@@ -127,10 +156,11 @@ for s = 1:numel(score_cols)
     fit.(model_name).lag_seconds = lag_seconds(:);
     fit.(model_name).source_score = score_cols{s};
     fit.(model_name).source_file = score_file;
-    fit.(model_name).se = [];
-    fit.(model_name).p = [];
-    fit.(model_name).p_type = '';
-    fit.(model_name).uncertainty_source = 'not stored in map-score CSV; use group-level stats across subjects or refit source time series';
+    fit.(model_name).se = SE;
+    fit.(model_name).t = T;
+    fit.(model_name).p = P;
+    fit.(model_name).p_type = p_type;
+    fit.(model_name).uncertainty_source = uncertainty_source;
     fits_by_signature.(score_fields{s}) = fit;
 end
 
@@ -149,6 +179,47 @@ result.signature_meta.source_file = score_file;
 result.fits = fits_by_signature.(score_fields{1});
 result.settings = struct('signal_source', 'second_level_map_scores', ...
     'model_name', model_name, 'object', object_name);
+end
+
+function t_values = local_t_values(Tscore, score_col)
+t_values = [];
+if isempty(Tscore) || ~istable(Tscore) || ~any(strcmp(score_col, Tscore.Properties.VariableNames))
+    return
+end
+t_values = Tscore.(score_col);
+end
+
+function t_mean = local_t_mean_for_bin(t_values, t_conditions, t_lag_index, conditions, lag_index, condition_name, lag_name, fallback_wh)
+t_mean = NaN;
+if numel(t_values) == numel(t_conditions) && numel(t_values) == numel(t_lag_index)
+    wh = strcmp(t_conditions, condition_name) & t_lag_index == lag_name;
+    t_mean = local_mean_omitnan(t_values(wh));
+elseif numel(t_values) == numel(conditions) && numel(t_values) == numel(lag_index)
+    t_mean = local_mean_omitnan(t_values(fallback_wh));
+end
+end
+
+function [SE, P, p_type, uncertainty_source] = local_approx_uncertainty(H, T, S)
+SE = [];
+P = [];
+p_type = '';
+uncertainty_source = 'not stored in map-score CSV; use group-level stats across subjects or refit source time series';
+if isempty(T) || all(isnan(T(:)))
+    return
+end
+
+SE = abs(H ./ T);
+SE(~isfinite(SE)) = NaN;
+P = [];
+if any(strcmp('dfe', S.Properties.VariableNames))
+    dfe = local_mean_omitnan(local_to_numeric(S.dfe));
+    if ~isnan(dfe)
+        P = 2 * (1 - tcdf(abs(T), dfe));
+        P(P == 0) = eps;
+        p_type = sprintf('Approximate two-tailed P-values from beta-map score / t-map score ratio, dfe = %.3f', dfe);
+    end
+end
+uncertainty_source = 'approximate score SE from matching beta and t map-score CSVs';
 end
 
 function conditions = local_condition_values(S)

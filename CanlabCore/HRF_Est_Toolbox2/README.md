@@ -14,7 +14,7 @@ results = run_hrf_pipeline( ...
     'MaskNii', '/path/to/brain_mask.nii.gz', ...
     'Conditions', {'pain', 'neutral'}, ...
     'WindowSeconds', 30, ...
-    'Models', {'logit', 'sfir', 'canonical'}, ...
+    'Models', {'fir', 'sfir', 'canonical'}, ...
     'OutputMat', '/path/to/sub-01_hrf_results.mat');
 ```
 
@@ -45,10 +45,10 @@ results = run_hrf_pipeline( ...
 
 - `events.tsv` must include: `onset`, `duration`, `trial_type`.
 - If TR is not passed, the pipeline attempts to use NIfTI header `PixelDimensions(4)`.
-- Model wrappers call legacy toolbox methods (`Fit_Logit2`, `Fit_sFIR`, `Fit_Canonical_HRF`, `Fit_Spline`, `Fit_NLgamma`).
+- Model wrappers call legacy toolbox methods (`Fit_Logit2`, `Fit_sFIR`, `Fit_Canonical_HRF`, `Fit_Spline`, `Fit_NLgamma`). `fir` is the unsmoothed `Fit_sFIR(..., mode=0)` fit; `sfir` is the smoothed `Fit_sFIR(..., mode=1)` fit.
 - `canonical` and `nlgamma` require SPM on the MATLAB path; `spline` requires the FDA package (`create_bspline_basis`, `eval_basis`). By default, unavailable optional models are skipped with a warning. Use `'ModelDependencyPolicy', 'error'` to fail fast instead.
 - Subject/run-level fit uncertainty is stored in `.se`, `.t`, `.p`, `.dfe`,
-  and `.uncertainty_source` for linear fits (`sfir`, `canonical`, `spline`).
+  and `.uncertainty_source` for linear fits (`fir`, `sfir`, `canonical`, `spline`).
   Nonlinear fits (`logit`, `nlgamma`) currently store the curve but not a
   model-based SE/p curve.
 
@@ -137,8 +137,13 @@ Note: if you pass `SignatureName` while `SignalSource` is left at default (`'mea
 
 ```matlab
 % Single subject/run fitted curves by condition.
-% For sfir/canonical/spline fits, ribbons are model-based SE from the run.
+% For fir/sfir/canonical/spline fits, ribbons are model-based SE from the run.
 plot_hrf_by_condition(results, 'Model', 'sfir', 'Conditions', {'pain','neutral'});
+
+% Compare fitted model families on the same axes.
+plot_hrf_by_condition(results, ...
+    'Model', {'fir','sfir','canonical'}, ...
+    'Condition', 'pain');
 
 % Raw event-locked trial means from the selected 1D time series.
 % Ribbons are SEM across repeated events/trials within the run.
@@ -154,9 +159,23 @@ plot_hrf_by_condition(results_sig, ...
     'Conditions', {'pain','neutral'});
 
 % Across a study, one curve per subject for a selected condition.
-% Ribbons are within-run fit SE; duplicate runs are averaged by subject.
+% Ribbons are within-run/within-subject SE when available; the black
+% group curve shows mean +/- SEM across plotted subjects or runs.
 plot_hrf_study_by_subject(study, ...
     'Model', 'sfir', ...
+    'Condition', 'pain', ...
+    'Unit', 'subject');
+
+% Compare study-level group means across fitted models.
+plot_hrf_study_by_subject(study, ...
+    'Model', {'fir','sfir','canonical'}, ...
+    'Condition', 'pain', ...
+    'Unit', 'subject');
+
+% Across a study, event-locked trial means use repeated event instances
+% within each run for SEM at each TR.
+plot_hrf_study_by_subject(study, ...
+    'PlotType', 'trialmean', ...
     'Condition', 'pain', ...
     'Unit', 'subject');
 ```
@@ -168,7 +187,7 @@ plot_hrf_study_by_subject(study, ...
 `plot_hrf_by_condition`. It no longer uses across-signature variability as a
 standard-error ribbon because that is not subject-level fit uncertainty. Plot
 titles now explicitly label the curve source, selected model
-(`sfir`, `canonical`, `nlgamma`, etc.), and whether the ribbon is within-run
+(`fir`, `sfir`, `canonical`, `nlgamma`, etc.), and whether the ribbon is within-run
 model SE, trial SEM, or unavailable.
 
 ## Speeding up all-signature fitting
@@ -292,6 +311,7 @@ slurm_paths = hrf_write_slurm_study_script(fmri_files, events_files, subject_ids
         'Conditions', {'pain', 'neutral'}, ...
         'WindowSeconds', 30, ...
         'Models', {'sfir'}, ...
+        'WholeBrainMode', 'sFIR', ...
         'WholeBrainPThresh', 0.005, ...
         'WholeBrainThreshType', 'unc'}, ...
     'SignatureSets', {'all'}, ...
@@ -316,6 +336,14 @@ slurm_paths = hrf_write_slurm_study_script(fmri_files, events_files, subject_ids
         'ModelDependencyPolicy', 'error'}, ...
     'ModuleLoad', 'matlab');
 ```
+
+`Models` controls the 1D fitters saved in each result MAT file. It does not
+request whole-brain canonical, nlgamma, or spline NIfTI maps. Whole-brain maps
+are condition-lag FIR/sFIR volumes, and their mode is controlled by
+`WholeBrainMode`. If `PipelineArgs` includes `Models={'sfir', ...}` and omits
+`WholeBrainMode`, `hrf_write_slurm_study_script` adds
+`'WholeBrainMode','sFIR'` to the generated worker config and prints a note.
+To force ordinary FIR maps, pass `'WholeBrainMode','FIR'` explicitly.
 
 Submit the generated script from the cluster shell:
 
@@ -380,7 +408,7 @@ t_obj = results.wholebrain.t;     % statistic_image, .dat = T maps, .p/.ste/.sig
 ```
 
 `Models` and `WholeBrainMode` refer to different things. `Models` controls the
-1D curve fitters (`logit`, `sfir`, `canonical`, `spline`, `nlgamma`) used for
+1D curve fitters (`logit`, `fir`, `sfir`, `canonical`, `spline`, `nlgamma`) used for
 mean, signature, image-set, or atlas time series. `WholeBrainMode` controls the
 4D condition-lag maps written by `hrf_fit_wholebrain_stats` and is currently
 `FIR` or `sFIR`. If a NIfTI filename contains `canonical` or another curve
@@ -433,6 +461,21 @@ study = hrf_input_table_to_study(input_table);
 % One subject/run in the familiar run_hrf_pipeline-style shape
 results = study.results{1};
 wholebrain = results.wholebrain;
+```
+
+If the SLURM/result MAT files are available and you want event-level trial
+SEM plots, load those MAT files into the study too:
+
+```matlab
+study_runs = hrf_input_table_to_study(input_table, ...
+    'LoadWholeBrain', false, ...
+    'IncludeMapScores', false, ...
+    'LoadResultMat', true);
+
+plot_hrf_study_by_subject(study_runs, ...
+    'PlotType', 'trialmean', ...
+    'Condition', 'nback-stimblock', ...
+    'Unit', 'subject');
 ```
 
 Use the reconstructed whole-brain object for animation:
@@ -511,10 +554,21 @@ directly from the original 4D BOLD volumes.
 
 Map-score curves can look more jagged than `run_hrf_pipeline` 1D HRF fits
 because each point is a spatial pattern score from a separate condition-lag
-beta/T image. The score CSV does not contain subject-level SE for those
-pattern scores. Use `hrf_time_unfolding_stats` for across-subject mean/SEM and
+beta/T image. If the collected input table contains both
+`beta_scores_file` and `t_scores_file`, `hrf_input_table_to_study(...,
+'Object','beta')` derives an approximate score SE as `abs(beta_score /
+t_score)` and stores it in each `mapscore.se` matrix for plotting ribbons.
+Set `'ApproxSEFromT', false` to disable this. These score-level SEs are an
+approximation from paired beta/T map scores, not the original voxelwise model
+covariance. Use `hrf_time_unfolding_stats` for across-subject mean/SEM and
 p-values, or refit the source 1D mean/signature/ROI time series with
-`run_hrf_pipeline` when you need within-run fit SE and p-values.
+`run_hrf_pipeline` when you need model-based within-run fit SE and p-values.
+
+For event-related designs with multiple event instances in a run, use
+`PlotType='trialmean'` to plot raw event-locked means with SEM across repeated
+events at each TR. That SEM is a different quantity from map-score or FIR beta
+SE: it summarizes trial-to-trial variability in the extracted 1D signal, not
+uncertainty in the condition-lag beta map.
 
 ## Multilevel time-unfolding significance testing
 

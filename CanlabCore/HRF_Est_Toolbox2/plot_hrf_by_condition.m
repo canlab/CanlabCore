@@ -13,6 +13,7 @@ function ax = plot_hrf_by_condition(results, varargin)
 p = inputParser;
 p.addRequired('results', @isstruct);
 p.addParameter('Model', 'sfir', @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('SourceModel', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', [], @(x) isempty(x) || isnumeric(x) || iscell(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Signature', '', @(x) ischar(x) || isstring(x));
@@ -26,6 +27,7 @@ p.addParameter('BaselineSeconds', 0, @(x) isscalar(x) && x >= 0);
 p.addParameter('LineWidth', 1.8, @(x) isscalar(x) && x > 0);
 p.parse(results, varargin{:});
 opts = p.Results;
+opts.SourceModel = lower(strtrim(char(opts.SourceModel)));
 
 model_names = local_model_names(opts.Model);
 plot_type = lower(char(opts.PlotType));
@@ -52,11 +54,10 @@ plotted_se = false(1, numel(model_names));
 used_models = {};
 for m = 1:numel(model_names)
     model_name = model_names{m};
-    if ~isfield(fit_struct, model_name)
-        error('Model %s not available in selected fit structure.', model_name);
-    end
+    [selected_fit, ok, reason] = local_select_fit(fit_struct, model_name, opts.SourceModel);
+    if ~ok, error('%s', reason); end
 
-    fit = local_fit_with_uncertainty(results, fit_struct.(model_name), model_name, opts);
+    fit = local_fit_with_uncertainty(results, selected_fit, model_name, opts);
     y_mat = fit.hrf;
     x = local_fit_time(fit, results, size(y_mat, 1));
     has_se = isfield(fit, 'se') && ~isempty(fit.se) && all(size(fit.se) == size(y_mat));
@@ -212,6 +213,54 @@ elseif isfield(results, 'fits')
     fit_struct = results.fits;
 else
     error('results must contain .fits or selected .fits_by_signature.');
+end
+end
+
+function [fit, ok, reason] = local_select_fit(fit_struct, model_name, source_model)
+fit = struct();
+ok = false;
+reason = '';
+model_name = lower(char(model_name));
+source_model = lower(strtrim(char(source_model)));
+
+if isfield(fit_struct, model_name)
+    candidate = fit_struct.(model_name);
+    if local_fit_matches_source(candidate, source_model)
+        fit = candidate;
+        ok = true;
+    else
+        reason = sprintf('Model %s is not from source model %s.', model_name, source_model);
+    end
+    return
+end
+
+if isfield(fit_struct, 'mapscore')
+    candidate = fit_struct.mapscore;
+    wanted_source = source_model;
+    if isempty(wanted_source) && ~strcmp(model_name, 'mapscore')
+        wanted_source = model_name;
+    end
+    if local_fit_matches_source(candidate, wanted_source)
+        fit = candidate;
+        ok = true;
+        return
+    end
+end
+
+if isempty(source_model)
+    reason = sprintf('Model %s not available in selected fit structure.', model_name);
+else
+    reason = sprintf('Model %s not available for source model %s.', model_name, source_model);
+end
+end
+
+function tf = local_fit_matches_source(fit, source_model)
+if isempty(source_model)
+    tf = true;
+elseif isfield(fit, 'source_model') && ~isempty(fit.source_model)
+    tf = strcmpi(char(fit.source_model), source_model);
+else
+    tf = false;
 end
 end
 

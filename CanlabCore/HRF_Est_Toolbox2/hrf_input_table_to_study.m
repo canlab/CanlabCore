@@ -21,6 +21,9 @@ p.addParameter('IncludeMapScores', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('ScoreColumns', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelName', 'mapscore', @(x) ischar(x) || isstring(x));
+p.addParameter('SourceModel', {}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('AddAverageScore', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('AverageScoreName', 'mean_mapscore', @(x) ischar(x) || isstring(x));
 p.addParameter('ApproxSEFromT', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('NoVerbose', true, @(x) islogical(x) || isnumeric(x));
@@ -107,6 +110,13 @@ if isfield(score_study, 'score_names')
 else
     study.score_names = {};
 end
+if isfield(score_study, 'source_models')
+    study.source_models = score_study.source_models;
+elseif any(strcmp('model', inputs.Properties.VariableNames))
+    study.source_models = unique(lower(cellstr(string(inputs.model))), 'stable');
+else
+    study.source_models = {};
+end
 end
 
 function inputs = local_read_inputs(second_level_inputs)
@@ -129,6 +139,9 @@ try
         'Object', opts.Object, ...
         'ScoreColumns', opts.ScoreColumns, ...
         'ModelName', opts.ModelName, ...
+        'SourceModel', opts.SourceModel, ...
+        'AddAverageScore', opts.AddAverageScore, ...
+        'AverageScoreName', opts.AverageScoreName, ...
         'ApproxSEFromT', opts.ApproxSEFromT, ...
         'MissingPolicy', local_nested_missing_policy(missing_policy));
 catch err
@@ -245,12 +258,18 @@ else
     r.mapscore_signature_meta = score_result.signature_meta;
 end
 r.mapscore_source = score_result.signature_meta.source_file;
+if isfield(score_result.signature_meta, 'source_model')
+    r.mapscore_source_model = score_result.signature_meta.source_model;
+end
 if ~isfield(r, 'conditions') || isempty(r.conditions)
     r.conditions = score_result.conditions;
 end
 if isfield(r, 'settings')
     r.settings.mapscore_model_name = score_result.settings.model_name;
     r.settings.mapscore_object = score_result.settings.object;
+    if isfield(score_result.settings, 'source_model')
+        r.settings.mapscore_source_model = score_result.settings.source_model;
+    end
 else
     r.settings = score_result.settings;
 end

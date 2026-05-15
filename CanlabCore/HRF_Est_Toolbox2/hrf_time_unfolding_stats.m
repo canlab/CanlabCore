@@ -7,6 +7,7 @@ function stats = hrf_time_unfolding_stats(study, varargin)
 p = inputParser;
 p.addRequired('study', @isstruct);
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
+p.addParameter('SourceModel', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Signature', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ConditionA', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ConditionB', '', @(x) ischar(x) || isstring(x));
@@ -18,13 +19,14 @@ p.parse(study, varargin{:});
 opts = p.Results;
 
 model_name = char(opts.Model);
+source_model = lower(strtrim(char(opts.SourceModel)));
 unit = lower(char(opts.Unit));
 missing_policy = lower(char(opts.MissingPolicy));
 opts.ConditionA = char(opts.ConditionA);
 opts.ConditionB = char(opts.ConditionB);
 opts.Signature = char(opts.Signature);
 
-[D_runs, run_subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, missing_policy);
+[D_runs, run_subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy);
 if isempty(D_runs)
     error('No valid HRF fits found for model "%s". Skipped %d result(s).', model_name, numel(skipped));
 end
@@ -47,6 +49,7 @@ stats.conditionB = char(opts.ConditionB);
 stats.conditionA_matched = matchedA;
 stats.conditionB_matched = matchedB;
 stats.model = model_name;
+stats.source_model = source_model;
 stats.signature = char(opts.Signature);
 stats.unit = unit;
 stats.subject_ids = subject_ids(:);
@@ -73,7 +76,7 @@ if ~isempty(group_labels)
 end
 end
 
-function [D, subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, missing_policy)
+function [D, subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy)
 D = [];
 subject_ids = {};
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
@@ -93,12 +96,13 @@ for s = 1:numel(study.results)
         skipped = local_skip(skipped, s, subject_id, reason, missing_policy);
         continue
     end
-    if ~isfield(fit_struct, model_name)
-        skipped = local_skip(skipped, s, subject_id, sprintf('missing model %s', model_name), missing_policy);
+    [fit, ok, reason] = local_select_fit(fit_struct, model_name, source_model);
+    if ~ok
+        skipped = local_skip(skipped, s, subject_id, reason, missing_policy);
         continue
     end
 
-    h = fit_struct.(model_name).hrf;
+    h = fit.hrf;
     try
         specA = local_condition_spec(r, opts.ConditionA, 'first');
     catch
@@ -301,6 +305,56 @@ if isempty(sig_field)
 end
 fit_struct = r.fits_by_signature.(sig_field);
 ok = true;
+end
+
+function [fit, ok, reason] = local_select_fit(fit_struct, model_name, source_model)
+fit = struct();
+ok = false;
+reason = '';
+model_name = lower(char(model_name));
+source_model = lower(strtrim(char(source_model)));
+
+if isfield(fit_struct, model_name)
+    candidate = fit_struct.(model_name);
+    if local_fit_matches_source(candidate, source_model)
+        fit = candidate;
+        ok = true;
+    else
+        reason = sprintf('model %s source model mismatch', model_name);
+    end
+    return
+end
+
+if isfield(fit_struct, 'mapscore')
+    candidate = fit_struct.mapscore;
+    wanted_source = source_model;
+    if isempty(wanted_source) && ~strcmp(model_name, 'mapscore')
+        wanted_source = model_name;
+    end
+    if local_fit_matches_source(candidate, wanted_source)
+        fit = candidate;
+        ok = true;
+        return
+    end
+end
+
+if isempty(source_model)
+    reason = sprintf('missing model %s', model_name);
+else
+    reason = sprintf('missing model %s for source model %s', model_name, source_model);
+end
+end
+
+function tf = local_fit_matches_source(fit, source_model)
+if isempty(source_model)
+    tf = true;
+    return
+end
+if isfield(fit, 'source_model') && ~isempty(fit.source_model)
+    tf = strcmpi(char(fit.source_model), source_model);
+else
+    tf = false;
+end
 end
 
 function sig_field = local_signature_field(r, sig)

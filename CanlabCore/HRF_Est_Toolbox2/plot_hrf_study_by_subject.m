@@ -4,6 +4,7 @@ function ax = plot_hrf_study_by_subject(study, varargin)
 p = inputParser;
 p.addRequired('study', @isstruct);
 p.addParameter('Model', 'sfir', @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('SourceModel', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Signature', '', @(x) ischar(x) || isstring(x));
 p.addParameter('PlotType', 'fit', @(x) ischar(x) || isstring(x));
@@ -19,6 +20,7 @@ p.parse(study, varargin{:});
 opts = p.Results;
 opts.Condition = char(opts.Condition);
 opts.Signature = char(opts.Signature);
+opts.SourceModel = lower(strtrim(char(opts.SourceModel)));
 opts.Models = local_model_names(opts.Model);
 opts.Model = opts.Models{1};
 opts.PlotType = lower(char(opts.PlotType));
@@ -64,9 +66,9 @@ if logical(opts.ShowGroupMean)
     plot(ax, x, group_mean, 'k-', 'LineWidth', opts.GroupLineWidth, 'DisplayName', 'Group mean');
 end
 legend(ax, 'Interpreter', 'none');
-title(ax, local_title(opts, condition_name, SE, Y), 'Interpreter', 'none');
+title(ax, local_title(opts, condition_name, SE, Y, study), 'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
-ylabel(ax, local_ylabel(opts));
+ylabel(ax, local_ylabel(opts, study));
 hline(0, 'k-');
 end
 
@@ -122,7 +124,7 @@ end
 legend(ax, 'Interpreter', 'none');
 title(ax, local_multi_model_title(opts, condition_name), 'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
-ylabel(ax, local_ylabel(opts));
+ylabel(ax, local_ylabel(opts, study));
 hline(0, 'k-');
 end
 
@@ -150,8 +152,9 @@ for s = 1:numel(study.results)
         skipped = local_skip(skipped, s, subject_id, reason, missing_policy);
         continue
     end
-    if ~isfield(fit_struct, model_name)
-        skipped = local_skip(skipped, s, subject_id, sprintf('missing model %s', model_name), missing_policy);
+    [fit, ok, reason] = local_select_fit(fit_struct, model_name, opts.SourceModel);
+    if ~ok
+        skipped = local_skip(skipped, s, subject_id, reason, missing_policy);
         continue
     end
 
@@ -165,7 +168,6 @@ for s = 1:numel(study.results)
         continue
     end
 
-    fit = fit_struct.(model_name);
     y = local_mean_omitnan(fit.hrf(:, condition_spec.indices), 2)';
     se = local_fit_se(fit, condition_spec.indices, numel(y));
     this_x = local_fit_time(fit, r, numel(y));
@@ -358,10 +360,14 @@ if n_runs > 1
 end
 end
 
-function ttl = local_title(opts, condition_name, SE, Y)
+function ttl = local_title(opts, condition_name, SE, Y, study)
 sig = char(opts.Signature);
 if isempty(sig)
-    sig = 'selected signal';
+    if local_is_mapscore_study(study)
+        sig = 'mean_mapscore';
+    else
+        sig = 'selected signal';
+    end
 end
 parts = {};
 if any(~isnan(SE(:)))
@@ -387,12 +393,13 @@ if isempty(parts)
 else
     ribbon_txt = sprintf('ribbon=%s', strjoin(parts, ' + '));
 end
+source_model = local_source_model_text(opts);
 if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
     ttl = sprintf('model=trialmean, unit=%s, condition=%s, source=%s, %s', ...
         lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
-elseif strcmpi(opts.Model, 'mapscore')
-    ttl = sprintf('model=mapscore, unit=%s, condition=%s, score=%s, %s', ...
-        lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+elseif local_is_mapscore_study(study)
+    ttl = sprintf('model=%s%s, unit=%s, condition=%s, score=%s, %s', ...
+        char(opts.Model), source_model, lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
 else
     ttl = sprintf('model=%s, unit=%s, condition=%s, source=%s, %s', ...
         char(opts.Model), lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
@@ -420,16 +427,30 @@ ttl = sprintf('models=%s, unit=%s, condition=%s, source=%s, %s', ...
     strjoin(opts.Models, ' + '), lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
 end
 
-function ylab = local_ylabel(opts)
+function ylab = local_ylabel(opts, study)
 if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
     ylab = 'Observed signal';
     return
 end
-if strcmpi(opts.Model, 'mapscore')
+if strcmpi(opts.Model, 'mapscore') || local_is_mapscore_study(study)
     ylab = 'Pattern expression / map score';
 else
     ylab = 'Fitted response amplitude';
 end
+end
+
+function txt = local_source_model_text(opts)
+if isempty(opts.SourceModel)
+    txt = '';
+else
+    txt = sprintf(' source_model=%s', opts.SourceModel);
+end
+end
+
+function tf = local_is_mapscore_study(study)
+tf = (isfield(study, 'source') && contains(char(study.source), 'map_scores')) || ...
+    (isfield(study, 'mapscore_success') && any(study.mapscore_success)) || ...
+    (isfield(study, 'object') && isfield(study, 'model_name') && strcmpi(char(study.model_name), 'mapscore'));
 end
 
 function model_names = local_model_names(model_input)
@@ -498,6 +519,56 @@ if isempty(sig_field)
 end
 fit_struct = r.fits_by_signature.(sig_field);
 ok = true;
+end
+
+function [fit, ok, reason] = local_select_fit(fit_struct, model_name, source_model)
+fit = struct();
+ok = false;
+reason = '';
+model_name = lower(char(model_name));
+source_model = lower(strtrim(char(source_model)));
+
+if isfield(fit_struct, model_name)
+    candidate = fit_struct.(model_name);
+    if local_fit_matches_source(candidate, source_model)
+        fit = candidate;
+        ok = true;
+    else
+        reason = sprintf('model %s source model mismatch', model_name);
+    end
+    return
+end
+
+if isfield(fit_struct, 'mapscore')
+    candidate = fit_struct.mapscore;
+    wanted_source = source_model;
+    if isempty(wanted_source) && ~strcmp(model_name, 'mapscore')
+        wanted_source = model_name;
+    end
+    if local_fit_matches_source(candidate, wanted_source)
+        fit = candidate;
+        ok = true;
+        return
+    end
+end
+
+if isempty(source_model)
+    reason = sprintf('missing model %s', model_name);
+else
+    reason = sprintf('missing model %s for source model %s', model_name, source_model);
+end
+end
+
+function tf = local_fit_matches_source(fit, source_model)
+if isempty(source_model)
+    tf = true;
+    return
+end
+if isfield(fit, 'source_model') && ~isempty(fit.source_model)
+    tf = strcmpi(char(fit.source_model), source_model);
+else
+    tf = false;
+end
 end
 
 function sig_field = local_signature_field(r, sig)

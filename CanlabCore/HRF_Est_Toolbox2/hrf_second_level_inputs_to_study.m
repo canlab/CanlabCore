@@ -12,18 +12,24 @@ function study = hrf_second_level_inputs_to_study(second_level_inputs, varargin)
 % subject-level HRF model fits. The default model name is therefore
 % "mapscore". For beta map-score CSVs, matching t map-score CSVs are used
 % by default to derive approximate score SE as abs(beta_score / t_score).
+% If multiple score columns are available, result.fits is the average score
+% curve by default; individual signatures/maps remain in fits_by_signature.
 
 p = inputParser;
 p.addRequired('second_level_inputs', @(x) istable(x) || ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('ScoreColumns', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('ModelName', 'mapscore', @(x) ischar(x) || isstring(x));
+p.addParameter('SourceModel', {}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('AddAverageScore', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('AverageScoreName', 'mean_mapscore', @(x) ischar(x) || isstring(x));
 p.addParameter('ApproxSEFromT', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.parse(second_level_inputs, varargin{:});
 opts = p.Results;
 
 inputs = local_read_inputs(second_level_inputs);
+source_model_filter = local_source_model_filter(opts.SourceModel);
 score_file_var = local_score_file_var(char(opts.Object));
 if ~any(strcmp(score_file_var, inputs.Properties.VariableNames))
     error('second_level_inputs is missing column %s.', score_file_var);
@@ -42,6 +48,14 @@ model_name = char(opts.ModelName);
 for i = 1:n
     subject_ids{i} = local_table_value(inputs, i, 'subject');
     score_file = local_table_value(inputs, i, score_file_var);
+    source_model = local_source_model(inputs, i, score_file);
+
+    if ~local_source_model_matches(source_model, source_model_filter)
+        reason = sprintf('source model %s did not match requested SourceModel', source_model);
+        skipped = local_skip(skipped, i, subject_ids{i}, reason, missing_policy);
+        errors{i} = reason;
+        continue
+    end
 
     if isempty(score_file) || exist(score_file, 'file') ~= 2
         reason = sprintf('missing score file %s', score_file);
@@ -62,9 +76,14 @@ for i = 1:n
         end
 
         results{i} = local_score_table_to_result(S, Tscore, score_cols, model_name, ...
-            char(opts.Object), score_file);
+            char(opts.Object), score_file, source_model, logical(opts.AddAverageScore), ...
+            char(opts.AverageScoreName));
         success(i) = true;
-        all_score_names = [all_score_names, score_cols(:)']; %#ok<AGROW>
+        if logical(opts.AddAverageScore)
+            all_score_names = [all_score_names, {char(opts.AverageScoreName)}, score_cols(:)']; %#ok<AGROW>
+        else
+            all_score_names = [all_score_names, score_cols(:)']; %#ok<AGROW>
+        end
     catch err
         skipped = local_skip(skipped, i, subject_ids{i}, err.message, missing_policy);
         errors{i} = err.message;
@@ -80,6 +99,7 @@ study.skipped = skipped;
 study.score_names = unique(all_score_names, 'stable');
 study.object = char(opts.Object);
 study.model_name = model_name;
+study.source_models = local_study_source_models(inputs);
 study.source = 'second_level_inputs_map_scores';
 study.second_level_inputs = inputs;
 end
@@ -89,6 +109,54 @@ if istable(second_level_inputs)
     inputs = second_level_inputs;
 else
     inputs = readtable(char(second_level_inputs), 'TextType', 'string');
+end
+end
+
+function models = local_source_model_filter(source_model)
+if isempty(source_model)
+    models = {};
+else
+    models = lower(cellstr(string(source_model)));
+    models = cellfun(@strtrim, models, 'UniformOutput', false);
+    models = models(~cellfun(@isempty, models));
+end
+end
+
+function tf = local_source_model_matches(source_model, requested)
+if isempty(requested)
+    tf = true;
+else
+    tf = ismember(lower(strtrim(source_model)), requested);
+end
+end
+
+function source_model = local_source_model(inputs, row, score_file)
+source_model = local_table_value(inputs, row, 'model');
+if isempty(source_model)
+    source_model = local_model_from_filename(score_file);
+end
+source_model = lower(strtrim(source_model));
+end
+
+function model_name = local_model_from_filename(file_name)
+model_name = '';
+if isempty(file_name)
+    return
+end
+[~, name] = fileparts(file_name);
+tok = regexp(name, '_([A-Za-z]+)_(beta|t)_map_scores$', 'tokens', 'once');
+if ~isempty(tok) && ismember(lower(tok{1}), {'fir', 'sfir', 'canonical', 'spline'})
+    model_name = lower(tok{1});
+end
+end
+
+function models = local_study_source_models(inputs)
+if any(strcmp('model', inputs.Properties.VariableNames))
+    vals = cellstr(string(inputs.model));
+    vals = vals(~cellfun(@(s) ismissing(string(s)) || strlength(string(s)) == 0, vals));
+    models = unique(lower(vals), 'stable');
+else
+    models = {};
 end
 end
 
@@ -115,7 +183,7 @@ end
 Tscore = readtable(t_score_file, 'TextType', 'string');
 end
 
-function result = local_score_table_to_result(S, Tscore, score_cols, model_name, object_name, score_file)
+function result = local_score_table_to_result(S, Tscore, score_cols, model_name, object_name, score_file, source_model, add_average, average_name)
 conditions = local_condition_values(S);
 condition_names = unique(conditions, 'stable');
 lag_index = local_lag_index_values(S, conditions);
@@ -128,8 +196,19 @@ if ~isempty(Tscore)
     t_lag_index = local_lag_index_values(Tscore, t_conditions);
 end
 
-score_fields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(score_cols));
+if add_average
+    signature_names = [{average_name}, score_cols(:)'];
+    signature_fields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(signature_names));
+    average_field = signature_fields{1};
+    score_fields = signature_fields(2:end);
+else
+    signature_names = score_cols(:)';
+    signature_fields = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(signature_names));
+    average_field = '';
+    score_fields = signature_fields;
+end
 fits_by_signature = struct();
+fit_data_by_score = cell(1, numel(score_cols));
 
 for s = 1:numel(score_cols)
     H = nan(numel(lag_names), numel(condition_names));
@@ -149,19 +228,24 @@ for s = 1:numel(score_cols)
 
     [SE, P, p_type, uncertainty_source] = local_approx_uncertainty(H, T, S);
 
+    fit_data = local_score_fit_data(H, lag_names, lag_seconds, score_cols{s}, ...
+        score_file, source_model, SE, T, P, p_type, uncertainty_source);
+    fit_data_by_score{s} = fit_data;
+
     fit = struct();
-    fit.(model_name) = struct();
-    fit.(model_name).hrf = H;
-    fit.(model_name).lag_index = lag_names(:);
-    fit.(model_name).lag_seconds = lag_seconds(:);
-    fit.(model_name).source_score = score_cols{s};
-    fit.(model_name).source_file = score_file;
-    fit.(model_name).se = SE;
-    fit.(model_name).t = T;
-    fit.(model_name).p = P;
-    fit.(model_name).p_type = p_type;
-    fit.(model_name).uncertainty_source = uncertainty_source;
+    fit.(model_name) = fit_data;
     fits_by_signature.(score_fields{s}) = fit;
+end
+
+if add_average
+    average_fit = struct();
+    average_fit.(model_name) = local_average_score_fit(fit_data_by_score, average_name, score_cols, score_file, source_model);
+    fits_by_signature.(average_field) = average_fit;
+    selected_signature = average_name;
+    selected_fit = average_fit;
+else
+    selected_signature = score_cols{1};
+    selected_fit = fits_by_signature.(score_fields{1});
 end
 
 result = struct();
@@ -169,16 +253,63 @@ result.conditions = condition_names(:)';
 result.fits_by_signature = fits_by_signature;
 result.signature_meta = struct();
 result.signature_meta.signal_source = 'wholebrain_map_score';
-result.signature_meta.selected_signature = score_cols{1};
-result.signature_meta.selected_signatures = score_cols(:)';
-result.signature_meta.selected_signature_fields = score_fields(:)';
-result.signature_meta.available_signatures = score_cols(:)';
-result.signature_meta.n_signatures = numel(score_cols);
+result.signature_meta.selected_signature = selected_signature;
+result.signature_meta.selected_signatures = signature_names(:)';
+result.signature_meta.selected_signature_fields = signature_fields(:)';
+result.signature_meta.available_signatures = signature_names(:)';
+result.signature_meta.n_signatures = numel(signature_names);
 result.signature_meta.object = object_name;
 result.signature_meta.source_file = score_file;
-result.fits = fits_by_signature.(score_fields{1});
+result.signature_meta.source_model = source_model;
+result.fits = selected_fit;
 result.settings = struct('signal_source', 'second_level_map_scores', ...
-    'model_name', model_name, 'object', object_name);
+    'model_name', model_name, 'object', object_name, 'source_model', source_model);
+end
+
+function fit_data = local_score_fit_data(H, lag_names, lag_seconds, source_score, score_file, source_model, SE, T, P, p_type, uncertainty_source)
+fit_data = struct();
+fit_data.hrf = H;
+fit_data.lag_index = lag_names(:);
+fit_data.lag_seconds = lag_seconds(:);
+fit_data.source_score = source_score;
+fit_data.source_file = score_file;
+fit_data.source_model = source_model;
+fit_data.se = SE;
+fit_data.t = T;
+fit_data.p = P;
+fit_data.p_type = p_type;
+fit_data.uncertainty_source = uncertainty_source;
+end
+
+function fit_data = local_average_score_fit(fit_data_by_score, average_name, score_cols, score_file, source_model)
+H = local_stack_field(fit_data_by_score, 'hrf');
+SE = local_stack_field(fit_data_by_score, 'se');
+T = local_stack_field(fit_data_by_score, 't');
+
+fit_data = fit_data_by_score{1};
+fit_data.hrf = local_mean_omitnan_stack(H);
+fit_data.source_score = average_name;
+fit_data.source_scores = score_cols(:)';
+fit_data.source_file = score_file;
+fit_data.source_model = source_model;
+
+if ~isempty(SE)
+    fit_data.se = local_combine_score_se(H, SE);
+elseif size(H, 3) > 1
+    fit_data.se = local_sem_omitnan_stack(H);
+else
+    fit_data.se = [];
+end
+
+if ~isempty(fit_data.se)
+    fit_data.t = fit_data.hrf ./ fit_data.se;
+    fit_data.t(~isfinite(fit_data.t)) = NaN;
+else
+    fit_data.t = local_mean_omitnan_stack(T);
+end
+fit_data.p = [];
+fit_data.p_type = '';
+fit_data.uncertainty_source = 'average across map-score columns';
 end
 
 function t_values = local_t_values(Tscore, score_col)
@@ -220,6 +351,89 @@ if any(strcmp('dfe', S.Properties.VariableNames))
     end
 end
 uncertainty_source = 'approximate score SE from matching beta and t map-score CSVs';
+end
+
+function X = local_stack_field(fit_data_by_score, field_name)
+first_idx = [];
+for i = 1:numel(fit_data_by_score)
+    if isfield(fit_data_by_score{i}, field_name) && ~isempty(fit_data_by_score{i}.(field_name))
+        first_idx = i;
+        break
+    end
+end
+if isempty(first_idx)
+    X = [];
+    return
+end
+
+first_x = fit_data_by_score{first_idx}.(field_name);
+X = nan([size(first_x), numel(fit_data_by_score)]);
+X(:, :, first_idx) = first_x;
+for i = (first_idx + 1):numel(fit_data_by_score)
+    if ~isfield(fit_data_by_score{i}, field_name) || isempty(fit_data_by_score{i}.(field_name))
+        continue
+    end
+    this_x = fit_data_by_score{i}.(field_name);
+    if isequal(size(this_x), size(first_x))
+        X(:, :, i) = this_x;
+    end
+end
+if ~isempty(X) && all(isnan(X(:)))
+    X = [];
+end
+end
+
+function M = local_mean_omitnan_stack(X)
+if isempty(X)
+    M = [];
+    return
+end
+M = nan(size(X, 1), size(X, 2));
+for r = 1:size(X, 1)
+    for c = 1:size(X, 2)
+        M(r, c) = local_mean_omitnan(squeeze(X(r, c, :)));
+    end
+end
+end
+
+function SE = local_sem_omitnan_stack(X)
+if isempty(X)
+    SE = [];
+    return
+end
+SE = nan(size(X, 1), size(X, 2));
+for r = 1:size(X, 1)
+    for c = 1:size(X, 2)
+        vals = squeeze(X(r, c, :));
+        vals = vals(~isnan(vals));
+        if numel(vals) > 1
+            SE(r, c) = std(vals) ./ sqrt(numel(vals));
+        end
+    end
+end
+end
+
+function SE = local_combine_score_se(H, score_SE)
+SE = nan(size(H, 1), size(H, 2));
+score_sem = local_sem_omitnan_stack(H);
+for r = 1:size(score_SE, 1)
+    for c = 1:size(score_SE, 2)
+        vals = squeeze(score_SE(r, c, :));
+        vals = vals(~isnan(vals));
+        if isempty(vals)
+            model_se = NaN;
+        else
+            model_se = sqrt(sum(vals .^ 2)) ./ numel(vals);
+        end
+        if isnan(model_se)
+            SE(r, c) = score_sem(r, c);
+        elseif isnan(score_sem(r, c))
+            SE(r, c) = model_se;
+        else
+            SE(r, c) = sqrt(model_se .^ 2 + score_sem(r, c) .^ 2);
+        end
+    end
+end
 end
 
 function conditions = local_condition_values(S)

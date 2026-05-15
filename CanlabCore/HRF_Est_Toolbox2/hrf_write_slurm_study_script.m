@@ -112,21 +112,16 @@ models = local_arg_value(pipeline_args, 'Models');
 has_wholebrain_mode = local_has_arg(pipeline_args, 'WholeBrainMode');
 if ~isempty(models)
     model_names = lower(cellstr(string(models)));
-    if ~has_wholebrain_mode && any(strcmp(model_names, 'sfir'))
-        pipeline_args = [pipeline_args, {'WholeBrainMode', 'sFIR'}];
-        note = sprintf(['Note: PipelineArgs included Models={... ''sfir'' ...} but no WholeBrainMode, ' ...
-            'so the SLURM worker will write whole-brain maps with WholeBrainMode=''sFIR''.']);
-    elseif ~has_wholebrain_mode && any(strcmp(model_names, 'fir'))
-        pipeline_args = [pipeline_args, {'WholeBrainMode', 'FIR'}];
-        note = sprintf(['Note: PipelineArgs included Models={... ''fir'' ...} but no WholeBrainMode, ' ...
-            'so the SLURM worker will write whole-brain maps with WholeBrainMode=''FIR''.']);
+    if ~has_wholebrain_mode
+        pipeline_args = [pipeline_args, {'WholeBrainMode', 'auto'}];
+        note = sprintf(['Note: PipelineArgs did not include WholeBrainMode, so the SLURM worker will use ' ...
+            'WholeBrainMode=''auto'' and write one 4D whole-brain map set for each requested supported linear model.']);
     end
 
-    nonlinear = intersect(model_names, {'canonical', 'nlgamma', 'spline'}, 'stable');
+    nonlinear = intersect(model_names, {'logit', 'nlgamma'}, 'stable');
     if ~isempty(nonlinear)
-        extra = sprintf(['Note: Models={%s} affects the 1D extracted-signal fits saved in the MAT results. ' ...
-            'The 4D whole-brain NIfTI writer currently supports FIR/sFIR map modes only; use ' ...
-            '''WholeBrainMode'',''sFIR'' or ''WholeBrainMode'',''FIR'' to choose those maps.'], ...
+        extra = sprintf(['Note: Models={%s} affects the 1D extracted-signal fits saved in the MAT results, ' ...
+            'but nonlinear logit/nlgamma whole-brain maps are skipped by the fast 4D writer.'], ...
             strjoin(nonlinear, ', '));
         if isempty(note), note = extra; else, note = sprintf('%s\n%s', note, extra); end
     end
@@ -229,21 +224,44 @@ fprintf(fid, 'fprintf(''Running HRF task %%d/%%d: %%s\\n'', task_id, n_tasks, su
 fprintf(fid, 'args = [config.pipeline_args, {''WriteWholeBrain'', true, ''WholeBrainOutputPrefix'', output_prefix, ''OutputMat'', output_mat}];\n');
 fprintf(fid, 'results = run_hrf_pipeline(fmri_file, events_file, args{:});\n');
 fprintf(fid, 'if ~isempty(config.signature_sets) || ~isempty(config.image_sets)\n');
+fprintf(fid, '    wholebrain_models = local_wholebrain_models(results);\n');
 fprintf(fid, '    for oi = 1:numel(config.score_objects)\n');
 fprintf(fid, '        object_name = char(config.score_objects{oi});\n');
-fprintf(fid, '        score_csv = sprintf(''%%s_%%s_map_scores.csv'', output_prefix, object_name);\n');
-fprintf(fid, '        hrf_apply_maps_to_wholebrain(results.wholebrain, ''Object'', object_name, ...\n');
-fprintf(fid, '            ''SignatureSets'', config.signature_sets, ''ImageSets'', config.image_sets, ...\n');
-fprintf(fid, '            ''SimilarityMetric'', config.similarity_metric, ''OutputCsv'', score_csv);\n');
+fprintf(fid, '        for mi = 1:numel(wholebrain_models)\n');
+fprintf(fid, '            model_name = wholebrain_models(mi).name;\n');
+fprintf(fid, '            model_stats = wholebrain_models(mi).stats;\n');
+fprintf(fid, '            if numel(wholebrain_models) == 1\n');
+fprintf(fid, '                score_csv = sprintf(''%%s_%%s_map_scores.csv'', output_prefix, object_name);\n');
+fprintf(fid, '            else\n');
+fprintf(fid, '                score_csv = sprintf(''%%s_%%s_%%s_map_scores.csv'', output_prefix, lower(model_name), object_name);\n');
+fprintf(fid, '            end\n');
+fprintf(fid, '            hrf_apply_maps_to_wholebrain(model_stats, ''Object'', object_name, ...\n');
+fprintf(fid, '                ''SignatureSets'', config.signature_sets, ''ImageSets'', config.image_sets, ...\n');
+fprintf(fid, '                ''SimilarityMetric'', config.similarity_metric, ''OutputCsv'', score_csv);\n');
+fprintf(fid, '        end\n');
 fprintf(fid, '    end\n');
 fprintf(fid, 'end\n');
 fprintf(fid, 'if config.make_animations\n');
 fprintf(fid, '    movie_file = sprintf(''%%s_%%s_montage.mp4'', output_prefix, config.animation_object);\n');
-fprintf(fid, '    hrf_animate_wholebrain_stats(results.wholebrain, ''Object'', config.animation_object, ...\n');
+fprintf(fid, '    wholebrain_models = local_wholebrain_models(results);\n');
+fprintf(fid, '    hrf_animate_wholebrain_stats(wholebrain_models(1).stats, ''Object'', config.animation_object, ...\n');
 fprintf(fid, '        ''Condition'', config.animation_condition, ''FrameRate'', config.animation_frame_rate, ...\n');
 fprintf(fid, '        ''OutputFile'', movie_file);\n');
 fprintf(fid, 'end\n');
 fprintf(fid, '\n');
+fprintf(fid, 'function models = local_wholebrain_models(results)\n');
+fprintf(fid, 'models = struct(''name'', {}, ''stats'', {});\n');
+fprintf(fid, 'if isfield(results, ''wholebrain_by_model'') && ~isempty(results.wholebrain_by_model)\n');
+fprintf(fid, '    fields = fieldnames(results.wholebrain_by_model);\n');
+fprintf(fid, '    for ii = 1:numel(fields)\n');
+fprintf(fid, '        models(end + 1) = struct(''name'', fields{ii}, ''stats'', results.wholebrain_by_model.(fields{ii})); %%#ok<AGROW>\n');
+fprintf(fid, '    end\n');
+fprintf(fid, 'elseif isfield(results, ''wholebrain'')\n');
+fprintf(fid, '    models = struct(''name'', ''wholebrain'', ''stats'', results.wholebrain);\n');
+fprintf(fid, 'else\n');
+fprintf(fid, '    error(''run_hrf_pipeline did not return wholebrain outputs.'');\n');
+fprintf(fid, 'end\n');
+fprintf(fid, 'end\n\n');
 fprintf(fid, 'function val = local_cell_at(values, idx)\n');
 fprintf(fid, 'if iscell(values), val = values{idx}; else, val = values(idx); end\n');
 fprintf(fid, 'val = local_cell_to_char(val);\n');

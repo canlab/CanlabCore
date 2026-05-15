@@ -1,9 +1,9 @@
 function out = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, varargin)
-%HRF_FIT_WHOLEBRAIN_STATS Vectorized whole-brain FIR/sFIR HRF beta and T maps.
+%HRF_FIT_WHOLEBRAIN_STATS Vectorized whole-brain HRF beta and T maps.
 %
 % out = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...)
 %
-% This fits an FIR-style time-unfolding model to every voxel in a 4D fMRI
+% This fits a linear HRF model to every voxel in a 4D fMRI
 % image and returns two CANlab statistic_image objects:
 %   out.b  - beta/HRF amplitude maps, one 3D volume per condition x lag
 %   out.t  - T maps for the same condition x lag volumes
@@ -76,7 +76,7 @@ end
 
 [Runc, condition_groups] = hrf_build_stick_functions(E, cond_names, TR, n_tp);
 cond_names = {condition_groups.label};
-[X, design_info] = local_build_fir_design(Runc, cond_names, TR, opts.WindowSeconds, opts.Mode, opts.Nuisance);
+[X, design_info] = local_build_wholebrain_design(Runc, cond_names, TR, opts.WindowSeconds, opts.Mode, opts.Nuisance);
 
 if size(X, 1) ~= size(data_obj.dat, 2)
     error('Design rows (%d) must match fMRI time points (%d).', size(X, 1), size(data_obj.dat, 2));
@@ -85,10 +85,9 @@ end
 [PX, pen] = local_get_pseudoinverse(X, design_info, opts.Mode);
 hat_trace = trace(X * PX);
 dfe = max(size(X, 1) - hat_trace, 1);
-coef_var_scale = max(diag(PX * PX'), 0);
+coef_var_scale = max(diag(design_info.output_lift * (PX * PX') * design_info.output_lift'), 0);
 
-keep = design_info.fir_columns;
-n_keep = numel(keep);
+n_keep = size(design_info.output_lift, 1);
 n_vox = size(data_obj.dat, 1);
 
 beta_dat = zeros(n_vox, n_keep, 'single');
@@ -122,8 +121,8 @@ for first_vox = 1:chunk_size:n_vox
     mse = sum(R .^ 2, 1) ./ dfe;
     SE = sqrt(coef_var_scale * mse);
 
-    Bkeep = B(keep, :);
-    SEkeep = SE(keep, :);
+    Bkeep = design_info.output_lift * B;
+    SEkeep = SE;
     Tkeep = Bkeep ./ SEkeep;
     Pkeep = 2 * (1 - tcdf(abs(Tkeep), dfe));
     Pkeep(Pkeep == 0) = eps;
@@ -216,6 +215,19 @@ if isempty(TR) || TR <= 0
 end
 end
 
+function [X, info] = local_build_wholebrain_design(Runc, cond_names, TR, window_seconds, mode, nuisance)
+switch lower(char(mode))
+    case {'fir', 'sfir'}
+        [X, info] = local_build_fir_design(Runc, cond_names, TR, window_seconds, mode, nuisance);
+    case 'canonical'
+        [X, info] = local_build_canonical_design(Runc, cond_names, TR, window_seconds, mode, nuisance);
+    case 'spline'
+        [X, info] = local_build_spline_design(Runc, cond_names, TR, window_seconds, mode, nuisance);
+    otherwise
+        error('Unknown Mode: %s. Use ''FIR'', ''sFIR'', ''canonical'', or ''spline''.', char(mode));
+end
+end
+
 function [X, info] = local_build_fir_design(Runc, cond_names, TR, window_seconds, mode, nuisance)
 numstim = numel(Runc);
 len = numel(Runc{1});
@@ -280,6 +292,137 @@ info.nuisance_columns = (info.intercept_column + 1):size(X, 2);
 info.labels = labels;
 info.metadata_table = table((1:numel(labels))', condition_col, condition_index, lag_index, lag_seconds, labels, ...
     'VariableNames', {'volume_index', 'condition', 'condition_index', 'lag_index', 'lag_seconds', 'image_label'});
+info.output_lift = zeros(numel(labels), size(X, 2));
+for i = 1:numel(labels)
+    info.output_lift(i, i) = 1;
+end
+end
+
+function [X, info] = local_build_canonical_design(Runc, cond_names, TR, window_seconds, mode, nuisance)
+[~, t, tlen] = local_scalar_window(window_seconds, TR, mode);
+numstim = numel(Runc);
+len = numel(Runc{1});
+h = local_canonical_basis(TR, tlen);
+
+Xtask = zeros(len, numstim);
+for i = 1:numstim
+    v = conv(Runc{i}(:), h(:));
+    Xtask(:, i) = v(1:len);
+end
+X = [ones(len, 1), Xtask];
+if ~isempty(nuisance)
+    if size(nuisance, 1) ~= len
+        error('Nuisance matrix must have %d rows to match fMRI time points.', len);
+    end
+    X = [X nuisance];
+end
+
+[labels, condition_col, condition_index, lag_index, lag_seconds] = ...
+    local_condition_lag_metadata(cond_names, t, mode);
+
+info = struct();
+info.mode = char(mode);
+info.TR = TR;
+info.tlen = repmat(tlen, 1, numstim);
+info.intercept_column = 1;
+info.nuisance_columns = (numstim + 2):size(X, 2);
+info.labels = labels;
+info.metadata_table = table((1:numel(labels))', condition_col, condition_index, lag_index, lag_seconds, labels, ...
+    'VariableNames', {'volume_index', 'condition', 'condition_index', 'lag_index', 'lag_seconds', 'image_label'});
+info.output_lift = zeros(numel(labels), size(X, 2));
+for c = 1:numstim
+    col = c + 1;
+    rows = ((c - 1) * tlen + 1):(c * tlen);
+    info.output_lift(rows, col) = h(:);
+end
+end
+
+function [X, info] = local_build_spline_design(Runc, cond_names, TR, window_seconds, mode, nuisance)
+[window_seconds, t, tlen] = local_scalar_window(window_seconds, TR, mode); %#ok<ASGLU>
+numstim = numel(Runc);
+len = numel(Runc{1});
+K = 8;
+norder = 4;
+
+try
+    basis = create_bspline_basis([0, tlen], K + 3, norder);
+    Bbasis = eval_basis((1:tlen), basis);
+catch
+    error('Mode=''spline'' requires the FDA package on the MATLAB path (missing create_bspline_basis/eval_basis; see https://github.com/markgewhite/fda).');
+end
+Bbasis = Bbasis(:, 3:end-1);
+
+Wi = zeros(len, numstim * K);
+for c = 1:numstim
+    Wc = tor_make_deconv_mtx3(Runc{c}(:), tlen, 1);
+    Wi(:, (c - 1) * K + 1:c * K) = Wc(:, 1:tlen) * Bbasis;
+end
+X = [ones(len, 1), Wi];
+if ~isempty(nuisance)
+    if size(nuisance, 1) ~= len
+        error('Nuisance matrix must have %d rows to match fMRI time points.', len);
+    end
+    X = [X nuisance];
+end
+
+[labels, condition_col, condition_index, lag_index, lag_seconds] = ...
+    local_condition_lag_metadata(cond_names, t, mode);
+
+info = struct();
+info.mode = char(mode);
+info.TR = TR;
+info.tlen = repmat(tlen, 1, numstim);
+info.intercept_column = 1;
+info.nuisance_columns = (numstim * K + 2):size(X, 2);
+info.labels = labels;
+info.metadata_table = table((1:numel(labels))', condition_col, condition_index, lag_index, lag_seconds, labels, ...
+    'VariableNames', {'volume_index', 'condition', 'condition_index', 'lag_index', 'lag_seconds', 'image_label'});
+info.output_lift = zeros(numel(labels), size(X, 2));
+for c = 1:numstim
+    rows = ((c - 1) * tlen + 1):(c * tlen);
+    cols = (c - 1) * K + 2:c * K + 1;
+    info.output_lift(rows, cols) = Bbasis;
+end
+end
+
+function [window_seconds, t, tlen] = local_scalar_window(window_seconds, TR, mode)
+if ~isscalar(window_seconds)
+    if all(window_seconds == window_seconds(1))
+        window_seconds = window_seconds(1);
+    else
+        error('WindowSeconds must be scalar for whole-brain Mode=''%s''.', char(mode));
+    end
+end
+t = 1:TR:window_seconds;
+tlen = numel(t);
+end
+
+function h = local_canonical_basis(TR, tlen)
+len = max(round(30 / TR), tlen);
+xBF.dt = TR;
+xBF.length = len;
+xBF.name = 'hrf (with time and dispersion derivatives)';
+xBF = spm_get_bf(xBF);
+h = xBF.bf(1:tlen, 1);
+h = h ./ max(h);
+end
+
+function [labels, condition_col, condition_index, lag_index, lag_seconds] = local_condition_lag_metadata(cond_names, t, mode)
+labels = {};
+condition_col = {};
+condition_index = [];
+lag_index = [];
+lag_seconds = [];
+for c = 1:numel(cond_names)
+    for j = 1:numel(t)
+        label = sprintf('%s_%s_lag%03d_%0.3gs', local_safe_label(mode), local_safe_label(cond_names{c}), j, t(j));
+        labels{end + 1, 1} = label; %#ok<AGROW>
+        condition_col{end + 1, 1} = cond_names{c}; %#ok<AGROW>
+        condition_index(end + 1, 1) = c; %#ok<AGROW>
+        lag_index(end + 1, 1) = j; %#ok<AGROW>
+        lag_seconds(end + 1, 1) = t(j); %#ok<AGROW>
+    end
+end
 end
 
 function [PX, pen] = local_get_pseudoinverse(X, info, mode)
@@ -287,7 +430,7 @@ mode = lower(char(mode));
 pen = zeros(size(X, 2));
 
 switch mode
-    case 'fir'
+    case {'fir', 'canonical', 'spline'}
         PX = pinv(X);
     case 'sfir'
         start_idx = 1;
@@ -305,7 +448,7 @@ switch mode
         end
         PX = (X' * X + pen) \ X';
     otherwise
-        error('Unknown Mode: %s. Use ''FIR'' or ''sFIR''.', mode);
+        error('Unknown Mode: %s. Use ''FIR'', ''sFIR'', ''canonical'', or ''spline''.', mode);
 end
 end
 
@@ -317,38 +460,57 @@ paths.se = [prefix '_se.nii'];
 paths.p = [prefix '_p.nii'];
 paths.metadata = [prefix '_metadata.csv'];
 
-write_args = {'fname', paths.beta};
-if overwrite, write_args{end + 1} = 'overwrite'; end
-write(out.b, write_args{:});
+local_write_image(out.b, paths.beta, overwrite);
 
-write_args = {'fname', paths.t};
-if overwrite, write_args{end + 1} = 'overwrite'; end
-write(out.t, write_args{:});
+local_write_image(out.t, paths.t, overwrite);
 
 se_obj = out.b;
 se_obj.type = 'HRF beta standard error';
 se_obj.dat = out.b.ste;
 se_obj.dat_descrip = 'Whole-brain HRF beta standard error maps';
-write_args = {'fname', paths.se};
-if overwrite, write_args{end + 1} = 'overwrite'; end
-write(se_obj, write_args{:});
+local_write_image(se_obj, paths.se, overwrite);
 
 p_obj = out.t;
 p_obj.type = 'p';
 p_obj.dat = out.t.p;
 p_obj.p = out.t.p;
 p_obj.dat_descrip = 'Whole-brain HRF two-tailed p-value maps';
-write_args = {'fname', paths.p};
-if overwrite, write_args{end + 1} = 'overwrite'; end
-write(p_obj, write_args{:});
+local_write_image(p_obj, paths.p, overwrite);
 
+local_delete_if_overwrite(paths.metadata, overwrite);
 writetable(out.metadata_table, paths.metadata);
 
 if write_thresholded_t
     paths.t_thresholded = [prefix '_t_thresh.nii'];
-    write_args = {'fname', paths.t_thresholded, 'thresh'};
-    if overwrite, write_args{end + 1} = 'overwrite'; end
-    write(out.t, write_args{:});
+    local_write_image(out.t, paths.t_thresholded, overwrite, 'thresh');
+end
+end
+
+function local_write_image(obj, fname, overwrite, varargin)
+local_delete_if_overwrite(fname, overwrite);
+write_args = [{'fname', fname}, varargin(:)'];
+if overwrite
+    write_args{end + 1} = 'overwrite';
+end
+write(obj, write_args{:});
+end
+
+function local_delete_if_overwrite(fname, overwrite)
+if exist(fname, 'file') ~= 2
+    return
+end
+if ~overwrite
+    error('Output file already exists: %s. Use Overwrite=true to replace it.', fname);
+end
+
+try
+    fileattrib(fname, '+w');
+catch
+end
+try
+    delete(fname);
+catch err
+    error('Could not overwrite existing output file %s: %s', fname, err.message);
 end
 end
 

@@ -14,6 +14,9 @@ function results = run_hrf_pipeline(fmri_nii, events_tsv, varargin)
 %   'WindowSeconds'   : HRF estimation window, seconds (default 30)
 %   'Models'          : subset of {'logit','fir','sfir','canonical','spline','nlgamma'}
 %                       (default all)
+%   'WholeBrainMode'  : 'auto', a model name, or cellstr of model names.
+%                       'auto' writes one whole-brain output per requested
+%                       linear model: fir, sfir, canonical, and spline.
 %   'OutputMat'       : optional .mat path to save results
 %
 % Output
@@ -44,7 +47,8 @@ p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x));
 p.addParameter('MapNames', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('WriteWholeBrain', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainOutputPrefix', '', @(x) ischar(x) || isstring(x));
-p.addParameter('WholeBrainMode', 'FIR', @(x) ischar(x) || isstring(x));
+p.addParameter('WholeBrainMode', 'auto', @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('WholeBrainOverwrite', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainPThresh', [], @(x) isempty(x) || (isscalar(x) && x > 0 && x < 1));
 p.addParameter('WholeBrainThreshType', 'unc', @(x) ischar(x) || isstring(x));
 p.addParameter('WholeBrainWriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
@@ -53,6 +57,12 @@ p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('ReuseWholeBrainOutput', false, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
+write_wholebrain = logical(opts.WriteWholeBrain) || ~isempty(char(opts.WholeBrainOutputPrefix));
+if write_wholebrain
+    wholebrain_modes = local_resolve_wholebrain_modes(opts.WholeBrainMode, opts.Models);
+else
+    wholebrain_modes = {};
+end
 
 % Convenience: if a signature name is provided, force signature mode
 if strcmpi(char(opts.SignalSource), 'mean') && ~isempty(char(opts.SignatureName))
@@ -227,7 +237,10 @@ results.stick_functions = Runc;
 results.fits = fits;
 results.settings = struct('TR', TR, 'window_seconds', opts.WindowSeconds, ...
     'fmri_nii', fmri_nii, 'events_tsv', events_tsv, 'mask_nii', char(opts.MaskNii), ...
-    'signal_source', char(opts.SignalSource));
+    'signal_source', char(opts.SignalSource), 'wholebrain_modes', {wholebrain_modes});
+if isscalar(wholebrain_modes)
+    results.settings.wholebrain_mode = wholebrain_modes{1};
+end
 results.signature_meta = signature_meta;
 results.fits_by_signature = fits_by_signature;
 if exist('all_tc', 'var')
@@ -235,29 +248,40 @@ if exist('all_tc', 'var')
     results.timeseries_by_signature = local_timeseries_by_signature(all_tc, signature_meta);
 end
 
-if logical(opts.WriteWholeBrain) || ~isempty(char(opts.WholeBrainOutputPrefix))
+if write_wholebrain
     wholebrain_prefix = char(opts.WholeBrainOutputPrefix);
     if isempty(wholebrain_prefix)
         wholebrain_prefix = local_default_wholebrain_prefix(fmri_nii);
     end
 
     write_thresholded_t = logical(opts.WholeBrainWriteThresholdedT) || ~isempty(opts.WholeBrainPThresh);
-    if logical(opts.ReuseWholeBrainOutput) && local_has_wholebrain_outputs(wholebrain_prefix)
-        results.wholebrain = local_load_wholebrain_outputs(wholebrain_prefix);
-        fprintf('Reusing existing whole-brain HRF outputs: %s_*.nii\n', wholebrain_prefix);
-    else
-        results.wholebrain = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...
-            'TR', TR, ...
-            'MaskNii', char(opts.MaskNii), ...
-            'Conditions', cond_names, ...
-            'WindowSeconds', opts.WindowSeconds, ...
-            'Mode', opts.WholeBrainMode, ...
-            'OutputPrefix', wholebrain_prefix, ...
-            'PThresh', opts.WholeBrainPThresh, ...
-            'ThreshType', opts.WholeBrainThreshType, ...
-            'WriteThresholdedT', write_thresholded_t, ...
-            'ChunkSize', opts.WholeBrainChunkSize, ...
-            'ScaleMode', opts.WholeBrainScaleMode);
+    wholebrain_by_model = struct();
+    for m = 1:numel(wholebrain_modes)
+        mode_name = wholebrain_modes{m};
+        model_prefix = local_wholebrain_model_prefix(wholebrain_prefix, mode_name, numel(wholebrain_modes));
+        model_field = matlab.lang.makeValidName(lower(mode_name));
+        if logical(opts.ReuseWholeBrainOutput) && local_has_wholebrain_outputs(model_prefix)
+            wholebrain_by_model.(model_field) = local_load_wholebrain_outputs(model_prefix);
+            fprintf('Reusing existing whole-brain HRF outputs: %s_*.nii\n', model_prefix);
+        else
+            wholebrain_by_model.(model_field) = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, ...
+                'TR', TR, ...
+                'MaskNii', char(opts.MaskNii), ...
+                'Conditions', cond_names, ...
+                'WindowSeconds', opts.WindowSeconds, ...
+                'Mode', mode_name, ...
+                'OutputPrefix', model_prefix, ...
+                'PThresh', opts.WholeBrainPThresh, ...
+                'ThreshType', opts.WholeBrainThreshType, ...
+                'WriteThresholdedT', write_thresholded_t, ...
+                'ChunkSize', opts.WholeBrainChunkSize, ...
+                'ScaleMode', opts.WholeBrainScaleMode, ...
+                'Overwrite', logical(opts.WholeBrainOverwrite));
+        end
+    end
+    results.wholebrain_by_model = wholebrain_by_model;
+    if isscalar(wholebrain_modes)
+        results.wholebrain = wholebrain_by_model.(matlab.lang.makeValidName(lower(wholebrain_modes{1})));
     end
 end
 
@@ -274,15 +298,83 @@ function wholebrain = local_load_wholebrain_outputs(prefix)
 wholebrain = hrf_load_wholebrain_stats(prefix);
 end
 
+function modes = local_resolve_wholebrain_modes(mode_input, models)
+if iscell(mode_input) || (isstring(mode_input) && numel(mode_input) > 1)
+    requested = cellstr(string(mode_input));
+else
+    requested = {char(mode_input)};
+end
+
+if isscalar(requested) && strcmpi(requested{1}, 'auto')
+    requested = cellstr(string(models));
+end
+
+supported = {'fir', 'sfir', 'canonical', 'spline'};
+modes = {};
+for i = 1:numel(requested)
+    mode = lower(strtrim(char(requested{i})));
+    if strcmp(mode, 'auto')
+        nested = local_resolve_wholebrain_modes('auto', models);
+        modes = [modes, nested]; %#ok<AGROW>
+        continue
+    end
+    if ~ismember(mode, supported)
+        if ismember(mode, {'logit', 'nlgamma'})
+            warning('run_hrf_pipeline:SkippingWholeBrainModel', ...
+                'Skipping whole-brain %s maps: nonlinear voxelwise model is not supported by the fast 4D writer.', mode);
+            continue
+        end
+        error('Unknown WholeBrainMode/model: %s. Use auto, FIR, sFIR, canonical, or spline.', mode);
+    end
+    if strcmp(mode, 'sfir')
+        modes{end + 1} = 'sFIR'; %#ok<AGROW>
+    else
+        modes{end + 1} = mode; %#ok<AGROW>
+    end
+end
+
+modes = unique(modes, 'stable');
+if isempty(modes)
+    modes = {'FIR'};
+end
+end
+
+function model_prefix = local_wholebrain_model_prefix(prefix, mode_name, n_modes)
+if n_modes == 1
+    model_prefix = prefix;
+else
+    model_prefix = sprintf('%s_%s', prefix, lower(char(mode_name)));
+end
+end
+
 function local_save_results_mat(output_mat, results, opts)
 save_version = char(opts.OutputMatVersion);
 results_to_save = results;
-if ~logical(opts.SaveWholeBrainInMat) && isfield(results_to_save, 'wholebrain')
-    results_to_save.wholebrain_paths = results_to_save.wholebrain.paths;
-    if isfield(results_to_save.wholebrain, 'metadata_table')
-        results_to_save.wholebrain_metadata_table = results_to_save.wholebrain.metadata_table;
+if ~logical(opts.SaveWholeBrainInMat)
+    if isfield(results_to_save, 'wholebrain')
+        results_to_save.wholebrain_paths = results_to_save.wholebrain.paths;
+        if isfield(results_to_save.wholebrain, 'metadata_table')
+            results_to_save.wholebrain_metadata_table = results_to_save.wholebrain.metadata_table;
+        end
+        results_to_save = rmfield(results_to_save, 'wholebrain');
     end
-    results_to_save = rmfield(results_to_save, 'wholebrain');
+    if isfield(results_to_save, 'wholebrain_by_model')
+        fields = fieldnames(results_to_save.wholebrain_by_model);
+        wholebrain_paths_by_model = struct();
+        wholebrain_metadata_by_model = struct();
+        for i = 1:numel(fields)
+            wb = results_to_save.wholebrain_by_model.(fields{i});
+            if isfield(wb, 'paths')
+                wholebrain_paths_by_model.(fields{i}) = wb.paths;
+            end
+            if isfield(wb, 'metadata_table')
+                wholebrain_metadata_by_model.(fields{i}) = wb.metadata_table;
+            end
+        end
+        results_to_save.wholebrain_paths_by_model = wholebrain_paths_by_model;
+        results_to_save.wholebrain_metadata_by_model = wholebrain_metadata_by_model;
+        results_to_save = rmfield(results_to_save, 'wholebrain_by_model');
+    end
 end
 
 results = results_to_save;

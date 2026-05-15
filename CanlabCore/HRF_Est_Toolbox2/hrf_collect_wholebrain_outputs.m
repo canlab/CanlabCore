@@ -36,19 +36,20 @@ for i = 1:numel(beta_files)
     metadata_path = [prefix '_metadata.csv'];
     beta_scores_path = [prefix '_beta_map_scores.csv'];
     t_scores_path = [prefix '_t_map_scores.csv'];
-    result_mat_path = [prefix '_results.mat'];
+    model_name = local_model_from_metadata_or_prefix(metadata_path, prefix);
+    result_mat_path = local_result_mat_path(prefix, model_name);
 
     [~, prefix_name] = fileparts(prefix);
     subject = local_subject_from_name(prefix_name);
 
-    rows(end + 1, :) = {subject, prefix, beta_path, local_existing(t_path), ...
+    rows(end + 1, :) = {subject, model_name, prefix, beta_path, local_existing(t_path), ...
         local_existing(se_path), local_existing(p_path), ...
         local_existing(t_thresh_path), local_existing(metadata_path), ...
         local_existing(beta_scores_path), local_existing(t_scores_path), ...
         local_existing(result_mat_path)}; %#ok<AGROW>
 end
 
-var_names = {'subject', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
+var_names = {'subject', 'model', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
     'metadata_file', 'beta_scores_file', 't_scores_file', 'result_mat_file'};
 if isempty(rows)
     T = cell2table(cell(0, numel(var_names)), 'VariableNames', var_names);
@@ -70,10 +71,43 @@ end
 end
 
 function subject = local_subject_from_name(name)
-tok = regexp(name, '(sub-[A-Za-z0-9]+)', 'tokens', 'once');
+tok = regexp(name, '(sub-[A-Za-z0-9]+|SID[0-9]+)', 'tokens', 'once');
 if isempty(tok)
-    subject = name;
+    subject = regexprep(name, '_hrf.*$', '');
 else
     subject = tok{1};
+end
+end
+
+function model_name = local_model_from_metadata_or_prefix(metadata_path, prefix)
+if exist(metadata_path, 'file') == 2
+    try
+        M = readtable(metadata_path, 'TextType', 'string');
+        if any(strcmp('mode', M.Properties.VariableNames)) && height(M) > 0
+            model_name = lower(char(string(M.mode(1))));
+            return
+        end
+    catch
+    end
+end
+
+[~, name] = fileparts(prefix);
+tok = regexp(name, '_([A-Za-z]+)$', 'tokens', 'once');
+if ~isempty(tok) && ismember(lower(tok{1}), {'fir', 'sfir', 'canonical', 'spline'})
+    model_name = lower(tok{1});
+else
+    model_name = '';
+end
+end
+
+function result_mat_path = local_result_mat_path(prefix, model_name)
+result_mat_path = [prefix '_results.mat'];
+if exist(result_mat_path, 'file') == 2 || isempty(model_name)
+    return
+end
+base_prefix = regexprep(prefix, ['_' regexptranslate('escape', model_name) '$'], '');
+candidate = [base_prefix '_results.mat'];
+if exist(candidate, 'file') == 2
+    result_mat_path = candidate;
 end
 end

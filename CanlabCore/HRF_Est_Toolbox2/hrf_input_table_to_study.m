@@ -31,6 +31,8 @@ p.parse(second_level_inputs, varargin{:});
 opts = p.Results;
 
 inputs = local_read_inputs(second_level_inputs);
+[model_name, source_model] = local_resolve_model_and_source(opts.ModelName, opts.SourceModel);
+inputs = local_filter_inputs_by_source_model(inputs, source_model);
 n = height(inputs);
 results = cell(n, 1);
 subject_ids = cell(n, 1);
@@ -44,7 +46,7 @@ missing_policy = lower(char(opts.MissingPolicy));
 
 score_study = struct();
 if logical(opts.IncludeMapScores)
-    score_study = local_score_study(inputs, opts, missing_policy);
+    score_study = local_score_study(inputs, opts, missing_policy, model_name, source_model);
 end
 
 for i = 1:n
@@ -78,10 +80,16 @@ for i = 1:n
         end
     end
 
-    if logical(opts.IncludeMapScores) && isfield(score_study, 'results') && ...
-            numel(score_study.results) >= i && ~isempty(score_study.results{i})
-        r = local_merge_mapscore_result(r, score_study.results{i});
-        mapscore_success(i) = true;
+    if logical(opts.IncludeMapScores)
+        if isfield(score_study, 'results') && numel(score_study.results) >= i && ~isempty(score_study.results{i})
+            r = local_merge_mapscore_result(r, score_study.results{i});
+            mapscore_success(i) = true;
+        else
+            score_reason = local_score_error(score_study, i);
+            if ~isempty(score_reason)
+                row_errors{end + 1} = score_reason; %#ok<AGROW>
+            end
+        end
     end
 
     if ~isempty(fieldnames(r))
@@ -101,7 +109,11 @@ study.mapscore_success = mapscore_success;
 study.errors = errors;
 study.skipped = skipped;
 study.object = char(opts.Object);
-study.model_name = char(opts.ModelName);
+if isfield(score_study, 'model_name')
+    study.model_name = score_study.model_name;
+else
+    study.model_name = model_name;
+end
 study.source = 'second_level_inputs';
 study.second_level_inputs = inputs;
 
@@ -127,7 +139,39 @@ else
 end
 end
 
-function score_study = local_score_study(inputs, opts, missing_policy)
+function [model_name, source_model] = local_resolve_model_and_source(model_name_in, source_model_in)
+model_name = lower(strtrim(char(model_name_in)));
+source_model = local_source_model_filter(source_model_in);
+if isempty(source_model) && local_is_wholebrain_model_name(model_name)
+    source_model = {model_name};
+    model_name = 'mapscore';
+end
+end
+
+function inputs = local_filter_inputs_by_source_model(inputs, source_model)
+if isempty(source_model) || ~any(strcmp('model', inputs.Properties.VariableNames))
+    return
+end
+row_models = lower(cellstr(string(inputs.model)));
+keep = ismember(row_models, source_model);
+inputs = inputs(keep, :);
+end
+
+function models = local_source_model_filter(source_model)
+if isempty(source_model)
+    models = {};
+else
+    models = lower(cellstr(string(source_model)));
+    models = cellfun(@strtrim, models, 'UniformOutput', false);
+    models = models(~cellfun(@isempty, models));
+end
+end
+
+function tf = local_is_wholebrain_model_name(model_name)
+tf = ismember(lower(strtrim(char(model_name))), {'fir', 'sfir', 'canonical', 'spline'});
+end
+
+function score_study = local_score_study(inputs, opts, missing_policy, model_name, source_model)
 score_study = struct();
 score_var = local_score_file_var(char(opts.Object));
 if ~any(strcmp(score_var, inputs.Properties.VariableNames))
@@ -138,8 +182,8 @@ try
     score_study = hrf_second_level_inputs_to_study(inputs, ...
         'Object', opts.Object, ...
         'ScoreColumns', opts.ScoreColumns, ...
-        'ModelName', opts.ModelName, ...
-        'SourceModel', opts.SourceModel, ...
+        'ModelName', model_name, ...
+        'SourceModel', source_model, ...
         'AddAverageScore', opts.AddAverageScore, ...
         'AverageScoreName', opts.AverageScoreName, ...
         'ApproxSEFromT', opts.ApproxSEFromT, ...
@@ -150,6 +194,19 @@ catch err
     elseif strcmp(missing_policy, 'warn')
         warning('hrf_input_table_to_study:MapScoreLoadFailed', ...
             'Could not load map-score curves: %s', err.message);
+    end
+end
+end
+
+function reason = local_score_error(score_study, row)
+reason = '';
+if isfield(score_study, 'errors') && numel(score_study.errors) >= row
+    reason = char(string(score_study.errors{row}));
+end
+if isempty(reason) && isfield(score_study, 'skipped')
+    idx = find([score_study.skipped.index] == row, 1, 'first');
+    if ~isempty(idx)
+        reason = score_study.skipped(idx).reason;
     end
 end
 end

@@ -316,7 +316,8 @@ source_model = lower(strtrim(char(source_model)));
 
 if isfield(fit_struct, model_name)
     candidate = fit_struct.(model_name);
-    if local_fit_matches_source(candidate, source_model)
+    wanted_source = local_requested_source_model(model_name, source_model, candidate);
+    if local_fit_matches_source(candidate, wanted_source)
         fit = candidate;
         ok = true;
     else
@@ -355,6 +356,17 @@ if isfield(fit, 'source_model') && ~isempty(fit.source_model)
 else
     tf = false;
 end
+end
+
+function source_model = local_requested_source_model(model_name, source_model, fit)
+if isempty(source_model) && local_is_wholebrain_model_name(model_name) && ...
+        isfield(fit, 'source_model') && ~isempty(fit.source_model)
+    source_model = model_name;
+end
+end
+
+function tf = local_is_wholebrain_model_name(model_name)
+tf = ismember(lower(strtrim(char(model_name))), {'fir', 'sfir', 'canonical', 'spline'});
 end
 
 function sig_field = local_signature_field(r, sig)

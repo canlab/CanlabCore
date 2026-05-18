@@ -538,9 +538,18 @@ Use map-score CSVs with `hrf_time_unfolding_stats`:
 ```matlab
 input_table = hrf_collect_wholebrain_outputs('/path/to/hrf_outputs');
 
+% Backfill missing canonical/sfir/spline map-score CSVs after an older run.
+input_table = hrf_score_wholebrain_input_table(input_table, ...
+    'SourceModel', 'sfir', ...
+    'ScoreObjects', {'beta','t'}, ...
+    'SignatureSets', {'all'}, ...
+    'ImageSets', image_sets, ...
+    'OutputCsv', '/path/to/hrf_outputs/second_level_inputs.csv');
+
 study_scores = hrf_input_table_to_study(input_table, ...
     'LoadWholeBrain', false, ...
-    'Object', 'beta');
+    'Object', 'beta', ...
+    'SourceModel', 'sfir');
 
 % Default Signature is mean_mapscore, the average over score columns.
 % Model='sfir' selects rows whose source whole-brain model was sfir.
@@ -569,7 +578,11 @@ plot_hrf_time_unfolding_stats(stats_nps);
 
 For map-score studies, `Model='sfir'`, `Model='canonical'`, or
 `Model='spline'` selects the source whole-brain model recorded by
-`hrf_collect_wholebrain_outputs`. You can still use `Model='mapscore'` with
+`hrf_collect_wholebrain_outputs`. Prefer filtering during study construction
+with `'SourceModel','sfir'`/`'canonical'`/`'spline'`. For compatibility,
+`'ModelName','canonical'` is also interpreted as source-model selection when
+the input table has a whole-brain `model` column; it does not relabel FIR rows
+as canonical. You can still use `Model='mapscore'` with
 `'SourceModel','sfir'` if you prefer to be explicit. Column names such as
 `sig_all_NPS` mean "signature set `all`, signature `NPS`." Rows in the score
 CSV identify the HRF condition and lag. These values are therefore NPS

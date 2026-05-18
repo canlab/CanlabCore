@@ -39,7 +39,7 @@ switch opts.PlotType
         error('Unknown PlotType: %s. Use ''fit'' or ''trialmean''.', opts.PlotType);
 end
 if isempty(Y_runs)
-    error('No valid HRF curves found. Skipped %d result(s).', numel(skipped));
+    local_error_no_curves(skipped, study, opts);
 end
 
 [Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
@@ -70,6 +70,92 @@ title(ax, local_title(opts, condition_name, SE, Y, study), 'Interpreter', 'none'
 xlabel(ax, 'Seconds after event onset');
 ylabel(ax, local_ylabel(opts, study));
 hline(0, 'k-');
+end
+
+function local_error_no_curves(skipped, study, opts)
+reason_summary = local_skip_reason_summary(skipped);
+available = local_available_summary(study);
+error(['No valid HRF curves found for Model=%s, SourceModel=%s, Signature=%s, Condition=%s. ' ...
+    'Skipped %d result(s). Top reasons: %s. Available: %s'], ...
+    char(opts.Model), local_display_or_default(opts.SourceModel), local_display_or_default(opts.Signature), ...
+    local_display_or_default(opts.Condition), numel(skipped), reason_summary, available);
+end
+
+function txt = local_skip_reason_summary(skipped)
+if isempty(skipped)
+    txt = 'none recorded';
+    return
+end
+reasons = {skipped.reason};
+[u, ~, ic] = unique(reasons, 'stable');
+counts = accumarray(ic(:), 1);
+n = min(numel(u), 4);
+parts = cell(1, n);
+for i = 1:n
+    parts{i} = sprintf('%s (%d)', u{i}, counts(i));
+end
+txt = strjoin(parts, '; ');
+end
+
+function txt = local_available_summary(study)
+parts = {};
+if isfield(study, 'source_models') && ~isempty(study.source_models)
+    parts{end + 1} = sprintf('source_models={%s}', strjoin(cellstr(string(study.source_models)), ', '));
+end
+if isfield(study, 'score_names') && ~isempty(study.score_names)
+    parts{end + 1} = sprintf('score_names={%s}', strjoin(cellstr(string(study.score_names)), ', '));
+end
+[models, signatures, conditions] = local_available_from_results(study);
+if ~isempty(models)
+    parts{end + 1} = sprintf('models={%s}', strjoin(models, ', '));
+end
+if ~isempty(signatures)
+    parts{end + 1} = sprintf('signatures={%s}', strjoin(signatures, ', '));
+end
+if ~isempty(conditions)
+    parts{end + 1} = sprintf('conditions={%s}', strjoin(conditions, ', '));
+end
+if isempty(parts)
+    txt = 'none';
+else
+    txt = strjoin(parts, '; ');
+end
+end
+
+function [models, signatures, conditions] = local_available_from_results(study)
+models = {};
+signatures = {};
+conditions = {};
+for i = 1:numel(study.results)
+    r = study.results{i};
+    if isempty(r), continue; end
+    if isfield(r, 'fits')
+        models = [models; fieldnames(r.fits)]; %#ok<AGROW>
+    end
+    if isfield(r, 'fits_by_signature') && ~isempty(r.fits_by_signature)
+        signatures = [signatures; fieldnames(r.fits_by_signature)]; %#ok<AGROW>
+    end
+    if isfield(r, 'conditions') && ~isempty(r.conditions)
+        conditions = [conditions; cellstr(string(r.conditions(:)))]; %#ok<AGROW>
+    end
+end
+models = unique(models, 'stable');
+signatures = unique(signatures, 'stable');
+conditions = unique(conditions, 'stable');
+end
+
+function txt = local_display_or_default(value)
+txt = char(value);
+if isempty(txt)
+    txt = '<default>';
+end
+end
+
+function reason = local_result_error(study, idx, fallback)
+reason = fallback;
+if isfield(study, 'errors') && numel(study.errors) >= idx && ~isempty(study.errors{idx})
+    reason = char(string(study.errors{idx}));
+end
 end
 
 function ax = local_plot_multiple_models(study, opts)
@@ -118,7 +204,7 @@ for m = 1:numel(opts.Models)
 end
 
 if ~any(plotted)
-    error('No valid HRF curves found for requested models. Skipped %d result(s).', numel(all_skipped));
+    local_error_no_curves(all_skipped, study, opts);
 end
 
 legend(ax, 'Interpreter', 'none');
@@ -143,7 +229,7 @@ for s = 1:numel(study.results)
     subject_id = local_subject_id(study, s);
     r = study.results{s};
     if isempty(r)
-        skipped = local_skip(skipped, s, subject_id, 'empty result', missing_policy);
+        skipped = local_skip(skipped, s, subject_id, local_result_error(study, s, 'empty result'), missing_policy);
         continue
     end
 
@@ -204,7 +290,7 @@ for s = 1:numel(study.results)
     subject_id = local_subject_id(study, s);
     r = study.results{s};
     if isempty(r)
-        skipped = local_skip(skipped, s, subject_id, 'empty result', missing_policy);
+        skipped = local_skip(skipped, s, subject_id, local_result_error(study, s, 'empty result'), missing_policy);
         continue
     end
     if ~isfield(r, 'events') || isempty(r.events)
@@ -530,7 +616,8 @@ source_model = lower(strtrim(char(source_model)));
 
 if isfield(fit_struct, model_name)
     candidate = fit_struct.(model_name);
-    if local_fit_matches_source(candidate, source_model)
+    wanted_source = local_requested_source_model(model_name, source_model, candidate);
+    if local_fit_matches_source(candidate, wanted_source)
         fit = candidate;
         ok = true;
     else
@@ -569,6 +656,17 @@ if isfield(fit, 'source_model') && ~isempty(fit.source_model)
 else
     tf = false;
 end
+end
+
+function source_model = local_requested_source_model(model_name, source_model, fit)
+if isempty(source_model) && local_is_wholebrain_model_name(model_name) && ...
+        isfield(fit, 'source_model') && ~isempty(fit.source_model)
+    source_model = model_name;
+end
+end
+
+function tf = local_is_wholebrain_model_name(model_name)
+tf = ismember(lower(strtrim(char(model_name))), {'fir', 'sfir', 'canonical', 'spline'});
 end
 
 function sig_field = local_signature_field(r, sig)

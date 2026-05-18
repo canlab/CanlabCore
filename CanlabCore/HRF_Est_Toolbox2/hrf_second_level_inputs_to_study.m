@@ -29,7 +29,13 @@ p.parse(second_level_inputs, varargin{:});
 opts = p.Results;
 
 inputs = local_read_inputs(second_level_inputs);
-source_model_filter = local_source_model_filter(opts.SourceModel);
+model_name = lower(strtrim(char(opts.ModelName)));
+source_model_input = opts.SourceModel;
+if isempty(local_source_model_filter(source_model_input)) && local_is_wholebrain_model_name(model_name)
+    source_model_input = model_name;
+    model_name = 'mapscore';
+end
+source_model_filter = local_source_model_filter(source_model_input);
 score_file_var = local_score_file_var(char(opts.Object));
 if ~any(strcmp(score_file_var, inputs.Properties.VariableNames))
     error('second_level_inputs is missing column %s.', score_file_var);
@@ -43,11 +49,10 @@ errors = cell(n, 1);
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
 all_score_names = {};
 missing_policy = lower(char(opts.MissingPolicy));
-model_name = char(opts.ModelName);
 
 for i = 1:n
     subject_ids{i} = local_table_value(inputs, i, 'subject');
-    score_file = local_table_value(inputs, i, score_file_var);
+    score_file = local_score_file_for_row(inputs, i, score_file_var);
     source_model = local_source_model(inputs, i, score_file);
 
     if ~local_source_model_matches(source_model, source_model_filter)
@@ -122,6 +127,10 @@ else
 end
 end
 
+function tf = local_is_wholebrain_model_name(model_name)
+tf = ismember(lower(strtrim(char(model_name))), {'fir', 'sfir', 'canonical', 'spline'});
+end
+
 function tf = local_source_model_matches(source_model, requested)
 if isempty(requested)
     tf = true;
@@ -171,12 +180,29 @@ switch lower(object_name)
 end
 end
 
+function score_file = local_score_file_for_row(inputs, row, score_file_var)
+score_file = local_table_value(inputs, row, score_file_var);
+if ~isempty(score_file)
+    return
+end
+prefix = local_table_value(inputs, row, 'prefix');
+if isempty(prefix)
+    return
+end
+switch score_file_var
+    case 'beta_scores_file'
+        score_file = [prefix '_beta_map_scores.csv'];
+    case 't_scores_file'
+        score_file = [prefix '_t_map_scores.csv'];
+end
+end
+
 function Tscore = local_read_t_score_table(inputs, row, opts)
 Tscore = table();
 if ~logical(opts.ApproxSEFromT) || ~strcmpi(char(opts.Object), 'beta')
     return
 end
-t_score_file = local_table_value(inputs, row, 't_scores_file');
+t_score_file = local_score_file_for_row(inputs, row, 't_scores_file');
 if isempty(t_score_file) || exist(t_score_file, 'file') ~= 2
     return
 end

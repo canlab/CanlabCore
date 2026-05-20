@@ -71,7 +71,11 @@ for i = 1:n
 
     try
         S = readtable(score_file, 'TextType', 'string');
+        local_validate_score_table(S, inputs, i, score_file);
         Tscore = local_read_t_score_table(inputs, i, opts);
+        if ~isempty(Tscore)
+            local_validate_score_table(Tscore, inputs, i, local_score_file_for_row(inputs, i, 't_scores_file'));
+        end
         score_cols = local_score_columns(S, opts.ScoreColumns);
         if isempty(score_cols)
             reason = 'no numeric score columns';
@@ -207,6 +211,40 @@ if isempty(t_score_file) || exist(t_score_file, 'file') ~= 2
     return
 end
 Tscore = readtable(t_score_file, 'TextType', 'string');
+end
+
+function local_validate_score_table(S, inputs, row, score_file)
+metadata_file = local_table_value(inputs, row, 'metadata_file');
+if isempty(metadata_file) || exist(metadata_file, 'file') ~= 2
+    return
+end
+M = readtable(metadata_file, 'TextType', 'string');
+if height(S) ~= height(M)
+    error('Score file %s has %d rows but metadata %s has %d rows. Regenerate map-score CSVs from the matching whole-brain maps.', ...
+        score_file, height(S), metadata_file, height(M));
+end
+has_score_condition = any(strcmp('condition', S.Properties.VariableNames));
+has_metadata_condition = any(strcmp('condition', M.Properties.VariableNames));
+if has_metadata_condition && ~has_score_condition
+    error('Score file %s is missing condition labels from metadata %s. Regenerate map-score CSVs.', ...
+        score_file, metadata_file);
+elseif has_score_condition && has_metadata_condition
+    if ~isequal(string(S.condition), string(M.condition))
+        error('Score file %s condition labels do not match metadata %s. Regenerate map-score CSVs.', ...
+            score_file, metadata_file);
+    end
+end
+has_score_lag = any(strcmp('lag_index', S.Properties.VariableNames));
+has_metadata_lag = any(strcmp('lag_index', M.Properties.VariableNames));
+if has_metadata_lag && ~has_score_lag
+    error('Score file %s is missing lag indices from metadata %s. Regenerate map-score CSVs.', ...
+        score_file, metadata_file);
+elseif has_score_lag && has_metadata_lag
+    if ~isequaln(local_to_numeric(S.lag_index), local_to_numeric(M.lag_index))
+        error('Score file %s lag indices do not match metadata %s. Regenerate map-score CSVs.', ...
+            score_file, metadata_file);
+    end
+end
 end
 
 function result = local_score_table_to_result(S, Tscore, score_cols, model_name, object_name, score_file, source_model, add_average, average_name)

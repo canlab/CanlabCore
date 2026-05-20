@@ -15,6 +15,11 @@ p.addParameter('ShowGroupMean', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('ShowGroupSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('GroupLineWidth', 2.5, @(x) isscalar(x) && x > 0);
 p.addParameter('BaselineSeconds', 0, @(x) isscalar(x) && x >= 0);
+p.addParameter('TrialOutlierPolicy', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('TrialOutlierZThreshold', 4, @(x) isscalar(x) && x > 0);
+p.addParameter('OutlierWeighting', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('OutlierZThreshold', 4, @(x) isscalar(x) && x > 0);
+p.addParameter('CurveWeights', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.parse(study, varargin{:});
 opts = p.Results;
@@ -43,6 +48,7 @@ if isempty(Y_runs)
 end
 
 [Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
+curve_weights = local_curve_weights(Y, opts);
 
 figure; ax = axes; hold(ax, 'on');
 colors = lines(size(Y, 1));
@@ -56,8 +62,8 @@ for s = 1:size(Y, 1)
     plot(ax, x, y, 'Color', colors(s, :), 'DisplayName', subject_ids{s});
 end
 if logical(opts.ShowGroupMean)
-    group_mean = local_mean_omitnan(Y, 1)';
-    group_se = local_sem_omitnan(Y, 1)';
+    group_mean = local_weighted_mean_omitnan(Y, curve_weights)';
+    group_se = local_weighted_sem_omitnan(Y, curve_weights)';
     if logical(opts.ShowGroupSE) && size(Y, 1) > 1 && any(~isnan(group_se))
         fill(ax, [x; flipud(x)], [group_mean + group_se; flipud(group_mean - group_se)], ...
             [0 0 0], 'FaceAlpha', min(opts.SEAlpha * 2, 0.25), ...
@@ -66,7 +72,7 @@ if logical(opts.ShowGroupMean)
     plot(ax, x, group_mean, 'k-', 'LineWidth', opts.GroupLineWidth, 'DisplayName', 'Group mean');
 end
 legend(ax, 'Interpreter', 'none');
-title(ax, local_title(opts, condition_name, SE, Y, study), 'Interpreter', 'none');
+title(ax, local_title(opts, condition_name, SE, Y, study, curve_weights), 'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
 ylabel(ax, local_ylabel(opts, study));
 hline(0, 'k-');
@@ -177,12 +183,13 @@ for m = 1:numel(opts.Models)
         condition_name = this_condition;
     end
     [Y, ~, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
+    curve_weights = local_curve_weights(Y, model_opts);
     model_color = colors(m, :);
     subject_color = model_color + (1 - model_color) * 0.55;
 
     if logical(opts.ShowGroupMean)
-        group_mean = local_mean_omitnan(Y, 1)';
-        group_se = local_sem_omitnan(Y, 1)';
+        group_mean = local_weighted_mean_omitnan(Y, curve_weights)';
+        group_se = local_weighted_sem_omitnan(Y, curve_weights)';
         if logical(opts.ShowGroupSE) && size(Y, 1) > 1 && any(~isnan(group_se))
             fill(ax, [x; flipud(x)], [group_mean + group_se; flipud(group_mean - group_se)], ...
                 model_color, 'FaceAlpha', min(opts.SEAlpha * 2, 0.20), ...
@@ -314,7 +321,10 @@ for s = 1:numel(study.results)
             condition_name = condition_spec.display_label;
         end
         avg = hrf_average_condition_trials(tc, r.events, condition_spec.matched_conditions, ...
-            r.settings.TR, r.settings.window_seconds, 'BaselineSeconds', opts.BaselineSeconds);
+            r.settings.TR, r.settings.window_seconds, ...
+            'BaselineSeconds', opts.BaselineSeconds, ...
+            'OutlierPolicy', opts.TrialOutlierPolicy, ...
+            'OutlierZThreshold', opts.TrialOutlierZThreshold);
     catch err
         skipped = local_skip(skipped, s, subject_id, err.message, missing_policy);
         continue
@@ -446,7 +456,7 @@ if n_runs > 1
 end
 end
 
-function ttl = local_title(opts, condition_name, SE, Y, study)
+function ttl = local_title(opts, condition_name, SE, Y, study, curve_weights)
 sig = char(opts.Signature);
 if isempty(sig)
     if local_is_mapscore_study(study)
@@ -479,16 +489,17 @@ if isempty(parts)
 else
     ribbon_txt = sprintf('ribbon=%s', strjoin(parts, ' + '));
 end
+weight_txt = local_weight_title(opts, curve_weights);
 source_model = local_source_model_text(opts);
 if any(strcmpi(opts.PlotType, {'trialmean', 'trial_mean', 'trials'}))
-    ttl = sprintf('model=trialmean, unit=%s, condition=%s, source=%s, %s', ...
-        lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+    ttl = sprintf('model=trialmean, unit=%s, condition=%s, source=%s, %s%s', ...
+        lower(char(opts.Unit)), condition_name, sig, ribbon_txt, weight_txt);
 elseif local_is_mapscore_study(study)
-    ttl = sprintf('model=%s%s, unit=%s, condition=%s, score=%s, %s', ...
-        char(opts.Model), source_model, lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+    ttl = sprintf('model=%s%s, unit=%s, condition=%s, score=%s, %s%s', ...
+        char(opts.Model), source_model, lower(char(opts.Unit)), condition_name, sig, ribbon_txt, weight_txt);
 else
-    ttl = sprintf('model=%s, unit=%s, condition=%s, source=%s, %s', ...
-        char(opts.Model), lower(char(opts.Unit)), condition_name, sig, ribbon_txt);
+    ttl = sprintf('model=%s, unit=%s, condition=%s, source=%s, %s%s', ...
+        char(opts.Model), lower(char(opts.Unit)), condition_name, sig, ribbon_txt, weight_txt);
 end
 end
 
@@ -523,6 +534,141 @@ if strcmpi(opts.Model, 'mapscore') || local_is_mapscore_study(study)
 else
     ylab = 'Fitted response amplitude';
 end
+end
+
+function weights = local_curve_weights(Y, opts)
+weights = opts.CurveWeights(:);
+if ~isempty(weights)
+    if numel(weights) ~= size(Y, 1)
+        error('CurveWeights must have one value per plotted %s curve (%d).', ...
+            lower(char(opts.Unit)), size(Y, 1));
+    end
+    weights(~isfinite(weights) | weights < 0) = 0;
+    return
+end
+
+policy = lower(strtrim(char(opts.OutlierWeighting)));
+weights = ones(size(Y, 1), 1);
+if strcmp(policy, 'none') || size(Y, 1) < 3
+    return
+end
+
+z = local_curve_max_abs_robust_z(Y);
+threshold = opts.OutlierZThreshold;
+switch policy
+    case {'exclude', 'omit'}
+        weights(z > threshold) = 0;
+    case {'huber', 'downweight'}
+        weights = min(1, threshold ./ max(z, eps));
+    case {'bisquare', 'tukey'}
+        u = z ./ threshold;
+        weights = (1 - u .^ 2) .^ 2;
+        weights(u >= 1) = 0;
+    otherwise
+        error('Unknown OutlierWeighting: %s. Use none, exclude, huber, or bisquare.', policy);
+end
+end
+
+function z = local_curve_max_abs_robust_z(Y)
+n = size(Y, 1);
+center = local_nanmedian(Y, 1);
+scale = 1.4826 .* local_nanmedian(abs(Y - repmat(center, n, 1)), 1);
+scale_bad = scale == 0 | isnan(scale);
+fallback_scale = local_nanstd(Y, 1);
+scale(scale_bad) = fallback_scale(scale_bad);
+scale(scale == 0 | isnan(scale)) = NaN;
+Z = abs((Y - repmat(center, n, 1)) ./ repmat(scale, n, 1));
+z = zeros(n, 1);
+for i = 1:n
+    zi = Z(i, :);
+    zi = zi(~isnan(zi));
+    if ~isempty(zi)
+        z(i) = max(zi);
+    end
+end
+end
+
+function m = local_weighted_mean_omitnan(Y, weights)
+m = nan(1, size(Y, 2));
+for j = 1:size(Y, 2)
+    y = Y(:, j);
+    valid = ~isnan(y) & weights > 0;
+    if any(valid)
+        w = weights(valid);
+        m(j) = sum(w .* y(valid)) ./ sum(w);
+    end
+end
+end
+
+function se = local_weighted_sem_omitnan(Y, weights)
+se = nan(1, size(Y, 2));
+for j = 1:size(Y, 2)
+    y = Y(:, j);
+    valid = ~isnan(y) & weights > 0;
+    if sum(valid) < 2
+        continue
+    end
+    w = weights(valid);
+    yy = y(valid);
+    mu = sum(w .* yy) ./ sum(w);
+    n_eff = (sum(w) .^ 2) ./ sum(w .^ 2);
+    var_w = sum(w .* (yy - mu) .^ 2) ./ sum(w);
+    se(j) = sqrt(var_w ./ max(n_eff, eps));
+end
+end
+
+function m = local_nanmedian(X, dim)
+if nargin < 2, dim = 1; end
+if dim == 1
+    m = nan(1, size(X, 2));
+    for j = 1:size(X, 2)
+        y = X(:, j);
+        y = y(~isnan(y));
+        if ~isempty(y), m(j) = median(y); end
+    end
+else
+    m = nan(size(X, 1), 1);
+    for i = 1:size(X, 1)
+        y = X(i, :);
+        y = y(~isnan(y));
+        if ~isempty(y), m(i) = median(y); end
+    end
+end
+end
+
+function s = local_nanstd(X, dim)
+mu = local_nanmean(X, dim);
+if dim == 1
+    centered = X - repmat(mu, size(X, 1), 1);
+    n = sum(~isnan(X), 1);
+    centered(isnan(centered)) = 0;
+    s = sqrt(sum(centered .^ 2, 1) ./ max(n - 1, 1));
+elseif dim == 2
+    centered = X - repmat(mu, 1, size(X, 2));
+    n = sum(~isnan(X), 2);
+    centered(isnan(centered)) = 0;
+    s = sqrt(sum(centered .^ 2, 2) ./ max(n - 1, 1));
+else
+    error('local_nanstd supports dim 1 or 2.');
+end
+s(n < 2) = NaN;
+end
+
+function m = local_nanmean(X, dim)
+valid = ~isnan(X);
+den = sum(valid, dim);
+X(~valid) = 0;
+m = sum(X, dim) ./ den;
+m(den == 0) = NaN;
+end
+
+function txt = local_weight_title(opts, weights)
+if strcmpi(char(opts.OutlierWeighting), 'none') && isempty(opts.CurveWeights)
+    txt = '';
+    return
+end
+txt = sprintf(', curve_weighting=%s, effective_n=%0.3g', ...
+    char(opts.OutlierWeighting), sum(weights));
 end
 
 function txt = local_source_model_text(opts)

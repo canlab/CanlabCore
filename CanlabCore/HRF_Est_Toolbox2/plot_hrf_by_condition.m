@@ -24,6 +24,8 @@ p.addParameter('RecomputeSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEAlpha', 0.18, @(x) isscalar(x) && x >= 0 && x <= 1);
 p.addParameter('Alpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
 p.addParameter('BaselineSeconds', 0, @(x) isscalar(x) && x >= 0);
+p.addParameter('TrialOutlierPolicy', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('TrialOutlierZThreshold', 4, @(x) isscalar(x) && x > 0);
 p.addParameter('LineWidth', 1.8, @(x) isscalar(x) && x > 0);
 p.parse(results, varargin{:});
 opts = p.Results;
@@ -118,7 +120,9 @@ legend_labels = cell(1, numel(condition_specs));
 for k = 1:numel(condition_specs)
     avg = hrf_average_condition_trials(tc, results.events, condition_specs(k).matched_conditions, ...
         results.settings.TR, results.settings.window_seconds, ...
-        'BaselineSeconds', opts.BaselineSeconds);
+        'BaselineSeconds', opts.BaselineSeconds, ...
+        'OutlierPolicy', opts.TrialOutlierPolicy, ...
+        'OutlierZThreshold', opts.TrialOutlierZThreshold);
     x = avg.time;
     y = avg.mean;
     if logical(opts.ShowSE)
@@ -126,11 +130,13 @@ for k = 1:numel(condition_specs)
             'FaceAlpha', opts.SEAlpha, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     end
     plot(ax, x, y, 'LineWidth', opts.LineWidth, 'Color', colors(k, :));
-    legend_labels{k} = sprintf('%s (n=%d)', condition_specs(k).display_label, avg.n_trials);
+    legend_labels{k} = sprintf('%s (n=%d, weighted=%0.3g)', ...
+        condition_specs(k).display_label, avg.n_trials, sum(avg.trial_weights));
 end
 
 legend(ax, format_strings_for_legend(legend_labels), 'Interpreter', 'none');
-title(ax, sprintf('model=trialmean, source=%s, ribbon=within-run trial SEM', source_label), ...
+title(ax, sprintf('model=trialmean, source=%s, outliers=%s, ribbon=within-run trial SEM', ...
+    source_label, char(opts.TrialOutlierPolicy)), ...
     'Interpreter', 'none');
 xlabel(ax, 'Seconds after event onset');
 ylabel(ax, 'Observed signal');

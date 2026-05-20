@@ -15,6 +15,8 @@ p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('Overwrite', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('OverwriteStale', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('RequireMetadata', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('OutputCsv', '', @(x) ischar(x) || isstring(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('NoVerbose', true, @(x) islogical(x) || isnumeric(x));
@@ -47,26 +49,39 @@ for i = 1:height(input_table)
     [metadata_table, metadata_file] = local_metadata_for_row(input_table, i, prefix, model_name);
     if ~isempty(metadata_table) && ~isempty(metadata_file)
         input_table = local_set_file(input_table, i, 'metadata_file', metadata_file);
+    elseif logical(opts.RequireMetadata)
+        msg = sprintf('missing metadata for %s; cannot write condition-labeled map scores', prefix);
+        status = local_add_status(status, i, subject, model_name, '', false, msg);
+        local_handle_missing(missing_policy, i, subject, msg);
+        continue
     end
 
     for j = 1:numel(objects)
         object_name = objects{j};
         score_file = local_score_file(input_table, i, object_name, prefix);
-        if exist(score_file, 'file') == 2 && ~logical(opts.Overwrite)
+        if exist(score_file, 'file') == 2 && ~logical(opts.Overwrite) && ...
+                local_existing_score_is_valid(score_file, metadata_table)
             input_table = local_set_score_file(input_table, i, object_name, score_file);
             status = local_add_status(status, i, subject, model_name, object_name, false, 'exists');
+            continue
+        elseif exist(score_file, 'file') == 2 && ~logical(opts.Overwrite) && ~logical(opts.OverwriteStale)
+            msg = sprintf('existing score file is stale: %s', score_file);
+            status = local_add_status(status, i, subject, model_name, object_name, false, msg);
+            local_handle_missing(missing_policy, i, subject, msg);
             continue
         end
 
         try
             wholebrain = hrf_load_wholebrain_stats(prefix, 'NoVerbose', logical(opts.NoVerbose));
+            local_validate_wholebrain_metadata(wholebrain, metadata_table, object_name, prefix);
             hrf_apply_maps_to_wholebrain(wholebrain, ...
                 'Object', object_name, ...
                 'SignatureSets', opts.SignatureSets, ...
                 'ImageSets', opts.ImageSets, ...
                 'SimilarityMetric', opts.SimilarityMetric, ...
                 'MetadataTable', metadata_table, ...
-                'OutputCsv', score_file);
+                'OutputCsv', score_file, ...
+                'WarningContext', local_warning_context(i, subject, model_name, object_name, prefix));
             input_table = local_set_score_file(input_table, i, object_name, score_file);
             status = local_add_status(status, i, subject, model_name, object_name, true, score_file);
         catch err
@@ -171,6 +186,9 @@ if exist(metadata_file, 'file') == 2
 end
 
 metadata_table = local_metadata_from_result_mat(input_table, row, model_name);
+if isempty(metadata_table)
+    metadata_table = local_metadata_from_sibling(prefix, model_name);
+end
 if ~isempty(metadata_table)
     try
         writetable(metadata_table, metadata_file);
@@ -210,6 +228,143 @@ elseif isfield(R, 'wholebrain') && isfield(R.wholebrain, 'metadata_table')
 end
 end
 
+function metadata_table = local_metadata_from_sibling(prefix, model_name)
+metadata_table = table();
+base_prefix = local_base_prefix(prefix, model_name);
+candidate_files = { ...
+    [base_prefix '_metadata.csv'], ...
+    [base_prefix '_sfir_metadata.csv'], ...
+    [base_prefix '_canonical_metadata.csv'], ...
+    [base_prefix '_spline_metadata.csv']};
+candidate_files = unique(candidate_files, 'stable');
+this_file = [prefix '_metadata.csv'];
+
+for i = 1:numel(candidate_files)
+    fname = candidate_files{i};
+    if strcmp(fname, this_file) || exist(fname, 'file') ~= 2
+        continue
+    end
+    try
+        T = readtable(fname, 'TextType', 'string');
+    catch
+        continue
+    end
+    if any(strcmp('condition', T.Properties.VariableNames)) && ...
+            any(strcmp('lag_index', T.Properties.VariableNames))
+        metadata_table = local_relabel_metadata(T, model_name);
+        return
+    end
+end
+end
+
+function base_prefix = local_base_prefix(prefix, model_name)
+base_prefix = char(prefix);
+model_suffix = ['_' lower(char(model_name))];
+if endsWith(lower(base_prefix), model_suffix)
+    base_prefix = base_prefix(1:end - numel(model_suffix));
+end
+end
+
+function T = local_relabel_metadata(T, model_name)
+model_name = lower(char(model_name));
+T.volume_index = (1:height(T))';
+if any(strcmp('mode', T.Properties.VariableNames))
+    T.mode = repmat(string(upper(model_name)), height(T), 1);
+end
+if any(strcmp('image_label', T.Properties.VariableNames)) && ...
+        any(strcmp('condition', T.Properties.VariableNames)) && ...
+        any(strcmp('lag_index', T.Properties.VariableNames))
+    T.image_label = local_image_labels(T, model_name);
+end
+end
+
+function labels = local_image_labels(T, model_name)
+conditions = cellstr(string(T.condition));
+lag_index = local_to_numeric(T.lag_index);
+if any(strcmp('lag_seconds', T.Properties.VariableNames))
+    lag_seconds = local_to_numeric(T.lag_seconds);
+else
+    lag_seconds = lag_index;
+end
+labels = cell(height(T), 1);
+for i = 1:height(T)
+    if ismember(model_name, {'canonical', 'spline'})
+        labels{i} = sprintf('%s_%s_lag%03d_%0.3gs', ...
+            local_safe_label(model_name), local_safe_label(conditions{i}), ...
+            lag_index(i), lag_seconds(i));
+    else
+        labels{i} = sprintf('%s_lag%03d_%0.3gs', ...
+            local_safe_label(conditions{i}), lag_index(i), lag_seconds(i));
+    end
+end
+end
+
+function s = local_safe_label(s)
+s = matlab.lang.makeValidName(char(s));
+end
+
+function tf = local_existing_score_is_valid(score_file, metadata_table)
+tf = true;
+if isempty(metadata_table)
+    return
+end
+try
+    S = readtable(score_file, 'TextType', 'string');
+catch
+    tf = false;
+    return
+end
+if height(S) ~= height(metadata_table)
+    tf = false;
+    return
+end
+has_score_condition = any(strcmp('condition', S.Properties.VariableNames));
+has_metadata_condition = any(strcmp('condition', metadata_table.Properties.VariableNames));
+if has_metadata_condition && ~has_score_condition
+    tf = false;
+    return
+elseif has_score_condition && has_metadata_condition && ...
+        ~isequal(string(S.condition), string(metadata_table.condition))
+    tf = false;
+    return
+end
+has_score_lag = any(strcmp('lag_index', S.Properties.VariableNames));
+has_metadata_lag = any(strcmp('lag_index', metadata_table.Properties.VariableNames));
+if has_metadata_lag && ~has_score_lag
+    tf = false;
+    return
+elseif has_score_lag && has_metadata_lag && ...
+        ~isequaln(local_to_numeric(S.lag_index), local_to_numeric(metadata_table.lag_index))
+    tf = false;
+end
+end
+
+function x = local_to_numeric(x)
+if isnumeric(x)
+    x = double(x);
+else
+    x = str2double(string(x));
+end
+end
+
+function local_validate_wholebrain_metadata(wholebrain, metadata_table, object_name, prefix)
+if isempty(metadata_table)
+    return
+end
+switch lower(char(object_name))
+    case 'beta'
+        n_images = size(wholebrain.b.dat, 2);
+    case 't'
+        n_images = size(wholebrain.t.dat, 2);
+    otherwise
+        n_images = height(metadata_table);
+end
+if height(metadata_table) ~= n_images
+    error('Cannot score %s: metadata has %d rows but %s image has %d volumes. Regenerate the whole-brain maps and metadata together.', ...
+        prefix, height(metadata_table), object_name, n_images);
+end
+end
+
 function status = local_add_status(status, row, subject, model_name, object_name, wrote_file, message)
 new_row = table(row, string(subject), string(model_name), string(object_name), logical(wrote_file), string(message), ...
     'VariableNames', status.Properties.VariableNames);
@@ -243,4 +398,9 @@ switch missing_policy
     otherwise
         error('Unknown MissingPolicy: %s. Use warn, silent, or error.', missing_policy);
 end
+end
+
+function context = local_warning_context(row, subject, model_name, object_name, prefix)
+context = sprintf('row=%d; subject=%s; model=%s; object=%s; prefix=%s', ...
+    row, char(subject), char(model_name), char(object_name), char(prefix));
 end

@@ -20,12 +20,14 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('MetadataTable', table(), @(x) isempty(x) || istable(x));
 p.addParameter('OutputCsv', '', @(x) ischar(x) || isstring(x));
+p.addParameter('WarningContext', '', @(x) ischar(x) || isstring(x));
 p.parse(stats_input, varargin{:});
 opts = p.Results;
 
 [obj, metadata_table] = local_get_object(stats_input, opts.Object, opts.MetadataTable);
 n_images = size(obj.dat, 2);
 scores = local_base_table(obj, metadata_table, n_images);
+empty_insertions = struct('score', {}, 'n_inserted', {});
 
 signature_sets = local_to_cell(opts.SignatureSets);
 for s = 1:numel(signature_sets)
@@ -42,7 +44,9 @@ for s = 1:numel(signature_sets)
         name = S.signaturenames{i};
         v = local_get_signal(S.(name));
         varname = local_unique_varname(scores, local_varname({'sig', sigset, name}));
-        scores.(varname) = local_match_length(v, n_images);
+        [v, n_inserted] = local_match_length(v, n_images, obj);
+        scores.(varname) = v;
+        empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
     end
 end
 
@@ -63,9 +67,13 @@ for s = 1:numel(image_sets)
         this_map = get_wh_image(maps, i);
         v = apply_mask(obj, this_map, 'pattern_expression', 'ignore_missing', char(opts.SimilarityMetric));
         varname = local_unique_varname(scores, local_varname({'map', set_name, map_names{i}}));
-        scores.(varname) = local_match_length(v, n_images);
+        [v, n_inserted] = local_match_length(v, n_images, obj);
+        scores.(varname) = v;
+        empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
     end
 end
+
+local_warn_empty_insertions(empty_insertions, opts.WarningContext, opts.OutputCsv);
 
 if ~isempty(opts.OutputCsv)
     writetable(scores, char(opts.OutputCsv));
@@ -95,7 +103,11 @@ end
 end
 
 function T = local_base_table(obj, metadata_table, n_images)
-if ~isempty(metadata_table) && height(metadata_table) == n_images
+if ~isempty(metadata_table)
+    if height(metadata_table) ~= n_images
+        error('Metadata row count (%d) does not match number of 4D images (%d). Regenerate matching whole-brain maps/metadata before scoring.', ...
+            height(metadata_table), n_images);
+    end
     T = metadata_table;
 elseif isa(obj, 'statistic_image') && ~isempty(obj.image_labels) && numel(obj.image_labels) == n_images
     T = table((1:n_images)', obj.image_labels(:), 'VariableNames', {'volume_index', 'image_label'});
@@ -146,11 +158,73 @@ end
 v = v(:);
 end
 
-function v = local_match_length(v, n_images)
+function [v, n_inserted] = local_match_length(v, n_images, obj)
 v = v(:);
-if numel(v) ~= n_images
-    error('Map/signature output length (%d) does not match number of 4D volumes (%d).', numel(v), n_images);
+n_inserted = 0;
+if numel(v) == n_images
+    return
 end
+
+empty_images = local_empty_images(obj, n_images);
+if numel(v) + sum(empty_images) == n_images
+    full_v = nan(n_images, 1);
+    full_v(~empty_images) = v;
+    v = full_v;
+    n_inserted = sum(empty_images);
+    return
+end
+
+error('Map/signature output length (%d) does not match number of 4D volumes (%d), and the mismatch cannot be explained by all-zero/all-NaN maps.', ...
+    numel(v), n_images);
+end
+
+function empty_images = local_empty_images(obj, n_images)
+empty_images = false(n_images, 1);
+if ~isprop(obj, 'dat') || isempty(obj.dat) || size(obj.dat, 2) ~= n_images
+    return
+end
+
+empty_images = all(obj.dat == 0 | isnan(obj.dat), 1)';
+
+if isprop(obj, 'removed_images') && ~isempty(obj.removed_images) && ...
+        numel(obj.removed_images) == n_images
+    empty_images = empty_images | obj.removed_images(:);
+end
+end
+
+function empty_insertions = local_record_empty_insertion(empty_insertions, score_name, n_inserted)
+if n_inserted == 0
+    return
+end
+empty_insertions(end + 1) = struct('score', char(score_name), 'n_inserted', n_inserted);
+end
+
+function local_warn_empty_insertions(empty_insertions, warning_context, output_csv)
+if isempty(empty_insertions)
+    return
+end
+
+n_each = [empty_insertions.n_inserted];
+unique_n = unique(n_each);
+score_names = {empty_insertions.score};
+n_show = min(numel(score_names), 8);
+shown_scores = strjoin(score_names(1:n_show), ', ');
+if numel(score_names) > n_show
+    shown_scores = sprintf('%s, ...', shown_scores);
+end
+
+context = char(warning_context);
+if isempty(context)
+    context = 'context not provided';
+end
+if ~isempty(output_csv)
+    context = sprintf('%s; output_csv=%s', context, char(output_csv));
+end
+
+warning('hrf_apply_maps_to_wholebrain:ReinsertedEmptyImages', ...
+    ['%s: Reinserted NaN scores for all-zero/all-NaN 4D volume(s) to preserve metadata alignment. ' ...
+    '%d score column(s) affected; inserted counts={%s}; first affected columns: %s'], ...
+    context, numel(empty_insertions), strjoin(cellstr(string(unique_n)), ', '), shown_scores);
 end
 
 function name = local_varname(parts)

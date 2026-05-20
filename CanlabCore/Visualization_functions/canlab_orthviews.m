@@ -24,9 +24,15 @@ function varargout = canlab_orthviews(varargin)
 %     canlab_orthviews('xhairs', 'off')                 % hide crosshairs
 %     canlab_orthviews('Reset')                         % close & clear state
 %
-%     canlab_orthviews('AddBlobs', handle, XYZ, Z, M)
-%     canlab_orthviews('AddColouredBlobs', handle, XYZ, Z, M, col)
+%     canlab_orthviews('AddBlobs', [handle,] XYZ, Z, M)
+%     canlab_orthviews('AddColouredBlobs', [handle,] XYZ, Z, M, col)
+%     canlab_orthviews('AddBlobs', [handle,] obj [, opts...])  % obj = statistic_image / fmri_data / region / ...
 %     canlab_orthviews('RemoveBlobs')                   % drop all blob layers
+%
+% Note: the SPM-style `handle` selects one of several linked orthviews
+% windows. canlab_orthviews maintains a single linked figure, so the
+% handle is accepted for source-compatibility but ignored — you can
+% omit it entirely.
 %
 % :Inputs:
 %
@@ -89,6 +95,21 @@ function varargout = canlab_orthviews(varargin)
 %     r = region(t);
 %     canlab_orthviews(r);
 %
+% Example sequence of visualizations:
+% obj = load_image_set('emotionreg');
+% t = ttest(obj);
+% canlab_orthviews(t, 'trans'); pause(2)
+% canlab_orthviews('RemoveBlobs'); pause(2)
+% t = threshold(t, .005, 'unc');
+% canlab_orthviews('AddBlobs', t); pause(2)
+% xyz = canlab_orthviews('position');
+% canlab_orthviews('RemoveBlobs'); 
+% canlab_orthviews('AddBlobs', t, 'color', {[0 1 0]})
+% canlab_orthviews('Reposition', [57 -1 -23])
+% canlab_orthviews('zoom', 20)
+% canlab_orthviews('RemoveBlobs'); 
+% canlab_orthviews('AddBlobs', t, 'unique')
+%
 % :See also:
 %   - canlab_get_underlay_image
 %   - cluster_orthviews
@@ -139,7 +160,8 @@ function tf = is_command_string(s)
     cmds = {'reposition','pos','position','reset','xhairs','zoom', ...
             'image','addblobs','addcolouredblobs','addcoloredblobs', ...
             'removeblobs','rmblobs','rmcolouredblobs','rmcoloredblobs', ...
-            'overlay','underlay','redraw','close','window','context'};
+            'overlay','underlay','redraw','close','window','context', ...
+            'legend', 'colorbar', 'nocolorbar','nolegend','no_colorbar','no_legend'};
     tf = ismember(lower(strtrim(s)), cmds);
 end
 
@@ -168,8 +190,14 @@ function varargout = dispatch_command(varargin)
             varargout{1} = state.centre;
 
         case {'reset','close'}
-            fh = find_canlab_orthviews_figure();
-            if ~isempty(fh) && ishghandle(fh), close(fh); end
+            % Find and close every canlab_orthviews figure (defensively
+            % handles the case where more than one window is open).
+            f = findobj('Tag', 'canlab_orthviews');
+            if ~isempty(f)
+                is_fig = arrayfun(@(h) contains(class(h), 'Figure'), f);
+                f = f(is_fig);
+                if ~isempty(f), close(f); end
+            end
 
         case 'xhairs'
             fh = find_canlab_orthviews_figure();
@@ -230,9 +258,27 @@ function varargout = dispatch_command(varargin)
                 redraw_all(fh);
             end
 
+        case {'colorbar','legend'}
+            set_colorbar_visibility(true);
+
+        case {'nocolorbar','nolegend','no_colorbar','no_legend'}
+            set_colorbar_visibility(false);
+
         case 'context'
             % no-op placeholder for parity with spm_orthviews('context_menu')
     end
+end
+
+
+function set_colorbar_visibility(showit)
+    fh = find_canlab_orthviews_figure();
+    if isempty(fh)
+        [fh, ~] = ensure_figure_with_underlay([]);
+    end
+    state = getappdata(fh, 'canlab_orthviews_state');
+    state.show_colorbar = logical(showit);
+    setappdata(fh, 'canlab_orthviews_state', state);
+    redraw_all(fh);
 end
 
 
@@ -258,6 +304,10 @@ function varargout = dispatch_object(varargin)
     end
     if ~isempty(opts.show_xhairs)
         state.show_xhairs = logical(opts.show_xhairs);
+        setappdata(fh, 'canlab_orthviews_state', state);
+    end
+    if ~isempty(opts.show_colorbar)
+        state.show_colorbar = logical(opts.show_colorbar);
         setappdata(fh, 'canlab_orthviews_state', state);
     end
 
@@ -302,13 +352,16 @@ end
 
 function [overlay_file, opts, rest] = parse_render_options(args)
     overlay_file = '';
-    opts = struct('posneg',false, 'colors',{{}}, 'trans',false, ...
+    opts = struct('posneg',false, 'colors',{{}}, ...
+                  'transparency',0, ...        % 0 = opaque, 1 = fully transparent
                   'solid',false, 'replace_blobs',false, ...
                   'doverbose',true, ...
-                  'bgcolor',[], ...      % [] = leave figure background unchanged
-                  'show_xhairs',[], ...  % [] = leave crosshair state unchanged
+                  'bgcolor',[], ...            % [] = leave figure background unchanged
+                  'show_xhairs',[], ...        % [] = leave crosshair state unchanged
                   'smooth_edges',true, ...     % anti-alias blob edges via trilinear
-                  'smooth_sigma_mm',0);        % optional Gaussian pre-blur of blob volume
+                  'smooth_sigma_mm',0, ...     % optional Gaussian pre-blur of blob volume
+                  'unique',false, ...          % one solid-color layer per contiguous region
+                  'show_colorbar',[]);         % [] = leave colorbar state unchanged
 
     rest = {};
     i = 1;
@@ -327,8 +380,25 @@ function [overlay_file, opts, rest] = parse_render_options(args)
                     if ~iscell(c), c = {c}; end
                     opts.colors = c;
                     i = i + 2; continue;
-                case 'trans'
-                    opts.trans = true;
+                case {'trans','transparent','transparency'}
+                    % key-value pair: <0..1>, where 0 is opaque and 1 is
+                    % fully transparent. Bare keyword keeps the legacy
+                    % "moderately transparent" default (~0.4) so old
+                    % 'trans' calls continue to look the same.
+                    if i + 1 <= numel(args) && isnumeric(args{i+1}) ...
+                            && isscalar(args{i+1}) ...
+                            && args{i+1} >= 0 && args{i+1} <= 1
+                        opts.transparency = double(args{i+1});
+                        i = i + 2; continue;
+                    else
+                        opts.transparency = 0.4;
+                    end
+                case 'unique'
+                    opts.unique = true;
+                case {'nocolorbar','nolegend','no_colorbar','no_legend'}
+                    opts.show_colorbar = false;
+                case {'colorbar','legend'}
+                    opts.show_colorbar = true;
                 case 'solid'
                     opts.solid = true;
                 case {'replaceblobs','clear','new'}
@@ -450,6 +520,25 @@ function layers = imgobj_to_layers(obj, opts)
     % honored automatically (reconstruct_image multiplies .dat by .sig).
     obj = replace_empty(obj);
 
+    % atlas: integer-label colormap, one layer per label
+    if isa(obj, 'atlas')
+        if isa(obj, 'statistic_image')
+            V = reconstruct_image(obj);
+        else
+            V = iimg_reconstruct_vols(double(obj.dat), obj.volInfo);
+        end
+        if ndims(V) > 3, V = V(:, :, :, 1); end
+        layers = {make_blob_layer(V, obj.volInfo.mat, 'unique', [], opts)};
+        return
+    end
+
+    % 'unique': one solid-color layer per contiguous cluster (matches the
+    % legacy image_vector.orthviews 'unique' behavior).
+    if opts.unique
+        layers = imgobj_unique_layers(obj, opts);
+        return
+    end
+
     if isa(obj, 'statistic_image')
         V = reconstruct_image(obj);
     else
@@ -459,11 +548,6 @@ function layers = imgobj_to_layers(obj, opts)
         V = V(:, :, :, 1);
     end
     M = obj.volInfo.mat;
-
-    if isa(obj, 'atlas')
-        layers = {make_blob_layer(V, M, 'unique', [], opts)};
-        return
-    end
 
     if opts.posneg
         layers = split_posneg(V, M, opts);
@@ -479,10 +563,80 @@ function layers = imgobj_to_layers(obj, opts)
 end
 
 
+function layers = imgobj_unique_layers(obj, opts)
+    % Split an image_vector-derived object into contiguous regions and
+    % build one solid-color blob layer per region. Colors come from
+    % scn_standard_colors, matching @image_vector/orthviews 'unique'.
+    obj = replace_empty(obj);
+    try
+        r = region(obj, 'contiguous_regions');
+    catch ME
+        warning('canlab_orthviews:unique', ...
+            'region(obj, ''contiguous_regions'') failed: %s', ME.message);
+        layers = {};
+        return
+    end
+    layers = region_unique_layers(r, obj.volInfo.mat, obj.volInfo.dim, opts);
+end
+
+
+function layers = region_unique_layers(r, M, dim, opts)
+    % One solid-color blob layer per region in the array.
+    layers = {};
+    if isempty(r), return; end
+    if isempty(M), M = eye(4); end
+    if nargin < 4 || isempty(dim)
+        XYZall = [];
+        for k = 1:numel(r)
+            if ~isempty(r(k).XYZ)
+                XYZall = [XYZall r(k).XYZ];                 %#ok<AGROW>
+            end
+        end
+        if isempty(XYZall), return; end
+        dim = max(round(XYZall), [], 2)';
+        dim = max(dim, [1 1 1]);
+    end
+
+    try
+        colors = scn_standard_colors(numel(r));
+    catch
+        colors = arrayfun(@(k) [rand rand rand], 1:numel(r), ...
+            'UniformOutput', false);
+    end
+
+    for k = 1:numel(r)
+        if isempty(r(k).XYZ), continue; end
+        XYZ = round(r(k).XYZ);
+        XYZ(XYZ < 1) = 1;
+        keep = XYZ(1, :) <= dim(1) & XYZ(2, :) <= dim(2) & XYZ(3, :) <= dim(3);
+        XYZ = XYZ(:, keep);
+        if isempty(XYZ), continue; end
+
+        zk = r(k).Z;
+        if isempty(zk) || numel(zk) < size(r(k).XYZ, 2)
+            zk = ones(1, size(r(k).XYZ, 2));
+        end
+        zk = zk(keep);
+        if isempty(zk), zk = ones(1, size(XYZ, 2)); end
+
+        V = zeros(dim, 'single');
+        V(sub2ind(dim, XYZ(1, :), XYZ(2, :), XYZ(3, :))) = single(zk);
+
+        layers{end+1} = make_blob_layer(V, M, 'solid', colors{k}, opts); %#ok<AGROW>
+    end
+end
+
+
 function layers = region_to_layers(r, opts)
     if isempty(r), layers = {}; return; end
     M = r(1).M;
     if isempty(M), M = eye(4); end
+
+    % 'unique': one solid-color layer per region in the array.
+    if opts.unique
+        layers = region_unique_layers(r, M, [], opts);
+        return
+    end
 
     % Rasterize all region voxel indices into a dense volume.
     XYZ = []; Z = [];
@@ -582,9 +736,7 @@ function L = make_blob_layer(V, M, style, color, opts)
         'smooth_edges',    opts.smooth_edges, ...
         'smooth_sigma_mm', opts.smooth_sigma_mm);
 
-    if opts.trans
-        L.alpha = 0.6;
-    end
+    L.alpha = max(0, min(1, 1 - opts.transparency));
 
     nz = V(V ~= 0 & isfinite(V));
     if ~isempty(nz)
@@ -609,18 +761,62 @@ end
 
 
 function add_blob_layer(args, mode)
-    % spm_orthviews('AddBlobs', h, XYZ, Z, M) and 'AddColouredBlobs'.
-    % Materializes XYZ/Z into a dense 3-D blob volume so the slice
-    % renderer can fill voxels at panel resolution.
-    if numel(args) < 4
-        warning('canlab_orthviews:addblobs','AddBlobs needs handle,XYZ,Z,M.');
+    % Accepted call shapes:
+    %   canlab_orthviews('AddBlobs', h, XYZ, Z, M)              % SPM-style
+    %   canlab_orthviews('AddBlobs',    XYZ, Z, M)              % handle omitted
+    %   canlab_orthviews('AddColouredBlobs', h, XYZ, Z, M, col) % SPM-style
+    %   canlab_orthviews('AddColouredBlobs',    XYZ, Z, M, col) % handle omitted
+    %   canlab_orthviews('AddBlobs', [h,] obj [, opts...])      % object input
+    %
+    % The numeric handle `h` exists in SPM to select one of several linked
+    % orthviews windows. canlab_orthviews maintains a single linked
+    % figure, so the handle is accepted for compatibility but ignored.
+    % `obj` may be statistic_image / fmri_data / image_vector / atlas /
+    % region (array); options like 'unique', 'transparent', 'color',
+    % 'smooth', 'posneg' all work the same as in the direct object call.
+
+    if isempty(args)
+        warning('canlab_orthviews:addblobs', ...
+            'AddBlobs requires at least one argument.');
         return
     end
-    XYZ = args{2};      % 3 x N voxel indices (1-based, SPM convention)
-    Z   = args{3};
-    M   = args{4};
+
+    % Strip the optional SPM handle (a lone scalar number).
+    if isnumeric(args{1}) && isscalar(args{1})
+        args = args(2:end);
+    end
+    if isempty(args)
+        warning('canlab_orthviews:addblobs', ...
+            'AddBlobs needs a data argument.');
+        return
+    end
+
+    first = args{1};
+
+    % --- Object-style call ------------------------------------------------
+    if isa(first, 'image_vector')   || isa(first, 'fmri_data') || ...
+       isa(first, 'statistic_image') || isa(first, 'atlas')    || ...
+       isa(first, 'region')
+        % Forward to the standard dispatcher; all object options
+        % ('unique', 'color', 'transparent', 'smooth', 'posneg', ...) are
+        % parsed there. AddColouredBlobs with a missing color is a no-op
+        % in this branch — the user passes color via the 'color' option.
+        dispatch_object(first, args{2:end});
+        return
+    end
+
+    % --- Legacy SPM-compatible XYZ / Z / M call --------------------------
+    if numel(args) < 3
+        warning('canlab_orthviews:addblobs', ...
+            'AddBlobs(XYZ, Z, M) needs XYZ, Z, and M.');
+        return
+    end
+    XYZ = args{1};
+    Z   = args{2};
+    M   = args{3};
     if size(M, 1) ~= 4 || size(M, 2) ~= 4
-        warning('canlab_orthviews:addblobs','M must be 4x4.'); return
+        warning('canlab_orthviews:addblobs', 'M must be 4x4.');
+        return
     end
 
     XYZ = round(XYZ);
@@ -631,12 +827,14 @@ function add_blob_layer(args, mode)
     linidx = sub2ind(dim, XYZ(1, :), XYZ(2, :), XYZ(3, :));
     V(linidx) = single(reshape(Z, 1, []));
 
-    opts = struct('posneg',false, 'colors',{{}}, 'trans',false, ...
+    opts = struct('posneg',false, 'colors',{{}}, ...
+                  'transparency',0, ...
                   'solid',false, 'replace_blobs',false, 'doverbose',true, ...
-                  'smooth_edges', true, 'smooth_sigma_mm', 0);
+                  'smooth_edges', true, 'smooth_sigma_mm', 0, ...
+                  'unique', false);
 
-    if strcmp(mode, 'solidcolor') && numel(args) >= 5
-        L = make_blob_layer(V, M, 'solid', args{5}, opts);
+    if strcmp(mode, 'solidcolor') && numel(args) >= 4
+        L = make_blob_layer(V, M, 'solid', args{4}, opts);
     else
         L = make_blob_layer(V, M, 'autocolor', [], opts);
     end
@@ -715,9 +913,12 @@ function state = default_state(fh)
         'centre', [0 0 0], ...
         'zoom', Inf, ...
         'show_xhairs', true, ...
+        'show_colorbar', true, ...     % horizontal colorbar for autocolor blobs
         'bgcolor', [1 1 1], ...        % white background by default
         'underlay', [], ...
-        'blobs', {{}} );
+        'blobs', {{}}, ...
+        'drag_panel', [], ...
+        'drag_active', false );
 end
 
 
@@ -746,8 +947,9 @@ function fh = build_figure()
         hold(ax(k), 'on');
 
         % Tight per-axis position: no horizontal padding so panels are
-        % flush; small vertical room for the title.
-        set(ax(k), 'Position', [(k-1)*w, 0.015, w, 0.95]);
+        % flush; reserve a strip at the bottom of the figure for the
+        % autocolor colorbar.
+        set(ax(k), 'Position', [(k-1)*w, 0.11, w, 0.85]);
 
         % Hide the modern axes toolbar (and zoom/pan default interactions)
         % so clicks always reach our ButtonDownFcn cleanly.
@@ -762,6 +964,49 @@ function fh = build_figure()
     setappdata(fh, 'canlab_orthviews_state', state);
 
     % Click + right-click context menu wiring (attach to each axis)
+    install_interaction(fh);
+end
+
+
+function rebuild_panels(fh)
+    % Rebuild the three sagittal/coronal/axial panels inside an existing
+    % canlab_orthviews figure (used to recover from external clobbering).
+    state = getappdata(fh, 'canlab_orthviews_state');
+    if isempty(state), return; end
+    bg = [1 1 1];
+    if isfield(state, 'bgcolor') && ~isempty(state.bgcolor)
+        bg = state.bgcolor;
+    end
+
+    % Remove any leftover plain axes (the colorbar axis has its own tag
+    % and is preserved).
+    leftovers = findall(fh, 'Type', 'axes');
+    for k = 1:numel(leftovers)
+        if ~strcmp(get(leftovers(k), 'Tag'), 'canlab_orthviews_cbar')
+            delete(leftovers(k));
+        end
+    end
+
+    titles = {'Sagittal','Coronal','Axial'};
+    w = 1/3;
+    ax = gobjects(1, 3);
+    for k = 1:3
+        ax(k) = axes('Parent', fh, ...
+            'Units','normalized', ...
+            'Position', [(k-1)*w, 0.11, w, 0.85], ...
+            'Color', bg, ...
+            'XColor','none','YColor','none', ...
+            'LooseInset',[0 0 0 0]);
+        axis(ax(k), 'image','off');
+        title(ax(k), titles{k}, 'Color', fg_for(bg), 'FontSize', 11);
+        hold(ax(k), 'on');
+        try, ax(k).Toolbar.Visible = 'off'; end %#ok<TRYNC>
+        try, disableDefaultInteractivity(ax(k)); end %#ok<TRYNC>
+    end
+    state.ax = ax;
+    setappdata(fh, 'canlab_orthviews_state', state);
+
+    % Click + context menu must be re-wired to the fresh axes
     install_interaction(fh);
 end
 
@@ -828,12 +1073,63 @@ end
 
 function axis_click_cb(src, evt)
     % Single named entry point so MATLAB can re-resolve the local
-    % function at click time. Reads the panel id from appdata.
+    % function at click time. Reads the panel id from appdata, performs
+    % the initial reposition, and then installs figure-level motion +
+    % up callbacks so the user can drag the crosshair through slices.
     fh = ancestor(src, 'figure');
     if isempty(fh) || ~isgraphics(fh), return; end
     panel_id = getappdata(src, 'canlab_orthviews_panel_id');
     if isempty(panel_id), return; end
+
+    % Initial click — render at full resolution
     on_axis_click(src, evt, fh, panel_id);
+
+    % Begin drag: subsequent mouse-moves on the figure will reposition;
+    % the renderer drops to npix=128 while drag_active is true.
+    state = getappdata(fh, 'canlab_orthviews_state');
+    state.drag_panel  = panel_id;
+    state.drag_active = true;
+    setappdata(fh, 'canlab_orthviews_state', state);
+
+    set(fh, 'WindowButtonMotionFcn', @drag_motion_cb, ...
+            'WindowButtonUpFcn',     @drag_up_cb);
+end
+
+
+function drag_motion_cb(src, ~)
+    fh = ancestor(src, 'figure'); if isempty(fh), fh = src; end
+    state = getappdata(fh, 'canlab_orthviews_state');
+    if ~isfield(state, 'drag_panel') || isempty(state.drag_panel), return; end
+    panel_id = state.drag_panel;
+    if panel_id < 1 || panel_id > numel(state.ax), return; end
+    ax = state.ax(panel_id);
+    if ~isgraphics(ax), return; end
+
+    cp = get(ax, 'CurrentPoint');
+    u  = cp(1, 1);
+    v  = cp(1, 2);
+
+    xyz = state.centre;
+    switch panel_id
+        case 1, xyz(2) = u; xyz(3) = v;
+        case 2, xyz(1) = u; xyz(3) = v;
+        case 3, xyz(1) = u; xyz(2) = v;
+    end
+    state.centre = xyz;
+    setappdata(fh, 'canlab_orthviews_state', state);
+    redraw_all(fh);
+end
+
+
+function drag_up_cb(src, ~)
+    fh = ancestor(src, 'figure'); if isempty(fh), fh = src; end
+    set(fh, 'WindowButtonMotionFcn', '', 'WindowButtonUpFcn', '');
+    state = getappdata(fh, 'canlab_orthviews_state');
+    state.drag_panel  = [];
+    state.drag_active = false;
+    setappdata(fh, 'canlab_orthviews_state', state);
+    % Re-render at full resolution now that the drag has ended
+    redraw_all(fh);
 end
 
 
@@ -938,22 +1234,41 @@ end
 
 
 function s = recenter_on_first_blob(s)
-    if isempty(s.blobs), return; end
-    L = s.blobs{1};
+    % Recenter the crosshair on the most-prominent blob. With one combined
+    % layer (autocolor / solid), this is just that layer's peak. With one
+    % layer per cluster ('unique' / 'posneg'), pick the layer with the
+    % largest support; for uniform-valued layers (typical of 'unique'),
+    % use that cluster's centroid; otherwise its peak voxel.
 
-    % Prefer the peak-magnitude voxel: it survives Gaussian pre-smoothing
-    % unchanged in location, and gives a more useful crosshair landing
-    % spot than the geometric centroid of all nonzero voxels.
+    if isempty(s.blobs), return; end
+
+    best = 1; best_n = -1;
+    for k = 1:numel(s.blobs)
+        L = s.blobs{k};
+        if ~isfield(L, 'vol') || isempty(L.vol), continue; end
+        n = nnz(L.vol ~= 0 & isfinite(L.vol));
+        if n > best_n, best_n = n; best = k; end
+    end
+
+    L = s.blobs{best};
     if isfield(L, 'vol') && ~isempty(L.vol)
         Vabs = abs(L.vol);
         Vabs(~isfinite(Vabs)) = 0;
-        [mv, idx] = max(Vabs(:));
-        if mv > 0
+        nz = Vabs(Vabs > 0);
+        uvals = unique(nz);
+        if numel(uvals) <= 1
+            % Uniform values across the cluster -> centroid is the only
+            % meaningful focal point.
+            mask = Vabs > 0;
+            [I, J, K] = ind2sub(size(L.vol), find(mask));
+            mm = L.M * [mean(I); mean(J); mean(K); 1];
+        else
+            [~, idx] = max(Vabs(:));
             [i, j, k] = ind2sub(size(L.vol), idx);
             mm = L.M * [i; j; k; 1];
-            s.centre = reshape(mm(1:3), 1, []);
-            return
         end
+        s.centre = reshape(mm(1:3), 1, []);
+        return
     end
 
     if isfield(L, 'XYZmm') && ~isempty(L.XYZmm)
@@ -1131,6 +1446,16 @@ function redraw_all(fh)
     state = getappdata(fh, 'canlab_orthviews_state');
     if isempty(state) || isempty(state.underlay), return; end
 
+    % Defensive: external code that takes over `gcf` (e.g., subplot or
+    % clf inside plot/montage helpers) can delete our panels even when
+    % the canlab_orthviews figure handle is reused. Detect that and
+    % rebuild the three panels in place before drawing.
+    if ~isfield(state, 'ax') || numel(state.ax) ~= 3 ...
+            || ~all(isgraphics(state.ax))
+        rebuild_panels(fh);
+        state = getappdata(fh, 'canlab_orthviews_state');
+    end
+
     apply_bgcolor(fh);
     state = getappdata(fh, 'canlab_orthviews_state');
 
@@ -1149,7 +1474,13 @@ function redraw_all(fh)
         lim_axi = [u.fovmm(1,1) u.fovmm(1,2); u.fovmm(2,1) u.fovmm(2,2)];
     end
 
-    npix = 256;
+    % Drop sampling resolution during click-and-drag so mouse-tracking
+    % stays responsive; restored automatically on mouse-up.
+    if isfield(state, 'drag_active') && state.drag_active
+        npix = 128;
+    else
+        npix = 256;
+    end
     [I1, X1, Y1] = sample_slice(u, 'sagittal', xyz(1), lim_sag(1,:), lim_sag(2,:), npix);
     [I2, X2, Y2] = sample_slice(u, 'coronal',  xyz(2), lim_cor(1,:), lim_cor(2,:), npix);
     [I3, X3, Y3] = sample_slice(u, 'axial',    xyz(3), lim_axi(1,:), lim_axi(2,:), npix);
@@ -1173,6 +1504,122 @@ function redraw_all(fh)
     update_title(state.ax(1), 'Sagittal', xyz);
     update_title(state.ax(2), 'Coronal',  xyz);
     update_title(state.ax(3), 'Axial',    xyz);
+
+    % Horizontal colorbar for autocolor blob layers (no-op when no
+    % autocolor layer is present, e.g. for 'unique' / 'posneg' / 'color')
+    draw_colorbar(fh, state);
+end
+
+
+function draw_colorbar(fh, state)
+    % Compute the data range across all autocolor blob layers; if none
+    % are present, remove any existing colorbar axis and return.
+    vmin = Inf;
+    vmax = -Inf;
+    has_auto = false;
+    for k = 1:numel(state.blobs)
+        L = state.blobs{k};
+        if ~isfield(L, 'style') || ~strcmp(L.style, 'autocolor'), continue; end
+        if ~isfield(L, 'vol') || isempty(L.vol), continue; end
+        V = L.vol;
+        in = isfinite(V) & V ~= 0;
+        if ~any(in(:)), continue; end
+        vmin = min(vmin, double(min(V(in))));
+        vmax = max(vmax, double(max(V(in))));
+        has_auto = true;
+    end
+
+    cb_ax = findall(fh, 'Type','axes','Tag','canlab_orthviews_cbar');
+
+    if ~has_auto || ~isfinite(vmin) || ~isfinite(vmax) || (vmin == 0 && vmax == 0)
+        if ~isempty(cb_ax), delete(cb_ax); end
+        return
+    end
+    if isfield(state, 'show_colorbar') && ~state.show_colorbar
+        if ~isempty(cb_ax), delete(cb_ax); end
+        return
+    end
+
+    % Degenerate case: a single value collapses XLim. Expand a hair so
+    % MATLAB accepts the limits while still labeling the lone value.
+    if vmax <= vmin
+        if vmin == 0
+            vmin = -eps; vmax = eps;
+        else
+            d = abs(vmax) * 0.05;
+            if d == 0, d = eps; end
+            vmax = vmin + d;
+        end
+    end
+
+    % Reuse the colorbar axis if it already exists; otherwise create one.
+    if isempty(cb_ax)
+        cb_ax = axes('Parent', fh, 'Tag', 'canlab_orthviews_cbar', ...
+                     'Units', 'normalized');
+    else
+        cb_ax = cb_ax(1);
+        cla(cb_ax);
+    end
+
+    % Hot/cool gradient matching the blob renderer's mapping.
+    n    = 256;
+    zmax = max(abs(vmin), abs(vmax));
+    if zmax <= 0, zmax = 1; end
+
+    vals = linspace(vmin, vmax, n);
+    R = zeros(1, n); G = R; B = R;
+    pos = vals >= 0;
+    neg = ~pos;
+    if any(pos)
+        t = min(vals(pos) / zmax, 1);
+        R(pos) = 1;  G(pos) = max(0, 1 - t);  B(pos) = 0;
+    end
+    if any(neg)
+        t = min(-vals(neg) / zmax, 1);
+        R(neg) = 0;  G(neg) = max(0, 1 - t);  B(neg) = 1;
+    end
+    rgb = cat(3, R, G, B);
+
+    set(cb_ax, 'Position', [0.35, 0.04, 0.30, 0.045], ...
+               'Color', state.bgcolor, ...
+               'XLim', [vmin vmax], 'YLim', [0 1]);
+
+    image('Parent', cb_ax, ...
+          'XData', [vmin vmax], 'YData', [0 1], 'CData', rgb, ...
+          'HitTest', 'off', 'PickableParts', 'none');
+
+    fg = fg_for(state.bgcolor);
+    set(cb_ax, ...
+        'XLim', [vmin vmax], 'YLim', [0 1], ...
+        'YTick', [], ...
+        'XTick', [vmin vmax], ...
+        'XTickLabel', {sig1_str(vmin), sig1_str(vmax)}, ...
+        'TickLength', [0 0], ...
+        'XColor', fg, 'YColor', fg, ...
+        'FontSize', 10, ...
+        'Box', 'on', ...
+        'TickDir', 'out');
+
+    % The colorbar isn't interactive — keep it out of the click path.
+    try, cb_ax.Toolbar.Visible = 'off'; end %#ok<TRYNC>
+    try, disableDefaultInteractivity(cb_ax); end %#ok<TRYNC>
+    set(cb_ax, 'HitTest', 'off', 'PickableParts', 'none');
+end
+
+
+function s = sig1_str(x)
+    % Format a number to 1 significant digit. Handles zero, small
+    % magnitudes (no scientific notation up to 1e4), and large
+    % magnitudes (scientific notation beyond).
+    if x == 0, s = '0'; return; end
+    p = floor(log10(abs(x)));
+    r = round(x / 10^p) * 10^p;
+    if abs(r) >= 1 && abs(r) < 1e4
+        % integer-ish: drop trailing decimals
+        s = sprintf('%g', r);
+    else
+        s = sprintf('%.1g', r);
+    end
 end
 
 

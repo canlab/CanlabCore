@@ -123,6 +123,80 @@ tc.verifyEqual(mm_back, [10 -8 12], 'AbsTol', 1e-9);
 end
 
 
+function test_addblobs_with_statistic_image(tc) %#ok<DEFNU>
+% AddBlobs should accept a statistic_image directly (without the
+% XYZ/Z/M trio), with or without the legacy SPM handle.
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+
+canlab_orthviews;
+canlab_orthviews('AddBlobs', t);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyNotEmpty(state.blobs);
+
+% Same call with the SPM handle prepended — should also work, and
+% should NOT have created a fresh figure.
+n_before = numel(state.blobs);
+canlab_orthviews('AddBlobs', 1, t);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyGreaterThan(numel(state.blobs), n_before);
+end
+
+
+function test_addblobs_with_region(tc) %#ok<DEFNU>
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+r = region(t);
+tc.assumeFalse(isempty(r), 'No surviving regions for AddBlobs region test');
+
+canlab_orthviews;
+canlab_orthviews('AddBlobs', r);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyNotEmpty(state.blobs);
+end
+
+
+function test_addblobs_handle_optional(tc) %#ok<DEFNU>
+% (handle, XYZ, Z, M) and (XYZ, Z, M) should produce identical blob
+% layers because the handle has no effect in canlab_orthviews.
+assume_display(tc);
+
+XYZ = [50; 60; 40];
+Z   = 3.4;
+M   = eye(4); M(1,4) = 10 - 50; M(2,4) = -8 - 60; M(3,4) = 12 - 40;
+
+canlab_orthviews;
+canlab_orthviews('AddBlobs', 1, XYZ, Z, M);
+fh = expect_open_figure(tc);
+mm_with    = getappdata(fh, 'canlab_orthviews_state');
+mm_with    = mm_with.blobs{end}.XYZmm(:, 1)';
+
+canlab_orthviews('RemoveBlobs');
+canlab_orthviews('AddBlobs', XYZ, Z, M);
+mm_without = getappdata(fh, 'canlab_orthviews_state');
+mm_without = mm_without.blobs{end}.XYZmm(:, 1)';
+
+tc.verifyEqual(mm_without, mm_with, 'AbsTol', 1e-9);
+tc.verifyEqual(mm_with, [10 -8 12], 'AbsTol', 1e-9);
+end
+
+
+function test_addblobs_object_passes_options(tc) %#ok<DEFNU>
+% Options after the object should flow through to the layer.
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+canlab_orthviews;
+canlab_orthviews('AddBlobs', t, 'transparent', 0.5, 'unique');
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.assumeNotEmpty(state.blobs);
+tc.verifyEqual(state.blobs{1}.alpha, 0.5, 'AbsTol', 1e-9);
+tc.verifyEqual(state.blobs{1}.style, 'solid');     % 'unique' uses solid layers
+end
+
+
 function test_remove_blobs(tc) %#ok<DEFNU>
 assume_display(tc);
 t = canlab_get_sample_thresholded_t(0.005);
@@ -348,6 +422,119 @@ tc.verifyTrue(all(per_panel >= 4), sprintf( ...
 end
 
 
+function test_transparency_keyvalue(tc) %#ok<DEFNU>
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+canlab_orthviews(t, 'transparent', 0.4);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.assumeNotEmpty(state.blobs);
+% transparency 0.4 -> alpha 0.6
+tc.verifyEqual(state.blobs{1}.alpha, 0.6, 'AbsTol', 1e-9);
+end
+
+
+function test_transparency_default_is_opaque(tc) %#ok<DEFNU>
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+canlab_orthviews(t);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.assumeNotEmpty(state.blobs);
+tc.verifyEqual(state.blobs{1}.alpha, 1, 'AbsTol', 1e-9, ...
+    'Default should be fully opaque (alpha = 1, transparency = 0)');
+end
+
+
+function test_bare_trans_keyword_backward_compat(tc) %#ok<DEFNU>
+% The legacy 'trans' flag, with no value, should still produce a
+% moderately-transparent overlay (alpha = 0.6).
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+canlab_orthviews(t, 'trans');
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.assumeNotEmpty(state.blobs);
+tc.verifyEqual(state.blobs{1}.alpha, 0.6, 'AbsTol', 1e-9);
+end
+
+
+function test_unique_one_layer_per_cluster(tc) %#ok<DEFNU>
+assume_display(tc);
+t = canlab_get_sample_thresholded_t(0.005);
+
+% Baseline: combined autocolor produces a single layer.
+canlab_orthviews(t);
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+n_combined = numel(state.blobs);
+
+% 'unique' should produce one layer per contiguous cluster.
+canlab_orthviews(t, 'unique', 'replaceblobs');
+state = getappdata(fh, 'canlab_orthviews_state');
+n_unique = numel(state.blobs);
+
+tc.verifyGreaterThan(n_unique, n_combined, ...
+    'unique should produce more layers than the combined autocolor case');
+
+% Each layer must be a solid color and the colors should differ
+colors = zeros(numel(state.blobs), 3);
+for k = 1:numel(state.blobs)
+    tc.verifyEqual(state.blobs{k}.style, 'solid');
+    tc.verifyNotEmpty(state.blobs{k}.color);
+    colors(k, :) = state.blobs{k}.color(1:3);
+end
+tc.verifyGreaterThan(size(unique(colors, 'rows'), 1), 1, ...
+    'Per-cluster colors should differ');
+end
+
+
+function test_drag_installs_motion_handler(tc) %#ok<DEFNU>
+% After clicking on a panel, the figure should have a
+% WindowButtonMotionFcn installed (the drag handler).
+assume_display(tc);
+canlab_orthviews;
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+ax = state.ax(3);
+
+% Synthesize the click using IntersectionPoint
+synth_evt = struct('IntersectionPoint', [0 0 0]);
+cb = get(ax, 'ButtonDownFcn');
+feval(cb, ax, synth_evt);
+
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyTrue(state.drag_active, 'drag_active should be true mid-drag');
+tc.verifyEqual(state.drag_panel, 3);
+tc.verifyNotEmpty(get(fh, 'WindowButtonMotionFcn'));
+tc.verifyNotEmpty(get(fh, 'WindowButtonUpFcn'));
+end
+
+
+function test_drag_up_clears_handlers(tc) %#ok<DEFNU>
+% Releasing the mouse should clear the drag handlers and re-render at
+% full resolution.
+assume_display(tc);
+canlab_orthviews;
+fh = expect_open_figure(tc);
+state = getappdata(fh, 'canlab_orthviews_state');
+ax = state.ax(3);
+
+feval(get(ax, 'ButtonDownFcn'), ax, struct('IntersectionPoint', [0 0 0]));
+
+% Simulate mouse-up by invoking the figure's WindowButtonUpFcn directly
+up_cb = get(fh, 'WindowButtonUpFcn');
+tc.assumeNotEmpty(up_cb);
+feval(up_cb, fh, []);
+
+state = getappdata(fh, 'canlab_orthviews_state');
+tc.verifyFalse(state.drag_active);
+tc.verifyEmpty(state.drag_panel);
+tc.verifyTrue(isempty(get(fh, 'WindowButtonMotionFcn')) || ...
+    isequal(get(fh, 'WindowButtonMotionFcn'), ''));
+end
+
+
 function test_smooth_edges_default_on(tc) %#ok<DEFNU>
 assume_display(tc);
 t = canlab_get_sample_thresholded_t(0.005);
@@ -438,6 +625,22 @@ n_smoothed = nnz(state.blobs{1}.vol ~= 0);
 tc.verifyGreaterThan(n_smoothed, n_nosmooth, ...
     'Pre-blurred blob should occupy more voxels than the original');
 tc.verifyEqual(state.blobs{1}.smooth_sigma_mm, 4, 'AbsTol', 1e-9);
+end
+
+
+function test_close_command(tc) %#ok<DEFNU>
+% 'close' (and the legacy 'reset' alias) must dispose of the
+% canlab_orthviews figure, and must be a safe no-op when called with
+% no figure open.
+assume_display(tc);
+
+canlab_orthviews;
+expect_open_figure(tc);
+tc.verifyWarningFree(@() canlab_orthviews('close'));
+tc.verifyEmpty(findobj('Type','figure','Tag','canlab_orthviews'));
+
+% Idempotent: another close with nothing open should not error.
+tc.verifyWarningFree(@() canlab_orthviews('close'));
 end
 
 

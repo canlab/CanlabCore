@@ -1,7 +1,11 @@
 function [tc, TR, n_tp] = hrf_extract_timeseries_from_nii(fmri_nii, mask_nii)
 %HRF_EXTRACT_TIMESERIES_FROM_NII Mean fMRI timeseries from 4D NIfTI.
-info = niftiinfo(fmri_nii);
-V = double(niftiread(info));
+try
+    info = niftiinfo(fmri_nii);
+    V = double(niftiread(info));
+catch err
+    error('Could not read fMRI NIfTI %s: %s', char(fmri_nii), err.message);
+end
 if ndims(V) ~= 4
     error('Expected 4D fMRI image, got %d dimensions.', ndims(V));
 end
@@ -18,7 +22,11 @@ end
 if nargin < 2 || isempty(mask_nii)
     mask = true(size(V,1), size(V,2), size(V,3));
 else
-    M = niftiread(mask_nii);
+    try
+        M = niftiread(mask_nii);
+    catch err
+        error('Could not read mask NIfTI %s: %s', char(mask_nii), err.message);
+    end
     mask = M > 0;
     if ~isequal(size(mask), size(V(:,:,:,1)))
         error('Mask dimensions must match fMRI spatial dimensions.');

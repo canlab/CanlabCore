@@ -492,7 +492,27 @@ write_args = [{'fname', fname}, varargin(:)'];
 if overwrite
     write_args{end + 1} = 'overwrite';
 end
+obj = local_prepare_image_for_write(obj);
 write(obj, write_args{:});
+end
+
+function obj = local_prepare_image_for_write(obj)
+if ~isprop(obj, 'removed_images') || isempty(obj.removed_images) || isempty(obj.dat)
+    return
+end
+
+removed = logical(obj.removed_images(:)');
+n_images = size(obj.dat, 2);
+if numel(removed) ~= n_images
+    return
+end
+
+if any(removed)
+    % threshold() can mark 4D maps as removed even when .dat still contains
+    % the full volume series.  image_vector/write() reinserts removed images,
+    % so reset this flag when the image count is already complete.
+    obj.removed_images = false(size(obj.removed_images));
+end
 end
 
 function local_delete_if_overwrite(fname, overwrite)

@@ -33,11 +33,16 @@ stats = hrf_time_unfolding_stats(study, ...
 
 Y_runs = stats.run_level_data;
 run_subject_ids = stats.run_subject_ids(:);
+if isfield(stats, 'run_labels') && numel(stats.run_labels) == numel(run_subject_ids)
+    source_run_labels = cellstr(string(stats.run_labels(:)));
+else
+    source_run_labels = local_unique_run_labels(run_subject_ids);
+end
 unit = lower(char(opts.Unit));
 switch unit
     case 'run'
         Y = Y_runs;
-        labels = local_unique_run_labels(run_subject_ids);
+        labels = source_run_labels;
         subject_ids = run_subject_ids;
         run_count = ones(size(labels));
     case 'subject'

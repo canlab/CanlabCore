@@ -36,6 +36,7 @@ inputs = local_filter_inputs_by_source_model(inputs, source_model);
 n = height(inputs);
 results = cell(n, 1);
 subject_ids = cell(n, 1);
+run_labels = cell(n, 1);
 success = false(n, 1);
 wholebrain_success = false(n, 1);
 resultmat_success = false(n, 1);
@@ -51,6 +52,7 @@ end
 
 for i = 1:n
     subject_ids{i} = local_table_value(inputs, i, 'subject');
+    run_labels{i} = local_run_label(inputs, i);
     r = struct();
     row_errors = {};
 
@@ -93,6 +95,10 @@ for i = 1:n
     end
 
     if ~isempty(fieldnames(r))
+        r.subject_id = subject_ids{i};
+        r.run_label = run_labels{i};
+        r.input_row = i;
+        r.input_prefix = local_table_value(inputs, i, 'prefix');
         results{i} = r;
         success(i) = resultmat_success(i) || wholebrain_success(i) || mapscore_success(i);
     end
@@ -102,6 +108,7 @@ end
 study = struct();
 study.results = results;
 study.subject_ids = subject_ids;
+study.run_labels = run_labels;
 study.success = success;
 study.resultmat_success = resultmat_success;
 study.wholebrain_success = wholebrain_success;
@@ -128,6 +135,34 @@ elseif any(strcmp('model', inputs.Properties.VariableNames))
     study.source_models = unique(lower(cellstr(string(inputs.model))), 'stable');
 else
     study.source_models = {};
+end
+end
+
+function run_label = local_run_label(inputs, row)
+run_label = local_table_value(inputs, row, 'run_label');
+if isempty(run_label)
+    prefix = local_table_value(inputs, row, 'prefix');
+    subject = local_table_value(inputs, row, 'subject');
+    model_name = local_table_value(inputs, row, 'model');
+    run_label = local_run_label_from_prefix(prefix, subject, model_name);
+end
+end
+
+function run_label = local_run_label_from_prefix(prefix, subject, model_name)
+run_label = '';
+if isempty(prefix)
+    return
+end
+[~, name] = fileparts(prefix);
+run_label = regexprep(name, '_hrf.*$', '');
+if ~isempty(subject)
+    run_label = regexprep(run_label, ['^' regexptranslate('escape', subject) '_?'], '');
+end
+if ~isempty(model_name)
+    run_label = regexprep(run_label, ['_' regexptranslate('escape', model_name) '$'], '');
+end
+if isempty(run_label)
+    run_label = 'run-unknown';
 end
 end
 

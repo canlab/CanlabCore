@@ -26,7 +26,7 @@ opts.ConditionA = char(opts.ConditionA);
 opts.ConditionB = char(opts.ConditionB);
 opts.Signature = char(opts.Signature);
 
-[D_runs, run_subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy);
+[D_runs, run_subject_ids, run_labels, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy);
 if isempty(D_runs)
     error('No valid HRF fits found for model "%s". Skipped %d result(s).', model_name, numel(skipped));
 end
@@ -56,6 +56,7 @@ stats.subject_ids = subject_ids(:);
 stats.n_subjects = numel(subject_ids);
 stats.n_runs = size(D_runs, 1);
 stats.run_subject_ids = run_subject_ids(:);
+stats.run_labels = run_labels(:);
 stats.run_to_subject = run_to_subject(:);
 stats.data = D;
 stats.run_level_data = D_runs;
@@ -76,9 +77,10 @@ if ~isempty(group_labels)
 end
 end
 
-function [D, subject_ids, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy)
+function [D, subject_ids, run_labels, skipped, matchedA, matchedB] = local_collect_contrasts(study, opts, model_name, source_model, missing_policy)
 D = [];
 subject_ids = {};
+run_labels = {};
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
 matchedA = {};
 matchedB = {};
@@ -132,6 +134,7 @@ for s = 1:numel(study.results)
         continue
     end
     subject_ids{end + 1, 1} = subject_id; %#ok<AGROW>
+    run_labels{end + 1, 1} = local_run_label(study, s, subject_id); %#ok<AGROW>
 end
 end
 
@@ -409,5 +412,13 @@ if isfield(study, 'subject_ids') && numel(study.subject_ids) >= idx
     subject_id = char(study.subject_ids{idx});
 else
     subject_id = sprintf('sub-%03d', idx);
+end
+end
+
+function run_label = local_run_label(study, idx, subject_id)
+if isfield(study, 'run_labels') && numel(study.run_labels) >= idx && ~isempty(study.run_labels{idx})
+    run_label = char(study.run_labels{idx});
+else
+    run_label = sprintf('%s_run%02d', subject_id, idx);
 end
 end

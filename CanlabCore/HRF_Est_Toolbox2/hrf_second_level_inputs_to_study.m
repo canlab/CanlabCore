@@ -44,6 +44,7 @@ end
 n = height(inputs);
 results = cell(n, 1);
 subject_ids = cell(n, 1);
+run_labels = cell(n, 1);
 success = false(n, 1);
 errors = cell(n, 1);
 skipped = struct('index', {}, 'subject', {}, 'reason', {});
@@ -52,6 +53,7 @@ missing_policy = lower(char(opts.MissingPolicy));
 
 for i = 1:n
     subject_ids{i} = local_table_value(inputs, i, 'subject');
+    run_labels{i} = local_run_label(inputs, i);
     score_file = local_score_file_for_row(inputs, i, score_file_var);
     source_model = local_source_model(inputs, i, score_file);
 
@@ -87,6 +89,10 @@ for i = 1:n
         results{i} = local_score_table_to_result(S, Tscore, score_cols, model_name, ...
             char(opts.Object), score_file, source_model, logical(opts.AddAverageScore), ...
             char(opts.AverageScoreName));
+        results{i}.subject_id = subject_ids{i};
+        results{i}.run_label = run_labels{i};
+        results{i}.input_row = i;
+        results{i}.input_prefix = local_table_value(inputs, i, 'prefix');
         success(i) = true;
         if logical(opts.AddAverageScore)
             all_score_names = [all_score_names, {char(opts.AverageScoreName)}, score_cols(:)']; %#ok<AGROW>
@@ -102,6 +108,7 @@ end
 study = struct();
 study.results = results;
 study.subject_ids = subject_ids;
+study.run_labels = run_labels;
 study.success = success;
 study.errors = errors;
 study.skipped = skipped;
@@ -111,6 +118,34 @@ study.model_name = model_name;
 study.source_models = local_study_source_models(inputs);
 study.source = 'second_level_inputs_map_scores';
 study.second_level_inputs = inputs;
+end
+
+function run_label = local_run_label(inputs, row)
+run_label = local_table_value(inputs, row, 'run_label');
+if isempty(run_label)
+    prefix = local_table_value(inputs, row, 'prefix');
+    subject = local_table_value(inputs, row, 'subject');
+    model_name = local_table_value(inputs, row, 'model');
+    run_label = local_run_label_from_prefix(prefix, subject, model_name);
+end
+end
+
+function run_label = local_run_label_from_prefix(prefix, subject, model_name)
+run_label = '';
+if isempty(prefix)
+    return
+end
+[~, name] = fileparts(prefix);
+run_label = regexprep(name, '_hrf.*$', '');
+if ~isempty(subject)
+    run_label = regexprep(run_label, ['^' regexptranslate('escape', subject) '_?'], '');
+end
+if ~isempty(model_name)
+    run_label = regexprep(run_label, ['_' regexptranslate('escape', model_name) '$'], '');
+end
+if isempty(run_label)
+    run_label = 'run-unknown';
+end
 end
 
 function inputs = local_read_inputs(second_level_inputs)

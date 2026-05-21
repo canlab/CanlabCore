@@ -41,15 +41,16 @@ for i = 1:numel(beta_files)
 
     [~, prefix_name] = fileparts(prefix);
     subject = local_subject_from_name(prefix_name);
+    run_label = local_run_label_from_name(prefix_name, subject, model_name);
 
-    rows(end + 1, :) = {subject, model_name, prefix, beta_path, local_existing(t_path), ...
+    rows(end + 1, :) = {subject, run_label, model_name, prefix, beta_path, local_existing(t_path), ...
         local_existing(se_path), local_existing(p_path), ...
         local_existing(t_thresh_path), local_existing(metadata_path), ...
         local_existing(beta_scores_path), local_existing(t_scores_path), ...
         local_existing(result_mat_path)}; %#ok<AGROW>
 end
 
-var_names = {'subject', 'model', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
+var_names = {'subject', 'run_label', 'model', 'prefix', 'beta_file', 't_file', 'se_file', 'p_file', 'thresholded_t_file', ...
     'metadata_file', 'beta_scores_file', 't_scores_file', 'result_mat_file'};
 if isempty(rows)
     T = cell2table(cell(0, numel(var_names)), 'VariableNames', var_names);
@@ -76,6 +77,19 @@ if isempty(tok)
     subject = regexprep(name, '_hrf.*$', '');
 else
     subject = tok{1};
+end
+end
+
+function run_label = local_run_label_from_name(name, subject, model_name)
+run_label = regexprep(name, '_hrf.*$', '');
+if ~isempty(subject)
+    run_label = regexprep(run_label, ['^' regexptranslate('escape', subject) '_?'], '');
+end
+if ~isempty(model_name)
+    run_label = regexprep(run_label, ['_' regexptranslate('escape', model_name) '$'], '');
+end
+if isempty(run_label)
+    run_label = 'run-unknown';
 end
 end
 

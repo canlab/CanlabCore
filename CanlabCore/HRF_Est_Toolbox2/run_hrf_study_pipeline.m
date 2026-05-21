@@ -17,6 +17,7 @@ end
 if numel(subject_ids) ~= n
     error('subject_ids must be empty or contain one id per fMRI file.');
 end
+run_labels = local_run_labels(fmri_files, subject_ids, study_opts.run_labels);
 results = cell(1, n);
 errors = cell(1, n);
 
@@ -32,12 +33,12 @@ if study_opts.use_parallel_subjects
         parpool;
     end
     parfor i = 1:n
-        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, ...
+        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, run_labels{i}, ...
             pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
     end
 else
     for i = 1:n
-        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, ...
+        [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, run_labels{i}, ...
             pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
     end
 end
@@ -58,6 +59,7 @@ valid_subject_ids = subject_ids(success);
 
 study = struct();
 study.subject_ids = subject_ids;
+study.run_labels = run_labels;
 study.results = results;
 study.success = success;
 study.errors = errors;
@@ -79,7 +81,7 @@ end
 
 function [opts, pipeline_args] = local_parse_study_options(varargin)
 opts = struct('use_parallel_subjects', false, 'continue_on_error', true, ...
-    'wholebrain_output_dir', '', 'reuse_wholebrain_outputs', false);
+    'wholebrain_output_dir', '', 'reuse_wholebrain_outputs', false, 'run_labels', {{}});
 pipeline_args = varargin;
 i = 1;
 while i <= numel(pipeline_args)
@@ -102,19 +104,23 @@ while i <= numel(pipeline_args)
                 opts.reuse_wholebrain_outputs = logical(pipeline_args{i + 1});
                 pipeline_args(i:i+1) = [];
                 continue
+            case 'runlabels'
+                opts.run_labels = cellstr(string(pipeline_args{i + 1}));
+                pipeline_args(i:i+1) = [];
+                continue
         end
     end
     i = i + 1;
 end
 end
 
-function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs)
+function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, run_label, pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs)
 result = [];
 err_msg = '';
 try
     args = pipeline_args;
     if ~isempty(wholebrain_output_dir)
-        prefix = fullfile(wholebrain_output_dir, [local_file_label(subject_id) '_hrf']);
+        prefix = fullfile(wholebrain_output_dir, [local_file_label([char(subject_id) '_' char(run_label)]) '_hrf']);
         args = [args, {'WholeBrainOutputPrefix', prefix}];
     end
     if reuse_wholebrain_outputs
@@ -124,6 +130,54 @@ try
 catch ME
     err_msg = ME.message;
 end
+end
+
+function run_labels = local_run_labels(fmri_files, subject_ids, run_labels_input)
+n = numel(fmri_files);
+if ~isempty(run_labels_input)
+    run_labels = cellstr(string(run_labels_input));
+    if numel(run_labels) ~= n
+        error('RunLabels must contain one label per fMRI file.');
+    end
+    run_labels = cellfun(@local_file_label, run_labels, 'UniformOutput', false);
+else
+    run_labels = cell(n, 1);
+    for i = 1:n
+        run_labels{i} = local_run_label_from_filename(fmri_files{i}, i);
+    end
+end
+
+seen = containers.Map('KeyType', 'char', 'ValueType', 'double');
+for i = 1:n
+    key = sprintf('%s__%s', char(subject_ids{i}), run_labels{i});
+    if isKey(seen, key)
+        seen(key) = seen(key) + 1;
+        run_labels{i} = sprintf('%s_dup%02d', run_labels{i}, seen(key));
+    else
+        seen(key) = 1;
+    end
+end
+end
+
+function label = local_run_label_from_filename(fmri_file, idx)
+[~, name, ext] = fileparts(char(fmri_file));
+if strcmpi(ext, '.gz')
+    [~, name] = fileparts(name);
+end
+parts = {};
+tokens = {'ses', 'task', 'run', 'acq', 'desc'};
+for i = 1:numel(tokens)
+    tok = regexp(name, [tokens{i} '-[^_]+'], 'match', 'once');
+    if ~isempty(tok)
+        parts{end + 1} = tok; %#ok<AGROW>
+    end
+end
+if isempty(parts)
+    label = sprintf('run-%03d', idx);
+else
+    label = strjoin(parts, '_');
+end
+label = local_file_label(label);
 end
 
 function label = local_file_label(subject_id)

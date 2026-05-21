@@ -37,9 +37,9 @@ switch opts.PlotType
             ax = local_plot_multiple_models(study, opts);
             return
         end
-        [Y_runs, SE_runs, run_subject_ids, condition_name, x, skipped] = local_collect_curves(study, opts);
+        [Y_runs, SE_runs, run_subject_ids, run_labels, condition_name, x, skipped] = local_collect_curves(study, opts);
     case {'trialmean', 'trial_mean', 'trials'}
-        [Y_runs, SE_runs, run_subject_ids, condition_name, x, skipped] = local_collect_trial_means(study, opts);
+        [Y_runs, SE_runs, run_subject_ids, run_labels, condition_name, x, skipped] = local_collect_trial_means(study, opts);
     otherwise
         error('Unknown PlotType: %s. Use ''fit'' or ''trialmean''.', opts.PlotType);
 end
@@ -47,7 +47,7 @@ if isempty(Y_runs)
     local_error_no_curves(skipped, study, opts);
 end
 
-[Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
+[Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)), run_labels);
 curve_weights = local_curve_weights(Y, opts);
 
 figure; ax = axes; hold(ax, 'on');
@@ -174,7 +174,7 @@ plotted = false(1, numel(opts.Models));
 for m = 1:numel(opts.Models)
     model_opts = opts;
     model_opts.Model = opts.Models{m};
-    [Y_runs, SE_runs, run_subject_ids, this_condition, x, skipped] = local_collect_curves(study, model_opts);
+    [Y_runs, SE_runs, run_subject_ids, run_labels, this_condition, x, skipped] = local_collect_curves(study, model_opts);
     all_skipped = [all_skipped, skipped]; %#ok<AGROW>
     if isempty(Y_runs)
         continue
@@ -182,7 +182,7 @@ for m = 1:numel(opts.Models)
     if isempty(condition_name) || strcmp(condition_name, char(opts.Condition))
         condition_name = this_condition;
     end
-    [Y, ~, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)));
+    [Y, ~, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, lower(char(opts.Unit)), run_labels);
     curve_weights = local_curve_weights(Y, model_opts);
     model_color = colors(m, :);
     subject_color = model_color + (1 - model_color) * 0.55;
@@ -221,10 +221,11 @@ ylabel(ax, local_ylabel(opts, study));
 hline(0, 'k-');
 end
 
-function [Y, SE, subject_ids, condition_name, x, skipped] = local_collect_curves(study, opts)
+function [Y, SE, subject_ids, run_labels, condition_name, x, skipped] = local_collect_curves(study, opts)
 Y = [];
 SE = [];
 subject_ids = {};
+run_labels = {};
 condition_pattern = char(opts.Condition);
 condition_name = condition_pattern;
 x = [];
@@ -280,13 +281,15 @@ for s = 1:numel(study.results)
         continue
     end
     subject_ids{end + 1, 1} = subject_id; %#ok<AGROW>
+    run_labels{end + 1, 1} = local_run_label(study, s, subject_id); %#ok<AGROW>
 end
 end
 
-function [Y, SE, subject_ids, condition_name, x, skipped] = local_collect_trial_means(study, opts)
+function [Y, SE, subject_ids, run_labels, condition_name, x, skipped] = local_collect_trial_means(study, opts)
 Y = [];
 SE = [];
 subject_ids = {};
+run_labels = {};
 condition_pattern = char(opts.Condition);
 condition_name = condition_pattern;
 x = [];
@@ -349,6 +352,7 @@ for s = 1:numel(study.results)
         continue
     end
     subject_ids{end + 1, 1} = subject_id; %#ok<AGROW>
+    run_labels{end + 1, 1} = local_run_label(study, s, subject_id); %#ok<AGROW>
 end
 end
 
@@ -375,12 +379,15 @@ if idx <= numel(groups) && isfield(groups, 'display_label')
 end
 end
 
-function [Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, unit)
+function [Y, SE, subject_ids] = local_aggregate_unit(Y_runs, SE_runs, run_subject_ids, unit, run_labels)
+if nargin < 5 || isempty(run_labels)
+    run_labels = run_subject_ids;
+end
 switch unit
     case 'run'
         Y = Y_runs;
         SE = SE_runs;
-        subject_ids = run_subject_ids(:);
+        subject_ids = run_labels(:);
     case 'subject'
         subject_ids = unique(run_subject_ids, 'stable');
         Y = nan(numel(subject_ids), size(Y_runs, 2));
@@ -887,5 +894,13 @@ if isfield(study, 'subject_ids') && numel(study.subject_ids) >= idx
     subject_id = char(study.subject_ids{idx});
 else
     subject_id = sprintf('sub-%03d', idx);
+end
+end
+
+function run_label = local_run_label(study, idx, subject_id)
+if isfield(study, 'run_labels') && numel(study.run_labels) >= idx && ~isempty(study.run_labels{idx})
+    run_label = char(study.run_labels{idx});
+else
+    run_label = sprintf('%s_run%02d', subject_id, idx);
 end
 end

@@ -329,6 +329,13 @@ slurm_paths = hrf_write_slurm_study_script(fmri_files, events_files, subject_ids
     'ModuleLoad', 'matlab');
 ```
 
+If `subject_ids` contains repeated subjects, the SLURM writer derives a run
+label from each BIDS fMRI filename (`ses-*`, `task-*`, `run-*`, etc.) and
+writes run-unique prefixes such as
+`SID000002_ses-20_task-distractmap_run-01_hrf`. This prevents multiple runs
+from overwriting the same `SID000002_hrf_*` files. To supply your own labels,
+pass `'RunLabels', run_labels`.
+
 To run `canonical` or `nlgamma`, add SPM to the worker path; to run `spline`,
 also add FDA:
 
@@ -574,6 +581,23 @@ stats_nps = hrf_time_unfolding_stats(study_scores, ...
     'Alpha', 0.05);
 
 plot_hrf_time_unfolding_stats(stats_nps);
+```
+
+Map-score-only studies rebuilt from CSVs do not contain the original event
+table or time series, so `PlotType='trialmean'` is unavailable. To inspect
+run-level event-locked trial means, rebuild from the saved result MAT files:
+
+```matlab
+study_runs = hrf_input_table_to_study(input_table, ...
+    'LoadResultMat', true, ...
+    'LoadWholeBrain', false, ...
+    'IncludeMapScores', false);
+
+plot_hrf_study_by_subject(study_runs, ...
+    'PlotType', 'trialmean', ...
+    'Condition', 'nback-stimblock', ...
+    'Unit', 'run', ...
+    'TrialOutlierPolicy', 'huber');
 ```
 
 `hrf_score_wholebrain_input_table` validates existing score CSVs against the

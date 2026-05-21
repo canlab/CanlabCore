@@ -29,6 +29,7 @@ p.addParameter('ScriptFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ManifestFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('WorkerFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ConfigMat', '', @(x) ischar(x) || isstring(x));
+p.addParameter('RunLabels', {}, @(x) isempty(x) || ischar(x) || iscell(x) || isstring(x));
 p.addParameter('CanlabRoot', local_default_canlab_root(), @(x) ischar(x) || isstring(x));
 p.addParameter('ExtraMatlabPaths', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('PipelineArgs', {}, @(x) iscell(x));
@@ -68,13 +69,14 @@ local_ensure_parent(paths.manifest_file);
 local_ensure_parent(paths.worker_file);
 local_ensure_parent(paths.config_mat);
 
-manifest = local_manifest_table(fmri_files, events_files, subject_ids, output_dir);
+manifest = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, opts.RunLabels);
 writetable(manifest, paths.manifest_file);
 
 config = struct();
 config.canlab_root = char(opts.CanlabRoot);
 config.extra_matlab_paths = local_to_cell(opts.ExtraMatlabPaths);
 config.subject_ids = subject_ids(:);
+config.run_labels = manifest.run_label(:);
 config.fmri_files = fmri_files(:);
 config.events_files = events_files(:);
 config.output_prefixes = manifest.output_prefix(:);
@@ -169,25 +171,77 @@ paths = struct('script_file', script_file, 'manifest_file', manifest_file, ...
     'worker_file', worker_file, 'config_mat', config_mat);
 end
 
-function T = local_manifest_table(fmri_files, events_files, subject_ids, output_dir)
+function T = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, run_labels_input)
 n = numel(fmri_files);
 subject = cell(n, 1);
+run_label = cell(n, 1);
 fmri_file = cell(n, 1);
 events_file = cell(n, 1);
 output_prefix = cell(n, 1);
 output_mat = cell(n, 1);
+run_labels = local_run_labels(fmri_files, subject_ids, run_labels_input);
 
 for i = 1:n
-    label = local_file_label(subject_ids{i});
+    subject_label = local_file_label(subject_ids{i});
+    run_label{i} = run_labels{i};
+    output_label = local_file_label([subject_label '_' run_labels{i}]);
     subject{i} = char(subject_ids{i});
     fmri_file{i} = char(fmri_files{i});
     events_file{i} = char(events_files{i});
-    output_prefix{i} = fullfile(output_dir, [label '_hrf']);
-    output_mat{i} = fullfile(output_dir, [label '_hrf_results.mat']);
+    output_prefix{i} = fullfile(output_dir, [output_label '_hrf']);
+    output_mat{i} = fullfile(output_dir, [output_label '_hrf_results.mat']);
 end
 
-T = table((1:n)', subject, fmri_file, events_file, output_prefix, output_mat, ...
-    'VariableNames', {'index', 'subject', 'fmri_file', 'events_file', 'output_prefix', 'output_mat'});
+T = table((1:n)', subject, run_label, fmri_file, events_file, output_prefix, output_mat, ...
+    'VariableNames', {'index', 'subject', 'run_label', 'fmri_file', 'events_file', 'output_prefix', 'output_mat'});
+end
+
+function run_labels = local_run_labels(fmri_files, subject_ids, run_labels_input)
+n = numel(fmri_files);
+if ~isempty(run_labels_input)
+    run_labels = cellstr(string(run_labels_input));
+    if numel(run_labels) ~= n
+        error('RunLabels must contain one label per fMRI file.');
+    end
+    run_labels = cellfun(@local_file_label, run_labels, 'UniformOutput', false);
+else
+    run_labels = cell(n, 1);
+    for i = 1:n
+        run_labels{i} = local_run_label_from_filename(fmri_files{i}, i);
+    end
+end
+
+seen = containers.Map('KeyType', 'char', 'ValueType', 'double');
+for i = 1:n
+    key = sprintf('%s__%s', char(subject_ids{i}), run_labels{i});
+    if isKey(seen, key)
+        seen(key) = seen(key) + 1;
+        run_labels{i} = sprintf('%s_dup%02d', run_labels{i}, seen(key));
+    else
+        seen(key) = 1;
+    end
+end
+end
+
+function label = local_run_label_from_filename(fmri_file, idx)
+[~, name, ext] = fileparts(char(fmri_file));
+if strcmpi(ext, '.gz')
+    [~, name] = fileparts(name);
+end
+parts = {};
+tokens = {'ses', 'task', 'run', 'acq', 'desc'};
+for i = 1:numel(tokens)
+    tok = regexp(name, [tokens{i} '-[^_]+'], 'match', 'once');
+    if ~isempty(tok)
+        parts{end + 1} = tok; %#ok<AGROW>
+    end
+end
+if isempty(parts)
+    label = sprintf('run-%03d', idx);
+else
+    label = strjoin(parts, '_');
+end
+label = local_file_label(label);
 end
 
 function local_write_worker(worker_file, manifest_file, config_mat)
@@ -213,14 +267,16 @@ fprintf(fid, 'if isfield(config, ''fmri_files'') && isfield(config, ''output_pre
 fprintf(fid, '    n_tasks = numel(config.fmri_files);\n');
 fprintf(fid, '    if task_id > n_tasks, error(''Task id %%d exceeds configured tasks %%d.'', task_id, n_tasks); end\n');
 fprintf(fid, '    subject = local_cell_at(config.subject_ids, task_id);\n');
+fprintf(fid, '    run_label = local_cell_at(config.run_labels, task_id);\n');
 fprintf(fid, '    fmri_file = strrep(local_cell_at(config.fmri_files, task_id), ''\\'', filesep);\n');
 fprintf(fid, '    events_file = strrep(local_cell_at(config.events_files, task_id), ''\\'', filesep);\n');
 fprintf(fid, '    output_prefix = strrep(local_cell_at(config.output_prefixes, task_id), ''\\'', filesep);\n');
 fprintf(fid, '    output_mat = strrep(local_cell_at(config.output_mats, task_id), ''\\'', filesep);\n');
 fprintf(fid, 'else\n');
-fprintf(fid, '    [subject, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id);\n');
+fprintf(fid, '    [subject, run_label, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id);\n');
 fprintf(fid, 'end\n');
-fprintf(fid, 'fprintf(''Running HRF task %%d/%%d: %%s\\n'', task_id, n_tasks, subject);\n');
+fprintf(fid, 'if isempty(run_label), run_label = sprintf(''task-%%03d'', task_id); end\n');
+fprintf(fid, 'fprintf(''Running HRF task %%d/%%d: %%s | %%s\\n'', task_id, n_tasks, subject, run_label);\n');
 fprintf(fid, 'args = [config.pipeline_args, {''WriteWholeBrain'', true, ''WholeBrainOutputPrefix'', output_prefix, ''OutputMat'', output_mat}];\n');
 fprintf(fid, 'results = run_hrf_pipeline(fmri_file, events_file, args{:});\n');
 fprintf(fid, 'if ~isempty(config.signature_sets) || ~isempty(config.image_sets)\n');
@@ -235,9 +291,11 @@ fprintf(fid, '                score_csv = sprintf(''%%s_%%s_map_scores.csv'', ou
 fprintf(fid, '            else\n');
 fprintf(fid, '                score_csv = sprintf(''%%s_%%s_%%s_map_scores.csv'', output_prefix, lower(model_name), object_name);\n');
 fprintf(fid, '            end\n');
+fprintf(fid, '            context = sprintf(''task=%%d; subject=%%s; run=%%s; model=%%s; object=%%s; prefix=%%s'', task_id, subject, run_label, model_name, object_name, output_prefix);\n');
 fprintf(fid, '            hrf_apply_maps_to_wholebrain(model_stats, ''Object'', object_name, ...\n');
 fprintf(fid, '                ''SignatureSets'', config.signature_sets, ''ImageSets'', config.image_sets, ...\n');
-fprintf(fid, '                ''SimilarityMetric'', config.similarity_metric, ''OutputCsv'', score_csv);\n');
+fprintf(fid, '                ''SimilarityMetric'', config.similarity_metric, ''OutputCsv'', score_csv, ...\n');
+fprintf(fid, '                ''WarningContext'', context);\n');
 fprintf(fid, '        end\n');
 fprintf(fid, '    end\n');
 fprintf(fid, 'end\n');
@@ -266,19 +324,32 @@ fprintf(fid, 'function val = local_cell_at(values, idx)\n');
 fprintf(fid, 'if iscell(values), val = values{idx}; else, val = values(idx); end\n');
 fprintf(fid, 'val = local_cell_to_char(val);\n');
 fprintf(fid, 'end\n\n');
-fprintf(fid, 'function [subject, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id)\n');
+fprintf(fid, 'function [subject, run_label, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id)\n');
 fprintf(fid, 'raw = local_read_manifest(manifest_file);\n');
 fprintf(fid, 'if isempty(raw) || size(raw, 2) < 5, error(''Manifest must have at least 5 columns.''); end\n');
 fprintf(fid, 'data_start = 1 + local_has_manifest_header(raw(1, :));\n');
 fprintf(fid, 'n_tasks = size(raw, 1) - data_start + 1;\n');
 fprintf(fid, 'if task_id > n_tasks, error(''Task id %%d exceeds manifest rows %%d.'', task_id, n_tasks); end\n');
 fprintf(fid, 'row_idx = data_start + task_id - 1;\n');
-fprintf(fid, 'if size(raw, 2) >= 6, cols = [2 3 4 5 6]; else, cols = 1:5; end\n');
-fprintf(fid, 'subject = local_cell_to_char(raw{row_idx, cols(1)});\n');
-fprintf(fid, 'fmri_file = strrep(local_cell_to_char(raw{row_idx, cols(2)}), ''\\'', filesep);\n');
-fprintf(fid, 'events_file = strrep(local_cell_to_char(raw{row_idx, cols(3)}), ''\\'', filesep);\n');
-fprintf(fid, 'output_prefix = strrep(local_cell_to_char(raw{row_idx, cols(4)}), ''\\'', filesep);\n');
-fprintf(fid, 'output_mat = strrep(local_cell_to_char(raw{row_idx, cols(5)}), ''\\'', filesep);\n');
+fprintf(fid, 'headers = local_manifest_headers(raw, data_start);\n');
+fprintf(fid, 'subject = local_manifest_value(raw, headers, row_idx, ''subject'', 2);\n');
+fprintf(fid, 'run_label = local_manifest_value(raw, headers, row_idx, ''run_label'', 3);\n');
+fprintf(fid, 'fmri_file = strrep(local_manifest_value(raw, headers, row_idx, ''fmri_file'', 4), ''\\'', filesep);\n');
+fprintf(fid, 'events_file = strrep(local_manifest_value(raw, headers, row_idx, ''events_file'', 5), ''\\'', filesep);\n');
+fprintf(fid, 'output_prefix = strrep(local_manifest_value(raw, headers, row_idx, ''output_prefix'', 6), ''\\'', filesep);\n');
+fprintf(fid, 'output_mat = strrep(local_manifest_value(raw, headers, row_idx, ''output_mat'', 7), ''\\'', filesep);\n');
+fprintf(fid, 'end\n\n');
+fprintf(fid, 'function headers = local_manifest_headers(raw, data_start)\n');
+fprintf(fid, 'headers = containers.Map(''KeyType'', ''char'', ''ValueType'', ''double'');\n');
+fprintf(fid, 'if data_start == 1, return; end\n');
+fprintf(fid, 'for ii = 1:size(raw, 2)\n');
+fprintf(fid, '    key = lower(strtrim(local_cell_to_char(raw{1, ii})));\n');
+fprintf(fid, '    if ~isempty(key), headers(key) = ii; end\n');
+fprintf(fid, 'end\n');
+fprintf(fid, 'end\n\n');
+fprintf(fid, 'function val = local_manifest_value(raw, headers, row_idx, name, fallback_col)\n');
+fprintf(fid, 'if isKey(headers, name), col = headers(name); else, col = fallback_col; end\n');
+fprintf(fid, 'if col > size(raw, 2), val = ''''; else, val = local_cell_to_char(raw{row_idx, col}); end\n');
 fprintf(fid, 'end\n\n');
 fprintf(fid, 'function raw = local_read_manifest(manifest_file)\n');
 fprintf(fid, 'try\n');

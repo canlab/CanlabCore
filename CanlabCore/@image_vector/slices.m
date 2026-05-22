@@ -1,6 +1,11 @@
 function o = slices(obj, varargin)
-% slices Create a montage of single-slice results for every image in an image_vector object.
+% slices: create a montage of single-slice results for every image in an image_vector object.
 %
+% NOTE: This function is being consolidated with image_vector.display_slices, 
+% and now calls display_slices with the 'multi_image' keyword. 
+% See help on display_slices
+
+
 % obj is an image_vector, fmri_data, or statistic_image object with
 % multiple images (only the first 64 will display), which are stored as
 % columns in its .dat field.
@@ -67,101 +72,109 @@ function o = slices(obj, varargin)
 %   - region
 %   - reparse_contiguous
 %
+
+
 % ..
 %    Copyright 2011, Tor Wager
 % ..
 
-slice_mm = 0;
-my_orientation = 'saggital';
-nimgs = size(obj.dat, 2);
-dosplitcolor = 1;
-outlinecolor = [];
-for i = 1:nimgs, names{i, 1} = sprintf('Img %3.0f', i); end
-
-for i = 1:length(varargin)
-    if ischar(varargin{i})
-        switch varargin{i}
-            
-            % functional commands
-            case 'orientation', my_orientation = varargin{i+1}; varargin{i+1} = [];
-            case 'slice', slice_mm = varargin{i+1};
-            case 'nimages', nimgs = varargin{i+1};
-            case 'names', names = varargin{i+1};
-                
-            case 'color', dosplitcolor = 0; color = varargin{i + 1};
-            case 'outline', outlinecolor = varargin{i + 1};
-                
-            otherwise, warning(['Unknown input string option:' varargin{i}]);
-        end
-    end
-end
-
-numax = [ceil(sqrt(nimgs)) floor(sqrt(nimgs))];
-if prod(numax) < nimgs, numax(2) = numax(2) + 1; end
-
-if nimgs > 64, disp('Displaying only first 64 images!'); end
-
-m = mean(obj);
-
-o = fmridisplay;
-f1 = create_figure('slice_montage', numax(1), numax(2));
-colormap gray
-
-for i = 1:prod(numax)
-    newaxhan(i) = subplot(numax(1), numax(2), i);
-    axis off;
-end
+display_slices(obj, 'multi_image', varargin{:});
 
 
+% 
+% slice_mm = 0;
+% my_orientation = 'saggital';
+% nimgs = size(obj.dat, 2);
+% dosplitcolor = 1;
+% outlinecolor = [];
+% for i = 1:nimgs, names{i, 1} = sprintf('Img %3.0f', i); end
+% 
+% for i = 1:length(varargin)
+%     if ischar(varargin{i})
+%         switch varargin{i}
+% 
+%             % functional commands
+%             case 'orientation', my_orientation = varargin{i+1}; varargin{i+1} = [];
+%             case 'slice', slice_mm = varargin{i+1};
+%             case 'nimages', nimgs = varargin{i+1};
+%             case 'names', names = varargin{i+1};
+% 
+%             case 'color', dosplitcolor = 0; color = varargin{i + 1};
+%             case 'outline', outlinecolor = varargin{i + 1};
+% 
+%             otherwise, warning(['Unknown input string option:' varargin{i}]);
+%         end
+%     end
+% end
 
-% For each slice
-for i = 1:nimgs
-    
-    %o = removeblobs(o);
-    o = montage(o, my_orientation, 'slice_range', [slice_mm slice_mm]);
-    enlarge_axes(gcf, .8)
-    
-    % add blobs
-    m.dat = obj.dat(:, i);
-    
-    if isa(obj, 'statistic_image')
-        m.dat(~obj.sig(:, i)) = 0;
-    end
-    
-    m = reparse_contiguous(m);
-    
-    cl = region(m);
-    
-    %     cluster_orthviews(cl, {[1 0 0]}, 'solid');
-    %     %spm_orthviews_name_axis(names{i}, i);
-    %     spm_orthviews('Position', [0 0 0]);
-    %     s = input('Press a key');
-    %
-    if dosplitcolor
-        o = addblobs(o, cl, 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}, 'wh_montages', i);
-    else
-        o = addblobs(o, cl, 'color', color, 'wh_montages', i);
-    end
-    
-    if ~isempty(outlinecolor)
-        o = addblobs(o, cl, 'color', outlinecolor, 'wh_montages', i, 'outline');
-    end
-    
-    title(names{i}, 'FontSize', 24)
-    
-    % copy to composite figure
-    newhan(i) = copyobj(o.montage{i}.axis_handles(1), f1);
-    
-    o.montage{i}.axis_handles = newhan(i);
-    
-    % close the original
-    close
-    
-    newpos = get(newaxhan(i), 'Position');
-    set(newhan(i), 'Position', newpos);
-    drawnow
-    
-end
+
+% 
+% numax = [ceil(sqrt(nimgs)) floor(sqrt(nimgs))];
+% if prod(numax) < nimgs, numax(2) = numax(2) + 1; end
+% 
+% if nimgs > 64, disp('Displaying only first 64 images!'); end
+% 
+% m = mean(obj);
+% 
+% o = fmridisplay;
+% f1 = create_figure('slice_montage', numax(1), numax(2));
+% colormap gray
+% 
+% for i = 1:prod(numax)
+%     newaxhan(i) = subplot(numax(1), numax(2), i);
+%     axis off;
+% end
+% 
+% 
+% 
+% % For each slice
+% for i = 1:nimgs
+% 
+%     %o = removeblobs(o);
+%     o = montage(o, my_orientation, 'slice_range', [slice_mm slice_mm]);
+%     enlarge_axes(gcf, .8)
+% 
+%     % add blobs
+%     m.dat = obj.dat(:, i);
+% 
+%     if isa(obj, 'statistic_image')
+%         m.dat(~obj.sig(:, i)) = 0;
+%     end
+% 
+%     m = reparse_contiguous(m);
+% 
+%     cl = region(m);
+% 
+%     %     cluster_orthviews(cl, {[1 0 0]}, 'solid');
+%     %     %spm_orthviews_name_axis(names{i}, i);
+%     %     spm_orthviews('Position', [0 0 0]);
+%     %     s = input('Press a key');
+%     %
+%     if dosplitcolor
+%         o = addblobs(o, cl, 'splitcolor', {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}, 'wh_montages', i);
+%     else
+%         o = addblobs(o, cl, 'color', color, 'wh_montages', i);
+%     end
+% 
+%     if ~isempty(outlinecolor)
+%         o = addblobs(o, cl, 'color', outlinecolor, 'wh_montages', i, 'outline');
+%     end
+% 
+%     title(names{i}, 'FontSize', 24)
+% 
+%     % copy to composite figure
+%     newhan(i) = copyobj(o.montage{i}.axis_handles(1), f1);
+% 
+%     o.montage{i}.axis_handles = newhan(i);
+% 
+%     % close the original
+%     close
+% 
+%     newpos = get(newaxhan(i), 'Position');
+%     set(newhan(i), 'Position', newpos);
+%     drawnow
+% 
+% end
 
 
 end % function

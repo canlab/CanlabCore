@@ -266,9 +266,17 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                   wmap_onlyDRUGS_l2nGM_N99_20220428.img
 %                   wmap_onlyFOOD_l2nGM_N99_20220428.img
 %
-%       'pifonem' : Murillo .. Ashar J Pain 2026 - Picture Induced Fear
+%       {'pifonem' 'fearofneckpain'} :
+%                   Murillo .. Ashar J Pain 2026 - Picture Induced Fear
 %                   of Neck Movement (PiFoneM). In ppl with acute and
 %                   chronic whiplash, predicts fear of neck movements.
+%
+%       {'selfother' 'mentalizing'} :
+%                   Acil et al. 2026 Nature Communications mentalizing
+%                   signatures. Returns four maps in one fmri_data object:
+%                   MS (overall mentalizing), MS_Self, MS_Other, and
+%                   MS_SvO (Self vs. Other). Apply to L2-norm-rescaled
+%                   single-subject contrasts.
 %
 % :Examples:
 % ::
@@ -494,9 +502,13 @@ else
             
             [image_obj, networknames, imagenames] = load_margfsl;
 
-        case {'pifonem'}
-            
+        case {'pifonem', 'fearofneckpain'}
+
             [image_obj, networknames, imagenames] = load_pifonem;
+
+        case {'selfother', 'mentalizing', 'acil_mentalizing'}
+
+            [image_obj, networknames, imagenames] = load_selfother;
 
         case 'list'
             
@@ -1304,6 +1316,27 @@ imagenames = {'PiFoneM_unthresholded.nii'};
 imagenames = check_image_names_get_full_path(imagenames);
 
 image_obj = fmri_data(imagenames, [], 'noverbose');  % loads images with spatial basis patterns
+
+end  % function
+
+
+% Load Self/Other Mentalizing signatures (Acil et al. 2026, Nat Comms)
+% ------------------------------------------------------------------------
+
+function [image_obj, networknames, imagenames] = load_selfother
+
+networknames = {'MS', 'MS_Self', 'MS_Other', 'MS_SvO'};
+
+imagenames = {
+    'Mentalization_Boot_Unthr_11-Jun-2024.nii'
+    'Self_Boot_Unthr_11-Jun-2024.nii'
+    'Other_Boot_Unthr_11-Jun-2024.nii'
+    'SvO_Boot_Unthr_11-Jun-2024.nii'
+    };
+
+imagenames = check_image_names_get_full_path(imagenames);
+
+image_obj = fmri_data(imagenames, [], 'noverbose');
 
 end  % function
 

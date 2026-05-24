@@ -11,7 +11,9 @@ function study = hrf_second_level_inputs_to_study(second_level_inputs, varargin)
 % The converted "fits" are map-score curves over condition x lag, not
 % subject-level HRF model fits. The default model name is therefore
 % "mapscore". For beta map-score CSVs, matching t map-score CSVs are used
-% by default to derive approximate score SE as abs(beta_score / t_score).
+% by default as a fallback to derive approximate score SE as
+% abs(beta_score / t_score). If beta score CSVs contain propagated
+% *_se columns from HRF beta SE maps, those are preferred.
 % If multiple score columns are available, result.fits is the average score
 % curve by default; individual signatures/maps remain in fits_by_signature.
 
@@ -312,12 +314,17 @@ fit_data_by_score = cell(1, numel(score_cols));
 for s = 1:numel(score_cols)
     H = nan(numel(lag_names), numel(condition_names));
     T = nan(numel(lag_names), numel(condition_names));
+    propagated_SE = nan(numel(lag_names), numel(condition_names));
     values = S.(score_cols{s});
     t_values = local_t_values(Tscore, score_cols{s});
+    se_values = local_score_se_values(S, score_cols{s});
     for c = 1:numel(condition_names)
         for l = 1:numel(lag_names)
             wh = strcmp(conditions, condition_names{c}) & lag_index == lag_names(l);
             H(l, c) = local_mean_omitnan(values(wh));
+            if ~isempty(se_values)
+                propagated_SE(l, c) = local_combine_independent_se(se_values(wh));
+            end
             if ~isempty(t_values)
                 T(l, c) = local_t_mean_for_bin(t_values, t_conditions, t_lag_index, ...
                     conditions, lag_index, condition_names{c}, lag_names(l), wh);
@@ -325,7 +332,7 @@ for s = 1:numel(score_cols)
         end
     end
 
-    [SE, P, p_type, uncertainty_source] = local_approx_uncertainty(H, T, S);
+    [SE, T, P, p_type, uncertainty_source] = local_score_uncertainty(H, T, propagated_SE, S);
 
     fit_data = local_score_fit_data(H, lag_names, lag_seconds, score_cols{s}, ...
         score_file, source_model, SE, T, P, p_type, uncertainty_source);
@@ -419,6 +426,24 @@ end
 t_values = Tscore.(score_col);
 end
 
+function se_values = local_score_se_values(S, score_col)
+se_values = [];
+se_col = [char(score_col) '_se'];
+if any(strcmp(se_col, S.Properties.VariableNames))
+    se_values = S.(se_col);
+end
+end
+
+function se = local_combine_independent_se(vals)
+vals = vals(:);
+vals = vals(isfinite(vals));
+if isempty(vals)
+    se = NaN;
+else
+    se = sqrt(sum(vals .^ 2)) ./ numel(vals);
+end
+end
+
 function t_mean = local_t_mean_for_bin(t_values, t_conditions, t_lag_index, conditions, lag_index, condition_name, lag_name, fallback_wh)
 t_mean = NaN;
 if numel(t_values) == numel(t_conditions) && numel(t_values) == numel(t_lag_index)
@@ -429,11 +454,28 @@ elseif numel(t_values) == numel(conditions) && numel(t_values) == numel(lag_inde
 end
 end
 
-function [SE, P, p_type, uncertainty_source] = local_approx_uncertainty(H, T, S)
+function [SE, T, P, p_type, uncertainty_source] = local_score_uncertainty(H, T, propagated_SE, S)
 SE = [];
 P = [];
 p_type = '';
 uncertainty_source = 'not stored in map-score CSV; use group-level stats across subjects or refit source time series';
+
+if ~isempty(propagated_SE) && any(isfinite(propagated_SE(:)))
+    SE = propagated_SE;
+    T = H ./ SE;
+    T(~isfinite(T)) = NaN;
+    if any(strcmp('dfe', S.Properties.VariableNames))
+        dfe = local_mean_omitnan(local_to_numeric(S.dfe));
+        if ~isnan(dfe)
+            P = 2 * (1 - tcdf(abs(T), dfe));
+            P(P == 0) = eps;
+            p_type = sprintf('Approximate two-tailed P-values from beta map-score / propagated beta-SE map-score, dfe = %.3f', dfe);
+        end
+    end
+    uncertainty_source = 'propagated score SE from matching HRF beta SE maps, assuming diagonal voxel covariance';
+    return
+end
+
 if isempty(T) || all(isnan(T(:)))
     return
 end
@@ -587,7 +629,7 @@ metadata_cols = {'volume_index', 'condition', 'condition_index', 'lag_index', ..
 cols = {};
 for i = 1:numel(S.Properties.VariableNames)
     name = S.Properties.VariableNames{i};
-    if ismember(name, metadata_cols)
+    if ismember(name, metadata_cols) || local_is_uncertainty_column(name)
         continue
     end
     if isnumeric(S.(name))
@@ -604,6 +646,10 @@ if isempty(y)
 else
     m = mean(y);
 end
+end
+
+function tf = local_is_uncertainty_column(name)
+tf = endsWith(char(name), '_se');
 end
 
 function value = local_table_value(T, row, varname)

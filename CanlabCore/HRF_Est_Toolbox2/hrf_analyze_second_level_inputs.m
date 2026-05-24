@@ -210,13 +210,17 @@ metadata_cols = {'volume_index', 'condition', 'condition_index', 'lag_index', ..
 cols = {};
 for i = 1:numel(S.Properties.VariableNames)
     name = S.Properties.VariableNames{i};
-    if ismember(name, metadata_cols)
+    if ismember(name, metadata_cols) || local_is_uncertainty_column(name)
         continue
     end
     if isnumeric(S.(name))
         cols{end + 1} = name; %#ok<AGROW>
     end
 end
+end
+
+function tf = local_is_uncertainty_column(name)
+tf = endsWith(char(name), '_se');
 end
 
 function subject_table = local_subject_average(T)

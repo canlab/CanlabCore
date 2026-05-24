@@ -23,12 +23,12 @@ p.parse(root_dir, varargin{:});
 opts = p.Results;
 
 root_dir = char(root_dir);
-beta_files = dir(fullfile(root_dir, '**', '*_beta.nii'));
+prefixes = local_output_prefixes(root_dir);
 
 rows = {};
-for i = 1:numel(beta_files)
-    beta_path = fullfile(beta_files(i).folder, beta_files(i).name);
-    prefix = erase(beta_path, '_beta.nii');
+for i = 1:numel(prefixes)
+    prefix = prefixes{i};
+    beta_path = [prefix '_beta.nii'];
     t_path = [prefix '_t.nii'];
     se_path = [prefix '_se.nii'];
     p_path = [prefix '_p.nii'];
@@ -43,7 +43,7 @@ for i = 1:numel(beta_files)
     subject = local_subject_from_name(prefix_name);
     run_label = local_run_label_from_name(prefix_name, subject, model_name);
 
-    rows(end + 1, :) = {subject, run_label, model_name, prefix, beta_path, local_existing(t_path), ...
+    rows(end + 1, :) = {subject, run_label, model_name, prefix, local_existing(beta_path), local_existing(t_path), ...
         local_existing(se_path), local_existing(p_path), ...
         local_existing(t_thresh_path), local_existing(metadata_path), ...
         local_existing(beta_scores_path), local_existing(t_scores_path), ...
@@ -61,6 +61,28 @@ end
 if ~isempty(opts.OutputCsv)
     writetable(T, char(opts.OutputCsv));
 end
+end
+
+function prefixes = local_output_prefixes(root_dir)
+suffixes = {'_beta.nii', '_t.nii', '_se.nii', '_p.nii', '_t_thresh.nii', ...
+    '_metadata.csv', '_beta_map_scores.csv', '_t_map_scores.csv'};
+
+prefixes = {};
+for s = 1:numel(suffixes)
+    suffix = suffixes{s};
+    files = dir(fullfile(root_dir, '**', ['*' suffix]));
+    for i = 1:numel(files)
+        path_in = fullfile(files(i).folder, files(i).name);
+        prefixes{end + 1, 1} = local_strip_suffix(path_in, suffix); %#ok<AGROW>
+    end
+end
+
+prefixes = unique(prefixes, 'stable');
+prefixes = sort(prefixes);
+end
+
+function prefix = local_strip_suffix(path_in, suffix)
+prefix = path_in(1:end - numel(suffix));
 end
 
 function out = local_existing(path_in)

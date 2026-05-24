@@ -628,15 +628,17 @@ average.
 
 Map-score curves can look more jagged than `run_hrf_pipeline` 1D HRF fits
 because each point is a spatial pattern score from a separate condition-lag
-beta/T image. If the collected input table contains both
-`beta_scores_file` and `t_scores_file`, `hrf_input_table_to_study(...,
-'Object','beta')` derives an approximate score SE as `abs(beta_score /
-t_score)` and stores it in each `mapscore.se` matrix for plotting ribbons.
-Set `'ApproxSEFromT', false` to disable this. These score-level SEs are an
-approximation from paired beta/T map scores, not the original voxelwise model
-covariance. Use `hrf_time_unfolding_stats` for across-subject mean/SEM and
-p-values, or refit the source 1D mean/signature/ROI time series with
-`run_hrf_pipeline` when you need model-based within-run fit SE and p-values.
+beta/T image. When beta scores are written with a matching `_se.nii` image,
+`hrf_apply_maps_to_wholebrain` adds propagated score-SE columns such as
+`sig_all_NPS_se`, computed as `sqrt(sum((signature_weight .* beta_se).^2))`
+under a diagonal voxel-covariance approximation. `hrf_input_table_to_study(...,
+'Object','beta')` uses those propagated SE columns for `mapscore.se`. For
+older score CSVs without propagated SE columns, matching `t_scores_file`
+values are still used as a fallback approximation, `abs(beta_score / t_score)`;
+set `'ApproxSEFromT', false` to disable that fallback. Use
+`hrf_time_unfolding_stats` for across-subject mean/SEM and p-values, or refit
+the source 1D mean/signature/ROI time series with `run_hrf_pipeline` when you
+need full model covariance.
 
 Inspect noisy runs/subjects before interpreting large ribbons or strange
 averages:

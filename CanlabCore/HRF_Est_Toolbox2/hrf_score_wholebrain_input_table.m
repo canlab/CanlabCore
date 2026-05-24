@@ -14,6 +14,7 @@ p.addParameter('ScoreObjects', {'beta', 't'}, @(x) ischar(x) || iscell(x) || iss
 p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
+p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Overwrite', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('OverwriteStale', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('RequireMetadata', true, @(x) islogical(x) || isnumeric(x));
@@ -59,8 +60,9 @@ for i = 1:height(input_table)
     for j = 1:numel(objects)
         object_name = objects{j};
         score_file = local_score_file(input_table, i, object_name, prefix);
+        require_uncertainty = local_requires_uncertainty(prefix, object_name, opts);
         if exist(score_file, 'file') == 2 && ~logical(opts.Overwrite) && ...
-                local_existing_score_is_valid(score_file, metadata_table)
+                local_existing_score_is_valid(score_file, metadata_table, require_uncertainty)
             input_table = local_set_score_file(input_table, i, object_name, score_file);
             status = local_add_status(status, i, subject, model_name, object_name, false, 'exists');
             continue
@@ -72,13 +74,16 @@ for i = 1:height(input_table)
         end
 
         try
-            wholebrain = hrf_load_wholebrain_stats(prefix, 'NoVerbose', logical(opts.NoVerbose));
-            local_validate_wholebrain_metadata(wholebrain, metadata_table, object_name, prefix);
-            hrf_apply_maps_to_wholebrain(wholebrain, ...
+            score_obj = local_load_score_object(prefix, object_name, metadata_table, logical(opts.NoVerbose));
+            local_validate_score_object_metadata(score_obj, metadata_table, object_name, prefix);
+            se_obj = local_uncertainty_object(prefix, object_name, metadata_table, logical(opts.NoVerbose), logical(opts.PropagateSE));
+            hrf_apply_maps_to_wholebrain(score_obj, ...
                 'Object', object_name, ...
                 'SignatureSets', opts.SignatureSets, ...
                 'ImageSets', opts.ImageSets, ...
                 'SimilarityMetric', opts.SimilarityMetric, ...
+                'SEInput', se_obj, ...
+                'PropagateSE', opts.PropagateSE, ...
                 'MetadataTable', metadata_table, ...
                 'OutputCsv', score_file, ...
                 'WarningContext', local_warning_context(i, subject, model_name, object_name, prefix));
@@ -303,15 +308,19 @@ function s = local_safe_label(s)
 s = matlab.lang.makeValidName(char(s));
 end
 
-function tf = local_existing_score_is_valid(score_file, metadata_table)
+function tf = local_existing_score_is_valid(score_file, metadata_table, require_uncertainty)
 tf = true;
-if isempty(metadata_table)
-    return
-end
 try
     S = readtable(score_file, 'TextType', 'string');
 catch
     tf = false;
+    return
+end
+if logical(require_uncertainty) && ~local_score_table_has_uncertainty(S)
+    tf = false;
+    return
+end
+if isempty(metadata_table)
     return
 end
 if height(S) ~= height(metadata_table)
@@ -339,6 +348,47 @@ elseif has_score_lag && has_metadata_lag && ...
 end
 end
 
+function tf = local_requires_uncertainty(prefix, object_name, opts)
+tf = strcmpi(char(object_name), 'beta') && logical(opts.PropagateSE) && ...
+    local_is_linear_metric(opts.SimilarityMetric) && ...
+    exist([prefix '_beta.nii'], 'file') == 2 && exist([prefix '_se.nii'], 'file') == 2;
+end
+
+function tf = local_is_linear_metric(metric)
+metric = lower(strrep(strtrim(char(metric)), '_', ''));
+tf = ismember(metric, {'dotproduct', 'dot'});
+end
+
+function tf = local_score_table_has_uncertainty(S)
+score_cols = local_score_columns_for_validation(S);
+tf = true;
+for i = 1:numel(score_cols)
+    if ~any(strcmp([score_cols{i} '_se'], S.Properties.VariableNames))
+        tf = false;
+        return
+    end
+end
+end
+
+function cols = local_score_columns_for_validation(S)
+metadata_cols = {'volume_index', 'condition', 'condition_index', 'lag_index', ...
+    'lag_seconds', 'image_label', 'N', 'dfe', 'TR', 'mode'};
+cols = {};
+for i = 1:numel(S.Properties.VariableNames)
+    name = S.Properties.VariableNames{i};
+    if ismember(name, metadata_cols) || local_is_uncertainty_column(name)
+        continue
+    end
+    if isnumeric(S.(name))
+        cols{end + 1} = name; %#ok<AGROW>
+    end
+end
+end
+
+function tf = local_is_uncertainty_column(name)
+tf = endsWith(char(name), '_se');
+end
+
 function x = local_to_numeric(x)
 if isnumeric(x)
     x = double(x);
@@ -347,18 +397,88 @@ else
 end
 end
 
-function local_validate_wholebrain_metadata(wholebrain, metadata_table, object_name, prefix)
+function obj = local_load_score_object(prefix, object_name, metadata_table, noverbose)
+image_file = local_score_image_file(prefix, object_name);
+if exist(image_file, 'file') ~= 2
+    error('Missing %s image: %s', object_name, image_file);
+end
+
+load_args = {};
+if noverbose
+    load_args = {'noverbose'};
+end
+obj = statistic_image(fmri_data(image_file, load_args{:}));
+switch lower(char(object_name))
+    case 'beta'
+        obj.type = 'FIR HRF beta';
+    case 't'
+        obj.type = 'T';
+end
+
+if ~isempty(metadata_table) && height(metadata_table) == size(obj.dat, 2)
+    if any(strcmp('image_label', metadata_table.Properties.VariableNames))
+        obj.image_labels = cellstr(string(metadata_table.image_label));
+    end
+    if any(strcmp('N', metadata_table.Properties.VariableNames))
+        obj.N = metadata_table.N(1);
+    end
+    if any(strcmp('dfe', metadata_table.Properties.VariableNames))
+        obj.dfe = metadata_table.dfe(1);
+    end
+end
+if isempty(obj.sig)
+    obj.sig = true(size(obj.dat));
+end
+end
+
+function obj = local_uncertainty_object(prefix, object_name, metadata_table, noverbose, propagate_se)
+obj = [];
+if ~propagate_se || ~strcmpi(char(object_name), 'beta')
+    return
+end
+image_file = [prefix '_se.nii'];
+if exist(image_file, 'file') ~= 2
+    return
+end
+
+load_args = {};
+if noverbose
+    load_args = {'noverbose'};
+end
+obj = statistic_image(fmri_data(image_file, load_args{:}));
+obj.type = 'HRF beta standard error';
+if ~isempty(metadata_table) && height(metadata_table) == size(obj.dat, 2)
+    if any(strcmp('image_label', metadata_table.Properties.VariableNames))
+        obj.image_labels = cellstr(string(metadata_table.image_label));
+    end
+    if any(strcmp('N', metadata_table.Properties.VariableNames))
+        obj.N = metadata_table.N(1);
+    end
+    if any(strcmp('dfe', metadata_table.Properties.VariableNames))
+        obj.dfe = metadata_table.dfe(1);
+    end
+end
+if isempty(obj.sig)
+    obj.sig = true(size(obj.dat));
+end
+end
+
+function image_file = local_score_image_file(prefix, object_name)
+switch lower(char(object_name))
+    case 'beta'
+        image_file = [prefix '_beta.nii'];
+    case 't'
+        image_file = [prefix '_t.nii'];
+    otherwise
+        error('Unknown object: %s. Use beta or t.', char(object_name));
+end
+end
+
+function local_validate_score_object_metadata(obj, metadata_table, object_name, prefix)
 if isempty(metadata_table)
     return
 end
-switch lower(char(object_name))
-    case 'beta'
-        n_images = size(wholebrain.b.dat, 2);
-    case 't'
-        n_images = size(wholebrain.t.dat, 2);
-    otherwise
-        n_images = height(metadata_table);
-end
+n_images = size(obj.dat, 2);
 if height(metadata_table) ~= n_images
     error('Cannot score %s: metadata has %d rows but %s image has %d volumes. Regenerate the whole-brain maps and metadata together.', ...
         prefix, height(metadata_table), object_name, n_images);

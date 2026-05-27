@@ -62,7 +62,7 @@ for i = 1:height(input_table)
         score_file = local_score_file(input_table, i, object_name, prefix);
         require_uncertainty = local_requires_uncertainty(prefix, object_name, opts);
         if exist(score_file, 'file') == 2 && ~logical(opts.Overwrite) && ...
-                local_existing_score_is_valid(score_file, metadata_table, require_uncertainty)
+                local_existing_score_is_valid(score_file, metadata_table, require_uncertainty, opts)
             input_table = local_set_score_file(input_table, i, object_name, score_file);
             status = local_add_status(status, i, subject, model_name, object_name, false, 'exists');
             continue
@@ -308,7 +308,7 @@ function s = local_safe_label(s)
 s = matlab.lang.makeValidName(char(s));
 end
 
-function tf = local_existing_score_is_valid(score_file, metadata_table, require_uncertainty)
+function tf = local_existing_score_is_valid(score_file, metadata_table, require_uncertainty, opts)
 tf = true;
 try
     S = readtable(score_file, 'TextType', 'string');
@@ -317,6 +317,10 @@ catch
     return
 end
 if logical(require_uncertainty) && ~local_score_table_has_uncertainty(S)
+    tf = false;
+    return
+end
+if ~local_has_requested_score_sets(S, opts)
     tf = false;
     return
 end
@@ -345,6 +349,59 @@ if has_metadata_lag && ~has_score_lag
 elseif has_score_lag && has_metadata_lag && ...
         ~isequaln(local_to_numeric(S.lag_index), local_to_numeric(metadata_table.lag_index))
     tf = false;
+end
+end
+
+function tf = local_has_requested_score_sets(S, opts)
+tf = true;
+sigsets = local_to_cell(opts.SignatureSets);
+for i = 1:numel(sigsets)
+    if ~local_has_numeric_prefix(S, local_var_prefix({'sig', sigsets{i}}))
+        tf = false;
+        return
+    end
+end
+
+image_sets = local_to_cell(opts.ImageSets);
+for i = 1:numel(image_sets)
+    if isa(image_sets{i}, 'image_vector')
+        set_name = 'imageset';
+    else
+        set_name = char(image_sets{i});
+    end
+    if ~local_has_numeric_prefix(S, local_var_prefix({'map', set_name}))
+        tf = false;
+        return
+    end
+end
+end
+
+function tf = local_has_numeric_prefix(S, prefix)
+tf = false;
+names = S.Properties.VariableNames;
+for i = 1:numel(names)
+    name = names{i};
+    if startsWith(name, prefix) && isnumeric(S.(name)) && ~local_is_uncertainty_column(name)
+        tf = true;
+        return
+    end
+end
+end
+
+function prefix = local_var_prefix(parts)
+prefix = matlab.lang.makeValidName(strjoin(cellfun(@char, parts, 'UniformOutput', false), '_'));
+prefix = [prefix '_'];
+end
+
+function c = local_to_cell(x)
+if isempty(x)
+    c = {};
+elseif isa(x, 'image_vector')
+    c = {x};
+elseif ischar(x) || isstring(x)
+    c = cellstr(string(x));
+else
+    c = x;
 end
 end
 

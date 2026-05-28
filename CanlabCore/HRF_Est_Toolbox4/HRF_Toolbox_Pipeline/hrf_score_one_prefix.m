@@ -91,6 +91,7 @@ p.addParameter('ResultMatFile', '', @(x) ischar(x) || isstring(x));
 p.addParameter('StatsInput', [], @(x) isempty(x) || isstruct(x));
 p.addParameter('Overwrite', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('OverwriteStale', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('Append', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('RequireMetadata', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('NoVerbose', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WarningContext', '', @(x) ischar(x) || isstring(x));
@@ -142,11 +143,32 @@ for j = 1:numel(objects)
         if local_existing_score_is_valid(score_file, metadata_table, require_uncertainty, opts)
             status.skipped_existing{end + 1} = score_file; %#ok<AGROW>
             continue
-        elseif ~logical(opts.OverwriteStale)
+        end
+        % Existing file is "stale" relative to current request -- either
+        % missing requested signature/image sets, or out-of-shape metadata.
+        % If Append mode is on and metadata aligns, compute ONLY the missing
+        % sets and merge into the existing CSV (preserves prior columns).
+        % Otherwise fall back to OverwriteStale (full regenerate) or skip.
+        if logical(opts.Append)
+            [appended, append_err] = local_try_append( ...
+                score_file, prefix, object_name, model_name, metadata_table, opts);
+            if appended
+                status.wrote_files{end + 1} = score_file; %#ok<AGROW>
+                continue
+            elseif ~isempty(append_err)
+                status.errors(end + 1) = struct('object', object_name, ...
+                    'message', sprintf('append failed for %s: %s (falling back to overwrite if OverwriteStale)', ...
+                        score_file, append_err)); %#ok<AGROW>
+                % fall through; OverwriteStale (if true) regenerates from scratch
+            end
+            % append_err empty AND not appended means metadata didn't align;
+            % fall through to the OverwriteStale logic below.
+        end
+        if ~logical(opts.OverwriteStale)
             status.skipped_stale{end + 1} = score_file; %#ok<AGROW>
             continue
         end
-        % else fall through and regenerate
+        % else fall through and regenerate from scratch
     end
 
     try
@@ -170,6 +192,130 @@ for j = 1:numel(objects)
     catch err
         status.errors(end + 1) = struct('object', object_name, 'message', err.message); %#ok<AGROW>
     end
+end
+end
+
+
+% =========================================================================
+% Append mode: compute only missing sets, merge into existing CSV
+% =========================================================================
+function [appended, err_msg] = local_try_append(score_file, prefix, object_name, model_name, metadata_table, opts)
+% Returns appended=true and err_msg='' on success.
+% Returns appended=false and err_msg='' if metadata mismatch -> caller falls back.
+% Returns appended=false and err_msg=<message> on actual error -> caller decides.
+appended = false;
+err_msg = '';
+
+try
+    existing = readtable(score_file, 'TextType', 'string');
+catch err
+    err_msg = sprintf('could not read existing CSV: %s', err.message);
+    return
+end
+
+if ~local_existing_metadata_aligns(existing, metadata_table)
+    % Silent fall-through; the existing file is incompatible with current
+    % metadata (different rows, conditions, or lags). Full regenerate is
+    % the right move.
+    return
+end
+
+[missing_sigs, missing_imgs] = local_missing_sets(existing, opts);
+if isempty(missing_sigs) && isempty(missing_imgs)
+    % Everything requested is already present; nothing to do, but the
+    % existing file is fine.
+    appended = true;  % no-op write avoided
+    return
+end
+
+try
+    [score_obj, se_obj] = local_resolve_score_objects_for_write( ...
+        prefix, object_name, metadata_table, opts);
+    local_validate_score_object_metadata(score_obj, metadata_table, object_name, prefix);
+
+    new_scores = hrf_apply_maps_to_wholebrain(score_obj, ...
+        'Object', object_name, ...
+        'SignatureSets', missing_sigs, ...
+        'ImageSets', missing_imgs, ...
+        'SimilarityMetric', opts.SimilarityMetric, ...
+        'SEInput', se_obj, ...
+        'PropagateSE', opts.PropagateSE, ...
+        'SEScoreSuffix', opts.SEScoreSuffix, ...
+        'MetadataTable', metadata_table, ...
+        'OutputCsv', '', ...
+        'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
+
+    merged = local_merge_score_tables(existing, new_scores);
+    writetable(merged, score_file);
+    appended = true;
+catch err
+    err_msg = err.message;
+end
+end
+
+
+function tf = local_existing_metadata_aligns(existing, meta)
+% Row count + condition + lag must match for an in-place append to make sense.
+tf = false;
+if isempty(meta) || height(existing) ~= height(meta)
+    return
+end
+has_cond_e = any(strcmp('condition', existing.Properties.VariableNames));
+has_cond_m = any(strcmp('condition', meta.Properties.VariableNames));
+if has_cond_e && has_cond_m && ~isequal(string(existing.condition), string(meta.condition))
+    return
+end
+has_lag_e = any(strcmp('lag_index', existing.Properties.VariableNames));
+has_lag_m = any(strcmp('lag_index', meta.Properties.VariableNames));
+if has_lag_e && has_lag_m && ~isequaln(local_to_numeric(existing.lag_index), local_to_numeric(meta.lag_index))
+    return
+end
+tf = true;
+end
+
+
+function [missing_sigs, missing_imgs] = local_missing_sets(existing, opts)
+% Semantic match: each requested SET name produces columns starting with
+% sig_<setname>_ or map_<setname>_. A set is "present" if at least one
+% such column exists.
+missing_sigs = {};
+sigsets = local_to_cell(opts.SignatureSets);
+for i = 1:numel(sigsets)
+    if ~local_has_numeric_prefix(existing, local_var_prefix({'sig', sigsets{i}}))
+        missing_sigs{end + 1} = sigsets{i}; %#ok<AGROW>
+    end
+end
+missing_imgs = {};
+image_sets = local_to_cell(opts.ImageSets);
+for i = 1:numel(image_sets)
+    if isa(image_sets{i}, 'image_vector')
+        set_name = 'imageset';
+    else
+        set_name = char(image_sets{i});
+    end
+    if ~local_has_numeric_prefix(existing, local_var_prefix({'map', set_name}))
+        missing_imgs{end + 1} = image_sets{i}; %#ok<AGROW>
+    end
+end
+end
+
+
+function merged = local_merge_score_tables(existing, new_scores)
+% Add any new score columns from new_scores into existing. Metadata
+% columns come from existing (they should match new_scores's metadata
+% since the alignment check passed). Existing score columns are
+% preserved -- if a column name collides we keep the existing one
+% (assume it's already valid).
+merged = existing;
+metadata_cols = {'volume_index', 'condition', 'condition_index', 'lag_index', ...
+    'lag_seconds', 'image_label', 'N', 'dfe', 'TR', 'mode', 'subject', 'run_label'};
+new_vars = new_scores.Properties.VariableNames;
+existing_vars = existing.Properties.VariableNames;
+for i = 1:numel(new_vars)
+    col = new_vars{i};
+    if ismember(col, metadata_cols), continue; end
+    if any(strcmp(col, existing_vars)), continue; end
+    merged.(col) = new_scores.(col);
 end
 end
 

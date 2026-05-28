@@ -1,13 +1,9 @@
 function obj = cat(varargin)
 % cat - Concatenate statistic_hrf objects across (subject, run) axes.
 %
-% Usage
-% -----
-%   Tstudy = cat(1, Ht_sub01_run01, Ht_sub01_run02, ..., Ht_subN_runM)
-%
-% Mirrors fmri_hrf/cat: delegates voxel-axis concatenation to
-% statistic_image/cat and stacks the HRF metadata tables, tagging each
-% chunk with its subject and run_label.
+% Mirrors fmri_hrf/cat: stacks .dat along the volume axis and stacks each
+% input's HRF metadata_table with subject/run_label columns added. Other
+% parent fields (volInfo, etc.) are copied from the first input.
 
 if nargin < 2
     error('statistic_hrf:cat:NotEnoughArgs', 'cat requires at least two arguments.');
@@ -32,8 +28,17 @@ end
 
 local_assert_alignable(objs);
 
-parent_objs = cellfun(@(x) statistic_image(x), objs, 'UniformOutput', false);
-parent_cat = cat(1, parent_objs{:});
+base = objs{1};
+n_vox = size(base.dat, 1);
+all_dat = base.dat;
+for i = 2:numel(objs)
+    if size(objs{i}.dat, 1) ~= n_vox
+        error('statistic_hrf:cat:VoxelMismatch', ...
+            'Cannot cat: input %d has %d voxels, expected %d.', ...
+            i, size(objs{i}.dat, 1), n_vox);
+    end
+    all_dat = [all_dat, objs{i}.dat]; %#ok<AGROW>
+end
 
 meta_chunks = cell(numel(objs), 1);
 for i = 1:numel(objs)
@@ -50,11 +55,13 @@ else
     stacked_meta = vertcat(meta_chunks{:});
 end
 
-obj = statistic_hrf(parent_cat, ...
-    'MetadataTable', stacked_meta, ...
-    'ModelName', objs{1}.model_name, ...
-    'Conditions', objs{1}.conditions, ...
-    'TR', objs{1}.TR);
+obj = base;
+obj.dat = all_dat;
+obj.metadata_table = stacked_meta;
+n_vol = size(all_dat, 2);
+if isprop(obj, 'removed_images')
+    obj.removed_images = false(n_vol, 1);
+end
 end
 
 

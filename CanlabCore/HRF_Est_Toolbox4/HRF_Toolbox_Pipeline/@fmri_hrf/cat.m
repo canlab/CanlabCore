@@ -5,14 +5,13 @@ function obj = cat(varargin)
 % -----
 %   Hstudy = cat(1, Hb_sub01_run01, Hb_sub01_run02, ..., Hb_subN_runM)
 %
-% Concatenates the underlying fmri_data voxel-by-volume by delegating to
-% fmri_data/cat. Then aligns HRF metadata: requires all inputs to share
-% model_name, TR, and condition set (so the resulting stacked metadata
-% table is interpretable). Stacks per-object (subject, run_label) into the
-% metadata_table to preserve the source axis.
+% Stacks the underlying voxel .dat matrices along the volume axis and
+% stacks each input's HRF metadata_table, tagging chunks with subject and
+% run_label so the source axis is preserved. The output's other parent
+% fields (volInfo, mask, etc.) are copied from the first input.
 %
 % v0 ignores the dimension argument and always concatenates along the
-% volume/image axis. Multi-dim concatenation will come later.
+% volume axis. Voxel count must match across inputs.
 
 if nargin < 2
     error('fmri_hrf:cat:NotEnoughArgs', 'cat requires at least two arguments.');
@@ -37,18 +36,24 @@ end
 
 local_assert_alignable(objs);
 
-% Delegate voxel-axis concatenation to fmri_data/cat.
-parent_objs = cellfun(@(x) fmri_data(x), objs, 'UniformOutput', false);
-parent_cat = cat(1, parent_objs{:});
+% Stack the .dat matrices along the volume axis.
+base = objs{1};
+n_vox = size(base.dat, 1);
+all_dat = base.dat;
+for i = 2:numel(objs)
+    if size(objs{i}.dat, 1) ~= n_vox
+        error('fmri_hrf:cat:VoxelMismatch', ...
+            'Cannot cat: input %d has %d voxels, expected %d.', ...
+            i, size(objs{i}.dat, 1), n_vox);
+    end
+    all_dat = [all_dat, objs{i}.dat]; %#ok<AGROW>
+end
 
-% Build the stacked HRF metadata table by appending each input's
-% metadata_table and tagging with subject + run_label.
+% Build the stacked HRF metadata table, tagging chunks with subject + run_label.
 meta_chunks = cell(numel(objs), 1);
 for i = 1:numel(objs)
     M = objs{i}.metadata_table;
-    if isempty(M)
-        continue
-    end
+    if isempty(M), continue; end
     M.subject = repmat(string(objs{i}.subject), height(M), 1);
     M.run_label = repmat(string(objs{i}.run_label), height(M), 1);
     meta_chunks{i} = M;
@@ -60,18 +65,21 @@ else
     stacked_meta = vertcat(meta_chunks{:});
 end
 
-% Lift the concatenated fmri_data into a new fmri_hrf.
-obj = fmri_hrf(parent_cat, ...
-    'MetadataTable', stacked_meta, ...
-    'ModelName', objs{1}.model_name, ...
-    'Conditions', objs{1}.conditions, ...
-    'TR', objs{1}.TR);
+% Build the result by value-copying the first input and updating data + meta.
+obj = base;
+obj.dat = all_dat;
+obj.metadata_table = stacked_meta;
+% Reset image-axis flags to match new volume count.
+n_vol = size(all_dat, 2);
+if isprop(obj, 'removed_images')
+    obj.removed_images = false(n_vol, 1);
+end
 end
 
 
 function local_assert_alignable(objs)
 % All objects must share model_name, TR, conditions for concatenation to
-% be meaningful. Subject/run can differ (that's the point).
+% be meaningful. Subject and run_label can differ -- that's the point.
 ref = objs{1};
 for i = 2:numel(objs)
     if ~strcmp(objs{i}.model_name, ref.model_name)

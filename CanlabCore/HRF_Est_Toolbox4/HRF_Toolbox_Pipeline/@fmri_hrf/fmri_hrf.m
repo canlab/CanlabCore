@@ -172,9 +172,9 @@ if ~isempty(char(opts.Subject)), obj.subject = char(opts.Subject); end
 if ~isempty(char(opts.RunLabel)), obj.run_label = char(opts.RunLabel); end
 if ~isempty(char(opts.ModelName)), obj.model_name = char(opts.ModelName); end
 if ~isempty(opts.Conditions)
-    obj.conditions = cellstr(string(opts.Conditions));
+    obj.conditions = reshape(cellstr(string(opts.Conditions)), 1, []);
 elseif ~isempty(obj.metadata_table) && any(strcmp('condition', obj.metadata_table.Properties.VariableNames))
-    obj.conditions = unique(cellstr(string(obj.metadata_table.condition)), 'stable');
+    obj.conditions = reshape(unique(cellstr(string(obj.metadata_table.condition)), 'stable'), 1, []);
 end
 if ~isnan(opts.TR), obj.TR = opts.TR; end
 if ~isempty(opts.DesignMatrix), obj.design_matrix = opts.DesignMatrix; end

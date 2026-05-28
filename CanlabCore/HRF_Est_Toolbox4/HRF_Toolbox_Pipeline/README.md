@@ -2,6 +2,14 @@
 
 This folder hosts the user-facing pipeline that goes from a **4D fMRI NIfTI** and **BIDS events.tsv** directly to model-based HRF estimates. It lives under `CanlabCore/HRF_Est_Toolbox4/HRF_Toolbox_Pipeline/` and depends on the canonical Lindquist-lab fitters at `HRF_Est_Toolbox4/` (sibling directory).
 
+## Documentation
+
+- **[Tutorial](docs/Tutorial.md)** — narrative walkthrough from single-subject quick start through SLURM scaling, audit/repair, group analysis, and the new OOP classes.
+- **[Architecture](docs/Architecture.md)** — code-map and call graph: how the ~40 files fit into layers, what depends on what, and where to add new code.
+- **[Phased Plan](docs/HRF_Pipeline_Phased_Plan.md)** — the four-phase refactor roadmap (Phases 1–3 shipped, Phase 4 pending).
+
+This README is the function-by-function reference manual; the docs above are the entry points for new users.
+
 ## Quick start
 
 ```matlab

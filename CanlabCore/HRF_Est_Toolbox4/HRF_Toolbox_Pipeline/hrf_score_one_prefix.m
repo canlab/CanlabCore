@@ -84,6 +84,7 @@ p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
+p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEScoreSuffix', '_se', @(x) ischar(x) || isstring(x));
@@ -193,7 +194,8 @@ for j = 1:numel(objects)
         % Optionally append atlas region means.
         if ~isempty(opts.AtlasObj)
             atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
-                local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName));
+                local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), ...
+                local_effective_regions(opts.AtlasObj, opts.Regions));
             scores = local_horzappend_scores(scores, atlas_cols);
         end
 
@@ -231,8 +233,8 @@ if ~local_existing_metadata_aligns(existing, metadata_table)
 end
 
 [missing_sigs, missing_imgs] = local_missing_sets(existing, opts);
-atlas_missing = local_atlas_missing(existing, opts);
-if isempty(missing_sigs) && isempty(missing_imgs) && ~atlas_missing
+missing_regions = local_missing_atlas_regions(existing, opts);
+if isempty(missing_sigs) && isempty(missing_imgs) && isempty(missing_regions)
     % Everything requested is already present; nothing to do, but the
     % existing file is fine.
     appended = true;  % no-op write avoided
@@ -256,10 +258,11 @@ try
         'OutputCsv', '', ...
         'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
 
-    % Atlas region means (append, semantic-matched on atlas name).
-    if atlas_missing
+    % Atlas region means -- append ONLY the missing regions, so adding a
+    % new region to an existing CSV doesn't trigger a full re-extract.
+    if ~isempty(missing_regions)
         atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
-            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName));
+            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), missing_regions);
         new_scores = local_horzappend_scores(new_scores, atlas_cols);
     end
 
@@ -341,23 +344,48 @@ end
 % =========================================================================
 % Atlas region-mean scoring (post-hoc extraction from whole-brain maps)
 % =========================================================================
-function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_name)
-% Returns a table with one column per atlas region named
+function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_name, regions)
+% Returns a table with one column per requested atlas region:
 %   atlas_<atlasname>_<region>_mean
-% with row count == n_volumes in score_obj. Uses extract_roi_averages,
-% which handles space resampling between atlas and score_obj automatically.
-cl = extract_roi_averages(score_obj, atlas_obj);
-labels = local_atlas_labels(atlas_obj, numel(cl));
+% with row count == n_volumes in score_obj.
+% Uses extract_roi_averages which handles space resampling between atlas
+% and score_obj automatically. If `regions` is non-empty, subsets the
+% atlas via select_atlas_subset(..., 'exact') first.
+if isempty(regions)
+    regions = local_effective_regions(atlas_obj, {});
+end
+regions = cellstr(string(regions));
+
+% Subset the atlas to the requested regions.
+sub_atlas = atlas_obj;
+if isa(atlas_obj, 'atlas')
+    try
+        sub_atlas = select_atlas_subset(atlas_obj, regions, 'exact');
+    catch err
+        error('hrf_score_one_prefix:AtlasRegionSubset', ...
+            'Failed to subset atlas to regions {%s}: %s', ...
+            strjoin(regions, ', '), err.message);
+    end
+end
+
+cl = extract_roi_averages(score_obj, sub_atlas);
+% Map cl entries back to the requested region labels in order. If
+% select_atlas_subset reordered or merged regions, fall back to atlas
+% labels.
+out_labels = local_atlas_labels(sub_atlas, numel(cl));
+if numel(out_labels) == numel(regions)
+    out_labels = regions;
+end
+
 atlas_token = matlab.lang.makeValidName(char(atlas_name));
 n_vol = size(score_obj.dat, 2);
 
 atlas_cols = table();
 for i = 1:numel(cl)
-    region_token = matlab.lang.makeValidName(char(labels{i}));
+    region_token = matlab.lang.makeValidName(char(out_labels{i}));
     col_name = sprintf('atlas_%s_%s_mean', atlas_token, region_token);
     vals = double(cl(i).dat(:));
     if numel(vals) ~= n_vol
-        % Pad / truncate defensively so we always emit n_vol rows.
         padded = NaN(n_vol, 1);
         m = min(numel(vals), n_vol);
         padded(1:m) = vals(1:m);
@@ -365,6 +393,33 @@ for i = 1:numel(cl)
     end
     atlas_cols.(col_name) = vals;
 end
+end
+
+
+function regions = local_effective_regions(atlas_obj, requested_regions)
+% Returns the cellstr of region labels to score:
+%   - if requested_regions is non-empty -> that list (cellstr)
+%   - else atlas_obj.labels (full atlas)
+%   - else generic region_NNN fallback
+if ~isempty(requested_regions)
+    regions = cellstr(string(requested_regions));
+    regions = regions(:)';
+    return
+end
+if isprop(atlas_obj, 'labels') && ~isempty(atlas_obj.labels)
+    regions = cellstr(string(atlas_obj.labels));
+    regions = regions(:)';
+    return
+end
+% Last-ditch fallback: ask the atlas for a region count if possible.
+n_guess = 0;
+if isprop(atlas_obj, 'dat') && ~isempty(atlas_obj.dat)
+    n_guess = max(max(double(atlas_obj.dat(:))), 0);
+end
+if n_guess <= 0
+    n_guess = 1;
+end
+regions = arrayfun(@(i) sprintf('region_%03d', i), 1:n_guess, 'UniformOutput', false);
 end
 
 
@@ -395,15 +450,24 @@ name = 'atlas';
 end
 
 
-function tf = local_atlas_missing(existing, opts)
-% True iff AtlasObj is supplied AND no atlas_<name>_ columns exist in the
-% existing CSV. Atlas presence is treated as one "set" (all regions
-% together) for the semantic-match check.
-tf = false;
+function missing_regions = local_missing_atlas_regions(existing, opts)
+% Returns the cellstr of region labels whose atlas_<name>_<region>_mean
+% column is absent from the existing CSV. Empty if AtlasObj is not
+% supplied OR all effective regions are present.
+missing_regions = {};
 if isempty(opts.AtlasObj), return; end
 atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
-prefix = local_var_prefix({'atlas', atlas_name});
-tf = ~local_has_numeric_prefix(existing, prefix);
+effective_regions = local_effective_regions(opts.AtlasObj, opts.Regions);
+atlas_token = matlab.lang.makeValidName(char(atlas_name));
+existing_vars = existing.Properties.VariableNames;
+
+for r = 1:numel(effective_regions)
+    region_token = matlab.lang.makeValidName(char(effective_regions{r}));
+    col_name = sprintf('atlas_%s_%s_mean', atlas_token, region_token);
+    if ~any(strcmp(col_name, existing_vars))
+        missing_regions{end + 1} = effective_regions{r}; %#ok<AGROW>
+    end
+end
 end
 
 
@@ -732,13 +796,11 @@ for i = 1:numel(image_sets)
     end
 end
 
-% Atlas region means (treated as one set keyed by atlas name).
-if ~isempty(opts.AtlasObj)
-    atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
-    if ~local_has_numeric_prefix(S, local_var_prefix({'atlas', atlas_name}))
-        tf = false;
-        return
-    end
+% Atlas region means: per-region check so adding a new region to an
+% existing CSV doesn't require regenerating everything.
+if ~isempty(opts.AtlasObj) && ~isempty(local_missing_atlas_regions(S, opts))
+    tf = false;
+    return
 end
 end
 

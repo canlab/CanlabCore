@@ -82,6 +82,8 @@ p.addParameter('NumModels', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('ScoreObjects', {'beta'}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
+p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
+p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEScoreSuffix', '_se', @(x) ischar(x) || isstring(x));
@@ -176,7 +178,7 @@ for j = 1:numel(objects)
             prefix, object_name, metadata_table, opts);
         local_validate_score_object_metadata(score_obj, metadata_table, object_name, prefix);
 
-        hrf_apply_maps_to_wholebrain(score_obj, ...
+        scores = hrf_apply_maps_to_wholebrain(score_obj, ...
             'Object', object_name, ...
             'SignatureSets', opts.SignatureSets, ...
             'ImageSets', opts.ImageSets, ...
@@ -185,9 +187,17 @@ for j = 1:numel(objects)
             'PropagateSE', opts.PropagateSE, ...
             'SEScoreSuffix', opts.SEScoreSuffix, ...
             'MetadataTable', metadata_table, ...
-            'OutputCsv', score_file, ...
+            'OutputCsv', '', ...
             'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
 
+        % Optionally append atlas region means.
+        if ~isempty(opts.AtlasObj)
+            atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
+                local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName));
+            scores = local_horzappend_scores(scores, atlas_cols);
+        end
+
+        writetable(scores, score_file);
         status.wrote_files{end + 1} = score_file; %#ok<AGROW>
     catch err
         status.errors(end + 1) = struct('object', object_name, 'message', err.message); %#ok<AGROW>
@@ -221,7 +231,8 @@ if ~local_existing_metadata_aligns(existing, metadata_table)
 end
 
 [missing_sigs, missing_imgs] = local_missing_sets(existing, opts);
-if isempty(missing_sigs) && isempty(missing_imgs)
+atlas_missing = local_atlas_missing(existing, opts);
+if isempty(missing_sigs) && isempty(missing_imgs) && ~atlas_missing
     % Everything requested is already present; nothing to do, but the
     % existing file is fine.
     appended = true;  % no-op write avoided
@@ -244,6 +255,13 @@ try
         'MetadataTable', metadata_table, ...
         'OutputCsv', '', ...
         'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
+
+    % Atlas region means (append, semantic-matched on atlas name).
+    if atlas_missing
+        atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
+            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName));
+        new_scores = local_horzappend_scores(new_scores, atlas_cols);
+    end
 
     merged = local_merge_score_tables(existing, new_scores);
     writetable(merged, score_file);
@@ -316,6 +334,97 @@ for i = 1:numel(new_vars)
     if ismember(col, metadata_cols), continue; end
     if any(strcmp(col, existing_vars)), continue; end
     merged.(col) = new_scores.(col);
+end
+end
+
+
+% =========================================================================
+% Atlas region-mean scoring (post-hoc extraction from whole-brain maps)
+% =========================================================================
+function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_name)
+% Returns a table with one column per atlas region named
+%   atlas_<atlasname>_<region>_mean
+% with row count == n_volumes in score_obj. Uses extract_roi_averages,
+% which handles space resampling between atlas and score_obj automatically.
+cl = extract_roi_averages(score_obj, atlas_obj);
+labels = local_atlas_labels(atlas_obj, numel(cl));
+atlas_token = matlab.lang.makeValidName(char(atlas_name));
+n_vol = size(score_obj.dat, 2);
+
+atlas_cols = table();
+for i = 1:numel(cl)
+    region_token = matlab.lang.makeValidName(char(labels{i}));
+    col_name = sprintf('atlas_%s_%s_mean', atlas_token, region_token);
+    vals = double(cl(i).dat(:));
+    if numel(vals) ~= n_vol
+        % Pad / truncate defensively so we always emit n_vol rows.
+        padded = NaN(n_vol, 1);
+        m = min(numel(vals), n_vol);
+        padded(1:m) = vals(1:m);
+        vals = padded;
+    end
+    atlas_cols.(col_name) = vals;
+end
+end
+
+
+function labels = local_atlas_labels(atlas_obj, n_regions)
+labels = {};
+if isprop(atlas_obj, 'labels') && ~isempty(atlas_obj.labels)
+    labels = cellstr(string(atlas_obj.labels));
+end
+if numel(labels) < n_regions
+    extra = arrayfun(@(i) sprintf('region_%03d', i), numel(labels) + 1 : n_regions, ...
+        'UniformOutput', false);
+    labels = [labels(:); extra(:)];
+end
+labels = labels(1:n_regions);
+end
+
+
+function name = local_resolve_atlas_name(atlas_obj, user_name)
+% Priority: explicit user-supplied name -> atlas_obj.atlas_name property
+% -> 'atlas' fallback.
+name = char(user_name);
+if ~isempty(name), return; end
+if isprop(atlas_obj, 'atlas_name') && ~isempty(atlas_obj.atlas_name)
+    name = char(atlas_obj.atlas_name);
+    return
+end
+name = 'atlas';
+end
+
+
+function tf = local_atlas_missing(existing, opts)
+% True iff AtlasObj is supplied AND no atlas_<name>_ columns exist in the
+% existing CSV. Atlas presence is treated as one "set" (all regions
+% together) for the semantic-match check.
+tf = false;
+if isempty(opts.AtlasObj), return; end
+atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
+prefix = local_var_prefix({'atlas', atlas_name});
+tf = ~local_has_numeric_prefix(existing, prefix);
+end
+
+
+function merged = local_horzappend_scores(scores, atlas_cols)
+% Append atlas_cols as new columns to scores; row counts must match.
+if isempty(atlas_cols) || width(atlas_cols) == 0
+    merged = scores;
+    return
+end
+if height(scores) ~= height(atlas_cols)
+    error('hrf_score_one_prefix:AtlasRowMismatch', ...
+        'Atlas scores have %d rows but main scores have %d rows.', ...
+        height(atlas_cols), height(scores));
+end
+existing_vars = scores.Properties.VariableNames;
+merged = scores;
+new_vars = atlas_cols.Properties.VariableNames;
+for i = 1:numel(new_vars)
+    col = new_vars{i};
+    if any(strcmp(col, existing_vars)), continue; end
+    merged.(col) = atlas_cols.(col);
 end
 end
 
@@ -618,6 +727,15 @@ for i = 1:numel(image_sets)
         set_name = char(image_sets{i});
     end
     if ~local_has_numeric_prefix(S, local_var_prefix({'map', set_name}))
+        tf = false;
+        return
+    end
+end
+
+% Atlas region means (treated as one set keyed by atlas name).
+if ~isempty(opts.AtlasObj)
+    atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
+    if ~local_has_numeric_prefix(S, local_var_prefix({'atlas', atlas_name}))
         tf = false;
         return
     end

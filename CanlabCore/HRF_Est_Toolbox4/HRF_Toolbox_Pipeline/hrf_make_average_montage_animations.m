@@ -31,9 +31,26 @@ p.addParameter('FPS', 8, @(x) isscalar(x) && x > 0);
 p.addParameter('Threshold', [], @(x) isempty(x) || isscalar(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('SubjectThreshold', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('SubjectCorrection', '', @(x) ischar(x) || isstring(x));
+p.addParameter('SubjectAlpha', NaN, @(x) isscalar(x));
+p.addParameter('ColorLimits', 'auto', @(x) (ischar(x) || isstring(x)) || (isnumeric(x) && numel(x) == 2));
 p.parse(input_data, varargin{:});
 opts = p.Results;
 verbose = logical(opts.Verbose);
+
+% Resolve subject-level thresholding defaults from the group settings so
+% they track unless the user overrides explicitly.
+subject_correction = char(opts.SubjectCorrection);
+if isempty(subject_correction)
+    subject_correction = char(opts.GroupCorrection);
+end
+subject_alpha = opts.SubjectAlpha;
+if isnan(subject_alpha)
+    subject_alpha = opts.GroupAlpha;
+end
+opts.SubjectCorrectionResolved = subject_correction;
+opts.SubjectAlphaResolved = subject_alpha;
 
 records = local_records(input_data);
 records = local_filter_records(records, char(opts.Model));
@@ -122,6 +139,8 @@ for c = 1:numel(condition_patterns)
                 'FrameStep', opts.FrameStep, ...
                 'FPS', opts.FPS, ...
                 'Threshold', opts.Threshold, ...
+                'ColorLimits', opts.ColorLimits, ...
+                'UseSigMask', true, ...
                 'TitlePrefix', sprintf('%s %s', sid, condition_label));
         end
 
@@ -160,6 +179,7 @@ for c = 1:numel(condition_patterns)
             'FrameStep', opts.FrameStep, ...
             'FPS', opts.FPS, ...
             'Threshold', opts.Threshold, ...
+            'ColorLimits', opts.ColorLimits, ...
             'UseSigMask', true, ...
             'TitlePrefix', sprintf('Group %s', group_condition_label));
     end
@@ -355,9 +375,26 @@ if n_runs == 0
 end
 
 stack = local_stack(run_dat);
-[mean_dat, sem_dat] = local_mean_sem_stack(stack);
+[mean_dat, sem_dat, n_dat] = local_mean_sem_stack(stack);
 subject_img = local_make_average_image(template_img, mean_dat, sem_dat, subject_meta, ...
     sprintf('Subject average, n runs = %d', n_runs), n_runs);
+
+% Optionally populate subject_img.sig from a per-subject t-stat (mean/sem)
+% so the animation's UseSigMask actually masks something. n_runs < 2
+% means no SE is available -- skip.
+if logical(opts.SubjectThreshold) && n_runs >= 2 && isa(subject_img, 'statistic_image')
+    correction = opts.SubjectCorrectionResolved;
+    alpha = opts.SubjectAlphaResolved;
+    subject_t_img = local_make_t_image(template_img, mean_dat, sem_dat, n_dat, ...
+        subject_meta, correction, alpha, ...
+        sprintf('Subject one-sample t maps across runs, n runs = %d', n_runs));
+    if isa(subject_t_img, 'statistic_image') && ~isempty(subject_t_img.sig)
+        subject_img.sig = subject_t_img.sig;
+        subject_img.p = subject_t_img.p;
+        subject_img.p_type = subject_t_img.p_type;
+        subject_img.ste = sem_dat;
+    end
+end
 end
 
 function [group_img, group_t_img, group_meta, n_subjects] = local_group_average(subject_images, subject_metas, condition_pattern, opts)
@@ -383,7 +420,9 @@ else
 end
 group_img = local_make_average_image(template, mean_dat, sem_dat, group_meta, ...
     sprintf('Group average, n subjects = %d', n_subjects), n_subjects);
-group_t_img = local_make_group_t_image(template, mean_dat, sem_dat, n_dat, group_meta, opts);
+group_t_img = local_make_t_image(template, mean_dat, sem_dat, n_dat, group_meta, ...
+    opts.GroupCorrection, opts.GroupAlpha, ...
+    sprintf('Group one-sample t maps across subject averages, n subjects = %d', max(n_dat(:))));
 end
 
 function [obj, metadata_table] = local_record_object(record, object_name, cache)
@@ -603,7 +642,10 @@ se = sd ./ sqrt(n);
 se(n == 0) = NaN;
 end
 
-function t_img = local_make_group_t_image(template_img, mean_dat, sem_dat, n_dat, metadata_table, opts)
+function t_img = local_make_t_image(template_img, mean_dat, sem_dat, n_dat, metadata_table, correction, alpha, description)
+% One-sample t map with corrected sig mask. Shared between subject- and
+% group-level paths (n_dat is "samples per voxel-volume" -- subjects at
+% group level, runs at subject level).
 t_dat = mean_dat ./ sem_dat;
 t_dat(~isfinite(t_dat) | n_dat < 2) = NaN;
 dfe = max(n_dat - 1, 1);
@@ -615,11 +657,11 @@ t_img.dat = t_dat;
 if isa(t_img, 'statistic_image')
     t_img.type = 'T';
     t_img.p = p_dat;
-    t_img.p_type = sprintf('Two-tailed one-sample t-test across subject averages, %s q < %.3g', ...
-        upper(char(opts.GroupCorrection)), opts.GroupAlpha);
+    t_img.p_type = sprintf('Two-tailed one-sample t-test, %s q < %.3g', ...
+        upper(char(correction)), alpha);
     t_img.ste = sem_dat;
-    t_img.sig = local_corrected_sig(p_dat, opts.GroupAlpha, opts.GroupCorrection);
-    t_img.dat_descrip = sprintf('Group one-sample t maps across subject averages, n subjects = %d', max(n_dat(:)));
+    t_img.sig = local_corrected_sig(p_dat, alpha, correction);
+    t_img.dat_descrip = char(description);
 end
 if isprop(t_img, 'image_labels') && ~isempty(metadata_table) && any(strcmp('image_label', metadata_table.Properties.VariableNames))
     t_img.image_labels = cellstr(string(metadata_table.image_label));

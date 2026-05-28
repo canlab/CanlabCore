@@ -19,6 +19,13 @@ p.addParameter('ScoreObjects', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('RequireScores', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.addParameter('CheckNiftiVolumes', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('OutputCsv', '', @(x) ischar(x) || isstring(x));
+p.addParameter('RepairMissing', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
+p.addParameter('SimilarityMetric', '', @(x) ischar(x) || isstring(x));
+p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('UseParallel', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('Verbose', false, @(x) islogical(x) || isnumeric(x));
 p.parse(root_or_manifest, varargin{:});
 opts = p.Results;
 
@@ -117,9 +124,239 @@ end
 
 summary = local_summary(audit, manifest_file, config_mat, log_dir, models, require_scores);
 
+if logical(opts.RepairMissing)
+    [audit, repair_summary] = local_repair_missing_scores(audit, config, ...
+        models, score_objects, opts);
+    summary = local_summary(audit, manifest_file, config_mat, log_dir, models, require_scores);
+    summary.repair = repair_summary;
+end
+
 if ~isempty(char(opts.OutputCsv))
     writetable(audit, char(opts.OutputCsv));
 end
+end
+
+% =========================================================================
+% Score-file repair (RepairMissing mode)
+%   For every audit row where core_complete is true but score_complete is
+%   not, call hrf_score_one_prefix to backfill the missing CSVs. After
+%   scoring, re-evaluate score-file presence and update the audit table.
+% =========================================================================
+function [audit, repair_summary] = local_repair_missing_scores(audit, config, ...
+    models, score_objects, opts)
+
+repair_summary = struct( ...
+    'n_rows_attempted', 0, ...
+    'n_rows_repaired', 0, ...
+    'n_rows_failed', 0, ...
+    'n_files_written', 0, ...
+    'errors', {{}}, ...
+    'skipped_reason', '');
+
+signature_sets = local_repair_signature_sets(opts.SignatureSets, config);
+image_sets = local_repair_image_sets(opts.ImageSets, config);
+
+if isempty(signature_sets) && isempty(image_sets)
+    repair_summary.skipped_reason = ['No SignatureSets or ImageSets provided to RepairMissing ' ...
+        'and none recorded in the SLURM config. Nothing to score.'];
+    warning('hrf_audit_slurm_outputs:NothingToRepair', '%s', repair_summary.skipped_reason);
+    return
+end
+
+similarity_metric = local_repair_similarity_metric(opts.SimilarityMetric, config);
+propagate_se = logical(opts.PropagateSE);
+n_models = max(numel(models), 1);
+
+needs_repair = audit.core_complete & ~audit.score_complete;
+row_indices = find(needs_repair);
+repair_summary.n_rows_attempted = numel(row_indices);
+
+if isempty(row_indices)
+    return
+end
+
+if logical(opts.Verbose)
+    fprintf('hrf_audit_slurm_outputs: RepairMissing -- attempting %d row(s).\n', numel(row_indices));
+end
+
+% Pre-compute the per-row argument bundles (this preserves parfor safety:
+% parfor cannot slice a table by row, so we marshal each row's relevant
+% scalars into a struct first).
+arg_bundles = cell(numel(row_indices), 1);
+for k = 1:numel(row_indices)
+    r = row_indices(k);
+    arg_bundles{k} = struct( ...
+        'row', r, ...
+        'output_prefix', local_char(audit.output_prefix(r)), ...
+        'model_name', local_char(audit.model(r)), ...
+        'result_mat_file', local_char(audit.result_mat_file(r)), ...
+        'metadata_file', local_char(audit.metadata_file(r)), ...
+        'subject', local_char(audit.subject(r)), ...
+        'task_index', audit.task_index(r));
+end
+
+helper_statuses = cell(numel(arg_bundles), 1);
+helper_errors = cell(numel(arg_bundles), 1);
+
+if logical(opts.UseParallel)
+    parfor k = 1:numel(arg_bundles)
+        [helper_statuses{k}, helper_errors{k}] = local_repair_one_row( ...
+            arg_bundles{k}, score_objects, signature_sets, image_sets, ...
+            similarity_metric, propagate_se, n_models);
+    end
+else
+    for k = 1:numel(arg_bundles)
+        [helper_statuses{k}, helper_errors{k}] = local_repair_one_row( ...
+            arg_bundles{k}, score_objects, signature_sets, image_sets, ...
+            similarity_metric, propagate_se, n_models);
+    end
+end
+
+for k = 1:numel(arg_bundles)
+    r = arg_bundles{k}.row;
+    s = helper_statuses{k};
+    e = helper_errors{k};
+
+    if ~isempty(s)
+        repair_summary.n_files_written = repair_summary.n_files_written + numel(s.wrote_files);
+        for ei = 1:numel(s.errors)
+            repair_summary.errors{end + 1} = sprintf( ...
+                'task %d (%s) object=%s: %s', ...
+                arg_bundles{k}.task_index, arg_bundles{k}.subject, ...
+                s.errors(ei).object, s.errors(ei).message);
+        end
+
+        % Update beta_scores_file / t_scores_file in the audit table from
+        % whatever the helper produced or verified.
+        for fi = 1:numel(s.wrote_files)
+            audit = local_set_audit_scores_path(audit, r, s.wrote_files{fi});
+        end
+        for fi = 1:numel(s.skipped_existing)
+            audit = local_set_audit_scores_path(audit, r, s.skipped_existing{fi});
+        end
+    end
+    if ~isempty(e)
+        repair_summary.errors{end + 1} = sprintf( ...
+            'task %d (%s) helper error: %s', ...
+            arg_bundles{k}.task_index, arg_bundles{k}.subject, e);
+    end
+
+    % Re-evaluate score-file presence for this row.
+    [score_files_exist, score_files_missing, beta_scores_file, t_scores_file] = ...
+        local_score_status(arg_bundles{k}.output_prefix, arg_bundles{k}.model_name, n_models, score_objects);
+    audit.beta_scores_file{r} = beta_scores_file;
+    audit.t_scores_file{r} = t_scores_file;
+    audit.score_complete(r) = score_files_exist;
+    audit.score_files_missing{r} = score_files_missing;
+    audit.complete(r) = audit.core_complete(r) && audit.score_complete(r);
+    audit.failed_reason{r} = local_recompute_failed_reason(audit, r);
+
+    if audit.score_complete(r) && audit.core_complete(r)
+        repair_summary.n_rows_repaired = repair_summary.n_rows_repaired + 1;
+    else
+        repair_summary.n_rows_failed = repair_summary.n_rows_failed + 1;
+    end
+end
+end
+
+function [helper_status, helper_error] = local_repair_one_row(bundle, score_objects, ...
+    signature_sets, image_sets, similarity_metric, propagate_se, n_models)
+helper_status = [];
+helper_error = '';
+try
+    helper_status = hrf_score_one_prefix(bundle.output_prefix, ...
+        'ModelName', bundle.model_name, ...
+        'NumModels', n_models, ...
+        'ScoreObjects', score_objects, ...
+        'SignatureSets', signature_sets, ...
+        'ImageSets', image_sets, ...
+        'SimilarityMetric', similarity_metric, ...
+        'PropagateSE', propagate_se, ...
+        'MetadataFile', bundle.metadata_file, ...
+        'ResultMatFile', bundle.result_mat_file, ...
+        'Overwrite', false, ...
+        'OverwriteStale', true, ...
+        'WarningContext', sprintf('task=%d; subject=%s; repair=true', ...
+            bundle.task_index, bundle.subject));
+catch err
+    helper_error = err.message;
+end
+end
+
+function audit = local_set_audit_scores_path(audit, row, file_path)
+[~, base] = fileparts(char(file_path));
+if endsWith(base, '_beta_map_scores')
+    audit.beta_scores_file{row} = char(file_path);
+elseif endsWith(base, '_t_map_scores')
+    audit.t_scores_file{row} = char(file_path);
+end
+end
+
+function metric = local_repair_similarity_metric(metric_override, config)
+metric = char(metric_override);
+if ~isempty(metric), return; end
+if isstruct(config) && isfield(config, 'similarity_metric') && ~isempty(config.similarity_metric)
+    metric = char(config.similarity_metric);
+else
+    metric = 'dotproduct';
+end
+end
+
+function sigsets = local_repair_signature_sets(sig_override, config)
+if ~isempty(sig_override)
+    sigsets = sig_override;
+    return
+end
+sigsets = local_config_field(config, 'signature_sets', {});
+end
+
+function image_sets = local_repair_image_sets(image_override, config)
+if ~isempty(image_override)
+    image_sets = image_override;
+    return
+end
+image_sets = local_config_field(config, 'image_sets', {});
+end
+
+function s = local_char(value)
+if iscell(value)
+    if isempty(value), s = ''; return; end
+    value = value{1};
+end
+if isstring(value)
+    if isempty(value) || ismissing(value) || strlength(value) == 0, s = ''; return; end
+    s = char(value);
+elseif ischar(value)
+    s = value;
+elseif isnumeric(value)
+    s = num2str(value);
+else
+    try, s = char(string(value)); catch, s = ''; end
+end
+end
+
+function reason = local_recompute_failed_reason(audit, row)
+parts = {};
+existing = char(audit.error_type{row});
+if ~isempty(existing)
+    parts{end + 1} = ['log error: ' existing];
+end
+if ~audit.result_mat_exists(row), parts{end + 1} = 'missing result MAT'; end
+if ~audit.fmri_exists(row), parts{end + 1} = 'missing input fMRI'; end
+if ~audit.events_exists(row), parts{end + 1} = 'missing events file'; end
+missing = {};
+if ~audit.beta_exists(row), missing{end + 1} = 'beta'; end
+if ~audit.t_exists(row), missing{end + 1} = 't'; end
+if ~audit.se_exists(row), missing{end + 1} = 'se'; end
+if ~audit.p_exists(row), missing{end + 1} = 'p'; end
+if ~audit.metadata_exists(row), missing{end + 1} = 'metadata'; end
+if ~isempty(missing)
+    parts{end + 1} = ['missing outputs: ' strjoin(missing, ',')];
+end
+if ~audit.score_complete(row) && ~isempty(char(audit.score_files_missing{row}))
+    parts{end + 1} = ['missing score CSVs: ' char(audit.score_files_missing{row})];
+end
+reason = strjoin(parts, '; ');
 end
 
 function [root_dir, manifest_file] = local_resolve_manifest(root_or_manifest, manifest_override)

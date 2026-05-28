@@ -1,0 +1,695 @@
+function status = hrf_score_one_prefix(output_prefix, varargin)
+%HRF_SCORE_ONE_PREFIX Score one (task, model) prefix's whole-brain HRF maps.
+%
+% status = hrf_score_one_prefix(output_prefix, ...)
+%
+% Single source of truth for applying signature/image sets to one set of
+% whole-brain HRF maps. Writes *_<object>_map_scores.csv files in place at
+% OUTPUT_PREFIX. Three callers share this helper:
+%
+%   * hrf_write_slurm_study_script (SLURM worker) - in-memory stats path,
+%     called immediately after hrf_fit_wholebrain_stats with the in-memory
+%     struct so no NIfTI re-read is needed.
+%   * hrf_audit_slurm_outputs (RepairMissing mode) - disk path, called when
+%     the audit detects core_complete && ~score_complete rows.
+%   * hrf_score_wholebrain_input_table (post-hoc backfill) - disk path,
+%     iterated per row of the second-level input table.
+%
+% Required input
+%   output_prefix : char/string. Full path prefix used by
+%                   hrf_fit_wholebrain_stats. The whole-brain image files
+%                   are expected at <output_prefix>_beta.nii etc.
+%
+% Common name-value parameters
+%   'ModelName'        - 'fir' | 'sfir' | 'canonical' | 'spline' | ''.
+%                        Used to build per-model filenames when NumModels>1.
+%   'NumModels'        - 1 if only one whole-brain model was fit at this
+%                        prefix; >1 if multiple share the prefix. Controls
+%                        filename composition: single-model files are
+%                        <prefix>_<object>_map_scores.csv; multi-model files
+%                        are <prefix>_<model>_<object>_map_scores.csv.
+%   'ScoreObjects'     - cellstr/string. Default {'beta'}. Subset of
+%                        {'beta','t'}.
+%   'SignatureSets'    - cellstr/string. Passed to
+%                        hrf_apply_maps_to_wholebrain.
+%   'ImageSets'        - cellstr/string/image_vector. Passed to
+%                        hrf_apply_maps_to_wholebrain.
+%   'SimilarityMetric' - default 'dotproduct'.
+%   'PropagateSE'      - default true. Beta-only and metric-restricted, same
+%                        semantics as hrf_apply_maps_to_wholebrain.
+%
+% Metadata resolution (in order of preference)
+%   'MetadataTable'    - pre-resolved metadata table; skip resolution.
+%   'MetadataFile'     - explicit metadata CSV; loaded if exists.
+%   'ResultMatFile'    - result.mat path; fallback if no MetadataFile.
+%   Otherwise: <prefix>_metadata.csv, then <prefix>_<model>_metadata.csv
+%   siblings, then return empty (and skip if RequireMetadata is true).
+%
+% Fast path (skip NIfTI re-read)
+%   'StatsInput'       - struct returned by hrf_fit_wholebrain_stats (fields
+%                        .b, .t, .metadata_table). If supplied, no disk
+%                        reads are needed for the score/SE objects.
+%
+% Other controls
+%   'Overwrite'        - default false. Force regeneration of existing CSVs.
+%   'OverwriteStale'   - default true. Regenerate CSVs that exist but fail
+%                        metadata/signature-coverage validation.
+%   'RequireMetadata'  - default true. Skip writing if no metadata could be
+%                        resolved.
+%   'NoVerbose'        - default true. Suppress fmri_data load messages.
+%   'WarningContext'   - propagated to hrf_apply_maps_to_wholebrain.
+%
+% Return
+%   status struct with fields
+%     .output_prefix       - char
+%     .model_name          - char
+%     .metadata_file       - char (or '')
+%     .wrote_files         - cellstr of CSV paths produced this call
+%     .skipped_existing    - cellstr of CSV paths left alone (already valid)
+%     .skipped_stale       - cellstr of CSV paths left alone (stale, with
+%                            OverwriteStale=false)
+%     .errors              - struct array with .object and .message fields
+%     .core_inputs_present - logical; true iff *_beta.nii exists (or .b is
+%                            provided via StatsInput)
+%
+% See also: hrf_apply_maps_to_wholebrain, hrf_audit_slurm_outputs,
+%           hrf_score_wholebrain_input_table, hrf_write_slurm_study_script.
+
+p = inputParser;
+p.addRequired('output_prefix', @(x) ischar(x) || isstring(x));
+p.addParameter('ModelName', '', @(x) ischar(x) || isstring(x));
+p.addParameter('NumModels', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
+p.addParameter('ScoreObjects', {'beta'}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
+p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
+p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
+p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('SEScoreSuffix', '_se', @(x) ischar(x) || isstring(x));
+p.addParameter('MetadataTable', table(), @(x) isempty(x) || istable(x));
+p.addParameter('MetadataFile', '', @(x) ischar(x) || isstring(x));
+p.addParameter('ResultMatFile', '', @(x) ischar(x) || isstring(x));
+p.addParameter('StatsInput', [], @(x) isempty(x) || isstruct(x));
+p.addParameter('Overwrite', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('OverwriteStale', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('RequireMetadata', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('NoVerbose', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('WarningContext', '', @(x) ischar(x) || isstring(x));
+p.parse(output_prefix, varargin{:});
+opts = p.Results;
+
+prefix = char(opts.output_prefix);
+model_name = char(opts.ModelName);
+n_models = double(opts.NumModels);
+objects = local_resolve_score_objects(opts.ScoreObjects);
+
+status = struct( ...
+    'output_prefix', prefix, ...
+    'model_name', model_name, ...
+    'metadata_file', '', ...
+    'wrote_files', {{}}, ...
+    'skipped_existing', {{}}, ...
+    'skipped_stale', {{}}, ...
+    'errors', struct('object', {}, 'message', {}), ...
+    'core_inputs_present', false);
+
+% Resolve metadata first; many downstream checks need it.
+[metadata_table, metadata_file] = local_resolve_metadata( ...
+    prefix, model_name, opts.MetadataTable, opts.MetadataFile, ...
+    opts.ResultMatFile, opts.StatsInput);
+status.metadata_file = metadata_file;
+
+if isempty(metadata_table) && logical(opts.RequireMetadata)
+    status.errors(end + 1) = struct('object', '', ...
+        'message', sprintf('Cannot score %s: no metadata table resolvable from prefix, result.mat, or sibling CSVs.', prefix));
+    return
+end
+
+% Check core inputs (cheaply, before iterating objects).
+status.core_inputs_present = local_core_inputs_present(prefix, model_name, n_models, opts.StatsInput);
+if ~status.core_inputs_present
+    expected_beta = [local_image_prefix(prefix, model_name, n_models) '_beta.nii'];
+    status.errors(end + 1) = struct('object', '', ...
+        'message', sprintf('Missing core whole-brain inputs for prefix %s (expected %s or StatsInput.b).', prefix, expected_beta));
+    return
+end
+
+for j = 1:numel(objects)
+    object_name = objects{j};
+    score_file = local_score_file_path(prefix, model_name, n_models, object_name);
+    require_uncertainty = local_requires_uncertainty(prefix, object_name, opts);
+
+    if exist(score_file, 'file') == 2 && ~logical(opts.Overwrite)
+        if local_existing_score_is_valid(score_file, metadata_table, require_uncertainty, opts)
+            status.skipped_existing{end + 1} = score_file; %#ok<AGROW>
+            continue
+        elseif ~logical(opts.OverwriteStale)
+            status.skipped_stale{end + 1} = score_file; %#ok<AGROW>
+            continue
+        end
+        % else fall through and regenerate
+    end
+
+    try
+        [score_obj, se_obj] = local_resolve_score_objects_for_write( ...
+            prefix, object_name, metadata_table, opts);
+        local_validate_score_object_metadata(score_obj, metadata_table, object_name, prefix);
+
+        hrf_apply_maps_to_wholebrain(score_obj, ...
+            'Object', object_name, ...
+            'SignatureSets', opts.SignatureSets, ...
+            'ImageSets', opts.ImageSets, ...
+            'SimilarityMetric', opts.SimilarityMetric, ...
+            'SEInput', se_obj, ...
+            'PropagateSE', opts.PropagateSE, ...
+            'SEScoreSuffix', opts.SEScoreSuffix, ...
+            'MetadataTable', metadata_table, ...
+            'OutputCsv', score_file, ...
+            'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
+
+        status.wrote_files{end + 1} = score_file; %#ok<AGROW>
+    catch err
+        status.errors(end + 1) = struct('object', object_name, 'message', err.message); %#ok<AGROW>
+    end
+end
+end
+
+% =========================================================================
+% Score-objects resolution (validate and normalize ScoreObjects argument)
+% =========================================================================
+function objects = local_resolve_score_objects(score_objects)
+objects = lower(cellstr(string(score_objects)));
+objects = cellfun(@strtrim, objects, 'UniformOutput', false);
+if any(strcmp(objects, 'both')) || any(strcmp(objects, 'all'))
+    objects = {'beta', 't'};
+end
+objects = unique(objects(~cellfun(@isempty, objects)), 'stable');
+valid = {'beta', 'b', 't', 'tmap', 'tmaps'};
+bad = setdiff(objects, valid);
+if ~isempty(bad)
+    error('hrf_score_one_prefix:UnknownScoreObjects', ...
+        'Unknown ScoreObjects: %s. Use beta, t, or both.', strjoin(bad, ', '));
+end
+objects(strcmp(objects, 'b')) = {'beta'};
+objects(ismember(objects, {'tmap', 'tmaps'})) = {'t'};
+objects = unique(objects, 'stable');
+end
+
+% =========================================================================
+% Filename composition
+%   The helper's prefix arg is the task-level output_prefix. For multi-model
+%   studies, the per-model NIfTI files live at <prefix>_<model>_*.nii, and
+%   the per-model score CSV at <prefix>_<model>_<object>_map_scores.csv.
+%   For single-model studies the model suffix is omitted from both.
+% =========================================================================
+function img_prefix = local_image_prefix(prefix, model_name, n_models)
+if n_models <= 1 || isempty(model_name)
+    img_prefix = prefix;
+else
+    img_prefix = sprintf('%s_%s', prefix, lower(char(model_name)));
+end
+end
+
+function score_file = local_score_file_path(prefix, model_name, n_models, object_name)
+if n_models <= 1 || isempty(model_name)
+    score_file = sprintf('%s_%s_map_scores.csv', prefix, object_name);
+else
+    score_file = sprintf('%s_%s_%s_map_scores.csv', prefix, lower(model_name), object_name);
+end
+end
+
+% =========================================================================
+% Core-inputs presence check (cheap)
+% =========================================================================
+function tf = local_core_inputs_present(prefix, model_name, n_models, stats_input)
+if ~isempty(stats_input) && isstruct(stats_input) && isfield(stats_input, 'b') && ...
+        isobject(stats_input.b) && ~isempty(stats_input.b.dat)
+    tf = true;
+    return
+end
+img_prefix = local_image_prefix(prefix, model_name, n_models);
+tf = exist([img_prefix '_beta.nii'], 'file') == 2;
+end
+
+% =========================================================================
+% Metadata resolution
+%   Order: MetadataTable input -> StatsInput.metadata_table ->
+%          MetadataFile input -> <prefix>_metadata.csv ->
+%          result.mat fallback -> sibling-model CSV fallback.
+% =========================================================================
+function [metadata_table, metadata_file] = local_resolve_metadata( ...
+    prefix, model_name, metadata_in, metadata_file_in, result_mat_in, stats_input)
+
+metadata_table = table();
+metadata_file = '';
+
+if ~isempty(metadata_in) && istable(metadata_in) && height(metadata_in) > 0
+    metadata_table = metadata_in;
+    if ~isempty(metadata_file_in)
+        metadata_file = char(metadata_file_in);
+    end
+    return
+end
+
+if ~isempty(stats_input) && isstruct(stats_input) && ...
+        isfield(stats_input, 'metadata_table') && istable(stats_input.metadata_table) && ...
+        height(stats_input.metadata_table) > 0
+    metadata_table = stats_input.metadata_table;
+    return
+end
+
+if ~isempty(metadata_file_in)
+    metadata_file = char(metadata_file_in);
+    if exist(metadata_file, 'file') == 2
+        try
+            metadata_table = readtable(metadata_file, 'TextType', 'string');
+            return
+        catch
+        end
+    end
+end
+
+% Default: <prefix>_metadata.csv
+default_metadata_file = [char(prefix) '_metadata.csv'];
+if exist(default_metadata_file, 'file') == 2
+    try
+        metadata_table = readtable(default_metadata_file, 'TextType', 'string');
+        metadata_file = default_metadata_file;
+        return
+    catch
+    end
+end
+
+% Result MAT fallback
+result_mat = char(result_mat_in);
+if ~isempty(result_mat) && exist(result_mat, 'file') == 2
+    metadata_table = local_metadata_from_result_mat(result_mat, model_name);
+    if ~isempty(metadata_table)
+        if isempty(metadata_file), metadata_file = default_metadata_file; end
+        try
+            writetable(metadata_table, metadata_file);
+        catch
+            metadata_file = '';
+        end
+        return
+    end
+end
+
+% Sibling-model CSV fallback
+sibling_metadata = local_metadata_from_sibling(prefix, model_name);
+if ~isempty(sibling_metadata)
+    metadata_table = sibling_metadata;
+    if isempty(metadata_file), metadata_file = default_metadata_file; end
+    try
+        writetable(metadata_table, metadata_file);
+    catch
+        metadata_file = '';
+    end
+end
+end
+
+function metadata_table = local_metadata_from_result_mat(mat_file, model_name)
+metadata_table = table();
+try
+    S = load(mat_file, 'results');
+catch
+    return
+end
+if ~isfield(S, 'results'), return; end
+R = S.results;
+if isempty(model_name), model_name = 'fir'; end
+model_field = matlab.lang.makeValidName(lower(char(model_name)));
+
+if isfield(R, 'wholebrain_metadata_by_model') && isfield(R.wholebrain_metadata_by_model, model_field)
+    metadata_table = R.wholebrain_metadata_by_model.(model_field);
+elseif isfield(R, 'wholebrain_by_model') && isfield(R.wholebrain_by_model, model_field) && ...
+        isfield(R.wholebrain_by_model.(model_field), 'metadata_table')
+    metadata_table = R.wholebrain_by_model.(model_field).metadata_table;
+elseif isfield(R, 'wholebrain_metadata_table')
+    metadata_table = R.wholebrain_metadata_table;
+elseif isfield(R, 'wholebrain') && isfield(R.wholebrain, 'metadata_table')
+    metadata_table = R.wholebrain.metadata_table;
+end
+end
+
+function metadata_table = local_metadata_from_sibling(prefix, model_name)
+metadata_table = table();
+base_prefix = local_base_prefix(prefix, model_name);
+candidate_files = { ...
+    [base_prefix '_metadata.csv'], ...
+    [base_prefix '_sfir_metadata.csv'], ...
+    [base_prefix '_canonical_metadata.csv'], ...
+    [base_prefix '_spline_metadata.csv']};
+candidate_files = unique(candidate_files, 'stable');
+this_file = [prefix '_metadata.csv'];
+
+for i = 1:numel(candidate_files)
+    fname = candidate_files{i};
+    if strcmp(fname, this_file) || exist(fname, 'file') ~= 2
+        continue
+    end
+    try
+        T = readtable(fname, 'TextType', 'string');
+    catch
+        continue
+    end
+    if any(strcmp('condition', T.Properties.VariableNames)) && ...
+            any(strcmp('lag_index', T.Properties.VariableNames))
+        metadata_table = local_relabel_metadata(T, model_name);
+        return
+    end
+end
+end
+
+function base_prefix = local_base_prefix(prefix, model_name)
+base_prefix = char(prefix);
+if isempty(model_name), return; end
+model_suffix = ['_' lower(char(model_name))];
+if endsWith(lower(base_prefix), model_suffix)
+    base_prefix = base_prefix(1:end - numel(model_suffix));
+end
+end
+
+function T = local_relabel_metadata(T, model_name)
+model_name = lower(char(model_name));
+T.volume_index = (1:height(T))';
+if any(strcmp('mode', T.Properties.VariableNames))
+    T.mode = repmat(string(upper(model_name)), height(T), 1);
+end
+if any(strcmp('image_label', T.Properties.VariableNames)) && ...
+        any(strcmp('condition', T.Properties.VariableNames)) && ...
+        any(strcmp('lag_index', T.Properties.VariableNames))
+    T.image_label = local_image_labels(T, model_name);
+end
+end
+
+function labels = local_image_labels(T, model_name)
+conditions = cellstr(string(T.condition));
+lag_index = local_to_numeric(T.lag_index);
+if any(strcmp('lag_seconds', T.Properties.VariableNames))
+    lag_seconds = local_to_numeric(T.lag_seconds);
+else
+    lag_seconds = lag_index;
+end
+labels = cell(height(T), 1);
+for i = 1:height(T)
+    if ismember(model_name, {'canonical', 'spline'})
+        labels{i} = sprintf('%s_%s_lag%03d_%0.3gs', ...
+            matlab.lang.makeValidName(model_name), ...
+            matlab.lang.makeValidName(conditions{i}), ...
+            lag_index(i), lag_seconds(i));
+    else
+        labels{i} = sprintf('%s_lag%03d_%0.3gs', ...
+            matlab.lang.makeValidName(conditions{i}), lag_index(i), lag_seconds(i));
+    end
+end
+end
+
+% =========================================================================
+% Existing-score validity
+%   We regenerate when the existing CSV is missing requested signature/map
+%   columns, when its row count or condition/lag layout disagrees with the
+%   current metadata, or when uncertainty is requested but absent.
+% =========================================================================
+function tf = local_existing_score_is_valid(score_file, metadata_table, require_uncertainty, opts)
+tf = true;
+try
+    S = readtable(score_file, 'TextType', 'string');
+catch
+    tf = false;
+    return
+end
+if logical(require_uncertainty) && ~local_score_table_has_uncertainty(S)
+    tf = false;
+    return
+end
+if ~local_has_requested_score_sets(S, opts)
+    tf = false;
+    return
+end
+if isempty(metadata_table)
+    return
+end
+if height(S) ~= height(metadata_table)
+    tf = false;
+    return
+end
+has_score_condition = any(strcmp('condition', S.Properties.VariableNames));
+has_metadata_condition = any(strcmp('condition', metadata_table.Properties.VariableNames));
+if has_metadata_condition && ~has_score_condition
+    tf = false;
+    return
+elseif has_score_condition && has_metadata_condition && ...
+        ~isequal(string(S.condition), string(metadata_table.condition))
+    tf = false;
+    return
+end
+has_score_lag = any(strcmp('lag_index', S.Properties.VariableNames));
+has_metadata_lag = any(strcmp('lag_index', metadata_table.Properties.VariableNames));
+if has_metadata_lag && ~has_score_lag
+    tf = false;
+    return
+elseif has_score_lag && has_metadata_lag && ...
+        ~isequaln(local_to_numeric(S.lag_index), local_to_numeric(metadata_table.lag_index))
+    tf = false;
+end
+end
+
+function tf = local_has_requested_score_sets(S, opts)
+tf = true;
+sigsets = local_to_cell(opts.SignatureSets);
+for i = 1:numel(sigsets)
+    if ~local_has_numeric_prefix(S, local_var_prefix({'sig', sigsets{i}}))
+        tf = false;
+        return
+    end
+end
+
+image_sets = local_to_cell(opts.ImageSets);
+for i = 1:numel(image_sets)
+    if isa(image_sets{i}, 'image_vector')
+        set_name = 'imageset';
+    else
+        set_name = char(image_sets{i});
+    end
+    if ~local_has_numeric_prefix(S, local_var_prefix({'map', set_name}))
+        tf = false;
+        return
+    end
+end
+end
+
+function tf = local_has_numeric_prefix(S, prefix)
+tf = false;
+names = S.Properties.VariableNames;
+for i = 1:numel(names)
+    name = names{i};
+    if startsWith(name, prefix) && isnumeric(S.(name)) && ~local_is_uncertainty_column(name)
+        tf = true;
+        return
+    end
+end
+end
+
+function prefix = local_var_prefix(parts)
+prefix = matlab.lang.makeValidName(strjoin(cellfun(@char, parts, 'UniformOutput', false), '_'));
+prefix = [prefix '_'];
+end
+
+function tf = local_score_table_has_uncertainty(S)
+score_cols = local_score_columns_for_validation(S);
+tf = true;
+for i = 1:numel(score_cols)
+    if ~any(strcmp([score_cols{i} '_se'], S.Properties.VariableNames))
+        tf = false;
+        return
+    end
+end
+end
+
+function cols = local_score_columns_for_validation(S)
+metadata_cols = {'volume_index', 'condition', 'condition_index', 'lag_index', ...
+    'lag_seconds', 'image_label', 'N', 'dfe', 'TR', 'mode'};
+cols = {};
+for i = 1:numel(S.Properties.VariableNames)
+    name = S.Properties.VariableNames{i};
+    if ismember(name, metadata_cols) || local_is_uncertainty_column(name)
+        continue
+    end
+    if isnumeric(S.(name))
+        cols{end + 1} = name; %#ok<AGROW>
+    end
+end
+end
+
+function tf = local_is_uncertainty_column(name)
+tf = endsWith(char(name), '_se');
+end
+
+function tf = local_requires_uncertainty(prefix, object_name, opts)
+img_prefix = local_image_prefix(prefix, char(opts.ModelName), double(opts.NumModels));
+tf = strcmpi(char(object_name), 'beta') && logical(opts.PropagateSE) && ...
+    local_is_linear_metric(opts.SimilarityMetric) && ...
+    exist([img_prefix '_beta.nii'], 'file') == 2 && exist([img_prefix '_se.nii'], 'file') == 2;
+end
+
+function tf = local_is_linear_metric(metric)
+metric = lower(strrep(strtrim(char(metric)), '_', ''));
+tf = ismember(metric, {'dotproduct', 'dot'});
+end
+
+% =========================================================================
+% Score / SE object loading
+%   Fast path: take from StatsInput struct in memory (no disk read).
+%   Slow path: load statistic_image(fmri_data(file)) from NIfTI.
+% =========================================================================
+function [score_obj, se_obj] = local_resolve_score_objects_for_write( ...
+    prefix, object_name, metadata_table, opts)
+
+if ~isempty(opts.StatsInput) && isstruct(opts.StatsInput)
+    [score_obj, se_obj] = local_score_objects_from_stats(opts.StatsInput, object_name, opts);
+    if ~isempty(score_obj)
+        return
+    end
+end
+
+% Disk path
+model_name = char(opts.ModelName);
+n_models = double(opts.NumModels);
+score_obj = local_load_score_object_from_disk(prefix, object_name, metadata_table, ...
+    logical(opts.NoVerbose), model_name, n_models);
+se_obj = local_uncertainty_object_from_disk(prefix, object_name, metadata_table, ...
+    logical(opts.NoVerbose), logical(opts.PropagateSE), model_name, n_models);
+end
+
+function [score_obj, se_obj] = local_score_objects_from_stats(stats_input, object_name, opts)
+score_obj = [];
+se_obj = [];
+switch lower(char(object_name))
+    case 'beta'
+        if isfield(stats_input, 'b'), score_obj = stats_input.b; end
+        if logical(opts.PropagateSE) && ~isempty(score_obj) && ...
+                isprop(score_obj, 'ste') && ~isempty(score_obj.ste)
+            se_obj = score_obj;
+            se_obj.dat = score_obj.ste;
+            se_obj.type = 'HRF beta standard error';
+        end
+    case 't'
+        if isfield(stats_input, 't'), score_obj = stats_input.t; end
+end
+end
+
+function obj = local_load_score_object_from_disk(prefix, object_name, metadata_table, noverbose, model_name, n_models)
+image_file = local_score_image_file(prefix, object_name, model_name, n_models);
+if exist(image_file, 'file') ~= 2
+    error('hrf_score_one_prefix:MissingImage', ...
+        'Missing %s image: %s', object_name, image_file);
+end
+
+load_args = {};
+if noverbose, load_args = {'noverbose'}; end
+obj = statistic_image(fmri_data(image_file, load_args{:}));
+switch lower(char(object_name))
+    case 'beta'
+        obj.type = 'FIR HRF beta';
+    case 't'
+        obj.type = 'T';
+end
+
+obj = local_apply_metadata_to_obj(obj, metadata_table);
+end
+
+function obj = local_uncertainty_object_from_disk(prefix, object_name, metadata_table, noverbose, propagate_se, model_name, n_models)
+obj = [];
+if ~propagate_se || ~strcmpi(char(object_name), 'beta')
+    return
+end
+image_file = [local_image_prefix(prefix, model_name, n_models) '_se.nii'];
+if exist(image_file, 'file') ~= 2
+    return
+end
+
+load_args = {};
+if noverbose, load_args = {'noverbose'}; end
+obj = statistic_image(fmri_data(image_file, load_args{:}));
+obj.type = 'HRF beta standard error';
+obj = local_apply_metadata_to_obj(obj, metadata_table);
+end
+
+function obj = local_apply_metadata_to_obj(obj, metadata_table)
+if ~isempty(metadata_table) && height(metadata_table) == size(obj.dat, 2)
+    if any(strcmp('image_label', metadata_table.Properties.VariableNames))
+        obj.image_labels = cellstr(string(metadata_table.image_label));
+    end
+    if any(strcmp('N', metadata_table.Properties.VariableNames))
+        obj.N = metadata_table.N(1);
+    end
+    if any(strcmp('dfe', metadata_table.Properties.VariableNames))
+        obj.dfe = metadata_table.dfe(1);
+    end
+end
+if isprop(obj, 'sig') && isempty(obj.sig)
+    obj.sig = true(size(obj.dat));
+end
+end
+
+function image_file = local_score_image_file(prefix, object_name, model_name, n_models)
+img_prefix = local_image_prefix(prefix, model_name, n_models);
+switch lower(char(object_name))
+    case 'beta'
+        image_file = [img_prefix '_beta.nii'];
+    case 't'
+        image_file = [img_prefix '_t.nii'];
+    otherwise
+        error('hrf_score_one_prefix:UnknownObject', ...
+            'Unknown object: %s. Use beta or t.', char(object_name));
+end
+end
+
+function local_validate_score_object_metadata(obj, metadata_table, object_name, prefix)
+if isempty(metadata_table)
+    return
+end
+n_images = size(obj.dat, 2);
+if height(metadata_table) ~= n_images
+    error('hrf_score_one_prefix:MetadataVolumeMismatch', ...
+        'Cannot score %s: metadata has %d rows but %s image has %d volumes. Regenerate the whole-brain maps and metadata together.', ...
+        prefix, height(metadata_table), object_name, n_images);
+end
+end
+
+% =========================================================================
+% Utilities
+% =========================================================================
+function c = local_to_cell(x)
+if isempty(x)
+    c = {};
+elseif isa(x, 'image_vector')
+    c = {x};
+elseif ischar(x) || isstring(x)
+    c = cellstr(string(x));
+else
+    c = x;
+end
+end
+
+function x = local_to_numeric(x)
+if isnumeric(x)
+    x = double(x);
+else
+    x = str2double(string(x));
+end
+end
+
+function context = local_warning_context(user_context, model_name, object_name, prefix)
+parts = {};
+user_context = char(user_context);
+if ~isempty(user_context)
+    parts{end + 1} = user_context;
+end
+if ~isempty(model_name)
+    parts{end + 1} = sprintf('model=%s', model_name);
+end
+parts{end + 1} = sprintf('object=%s', char(object_name));
+parts{end + 1} = sprintf('prefix=%s', char(prefix));
+context = strjoin(parts, '; ');
+end

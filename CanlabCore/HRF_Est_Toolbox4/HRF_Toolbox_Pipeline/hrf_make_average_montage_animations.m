@@ -39,7 +39,14 @@ if isempty(records)
     error('No whole-brain records were available after filtering.');
 end
 
-condition_patterns = local_condition_patterns(records, opts.Conditions);
+% Per-prefix cache for the loaded wholebrain struct (and fallback single-file
+% loads). containers.Map is a handle class -- mutating it inside the local
+% helpers mutates the same instance in the main loop, so each unique source
+% NIfTI is read from disk at most once across all conditions, subjects, and
+% runs. On UNC-mounted study directories this is the dominant speedup.
+record_cache = containers.Map('KeyType', 'char', 'ValueType', 'any');
+
+condition_patterns = local_condition_patterns(records, opts.Conditions, record_cache);
 output_dir = char(opts.OutputDir);
 write_movies = logical(opts.MakeAnimations) && ~isempty(output_dir);
 if write_movies && exist(output_dir, 'dir') ~= 7
@@ -69,7 +76,7 @@ for c = 1:numel(condition_patterns)
         subject_mask = strcmp({records.subject}, sid);
         subject_records = records(subject_mask(:));
         [subject_img, subject_meta, n_runs, skipped] = local_subject_average( ...
-            subject_records, condition_pattern, opts);
+            subject_records, condition_pattern, opts, record_cache);
 
         if local_missing_image(subject_img)
             local_handle_missing(opts.MissingPolicy, ...
@@ -228,7 +235,7 @@ end
 records = records(keep);
 end
 
-function patterns = local_condition_patterns(records, requested)
+function patterns = local_condition_patterns(records, requested, cache)
 if ~isempty(requested)
     patterns = cellstr(string(requested));
     patterns = patterns(:)';
@@ -238,7 +245,7 @@ end
 patterns = {};
 for i = 1:numel(records)
     try
-        [~, metadata_table] = local_record_object(records(i), 'beta');
+        [~, metadata_table] = local_record_object(records(i), 'beta', cache);
     catch
         continue
     end
@@ -253,7 +260,7 @@ end
 patterns = patterns(:)';
 end
 
-function [subject_img, subject_meta, n_runs, skipped] = local_subject_average(records, condition_pattern, opts)
+function [subject_img, subject_meta, n_runs, skipped] = local_subject_average(records, condition_pattern, opts, cache)
 run_dat = {};
 template_img = [];
 subject_meta = table();
@@ -261,7 +268,7 @@ skipped = {};
 
 for i = 1:numel(records)
     try
-        [obj, metadata_table] = local_record_object(records(i), char(opts.Object));
+        [obj, metadata_table] = local_record_object(records(i), char(opts.Object), cache);
         [Y, meta] = local_condition_matrix(obj, metadata_table, condition_pattern);
         if isempty(template_img)
             template_img = obj;
@@ -319,15 +326,31 @@ group_img = local_make_average_image(template, mean_dat, sem_dat, group_meta, ..
 group_t_img = local_make_group_t_image(template, mean_dat, sem_dat, n_dat, group_meta, opts);
 end
 
-function [obj, metadata_table] = local_record_object(record, object_name)
+function [obj, metadata_table] = local_record_object(record, object_name, cache)
+% Cache strategy:
+%   - record.wholebrain in memory      -> no disk read, no cache needed
+%   - record.prefix given              -> cache the loaded wholebrain struct
+%                                         under 'wb:<prefix>'; serves all
+%                                         object_name requests for free
+%   - direct single-file fallback      -> cache the (obj, metadata) tuple
+%                                         under 'f:<file>'
+% containers.Map is a handle class, so mutations propagate to all callers.
+
 if ~isempty(record.wholebrain)
     [obj, metadata_table] = local_object_from_wholebrain(record.wholebrain, object_name);
     return
 end
 
 if ~isempty(record.prefix)
+    wb_key = ['wb:' record.prefix];
+    if isKey(cache, wb_key)
+        wb = cache(wb_key);
+        [obj, metadata_table] = local_object_from_wholebrain(wb, object_name);
+        return
+    end
     try
         wb = hrf_load_wholebrain_stats(record.prefix, 'NoVerbose', true);
+        cache(wb_key) = wb;
         [obj, metadata_table] = local_object_from_wholebrain(wb, object_name);
         return
     catch
@@ -338,10 +361,18 @@ end
 if isempty(file_name) || exist(file_name, 'file') ~= 2
     error('Missing %s image file.', type_label);
 end
+f_key = ['f:' file_name];
+if isKey(cache, f_key)
+    cached = cache(f_key);
+    obj = cached.obj;
+    metadata_table = cached.metadata;
+    return
+end
 obj = statistic_image(fmri_data(file_name, 'noverbose'));
 obj.type = type_label;
 metadata_table = local_read_metadata(record.metadata_file);
 obj = local_attach_metadata(obj, metadata_table);
+cache(f_key) = struct('obj', obj, 'metadata', metadata_table);
 end
 
 function [obj, metadata_table] = local_object_from_wholebrain(wholebrain, object_name)

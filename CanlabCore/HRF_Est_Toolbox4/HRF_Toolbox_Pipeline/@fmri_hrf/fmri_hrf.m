@@ -51,8 +51,12 @@
 
 classdef fmri_hrf < fmri_data
     properties
+        % NOTE: metadata_table is inherited from fmri_data — do NOT redefine
+        % it here or MATLAB raises a "property already defined in superclass"
+        % error at class construction. fmri_hrf populates the inherited
+        % metadata_table with the HRF-specific schema (volume_index,
+        % condition, lag_index, lag_seconds, image_label, ...).
         hrf_meta_version = 1
-        metadata_table = table()
         subject = ''
         run_label = ''
         model_name = ''
@@ -127,8 +131,10 @@ end
 % =========================================================================
 function obj = local_copy_parent_fields(obj, src)
 % Copy data + metadata fields from src (fmri_data or image_vector) into obj.
-% Skips properties that fmri_hrf overrides.
-hrf_only = {'hrf_meta_version', 'metadata_table', 'subject', 'run_label', ...
+% Skips properties that fmri_hrf defines itself; metadata_table is
+% inherited from fmri_data so it IS copied through (and may be overridden
+% later by a 'MetadataTable' name-value pair).
+hrf_only = {'hrf_meta_version', 'subject', 'run_label', ...
     'model_name', 'conditions', 'TR', 'design_matrix', 'design_info', ...
     'source_paths', 'timeseries'};
 

@@ -40,6 +40,17 @@ function T = hrf_curve_summaries(source, varargin)
 %                    populated. Default NaN.
 %   'IncludeNaN'   - true to keep empty/all-NaN curves in the output (with
 %                    metrics = NaN). Default false (skip them).
+%   'SignificanceAlpha'      - p threshold for significance-driven
+%                              onset/offset. Default 0.05.
+%   'SignificanceCorrection' - 'none' (default), 'bonferroni', 'fdr'.
+%                              Applied across lags within each curve.
+%   'BipolarPeakThreshold'   - secondary-polarity peak is counted as a
+%                              separate mode iff its magnitude reaches
+%                              this fraction of |primary peak|. Default
+%                              0.25.
+%   'DefaultDfe'             - degrees of freedom used when neither
+%                              dfe nor N columns are in metadata.
+%                              Default Inf (= normal approximation).
 %
 % Output
 % ------
@@ -49,12 +60,28 @@ function T = hrf_curve_summaries(source, varargin)
 %                                            - 'sig_<set>_<name>' parsed
 %   condition, n_lags, n_finite              - condition + curve coverage
 %   peak_value, peak_lag_seconds, peak_lag_index
+%                                            - primary peak (signed
+%                                              argmax(|x|)); back-compat
+%   peak_pos_value, peak_pos_lag_seconds     - largest positive value
+%   peak_neg_value, peak_neg_lag_seconds     - largest negative value
+%   peak_separation_seconds                  - pos_lag - neg_lag (signed),
+%                                              NaN if curve is unimodal
+%   n_modes                                  - 1 or 2; 2 iff opposite-
+%                                              polarity peak reaches
+%                                              BipolarPeakThreshold *
+%                                              |primary|
 %   auc                                      - trapezoidal over lag_seconds
 %   mean_amplitude, sd_amplitude
 %   fwhm_seconds                             - full width at half peak
 %   onset_lag_seconds, offset_lag_seconds, duration_seconds
-%                                            - around the peak, at
+%                                            - peak-relative, at
 %                                              PeakThreshold * |peak|
+%   n_sig_lags                               - count of lags with p <
+%                                              SignificanceAlpha (NaN if
+%                                              no SE column present)
+%   onset_sig_lag_seconds                    - first significant lag
+%   offset_sig_lag_seconds                   - last significant lag
+%   duration_sig_seconds                     - offset_sig - onset_sig
 %
 % Notes
 % -----
@@ -79,6 +106,10 @@ p.addParameter('Objects', {'beta', 't'}, @(x) iscell(x) || isstring(x) || ischar
 p.addParameter('PeakThreshold', 0.5, @(x) isscalar(x) && x > 0 && x < 1);
 p.addParameter('TR', NaN, @(x) isscalar(x));
 p.addParameter('IncludeNaN', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('SignificanceAlpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
+p.addParameter('SignificanceCorrection', 'none', @(x) ischar(x) || isstring(x));
+p.addParameter('BipolarPeakThreshold', 0.25, @(x) isscalar(x) && x >= 0 && x < 1);
+p.addParameter('DefaultDfe', Inf, @(x) isscalar(x));
 p.parse(source, varargin{:});
 opts = p.Results;
 
@@ -183,7 +214,23 @@ for c = 1:numel(condition_list)
         col = source_cols{k};
         vals_raw = score_table.(col)(mask);
         vals = double(vals_raw(ord));
-        metrics = local_compute_metrics(vals, sub_lag_s, opts.PeakThreshold);
+
+        % Look up SE column for significance-driven onset/offset.
+        se_vals = [];
+        se_col = [col '_se'];
+        if any(strcmp(se_col, score_table.Properties.VariableNames))
+            se_raw = score_table.(se_col)(mask);
+            se_vals = double(se_raw(ord));
+        end
+
+        % Degrees of freedom: from metadata.dfe column if present, else
+        % from metadata.N - 1, else from opts.DefaultDfe (default Inf,
+        % which collapses tcdf to normal CDF).
+        dfe = local_resolve_dfe(score_table, mask, opts.DefaultDfe);
+
+        metrics = local_compute_metrics(vals, sub_lag_s, opts.PeakThreshold, ...
+            se_vals, dfe, opts.SignificanceAlpha, opts.SignificanceCorrection, ...
+            opts.BipolarPeakThreshold);
         if ~opts.IncludeNaN && metrics.n_finite == 0
             continue
         end
@@ -303,20 +350,41 @@ end
 % =========================================================================
 % Metric computation
 % =========================================================================
-function m = local_compute_metrics(vals, lag_seconds, peak_thresh_frac)
+function m = local_compute_metrics(vals, lag_seconds, peak_thresh_frac, se_vals, dfe, sig_alpha, sig_correction, bipolar_thresh)
+% All-NaN-safe metric computation. New since v0:
+%   * peak_pos / peak_neg     -- always report extrema in each polarity,
+%                                so multi-modal curves (HRF + undershoot)
+%                                surface both modes. peak_value continues
+%                                to be signed argmax(|x|) for back-compat.
+%   * onset_sig / offset_sig  -- if SE present, t = score/se, p from tcdf,
+%                                onset = first lag with p < sig_alpha,
+%                                offset = last. Independent of peak-relative
+%                                threshold, so a noisy curve with no real
+%                                response correctly reports NaN.
+
 m = struct( ...
     'n_lags', numel(vals), ...
     'n_finite', sum(isfinite(vals)), ...
     'peak_value', NaN, ...
     'peak_lag_seconds', NaN, ...
     'peak_lag_index', NaN, ...
+    'peak_pos_value', NaN, ...
+    'peak_pos_lag_seconds', NaN, ...
+    'peak_neg_value', NaN, ...
+    'peak_neg_lag_seconds', NaN, ...
+    'peak_separation_seconds', NaN, ...
+    'n_modes', 0, ...
     'auc', NaN, ...
     'mean_amplitude', NaN, ...
     'sd_amplitude', NaN, ...
     'fwhm_seconds', NaN, ...
     'onset_lag_seconds', NaN, ...
     'offset_lag_seconds', NaN, ...
-    'duration_seconds', NaN);
+    'duration_seconds', NaN, ...
+    'n_sig_lags', NaN, ...
+    'onset_sig_lag_seconds', NaN, ...
+    'offset_sig_lag_seconds', NaN, ...
+    'duration_sig_seconds', NaN);
 
 finite = isfinite(vals);
 if ~any(finite)
@@ -326,17 +394,50 @@ end
 vfin = vals(finite);
 lfin = lag_seconds(finite);
 
+% --- Primary peak (signed argmax(|x|)) ---------------------------------
 [~, k_peak_in_fin] = max(abs(vfin));
 m.peak_value = vfin(k_peak_in_fin);
 m.peak_lag_seconds = lfin(k_peak_in_fin);
-% peak_lag_index = 1-based index into the original (unsorted-then-sorted) curve
 peak_lag_pos = find(finite);
 m.peak_lag_index = peak_lag_pos(k_peak_in_fin);
 
+% --- Bipolar peaks (always report both polarities, then decide n_modes) -
+pos_mask = vfin > 0;
+neg_mask = vfin < 0;
+if any(pos_mask)
+    [pv, kpos] = max(vfin .* pos_mask + (-Inf) .* ~pos_mask);
+    if isfinite(pv)
+        m.peak_pos_value = pv;
+        m.peak_pos_lag_seconds = lfin(kpos);
+    end
+end
+if any(neg_mask)
+    [nv, kneg] = min(vfin .* neg_mask + (Inf) .* ~neg_mask);
+    if isfinite(nv)
+        m.peak_neg_value = nv;
+        m.peak_neg_lag_seconds = lfin(kneg);
+    end
+end
+
+% n_modes: count of polarities whose magnitude reaches bipolar_thresh of
+% the primary peak. Pure positive (or pure negative) curves => 1 mode.
+primary_mag = abs(m.peak_value);
+modes = 0;
+if isfinite(m.peak_pos_value) && abs(m.peak_pos_value) >= bipolar_thresh * primary_mag
+    modes = modes + 1;
+end
+if isfinite(m.peak_neg_value) && abs(m.peak_neg_value) >= bipolar_thresh * primary_mag
+    modes = modes + 1;
+end
+m.n_modes = modes;
+if isfinite(m.peak_pos_lag_seconds) && isfinite(m.peak_neg_lag_seconds) && modes == 2
+    m.peak_separation_seconds = m.peak_pos_lag_seconds - m.peak_neg_lag_seconds;
+end
+
+% --- Peak-relative onset / offset / FWHM (around primary peak) ---------
 if abs(m.peak_value) > 0
     threshold = peak_thresh_frac * abs(m.peak_value);
     above = abs(vfin) >= threshold;
-    % onset/offset are first/last lag in the *contiguous run containing the peak*
     [onset_k, offset_k] = local_contiguous_run(above, k_peak_in_fin);
     if ~isempty(onset_k)
         m.onset_lag_seconds = lfin(onset_k);
@@ -345,7 +446,6 @@ if abs(m.peak_value) > 0
         if peak_thresh_frac == 0.5
             m.fwhm_seconds = m.duration_seconds;
         else
-            % If user passed a different threshold, still report FWHM at 0.5.
             half_above = abs(vfin) >= 0.5 * abs(m.peak_value);
             [hk0, hk1] = local_contiguous_run(half_above, k_peak_in_fin);
             if ~isempty(hk0)
@@ -355,12 +455,83 @@ if abs(m.peak_value) > 0
     end
 end
 
+% --- Significance-driven onset / offset (requires SE) ------------------
+if ~isempty(se_vals)
+    se_fin = se_vals(finite);
+    valid_t = se_fin > 0 & isfinite(se_fin);
+    if any(valid_t)
+        t_lags = NaN(size(vfin));
+        p_lags = NaN(size(vfin));
+        t_lags(valid_t) = vfin(valid_t) ./ se_fin(valid_t);
+        p_lags(valid_t) = 2 * (1 - tcdf(abs(t_lags(valid_t)), dfe));
+        p_use = p_lags;
+        switch lower(strtrim(char(sig_correction)))
+            case {'none', '', 'unc', 'uncorrected'}
+                % no change
+            case 'bonferroni'
+                p_use = min(p_lags * sum(valid_t), 1);
+            case 'fdr'
+                p_use = NaN(size(p_lags));
+                pv = p_lags(valid_t);
+                [psort, ord_p] = sort(pv);
+                n = numel(psort);
+                ranks = (1:n)';
+                fdr_threshold = sig_alpha * ranks / n;
+                below = psort <= fdr_threshold;
+                k_max = find(below, 1, 'last');
+                p_use_local = ones(size(pv));
+                if ~isempty(k_max)
+                    p_use_local(ord_p(1:k_max)) = sig_alpha;  % flag as sig
+                end
+                p_use(valid_t) = p_use_local;
+            otherwise
+                warning('hrf_curve_summaries:UnknownCorrection', ...
+                    'Unknown SignificanceCorrection: %s. Using none.', char(sig_correction));
+        end
+        sig_mask = p_use < sig_alpha;
+        m.n_sig_lags = sum(sig_mask);
+        if any(sig_mask)
+            first_idx = find(sig_mask, 1, 'first');
+            last_idx = find(sig_mask, 1, 'last');
+            m.onset_sig_lag_seconds = lfin(first_idx);
+            m.offset_sig_lag_seconds = lfin(last_idx);
+            m.duration_sig_seconds = lfin(last_idx) - lfin(first_idx);
+        end
+    end
+end
+
+% --- AUC + central tendency --------------------------------------------
 if numel(lfin) >= 2
     [lsort, ord] = sort(lfin);
     m.auc = trapz(lsort, vfin(ord));
 end
 m.mean_amplitude = mean(vfin);
 m.sd_amplitude = std(vfin);
+end
+
+
+function dfe = local_resolve_dfe(score_table, mask, default_dfe)
+% Pull degrees of freedom from the metadata table (set per scoring run).
+% Priority: dfe column -> N - 1 column -> opts.DefaultDfe (Inf collapses
+% t-distribution to normal, which is the right behavior at the
+% whole-brain map scale where N is large).
+v = score_table.Properties.VariableNames;
+idx = find(mask, 1);
+if any(strcmp('dfe', v))
+    val = double(score_table.dfe(idx));
+    if isfinite(val) && val > 0
+        dfe = val;
+        return
+    end
+end
+if any(strcmp('N', v))
+    val = double(score_table.N(idx));
+    if isfinite(val) && val > 1
+        dfe = val - 1;
+        return
+    end
+end
+dfe = default_dfe;
 end
 
 
@@ -387,24 +558,26 @@ end
 % Row construction
 % =========================================================================
 function T = local_empty_summary_table()
-T = table('Size', [0 18], ...
+T = table('Size', [0 30], ...
     'VariableTypes', { ...
         'string','string','string','string', ...
         'string','string','string','string', ...
         'string','double','double', ...
         'double','double','double', ...
-        'double','double','double','double'}, ...
+        'double','double','double','double','double', ...
+        'double','double','double','double', ...
+        'double','double','double', ...
+        'double','double','double'}, ...
     'VariableNames', { ...
         'subject','run_label','model','object', ...
         'source','source_kind','source_set','source_name', ...
         'condition','n_lags','n_finite', ...
         'peak_value','peak_lag_seconds','peak_lag_index', ...
-        'auc','mean_amplitude','sd_amplitude','fwhm_seconds'});
-% extend with onset/offset/duration as separate vars (kept distinct for
-% downstream filtering even though they live alongside fwhm)
-T.onset_lag_seconds = double.empty(0, 1);
-T.offset_lag_seconds = double.empty(0, 1);
-T.duration_seconds = double.empty(0, 1);
+        'peak_pos_value','peak_pos_lag_seconds','peak_neg_value','peak_neg_lag_seconds','peak_separation_seconds', ...
+        'n_modes','auc','mean_amplitude','sd_amplitude', ...
+        'fwhm_seconds','onset_lag_seconds','offset_lag_seconds','duration_seconds', ...
+        'n_sig_lags','onset_sig_lag_seconds','offset_sig_lag_seconds'});
+T.duration_sig_seconds = double.empty(0, 1);
 end
 
 
@@ -414,16 +587,21 @@ row = table( ...
     string(col), string(skind), string(sset), string(sname), ...
     string(cond), metrics.n_lags, metrics.n_finite, ...
     metrics.peak_value, metrics.peak_lag_seconds, metrics.peak_lag_index, ...
-    metrics.auc, metrics.mean_amplitude, metrics.sd_amplitude, metrics.fwhm_seconds, ...
+    metrics.peak_pos_value, metrics.peak_pos_lag_seconds, ...
+    metrics.peak_neg_value, metrics.peak_neg_lag_seconds, metrics.peak_separation_seconds, ...
+    metrics.n_modes, metrics.auc, metrics.mean_amplitude, metrics.sd_amplitude, ...
+    metrics.fwhm_seconds, metrics.onset_lag_seconds, metrics.offset_lag_seconds, metrics.duration_seconds, ...
+    metrics.n_sig_lags, metrics.onset_sig_lag_seconds, metrics.offset_sig_lag_seconds, ...
     'VariableNames', { ...
         'subject','run_label','model','object', ...
         'source','source_kind','source_set','source_name', ...
         'condition','n_lags','n_finite', ...
         'peak_value','peak_lag_seconds','peak_lag_index', ...
-        'auc','mean_amplitude','sd_amplitude','fwhm_seconds'});
-row.onset_lag_seconds = metrics.onset_lag_seconds;
-row.offset_lag_seconds = metrics.offset_lag_seconds;
-row.duration_seconds = metrics.duration_seconds;
+        'peak_pos_value','peak_pos_lag_seconds','peak_neg_value','peak_neg_lag_seconds','peak_separation_seconds', ...
+        'n_modes','auc','mean_amplitude','sd_amplitude', ...
+        'fwhm_seconds','onset_lag_seconds','offset_lag_seconds','duration_seconds', ...
+        'n_sig_lags','onset_sig_lag_seconds','offset_sig_lag_seconds'});
+row.duration_sig_seconds = metrics.duration_sig_seconds;
 end
 
 

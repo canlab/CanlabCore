@@ -85,6 +85,7 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+p.addParameter('Normalize', 'l1', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEScoreSuffix', '_se', @(x) ischar(x) || isstring(x));
@@ -195,7 +196,8 @@ for j = 1:numel(objects)
         if ~isempty(opts.AtlasObj)
             atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
                 local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), ...
-                local_effective_regions(opts.AtlasObj, opts.Regions));
+                local_effective_regions(opts.AtlasObj, opts.Regions), ...
+                opts.Normalize);
             scores = local_horzappend_scores(scores, atlas_cols);
         end
 
@@ -262,7 +264,8 @@ try
     % new region to an existing CSV doesn't trigger a full re-extract.
     if ~isempty(missing_regions)
         atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
-            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), missing_regions);
+            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), ...
+            missing_regions, opts.Normalize);
         new_scores = local_horzappend_scores(new_scores, atlas_cols);
     end
 
@@ -344,13 +347,31 @@ end
 % =========================================================================
 % Atlas region-mean scoring (post-hoc extraction from whole-brain maps)
 % =========================================================================
-function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_name, regions)
+function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_name, regions, normalize)
 % Returns a table with one column per requested atlas region:
-%   atlas_<atlasname>_<region>_mean
+%   atlas_<atlasname>_<region>_<suffix>
 % with row count == n_volumes in score_obj.
 % Uses extract_roi_averages which handles space resampling between atlas
 % and score_obj automatically. If `regions` is non-empty, subsets the
-% atlas via select_atlas_subset(..., 'exact') first.
+% atlas via select_atlas_subset(..., 'exact', 'deterministic') first.
+% The 'deterministic' flag forces probabilistic atlases (e.g., canlab2024)
+% to a winner-takes-all parcellation so each voxel belongs to at most one
+% region -- avoids the probabilistic overlap that would otherwise blur
+% region boundaries.
+%
+% normalize is one of:
+%   'mean'  - region mean (extract_roi_averages default). Suffix '_mean'.
+%             Already L1-normalized by region size (= mean = sum / nVoxels).
+%   'l1'    - region mean, then each region's time course divided by its
+%             own L1 norm sum(|values|). Makes regions of differing baseline
+%             signal magnitudes directly comparable in HRF *shape*. Suffix
+%             '_meanL1'. (Default.)
+%   'none'  - region sum (extract_roi_averages 'nonorm'). Suffix '_sum'.
+%             Larger regions get larger values; only useful when downstream
+%             code wants raw integrated signal.
+if nargin < 5 || isempty(normalize), normalize = 'l1'; end
+normalize = lower(strtrim(char(normalize)));
+
 if isempty(regions)
     regions = local_effective_regions(atlas_obj, {});
 end
@@ -360,7 +381,7 @@ regions = cellstr(string(regions));
 sub_atlas = atlas_obj;
 if isa(atlas_obj, 'atlas')
     try
-        sub_atlas = select_atlas_subset(atlas_obj, regions, 'exact');
+        sub_atlas = select_atlas_subset(atlas_obj, regions, 'exact', 'deterministic');
     catch err
         error('hrf_score_one_prefix:AtlasRegionSubset', ...
             'Failed to subset atlas to regions {%s}: %s', ...
@@ -368,7 +389,19 @@ if isa(atlas_obj, 'atlas')
     end
 end
 
-cl = extract_roi_averages(score_obj, sub_atlas);
+% Choose extract_roi_averages mode based on requested normalization.
+switch normalize
+    case 'none'
+        cl = extract_roi_averages(score_obj, sub_atlas, 'nonorm');
+        suffix = 'sum';
+    case {'mean', 'l1'}
+        cl = extract_roi_averages(score_obj, sub_atlas);
+        suffix = normalize_suffix(normalize);
+    otherwise
+        error('hrf_score_one_prefix:UnknownNormalize', ...
+            'Unknown Normalize: %s. Use mean, l1, or none.', normalize);
+end
+
 % Map cl entries back to the requested region labels in order. If
 % select_atlas_subset reordered or merged regions, fall back to atlas
 % labels.
@@ -383,7 +416,7 @@ n_vol = size(score_obj.dat, 2);
 atlas_cols = table();
 for i = 1:numel(cl)
     region_token = matlab.lang.makeValidName(char(out_labels{i}));
-    col_name = sprintf('atlas_%s_%s_mean', atlas_token, region_token);
+    col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
     vals = double(cl(i).dat(:));
     if numel(vals) ~= n_vol
         padded = NaN(n_vol, 1);
@@ -391,7 +424,23 @@ for i = 1:numel(cl)
         padded(1:m) = vals(1:m);
         vals = padded;
     end
+    if strcmp(normalize, 'l1')
+        l1 = sum(abs(vals), 'omitnan');
+        if l1 > 0
+            vals = vals / l1;
+        end
+    end
     atlas_cols.(col_name) = vals;
+end
+end
+
+
+function s = normalize_suffix(mode)
+switch lower(char(mode))
+    case 'mean', s = 'mean';
+    case 'l1',   s = 'meanL1';
+    case 'none', s = 'sum';
+    otherwise,   s = lower(char(mode));
 end
 end
 
@@ -451,19 +500,23 @@ end
 
 
 function missing_regions = local_missing_atlas_regions(existing, opts)
-% Returns the cellstr of region labels whose atlas_<name>_<region>_mean
-% column is absent from the existing CSV. Empty if AtlasObj is not
-% supplied OR all effective regions are present.
+% Returns the cellstr of region labels whose atlas_<name>_<region>_<suffix>
+% column is absent from the existing CSV (suffix depends on opts.Normalize).
+% Empty if AtlasObj is not supplied OR all effective regions are present.
+% Note: different normalization modes produce different column suffixes,
+% so a CSV with _mean columns and a request for _meanL1 columns will
+% correctly route through append to add the L1 versions alongside.
 missing_regions = {};
 if isempty(opts.AtlasObj), return; end
 atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
 effective_regions = local_effective_regions(opts.AtlasObj, opts.Regions);
 atlas_token = matlab.lang.makeValidName(char(atlas_name));
+suffix = normalize_suffix(opts.Normalize);
 existing_vars = existing.Properties.VariableNames;
 
 for r = 1:numel(effective_regions)
     region_token = matlab.lang.makeValidName(char(effective_regions{r}));
-    col_name = sprintf('atlas_%s_%s_mean', atlas_token, region_token);
+    col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
     if ~any(strcmp(col_name, existing_vars))
         missing_regions{end + 1} = effective_regions{r}; %#ok<AGROW>
     end

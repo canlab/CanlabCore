@@ -1,11 +1,13 @@
-# HRF Estimation Toolbox 2: Simple End-to-End Pipeline
+# HRF Toolbox Pipeline: Simple End-to-End HRF Estimation
 
-This folder now includes a user-facing pipeline that goes from a **4D fMRI NIfTI** and **BIDS events.tsv** directly to model-based HRF estimates.
+This folder hosts the user-facing pipeline that goes from a **4D fMRI NIfTI** and **BIDS events.tsv** directly to model-based HRF estimates. It lives under `CanlabCore/HRF_Est_Toolbox4/HRF_Toolbox_Pipeline/` and depends on the canonical Lindquist-lab fitters at `HRF_Est_Toolbox4/` (sibling directory).
 
 ## Quick start
 
 ```matlab
-addpath(genpath('/path/to/CanlabCore/CanlabCore/HRF_Est_Toolbox2'));
+% Add CanlabCore + HRF_Est_Toolbox4 (legacy fitters) + this pipeline folder to the path.
+% genpath(canlab_root) is enough — it picks up everything under it including this pipeline.
+addpath(genpath('/path/to/CanlabCore/CanlabCore'));
 
 results = run_hrf_pipeline( ...
     '/path/to/sub-01_task-pain_bold.nii.gz', ...

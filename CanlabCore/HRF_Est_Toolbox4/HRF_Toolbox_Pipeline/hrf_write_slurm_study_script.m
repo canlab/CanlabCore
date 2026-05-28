@@ -439,7 +439,9 @@ fprintf(fid, '%s -nodisplay -nosplash -batch "run(''%s'')"\n', ...
 end
 
 function root = local_default_canlab_root()
-root = fileparts(fileparts(mfilename('fullpath')));
+% This file lives at CanlabCore/HRF_Est_Toolbox4/HRF_Toolbox_Pipeline/.
+% Walk up three levels to reach the CanlabCore root (where @fmri_data etc live).
+root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 end
 
 function local_ensure_parent(path_in)

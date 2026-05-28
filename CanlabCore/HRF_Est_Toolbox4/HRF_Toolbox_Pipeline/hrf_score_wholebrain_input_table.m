@@ -26,7 +26,7 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
-p.addParameter('Normalize', 'l1', @(x) ischar(x) || isstring(x));
+p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Overwrite', false, @(x) islogical(x) || isnumeric(x));

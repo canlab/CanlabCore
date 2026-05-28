@@ -85,7 +85,7 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
-p.addParameter('Normalize', 'l1', @(x) ischar(x) || isstring(x));
+p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('SEScoreSuffix', '_se', @(x) ischar(x) || isstring(x));
@@ -361,15 +361,16 @@ function atlas_cols = local_compute_atlas_scores(score_obj, atlas_obj, atlas_nam
 %
 % normalize is one of:
 %   'mean'  - region mean (extract_roi_averages default). Suffix '_mean'.
-%             Already L1-normalized by region size (= mean = sum / nVoxels).
+%             Already L1-normalized by region size (= sum / nVoxels).
+%             (Default.) Standard ROI output: plain mean BOLD signal.
 %   'l1'    - region mean, then each region's time course divided by its
 %             own L1 norm sum(|values|). Makes regions of differing baseline
 %             signal magnitudes directly comparable in HRF *shape*. Suffix
-%             '_meanL1'. (Default.)
+%             '_meanL1'.
 %   'none'  - region sum (extract_roi_averages 'nonorm'). Suffix '_sum'.
 %             Larger regions get larger values; only useful when downstream
 %             code wants raw integrated signal.
-if nargin < 5 || isempty(normalize), normalize = 'l1'; end
+if nargin < 5 || isempty(normalize), normalize = 'mean'; end
 normalize = lower(strtrim(char(normalize)));
 
 if isempty(regions)

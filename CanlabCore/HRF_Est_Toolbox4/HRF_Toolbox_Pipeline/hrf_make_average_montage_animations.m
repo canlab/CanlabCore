@@ -30,8 +30,10 @@ p.addParameter('FrameStep', 1, @(x) isscalar(x) && x >= 1);
 p.addParameter('FPS', 8, @(x) isscalar(x) && x > 0);
 p.addParameter('Threshold', [], @(x) isempty(x) || isscalar(x));
 p.addParameter('MissingPolicy', 'warn', @(x) ischar(x) || isstring(x));
+p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.parse(input_data, varargin{:});
 opts = p.Results;
+verbose = logical(opts.Verbose);
 
 records = local_records(input_data);
 records = local_filter_records(records, char(opts.Model));
@@ -56,6 +58,19 @@ end
 subject_ids = unique({records.subject}, 'stable');
 subject_rows = {};
 group_rows = {};
+
+if verbose
+    fprintf('\nhrf_make_average_montage_animations\n');
+    fprintf('  %d records  |  %d conditions  |  %d subjects  |  model=%s, object=%s\n', ...
+        numel(records), numel(condition_patterns), numel(subject_ids), ...
+        char(opts.Model), char(opts.Object));
+    if write_movies
+        fprintf('  output_dir: %s\n', output_dir);
+    end
+    fprintf('\n');
+end
+start_time = tic;
+
 avg = struct();
 avg.object = char(opts.Object);
 avg.model = char(opts.Model);
@@ -70,13 +85,27 @@ for c = 1:numel(condition_patterns)
     subject_images = {};
     subject_metas = {};
     subject_image_subjects = {};
+    cond_time = tic;
+
+    if verbose
+        fprintf('[%d/%d] condition = %s\n', c, numel(condition_patterns), condition_pattern);
+    end
 
     for s = 1:numel(subject_ids)
         sid = subject_ids{s};
         subject_mask = strcmp({records.subject}, sid);
         subject_records = records(subject_mask(:));
+        cache_before = record_cache.Count;
+        subj_time = tic;
         [subject_img, subject_meta, n_runs, skipped] = local_subject_average( ...
             subject_records, condition_pattern, opts, record_cache);
+        dt = toc(subj_time);
+        new_loads = record_cache.Count - cache_before;
+        if verbose
+            tag = local_load_tag(new_loads, numel(subject_records));
+            fprintf('  [%2d/%2d] %-12s %d runs  %s  %5.1fs\n', ...
+                s, numel(subject_ids), sid, n_runs, tag, dt);
+        end
 
         if local_missing_image(subject_img)
             local_handle_missing(opts.MissingPolicy, ...
@@ -105,11 +134,20 @@ for c = 1:numel(condition_patterns)
         subject_image_subjects{end + 1, 1} = sid; %#ok<AGROW>
     end
 
+    if verbose
+        fprintf('  group: averaging across %d subjects ...\n', numel(subject_images));
+    end
+    group_time = tic;
     [group_img, group_t_img, group_meta, n_subjects] = local_group_average(subject_images, subject_metas, condition_pattern, opts);
     if local_missing_image(group_img)
         local_handle_missing(opts.MissingPolicy, ...
             sprintf('No valid subjects for group condition %s.', condition_pattern));
         continue
+    end
+    if verbose
+        [n_sig_v_preview, ~] = local_sig_counts(group_t_img);
+        fprintf('  group: %d subjects, %d significant voxel-frames  %5.1fs\n', ...
+            n_subjects, n_sig_v_preview, toc(group_time));
     end
 
     group_condition_label = local_condition_label(group_meta, condition_pattern);
@@ -135,10 +173,32 @@ for c = 1:numel(condition_patterns)
         local_group_stat_label(opts), lower(char(opts.GroupCorrection)), opts.GroupAlpha, ...
         n_subjects, group_movie_file, strjoin(subject_image_subjects, ','), ...
         n_sig_voxels, n_sig_timepoints}; %#ok<AGROW>
+
+    if verbose
+        fprintf('  condition done in %5.1fs  (cache: %d entries)\n\n', ...
+            toc(cond_time), record_cache.Count);
+    end
+end
+
+if verbose
+    fprintf('hrf_make_average_montage_animations complete in %5.1fs  (cache: %d entries)\n\n', ...
+        toc(start_time), record_cache.Count);
 end
 
 avg.subject_table = local_subject_table(subject_rows);
 avg.group_table = local_group_table(group_rows);
+end
+
+
+function tag = local_load_tag(new_loads, n_records)
+% Compact indicator: '[cache hit]', '[load 3/3]', or '[load 1/3, hit 2/3]'.
+if new_loads == 0
+    tag = '[cache hit]';
+elseif new_loads == n_records
+    tag = sprintf('[load %d/%d]', new_loads, n_records);
+else
+    tag = sprintf('[load %d/%d, hit %d/%d]', new_loads, n_records, n_records - new_loads, n_records);
+end
 end
 
 function tf = local_missing_image(img)

@@ -151,10 +151,22 @@ t_hw = threshold(t_hw, .005, 'unc', 'k', 10);
 t_rf = threshold(t_rf, .005, 'unc', 'k', 10);
 ```
 
+> **Why `create_figure` before each `montage` / `surface` call.** CANlab
+> montage and surface methods register an `fmridisplay` object against
+> the *current* figure. Without an explicit `create_figure` (which opens
+> a fresh, named window and clears it), a second call can overplot the
+> previous figure instead of opening a new one — fine on the command
+> line, but ugly when the same script runs again in a Live Script. The
+> `axis off` keeps the placeholder axes from drawing a frame behind the
+> brain slices.
+
 ### Hot − Warm (pain contrast)
 
 ```matlab
+create_figure('Hot − Warm montage'); axis off
 montage(t_hw);
+
+create_figure('Hot − Warm surfaces'); axis off
 surface(t_hw, 'foursurfaces_hcp');
 ```
 
@@ -168,8 +180,11 @@ heat-evoked pain network.
 ### Rejector − Friend (rejection contrast)
 
 ```matlab
-montage(t_rejvfriend);
-surface(t_rejvfriend, 'foursurfaces_hcp');
+create_figure('Rejector − Friend montage'); axis off
+montage(t_rf);
+
+create_figure('Rejector − Friend surfaces'); axis off
+surface(t_rf, 'foursurfaces_hcp');
 ```
 
 ![Rejector vs Friend montage](pngs/rejvsfriend_montage.png)
@@ -290,7 +305,9 @@ For this run the headline numbers are
 ### Reading the ROC plot
 
 ```matlab
+create_figure('ROC');
 ROC = roc_plot(S_hw.dist_from_hyperplane_xval, S_hw.Y > 0, 'threshold', 0);
+set(gca, 'FontSize', 16);
 ```
 
 ![ROC: Hot vs Warm](pngs/svm_hotvswarm_roc.png)
@@ -329,21 +346,32 @@ the *d*s will still register signal.
 
 ### Confusion matrix
 
+`confusion_matrix(S_hw)` will plot a chart with the underlying ±1 codes
+as axis labels. To get nicer Hot/Warm labels (plus row and column
+percentage summaries) we pull the raw counts with `'noplot'` and pass
+them to MATLAB's `confusionchart` ourselves:
+
 ```matlab
-[rawConf, normConf] = confusion_matrix(S_hw);
+[rawConf, normConf] = confusion_matrix(S_hw, 'noplot');
+fig_cm = create_figure('Confusion matrix'); clf(fig_cm);
+cm = confusionchart(fig_cm, rawConf, {'Warm','Hot'}, ...
+    'Title', 'Hot vs Warm — cross-validated', ...
+    'RowSummary', 'row-normalized', ...
+    'ColumnSummary', 'column-normalized', ...
+    'FontSize', 14);
 ```
+
+The `clf(fig_cm)` removes the placeholder axes that `create_figure`
+opened — `confusionchart` can't share an axes container, so without
+this the call errors with *"Adding ConfusionMatrixChart to axes is not
+supported. Turn hold off."*
 
 ![Confusion matrix: Hot vs Warm](pngs/svm_hotvswarm_confusion.png)
 
-Rows are *true* labels, columns are *predicted* labels, and cells are
-percentages of each true class (row-normalised). For this run:
-
-|             | predicted −1 (Warm) | predicted +1 (Hot) |
-| ---         | ---                  | ---                  |
-| true −1 (Warm) | **72.9 %** (43)  | 27.1 % (16)          |
-| true +1 (Hot)  | 18.6 % (11)      | **81.4 %** (48)      |
-
-i.e., the classifier is slightly more sensitive to *Hot* than to *Warm*
+Rows are *true* labels, columns are *predicted* labels, and the cells
+along each row and column are summarised as row- and column-normalised
+percentages. The classifier correctly classifies 48 / 59 Hot maps and
+43 / 59 Warm maps, i.e., it is slightly more sensitive to *Hot* than to *Warm*
 at this decision threshold. Raw counts are in `rawConf`.
 
 ---

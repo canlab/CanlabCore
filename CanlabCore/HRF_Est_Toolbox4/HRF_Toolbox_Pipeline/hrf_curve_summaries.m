@@ -402,21 +402,24 @@ peak_lag_pos = find(finite);
 m.peak_lag_index = peak_lag_pos(k_peak_in_fin);
 
 % --- Bipolar peaks (always report both polarities, then decide n_modes) -
+% Use logical indexing (NOT additive masking with Inf -- Inf*0 = NaN in
+% IEEE-754, which would inject NaN everywhere when a curve is purely
+% single-polarity and break the max/min).
 pos_mask = vfin > 0;
 neg_mask = vfin < 0;
 if any(pos_mask)
-    [pv, kpos] = max(vfin .* pos_mask + (-Inf) .* ~pos_mask);
-    if isfinite(pv)
-        m.peak_pos_value = pv;
-        m.peak_pos_lag_seconds = lfin(kpos);
-    end
+    pos_vals = vfin(pos_mask);
+    pos_lags = lfin(pos_mask);
+    [pv, kpos] = max(pos_vals);
+    m.peak_pos_value = pv;
+    m.peak_pos_lag_seconds = pos_lags(kpos);
 end
 if any(neg_mask)
-    [nv, kneg] = min(vfin .* neg_mask + (Inf) .* ~neg_mask);
-    if isfinite(nv)
-        m.peak_neg_value = nv;
-        m.peak_neg_lag_seconds = lfin(kneg);
-    end
+    neg_vals = vfin(neg_mask);
+    neg_lags = lfin(neg_mask);
+    [nv, kneg] = min(neg_vals);
+    m.peak_neg_value = nv;
+    m.peak_neg_lag_seconds = neg_lags(kneg);
 end
 
 % n_modes: count of polarities whose magnitude reaches bipolar_thresh of

@@ -1,10 +1,10 @@
-function S = xval_SVM(varargin)
+function pmodel_obj = xval_SVM(varargin)
 %  SVM for repeated-measures (within-person) classification, with repeated cross-val and nested cross-val options
 %
 % :Usage:
 % ::
 %
-% S = xval_SVM(X, Y, id, varargin)
+% pmodel_obj = xval_SVM(X, Y, id, varargin)
 %
 % Steps and features:
 % -------------------------------------------------------------------------
@@ -118,45 +118,54 @@ function S = xval_SVM(varargin)
 %
 % :Outputs:
 %
-%   **S:**
-%        A predictive model object  (converted from structure with model output)
-%        of them (partially consistent with this function).
-%                           Y: Actual (obs) outcome - should be 1, -1 for SVM analysis
-%                        yfit: Predicted outcome - should be 1, -1 for SVM analysis
-%                              Cross-validated, so can be used as series
-%                              of predicted values based on brain
-%                              measures (very useful!)
-%                          id: Grouping variable for within-participant observations
-%                      accfun: Function handle to get accuracy (single-interval)
-%                           w: Model weights/betas, weights on input variables
-%                      nfolds: Number of folds in holdout set
-%                 cvpartition: Object with information about training/test sets
-%                       teIdx: Testing IDs for each fold (holdout set)
-%                       trIdx: Training IDs for each fold (holdout set)
-%             dist_from_hyperplane_xval: Cross-validated distance perpendicular to class boundary
-%                               higher = stronger prediction in favor of Class 1, lower = in favor of class -1.
-%                               Useful! use as continuous measure of
-%                               observation scores. Can calculate
-%                               effect sizes from this, for example.
-%       class_probability_xval: Cross-validated distance expressed as probabilities of Class 1, using Platt scaling
-%            crossval_accuracy: Cross-validated accuracy (input options; no hyperparam opt)
-%  classification_d_singleinterval: Classification effect size (input options; no hyperparam opt)
-%crossval_accuracy_opt_hyperparams: Cross-validated accuracy with optimized hyper-parameters
-%                  Y_within_id: Outcomes arranged by id, for within-person comparisons
-%             scores_within_id: SVM scores arranged by id, for within-person comparisons
-%                    scorediff: Within-person SVM scores arranged by id, for within-person comparisons
-%     crossval_accuracy_within: Within-person cross-validated accuracy (input options; no hyperparam opt)
-%      classification_d_within: Within-person classification effect size (input options; no hyperparam opt)
-%                 S.boot_w_ste: Bootstrapped standard errors of model weights (feature-level)
-%                S.boot_w_mean: Bootstrapped mean model weights (feature-level)
-%                         S.wZ: Bootstrapped Z-scores of model weights (feature-level)
-%                         S.wP: Bootstrapped P-values for individual model weights (feature-level)
-%                 S.wP_fdr_thr: P-value threshold for FDR q < 0.05
-%              S.boot_w_fdrsig: Logical vector for which weights are significant with FDR
-%               S.w_thresh_fdr: Thresholded weights at FDR q < 0.05 based on bootstrapping (feature-level)
-%                   S.SVMModel: ClasssificationSVM model object trained on full dataset, final chosen parameter set; for predicting in subsequent validation samples.
-%                               Y-hat = (X/s)'* w + b
-%                               ClassificationSVM objects store w, b, and s in the properties Beta, Bias, and KernelParameters.Scale, respectively.
+%   **pmodel_obj:**
+%        A @predictive_model object holding the cross-validated SVM
+%        results. Properties listed below are accessible either via the
+%        categorised sub-structs (e.g. pmodel_obj.fitted_values.yfit,
+%        pmodel_obj.weights.w, pmodel_obj.weight_stats.boot_w_ste) or via
+%        legacy flat aliases (pmodel_obj.yfit, pmodel_obj.w,
+%        pmodel_obj.boot_w_ste). See @predictive_model for the full
+%        property list and method surface.
+%
+%                              Y: Actual (obs) outcome - should be 1, -1 for SVM analysis
+%                           yfit: Predicted outcome - should be 1, -1 for SVM analysis
+%                                 Cross-validated, so can be used as series
+%                                 of predicted values based on brain
+%                                 measures (very useful!)
+%                             id: Grouping variable for within-participant observations
+%                         accfun: Function handle to get accuracy (single-interval)
+%                              w: Model weights/betas, weights on input variables
+%                         nfolds: Number of folds in holdout set
+%                          teIdx: Testing IDs for each fold (holdout set)
+%                          trIdx: Training IDs for each fold (holdout set)
+%      dist_from_hyperplane_xval: Cross-validated distance perpendicular to class boundary;
+%                                 higher = stronger prediction in favor of Class 1,
+%                                 lower = in favor of class -1. Useful as a continuous
+%                                 measure of observation scores. Can calculate effect
+%                                 sizes from this, for example.
+%         class_probability_xval: Cross-validated distance expressed as probabilities
+%                                 of Class 1, using Platt scaling
+%              crossval_accuracy: Cross-validated accuracy (input options; no hyperparam opt)
+% classification_d_singleinterval: Classification effect size (input options; no hyperparam opt)
+%                    Y_within_id: Outcomes arranged by id, for within-person comparisons
+%               scores_within_id: SVM scores arranged by id, for within-person comparisons
+%                      scorediff: Within-person SVM score differences (for paired tests)
+%       crossval_accuracy_within: Within-person cross-validated accuracy
+%        classification_d_within: Within-person classification effect size
+%                     boot_w_ste: Bootstrapped standard errors of model weights (feature-level)
+%                    boot_w_mean: Bootstrapped mean model weights (feature-level)
+%                             wZ: Bootstrapped Z-scores of model weights (feature-level)
+%                             wP: Bootstrapped P-values for individual model weights
+%                     wP_fdr_thr: P-value threshold for FDR q < 0.05
+%                  boot_w_fdrsig: Logical vector for which weights are significant with FDR
+%                   w_thresh_fdr: Thresholded weights at FDR q < 0.05 based on bootstrapping
+%             SVMModel / ml_model: ClassificationSVM model object trained on full dataset
+%                                  with final chosen parameter set; for predicting in
+%                                  subsequent validation samples.
+%                                  Y-hat = (X/s)'* w + b
+%                                  ClassificationSVM objects store w, b, and s in the
+%                                  properties Beta, Bias, and KernelParameters.Scale,
+%                                  respectively. SVMModel is a legacy alias of ml_model.
 %
 % :Examples:
 % ::
@@ -695,11 +704,11 @@ end
 % X = X(indx, :); Y = Y(indx); id = id(indx);
 % S = xval_SVM(X, Y, id, 'nooptimize', 'norepeats');
 
-% Recast as object
+% Recast as @predictive_model object
 % Future: this could be done earlier, and more subfunctions converted to
 % object methods, which would be contingent on the type of model run.
 
-S = predictive_model(S);
+pmodel_obj = predictive_model(S, 'noverbose');
 
 end % main function
 

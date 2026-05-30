@@ -321,93 +321,147 @@ If we DO want subclasses later, they should be predictive_classifier and
 predictive_regressor inheriting from predictive_model, but the v1 design
 is flat.
 
------------ 4b. Properties: hyperparameters vs. fitted state ------------------
+----------- 4b. Properties: categorised layout (IMPLEMENTED Phase 0) ----------
 
-properties  % HYPERPARAMETERS — set by user/constructor, never by fit
-    algorithm        % string: 'svm', 'svr', 'linear_svm', 'lassopcr', 'pcr',
-                     %         'lassoglm', 'ridge', 'pls', 'logistic',
-                     %         'tree', 'rf', 'knn', 'gp', 'nnet', 'ecoc',
-                     %         'gam', 'naive_bayes', or 'custom'
-    task             % 'classification' | 'regression' (inferred from Y type
-                     % during fit if not set)
-    modeloptions     % cell of name/value pairs forwarded to the MATLAB fit fn
-    highdimensional  % logical; route to fitclinear/fitrlinear if true
-    random_state     % integer seed for reproducibility (set via rng() in fit)
-    standardize      % logical; default true; z-score predictors before fit
+After surveying the union of fields across the 11 Category-A xval_*
+wrappers (~50 distinct field names), a flat property layout was rejected
+as unworkable (the class would have ballooned to ~85 flat properties with
+no method support, violating G9). The implemented layout instead groups
+fitted state into ~13 named sub-struct properties, with the legacy flat
+names exposed as Dependent (read-only) aliases so existing code that does
+`pm.w` / `pm.yfit` / etc. keeps working.
 
-    Y_name           % outcome name (display only)
-    X_name           % predictor name (display only)
-    class_labels     % cell of strings, e.g., {'No pain','Pain'}
-end
+HYPERPARAMETERS (top-level, set by user/constructor):
 
-properties  % CV / BOOTSTRAP / PERMUTATION OPTIONS — also hyperparameters
-    cv               % splitter object (see 4e); default = stratified_kfold(5)
-    scorer           % scorer object (see 4f); default chosen from task
-    nboot            % default 1000
-    nperm            % default 5000
-    do_calibrate     % logical; Platt scaling for classifiers; default false
-    use_parallel     % logical; default true if pool exists
-end
+    properties  % HYPERPARAMETERS
+        algorithm       % string: 'svm','svr','linear_svm','lassopcr',
+                        %         'pcr','ridge','lda','pls','logistic',
+                        %         'tree','rf','knn','gp','nnet','ecoc',
+                        %         'gam','naive_bayes','custom'
+        task            % 'classification' | 'regression'
+        modeloptions    % cell of name/value pairs forwarded to MATLAB fit fn
+        random_state    % rng seed
+        standardize     % logical
+        use_parallel    % logical
+        cv              % splitter object (Phase 1)
+        scorer          % scorer object (Phase 1)
+        nboot           % bootstrap samples
+        nperm           % permutation samples
+        do_calibrate    % logical (Platt-style calibration)
+        Y_name, X_name, class_labels
+    end
 
-properties (SetAccess = protected)  % FITTED STATE — written by fit/crossval/etc.
-    is_fitted        % logical; convenience for downstream branches
+FITTED STATE (categorised sub-struct properties + a few top-level fields):
 
-    ml_model         % the underlying MATLAB model object (or cell across folds)
-    Beta             % numeric vector, p x 1 (or p x nLambda for linear sweeps)
-    intercept        % scalar
-    n_features_in    % p at fit time, for shape-checking new data
-    classes          % unique sorted classes (classification only)
+    properties (SetAccess = protected)
+        inputs               % .Y .id .Y_orig .INPUTS
+        cv_partition         % .trIdx .teIdx .nfolds .fold_modeloptions
+                             %   .hyperparams_by_fold .cvpartition
+        fitted_values        % .yfit .dist_from_hyperplane_xval
+                             %   .class_probability_xval .scores_within_id
+                             %   .Y_within_id .scorediff .subjfit
+                             %   .high_vs_low_scores_within_id
+                             %   .predictions .trueLabels
+        weights              % .w (= Beta) .mean_vox_weights .vox_weights
+                             %   .VOXWEIGHTS .my_intercepts .subjbetas
+                             %   .weight_obj  (statistic_image when available)
+        weight_stats         % .boot_w .boot_w_ste .boot_w_mean .wZ .wP
+                             %   .wP_fdr_thr .boot_w_fdrsig .w_thresh_fdr
+        error_metrics        % .crossval_accuracy .crossval_accuracy_within
+                             %   .d_singleinterval .d_within
+                             %   .prediction_outcome_r .cverr .mse .rmse
+                             %   .meanabserr .r_squared .var_full .var_null
+                             %   .var_reduction .pred_err .pred_err_null
+                             %   .devs_from_full_model
+                             %   .devs_from_mean_only_model .r_each_subject
+                             %   .accuracy .overallAccuracy .err .phi
+        descriptions         % .accfun_descrip .cverrfun
+                             %   .crossval_accuracy_descrip
+                             %   .prediction_outcome_r_descrip
+                             %   .pred_err_descrip .var_reduction_descrip
+                             %   .classification_d_within_descrip
+                             %   .note .r_each_subject_note
+                             %   .r_each_subject_note2 .cvoutput_descrip
+                             %   .error_type .function_call .function_handle
+                             %   .algorithm_name
+        ml_model             % the trained MATLAB model object (verbatim).
+                             %   Aliases: SVMModel, SVRModel, ClassificationModel
+                             %   all land here via the routing table.
+        fold_models          % cell of per-fold trained MATLAB models.
+                             %   Alias: "models".
+        bootstrap_results    % full bootstrap output struct (e.g., the
+                             %   .bootstrap sub-struct produced by
+                             %   xval_lasso_brain). Aliases: bootstrap, WTS,
+                             %   boot_weights.
+        permutation_results  % full permutation output struct
+        diagnostics          % .ROC_forced_choice .ROC_single_interval
+                             %   .mult_obs_within_person .all_reg_hyperparams
+        cross_classify       % cross-classification output (.stats1 .stats2
+                             %   .test_results .crosstestfit .cvoutput
+                             %   .test_Y .all)
+        legacy_extras        % catch-all struct for fields without a
+                             %   categorised home (covs, data, full_model,
+                             %   inputOptions, ...) — stored verbatim so
+                             %   nothing is lost during struct -> object.
+        accfun               % top-level: objective function handle
+        history              % cell of strings (image_vector convention)
+        removed_voxels       % logical (image_vector convention)
+    end
 
-    % cross-validation results (from crossval)
-    cv_results       % struct array, one per fold:
-                     %   trIdx, teIdx, fold_model (compact), yfit, score,
-                     %   train_score, test_score, fit_time
-    yfit             % length-n vector of held-out predictions (cv_predict)
-    score            % length-n vector of held-out continuous scores
-                     %   (decision_function / class-1 probability / regression)
-    cv_score         % aggregated holdout score (mean over folds w/ scorer)
-    cv_score_descrip % string description of the scorer
+DEPENDENT READ-ONLY LEGACY ALIASES (top-level, forwarding getters):
 
-    % bootstrap results (from bootstrap)
-    boot_Beta        % p x nboot
-    boot_Beta_mean   % p x 1
-    boot_Beta_se     % p x 1
-    Beta_z           % p x 1
-    Beta_p           % p x 1
-    Beta_p_fdr_thr   % scalar FDR threshold (q < .05)
-    Beta_fdr_sig     % logical p x 1
-    Beta_thresh_fdr  % p x 1, Beta * Beta_fdr_sig
+    properties (Dependent, SetAccess = private)
+        Y, id, yfit, w, boot_w, boot_w_ste, boot_w_mean, wZ, wP,
+        wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr,
+        dist_from_hyperplane_xval, class_probability_xval,
+        crossval_accuracy, crossval_accuracy_within,
+        classification_d_singleinterval, classification_d_within,
+        regression_d_singleinterval, regression_d_within,
+        d_singleinterval, d_within, mult_obs_within_person,
+        ClassificationModel, SVMModel, SVRModel,
+        trIdx, teIdx, nfolds,
+        accfun_descrip, cverrfun, cverr, crossval_accuracy_descrip,
+        prediction_outcome_r, prediction_outcome_r_descrip, pred_outcome_r,
+        mse, rmse, meanabserr, r_squared,
+        scorediff, scores_within_id, Y_within_id,
+        ROC_forced_choice, ROC_single_interval, weight_obj
+    end
 
-    % permutation results (from permutation_test)
-    perm_null_score  % nperm x 1 null distribution of cv_score
-    perm_p           % scalar p-value
-    perm_score_descrip
+ROUTING TABLE (the part that does the work):
 
-    % within-person / repeated-measures (when groups passed and >1 obs/group)
-    mult_obs_within_person  % logical
-    Y_within_id      % cell array of per-id outcome vectors
-    scores_within_id % cell array of per-id score vectors
-    scorediff        % within-person score difference (for paired tests)
-    d_singleinterval % Cohen's d, between-person
-    d_within         % Cohen's d, within-person
+    A static method `predictive_model.field_routing()` returns an N x 3
+    cell array mapping every known input-struct field name to its
+    {category, subfield} home. The constructor walks an input struct
+    once, looks up each field name in the table, and writes to the
+    right location. Unrouted fields land in legacy_extras so nothing
+    is dropped silently. Adding a new wrapper = adding new rows.
 
-    % bookkeeping
-    history          % cell array of strings, image_vector-style
-    removed_voxels   % logical (for image-aware fits that drop voxels in fit)
-end
+    Legacy translations are encoded in the routing table directly:
+        SVMModel, SVRModel, ClassificationModel  -> ml_model
+        classification_d_singleinterval          -> error_metrics.d_singleinterval
+        regression_d_singleinterval              -> error_metrics.d_singleinterval
+        classification_d_within                  -> error_metrics.d_within
+        regression_d_within                      -> error_metrics.d_within
+        pred_outcome_r                           -> error_metrics.prediction_outcome_r
+        models                                   -> fold_models
+        bootstrap                                -> bootstrap_results
+        y (lowercase)                            -> inputs.Y
 
-LEGACY ALIAS PROPERTIES (kept for back-compat with xval_SVM/SVR struct dumps):
-    Y, id, trIdx, teIdx, nfolds, dist_from_hyperplane_xval,
-    class_probability_xval, crossval_accuracy, classification_d_singleinterval,
-    w (-> Beta), boot_w (-> boot_Beta), boot_w_ste, boot_w_mean, wZ, wP,
-    wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr, cverr, cverrfun, accfun,
-    accfun_descrip, prediction_outcome_r, prediction_outcome_r_descrip,
-    crossval_accuracy_descrip, ClassificationModel
+PREDICATES (implemented Phase 0):
+    is_fitted(obj)       -- true if any categorised fitted-state field has content
+    is_classifier(obj)   -- true if task='classification' or Y is binary
+    is_regressor(obj)    -- true if task='regression' or Y has >2 unique values
+    clone(obj)           -- new object: same hyperparameters, empty fitted state
 
-Recommendation: keep these as PROPERTIES (so existing code that does
-obj.w doesn't break) but mark them as legacy in the docstring. The new
-methods read/write the canonical names; the constructor's struct-copy
-path populates both. After ~2 releases, deprecate the legacy ones.
+VERIFIED PROPERTIES OF THE LAYOUT:
+    - Round-trip from a synthetic xval_SVM-style struct preserves every
+      tested legacy alias (Y, yfit, w, crossval_accuracy, d_singleinterval,
+      SVMModel, ClassificationModel, boot_w_ste, nfolds, modeloptions).
+    - is_classifier correctly returns true for binary Y, false otherwise.
+    - clone() preserves all hyperparameters and clears all fitted state.
+    - validate_object accepts well-formed objects and rejects malformed
+      modeloptions (the original predicate that short-circuited
+      incorrectly was rewritten to actually validate odd-position names).
 
 ----------- 4c. Required and conventional methods -----------------------------
 

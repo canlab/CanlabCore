@@ -1,0 +1,180 @@
+===============================================================================
+xval_*.m inventory: predictive-model fitters vs. CV utilities
+Date:   2026-05-30
+Branch: predictive_model_obj_dev
+Plan:   predictive_model_plan_claude.txt
+===============================================================================
+
+PURPOSE
+-------
+Identify which xval_*.m functions in CanlabCore actually fit and
+cross-validate a multivariate predictive model (so should be refactored
+to return a @predictive_model object), vs. which are CV utilities
+(holdout selection, feature selection helpers, plotting) that should be
+left alone for this phase.
+
+CATEGORIES
+----------
+  A. PREDICTIVE-MODEL FITTER  -> refactor to return predictive_model
+                                 (variable name: pmodel_obj)
+  B. CV UTILITY               -> leave alone
+  C. LEGACY / BACKUP          -> leave alone
+
+
+===============================================================================
+TABLE
+===============================================================================
+
+| File                                                  | Cat | Output var today        | Notes |
+|-------------------------------------------------------|-----|-------------------------|-------|
+| xval_SVM.m                                            | A   | S                       | Binary SVM via fitcsvm; subject-grouped CV; optional bayesopt + bootstrap |
+| xval_SVR.m                                            | A   | S                       | SVR via fitrsvm; subject-grouped CV; optional bayesopt + bootstrap |
+| xval_classify.m                                       | A   | S                       | LDA via fitcdiscr |
+| xval_discriminant_classifier.m                        | A   | S                       | LDA via fitcdiscr — NEARLY DUPLICATE of xval_classify.m (flag) |
+| xval_cross_classfy.m                                  | A   | test_results, stats1, stats2 | SVM or LASSOPCR cross-classification; FILENAME TYPO: classfy -> classify |
+| xval_regression_multisubject.m                        | A   | STATS                   | Core engine: 'lasso' / 'ols' / 'ridge' / 'robust' regression |
+| xval_regression_multisubject_featureselect.m          | A   | STATS                   | Same engine with per-fold feature selection |
+| xval_regression_multisubject_bootstrapweightmap.m     | A   | STATS                   | Regression + voxel-level bootstrap weight maps |
+| xval_lasso_brain.m                                    | A   | STATS_FINAL             | PCA-Lasso wrapper around xval_regression_multisubject |
+| xval_lasso_brain_featureselect.m                      | A   | STATS_FINAL             | PCA-Lasso + feature selection; FUNCTION-NAME COLLISION with xval_lasso_brain (both declare `function STATS_FINAL = xval_lasso_brain(...)`) |
+| xval_ridge_brain.m                                    | A   | STATS_FINAL             | PCA-Ridge wrapper; DOCSTRING INCORRECTLY says "Lasso" |
+| xval_bestsubsets_brain.m                              | A   | STATS_FINAL             | PCA-bestsubsets wrapper around xval_regression_multisubject |
+| xval_simple_ols_loo.m                                 | B   | pred_value              | LOO demo, scalar return, no model object |
+| xval_simple_ols_loo_featureselect.m                   | B   | pred_value              | LOO + feature-select demo; FUNCTION-NAME BUG: declared as `xval_simple_ols_loo`, missing `_featureselect` suffix |
+| xval_simple_ols_featureselect.m                       | B   | pred_value              | OLS + per-fold feature select |
+| xval_featureselect_nmdscluster.m                      | B   | pred_value              | Feature selection via NMDS clustering |
+| xval_lasso_trace.m                                    | B   | STATS                   | LOOCV variable importance traces (no final model) |
+| xval_select_holdout_set.m                             | B   | wh_holdout_final        | Holdout set selector (utility) |
+| xval_select_holdout_set_categoricalcovs.m             | B   | holdout_sets            | Holdout set selector w/ categorical covs |
+| xval_stratified_holdout_leave_whole_subject_out.m     | B   | trIdx, teIdx, holdout_integer_indic | LOSO / GroupKFold-style splitter |
+| xval_regression_bootstrapweightmap_brainplots.m       | B   | OUT                     | Post-hoc plotting of bootstrap weight maps |
+| xval_lasso_brain_permutation_histogram.m              | B   | (none)                  | Post-hoc permutation histogram plot |
+| xval_SVM_BKedit25Dec.m                                | C   | S                       | Backup of xval_SVM.m; do not touch |
+
+
+===============================================================================
+COUNTS
+===============================================================================
+  Category A (refactor):        12 files
+  Category B (leave):           10 files
+  Category C (legacy/backup):    1 file
+  TOTAL:                        23 files (24 listed; one was a wrapper of a
+                                          file already counted)
+
+
+===============================================================================
+KNOWN ISSUES TO FIX DURING REFACTOR
+===============================================================================
+
+T1. xval_cross_classfy.m  -> rename to xval_cross_classify.m
+    Filename typo. Function declaration line also says `xval_cross_classfy`.
+    Need to grep for callers before renaming so we can update them too.
+
+T2. xval_ridge_brain.m  -> fix docstring
+    Says "PCA-Lasso" but the function fits ridge. Docstring confusion only.
+
+T3. xval_simple_ols_loo_featureselect.m  -> function name mismatch
+    Declared as `function pred_value = xval_simple_ols_loo(X, Y, pthreshold)`
+    but the file is named `xval_simple_ols_loo_featureselect.m`. This means
+    if the file is on the path, MATLAB dispatch will be confused. This is
+    in category B (no model object) but worth fixing in the same sweep.
+
+T4. xval_lasso_brain_featureselect.m  -> function name COLLISION
+    Declared as `function STATS_FINAL = xval_lasso_brain(...)` — same name
+    as xval_lasso_brain.m. Whichever is found first on the path will be
+    called; the other is shadowed. Fix to `xval_lasso_brain_featureselect`.
+
+T5. xval_classify.m vs xval_discriminant_classifier.m  -> near duplicate
+    Both fit LDA via fitcdiscr with nearly identical surface. Likely one
+    is a renamed copy of the other. Flag for user — should one of them
+    be removed before we refactor both?
+
+T6. xval_SVM_BKedit25Dec.m  -> backup file
+    Per CLAUDE.md a few committed *_old.m files are intentional legacy
+    fallbacks; this looks similar. Leave it alone unless user wants it
+    removed.
+
+
+===============================================================================
+REFACTOR PLAN (next step, after user verification)
+===============================================================================
+
+For each Category A file:
+
+  1. Wrap the existing struct-build at the end of the function with a
+     `predictive_model(...)` constructor call:
+
+         pmodel_obj = predictive_model(stats_struct);
+         varargout{1} = pmodel_obj;    % or return as the primary output
+
+     This is back-compatible because struct fields with matching property
+     names are copied verbatim, and the constructor already does legacy
+     translations for SVMModel/SVRModel and the
+     classification_d_singleinterval / regression_d_singleinterval
+     fields (per @predictive_model/predictive_model.m).
+
+  2. Rename the in-function variable (S, STATS, STATS_FINAL,
+     test_results, stats1, stats2) to `pmodel_obj` for the OUTPUT only;
+     intermediate working structs can keep their names if heavy renaming
+     would be churny.
+
+  3. Update the help block:
+       - change ":Outputs: S - Structure with ..." to "pmodel_obj -
+         @predictive_model object with ..."
+       - add a one-line note: "See @predictive_model for the full
+         property list and method surface."
+       - fix any typos noticed during the edit.
+
+  4. Where the function takes the OUTPUT of another xval_ and operates
+     on it (e.g. xval_lasso_brain calls xval_regression_multisubject),
+     keep the inner call returning a predictive_model and adapt the
+     outer code to read from object properties instead of struct fields.
+     Touch the inner function FIRST so callers can rely on the new
+     contract.
+
+  5. Per the plan (Phase 0/1 not yet done), no fit/predict method
+     calls happen here — these wrappers continue to run their own CV
+     loops and bootstrap internally and just box up the result. The
+     consolidation onto a single engine is Phase 2-3 work.
+
+ORDER OF EDITS (dependency-driven):
+  1. xval_regression_multisubject.m              (leaf — many callers)
+  2. xval_regression_multisubject_featureselect.m (leaf)
+  3. xval_regression_multisubject_bootstrapweightmap.m
+  4. xval_lasso_brain.m                          (calls #1)
+  5. xval_lasso_brain_featureselect.m            (calls #2; + collision fix)
+  6. xval_ridge_brain.m                          (calls #1; + docstring fix)
+  7. xval_bestsubsets_brain.m                    (calls #1)
+  8. xval_SVM.m                                  (independent)
+  9. xval_SVR.m                                  (independent)
+  10. xval_classify.m                            (independent)
+  11. xval_discriminant_classifier.m             (independent; FLAG dup)
+  12. xval_cross_classfy.m                       (independent; + rename)
+
+
+===============================================================================
+QUESTIONS FOR USER BEFORE PROCEEDING
+===============================================================================
+
+Q1. Renaming xval_cross_classfy.m
+    File rename touches anything that calls it. Should I:
+      (a) rename the file + function, grep for callers, update them; OR
+      (b) leave the typo, just add a deprecation comment.
+    The plan's "fix typos" instruction reads as (a) — confirm?
+
+Q2. Function name collision in xval_lasso_brain_featureselect.m
+    Same name as xval_lasso_brain. Rename the inner declaration to
+    `xval_lasso_brain_featureselect` to match the filename?
+
+Q3. xval_classify.m vs xval_discriminant_classifier.m
+    Refactor BOTH (preserving the duplication for now), or pick one as
+    the canonical one and delete the other?
+
+Q4. xval_simple_ols_loo_featureselect.m function name mismatch
+    Category B (no model object) but the declaration says
+    `xval_simple_ols_loo` instead of the file's full name. Fix in the
+    same sweep, or out of scope?
+
+===============================================================================
+END
+===============================================================================

@@ -68,6 +68,7 @@ p.addParameter('FigureSize', [], @(x) isempty(x) || (isnumeric(x) && numel(x) ==
 p.addParameter('ErrorBand', 'sem', @(x) ischar(x) || isstring(x));
 p.addParameter('YZero', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Title', '', @(x) ischar(x) || isstring(x));
+p.addParameter('Verbose', false, @(x) islogical(x) || isnumeric(x));
 p.parse(input_table, varargin{:});
 opts = p.Results;
 
@@ -77,7 +78,7 @@ suffix = local_normalize_suffix(opts.Normalize);
 
 % 1. Walk the input_table, load the matching score CSV per row, extract the
 %    atlas columns. Output is a long table per-row.
-long = local_collect_atlas_long(input_table, model, object, opts.AtlasObj, char(opts.AtlasName), suffix);
+long = local_collect_atlas_long(input_table, model, object, opts.AtlasObj, char(opts.AtlasName), suffix, logical(opts.Verbose));
 if isempty(long) || height(long) == 0
     error('plot_hrf_atlas_curves:NoData', ...
         ['No atlas columns ending in _%s found in any score CSV for ' ...
@@ -118,7 +119,7 @@ end
 % =========================================================================
 % Data collection
 % =========================================================================
-function long = local_collect_atlas_long(input_table, model, object, atlas_obj, atlas_name, suffix)
+function long = local_collect_atlas_long(input_table, model, object, atlas_obj, atlas_name, suffix, verbose)
 % Returns one row per (subject, run_label, condition, region, lag_seconds, value).
 % Column matching is 3-tier:
 %   (a) AtlasObj.labels  -> exact end-match per label (region names from labels)
@@ -136,24 +137,65 @@ end
 suffix_str = ['_' suffix];
 labels = local_labels_from_atlas(atlas_obj);
 
+if verbose
+    fprintf('plot_hrf_atlas_curves: input_table has %d rows; filtering on model=''%s'', object=''%s''\n', ...
+        height(input_table), model, object);
+    if ~isempty(labels)
+        fprintf('  matcher: AtlasObj.labels (%d labels)\n', numel(labels));
+    elseif ~isempty(atlas_name)
+        fprintf('  matcher: AtlasName substring ''%s''\n', atlas_name);
+    else
+        fprintf('  matcher: auto (any atlas_*_%s)\n', suffix);
+    end
+end
+
 chunks = {};
+n_loaded = 0;
+n_skipped_model = 0;
+n_skipped_path = 0;
+n_skipped_meta = 0;
+n_skipped_no_atlas = 0;
+seen_paths = strings(0, 1);
 for i = 1:height(input_table)
     row_model = local_get_string(input_table, i, 'model');
-    if ~isempty(model) && ~strcmpi(row_model, model), continue; end
+    if ~isempty(model) && ~strcmpi(row_model, model)
+        n_skipped_model = n_skipped_model + 1;
+        continue
+    end
     path = char(string(input_table.(file_col)(i)));
-    if isempty(path) || exist(path, 'file') ~= 2, continue; end
+    if isempty(path) || exist(path, 'file') ~= 2
+        n_skipped_path = n_skipped_path + 1;
+        continue
+    end
     try
         T = readtable(path, 'TextType', 'string');
     catch
+        n_skipped_path = n_skipped_path + 1;
         continue
     end
     cols = T.Properties.VariableNames;
     if ~any(strcmp('condition', cols)) || ~any(strcmp('lag_seconds', cols))
+        n_skipped_meta = n_skipped_meta + 1;
         continue
     end
 
     [region_cols, region_labels] = local_match_atlas_columns(cols, labels, atlas_name, suffix_str);
-    if isempty(region_cols), continue; end
+    if isempty(region_cols)
+        n_skipped_no_atlas = n_skipped_no_atlas + 1;
+        if verbose && n_skipped_no_atlas <= 2
+            atlas_like = cols(startsWith(cols, 'atlas_'));
+            fprintf('  row %d (model=%s): no matching atlas columns. atlas_* present (first 3): %s\n', ...
+                i, row_model, strjoin(atlas_like(1:min(3, numel(atlas_like))), ', '));
+        end
+        continue
+    end
+
+    n_loaded = n_loaded + 1;
+    seen_paths(end + 1, 1) = string(path); %#ok<AGROW>
+    if verbose && n_loaded <= 3
+        fprintf('  loaded row %d  model=%s  subj=%s  cols matched: %d  path: %s\n', ...
+            i, row_model, local_get_string(input_table, i, 'subject'), numel(region_cols), path);
+    end
 
     n = height(T);
     subj = string(local_get_string(input_table, i, 'subject'));
@@ -173,6 +215,26 @@ end
 
 if ~isempty(chunks)
     long = vertcat(chunks{:});
+end
+
+if verbose
+    fprintf('  loaded %d row(s); skipped model=%d, path=%d, meta=%d, no_atlas=%d\n', ...
+        n_loaded, n_skipped_model, n_skipped_path, n_skipped_meta, n_skipped_no_atlas);
+    n_unique_paths = numel(unique(seen_paths));
+    if n_loaded > 0 && n_unique_paths < n_loaded
+        fprintf(['  WARNING: %d loaded rows reference only %d unique file paths -- ' ...
+                 'multiple rows point at the same score CSV. The scoring step probably ' ...
+                 'wrote one file per (subject, run) regardless of model, so every model ' ...
+                 'filter ends up reading the same data.\n'], ...
+                n_loaded, n_unique_paths);
+    end
+    if ~isempty(long)
+        fprintf('  long table: %d rows; %d unique (subject, run, condition, region, lag)\n', ...
+            height(long), height(unique(long(:, {'subject','run_label','condition','region','lag_seconds'}))));
+        fprintf('  unique regions: %d; unique conditions: %d; lag count per (subj, run, region, cond): %d\n', ...
+            numel(unique(long.region)), numel(unique(long.condition)), ...
+            mode(splitapply(@numel, long.lag_seconds, findgroups(long.subject, long.run_label, long.region, long.condition))));
+    end
 end
 end
 

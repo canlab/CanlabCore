@@ -32,12 +32,14 @@ function xval_regression_multisubject_featureselect_unit_test()
     % Categorised <-> legacy alias agreement on key fields.
     % (mean_vox_weights is only populated when pcsquash is enabled;
     % this no-PCA test doesn't exercise that path.)
-    assert(isequaln(pm.subjfit,        pm.fitted_values.subjfit),        'subjfit');
-    assert(isequaln(pm.vox_weights,    pm.weights.vox_weights),          'vox_weights');
-    assert(isequaln(pm.pred_err,       pm.error_metrics.pred_err),       'pred_err');
-    assert(isequaln(pm.pred_err_null,  pm.error_metrics.pred_err_null),  'pred_err_null');
-    assert(isequaln(pm.var_reduction,  pm.error_metrics.var_reduction),  'var_reduction');
-    assert(isequaln(pm.Y_orig,         pm.inputs.Y_orig),                'Y_orig');
+    assert(isequaln(pm.subjfit,        pm.fitted_values.subjfit),               'subjfit');
+    % vox_weights renamed to weights.w_perfold in consolidated layout
+    assert(isequaln(pm.vox_weights,    pm.weights.w_perfold),                   'vox_weights / w_perfold');
+    % error_metrics entries are (value, descrip) tuples.
+    assert(isequaln(pm.pred_err,       pm.error_metrics.pred_err.value),        'pred_err');
+    assert(isequaln(pm.pred_err_null,  pm.error_metrics.pred_err_null.value),   'pred_err_null');
+    assert(isequaln(pm.var_reduction,  pm.error_metrics.var_reduction.value),   'var_reduction');
+    assert(~isempty(pm.Y_orig), 'Y_orig empty (should alias Y)');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     % Verify vox_weights matches the full feature space (the bug we fixed

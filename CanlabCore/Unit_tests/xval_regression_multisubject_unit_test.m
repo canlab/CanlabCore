@@ -45,15 +45,18 @@ function xval_regression_multisubject_unit_test()
     fprintf('  class = %s, is_fitted = %d\n', class(pmodel_obj), pmodel_obj.is_fitted);
 
     % --- Categorised <-> legacy alias agreement ---
-    assert(isequal(pmodel_obj.subjfit,            pmodel_obj.fitted_values.subjfit),     'subjfit alias mismatch');
-    assert(isequal(pmodel_obj.subjbetas,          pmodel_obj.weights.subjbetas),         'subjbetas alias mismatch');
-    assert(isequal(pmodel_obj.mean_vox_weights,   pmodel_obj.weights.mean_vox_weights),  'mean_vox_weights alias mismatch');
-    assert(isequal(pmodel_obj.pred_err,           pmodel_obj.error_metrics.pred_err),    'pred_err alias mismatch');
-    assert(isequal(pmodel_obj.pred_err_null,      pmodel_obj.error_metrics.pred_err_null), 'pred_err_null alias mismatch');
-    assert(isequal(pmodel_obj.var_reduction,      pmodel_obj.error_metrics.var_reduction), 'var_reduction alias mismatch');
-    assert(isequal(pmodel_obj.r_each_subject,     pmodel_obj.error_metrics.r_each_subject), 'r_each_subject alias mismatch');
-    assert(isequal(pmodel_obj.Y_orig,             pmodel_obj.inputs.Y_orig),             'Y_orig alias mismatch');
-    assert(isequal(pmodel_obj.INPUTS,             pmodel_obj.inputs.INPUTS),             'INPUTS alias mismatch');
+    assert(isequal(pmodel_obj.subjfit,            pmodel_obj.fitted_values.subjfit),               'subjfit');
+    assert(isequal(pmodel_obj.subjbetas,          pmodel_obj.weights.subjbetas),                   'subjbetas');
+    assert(isequal(pmodel_obj.mean_vox_weights,   pmodel_obj.weights.mean_vox_weights),            'mean_vox_weights');
+    % error_metrics entries are (value, descrip) tuples; legacy alias unwraps .value.
+    assert(isequal(pmodel_obj.pred_err,           pmodel_obj.error_metrics.pred_err.value),        'pred_err');
+    assert(isequal(pmodel_obj.pred_err_null,      pmodel_obj.error_metrics.pred_err_null.value),   'pred_err_null');
+    assert(isequal(pmodel_obj.var_reduction,      pmodel_obj.error_metrics.var_reduction.value),   'var_reduction');
+    assert(isequal(pmodel_obj.r_each_subject,     pmodel_obj.error_metrics.r_each_subject.value),  'r_each_subject');
+    % After consolidation: Y/Y_orig are top-level; INPUTS is a Dependent
+    % alias for the top-level inputParameters struct.
+    assert(~isempty(pmodel_obj.Y_orig), 'Y_orig empty (should alias Y)');
+    assert(~isempty(pmodel_obj.INPUTS), 'INPUTS empty (should alias inputParameters)');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     % --- Shape / sanity ---

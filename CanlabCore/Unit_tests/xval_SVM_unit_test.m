@@ -47,22 +47,24 @@ function xval_SVM_unit_test()
         class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_classifier);
 
     % --- Categorised <-> legacy alias agreement ---
-    assert(isequal(pmodel_obj.Y,                              pmodel_obj.inputs.Y),                              'Y alias mismatch');
-    assert(isequal(pmodel_obj.id,                             pmodel_obj.inputs.id),                             'id alias mismatch');
-    assert(isequal(pmodel_obj.yfit,                           pmodel_obj.fitted_values.yfit),                    'yfit alias mismatch');
-    assert(isequal(pmodel_obj.dist_from_hyperplane_xval,      pmodel_obj.fitted_values.dist_from_hyperplane_xval), 'dist_from_hyperplane_xval alias mismatch');
-    assert(isequal(pmodel_obj.class_probability_xval,         pmodel_obj.fitted_values.class_probability_xval),  'class_probability_xval alias mismatch');
-    assert(isequal(pmodel_obj.scorediff,                      pmodel_obj.fitted_values.scorediff),               'scorediff alias mismatch');
-    assert(isequal(pmodel_obj.w,                              pmodel_obj.weights.w),                             'w alias mismatch');
-    assert(isequal(pmodel_obj.crossval_accuracy,              pmodel_obj.error_metrics.crossval_accuracy),       'crossval_accuracy alias mismatch');
-    assert(isequal(pmodel_obj.classification_d_singleinterval, pmodel_obj.error_metrics.d_singleinterval),       'classification_d_singleinterval alias mismatch');
-    assert(isequal(pmodel_obj.crossval_accuracy_within,       pmodel_obj.error_metrics.crossval_accuracy_within), 'crossval_accuracy_within alias mismatch');
-    assert(isequal(pmodel_obj.classification_d_within,        pmodel_obj.error_metrics.d_within),                'classification_d_within alias mismatch');
-    assert(isequal(pmodel_obj.SVMModel,                       pmodel_obj.ml_model),                              'SVMModel alias mismatch');
-    assert(isequal(pmodel_obj.ClassificationModel,            pmodel_obj.ml_model),                              'ClassificationModel alias mismatch');
-    assert(isequal(pmodel_obj.trIdx,                          pmodel_obj.cv_partition.trIdx),                    'trIdx alias mismatch');
-    assert(isequal(pmodel_obj.teIdx,                          pmodel_obj.cv_partition.teIdx),                    'teIdx alias mismatch');
-    assert(isequal(pmodel_obj.nfolds,                         pmodel_obj.cv_partition.nfolds),                   'nfolds alias mismatch');
+    % Y, id are now top-level (was pmodel_obj.inputs.Y / .id) — sanity-check they're present.
+    assert(~isempty(pmodel_obj.Y),  'Y empty');
+    assert(~isempty(pmodel_obj.id), 'id empty');
+    assert(isequal(pmodel_obj.yfit,                           pmodel_obj.fitted_values.yfit),                          'yfit');
+    assert(isequal(pmodel_obj.dist_from_hyperplane_xval,      pmodel_obj.fitted_values.dist_from_hyperplane_xval),     'dist_from_hyperplane_xval');
+    assert(isequal(pmodel_obj.class_probability_xval,         pmodel_obj.fitted_values.class_probability_xval),        'class_probability_xval');
+    assert(isequal(pmodel_obj.scorediff,                      pmodel_obj.fitted_values.scorediff),                     'scorediff');
+    assert(isequal(pmodel_obj.w,                              pmodel_obj.weights.w),                                   'w');
+    % error_metrics entries are now (value, descrip) tuples; legacy alias unwraps .value.
+    assert(isequal(pmodel_obj.crossval_accuracy,              pmodel_obj.error_metrics.crossval_accuracy.value),       'crossval_accuracy');
+    assert(isequaln(pmodel_obj.classification_d_singleinterval, pmodel_obj.error_metrics.d_singleinterval.value),      'classification_d_singleinterval');
+    assert(isequaln(pmodel_obj.crossval_accuracy_within,      pmodel_obj.error_metrics.crossval_accuracy_within.value),'crossval_accuracy_within');
+    assert(isequaln(pmodel_obj.classification_d_within,       pmodel_obj.error_metrics.d_within.value),                'classification_d_within');
+    assert(isequal(pmodel_obj.SVMModel,                       pmodel_obj.ml_model),                                    'SVMModel');
+    assert(isequal(pmodel_obj.ClassificationModel,            pmodel_obj.ml_model),                                    'ClassificationModel');
+    assert(isequal(pmodel_obj.trIdx,                          pmodel_obj.cv_partition.trIdx),                          'trIdx');
+    assert(isequal(pmodel_obj.teIdx,                          pmodel_obj.cv_partition.teIdx),                          'teIdx');
+    assert(isequal(pmodel_obj.nfolds,                         pmodel_obj.cv_partition.nfolds),                         'nfolds');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     % --- Shape / sanity ---

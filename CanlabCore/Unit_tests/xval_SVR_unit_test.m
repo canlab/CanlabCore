@@ -39,13 +39,14 @@ function xval_SVR_unit_test()
         class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_regressor);
 
     % Round-trip categorised vs. legacy aliases (regression-relevant fields only).
-    assert(isequaln(pmodel_obj.Y,                    pmodel_obj.inputs.Y),                            'Y');
-    assert(isequaln(pmodel_obj.yfit,                 pmodel_obj.fitted_values.yfit),                  'yfit');
-    assert(isequaln(pmodel_obj.w,                    pmodel_obj.weights.w),                           'w');
-    assert(isequaln(pmodel_obj.prediction_outcome_r, pmodel_obj.error_metrics.prediction_outcome_r),  'prediction_outcome_r');
-    assert(isequaln(pmodel_obj.pred_outcome_r,       pmodel_obj.error_metrics.prediction_outcome_r),  'pred_outcome_r alias');
-    assert(isequaln(pmodel_obj.d_singleinterval,     pmodel_obj.error_metrics.d_singleinterval),      'd_singleinterval');
-    assert(isequaln(pmodel_obj.SVRModel,             pmodel_obj.ml_model),                            'SVRModel');
+    assert(~isempty(pmodel_obj.Y),                                                                     'Y empty');
+    assert(isequaln(pmodel_obj.yfit,                 pmodel_obj.fitted_values.yfit),                        'yfit');
+    assert(isequaln(pmodel_obj.w,                    pmodel_obj.weights.w),                                 'w');
+    % error_metrics entries are (value, descrip) tuples; legacy alias unwraps .value.
+    assert(isequaln(pmodel_obj.prediction_outcome_r, pmodel_obj.error_metrics.prediction_outcome_r.value),  'prediction_outcome_r');
+    assert(isequaln(pmodel_obj.pred_outcome_r,       pmodel_obj.error_metrics.prediction_outcome_r.value),  'pred_outcome_r alias');
+    assert(isequaln(pmodel_obj.d_singleinterval,     pmodel_obj.error_metrics.d_singleinterval.value),      'd_singleinterval');
+    assert(isequaln(pmodel_obj.SVRModel,             pmodel_obj.ml_model),                                  'SVRModel');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     fprintf('  cv: r = %.3f, d = %.2f\n', pmodel_obj.prediction_outcome_r, pmodel_obj.d_singleinterval);

@@ -1,132 +1,107 @@
 classdef predictive_model
     % predictive_model  Object representing a multivariate predictive model.
     %
-    % This class is the canonical output of CanlabCore's predictive-modeling
-    % entry points (xval_SVM, xval_SVR, xval_discriminant_classifier,
-    % xval_cross_classify, xval_regression_multisubject, xval_lasso_brain,
-    % xval_ridge_brain, xval_bestsubsets_brain, fmri_data.predict, ...).
+    % Canonical output of CanlabCore's predictive-modelling entry points
+    % (xval_SVM, xval_SVR, xval_discriminant_classifier, xval_cross_classify,
+    % xval_regression_multisubject, xval_lasso_brain, xval_ridge_brain,
+    % xval_bestsubsets_brain, fmri_data.predict, ...).
     %
-    % Properties are organised into two top-level blocks:
+    % TOP-LEVEL PROPERTIES (post-consolidation)
     %
-    %   HYPERPARAMETERS   (set by the user / wrapper)
+    %   HYPERPARAMETERS (set by user/constructor)
     %     algorithm, task, modeloptions, random_state, standardize,
     %     use_parallel, cv, scorer, nboot, nperm, do_calibrate,
-    %     Y_name, X_name, class_labels.
+    %     Y_name, X_name, class_labels
     %
-    %   FITTED STATE      (populated by fit / crossval / bootstrap / ...)
-    %     The fitted-state surface is grouped into 13 named sub-struct
-    %     properties plus a few top-level fields, so the class stays
-    %     grok-able as more algorithm families are added.
+    %   DATA (top-level, was in the inputs category)
+    %     Y                 outcome vector actually fit (after bad-case removal)
+    %     id                grouping vector (e.g., subject id)
+    %     omitted_cases     logical, length = original Y, true = removed
+    %                       by the pre-fit data-quality check (NaN in X or Y,
+    %                       or any other "bad case" the wrapper detected).
+    %     omitted_features  logical, length = original feature count,
+    %                       true = removed (all-NaN columns, zero-variance
+    %                       columns, etc.).
+    %     inputParameters   struct: pcsquash, num_dims, holdout_method,
+    %                       regparams, lambda, Alpha, snapshot of modeloptions,
+    %                       etc. Consolidates legacy INPUTS, inputs, inputOptions.
     %
-    %       inputs               .Y .id .Y_orig .INPUTS
-    %       cv_partition         .trIdx .teIdx .nfolds .fold_modeloptions
-    %                            .hyperparams_by_fold
-    %       fitted_values        .yfit .dist_from_hyperplane_xval
-    %                            .class_probability_xval .scores_within_id
-    %                            .Y_within_id .scorediff .subjfit
-    %                            .high_vs_low_scores_within_id .predictions
-    %                            .trueLabels
-    %       weights              .w (= Beta) .mean_vox_weights .vox_weights
-    %                            .VOXWEIGHTS .my_intercepts .subjbetas
-    %                            .weight_obj   (statistic_image when available)
-    %       weight_stats         .boot_w .boot_w_ste .boot_w_mean .wZ .wP
-    %                            .wP_fdr_thr .boot_w_fdrsig .w_thresh_fdr
-    %       error_metrics        .crossval_accuracy .crossval_accuracy_within
-    %                            .d_singleinterval .d_within
-    %                            .prediction_outcome_r .cverr .mse .rmse
-    %                            .meanabserr .r_squared .var_full .var_null
-    %                            .var_reduction .pred_err .pred_err_null
-    %                            .devs_from_full_model
-    %                            .devs_from_mean_only_model .r_each_subject
-    %                            .accuracy .overallAccuracy .err
-    %       descriptions         .accfun_descrip .cverrfun
-    %                            .crossval_accuracy_descrip
-    %                            .prediction_outcome_r_descrip
-    %                            .pred_err_descrip .var_reduction_descrip
-    %                            .classification_d_within_descrip
-    %                            .note .r_each_subject_note
-    %                            .r_each_subject_note2 .cvoutput_descrip
-    %                            .error_type .function_call .function_handle
-    %                            .algorithm_name
-    %       ml_model             trained MATLAB model object (e.g.,
-    %                            ClassificationSVM, RegressionLinear, ...);
-    %                            accepts legacy field names SVMModel,
-    %                            SVRModel, ClassificationModel.
-    %       fold_models          cell array of per-fold trained MATLAB models
-    %                            (accepts legacy field name "models").
-    %       bootstrap_results    full bootstrap output (e.g., the .bootstrap
-    %                            sub-struct produced by xval_lasso_brain);
-    %                            .WTS is also routed here.
-    %       permutation_results  full permutation-test output
-    %       diagnostics          .ROC_forced_choice .ROC_single_interval
-    %                            .mult_obs_within_person
-    %                            .all_reg_hyperparams .phi
-    %       cross_classify       cross-classification output from
-    %                            xval_cross_classify (.stats1 .stats2
-    %                            .test_results .crosstestfit .cvoutput
-    %                            .test_Y .all)
-    %       legacy_extras        catch-all struct for any input-struct field
-    %                            that does not yet have a categorised home;
-    %                            stored verbatim so nothing is lost.
-    %       accfun               objective function handle used in CV
-    %       history              cell of one-line strings, image_vector-style
-    %       removed_voxels       logical vector, image_vector-style
+    %   FIT METADATA
+    %     fit_type          char: 'crossval' | 'insample' | 'test'.
+    %                       Describes the provenance of BOTH `yfit` and `weights`.
+    %                       Set by the function that populates them; for
+    %                       cross-validated wrappers this is 'crossval'.
     %
-    %   LEGACY ALIASES (read-only, Dependent)
-    %     For backward compatibility with code written against the flat
-    %     output struct that xval_SVM / xval_SVR / etc. used to return, the
-    %     class exposes Dependent properties at the top level that forward
-    %     to the categorised sub-struct fields:
+    %   FITTED STATE (categorised sub-structs)
+    %     fitted_values     .yfit  .scores  .score_type ('distance'|'probability')
+    %                       .scores_within_id .Y_within_id .scorediff
+    %                       .high_vs_low_scores_within_id .subjfit
+    %                       .predictions .Y_per_fold
+    %     weights           .w (main coefficient vector)
+    %                       .w_perfold (matrix nvox x nfolds; was vox_weights)
+    %                       .w_bootstrap (struct; was VOXWEIGHTS)
+    %                       .mean_vox_weights .my_intercepts .subjbetas .weight_obj
+    %                       .boot_w .boot_w_ste .boot_w_mean      (merged from weight_stats)
+    %                       .z .p .fdr_thr .fdr_sig .thresh_fdr   (merged from weight_stats;
+    %                                                             renamed wZ->z, wP->p,
+    %                                                             wP_fdr_thr->fdr_thr,
+    %                                                             boot_w_fdrsig->fdr_sig,
+    %                                                             w_thresh_fdr->thresh_fdr)
+    %     error_metrics     Each entry is a (value, descrip) tuple:
+    %                       error_metrics.pred_err = struct('value', 2.4, 'descrip', 'RMSE')
+    %                       Top-level Dependent aliases (.pred_err, .crossval_accuracy, ...)
+    %                       unwrap .value for arithmetic; the corresponding
+    %                       *_descrip aliases unwrap .descrip.
+    %     cv_partition      .trIdx .teIdx .nfolds .fold_modeloptions
+    %                       .hyperparams_by_fold .cvpartition
+    %     ml_model          trained MATLAB model object (verbatim).
+    %     fold_models       cell of per-fold trained models.
+    %     bootstrap_results full bootstrap output struct.
+    %     permutation_results
+    %     diagnostics       .ROC_forced_choice .ROC_single_interval
+    %                       .mult_obs_within_person .all_reg_hyperparams .phi
+    %     cross_classify    cross-classification output (.stats1 .stats2
+    %                       .test_results .crosstestfit .cvoutput .test_Y .all)
+    %     legacy_extras     catch-all for fields without a categorised home.
+    %     note              cell array of strings, appended to (not overwritten)
+    %                       as wrappers add commentary. Consolidates legacy
+    %                       note + r_each_subject_note + r_each_subject_note2.
+    %     accfun            objective function handle (top-level).
+    %     history           cell of strings (image_vector convention).
+    %     removed_voxels    logical (image_vector convention).
     %
-    %       Y, id, yfit, w, boot_w, boot_w_ste, boot_w_mean, wZ, wP,
-    %       wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr,
-    %       dist_from_hyperplane_xval, class_probability_xval,
-    %       crossval_accuracy, crossval_accuracy_within,
-    %       classification_d_singleinterval, classification_d_within,
-    %       regression_d_singleinterval, regression_d_within,
-    %       d_singleinterval, d_within, mult_obs_within_person,
-    %       ClassificationModel, SVMModel, SVRModel, trIdx, teIdx, nfolds,
-    %       accfun_descrip, cverrfun, cverr, crossval_accuracy_descrip,
-    %       prediction_outcome_r, prediction_outcome_r_descrip,
-    %       pred_outcome_r, mse, rmse, meanabserr, r_squared,
-    %       scorediff, scores_within_id, Y_within_id,
-    %       ROC_forced_choice, ROC_single_interval, weight_obj, modeloptions.
-    %
-    %     Reading these (`pm.w`, `pm.yfit`, ...) keeps working exactly as
-    %     before. Writing to them is not supported; mutate the categorised
-    %     sub-structs directly via methods.
+    % LEGACY DEPENDENT ALIASES (read-only, full back-compat)
+    %     Every flat field name that user code currently reads still works:
+    %     Y_orig, trueLabels, y -> Y
+    %     INPUTS, inputs, inputOptions -> inputParameters
+    %     vox_weights -> weights.w_perfold
+    %     VOXWEIGHTS  -> weights.w_bootstrap
+    %     wZ, wP, wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr
+    %                 -> weights.z / .p / .fdr_thr / .fdr_sig / .thresh_fdr
+    %     r_each_subject_note, r_each_subject_note2 -> indexed entries in .note
+    %     pred_err, crossval_accuracy, r_squared, mse, rmse, ... -> .value of the tuple
+    %     pred_err_descrip, crossval_accuracy_descrip, ...       -> .descrip of the tuple
+    %     classification_d_singleinterval, regression_d_singleinterval, ...
+    %                                                            -> d_singleinterval.value
+    %     SVMModel, SVRModel, ClassificationModel -> ml_model
     %
     % :Usage:
     % ::
-    %     pm = predictive_model();             % empty object
+    %     pm = predictive_model();             % empty
     %     pm = predictive_model(S);            % from struct (legacy wrappers)
     %     pm = predictive_model(S, 'noverbose'); % suppress "fields not copied"
     %     pm = predictive_model('algorithm','svm','task','classification', ...
     %                           'modeloptions',{'KernelFunction','linear'});
     %
-    % When constructed from a struct (the path used by every xval_*.m wrapper
-    % today), the constructor walks the struct's fields and routes each one
-    % into its categorised home. Legacy translations:
-    %     SVMModel, SVRModel                 -> ml_model
-    %     ClassificationModel                -> ml_model
-    %     classification_d_singleinterval    -> error_metrics.d_singleinterval
-    %     regression_d_singleinterval        -> error_metrics.d_singleinterval
-    %     classification_d_within            -> error_metrics.d_within
-    %     regression_d_within                -> error_metrics.d_within
-    %     pred_outcome_r                     -> error_metrics.prediction_outcome_r
-    %     models                             -> fold_models
-    %     bootstrap                          -> bootstrap_results
-    %
     % :Examples:
     % ::
-    %     % Build from a struct produced by xval_SVM:
     %     S  = xval_SVM(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap');
     %     pm = predictive_model(S);
-    %     pm.is_fitted               % true
-    %     pm.is_classifier           % true (Y has two unique values)
-    %     pm.crossval_accuracy       % legacy alias -> error_metrics.crossval_accuracy
-    %     pm.fitted_values.yfit      % canonical path to held-out predictions
-    %     pm.weights.w               % canonical path to model weights
+    %     pm.fit_type                  % 'crossval'
+    %     pm.crossval_accuracy         % numeric (Dependent unwraps .value)
+    %     pm.crossval_accuracy_descrip % descrip string (Dependent unwraps .descrip)
+    %     pm.weights.z                 % bootstrap z-scores
+    %     pm.weights.w_perfold         % per-fold weight matrix
     %
     % :See also:
     %   xval_SVM, xval_SVR, xval_discriminant_classifier, fmri_data.predict
@@ -140,41 +115,37 @@ classdef predictive_model
     %     it under the terms of the GNU General Public License as published by
     %     the Free Software Foundation, either version 3 of the License, or
     %     (at your option) any later version.
-    %
-    %     This program is distributed in the hope that it will be useful,
-    %     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    %     GNU General Public License for more details.
-    %
-    %     You should have received a copy of the GNU General Public License
-    %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     % -------------------------------------------------------------------------
 
     properties  % HYPERPARAMETERS
-        algorithm       = '';     % string, e.g. 'svm','svr','lassopcr','ridge','lda'
-        task            = '';     % 'classification' | 'regression'
-        modeloptions    = {};     % cell of name/value pairs forwarded to fit fn
-        random_state    = [];     % rng seed for reproducibility
-        standardize     = [];     % logical
-        use_parallel    = [];     % logical
-        cv              = [];     % splitter object (Phase 1)
-        scorer          = [];     % scorer object (Phase 1)
-        nboot           = [];     % bootstrap samples (default chosen at fit)
-        nperm           = [];     % permutation samples
-        do_calibrate    = [];     % logical; Platt-style calibration
+        algorithm       = '';
+        task            = '';
+        modeloptions    = {};
+        random_state    = [];
+        standardize     = [];
+        use_parallel    = [];
+        cv              = [];
+        scorer          = [];
+        nboot           = [];
+        nperm           = [];
+        do_calibrate    = [];
         Y_name          = '';
         X_name          = '';
         class_labels    = {};
     end
 
-    properties (SetAccess = protected)  % CATEGORISED FITTED STATE
-        inputs               = struct();
+    properties (SetAccess = protected)  % DATA + FIT METADATA + CATEGORISED FITTED STATE
+        Y                    = [];
+        id                   = [];
+        omitted_cases        = [];
+        omitted_features     = [];
+        inputParameters      = struct();
+        fit_type             = '';
+
         cv_partition         = struct();
         fitted_values        = struct();
         weights              = struct();
-        weight_stats         = struct();
         error_metrics        = struct();
-        descriptions         = struct();
         ml_model             = [];
         fold_models          = {};
         bootstrap_results    = struct();
@@ -182,24 +153,27 @@ classdef predictive_model
         diagnostics          = struct();
         cross_classify       = struct();
         legacy_extras        = struct();
-        accfun               = [];    % top-level: objective function handle
+        note                 = {};
+        accfun               = [];
         history              = {};
         removed_voxels       = [];
     end
 
     properties (Dependent, SetAccess = private)  % LEGACY READ-ONLY ALIASES
-        % -- inputs --
-        Y
-        id
+        % Data
         Y_orig
+        trueLabels
+        y
         INPUTS
-        % -- cv_partition --
+        inputs
+        inputOptions
+        % cv_partition
         trIdx
         teIdx
         nfolds
         fold_modeloptions
         hyperparams_by_fold
-        % -- fitted_values --
+        % fitted_values
         yfit
         dist_from_hyperplane_xval
         class_probability_xval
@@ -209,8 +183,7 @@ classdef predictive_model
         high_vs_low_scores_within_id
         subjfit
         predictions
-        trueLabels
-        % -- weights --
+        % weights
         w
         mean_vox_weights
         vox_weights
@@ -218,7 +191,6 @@ classdef predictive_model
         my_intercepts
         subjbetas
         weight_obj
-        % -- weight_stats --
         boot_w
         boot_w_ste
         boot_w_mean
@@ -227,7 +199,7 @@ classdef predictive_model
         wP_fdr_thr
         boot_w_fdrsig
         w_thresh_fdr
-        % -- error_metrics (incl. legacy d-prefix variants) --
+        % error_metrics (unwrap .value)
         crossval_accuracy
         crossval_accuracy_within
         d_singleinterval
@@ -255,38 +227,38 @@ classdef predictive_model
         overallAccuracy
         err
         phi
-        % -- descriptions --
-        accfun_descrip
-        cverrfun
+        % error_metrics descrip (unwrap .descrip)
         crossval_accuracy_descrip
         prediction_outcome_r_descrip
         pred_err_descrip
         var_reduction_descrip
         classification_d_within_descrip
-        note
-        r_each_subject_note
-        r_each_subject_note2
+        % stand-alone descrip strings (not paired with a metric)
+        accfun_descrip
+        cverrfun
         cvoutput_descrip
         error_type
         function_call
         function_handle
         algorithm_name
-        % -- ml_model legacy single-object aliases --
+        % notes
+        r_each_subject_note
+        r_each_subject_note2
+        % ml_model aliases
         ClassificationModel
         SVMModel
         SVRModel
-        % -- bootstrap_results --
+        % bootstrap_results
         WTS
-        % -- diagnostics --
+        % diagnostics
         mult_obs_within_person
         ROC_forced_choice
         ROC_single_interval
         all_reg_hyperparams
-        % -- legacy_extras (brain-wrapper composite fields) --
+        % legacy_extras composites (brain wrappers)
         full_model
         data
         covs
-        inputOptions
     end
 
 
@@ -294,24 +266,18 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function obj = predictive_model(varargin)
-            % predictive_model  Construct a predictive_model object.
-            %
-            % Usage:
-            %   pm = predictive_model();
-            %   pm = predictive_model(S);                   % struct path
-            %   pm = predictive_model(S, 'noverbose');
-            %   pm = predictive_model('algorithm','svm', 'task','classification', ...);
+            % predictive_model  Construct from a struct or from name/value hyperparameters.
 
             if nargin == 0, return; end
 
-            % --- Path 1: struct input (legacy wrappers) ---
+            % --- struct input (legacy wrappers) ---
             if isstruct(varargin{1})
                 doverbose = ~any(strcmpi(varargin(2:end), 'noverbose'));
                 obj = obj.populate_from_struct(varargin{1}, doverbose);
                 return
             end
 
-            % --- Path 2: name-value pairs (new API) ---
+            % --- name/value hyperparameters (new API) ---
             if ischar(varargin{1}) || isstring(varargin{1})
                 p = inputParser;
                 p.KeepUnmatched = true;
@@ -330,16 +296,13 @@ classdef predictive_model
                 addParameter(p, 'X_name',       obj.X_name);
                 addParameter(p, 'class_labels', obj.class_labels);
                 parse(p, varargin{:});
-
                 hp_names = fieldnames(p.Results);
                 for i = 1:numel(hp_names)
                     obj.(hp_names{i}) = p.Results.(hp_names{i});
                 end
-
                 if ~isempty(fieldnames(p.Unmatched))
                     warning('predictive_model:UnknownHyperparameter', ...
-                        ['Ignored unknown name/value pairs: %s. ' ...
-                         'For struct input, pass the struct as the first argument.'], ...
+                        'Ignored unknown name/value pairs: %s.', ...
                         strjoin(fieldnames(p.Unmatched), ', '));
                 end
                 return
@@ -352,7 +315,6 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function tf = is_fitted(obj)
-            % is_fitted  True if any categorised fitted-state field has content.
             tf = ~isempty(obj.ml_model) ...
                 || ~isempty(obj.fold_models) ...
                 || ~isempty(fieldnames(obj.fitted_values)) ...
@@ -365,30 +327,24 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function tf = is_classifier(obj)
-            % is_classifier  True if task is 'classification' or Y is binary.
             tf = strcmpi(obj.task, 'classification');
-            if ~tf && isfield(obj.inputs, 'Y') && ~isempty(obj.inputs.Y)
-                Yv = obj.inputs.Y;
-                tf = numel(unique(Yv(~isnan(Yv)))) <= 2;
+            if ~tf && ~isempty(obj.Y)
+                tf = numel(unique(obj.Y(~isnan(obj.Y)))) <= 2;
             end
         end
 
 
         % -----------------------------------------------------------------
         function tf = is_regressor(obj)
-            % is_regressor  True if task is 'regression' (or Y has >2 unique values).
             tf = strcmpi(obj.task, 'regression');
-            if ~tf && isfield(obj.inputs, 'Y') && ~isempty(obj.inputs.Y)
-                Yv = obj.inputs.Y;
-                tf = numel(unique(Yv(~isnan(Yv)))) > 2;
+            if ~tf && ~isempty(obj.Y)
+                tf = numel(unique(obj.Y(~isnan(obj.Y)))) > 2;
             end
         end
 
 
         % -----------------------------------------------------------------
         function new_obj = clone(obj)
-            % clone  Return a fresh predictive_model with the same
-            %        hyperparameters but no fitted state.
             new_obj = predictive_model();
             hp = {'algorithm','task','modeloptions','random_state', ...
                   'standardize','use_parallel','cv','scorer','nboot', ...
@@ -401,14 +357,7 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function obj = validate_object(obj, varargin)
-            % validate_object  Light type/shape checks for populated fields.
-            %
-            % Categorised sub-structs are validated only when non-empty.
-            % Pass 'noverbose' to suppress the success message.
-
             doverbose = ~any(strcmpi(varargin, 'noverbose'));
-
-            % Hyperparameter shape checks (only when set).
             if ~isempty(obj.algorithm) && ~(ischar(obj.algorithm) || isstring(obj.algorithm))
                 error('predictive_model:InvalidProperty', 'algorithm must be char/string.');
             end
@@ -416,180 +365,172 @@ classdef predictive_model
                 error('predictive_model:InvalidProperty', ...
                     'task must be ''classification'' or ''regression''.');
             end
+            if ~isempty(obj.fit_type) && ~any(strcmpi(obj.fit_type, {'crossval','insample','test'}))
+                error('predictive_model:InvalidProperty', ...
+                    'fit_type must be ''crossval'', ''insample'', or ''test''.');
+            end
             if ~isempty(obj.modeloptions)
                 if ~iscell(obj.modeloptions)
                     error('predictive_model:InvalidProperty', ...
                         'modeloptions must be a cell array of name/value pairs.');
                 end
-                % Fixed predicate: option NAMES (odd positions) must be char/string;
-                % VALUES (even positions) may be anything.
                 names = obj.modeloptions(1:2:end);
                 bad = ~cellfun(@(c) ischar(c) || isstring(c), names);
                 if any(bad)
                     error('predictive_model:InvalidProperty', ...
-                        ['modeloptions: option names (odd positions) must be ' ...
-                         'char/string; got non-string in position(s) %s.'], ...
-                        num2str(find(bad)*2 - 1));
+                        'modeloptions: option names (odd positions) must be char/string.');
                 end
             end
-            if ~isempty(obj.class_labels)
-                if ~(iscell(obj.class_labels) && ...
-                     all(cellfun(@(c) ischar(c) || isstring(c), obj.class_labels)))
-                    error('predictive_model:InvalidProperty', ...
-                        'class_labels must be a cell array of strings.');
-                end
-            end
-            if ~isempty(obj.Y_name) && ~(ischar(obj.Y_name) || isstring(obj.Y_name))
-                error('predictive_model:InvalidProperty', 'Y_name must be char/string.');
-            end
-            if ~isempty(obj.X_name) && ~(ischar(obj.X_name) || isstring(obj.X_name))
-                error('predictive_model:InvalidProperty', 'X_name must be char/string.');
-            end
-            if ~isempty(obj.accfun) && ~isa(obj.accfun, 'function_handle')
-                error('predictive_model:InvalidProperty', ...
-                    'accfun must be a function handle.');
-            end
-
-            % Categorised fitted-state structs: must be structs when set.
-            cats = {'inputs','cv_partition','fitted_values','weights', ...
-                    'weight_stats','error_metrics','descriptions', ...
-                    'bootstrap_results','permutation_results', ...
+            cats = {'inputParameters','cv_partition','fitted_values','weights', ...
+                    'error_metrics','bootstrap_results','permutation_results', ...
                     'diagnostics','cross_classify','legacy_extras'};
             for i = 1:numel(cats)
                 if ~isstruct(obj.(cats{i}))
-                    error('predictive_model:InvalidProperty', ...
-                        '%s must be a struct.', cats{i});
+                    error('predictive_model:InvalidProperty', '%s must be a struct.', cats{i});
                 end
             end
-
-            % Inputs.Y / inputs.id must be numeric vectors when present.
-            if isfield(obj.inputs, 'Y') && ~isempty(obj.inputs.Y)
-                validateattributes(obj.inputs.Y, {'numeric'}, {'vector'}, ...
-                    mfilename, 'inputs.Y');
+            if ~isempty(obj.Y)
+                % Y may be a numeric vector (single-dataset wrappers) OR
+                % a cell array of numeric vectors (multi-subject wrappers).
+                if ~(isnumeric(obj.Y) || iscell(obj.Y))
+                    error('predictive_model:InvalidProperty', ...
+                        'Y must be a numeric vector or a cell array of numeric vectors.');
+                end
             end
-            if isfield(obj.inputs, 'id') && ~isempty(obj.inputs.id)
-                validateattributes(obj.inputs.id, {'numeric'}, {'vector'}, ...
-                    mfilename, 'inputs.id');
-            end
-
-            if doverbose
-                disp('predictive_model object validated successfully.');
-            end
+            if doverbose, disp('predictive_model object validated successfully.'); end
         end
 
 
         % -----------------------------------------------------------------
         % LEGACY DEPENDENT ALIASES (read-only)
         % -----------------------------------------------------------------
-        % inputs
-        function v = get.Y(obj),                            v = predictive_model.field_or_empty(obj.inputs, 'Y'); end
-        function v = get.id(obj),                           v = predictive_model.field_or_empty(obj.inputs, 'id'); end
-        function v = get.Y_orig(obj),                       v = predictive_model.field_or_empty(obj.inputs, 'Y_orig'); end
-        function v = get.INPUTS(obj),                       v = predictive_model.field_or_empty(obj.inputs, 'INPUTS'); end
+        % Data
+        function v = get.Y_orig(obj),     v = obj.Y; end
+        function v = get.y(obj),          v = obj.Y; end
+        function v = get.trueLabels(obj), v = predictive_model.field_or_empty(obj.fitted_values, 'Y_per_fold'); end
+        function v = get.INPUTS(obj),       v = obj.inputParameters; end
+        function v = get.inputs(obj),       v = obj.inputParameters; end
+        function v = get.inputOptions(obj), v = obj.inputParameters; end
 
         % cv_partition
-        function v = get.trIdx(obj),                        v = predictive_model.field_or_empty(obj.cv_partition, 'trIdx'); end
-        function v = get.teIdx(obj),                        v = predictive_model.field_or_empty(obj.cv_partition, 'teIdx'); end
-        function v = get.nfolds(obj),                       v = predictive_model.field_or_empty(obj.cv_partition, 'nfolds'); end
-        function v = get.fold_modeloptions(obj),            v = predictive_model.field_or_empty(obj.cv_partition, 'fold_modeloptions'); end
-        function v = get.hyperparams_by_fold(obj),          v = predictive_model.field_or_empty(obj.cv_partition, 'hyperparams_by_fold'); end
+        function v = get.trIdx(obj),               v = predictive_model.field_or_empty(obj.cv_partition, 'trIdx'); end
+        function v = get.teIdx(obj),               v = predictive_model.field_or_empty(obj.cv_partition, 'teIdx'); end
+        function v = get.nfolds(obj),              v = predictive_model.field_or_empty(obj.cv_partition, 'nfolds'); end
+        function v = get.fold_modeloptions(obj),   v = predictive_model.field_or_empty(obj.cv_partition, 'fold_modeloptions'); end
+        function v = get.hyperparams_by_fold(obj), v = predictive_model.field_or_empty(obj.cv_partition, 'hyperparams_by_fold'); end
 
         % fitted_values
         function v = get.yfit(obj),                         v = predictive_model.field_or_empty(obj.fitted_values, 'yfit'); end
-        function v = get.dist_from_hyperplane_xval(obj),    v = predictive_model.field_or_empty(obj.fitted_values, 'dist_from_hyperplane_xval'); end
-        function v = get.class_probability_xval(obj),       v = predictive_model.field_or_empty(obj.fitted_values, 'class_probability_xval'); end
-        function v = get.scorediff(obj),                    v = predictive_model.field_or_empty(obj.fitted_values, 'scorediff'); end
+        function v = get.dist_from_hyperplane_xval(obj)
+            % Returns scores when score_type='distance', else legacy field.
+            if isfield(obj.fitted_values, 'score_type') && strcmpi(obj.fitted_values.score_type, 'distance')
+                v = predictive_model.field_or_empty(obj.fitted_values, 'scores');
+            else
+                v = predictive_model.field_or_empty(obj.fitted_values, 'dist_from_hyperplane_xval');
+            end
+        end
+        function v = get.class_probability_xval(obj)
+            if isfield(obj.fitted_values, 'score_type') && strcmpi(obj.fitted_values.score_type, 'probability')
+                v = predictive_model.field_or_empty(obj.fitted_values, 'scores');
+            else
+                v = predictive_model.field_or_empty(obj.fitted_values, 'class_probability_xval');
+            end
+        end
         function v = get.scores_within_id(obj),             v = predictive_model.field_or_empty(obj.fitted_values, 'scores_within_id'); end
         function v = get.Y_within_id(obj),                  v = predictive_model.field_or_empty(obj.fitted_values, 'Y_within_id'); end
+        function v = get.scorediff(obj),                    v = predictive_model.field_or_empty(obj.fitted_values, 'scorediff'); end
         function v = get.high_vs_low_scores_within_id(obj), v = predictive_model.field_or_empty(obj.fitted_values, 'high_vs_low_scores_within_id'); end
         function v = get.subjfit(obj),                      v = predictive_model.field_or_empty(obj.fitted_values, 'subjfit'); end
         function v = get.predictions(obj),                  v = predictive_model.field_or_empty(obj.fitted_values, 'predictions'); end
-        function v = get.trueLabels(obj),                   v = predictive_model.field_or_empty(obj.fitted_values, 'trueLabels'); end
 
-        % weights
-        function v = get.w(obj),                            v = predictive_model.field_or_empty(obj.weights, 'w'); end
-        function v = get.weight_obj(obj),                   v = predictive_model.field_or_empty(obj.weights, 'weight_obj'); end
-        function v = get.mean_vox_weights(obj),             v = predictive_model.field_or_empty(obj.weights, 'mean_vox_weights'); end
-        function v = get.vox_weights(obj),                  v = predictive_model.field_or_empty(obj.weights, 'vox_weights'); end
-        function v = get.VOXWEIGHTS(obj),                   v = predictive_model.field_or_empty(obj.weights, 'VOXWEIGHTS'); end
-        function v = get.my_intercepts(obj),                v = predictive_model.field_or_empty(obj.weights, 'my_intercepts'); end
-        function v = get.subjbetas(obj),                    v = predictive_model.field_or_empty(obj.weights, 'subjbetas'); end
+        % weights (and merged former weight_stats)
+        function v = get.w(obj),                v = predictive_model.field_or_empty(obj.weights, 'w'); end
+        function v = get.mean_vox_weights(obj), v = predictive_model.field_or_empty(obj.weights, 'mean_vox_weights'); end
+        function v = get.vox_weights(obj),      v = predictive_model.field_or_empty(obj.weights, 'w_perfold'); end
+        function v = get.VOXWEIGHTS(obj),       v = predictive_model.field_or_empty(obj.weights, 'w_bootstrap'); end
+        function v = get.my_intercepts(obj),    v = predictive_model.field_or_empty(obj.weights, 'my_intercepts'); end
+        function v = get.subjbetas(obj),        v = predictive_model.field_or_empty(obj.weights, 'subjbetas'); end
+        function v = get.weight_obj(obj),       v = predictive_model.field_or_empty(obj.weights, 'weight_obj'); end
+        function v = get.boot_w(obj),           v = predictive_model.field_or_empty(obj.weights, 'boot_w'); end
+        function v = get.boot_w_ste(obj),       v = predictive_model.field_or_empty(obj.weights, 'boot_w_ste'); end
+        function v = get.boot_w_mean(obj),      v = predictive_model.field_or_empty(obj.weights, 'boot_w_mean'); end
+        function v = get.wZ(obj),               v = predictive_model.field_or_empty(obj.weights, 'z'); end
+        function v = get.wP(obj),               v = predictive_model.field_or_empty(obj.weights, 'p'); end
+        function v = get.wP_fdr_thr(obj),       v = predictive_model.field_or_empty(obj.weights, 'fdr_thr'); end
+        function v = get.boot_w_fdrsig(obj),    v = predictive_model.field_or_empty(obj.weights, 'fdr_sig'); end
+        function v = get.w_thresh_fdr(obj),     v = predictive_model.field_or_empty(obj.weights, 'thresh_fdr'); end
 
-        % weight_stats
-        function v = get.boot_w(obj),                       v = predictive_model.field_or_empty(obj.weight_stats, 'boot_w'); end
-        function v = get.boot_w_ste(obj),                   v = predictive_model.field_or_empty(obj.weight_stats, 'boot_w_ste'); end
-        function v = get.boot_w_mean(obj),                  v = predictive_model.field_or_empty(obj.weight_stats, 'boot_w_mean'); end
-        function v = get.wZ(obj),                           v = predictive_model.field_or_empty(obj.weight_stats, 'wZ'); end
-        function v = get.wP(obj),                           v = predictive_model.field_or_empty(obj.weight_stats, 'wP'); end
-        function v = get.wP_fdr_thr(obj),                   v = predictive_model.field_or_empty(obj.weight_stats, 'wP_fdr_thr'); end
-        function v = get.boot_w_fdrsig(obj),                v = predictive_model.field_or_empty(obj.weight_stats, 'boot_w_fdrsig'); end
-        function v = get.w_thresh_fdr(obj),                 v = predictive_model.field_or_empty(obj.weight_stats, 'w_thresh_fdr'); end
+        % error_metrics — unwrap .value for arithmetic
+        function v = get.crossval_accuracy(obj),                v = predictive_model.metric_value(obj.error_metrics, 'crossval_accuracy'); end
+        function v = get.crossval_accuracy_within(obj),         v = predictive_model.metric_value(obj.error_metrics, 'crossval_accuracy_within'); end
+        function v = get.d_singleinterval(obj),                 v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
+        function v = get.d_within(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
+        function v = get.classification_d_singleinterval(obj),  v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
+        function v = get.classification_d_within(obj),          v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
+        function v = get.regression_d_singleinterval(obj),      v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
+        function v = get.regression_d_within(obj),              v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
+        function v = get.prediction_outcome_r(obj),             v = predictive_model.metric_value(obj.error_metrics, 'prediction_outcome_r'); end
+        function v = get.pred_outcome_r(obj),                   v = predictive_model.metric_value(obj.error_metrics, 'prediction_outcome_r'); end
+        function v = get.cverr(obj),                            v = predictive_model.metric_value(obj.error_metrics, 'cverr'); end
+        function v = get.mse(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'mse'); end
+        function v = get.rmse(obj),                             v = predictive_model.metric_value(obj.error_metrics, 'rmse'); end
+        function v = get.meanabserr(obj),                       v = predictive_model.metric_value(obj.error_metrics, 'meanabserr'); end
+        function v = get.r_squared(obj),                        v = predictive_model.metric_value(obj.error_metrics, 'r_squared'); end
+        function v = get.var_full(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'var_full'); end
+        function v = get.var_null(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'var_null'); end
+        function v = get.var_reduction(obj),                    v = predictive_model.metric_value(obj.error_metrics, 'var_reduction'); end
+        function v = get.pred_err(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'pred_err'); end
+        function v = get.pred_err_null(obj),                    v = predictive_model.metric_value(obj.error_metrics, 'pred_err_null'); end
+        function v = get.devs_from_full_model(obj),             v = predictive_model.metric_value(obj.error_metrics, 'devs_from_full_model'); end
+        function v = get.devs_from_mean_only_model(obj),        v = predictive_model.metric_value(obj.error_metrics, 'devs_from_mean_only_model'); end
+        function v = get.r_each_subject(obj),                   v = predictive_model.metric_value(obj.error_metrics, 'r_each_subject'); end
+        function v = get.accuracy(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'accuracy'); end
+        function v = get.overallAccuracy(obj),                  v = predictive_model.metric_value(obj.error_metrics, 'overallAccuracy'); end
+        function v = get.err(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'err'); end
+        function v = get.phi(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'phi'); end
 
-        % error_metrics
-        function v = get.crossval_accuracy(obj),                v = predictive_model.field_or_empty(obj.error_metrics, 'crossval_accuracy'); end
-        function v = get.crossval_accuracy_within(obj),         v = predictive_model.field_or_empty(obj.error_metrics, 'crossval_accuracy_within'); end
-        function v = get.d_singleinterval(obj),                 v = predictive_model.field_or_empty(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.d_within(obj),                         v = predictive_model.field_or_empty(obj.error_metrics, 'd_within'); end
-        function v = get.classification_d_singleinterval(obj),  v = predictive_model.field_or_empty(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.classification_d_within(obj),          v = predictive_model.field_or_empty(obj.error_metrics, 'd_within'); end
-        function v = get.regression_d_singleinterval(obj),      v = predictive_model.field_or_empty(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.regression_d_within(obj),              v = predictive_model.field_or_empty(obj.error_metrics, 'd_within'); end
-        function v = get.prediction_outcome_r(obj),             v = predictive_model.field_or_empty(obj.error_metrics, 'prediction_outcome_r'); end
-        function v = get.pred_outcome_r(obj),                   v = predictive_model.field_or_empty(obj.error_metrics, 'prediction_outcome_r'); end
-        function v = get.cverr(obj),                            v = predictive_model.field_or_empty(obj.error_metrics, 'cverr'); end
-        function v = get.mse(obj),                              v = predictive_model.field_or_empty(obj.error_metrics, 'mse'); end
-        function v = get.rmse(obj),                             v = predictive_model.field_or_empty(obj.error_metrics, 'rmse'); end
-        function v = get.meanabserr(obj),                       v = predictive_model.field_or_empty(obj.error_metrics, 'meanabserr'); end
-        function v = get.r_squared(obj),                        v = predictive_model.field_or_empty(obj.error_metrics, 'r_squared'); end
-        function v = get.var_full(obj),                         v = predictive_model.field_or_empty(obj.error_metrics, 'var_full'); end
-        function v = get.var_null(obj),                         v = predictive_model.field_or_empty(obj.error_metrics, 'var_null'); end
-        function v = get.var_reduction(obj),                    v = predictive_model.field_or_empty(obj.error_metrics, 'var_reduction'); end
-        function v = get.pred_err(obj),                         v = predictive_model.field_or_empty(obj.error_metrics, 'pred_err'); end
-        function v = get.pred_err_null(obj),                    v = predictive_model.field_or_empty(obj.error_metrics, 'pred_err_null'); end
-        function v = get.devs_from_full_model(obj),             v = predictive_model.field_or_empty(obj.error_metrics, 'devs_from_full_model'); end
-        function v = get.devs_from_mean_only_model(obj),        v = predictive_model.field_or_empty(obj.error_metrics, 'devs_from_mean_only_model'); end
-        function v = get.r_each_subject(obj),                   v = predictive_model.field_or_empty(obj.error_metrics, 'r_each_subject'); end
-        function v = get.accuracy(obj),                         v = predictive_model.field_or_empty(obj.error_metrics, 'accuracy'); end
-        function v = get.overallAccuracy(obj),                  v = predictive_model.field_or_empty(obj.error_metrics, 'overallAccuracy'); end
-        function v = get.err(obj),                              v = predictive_model.field_or_empty(obj.error_metrics, 'err'); end
-        function v = get.phi(obj),                              v = predictive_model.field_or_empty(obj.error_metrics, 'phi'); end
+        % error_metrics — descrip side of the tuple
+        function v = get.crossval_accuracy_descrip(obj),        v = predictive_model.metric_descrip(obj.error_metrics, 'crossval_accuracy'); end
+        function v = get.prediction_outcome_r_descrip(obj),     v = predictive_model.metric_descrip(obj.error_metrics, 'prediction_outcome_r'); end
+        function v = get.pred_err_descrip(obj),                 v = predictive_model.metric_descrip(obj.error_metrics, 'pred_err'); end
+        function v = get.var_reduction_descrip(obj),            v = predictive_model.metric_descrip(obj.error_metrics, 'var_reduction'); end
+        function v = get.classification_d_within_descrip(obj),  v = predictive_model.metric_descrip(obj.error_metrics, 'd_within'); end
 
-        % descriptions
-        function v = get.accfun_descrip(obj),                   v = predictive_model.field_or_empty(obj.descriptions, 'accfun_descrip'); end
-        function v = get.cverrfun(obj),                         v = predictive_model.field_or_empty(obj.descriptions, 'cverrfun'); end
-        function v = get.crossval_accuracy_descrip(obj),        v = predictive_model.field_or_empty(obj.descriptions, 'crossval_accuracy_descrip'); end
-        function v = get.prediction_outcome_r_descrip(obj),     v = predictive_model.field_or_empty(obj.descriptions, 'prediction_outcome_r_descrip'); end
-        function v = get.pred_err_descrip(obj),                 v = predictive_model.field_or_empty(obj.descriptions, 'pred_err_descrip'); end
-        function v = get.var_reduction_descrip(obj),            v = predictive_model.field_or_empty(obj.descriptions, 'var_reduction_descrip'); end
-        function v = get.classification_d_within_descrip(obj),  v = predictive_model.field_or_empty(obj.descriptions, 'classification_d_within_descrip'); end
-        function v = get.note(obj),                             v = predictive_model.field_or_empty(obj.descriptions, 'note'); end
-        function v = get.r_each_subject_note(obj),              v = predictive_model.field_or_empty(obj.descriptions, 'r_each_subject_note'); end
-        function v = get.r_each_subject_note2(obj),             v = predictive_model.field_or_empty(obj.descriptions, 'r_each_subject_note2'); end
-        function v = get.cvoutput_descrip(obj),                 v = predictive_model.field_or_empty(obj.descriptions, 'cvoutput_descrip'); end
-        function v = get.error_type(obj),                       v = predictive_model.field_or_empty(obj.descriptions, 'error_type'); end
-        function v = get.function_call(obj),                    v = predictive_model.field_or_empty(obj.descriptions, 'function_call'); end
-        function v = get.function_handle(obj),                  v = predictive_model.field_or_empty(obj.descriptions, 'function_handle'); end
-        function v = get.algorithm_name(obj),                   v = predictive_model.field_or_empty(obj.descriptions, 'algorithm_name'); end
+        % notes
+        function v = get.r_each_subject_note(obj)
+            v = predictive_model.lookup_note(obj.note, 'r_each_subject');
+        end
+        function v = get.r_each_subject_note2(obj)
+            v = predictive_model.lookup_note(obj.note, 'r_each_subject_2');
+        end
 
-        % ml_model legacy aliases
-        function v = get.ClassificationModel(obj),              v = obj.ml_model; end
-        function v = get.SVMModel(obj),                         v = obj.ml_model; end
-        function v = get.SVRModel(obj),                         v = obj.ml_model; end
+        % stand-alone descriptions (not paired with a metric)
+        function v = get.accfun_descrip(obj),                   v = predictive_model.field_or_empty(obj.legacy_extras, 'accfun_descrip'); end
+        function v = get.cverrfun(obj),                         v = predictive_model.field_or_empty(obj.legacy_extras, 'cverrfun'); end
+        function v = get.cvoutput_descrip(obj),                 v = predictive_model.field_or_empty(obj.legacy_extras, 'cvoutput_descrip'); end
+        function v = get.error_type(obj),                       v = predictive_model.field_or_empty(obj.legacy_extras, 'error_type'); end
+        function v = get.function_call(obj),                    v = predictive_model.field_or_empty(obj.legacy_extras, 'function_call'); end
+        function v = get.function_handle(obj),                  v = predictive_model.field_or_empty(obj.legacy_extras, 'function_handle'); end
+        function v = get.algorithm_name(obj),                   v = predictive_model.field_or_empty(obj.legacy_extras, 'algorithm_name'); end
+
+        % ml_model aliases
+        function v = get.ClassificationModel(obj), v = obj.ml_model; end
+        function v = get.SVMModel(obj),            v = obj.ml_model; end
+        function v = get.SVRModel(obj),            v = obj.ml_model; end
 
         % bootstrap_results
-        function v = get.WTS(obj),                              v = predictive_model.field_or_empty(obj.bootstrap_results, 'WTS'); end
+        function v = get.WTS(obj), v = predictive_model.field_or_empty(obj.bootstrap_results, 'WTS'); end
 
         % diagnostics
-        function v = get.mult_obs_within_person(obj),           v = predictive_model.field_or_empty(obj.diagnostics, 'mult_obs_within_person'); end
-        function v = get.ROC_forced_choice(obj),                v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_forced_choice'); end
-        function v = get.ROC_single_interval(obj),              v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_single_interval'); end
-        function v = get.all_reg_hyperparams(obj),              v = predictive_model.field_or_empty(obj.diagnostics, 'all_reg_hyperparams'); end
+        function v = get.mult_obs_within_person(obj), v = predictive_model.field_or_empty(obj.diagnostics, 'mult_obs_within_person'); end
+        function v = get.ROC_forced_choice(obj),      v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_forced_choice'); end
+        function v = get.ROC_single_interval(obj),    v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_single_interval'); end
+        function v = get.all_reg_hyperparams(obj),    v = predictive_model.field_or_empty(obj.diagnostics, 'all_reg_hyperparams'); end
 
-        % legacy_extras composite fields (brain wrappers)
-        function v = get.full_model(obj),                       v = predictive_model.field_or_empty(obj.legacy_extras, 'full_model'); end
-        function v = get.data(obj),                             v = predictive_model.field_or_empty(obj.legacy_extras, 'data'); end
-        function v = get.covs(obj),                             v = predictive_model.field_or_empty(obj.legacy_extras, 'covs'); end
-        function v = get.inputOptions(obj),                     v = predictive_model.field_or_empty(obj.legacy_extras, 'inputOptions'); end
+        % legacy_extras composite (brain wrappers)
+        function v = get.full_model(obj), v = predictive_model.field_or_empty(obj.legacy_extras, 'full_model'); end
+        function v = get.data(obj),       v = predictive_model.field_or_empty(obj.legacy_extras, 'data'); end
+        function v = get.covs(obj),       v = predictive_model.field_or_empty(obj.legacy_extras, 'covs'); end
 
     end
 
@@ -598,15 +539,11 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function obj = populate_from_struct(obj, S, doverbose)
-            % Walk the input struct and route each field to its categorised
-            % home using the static routing table. Unrouted fields land in
-            % legacy_extras so nothing is lost.
+            % Walk input struct, route each field to its categorised home.
 
-            routing  = predictive_model.field_routing();
+            routing = predictive_model.field_routing();
             hp_props = predictive_model.hyperparameter_names();
-
-            % Build a lookup: input-field-name -> {category, subfield}
-            keys = routing(:,1);
+            keys = routing(:, 1);
 
             fn = fieldnames(S);
             unrouted_to_extras = {};
@@ -621,28 +558,18 @@ classdef predictive_model
                     continue
                 end
 
-                % 2) top-level fitted-state field (accfun, history, removed_voxels)
-                if any(strcmp(name, {'accfun','history','removed_voxels'}))
+                % 2) top-level new properties + a few legacy top-level
+                if any(strcmp(name, {'Y','id','omitted_cases','omitted_features', ...
+                                     'fit_type','accfun','history','removed_voxels'}))
                     obj.(name) = val;
                     continue
                 end
 
-                % 3) categorised routing
+                % 3) routing table (dotted path target)
                 idx = find(strcmp(keys, name), 1);
                 if ~isempty(idx)
-                    cat = routing{idx, 2};
-                    sub = routing{idx, 3};
-                    if isempty(sub)
-                        % store directly at the category (e.g., ml_model,
-                        % fold_models, bootstrap_results when struct, etc.)
-                        obj.(cat) = val;
-                    else
-                        % ensure the category is a struct, then write subfield
-                        if ~isstruct(obj.(cat))
-                            obj.(cat) = struct();
-                        end
-                        obj.(cat).(sub) = val;
-                    end
+                    target = routing{idx, 2};
+                    obj = predictive_model.write_path(obj, target, val);
                     continue
                 end
 
@@ -651,7 +578,6 @@ classdef predictive_model
                 unrouted_to_extras{end+1, 1} = name; %#ok<AGROW>
             end
 
-            % Validate after population.
             obj = obj.validate_object('noverbose');
 
             if doverbose && ~isempty(unrouted_to_extras)
@@ -669,7 +595,6 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function v = field_or_empty(s, name)
-            % Safely read a sub-struct field; return [] if absent.
             if isstruct(s) && isfield(s, name)
                 v = s.(name);
             else
@@ -679,8 +604,39 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function v = metric_value(em_struct, name)
+            % Unwrap .value from a (value, descrip) tuple.
+            if isstruct(em_struct) && isfield(em_struct, name)
+                entry = em_struct.(name);
+                if isstruct(entry) && isfield(entry, 'value')
+                    v = entry.value;
+                else
+                    v = entry;
+                end
+            else
+                v = [];
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function v = metric_descrip(em_struct, name)
+            % Unwrap .descrip from a (value, descrip) tuple.
+            if isstruct(em_struct) && isfield(em_struct, name)
+                entry = em_struct.(name);
+                if isstruct(entry) && isfield(entry, 'descrip')
+                    v = entry.descrip;
+                else
+                    v = '';
+                end
+            else
+                v = '';
+            end
+        end
+
+
+        % -----------------------------------------------------------------
         function names = hyperparameter_names()
-            % Names of the top-level hyperparameter properties.
             names = {'algorithm','task','modeloptions','random_state', ...
                      'standardize','use_parallel','cv','scorer','nboot', ...
                      'nperm','do_calibrate','Y_name','X_name','class_labels'};
@@ -688,141 +644,266 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
-        function routing = field_routing()
-            % field_routing  Lookup table from input-struct field name to
-            % {category, subfield}. An empty subfield means "store at the
-            % category directly".
+        function v = lookup_note(note_cell, prefix)
+            % Find a note string starting with `prefix:` and return its body.
+            v = '';
+            if ~iscell(note_cell), return; end
+            for i = 1:numel(note_cell)
+                s = note_cell{i};
+                if ischar(s) || isstring(s)
+                    s = char(s);
+                    if startsWith(s, [prefix ':'])
+                        v = strtrim(s(numel(prefix)+2:end));
+                        return
+                    end
+                end
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function obj = write_path(obj, target_path, value)
+            % Write `value` into obj at a dotted path like
+            % 'error_metrics.pred_err.value' or 'weights.z'.
             %
-            % Adding a new wrapper: drop new rows here so the constructor
-            % routes their fields without code change elsewhere.
+            % An embedded '+' marks a cell-array append:
+            %   'note+'           append the value as a new cell entry
+            %   'note+r_each_subject'  append with prefix "r_each_subject: "
+
+            if contains(target_path, '+')
+                tokens = strsplit(target_path, '+');
+                target_path = tokens{1};
+                prefix = tokens{2};
+                if ~ischar(value) && ~isstring(value)
+                    value = char(string(value));
+                end
+                value = char(value);
+                if ~isempty(prefix)
+                    value = [prefix ': ' value];
+                end
+                parts = strsplit(target_path, '.');
+                top = parts{1};
+                if numel(parts) == 1
+                    cur = obj.(top);
+                    if ~iscell(cur), cur = {}; end
+                    cur{end+1, 1} = value;
+                    obj.(top) = cur;
+                    return
+                end
+            end
+
+            parts = strsplit(target_path, '.');
+            top = parts{1};
+
+            if numel(parts) == 1
+                obj.(top) = value;
+                return
+            end
+
+            if ~isstruct(obj.(top))
+                obj.(top) = struct();
+            end
+            sub_struct = obj.(top);
+            sub_struct = predictive_model.setfield_recursive(sub_struct, parts(2:end), value);
+            obj.(top) = sub_struct;
+        end
+
+
+        % -----------------------------------------------------------------
+        function s = setfield_recursive(s, parts, value)
+            if numel(parts) == 1
+                s.(parts{1}) = value;
+            else
+                if ~isfield(s, parts{1}) || ~isstruct(s.(parts{1}))
+                    s.(parts{1}) = struct();
+                end
+                s.(parts{1}) = predictive_model.setfield_recursive(s.(parts{1}), parts(2:end), value);
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function [omitted_cases, omitted_features] = detect_bad_data(X, Y)
+            % detect_bad_data  Pre-fit data-quality check.
+            %
+            % Returns logical vectors over the ORIGINAL cases and features:
+            %   omitted_cases     true for rows with any NaN/Inf in X or Y
+            %   omitted_features  true for columns that, after dropping bad
+            %                     cases, are all-NaN, constant (zero variance),
+            %                     or contain Inf.
+            %
+            % Wrappers apply these by:
+            %     X(omitted_cases, :) = []; Y(omitted_cases) = [];
+            %     X(:, omitted_features) = [];
+            %     pm.omitted_cases    = omitted_cases;
+            %     pm.omitted_features = omitted_features;
+
+            Y = Y(:);
+            omitted_cases = isnan(Y) | isinf(Y) | any(isnan(X), 2) | any(isinf(X), 2);
+
+            Xg = X(~omitted_cases, :);
+            if isempty(Xg)
+                omitted_features = false(size(X, 2), 1);
+                return
+            end
+            all_nan = all(isnan(Xg), 1);
+            any_inf = any(isinf(Xg), 1);
+            zero_var = false(1, size(Xg, 2));
+            ok_cols = ~all_nan;
+            if any(ok_cols)
+                zero_var(ok_cols) = var(Xg(:, ok_cols), 0, 1, 'omitnan') == 0;
+            end
+            omitted_features = (all_nan | any_inf | zero_var).';
+        end
+
+
+        % -----------------------------------------------------------------
+        function routing = field_routing()
+            % field_routing  Lookup table: input-struct field name -> dotted
+            % target path inside the predictive_model object.
+            %
+            % An optional trailing '+' on a path means "append to cell array"
+            % (used for `note`).
 
             routing = { ...
-                % --- inputs ---
-                'Y',                                 'inputs',              'Y'
-                'y',                                 'inputs',              'Y'
-                'id',                                'inputs',              'id'
-                'Y_orig',                            'inputs',              'Y_orig'
-                'INPUTS',                            'inputs',              'INPUTS'
+                % --- DATA (top-level after consolidation) ---
+                'Y',                                 'Y'
+                'y',                                 'Y'
+                'Y_orig',                            'Y'
+                'id',                                'id'
+                'omitted_cases',                     'omitted_cases'
+                'omitted_features',                  'omitted_features'
+
+                % --- inputParameters (was INPUTS / inputs / inputOptions) ---
+                'INPUTS',                            'inputParameters'
+                'inputs',                            'inputParameters'
+                'inputOptions',                      'inputParameters'
+                'inputParameters',                   'inputParameters'
+
+                % --- fit metadata ---
+                'fit_type',                          'fit_type'
 
                 % --- cv_partition ---
-                'trIdx',                             'cv_partition',        'trIdx'
-                'teIdx',                             'cv_partition',        'teIdx'
-                'nfolds',                            'cv_partition',        'nfolds'
-                'fold_modeloptions',                 'cv_partition',        'fold_modeloptions'
-                'hyperparams_by_fold',               'cv_partition',        'hyperparams_by_fold'
-                'cvpartition',                       'cv_partition',        'cvpartition'
+                'trIdx',                             'cv_partition.trIdx'
+                'teIdx',                             'cv_partition.teIdx'
+                'nfolds',                            'cv_partition.nfolds'
+                'fold_modeloptions',                 'cv_partition.fold_modeloptions'
+                'hyperparams_by_fold',               'cv_partition.hyperparams_by_fold'
+                'cvpartition',                       'cv_partition.cvpartition'
 
                 % --- fitted_values ---
-                'yfit',                              'fitted_values',       'yfit'
-                'dist_from_hyperplane_xval',         'fitted_values',       'dist_from_hyperplane_xval'
-                'class_probability_xval',            'fitted_values',       'class_probability_xval'
-                'scores_within_id',                  'fitted_values',       'scores_within_id'
-                'Y_within_id',                       'fitted_values',       'Y_within_id'
-                'scorediff',                         'fitted_values',       'scorediff'
-                'high_vs_low_scores_within_id',      'fitted_values',       'high_vs_low_scores_within_id'
-                'subjfit',                           'fitted_values',       'subjfit'
-                'predictions',                       'fitted_values',       'predictions'
-                'trueLabels',                        'fitted_values',       'trueLabels'
+                'yfit',                              'fitted_values.yfit'
+                'scores',                            'fitted_values.scores'
+                'score_type',                        'fitted_values.score_type'
+                'dist_from_hyperplane_xval',         'fitted_values.dist_from_hyperplane_xval'
+                'class_probability_xval',            'fitted_values.class_probability_xval'
+                'scores_within_id',                  'fitted_values.scores_within_id'
+                'Y_within_id',                       'fitted_values.Y_within_id'
+                'scorediff',                         'fitted_values.scorediff'
+                'high_vs_low_scores_within_id',      'fitted_values.high_vs_low_scores_within_id'
+                'subjfit',                           'fitted_values.subjfit'
+                'predictions',                       'fitted_values.predictions'
+                'trueLabels',                        'fitted_values.Y_per_fold'
 
-                % --- weights ---
-                'w',                                 'weights',             'w'
-                'mean_vox_weights',                  'weights',             'mean_vox_weights'
-                'vox_weights',                       'weights',             'vox_weights'
-                'VOXWEIGHTS',                        'weights',             'VOXWEIGHTS'
-                'my_intercepts',                     'weights',             'my_intercepts'
-                'subjbetas',                         'weights',             'subjbetas'
-                'weight_obj',                        'weights',             'weight_obj'
+                % --- weights (incl. former weight_stats and renamed VOXWEIGHTS/vox_weights) ---
+                'w',                                 'weights.w'
+                'mean_vox_weights',                  'weights.mean_vox_weights'
+                'vox_weights',                       'weights.w_perfold'
+                'VOXWEIGHTS',                        'weights.w_bootstrap'
+                'my_intercepts',                     'weights.my_intercepts'
+                'subjbetas',                         'weights.subjbetas'
+                'weight_obj',                        'weights.weight_obj'
+                'boot_w',                            'weights.boot_w'
+                'boot_w_ste',                        'weights.boot_w_ste'
+                'boot_w_mean',                       'weights.boot_w_mean'
+                'wZ',                                'weights.z'
+                'wP',                                'weights.p'
+                'wP_fdr_thr',                        'weights.fdr_thr'
+                'boot_w_fdrsig',                     'weights.fdr_sig'
+                'w_thresh_fdr',                      'weights.thresh_fdr'
 
-                % --- weight_stats ---
-                'boot_w',                            'weight_stats',        'boot_w'
-                'boot_w_ste',                        'weight_stats',        'boot_w_ste'
-                'boot_w_mean',                       'weight_stats',        'boot_w_mean'
-                'wZ',                                'weight_stats',        'wZ'
-                'wP',                                'weight_stats',        'wP'
-                'wP_fdr_thr',                        'weight_stats',        'wP_fdr_thr'
-                'boot_w_fdrsig',                     'weight_stats',        'boot_w_fdrsig'
-                'w_thresh_fdr',                      'weight_stats',        'w_thresh_fdr'
+                % --- error_metrics — value half of (value, descrip) tuple ---
+                'crossval_accuracy',                 'error_metrics.crossval_accuracy.value'
+                'crossval_accuracy_within',          'error_metrics.crossval_accuracy_within.value'
+                'd_singleinterval',                  'error_metrics.d_singleinterval.value'
+                'd_within',                          'error_metrics.d_within.value'
+                'classification_d_singleinterval',   'error_metrics.d_singleinterval.value'
+                'regression_d_singleinterval',       'error_metrics.d_singleinterval.value'
+                'classification_d_within',           'error_metrics.d_within.value'
+                'regression_d_within',               'error_metrics.d_within.value'
+                'prediction_outcome_r',              'error_metrics.prediction_outcome_r.value'
+                'pred_outcome_r',                    'error_metrics.prediction_outcome_r.value'
+                'cverr',                             'error_metrics.cverr.value'
+                'mse',                               'error_metrics.mse.value'
+                'rmse',                              'error_metrics.rmse.value'
+                'meanabserr',                        'error_metrics.meanabserr.value'
+                'r_squared',                         'error_metrics.r_squared.value'
+                'var_full',                          'error_metrics.var_full.value'
+                'var_null',                          'error_metrics.var_null.value'
+                'var_reduction',                     'error_metrics.var_reduction.value'
+                'pred_err',                          'error_metrics.pred_err.value'
+                'pred_err_null',                     'error_metrics.pred_err_null.value'
+                'devs_from_full_model',              'error_metrics.devs_from_full_model.value'
+                'devs_from_mean_only_model',         'error_metrics.devs_from_mean_only_model.value'
+                'r_each_subject',                    'error_metrics.r_each_subject.value'
+                'accuracy',                          'error_metrics.accuracy.value'
+                'overallAccuracy',                   'error_metrics.overallAccuracy.value'
+                'err',                               'error_metrics.err.value'
+                'phi',                               'error_metrics.phi.value'
 
-                % --- error_metrics (incl. legacy d-prefix translations) ---
-                'crossval_accuracy',                 'error_metrics',       'crossval_accuracy'
-                'crossval_accuracy_within',          'error_metrics',       'crossval_accuracy_within'
-                'd_singleinterval',                  'error_metrics',       'd_singleinterval'
-                'd_within',                          'error_metrics',       'd_within'
-                'classification_d_singleinterval',   'error_metrics',       'd_singleinterval'
-                'regression_d_singleinterval',       'error_metrics',       'd_singleinterval'
-                'classification_d_within',           'error_metrics',       'd_within'
-                'regression_d_within',               'error_metrics',       'd_within'
-                'prediction_outcome_r',              'error_metrics',       'prediction_outcome_r'
-                'pred_outcome_r',                    'error_metrics',       'prediction_outcome_r'
-                'cverr',                             'error_metrics',       'cverr'
-                'mse',                               'error_metrics',       'mse'
-                'rmse',                              'error_metrics',       'rmse'
-                'meanabserr',                        'error_metrics',       'meanabserr'
-                'r_squared',                         'error_metrics',       'r_squared'
-                'var_full',                          'error_metrics',       'var_full'
-                'var_null',                          'error_metrics',       'var_null'
-                'var_reduction',                     'error_metrics',       'var_reduction'
-                'pred_err',                          'error_metrics',       'pred_err'
-                'pred_err_null',                     'error_metrics',       'pred_err_null'
-                'devs_from_full_model',              'error_metrics',       'devs_from_full_model'
-                'devs_from_mean_only_model',         'error_metrics',       'devs_from_mean_only_model'
-                'r_each_subject',                    'error_metrics',       'r_each_subject'
-                'accuracy',                          'error_metrics',       'accuracy'
-                'overallAccuracy',                   'error_metrics',       'overallAccuracy'
-                'err',                               'error_metrics',       'err'
-                'phi',                               'error_metrics',       'phi'
+                % --- error_metrics — descrip half ---
+                'crossval_accuracy_descrip',         'error_metrics.crossval_accuracy.descrip'
+                'prediction_outcome_r_descrip',      'error_metrics.prediction_outcome_r.descrip'
+                'pred_err_descrip',                  'error_metrics.pred_err.descrip'
+                'var_reduction_descrip',             'error_metrics.var_reduction.descrip'
+                'classification_d_within_descrip',   'error_metrics.d_within.descrip'
 
-                % --- descriptions ---
-                'accfun_descrip',                    'descriptions',        'accfun_descrip'
-                'cverrfun',                          'descriptions',        'cverrfun'
-                'crossval_accuracy_descrip',         'descriptions',        'crossval_accuracy_descrip'
-                'prediction_outcome_r_descrip',      'descriptions',        'prediction_outcome_r_descrip'
-                'pred_err_descrip',                  'descriptions',        'pred_err_descrip'
-                'var_reduction_descrip',             'descriptions',        'var_reduction_descrip'
-                'classification_d_within_descrip',   'descriptions',        'classification_d_within_descrip'
-                'note',                              'descriptions',        'note'
-                'r_each_subject_note',               'descriptions',        'r_each_subject_note'
-                'r_each_subject_note2',              'descriptions',        'r_each_subject_note2'
-                'cvoutput_descrip',                  'descriptions',        'cvoutput_descrip'
-                'error_type',                        'descriptions',        'error_type'
-                'function_call',                     'descriptions',        'function_call'
-                'function_handle',                   'descriptions',        'function_handle'
-                'algorithm_name',                    'descriptions',        'algorithm_name'
+                % --- notes (cell-array append) ---
+                'note',                              'note+'
+                'r_each_subject_note',               'note+r_each_subject'
+                'r_each_subject_note2',              'note+r_each_subject_2'
 
                 % --- ml_model (legacy single-object aliases) ---
-                'ClassificationModel',               'ml_model',            ''
-                'SVMModel',                          'ml_model',            ''
-                'SVRModel',                          'ml_model',            ''
+                'ClassificationModel',               'ml_model'
+                'SVMModel',                          'ml_model'
+                'SVRModel',                          'ml_model'
 
                 % --- fold_models ---
-                'models',                            'fold_models',         ''
+                'models',                            'fold_models'
 
                 % --- bootstrap_results ---
-                'bootstrap',                         'bootstrap_results',   ''
-                'WTS',                               'bootstrap_results',   'WTS'
-                'boot_weights',                      'bootstrap_results',   'boot_weights'
+                'bootstrap',                         'bootstrap_results'
+                'WTS',                               'bootstrap_results.WTS'
+                'boot_weights',                      'bootstrap_results.boot_weights'
 
                 % --- diagnostics ---
-                'ROC_forced_choice',                 'diagnostics',         'ROC_forced_choice'
-                'ROC_single_interval',               'diagnostics',         'ROC_single_interval'
-                'mult_obs_within_person',            'diagnostics',         'mult_obs_within_person'
-                'all_reg_hyperparams',               'diagnostics',         'all_reg_hyperparams'
+                'ROC_forced_choice',                 'diagnostics.ROC_forced_choice'
+                'ROC_single_interval',               'diagnostics.ROC_single_interval'
+                'mult_obs_within_person',            'diagnostics.mult_obs_within_person'
+                'all_reg_hyperparams',               'diagnostics.all_reg_hyperparams'
 
                 % --- cross_classify ---
-                'stats1',                            'cross_classify',      'stats1'
-                'stats2',                            'cross_classify',      'stats2'
-                'test_results',                      'cross_classify',      'test_results'
-                'crosstestfit',                      'cross_classify',      'crosstestfit'
-                'cvoutput',                          'cross_classify',      'cvoutput'
-                'test_Y',                            'cross_classify',      'test_Y'
-                'all',                               'cross_classify',      'all'
+                'stats1',                            'cross_classify.stats1'
+                'stats2',                            'cross_classify.stats2'
+                'test_results',                      'cross_classify.test_results'
+                'crosstestfit',                      'cross_classify.crosstestfit'
+                'cvoutput',                          'cross_classify.cvoutput'
+                'test_Y',                            'cross_classify.test_Y'
+                'all',                               'cross_classify.all'
 
-                % --- legacy_extras (explicit routing for known wrapper-specific
-                %     fields; reads from legacy_extras.<name>) ---
-                'covs',                              'legacy_extras',       'covs'
-                'data',                              'legacy_extras',       'data'
-                'full_model',                        'legacy_extras',       'full_model'
-                'inputOptions',                      'legacy_extras',       'inputOptions'
+                % --- stand-alone descrip strings (kept in legacy_extras) ---
+                'accfun_descrip',                    'legacy_extras.accfun_descrip'
+                'cverrfun',                          'legacy_extras.cverrfun'
+                'cvoutput_descrip',                  'legacy_extras.cvoutput_descrip'
+                'error_type',                        'legacy_extras.error_type'
+                'function_call',                     'legacy_extras.function_call'
+                'function_handle',                   'legacy_extras.function_handle'
+                'algorithm_name',                    'legacy_extras.algorithm_name'
+
+                % --- legacy_extras catch-all for brain-wrapper composite fields ---
+                'covs',                              'legacy_extras.covs'
+                'data',                              'legacy_extras.data'
+                'full_model',                        'legacy_extras.full_model'
             };
         end
 

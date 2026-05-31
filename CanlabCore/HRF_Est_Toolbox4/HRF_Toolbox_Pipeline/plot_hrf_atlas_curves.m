@@ -22,8 +22,14 @@ function fig = plot_hrf_atlas_curves(input_table, varargin)
 %   'Model'       - which row's model column to use. Default 'sfir'.
 %   'Object'      - 'beta' (default) or 't'.
 %   'Conditions'  - cellstr; subset of conditions to plot. Default [] (all).
-%   'AtlasName'   - the token in 'atlas_<name>_<region>_mean'. Default
-%                   'canlab2024'.
+%   'AtlasObj'    - the atlas object (recommended). When provided, its
+%                   .labels drive column matching and region naming so
+%                   multi-token atlas names like 'CANLab2024_...' work
+%                   without further configuration. Default [].
+%   'AtlasName'   - case-insensitive substring of the atlas-name token
+%                   embedded in 'atlas_<name>_<region>_<suffix>'. Used
+%                   only when AtlasObj is not provided. Default '' (any
+%                   atlas; takes every atlas_*_<suffix> column).
 %   'Normalize'   - which suffix to read: 'mean' (default), 'l1', 'sum'.
 %                   Must match what hrf_score_wholebrain_input_table wrote.
 %   'TopN'        - number of regions to plot. Default 16.
@@ -51,7 +57,8 @@ p.addRequired('input_table', @istable);
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
-p.addParameter('AtlasName', 'canlab2024', @(x) ischar(x) || isstring(x));
+p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
+p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('TopN', 16, @(x) isscalar(x) && x >= 1);
 p.addParameter('RankBy', 'peak_abs', @(x) ischar(x) || isstring(x));
@@ -66,16 +73,18 @@ opts = p.Results;
 
 model = lower(char(opts.Model));
 object = lower(char(opts.Object));
-atlas_token = matlab.lang.makeValidName(char(opts.AtlasName));
 suffix = local_normalize_suffix(opts.Normalize);
 
 % 1. Walk the input_table, load the matching score CSV per row, extract the
 %    atlas columns. Output is a long table per-row.
-long = local_collect_atlas_long(input_table, model, object, atlas_token, suffix);
+long = local_collect_atlas_long(input_table, model, object, opts.AtlasObj, char(opts.AtlasName), suffix);
 if isempty(long) || height(long) == 0
     error('plot_hrf_atlas_curves:NoData', ...
-        'No atlas columns matching atlas_%s_*_%s found in any score CSV for model=%s, object=%s.', ...
-        atlas_token, suffix, model, object);
+        ['No atlas columns ending in _%s found in any score CSV for ' ...
+         'model=%s, object=%s. Pass ''AtlasObj'' (preferred) or ' ...
+         '''AtlasName'' substring to disambiguate, or check that ' ...
+         'scoring actually wrote atlas columns for this model/object.'], ...
+        suffix, model, object);
 end
 
 if ~isempty(opts.Conditions)
@@ -109,8 +118,13 @@ end
 % =========================================================================
 % Data collection
 % =========================================================================
-function long = local_collect_atlas_long(input_table, model, object, atlas_token, suffix)
+function long = local_collect_atlas_long(input_table, model, object, atlas_obj, atlas_name, suffix)
 % Returns one row per (subject, run_label, condition, region, lag_seconds, value).
+% Column matching is 3-tier:
+%   (a) AtlasObj.labels  -> exact end-match per label (region names from labels)
+%   (b) AtlasName        -> case-insensitive substring of column name (region names
+%                           derived by stripping the matched substring from the middle)
+%   (c) neither          -> any atlas_*_<suffix> column (region name = entire middle)
 long = table();
 v = input_table.Properties.VariableNames;
 file_col = sprintf('%s_scores_file', object);
@@ -119,8 +133,8 @@ if ~any(strcmp(file_col, v))
         'input_table is missing %s.', file_col);
 end
 
-col_prefix = sprintf('atlas_%s_', atlas_token);
-col_suffix = ['_' suffix];
+suffix_str = ['_' suffix];
+labels = local_labels_from_atlas(atlas_obj);
 
 chunks = {};
 for i = 1:height(input_table)
@@ -134,33 +148,25 @@ for i = 1:height(input_table)
         continue
     end
     cols = T.Properties.VariableNames;
-    keep = startsWith(cols, col_prefix) & endsWith(cols, col_suffix);
-    if ~any(keep), continue; end
-
     if ~any(strcmp('condition', cols)) || ~any(strcmp('lag_seconds', cols))
         continue
     end
+
+    [region_cols, region_labels] = local_match_atlas_columns(cols, labels, atlas_name, suffix_str);
+    if isempty(region_cols), continue; end
 
     n = height(T);
     subj = string(local_get_string(input_table, i, 'subject'));
     run  = string(local_get_string(input_table, i, 'run_label'));
 
-    region_cols = cols(keep);
     for c = 1:numel(region_cols)
-        col = region_cols{c};
-        region_name = extractBetween(col, col_prefix, col_suffix);
-        if isempty(region_name)
-            region_name = {erase(erase(col, col_prefix), col_suffix)};
-        end
-        region_name = region_name{1};
-
         chunk = table();
         chunk.subject = repmat(subj, n, 1);
         chunk.run_label = repmat(run, n, 1);
         chunk.condition = string(T.condition);
         chunk.lag_seconds = double(T.lag_seconds);
-        chunk.region = repmat(string(region_name), n, 1);
-        chunk.value = double(T.(col));
+        chunk.region = repmat(string(region_labels{c}), n, 1);
+        chunk.value = double(T.(region_cols{c}));
         chunks{end + 1} = chunk; %#ok<AGROW>
     end
 end
@@ -171,30 +177,99 @@ end
 end
 
 
+function labels = local_labels_from_atlas(atlas_obj)
+labels = {};
+if isempty(atlas_obj), return; end
+if isprop(atlas_obj, 'labels') && ~isempty(atlas_obj.labels)
+    labels = cellstr(string(atlas_obj.labels));
+    labels = labels(:);
+end
+end
+
+
+function [matched_cols, matched_labels] = local_match_atlas_columns(cols, labels, atlas_name, suffix_str)
+matched_cols = {};
+matched_labels = {};
+
+% Tier A: AtlasObj.labels drive matching. For each label, look for a column
+% that ends with _<makeValidName(label)>_<suffix>. Region names come from
+% the original labels (preserving any non-validname chars like '/').
+if ~isempty(labels)
+    for L = 1:numel(labels)
+        tok = matlab.lang.makeValidName(char(labels{L}));
+        end_pat = ['_' tok suffix_str];
+        is_match = startsWith(cols, 'atlas_') & endsWith(cols, end_pat);
+        idx = find(is_match);
+        for k = 1:numel(idx)
+            matched_cols{end + 1} = cols{idx(k)}; %#ok<AGROW>
+            matched_labels{end + 1} = labels{L}; %#ok<AGROW>
+        end
+    end
+    return
+end
+
+% Tier B: AtlasName substring match (case-insensitive). Region name is
+% the column middle with the matched substring stripped from the front.
+if ~isempty(atlas_name)
+    is_atlas = startsWith(cols, 'atlas_') & endsWith(cols, suffix_str);
+    is_match = is_atlas & contains(lower(cols), lower(atlas_name));
+    hit_cols = cols(is_match);
+    for k = 1:numel(hit_cols)
+        col = hit_cols{k};
+        mid = col(length('atlas_') + 1 : end - length(suffix_str));
+        lc_mid = lower(mid);
+        lc_name = lower(atlas_name);
+        idx = strfind(lc_mid, lc_name);
+        if ~isempty(idx)
+            % Strip the matched substring plus a trailing underscore.
+            start_after = idx(1) + length(atlas_name);
+            if start_after <= length(mid) && mid(start_after) == '_'
+                start_after = start_after + 1;
+            end
+            region = mid(start_after:end);
+            if isempty(region), region = mid; end
+        else
+            region = mid;
+        end
+        matched_cols{end + 1} = col; %#ok<AGROW>
+        matched_labels{end + 1} = region; %#ok<AGROW>
+    end
+    return
+end
+
+% Tier C: any atlas_*_<suffix> column. Region name = the full middle.
+is_match = startsWith(cols, 'atlas_') & endsWith(cols, suffix_str);
+hit_cols = cols(is_match);
+for k = 1:numel(hit_cols)
+    col = hit_cols{k};
+    matched_cols{end + 1} = col; %#ok<AGROW>
+    matched_labels{end + 1} = col(length('atlas_') + 1 : end - length(suffix_str)); %#ok<AGROW>
+end
+end
+
+
 function pooled = local_pool_subjects(long)
 % Collapse multiple runs per subject first, then pool across subjects.
-% Output: condition, region, lag_seconds, mean, sem, n.
+% Uses findgroups + splitapply (function handles) rather than groupsummary
+% (which only accepts a fixed set of method-name strings, not 'numel').
+% Output: condition, region, lag_seconds, mean, sem, sd, n.
 
 % Per (subject, condition, region, lag): average across runs.
-g1 = groupsummary(long, ...
-    {'subject', 'condition', 'region', 'lag_seconds'}, ...
-    'mean', 'value');
-g1 = removevars(g1, 'GroupCount');
-g1.Properties.VariableNames{end} = 'value';
+[G1, subj_u, cond_u, region_u, lag_u] = findgroups( ...
+    long.subject, long.condition, long.region, long.lag_seconds);
+v_per_run = splitapply(@(x) mean(x, 'omitnan'), long.value, G1);
+g1 = table(subj_u, cond_u, region_u, lag_u, v_per_run, ...
+    'VariableNames', {'subject','condition','region','lag_seconds','value'});
 
-% Per (condition, region, lag): mean + SEM across subjects.
-g2 = groupsummary(g1, ...
-    {'condition', 'region', 'lag_seconds'}, ...
-    {'mean', 'std', 'numel'}, 'value');
+% Per (condition, region, lag): mean + SD + N (finite) across subjects.
+[G2, cond_u2, region_u2, lag_u2] = findgroups( ...
+    g1.condition, g1.region, g1.lag_seconds);
+m  = splitapply(@(x) mean(x, 'omitnan'), g1.value, G2);
+sd = splitapply(@(x) std(x, 'omitnan'),  g1.value, G2);
+nn = splitapply(@(x) sum(isfinite(x)),   g1.value, G2);
 
-pooled = table();
-pooled.condition = g2.condition;
-pooled.region = g2.region;
-pooled.lag_seconds = g2.lag_seconds;
-pooled.mean = g2.mean_value;
-pooled.n = g2.numel_value;
-pooled.sem = g2.std_value ./ sqrt(max(pooled.n, 1));
-pooled.sd = g2.std_value;
+pooled = table(cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
+    'VariableNames', {'condition','region','lag_seconds','mean','sd','n','sem'});
 end
 
 

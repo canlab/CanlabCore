@@ -282,6 +282,11 @@ classdef predictive_model
         ROC_forced_choice
         ROC_single_interval
         all_reg_hyperparams
+        % -- legacy_extras (brain-wrapper composite fields) --
+        full_model
+        data
+        covs
+        inputOptions
     end
 
 
@@ -577,6 +582,12 @@ classdef predictive_model
         function v = get.ROC_forced_choice(obj),                v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_forced_choice'); end
         function v = get.ROC_single_interval(obj),              v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_single_interval'); end
         function v = get.all_reg_hyperparams(obj),              v = predictive_model.field_or_empty(obj.diagnostics, 'all_reg_hyperparams'); end
+
+        % legacy_extras composite fields (brain wrappers)
+        function v = get.full_model(obj),                       v = predictive_model.field_or_empty(obj.legacy_extras, 'full_model'); end
+        function v = get.data(obj),                             v = predictive_model.field_or_empty(obj.legacy_extras, 'data'); end
+        function v = get.covs(obj),                             v = predictive_model.field_or_empty(obj.legacy_extras, 'covs'); end
+        function v = get.inputOptions(obj),                     v = predictive_model.field_or_empty(obj.legacy_extras, 'inputOptions'); end
 
     end
 

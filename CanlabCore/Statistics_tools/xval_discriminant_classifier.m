@@ -1,8 +1,8 @@
-function S = xval_discriminant_classifier(X, labels, varargin)
+function pmodel_obj = xval_discriminant_classifier(X, labels, varargin)
 % xval_discriminant_classifier  Cross-validated discriminant classification using fitcdiscr
 %
 % USAGE:
-%   S = xval_discriminant_classifier(X, labels, varargin)
+%   pmodel_obj = xval_discriminant_classifier(X, labels, varargin)
 %
 % Required inputs
 % -------------------------------------------------------------------------
@@ -20,16 +20,16 @@ function S = xval_discriminant_classifier(X, labels, varargin)
 %
 % Outputs
 % -------------------------------------------------------------------------
-%   S           struct with fields:
-%       Y                   [N×1] true labels
-%       id                  [N×1] grouping variable (empty if not provided)
-%       nfolds              positive integer, number of folds
-%       trIdx               {1×nfolds} cell array of logical vectors for training set per fold
-%       teIdx               {1×nfolds} cell array of logical vectors for test set per fold
-%       models              {1×nfolds} cell array of fitcdiscr model objects
-%       predictions         {1×nfolds} cell array of predicted labels per fold
-%       trueLabels          {1×nfolds} cell array of true labels per fold
-%       accuracy            [nfolds×1] classification accuracy per fold (percentage)
+%   pmodel_obj  @predictive_model object holding the cross-validated LDA
+%               results. Fields accessible either via categorised
+%               sub-structs (pmodel_obj.fitted_values.yfit /
+%               .predictions / .trueLabels,
+%               pmodel_obj.error_metrics.accuracy / .overallAccuracy,
+%               pmodel_obj.cv_partition.trIdx / .teIdx /.nfolds,
+%               pmodel_obj.fold_models) or via legacy flat aliases
+%               (pmodel_obj.Y, .id, .yfit, .accuracy, .overallAccuracy,
+%               .trIdx, .teIdx, .nfolds, .predictions, .trueLabels,
+%               .models). See @predictive_model.
 %
 % DESCRIPTION:
 %   Performs stratified k-fold cross-validated linear discriminant analysis (LDA)
@@ -209,6 +209,9 @@ if doplot
 
 end
 
+
+    %% -------------------- Wrap in @predictive_model --------------------
+    pmodel_obj = predictive_model(S, 'noverbose');
 
     %% -------------------- End of function --------------------
 end

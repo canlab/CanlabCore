@@ -1,10 +1,23 @@
-function [test_results, stats1, stats2] = xval_cross_classfy(algorithm_name, data1, data2, cv_assign, varargin)
+function [pmodel_obj, stats1, stats2] = xval_cross_classify(algorithm_name, data1, data2, cv_assign, varargin)
 
 % Run SVM or LASSOPCR on two image_vector or fmri_data objects for cross-classification.
 %
 % Usage:
 % -------------------------------------------------------------------------
-% [test_results, stats1, stats2] = xval_cross_classfy(algorithm_name, dat1, dat2, cv_assign, [optional inputs])
+% [pmodel_obj, stats1, stats2] = xval_cross_classify(algorithm_name, dat1, dat2, cv_assign, [optional inputs])
+%
+% (File renamed from xval_cross_classfy.m and function renamed to match
+%  the filename — typo fix. Sole external caller searchlight_disti.m
+%  was updated in the same commit.)
+%
+% :Outputs:
+%   **pmodel_obj** — @predictive_model object summarising the
+%     cross-classification (built from the test_results struct that
+%     this function previously returned). Categorised access via
+%     pmodel_obj.cross_classify.{stats1, stats2, ...}; the per-direction
+%     stats are also returned separately as the 2nd/3rd outputs for
+%     back-compat with the legacy multi-output signature.
+%   **stats1, stats2** — raw per-direction struct outputs (unchanged).
 %
 % Features:
 % - ...
@@ -99,8 +112,8 @@ function [test_results, stats1, stats2] = xval_cross_classfy(algorithm_name, dat
 % 
 % % Run, and run again with existing indx
 % % -------------------------------------
-% % [test_results, stats1, stats2] = xval_cross_classfy('cv_svm', dat1, dat2, cv_assign, 'outcome_method', 'singleinterval')
-% [test_results, stats1, stats2] = xval_cross_classfy('cv_lassopcr', dat1, dat2, cv_assign, 'outcome_method', 'singleinterval')
+% % [test_results, stats1, stats2] = xval_cross_classify('cv_svm', dat1, dat2, cv_assign, 'outcome_method', 'singleinterval')
+% [test_results, stats1, stats2] = xval_cross_classify('cv_lassopcr', dat1, dat2, cv_assign, 'outcome_method', 'singleinterval')
 %
 % See also:
 % fmri_data.predict.m
@@ -139,12 +152,19 @@ end
 
 % ----- run algorithms ----- 
 
-switch algorithm_name    
+switch algorithm_name
     case 'cv_svm'
         [test_results, stats1, stats2] = cv_svm_cross_classfy(data1, data2, cv_assign, test_Y1, test_Y2, out_method, dobalanced, balanced_ridge);
-    case 'cv_lassopcr'        
+    case 'cv_lassopcr'
         [test_results, stats1, stats2] = cv_lassopcr_cross_classfy(data1, data2, cv_assign, test_Y1, test_Y2, out_method);
 end
+
+% Wrap the test_results struct + per-direction stats in a
+% @predictive_model object. The routing table sends test_results,
+% stats1, stats2 fields into pmodel_obj.cross_classify.
+pmodel_obj = predictive_model( ...
+    struct('test_results', test_results, 'stats1', stats1, 'stats2', stats2), ...
+    'noverbose');
 
 end
 

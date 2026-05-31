@@ -117,8 +117,8 @@ function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
     % -----------------------------------------------------------
     nested_choose_ndims();
 
-    [STATS.INPUTS.pcsquash, STATS.INPUTS.num_dims, STATS.INPUTS.Y, STATS.INPUTS.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
-    %STATS.INPUTS.X = X;
+    [STATS.inputParameters.pcsquash, STATS.inputParameters.num_dims, STATS.inputParameters.Y, STATS.inputParameters.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
+    %STATS.inputParameters.X = X;
 
     %include = 1:N;  % which subjects to include
 
@@ -134,7 +134,7 @@ function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
 
         % Return holdout_set{} defining folds and holdout set for each fold
         holdout_set = nested_select_holdout_set();
-        STATS.INPUTS.holdout_set{s} = holdout_set;
+        STATS.inputParameters.holdout_set{s} = holdout_set;
 
         checkrowdependence(X{s}, verbose || verboseL);  
         % rows are assumed to be independent; if they are not, can get

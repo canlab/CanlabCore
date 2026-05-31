@@ -164,9 +164,6 @@ classdef predictive_model
         Y_orig
         trueLabels
         y
-        INPUTS
-        inputs
-        inputOptions
         % cv_partition
         trIdx
         teIdx
@@ -408,9 +405,6 @@ classdef predictive_model
         function v = get.Y_orig(obj),     v = obj.Y; end
         function v = get.y(obj),          v = obj.Y; end
         function v = get.trueLabels(obj), v = predictive_model.field_or_empty(obj.fitted_values, 'Y_per_fold'); end
-        function v = get.INPUTS(obj),       v = obj.inputParameters; end
-        function v = get.inputs(obj),       v = obj.inputParameters; end
-        function v = get.inputOptions(obj), v = obj.inputParameters; end
 
         % cv_partition
         function v = get.trIdx(obj),               v = predictive_model.field_or_empty(obj.cv_partition, 'trIdx'); end
@@ -774,10 +768,7 @@ classdef predictive_model
                 'omitted_cases',                     'omitted_cases'
                 'omitted_features',                  'omitted_features'
 
-                % --- inputParameters (was INPUTS / inputs / inputOptions) ---
-                'INPUTS',                            'inputParameters'
-                'inputs',                            'inputParameters'
-                'inputOptions',                      'inputParameters'
+                % --- inputParameters (only canonical name accepted; INPUTS / inputs / inputOptions deprecated) ---
                 'inputParameters',                   'inputParameters'
 
                 % --- fit metadata ---

@@ -47,7 +47,8 @@ function xval_SVM_unit_test()
         class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_classifier);
 
     % --- Categorised <-> legacy alias agreement ---
-    % Y, id are now top-level (was pmodel_obj.inputs.Y / .id) — sanity-check they're present.
+    % Y, id are top-level. (Legacy `.inputs.Y` Dependent alias removed
+    % in the INPUTS/inputs/inputOptions cleanup commit.)
     assert(~isempty(pmodel_obj.Y),  'Y empty');
     assert(~isempty(pmodel_obj.id), 'id empty');
     assert(isequal(pmodel_obj.yfit,                           pmodel_obj.fitted_values.yfit),                          'yfit');

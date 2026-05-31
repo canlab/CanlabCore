@@ -55,8 +55,8 @@ function xval_regression_multisubject_unit_test()
     assert(isequal(pmodel_obj.r_each_subject,     pmodel_obj.error_metrics.r_each_subject.value),  'r_each_subject');
     % After consolidation: Y/Y_orig are top-level; INPUTS is a Dependent
     % alias for the top-level inputParameters struct.
-    assert(~isempty(pmodel_obj.Y_orig), 'Y_orig empty (should alias Y)');
-    assert(~isempty(pmodel_obj.INPUTS), 'INPUTS empty (should alias inputParameters)');
+    assert(~isempty(pmodel_obj.Y_orig),          'Y_orig empty (should alias Y)');
+    assert(~isempty(pmodel_obj.inputParameters), 'inputParameters empty');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     % --- Shape / sanity ---

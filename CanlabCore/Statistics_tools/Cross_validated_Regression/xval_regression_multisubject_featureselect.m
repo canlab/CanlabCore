@@ -167,7 +167,15 @@ function pmodel_obj = xval_regression_multisubject_featureselect(fit_method, Y, 
 %             ncovs = size(train_covs, 2); % needed to get voxel weights only
 %             [subjbetas{s}, STATS.vox_weights(:, wh_fold)] = do_fit(fit_method, train_y, [train_covs train_dat], pcsquash, v, nvox, regparams, ncovs);
 
-            [subjbetas{s}, STATS.vox_weights(:, wh_fold)] = do_fit(fit_method, train_y, train_dat, pcsquash, v, nvox, regparams);
+            % Bug fix: do_fit returns vox_weights sized for the
+            % feature-selected subset, but STATS.vox_weights is
+            % pre-allocated to the full nvox feature space. Pad back
+            % into full space using the per-fold wh_features mask.
+            n_selected = sum(wh_features);
+            [subjbetas{s}, vox_weights_sel] = do_fit(fit_method, train_y, train_dat, pcsquash, v, n_selected, regparams);
+            vox_weights_full = zeros(nvox, 1);
+            vox_weights_full(wh_features) = vox_weights_sel;
+            STATS.vox_weights(:, wh_fold) = vox_weights_full;
 
             switch fit_method
                 case {'logistic', 'logistictrain'}

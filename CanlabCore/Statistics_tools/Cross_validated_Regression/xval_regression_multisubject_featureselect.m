@@ -1,7 +1,25 @@
-function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
-    % STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
+function pmodel_obj = xval_regression_multisubject_featureselect(fit_method, Y, X, varargin)
+    % pmodel_obj = xval_regression_multisubject_featureselect(fit_method, Y, X, varargin)
     %
-    % CROSS-VALIDATED (JACKKNIFE) REGRESSION
+    % CROSS-VALIDATED (JACKKNIFE) REGRESSION with per-fold feature selection.
+    %
+    % :Output:
+    %   **pmodel_obj** is a @predictive_model object. Cross-validated
+    %   predictions, weights, and error metrics are accessible either via
+    %   categorised sub-structs (pmodel_obj.fitted_values.subjfit,
+    %   pmodel_obj.weights.mean_vox_weights,
+    %   pmodel_obj.error_metrics.pred_err, ...) or legacy flat aliases
+    %   (pmodel_obj.subjfit, pmodel_obj.mean_vox_weights,
+    %   pmodel_obj.pred_err, ...). See @predictive_model.
+    %
+    % :Programmers' notes:
+    %   MATLAB R2026a compatibility: parent-scope inits added for
+    %   nested-function shared variables (see sibling
+    %   xval_regression_multisubject.m). Filename / function name now
+    %   match (declaration previously shadowed
+    %   xval_regression_multisubject on the path).
+    %
+    % --- Original ---
     % Leave-one observation out, predict outcomes for each missing holdout_set.
     %
     % Y = outcome, holdout_set x 1
@@ -42,8 +60,20 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
 
     % Set defaults
     % -----------------------------------------------------------
+    % R2026a parent-scope inits for nested-function shared variables
+    % (see xval_regression_multisubject.m for full rationale).
+    N = length(Y);
+    [pcsquash, doplssquash, dochoose_ndims, dochoose_regparams, ...
+     verbose, verboseL, doplot, docenterrowsX, dosave, has_cov] = deal([]);
+    [num_dims, cov_val, regparams, holdout_method] = deal([]);
+    [subjbetas, subjfit, nanvox, wasnan, Y_orig, my_intercepts] = deal({});
+    [train_y, train_dat, test_dat, weight_y, weight_dat] = deal([]);
+    [devs_from_full_model, devs_from_mean_only_model] = deal([]);
+    [var_full, var_null, rr, rsq, pred_err] = deal([]);
+    fit = [];
+    v   = [];
+
     nested_setdefaults();
-    docenterrowsX; dosave;
 
     % Variable dimensions: retain max possible for each subject
     % If choose ndims is selected, then pick the number here
@@ -65,7 +95,6 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         % ===========================================
 
         nested_prepdata(); % remove NaNs and initialize fit variable (output)
-        nanvox; % we will need to pass this into another inline later
 
         % Return holdout_set{} defining folds and holdout set for each fold
         holdout_set = nested_select_holdout_set();
@@ -228,6 +257,8 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         disp(' ')
     end
 
+    % Wrap the working struct in a @predictive_model object.
+    pmodel_obj = predictive_model(STATS, 'noverbose');
 
 
     % =======================================================================
@@ -593,7 +624,7 @@ function [v, train_dat, test_dat] = do_pcsquash(train_y, train_dat, test_dat, nu
         %     xlabel('Yhat from PLS'); ylabel('Actual yhat');
 
     else
-        [v, scores] = princomp(train_dat, 'econ');  % scores = train_dat, up to scaling factor!! can't use scores from princomp-diff scaling
+        [v, scores] = pca(train_dat, 'Economy', true); %#ok<ASGLU> R2026a: princomp removed, pca is the equivalent
         train_dat = train_dat * v;
         v = v(:, 1:num_dims);  % eigenvectors
         train_dat = train_dat(:, 1:num_dims); % train_dat now becomes the scores
@@ -955,6 +986,6 @@ end  % inner_xval_optimize_ridge
 
 function pe = xval_given_param(paramval, fit_method, Y, data, pcastr, plsstr, num_dims)
     % paramval could be a ridge or LASSO shrinkage value
-    STATS = xval_regression_multisubject(fit_method, {Y}, {data}, 'regparams', paramval, 'noverbose', 'holdout_method', 'balanced4', pcastr, plsstr, 'num_dims', num_dims);
-    pe = STATS.pred_err;
+    pm = xval_regression_multisubject(fit_method, {Y}, {data}, 'regparams', paramval, 'noverbose', 'holdout_method', 'balanced4', pcastr, plsstr, 'num_dims', num_dims);
+    pe = pm.pred_err;
 end

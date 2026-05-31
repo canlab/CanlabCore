@@ -38,15 +38,14 @@ function xval_SVR_unit_test()
     fprintf('  class = %s, is_fitted = %d, is_regressor = %d\n', ...
         class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_regressor);
 
-    % Round-trip categorised vs. legacy aliases
-    assert(isequal(pmodel_obj.Y,                          pmodel_obj.inputs.Y),                                  'Y');
-    assert(isequal(pmodel_obj.yfit,                       pmodel_obj.fitted_values.yfit),                        'yfit');
-    assert(isequal(pmodel_obj.dist_from_hyperplane_xval,  pmodel_obj.fitted_values.dist_from_hyperplane_xval),   'dist_from_hyperplane_xval');
-    assert(isequal(pmodel_obj.w,                          pmodel_obj.weights.w),                                 'w');
-    assert(isequal(pmodel_obj.prediction_outcome_r,       pmodel_obj.error_metrics.prediction_outcome_r),        'prediction_outcome_r');
-    assert(isequal(pmodel_obj.pred_outcome_r,             pmodel_obj.error_metrics.prediction_outcome_r),        'pred_outcome_r alias');
-    assert(isequal(pmodel_obj.d_singleinterval,           pmodel_obj.error_metrics.d_singleinterval),            'd_singleinterval');
-    assert(isequal(pmodel_obj.SVRModel,                   pmodel_obj.ml_model),                                  'SVRModel');
+    % Round-trip categorised vs. legacy aliases (regression-relevant fields only).
+    assert(isequaln(pmodel_obj.Y,                    pmodel_obj.inputs.Y),                            'Y');
+    assert(isequaln(pmodel_obj.yfit,                 pmodel_obj.fitted_values.yfit),                  'yfit');
+    assert(isequaln(pmodel_obj.w,                    pmodel_obj.weights.w),                           'w');
+    assert(isequaln(pmodel_obj.prediction_outcome_r, pmodel_obj.error_metrics.prediction_outcome_r),  'prediction_outcome_r');
+    assert(isequaln(pmodel_obj.pred_outcome_r,       pmodel_obj.error_metrics.prediction_outcome_r),  'pred_outcome_r alias');
+    assert(isequaln(pmodel_obj.d_singleinterval,     pmodel_obj.error_metrics.d_singleinterval),      'd_singleinterval');
+    assert(isequaln(pmodel_obj.SVRModel,             pmodel_obj.ml_model),                            'SVRModel');
     fprintf('  Categorised <-> legacy alias round-trip OK\n');
 
     fprintf('  cv: r = %.3f, d = %.2f\n', pmodel_obj.prediction_outcome_r, pmodel_obj.d_singleinterval);

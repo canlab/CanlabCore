@@ -1,10 +1,10 @@
-function S = xval_SVR(varargin)
+function pmodel_obj = xval_SVR(varargin)
 %  Support Vector Regression (SVR) for between or within-person multivariate regression, with repeated cross-val and nested cross-val options
 %
 % :Usage:
 % ::
 %
-% S = xval_SVR(X, Y, id, varargin)
+% pmodel_obj = xval_SVR(X, Y, id, varargin)
 %
 % Steps and features:
 % -------------------------------------------------------------------------
@@ -101,9 +101,13 @@ function S = xval_SVR(varargin)
 %
 % :Outputs:
 %
-%   **S:**
-%        Structure with model output
-%        of them (partially consistent with this function).
+%   **pmodel_obj:**
+%        A @predictive_model object holding the cross-validated SVR
+%        results. Fields below are accessible either via categorised
+%        sub-structs (pmodel_obj.fitted_values.yfit,
+%        pmodel_obj.weights.w, pmodel_obj.error_metrics.prediction_outcome_r)
+%        or via legacy flat aliases (pmodel_obj.yfit, pmodel_obj.w,
+%        pmodel_obj.prediction_outcome_r). See @predictive_model.
 %                           Y: Actual (obs) outcome - continuous
 %                        yfit: Predicted outcome - continuous
 %                              Cross-validated, so can be used as series
@@ -599,11 +603,11 @@ end
 % S = xval_SVR(X, Y, id, 'nooptimize', 'norepeats');
 
 
-% Recast as object
+% Recast as @predictive_model object
 % Future: this could be done earlier, and more subfunctions converted to
 % object methods, which would be contingent on the type of model run.
 
-S = predictive_model(S);
+pmodel_obj = predictive_model(S, 'noverbose');
 
 
 end % main function

@@ -80,6 +80,16 @@ function xval_SVM_unit_test()
         pmodel_obj.crossval_accuracy, pmodel_obj.classification_d_singleinterval, ...
         pmodel_obj.crossval_accuracy_within, pmodel_obj.classification_d_within);
 
+    % --- fit_type + omitted markers (Phase B) ---
+    assert(strcmp(pmodel_obj.fit_type, 'crossval'), ...
+        'fit_type should be ''crossval'', got ''%s''', pmodel_obj.fit_type);
+    assert(islogical(pmodel_obj.omitted_cases),    'omitted_cases must be logical');
+    assert(islogical(pmodel_obj.omitted_features), 'omitted_features must be logical');
+    assert(numel(pmodel_obj.omitted_cases)    == numel(Y),         'omitted_cases length should match original Y');
+    assert(numel(pmodel_obj.omitted_features) == size(X, 2),       'omitted_features length should match original feature count');
+    fprintf('  fit_type=%s, omitted_cases=%d, omitted_features=%d\n', ...
+        pmodel_obj.fit_type, sum(pmodel_obj.omitted_cases), sum(pmodel_obj.omitted_features));
+
     % --- validate_object accepts the returned object ---
     pmodel_obj.validate_object('noverbose');
     fprintf('  validate_object OK\n');

@@ -73,6 +73,14 @@ function pmodel_obj = xval_regression_multisubject_featureselect(fit_method, Y, 
     fit = [];
     v   = [];
 
+    % Phase B: per-subject bad-data detection.
+    omitted_cases_cell    = cell(1, N);
+    omitted_features_cell = cell(1, N);
+    for s_ = 1:N
+        [omitted_cases_cell{s_}, omitted_features_cell{s_}] = ...
+            predictive_model.detect_bad_data(X{s_}, Y{s_});
+    end
+
     nested_setdefaults();
 
     % Variable dimensions: retain max possible for each subject
@@ -264,6 +272,11 @@ function pmodel_obj = xval_regression_multisubject_featureselect(fit_method, Y, 
         fprintf('Null model pred. error is %3.2f, and full model is %3.2f\n', STATS.pred_err_null(1), STATS.pred_err(1));
         disp(' ')
     end
+
+    % Phase B fit metadata.
+    STATS.omitted_cases    = omitted_cases_cell;
+    STATS.omitted_features = omitted_features_cell;
+    STATS.fit_type         = 'crossval';
 
     % Wrap the working struct in a @predictive_model object.
     pmodel_obj = predictive_model(STATS, 'noverbose');

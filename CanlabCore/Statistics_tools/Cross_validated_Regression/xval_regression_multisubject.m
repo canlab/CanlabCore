@@ -97,6 +97,16 @@ function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
     fit = [];
     v   = [];
 
+    % Phase B: per-subject bad-data detection. The pre-existing
+    % nested_prepdata also calls nanremove (legacy), so we capture the
+    % same information up-front in a consistent format for the output.
+    omitted_cases_cell    = cell(1, N);
+    omitted_features_cell = cell(1, N);
+    for s_ = 1:N
+        [omitted_cases_cell{s_}, omitted_features_cell{s_}] = ...
+            predictive_model.detect_bad_data(X{s_}, Y{s_});
+    end
+
     % Set defaults
     % -----------------------------------------------------------
     nested_setdefaults();
@@ -310,6 +320,11 @@ function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
         fprintf('Null model pred. error is %3.2f, and full model is %3.2f\n', STATS.pred_err_null(1), STATS.pred_err(1));
         disp(' ')
     end
+
+    % Phase B fit metadata
+    STATS.omitted_cases    = omitted_cases_cell;
+    STATS.omitted_features = omitted_features_cell;
+    STATS.fit_type         = 'crossval';
 
     % Wrap the working struct in a @predictive_model object. Constructor
     % routes every STATS field into its categorised home; legacy flat

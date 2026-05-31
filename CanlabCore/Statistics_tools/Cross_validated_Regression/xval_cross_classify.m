@@ -159,12 +159,26 @@ switch algorithm_name
         [test_results, stats1, stats2] = cv_lassopcr_cross_classfy(data1, data2, cv_assign, test_Y1, test_Y2, out_method);
 end
 
+% Phase B: detect bad cases/features per dataset (data1, data2) and
+% store as 1x2 cell arrays. This is informational only — the actual
+% NaN handling for cross_classify happens inside cv_svm_cross_classfy /
+% cv_lassopcr_cross_classfy, which we leave alone for now.
+[oc1, of1] = predictive_model.detect_bad_data(data1.dat', data1.Y(:, 1));
+[oc2, of2] = predictive_model.detect_bad_data(data2.dat', data2.Y(:, 1));
+omitted_cases_cell    = {oc1, oc2};
+omitted_features_cell = {of1, of2};
+
 % Wrap the test_results struct + per-direction stats in a
 % @predictive_model object. The routing table sends test_results,
 % stats1, stats2 fields into pmodel_obj.cross_classify.
-pmodel_obj = predictive_model( ...
-    struct('test_results', test_results, 'stats1', stats1, 'stats2', stats2), ...
-    'noverbose');
+wrapper_struct = struct( ...
+    'test_results',     test_results, ...
+    'stats1',           stats1, ...
+    'stats2',           stats2, ...
+    'omitted_cases',    {omitted_cases_cell}, ...
+    'omitted_features', {omitted_features_cell}, ...
+    'fit_type',         'crossval');
+pmodel_obj = predictive_model(wrapper_struct, 'noverbose');
 
 end
 

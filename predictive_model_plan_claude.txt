@@ -321,7 +321,122 @@ If we DO want subclasses later, they should be predictive_classifier and
 predictive_regressor inheriting from predictive_model, but the v1 design
 is flat.
 
------------ 4b. Properties: categorised layout (IMPLEMENTED Phase 0) ----------
+----------- 4b. Properties: CONSOLIDATED layout (IMPLEMENTED 2026-05-31) -------
+
+The original categorised layout (~85 fields across 13 sub-structs) was
+consolidated based on user-directed property merging. The current
+layout has fewer, more semantically-grouped properties; backward
+compat is preserved via Dependent read-only aliases for every legacy
+flat name (Y_orig, INPUTS, vox_weights, VOXWEIGHTS, wZ, wP,
+pred_err_descrip, ...).
+
+KEY CHANGES (vs. original §4b proposal):
+
+1. yfit semantics: top-level `fit_type` char {'crossval','insample','test'}
+   describes the provenance of BOTH yfit and weights. Each xval_*
+   wrapper sets `S.fit_type = 'crossval'` before the predictive_model
+   wrap. Future predict(model, X_new) will set 'test'.
+
+2. Top-level Y / id / inputParameters (was the `inputs` category):
+   - Y consolidates the legacy Y, Y_orig, trueLabels, y aliases.
+   - id is now its own top-level property.
+   - inputParameters replaces .INPUTS / .inputs / .inputOptions.
+
+3. omitted_cases / omitted_features (NEW):
+   - logical vectors over original observations/features
+   - populated by predictive_model.detect_bad_data(X, Y) which every
+     xval_* calls before fitting
+   - removes NaN/Inf cases, all-NaN columns, zero-variance columns,
+     Inf-containing columns
+   - lets downstream code reconstruct the mapping back to the
+     original X / Y order (analogous to nanremove's nanvec)
+
+4. weights category now holds the union of former weights + weight_stats:
+     weights.w                main coefficient vector
+     weights.w_perfold        matrix nvox x nfolds (was vox_weights)
+     weights.w_bootstrap      struct (was VOXWEIGHTS)
+     weights.boot_w / .boot_w_ste / .boot_w_mean
+     weights.z / .p / .fdr_thr / .fdr_sig / .thresh_fdr
+       — renamed from weight_stats.wZ / .wP / .wP_fdr_thr /
+         .boot_w_fdrsig / .w_thresh_fdr (drops misleading "w" prefix).
+     weights.mean_vox_weights / .my_intercepts / .subjbetas / .weight_obj
+   The weight_stats category is eliminated.
+
+5. error_metrics entries are now (value, descrip) tuples:
+     error_metrics.pred_err.value, .pred_err.descrip
+     error_metrics.crossval_accuracy.value, ...
+   The top-level Dependent aliases (.pred_err, .crossval_accuracy, ...)
+   unwrap .value so arithmetic still works. Aliases for *_descrip
+   unwrap .descrip. The routing table pairs metric and descrip fields
+   into a single tuple so legacy wrappers that set them separately
+   still produce a complete tuple.
+
+6. note becomes a cell-array (accumulated, not overwritten):
+   r_each_subject_note / r_each_subject_note2 are appended to note
+   with prefixes; their Dependent aliases return the matching entry.
+
+7. fitted_values gains a canonical .scores + .score_type marker:
+     score_type ∈ {'distance', 'probability'}
+   Legacy aliases dist_from_hyperplane_xval / class_probability_xval
+   read .scores when the type matches; otherwise fall back to the
+   legacy-named sub-fields.
+
+8. The `inputs`, `weight_stats`, and `descriptions` categories are
+   eliminated. Stand-alone description strings (function_call,
+   function_handle, algorithm_name, error_type, cverrfun,
+   accfun_descrip, cvoutput_descrip) live in `legacy_extras` since
+   they don't fit cleanly into a metric tuple.
+
+CURRENT TOP-LEVEL PROPERTIES (after consolidation):
+
+  HYPERPARAMETERS (set by user/constructor) — unchanged
+    algorithm, task, modeloptions, random_state, standardize,
+    use_parallel, cv, scorer, nboot, nperm, do_calibrate,
+    Y_name, X_name, class_labels
+
+  DATA (top-level)
+    Y, id, omitted_cases, omitted_features, inputParameters
+
+  FIT METADATA
+    fit_type
+
+  CATEGORISED FITTED STATE
+    fitted_values, weights, error_metrics, cv_partition,
+    ml_model, fold_models, bootstrap_results, permutation_results,
+    diagnostics, cross_classify, legacy_extras
+
+  CONVENIENCE / IMAGE_VECTOR COMPAT
+    note (cell array), accfun, history, removed_voxels
+
+STATIC HELPERS
+
+  detect_bad_data(X, Y)      pre-fit data-quality check used by every
+                             xval_*; returns omitted_cases and
+                             omitted_features logical vectors.
+  metric_value / metric_descrip   tuple unwrapping for Dependent getters.
+  write_path(obj, path, val)  dotted-path writer with embedded '+' for
+                             cell-array append (used by note).
+  field_routing()            dotted-target routing table; adding a new
+                             wrapper output field = one new row.
+
+LEGACY DEPENDENT ALIASES (read-only)
+
+  Every flat field name that user code currently reads still works:
+    Y_orig, trueLabels, y                       -> Y
+    INPUTS, inputs, inputOptions                -> inputParameters
+    vox_weights, VOXWEIGHTS                     -> weights.w_perfold / .w_bootstrap
+    wZ, wP, wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr
+                                                -> weights.z / .p / .fdr_thr / .fdr_sig / .thresh_fdr
+    r_each_subject_note, r_each_subject_note2   -> indexed entries in note
+    pred_err, crossval_accuracy, r_squared, mse, rmse, ...
+                                                -> error_metrics.<name>.value
+    pred_err_descrip, crossval_accuracy_descrip, ...
+                                                -> error_metrics.<name>.descrip
+    classification_d_singleinterval, regression_d_singleinterval, ...
+                                                -> error_metrics.d_singleinterval.value
+    SVMModel, SVRModel, ClassificationModel     -> ml_model
+
+----------- 4b-LEGACY. Original categorised layout (PRE-CONSOLIDATION) --------
 
 After surveying the union of fields across the 11 Category-A xval_*
 wrappers (~50 distinct field names), a flat property layout was rejected

@@ -136,8 +136,9 @@ function pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method
         
         fprintf('Getting p-values for voxel weights: Running %3.0f bootstrap samples: 000', nbootsamples);
 
-        poolstate = matlabpool('size');
-        if poolstate  
+        % matlabpool was removed in MATLAB R2014a; use parpool / gcp.
+        pool = gcp('nocreate');
+        if ~isempty(pool)
             fprintf('Parallel mode\n');
             nested_bootstrap_loop_parallel
         else

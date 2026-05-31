@@ -51,6 +51,13 @@ function xval_discriminant_classifier_unit_test()
     fprintf('  overall_acc = %.1f%%, mean_fold_acc = %.1f%%\n', ...
         pmodel_obj.overallAccuracy, mean(pmodel_obj.accuracy));
 
+    % --- fit_type + omitted markers (Phase B) ---
+    assert(strcmp(pmodel_obj.fit_type, 'crossval'), 'fit_type should be crossval');
+    assert(islogical(pmodel_obj.omitted_cases),    'omitted_cases must be logical');
+    assert(islogical(pmodel_obj.omitted_features), 'omitted_features must be logical');
+    fprintf('  fit_type=%s, omitted_cases=%d, omitted_features=%d\n', ...
+        pmodel_obj.fit_type, sum(pmodel_obj.omitted_cases), sum(pmodel_obj.omitted_features));
+
     pmodel_obj.validate_object('noverbose');
     fprintf('xval_discriminant_classifier_unit_test: PASS\n');
 end

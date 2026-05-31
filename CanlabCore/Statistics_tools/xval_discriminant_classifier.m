@@ -85,6 +85,22 @@ function pmodel_obj = xval_discriminant_classifier(X, labels, varargin)
 
     N = size(X, 1);
 
+    %% -------------------- Pre-fit data-quality check (Phase B) ----------
+    [omitted_cases, omitted_features] = predictive_model.detect_bad_data(X, double(labels));
+    if any(omitted_cases) || any(omitted_features)
+        if verbose && any(omitted_cases)
+            fprintf('xval_discriminant_classifier: removing %d cases (NaN/Inf)\n', sum(omitted_cases));
+        end
+        if verbose && any(omitted_features)
+            fprintf('xval_discriminant_classifier: removing %d features (all-NaN / zero-variance / Inf)\n', sum(omitted_features));
+        end
+        X(omitted_cases, :)      = [];
+        labels(omitted_cases)    = [];
+        if ~isempty(id), id(omitted_cases) = []; end
+        X(:, omitted_features) = [];
+        N = size(X, 1);
+    end
+
     %% -------------------- Determine fold indices --------------------
     if ~isempty(id)
         % Use leave-whole-subject-out stratified folds
@@ -210,7 +226,10 @@ if doplot
 end
 
 
-    %% -------------------- Wrap in @predictive_model --------------------
+    %% -------------------- Fit metadata + Wrap in @predictive_model ----
+    S.omitted_cases    = omitted_cases;
+    S.omitted_features = omitted_features;
+    S.fit_type         = 'crossval';
     pmodel_obj = predictive_model(S, 'noverbose');
 
     %% -------------------- End of function --------------------

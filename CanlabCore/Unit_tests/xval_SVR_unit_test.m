@@ -51,6 +51,13 @@ function xval_SVR_unit_test()
 
     fprintf('  cv: r = %.3f, d = %.2f\n', pmodel_obj.prediction_outcome_r, pmodel_obj.d_singleinterval);
 
+    % --- fit_type + omitted markers (Phase B) ---
+    assert(strcmp(pmodel_obj.fit_type, 'crossval'), 'fit_type should be crossval');
+    assert(islogical(pmodel_obj.omitted_cases),    'omitted_cases must be logical');
+    assert(islogical(pmodel_obj.omitted_features), 'omitted_features must be logical');
+    fprintf('  fit_type=%s, omitted_cases=%d, omitted_features=%d\n', ...
+        pmodel_obj.fit_type, sum(pmodel_obj.omitted_cases), sum(pmodel_obj.omitted_features));
+
     pmodel_obj.validate_object('noverbose');
     fprintf('xval_SVR_unit_test: PASS\n');
 end

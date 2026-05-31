@@ -257,6 +257,21 @@ if exist('dobootstrap1', 'var'), dobootstrap = dobootstrap1; end
 if isempty(id), id = [1:length(Y)]'; end
 if ~iscolumn(id), id = id'; end
 
+% Pre-fit data-quality check (Phase B; same pattern in every xval_*).
+[omitted_cases, omitted_features] = predictive_model.detect_bad_data(X, Y);
+if any(omitted_cases) || any(omitted_features)
+    if doverbose && any(omitted_cases)
+        fprintf('xval_SVR: removing %d cases (NaN/Inf in X or Y)\n', sum(omitted_cases));
+    end
+    if doverbose && any(omitted_features)
+        fprintf('xval_SVR: removing %d features (all-NaN / zero-variance / Inf)\n', sum(omitted_features));
+    end
+    X(omitted_cases, :) = [];
+    Y(omitted_cases)    = [];
+    id(omitted_cases)   = [];
+    X(:, omitted_features) = [];
+end
+
 %% Select holdout sets for outer loop
 % - Keep images from the same id together
 % - Stratify on the outcome to be predicted
@@ -266,6 +281,9 @@ S = struct();   % Define structure for models and output; use variable names in 
 
 S.Y = Y;
 S.id = id;      % Subject grouping - not in fmri_data.predict
+S.omitted_cases    = omitted_cases;
+S.omitted_features = omitted_features;
+S.fit_type         = 'crossval';
 
 S.modeloptions = modeloptions;
 

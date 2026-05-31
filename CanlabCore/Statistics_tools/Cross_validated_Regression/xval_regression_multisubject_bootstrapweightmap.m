@@ -1,5 +1,19 @@
-function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
-    % STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+function pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+    % pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+    %
+    % :Output:
+    %   **pmodel_obj** is a @predictive_model object (voxel-level
+    %   bootstrap weight maps in pmodel_obj.bootstrap_results and
+    %   pmodel_obj.weights.VOXWEIGHTS). Legacy flat aliases
+    %   (pm.subjfit, pm.VOXWEIGHTS, pm.pred_err) also work. See
+    %   @predictive_model.
+    %
+    % :Programmers' notes:
+    %   MATLAB R2026a compatibility: parent-scope inits added for
+    %   nested-function shared variables (see
+    %   xval_regression_multisubject.m for rationale).
+    %
+    % --- Original ---
     %
     % CROSS-VALIDATED (JACKKNIFE) REGRESSION
     % Leave-one observation out, predict outcomes for each missing holdout_set.
@@ -40,6 +54,18 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
 
     % Set defaults
     % -----------------------------------------------------------
+    % R2026a parent-scope inits for nested-function shared variables.
+    N = length(Y);
+    [pcsquash, doplssquash, dochoose_ndims, dochoose_regparams, ...
+     verbose, verboseL, doplot, docenterrowsX, dosave, has_cov] = deal([]);
+    [num_dims, cov_val, regparams, holdout_method] = deal([]);
+    [subjbetas, subjfit, nanvox, wasnan, Y_orig, my_intercepts] = deal({});
+    [train_y, train_dat, test_dat, weight_y, weight_dat] = deal([]);
+    [devs_from_full_model, devs_from_mean_only_model] = deal([]);
+    [var_full, var_null, rr, rsq, pred_err] = deal([]);
+    fit = [];
+    v   = [];
+
     nested_setdefaults();
     verbose;
 
@@ -63,7 +89,6 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
         % ===========================================
 
         nested_prepdata(); % remove NaNs and initialize fit variable (output)
-        nanvox; % we will need to pass this into another inline later
 
         % Return holdout_set{} defining folds and holdout set for each fold
 %         holdout_set = nested_select_holdout_set();
@@ -203,6 +228,8 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
 % %         disp(' ')
 % %     end
 
+    % Wrap the working struct in a @predictive_model object.
+    pmodel_obj = predictive_model(STATS, 'noverbose');
 
 
     % =======================================================================
@@ -774,7 +801,7 @@ function [v, train_dat, test_dat] = do_pcsquash(train_y, train_dat, test_dat, nu
         %     xlabel('Yhat from PLS'); ylabel('Actual yhat');
 
     else
-        [v, scores] = princomp(train_dat, 'econ');  % scores = train_dat, up to scaling factor!! can't use scores from princomp-diff scaling
+        [v, scores] = pca(train_dat, 'Economy', true); %#ok<ASGLU> R2026a: princomp removed, pca is the equivalent
         train_dat = train_dat * v;
         v = v(:, 1:num_dims);  % eigenvectors
         train_dat = train_dat(:, 1:num_dims); % train_dat now becomes the scores

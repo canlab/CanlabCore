@@ -1,0 +1,185 @@
+function obj = crossval(obj, X, Y, varargin)
+% crossval  Cross-validate the model: refit per fold, predict held-out, score.
+%
+% :Usage:
+% ::
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = crossval(pm, X, Y, 'cv', cv_splitter.stratified_kfold(5));
+%     pm = crossval(pm, X, Y, 'groups', subject_id, ...
+%                              'cv',      cv_splitter.group_kfold(10), ...
+%                              'scoring', 'roc_auc');
+%
+% Pipeline:
+%   1. Pre-fit bad-data check (same as fit()); drop rows/columns.
+%   2. Pick cv splitter (obj.cv) and scorer (obj.scorer); default to
+%      stratified_kfold(5) + balanced_accuracy for classification,
+%      kfold(5) + r2 for regression.
+%   3. For each fold:
+%        - clone(obj); fit on training rows; predict held-out;
+%        - aggregate yfit and continuous scores;
+%        - record per-fold score and fit time.
+%   4. Re-fit on full data so obj.ml_model / obj.weights are the
+%      canonical "ship-it" model.
+%   5. Populate:
+%        obj.fitted_values.yfit / .scores / .score_type
+%        obj.cv_partition.{trIdx, teIdx, nfolds}
+%        obj.fold_models     (per-fold ml_models, or full pm clones
+%                             if 'return_estimator' is true)
+%        obj.error_metrics.<scorer_name>            mean across folds
+%        obj.error_metrics.<scorer_name>_per_fold   per-fold vector
+%        obj.error_metrics.fit_time_per_fold        timings
+%        obj.fit_type = 'crossval'
+%
+% :Optional Inputs (name/value):
+%   'groups'           grouping vector (e.g. subject id) for grouped splitters
+%   'cv'               cv_splitter object; if omitted, uses obj.cv or default
+%   'scoring'          scorer name (e.g. 'roc_auc') OR a cv_scorer object;
+%                      if omitted, uses obj.scorer or default-for-task
+%   'return_estimator' (default false) — store full pm clones in fold_models
+%                      instead of just the inner ml_models
+
+    p = inputParser; p.KeepUnmatched = true;
+    addParameter(p, 'groups',           []);
+    addParameter(p, 'cv',               []);
+    addParameter(p, 'scoring',          []);
+    addParameter(p, 'return_estimator', false);
+    parse(p, varargin{:});
+
+    groups            = p.Results.groups;
+    return_estimator  = p.Results.return_estimator;
+
+    if ~isempty(p.Results.cv), obj.cv = p.Results.cv; end
+    if ~isempty(p.Results.scoring)
+        if isa(p.Results.scoring, 'cv_scorer')
+            obj.scorer = p.Results.scoring;
+        else
+            obj.scorer = cv_scorer.make(p.Results.scoring);
+        end
+    end
+
+    if isempty(obj.algorithm)
+        error('predictive_model:crossval:NoAlgorithm', ...
+            'Set obj.algorithm before crossval.');
+    end
+
+    % Pre-fit bad-data check (same as fit()).
+    [oc, of] = predictive_model.detect_bad_data(X, Y);
+    if any(oc) || any(of)
+        X(oc, :) = []; Y(oc) = []; X(:, of) = [];
+        if ~isempty(groups), groups(oc) = []; end
+    end
+
+    Y = Y(:);
+    n = numel(Y);
+
+    % Infer task if not set.
+    if isempty(obj.task)
+        if numel(unique(Y(~isnan(Y)))) <= 2
+            obj.task = 'classification';
+        else
+            obj.task = 'regression';
+        end
+    end
+
+    % Pick cv splitter.
+    if isempty(obj.cv)
+        if strcmp(obj.task, 'classification')
+            obj.cv = cv_splitter.stratified_kfold(5);
+        else
+            obj.cv = cv_splitter.kfold(5);
+        end
+    end
+    if ~isempty(obj.random_state) && isempty(obj.cv.random_state)
+        obj.cv.random_state = obj.random_state;
+    end
+
+    % Pick scorer.
+    if isempty(obj.scorer)
+        obj.scorer = cv_scorer.default_for_task(obj.task);
+    end
+
+    splits = obj.cv.split(X, Y, groups);
+    nfolds = numel(splits);
+
+    yfit_cv         = nan(n, 1);
+    scores_cv       = nan(n, 1);
+    per_fold_score  = nan(nfolds, 1);
+    fit_time        = zeros(nfolds, 1);
+    fold_estimators = cell(1, nfolds);
+
+    needs_cont = obj.scorer.needs_continuous;
+
+    for f = 1:nfolds
+        tr = splits(f).trIdx;
+        te = splits(f).teIdx;
+        if ~any(tr) || ~any(te)
+            continue
+        end
+
+        m = clone(obj);
+        t0 = tic;
+        m = fit(m, X(tr, :), Y(tr));
+        fit_time(f) = toc(t0);
+
+        if needs_cont
+            [yf, sf] = predict(m, X(te, :));
+            yfit_cv(te)   = yf;
+            % Use the rightmost score column (class-1 / regression yhat).
+            if size(sf, 2) >= 1
+                scores_cv(te) = sf(:, end);
+            end
+            per_fold_score(f) = obj.scorer.score(Y(te), yf, sf);
+        else
+            [yf, sf] = predict(m, X(te, :));
+            yfit_cv(te) = yf;
+            if size(sf, 2) >= 1
+                scores_cv(te) = sf(:, end);
+            end
+            per_fold_score(f) = obj.scorer.score(Y(te), yf);
+        end
+
+        if return_estimator
+            fold_estimators{f} = m;
+        else
+            fold_estimators{f} = m.ml_model;
+        end
+    end
+
+    % Final: refit on full data so the canonical obj.ml_model / .weights.w
+    % is the "ship-it" model, not a per-fold model.
+    obj = fit(obj, X, Y, 'id', groups);
+
+    % Store cross-validation outputs (overwriting the in-sample fit_type
+    % set by fit()).
+    obj.fitted_values.yfit       = yfit_cv;
+    if any(~isnan(scores_cv))
+        obj.fitted_values.scores     = scores_cv;
+        obj.fitted_values.score_type = ternary(needs_cont, 'probability', 'distance');
+    end
+    obj.fit_type = 'crossval';
+
+    obj.fold_models               = fold_estimators;
+    obj.cv_partition.nfolds       = nfolds;
+    obj.cv_partition.trIdx        = arrayfun(@(s) s.trIdx, splits, 'uniform', false);
+    obj.cv_partition.teIdx        = arrayfun(@(s) s.teIdx, splits, 'uniform', false);
+
+    obj.error_metrics.(obj.scorer.name) = struct( ...
+        'value',   mean(per_fold_score, 'omitnan'), ...
+        'descrip', sprintf('mean %s across %d folds (greater_is_better=%d)', ...
+                           obj.scorer.name, nfolds, obj.scorer.greater_is_better));
+    obj.error_metrics.([obj.scorer.name '_per_fold']) = struct( ...
+        'value',   per_fold_score, ...
+        'descrip', sprintf('per-fold %s', obj.scorer.name));
+    obj.error_metrics.fit_time_per_fold = struct( ...
+        'value', fit_time, 'descrip', 'seconds per fold');
+
+    obj.history{end+1, 1} = sprintf('crossval(%s, %s, scorer=%s): mean=%.3f', ...
+        obj.algorithm, obj.cv.type, obj.scorer.name, ...
+        mean(per_fold_score, 'omitnan'));
+end
+
+
+% -------- small helper (avoids if/else nesting in struct() args) ----------
+function v = ternary(cond, a, b)
+    if cond, v = a; else, v = b; end
+end

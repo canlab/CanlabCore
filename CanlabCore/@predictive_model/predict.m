@@ -32,8 +32,16 @@ function [yhat, score_out] = predict(obj, X)
     end
 
     % Delegate to the trained MATLAB model.
+    % Classification models return [labels, scores]; regression models
+    % return just yhat. For regression we treat yhat itself as the
+    % "continuous score".
     if nargout > 1
-        [yhat, score_out] = predict(obj.ml_model, X); %#ok<MINV> external method
+        try
+            [yhat, score_out] = predict(obj.ml_model, X); %#ok<MINV> external method
+        catch
+            yhat = predict(obj.ml_model, X);
+            score_out = yhat;
+        end
     else
         yhat = predict(obj.ml_model, X);
     end

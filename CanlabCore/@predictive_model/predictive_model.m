@@ -159,104 +159,20 @@ classdef predictive_model
         removed_voxels       = [];
     end
 
-    properties (Dependent, SetAccess = private)  % LEGACY READ-ONLY ALIASES
-        % Data
-        Y_orig
-        trueLabels
-        y
-        % cv_partition
-        trIdx
-        teIdx
-        nfolds
-        fold_modeloptions
-        hyperparams_by_fold
-        % fitted_values
-        yfit
-        dist_from_hyperplane_xval
-        class_probability_xval
-        scores_within_id
-        Y_within_id
-        scorediff
-        high_vs_low_scores_within_id
-        subjfit
-        predictions
-        % weights
-        w
-        mean_vox_weights
-        vox_weights
-        VOXWEIGHTS
-        my_intercepts
-        subjbetas
-        weight_obj
-        boot_w
-        boot_w_ste
-        boot_w_mean
-        wZ
-        wP
-        wP_fdr_thr
-        boot_w_fdrsig
-        w_thresh_fdr
-        % error_metrics (unwrap .value)
-        crossval_accuracy
-        crossval_accuracy_within
-        d_singleinterval
-        d_within
-        classification_d_singleinterval
-        classification_d_within
-        regression_d_singleinterval
-        regression_d_within
-        prediction_outcome_r
-        pred_outcome_r
-        cverr
-        mse
-        rmse
-        meanabserr
-        r_squared
-        var_full
-        var_null
-        var_reduction
-        pred_err
-        pred_err_null
-        devs_from_full_model
-        devs_from_mean_only_model
-        r_each_subject
-        accuracy
-        overallAccuracy
-        err
-        phi
-        % error_metrics descrip (unwrap .descrip)
-        crossval_accuracy_descrip
-        prediction_outcome_r_descrip
-        pred_err_descrip
-        var_reduction_descrip
-        classification_d_within_descrip
-        % stand-alone descrip strings (not paired with a metric)
-        accfun_descrip
-        cverrfun
-        cvoutput_descrip
-        error_type
-        function_call
-        function_handle
-        algorithm_name
-        % notes
-        r_each_subject_note
-        r_each_subject_note2
-        % ml_model aliases
-        ClassificationModel
-        SVMModel
-        SVRModel
-        % bootstrap_results
-        WTS
-        % diagnostics
-        mult_obs_within_person
-        ROC_forced_choice
-        ROC_single_interval
-        all_reg_hyperparams
-        % legacy_extras composites (brain wrappers)
-        full_model
-        data
-        covs
-    end
+    % Note: Dependent legacy aliases (yfit, w, wZ, wP, vox_weights,
+    % VOXWEIGHTS, crossval_accuracy, pred_err, classification_d_*,
+    % regression_d_*, SVMModel, SVRModel, ClassificationModel, Y_orig,
+    % trueLabels, etc.) were eliminated in the property-deduplication
+    % commit. Each piece of data now has exactly ONE canonical access
+    % path: either a top-level property (Y, id, ml_model, fold_models,
+    % omitted_cases, omitted_features, inputParameters, fit_type, note,
+    % accfun, history, removed_voxels) or a categorised sub-struct
+    % field (cv_partition.X, fitted_values.X, weights.X,
+    % error_metrics.X.value, error_metrics.X.descrip, diagnostics.X,
+    % bootstrap_results.X, permutation_results.X, cross_classify.X,
+    % legacy_extras.X). The routing table continues to translate legacy
+    % wrapper struct field names into these canonical paths until the
+    % wrappers themselves are refactored.
 
 
     methods
@@ -398,133 +314,9 @@ classdef predictive_model
         end
 
 
-        % -----------------------------------------------------------------
-        % LEGACY DEPENDENT ALIASES (read-only)
-        % -----------------------------------------------------------------
-        % Data
-        function v = get.Y_orig(obj),     v = obj.Y; end
-        function v = get.y(obj),          v = obj.Y; end
-        function v = get.trueLabels(obj), v = predictive_model.field_or_empty(obj.fitted_values, 'Y_per_fold'); end
-
-        % cv_partition
-        function v = get.trIdx(obj),               v = predictive_model.field_or_empty(obj.cv_partition, 'trIdx'); end
-        function v = get.teIdx(obj),               v = predictive_model.field_or_empty(obj.cv_partition, 'teIdx'); end
-        function v = get.nfolds(obj),              v = predictive_model.field_or_empty(obj.cv_partition, 'nfolds'); end
-        function v = get.fold_modeloptions(obj),   v = predictive_model.field_or_empty(obj.cv_partition, 'fold_modeloptions'); end
-        function v = get.hyperparams_by_fold(obj), v = predictive_model.field_or_empty(obj.cv_partition, 'hyperparams_by_fold'); end
-
-        % fitted_values
-        function v = get.yfit(obj),                         v = predictive_model.field_or_empty(obj.fitted_values, 'yfit'); end
-        function v = get.dist_from_hyperplane_xval(obj)
-            % Returns scores when score_type='distance', else legacy field.
-            if isfield(obj.fitted_values, 'score_type') && strcmpi(obj.fitted_values.score_type, 'distance')
-                v = predictive_model.field_or_empty(obj.fitted_values, 'scores');
-            else
-                v = predictive_model.field_or_empty(obj.fitted_values, 'dist_from_hyperplane_xval');
-            end
-        end
-        function v = get.class_probability_xval(obj)
-            if isfield(obj.fitted_values, 'score_type') && strcmpi(obj.fitted_values.score_type, 'probability')
-                v = predictive_model.field_or_empty(obj.fitted_values, 'scores');
-            else
-                v = predictive_model.field_or_empty(obj.fitted_values, 'class_probability_xval');
-            end
-        end
-        function v = get.scores_within_id(obj),             v = predictive_model.field_or_empty(obj.fitted_values, 'scores_within_id'); end
-        function v = get.Y_within_id(obj),                  v = predictive_model.field_or_empty(obj.fitted_values, 'Y_within_id'); end
-        function v = get.scorediff(obj),                    v = predictive_model.field_or_empty(obj.fitted_values, 'scorediff'); end
-        function v = get.high_vs_low_scores_within_id(obj), v = predictive_model.field_or_empty(obj.fitted_values, 'high_vs_low_scores_within_id'); end
-        function v = get.subjfit(obj),                      v = predictive_model.field_or_empty(obj.fitted_values, 'subjfit'); end
-        function v = get.predictions(obj),                  v = predictive_model.field_or_empty(obj.fitted_values, 'predictions'); end
-
-        % weights (and merged former weight_stats)
-        function v = get.w(obj),                v = predictive_model.field_or_empty(obj.weights, 'w'); end
-        function v = get.mean_vox_weights(obj), v = predictive_model.field_or_empty(obj.weights, 'mean_vox_weights'); end
-        function v = get.vox_weights(obj),      v = predictive_model.field_or_empty(obj.weights, 'w_perfold'); end
-        function v = get.VOXWEIGHTS(obj),       v = predictive_model.field_or_empty(obj.weights, 'w_bootstrap'); end
-        function v = get.my_intercepts(obj),    v = predictive_model.field_or_empty(obj.weights, 'my_intercepts'); end
-        function v = get.subjbetas(obj),        v = predictive_model.field_or_empty(obj.weights, 'subjbetas'); end
-        function v = get.weight_obj(obj),       v = predictive_model.field_or_empty(obj.weights, 'weight_obj'); end
-        function v = get.boot_w(obj),           v = predictive_model.field_or_empty(obj.weights, 'boot_w'); end
-        function v = get.boot_w_ste(obj),       v = predictive_model.field_or_empty(obj.weights, 'boot_w_ste'); end
-        function v = get.boot_w_mean(obj),      v = predictive_model.field_or_empty(obj.weights, 'boot_w_mean'); end
-        function v = get.wZ(obj),               v = predictive_model.field_or_empty(obj.weights, 'z'); end
-        function v = get.wP(obj),               v = predictive_model.field_or_empty(obj.weights, 'p'); end
-        function v = get.wP_fdr_thr(obj),       v = predictive_model.field_or_empty(obj.weights, 'fdr_thr'); end
-        function v = get.boot_w_fdrsig(obj),    v = predictive_model.field_or_empty(obj.weights, 'fdr_sig'); end
-        function v = get.w_thresh_fdr(obj),     v = predictive_model.field_or_empty(obj.weights, 'thresh_fdr'); end
-
-        % error_metrics — unwrap .value for arithmetic
-        function v = get.crossval_accuracy(obj),                v = predictive_model.metric_value(obj.error_metrics, 'crossval_accuracy'); end
-        function v = get.crossval_accuracy_within(obj),         v = predictive_model.metric_value(obj.error_metrics, 'crossval_accuracy_within'); end
-        function v = get.d_singleinterval(obj),                 v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.d_within(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
-        function v = get.classification_d_singleinterval(obj),  v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.classification_d_within(obj),          v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
-        function v = get.regression_d_singleinterval(obj),      v = predictive_model.metric_value(obj.error_metrics, 'd_singleinterval'); end
-        function v = get.regression_d_within(obj),              v = predictive_model.metric_value(obj.error_metrics, 'd_within'); end
-        function v = get.prediction_outcome_r(obj),             v = predictive_model.metric_value(obj.error_metrics, 'prediction_outcome_r'); end
-        function v = get.pred_outcome_r(obj),                   v = predictive_model.metric_value(obj.error_metrics, 'prediction_outcome_r'); end
-        function v = get.cverr(obj),                            v = predictive_model.metric_value(obj.error_metrics, 'cverr'); end
-        function v = get.mse(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'mse'); end
-        function v = get.rmse(obj),                             v = predictive_model.metric_value(obj.error_metrics, 'rmse'); end
-        function v = get.meanabserr(obj),                       v = predictive_model.metric_value(obj.error_metrics, 'meanabserr'); end
-        function v = get.r_squared(obj),                        v = predictive_model.metric_value(obj.error_metrics, 'r_squared'); end
-        function v = get.var_full(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'var_full'); end
-        function v = get.var_null(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'var_null'); end
-        function v = get.var_reduction(obj),                    v = predictive_model.metric_value(obj.error_metrics, 'var_reduction'); end
-        function v = get.pred_err(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'pred_err'); end
-        function v = get.pred_err_null(obj),                    v = predictive_model.metric_value(obj.error_metrics, 'pred_err_null'); end
-        function v = get.devs_from_full_model(obj),             v = predictive_model.metric_value(obj.error_metrics, 'devs_from_full_model'); end
-        function v = get.devs_from_mean_only_model(obj),        v = predictive_model.metric_value(obj.error_metrics, 'devs_from_mean_only_model'); end
-        function v = get.r_each_subject(obj),                   v = predictive_model.metric_value(obj.error_metrics, 'r_each_subject'); end
-        function v = get.accuracy(obj),                         v = predictive_model.metric_value(obj.error_metrics, 'accuracy'); end
-        function v = get.overallAccuracy(obj),                  v = predictive_model.metric_value(obj.error_metrics, 'overallAccuracy'); end
-        function v = get.err(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'err'); end
-        function v = get.phi(obj),                              v = predictive_model.metric_value(obj.error_metrics, 'phi'); end
-
-        % error_metrics — descrip side of the tuple
-        function v = get.crossval_accuracy_descrip(obj),        v = predictive_model.metric_descrip(obj.error_metrics, 'crossval_accuracy'); end
-        function v = get.prediction_outcome_r_descrip(obj),     v = predictive_model.metric_descrip(obj.error_metrics, 'prediction_outcome_r'); end
-        function v = get.pred_err_descrip(obj),                 v = predictive_model.metric_descrip(obj.error_metrics, 'pred_err'); end
-        function v = get.var_reduction_descrip(obj),            v = predictive_model.metric_descrip(obj.error_metrics, 'var_reduction'); end
-        function v = get.classification_d_within_descrip(obj),  v = predictive_model.metric_descrip(obj.error_metrics, 'd_within'); end
-
-        % notes
-        function v = get.r_each_subject_note(obj)
-            v = predictive_model.lookup_note(obj.note, 'r_each_subject');
-        end
-        function v = get.r_each_subject_note2(obj)
-            v = predictive_model.lookup_note(obj.note, 'r_each_subject_2');
-        end
-
-        % stand-alone descriptions (not paired with a metric)
-        function v = get.accfun_descrip(obj),                   v = predictive_model.field_or_empty(obj.legacy_extras, 'accfun_descrip'); end
-        function v = get.cverrfun(obj),                         v = predictive_model.field_or_empty(obj.legacy_extras, 'cverrfun'); end
-        function v = get.cvoutput_descrip(obj),                 v = predictive_model.field_or_empty(obj.legacy_extras, 'cvoutput_descrip'); end
-        function v = get.error_type(obj),                       v = predictive_model.field_or_empty(obj.legacy_extras, 'error_type'); end
-        function v = get.function_call(obj),                    v = predictive_model.field_or_empty(obj.legacy_extras, 'function_call'); end
-        function v = get.function_handle(obj),                  v = predictive_model.field_or_empty(obj.legacy_extras, 'function_handle'); end
-        function v = get.algorithm_name(obj),                   v = predictive_model.field_or_empty(obj.legacy_extras, 'algorithm_name'); end
-
-        % ml_model aliases
-        function v = get.ClassificationModel(obj), v = obj.ml_model; end
-        function v = get.SVMModel(obj),            v = obj.ml_model; end
-        function v = get.SVRModel(obj),            v = obj.ml_model; end
-
-        % bootstrap_results
-        function v = get.WTS(obj), v = predictive_model.field_or_empty(obj.bootstrap_results, 'WTS'); end
-
-        % diagnostics
-        function v = get.mult_obs_within_person(obj), v = predictive_model.field_or_empty(obj.diagnostics, 'mult_obs_within_person'); end
-        function v = get.ROC_forced_choice(obj),      v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_forced_choice'); end
-        function v = get.ROC_single_interval(obj),    v = predictive_model.field_or_empty(obj.diagnostics, 'ROC_single_interval'); end
-        function v = get.all_reg_hyperparams(obj),    v = predictive_model.field_or_empty(obj.diagnostics, 'all_reg_hyperparams'); end
-
-        % legacy_extras composite (brain wrappers)
-        function v = get.full_model(obj), v = predictive_model.field_or_empty(obj.legacy_extras, 'full_model'); end
-        function v = get.data(obj),       v = predictive_model.field_or_empty(obj.legacy_extras, 'data'); end
-        function v = get.covs(obj),       v = predictive_model.field_or_empty(obj.legacy_extras, 'covs'); end
+        % All flat Dependent legacy aliases removed in the property-
+        % deduplication commit. See the comment on the missing Dependent
+        % property block above for the canonical access paths.
 
     end
 

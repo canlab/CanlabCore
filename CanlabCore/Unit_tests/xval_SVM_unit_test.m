@@ -46,40 +46,34 @@ function xval_SVM_unit_test()
     fprintf('  class = %s, is_fitted = %d, is_classifier = %d\n', ...
         class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_classifier);
 
-    % --- Categorised <-> legacy alias agreement ---
-    % Y, id are top-level. (Legacy `.inputs.Y` Dependent alias removed
-    % in the INPUTS/inputs/inputOptions cleanup commit.)
-    assert(~isempty(pmodel_obj.Y),  'Y empty');
-    assert(~isempty(pmodel_obj.id), 'id empty');
-    assert(isequal(pmodel_obj.yfit,                           pmodel_obj.fitted_values.yfit),                          'yfit');
-    assert(isequal(pmodel_obj.dist_from_hyperplane_xval,      pmodel_obj.fitted_values.dist_from_hyperplane_xval),     'dist_from_hyperplane_xval');
-    assert(isequal(pmodel_obj.class_probability_xval,         pmodel_obj.fitted_values.class_probability_xval),        'class_probability_xval');
-    assert(isequal(pmodel_obj.scorediff,                      pmodel_obj.fitted_values.scorediff),                     'scorediff');
-    assert(isequal(pmodel_obj.w,                              pmodel_obj.weights.w),                                   'w');
-    % error_metrics entries are now (value, descrip) tuples; legacy alias unwraps .value.
-    assert(isequal(pmodel_obj.crossval_accuracy,              pmodel_obj.error_metrics.crossval_accuracy.value),       'crossval_accuracy');
-    assert(isequaln(pmodel_obj.classification_d_singleinterval, pmodel_obj.error_metrics.d_singleinterval.value),      'classification_d_singleinterval');
-    assert(isequaln(pmodel_obj.crossval_accuracy_within,      pmodel_obj.error_metrics.crossval_accuracy_within.value),'crossval_accuracy_within');
-    assert(isequaln(pmodel_obj.classification_d_within,       pmodel_obj.error_metrics.d_within.value),                'classification_d_within');
-    assert(isequal(pmodel_obj.SVMModel,                       pmodel_obj.ml_model),                                    'SVMModel');
-    assert(isequal(pmodel_obj.ClassificationModel,            pmodel_obj.ml_model),                                    'ClassificationModel');
-    assert(isequal(pmodel_obj.trIdx,                          pmodel_obj.cv_partition.trIdx),                          'trIdx');
-    assert(isequal(pmodel_obj.teIdx,                          pmodel_obj.cv_partition.teIdx),                          'teIdx');
-    assert(isequal(pmodel_obj.nfolds,                         pmodel_obj.cv_partition.nfolds),                         'nfolds');
-    fprintf('  Categorised <-> legacy alias round-trip OK\n');
+    % --- Canonical-path access (legacy flat aliases removed) ---
+    assert(~isempty(pmodel_obj.Y),                                       'Y empty');
+    assert(~isempty(pmodel_obj.id),                                      'id empty');
+    assert(~isempty(pmodel_obj.fitted_values.yfit),                      'yfit empty');
+    assert(~isempty(pmodel_obj.fitted_values.dist_from_hyperplane_xval), 'dist_from_hyperplane_xval empty');
+    assert(~isempty(pmodel_obj.fitted_values.class_probability_xval),    'class_probability_xval empty');
+    assert(~isempty(pmodel_obj.weights.w),                               'weights.w empty');
+    assert(~isempty(pmodel_obj.error_metrics.crossval_accuracy.value),   'crossval_accuracy.value empty');
+    assert(~isempty(pmodel_obj.error_metrics.d_singleinterval.value),    'd_singleinterval.value empty');
+    assert(~isempty(pmodel_obj.ml_model),                                'ml_model empty');
+    assert(~isempty(pmodel_obj.cv_partition.trIdx),                      'trIdx empty');
+    assert(~isempty(pmodel_obj.cv_partition.teIdx),                      'teIdx empty');
+    assert(~isempty(pmodel_obj.cv_partition.nfolds),                     'nfolds empty');
+    fprintf('  Canonical-path access OK\n');
 
     % --- Shape / sanity ---
     n = numel(Y);
-    assert(numel(pmodel_obj.yfit) == n,                       'yfit length mismatch');
-    assert(numel(pmodel_obj.dist_from_hyperplane_xval) == n,  'dist_from_hyperplane_xval length mismatch');
-    assert(size(pmodel_obj.w, 1) == size(X, 2),               'w length should match number of features');
-    assert(pmodel_obj.crossval_accuracy >= 0 && pmodel_obj.crossval_accuracy <= 100, ...
-        'crossval_accuracy out of [0,100]');
-    assert(pmodel_obj.diagnostics.mult_obs_within_person == true, ...
-        'Should detect multiple obs per id (each subj has Hot+Warm)');
+    assert(numel(pmodel_obj.fitted_values.yfit) == n,                       'yfit length mismatch');
+    assert(numel(pmodel_obj.fitted_values.dist_from_hyperplane_xval) == n,  'dist_from_hyperplane_xval length mismatch');
+    assert(size(pmodel_obj.weights.w, 1) == size(X, 2),                     'weights.w length should match number of features');
+    cv_acc = pmodel_obj.error_metrics.crossval_accuracy.value;
+    assert(cv_acc >= 0 && cv_acc <= 100,                                    'crossval_accuracy out of [0,100]');
+    assert(pmodel_obj.diagnostics.mult_obs_within_person == true,           'Should detect multiple obs per id');
     fprintf('  Shape/sanity OK: cv_acc = %.1f%%, d_single = %.2f, cv_acc_within = %.1f%%, d_within = %.2f\n', ...
-        pmodel_obj.crossval_accuracy, pmodel_obj.classification_d_singleinterval, ...
-        pmodel_obj.crossval_accuracy_within, pmodel_obj.classification_d_within);
+        cv_acc, ...
+        pmodel_obj.error_metrics.d_singleinterval.value, ...
+        pmodel_obj.error_metrics.crossval_accuracy_within.value, ...
+        pmodel_obj.error_metrics.d_within.value);
 
     % --- fit_type + omitted markers (Phase B) ---
     assert(strcmp(pmodel_obj.fit_type, 'crossval'), ...

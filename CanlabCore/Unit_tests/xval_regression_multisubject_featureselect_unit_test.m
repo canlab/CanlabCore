@@ -29,31 +29,30 @@ function xval_regression_multisubject_featureselect_unit_test()
     assert(pm.is_fitted, 'is_fitted=false');
     fprintf('  class = %s, is_fitted = %d\n', class(pm), pm.is_fitted);
 
-    % Categorised <-> legacy alias agreement on key fields.
-    % (mean_vox_weights is only populated when pcsquash is enabled;
-    % this no-PCA test doesn't exercise that path.)
-    assert(isequaln(pm.subjfit,        pm.fitted_values.subjfit),               'subjfit');
-    % vox_weights renamed to weights.w_perfold in consolidated layout
-    assert(isequaln(pm.vox_weights,    pm.weights.w_perfold),                   'vox_weights / w_perfold');
-    % error_metrics entries are (value, descrip) tuples.
-    assert(isequaln(pm.pred_err,       pm.error_metrics.pred_err.value),        'pred_err');
-    assert(isequaln(pm.pred_err_null,  pm.error_metrics.pred_err_null.value),   'pred_err_null');
-    assert(isequaln(pm.var_reduction,  pm.error_metrics.var_reduction.value),   'var_reduction');
-    assert(~isempty(pm.Y_orig), 'Y_orig empty (should alias Y)');
-    fprintf('  Categorised <-> legacy alias round-trip OK\n');
+    % Canonical-path access (legacy flat aliases removed).
+    % mean_vox_weights is only populated when pcsquash is enabled; this no-PCA test doesn't exercise that path.
+    assert(~isempty(pm.fitted_values.subjfit),               'subjfit empty');
+    assert(~isempty(pm.weights.w_perfold),                   'weights.w_perfold empty (was vox_weights)');
+    assert(~isempty(pm.error_metrics.pred_err.value),        'pred_err empty');
+    assert(~isempty(pm.error_metrics.pred_err_null.value),   'pred_err_null empty');
+    assert(~isempty(pm.error_metrics.var_reduction.value),   'var_reduction empty');
+    assert(~isempty(pm.Y),                                   'Y empty');
+    fprintf('  Canonical-path access OK\n');
 
-    % Verify vox_weights matches the full feature space (the bug we fixed
+    % Verify weights.w_perfold matches the full feature space (the bug we fixed
     % was that this was the *selected*-features count instead).
-    assert(size(pm.vox_weights, 1) == size(X, 2), ...
-        'vox_weights should span full feature count (%d), got %d', ...
-        size(X, 2), size(pm.vox_weights, 1));
-    fprintf('  vox_weights shape OK: %d x %d (features x folds)\n', ...
-        size(pm.vox_weights, 1), size(pm.vox_weights, 2));
+    assert(size(pm.weights.w_perfold, 1) == size(X, 2), ...
+        'weights.w_perfold should span full feature count (%d), got %d', ...
+        size(X, 2), size(pm.weights.w_perfold, 1));
+    fprintf('  w_perfold shape OK: %d x %d (features x folds)\n', ...
+        size(pm.weights.w_perfold, 1), size(pm.weights.w_perfold, 2));
 
-    assert(~isempty(pm.r_squared) && pm.r_squared(1) > 0, ...
-        'expected r_squared > 0; got %.3f', pm.r_squared(1));
+    r2 = pm.error_metrics.r_squared.value;
+    assert(~isempty(r2) && r2(1) > 0, 'expected r_squared > 0; got %.3f', r2(1));
     fprintf('  r_squared = %.3f, pred_err = %.3f, pred_err_null = %.3f\n', ...
-        pm.r_squared(1), pm.pred_err(1), pm.pred_err_null(1));
+        r2(1), ...
+        pm.error_metrics.pred_err.value(1), ...
+        pm.error_metrics.pred_err_null.value(1));
 
     pm.validate_object('noverbose');
     fprintf('xval_regression_multisubject_featureselect_unit_test: PASS\n');

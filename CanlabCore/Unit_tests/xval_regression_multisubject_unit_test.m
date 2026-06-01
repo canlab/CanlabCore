@@ -44,29 +44,28 @@ function xval_regression_multisubject_unit_test()
     assert(pmodel_obj.is_fitted, 'Returned object reports is_fitted = false');
     fprintf('  class = %s, is_fitted = %d\n', class(pmodel_obj), pmodel_obj.is_fitted);
 
-    % --- Categorised <-> legacy alias agreement ---
-    assert(isequal(pmodel_obj.subjfit,            pmodel_obj.fitted_values.subjfit),               'subjfit');
-    assert(isequal(pmodel_obj.subjbetas,          pmodel_obj.weights.subjbetas),                   'subjbetas');
-    assert(isequal(pmodel_obj.mean_vox_weights,   pmodel_obj.weights.mean_vox_weights),            'mean_vox_weights');
-    % error_metrics entries are (value, descrip) tuples; legacy alias unwraps .value.
-    assert(isequal(pmodel_obj.pred_err,           pmodel_obj.error_metrics.pred_err.value),        'pred_err');
-    assert(isequal(pmodel_obj.pred_err_null,      pmodel_obj.error_metrics.pred_err_null.value),   'pred_err_null');
-    assert(isequal(pmodel_obj.var_reduction,      pmodel_obj.error_metrics.var_reduction.value),   'var_reduction');
-    assert(isequal(pmodel_obj.r_each_subject,     pmodel_obj.error_metrics.r_each_subject.value),  'r_each_subject');
-    % After consolidation: Y/Y_orig are top-level; INPUTS is a Dependent
-    % alias for the top-level inputParameters struct.
-    assert(~isempty(pmodel_obj.Y_orig),          'Y_orig empty (should alias Y)');
-    assert(~isempty(pmodel_obj.inputParameters), 'inputParameters empty');
-    fprintf('  Categorised <-> legacy alias round-trip OK\n');
+    % --- Canonical-path access (legacy flat aliases removed) ---
+    assert(~isempty(pmodel_obj.fitted_values.subjfit),                       'subjfit empty');
+    assert(~isempty(pmodel_obj.weights.subjbetas),                           'subjbetas empty');
+    assert(~isempty(pmodel_obj.weights.mean_vox_weights),                    'mean_vox_weights empty');
+    assert(~isempty(pmodel_obj.error_metrics.pred_err.value),                'pred_err empty');
+    assert(~isempty(pmodel_obj.error_metrics.pred_err_null.value),           'pred_err_null empty');
+    assert(~isempty(pmodel_obj.error_metrics.var_reduction.value),           'var_reduction empty');
+    assert(~isempty(pmodel_obj.error_metrics.r_each_subject.value),          'r_each_subject empty');
+    assert(~isempty(pmodel_obj.Y),                                           'Y empty');
+    assert(~isempty(pmodel_obj.inputParameters),                             'inputParameters empty');
+    fprintf('  Canonical-path access OK\n');
 
     % --- Shape / sanity ---
-    assert(numel(pmodel_obj.subjfit) == 1,                       'subjfit cell length should equal num datasets');
-    assert(numel(pmodel_obj.subjfit{1}) == n,                    'subjfit{1} length should equal n');
-    assert(size(pmodel_obj.mean_vox_weights, 1) == size(X, 2),   'mean_vox_weights should have one row per voxel');
-    assert(~isempty(pmodel_obj.r_squared) && pmodel_obj.r_squared(1) >  0, ...
-        'OLS+PCA should explain non-trivial variance on this synthetic outcome');
+    assert(numel(pmodel_obj.fitted_values.subjfit) == 1,                       'subjfit cell length should equal num datasets');
+    assert(numel(pmodel_obj.fitted_values.subjfit{1}) == n,                    'subjfit{1} length should equal n');
+    assert(size(pmodel_obj.weights.mean_vox_weights, 1) == size(X, 2),         'mean_vox_weights should have one row per voxel');
+    r2 = pmodel_obj.error_metrics.r_squared.value;
+    assert(~isempty(r2) && r2(1) > 0, 'OLS+PCA should explain non-trivial variance');
     fprintf('  Shape/sanity OK: r_squared = %.3f, pred_err = %.3f, pred_err_null = %.3f\n', ...
-        pmodel_obj.r_squared(1), pmodel_obj.pred_err(1), pmodel_obj.pred_err_null(1));
+        r2(1), ...
+        pmodel_obj.error_metrics.pred_err.value(1), ...
+        pmodel_obj.error_metrics.pred_err_null.value(1));
 
     % --- validate_object accepts the returned object ---
     pmodel_obj.validate_object('noverbose');

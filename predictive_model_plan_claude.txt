@@ -419,22 +419,56 @@ STATIC HELPERS
   field_routing()            dotted-target routing table; adding a new
                              wrapper output field = one new row.
 
-LEGACY DEPENDENT ALIASES (read-only)
+LEGACY DEPENDENT ALIASES — ALL REMOVED (deduplication commit)
 
-  Every flat field name that user code currently reads still works:
-    Y_orig, trueLabels, y                       -> Y
-    INPUTS, inputs, inputOptions                -> inputParameters
-    vox_weights, VOXWEIGHTS                     -> weights.w_perfold / .w_bootstrap
-    wZ, wP, wP_fdr_thr, boot_w_fdrsig, w_thresh_fdr
-                                                -> weights.z / .p / .fdr_thr / .fdr_sig / .thresh_fdr
-    r_each_subject_note, r_each_subject_note2   -> indexed entries in note
-    pred_err, crossval_accuracy, r_squared, mse, rmse, ...
-                                                -> error_metrics.<name>.value
-    pred_err_descrip, crossval_accuracy_descrip, ...
-                                                -> error_metrics.<name>.descrip
-    classification_d_singleinterval, regression_d_singleinterval, ...
-                                                -> error_metrics.d_singleinterval.value
-    SVMModel, SVRModel, ClassificationModel     -> ml_model
+  All flat Dependent aliases have been eliminated. Each piece of data
+  now has exactly ONE canonical access path. The 12 top-level
+  properties + 9 categorised sub-structs listed above are the only
+  property surface. Reading via a legacy flat name (e.g. `pm.yfit`,
+  `pm.w`, `pm.crossval_accuracy`, `pm.SVMModel`, `pm.vox_weights`,
+  `pm.Y_orig`, `pm.wZ`) now errors.
+
+  Migration map for downstream code:
+    Y_orig, trueLabels, y                       -> Y (top-level)
+    INPUTS, inputs, inputOptions                -> inputParameters (top-level)
+    SVMModel, SVRModel, ClassificationModel     -> ml_model (top-level)
+    yfit, dist_from_hyperplane_xval,
+    class_probability_xval, scorediff,
+    scores_within_id, Y_within_id, subjfit,
+    predictions, high_vs_low_scores_within_id   -> fitted_values.<name>
+    w, vox_weights, VOXWEIGHTS, mean_vox_weights,
+    my_intercepts, subjbetas, weight_obj,
+    boot_w, boot_w_ste, boot_w_mean,
+    wZ, wP, wP_fdr_thr, boot_w_fdrsig,
+    w_thresh_fdr                                -> weights.<canonical-name>
+                                                   (vox_weights->w_perfold,
+                                                    VOXWEIGHTS->w_bootstrap,
+                                                    wZ->z, wP->p,
+                                                    wP_fdr_thr->fdr_thr,
+                                                    boot_w_fdrsig->fdr_sig,
+                                                    w_thresh_fdr->thresh_fdr)
+    trIdx, teIdx, nfolds, fold_modeloptions,
+    hyperparams_by_fold                         -> cv_partition.<name>
+    crossval_accuracy, mse, rmse, pred_err,
+    r_squared, etc.                             -> error_metrics.<name>.value
+    crossval_accuracy_descrip, etc.             -> error_metrics.<name>.descrip
+    classification_d_singleinterval,
+    regression_d_singleinterval, etc.           -> error_metrics.d_singleinterval.value
+                                                   (and .d_within.value)
+    pred_outcome_r                              -> error_metrics.prediction_outcome_r.value
+    mult_obs_within_person, ROC_forced_choice,
+    ROC_single_interval, all_reg_hyperparams    -> diagnostics.<name>
+    WTS                                         -> bootstrap_results.WTS
+    full_model, data, covs                      -> legacy_extras.<name>
+    accfun_descrip, cverrfun, cvoutput_descrip,
+    error_type, function_call, function_handle,
+    algorithm_name                              -> legacy_extras.<name>
+    r_each_subject_note, r_each_subject_note2   -> entries in `note` cell
+
+  The routing table inside the constructor continues to translate
+  legacy struct field names from xval_* wrappers into these canonical
+  paths until the wrappers themselves are refactored to write
+  canonical paths directly.
 
 ----------- 4b-LEGACY. Original categorised layout (PRE-CONSOLIDATION) --------
 

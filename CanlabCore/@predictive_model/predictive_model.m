@@ -544,6 +544,79 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function reg = algorithm_registry()
+            % algorithm_registry  Map algorithm short-name -> fit fn + defaults.
+            %
+            % Each entry has:
+            %   .fit_fn    function handle to the MATLAB fitter
+            %   .task      'classification' | 'regression'
+            %   .defaults  cell of default name/value options forwarded to fit_fn
+            %
+            % Adding a new algorithm = adding one row.
+
+            reg = struct();
+
+            % --- Classification ---
+            reg.svm        = struct('fit_fn', @fitcsvm,    'task', 'classification', ...
+                                    'defaults', {{'KernelFunction', 'linear'}});
+            reg.linear_svm = struct('fit_fn', @fitclinear, 'task', 'classification', ...
+                                    'defaults', {{'Learner', 'svm'}});
+            reg.logistic   = struct('fit_fn', @fitclinear, 'task', 'classification', ...
+                                    'defaults', {{'Learner', 'logistic'}});
+            reg.lda        = struct('fit_fn', @fitcdiscr,  'task', 'classification', ...
+                                    'defaults', {{}});
+
+            % --- Regression ---
+            reg.svr        = struct('fit_fn', @fitrsvm,    'task', 'regression', ...
+                                    'defaults', {{'KernelFunction', 'linear'}});
+            reg.linear_svr = struct('fit_fn', @fitrlinear, 'task', 'regression', ...
+                                    'defaults', {{}});
+        end
+
+
+        % -----------------------------------------------------------------
+        function w = extract_weights(mdl)
+            % extract_weights  Pull the coefficient vector from a MATLAB model.
+            %
+            % Handles the major fit*() return types:
+            %   ClassificationSVM / RegressionSVM   -> mdl.Beta
+            %   ClassificationLinear / RegressionLinear -> mdl.Beta (first Lambda)
+            %   ClassificationDiscriminant          -> mdl.Coeffs(2,1).Linear
+            % For non-linear models (RBF SVM, trees, ensembles) returns [].
+
+            w = [];
+            try
+                if isprop(mdl, 'Beta') && ~isempty(mdl.Beta)
+                    w = mdl.Beta;
+                    if size(w, 2) > 1, w = w(:, 1); end
+                elseif isprop(mdl, 'Coeffs') && ~isempty(mdl.Coeffs)
+                    % LDA stores between-class coefficients in Coeffs(i,j)
+                    w = mdl.Coeffs(2, 1).Linear;
+                end
+            catch
+                w = [];
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function b = extract_intercept(mdl)
+            % extract_intercept  Pull the bias / intercept term.
+            b = 0;
+            try
+                if isprop(mdl, 'Bias') && ~isempty(mdl.Bias)
+                    b = mdl.Bias;
+                    if numel(b) > 1, b = b(1); end
+                elseif isprop(mdl, 'Coeffs') && ~isempty(mdl.Coeffs)
+                    b = mdl.Coeffs(2, 1).Const;
+                end
+            catch
+                b = 0;
+            end
+        end
+
+
+        % -----------------------------------------------------------------
         function routing = field_routing()
             % field_routing  Lookup table: input-struct field name -> dotted
             % target path inside the predictive_model object.

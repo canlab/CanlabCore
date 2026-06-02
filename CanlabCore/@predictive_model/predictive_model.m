@@ -617,6 +617,43 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function y = pava(x)
+            % pava  Pool-adjacent-violators algorithm for isotonic regression.
+            % Returns the monotone non-decreasing sequence y that minimizes
+            % sum((y - x).^2) subject to y(1) <= y(2) <= ... <= y(n).
+            x = x(:);
+            n = numel(x);
+            y = x;
+            weights = ones(n, 1);
+            i = 1;
+            while i < n
+                if y(i) > y(i + 1)
+                    % Merge i and i+1 into a single block.
+                    total_w = weights(i) + weights(i + 1);
+                    merged  = (y(i) * weights(i) + y(i + 1) * weights(i + 1)) / total_w;
+                    y(i)        = merged;
+                    weights(i)  = total_w;
+                    y(i + 1)        = [];
+                    weights(i + 1)  = [];
+                    n = n - 1;
+                    if i > 1, i = i - 1; end
+                else
+                    i = i + 1;
+                end
+            end
+            % Now y has length <= original n with weights; expand back.
+            % Reconstruct full-length output.
+            out = zeros(numel(x), 1);
+            j = 1;
+            for k = 1:numel(y)
+                out(j : j + weights(k) - 1) = y(k);
+                j = j + weights(k);
+            end
+            y = out;
+        end
+
+
+        % -----------------------------------------------------------------
         function routing = field_routing()
             % field_routing  Lookup table: input-struct field name -> dotted
             % target path inside the predictive_model object.

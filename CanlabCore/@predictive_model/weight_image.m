@@ -55,17 +55,30 @@ function si = weight_image(obj, source, varargin)
     end
 
     % If the model dropped features at fit time, expand back to the
-    % full source feature space (zeros for dropped features).
+    % full source feature space (zeros for dropped features). Check
+    % the no-expansion case first — only fall through to the omitted-
+    % features expansion if the lengths actually require it, since
+    % many wrappers produce full-length weight vectors with an
+    % all-false omitted_features.
     n_src = size(source.dat, 1);
-    if islogical(obj.omitted_features) && numel(obj.omitted_features) == n_src
-        full_w = zeros(n_src, 1);
-        full_w(~obj.omitted_features) = w;
-    elseif numel(w) == n_src
+    omitted = obj.omitted_features;
+    if ~islogical(omitted) && isnumeric(omitted)
+        omitted = logical(omitted);
+    end
+
+    if numel(w) == n_src
         full_w = w;
+    elseif islogical(omitted) && numel(omitted) == n_src ...
+            && numel(w) == n_src - sum(omitted)
+        full_w = zeros(n_src, 1);
+        full_w(~omitted) = w;
     else
         error('predictive_model:weight_image:LengthMismatch', ...
-            'weights length %d does not match source feature count %d (and omitted_features is the wrong shape to bridge).', ...
-            numel(w), n_src);
+            ['Weights length (%d) does not fit source feature count (%d).\n' ...
+             '  omitted_features length = %d, sum = %d.\n' ...
+             'Was the model trained on a different fmri_data than `source`, or ' ...
+             'has `source` been re-masked/remove_empty''d since fitting?'], ...
+            numel(w), n_src, numel(omitted), sum(omitted ~= 0));
     end
 
     % Build the statistic_image.
@@ -78,25 +91,32 @@ function si = weight_image(obj, source, varargin)
     si.dat_descrip = sprintf('predictive_model weights (algorithm=%s, fit_type=%s, %s)', ...
         char(string(obj.algorithm)), char(string(obj.fit_type)), use);
 
-    % Attach bootstrap stats if available.
+    % Attach bootstrap stats if available, using the same fit-then-fall-back
+    % logic as for full_w.
     if isfield(obj.weights, 'p') && ~isempty(obj.weights.p) ...
             && numel(obj.weights.p) == numel(w)
-        if islogical(obj.omitted_features) && numel(obj.omitted_features) == n_src
-            full_p = ones(n_src, 1);
-            full_p(~obj.omitted_features) = obj.weights.p;
-        else
-            full_p = obj.weights.p;
-        end
-        si.p = full_p;
+        si.p = bridge_to_source_space(obj.weights.p, n_src, omitted, 1);
     end
     if isfield(obj.weights, 'fdr_sig') && ~isempty(obj.weights.fdr_sig) ...
             && numel(obj.weights.fdr_sig) == numel(w)
-        if islogical(obj.omitted_features) && numel(obj.omitted_features) == n_src
-            full_sig = false(n_src, 1);
-            full_sig(~obj.omitted_features) = obj.weights.fdr_sig;
-        else
-            full_sig = logical(obj.weights.fdr_sig);
-        end
-        si.sig = full_sig;
+        si.sig = logical(bridge_to_source_space(obj.weights.fdr_sig, n_src, omitted, 0));
+    end
+end
+
+
+function out = bridge_to_source_space(v, n_src, omitted, fill_value)
+% Helper: map a per-feature vector v from the model's feature space
+% into the source's n_src-voxel space. Uses the same precedence as
+% the main full_w branch: direct match wins, then omitted_features
+% expansion, otherwise return v as-is (best-effort).
+    v = v(:);
+    if numel(v) == n_src
+        out = v;
+    elseif islogical(omitted) && numel(omitted) == n_src ...
+            && numel(v) == n_src - sum(omitted)
+        out = repmat(fill_value, n_src, 1);
+        out(~omitted) = v;
+    else
+        out = v;
     end
 end

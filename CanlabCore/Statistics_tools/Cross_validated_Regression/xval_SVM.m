@@ -170,7 +170,43 @@ function pmodel_obj = xval_SVM(varargin)
 % :Examples:
 % ::
 %
-% Simulate some data with true signal, with two observations per person
+% Real-data example: DPSP Hot-vs-Warm pain classifier
+% -------------------------------------------------------------------------
+% The DPSP sample dataset (Woo et al. 2014) is bundled with CanlabCore.
+% load_image_set can fetch and pre-process the binary-classification
+% pair in one call:
+%
+%   hw_obj = load_image_set('DPSP_hotwarm');         % gray-matter masked, ±1 Y, subj_id in metadata
+%   X  = double(hw_obj.dat');                        % images x voxels
+%   Y  = hw_obj.Y;                                   % +1 hot, -1 warm
+%   id = grp2idx(hw_obj.metadata_table.subj_id);     % integer subject grouping
+%
+%   rng(2026);
+%   pm = xval_SVM(X, Y, id, ...
+%       'highdimensional', true, ...
+%       'nooptimize', 'norepeats', 'nobootstrap');
+%
+%   % pm is a @predictive_model object. Inspect via canonical paths:
+%   pm.error_metrics.crossval_accuracy.value          % single-interval cv acc
+%   pm.error_metrics.d_singleinterval.value           % effect size
+%   pm.fitted_values.dist_from_hyperplane_xval        % cv decision-function scores
+%   pm.weights.w                                       % full-data SVM weights
+%
+%   % Further analysis with the new pipeline:
+%   pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);   % FDR-thresholded weights
+%   si = weight_image(pm, hw_obj);                           % statistic_image for montaging
+%   si = threshold(si, .05, 'fdr');
+%   montage(region(si));
+%
+% Same workflow for the Rejector-vs-Friend rejection classifier:
+%
+%   rf_obj = load_image_set('DPSP_rejectorfriend');
+%   X  = double(rf_obj.dat'); Y = rf_obj.Y;
+%   id = grp2idx(rf_obj.metadata_table.subj_id);
+%   pm = xval_SVM(X, Y, id, 'highdimensional', true, ...
+%                'nooptimize', 'norepeats', 'nobootstrap');
+%
+% Synthetic-data example
 % -------------------------------------------------------------------------
 % n = 50; % participants
 % k = 120; % features

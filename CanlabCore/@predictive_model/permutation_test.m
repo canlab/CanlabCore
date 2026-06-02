@@ -57,20 +57,35 @@ function obj = permutation_test(obj, X, Y, varargin)
         if verbose && mod(i, every) == 0, fprintf('.'); end
 
         if isempty(groups)
+            % No grouping: free observation-level permutation.
             Y_perm = Y(randperm(n));
         else
-            % Subject-level shuffle: permute the labels of whole subjects.
             uniq = unique(groups);
-            perm_labels = containers.Map( ...
-                num2cell(uniq), num2cell(uniq(randperm(numel(uniq)))));
-            % Map each obs's group -> permuted group -> Y of that group.
-            % Simpler: just shuffle the unique-group Y assignment and
-            % broadcast back.
-            group_Y = arrayfun(@(g) mode(Y(groups == g)), uniq);
-            new_group_Y = group_Y(randperm(numel(uniq)));
-            Y_perm = Y;
-            for g = 1:numel(uniq)
-                Y_perm(groups == uniq(g)) = new_group_Y(g);
+            % Detect whether Y is constant within each group. If yes,
+            % the design is "between-subjects" (each subject has one
+            % class) and we should shuffle Y at the SUBJECT level. If
+            % no, the design is "within-subjects" (each subject has
+            % multiple classes; e.g. DPSP Hot+Warm per subject) and we
+            % shuffle Y WITHIN each subject — the correct permutation
+            % for paired data.
+            y_within_const = arrayfun(@(g) ...
+                numel(unique(Y(groups == g))) == 1, uniq);
+            if all(y_within_const)
+                % Subject-level shuffle.
+                group_Y = arrayfun(@(g) Y(find(groups == g, 1, 'first')), uniq);
+                new_group_Y = group_Y(randperm(numel(uniq)));
+                Y_perm = Y;
+                for g = 1:numel(uniq)
+                    Y_perm(groups == uniq(g)) = new_group_Y(g);
+                end
+            else
+                % Within-subject shuffle: permute Y for each subject's
+                % observations independently.
+                Y_perm = Y;
+                for g = 1:numel(uniq)
+                    ix = find(groups == uniq(g));
+                    Y_perm(ix) = Y(ix(randperm(numel(ix))));
+                end
             end
         end
 

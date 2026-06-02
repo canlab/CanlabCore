@@ -1,4 +1,4 @@
-function [cverr, stats, optout] = predict(obj, varargin)
+function [cverr, stats, optout, pm] = predict(obj, varargin)
 % Predict outcome (Y) from brain data and test cross-validated error rate for an fmri_data object
 %
 % :Usage:
@@ -1009,6 +1009,23 @@ if bootweights
 
 end
 
+
+% Phase 4.1: also return a @predictive_model object built from stats.
+% The first three outputs (cverr, stats, optout) are unchanged for
+% back-compat. New code can request the 4th output and use the new API.
+if nargout >= 4
+    % Build pm from a local copy of stats so the returned stats is
+    % unchanged. Inject fit_type via the struct so the routing table
+    % can populate pm.fit_type (it's SetAccess=protected externally).
+    stats_for_pm = stats;
+    if ~isfield(stats_for_pm, 'fit_type') || isempty(stats_for_pm.fit_type)
+        stats_for_pm.fit_type = 'crossval';
+    end
+    pm = predictive_model(stats_for_pm, 'noverbose');
+    if isfield(stats, 'algorithm_name') && ~isempty(stats.algorithm_name)
+        pm.algorithm = stats.algorithm_name;   % public hyperparameter
+    end
+end
 
 end % main function
 

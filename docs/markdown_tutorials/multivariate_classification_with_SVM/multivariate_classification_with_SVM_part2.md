@@ -218,14 +218,33 @@ montage(region(si));
 ```matlab
 pm = permutation_test(pm, X, Y, 'nperm', 1000, 'groups', id);
 disp(pm.permutation_results.p_value);
+disp(pm.permutation_results.permutation);          % which scheme was used
+disp(pm.permutation_results.permutation_descrip);  % one-line explanation
 ```
 
-For paired-within-subject designs (DPSP Hot+Warm per subject), the
-permutation is done WITHIN each subject — Y is shuffled for each
-subject's observations independently, preserving the subject
-structure while breaking the class-vs-brain mapping. For
-between-subjects designs (each subject has one class), the
-permutation happens at the subject level.
+### Permutation schemes
+
+| `'permutation'` value | What it does | When to use |
+|---|---|---|
+| `'auto'` *(default)* | Detect from data: no groups → `free`; groups + Y constant per group → `between_subjects`; groups + Y varies per group → `within_subjects` | Safe default; the resolved scheme is stored on the output |
+| `'within_subjects'` *(paired-design gold standard)* | Permute Y INDEPENDENTLY within each subject's observations | Each subject contributes both classes (DPSP Hot+Warm, drug A vs B within-subject, etc.). Preserves subject-level pattern; breaks only the class-vs-brain mapping |
+| `'between_subjects'` | Reassign each subject's Y to another subject's at random | Each subject contributes ONE class (patient vs control). Errors with a warning if Y varies within a subject |
+| `'free'` | Observation-level shuffle of Y, ignoring groups | Truly independent observations only. **Inflates false positives** for grouped data |
+
+The output stores which scheme was actually used in
+`pm.permutation_results.permutation` and a one-line explanation in
+`pm.permutation_results.permutation_descrip`, so you always know
+what null you tested against.
+
+**Why within-subject is the gold standard for paired designs:**
+the null is "there's no Hot-vs-Warm signal in the brain for *each*
+subject." Within-subject shuffling preserves the subject-level
+brain pattern (no subject confound), the class balance (still 59
+Hot + 59 Warm globally), and the within-subject correlation
+structure; the only thing it breaks is the actual Hot/Warm
+assignment for each subject's two observations. That's exactly
+the thing the classifier is supposed to be exploiting, so it's
+the right thing to randomize.
 
 ## 9. Calibrated probabilities
 

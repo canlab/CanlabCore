@@ -70,11 +70,20 @@ snapnow
 
 %% 8. Permutation test (is the cv score significantly better than chance?)
 % Small nperm for tutorial; bump to 1000+ for real use.
+% DPSP is paired (Hot + Warm per subject) — 'auto' detects this and
+% uses 'within_subjects' (the gold standard for paired designs).
 pm = permutation_test(pm, X, Y, 'nperm', 50, 'groups', id);
-fprintf('Permutation test: observed = %.3f, null mean = %.3f, p = %.4f\n', ...
+fprintf('Permutation test (%s): observed = %.3f, null mean = %.3f, p = %.4f\n', ...
+    pm.permutation_results.permutation, ...
     pm.permutation_results.observed, ...
     mean(pm.permutation_results.null_scores, 'omitnan'), ...
     pm.permutation_results.p_value);
+fprintf('  scheme: %s\n', pm.permutation_results.permutation_descrip);
+
+% Force a specific scheme — useful for reporting or to compare
+% paired vs free-permutation p-values:
+%   pm = permutation_test(pm, X, Y, 'nperm', 50, 'groups', id, ...
+%                          'permutation', 'within_subjects');
 
 %% 9. Calibrated probabilities
 pm_cal = calibrate(pm, X, Y);

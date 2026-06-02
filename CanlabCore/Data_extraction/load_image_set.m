@@ -1844,6 +1844,20 @@ function [image_obj, networknames, imagenames] = load_dpsp_pair(cond_pos, cond_n
     if length(networknames) == 1
         networknames = repmat(networknames, size(image_obj.dat, 2), 1);
     end
-    imagenames = image_obj.fullpath;
+
+    % Normalise imagenames to a cell array of char so the verbose
+    % printout in the parent (fprintf('%s\n', imagenames{:})) works.
+    fp = image_obj.fullpath;
+    if isempty(fp)
+        imagenames = {pos_path; neg_path};
+    elseif ischar(fp)
+        imagenames = cellstr(fp);
+    elseif isstring(fp)
+        imagenames = cellstr(fp);
+    elseif iscell(fp)
+        imagenames = fp(:);
+    else
+        imagenames = {pos_path; neg_path};   % conservative fallback
+    end
 end
 

@@ -642,6 +642,59 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function [si, passthrough, do_regions] = weight_image_for_display(obj, varargin)
+            % weight_image_for_display  Shared arg-parsing for montage/surface.
+            %
+            % Resolves the weight @statistic_image to display and separates
+            % the remaining name/value pairs (passthrough) from the
+            % display-control flags ('regions') and the weight_image-only
+            % option ('use').
+            %
+            % Returns:
+            %   si          the @statistic_image weight map
+            %   passthrough cell of options to forward to montage/surface
+            %   do_regions  logical, true if the caller asked for 'regions'
+
+            args = varargin;
+
+            % 1) optional leading source object (anything with a volInfo).
+            source = [];
+            if ~isempty(args) && isobject(args{1}) && isprop(args{1}, 'volInfo')
+                source = args{1};
+                args(1) = [];
+            end
+
+            % 2) strip the 'regions' flag.
+            is_reg = cellfun(@(a) (ischar(a) || isstring(a)) && strcmpi(a, 'regions'), args);
+            do_regions = any(is_reg);
+            args(is_reg) = [];
+
+            % 3) pull out 'use' (weight_image only; not a montage option).
+            use = 'w';
+            iu = find(cellfun(@(a) (ischar(a) || isstring(a)) && strcmpi(a, 'use'), args), 1);
+            if ~isempty(iu) && iu < numel(args)
+                use = args{iu + 1};
+                args([iu iu + 1]) = [];
+            end
+
+            % 4) build / fetch the statistic_image.
+            if ~isempty(source)
+                si = weight_image(obj, source, 'use', use);
+            elseif isstruct(obj.weights) && isfield(obj.weights, 'weight_obj') ...
+                    && ~isempty(obj.weights.weight_obj)
+                si = obj.weights.weight_obj;
+            else
+                error('predictive_model:montage:NoSource', ...
+                    ['Provide a source image object (fmri_data/image_vector) so the ' ...
+                     'weight vector can be mapped to voxel space, or populate ' ...
+                     'pm.weights.weight_obj first.']);
+            end
+
+            passthrough = args;
+        end
+
+
+        % -----------------------------------------------------------------
         function stats = compute_within_person_stats(Y, scores, groups, task)
             % compute_within_person_stats  Within-person forced-choice
             % accuracy, Cohen's d, scorediff, scores/Y arranged by id.

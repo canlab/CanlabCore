@@ -378,47 +378,61 @@ if isempty(regions)
 end
 regions = cellstr(string(regions));
 
-% Subset the atlas to the requested regions.
-sub_atlas = atlas_obj;
-if isa(atlas_obj, 'atlas')
-    try
-        sub_atlas = select_atlas_subset(atlas_obj, regions, 'exact', 'deterministic');
-    catch err
-        error('hrf_score_one_prefix:AtlasRegionSubset', ...
-            'Failed to subset atlas to regions {%s}: %s', ...
-            strjoin(regions, ', '), err.message);
-    end
-end
+% IMPORTANT: extract_roi_averages exhibits different per-volume behavior
+% when given a multi-region atlas (518 regions in one call) vs a
+% single-region deterministic subset. The multi-region path can produce
+% jagged per-volume averages even when each region's underlying voxels
+% are smooth canonical curves -- confirmed in a side-by-side diagnostic
+% where extract_roi_averages on a 1-region subset gave a smooth peak
+% while the CSV column (written from a 518-region subset call) was
+% noise. To stay on the correct code path, subset the atlas to ONE
+% region at a time and call extract_roi_averages per region. Slower
+% (~Nx for N regions) but correct.
 
-% Choose extract_roi_averages mode based on requested normalization.
+extract_args = {};
 switch normalize
     case 'none'
-        cl = extract_roi_averages(score_obj, sub_atlas, 'nonorm');
+        extract_args = {'nonorm'};
         suffix = 'sum';
     case {'mean', 'l1'}
-        cl = extract_roi_averages(score_obj, sub_atlas);
         suffix = normalize_suffix(normalize);
     otherwise
         error('hrf_score_one_prefix:UnknownNormalize', ...
             'Unknown Normalize: %s. Use mean, l1, or none.', normalize);
 end
 
-% Map cl entries back to the requested region labels in order. If
-% select_atlas_subset reordered or merged regions, fall back to atlas
-% labels.
-out_labels = local_atlas_labels(sub_atlas, numel(cl));
-if numel(out_labels) == numel(regions)
-    out_labels = regions;
-end
-
 atlas_token = matlab.lang.makeValidName(char(atlas_name));
 n_vol = size(score_obj.dat, 2);
-
 atlas_cols = table();
-for i = 1:numel(cl)
-    region_token = matlab.lang.makeValidName(char(out_labels{i}));
+
+for r = 1:numel(regions)
+    region_label = regions{r};
+    if isa(atlas_obj, 'atlas')
+        try
+            single_sub = select_atlas_subset(atlas_obj, {region_label}, 'exact', 'deterministic');
+        catch err
+            warning('hrf_score_one_prefix:AtlasRegionSubset', ...
+                'Skipping region ''%s'': %s', region_label, err.message);
+            continue
+        end
+    else
+        single_sub = atlas_obj;
+    end
+
+    try
+        cl = extract_roi_averages(score_obj, single_sub, extract_args{:});
+    catch err
+        warning('hrf_score_one_prefix:AtlasExtract', ...
+            'Skipping region ''%s'': %s', region_label, err.message);
+        continue
+    end
+    if isempty(cl)
+        continue
+    end
+
+    region_token = matlab.lang.makeValidName(char(region_label));
     col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
-    vals = double(cl(i).dat(:));
+    vals = double(cl(1).dat(:));
     if numel(vals) ~= n_vol
         padded = NaN(n_vol, 1);
         m = min(numel(vals), n_vol);

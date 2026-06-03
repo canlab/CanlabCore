@@ -99,6 +99,16 @@ end
 
 % 2. Pool across (subject, run) per (condition, region, lag).
 pooled = local_pool_subjects(long);
+if logical(opts.Verbose)
+    if isempty(pooled) || height(pooled) == 0
+        fprintf('  pooled: 0 rows  <-- this will cause "No regions to plot"\n');
+    else
+        fprintf('  pooled: %d rows; %d unique regions; ranges: mean=[%.3g, %.3g], n=[%d, %d]\n', ...
+            height(pooled), numel(unique(pooled.region)), ...
+            min(pooled.mean, [], 'omitnan'), max(pooled.mean, [], 'omitnan'), ...
+            min(pooled.n), max(pooled.n));
+    end
+end
 
 % 3. Pick regions.
 if ~isempty(opts.Regions)
@@ -108,7 +118,12 @@ else
     top_regions = local_rank_regions(pooled, char(opts.RankBy), opts.TopN);
 end
 if isempty(top_regions)
-    error('plot_hrf_atlas_curves:NoRegions', 'No regions to plot.');
+    n_pooled_regions = numel(unique(pooled.region));
+    error('plot_hrf_atlas_curves:NoRegions', ...
+        ['No regions to plot. pooled table has %d rows / %d unique regions. ' ...
+         'If pooled is non-empty but ranking still returns empty, the RankBy ' ...
+         'metric (%s) may have produced all-NaN scores -- try ''peak_abs''.'], ...
+        height(pooled), n_pooled_regions, char(opts.RankBy));
 end
 
 % 4. Plot.
@@ -229,11 +244,11 @@ if verbose
                 n_loaded, n_unique_paths);
     end
     if ~isempty(long)
-        fprintf('  long table: %d rows; %d unique (subject, run, condition, region, lag)\n', ...
-            height(long), height(unique(long(:, {'subject','run_label','condition','region','lag_seconds'}))));
-        fprintf('  unique regions: %d; unique conditions: %d; lag count per (subj, run, region, cond): %d\n', ...
-            numel(unique(long.region)), numel(unique(long.condition)), ...
-            mode(splitapply(@numel, long.lag_seconds, findgroups(long.subject, long.run_label, long.region, long.condition))));
+        % Cheap counts only -- avoid unique() / splitapply on the full
+        % (potentially 10M+) row table, which can be slow or run into
+        % memory pressure and is not worth it for diagnostics.
+        fprintf('  long table: %d rows; unique regions: %d; unique conditions: %d\n', ...
+            height(long), numel(unique(long.region)), numel(unique(long.condition)));
     end
 end
 end

@@ -75,6 +75,11 @@ function obj = stability_selection(obj, X, Y, varargin)
     groups    = pi.Results.groups;
     verbose   = pi.Results.verbose;
 
+    % Normalize non-numeric groups (cell of subject-id strings, etc.).
+    if ~isempty(groups) && ~(isnumeric(groups) || islogical(groups))
+        [~, ~, groups] = unique(groups(:), 'stable');
+    end
+
     % 1. Bad-data
     [oc, of] = predictive_model.detect_bad_data(X, Y);
     if any(oc) || any(of)

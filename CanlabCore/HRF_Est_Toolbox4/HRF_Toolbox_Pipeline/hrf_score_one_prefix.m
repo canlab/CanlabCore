@@ -405,6 +405,14 @@ atlas_token = matlab.lang.makeValidName(char(atlas_name));
 n_vol = size(score_obj.dat, 2);
 atlas_cols = table();
 
+% Convert score_obj to fmri_data for extract_roi_averages. The scoring
+% pipeline loads NIfTIs as statistic_image(fmri_data(...)); on that
+% statistic_image-typed input extract_roi_averages takes a different
+% code path that applies sig() filters and produces non-linear per-volume
+% behavior even for smooth canonical data. The user's manual diagnostic
+% on plain fmri_data gave smooth output; matching that here.
+extract_input = local_to_fmri_data_for_extract(score_obj);
+
 for r = 1:numel(regions)
     region_label = regions{r};
     if isa(atlas_obj, 'atlas')
@@ -420,7 +428,7 @@ for r = 1:numel(regions)
     end
 
     try
-        cl = extract_roi_averages(score_obj, single_sub, extract_args{:});
+        cl = extract_roi_averages(extract_input, single_sub, extract_args{:});
     catch err
         warning('hrf_score_one_prefix:AtlasExtract', ...
             'Skipping region ''%s'': %s', region_label, err.message);
@@ -446,6 +454,32 @@ for r = 1:numel(regions)
         end
     end
     atlas_cols.(col_name) = vals;
+end
+end
+
+
+function fd = local_to_fmri_data_for_extract(obj)
+% Build a plain fmri_data carrying the same voxel space and data, so
+% extract_roi_averages takes the fmri_data code path. We hand-copy
+% fields rather than calling fmri_data(obj) because fmri_data's
+% constructor expects a filename as its first arg.
+if isa(obj, 'fmri_data') && ~isa(obj, 'statistic_image')
+    fd = obj;
+    return
+end
+fd = fmri_data();
+shared = {'dat', 'volInfo', 'removed_voxels', 'removed_images', ...
+    'space_defining_image_name', 'fullpath', 'files_exist', 'history', ...
+    'image_names', 'source_notes', 'mask', 'mask_descrip', ...
+    'images_per_session'};
+for i = 1:numel(shared)
+    f = shared{i};
+    if isprop(fd, f) && isprop(obj, f)
+        try
+            fd.(f) = obj.(f);
+        catch
+        end
+    end
 end
 end
 

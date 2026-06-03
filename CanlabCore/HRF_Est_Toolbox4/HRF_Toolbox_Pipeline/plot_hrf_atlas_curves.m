@@ -112,8 +112,28 @@ end
 
 % 3. Pick regions.
 if ~isempty(opts.Regions)
-    top_regions = cellstr(string(opts.Regions));
-    top_regions = intersect(top_regions, cellstr(unique(pooled.region)), 'stable');
+    % Allow either exact match against pooled.region (when AtlasObj was
+    % passed and labels are clean) or case-insensitive substring match
+    % (when AtlasName/no-arg paths leave pooled.region holding the full
+    % atlas_<name>_<region> token). Substring match handles e.g. user
+    % passing 'Cblm_VIIIa_L' when pooled has
+    % 'CANLab2024_MNI152NLin2009cAsym_coarse_2mm_Cblm_VIIIa_L'.
+    requested = cellstr(string(opts.Regions));
+    pool_regions = cellstr(unique(pooled.region));
+    top_regions = {};
+    for r = 1:numel(requested)
+        req = requested{r};
+        exact = pool_regions(strcmp(pool_regions, req));
+        if ~isempty(exact)
+            top_regions = [top_regions; exact(:)]; %#ok<AGROW>
+            continue
+        end
+        substr = pool_regions(contains(lower(pool_regions), lower(req)));
+        if ~isempty(substr)
+            top_regions = [top_regions; substr(:)]; %#ok<AGROW>
+        end
+    end
+    top_regions = unique(top_regions, 'stable');
 else
     top_regions = local_rank_regions(pooled, char(opts.RankBy), opts.TopN);
 end

@@ -51,7 +51,14 @@ function cm = confusionchart(obj, varargin)
         args = [args, {'Normalization', 'row-normalized'}];
     end
 
-    cm = confusionchart(Y, yfit, args{:});
+    % MATLAB's confusionchart needs a figure with no held/subplot axes —
+    % clear the current figure if it already has axes (e.g. after a plot()).
+    f = gcf;
+    if ~isempty(findobj(f, 'Type', 'axes'))
+        clf(f);
+    end
+
+    cm = confusionchart(f, Y, yfit, args{:});
 
     if ~isempty(obj.class_labels) && numel(obj.class_labels) == numel(unique(Y(~isnan(Y))))
         try, cm.ClassLabels = obj.class_labels; end %#ok<NOCOM,TRYNC>

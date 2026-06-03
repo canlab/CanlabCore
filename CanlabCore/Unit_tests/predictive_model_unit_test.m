@@ -117,5 +117,53 @@ function predictive_model_unit_test()
     assert(pm_fs.diagnostics.feature_selection.n_selected == 500,        'k=500 selected');
     fprintf(' 10. select_features OK (kept 500)\n');
 
+    % --- 11. visualisation methods (smoke test; no display assertions) ---
+    ROC = rocplot(pm, 'noplot');
+    assert(isfield(ROC, 'AUC') && ROC.AUC >= 0 && ROC.AUC <= 1,          'rocplot AUC in [0,1]');
+    h = plot(pm); close(h);                    % classification dispatcher (violin + ROC)
+    confusionchart(pm); close(gcf);
+    fprintf(' 11. rocplot/plot/confusionchart OK (AUC=%.3f)\n', ROC.AUC);
+
+    % --- 12. montage / surface delegates (smoke test) ---
+    montage(pm, hw_obj); close all force;
+    fprintf(' 12. montage(pm, source) OK\n');
+
+    % --- 13. grid_search (tiny grid) ---
+    pm_gs = predictive_model('algorithm','svm','task','classification', ...
+                             'cv', cv_splitter.stratified_group_kfold(3));
+    pm_gs = grid_search(pm_gs, X, Y, struct('BoxConstraint', [0.1 1]), ...
+                        'groups', id, 'verbose', false);
+    assert(isfield(pm_gs.diagnostics.grid_search, 'best_score'),         'grid_search best_score');
+    fprintf(' 13. grid_search OK (best %s=%.3f)\n', ...
+        pm_gs.scorer.name, pm_gs.diagnostics.grid_search.best_score);
+
+    % --- 14. stability_selection (small nboot) ---
+    pm_ss = stability_selection( ...
+        predictive_model('algorithm','linear_svm','task','classification'), ...
+        X, Y, 'nboot', 20, 'k', 1000, 'threshold', 0.6, 'groups', id, 'verbose', false);
+    ss = pm_ss.diagnostics.stability_selection;
+    assert(numel(ss.selection_freq) == size(X, 2),                       'selection_freq length');
+    assert(all(ss.selection_freq >= 0 & ss.selection_freq <= 1),         'selection_freq in [0,1]');
+    fprintf(' 14. stability_selection OK (%d stable voxels)\n', ss.n_stable);
+
+    % --- 15. @pipeline: PCA -> svm, leakage-free crossval + weight back-projection ---
+    est  = predictive_model('algorithm','svm','task','classification');
+    pipe = pipeline({ {'pca','k',20} }, est);
+    pipe = crossval(pipe, X, Y, 'groups', id, 'cv', cv_splitter.stratified_group_kfold(5));
+    assert(strcmp(pipe.fit_type, 'crossval'),                            'pipeline crossval fit_type');
+    assert(numel(pipe.weights.w) == size(X, 2),                          'pipeline back-projected weight length');
+    si_pipe = weight_image(pipe, hw_obj);
+    assert(isa(si_pipe, 'statistic_image'),                              'pipeline weight_image class');
+    fprintf(' 15. pipeline (PCA->svm) OK (cv bal_acc=%.3f)\n', ...
+        pipe.error_metrics.balanced_accuracy.value);
+
+    % --- 16. fmri_data.predict 'newapi' routing ---
+    [cverr, st, ~, pm_api] = predict(hw_obj, 'algorithm_name', 'cv_svm', ...
+                                     'nfolds', 5, 'newapi', 'verbose', 0);
+    assert(isa(pm_api, 'predictive_model'),                              'newapi returns predictive_model');
+    assert(strcmp(pm_api.fit_type, 'crossval'),                          'newapi fit_type=crossval');
+    assert(isfield(st, 'dist_from_hyperplane_xval'),                     'newapi stats has xval distances');
+    fprintf(' 16. fmri_data.predict ''newapi'' OK (cverr=%.3f)\n', cverr);
+
     fprintf('\npredictive_model_unit_test: PASS\n');
 end

@@ -155,8 +155,46 @@ function obj = crossval(obj, X, Y, varargin)
     if any(~isnan(scores_cv))
         obj.fitted_values.scores     = scores_cv;
         obj.fitted_values.score_type = ternary(needs_cont, 'probability', 'distance');
+        % Legacy alias for xval_SVM-style consumers: dist_from_hyperplane_xval
+        % is the same data, named for the SVM use case.
+        if strcmpi(obj.task, 'classification')
+            obj.fitted_values.dist_from_hyperplane_xval = scores_cv;
+        end
     end
     obj.fit_type = 'crossval';
+
+    % Within-person scoring (auto when groups is provided and any group
+    % has >=2 obs with varying Y). Populates fitted_values.scorediff /
+    % scores_within_id / Y_within_id and error_metrics.{
+    % crossval_accuracy_within, d_within, d_singleinterval}, plus a
+    % diagnostics.mult_obs_within_person flag.
+    if ~isempty(groups)
+        wps = predictive_model.compute_within_person_stats( ...
+            Y, scores_cv, groups, obj.task);
+        obj.fitted_values.scorediff             = wps.scorediff;
+        obj.fitted_values.scores_within_id      = wps.scores_within_id;
+        obj.fitted_values.Y_within_id           = wps.Y_within_id;
+        if ~isempty(wps.high_vs_low_scores_within_id)
+            obj.fitted_values.high_vs_low_scores_within_id = ...
+                wps.high_vs_low_scores_within_id;
+        end
+        obj.diagnostics.mult_obs_within_person  = wps.mult_obs_within_person;
+        if ~isnan(wps.crossval_accuracy_within)
+            obj.error_metrics.crossval_accuracy_within = struct( ...
+                'value',   wps.crossval_accuracy_within, ...
+                'descrip', 'forced-choice accuracy: fraction of subjects with scorediff > 0');
+        end
+        if ~isnan(wps.d_within)
+            obj.error_metrics.d_within = struct( ...
+                'value',   wps.d_within, ...
+                'descrip', 'Cohen''s d on paired within-subject scorediff');
+        end
+        if ~isnan(wps.d_singleinterval)
+            obj.error_metrics.d_singleinterval = struct( ...
+                'value',   wps.d_singleinterval, ...
+                'descrip', 'pooled standardized mean diff of cv scores between classes');
+        end
+    end
 
     obj.fold_models               = fold_estimators;
     obj.cv_partition.nfolds       = nfolds;

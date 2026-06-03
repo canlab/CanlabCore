@@ -617,6 +617,132 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function stats = compute_within_person_stats(Y, scores, groups, task)
+            % compute_within_person_stats  Within-person forced-choice
+            % accuracy, Cohen's d, scorediff, scores/Y arranged by id.
+            %
+            % stats fields:
+            %   scorediff                 [n_groups x 1] per-subject
+            %                             (mean score | Y=+1) - (mean score | Y=-1)
+            %   scores_within_id          {n_groups x 1} cell of per-subject scores
+            %   Y_within_id               {n_groups x 1} cell of per-subject Y
+            %   high_vs_low_scores_within_id  {n_groups x 1} cell of scores
+            %                             sorted by Y within subject (for regression)
+            %   crossval_accuracy_within  forced-choice accuracy: fraction of
+            %                             subjects whose scorediff > 0
+            %   d_within                  Cohen's d on the paired scorediff
+            %   d_singleinterval          Cohen's d between classes (all obs pooled)
+            %   mult_obs_within_person    true if any group has >=2 obs with varying Y
+
+            stats.scorediff                    = [];
+            stats.scores_within_id             = {};
+            stats.Y_within_id                  = {};
+            stats.high_vs_low_scores_within_id = {};
+            stats.crossval_accuracy_within     = NaN;
+            stats.d_within                     = NaN;
+            stats.d_singleinterval             = NaN;
+            stats.mult_obs_within_person       = false;
+
+            if isempty(groups) || isempty(scores) || all(isnan(scores))
+                return
+            end
+
+            Y = Y(:); scores = scores(:); groups = groups(:);
+            uniq = unique(groups);
+            n_groups = numel(uniq);
+
+            stats.scores_within_id  = cell(n_groups, 1);
+            stats.Y_within_id       = cell(n_groups, 1);
+            has_multi_class = false(n_groups, 1);
+            for g = 1:n_groups
+                msk = groups == uniq(g);
+                stats.scores_within_id{g} = scores(msk);
+                stats.Y_within_id{g}      = Y(msk);
+                has_multi_class(g) = sum(msk) >= 2 && numel(unique(Y(msk))) >= 2;
+            end
+            stats.mult_obs_within_person = any(has_multi_class);
+
+            % d_singleinterval: standardized mean diff between classes
+            % (pooled across all obs). Works for binary classification.
+            if strcmpi(task, 'classification')
+                classes = unique(Y(~isnan(Y)));
+                if numel(classes) == 2
+                    pos = max(classes); neg = min(classes);
+                    s_pos_all = scores(Y == pos & ~isnan(scores));
+                    s_neg_all = scores(Y == neg & ~isnan(scores));
+                    if ~isempty(s_pos_all) && ~isempty(s_neg_all)
+                        np = numel(s_pos_all); nn = numel(s_neg_all);
+                        pooled_sd = sqrt( ...
+                            ((np-1)*var(s_pos_all) + (nn-1)*var(s_neg_all)) ...
+                            / (np + nn - 2));
+                        if pooled_sd > 0
+                            stats.d_singleinterval = (mean(s_pos_all) - mean(s_neg_all)) / pooled_sd;
+                        end
+                    end
+                end
+            end
+
+            if ~stats.mult_obs_within_person
+                % Between-subjects: no scorediff / within-person stats.
+                return
+            end
+
+            % Within-subject case (e.g. DPSP Hot+Warm per subject).
+            if strcmpi(task, 'classification')
+                classes = unique(Y(~isnan(Y)));
+                if numel(classes) == 2
+                    pos = max(classes); neg = min(classes);
+                    stats.scorediff = nan(n_groups, 1);
+                    for g = 1:n_groups
+                        msk = groups == uniq(g);
+                        s_pos = scores(msk & Y == pos);
+                        s_neg = scores(msk & Y == neg);
+                        if ~isempty(s_pos) && ~isempty(s_neg)
+                            stats.scorediff(g) = mean(s_pos) - mean(s_neg);
+                        end
+                    end
+                    valid = ~isnan(stats.scorediff);
+                    if any(valid)
+                        stats.crossval_accuracy_within = mean(stats.scorediff(valid) > 0);
+                        sd_diff = std(stats.scorediff(valid));
+                        if sd_diff > 0
+                            stats.d_within = mean(stats.scorediff(valid)) / sd_diff;
+                        end
+                    end
+                end
+            else
+                % Regression: within-subject score sorted by Y. The
+                % "high vs low" arrangement makes paired tests across
+                % continuous Y simpler downstream.
+                stats.high_vs_low_scores_within_id = cell(n_groups, 1);
+                stats.scorediff = nan(n_groups, 1);
+                for g = 1:n_groups
+                    msk = groups == uniq(g);
+                    yi = Y(msk); si = scores(msk);
+                    [~, ord] = sort(yi);
+                    stats.high_vs_low_scores_within_id{g} = si(ord);
+                    % Binarize: top-half vs bottom-half within subject
+                    if numel(yi) >= 2
+                        half = floor(numel(yi)/2);
+                        if half >= 1
+                            stats.scorediff(g) = mean(si(ord(end-half+1:end))) - ...
+                                                  mean(si(ord(1:half)));
+                        end
+                    end
+                end
+                valid = ~isnan(stats.scorediff);
+                if any(valid)
+                    stats.crossval_accuracy_within = mean(stats.scorediff(valid) > 0);
+                    sd_diff = std(stats.scorediff(valid));
+                    if sd_diff > 0
+                        stats.d_within = mean(stats.scorediff(valid)) / sd_diff;
+                    end
+                end
+            end
+        end
+
+
+        % -----------------------------------------------------------------
         function y = pava(x)
             % pava  Pool-adjacent-violators algorithm for isotonic regression.
             % Returns the monotone non-decreasing sequence y that minimizes

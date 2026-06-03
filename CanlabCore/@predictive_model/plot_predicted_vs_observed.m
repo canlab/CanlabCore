@@ -48,6 +48,8 @@ plotColor = [0 0.4470 0.7410];  % medium-blue, for regression
 colors = seaborn_colors(10);
 colors = colors([4 8]);
 
+extra_args = {};
+
 % Parse optional arguments.
 for i = 1:length(varargin)
     if ischar(varargin{i})

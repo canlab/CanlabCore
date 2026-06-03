@@ -39,14 +39,22 @@ function [rawConf, normConf] = confusion_matrix(obj, varargin)
         end
     end
 
+    % Fetch predictions from the categorised sub-struct (the flat .yfit
+    % alias was removed during property deduplication).
+    if isstruct(obj.fitted_values) && isfield(obj.fitted_values, 'yfit')
+        yfit = obj.fitted_values.yfit;
+    else
+        yfit = [];
+    end
+
     % Ensure true outcomes (Y) and predictions (yfit) are defined.
-    if isempty(obj.Y) || isempty(obj.yfit)
+    if isempty(obj.Y) || isempty(yfit)
         error('predictive_model:MissingData', ...
-            'Both true outcomes (Y) and predicted outcomes (yfit) must be defined.');
+            'Both true outcomes (Y) and predicted outcomes (fitted_values.yfit) must be defined.');
     end
 
     % Compute the confusion matrix using MATLAB's built-in function.
-    rawConf = confusionmat(obj.Y, obj.yfit);
+    rawConf = confusionmat(obj.Y, yfit);
 
     % Normalize each row to percentages (per true class).
     normConf = rawConf;
@@ -64,7 +72,7 @@ function [rawConf, normConf] = confusion_matrix(obj, varargin)
         create_figure('confchart');
         hold off;
 
-        cm = confusionchart(obj.Y, obj.yfit, 'Normalization', 'row-normalized');  % doesn't work for me... , 'classLabels', {'TrueClass','FalseClass'}); % , 'ClassLabels', ClassLabels);
+        cm = confusionchart(obj.Y, yfit, 'Normalization', 'row-normalized');  % doesn't work for me... , 'classLabels', {'TrueClass','FalseClass'}); % , 'ClassLabels', ClassLabels);
         cm.OffDiagonalColor = [1 1 1];
         cm.DiagonalColor = [.2 .5 1];
         cm.FontSize = 18;

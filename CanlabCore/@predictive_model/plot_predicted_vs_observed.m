@@ -64,9 +64,16 @@ for i = 1:length(varargin)
     end
 end
 
+% Fetch fitted values from the categorised sub-struct (the flat .yfit /
+% .dist_from_hyperplane_xval Dependent aliases were removed during the
+% property-deduplication work).
+yfit   = local_fitted(obj, 'yfit');
+scores = local_fitted(obj, 'dist_from_hyperplane_xval');
+if isempty(scores), scores = local_fitted(obj, 'scores'); end
+
 % Check that true outcomes and predictions exist.
-if isempty(obj.Y) || isempty(obj.yfit)
-    error('predictive_model:MissingData', 'Both .Y and .yfit must be defined.');
+if isempty(obj.Y) || isempty(yfit)
+    error('predictive_model:MissingData', 'Both .Y and fitted_values.yfit must be defined.');
 end
 
 uniqueY = unique(obj.Y);
@@ -74,7 +81,7 @@ uniqueY = unique(obj.Y);
 if numel(uniqueY) > 2
     %% Regression Case
     % Compute correlation and p-value.
-    [r, p] = corr(obj.Y, obj.yfit, 'Rows','complete');
+    [r, p] = corr(obj.Y, yfit, 'Rows','complete');
     if p < 0.05
         sigStr = 'significant';
     else
@@ -87,11 +94,11 @@ if numel(uniqueY) > 2
         % Set point size inversely proportional to sqrt(N) (with a minimum size).
         pointSize = max(20, 100/sqrt(N));
 
-        scatter(obj.yfit, obj.Y, pointSize, plotColor, 'filled', ...
+        scatter(yfit, obj.Y, pointSize, plotColor, 'filled', ...
             'MarkerFaceAlpha', 0.5, 'MarkerEdgeAlpha', 0.5);
         hold on;
         % Fit and plot a linear regression line.
-        pFit = polyfit(obj.Y, obj.yfit, 1);
+        pFit = polyfit(obj.Y, yfit, 1);
         xFit = linspace(min(obj.Y), max(obj.Y), 100);
         yFit = polyval(pFit, xFit);
         plot(xFit, yFit, 'k-', 'LineWidth', 2);
@@ -114,13 +121,19 @@ if numel(uniqueY) > 2
 else
     %% Classification Case (Two unique outcomes)
     % Create a cell array with predictions grouped by true outcome.
+    if isempty(scores)
+        error('predictive_model:MissingScores', ...
+            ['Classification plot needs continuous model scores ' ...
+             '(fitted_values.dist_from_hyperplane_xval or .scores). ' ...
+             'Run crossval() first.']);
+    end
     cellData = cell(2,1);
-    cellData{1} = obj.dist_from_hyperplane_xval(obj.Y == uniqueY(1));
-    cellData{2} = obj.dist_from_hyperplane_xval(obj.Y == uniqueY(2));
+    cellData{1} = scores(obj.Y == uniqueY(1));
+    cellData{2} = scores(obj.Y == uniqueY(2));
 
     if doPlot
 
-        if length(obj.dist_from_hyperplane_xval) > 500
+        if length(scores) > 500
             extra_args = {'noind'};
         end
 
@@ -158,7 +171,10 @@ else
 
         % Print string with t-test of class differences
 
-        if obj.mult_obs_within_person
+        mult_obs = isstruct(obj.diagnostics) ...
+            && isfield(obj.diagnostics, 'mult_obs_within_person') ...
+            && obj.diagnostics.mult_obs_within_person;
+        if mult_obs
             disp('t-test for diffs in model scores, unpaired observations (single-interval)')
             disp('Not defined yet. Add for paired observations and update me!!')
 
@@ -178,3 +194,14 @@ set(gcf, 'Color', 'w')
 set(gca, 'FontSize', 18)
 
 end % function
+
+
+% -------------------------------------------------------------------------
+function v = local_fitted(obj, name)
+% Read obj.fitted_values.(name), returning [] if absent.
+    if isstruct(obj.fitted_values) && isfield(obj.fitted_values, name)
+        v = obj.fitted_values.(name);
+    else
+        v = [];
+    end
+end

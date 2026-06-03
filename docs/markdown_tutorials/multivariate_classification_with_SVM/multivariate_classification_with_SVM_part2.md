@@ -21,9 +21,8 @@ S = xval_SVM(X, Y, id, ...);              pm = predictive_model('algorithm','svm
                                           pm = crossval(pm, X, Y, 'cv', cv_splitter.stratified_group_kfold(5), 'groups', id);
                                           pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
                                           pm = permutation_test(pm, X, Y, 'nperm', 1000, 'groups', id);
-                                          si = weight_image(pm, hw_obj);
-                                          si = threshold(si, .05, 'fdr');
-                                          montage(region(si));
+                                          plot(pm);                 % scores-by-class + ROC
+                                          montage(pm, hw_obj, 'use', 'thresh_fdr', 'regions');
 ```
 
 Both return the same `@predictive_model` object; the new API just
@@ -39,14 +38,16 @@ rf_obj = load_image_set('DPSP_rejectorfriend');  % Rejector (+1) vs Friend (-1)
 Both keywords (a) apply the gray-matter mask, (b) `cat()` + `remove_empty`,
 (c) set `±1` effects-coded labels in `.Y`, and (d) attach
 `subj_id` to `.metadata_table`. The objects can be passed directly
-into `fmri_data.predict` or, with a `grp2idx`, into the new
-predictive_model API.
+into `fmri_data.predict` or into the new predictive_model API.
 
 ```matlab
 X  = double(hw_obj.dat');
 Y  = hw_obj.Y;
-id = grp2idx(hw_obj.metadata_table.subj_id);
+id = hw_obj.metadata_table.subj_id;   % cell of subject-id strings — used as-is
 ```
+
+The grouping vector may be numeric or a cell array of id strings; the
+splitter normalises it for you (a `grp2idx(...)` is no longer required).
 
 ## 2. Construct a predictive_model
 
@@ -125,20 +126,62 @@ After `crossval`:
 - `pm.ml_model` is the model re-trained on the FULL dataset (the
   "ship-it" version)
 
-## 5. Visualise the weight map (pre-thresholding)
+### Scoring options
+
+`'scoring'` accepts any registered `cv_scorer` name (or a `cv_scorer`
+object). The scorer determines both what `crossval` optimises/reports
+and whether continuous scores are needed:
+
+| Name | Task | Needs scores? | Higher better? |
+|---|---|---|---|
+| `accuracy`, `balanced_accuracy`, `f1` | classification | no | yes |
+| `roc_auc`, `log_loss` | classification | yes | yes / no |
+| `r2`, `pearson_r` | regression | no | yes |
+| `mse`, `rmse`, `mae` | regression | no | no |
+
+`balanced_accuracy` is the safe default for classification (robust to
+class imbalance); `roc_auc` is threshold-free and a good choice when
+you care about ranking rather than a fixed decision boundary.
+
+> **Tip:** `'groups'` accepts a numeric vector OR a cell array of
+> subject-id strings (e.g. `hw_obj.metadata_table.subj_id`) directly —
+> the splitter normalises non-numeric labels for you, so the `grp2idx`
+> call above is optional.
+
+## 5. Visualise cross-validated performance
+
+The new top-level visualisation methods read straight from the
+cross-validated `pm` — no manual extraction:
 
 ```matlab
+plot(pm);                 % classification: scores-by-class violin + ROC panel
+rocplot(pm);              % ROC curve alone; returns AUC / sens / spec struct
+confusionchart(pm);       % row-normalized confusion chart
+```
+
+`plot(pm)` dispatches on `pm.task` (scatter for regression, the
+two-panel violin+ROC for classification). `rocplot` wraps CANlab's
+`roc_plot` on the cross-validated decision values; `confusionchart`
+wraps MATLAB's confusion chart on `pm.fitted_values.yfit`.
+
+## 6. Visualise the weight map (pre-thresholding)
+
+```matlab
+montage(pm, hw_obj);                 % one-line delegate
+% equivalently:
 si_raw = weight_image(pm, hw_obj);
-create_figure('SVM weights — raw');
 montage(si_raw);
+surface(pm, hw_obj);                 % cortical-surface rendering
 ```
 
 `weight_image(pm, source)` maps `pm.weights.w` back into the source
 fmri_data's voxel space (using its `volInfo` + `removed_voxels`)
-and returns a `@statistic_image`. Voxels the model dropped at fit
-time (in `omitted_features`) become zeros.
+and returns a `@statistic_image`. `montage(pm, source)` /
+`surface(pm, source)` are thin delegates that build that image and
+render it. Voxels the model dropped at fit time (in
+`omitted_features`) become zeros.
 
-## 6. Bootstrap inference — and a word about its limit
+## 7. Bootstrap inference — and a word about its limit
 
 ```matlab
 pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
@@ -188,32 +231,36 @@ regularised model. To get finer-grained voxel-wise inference:
    is a clean alternative for asking "is the *model* significantly
    better than chance?" rather than "which voxels are significantly
    non-zero?".
-4. **Stability selection** — feature selection by counting how often
-   a voxel appears in the top-k across bootstraps. Not yet a
-   first-class method on the class but easy to compute from
-   `pm.weights.boot_w`.
+4. **Stability selection** — count how often each voxel lands in the
+   top-k by `|weight|` across bootstrap resamples. This is now a
+   first-class method, `stability_selection(pm, X, Y, ...)` (see
+   §12), and is the recommended inference for high-dimensional
+   regularised models where the bootstrap z/p collapses.
 
-## 7. Visualise the thresholded weight map
+## 8. Visualise the thresholded weight map
 
 After bootstrap, the canonical "what does the classifier rely on"
 map is `pm.weights.w` masked by `pm.weights.fdr_sig`:
 
 ```matlab
+montage(pm, hw_obj, 'use', 'thresh_fdr');            % delegate
+% or build the image yourself:
 si_thr = weight_image(pm, hw_obj, 'use', 'thresh_fdr');
-create_figure('SVM weights — FDR thresholded');
 montage(si_thr);
 ```
 
-Or equivalently, `weight_image` attaches `si.p` and `si.sig` so
-you can re-threshold with the statistic_image methods:
+Or, since `weight_image` attaches `si.p` and `si.sig`, re-threshold
+with the statistic_image methods and outline contiguous clusters:
 
 ```matlab
+montage(pm, hw_obj, 'use', 'thresh_fdr', 'regions');  % delegate -> region montage
+% equivalently:
 si = weight_image(pm, hw_obj);
 si = threshold(si, .05, 'fdr');
 montage(region(si));
 ```
 
-## 8. Permutation test — is the model itself significant?
+## 9. Permutation test — is the model itself significant?
 
 ```matlab
 pm = permutation_test(pm, X, Y, 'nperm', 1000, 'groups', id);
@@ -246,7 +293,7 @@ assignment for each subject's two observations. That's exactly
 the thing the classifier is supposed to be exploiting, so it's
 the right thing to randomize.
 
-## 9. Calibrated probabilities
+## 10. Calibrated probabilities
 
 SVM decision values are not probabilities. To get well-calibrated
 probabilities, fit a Platt sigmoid on the cross-validated decision
@@ -260,7 +307,7 @@ P  = predict_proba(pm, X_new);               % calibrated class-1 probs in [0,1]
 `calibrate(..., 'method', 'isotonic')` uses isotonic regression
 (pool-adjacent-violators) instead of a parametric sigmoid.
 
-## 10. Hyperparameter search
+## 11. Hyperparameter search
 
 ```matlab
 pg = struct();
@@ -278,7 +325,7 @@ pm.diagnostics.grid_search.scores            % full grid
 `mse`) the mean cv score across the Cartesian product of `pg`
 values, then refits at the winner.
 
-## 11. Univariate feature selection
+## 12. Univariate feature selection
 
 ```matlab
 pm = select_features(pm, X, Y, 'k', 1000);   % keep top-1000 by univariate p
@@ -291,11 +338,68 @@ The selection is unioned into `pm.omitted_features`, so subsequent
 `predict()` calls on the full-width X automatically drop the
 non-selected columns. **Important caveat:** when used in conjunction
 with `crossval`, the selection is computed on the *whole* dataset
-— this leaks held-out information into feature choice. For honest
-CV-respecting feature selection, run `select_features` *per fold*
-(future feature: a Pipeline composer).
+— this leaks held-out information into feature choice. For honest,
+CV-respecting feature selection, wrap the screen as a custom step in
+an `@pipeline` (whose `crossval` refits every step on each fold's
+training rows only):
 
-## 12. End-to-end on the rejection task
+```matlab
+fs = struct( ...
+  'fit_transform', @(Xtr,Ytr) deal(Xtr, top_k_mask(Xtr, Ytr, 2000)), ...
+  'transform',     @(mask, Xin) Xin(:, mask));            % apply learned mask
+est  = predictive_model('algorithm','svm','task','classification');
+pipe = pipeline({fs}, est);
+pipe = crossval(pipe, X, Y, 'cv', cv_splitter.stratified_group_kfold(5), 'groups', id);
+```
+
+where `top_k_mask` returns a logical column mask of the 2000 most
+Y-correlated voxels computed **on the training rows only**.
+
+## 13. Stability selection — voxel inference when bootstrap z/p collapses
+
+As §7 warned, a strongly regularised model gives near-identical
+bootstrap weights, so the bootstrap z/p (and the FDR mask) become
+useless. **Stability selection** asks a different, more robust
+question: *on each bootstrap, which voxels land in the top-k by
+`|weight|`, and how often does each voxel make that cut?* Voxels that
+are reliably top-ranked across resamples are "stable" — the classifier
+leans on them regardless of which subjects it sees.
+
+```matlab
+pm = stability_selection(pm, X, Y, ...
+    'nboot',     200, ...      % bootstrap resamples
+    'k',         2000, ...     % top-k voxels by |w| per bootstrap
+    'threshold', 0.6, ...      % "stable" if selected in >= 60% of boots
+    'groups',    id);          % resample whole subjects
+
+ss = pm.diagnostics.stability_selection;
+fprintf('%d stable voxels (of %d)\n', ss.n_stable, numel(ss.selection_freq));
+```
+
+After it runs, `ss` holds:
+
+| Field | What |
+|---|---|
+| `ss.selection_count` | `[p × 1]` times each voxel was in the top-k |
+| `ss.selection_freq`  | `[p × 1]` that count / `valid_boots`, in `[0,1]` |
+| `ss.stable`          | logical mask, `selection_freq >= threshold` |
+| `ss.n_stable`        | number of stable voxels |
+| `ss.valid_boots`     | bootstraps that produced a usable weight vector |
+
+The selection frequency is itself a brain map — push it through
+`weight_image` to montage where the classifier is *stably* reading
+signal:
+
+```matlab
+freq_obj = hw_obj;                       % borrow volInfo + removed_voxels
+freq_obj.dat = ss.selection_freq;
+montage(freq_obj);                       % selection-frequency map in [0,1]
+```
+
+Reference: Meinshausen & Bühlmann, *Stability Selection*, J. R. Stat.
+Soc. B (2010).
+
+## 14. End-to-end on the rejection task
 
 The same pipeline on `DPSP_rejectorfriend`:
 
@@ -316,7 +420,7 @@ fprintf('Rejector-vs-Friend cv balanced accuracy: %.1f%%\n', ...
     100 * pm.error_metrics.balanced_accuracy.value);
 ```
 
-## 13. Reproduce as a unit test
+## 15. Reproduce as a unit test
 
 The full flow is also `CanlabCore/Unit_tests/predictive_model_unit_test.m`,
 which runs the entire pipeline with small `nboot=25` / `nperm=10`

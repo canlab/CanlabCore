@@ -13,6 +13,39 @@ function [yhat, score_out] = predict(obj, X)
 %      scores) is the MATLAB model's native score: signed distance for
 %      SVM, posterior probability for fitPosterior-wrapped SVM,
 %      predicted value for regressors.
+%
+% :Inputs:
+%
+%   **obj:**
+%        a fitted @predictive_model (obj.ml_model populated by fit()).
+%
+%   **X:**
+%        [n x p] predictor matrix in the ORIGINAL (pre-omitted-features)
+%        feature space; predict() applies the stored omitted-features mask
+%        and standardization itself.
+%
+% :Outputs:
+%
+%   **yhat:**
+%        [n x 1] predicted class labels (classification) or values
+%        (regression).
+%
+%   **score_out:**
+%        [n x k] continuous scores: signed distance from the hyperplane
+%        (SVM), posterior probability (calibrated SVM), or predicted value
+%        (regression). The last column is the positive-class / regression
+%        score consumed by crossval and the scorers.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = fit(pm, X, Y);
+%     [yhat, scores] = predict(pm, X);
+%
+% :See also:
+%   fit, score, crossval, predict_proba
 
     if isempty(obj.ml_model)
         error('predictive_model:predict:NotFitted', ...

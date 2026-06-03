@@ -25,11 +25,15 @@ function [rawConf, normConf] = confusion_matrix(obj, varargin)
 %
 % :Examples:
 % ::
-%     [raw, norm] = pm_obj.confusion_matrix();        % Compute and plot the confusion matrix.
-%     [raw, norm] = pm_obj.confusion_matrix('noplot');  % Compute without plotting.
+%     dat = load_image_set('DPSP_hotwarm');
+%     pm  = predictive_model('algorithm','svm','task','classification');
+%     pm  = crossval(pm, dat.dat', dat.Y);
+%     [raw, norm] = confusion_matrix(pm);            % compute and plot
+%     [raw, norm] = confusion_matrix(pm, 'noplot');  % compute only
 %
-% (Additional methods such as train, test, etc. are forthcoming.)
-    
+% :See also:
+%   confusionchart, plot, rocplot
+
     % Default: plot the confusion matrix.
     plotFlag = true;
 

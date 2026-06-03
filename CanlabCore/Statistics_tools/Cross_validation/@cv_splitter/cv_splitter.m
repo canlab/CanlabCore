@@ -73,6 +73,13 @@ classdef cv_splitter
                 rng(obj.random_state);
             end
 
+            % Normalize non-numeric groups (e.g. a cell array of subject-id
+            % strings, categoricals, or a string array) into integer group
+            % labels so the group-aware splitters can compare with ==.
+            if ~isempty(groups) && ~(isnumeric(groups) || islogical(groups))
+                [~, ~, groups] = unique(groups(:), 'stable');
+            end
+
             if isnumeric(X) || islogical(X)
                 n = size(X, 1);
             else

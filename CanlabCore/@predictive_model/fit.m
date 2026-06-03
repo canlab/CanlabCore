@@ -27,6 +27,25 @@ function obj = fit(obj, X, Y, varargin)
 %   'id'         [n x 1] grouping vector (e.g. subject id). Stored as
 %                obj.id; not used by this fit but available for later
 %                crossval.
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with obj.ml_model (trained MATLAB model),
+%        obj.weights.{w, intercept}, obj.Y, obj.omitted_cases /
+%        omitted_features, and obj.fit_type = 'insample' populated. Value
+%        semantics: capture the return (m = fit(m, X, Y)).
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');     % 118 imgs (hot/warm), Y=+/-1
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = fit(pm, X, Y, 'id', id);             % in-sample fit on all data
+%     numel(pm.weights.w)                        % one weight per voxel
+%
+% :See also:
+%   crossval, predict, score, bootstrap
 
     if isempty(obj.algorithm)
         error('predictive_model:fit:NoAlgorithm', ...

@@ -30,17 +30,32 @@ function obj = stability_selection(obj, X, Y, varargin)
 %   'groups'     grouping vector for subject-grouped resampling
 %   'verbose'    default true
 %
-% After:
-%   obj.diagnostics.stability_selection.nboot
-%                                       .k
-%                                       .threshold
-%                                       .selection_count  [p x 1]
-%                                       .selection_freq   [p x 1] in [0,1]
-%                                       .stable           logical mask
-%                                       .n_stable         scalar
-%                                       .valid_boots      number of
-%                                                         non-degenerate
-%                                                         bootstrap fits
+% :Inputs:
+%
+%   **obj:**  a @predictive_model with a linear algorithm.
+%   **X:**    [n x p] predictor matrix.
+%   **Y:**    [n x 1] outcome vector.
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with obj.diagnostics.stability_selection
+%        populated: .nboot, .k, .threshold, .selection_count [p x 1],
+%        .selection_freq [p x 1] in [0,1], .stable (logical mask),
+%        .n_stable, .valid_boots. Map .selection_freq to voxel space by
+%        stashing it as a weight vector and calling weight_image.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','linear_svm','task','classification');
+%     pm = stability_selection(pm, X, Y, 'nboot', 100, 'k', 2000, ...
+%                              'threshold', 0.6, 'groups', id);
+%     pm.diagnostics.stability_selection.n_stable
+%
+% :See also:
+%   bootstrap, select_features, weight_image, grid_search
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'nboot',     []);

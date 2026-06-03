@@ -57,6 +57,43 @@ function obj = bootstrap(obj, X, Y, varargin)
 % finer-grained voxel-wise inference, fit a less-aggressively-regularised
 % model (smaller Lambda) or use permutation testing on a univariate
 % statistic.
+%
+% :Inputs:
+%
+%   **obj:**
+%        a @predictive_model with obj.algorithm set (need not be pre-fit).
+%
+%   **X:**
+%        [n x p] predictor matrix.
+%
+%   **Y:**
+%        [n x 1] outcome vector.
+%
+% :Optional Inputs (name/value):
+%   'nboot'    number of bootstrap resamples (default obj.nboot or 1000)
+%   'groups'   grouping vector; resample whole groups (clusters) instead
+%              of individual observations (e.g. subject id)
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with bootstrap weight statistics in
+%        obj.weights (.boot_w, .boot_w_mean, .boot_w_ste, .z, .p, .p_wald,
+%        .fdr_thr, .fdr_sig, .thresh_fdr). Map to voxel space with
+%        weight_image(obj, source).
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = crossval(pm, X, Y, 'groups', id);
+%     pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
+%     sum(pm.weights.fdr_sig)          % # FDR-significant voxels
+%     si = weight_image(pm, dat);      % statistic_image with .p / .sig
+%
+% :See also:
+%   weight_image, crossval, permutation_test, stability_selection
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'nboot',   []);
@@ -71,6 +108,11 @@ function obj = bootstrap(obj, X, Y, varargin)
     end
     groups  = pi.Results.groups;
     verbose = pi.Results.verbose;
+
+    % Normalize non-numeric groups (cell of subject-id strings, etc.).
+    if ~isempty(groups) && ~(isnumeric(groups) || islogical(groups))
+        [~, ~, groups] = unique(groups(:), 'stable');
+    end
 
     % 1. Bad data
     [oc, of] = predictive_model.detect_bad_data(X, Y);

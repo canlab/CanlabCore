@@ -22,8 +22,10 @@ function obj = select_features(obj, X, Y, varargin)
 %
 % IMPORTANT: when used in conjunction with crossval, the selection is
 % computed on the WHOLE dataset, which leaks held-out information into
-% feature choice. For honest CV, run select_features per fold (manually
-% or via a future select_features-inside-Pipeline composer).
+% feature choice. For honest CV, run the selection per fold — wrap it as a
+% custom transform step in an @pipeline (whose crossval refits every step
+% on the training rows of each fold), rather than calling select_features
+% once on the full data.
 %
 % :Optional Inputs (name/value):
 %   'method'  'univariate' (default; t-test / ANOVA / correlation) or
@@ -32,14 +34,30 @@ function obj = select_features(obj, X, Y, varargin)
 %   'k'       keep top-k features by score (overrides 'pthresh')
 %   'verbose' default true
 %
-% After:
-%   obj.omitted_features                   (unioned with selection mask)
-%   obj.diagnostics.feature_selection      struct:
-%     .method      char
-%     .pvalues     [p x 1] (univariate only)
-%     .scores      [p x 1] (top_k_correlation: |corr|)
-%     .selected    [p x 1] logical
-%     .n_selected, .n_input
+% :Inputs:
+%
+%   **obj:**  a @predictive_model.
+%   **X:**    [n x p] predictor matrix.
+%   **Y:**    [n x 1] outcome vector.
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with obj.omitted_features unioned with the
+%        non-selected columns and obj.diagnostics.feature_selection a struct
+%        with .method, .pvalues / .scores, .selected, .n_selected, .n_input.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = fit(pm, X, Y);                            % fit first...
+%     pm = select_features(pm, X, Y, 'k', 5000);     % ...then select (mask persists)
+%     pm.diagnostics.feature_selection.n_selected
+%
+% :See also:
+%   stability_selection, fit, pipeline, bootstrap
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'method',  'univariate');

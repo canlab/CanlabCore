@@ -8,6 +8,30 @@ function P = predict_proba(obj, X)
 % ::
 %     pm = calibrate(pm, X, Y);
 %     P = predict_proba(pm, X_new);   % [n x 1] in [0,1]
+%
+% :Inputs:
+%
+%   **obj:**
+%        a calibrated @predictive_model (run calibrate() first).
+%
+%   **X:**
+%        [n x p] predictor matrix in the model's feature space.
+%
+% :Outputs:
+%
+%   **P:**
+%        [n x 1] calibrated probability of the positive class, in [0, 1].
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = calibrate(pm, X, Y, 'method', 'platt');
+%     P  = predict_proba(pm, X);       % P(class = +1)
+%
+% :See also:
+%   calibrate, predict, fit
 
     if ~isfield(obj.fitted_values, 'calibrator') || isempty(obj.fitted_values.calibrator)
         error('predictive_model:predict_proba:NotCalibrated', ...

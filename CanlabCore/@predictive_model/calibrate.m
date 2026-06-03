@@ -23,8 +23,37 @@ function obj = calibrate(obj, X, Y, varargin)
 % After: predict_proba(pm, X_new) returns calibrated probabilities of
 % the positive class.
 %
+% :Inputs:
+%
+%   **obj:**
+%        a @predictive_model (classification task).
+%
+%   **X:**
+%        [n x p] predictor matrix.
+%
+%   **Y:**
+%        [n x 1] binary outcome.
+%
 % :Optional Inputs (name/value):
 %   'method'   'platt' (default) or 'isotonic'
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with obj.fitted_values.calibrator populated
+%        (Platt A/B parameters or isotonic knots) and obj.do_calibrate set.
+%        Use predict_proba(obj, X_new) afterwards.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = calibrate(pm, X, Y, 'method', 'platt');
+%     P  = predict_proba(pm, X);       % well-calibrated P(class = +1)
+%
+% :See also:
+%   predict_proba, crossval, predict
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'method', 'platt');

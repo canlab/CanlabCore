@@ -30,6 +30,28 @@ function si = weight_image(obj, source, varargin)
 %               'w'           obj.weights.w (default)
 %               'thresh_fdr'  obj.weights.thresh_fdr (post-bootstrap)
 %               'boot_w_mean' obj.weights.boot_w_mean
+%
+% :Outputs:
+%
+%   **si:**
+%        a @statistic_image with the weight vector mapped into source's
+%        voxel space (.dat), source's volInfo / removed_voxels, and — when
+%        bootstrap stats are present — the bootstrap p-values in .p and the
+%        FDR-significant mask in .sig, so you can threshold/plot directly.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = crossval(pm, X, Y);
+%     pm = bootstrap(pm, X, Y, 'nboot', 1000);
+%     si = weight_image(pm, dat);        % statistic_image with .p / .sig
+%     si = threshold(si, .05, 'fdr');
+%     montage(region(si));
+%
+% :See also:
+%   montage, surface, bootstrap, statistic_image
 
     p = inputParser; p.KeepUnmatched = true;
     addParameter(p, 'use', 'w');

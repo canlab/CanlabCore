@@ -12,6 +12,34 @@ function v = score(obj, X, Y)
 % If the scorer needs continuous scores (e.g. roc_auc), pulls them
 % from the second output of predict(obj, X); otherwise just uses
 % the discrete predictions.
+%
+% :Inputs:
+%
+%   **obj:**
+%        a fitted @predictive_model.
+%
+%   **X:**
+%        [n x p] predictor matrix in the model's feature space.
+%
+%   **Y:**
+%        [n x 1] true outcomes to score predictions against.
+%
+% :Outputs:
+%
+%   **v:**
+%        scalar score from obj.scorer (higher is better unless the scorer's
+%        greater_is_better is false, e.g. rmse).
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = fit(pm, X, Y);
+%     v  = score(pm, X, Y);            % in-sample accuracy (optimistic!)
+%
+% :See also:
+%   fit, predict, crossval, cv_scorer
 
     if isempty(obj.scorer)
         if isempty(obj.task)

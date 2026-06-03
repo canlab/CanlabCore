@@ -30,6 +30,17 @@ function obj = crossval(obj, X, Y, varargin)
 %        obj.error_metrics.fit_time_per_fold        timings
 %        obj.fit_type = 'crossval'
 %
+% :Inputs:
+%
+%   **obj:**
+%        a @predictive_model with obj.algorithm set.
+%
+%   **X:**
+%        [n x p] predictor matrix.
+%
+%   **Y:**
+%        [n x 1] outcome vector.
+%
 % :Optional Inputs (name/value):
 %   'groups'           grouping vector (e.g. subject id) for grouped splitters
 %   'cv'               cv_splitter object; if omitted, uses obj.cv or default
@@ -37,6 +48,31 @@ function obj = crossval(obj, X, Y, varargin)
 %                      if omitted, uses obj.scorer or default-for-task
 %   'return_estimator' (default false) — store full pm clones in fold_models
 %                      instead of just the inner ml_models
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with cross-validated state populated:
+%        obj.fitted_values.{yfit, scores}, obj.error_metrics.<scorer>
+%        (.value/.descrip tuples) plus per-fold vectors, obj.cv_partition,
+%        obj.fold_models, and obj.fit_type = 'crossval'. obj.ml_model /
+%        obj.weights are refit on the FULL data (the ship-it model). When
+%        'groups' is given, within-person forced-choice stats are also
+%        added (see compute_within_person_stats).
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     % leave-whole-subject-out, stratified on Y within the held-out folds
+%     pm = crossval(pm, X, Y, 'groups', id, ...
+%                   'cv', cv_splitter.stratified_group_kfold(5));
+%     pm.error_metrics.crossval_accuracy.value      % cv accuracy (%)
+%     pm.error_metrics.crossval_accuracy_within.value  % forced-choice acc
+%
+% :See also:
+%   fit, predict, score, bootstrap, cv_splitter, cv_scorer
 
     p = inputParser; p.KeepUnmatched = true;
     addParameter(p, 'groups',           []);
@@ -47,6 +83,13 @@ function obj = crossval(obj, X, Y, varargin)
 
     groups            = p.Results.groups;
     return_estimator  = p.Results.return_estimator;
+
+    % Normalize non-numeric groups (cell of subject-id strings, categorical,
+    % string array) to integer labels so within-person stats and the
+    % splitters can compare them.
+    if ~isempty(groups) && ~(isnumeric(groups) || islogical(groups))
+        [~, ~, groups] = unique(groups(:), 'stable');
+    end
 
     if ~isempty(p.Results.cv), obj.cv = p.Results.cv; end
     if ~isempty(p.Results.scoring)

@@ -35,11 +35,26 @@ function obj = grid_search(obj, X, Y, param_grid, varargin)
 %   'groups'     grouping vector for grouped CV
 %   'verbose'    default true
 %
-% After:
-%   obj                          full predictive_model fit with best params
-%   obj.modeloptions             extended with the winning name/value pairs
-%   obj.diagnostics.grid_search  struct with .param_names, .combos,
-%                                .scores, .best_idx, .best_score
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model refit with the best hyperparameters:
+%        obj.modeloptions extended with the winning name/value pairs,
+%        obj.error_metrics holding the chosen model's CV performance, and
+%        obj.diagnostics.grid_search a struct with .param_names, .combos,
+%        .scores, .best_idx, .best_score.
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     grid.BoxConstraint = [0.1 1 10];
+%     pm = grid_search(pm, X, Y, grid, 'groups', id);
+%     pm.diagnostics.grid_search.best_score
+%
+% :See also:
+%   crossval, fit, stability_selection, cv_splitter
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'groups',  []);

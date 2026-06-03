@@ -29,16 +29,27 @@ function plot_predicted_vs_observed(obj, varargin)
 %        OR, for classification models, a cell array with two [r g b]
 %        triplets, one for each class
 %
+% :Inputs:
+%
+%   **obj:**
+%        a cross-validated @predictive_model (regression or classification).
+%
 % :Outputs:
+%
+%   (none; draws a figure unless 'noplot' is passed, and prints the
+%    correlation / class-difference test to the command window.)
 %
 % :Examples:
 % ::
-%     % Regression example:
-%     pm_obj.predicted_observed_scatterplot();
-%     % Classification example:
-%     pm_obj.predicted_observed_scatterplot('noplot');
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = crossval(pm, X, Y);
+%     plot_predicted_vs_observed(pm);                 % scores-by-class violin
+%     plot_predicted_vs_observed(pm, 'noplot');       % report only
 %
-% (Additional plotting and analysis methods are forthcoming.)
+% :See also:
+%   plot, rocplot, confusionchart
 
 % Default settings:
 doPlot = true;

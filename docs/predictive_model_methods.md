@@ -1,92 +1,135 @@
 # `predictive_model` methods, organized by area
 
-`predictive_model` is an object that specifies a multivariate predictive model and its artifacts: the outcome `Y`, predictions `yfit`,
-weight maps `w`, bootstrap statistics, cross-validation indices and
-errors, the underlying MATLAB classification/regression model object,
-and effect-size summaries. It is intended as an output type for
-`xval_SVM`, `xval_SVR`, and similar wrappers; the constructor accepts a
-plain struct (such as the output of those wrappers) and copies matching
-fields, with legacy translations for `SVMModel`/`SVRModel` and the
-classification/regression `_d_singleinterval` and `_d_within` fields.
+`predictive_model` is a scikit-learn-style object for multivariate
+predictive modelling. It holds the hyperparameters that *specify* a model
+(algorithm, task, cross-validation scheme, scorer, …) and, after fitting,
+the *artifacts* it produces (predictions, weight maps, bootstrap
+statistics, error metrics, the underlying trained MATLAB model). It is the
+canonical output type of `xval_SVM`, `xval_SVR`, `fmri_data.predict`
+(`'newapi'`), and friends; the constructor also accepts a plain struct
+(such as the legacy wrapper outputs) and routes each field to its
+categorised home, with translations for legacy names like
+`SVMModel`/`SVRModel`, `vox_weights`, `wZ`/`wP`, etc.
 
-Many methods on the class are placeholders ("forthcoming") that error if
-called; see the table below for which ones are implemented today. Type
-`methods(my_obj)` in MATLAB for the live list on any instance.
+Type `methods(my_obj)` in MATLAB for the live list on any instance.
 
-## Properties
-Some properties' values are defined before model fitting. These specify input data, objective function, hyperparameters, and cross-validation scheme. Other properties' values are defined after model estimation, including cross-validation predictions, accuracy, etc.
+## Design
+
+- **Value semantics.** Every mutating method returns a NEW object — write
+  `pm = fit(pm, X, Y)`, not `fit(pm, X, Y)`.
+- **Hyperparameters vs fitted state are disjoint.** `clone(pm)` returns a
+  fresh, unfitted copy with identical hyperparameters (used for per-fold
+  refitting). `is_fitted(pm)` tests for any populated fitted state.
+- **Numeric core, image adapters on top.** `fit`/`predict`/`crossval`
+  operate on numeric `(X, Y, groups)`. Neuroimaging awareness lives in the
+  adapter methods (`weight_image`, `montage`, `surface`) that map the
+  coefficient vector back into voxel space using a source image's
+  `volInfo`.
+
+## Properties (consolidated layout)
+
+### Hyperparameters (set by user / constructor)
 
 | Property | Description |
 |---|---|
-| `Y` | Observed outcomes (vector); ±1 for SVM |
-| `id` | Grouping/subject vector for within-participant observations |
-| `class_labels` | Cell of class names, e.g. `{'No pain' 'Pain'}` |
-| `Y_name` | Name of outcome variable |
-| `X_name` | Name of predictor variable |
+| `algorithm` | Registry name: `svm`, `linear_svm`, `logistic`, `lda`, `ecoc`, `svr`, `lasso`, `ridge`, `gp`, … |
+| `task` | `'classification'` or `'regression'` |
 | `modeloptions` | Cell of fitter options, e.g. `{'KernelFunction','linear'}` |
-| `accfun` | Objective function; function handle computing accuracy from `(Y, yfit)` |
-| `accfun_descrip` | Text description of `accfun` |
-| `trIdx` | Cell of training-fold logical indices |
-| `teIdx` | Cell of test-fold logical indices |
-| `nfolds` | Number of cross-validation folds |
-| `dist_from_hyperplane_xval` | Cross-validated distances from the SVM hyperplane |
-| `yfit` | Cross-validated predicted outcomes |
-| `class_probability_xval` | Cross-validated Platt-scaled class-1 probabilities |
-| `crossval_accuracy` | Cross-validated accuracy scalar |
-| `crossval_accuracy_descrip` | Text description of the accuracy metric |
-| `classification_d_singleinterval` | Single-interval classification effect size |
-| `mult_obs_within_person` | Flag for multiple observations per subject |
-| `ClassificationModel` | Underlying full-data MATLAB model object (e.g. `ClassificationSVM`) |
-| `w` | Model weight vector |
-| `boot_w` | Bootstrap weight samples |
-| `boot_w_ste` | Bootstrap standard errors of weights |
-| `boot_w_mean` | Bootstrap mean of weights |
-| `wZ` | Bootstrap Z-scores for weights |
-| `wP` | Bootstrap p-values for weights |
-| `wP_fdr_thr` | FDR threshold (q < 0.05) for `wP` |
-| `boot_w_fdrsig` | Logical vector of FDR-significant weights |
-| `w_thresh_fdr` | Weights thresholded at FDR q < 0.05 |
-| `cverrfun` | Function handle for cross-validation error |
-| `cverr` | Cross-validation error values |
-| `prediction_outcome_r` | Pearson r between `yfit` and `Y` |
-| `prediction_outcome_r_descrip` | Description of the prediction-outcome correlation |
-| `d_singleinterval` | Single-interval effect size (regression or classification) |
-| `d_within` | Within-person effect size |
+| `cv` | A `cv_splitter` (kfold, stratified_group_kfold, …) |
+| `scorer` | A `cv_scorer` (accuracy, roc_auc, r2, rmse, …) |
+| `random_state`, `standardize`, `use_parallel`, `nboot`, `nperm`, `do_calibrate` | reproducibility / behaviour flags |
+| `class_labels`, `Y_name`, `X_name` | labels for plotting |
 
-## Basic operations
+### Data + fit metadata
 
-| Method | From | One-liner |
-|---|---|---|
-| `predictive_model` | `@predictive_model` | Constructor; copies a struct's matching fields and runs `validate_object` |
-| `validate_object` | `@predictive_model` | Type/shape checks for all properties |
+| Property | Description |
+|---|---|
+| `Y` | Outcome actually fit (after bad-case removal) |
+| `id` | Grouping/subject vector |
+| `omitted_cases` / `omitted_features` | Logical masks (over the original cases / features) of what was dropped |
+| `inputParameters` | Struct of stored fit-time parameters (standardization mean/std, …) |
+| `fit_type` | `'crossval'` \| `'insample'` \| `'test'` — provenance of `yfit` AND `weights` |
 
-## Display and visualization
+### Fitted state (categorised sub-structs)
 
-| Method | From | One-liner |
-|---|---|---|
-| `plot_predicted_vs_observed` | `@predictive_model` | Scatter (regression) or violin (binary classification) of `yfit` vs. `Y` |
+| Property | Key fields |
+|---|---|
+| `fitted_values` | `.yfit`, `.scores`, `.score_type`, `.dist_from_hyperplane_xval`, within-person arrays, `.calibrator` |
+| `weights` | `.w`, `.intercept`, `.w_perfold`, `.boot_w*`, `.z`, `.p`, `.fdr_thr`, `.fdr_sig`, `.thresh_fdr`, `.weight_obj` |
+| `error_metrics` | `(value, descrip)` tuples: `.crossval_accuracy`, `.r2`, `.rmse`, `.prediction_outcome_r`, `.d_within`, … |
+| `cv_partition` | `.trIdx`, `.teIdx`, `.nfolds` |
+| `ml_model` / `fold_models` | trained MATLAB model(s) |
+| `bootstrap_results` / `permutation_results` | full bootstrap / permutation output |
+| `diagnostics` | `.mult_obs_within_person`, `.grid_search`, `.feature_selection`, `.stability_selection`, … |
+| `cross_classify` | cross-classification output (from `xval_cross_classify`) |
+| `note` / `history` | cell arrays of commentary / provenance lines |
 
-## Tables
+`error_metrics` entries are `(value, descrip)` tuples; read e.g.
+`pm.error_metrics.crossval_accuracy.value`.
 
-| Method | From | One-liner |
-|---|---|---|
-| `confusion_matrix` | `@predictive_model` | Raw and row-normalized confusion matrices, with optional plotting |
+## Fit / predict / score
 
-## Statistics (forthcoming stubs)
+| Method | One-liner |
+|---|---|
+| `predictive_model` | Constructor: name/value hyperparameters, or a legacy struct |
+| `fit` | Train on the full sample (in-sample fit) |
+| `predict` | Apply the fitted model: returns `[yhat, scores]` |
+| `score` | Evaluate `obj.scorer` on `(Y, predict(obj, X))` |
+| `crossval` | Cross-validate: refit per fold, predict held-out, score; auto within-person stats when `groups` given |
+| `clone` / `is_fitted` / `is_classifier` / `is_regressor` / `validate_object` | model bookkeeping |
 
-These methods exist as stubs and currently throw an error when called.
+## Inference / tuning
 
-| Method | From | One-liner |
-|---|---|---|
-| `train` | `@predictive_model` | Train the model (forthcoming) |
-| `test` | `@predictive_model` | Test the model on held-out data (forthcoming) |
-| `crossval` | `@predictive_model` | Cross-validate the model (forthcoming) |
-| `bootstrap` | `@predictive_model` | Bootstrap analysis of weights (forthcoming) |
-| `permutation_test` | `@predictive_model` | Permutation test for significance (forthcoming) |
-| `select_features` | `@predictive_model` | Feature selection (forthcoming) |
-| `error_analysis` | `@predictive_model` | Analyze misclassified images and error patterns (forthcoming) |
-| `report` | `@predictive_model` | Generate a textual performance report (forthcoming) |
-| `plot` | `@predictive_model` | Default predictions-vs-outcomes plot (forthcoming) |
-| `montage` | `@predictive_model` | Display a montage of relevant images (forthcoming) |
-| `confusionchart` | `@predictive_model` | Confusion-chart visualization (forthcoming) |
-| `rocplot` | `@predictive_model` | ROC curves (forthcoming) |
+| Method | One-liner |
+|---|---|
+| `bootstrap` | Bootstrap weights → SE, Z, empirical p, FDR threshold + significant mask |
+| `permutation_test` | Null distribution by shuffling `Y` (free / between- / within-subjects schemes) |
+| `grid_search` | Exhaustive hyperparameter search via CV |
+| `stability_selection` | Per-bootstrap top-k selection frequency (high-dim feature inference) |
+| `select_features` | Univariate / top-k-correlation feature pre-screen |
+| `calibrate` / `predict_proba` | Platt / isotonic probability calibration and calibrated `P(class)` |
+
+## Visualization
+
+| Method | One-liner |
+|---|---|
+| `plot` | Task-dispatched: predicted-vs-observed scatter (regression) or scores-by-class + ROC (classification) |
+| `plot_predicted_vs_observed` | Scatter (regression) or violin (binary) of predictions vs `Y` |
+| `rocplot` | ROC curve from cross-validated scores (wraps `roc_plot`) |
+| `confusionchart` / `confusion_matrix` | Confusion chart / raw + normalized confusion matrices |
+| `weight_image` | Map the weight vector into a `statistic_image` (with bootstrap `.p` / `.sig`) |
+| `montage` / `surface` | Render the weight map on slices / cortical surface (thin delegates) |
+
+## Cross-validation infrastructure
+
+These standalone classes back `crossval` and are shared with `@pipeline`:
+
+| Class | One-liner |
+|---|---|
+| `cv_splitter` | Fold generators: `kfold`, `stratified_kfold`, `group_kfold`, `stratified_group_kfold`, `logo`, `holdout`, `shuffle_split`, `repeated_kfold`, `custom_partition` |
+| `cv_scorer` | Metrics: `accuracy`, `balanced_accuracy`, `f1`, `roc_auc`, `log_loss`, `mse`, `rmse`, `mae`, `r2`, `pearson_r` |
+
+## Pipelines
+
+`@pipeline` composes zero or more transform steps (`center`, `zscore`,
+`pca`, or a custom `fit_transform`/`transform` struct) feeding a final
+`predictive_model` estimator. Its `crossval` refits **every step per fold**
+(leakage-free PCR, standardize-then-SVM, …), and `weight_image(pipe,
+source)` back-projects the estimator weights through the steps into voxel
+space.
+
+## Worked example
+
+```matlab
+dat = load_image_set('DPSP_hotwarm');          % 118 imgs (59 subj x hot/warm), Y = +/-1
+X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+
+pm = predictive_model('algorithm','svm','task','classification');
+pm = crossval(pm, X, Y, 'groups', id, ...
+              'cv', cv_splitter.stratified_group_kfold(5));
+pm.error_metrics.crossval_accuracy.value        % cross-validated accuracy (%)
+
+pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
+plot(pm);                                       % scores-by-class + ROC
+montage(pm, dat, 'use', 'thresh_fdr', 'regions');  % FDR-thresholded clusters
+```

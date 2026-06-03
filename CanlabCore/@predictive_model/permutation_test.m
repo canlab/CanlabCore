@@ -47,6 +47,36 @@ function obj = permutation_test(obj, X, Y, varargin)
 %                      if Y is constant within every subject — the
 %                      permutation would be a no-op.
 %
+% :Inputs:
+%
+%   **obj:**
+%        a @predictive_model with obj.algorithm set.
+%
+%   **X:**
+%        [n x p] predictor matrix.
+%
+%   **Y:**
+%        [n x 1] outcome vector.
+%
+% :Outputs:
+%
+%   **obj:**
+%        the @predictive_model with obj.permutation_results populated (see
+%        the field list below).
+%
+% :Examples:
+% ::
+%     dat = load_image_set('DPSP_hotwarm');
+%     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+%     pm = predictive_model('algorithm','svm','task','classification');
+%     pm = crossval(pm, X, Y, 'groups', id);
+%     pm = permutation_test(pm, X, Y, 'groups', id, ...
+%                           'permutation', 'within_subjects', 'nperm', 1000);
+%     pm.permutation_results.p_value
+%
+% :See also:
+%   crossval, bootstrap, stability_selection
+%
 % After:
 %   obj.permutation_results.observed              observed cv score
 %   obj.permutation_results.null_scores           [nperm x 1]
@@ -74,6 +104,11 @@ function obj = permutation_test(obj, X, Y, varargin)
     groups       = pi.Results.groups;
     perm_request = lower(char(pi.Results.permutation));
     verbose      = pi.Results.verbose;
+
+    % Normalize non-numeric groups (cell of subject-id strings, etc.).
+    if ~isempty(groups) && ~(isnumeric(groups) || islogical(groups))
+        [~, ~, groups] = unique(groups(:), 'stable');
+    end
 
     if ~isempty(obj.random_state), rng(obj.random_state); end
 

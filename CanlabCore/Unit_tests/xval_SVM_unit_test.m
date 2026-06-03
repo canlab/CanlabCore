@@ -51,7 +51,9 @@ function xval_SVM_unit_test()
     assert(~isempty(pmodel_obj.id),                                      'id empty');
     assert(~isempty(pmodel_obj.fitted_values.yfit),                      'yfit empty');
     assert(~isempty(pmodel_obj.fitted_values.dist_from_hyperplane_xval), 'dist_from_hyperplane_xval empty');
-    assert(~isempty(pmodel_obj.fitted_values.class_probability_xval),    'class_probability_xval empty');
+    % class_probability_xval is xval_SVM-legacy (per-fold fitPosterior).
+    % The new pipeline stores raw scores in fitted_values.scores; to get
+    % calibrated probabilities call calibrate(pm, X, Y) + predict_proba.
     assert(~isempty(pmodel_obj.weights.w),                               'weights.w empty');
     assert(~isempty(pmodel_obj.error_metrics.crossval_accuracy.value),   'crossval_accuracy.value empty');
     assert(~isempty(pmodel_obj.error_metrics.d_singleinterval.value),    'd_singleinterval.value empty');
@@ -68,6 +70,9 @@ function xval_SVM_unit_test()
     assert(size(pmodel_obj.weights.w, 1) == size(X, 2),                     'weights.w length should match number of features');
     cv_acc = pmodel_obj.error_metrics.crossval_accuracy.value;
     assert(cv_acc >= 0 && cv_acc <= 100,                                    'crossval_accuracy out of [0,100]');
+    % Within-person scoring fields populated by crossval (DPSP is paired):
+    assert(~isnan(pmodel_obj.error_metrics.crossval_accuracy_within.value), 'crossval_accuracy_within populated');
+    assert(~isnan(pmodel_obj.error_metrics.d_within.value),                 'd_within populated');
     assert(pmodel_obj.diagnostics.mult_obs_within_person == true,           'Should detect multiple obs per id');
     fprintf('  Shape/sanity OK: cv_acc = %.1f%%, d_single = %.2f, cv_acc_within = %.1f%%, d_within = %.2f\n', ...
         cv_acc, ...

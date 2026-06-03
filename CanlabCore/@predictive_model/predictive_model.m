@@ -662,8 +662,12 @@ classdef predictive_model
             end
             stats.mult_obs_within_person = any(has_multi_class);
 
-            % d_singleinterval: standardized mean diff between classes
-            % (pooled across all obs). Works for binary classification.
+            % d_singleinterval: effect size of the model's
+            % discrimination at the single-observation level.
+            %   classification: pooled standardized mean diff of scores
+            %                   between the two classes
+            %   regression:     Cohen's d from the prediction-outcome
+            %                   Pearson correlation, d = 2r / sqrt(1-r^2)
             if strcmpi(task, 'classification')
                 classes = unique(Y(~isnan(Y)));
                 if numel(classes) == 2
@@ -679,6 +683,18 @@ classdef predictive_model
                             stats.d_singleinterval = (mean(s_pos_all) - mean(s_neg_all)) / pooled_sd;
                         end
                     end
+                end
+            else
+                % regression
+                try
+                    valid_pair = ~isnan(scores) & ~isnan(Y);
+                    if sum(valid_pair) >= 3
+                        r = corr(scores(valid_pair), Y(valid_pair));
+                        if ~isnan(r) && abs(r) < 1
+                            stats.d_singleinterval = 2 * r / sqrt(1 - r^2);
+                        end
+                    end
+                catch
                 end
             end
 
@@ -703,7 +719,9 @@ classdef predictive_model
                     end
                     valid = ~isnan(stats.scorediff);
                     if any(valid)
-                        stats.crossval_accuracy_within = mean(stats.scorediff(valid) > 0);
+                        % Express forced-choice accuracy in PERCENT to
+                        % match the legacy CANlab convention.
+                        stats.crossval_accuracy_within = 100 * mean(stats.scorediff(valid) > 0);
                         sd_diff = std(stats.scorediff(valid));
                         if sd_diff > 0
                             stats.d_within = mean(stats.scorediff(valid)) / sd_diff;

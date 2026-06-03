@@ -72,6 +72,27 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %        calculate cross-validated platt scaling if using SVM.
 %        Softmax parameters [A,B] are in other_output{3}
 %
+%   **newapi** (or **return_predictive_model**)
+%        Route the entire call through the new @predictive_model
+%        fit/crossval pipeline instead of the legacy internal algorithm
+%        switch. The first three outputs (cverr, stats, optout) are
+%        reformatted into the legacy shape and the 4th output (pm) is the
+%        populated @predictive_model object. algorithm_name is mapped onto
+%        the @predictive_model registry:
+%            cv_svm      -> 'svm'   (classification)
+%            cv_svr      -> 'svr'   (regression)
+%            cv_lassopcr -> 'lasso' (regression; penalized-linear
+%                                    approximation of lasso-PCR)
+%            cv_pcr      -> 'ridge' (regression; penalized-linear
+%                                    approximation of PCR)
+%        A bare registry name (e.g. 'ridge', 'svr', 'gp') is also accepted.
+%        The folds computed by predict() are reused (via a custom
+%        cv_splitter) so stratification is identical. 'bootweights' /
+%        'bootsamples' populate pm.weights bootstrap stats and stats.WTS.
+%        Example:
+%          [cverr, stats, optout, pm] = predict(dat, 'algorithm_name', ...
+%                'cv_svm', 'nfolds', 5, 'newapi', 'bootweights');
+%
 % :Algorithm choices:
 %   You can input the name (as a string array) of any algorithm with the
 %   appropriate inputs and outputs. i.e., this can either be one of the
@@ -560,6 +581,8 @@ useparallel = 'always';         % Use parallel processing, if available, for boo
 bootweights = 0;                % bootstrap voxel weights
 verbose = 1;
 doMultiClass = 0;               % option to run multiclass SVM
+donewapi = 0;                   % Phase 4.2: route the whole call through the new @predictive_model pipeline
+bootsamples_newapi = 100;       % default bootstrap samples for the newapi path
 
 if length(unique(obj.Y)) == 2
     error_type = 'mcr';
@@ -613,12 +636,22 @@ for i = 1:length(varargin)
             case {'cv_pcr', 'cv_multregress', 'cv_univregress', 'cv_svr', 'cv_lassopcr', 'cv_svm','cv_lassopcrmatlab' ,'cv_pls'}
                 algorithm_name = varargin{i};
                 
+            case {'newapi', 'return_predictive_model'}
+                % Phase 4.2: route the entire call through the new
+                % @predictive_model fit/crossval pipeline (see
+                % predict_via_predictive_model below). The first three
+                % returns are reformatted into the legacy stats/optout
+                % shape; the 4th return is the populated predictive_model.
+                donewapi = 1;
+                varargin{i} = [];
+
             case {'bootweights'}
                 bootweights = 1; varargin{i} = [];
-                
+
             case 'bootsamples'
                 bootfun_inputs{end+1} = 'bootsamples';
                 bootfun_inputs{end+1} = varargin{i+1};
+                bootsamples_newapi = varargin{i+1};
                 bootweights = 1;
                 varargin{i} = [];
                 varargin{i+1} = [];
@@ -755,7 +788,7 @@ else
     end
 end
 
-if verbose
+if verbose && ~donewapi
     fprintf('Cross-validated prediction with algorithm %s, %3.0f folds\n', algorithm_name, nfolds)
 end
 
@@ -767,6 +800,22 @@ if nfolds == 1
     cv_assignment = double(teIdx{1});
 else
     cv_assignment = sum((cat(2, teIdx{:}).*repmat((1:size(cat(2, teIdx{:}), 2)), size(cat(2, teIdx{:}), 1), 1))')';
+end
+
+% ---------------------------------------------------------------------
+% Phase 4.2: 'newapi' path — route through the @predictive_model pipeline
+% ---------------------------------------------------------------------
+% When the caller passes 'newapi' (or 'return_predictive_model'), we do
+% NOT run the long internal algorithm switch below. Instead we build a
+% predictive_model, reuse the folds already computed above (via a custom
+% cv_splitter so stratification matches), crossval it, and reformat the
+% result into the legacy [cverr, stats, optout] shape. pm (4th output) is
+% the populated predictive_model object.
+if donewapi
+    [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
+        algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
+        error_type, verbose, bootweights, bootsamples_newapi);
+    return
 end
 
 % ---------------------------------------------------------------------
@@ -1030,6 +1079,140 @@ end
 end % main function
 
 
+
+% =====================================================================
+% Phase 4.2 — newapi routing helper
+% =====================================================================
+function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
+        algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
+        error_type, verbose, bootweights, bootsamples)
+% Route an fmri_data.predict call through the new @predictive_model
+% fit/crossval pipeline and reformat the result into the legacy
+% [cverr, stats, optout] shape (plus pm, the predictive_model object).
+%
+% algorithm_name is one of the four CANlab cv_* names mapped onto the
+% @predictive_model algorithm registry; a bare registry name (e.g. 'svm',
+% 'ridge') is also accepted.
+
+    % --- 1. Map the legacy algorithm_name onto a registry entry ----------
+    switch algorithm_name
+        case 'cv_svm',      regname = 'svm';   task = 'classification';
+        case 'cv_svr',      regname = 'svr';   task = 'regression';
+        case 'cv_lassopcr', regname = 'lasso'; task = 'regression';
+        case 'cv_pcr',      regname = 'ridge'; task = 'regression';
+        otherwise
+            reg = predictive_model.algorithm_registry();
+            if isfield(reg, algorithm_name)
+                regname = algorithm_name;
+                task    = reg.(algorithm_name).task;
+            else
+                error('predict:newapi:UnsupportedAlgorithm', ...
+                    ['''newapi'' supports cv_svm, cv_svr, cv_lassopcr, cv_pcr, ' ...
+                     'or a bare @predictive_model registry name. Got ''%s''.\n' ...
+                     'Note: cv_pcr->ridge and cv_lassopcr->lasso are penalized-' ...
+                     'linear approximations of the PCA-reduced legacy algorithms.'], ...
+                    algorithm_name);
+            end
+    end
+
+    % --- 2. Build X, Y and clean bad cases so folds stay aligned ---------
+    X = double(obj.dat');
+    Y = double(obj.Y(:));
+    n_orig = numel(Y);
+
+    [oc, of] = predictive_model.detect_bad_data(X, Y);
+    fold_ids = cv_assignment(:);
+    if any(oc)
+        X(oc, :)      = [];
+        Y(oc)         = [];
+        fold_ids(oc)  = [];
+    end
+    if any(of), X(:, of) = []; end
+
+    % --- 3. Build the model and cross-validate over the existing folds ---
+    pm = predictive_model('algorithm', regname, 'task', task);
+    cv = cv_splitter.custom_partition(fold_ids);
+    if strcmp(task, 'classification')
+        pm = crossval(pm, X, Y, 'cv', cv, 'scoring', 'accuracy');
+    else
+        pm = crossval(pm, X, Y, 'cv', cv);
+    end
+
+    if bootweights
+        pm = bootstrap(pm, X, Y, 'nboot', bootsamples);
+    end
+
+    % --- 4. Reformat into the legacy stats / optout / cverr shape --------
+    yfit_clean = pm.fitted_values.yfit;
+    yfit = nan(n_orig, 1);
+    yfit(~oc) = yfit_clean;
+
+    Y_full = double(obj.Y(:));
+    err    = Y_full - yfit;
+
+    % cverr matches the requested error_type.
+    valid = ~isnan(yfit) & ~isnan(Y_full);
+    switch error_type
+        case {'mcr', 'class_loss'}
+            cverr = mean(Y_full(valid) ~= yfit(valid));
+        case 'mse'
+            cverr = mean(err(valid).^2);
+        case 'rmse'
+            cverr = sqrt(mean(err(valid).^2));
+        case 'meanabserr'
+            cverr = mean(abs(err(valid)));
+        otherwise
+            cverr = mean(err(valid).^2);
+    end
+
+    stats = struct('Y', Y_full, 'algorithm_name', algorithm_name, ...
+        'function_call', sprintf('newapi:%s (crossval @predictive_model)', regname), ...
+        'yfit', yfit, 'err', err, 'error_type', error_type, 'cverr', cverr, ...
+        'nfolds', nfolds, 'cvpartition', cvpart, 'fit_type', 'crossval');
+    stats.teIdx = teIdx;
+    stats.trIdx = trIdx;
+
+    if strcmp(task, 'classification')
+        stats.acc = 100 * mean(Y_full(valid) == yfit(valid));
+        % cross-validated distance from hyperplane (full-length).
+        if isfield(pm.fitted_values, 'dist_from_hyperplane_xval')
+            d = nan(n_orig, 1);
+            d(~oc) = pm.fitted_values.dist_from_hyperplane_xval;
+            stats.dist_from_hyperplane_xval = d;
+        end
+    else
+        stats.mse  = mean(err(valid).^2);
+        stats.rmse = sqrt(stats.mse);
+        stats.meanabserr = mean(abs(err(valid)));
+        r = corrcoef(Y_full(valid), yfit(valid));
+        stats.pred_outcome_r = r(1, 2);
+    end
+
+    % weight_obj in the source voxel space (statistic_image; carries
+    % bootstrap .p / .sig if bootstrap() was run).
+    try
+        stats.weight_obj = weight_image(pm, obj);
+    catch ME
+        if verbose
+            fprintf('predict (newapi): could not build weight_obj (%s).\n', ME.message);
+        end
+    end
+
+    if bootweights && isfield(pm.weights, 'p')
+        stats.WTS = struct('wP', pm.weights.p(:)', 'wZ', pm.weights.z(:)', ...
+            'wste', pm.weights.boot_w_ste(:)');
+    end
+
+    % optout: the trained full-sample weight vector + intercept, mirroring
+    % the "trained on all data" optional outputs of the legacy algorithms.
+    optout = {pm.weights.w, pm.weights.intercept};
+
+    if verbose
+        fprintf(['Cross-validated prediction via @predictive_model ' ...
+            '(algorithm %s -> %s), %d folds. cverr (%s) = %.4f\n'], ...
+            algorithm_name, regname, nfolds, error_type, cverr);
+    end
+end
 
 
 % ---------------------------------------------------------------------

@@ -459,14 +459,37 @@ end
 
 
 function fd = local_to_fmri_data_for_extract(obj)
-% Build a plain fmri_data carrying the same voxel space and data, so
-% extract_roi_averages takes the fmri_data code path. We hand-copy
-% fields rather than calling fmri_data(obj) because fmri_data's
-% constructor expects a filename as its first arg.
+% Build a plain fmri_data so extract_roi_averages takes the fmri_data
+% code path (statistic_image triggers a different per-volume mask path
+% that produces jagged output for atlas extraction).
+%
+% Preferred: re-load from obj.fullpath -- this populates obj.mask
+% correctly via fmri_data's constructor, which extract_roi_averages
+% needs (it uses obj.mask as the space-defining image at line 175).
+% Field-copying fields onto a hand-built fmri_data leaves obj.mask
+% partially populated and the volInfo.image_indx comparison at line
+% 251 errors with "Arrays have incompatible sizes".
+%
+% Fallback: copy shared fields. Less reliable, but covers the case
+% where score_obj was built in-memory (via StatsInput fast path) and
+% has no on-disk source.
 if isa(obj, 'fmri_data') && ~isa(obj, 'statistic_image')
     fd = obj;
     return
 end
+
+if isprop(obj, 'fullpath') && ~isempty(obj.fullpath)
+    src = deblank(obj.fullpath(1, :));
+    if exist(src, 'file') == 2
+        try
+            fd = fmri_data(src, 'noverbose');
+            return
+        catch
+            % fall through to field-copy fallback
+        end
+    end
+end
+
 fd = fmri_data();
 shared = {'dat', 'volInfo', 'removed_voxels', 'removed_images', ...
     'space_defining_image_name', 'fullpath', 'files_exist', 'history', ...

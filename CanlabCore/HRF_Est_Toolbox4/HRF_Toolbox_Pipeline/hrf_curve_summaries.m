@@ -115,6 +115,34 @@ opts = p.Results;
 
 T = local_empty_summary_table();
 
+% Multi-source dispatch: struct array with .label and .table fields. Each
+% sub-source is summarized independently; rows get a 'study_label' string
+% column appended. Other call shapes fall through to single-source paths
+% below and don't add the column (back-compat).
+if isstruct(source) && isfield(source, 'label') && ...
+        (isfield(source, 'table') || isfield(source, 'input_table') || isfield(source, 'source'))
+    chunks = cell(numel(source), 1);
+    for i = 1:numel(source)
+        if isfield(source(i), 'table')
+            sub_src = source(i).table;
+        elseif isfield(source(i), 'input_table')
+            sub_src = source(i).input_table;
+        else
+            sub_src = source(i).source;
+        end
+        Ti = hrf_curve_summaries(sub_src, varargin{:});
+        if ~isempty(Ti) && height(Ti) > 0
+            Ti.study_label = repmat(string(source(i).label), height(Ti), 1);
+        end
+        chunks{i} = Ti;
+    end
+    nonempty = ~cellfun(@isempty, chunks);
+    if any(nonempty)
+        T = vertcat(chunks{nonempty});
+    end
+    return
+end
+
 if ischar(source) || isstring(source)
     score_table = local_read_csv(char(source));
     rows = local_summaries_one_table(score_table, opts);
@@ -273,14 +301,28 @@ end
 
 
 function conds = local_filter_conditions(condition_vec, requested)
+% Match requested patterns against the unique conditions present in the
+% data. Patterns containing '*' are treated as MATLAB wildcards (via
+% regexptranslate); plain strings use exact match. Returns conditions in
+% the order they first appear in condition_vec.
 present = unique(cellstr(string(condition_vec)), 'stable');
 if isempty(requested)
     conds = present(:)';
     return
 end
 requested = cellstr(string(requested));
-conds = intersect(present, requested, 'stable');
-conds = conds(:)';
+keep = false(size(present));
+for i = 1:numel(requested)
+    p = requested{i};
+    if contains(p, '*')
+        rx = ['^', regexptranslate('wildcard', p), '$'];
+        hit = ~cellfun('isempty', regexp(present, rx, 'once'));
+    else
+        hit = strcmp(present, p);
+    end
+    keep = keep | hit(:);
+end
+conds = present(keep)';
 end
 
 

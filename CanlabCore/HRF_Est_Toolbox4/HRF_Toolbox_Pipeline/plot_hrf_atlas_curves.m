@@ -108,7 +108,7 @@ long = vertcat(long_chunks{keep});
 
 if ~isempty(opts.Conditions)
     requested = cellstr(string(opts.Conditions));
-    long = long(ismember(long.condition, string(requested)), :);
+    long = long(local_condition_pattern_match(long.condition, requested), :);
 end
 if height(long) == 0
     error('plot_hrf_atlas_curves:NoMatchingConditions', ...
@@ -598,6 +598,28 @@ if any(strcmp(col, t.Properties.VariableNames))
         catch
         end
     end
+end
+end
+
+
+function mask = local_condition_pattern_match(cond_vec, patterns)
+% Glob-style match: '*foo' matches anything ending in 'foo', 'foo*'
+% matches anything starting with 'foo', '*foo*' matches anything
+% containing 'foo'. Patterns without '*' use exact (case-sensitive)
+% match. Returns a column logical mask the same height as cond_vec.
+cond_str = string(cond_vec);
+mask = false(numel(cond_str), 1);
+for i = 1:numel(patterns)
+    p = char(patterns{i});
+    if contains(p, '*')
+        % regexptranslate('wildcard', ...) handles MATLAB's glob -> regex
+        % conversion (* -> .*, escaping of regex metacharacters).
+        rx = ['^', regexptranslate('wildcard', p), '$'];
+        hit = ~cellfun('isempty', regexp(cellstr(cond_str), rx, 'once'));
+    else
+        hit = cond_str == string(p);
+    end
+    mask = mask | hit(:);
 end
 end
 

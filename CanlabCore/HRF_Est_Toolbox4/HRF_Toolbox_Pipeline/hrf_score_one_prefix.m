@@ -439,7 +439,7 @@ for r = 1:numel(regions)
     end
 
     region_token = matlab.lang.makeValidName(char(region_label));
-    col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
+    col_name = local_make_atlas_column_name(atlas_token, region_token, suffix);
     vals = double(cl(1).dat(:));
     if numel(vals) ~= n_vol
         padded = NaN(n_vol, 1);
@@ -588,11 +588,43 @@ existing_vars = existing.Properties.VariableNames;
 
 for r = 1:numel(effective_regions)
     region_token = matlab.lang.makeValidName(char(effective_regions{r}));
-    col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
+    col_name = local_make_atlas_column_name(atlas_token, region_token, suffix);
     if ~any(strcmp(col_name, existing_vars))
         missing_regions{end + 1} = effective_regions{r}; %#ok<AGROW>
     end
 end
+end
+
+
+function col_name = local_make_atlas_column_name(atlas_token, region_token, suffix)
+% Build 'atlas_<atlas_token>_<region_token>_<suffix>' but keep it under
+% the historical MATLAB name length limit (63 chars) so the column can
+% be assigned to a table variable. We hard-cap at 63 even on newer
+% MATLAB releases where namelengthmax is 2048 -- this keeps column names
+% identical across local dev and cluster (where namelengthmax may
+% differ), so append/missing-region detection works across systems.
+% The atlas_token is shortened if needed; the region_token is preserved
+% at full length because it's the more informative half. If the region
+% alone exceeds the budget, it's truncated as a last resort.
+overhead = numel('atlas_') + 1 + 1 + numel(suffix);  % 'atlas_' + '_' + '_' + suffix
+max_len = min(63, namelengthmax);
+budget = max_len - overhead;
+
+if numel(atlas_token) + numel(region_token) > budget
+    atlas_budget = max(1, budget - numel(region_token));
+    if numel(atlas_token) > atlas_budget
+        atlas_token = atlas_token(1:atlas_budget);
+    end
+end
+
+if numel(atlas_token) + numel(region_token) > budget
+    region_budget = max(1, budget - numel(atlas_token));
+    if numel(region_token) > region_budget
+        region_token = region_token(1:region_budget);
+    end
+end
+
+col_name = sprintf('atlas_%s_%s_%s', atlas_token, region_token, suffix);
 end
 
 

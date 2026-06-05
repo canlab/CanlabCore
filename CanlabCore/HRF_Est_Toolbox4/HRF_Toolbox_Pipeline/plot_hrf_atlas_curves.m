@@ -53,7 +53,14 @@ function fig = plot_hrf_atlas_curves(input_table, varargin)
 %           hrf_score_wholebrain_input_table.
 
 p = inputParser;
-p.addRequired('input_table', @istable);
+% First arg accepts:
+%   - a single input_table (current behavior; single-study mode)
+%   - a struct array with fields .label and .table (or .input_table),
+%     e.g. struct('label', {'lf_acc','lf_exp'}, 'table', {it1, it2}).
+%     Each source's CSVs are tagged with the supplied label so per-region
+%     panels can compare across studies/contexts where BIDS condition
+%     names collide.
+p.addRequired('input_table', @(x) istable(x) || local_is_source_struct(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
@@ -76,10 +83,20 @@ model = lower(char(opts.Model));
 object = lower(char(opts.Object));
 suffix = local_normalize_suffix(opts.Normalize);
 
-% 1. Walk the input_table, load the matching score CSV per row, extract the
-%    atlas columns. Output is a long table per-row.
-long = local_collect_atlas_long(input_table, model, object, opts.AtlasObj, char(opts.AtlasName), suffix, logical(opts.Verbose));
-if isempty(long) || height(long) == 0
+% 1. Walk the input_table(s), load the matching score CSV per row, extract
+%    the atlas columns. Output is a long table per row, tagged with a
+%    'study_label' string column when multiple sources were passed.
+sources = local_normalize_sources(input_table);
+long_chunks = cell(numel(sources), 1);
+for s = 1:numel(sources)
+    chunk = local_collect_atlas_long(sources(s).table, model, object, ...
+        opts.AtlasObj, char(opts.AtlasName), suffix, logical(opts.Verbose));
+    if isempty(chunk) || height(chunk) == 0, continue; end
+    chunk.study_label = repmat(string(sources(s).label), height(chunk), 1);
+    long_chunks{s} = chunk;
+end
+keep = ~cellfun(@isempty, long_chunks);
+if ~any(keep)
     error('plot_hrf_atlas_curves:NoData', ...
         ['No atlas columns ending in _%s found in any score CSV for ' ...
          'model=%s, object=%s. Pass ''AtlasObj'' (preferred) or ' ...
@@ -87,6 +104,7 @@ if isempty(long) || height(long) == 0
          'scoring actually wrote atlas columns for this model/object.'], ...
         suffix, model, object);
 end
+long = vertcat(long_chunks{keep});
 
 if ~isempty(opts.Conditions)
     requested = cellstr(string(opts.Conditions));
@@ -347,26 +365,45 @@ end
 
 function pooled = local_pool_subjects(long)
 % Collapse multiple runs per subject first, then pool across subjects.
-% Uses findgroups + splitapply (function handles) rather than groupsummary
-% (which only accepts a fixed set of method-name strings, not 'numel').
-% Output: condition, region, lag_seconds, mean, sem, sd, n.
+% When long has a 'study_label' column (multi-source mode), it's carried
+% as an additional grouping axis so curves from different studies stay
+% separate even when their BIDS condition names collide.
+% Output: study_label (when present), condition, region, lag_seconds,
+%         mean, sem, sd, n.
 
-% Per (subject, condition, region, lag): average across runs.
-[G1, subj_u, cond_u, region_u, lag_u] = findgroups( ...
-    long.subject, long.condition, long.region, long.lag_seconds);
+has_study = any(strcmp('study_label', long.Properties.VariableNames));
+
+if has_study
+    [G1, subj_u, study_u, cond_u, region_u, lag_u] = findgroups( ...
+        long.subject, long.study_label, long.condition, long.region, long.lag_seconds);
+else
+    [G1, subj_u, cond_u, region_u, lag_u] = findgroups( ...
+        long.subject, long.condition, long.region, long.lag_seconds);
+end
 v_per_run = splitapply(@(x) mean(x, 'omitnan'), long.value, G1);
-g1 = table(subj_u, cond_u, region_u, lag_u, v_per_run, ...
-    'VariableNames', {'subject','condition','region','lag_seconds','value'});
 
-% Per (condition, region, lag): mean + SD + N (finite) across subjects.
-[G2, cond_u2, region_u2, lag_u2] = findgroups( ...
-    g1.condition, g1.region, g1.lag_seconds);
+if has_study
+    g1 = table(subj_u, study_u, cond_u, region_u, lag_u, v_per_run, ...
+        'VariableNames', {'subject','study_label','condition','region','lag_seconds','value'});
+    [G2, study_u2, cond_u2, region_u2, lag_u2] = findgroups( ...
+        g1.study_label, g1.condition, g1.region, g1.lag_seconds);
+else
+    g1 = table(subj_u, cond_u, region_u, lag_u, v_per_run, ...
+        'VariableNames', {'subject','condition','region','lag_seconds','value'});
+    [G2, cond_u2, region_u2, lag_u2] = findgroups( ...
+        g1.condition, g1.region, g1.lag_seconds);
+end
 m  = splitapply(@(x) mean(x, 'omitnan'), g1.value, G2);
 sd = splitapply(@(x) std(x, 'omitnan'),  g1.value, G2);
 nn = splitapply(@(x) sum(isfinite(x)),   g1.value, G2);
 
-pooled = table(cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
-    'VariableNames', {'condition','region','lag_seconds','mean','sd','n','sem'});
+if has_study
+    pooled = table(study_u2, cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
+        'VariableNames', {'study_label','condition','region','lag_seconds','mean','sd','n','sem'});
+else
+    pooled = table(cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
+        'VariableNames', {'condition','region','lag_seconds','mean','sd','n','sem'});
+end
 end
 
 
@@ -424,8 +461,15 @@ end
 fig = figure('Color', 'w', 'Position', [80, 80, fig_w, fig_h]);
 tl = tiledlayout(fig, nrows, ncols, 'Padding', 'compact', 'TileSpacing', 'compact');
 
-cond_list = cellstr(unique(pooled.condition, 'stable'));
-colors = local_color_palette(numel(cond_list));
+% Each curve is one (study_label, condition) series. In single-source
+% mode pooled has no study_label column, so we degenerate to condition-only.
+has_study = any(strcmp('study_label', pooled.Properties.VariableNames));
+if has_study
+    series_keys = unique(pooled(:, {'study_label', 'condition'}), 'stable');
+else
+    series_keys = unique(pooled(:, {'condition'}), 'stable');
+end
+colors = local_color_palette(height(series_keys));
 
 % Y-axis: share scale across panels so amplitudes are visually comparable.
 y_min = Inf; y_max = -Inf;
@@ -450,9 +494,22 @@ for r = 1:n
         yline(ax, 0, ':', 'Color', [0.5 0.5 0.5], 'LineWidth', 0.75, 'HandleVisibility', 'off');
     end
 
-    for c = 1:numel(cond_list)
-        cond = string(cond_list{c});
+    for k = 1:height(series_keys)
+        cond = series_keys.condition(k);
         mask = pooled.region == string(top_regions{r}) & pooled.condition == cond;
+        if has_study
+            study = series_keys.study_label(k);
+            mask = mask & pooled.study_label == study;
+            % Series legend: "label | condition" when label is non-empty,
+            % else just the condition.
+            if strlength(study) > 0
+                display_name = sprintf('%s | %s', char(study), char(cond));
+            else
+                display_name = char(cond);
+            end
+        else
+            display_name = char(cond);
+        end
         if ~any(mask), continue; end
         sub = sortrows(pooled(mask, :), 'lag_seconds');
         x = sub.lag_seconds(:);
@@ -461,11 +518,11 @@ for r = 1:n
         if any(e > 0)
             xx = [x; flipud(x)];
             yy = [y + e; flipud(y - e)];
-            fill(ax, xx, yy, colors(c, :), 'FaceAlpha', 0.18, 'EdgeColor', 'none', ...
+            fill(ax, xx, yy, colors(k, :), 'FaceAlpha', 0.18, 'EdgeColor', 'none', ...
                 'HandleVisibility', 'off');
         end
-        plot(ax, x, y, '-', 'Color', colors(c, :), 'LineWidth', 1.6, ...
-            'DisplayName', char(cond));
+        plot(ax, x, y, '-', 'Color', colors(k, :), 'LineWidth', 1.6, ...
+            'DisplayName', display_name);
     end
 
     title(ax, char(top_regions{r}), 'Interpreter', 'none', 'FontWeight', 'normal');
@@ -540,6 +597,39 @@ if any(strcmp(col, t.Properties.VariableNames))
             s = char(string(val));
         catch
         end
+    end
+end
+end
+
+
+function tf = local_is_source_struct(x)
+% True when x is a struct array carrying labeled input_tables -- accepts
+% either a .table field or .input_table field name. The label field is
+% required.
+tf = isstruct(x) && isfield(x, 'label') && (isfield(x, 'table') || isfield(x, 'input_table'));
+end
+
+
+function sources = local_normalize_sources(input_data)
+% Returns a non-empty struct array with fields .label (string) and
+% .table (table). A bare table comes back as a single entry with empty
+% label, preserving single-source plot behavior.
+if istable(input_data)
+    sources = struct('label', {""}, 'table', {input_data});
+    return
+end
+n = numel(input_data);
+sources = struct('label', cell(1, n), 'table', cell(1, n));
+for i = 1:n
+    if isfield(input_data(i), 'table')
+        sources(i).table = input_data(i).table;
+    else
+        sources(i).table = input_data(i).input_table;
+    end
+    sources(i).label = string(input_data(i).label);
+    if ~istable(sources(i).table)
+        error('plot_hrf_atlas_curves:BadSource', ...
+            'sources(%d).table must be a table.', i);
     end
 end
 end

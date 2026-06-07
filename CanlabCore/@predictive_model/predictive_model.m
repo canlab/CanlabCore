@@ -257,6 +257,16 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function obj = set_weight_obj(obj, weight_obj)
+            % set_weight_obj  Cache a weight @statistic_image on the model so
+            % montage(pm) / surface(pm) / weight_image(pm) work WITHOUT
+            % re-passing a source image. Used by image-aware entry points
+            % (e.g. fmri_data.predict 'newapi') that already have the source.
+            obj.weights.weight_obj = weight_obj;
+        end
+
+
+        % -----------------------------------------------------------------
         function new_obj = clone(obj)
             new_obj = predictive_model();
             hp = {'algorithm','task','modeloptions','random_state', ...

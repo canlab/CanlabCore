@@ -83,6 +83,22 @@ function obj = fit(obj, X, Y, varargin)
         obj.inputParameters.standardize_sd = sd;
     end
 
+    % 3a. PCR (principal-components regression) is handled specially: it is
+    % not a single MATLAB fit*() object but PCA + OLS on the components,
+    % faithful to the legacy fmri_data.predict cv_pcr (and the default
+    % cv_lassopcr, which OLS-refits the full model and is identical).
+    if strcmpi(obj.algorithm, 'pcr')
+        [w, b0] = predictive_model.fit_pcr(X, Y, obj.modeloptions);
+        obj.ml_model          = struct('type', 'pcr', 'w', w, 'intercept', b0);
+        obj.weights.w         = w;
+        obj.weights.intercept = b0;
+        if isempty(obj.task), obj.task = 'regression'; end
+        obj.fit_type = 'insample';
+        obj.history{end+1, 1} = sprintf('fit(pcr): %d obs, %d features', ...
+            numel(Y), size(X, 2));
+        return
+    end
+
     % 3. Look up algorithm.
     reg = predictive_model.algorithm_registry();
     if ~isfield(reg, obj.algorithm)

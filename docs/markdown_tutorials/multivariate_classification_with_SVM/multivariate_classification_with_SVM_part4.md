@@ -27,6 +27,7 @@ is identical.
 | `linear_svr` | `fitrlinear` | regression | high-dim linear SVR |
 | `lasso` | `fitrlinear` (L1) | regression | sparse |
 | `ridge` | `fitrlinear` (L2) | regression | dense, stable |
+| `pcr` | PCA + OLS | regression | principal-components regression; reproduces legacy `cv_pcr` / default `cv_lassopcr` |
 | `gp` | `fitrgp` | regression | Gaussian process; needs few features |
 | `tree_regressor`, `rf_regressor`, `nnet_regressor` | various | regression | non-linear baselines |
 

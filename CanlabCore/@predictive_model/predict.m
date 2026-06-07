@@ -64,6 +64,15 @@ function [yhat, score_out] = predict(obj, X)
              obj.inputParameters.standardize_sd;
     end
 
+    % PCR (and other struct-backed linear models) predict directly from
+    % the stored voxel-space weights: yhat = intercept + X * w.
+    if isstruct(obj.ml_model) && isfield(obj.ml_model, 'type') ...
+            && strcmp(obj.ml_model.type, 'pcr')
+        yhat = obj.ml_model.intercept + X * obj.ml_model.w;
+        if nargout > 1, score_out = yhat; end
+        return
+    end
+
     % Delegate to the trained MATLAB model.
     % Classification models return [labels, scores]; regression models
     % return just yhat. For regression we treat yhat itself as the

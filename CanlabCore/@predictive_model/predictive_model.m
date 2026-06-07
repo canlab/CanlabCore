@@ -642,6 +642,60 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function [w, intercept] = fit_pcr(X, Y, modeloptions)
+            % fit_pcr  Principal-components regression (PCA + OLS), faithful
+            % to the legacy fmri_data.predict cv_pcr algorithm.
+            %
+            % Steps (matching cv_pcr exactly):
+            %   1. PCA via SVD of the mean-centered training data
+            %      (scale(X,1)'), drop the last (near-zero) component.
+            %   2. Project the RAW X onto the components: sc = X * pc.
+            %   3. Truncate to the numeric rank (rank-1 if sc is not full
+            %      rank, as during bootstrapping).
+            %   4. OLS (pinv) of Y on [1 sc]; map the coefficients back to
+            %      voxel space: w = pc * b(2:end), intercept = b(1).
+            %
+            % Optional modeloptions: {'numcomponents', k} keeps the top-k
+            % components before the rank truncation (default: all).
+            %
+            % Returns the voxel-space weight vector w and the intercept, so
+            % prediction is simply intercept + Xnew * w.
+
+            Y = Y(:);
+
+            % Mean-center columns for the PCA basis (scale(.,1) = center
+            % only); SVD of the transpose gives the voxel-space loadings.
+            Xc = X - mean(X, 1);
+            [pc, ~, ~] = svd(Xc', 'econ');
+            pc(:, end) = [];                 % drop last (near-zero) component
+
+            % Optional component cap.
+            if nargin >= 3 && ~isempty(modeloptions)
+                wh = find(strcmpi(modeloptions(1:2:end), 'numcomponents'), 1);
+                if ~isempty(wh)
+                    numc = modeloptions{2*wh};
+                    numc = min(numc, size(pc, 2));
+                    pc = pc(:, 1:numc);
+                end
+            end
+
+            sc = X * pc;                      % scores from RAW X (legacy)
+
+            if rank(sc) == size(sc, 2)
+                numcomps = rank(sc);
+            else
+                numcomps = rank(sc) - 1;      % unstable during bootstrap
+            end
+
+            Xd = [ones(size(sc, 1), 1) sc(:, 1:numcomps)];
+            b  = pinv(Xd) * Y;                % stable OLS
+
+            w         = pc(:, 1:numcomps) * b(2:end);
+            intercept = b(1);
+        end
+
+
+        % -----------------------------------------------------------------
         function [si, passthrough, do_regions] = weight_image_for_display(obj, varargin)
             % weight_image_for_display  Shared arg-parsing for montage/surface.
             %

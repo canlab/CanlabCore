@@ -79,13 +79,14 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %        reformatted into the legacy shape and the 4th output (pm) is the
 %        populated @predictive_model object. algorithm_name is mapped onto
 %        the @predictive_model registry:
-%            cv_svm      -> 'svm'   (classification)
-%            cv_svr      -> 'svr'   (regression)
-%            cv_lassopcr -> 'lasso' (regression; penalized-linear
-%                                    approximation of lasso-PCR)
-%            cv_pcr      -> 'ridge' (regression; penalized-linear
-%                                    approximation of PCR)
-%        A bare registry name (e.g. 'ridge', 'svr', 'gp') is also accepted.
+%            cv_svm      -> 'svm'  (classification; identical to legacy)
+%            cv_svr      -> 'svr'  (regression; near-identical — fitrsvm vs
+%                                   the legacy Spider SVR solver)
+%            cv_pcr      -> 'pcr'  (regression; identical to legacy cv_pcr)
+%            cv_lassopcr -> 'pcr'  (regression; identical to the DEFAULT
+%                                   legacy cv_lassopcr, which OLS-refits the
+%                                   full model and reduces to PCR)
+%        A bare registry name (e.g. 'ridge', 'svr', 'gp', 'pcr') is also accepted.
 %        The folds computed by predict() are reused (via a custom
 %        cv_splitter) so stratification is identical. 'bootweights' /
 %        'bootsamples' populate pm.weights bootstrap stats and stats.WTS.
@@ -1098,22 +1099,32 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
     switch algorithm_name
         case 'cv_svm',      regname = 'svm';   task = 'classification';
         case 'cv_svr',      regname = 'svr';   task = 'regression';
-        case 'cv_lassopcr', regname = 'lasso'; task = 'regression';
-        case 'cv_pcr',      regname = 'ridge'; task = 'regression';
+        case 'cv_pcr',      regname = 'pcr';   task = 'regression';
+        case 'cv_lassopcr', regname = 'pcr';   task = 'regression';
         otherwise
             reg = predictive_model.algorithm_registry();
-            if isfield(reg, algorithm_name)
+            if strcmpi(algorithm_name, 'pcr')
+                regname = 'pcr'; task = 'regression';
+            elseif isfield(reg, algorithm_name)
                 regname = algorithm_name;
                 task    = reg.(algorithm_name).task;
             else
                 error('predict:newapi:UnsupportedAlgorithm', ...
                     ['''newapi'' supports cv_svm, cv_svr, cv_lassopcr, cv_pcr, ' ...
-                     'or a bare @predictive_model registry name. Got ''%s''.\n' ...
-                     'Note: cv_pcr->ridge and cv_lassopcr->lasso are penalized-' ...
-                     'linear approximations of the PCA-reduced legacy algorithms.'], ...
+                     '''pcr'', or a bare @predictive_model registry name. Got ''%s''.'], ...
                     algorithm_name);
             end
     end
+    % Note on faithfulness (folds held constant):
+    %   cv_svm      -> svm  : identical to legacy.
+    %   cv_svr      -> svr  : near-identical (fitrsvm vs the legacy Spider
+    %                         SVR solver differ slightly).
+    %   cv_pcr      -> pcr  : identical to legacy cv_pcr.
+    %   cv_lassopcr -> pcr  : identical to the DEFAULT legacy cv_lassopcr
+    %                         (which OLS-refits the full lasso model, i.e.
+    %                         reduces to PCR). With 'lasso_num'/'estimateparams'
+    %                         the legacy path additionally shrinks components;
+    %                         that is not reproduced here.
 
     % --- 2. Build X, Y and clean bad cases so folds stay aligned ---------
     X = double(obj.dat');

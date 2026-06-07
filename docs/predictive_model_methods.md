@@ -32,7 +32,7 @@ Type `methods(my_obj)` in MATLAB for the live list on any instance.
 
 | Property | Description |
 |---|---|
-| `algorithm` | Registry name: `svm`, `linear_svm`, `logistic`, `lda`, `ecoc`, `svr`, `lasso`, `ridge`, `gp`, … |
+| `algorithm` | Registry name: `svm`, `linear_svm`, `logistic`, `lda`, `ecoc`, `svr`, `lasso`, `ridge`, `gp`, `pcr` (PCA+OLS), … |
 | `task` | `'classification'` or `'regression'` |
 | `modeloptions` | Cell of fitter options, e.g. `{'KernelFunction','linear'}` |
 | `cv` | A `cv_splitter` (kfold, stratified_group_kfold, …) |

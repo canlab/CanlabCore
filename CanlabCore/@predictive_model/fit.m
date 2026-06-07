@@ -99,6 +99,22 @@ function obj = fit(obj, X, Y, varargin)
         return
     end
 
+    % 3b. LASSO-PCR: PCA + lasso (shrinkage by 'lasso_num' or nested-CV
+    % 'estimateparam') + relaxed-OLS refit on the non-zero components.
+    % Faithful to the legacy fmri_data.predict cv_lassopcr.
+    if strcmpi(obj.algorithm, 'lassopcr')
+        [w, b0, info] = predictive_model.fit_lassopcr(X, Y, obj.modeloptions);
+        obj.ml_model          = struct('type', 'pcr', 'w', w, 'intercept', b0);
+        obj.weights.w         = w;
+        obj.weights.intercept = b0;
+        obj.diagnostics.lassopcr = info;
+        if isempty(obj.task), obj.task = 'regression'; end
+        obj.fit_type = 'insample';
+        obj.history{end+1, 1} = sprintf('fit(lassopcr): %d obs, %d features, %d nonzero', ...
+            numel(Y), size(X, 2), info.n_nonzero);
+        return
+    end
+
     % 3. Look up algorithm.
     reg = predictive_model.algorithm_registry();
     if ~isfield(reg, obj.algorithm)

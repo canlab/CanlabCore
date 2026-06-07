@@ -28,8 +28,15 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
 %   **'nfolds':** scalar k for the fixed fold vector (default 5).
 %   **'tol':**    max-abs-difference tolerance to call outputs "identical"
 %                 (default 1e-6).
-%   **'algorithms':** cell of algorithm_name strings to test (default
-%                 {'cv_svm','cv_svr','cv_pcr','cv_lassopcr'}).
+%   **'algorithms':** cell of algorithm specs to test. Each entry is
+%                 either an algorithm_name string, or a 2-cell
+%                 {algorithm_name, extra_opts_cell} where extra_opts_cell
+%                 are extra name/value or flag args forwarded to BOTH the
+%                 legacy and newapi predict() calls (e.g. {'lasso_num',5}).
+%                 Default:
+%                   {'cv_svm','cv_svr','cv_pcr','cv_lassopcr', ...
+%                    {'cv_lassopcr',{'lasso_num',5}}, ...
+%                    {'cv_lassopcr',{'estimateparam'}}}.
 %   **'seed':**   rng seed for the synthetic outcomes / fold vector (default 1).
 %
 % :Outputs:
@@ -41,10 +48,14 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
 % Interpretation (with folds held constant):
 %   - 'cv_svm'      -> 'svm' (fitcsvm linear): EXACT match.
 %   - 'cv_pcr'      -> 'pcr' (PCA + OLS, faithful to legacy cv_pcr): EXACT.
-%   - 'cv_lassopcr' -> 'pcr': EXACT match to the DEFAULT legacy cv_lassopcr,
-%                     which OLS-refits the full lasso model and so reduces to
-%                     PCR. (With 'lasso_num'/'estimateparams' the legacy path
-%                     shrinks components and would differ.)
+%   - 'cv_lassopcr' (default)        -> 'pcr'     : EXACT (full model OLS-refit == PCR).
+%   - 'cv_lassopcr' {'lasso_num',k}  -> 'lassopcr': EXACT (same LASSO path +
+%                     relaxed-OLS refit on the non-zero components).
+%   - 'cv_lassopcr' {'estimateparam'}-> 'lassopcr': runs nested-CV lambda
+%                     selection. The new path uses a clean inner CV, so it
+%                     can DIFFER from the legacy estimateparam value (the
+%                     legacy nested CV reuses the outer fold vector); the new
+%                     behavior is the corrected one. Not expected identical.
 %   - 'cv_svr'      -> 'svr' (fitrsvm linear): NEAR-identical (corr ~0.9997),
 %                     not exact, because the legacy Spider SVR solver and
 %                     fitrsvm are different implementations. This is a solver
@@ -68,7 +79,8 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
     p = inputParser;
     addParameter(p, 'nfolds', 5);
     addParameter(p, 'tol', 1e-6);
-    addParameter(p, 'algorithms', {'cv_svm','cv_svr','cv_pcr','cv_lassopcr'});
+    addParameter(p, 'algorithms', {'cv_svm','cv_svr','cv_pcr','cv_lassopcr', ...
+        {'cv_lassopcr', {'lasso_num', 5}}, {'cv_lassopcr', {'estimateparam'}}});
     addParameter(p, 'seed', 1);
     parse(p, varargin{:});
     nfolds = p.Results.nfolds;
@@ -96,7 +108,15 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
 
     rows = {};
     for i = 1:numel(algos)
-        alg = algos{i};
+        spec = algos{i};
+        if iscell(spec)
+            alg = spec{1};  extra = spec{2};
+        else
+            alg = spec;     extra = {};
+        end
+        label = alg;
+        if ~isempty(extra), label = [alg ' ' opts_label(extra)]; end
+
         is_class = strcmp(alg, 'cv_svm');
         if is_class
             dat.Y = Ybin;  task = 'classification';  errtype = 'mcr';
@@ -106,11 +126,11 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
 
         % --- legacy ---
         [cverr_L, stats_L] = predict(dat, 'algorithm_name', alg, ...
-            'nfolds', foldvec, 'error_type', errtype, 'verbose', 0);
+            'nfolds', foldvec, 'error_type', errtype, 'verbose', 0, extra{:});
 
-        % --- newapi (same folds, same error_type) ---
+        % --- newapi (same folds, same error_type, same extra options) ---
         [cverr_N, stats_N] = predict(dat, 'algorithm_name', alg, ...
-            'nfolds', foldvec, 'error_type', errtype, 'newapi', 'verbose', 0);
+            'nfolds', foldvec, 'error_type', errtype, 'newapi', 'verbose', 0, extra{:});
 
         yL = stats_L.yfit(:);  yN = stats_N.yfit(:);
         ok = ~isnan(yL) & ~isnan(yN);
@@ -121,12 +141,12 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
             ryy = NaN;
         end
 
-        rows(end+1, :) = { alg, task, maxdiff, ryy, cverr_L, cverr_N, ...
+        rows(end+1, :) = { label, task, maxdiff, ryy, cverr_L, cverr_N, ...
             abs(cverr_L - cverr_N), maxdiff <= tol }; %#ok<AGROW>
 
-        fprintf(['%-13s [%s]  max|dyfit|=%.3g  corr=%.4f  ' ...
+        fprintf(['%-26s [%s]  max|dyfit|=%.3g  corr=%.4f  ' ...
                  'cverr L=%.4f N=%.4f  -> %s\n'], ...
-            alg, task, maxdiff, ryy, cverr_L, cverr_N, ...
+            label, task, maxdiff, ryy, cverr_L, cverr_N, ...
             ternary(maxdiff <= tol, 'IDENTICAL', 'DIFFERS'));
     end
 
@@ -135,9 +155,10 @@ function results = compare_predict_legacy_vs_newapi(dat, varargin)
          'cverr_legacy','cverr_newapi','cverr_absdiff','identical'});
 
     fprintf('\nFolds held constant (%d-fold round-robin). tol=%g.\n', nfolds, tol);
-    fprintf(['Expected: cv_svm, cv_pcr, cv_lassopcr IDENTICAL; ' ...
-             'cv_svr NEAR-identical (corr ~0.9997 — Spider SVR vs fitrsvm, ' ...
-             'a solver difference, not a fold bug).\n']);
+    fprintf(['Expected: cv_svm, cv_pcr, cv_lassopcr (default + lasso_num) IDENTICAL; ' ...
+             'cv_svr NEAR-identical (Spider SVR vs fitrsvm solver); ' ...
+             'cv_lassopcr estimateparam may differ (new path uses a clean ' ...
+             'nested CV — the corrected behavior).\n']);
 
     % Convenience flags: exact at tol, or near (corr > 0.999).
     results.near_identical = results.corr_yfit > 0.999;
@@ -146,4 +167,22 @@ end
 
 function v = ternary(c, a, b)
     if c, v = a; else, v = b; end
+end
+
+
+function s = opts_label(extra)
+% Compact label for an extra-options cell, e.g. {'lasso_num',5} -> "(lasso_num=5)".
+    parts = {};
+    i = 1;
+    while i <= numel(extra)
+        nm = char(string(extra{i}));
+        if i < numel(extra) && ~ischar(extra{i+1}) && ~isstring(extra{i+1})
+            parts{end+1} = sprintf('%s=%s', nm, mat2str(extra{i+1})); %#ok<AGROW>
+            i = i + 2;
+        else
+            parts{end+1} = nm; %#ok<AGROW>
+            i = i + 1;
+        end
+    end
+    s = ['(' strjoin(parts, ',') ')'];
 end

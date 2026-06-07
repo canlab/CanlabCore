@@ -83,10 +83,17 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %            cv_svr      -> 'svr'  (regression; near-identical — fitrsvm vs
 %                                   the legacy Spider SVR solver)
 %            cv_pcr      -> 'pcr'  (regression; identical to legacy cv_pcr)
-%            cv_lassopcr -> 'pcr'  (regression; identical to the DEFAULT
-%                                   legacy cv_lassopcr, which OLS-refits the
-%                                   full model and reduces to PCR)
-%        A bare registry name (e.g. 'ridge', 'svr', 'gp', 'pcr') is also accepted.
+%            cv_lassopcr -> 'pcr'      by default (identical to default
+%                                       legacy cv_lassopcr, which OLS-refits
+%                                       the full model and reduces to PCR);
+%                        -> 'lassopcr' when a shrinkage option is given
+%                                       ('lasso_num', 'estimateparam',
+%                                       'nopcr', or 'numcomponents'): PCA +
+%                                       LASSO path + relaxed-OLS refit.
+%                                       'lasso_num' reproduces legacy exactly;
+%                                       'estimateparam' uses a clean nested CV.
+%        A bare registry name (e.g. 'ridge', 'svr', 'gp', 'pcr', 'lassopcr')
+%        is also accepted.
 %        The folds computed by predict() are reused (via a custom
 %        cv_splitter) so stratification is identical. 'bootweights' /
 %        'bootsamples' populate pm.weights bootstrap stats and stats.WTS.
@@ -815,7 +822,7 @@ end
 if donewapi
     [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
         algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
-        error_type, verbose, bootweights, bootsamples_newapi);
+        error_type, verbose, bootweights, bootsamples_newapi, predfun_inputs);
     return
 end
 
@@ -1086,7 +1093,7 @@ end % main function
 % =====================================================================
 function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
         algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
-        error_type, verbose, bootweights, bootsamples)
+        error_type, verbose, bootweights, bootsamples, predfun_inputs)
 % Route an fmri_data.predict call through the new @predictive_model
 % fit/crossval pipeline and reformat the result into the legacy
 % [cverr, stats, optout] shape (plus pm, the predictive_model object).
@@ -1096,23 +1103,36 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
 % 'ridge') is also accepted.
 
     % --- 1. Map the legacy algorithm_name onto a registry entry ----------
+    if nargin < 12 || isempty(predfun_inputs), predfun_inputs = {}; end
+
+    % Detect cv_lassopcr shrinkage options (passed through predfun_inputs):
+    % 'lasso_num' (+value), 'estimateparam(s)', 'nopcr', 'numcomponents'.
+    has_shrinkage = any(cellfun(@(c) (ischar(c) || isstring(c)) && ...
+        any(strcmpi(c, {'lasso_num','estimateparam','estimateparams','nopcr','numcomponents'})), ...
+        predfun_inputs));
+    lassopcr_opts = predfun_inputs;   % forwarded verbatim as modeloptions
+
     switch algorithm_name
         case 'cv_svm',      regname = 'svm';   task = 'classification';
         case 'cv_svr',      regname = 'svr';   task = 'regression';
         case 'cv_pcr',      regname = 'pcr';   task = 'regression';
-        case 'cv_lassopcr', regname = 'pcr';   task = 'regression';
+        case 'cv_lassopcr'
+            task = 'regression';
+            % Default cv_lassopcr == PCR; only use the lasso path (with
+            % relaxed-OLS refit) when a shrinkage option was requested.
+            if has_shrinkage, regname = 'lassopcr'; else, regname = 'pcr'; end
         otherwise
             reg = predictive_model.algorithm_registry();
-            if strcmpi(algorithm_name, 'pcr')
-                regname = 'pcr'; task = 'regression';
+            if any(strcmpi(algorithm_name, {'pcr','lassopcr'}))
+                regname = lower(algorithm_name); task = 'regression';
             elseif isfield(reg, algorithm_name)
                 regname = algorithm_name;
                 task    = reg.(algorithm_name).task;
             else
                 error('predict:newapi:UnsupportedAlgorithm', ...
                     ['''newapi'' supports cv_svm, cv_svr, cv_lassopcr, cv_pcr, ' ...
-                     '''pcr'', or a bare @predictive_model registry name. Got ''%s''.'], ...
-                    algorithm_name);
+                     '''pcr'', ''lassopcr'', or a bare @predictive_model ' ...
+                     'registry name. Got ''%s''.'], algorithm_name);
             end
     end
     % Note on faithfulness (folds held constant):
@@ -1120,11 +1140,13 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
     %   cv_svr      -> svr  : near-identical (fitrsvm vs the legacy Spider
     %                         SVR solver differ slightly).
     %   cv_pcr      -> pcr  : identical to legacy cv_pcr.
-    %   cv_lassopcr -> pcr  : identical to the DEFAULT legacy cv_lassopcr
-    %                         (which OLS-refits the full lasso model, i.e.
-    %                         reduces to PCR). With 'lasso_num'/'estimateparams'
-    %                         the legacy path additionally shrinks components;
-    %                         that is not reproduced here.
+    %   cv_lassopcr -> pcr      (default) : identical to default cv_lassopcr,
+    %                            which OLS-refits the full model (== PCR).
+    %               -> lassopcr (when 'lasso_num'/'estimateparam'/'nopcr'/
+    %                            'numcomponents' is passed) : PCA + lasso path
+    %                            + relaxed-OLS refit. 'lasso_num' reproduces
+    %                            legacy exactly; 'estimateparam' uses a clean
+    %                            nested CV.
 
     % --- 2. Build X, Y and clean bad cases so folds stay aligned ---------
     X = double(obj.dat');
@@ -1141,7 +1163,12 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
     if any(of), X(:, of) = []; end
 
     % --- 3. Build the model and cross-validate over the existing folds ---
-    pm = predictive_model('algorithm', regname, 'task', task);
+    if strcmp(regname, 'lassopcr')
+        pm = predictive_model('algorithm', regname, 'task', task, ...
+            'modeloptions', lassopcr_opts);
+    else
+        pm = predictive_model('algorithm', regname, 'task', task);
+    end
     cv = cv_splitter.custom_partition(fold_ids);
     if strcmp(task, 'classification')
         pm = crossval(pm, X, Y, 'cv', cv, 'scoring', 'accuracy');

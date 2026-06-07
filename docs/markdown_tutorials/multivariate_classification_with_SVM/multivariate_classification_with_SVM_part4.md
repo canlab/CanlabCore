@@ -28,6 +28,7 @@ is identical.
 | `lasso` | `fitrlinear` (L1) | regression | sparse |
 | `ridge` | `fitrlinear` (L2) | regression | dense, stable |
 | `pcr` | PCA + OLS | regression | principal-components regression; reproduces legacy `cv_pcr` / default `cv_lassopcr` |
+| `lassopcr` | PCA + LASSO + relaxed-OLS | regression | shrinkage by `lasso_num` (path step) or `estimateparam` (nested-CV lambda), then OLS-refit on the non-zero components; reproduces legacy `cv_lassopcr` shrinkage |
 | `gp` | `fitrgp` | regression | Gaussian process; needs few features |
 | `tree_regressor`, `rf_regressor`, `nnet_regressor` | various | regression | non-linear baselines |
 

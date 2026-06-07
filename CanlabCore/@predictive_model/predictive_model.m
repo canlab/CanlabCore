@@ -661,37 +661,164 @@ classdef predictive_model
             % Returns the voxel-space weight vector w and the intercept, so
             % prediction is simply intercept + Xnew * w.
 
+            if nargin < 3, modeloptions = {}; end
             Y = Y(:);
 
-            % Mean-center columns for the PCA basis (scale(.,1) = center
-            % only); SVD of the transpose gives the voxel-space loadings.
-            Xc = X - mean(X, 1);
-            [pc, ~, ~] = svd(Xc', 'econ');
-            pc(:, end) = [];                 % drop last (near-zero) component
-
-            % Optional component cap.
-            if nargin >= 3 && ~isempty(modeloptions)
-                wh = find(strcmpi(modeloptions(1:2:end), 'numcomponents'), 1);
-                if ~isempty(wh)
-                    numc = modeloptions{2*wh};
-                    numc = min(numc, size(pc, 2));
-                    pc = pc(:, 1:numc);
-                end
-            end
-
-            sc = X * pc;                      % scores from RAW X (legacy)
-
-            if rank(sc) == size(sc, 2)
-                numcomps = rank(sc);
-            else
-                numcomps = rank(sc) - 1;      % unstable during bootstrap
-            end
+            [pc, sc, numcomps] = predictive_model.pca_for_pcr(X, modeloptions);
 
             Xd = [ones(size(sc, 1), 1) sc(:, 1:numcomps)];
             b  = pinv(Xd) * Y;                % stable OLS
 
             w         = pc(:, 1:numcomps) * b(2:end);
             intercept = b(1);
+        end
+
+
+        % -----------------------------------------------------------------
+        function [pc, sc, numcomps] = pca_for_pcr(X, modeloptions)
+            % pca_for_pcr  Shared PCA front-end for cv_pcr / cv_lassopcr,
+            % faithful to the legacy fmri_data.predict math:
+            %   - SVD of the mean-centered training data (scale(X,1)'),
+            %   - drop the last (near-zero) component,
+            %   - optional {'numcomponents', k} cap,
+            %   - scores from the RAW X (sc = X * pc),
+            %   - numcomps = numeric rank (rank-1 when sc is not full rank,
+            %     as happens during bootstrapping).
+            if nargin < 2, modeloptions = {}; end
+
+            Xc = X - mean(X, 1);
+            [pc, ~, ~] = svd(Xc', 'econ');
+            pc(:, end) = [];                 % drop last (near-zero) component
+
+            numc = predictive_model.opt_value(modeloptions, 'numcomponents');
+            if ~isempty(numc)
+                pc = pc(:, 1:min(numc, size(pc, 2)));
+            end
+
+            sc = X * pc;                     % scores from RAW X (legacy)
+
+            if rank(sc) == size(sc, 2)
+                numcomps = rank(sc);
+            else
+                numcomps = rank(sc) - 1;     % unstable during bootstrap
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function [w, intercept, info] = fit_lassopcr(X, Y, modeloptions, cv_assignment)
+            % fit_lassopcr  Lasso-PCR with relaxed-OLS refit, faithful to the
+            % legacy fmri_data.predict cv_lassopcr.
+            %
+            % PCA (as in fit_pcr) -> LASSO path on the components -> select a
+            % model along the path -> RE-FIT with OLS on the non-zero
+            % components (relaxed lasso) -> map back to voxel space.
+            %
+            % Model selection (via modeloptions):
+            %   {'lasso_num', k}   keep the k-th step of the LASSO path
+            %                      (lasso_rocha), then OLS-refit on its
+            %                      non-zero components. Reproduces legacy
+            %                      cv_lassopcr 'lasso_num' exactly.
+            %   'estimateparam'    pick the regularization by nested
+            %                      cross-validation (lasso_cv), then OLS-refit
+            %                      on the CV-selected non-zero components.
+            %   (neither)          use the full LASSO model -> reduces to PCR
+            %                      (identical to cv_pcr / default cv_lassopcr).
+            %   'nopcr'            skip PCA; LASSO directly on X columns.
+            %   {'numcomponents', k}  cap PCA components.
+            %
+            % cv_assignment (optional): inner fold ids for the nested-CV
+            % path. If omitted, a deterministic round-robin 5-fold split of
+            % the training rows is used (so the result is reproducible and
+            % does not perturb the RNG).
+            %
+            % info returns the selection metadata (.n / .lambda / .min_MSE /
+            % .n_nonzero).
+
+            if nargin < 3, modeloptions = {}; end
+            Y = Y(:);
+            info = struct();
+
+            do_pcr    = ~predictive_model.opt_flag(modeloptions, 'nopcr');
+            do_nested = predictive_model.opt_flag(modeloptions, 'estimateparam') ...
+                     || predictive_model.opt_flag(modeloptions, 'estimateparams');
+
+            if do_pcr
+                [pc, sc, numcomps] = predictive_model.pca_for_pcr(X, modeloptions);
+            else
+                pc = []; sc = X;
+                if rank(sc) == size(sc, 2), numcomps = rank(sc);
+                else, numcomps = rank(sc) - 1; end
+            end
+
+            S = sc(:, 1:numcomps);
+
+            if do_nested
+                % Nested-CV lambda selection on the training rows.
+                if nargin < 4 || isempty(cv_assignment)
+                    cv_assignment = mod(0:numel(Y)-1, 5)' + 1;   % deterministic 5-fold
+                end
+                opts = struct('alignment', 'lambda', 'cv_assignment', cv_assignment(:));
+                out  = lasso_cv(Y, S, numel(unique(cv_assignment)), opts);
+                wh_beta = logical([out.CV.intercept; out.CV.beta(:) ~= 0]);
+                info.lambda  = out.CV.lambda;
+                if isfield(out.CV, 'min_MSE'), info.min_MSE = out.CV.min_MSE; end
+            else
+                out = lasso_rocha(Y, S);
+                n   = size(out.beta, 1) - 1;                  % default: full model
+                ln  = predictive_model.opt_value(modeloptions, 'lasso_num');
+                if ~isempty(ln)
+                    if ln > size(out.beta, 1)
+                        error('predictive_model:fit_lassopcr:LassoNum', ...
+                            'lasso_num (%d) exceeds the number of path steps (%d).', ...
+                            ln, size(out.beta, 1));
+                    end
+                    n = ln;
+                end
+                wh_beta = logical([out.intercept(n+1); out.beta(n+1, :)' ~= 0]);
+                info.n  = n;
+            end
+
+            % Relaxed-OLS refit on the selected (non-zero) components.
+            Xsubset = [ones(size(S, 1), 1) S(:, wh_beta(2:end))];
+            betatmp = pinv(Xsubset) * Y;
+            betas   = zeros(size(wh_beta));
+            betas(wh_beta) = betatmp;
+
+            if do_pcr
+                w = pc(:, 1:numcomps) * betas(2:end);
+            else
+                w = betas(2:end);
+            end
+            intercept = betas(1);
+            info.n_nonzero = sum(wh_beta(2:end));
+        end
+
+
+        % -----------------------------------------------------------------
+        function tf = opt_flag(opts, name)
+            % True if `name` appears as a bare flag in the options cell.
+            tf = false;
+            if isempty(opts) || ~iscell(opts), return; end
+            for i = 1:numel(opts)
+                if (ischar(opts{i}) || isstring(opts{i})) && strcmpi(opts{i}, name)
+                    tf = true; return
+                end
+            end
+        end
+
+
+        % -----------------------------------------------------------------
+        function v = opt_value(opts, name)
+            % Value following name/value pair `name` in the options cell
+            % (empty if absent).
+            v = [];
+            if isempty(opts) || ~iscell(opts), return; end
+            for i = 1:numel(opts)-1
+                if (ischar(opts{i}) || isstring(opts{i})) && strcmpi(opts{i}, name)
+                    v = opts{i+1}; return
+                end
+            end
         end
 
 

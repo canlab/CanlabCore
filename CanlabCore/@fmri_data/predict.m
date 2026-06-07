@@ -598,6 +598,13 @@ else
     error_type = 'mse';
 end
 
+% Did the caller explicitly request an error_type? (computed before the
+% parse loop clears varargin slots.) The newapi path uses this to auto-pick
+% 'mse' for regression algorithms run on a binary outcome (where the default
+% above would otherwise pick the meaningless 'mcr').
+error_type_explicit = any(cellfun(@(x) (ischar(x) || isstring(x)) && ...
+    strcmpi(x, 'error_type'), varargin));
+
 if size(obj.dat, 2) ~= size(obj.Y, 1)
     if ~strcmp('MultiClass',varargin) %Added by LC 2/26/13 for new svm multiclass functionality
         error('obj.dat must be [Predictors x observations] and obj.Y must be [observations x 1]');
@@ -822,7 +829,8 @@ end
 if donewapi
     [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
         algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
-        error_type, verbose, bootweights, bootsamples_newapi, predfun_inputs);
+        error_type, verbose, bootweights, bootsamples_newapi, predfun_inputs, ...
+        error_type_explicit);
     return
 end
 
@@ -1093,7 +1101,8 @@ end % main function
 % =====================================================================
 function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
         algorithm_name, cv_assignment, trIdx, teIdx, cvpart, nfolds, ...
-        error_type, verbose, bootweights, bootsamples, predfun_inputs)
+        error_type, verbose, bootweights, bootsamples, predfun_inputs, ...
+        error_type_explicit)
 % Route an fmri_data.predict call through the new @predictive_model
 % fit/crossval pipeline and reformat the result into the legacy
 % [cverr, stats, optout] shape (plus pm, the predictive_model object).
@@ -1147,6 +1156,21 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
     %                            + relaxed-OLS refit. 'lasso_num' reproduces
     %                            legacy exactly; 'estimateparam' uses a clean
     %                            nested CV.
+
+    % Auto-pick a sensible error metric: a regression algorithm run on a
+    % binary outcome would otherwise inherit the 'mcr' default (which is
+    % meaningless on continuous predictions). Switch to 'mse' unless the
+    % caller explicitly asked for an error_type.
+    if nargin < 13, error_type_explicit = false; end
+    if strcmp(task, 'regression') && ~error_type_explicit ...
+            && any(strcmpi(error_type, {'mcr', 'class_loss'}))
+        if verbose
+            fprintf(['predict (newapi): regression algorithm on a binary ' ...
+                     'outcome — using error_type ''mse'' (pass ''error_type'' ' ...
+                     'to override).\n']);
+        end
+        error_type = 'mse';
+    end
 
     % --- 2. Build X, Y and clean bad cases so folds stay aligned ---------
     X = double(obj.dat');

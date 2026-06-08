@@ -1,4 +1,9 @@
-%% Multivariate classification with SVM — Part 2
+%% Multivariate decoding — Part 3: the sklearn-style predictive_model API
+%
+% Part 3 of the multivariate-decoding series (Part 1 classification basics;
+% Part 2 classification & regression; Part 4 cross-classification; Part 5
+% algorithms & tuning). See the matching .md for the full narrative,
+% nested-CV section, and code map.
 %
 % All of Part 1's workflow now in the new sklearn-style
 % @predictive_model API: construct -> fit -> cross-validate ->

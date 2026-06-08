@@ -80,7 +80,7 @@ function obj = bootstrap(obj, X, Y, varargin)
 %        the @predictive_model with bootstrap weight statistics in
 %        obj.weights (.boot_w, .boot_w_mean, .boot_w_ste, .z, .p, .p_wald,
 %        .fdr_thr, .fdr_sig, .thresh_fdr). Map to voxel space with
-%        weight_image(obj, source).
+%        weight_map_object(obj, source).
 %
 % :Examples:
 % ::
@@ -90,10 +90,10 @@ function obj = bootstrap(obj, X, Y, varargin)
 %     pm = crossval(pm, X, Y, 'groups', id);
 %     pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
 %     sum(pm.weights.fdr_sig)          % # FDR-significant voxels
-%     si = weight_image(pm, dat);      % statistic_image with .p / .sig
+%     [~, si] = weight_map_object(pm, dat);   % statistic_image with .p / .sig
 %
 % :See also:
-%   weight_image, crossval, permutation_test, stability_selection
+%   weight_map_object, crossval, permutation_test, stability_selection
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'nboot',   []);

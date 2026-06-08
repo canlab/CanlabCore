@@ -201,8 +201,8 @@ montage(pm_rej,  rf);      % social-rejection pattern
 % overlap of the (bootstrap-thresholded) patterns
 pm_pain = bootstrap(pm_pain, Xhw, Yhw, 'nboot', 1000, 'groups', idhw);
 pm_rej  = bootstrap(pm_rej,  Xrf, Yrf, 'nboot', 1000, 'groups', idrf);
-si_pain = weight_image(pm_pain, hw, 'use', 'thresh_fdr');
-si_rej  = weight_image(pm_rej,  rf, 'use', 'thresh_fdr');
+[~, si_pain] = weight_map_object(pm_pain, hw, 'use', 'thresh_fdr');
+[~, si_rej]  = weight_map_object(pm_rej,  rf, 'use', 'thresh_fdr');
 ```
 
 Woo et al. found the maps overlap in some regions (e.g. dACC,

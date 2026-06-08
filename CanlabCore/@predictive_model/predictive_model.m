@@ -259,9 +259,11 @@ classdef predictive_model
         % -----------------------------------------------------------------
         function obj = set_weight_obj(obj, weight_obj)
             % set_weight_obj  Cache a weight @statistic_image on the model so
-            % montage(pm) / surface(pm) / weight_image(pm) work WITHOUT
-            % re-passing a source image. Used by image-aware entry points
-            % (e.g. fmri_data.predict 'newapi') that already have the source.
+            % montage(pm) / surface(pm) work WITHOUT re-passing a source
+            % image. Low-level setter; weight_map_object(pm, source) is the
+            % usual entry point (it builds the object and calls this). Used by
+            % image-aware callers (e.g. fmri_data.predict 'newapi') that
+            % already have the source.
             obj.weights.weight_obj = weight_obj;
         end
 
@@ -838,7 +840,7 @@ classdef predictive_model
             %
             % Resolves the weight @statistic_image to display and separates
             % the remaining name/value pairs (passthrough) from the
-            % display-control flags ('regions') and the weight_image-only
+            % display-control flags ('regions') and the weight_map_object-only
             % option ('use').
             %
             % Returns:
@@ -860,7 +862,7 @@ classdef predictive_model
             do_regions = any(is_reg);
             args(is_reg) = [];
 
-            % 3) pull out 'use' (weight_image only; not a montage option).
+            % 3) pull out 'use' (weight_map_object only; not a montage option).
             use = 'w';
             iu = find(cellfun(@(a) (ischar(a) || isstring(a)) && strcmpi(a, 'use'), args), 1);
             if ~isempty(iu) && iu < numel(args)
@@ -870,7 +872,7 @@ classdef predictive_model
 
             % 4) build / fetch the statistic_image.
             if ~isempty(source)
-                si = weight_image(obj, source, 'use', use);
+                [~, si] = weight_map_object(obj, source, 'use', use);
             elseif isstruct(obj.weights) && isfield(obj.weights, 'weight_obj') ...
                     && ~isempty(obj.weights.weight_obj)
                 si = obj.weights.weight_obj;

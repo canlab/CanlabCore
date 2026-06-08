@@ -22,7 +22,7 @@ Type `methods(my_obj)` in MATLAB for the live list on any instance.
   refitting). `is_fitted(pm)` tests for any populated fitted state.
 - **Numeric core, image adapters on top.** `fit`/`predict`/`crossval`
   operate on numeric `(X, Y, groups)`. Neuroimaging awareness lives in the
-  adapter methods (`weight_image`, `montage`, `surface`) that map the
+  adapter methods (`weight_map_object`, `montage`, `surface`) that map the
   coefficient vector back into voxel space using a source image's
   `volInfo`.
 
@@ -97,7 +97,7 @@ Type `methods(my_obj)` in MATLAB for the live list on any instance.
 | `plot_predicted_vs_observed` | Scatter (regression) or violin (binary) of predictions vs `Y` |
 | `rocplot` | ROC curve from cross-validated scores (wraps `roc_plot`) |
 | `confusionchart` / `confusion_matrix` | Confusion chart / raw + normalized confusion matrices |
-| `weight_image` | Map the weight vector into a `statistic_image` (with bootstrap `.p` / `.sig`) |
+| `weight_map_object` | Map the weight vector into a `statistic_image` (with bootstrap `.p` / `.sig`) and cache it on `pm.weights.weight_obj`; second output is the image (`[~, si] = ...`) |
 | `montage` / `surface` | Render the weight map on slices / cortical surface (thin delegates) |
 
 ## Cross-validation infrastructure
@@ -114,7 +114,7 @@ These standalone classes back `crossval` and are shared with `@pipeline`:
 `@pipeline` composes zero or more transform steps (`center`, `zscore`,
 `pca`, or a custom `fit_transform`/`transform` struct) feeding a final
 `predictive_model` estimator. Its `crossval` refits **every step per fold**
-(leakage-free PCR, standardize-then-SVM, …), and `weight_image(pipe,
+(leakage-free PCR, standardize-then-SVM, …), and `weight_map_object(pipe,
 source)` back-projects the estimator weights through the steps into voxel
 space.
 

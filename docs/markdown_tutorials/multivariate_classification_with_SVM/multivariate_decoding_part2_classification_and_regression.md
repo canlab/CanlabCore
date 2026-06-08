@@ -166,15 +166,15 @@ montage(pm, bmrk3);                       % unthresholded weights
 ![bmrk3 weights (unthresholded)](pngs/bmrk3_weights_unthresh.png)
 
 To ask *which voxels carry reliable signal*, bootstrap the weights
-(resampling whole subjects) and threshold. `weight_image(pm, source)`
-returns a `statistic_image` with the bootstrap p-values attached, so you
-can threshold and montage it directly:
+(resampling whole subjects) and threshold. `weight_map_object(pm, source)`
+returns a `statistic_image` with the bootstrap p-values attached (and caches
+it on `pm`), so you can threshold and montage it directly:
 
 ```matlab
 pm = bootstrap(pm, double(bmrk3.dat'), bmrk3.Y, ...
                'nboot', 1000, 'groups', bmrk3.metadata_table.subject_id);
 
-si = weight_image(pm, bmrk3);
+[~, si] = weight_map_object(pm, bmrk3);
 si = threshold(si, .01, 'unc');           % bootstrap p < .01, uncorrected
 create_figure('thresholded weights'); axis off; montage(si);
 ```

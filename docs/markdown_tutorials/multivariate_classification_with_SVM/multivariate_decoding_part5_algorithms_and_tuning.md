@@ -156,7 +156,7 @@ fprintf('gp(PCA30)  R^2 = %.3f\n', pipe.error_metrics.r2.value);   % ~0.11
 
 The same PCA-then-estimator pattern turns *any* sample-hungry or
 feature-hungry learner (GP, kNN, kernel SVR) into something tractable on
-wide neuroimaging data, and `weight_image(pipe, hw)` still back-projects
+wide neuroimaging data, and `weight_map_object(pipe, hw)` still back-projects
 the weights to voxel space for linear estimators.
 
 ## 6. Hyperparameter tuning with `grid_search`

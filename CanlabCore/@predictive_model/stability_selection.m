@@ -43,7 +43,7 @@ function obj = stability_selection(obj, X, Y, varargin)
 %        populated: .nboot, .k, .threshold, .selection_count [p x 1],
 %        .selection_freq [p x 1] in [0,1], .stable (logical mask),
 %        .n_stable, .valid_boots. Map .selection_freq to voxel space by
-%        stashing it as a weight vector and calling weight_image.
+%        stashing it as a weight vector and calling weight_map_object.
 %
 % :Examples:
 % ::
@@ -55,7 +55,7 @@ function obj = stability_selection(obj, X, Y, varargin)
 %     pm.diagnostics.stability_selection.n_stable
 %
 % :See also:
-%   bootstrap, select_features, weight_image, grid_search
+%   bootstrap, select_features, weight_map_object, grid_search
 
     pi = inputParser; pi.KeepUnmatched = true;
     addParameter(pi, 'nboot',     []);

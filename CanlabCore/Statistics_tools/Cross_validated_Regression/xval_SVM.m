@@ -84,7 +84,7 @@ function pmodel_obj = xval_SVM(X, Y, id, varargin)
 %   % same space, then montage(pm) / surface(pm) work with no source:
 %   pm = weight_map_object(pm, hw_obj);               % cache weight @statistic_image
 %   montage(pm); surface(pm);
-%   si = weight_image(pm, hw_obj);                    % (or get it directly)
+%   [~, si] = weight_map_object(pm, hw_obj);          % (or get the image directly)
 
     % ----- parse flag-style options that aren't name/value -----
     [varargin, dooptimize ] = pop_flag(varargin, 'nooptimize',  true);

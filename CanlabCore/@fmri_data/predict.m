@@ -1251,13 +1251,12 @@ function [cverr, stats, optout, pm] = predict_via_predictive_model(obj, ...
     end
 
     % weight_obj in the source voxel space (statistic_image; carries
-    % bootstrap .p / .sig if bootstrap() was run). Cache it on pm too, so
-    % montage(pm) / surface(pm) / weight_image(pm) work without re-passing
-    % the source image (predict already has it).
+    % bootstrap .p / .sig if bootstrap() was run). weight_map_object builds
+    % it and caches it on pm, so montage(pm) / surface(pm) work without
+    % re-passing the source image (predict already has it).
     try
-        wobj = weight_image(pm, obj);
+        [pm, wobj] = weight_map_object(pm, obj);
         stats.weight_obj = wobj;
-        pm = set_weight_obj(pm, wobj);
     catch ME
         if verbose
             fprintf('predict (newapi): could not build weight_obj (%s).\n', ME.message);

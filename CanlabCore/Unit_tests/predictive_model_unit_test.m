@@ -75,13 +75,15 @@ function predictive_model_unit_test()
     fprintf('       z range = [%g .. %g]; p floor = %.4f\n', ...
         min(pm.weights.z), max(pm.weights.z), min(pm.weights.p));
 
-    % --- 7. weight_image: pre- and post-bootstrap thresholded ---
-    si_full = weight_image(pm, hw_obj);
-    si_thr  = weight_image(pm, hw_obj, 'use', 'thresh_fdr');
+    % --- 7. weight_map_object: pre- and post-bootstrap thresholded, + caching ---
+    [pm_w, si_full] = weight_map_object(pm, hw_obj);
+    [~,    si_thr]  = weight_map_object(pm, hw_obj, 'use', 'thresh_fdr');
     assert(isa(si_full, 'statistic_image'),                              'si_full class');
     assert(size(si_full.dat, 1) == size(hw_obj.dat, 1),                  'si_full voxel count');
     assert(size(si_thr.dat,  1) == size(hw_obj.dat, 1),                  'si_thr voxel count');
-    fprintf('  7. weight_image (full + thresh_fdr) OK\n');
+    assert(~isempty(pm_w.weights.weight_obj),                            'weight_obj cached on pm');
+    assert(isa(pm_w.weights.weight_obj, 'statistic_image'),             'cached weight_obj class');
+    fprintf('  7. weight_map_object (full + thresh_fdr + cache) OK\n');
     fprintf('       full-w nonzero: %d, FDR-thresh nonzero: %d\n', ...
         sum(si_full.dat ~= 0), sum(si_thr.dat ~= 0));
 
@@ -152,8 +154,8 @@ function predictive_model_unit_test()
     pipe = crossval(pipe, X, Y, 'groups', id, 'cv', cv_splitter.stratified_group_kfold(5));
     assert(strcmp(pipe.fit_type, 'crossval'),                            'pipeline crossval fit_type');
     assert(numel(pipe.weights.w) == size(X, 2),                          'pipeline back-projected weight length');
-    si_pipe = weight_image(pipe, hw_obj);
-    assert(isa(si_pipe, 'statistic_image'),                              'pipeline weight_image class');
+    si_pipe = weight_map_object(pipe, hw_obj);
+    assert(isa(si_pipe, 'statistic_image'),                              'pipeline weight_map_object class');
     fprintf(' 15. pipeline (PCA->svm) OK (cv bal_acc=%.3f)\n', ...
         pipe.error_metrics.balanced_accuracy.value);
 

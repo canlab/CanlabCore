@@ -1,8 +1,8 @@
 function varargout = montage(obj, varargin)
 % montage  Montage of a predictive model's weight map.
 %
-% Thin delegate: build the weight @statistic_image (via weight_image) and
-% call its montage. With 'regions', route through region() and montage the
+% Thin delegate: build the weight @statistic_image (via weight_map_object)
+% and call its montage. With 'regions', route through region() and montage the
 % region object instead, which outlines contiguous significant clusters.
 %
 % :Usage:
@@ -27,11 +27,12 @@ function varargout = montage(obj, varargin)
 %
 %   **'use':**
 %        which weight vector to map ('w' default, 'thresh_fdr',
-%        'boot_w_mean'); see weight_image.
+%        'boot_w_mean'); see weight_map_object.
 %
 %   **'regions':**
-%        montage region(weight_image(...)) instead of the statistic_image
-%        directly. Most useful after bootstrap() has set FDR significance.
+%        montage region(weight_map_object(...)) instead of the
+%        statistic_image directly. Most useful after bootstrap() has set FDR
+%        significance.
 %
 %   Any other name/value pairs are passed through to the underlying
 %   image_vector.montage / region.montage.
@@ -52,7 +53,7 @@ function varargout = montage(obj, varargin)
 %     montage(pm, dat, 'use', 'thresh_fdr', 'regions');  % FDR clusters
 %
 % :See also:
-%   weight_image, weight_map_object, surface, region, image_vector.montage
+%   weight_map_object, surface, region, image_vector.montage
 
     [si, passthrough, do_regions] = predictive_model.weight_image_for_display(obj, varargin{:});
 

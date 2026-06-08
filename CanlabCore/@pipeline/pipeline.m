@@ -200,23 +200,23 @@ classdef pipeline
 
 
         % -----------------------------------------------------------------
-        function si = weight_image(obj, source, varargin)
-            % weight_image  Back-project weights to voxel space as a
-            % @statistic_image (so montage(weight_image(pipe,source)) works,
-            % even for PCA-reduced PCR pipelines). Delegates to the
-            % estimator's weight_image after stashing the back-projected
+        function si = weight_map_object(obj, source, varargin)
+            % weight_map_object  Back-project weights to voxel space as a
+            % @statistic_image (so montage(weight_map_object(pipe,source))
+            % works, even for PCA-reduced PCR pipelines). Delegates to the
+            % estimator's weight_map_object after stashing the back-projected
             % weights into a temporary predictive_model.
             wstruct = obj.back_project_weights();
             if isempty(wstruct.w)
-                error('pipeline:weight_image:NoInputWeights', ...
+                error('pipeline:weight_map_object:NoInputWeights', ...
                     ['Could not back-project weights to input space (a step ' ...
                      'is non-invertible or the estimator is nonlinear).']);
             end
             % Back-projected weights are already in the full input (voxel)
-            % space, so weight_image direct-matches them to `source`; pass
-            % empty omitted_features.
+            % space, so weight_map_object direct-matches them to `source`;
+            % pass empty omitted_features.
             tmp = pipeline.inject_weights(clone(obj.estimator), wstruct.w, []);
-            si = weight_image(tmp, source, varargin{:});
+            [~, si] = weight_map_object(tmp, source, varargin{:});
         end
 
     end
@@ -345,8 +345,9 @@ classdef pipeline
 
         % -----------------------------------------------------------------
         function pm = inject_weights(pm, w, omitted_features)
-            % Stash a weight vector into a predictive_model so weight_image
-            % can map it (used by pipeline.weight_image). Uses the public
+            % Stash a weight vector into a predictive_model so
+            % weight_map_object can map it (used by pipeline.weight_map_object).
+            % Uses the public
             % struct-constructor route so SetAccess=protected is respected.
             S = struct('w', w(:), 'omitted_features', omitted_features, ...
                        'algorithm', char(string(pm.algorithm)), ...

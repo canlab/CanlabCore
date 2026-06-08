@@ -58,7 +58,9 @@ fprintf('CV balanced accuracy: %.1f%% (per-fold: %s)\n', ...
     mat2str(100 * pm.error_metrics.balanced_accuracy_per_fold.value', 3));
 
 %% 5. Visualise the raw (pre-bootstrap) weight map
-si_raw = weight_image(pm, hw_obj);
+% weight_map_object caches the @statistic_image on pm (so montage(pm) works
+% later with no source); the second output is the image itself.
+[pm, si_raw] = weight_map_object(pm, hw_obj);
 create_figure('SVM weights -- raw'); axis off
 montage(si_raw);
 snapnow
@@ -74,13 +76,13 @@ fprintf('  FDR threshold = %.4g\n', pm.weights.fdr_thr);
 fprintf('  FDR-significant voxels = %d / %d\n', sum(pm.weights.fdr_sig), numel(pm.weights.w));
 
 %% 7. Visualise the FDR-thresholded weight map
-si_thr = weight_image(pm, hw_obj, 'use', 'thresh_fdr');
+[~, si_thr] = weight_map_object(pm, hw_obj, 'use', 'thresh_fdr');
 create_figure('SVM weights -- FDR thresholded'); axis off
 montage(si_thr);
 snapnow
 
 % Or via statistic_image's own threshold():
-si = weight_image(pm, hw_obj);
+[~, si] = weight_map_object(pm, hw_obj);
 si = threshold(si, .05, 'fdr');
 create_figure('SVM weights -- statistic_image threshold(.05, fdr)'); axis off
 montage(region(si));

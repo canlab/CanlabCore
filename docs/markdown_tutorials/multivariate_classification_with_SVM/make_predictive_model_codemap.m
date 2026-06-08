@@ -75,12 +75,12 @@ function make_predictive_model_codemap(outpng)
     text(3, 21.0, 'Predict & visualize', 'FontSize',11,'FontWeight','bold');
     oy = 8; oh = 9;
     b_pred = bx( 3.0, oy, 22, oh, {'predict(pm, Xnew)','-> yhat, scores'}, C.viz);
-    b_wi   = bx(26.5, oy, 27, oh, {'weight\_image(pm, source)','-> statistic\_image'}, C.viz);
+    b_wi   = bx(26.5, oy, 27, oh, {'weight\_map\_object(pm, source)','-> statistic\_image + cache'}, C.viz);
     b_mont = bx(55.5, oy, 18, oh, {'montage(pm)','surface(pm)'}, C.viz);
     b_plot = bx(75.5, oy, 21.5, oh, {'plot(pm) / rocplot(pm)','confusionchart(pm)'}, C.viz);
 
     ar(14, iy, 14, oy+oh+0.2);                 % bootstrap -> predict/viz band
-    ar(53.5, oy+oh*0.5, 55.4, oy+oh*0.5);      % weight_image -> montage
+    ar(53.5, oy+oh*0.5, 55.4, oy+oh*0.5);      % weight_map_object -> montage
     ar(73.5, oy+oh*0.5, 75.4, oy+oh*0.5);      % montage -> plot group
 
     % ---------- legend (horizontal strip along the bottom) ----------

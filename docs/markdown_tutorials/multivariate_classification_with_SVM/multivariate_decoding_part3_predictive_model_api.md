@@ -190,17 +190,19 @@ wraps MATLAB's confusion chart on `pm.fitted_values.yfit`.
 ```matlab
 montage(pm, hw_obj);                 % one-line delegate
 % equivalently:
-si_raw = weight_image(pm, hw_obj);
+[pm, si_raw] = weight_map_object(pm, hw_obj);
 montage(si_raw);
 surface(pm, hw_obj);                 % cortical-surface rendering
 ```
 
-`weight_image(pm, source)` maps `pm.weights.w` back into the source
-fmri_data's voxel space (using its `volInfo` + `removed_voxels`)
-and returns a `@statistic_image`. `montage(pm, source)` /
-`surface(pm, source)` are thin delegates that build that image and
-render it. Voxels the model dropped at fit time (in
-`omitted_features`) become zeros.
+`weight_map_object(pm, source)` maps `pm.weights.w` back into the source
+fmri_data's voxel space (using its `volInfo` + `removed_voxels`), wraps it
+as a `@statistic_image`, and **caches it on `pm.weights.weight_obj`** —
+returning the updated `pm` (and the image as a second output). After that,
+`montage(pm)` / `surface(pm)` work with no source argument. `montage(pm,
+source)` / `surface(pm, source)` are thin delegates that build that image
+and render it. Voxels the model dropped at fit time (in `omitted_features`)
+become zeros.
 
 ![DPSP SVM weight map (unthresholded)](pngs/dpsp_clf_weights.png)
 
@@ -268,17 +270,17 @@ map is `pm.weights.w` masked by `pm.weights.fdr_sig`:
 ```matlab
 montage(pm, hw_obj, 'use', 'thresh_fdr');            % delegate
 % or build the image yourself:
-si_thr = weight_image(pm, hw_obj, 'use', 'thresh_fdr');
+[~, si_thr] = weight_map_object(pm, hw_obj, 'use', 'thresh_fdr');
 montage(si_thr);
 ```
 
-Or, since `weight_image` attaches `si.p` and `si.sig`, re-threshold
+Or, since `weight_map_object` attaches `si.p` and `si.sig`, re-threshold
 with the statistic_image methods and outline contiguous clusters:
 
 ```matlab
 montage(pm, hw_obj, 'use', 'thresh_fdr', 'regions');  % delegate -> region montage
 % equivalently:
-si = weight_image(pm, hw_obj);
+[~, si] = weight_map_object(pm, hw_obj);
 si = threshold(si, .05, 'fdr');
 montage(region(si));
 ```
@@ -470,8 +472,8 @@ After it runs, `ss` holds:
 | `ss.n_stable`        | number of stable voxels |
 | `ss.valid_boots`     | bootstraps that produced a usable weight vector |
 
-The selection frequency is itself a brain map — push it through
-`weight_image` to montage where the classifier is *stably* reading
+The selection frequency is itself a brain map — drop it into a borrowed
+image object's `.dat` to montage where the classifier is *stably* reading
 signal:
 
 ```matlab

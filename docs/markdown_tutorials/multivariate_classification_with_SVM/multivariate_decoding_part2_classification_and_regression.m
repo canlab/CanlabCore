@@ -33,7 +33,7 @@ xlabel('Cross-validated prediction'); ylabel('Observed pain rating'); set(gca, '
 create_figure('weights raw'); axis off; montage(pm_r, bmrk3);
 X = double(bmrk3.dat'); Y = bmrk3.Y;
 pm_r = bootstrap(pm_r, X, Y, 'nboot', 1000, 'groups', bmrk3.metadata_table.subject_id);
-si = weight_image(pm_r, bmrk3);
+[~, si] = weight_map_object(pm_r, bmrk3);
 si = threshold(si, .01, 'unc');                          % bootstrap p < .01, uncorrected
 create_figure('weights thresholded'); axis off; montage(si);
 %%

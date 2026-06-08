@@ -1,9 +1,9 @@
 function varargout = surface(obj, varargin)
 % surface  Cortical-surface rendering of a predictive model's weight map.
 %
-% Thin delegate: build the weight @statistic_image (via weight_image) and
-% call its surface. With 'regions', route through region() and surface the
-% region object instead.
+% Thin delegate: build the weight @statistic_image (via weight_map_object)
+% and call its surface. With 'regions', route through region() and surface
+% the region object instead.
 %
 % :Usage:
 % ::
@@ -27,7 +27,7 @@ function varargout = surface(obj, varargin)
 %        which weight vector to map ('w' default, 'thresh_fdr', ...).
 %
 %   **'regions':**
-%        surface region(weight_image(...)) instead of the statistic_image.
+%        surface region(weight_map_object(...)) instead of the statistic_image.
 %
 %   Any other name/value pairs are passed through to the underlying
 %   image_vector.surface / region.surface.
@@ -48,7 +48,7 @@ function varargout = surface(obj, varargin)
 %     surface(pm, dat, 'use', 'thresh_fdr');
 %
 % :See also:
-%   weight_image, weight_map_object, montage, region, image_vector.surface
+%   weight_map_object, montage, region, image_vector.surface
 
     [si, passthrough, do_regions] = predictive_model.weight_image_for_display(obj, varargin{:});
 

@@ -3,8 +3,8 @@
 CanlabCore ships with a small collection of test datasets and exposes a much
 larger registry of group-level images, parcellations, meta-analytic maps, and
 multivariate "signature" patterns through the `load_image_set` function.
-Together, these are the canonical inputs for tutorials, walkthroughs, and the
-example scripts in [CANlab_help_examples](https://github.com/canlab/CANlab_help_examples).
+Together, these are the canonical inputs for the tutorials and walkthroughs at
+[canlab.github.io](https://canlab.github.io).
 
 Most of the *built-in* test data lives in `CanlabCore/Sample_datasets/` and
 ships with the toolbox itself. The remaining datasets and patterns are loaded

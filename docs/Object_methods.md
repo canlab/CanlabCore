@@ -25,8 +25,7 @@ The fastest way to learn the toolbox is by example.
 
 - **[Walkthroughs](https://canlab.github.io/walkthroughs/)** — step-by-step analysis tutorials with code.
 - **[Tutorials](https://canlab.github.io/tutorials/)** — longer-form tutorials.
-- **[CANlab_help_examples](https://github.com/canlab/CANlab_help_examples)** repository — runnable MATLAB scripts (`example_help_files/`) and HTML output with figures (`published_html/`), plus the second-level batch script system.
-- **[canlab.github.io](https://canlab.github.io/)** — top-level entry point with Setup, Repositories, and Interactive fMRI sections.
+- **[canlab.github.io](https://canlab.github.io/)** — top-level entry point with Setup, Repositories, Interactive fMRI, and the second-level batch script system.
 
 ## Class hierarchy
 

@@ -3,7 +3,7 @@ function xval_SVM_unit_test()
 %
 % Reproduces the binary-classification setup from
 % docs/markdown_tutorials/multivariate_classification_with_SVM/
-%   multivariate_classification_with_SVM_part1.mlx
+%   multivariate_decoding_part1_classification_with_SVM.mlx
 % and asserts that the wrapper returns a populated @predictive_model
 % object whose categorised sub-structs agree with the legacy flat aliases.
 %

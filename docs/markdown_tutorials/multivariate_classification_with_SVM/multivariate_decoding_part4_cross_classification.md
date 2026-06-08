@@ -1,4 +1,11 @@
-# Multivariate classification with SVM — Part 3: cross-classification
+# Multivariate decoding — Part 4: cross-classification
+
+> **Multivariate decoding tutorial series**
+> 1. [Classification basics with SVM](multivariate_decoding_part1_classification_with_SVM.md) — train and cross-validate a linear SVM (Hot vs Warm); ROC, confusion matrix, effect sizes; apply to a held-out test set.
+> 2. [Classification and regression](multivariate_decoding_part2_classification_and_regression.md) — the difference between the two, the one-line dataset loaders, the `xval_*` wrapper family, and `fmri_data.predict` end-to-end for both.
+> 3. [The sklearn-style `predictive_model` API](multivariate_decoding_part3_predictive_model_api.md) — fit / predict / crossval / bootstrap / permutation, nested-CV tuning, calibration, stability selection.
+> 4. **Cross-classification** *(this part)* — does a pain pattern decode social rejection? (Woo et al., 2014).
+> 5. [Algorithms, tuning, and inference](multivariate_decoding_part5_algorithms_and_tuning.md) — compare SVM / SVR / lasso / ridge / GP, ECOC multiclass, grid search, stability selection.
 
 > Train a classifier on one task and test it on another. Here we ask
 > the Woo et al. (2014) question directly: does a brain pattern that
@@ -229,6 +236,7 @@ thresholding without editing a 500-line function.
   lower-than-diagonal value is the signature of *shared but
   dissociable* representations — the Woo et al. (2014) headline.
 
-Continue to **Part 4** for multiclass classification (ECOC) and
-regression (SVR / lasso / ridge / GP), with algorithm comparison,
-`grid_search` tuning, and `stability_selection` inference.
+Continue to [**Part 5**](multivariate_decoding_part5_algorithms_and_tuning.md)
+for multiclass classification (ECOC) and regression (SVR / lasso / ridge /
+GP), with algorithm comparison, `grid_search` tuning, and
+`stability_selection` inference.

@@ -1,4 +1,11 @@
-# Multivariate classification with SVM — Part 2
+# Multivariate decoding — Part 3: the sklearn-style `predictive_model` API
+
+> **Multivariate decoding tutorial series**
+> 1. [Classification basics with SVM](multivariate_decoding_part1_classification_with_SVM.md) — train and cross-validate a linear SVM (Hot vs Warm); ROC, confusion matrix, effect sizes; apply to a held-out test set.
+> 2. [Classification and regression](multivariate_decoding_part2_classification_and_regression.md) — the difference between the two, the one-line dataset loaders, the `xval_*` wrapper family, and `fmri_data.predict` end-to-end for both.
+> 3. **The sklearn-style `predictive_model` API** *(this part)* — fit / predict / crossval / bootstrap / permutation, nested-CV tuning, calibration, stability selection.
+> 4. [Cross-classification](multivariate_decoding_part4_cross_classification.md) — does a pain pattern decode social rejection? (Woo et al., 2014).
+> 5. [Algorithms, tuning, and inference](multivariate_decoding_part5_algorithms_and_tuning.md) — compare SVM / SVR / lasso / ridge / GP, ECOC multiclass, grid search, stability selection.
 
 > All of Part 1's workflow now in the new sklearn-style
 > `@predictive_model` API: construct → fit → cross-validate →
@@ -6,14 +13,14 @@
 > testing, hyperparameter search, and feature selection. Same DPSP
 > Hot-vs-Warm dataset.
 
-## What's new vs Part 1
+## What's new vs Parts 1–2
 
-Part 1 used `xval_SVM(X, Y, id, ...)` — a single-function wrapper that
-returns a `predictive_model` already populated with cv predictions,
-weights, and optionally bootstrap/permutation results. Part 2 takes
-the same workflow apart into composable methods on the
-`@predictive_model` class, so each step is independently
-inspectable and re-runnable.
+Part 1 used `xval_SVM(X, Y, id, ...)` — a single-function wrapper — and
+Part 2 used `fmri_data.predict`. Both return a `predictive_model` already
+populated with cv predictions, weights, and optionally bootstrap/permutation
+results. This part takes the same workflow apart into composable methods on
+the `@predictive_model` class, so each step is independently inspectable and
+re-runnable.
 
 ```
 % Part 1                                  % Part 2

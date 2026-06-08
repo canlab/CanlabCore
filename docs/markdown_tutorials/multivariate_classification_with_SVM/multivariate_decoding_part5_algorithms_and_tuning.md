@@ -1,6 +1,13 @@
-# Multivariate classification with SVM — Part 4: algorithms, tuning, inference
+# Multivariate decoding — Part 5: algorithms, tuning, and inference
 
-> One dataset, many estimators. Part 4 uses the `@predictive_model`
+> **Multivariate decoding tutorial series**
+> 1. [Classification basics with SVM](multivariate_decoding_part1_classification_with_SVM.md) — train and cross-validate a linear SVM (Hot vs Warm); ROC, confusion matrix, effect sizes; apply to a held-out test set.
+> 2. [Classification and regression](multivariate_decoding_part2_classification_and_regression.md) — the difference between the two, the one-line dataset loaders, the `xval_*` wrapper family, and `fmri_data.predict` end-to-end for both.
+> 3. [The sklearn-style `predictive_model` API](multivariate_decoding_part3_predictive_model_api.md) — fit / predict / crossval / bootstrap / permutation, nested-CV tuning, calibration, stability selection.
+> 4. [Cross-classification](multivariate_decoding_part4_cross_classification.md) — does a pain pattern decode social rejection? (Woo et al., 2014).
+> 5. **Algorithms, tuning, and inference** *(this part)* — compare SVM / SVR / lasso / ridge / GP, ECOC multiclass, grid search, stability selection.
+
+> One dataset, many estimators. This part uses the `@predictive_model`
 > registry to run **binary** and **multiclass (ECOC)** classification and
 > **regression** (SVR, lasso, ridge, Gaussian process) on the DPSP data,
 > compares cross-validated performance across algorithms, tunes
@@ -89,7 +96,7 @@ confusionchart(pm);                                  % see which pairs confuse
 On this dataset the 4-way accuracy is ~**70%** (chance 25%). The
 confusion chart is the interesting part: Hot/Warm and Rejecter/Friend
 each confuse *within* their own task far more than across, echoing the
-Part 3 finding that the two domains are partly separable.
+Part 4 finding that the two domains are partly separable.
 
 > **Note on scoring:** for multiclass use `accuracy` or
 > `balanced_accuracy`. `roc_auc` and the within-person forced-choice
@@ -173,7 +180,7 @@ and that the model isn't pathologically sensitive to C.
 
 ## 7. High-dimensional inference with `stability_selection`
 
-For wide, regularised models the bootstrap z/p collapses (Part 2 §7).
+For wide, regularised models the bootstrap z/p collapses (Part 3 §7).
 `stability_selection` is the robust alternative: how often does each
 voxel land in the top-k by `|weight|` across resamples?
 
@@ -222,7 +229,8 @@ a bootstrap-z threshold on an L2 model.
   `'groups', subject_id` and a group-aware splitter, or held-out folds
   leak subject identity and inflate performance.
 
-That completes the four-part SVM/`predictive_model` walkthrough:
-**Part 1** the classic `xval_SVM` wrapper, **Part 2** the composable
-sklearn-style API, **Part 3** cross-classification, and **Part 4**
-algorithms, tuning, and inference.
+That completes the five-part multivariate-decoding walkthrough:
+**Part 1** SVM classification basics, **Part 2** classification vs
+regression, **Part 3** the composable sklearn-style `predictive_model`
+API, **Part 4** cross-classification, and **Part 5** algorithms, tuning,
+and inference.

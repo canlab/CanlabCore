@@ -1,14 +1,21 @@
-# Multivariate classification and cross-classification with CANlab tools (SVM)
+# Multivariate decoding — Part 1: classification basics with SVM
+
+> **Multivariate decoding tutorial series**
+> 1. **Classification basics with SVM** *(this part)* — train and cross-validate a linear SVM (Hot vs Warm); ROC, confusion matrix, effect sizes; apply to a held-out test set.
+> 2. [Classification and regression](multivariate_decoding_part2_classification_and_regression.md) — the difference between the two, the one-line dataset loaders, the `xval_*` wrapper family, and `fmri_data.predict` end-to-end for both.
+> 3. [The sklearn-style `predictive_model` API](multivariate_decoding_part3_predictive_model_api.md) — fit / predict / crossval / bootstrap / permutation, nested-CV tuning, calibration, stability selection.
+> 4. [Cross-classification](multivariate_decoding_part4_cross_classification.md) — does a pain pattern decode social rejection? (Woo et al., 2014).
+> 5. [Algorithms, tuning, and inference](multivariate_decoding_part5_algorithms_and_tuning.md) — compare SVM / SVR / lasso / ridge / GP, ECOC multiclass, grid search, stability selection.
 
 A walkthrough of basic CANlab/SVM workflows for *decoding* fMRI condition
 maps: training and evaluating a linear SVM, reading out cross-validated
 scores, building ROC and confusion-matrix summaries, and laying the
 groundwork for cross-classification across distinct affective domains.
 
-> **Live Script version:** [`multivariate_classification_with_SVM_part1.mlx`](multivariate_classification_with_SVM_part1.mlx)
+> **Live Script version:** [`multivariate_decoding_part1_classification_with_SVM.mlx`](multivariate_decoding_part1_classification_with_SVM.mlx)
 > &nbsp;·&nbsp; plain-text source (recommended for version control, opens in the
 > Live Editor on R2025a+):
-> [`multivariate_classification_with_SVM_part1.m`](multivariate_classification_with_SVM_part1.m)
+> [`multivariate_decoding_part1_classification_with_SVM.m`](multivariate_decoding_part1_classification_with_SVM.m)
 
 ## About the study (Woo et al., 2014)
 
@@ -502,13 +509,17 @@ This is the end of *Part 1*. We have
 - trained and cross-validated a whole-brain linear SVM for *Hot vs Warm*,
 - read out accuracy, AUC, classification *d*, and the confusion matrix.
 
-In Part 2 we'll add the parallel rejection classifier, run the
+[**Part 2**](multivariate_decoding_part2_classification_and_regression.md)
+contrasts classification with **regression** and shows the one-line loaders
+and `fmri_data.predict` for both;
+[**Part 3**](multivariate_decoding_part3_predictive_model_api.md) opens up
+the full sklearn-style `predictive_model` API (bootstrap, permutation,
+nested-CV tuning, calibration, stability selection);
+[**Part 4**](multivariate_decoding_part4_cross_classification.md) runs the
 **cross-classification** test (does the Hot/Warm pattern discriminate
-Rejector/Friend, and vice versa?), repeat the analysis **within
-specific regions** (dACC, aINS, …) using a searchlight or atlas-based
-parcellation, evaluate the final model on the held-out `'test'`
-partition, and expose more of the methods that live on the
-`predictive_model` object.
+Rejector/Friend, and vice versa?); and
+[**Part 5**](multivariate_decoding_part5_algorithms_and_tuning.md) compares
+algorithms (SVM/SVR/lasso/ridge/GP), multiclass ECOC, and tuning.
 
 ## References
 

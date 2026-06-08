@@ -383,13 +383,27 @@ worth reporting** because they answer different questions:
   scores = S_hw.fitted_values.dist_from_hyperplane_xval;
   ROC2 = roc_plot(scores, S_hw.Y > 0, 'twochoice');
   ```
+  ```
+  ROC for two-choice classification of paired observations.
+  Assumes pos and null outcome observations have the same subject order.
+  Using a priori threshold of 0 for pairwise differences.
+
+  ROC_PLOT Output: Two-alternative forced choice, A priori threshold
+  Threshold: 0.00   Sens: 88%   Spec: 88%   PPV: 88%
+  Nonparametric AUC: 0.98   Parametric d_a: 1.82   Accuracy: 88% +- 5.1% (SE), P = 0.000001
+  ```
+  ![ROC: Hot vs Warm, forced-choice (twochoice)](pngs/svm_hotvswarm_roc_twochoice.png)
+
   Forced-choice builds in **more prior information**: it knows that for each
   participant there is *exactly one* Hot and *one* Warm image, and *which*
   two images belong to that participant. In effect **each person serves as
   their own control**, so between-subject differences in overall signal
   level cancel out. That makes it an *easier* problem, and forced-choice
-  accuracy is typically **higher** than single-interval accuracy on the
-  same scores (here ≈ 88 % vs. 79 %).
+  accuracy is **higher** than single-interval accuracy on the same scores
+  (here **88 % vs. 79 %**, AUC 0.98 vs. 0.87). `'twochoice'` pairs the
+  observations by assuming the positive and negative cases appear in the
+  **same subject order** — which holds here because Hot and Warm were stacked
+  subject-for-subject.
 
 Report **single-interval** accuracy when the deployment really is
 one-image-at-a-time and unpaired (e.g. screening an individual scan).
@@ -407,19 +421,44 @@ Two useful effect sizes fall out of these scores:
 
 - **Single-interval *d*** — treat the scores as a continuous response
   variable and compute the standardised mean difference between classes.
-  This is `S_hw.classification_d_singleinterval` (and equals the Gaussian
-  *d_a* reported by `roc_plot`).
+  This is `S_hw.error_metrics.d_singleinterval.value` (≈ **1.36**, and equals
+  the Gaussian *d_a* reported by `roc_plot`).
 - **Within-person *d*** — when you have paired observations per
   subject (as here), compute the *paired* score difference
-  (`score_Hot − score_Warm`) for each participant and standardise it.
-  This is `S_hw.d_within`, and uses the within-subject standard
-  deviation, which is typically smaller than the between-subject SD.
+  (`score_Hot − score_Warm`) for each participant and standardise it by the
+  SD of that difference across subjects (a paired Cohen's *dz*). This is
+  `S_hw.error_metrics.d_within.value` (≈ **1.29**).
 
 Both are usually more sensitive than thresholded accuracy because they
 exploit the continuous information in the scores rather than collapsing
 each prediction into a 0/1 hit. Accuracy can flatline at chance for a
 classifier that *would* discriminate well with a better threshold;
 the *d*s will still register signal.
+
+> **"Wait — the within-person *d* is *lower* than the single-interval *d*,
+> but the forced-choice accuracy is *higher*?"** Yes, and it's correct, not a
+> bug — just unintuitive. The two numbers answer different questions:
+>
+> - The within-person *dz* standardises the paired difference by **the SD of
+>   that difference across subjects**, `mean(Δ)/SD(Δ)`. The single-interval
+>   *d* standardises by the **pooled within-class SD** (which mixes between-
+>   and within-subject variance). The exact relationship is
+>   `dz / d_single = 1 / √(2(1−r))`, where *r* is the within-subject
+>   correlation between a person's Hot and Warm scores. On these data
+>   **r ≈ 0.39**, which is **below 0.5**, so `dz` lands *below* `d_single`
+>   (the ratio is ≈ 0.91). Only when *r* > 0.5 (a strong subject "main effect")
+>   does the within-person *d* exceed the single-interval *d*.
+> - **Accuracy** rises for a different reason. Forced-choice accuracy ≈
+>   `Φ(dz)` = Φ(1.29) ≈ 88 %, whereas single-interval accuracy ≈
+>   `Φ(d_single/2)` = Φ(0.68) ≈ 75 %. The forced-choice task *compares two
+>   observations* (cancelling each subject's baseline offset) instead of
+>   thresholding one — the `/1` vs `/2` in those expressions — so its accuracy
+>   is higher **even though** `dz < d_single`.
+>
+> Bottom line: a higher within-person *accuracy* does **not** require a higher
+> within-person *effect size*; they are different scales. (And note `roc_plot`'s
+> `'twochoice'` prints its *own* `d_a` ≈ 1.82, a third convention —
+> `√2·Φ⁻¹(accuracy)` — so don't expect it to match `d_within`.)
 
 ### Confusion matrix
 
@@ -449,6 +488,78 @@ Rows are *true* labels, columns are *predicted* labels, and the cells
 along each row and column are summarised as row- and column-normalised
 percentages. The classifier is slightly more sensitive to *Hot* than to *Warm*
 at this decision threshold. Raw counts are in `rawConf`.
+
+### Model weights: montage and surface
+
+The trained SVM is a **brain map** — one weight per voxel — and the weight
+pattern is what the classifier actually "looks at." `S_hw.weights.w` holds the
+raw coefficient vector, but to view it in the brain you map it back into voxel
+space. The `@predictive_model` method `weight_map_object` does this from any
+reference image in the same space (here the training object), wraps it as a
+`statistic_image`, and **caches it on the model** so `montage` / `surface`
+need no further arguments:
+
+```matlab
+S_hw = weight_map_object(S_hw, hw_obj);   % attach the weight map (training space)
+
+create_figure('SVM weights montage'); axis off
+montage(S_hw);
+
+create_figure('SVM weights surface'); axis off
+surface(S_hw, 'foursurfaces_hcp');
+```
+
+![Hot vs Warm SVM weight map](pngs/svm_hotvswarm_weights.png)
+![Hot vs Warm SVM weight surface](pngs/svm_hotvswarm_weights_surface.png)
+
+This is the **unthresholded** pattern fit to the training data: positive
+(warm-colored) weights push toward "Hot," negative toward "Warm," and you can
+see the heat-evoked pain network (insula, mid-cingulate, thalamus, S2)
+carrying positive weight. A raw weight map like this is fine for *seeing* what
+the model uses, but the individual voxel weights are not yet inference — for
+"which voxels are reliably non-zero," bootstrap the weights and threshold (see
+[Part 3](multivariate_decoding_part3_predictive_model_api.md), §7–8). The same
+two calls also work after training with `fmri_data.predict('newapi')` or any
+`xval_*` wrapper, because all of them return a `predictive_model`. (Heads-up
+for §7 onward: a strongly L2-regularised `linear_svm` produces near-identical
+bootstrap weights, so its FDR map can be empty — Part 3 covers why and what to
+do instead.)
+
+### A one-call summary
+
+`summary(S_hw)` prints how the model was built, what inference is available,
+and the task-relevant performance metrics in one shot — a quick way to capture
+the model's characteristics:
+
+```matlab
+summary(S_hw);
+```
+
+```
+=== predictive_model summary ===
+  Algorithm : linear_svm   (task: classification)
+  Fit       : cross-validated
+  Data      : 82 observations, 194676 features, 41 groups (within-person design)
+  CV scheme : stratified_group_kfold, 10 folds, scorer=balanced_accuracy
+  Inference : none yet (run bootstrap / permutation_test / calibrate)
+
+  Performance (cross-validated, task=classification)
+  --------------------------------------------
+    Accuracy                 79.3%
+    Balanced accuracy        79.0%
+    Forced-choice accuracy   87.8%
+    AUC                      0.865
+    Sensitivity              0.780
+    Specificity              0.805
+    PPV                      0.800
+    NPV                      0.786
+    Effect size (d)          1.287
+    N                        82
+```
+
+The `Inference` line fills in as you add `bootstrap` / `permutation_test` /
+`calibrate`; `report_accuracy(S_hw)` prints just the performance block and
+returns it as a struct for programmatic use.
 
 ### Apply to the held-out test set
 
@@ -524,5 +635,5 @@ algorithms (SVM/SVR/lasso/ridge/GP), multiclass ECOC, and tuning.
 ## References
 
 - Woo C-W, Koban L, Kross E, Lindquist MA, Banich MT, Ruzic L, Andrews-Hanna JR, Wager TD (2014). **Separate neural representations for physical pain and social rejection.** *Nature Communications* 5:5380. [doi:10.1038/ncomms6380](https://doi.org/10.1038/ncomms6380)
-- CANlab tutorials and walkthroughs: <https://github.com/canlab/CANlab_help_examples>
-- CanlabCore function reference: <https://canlabcore.readthedocs.org/en/latest/>
+- CANlab object methods, walkthroughs, and tutorials: <https://canlab.github.io>
+- `@predictive_model` API reference: [`docs/predictive_model_methods.md`](../../predictive_model_methods.md)

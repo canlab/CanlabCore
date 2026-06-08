@@ -218,4 +218,5 @@ create_figure('thresholded weights'); axis off; montage(si);
 ## References
 
 - Woo C-W et al. (2014). *Separate neural representations for physical pain and social rejection.* **Nat. Commun.** 5:5380. [doi:10.1038/ncomms6380](https://doi.org/10.1038/ncomms6380)
-- CANlab function reference: <https://canlabcore.readthedocs.org/en/latest/>
+- CANlab object methods, walkthroughs, and tutorials: <https://canlab.github.io>
+- `@predictive_model` API reference: [`docs/predictive_model_methods.md`](../../predictive_model_methods.md)

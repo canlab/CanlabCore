@@ -57,12 +57,33 @@ fprintf('CV balanced accuracy: %.1f%% (per-fold: %s)\n', ...
     100 * pm.error_metrics.balanced_accuracy.value, ...
     mat2str(100 * pm.error_metrics.balanced_accuracy_per_fold.value', 3));
 
+% summary(pm) prints provenance + the task-relevant performance block
+% (balanced accuracy, AUC, sensitivity, specificity, PPV, NPV, d); the
+% Inference line fills in after bootstrap/permutation_test/calibrate.
+summary(pm);
+% report_accuracy(pm) prints just the metric block and returns it as a struct:
+acc = report_accuracy(pm, 'noverbose');
+
+%% 4b. Repeated cross-validation (more stable estimate)
+% A single k-fold split wobbles with the luck of the partition; repeated
+% k-fold runs the whole CV n times and averages (cost scales linearly).
+pm_rep = crossval(clone(pm), X, Y, ...
+    'cv',      cv_splitter.repeated_kfold(5, 5), ...   % 5 folds x 5 repeats
+    'groups',  id, ...
+    'scoring', 'balanced_accuracy');
+fprintf('Repeated-CV balanced accuracy: %.1f%% (sd across folds %.3f)\n', ...
+    100 * pm_rep.error_metrics.balanced_accuracy.value, ...
+    std(pm_rep.error_metrics.balanced_accuracy_per_fold.value));
+
 %% 5. Visualise the raw (pre-bootstrap) weight map
-% weight_map_object caches the @statistic_image on pm (so montage(pm) works
-% later with no source); the second output is the image itself.
+% weight_map_object caches the @statistic_image on pm (so montage(pm) /
+% surface(pm) work later with no source); the second output is the image.
 [pm, si_raw] = weight_map_object(pm, hw_obj);
 create_figure('SVM weights -- raw'); axis off
-montage(si_raw);
+montage(pm);            % uses the cached map
+snapnow
+create_figure('SVM weights -- surface'); axis off
+surface(pm);
 snapnow
 
 %% 6. Bootstrap inference
@@ -81,11 +102,16 @@ create_figure('SVM weights -- FDR thresholded'); axis off
 montage(si_thr);
 snapnow
 
-% Or via statistic_image's own threshold():
+% Or via statistic_image's own threshold(). For a strongly regularised model
+% the FDR threshold can be empty (see the bootstrap caveat in the .md), so we
+% threshold at uncorrected p < .01 here and also show the surface.
 [~, si] = weight_map_object(pm, hw_obj);
-si = threshold(si, .05, 'fdr');
-create_figure('SVM weights -- statistic_image threshold(.05, fdr)'); axis off
-montage(region(si));
+si = threshold(si, .01, 'unc');
+create_figure('SVM weights -- thresholded montage'); axis off
+montage(si);
+snapnow
+create_figure('SVM weights -- thresholded surface'); axis off
+surface(si, 'foursurfaces_hcp');
 snapnow
 
 %% 8. Permutation test (is the cv score significantly better than chance?)
@@ -99,6 +125,13 @@ fprintf('Permutation test (%s): observed = %.3f, null mean = %.3f, p = %.4f\n', 
     mean(pm.permutation_results.null_scores, 'omitnan'), ...
     pm.permutation_results.p_value);
 fprintf('  scheme: %s\n', pm.permutation_results.permutation_descrip);
+
+% Visualise the null: histogram with a dashed alpha=.05 critical line and a
+% solid observed-score line. (plot(pm) also draws this automatically whenever
+% permutation results are present.) For publication use nperm >= 5000.
+create_figure('permutation null');
+plot_permutation(pm);
+snapnow
 
 % Force a specific scheme — useful for reporting or to compare
 % paired vs free-permutation p-values:
@@ -124,6 +157,37 @@ pm_gs = grid_search(pm_gs, X, Y, pg, 'groups', id, 'verbose', false);
 fprintf('Best params: %s, best score = %.3f\n', ...
     strjoin(string(pm_gs.diagnostics.grid_search.best_params(2:2:end)), ' / '), ...
     pm_gs.diagnostics.grid_search.best_score);
+
+%% 10b. Shrinkage sweeps (SVM C; LASSO-PCR components)
+% Each hyperparameter has an interior optimum. The score AT the chosen point
+% is optimistically biased (you picked it on these folds) — nest the search
+% for an honest estimate (see the .md).
+Cgrid = logspace(-3, 2, 6);
+accC  = nan(size(Cgrid));
+for i = 1:numel(Cgrid)
+    pmc = crossval(predictive_model('algorithm','svm','task','classification', ...
+              'modeloptions', {'BoxConstraint', Cgrid(i)}), X, Y, 'groups', id, ...
+              'cv', cv_splitter.stratified_group_kfold(5), 'scoring', 'balanced_accuracy');
+    accC(i) = pmc.error_metrics.balanced_accuracy.value;
+end
+
+bmrk3 = load_image_set('bmrk3', 'noverbose');
+Xr = double(bmrk3.dat');  Yr = bmrk3.Y;  idr = bmrk3.metadata_table.subject_id;
+lnum = [5 10 20 40 80];                  % # components kept before the OLS refit
+r2L  = nan(size(lnum));
+for i = 1:numel(lnum)
+    pml = crossval(predictive_model('algorithm','lassopcr','task','regression', ...
+              'modeloptions', {'lasso_num', lnum(i)}), Xr, Yr, 'groups', idr, ...
+              'cv', cv_splitter.group_kfold(5), 'scoring', 'r2');
+    r2L(i) = pml.error_metrics.predicted_r2.value;
+end
+
+create_figure('shrinkage sweeps', 1, 2);
+subplot(1,2,1); semilogx(Cgrid, accC, 'o-', 'LineWidth', 2);
+xlabel('SVM C (BoxConstraint)'); ylabel('CV balanced accuracy'); title('DPSP Hot/Warm');
+subplot(1,2,2); plot(lnum, r2L, 'o-', 'LineWidth', 2);
+xlabel('LASSO-PCR components kept'); ylabel('predicted R^2'); title('bmrk3 pain');
+snapnow
 
 %% 11. Univariate feature selection
 pm_fs = predictive_model('algorithm','svm','task','classification', ...

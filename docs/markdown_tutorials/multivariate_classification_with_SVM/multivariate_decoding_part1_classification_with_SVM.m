@@ -90,12 +90,15 @@ scores = S_hw.fitted_values.dist_from_hyperplane_xval;
 create_figure('ROC');
 ROC_single = roc_plot(scores, S_hw.Y > 0, 'threshold', 0);
 set(gca, 'FontSize', 16);
-ROC_forced = roc_plot(scores, S_hw.Y > 0, 'twochoice', 'noplot');   % paired / 2AFC
+%[text] Forced-choice (|'twochoice'|) pairs the observations by subject order — here each participant's Hot vs their own Warm map — and reports a higher accuracy (≈88% vs ≈79%) and AUC (≈0.98 vs ≈0.87) on the same scores.
+create_figure('ROC 2AFC');
+ROC_forced = roc_plot(scores, S_hw.Y > 0, 'twochoice');   % paired / 2AFC
 %%
 %[text] ## Continuous scores and Cohen's *d*
-%[text] The cross-validated scores yield two effect sizes. The **single-interval** *d* is the standardised mean difference between classes; the **within-person** *d* uses each participant's paired score difference (|score_Hot − score_Warm|) and the within-subject SD. Both are usually more sensitive than thresholded accuracy because they use the continuous score rather than a 0/1 hit.
+%[text] The cross-validated scores yield two effect sizes. The **single-interval** *d* (≈1.36) is the standardised mean difference between classes; the **within-person** *d* (≈1.29) is a paired Cohen's *dz* — each participant's score difference |score_Hot − score_Warm| standardised by the SD of that difference across subjects.
 classification_d_singleinterval = S_hw.error_metrics.d_singleinterval.value
 classification_d_within         = S_hw.error_metrics.d_within.value
+%[text] **Why is the within-person *d* lower than the single-interval *d*, while the forced-choice *accuracy* is higher?** It's correct, not a bug. The two *d*'s have different denominators: |dz/d\_single = 1/sqrt(2(1−r))|, where *r* is the within-subject correlation between a person's Hot and Warm scores. Here *r* ≈ 0.39 (below 0.5), so |dz| lands *below* |d\_single|. Accuracy, by contrast, compares |Phi(dz)| ≈ 88% (forced-choice) against |Phi(d\_single/2)| ≈ 75% (single-interval): the forced-choice task compares two observations (cancelling each subject's baseline) instead of thresholding one, so it scores higher even though |dz < d\_single|. A higher within-person accuracy does not require a larger within-person effect size — they are different scales.
 %%
 %[text] ## Confusion matrix
 %[text] Rows are *true* labels, columns are *predicted* labels, and cells are percentages of each true class (row-normalised). For this run the classifier is slightly more sensitive to Hot than to Warm at this decision threshold. We pull the raw counts via |confusion_matrix(..., 'noplot')| and then build our own |confusionchart| with text labels (Warm, Hot) rather than the underlying ±1 codes.
@@ -106,6 +109,19 @@ cm = confusionchart(fig_cm, rawConf, {'Warm','Hot'}, ...
     'RowSummary', 'row-normalized', ...
     'ColumnSummary', 'column-normalized', ...
     'FontSize', 14);
+%%
+%[text] ## Model weights: montage and surface
+%[text] The trained SVM is a brain map — one weight per voxel. |weight\_map\_object| maps |S\_hw.weights.w| back into voxel space from any reference image in the same space (here the |xval| training object), wraps it as a |statistic_image|, and **caches it on the model**, so |montage(pm)| / |surface(pm)| (and |plot(pm)|) need no source argument. This is the unthresholded pattern fit to the training data; for "which voxels are reliable", bootstrap and threshold (Part 3, §7–8). The same two calls work after any |xval_*| wrapper or |fmri_data.predict('newapi')|.
+ref = hw_obj; ref.dat = hw_obj.dat(:, is_xval); ref.Y = Y;   % training-space reference
+S_hw = weight_map_object(S_hw, ref);
+create_figure('SVM weights montage'); axis off
+montage(S_hw);
+create_figure('SVM weights surface'); axis off
+surface(S_hw, 'foursurfaces_hcp');
+%%
+%[text] ## A one-call summary
+%[text] |summary(pm)| prints how the model was built, what inference is available, and the task-relevant performance metrics (balanced accuracy, AUC, sensitivity, specificity, PPV, NPV, *d*) in one shot. The |Inference| line fills in as you add |bootstrap| / |permutation_test| / |calibrate|. |report_accuracy(pm)| prints just the performance block and returns it as a struct.
+summary(S_hw);
 %%
 %[text] ## Apply to the held-out test set
 %[text] Everything above used only the |xval| partition. |S\_hw| ships with a final classifier (|S\_hw.ml\_model|) trained on all |xval| images, so we apply it **once** to the |test| participants — data that played no part in fitting or any choice. Because |S\_hw| is a |predictive_model|, |predict| runs the stored model on a new [images × voxels] matrix. A test accuracy near the cross-validated estimate means the cross-validation was honest; a large drop suggests leakage. With only 18 test subjects the confidence interval is wide, so treat it as a confirmation, not a precise estimate.

@@ -37,6 +37,20 @@ rejection co-localized in similar gross anatomy.
 - Paper (open access): [Woo et al., 2014, *Nat. Commun.* — doi:10.1038/ncomms6380](https://doi.org/10.1038/ncomms6380)
   · [local PDF](../../../Neuroimaging_Pattern_Masks/Multivariate_signature_patterns/2015_Woo_NatureComms_Rejection/Woo_2014_NatComms_dpSP_romantic_rejection.pdf)
 
+> **Shortcut — one-line loaders.** Sections 1–3 below build the two
+> classification inputs by hand (load four objects, gray-matter mask,
+> concatenate, set `±1` labels, build a subject grouping vector) so you can
+> see every step. If you just want the ready-to-classify objects, two
+> keyword loaders do all of that for you:
+> ```matlab
+> hw_obj = load_image_set('DPSP_hotwarm', 'noverbose');        % Hot (+1) vs Warm (−1)
+> rf_obj = load_image_set('DPSP_rejectorfriend', 'noverbose'); % Rejector (+1) vs Friend (−1)
+> ```
+> Each returns an `fmri_data` object already masked, with `.Y` set to `±1`
+> and `subj_id` / `Condition` / `Orig_partition` in `.metadata_table`.
+> Part 2 onward uses these loaders; Part 1 keeps the manual build for
+> transparency.
+
 ## 1. Load the data
 
 The sample data live in `CanlabCore/Sample_datasets/DPSP_pain_rejection_participant_maps/`
@@ -94,10 +108,13 @@ aside so the model you ultimately ship can be evaluated *once* on data
 that was never used to choose anything — model, threshold, or
 hyperparameter. This is the cleanest form of out-of-sample accuracy you
 can report, but it costs you participants in training; somewhere around
-**n ≥ 60** is a reasonable floor for it to be meaningful. For the rest
-of this tutorial we'll use all 59 participants in cross-validation, then
-revisit the held-out partition in a later instalment when we add
-cross-classification.
+**n ≥ 60** is a reasonable floor for it to be meaningful. In this tutorial
+we **cross-validate within the `'xval'` partition** (41/59 participants) to
+estimate and tune the model, then **apply the trained model once to the
+`'test'` partition** (§3, *Apply to the held-out test set*) to get a clean
+out-of-sample accuracy. Keeping the two roles separate — `'xval'` for every
+choice you make, `'test'` for the single final report — is the discipline
+that keeps decoding accuracy honest.
 
 ## 1a. Apply a gray-matter mask (optional)
 
@@ -258,6 +275,12 @@ hw_obj.Y = [ones(n,1); -ones(n,1)];
 hw_id_strings = [single_subject_images_hot.metadata_table.subj_id; ...
                  single_subject_images_warm.metadata_table.subj_id];
 [~, ~, hw_id] = unique(hw_id_strings, 'stable');
+
+% Cross-validation vs final-holdout split (carried in Orig_partition)
+partition = [single_subject_images_hot.metadata_table.Orig_partition; ...
+             single_subject_images_warm.metadata_table.Orig_partition];
+is_xval = strcmp(partition, 'xval');     % 82 images (41 subjects × 2)
+is_test = strcmp(partition, 'test');     % 36 images (18 subjects × 2)
 ```
 
 ### Train and cross-validate
@@ -271,9 +294,10 @@ first pass we turn off hyperparameter optimization, repeats, and
 bootstrap:
 
 ```matlab
-X  = double(hw_obj.dat');   % images × voxels
-Y  = hw_obj.Y;              % +1 / -1
-id = hw_id;                 % subject grouping (1..59)
+% Cross-validate within the 'xval' partition only
+X  = double(hw_obj.dat(:, is_xval)');   % images × voxels
+Y  = hw_obj.Y(is_xval);                 % +1 / -1
+id = hw_id(is_xval);                     % subject grouping
 
 rng(2026);                  % reproducibility
 S_hw = xval_SVM(X, Y, id, ...
@@ -281,32 +305,44 @@ S_hw = xval_SVM(X, Y, id, ...
     'nooptimize', 'norepeats', 'nobootstrap');
 ```
 
-`S_hw` is a `predictive_model` object. The fields you'll most often use:
+`S_hw` is a `predictive_model` object. Its properties are organised into
+categorised sub-structs (hyperparameters vs fitted state); the ones you'll
+most often read:
 
-| field | what it is |
+| access path | what it is |
 | --- | --- |
-| `Y` / `yfit`                  | true and **cross-validated predicted** class labels (`±1`) |
-| `dist_from_hyperplane_xval`   | cross-validated continuous SVM scores (signed distance to the hyperplane) — use these as your "what the brain said" measure |
-| `class_probability_xval`      | cross-validated class-membership probabilities (Platt scaling) |
-| `crossval_accuracy`           | single-interval cross-validated accuracy (%) |
-| `classification_d_singleinterval`, `d_within` | classification effect sizes (Cohen's *d*) — see below |
-| `w`                           | model weights (one per voxel) from the final model fit to *all* data |
-| `trIdx` / `teIdx`             | training / test indices per fold |
-| `ClassificationModel`         | the underlying `ClassificationLinear` / `ClassificationSVM` object |
+| `S_hw.Y`                                      | true class labels (`±1`) |
+| `S_hw.fitted_values.yfit`                     | **cross-validated predicted** class labels (`±1`) |
+| `S_hw.fitted_values.dist_from_hyperplane_xval`| cross-validated continuous SVM scores (signed distance to the hyperplane) — your "what the brain said" measure |
+| `S_hw.error_metrics.crossval_accuracy.value`  | single-interval cross-validated accuracy (%) |
+| `S_hw.error_metrics.d_singleinterval.value`   | single-interval classification effect size (Cohen's *d*) |
+| `S_hw.error_metrics.d_within.value`           | within-person classification *d* (present when groups are paired) |
+| `S_hw.weights.w`                              | model weights (one per voxel) from the final model fit to all `xval` data |
+| `S_hw.cv_partition.trIdx` / `.teIdx`          | training / test indices per fold |
+| `S_hw.ml_model`                               | the underlying `ClassificationLinear` / `ClassificationSVM` object |
 
-For this run the headline numbers are
+> **Property layout note.** Earlier CANlab releases exposed these as flat
+> fields (`S_hw.yfit`, `S_hw.dist_from_hyperplane_xval`, `S_hw.w`, …). Those
+> flat aliases were removed when the object's properties were consolidated;
+> each value now has exactly one canonical path (a top-level property or a
+> categorised sub-struct field, with error metrics stored as
+> `(value, descrip)` tuples — hence the `.value` suffix). See
+> `docs/predictive_model_methods.md` for the full map.
+
+For this run (cross-validated within the 41-subject `'xval'` partition) the
+headline numbers are
 
 | metric | value |
 | --- | --- |
-| cross-validated accuracy             | **77.1 %** (chance = 50 %; *P* < 10⁻⁸) |
-| classification *d* (single-interval) | **1.05** |
-| classification *d* (within-person)   | **0.96** |
+| cross-validated accuracy             | **≈79 %** (chance = 50 %; *P* < 10⁻⁶) |
+| classification *d* (single-interval) | **≈1.36** |
+| classification *d* (within-person)   | **≈1.29** |
 
 ### Reading the ROC plot
 
 ```matlab
 create_figure('ROC');
-ROC = roc_plot(S_hw.dist_from_hyperplane_xval, S_hw.Y > 0, 'threshold', 0);
+ROC = roc_plot(S_hw.fitted_values.dist_from_hyperplane_xval, S_hw.Y > 0, 'threshold', 0);
 set(gca, 'FontSize', 16);
 ```
 
@@ -317,10 +353,44 @@ scores and traces sensitivity (true-positive rate for "Hot") against
 1 − specificity (false-positive rate). The diagonal is chance. With
 `'threshold', 0` we evaluate accuracy at the SVM's natural decision
 boundary (the hyperplane itself); `roc_plot` also reports the
-threshold-free **AUC** (here 0.80) and a Gaussian-model effect size
-*d_a* (here 1.05). At the *a priori* threshold of 0 we get
-*sensitivity* = 81 % (95 % CI 70–91 %), *specificity* = 73 %
-(62–84 %), and *PPV* = 75 %.
+threshold-free **AUC** (here ≈ 0.87) and a Gaussian-model effect size
+*d_a* (here ≈ 1.36). At the *a priori* threshold of 0 we get
+*sensitivity* ≈ 78 %, *specificity* ≈ 80 %, and *PPV* ≈ 80 %.
+
+#### Single-interval vs. forced-choice (`'twochoice'`)
+
+`roc_plot` can score the same scores two different ways, and **both are
+worth reporting** because they answer different questions:
+
+- **Single-interval** (the default above). Each image is classified on its
+  own: is this map's score above or below the threshold? This is the right
+  metric when, at test time, observations arrive *one at a time* and you
+  must commit to "Hot" or "Warm" for each in isolation — no knowledge of
+  how many of each class there are, or which images belong together.
+
+- **Forced-choice** / two-alternative (`'twochoice'`). Scores are compared
+  *within a matched pair* — here each participant's Hot map vs. their own
+  Warm map — and the higher-scoring one is labelled "Hot":
+  ```matlab
+  create_figure('ROC 2AFC');
+  scores = S_hw.fitted_values.dist_from_hyperplane_xval;
+  ROC2 = roc_plot(scores, S_hw.Y > 0, 'twochoice');
+  ```
+  Forced-choice builds in **more prior information**: it knows that for each
+  participant there is *exactly one* Hot and *one* Warm image, and *which*
+  two images belong to that participant. In effect **each person serves as
+  their own control**, so between-subject differences in overall signal
+  level cancel out. That makes it an *easier* problem, and forced-choice
+  accuracy is typically **higher** than single-interval accuracy on the
+  same scores (here ≈ 88 % vs. 79 %).
+
+Report **single-interval** accuracy when the deployment really is
+one-image-at-a-time and unpaired (e.g. screening an individual scan).
+Report **forced-choice** accuracy when the scientific claim is about
+discriminating two conditions *within* a person (the paired design here),
+where it is the more powerful and appropriate test. Quoting both makes the
+comparison-design dependence explicit rather than hidden in a single
+number.
 
 ### Continuous scores → Cohen's *d* (often more sensitive than accuracy)
 
@@ -370,9 +440,56 @@ supported. Turn hold off."*
 
 Rows are *true* labels, columns are *predicted* labels, and the cells
 along each row and column are summarised as row- and column-normalised
-percentages. The classifier correctly classifies 48 / 59 Hot maps and
-43 / 59 Warm maps, i.e., it is slightly more sensitive to *Hot* than to *Warm*
+percentages. The classifier is slightly more sensitive to *Hot* than to *Warm*
 at this decision threshold. Raw counts are in `rawConf`.
+
+### Apply to the held-out test set
+
+Everything above used only the `'xval'` partition. The model `S_hw` ships
+with a final classifier (`S_hw.ml_model`) trained on all `xval` images, so
+we can now apply it **once** to the `'test'` participants — data that
+played no part in fitting, scaling, or any choice we made. Because
+`S_hw` is a `predictive_model`, `predict` runs the stored model on a new
+`[images × voxels]` matrix:
+
+```matlab
+X_test = double(hw_obj.dat(:, is_test)');     % 36 held-out images × voxels
+Y_test = hw_obj.Y(is_test);
+
+[yhat_test, score_test] = predict(S_hw, X_test);   % labels and signed scores
+test_acc = 100 * mean(yhat_test == Y_test);
+fprintf('Held-out test accuracy: %.1f%%\n', test_acc);
+
+create_figure('ROC test');
+ROC_test = roc_plot(score_test(:, end), Y_test > 0, 'threshold', 0);            % single-interval
+ROC_test_fc = roc_plot(score_test(:, end), Y_test > 0, 'twochoice', 'noplot');  % forced-choice
+```
+
+On this run the held-out test gives **≈ 64 %** single-interval and
+**≈ 72 %** forced-choice accuracy (AUC ≈ 0.69) — below the ≈ 79 % / 88 %
+cross-validated numbers, but with **wide confidence intervals** (only 18
+test subjects: the single-interval result is not significant, *P* ≈ 0.13).
+A gap of this size on a test set this small is most consistent with
+**sampling variability**, not a problem with the cross-validation. The
+checks to make:
+
+- If the cross-validated and test numbers are similar (within their CIs),
+  the cross-validation was honest and the model generalises to genuinely
+  unseen participants — the reassuring outcome.
+- If test accuracy is *dramatically* below cross-validation (e.g. CV in the
+  high 80s, test near chance), suspect **leakage** into cross-validation —
+  images from the same subject split across folds, or a preprocessing /
+  feature-selection step fit on all data rather than per fold.
+
+Because the test set here is small, treat it as a confirmation with a wide
+error bar, not a precise point estimate; the forced-choice number is the
+more powerful read on this paired design.
+
+> **One-shot discipline.** Touch the test set exactly once, at the very
+> end. If you peek at test accuracy and then go back and change the model,
+> the threshold, or a hyperparameter, the test set has become part of your
+> training loop and no longer gives an unbiased estimate. Do all of that on
+> `'xval'` (with nested cross-validation for tuning — see the API tutorial).
 
 ---
 

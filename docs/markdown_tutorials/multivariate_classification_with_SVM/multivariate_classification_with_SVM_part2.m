@@ -9,12 +9,25 @@
 % Open this file in MATLAB and "Save As" .mlx to get a Live Script.
 
 %% 1. Load DPSP
-hw_obj = load_image_set('DPSP_hotwarm');
-rf_obj = load_image_set('DPSP_rejectorfriend');
+hw_obj = load_image_set('DPSP_hotwarm', 'noverbose');
+rf_obj = load_image_set('DPSP_rejectorfriend', 'noverbose');
 
 X  = double(hw_obj.dat');
 Y  = hw_obj.Y;
 id = grp2idx(hw_obj.metadata_table.subj_id);
+
+%%
+
+
+[cverr, stats, optout, pm_svm] = predict(hw_obj, 'algorithm_name', 'cv_svm', 'nfolds', 5, 'newapi');
+
+confusion_matrix(pm_svm);
+
+montage(pm_svm);
+surface(pm_svm);
+
+%%
+[cverr, stats, optout, pm_pcr] = predict(hw_obj, 'algorithm_name', 'cv_pcr', 'nfolds', 5, 'newapi');
 
 %% 2. Construct a predictive_model
 pm = predictive_model( ...

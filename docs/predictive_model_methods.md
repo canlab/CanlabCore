@@ -13,6 +13,63 @@ categorised home, with translations for legacy names like
 
 Type `methods(my_obj)` in MATLAB for the live list on any instance.
 
+## Three ways to create one
+
+You never have to build a `predictive_model` field by field — there are three
+entry points, and they all return the **same** object type, so everything in
+this reference applies regardless of how you made it.
+
+1. **Standalone, scikit-learn style** — construct from hyperparameters and
+   drive it with the method verbs (`fit` → `predict` → `crossval` →
+   `bootstrap`/`permutation_test` → `weight_map_object`/`plot`). Most control;
+   operates on numeric `(X, Y, groups)`.
+
+   ```matlab
+   pm = predictive_model('algorithm','svm','task','classification');
+   pm = crossval(pm, X, Y, 'groups', id);
+   pm = bootstrap(pm, X, Y, 'nboot', 1000, 'groups', id);
+   pm = weight_map_object(pm, dat);     % attach a brain map for montage(pm)
+   summary(pm);
+   ```
+
+2. **From an `fmri_data` object** — `fmri_data.predict(..., 'newapi')` takes a
+   brain-data object directly, runs the cross-validated prediction, and returns
+   a `predictive_model` as its 4th output (already carrying a weight map):
+
+   ```matlab
+   [cverr, stats, optout, pm] = predict(dat, 'algorithm_name','cv_svm', ...
+                                        'nfolds', 5, 'newapi');
+   ```
+
+3. **Via an `xval_*` wrapper** — single-call functions that take numeric
+   matrices and return a populated `predictive_model`: `xval_SVM`, `xval_SVR`,
+   `xval_discriminant_classifier`, `xval_lasso_brain`, `xval_cross_classify`,
+   …. These never see an image, so attach a weight map afterward with
+   `weight_map_object(pm, reference_image)`:
+
+   ```matlab
+   pm = xval_SVM(X, Y, id);
+   pm = weight_map_object(pm, dat);     % then montage(pm) / surface(pm)
+   ```
+
+The constructor also accepts a **plain struct** (e.g. a legacy wrapper's STATS
+output): `predictive_model(stats_struct)` maps each field to its consolidated
+home.
+
+## Tutorials
+
+Hands-on walkthroughs in the multivariate-decoding series — each has a
+rendered Markdown page and a runnable plain-text Live Script (`.m`, opens in
+the Live Editor on R2025a+):
+
+| Part | Topic | Markdown | Live Script (.m) |
+|---|---|---|---|
+| 1 | Classification basics with SVM (ROC, confusion, effect sizes, weight maps, apply-to-test) | [part 1 .md](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part1_classification_with_SVM.md) | [.m](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part1_classification_with_SVM.m) |
+| 2 | Classification **and** regression; one-line loaders; `xval_*` family; predicted R² | [part 2 .md](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part2_classification_and_regression.md) | [.m](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part2_classification_and_regression.m) |
+| 3 | The sklearn-style `predictive_model` API (fit/predict/crossval/bootstrap/permutation, tuning, calibration, stability selection) | [part 3 .md](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part3_predictive_model_api.md) | [.m](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part3_predictive_model_api.m) |
+| 4 | Cross-classification (Woo et al., 2014: does a pain pattern decode rejection?) | [part 4 .md](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part4_cross_classification.md) | [.m](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part4_cross_classification.m) |
+| 5 | Algorithms, multiclass ECOC, tuning, and inference | [part 5 .md](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part5_algorithms_and_tuning.md) | [.m](markdown_tutorials/multivariate_classification_with_SVM/multivariate_decoding_part5_algorithms_and_tuning.m) |
+
 ## Design
 
 - **Value semantics.** Every mutating method returns a NEW object — write

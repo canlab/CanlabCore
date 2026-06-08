@@ -179,7 +179,55 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function obj = predictive_model(varargin)
-            % predictive_model  Construct from a struct or from name/value hyperparameters.
+            % predictive_model  Construct a model from name/value hyperparameters (or a struct).
+            %
+            % Construction sets hyperparameters only — no data is touched until
+            % you call fit / crossval. Every method returns a NEW object (value
+            % semantics), so you chain with pm = method(pm, ...).
+            %
+            % :Usage:
+            % ::
+            %     pm = predictive_model('algorithm', 'svm', 'task', 'classification', ...);
+            %     pm = predictive_model(stats_struct);     % wrap a legacy wrapper output
+            %
+            % :Optional Inputs (name/value hyperparameters):
+            %   'algorithm'    registry name ('svm','linear_svm','logistic','lda',
+            %                  'knn','naive_bayes','ecoc',... ; 'svr','linear_svr',
+            %                  'lasso','ridge','gp',... ; or 'pcr'/'lassopcr').
+            %                  See predictive_model.algorithm_registry().
+            %   'task'         'classification' | 'regression'.
+            %   'modeloptions' cell of name/value pairs passed to the underlying
+            %                  MATLAB fitter (e.g. {'KernelFunction','linear'}).
+            %   'random_state' integer rng seed for reproducibility.
+            %   'cv'           a cv_splitter (default chosen at crossval time).
+            %   'scorer'       a cv_scorer name or object (default by task).
+            %   'standardize','use_parallel','nboot','nperm','do_calibrate',
+            %   'Y_name','X_name','class_labels'   further hyperparameters.
+            %
+            % :Inputs (struct form):
+            %   A single struct (e.g. the STATS output of a legacy xval_* wrapper)
+            %   is routed through populate_from_struct, mapping legacy field names
+            %   onto the consolidated property layout.
+            %
+            % :Outputs:
+            %   **obj:** an unfitted @predictive_model carrying the hyperparameters.
+            %
+            % :Examples:
+            % ::
+            %     % classification SVM, then fit + cross-validate
+            %     dat = load_image_set('DPSP_hotwarm', 'noverbose');
+            %     X = dat.dat'; Y = dat.Y; id = dat.metadata_table.subj_id;
+            %     pm = predictive_model('algorithm','svm','task','classification', ...
+            %                           'modeloptions', {'KernelFunction','linear'});
+            %     pm = crossval(pm, X, Y, 'groups', id);
+            %     summary(pm);
+            %
+            %     % regression PCR
+            %     pm = predictive_model('algorithm','pcr','task','regression');
+            %
+            % :See also:
+            %   fit, crossval, predict, bootstrap, permutation_test, summary,
+            %   algorithm_registry, cv_splitter, cv_scorer
 
             if nargin == 0, return; end
 
@@ -228,6 +276,10 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function tf = is_fitted(obj)
+            % is_fitted  True if the model has been fit/cross-validated.
+            % Returns logical true once any fitted state (ml_model, fold_models,
+            % fitted_values, weights, error_metrics, ...) is populated.
+            % Example:  tf = is_fitted(pm);
             tf = ~isempty(obj.ml_model) ...
                 || ~isempty(obj.fold_models) ...
                 || ~isempty(fieldnames(obj.fitted_values)) ...
@@ -240,6 +292,9 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function tf = is_classifier(obj)
+            % is_classifier  True if the model's task is classification.
+            % Uses obj.task, falling back to Y cardinality (<=2 unique values)
+            % when task is unset.  Example:  if is_classifier(pm), ... end
             tf = strcmpi(obj.task, 'classification');
             if ~tf && ~isempty(obj.Y)
                 tf = numel(unique(obj.Y(~isnan(obj.Y)))) <= 2;
@@ -249,6 +304,9 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function tf = is_regressor(obj)
+            % is_regressor  True if the model's task is regression.
+            % Uses obj.task, falling back to Y cardinality (>2 unique values)
+            % when task is unset.  Example:  if is_regressor(pm), ... end
             tf = strcmpi(obj.task, 'regression');
             if ~tf && ~isempty(obj.Y)
                 tf = numel(unique(obj.Y(~isnan(obj.Y)))) > 2;
@@ -270,6 +328,11 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function new_obj = clone(obj)
+            % clone  Copy the hyperparameters into a fresh, UNFITTED model.
+            % Returns a new predictive_model with the same algorithm/task/
+            % modeloptions/cv/scorer/... but no fitted state — handy for
+            % re-running a configuration from scratch.
+            % Example:  pm2 = clone(pm); pm2 = crossval(pm2, X, Y);
             new_obj = predictive_model();
             hp = {'algorithm','task','modeloptions','random_state', ...
                   'standardize','use_parallel','cv','scorer','nboot', ...
@@ -282,6 +345,10 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function obj = validate_object(obj, varargin)
+            % validate_object  Check property types/values are well-formed.
+            % Errors if algorithm/task/categorised-substruct properties are the
+            % wrong type. Pass 'noverbose' to suppress the success message.
+            % Example:  pm = validate_object(pm);
             doverbose = ~any(strcmpi(varargin, 'noverbose'));
             if ~isempty(obj.algorithm) && ~(ischar(obj.algorithm) || isstring(obj.algorithm))
                 error('predictive_model:InvalidProperty', 'algorithm must be char/string.');
@@ -403,7 +470,9 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function v = metric_value(em_struct, name)
-            % Unwrap .value from a (value, descrip) tuple.
+            % metric_value  Unwrap .value from an error_metrics (value,descrip)
+            % tuple. Returns [] when the metric is absent.
+            % Example:  acc = predictive_model.metric_value(pm.error_metrics, 'balanced_accuracy');
             if isstruct(em_struct) && isfield(em_struct, name)
                 entry = em_struct.(name);
                 if isstruct(entry) && isfield(entry, 'value')
@@ -419,7 +488,9 @@ classdef predictive_model
 
         % -----------------------------------------------------------------
         function v = metric_descrip(em_struct, name)
-            % Unwrap .descrip from a (value, descrip) tuple.
+            % metric_descrip  Unwrap .descrip (the text label) from an
+            % error_metrics (value,descrip) tuple. Returns '' when absent.
+            % Example:  s = predictive_model.metric_descrip(pm.error_metrics, 'predicted_r2');
             if isstruct(em_struct) && isfield(em_struct, name)
                 entry = em_struct.(name);
                 if isstruct(entry) && isfield(entry, 'descrip')
@@ -559,12 +630,22 @@ classdef predictive_model
         function reg = algorithm_registry()
             % algorithm_registry  Map algorithm short-name -> fit fn + defaults.
             %
-            % Each entry has:
+            % Returns a struct whose fieldnames are the valid 'algorithm' values
+            % for the MATLAB-fitter algorithms (svm, linear_svm, logistic, lda,
+            % knn, naive_bayes, ecoc, ...; svr, linear_svr, lasso, ridge, gp,
+            % ...). Each entry has:
             %   .fit_fn    function handle to the MATLAB fitter
             %   .task      'classification' | 'regression'
             %   .defaults  cell of default name/value options forwarded to fit_fn
             %
-            % Adding a new algorithm = adding one row.
+            % NOTE: the PCA-based estimators 'pcr' and 'lassopcr' are valid
+            % 'algorithm' values too, but are special-cased in fit (not in this
+            % registry). Adding a new MATLAB-fitter algorithm = adding one row.
+            %
+            % Example:
+            %   reg = predictive_model.algorithm_registry();
+            %   fieldnames(reg)            % list registered algorithm names
+            %   reg.svm.fit_fn             % @fitcsvm
 
             reg = struct();
 

@@ -51,7 +51,10 @@ function si = weight_image(obj, source, varargin)
 %     montage(region(si));
 %
 % :See also:
-%   montage, surface, bootstrap, statistic_image
+%   weight_map_object, montage, surface, bootstrap, statistic_image
+%
+% weight_map_object(pm, source) does the same mapping but STORES the result
+% on pm.weights.weight_obj so montage(pm)/surface(pm) need no source.
 
     p = inputParser; p.KeepUnmatched = true;
     addParameter(p, 'use', 'w');

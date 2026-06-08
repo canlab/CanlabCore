@@ -64,8 +64,8 @@ function pmodel_obj = xval_SVM(X, Y, id, varargin)
 %                   pm.history         provenance trail
 %
 % :See also:
-%   predictive_model, crossval, bootstrap, grid_search, cv_splitter,
-%   cv_scorer, fmri_data.fit_predictive_model, fmri_data.predict
+%   predictive_model, weight_map_object, crossval, bootstrap, grid_search,
+%   cv_splitter, cv_scorer, fmri_data.fit_predictive_model, fmri_data.predict
 %
 % :Example:
 % ::
@@ -79,7 +79,12 @@ function pmodel_obj = xval_SVM(X, Y, id, varargin)
 %   pm.error_metrics.crossval_accuracy.value          % cv accuracy
 %   pm.error_metrics.crossval_accuracy_within.value   % within-person acc
 %   pm.error_metrics.d_within.value                   % effect size
-%   si = weight_image(pm, hw_obj);                    % statistic_image
+%   % This wrapper trains on matrices and never sees an image object, so it
+%   % cannot build a weight map. Attach one with any reference image in the
+%   % same space, then montage(pm) / surface(pm) work with no source:
+%   pm = weight_map_object(pm, hw_obj);               % cache weight @statistic_image
+%   montage(pm); surface(pm);
+%   si = weight_image(pm, hw_obj);                    % (or get it directly)
 
     % ----- parse flag-style options that aren't name/value -----
     [varargin, dooptimize ] = pop_flag(varargin, 'nooptimize',  true);

@@ -52,7 +52,7 @@ function varargout = montage(obj, varargin)
 %     montage(pm, dat, 'use', 'thresh_fdr', 'regions');  % FDR clusters
 %
 % :See also:
-%   weight_image, surface, region, image_vector.montage
+%   weight_image, weight_map_object, surface, region, image_vector.montage
 
     [si, passthrough, do_regions] = predictive_model.weight_image_for_display(obj, varargin{:});
 

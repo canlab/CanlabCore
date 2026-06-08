@@ -48,7 +48,7 @@ function varargout = surface(obj, varargin)
 %     surface(pm, dat, 'use', 'thresh_fdr');
 %
 % :See also:
-%   weight_image, montage, region, image_vector.surface
+%   weight_image, weight_map_object, montage, region, image_vector.surface
 
     [si, passthrough, do_regions] = predictive_model.weight_image_for_display(obj, varargin{:});
 

@@ -48,8 +48,8 @@ function pmodel_obj = xval_SVR(X, Y, id, varargin)
 %     pm.ml_model / pm.fold_models / pm.fit_type
 %
 % :See also:
-%   predictive_model, crossval, bootstrap, grid_search, cv_splitter,
-%   cv_scorer, xval_SVM, fmri_data.predict
+%   predictive_model, weight_map_object, crossval, bootstrap, grid_search,
+%   cv_splitter, cv_scorer, xval_SVM, fmri_data.predict
 %
 % :Example:
 % ::
@@ -59,6 +59,9 @@ function pmodel_obj = xval_SVR(X, Y, id, varargin)
 %   X = double(hw_obj.dat');  Y = hw_obj.Y .* randn(size(hw_obj.Y));
 %   id = grp2idx(hw_obj.metadata_table.subj_id);
 %   pm = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', 'nobootstrap');
+%   % attach a weight map from any same-space reference image, then visualise:
+%   pm = weight_map_object(pm, hw_obj);
+%   montage(pm); surface(pm);
 
     [varargin, dooptimize ] = pop_flag(varargin, 'nooptimize',  true);
     [varargin, dorepeats_d] = pop_flag(varargin, 'norepeats',   1);

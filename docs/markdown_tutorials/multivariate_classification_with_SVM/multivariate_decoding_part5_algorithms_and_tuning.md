@@ -98,6 +98,8 @@ confusion chart is the interesting part: Hot/Warm and Rejecter/Friend
 each confuse *within* their own task far more than across, echoing the
 Part 4 finding that the two domains are partly separable.
 
+![ECOC 4-class confusion matrix](pngs/ecoc_confusion.png)
+
 > **Note on scoring:** for multiclass use `accuracy` or
 > `balanced_accuracy`. `roc_auc` and the within-person forced-choice
 > stats are binary-only and are skipped automatically.
@@ -130,6 +132,8 @@ Typical output (prediction–outcome correlation `r`, cross-validated
 | `linear_svr` | 0.22  | −0.38  |
 | `lasso`      | 0.18  | −0.67  |
 | `ridge`      | 0.26  | −0.22  |
+
+![Regression algorithm comparison](pngs/algorithm_comparison.png)
 
 `r` (does the prediction *track* the outcome) and `R²` (does it track on
 the *right scale*) can disagree — `svr` ranks well **and** is scaled

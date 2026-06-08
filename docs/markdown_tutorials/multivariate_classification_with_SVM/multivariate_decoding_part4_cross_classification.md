@@ -182,6 +182,8 @@ which on this dataset gives (forced-choice %):
 | train Pain   | **89.8** (within, CV) | 67.8 (cross) |
 | train Reject | 81.4 (cross)     | **83.1** (within, CV) |
 
+![Cross-classification generalization matrix](pngs/crossclass_matrix.png)
+
 Both off-diagonal cells are well above the 50% chance line (shared
 representation) yet below their within-system diagonal (dissociable
 representation) — the *shared-but-separable* signature.

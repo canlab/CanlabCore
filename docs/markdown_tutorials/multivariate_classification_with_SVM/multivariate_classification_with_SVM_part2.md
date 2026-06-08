@@ -176,6 +176,8 @@ two-panel violin+ROC for classification). `rocplot` wraps CANlab's
 `roc_plot` on the cross-validated decision values; `confusionchart`
 wraps MATLAB's confusion chart on `pm.fitted_values.yfit`.
 
+![plot(pm): scores by class + ROC](pngs/part2_plot_pm.png)
+
 ## 6. Visualise the weight map (pre-thresholding)
 
 ```matlab
@@ -192,6 +194,8 @@ and returns a `@statistic_image`. `montage(pm, source)` /
 `surface(pm, source)` are thin delegates that build that image and
 render it. Voxels the model dropped at fit time (in
 `omitted_features`) become zeros.
+
+![DPSP SVM weight map (unthresholded)](pngs/dpsp_clf_weights.png)
 
 ## 7. Bootstrap inference — and a word about its limit
 
@@ -337,6 +341,67 @@ pm.diagnostics.grid_search.scores            % full grid
 `mse`) the mean cv score across the Cartesian product of `pg`
 values, then refits at the winner.
 
+Each hyperparameter has a sweet spot. The **SVM slack/regularization**
+`BoxConstraint` (C) trades margin width against training errors; the
+**LASSO-PCR shrinkage** (`lasso_num`, the number of components kept before
+the relaxed-OLS refit) trades model flexibility against overfitting. Both
+show a clear interior optimum on these data:
+
+```matlab
+% SVM C sweep (DPSP Hot/Warm, balanced accuracy)
+Cgrid = logspace(-3, 2, 6);
+accC  = arrayfun(@(c) crossval(predictive_model('algorithm','svm','task','classification', ...
+            'modeloptions',{'BoxConstraint',c}), X, Y, 'groups', id, ...
+            'cv', cv_splitter.stratified_group_kfold(5), 'scoring','balanced_accuracy'), ...
+        Cgrid);   % (returns the pm; read .error_metrics.balanced_accuracy.value)
+
+% LASSO-PCR shrinkage sweep (bmrk3, R^2)
+lnum = [5 10 20 40 80];
+```
+
+![Nested-CV hyperparameter curves](pngs/nestedcv_tuning.png)
+
+On DPSP the SVM peaks near **C = 0.1** (≈ 81 % balanced accuracy); on bmrk3
+LASSO-PCR peaks near **10 components** (R² ≈ 0.31). Picking the best point
+off a curve like this is fine *for choosing a hyperparameter*, but the
+score *at that point* is **optimistically biased** — you selected it to be
+high on the very folds you're reporting.
+
+### Nested cross-validation (the honest estimate)
+
+To report an unbiased accuracy *and* tune the hyperparameter, nest the
+search: split into **outer** folds; within each outer training set run
+`grid_search` (an **inner** CV) to choose the hyperparameter; fit at that
+choice; predict the untouched outer test fold. The hyperparameter is
+re-chosen per fold, so no test data ever informs the selection.
+
+```matlab
+[~,~,g] = unique(id,'stable');
+outer   = cv_splitter.stratified_group_kfold(5);
+sp      = outer.split(X, Y, g);
+
+yhat = nan(numel(Y),1); chosenC = nan(numel(sp),1);
+for k = 1:numel(sp)
+    tr = sp(k).trIdx; te = sp(k).teIdx;
+    pm = predictive_model('algorithm','svm','task','classification', ...
+                          'cv', cv_splitter.stratified_group_kfold(4));   % inner CV
+    pm = grid_search(pm, X(tr,:), Y(tr), struct('BoxConstraint',[0.01 0.1 1 10]), ...
+                     'groups', g(tr), 'verbose', false);
+    chosenC(k) = pm.diagnostics.grid_search.best_params{2};
+    yhat(te)   = predict(pm, X(te,:));
+end
+nested_acc = 100 * mean(yhat == Y);
+```
+
+Here the nested estimate is **≈ 76 %** — *lower* than the ≈ 81 % you'd read
+off the tuning curve, and the more honest number to report. The chosen C
+also varies across folds (e.g. `[0.01 0.01 1 10 0.01]`), a useful reminder
+that "the best C" is itself uncertain. The same pattern wraps any tunable
+estimator: swap `'svm'`/`BoxConstraint` for `'lassopcr'`/`lasso_num` (or
+`'ridge'`/`Lambda`) to nest the shrinkage search. Because a tuned
+`predictive_model` is *still a predictive_model*, the inner `grid_search`
+composes cleanly inside the outer loop.
+
 ## 12. Univariate feature selection
 
 ```matlab
@@ -407,6 +472,8 @@ freq_obj = hw_obj;                       % borrow volInfo + removed_voxels
 freq_obj.dat = ss.selection_freq;
 montage(freq_obj);                       % selection-frequency map in [0,1]
 ```
+
+![DPSP stability-selection frequency map](pngs/part2_stability_map.png)
 
 Reference: Meinshausen & Bühlmann, *Stability Selection*, J. R. Stat.
 Soc. B (2010).

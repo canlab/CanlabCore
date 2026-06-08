@@ -106,8 +106,9 @@ Type `methods(my_obj)` in MATLAB for the live list on any instance.
 
 | Method | One-liner |
 |---|---|
-| `plot` | Task-dispatched: predicted-vs-observed scatter (regression) or scores-by-class + ROC (classification) |
+| `plot` | Task-dispatched core figure (predicted-vs-observed scatter for regression; scores-by-class + ROC for classification), **plus** a weight-map montage and permutation-null histogram when those artifacts are present (`'noweights'` / `'noperm'` / `'surface'` to control) |
 | `plot_predicted_vs_observed` | Scatter (regression) or violin (binary) of predictions vs `Y` |
+| `plot_permutation` | Histogram of the permutation null with observed-score and α-level critical-value lines (after `permutation_test`) |
 | `rocplot` | ROC curve from cross-validated scores (wraps `roc_plot`) |
 | `confusionchart` / `confusion_matrix` | Confusion chart / raw + normalized confusion matrices |
 | `weight_map_object` | Map the weight vector into a `statistic_image` (with bootstrap `.p` / `.sig`) and cache it on `pm.weights.weight_obj`; second output is the image (`[~, si] = ...`) |

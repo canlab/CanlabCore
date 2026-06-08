@@ -75,7 +75,7 @@ function obj = permutation_test(obj, X, Y, varargin)
 %     pm.permutation_results.p_value
 %
 % :See also:
-%   crossval, bootstrap, stability_selection
+%   crossval, bootstrap, stability_selection, plot_permutation, plot
 %
 % After:
 %   obj.permutation_results.observed              observed cv score

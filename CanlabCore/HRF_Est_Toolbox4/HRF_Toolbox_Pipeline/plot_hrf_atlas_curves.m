@@ -21,7 +21,19 @@ function fig = plot_hrf_atlas_curves(input_table, varargin)
 % ---------------------
 %   'Model'       - which row's model column to use. Default 'sfir'.
 %   'Object'      - 'beta' (default) or 't'.
-%   'Conditions'  - cellstr; subset of conditions to plot. Default [] (all).
+%   'Conditions'  - cellstr; subset of conditions to plot. Supports glob
+%                   wildcards (e.g. '*_heat_start_ttl_1'). Default [] (all).
+%   'CollapseConditions' - false (default) keeps each matched condition as
+%                   its own curve. true relabels every condition matching
+%                   a given pattern to that pattern's canonical name, so
+%                   all matches pool into ONE averaged curve. E.g. with
+%                   8 body-site conditions all ending in _heat_start_ttl_1,
+%                   'Conditions', {'*_heat_start_ttl_1'} +
+%                   'CollapseConditions', true gives a single
+%                   'heat_start_ttl_1' curve (per study_label) instead of 8.
+%   'ConditionLabels' - cellstr parallel to Conditions; explicit collapsed
+%                   names. Default derives the name from each pattern
+%                   (strip '*' and surrounding underscores).
 %   'AtlasObj'    - the atlas object (recommended). When provided, its
 %                   .labels drive column matching and region naming so
 %                   multi-token atlas names like 'CANLab2024_...' work
@@ -76,6 +88,8 @@ p.addParameter('ErrorBand', 'sem', @(x) ischar(x) || isstring(x));
 p.addParameter('YZero', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Title', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('CollapseConditions', false, @(x) islogical(x) || isnumeric(x));
+p.addParameter('ConditionLabels', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.parse(input_table, varargin{:});
 opts = p.Results;
 
@@ -108,7 +122,17 @@ long = vertcat(long_chunks{keep});
 
 if ~isempty(opts.Conditions)
     requested = cellstr(string(opts.Conditions));
-    long = long(local_condition_pattern_match(long.condition, requested), :);
+    if logical(opts.CollapseConditions)
+        % Collapse mode: every condition matching a pattern is RELABELED
+        % to that pattern's canonical name, so all matches pool into one
+        % averaged series instead of one series per distinct condition.
+        labels = local_resolve_condition_labels(requested, opts.ConditionLabels);
+        [keep_cond, new_cond] = local_collapse_conditions(long.condition, requested, labels);
+        long = long(keep_cond, :);
+        long.condition = new_cond(keep_cond);
+    else
+        long = long(local_condition_pattern_match(long.condition, requested), :);
+    end
 end
 if height(long) == 0
     error('plot_hrf_atlas_curves:NoMatchingConditions', ...
@@ -643,6 +667,54 @@ for i = 1:numel(patterns)
         hit = cond_str == string(p);
     end
     mask = mask | hit(:);
+end
+end
+
+
+function labels = local_resolve_condition_labels(patterns, user_labels)
+% Per-pattern collapsed label. If the user supplied ConditionLabels
+% (parallel to Conditions) use those; otherwise derive a clean label
+% from each pattern by stripping '*' and surrounding underscores:
+%   '*_heat_start_ttl_1'  -> 'heat_start_ttl_1'
+%   'leftface*'           -> 'leftface'
+user_labels = cellstr(string(user_labels));
+labels = cell(1, numel(patterns));
+for i = 1:numel(patterns)
+    if numel(user_labels) >= i && ~isempty(user_labels{i})
+        labels{i} = user_labels{i};
+    else
+        lab = strrep(patterns{i}, '*', '');
+        lab = regexprep(lab, '^_+', '');   % strip leading underscores
+        lab = regexprep(lab, '_+$', '');   % strip trailing underscores
+        if isempty(lab), lab = patterns{i}; end
+        labels{i} = lab;
+    end
+end
+end
+
+
+function [keep, new_cond] = local_collapse_conditions(cond_vec, patterns, labels)
+% For each row, find the FIRST pattern it matches and relabel the
+% condition to that pattern's collapsed label. Rows matching no pattern
+% are dropped (keep=false). Returns a full-length keep mask and a
+% full-length relabeled condition vector (only meaningful where keep).
+cond_str = string(cond_vec);
+n = numel(cond_str);
+keep = false(n, 1);
+new_cond = cond_str;
+for i = 1:numel(patterns)
+    p = char(patterns{i});
+    if contains(p, '*')
+        rx = ['^', regexptranslate('wildcard', p), '$'];
+        hit = ~cellfun('isempty', regexp(cellstr(cond_str), rx, 'once'));
+    else
+        hit = cond_str == string(p);
+    end
+    hit = hit(:);
+    % Only assign rows not already claimed by an earlier pattern.
+    assign = hit & ~keep;
+    new_cond(assign) = string(labels{i});
+    keep = keep | hit;
 end
 end
 

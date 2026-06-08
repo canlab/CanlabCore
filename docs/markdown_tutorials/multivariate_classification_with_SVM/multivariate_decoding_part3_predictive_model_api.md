@@ -84,14 +84,47 @@ pm = predictive_model( ...
 
 Registry of algorithms (see `predictive_model.algorithm_registry()`):
 
-| Name             | Underlying fitter | Task           |
-|------------------|-------------------|----------------|
-| `svm`            | `fitcsvm`         | classification |
-| `linear_svm`     | `fitclinear`      | classification |
-| `logistic`       | `fitclinear`      | classification |
-| `lda`            | `fitcdiscr`       | classification |
-| `svr`            | `fitrsvm`         | regression     |
-| `linear_svr`     | `fitrlinear`      | regression     |
+**Classification**
+
+| Name              | Underlying fitter | Notes                                  |
+|-------------------|-------------------|----------------------------------------|
+| `svm`             | `fitcsvm`         | kernel SVM (linear default); the workhorse |
+| `linear_svm`      | `fitclinear`      | fast linear SVM for wide (high-dim) data |
+| `logistic`        | `fitclinear`      | L2-regularised logistic regression     |
+| `lda`             | `fitcdiscr`       | linear discriminant analysis           |
+| `knn`             | `fitcknn`         | k-nearest neighbours                   |
+| `naive_bayes`     | `fitcnb`          | Gaussian naïve Bayes                   |
+| `tree_classifier` | `fitctree`        | single decision tree                   |
+| `rf_classifier`   | `fitcensemble`    | bagged trees (random forest)           |
+| `nnet_classifier` | `fitcnet`         | feed-forward neural net                |
+| `ecoc`            | `fitcecoc`        | **multiclass** (>2 classes) via error-correcting output codes |
+
+**Regression**
+
+| Name              | Underlying fitter | Notes                                  |
+|-------------------|-------------------|----------------------------------------|
+| `svr`             | `fitrsvm`         | kernel support-vector regression       |
+| `linear_svr`      | `fitrlinear`      | fast linear SVR for wide data          |
+| `lasso`           | `fitrlinear`      | L1-regularised (sparse) linear regression |
+| `ridge`           | `fitrlinear`      | L2-regularised linear regression       |
+| `tree_regressor`  | `fitrtree`        | single regression tree                 |
+| `rf_regressor`    | `fitrensemble`    | bagged trees                           |
+| `nnet_regressor`  | `fitrnet`         | feed-forward neural net                |
+| `gp`              | `fitrgp`          | Gaussian-process regression (reduce dims first; see Part 5) |
+
+**Special PCA-based estimators** (not MATLAB single-fitter wrappers — handled
+directly by `fit`, faithful to the legacy `fmri_data.predict` routines):
+
+| Name        | What it does                                                              |
+|-------------|---------------------------------------------------------------------------|
+| `pcr`       | principal-components regression: PCA → drop last component → OLS on scores. Reproduces legacy `cv_pcr`. |
+| `lassopcr`  | PCA → LASSO selection of components → relaxed-OLS refit on the survivors. Reproduces legacy `cv_lassopcr`; takes `lasso_num` / `estimateparam` shrinkage options. |
+
+`predictive_model.algorithm_registry()` returns the registry struct for the
+MATLAB-fitter algorithms; `pcr` and `lassopcr` are valid `'algorithm'` values
+too (they are special-cased in `fit`). All of the above can be passed as
+`'algorithm'` at construction, or reached through `fmri_data.predict` (e.g.
+`'cv_svm'`, `'cv_pcr'`, `'cv_lassopcr'`) and the `xval_*` wrappers.
 
 ## 3. fit / predict / score (the sklearn triad)
 
@@ -147,25 +180,89 @@ After `crossval`:
 
 ### Scoring options
 
-`'scoring'` accepts any registered `cv_scorer` name (or a `cv_scorer`
-object). The scorer determines both what `crossval` optimises/reports
-and whether continuous scores are needed:
+The `'scoring'` value sets the single number `crossval` **optimises and
+reports** as `pm.error_metrics.<scorer>.value` (the mean across folds, with a
+`<scorer>_per_fold` companion). But you are not limited to that one number:
+after `crossval`, the held-out predictions are stored and you can read out
+*any* metric without re-running anything.
 
-| Name | Task | Needs scores? | Higher better? |
+**How the cross-validated predictions are retrieved.** Two things are kept:
+
+- `pm.fitted_values.yfit` — the held-out **hard predictions** (class labels
+  for classification, predicted values for regression).
+- `pm.fitted_values.dist_from_hyperplane_xval` (alias `.scores`) — the
+  held-out **continuous decision scores** (signed distance to the hyperplane,
+  or the predicted value for regression). These are what ROC/AUC and the
+  effect sizes are computed from.
+
+The easiest way to see the full, task-appropriate metric panel is
+`report_accuracy(pm)` (struct + printed table) or `summary(pm)` (that panel
+plus provenance). For classification, `report_accuracy` pulls **AUC,
+sensitivity, specificity, PPV, NPV** straight from the cross-validated ROC, on
+top of accuracy / balanced accuracy / forced-choice accuracy. For regression
+it reports *r*, predicted R², out-of-sample R², RMSE / MAE / MSE.
+
+**Which metric to optimise / report.** For classification:
+
+- **`balanced_accuracy`** — the safe default; the mean of sensitivity and
+  specificity, so it is not fooled by class imbalance the way raw `accuracy`
+  is. Recommended as the headline number.
+- **sensitivity + specificity** — report these *as a pair* (true-positive and
+  true-negative rates). They expose *where* the model errs, which a single
+  accuracy number hides. Read them from `report_accuracy` / `rocplot`.
+- **`roc_auc`** — threshold-free; integrates performance over all decision
+  thresholds. Best when you care about *ranking* cases rather than a fixed
+  cutoff.
+- **PPV** (precision) and **`f1`** — PPV is "of the cases called positive, how
+  many are?", which depends on base rate and matters whenever positives are
+  rare or acting on a positive is costly. `f1` is the harmonic mean of PPV and
+  sensitivity (recall) — a useful single number when you want both high.
+
+For regression, `r2` (here the per-fold R²) or `pearson_r` to optimise, and
+report **predicted R²** (`pm.error_metrics.predicted_r2`) as the honest
+out-of-sample variance-explained (see Part 2).
+
+| Name | Task | Needs the model's continuous score? | Higher is better? |
 |---|---|---|---|
-| `accuracy`, `balanced_accuracy`, `f1` | classification | no | yes |
-| `roc_auc`, `log_loss` | classification | yes | yes / no |
-| `r2`, `pearson_r` | regression | no | yes |
-| `mse`, `rmse`, `mae` | regression | no | no |
+| `accuracy`, `balanced_accuracy`, `f1` | classification | no — computed from hard labels (`yfit`) | yes |
+| `roc_auc`, `log_loss` | classification | **yes** — needs the decision value / probability | `roc_auc` yes, `log_loss` no |
+| `r2`, `pearson_r` | regression | n/a — a regression prediction *is* a continuous value | yes |
+| `mse`, `rmse`, `mae` | regression | n/a | no |
 
-`balanced_accuracy` is the safe default for classification (robust to
-class imbalance); `roc_auc` is threshold-free and a good choice when
-you care about ranking rather than a fixed decision boundary.
+The "needs the continuous score?" column only distinguishes **classification**
+metrics: some (accuracy, balanced accuracy, F1) only need the predicted *label*,
+while `roc_auc` / `log_loss` need the underlying continuous decision value to
+sweep thresholds. For **regression** the distinction does not apply — the
+prediction is already a continuous number — so the column is *n/a* there (the
+earlier "no" was misleading).
 
 > **Tip:** `'groups'` accepts a numeric vector OR a cell array of
 > subject-id strings (e.g. `hw_obj.metadata_table.subj_id`) directly —
 > the splitter normalises non-numeric labels for you, so the `grp2idx`
 > call above is optional.
+
+### Repeated cross-validation
+
+A single k-fold split is one random partition; its score wobbles with the
+luck of the fold assignment. **Repeated k-fold** runs the whole k-fold
+cross-validation `n` times with different random partitions and averages,
+giving a more stable estimate and a sense of its run-to-run variability:
+
+```matlab
+pm = crossval(pm, X, Y, ...
+    'cv',      cv_splitter.repeated_kfold(5, 10), ...   % 5 folds × 10 repeats
+    'groups',  id, ...
+    'scoring', 'balanced_accuracy');
+
+pm.error_metrics.balanced_accuracy.value          % mean over all folds × repeats
+std(pm.error_metrics.balanced_accuracy_per_fold.value)   % spread across folds
+```
+
+Repeats cost compute linearly (10× the folds = 10× the fits), so use a modest
+`n` (5–10) for wide neuroimaging data. The payoff is a headline number that
+does not swing when you change the random seed — worth it before you report or
+compare models. For paired designs keep using the grouped/stratified splitter
+inside the repeats (`repeated_kfold` honours `groups`).
 
 ## 5. Visualise cross-validated performance
 
@@ -185,24 +282,67 @@ wraps MATLAB's confusion chart on `pm.fitted_values.yfit`.
 
 ![plot(pm): scores by class + ROC](pngs/part2_plot_pm.png)
 
-## 6. Visualise the weight map (pre-thresholding)
+### A one-call summary
+
+`summary(pm)` prints how the model was built, what inference is available, and
+the task-relevant performance block in one call — handy to drop after any
+`crossval` (and again after `bootstrap` / `permutation_test`, which add lines
+to the *Inference* row):
 
 ```matlab
-montage(pm, hw_obj);                 % one-line delegate
-% equivalently:
-[pm, si_raw] = weight_map_object(pm, hw_obj);
-montage(si_raw);
-surface(pm, hw_obj);                 % cortical-surface rendering
+summary(pm);
+```
+
+```
+=== predictive_model summary ===
+  Algorithm : svm   (task: classification)
+  Fit       : cross-validated
+  Data      : 118 observations, 194676 features, 59 groups (within-person design)
+  CV scheme : stratified_group_kfold, 5 folds, scorer=balanced_accuracy
+  Inference : none yet (run bootstrap / permutation_test / calibrate)
+
+  Performance (cross-validated, task=classification)
+  --------------------------------------------
+    Accuracy                 79.7%
+    Balanced accuracy        79.8%
+    Forced-choice accuracy   88.1%
+    AUC                      0.863
+    Sensitivity              0.847
+    Specificity              0.746
+    PPV                      0.769
+    NPV                      0.830
+    Effect size (d)          1.206
+    N                        118
+```
+
+`report_accuracy(pm)` prints just the performance block (and returns it as a
+struct); `summary(pm)` returns `{provenance, accuracy}` when you capture its
+output.
+
+## 6. Visualise the weight map (pre-thresholding)
+
+The recommended first step is to **attach** the weight map to the model with
+`weight_map_object`, which returns the updated `pm` carrying a full
+`@statistic_image` weight object at `pm.weights.weight_obj`:
+
+```matlab
+pm = weight_map_object(pm, hw_obj);   % pm now carries the weight map object
+montage(pm);                          % no source needed — uses the cached map
+surface(pm);                          % cortical-surface rendering
 ```
 
 `weight_map_object(pm, source)` maps `pm.weights.w` back into the source
-fmri_data's voxel space (using its `volInfo` + `removed_voxels`), wraps it
-as a `@statistic_image`, and **caches it on `pm.weights.weight_obj`** —
-returning the updated `pm` (and the image as a second output). After that,
-`montage(pm)` / `surface(pm)` work with no source argument. `montage(pm,
-source)` / `surface(pm, source)` are thin delegates that build that image
-and render it. Voxels the model dropped at fit time (in `omitted_features`)
-become zeros.
+fmri_data's voxel space (using its `volInfo` + `removed_voxels`), wraps it as
+a `@statistic_image`, and **caches it on `pm.weights.weight_obj`**, returning
+the updated `pm` (the `@statistic_image` is also available as a second output,
+`[pm, si] = weight_map_object(...)`). Because the map now lives on `pm`,
+`montage(pm)` / `surface(pm)` — and `plot(pm)` — work with no source argument,
+and the object travels with the model if you save it. Voxels the model dropped
+at fit time (in `omitted_features`) become zeros.
+
+If you don't need to keep the map on the model, the one-line delegates build it
+on the fly from a source image instead: `montage(pm, hw_obj)` /
+`surface(pm, hw_obj)`.
 
 ![DPSP SVM weight map (unthresholded)](pngs/dpsp_clf_weights.png)
 
@@ -281,9 +421,17 @@ with the statistic_image methods and outline contiguous clusters:
 montage(pm, hw_obj, 'use', 'thresh_fdr', 'regions');  % delegate -> region montage
 % equivalently:
 [~, si] = weight_map_object(pm, hw_obj);
-si = threshold(si, .05, 'fdr');
-montage(region(si));
+si = threshold(si, .01, 'unc');                       % see §7 caveat on FDR
+create_figure('thresholded weights'); axis off; montage(si);
+create_figure('thresholded weights surface'); axis off; surface(si, 'foursurfaces_hcp');
 ```
+
+![DPSP SVM weight map (bootstrap-thresholded)](pngs/dpsp_clf_weights_thresh.png)
+![DPSP SVM weight map (thresholded surface)](pngs/dpsp_clf_weights_surface.png)
+
+(Thresholded at uncorrected bootstrap *p* < .01 here, because for a strongly
+regularised model the FDR threshold can be empty — see the §7 caveat. Use the
+`'regions'` montage to outline only contiguous suprathreshold clusters.)
 
 ## 9. Permutation test — is the model itself significant?
 
@@ -293,6 +441,28 @@ disp(pm.permutation_results.p_value);
 disp(pm.permutation_results.permutation);          % which scheme was used
 disp(pm.permutation_results.permutation_descrip);  % one-line explanation
 ```
+
+Visualise the null with `plot_permutation`: the histogram is the
+cross-validated score under the (correctly shuffled) null, the **dashed** line
+is the α = 0.05 critical value the model must beat, and the **solid** line is
+the observed score:
+
+```matlab
+create_figure('permutation null');
+plot_permutation(pm);          % 'alpha', 0.01 to move the dashed line
+```
+
+![Permutation null distribution](pngs/perm_distribution.png)
+
+The observed balanced accuracy sits far into the right tail (well past the
+dashed threshold), so the model decodes Hot vs Warm well above chance. The same
+histogram is drawn automatically by `plot(pm)` whenever permutation results are
+present.
+
+> **Figure for illustration only:** it uses `'nperm', 200` so it runs quickly.
+> The smallest p-value resolvable with *n* permutations is `1/(n+1)`, so 200
+> perms bottoms out at *p* ≈ 0.005. For a publication-quality figure use
+> **≥ 5,000 permutations**.
 
 ### Permutation schemes
 
@@ -359,13 +529,31 @@ show a clear interior optimum on these data:
 ```matlab
 % SVM C sweep (DPSP Hot/Warm, balanced accuracy)
 Cgrid = logspace(-3, 2, 6);
-accC  = arrayfun(@(c) crossval(predictive_model('algorithm','svm','task','classification', ...
-            'modeloptions',{'BoxConstraint',c}), X, Y, 'groups', id, ...
-            'cv', cv_splitter.stratified_group_kfold(5), 'scoring','balanced_accuracy'), ...
-        Cgrid);   % (returns the pm; read .error_metrics.balanced_accuracy.value)
+accC  = nan(size(Cgrid));
+for i = 1:numel(Cgrid)
+    pmc = crossval(predictive_model('algorithm','svm','task','classification', ...
+              'modeloptions', {'BoxConstraint', Cgrid(i)}), X, Y, 'groups', id, ...
+              'cv', cv_splitter.stratified_group_kfold(5), 'scoring', 'balanced_accuracy');
+    accC(i) = pmc.error_metrics.balanced_accuracy.value;
+end
 
-% LASSO-PCR shrinkage sweep (bmrk3, R^2)
-lnum = [5 10 20 40 80];
+% LASSO-PCR shrinkage sweep (bmrk3, predicted R^2)
+bmrk3 = load_image_set('bmrk3', 'noverbose');
+Xr = double(bmrk3.dat');  Yr = bmrk3.Y;  idr = bmrk3.metadata_table.subject_id;
+lnum = [5 10 20 40 80];                   % # components kept before the OLS refit
+r2L  = nan(size(lnum));
+for i = 1:numel(lnum)
+    pml = crossval(predictive_model('algorithm','lassopcr','task','regression', ...
+              'modeloptions', {'lasso_num', lnum(i)}), Xr, Yr, 'groups', idr, ...
+              'cv', cv_splitter.group_kfold(5), 'scoring', 'r2');
+    r2L(i) = pml.error_metrics.predicted_r2.value;
+end
+
+figure;
+subplot(1,2,1); semilogx(Cgrid, accC, 'o-', 'LineWidth', 2);
+xlabel('SVM C (BoxConstraint)'); ylabel('CV balanced accuracy'); title('DPSP Hot/Warm');
+subplot(1,2,2); plot(lnum, r2L, 'o-', 'LineWidth', 2);
+xlabel('LASSO-PCR components kept'); ylabel('predicted R^2'); title('bmrk3 pain');
 ```
 
 ![Nested-CV hyperparameter curves](pngs/nestedcv_tuning.png)

@@ -89,6 +89,19 @@ Type `methods(my_obj)` in MATLAB for the live list on any instance.
 | `select_features` | Univariate / top-k-correlation feature pre-screen |
 | `calibrate` / `predict_proba` | Platt / isotonic probability calibration and calibrated `P(class)` |
 
+## Reporting
+
+| Method | One-liner |
+|---|---|
+| `report_accuracy` | Model-type-relevant performance metrics as a struct + printed table. Classification: accuracy / balanced acc / AUC / sensitivity / specificity / PPV / NPV / *d* / forced-choice acc (from the cross-validated ROC). Regression: prediction–outcome *r*, predicted R², out-of-sample R², RMSE / MAE / MSE |
+| `summary` | Human-readable overview: identity (algorithm, task, fit provenance), data (n obs / features / groups), CV scheme, which inference is available (bootstrap / permutation / calibration / cross-classification), and the `report_accuracy` performance block |
+
+**Regression R² variants** (Wager & Lindquist, *Principles of fMRI* Ch. 39.4), computed in `crossval` from the pooled cross-validated predictions and exposed in `error_metrics`:
+
+- `predicted_r2` = 1 − PRESS / SST, where PRESS = Σ(yᵢ − ŷᵢ)² over the held-out (cross-validated) predictions and SST = Σ(yᵢ − ȳ)² uses the grand mean. This is §39.4's *predicted R²*.
+- `out_of_sample_r2` = 1 − PRESS / Σ(yᵢ − ȳ_train(fold))², using each fold's *training* mean as the baseline.
+- Both can be **negative** when the model predicts worse than the mean. Distinct from the per-fold-averaged `r2` cv_scorer (each fold's own test mean, then averaged — akin to scikit-learn's default).
+
 ## Visualization
 
 | Method | One-liner |

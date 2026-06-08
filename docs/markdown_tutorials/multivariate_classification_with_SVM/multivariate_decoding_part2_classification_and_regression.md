@@ -24,7 +24,7 @@ They differ only in what **Y** is:
 |---|---|---|
 | Outcome `Y` | categorical (e.g. Hot vs Warm, `±1`) | continuous (e.g. pain rating, temperature) |
 | Question | *which class?* | *how much?* |
-| Read-out | accuracy, ROC/AUC, confusion matrix | prediction–outcome correlation *r*, R², RMSE |
+| Read-out | accuracy, ROC/AUC, confusion matrix | prediction–outcome correlation *r*, predicted R², RMSE |
 | Continuous score | distance from hyperplane / class probability | the predicted value itself |
 | Typical algorithms | SVM, logistic, LDA, ECOC | PCR, LASSO-PCR, SVR, ridge, GP |
 
@@ -154,6 +154,20 @@ xlabel('Cross-validated prediction'); ylabel('Observed pain rating');
 ```
 
 ![bmrk3 predicted vs observed](pngs/bmrk3_pcr_scatter.png)
+
+The correlation answers *"does the prediction track the outcome?"* but not
+*"how close is it, on the right scale?"* For that, report **predicted R²**
+(= 1 − PRESS/SST, Wager & Lindquist Ch. 39.4) — the variance explained by
+the *held-out* predictions, which (unlike an in-sample R² or the squared
+correlation) can go negative when the model does worse than guessing the
+mean. `crossval` computes it automatically; `report_accuracy` /
+`summary` print the whole metric block:
+
+```matlab
+pm.error_metrics.predicted_r2.value        % 1 - PRESS/SST (out-of-sample)
+report_accuracy(pm);                        % r, predicted R², RMSE, MAE, ...
+summary(pm);                                % + provenance (CV scheme, etc.)
+```
 
 ### Weight maps — unthresholded and bootstrap-thresholded
 

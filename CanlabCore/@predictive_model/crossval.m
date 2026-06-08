@@ -72,7 +72,8 @@ function obj = crossval(obj, X, Y, varargin)
 %     pm.error_metrics.crossval_accuracy_within.value  % forced-choice acc
 %
 % :See also:
-%   fit, predict, score, bootstrap, cv_splitter, cv_scorer
+%   fit, predict, score, bootstrap, cv_splitter, cv_scorer,
+%   report_accuracy, summary
 
     p = inputParser; p.KeepUnmatched = true;
     addParameter(p, 'groups',           []);
@@ -260,21 +261,29 @@ function obj = crossval(obj, X, Y, varargin)
             'descrip', sprintf('cv accuracy as a percent (= 100 * %s)', obj.scorer.name));
     end
 
-    % Legacy alias for regression: xval_SVR consumers read
-    % pm.error_metrics.prediction_outcome_r — Pearson correlation
-    % between cv predictions and Y. Compute if not already present.
+    % Regression out-of-sample performance from the pooled cross-validated
+    % predictions: Pearson r (xval_SVR consumers read prediction_outcome_r)
+    % plus the two section-39.4 R^2 variants (predicted_r2, out_of_sample_r2).
+    % These pool all held-out predictions rather than averaging per-fold r2.
     if strcmpi(obj.task, 'regression') ...
-            && ~isfield(obj.error_metrics, 'prediction_outcome_r') ...
-            && ~isempty(yfit_cv) && all(~isnan(yfit_cv))
-        try
-            r_val = corr(yfit_cv(:), Y(:), 'Rows', 'complete');
-        catch
-            r_val = NaN;
-        end
-        if ~isnan(r_val)
+            && ~isempty(yfit_cv) && any(~isnan(yfit_cv))
+        rm = predictive_model.regression_metrics_from_cv( ...
+            Y, yfit_cv, obj.cv_partition.trIdx, obj.cv_partition.teIdx);
+
+        if ~isfield(obj.error_metrics, 'prediction_outcome_r') && ~isnan(rm.prediction_outcome_r)
             obj.error_metrics.prediction_outcome_r = struct( ...
-                'value',   r_val, ...
+                'value',   rm.prediction_outcome_r, ...
                 'descrip', 'Pearson r between cv predictions and Y');
+        end
+        if ~isnan(rm.predicted_r2)
+            obj.error_metrics.predicted_r2 = struct( ...
+                'value',   rm.predicted_r2, ...
+                'descrip', 'predicted R^2 = 1 - PRESS/SST (grand-mean denominator; Wager & Lindquist Ch.39.4)');
+        end
+        if ~isnan(rm.out_of_sample_r2)
+            obj.error_metrics.out_of_sample_r2 = struct( ...
+                'value',   rm.out_of_sample_r2, ...
+                'descrip', 'out-of-sample R^2 = 1 - PRESS / SS(y - per-fold train mean) (Ch.39.4)');
         end
     end
     obj.error_metrics.([obj.scorer.name '_per_fold']) = struct( ...

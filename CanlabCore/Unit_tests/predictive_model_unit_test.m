@@ -167,5 +167,29 @@ function predictive_model_unit_test()
     assert(isfield(st, 'dist_from_hyperplane_xval'),                     'newapi stats has xval distances');
     fprintf(' 16. fmri_data.predict ''newapi'' OK (cverr=%.3f)\n', cverr);
 
+    % --- 17. predicted_r2 / out_of_sample_r2 + report_accuracy + summary ---
+    % Regression model on a continuous outcome (signed label scaled to vary).
+    rng(7);
+    Yr = double(Y) + 0.5 * randn(size(Y));
+    pm_reg = predictive_model('algorithm', 'pcr', 'task', 'regression');
+    pm_reg = crossval(pm_reg, X, Yr, 'cv', cv_splitter.group_kfold(5), 'groups', id);
+    assert(isfield(pm_reg.error_metrics, 'predicted_r2'),                'predicted_r2 present');
+    assert(isfield(pm_reg.error_metrics, 'out_of_sample_r2'),           'out_of_sample_r2 present');
+    % predicted_r2 must equal 1 - PRESS/SST computed by hand.
+    yf = pm_reg.fitted_values.yfit(:); yo = Yr(:);
+    pr2_manual = 1 - sum((yo - yf).^2) / sum((yo - mean(yo)).^2);
+    assert(abs(pm_reg.error_metrics.predicted_r2.value - pr2_manual) < 1e-9, ...
+        'predicted_r2 matches 1 - PRESS/SST');
+    acc_r = report_accuracy(pm_reg, 'noverbose');
+    assert(strcmp(acc_r.task, 'regression') && ~isnan(acc_r.predicted_r2), 'report_accuracy regression');
+    s_reg = summary(pm_reg, 'noverbose');
+    assert(strcmp(s_reg.provenance.fit_type, 'crossval'),                'summary provenance');
+    % Classification report_accuracy: ROC-derived fields populated.
+    acc_c = report_accuracy(pm, 'noverbose');
+    assert(strcmp(acc_c.task, 'classification') && ~isnan(acc_c.auc) && ~isnan(acc_c.npv), ...
+        'report_accuracy classification (auc + npv)');
+    fprintf(' 17. predicted_r2 / report_accuracy / summary OK (pred R^2=%.3f)\n', ...
+        pm_reg.error_metrics.predicted_r2.value);
+
     fprintf('\npredictive_model_unit_test: PASS\n');
 end

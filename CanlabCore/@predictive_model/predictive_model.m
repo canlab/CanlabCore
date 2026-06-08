@@ -1069,6 +1069,106 @@ classdef predictive_model
 
 
         % -----------------------------------------------------------------
+        function m = regression_metrics_from_cv(Y, yfit, trIdx, teIdx)
+            % regression_metrics_from_cv  Out-of-sample regression metrics
+            % from cross-validated predictions.
+            %
+            % Computes the scale-dependent error metrics plus the two
+            % out-of-sample R-squared variants defined in Wager & Lindquist,
+            % "Principles of fMRI", Ch.39.4 (Assessing regression model
+            % performance):
+            %
+            %   predicted_r2     = 1 - PRESS / SST
+            %                      PRESS = sum_i (y_i - yhat_i)^2  (yhat from a
+            %                      model trained without observation i, i.e. the
+            %                      cross-validated prediction)
+            %                      SST   = sum_i (y_i - ybar)^2, ybar the grand
+            %                      mean over all n observations.
+            %                      This is the section-39.4 "predicted R^2".
+            %
+            %   out_of_sample_r2 = 1 - PRESS / sum_folds sum_{i in test fold}
+            %                          (y_i - ybar_train(fold))^2
+            %                      The denominator compares each held-out point
+            %                      to the mean of ITS fold's training outcomes
+            %                      (the "guess the training mean" baseline). Both
+            %                      predicted_r2 and out_of_sample_r2 can be
+            %                      negative when the model predicts worse than
+            %                      the mean. Requires the cv partition; falls
+            %                      back to the grand mean (== predicted_r2) when
+            %                      trIdx/teIdx are not supplied.
+            %
+            % Distinct from the per-fold-averaged 'r2' cv_scorer (which uses
+            % each fold's own test mean and then averages across folds, akin to
+            % scikit-learn's default and critiqued for that choice).
+            %
+            % :Inputs:
+            %   Y       [n x 1] observed outcomes
+            %   yfit    [n x 1] cross-validated predictions (same indexing as Y)
+            %   trIdx   {nfolds x 1} cell of per-fold training index vectors
+            %           (optional; used only for out_of_sample_r2)
+            %   teIdx   {nfolds x 1} cell of per-fold test index vectors
+            %           (optional; used only for out_of_sample_r2)
+            %
+            % :Output:
+            %   m   struct with fields mse, rmse, mae, prediction_outcome_r,
+            %       predicted_r2, out_of_sample_r2 (NaN where not computable).
+
+            if nargin < 3, trIdx = {}; end
+            if nargin < 4, teIdx = {}; end
+
+            m = struct('mse', NaN, 'rmse', NaN, 'mae', NaN, ...
+                       'prediction_outcome_r', NaN, ...
+                       'predicted_r2', NaN, 'out_of_sample_r2', NaN);
+
+            Y = Y(:); yfit = yfit(:);
+            if numel(Y) ~= numel(yfit), return; end
+            valid = ~isnan(Y) & ~isnan(yfit);
+            n = sum(valid);
+            if n < 2, return; end
+
+            yv = Y(valid); fv = yfit(valid);
+            resid = yv - fv;
+            press = sum(resid.^2);                 % out-of-sample SSE
+
+            m.mse  = press / n;
+            m.rmse = sqrt(m.mse);
+            m.mae  = mean(abs(resid));
+
+            if std(yv) > 0 && std(fv) > 0
+                m.prediction_outcome_r = corr(yv, fv);
+            end
+
+            sst = sum((yv - mean(yv)).^2);          % grand-mean denominator
+            if sst > 0
+                m.predicted_r2 = 1 - press / sst;
+            end
+
+            % out_of_sample_r2: per-fold training-mean denominator. Operate on
+            % the FULL-length vectors (partition indexes original positions);
+            % skip held-out points that are NaN.
+            if ~isempty(trIdx) && ~isempty(teIdx) && numel(trIdx) == numel(teIdx)
+                ss_oos = 0; m_press = 0; usable = 0;
+                for f = 1:numel(teIdx)
+                    te = teIdx{f}; tr = trIdx{f};
+                    if islogical(te), te = find(te); end
+                    if islogical(tr), tr = find(tr); end
+                    ytr = Y(tr); ytr = ytr(~isnan(ytr));
+                    if isempty(ytr), continue; end
+                    ybar_tr = mean(ytr);
+                    okte = te(~isnan(Y(te)) & ~isnan(yfit(te)));
+                    if isempty(okte), continue; end
+                    ss_oos  = ss_oos  + sum((Y(okte) - ybar_tr).^2);
+                    m_press = m_press + sum((Y(okte) - yfit(okte)).^2);
+                    usable  = usable + numel(okte);
+                end
+                if usable >= 2 && ss_oos > 0
+                    m.out_of_sample_r2 = 1 - m_press / ss_oos;
+                end
+            end
+        end
+
+
+        % -----------------------------------------------------------------
         function routing = field_routing()
             % field_routing  Lookup table: input-struct field name -> dotted
             % target path inside the predictive_model object.

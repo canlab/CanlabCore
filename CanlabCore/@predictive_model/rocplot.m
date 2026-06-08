@@ -37,7 +37,7 @@ function ROC = rocplot(obj, varargin)
 %     fprintf('AUC = %.3f\n', ROC.AUC);
 %
 % :See also:
-%   roc_plot, plot, confusionchart, predictive_model
+%   roc_plot, plot, confusionchart, report_accuracy, summary, predictive_model
 
     % Continuous cross-validated scores.
     scores = local_fitted(obj, 'dist_from_hyperplane_xval');

@@ -22,6 +22,10 @@ confusionchart(pm);
 folds = mod(sid, 5) + 1;                                 % whole-subject 5-fold
 [cverr_r, stats_r, ~, pm_r] = predict(bmrk3, 'algorithm_name', 'cv_pcr', 'nfolds', folds, 'newapi');
 prediction_outcome_r = corr(stats_r.yfit, bmrk3.Y)
+%[text] Beyond the correlation, report **predicted R²** (1 - PRESS/SST; Wager & Lindquist Ch. 39.4) — the variance explained by the held-out predictions. |report_accuracy| / |summary| print the model-type-relevant metric block (and, for |summary|, the CV scheme and which inference is available).
+predicted_r2 = pm_r.error_metrics.predicted_r2.value
+report_accuracy(pm_r);
+summary(pm_r);
 %%
 %[text] ### Prediction–outcome correlation (the headline regression read-out)
 create_figure('predicted vs observed');

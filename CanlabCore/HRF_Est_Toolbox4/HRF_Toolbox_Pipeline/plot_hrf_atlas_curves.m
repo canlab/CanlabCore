@@ -19,6 +19,19 @@ function fig = plot_hrf_atlas_curves(input_table, varargin)
 %
 % Name-value parameters
 % ---------------------
+%   'Source'      - which score-column family to plot:
+%                     'atlas'     (default) -> atlas_<name>_<region>_<suffix>
+%                     'signature' -> sig_<set>_<name>  (e.g. sig_all_NPS)
+%                     'imageset'  -> map_<set>_<name>  (e.g. map_bucknerlab_*)
+%                   For 'signature'/'imageset', use 'Set' to pick a set and
+%                   AtlasObj/AtlasName/Normalize are ignored. Despite the
+%                   function name, all three families plot identically (one
+%                   curve per unit: region / signature / network).
+%   'Set'         - for Source 'signature'/'imageset': case-insensitive
+%                   substring of the set token to select, e.g. 'bucknerlab'
+%                   or 'all'. Default '' (every sig_*/map_* column). The
+%                   curve label is the column with the source_<set>_ prefix
+%                   stripped.
 %   'Model'       - which row's model column to use. Default 'sfir'.
 %   'Object'      - 'beta' (default) or 't'.
 %   'Conditions'  - cellstr; subset of conditions to plot. Supports glob
@@ -91,21 +104,30 @@ p.addParameter('Verbose', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('CollapseConditions', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('ConditionLabels', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('BalancedNesting', true, @(x) islogical(x) || isnumeric(x));
+p.addParameter('Source', 'atlas', @(x) ischar(x) || isstring(x));
+p.addParameter('Set', '', @(x) ischar(x) || isstring(x));
 p.parse(input_table, varargin{:});
 opts = p.Results;
 
 model = lower(char(opts.Model));
 object = lower(char(opts.Object));
 suffix = local_normalize_suffix(opts.Normalize);
+source_family = lower(strtrim(char(opts.Source)));
+if ~ismember(source_family, {'atlas', 'signature', 'imageset'})
+    error('plot_hrf_atlas_curves:UnknownSource', ...
+        'Source must be ''atlas'', ''signature'', or ''imageset''. Got ''%s''.', source_family);
+end
 
 % 1. Walk the input_table(s), load the matching score CSV per row, extract
-%    the atlas columns. Output is a long table per row, tagged with a
-%    'study_label' string column when multiple sources were passed.
+%    the requested source columns. Output is a long table per row, tagged
+%    with a 'study_label' string column when multiple sources were passed.
+match_spec = struct('family', source_family, 'set', char(opts.Set), ...
+    'atlas_obj', opts.AtlasObj, 'atlas_name', char(opts.AtlasName), 'suffix', suffix);
 sources = local_normalize_sources(input_table);
 long_chunks = cell(numel(sources), 1);
 for s = 1:numel(sources)
-    chunk = local_collect_atlas_long(sources(s).table, model, object, ...
-        opts.AtlasObj, char(opts.AtlasName), suffix, logical(opts.Verbose));
+    chunk = local_collect_source_long(sources(s).table, model, object, ...
+        match_spec, logical(opts.Verbose));
     if isempty(chunk) || height(chunk) == 0, continue; end
     chunk.study_label = repmat(string(sources(s).label), height(chunk), 1);
     % source_id is unique per input table (distinct from study_label, since
@@ -116,12 +138,19 @@ for s = 1:numel(sources)
 end
 keep = ~cellfun(@isempty, long_chunks);
 if ~any(keep)
+    pfx = local_source_prefix(source_family);
+    if strcmp(source_family, 'atlas')
+        hint = sprintf(['Pass ''AtlasObj'' (preferred) or ''AtlasName'' substring ' ...
+            'to disambiguate, or check that scoring wrote %s columns (suffix _%s) ' ...
+            'for this model/object.'], pfx, suffix);
+    else
+        hint = sprintf(['Check that scoring wrote %s columns for this ' ...
+            'model/object, and that your ''Set'' substring (''%s'') matches ' ...
+            'the set token in the column names.'], pfx, char(opts.Set));
+    end
     error('plot_hrf_atlas_curves:NoData', ...
-        ['No atlas columns ending in _%s found in any score CSV for ' ...
-         'model=%s, object=%s. Pass ''AtlasObj'' (preferred) or ' ...
-         '''AtlasName'' substring to disambiguate, or check that ' ...
-         'scoring actually wrote atlas columns for this model/object.'], ...
-        suffix, model, object);
+        'No %s* score columns found for source=''%s'', model=%s, object=%s. %s', ...
+        pfx, source_family, model, object, hint);
 end
 long = vertcat(long_chunks{keep});
 
@@ -231,13 +260,11 @@ end
 % =========================================================================
 % Data collection
 % =========================================================================
-function long = local_collect_atlas_long(input_table, model, object, atlas_obj, atlas_name, suffix, verbose)
-% Returns one row per (subject, run_label, condition, region, lag_seconds, value).
-% Column matching is 3-tier:
-%   (a) AtlasObj.labels  -> exact end-match per label (region names from labels)
-%   (b) AtlasName        -> case-insensitive substring of column name (region names
-%                           derived by stripping the matched substring from the middle)
-%   (c) neither          -> any atlas_*_<suffix> column (region name = entire middle)
+function long = local_collect_source_long(input_table, model, object, match_spec, verbose)
+% Returns one row per (subject, run_label, condition, region, lag_seconds,
+% value), where 'region' holds the unit label (atlas region / signature /
+% network) regardless of source family. Column matching is dispatched by
+% match_spec.family ('atlas' | 'signature' | 'imageset').
 long = table();
 v = input_table.Properties.VariableNames;
 file_col = sprintf('%s_scores_file', object);
@@ -246,18 +273,28 @@ if ~any(strcmp(file_col, v))
         'input_table is missing %s.', file_col);
 end
 
-suffix_str = ['_' suffix];
-labels = local_labels_from_atlas(atlas_obj);
+suffix_str = ['_' match_spec.suffix];
+labels = local_labels_from_atlas(match_spec.atlas_obj);
 
 if verbose
-    fprintf('plot_hrf_atlas_curves: input_table has %d rows; filtering on model=''%s'', object=''%s''\n', ...
-        height(input_table), model, object);
-    if ~isempty(labels)
-        fprintf('  matcher: AtlasObj.labels (%d labels)\n', numel(labels));
-    elseif ~isempty(atlas_name)
-        fprintf('  matcher: AtlasName substring ''%s''\n', atlas_name);
-    else
-        fprintf('  matcher: auto (any atlas_*_%s)\n', suffix);
+    fprintf('plot_hrf_atlas_curves: input_table has %d rows; source=''%s'', model=''%s'', object=''%s''\n', ...
+        height(input_table), match_spec.family, model, object);
+    switch match_spec.family
+        case 'atlas'
+            if ~isempty(labels)
+                fprintf('  matcher: AtlasObj.labels (%d labels)\n', numel(labels));
+            elseif ~isempty(match_spec.atlas_name)
+                fprintf('  matcher: AtlasName substring ''%s''\n', match_spec.atlas_name);
+            else
+                fprintf('  matcher: auto (any atlas_*_%s)\n', match_spec.suffix);
+            end
+        case {'signature', 'imageset'}
+            pfx = local_source_prefix(match_spec.family);
+            if ~isempty(match_spec.set)
+                fprintf('  matcher: %s* columns, Set substring ''%s''\n', pfx, match_spec.set);
+            else
+                fprintf('  matcher: any %s* column\n', pfx);
+            end
     end
 end
 
@@ -291,13 +328,14 @@ for i = 1:height(input_table)
         continue
     end
 
-    [region_cols, region_labels] = local_match_atlas_columns(cols, labels, atlas_name, suffix_str);
+    [region_cols, region_labels] = local_match_source_columns(cols, match_spec, labels, suffix_str);
     if isempty(region_cols)
         n_skipped_no_atlas = n_skipped_no_atlas + 1;
         if verbose && n_skipped_no_atlas <= 2
-            atlas_like = cols(startsWith(cols, 'atlas_'));
-            fprintf('  row %d (model=%s): no matching atlas columns. atlas_* present (first 3): %s\n', ...
-                i, row_model, strjoin(atlas_like(1:min(3, numel(atlas_like))), ', '));
+            pfx = local_source_prefix(match_spec.family);
+            like = cols(startsWith(cols, pfx));
+            fprintf('  row %d (model=%s): no matching %s columns. %s* present (first 3): %s\n', ...
+                i, row_model, match_spec.family, pfx, strjoin(like(1:min(3, numel(like))), ', '));
         end
         continue
     end
@@ -357,6 +395,69 @@ if isempty(atlas_obj), return; end
 if isprop(atlas_obj, 'labels') && ~isempty(atlas_obj.labels)
     labels = cellstr(string(atlas_obj.labels));
     labels = labels(:);
+end
+end
+
+
+function pfx = local_source_prefix(family)
+switch family
+    case 'atlas',     pfx = 'atlas_';
+    case 'signature', pfx = 'sig_';
+    case 'imageset',  pfx = 'map_';
+    otherwise,        pfx = 'atlas_';
+end
+end
+
+
+function [matched_cols, matched_labels] = local_match_source_columns(cols, match_spec, labels, suffix_str)
+% Dispatch column matching by source family.
+switch match_spec.family
+    case 'atlas'
+        [matched_cols, matched_labels] = local_match_atlas_columns( ...
+            cols, labels, match_spec.atlas_name, suffix_str);
+    case {'signature', 'imageset'}
+        [matched_cols, matched_labels] = local_match_prefixed_columns( ...
+            cols, local_source_prefix(match_spec.family), match_spec.set);
+    otherwise
+        matched_cols = {}; matched_labels = {};
+end
+end
+
+
+function [matched_cols, matched_labels] = local_match_prefixed_columns(cols, prefix, set_name)
+% Match sig_/map_ columns. Exclude *_se uncertainty columns. When set_name
+% is non-empty, restrict to columns whose name contains the set token
+% (case-insensitive) and strip 'prefix<set>_' to get the unit label;
+% otherwise strip just 'prefix' (label keeps the set, e.g. 'all_NPS').
+matched_cols = {};
+matched_labels = {};
+set_name = char(set_name);
+for k = 1:numel(cols)
+    col = cols{k};
+    if ~startsWith(col, prefix), continue; end
+    if endsWith(col, '_se'), continue; end
+    if ~isempty(set_name) && ~contains(lower(col), lower(set_name))
+        continue
+    end
+    mid = col(length(prefix) + 1 : end);   % drop 'sig_' / 'map_'
+    if ~isempty(set_name)
+        lc_mid = lower(mid);
+        idx = strfind(lc_mid, lower(set_name));
+        if ~isempty(idx)
+            start_after = idx(1) + length(set_name);
+            if start_after <= length(mid) && mid(start_after) == '_'
+                start_after = start_after + 1;
+            end
+            label = mid(start_after:end);
+            if isempty(label), label = mid; end
+        else
+            label = mid;
+        end
+    else
+        label = mid;
+    end
+    matched_cols{end + 1} = col; %#ok<AGROW>
+    matched_labels{end + 1} = label; %#ok<AGROW>
 end
 end
 

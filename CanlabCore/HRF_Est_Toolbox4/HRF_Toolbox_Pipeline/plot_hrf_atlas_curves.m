@@ -90,6 +90,7 @@ p.addParameter('Title', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('CollapseConditions', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('ConditionLabels', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+p.addParameter('BalancedNesting', true, @(x) islogical(x) || isnumeric(x));
 p.parse(input_table, varargin{:});
 opts = p.Results;
 
@@ -107,6 +108,10 @@ for s = 1:numel(sources)
         opts.AtlasObj, char(opts.AtlasName), suffix, logical(opts.Verbose));
     if isempty(chunk) || height(chunk) == 0, continue; end
     chunk.study_label = repmat(string(sources(s).label), height(chunk), 1);
+    % source_id is unique per input table (distinct from study_label, since
+    % several sources can share a label). Used by balanced nesting to give
+    % each source equal weight within a shared label.
+    chunk.source_id = repmat(string(sprintf('src%03d', s)), height(chunk), 1);
     long_chunks{s} = chunk;
 end
 keep = ~cellfun(@isempty, long_chunks);
@@ -120,12 +125,19 @@ if ~any(keep)
 end
 long = vertcat(long_chunks{keep});
 
+% Preserve the original (pre-collapse) condition so balanced nesting can
+% give each original condition (e.g. each body site) equal weight even
+% after they're relabeled to a shared collapsed name. When not collapsing,
+% orig_condition == condition (a no-op level).
+long.orig_condition = long.condition;
+
 if ~isempty(opts.Conditions)
     requested = cellstr(string(opts.Conditions));
     if logical(opts.CollapseConditions)
         % Collapse mode: every condition matching a pattern is RELABELED
         % to that pattern's canonical name, so all matches pool into one
         % averaged series instead of one series per distinct condition.
+        % orig_condition keeps the body-site identity for balanced nesting.
         labels = local_resolve_condition_labels(requested, opts.ConditionLabels);
         [keep_cond, new_cond] = local_collapse_conditions(long.condition, requested, labels);
         long = long(keep_cond, :);
@@ -140,7 +152,7 @@ if height(long) == 0
 end
 
 % 2. Pool across (subject, run) per (condition, region, lag).
-pooled = local_pool_subjects(long);
+pooled = local_pool_subjects(long, logical(opts.BalancedNesting));
 if logical(opts.Verbose)
     if isempty(pooled) || height(pooled) == 0
         fprintf('  pooled: 0 rows  <-- this will cause "No regions to plot"\n');
@@ -410,47 +422,83 @@ end
 end
 
 
-function pooled = local_pool_subjects(long)
-% Collapse multiple runs per subject first, then pool across subjects.
-% When long has a 'study_label' column (multi-source mode), it's carried
-% as an additional grouping axis so curves from different studies stay
-% separate even when their BIDS condition names collide.
-% Output: study_label (when present), condition, region, lag_seconds,
-%         mean, sem, sd, n.
+function pooled = local_pool_subjects(long, balanced)
+% Two-stage pooling: (1) collapse everything within each subject down to a
+% single value per (study_label, condition, region, lag); (2) average those
+% per-subject values across subjects, with SEM = sd/sqrt(n_subjects).
+%
+% Stage 1 nesting:
+%   balanced=true (default) -- hierarchical, equal weight at each level.
+%     Average AWAY the nuisance factors one at a time, innermost first:
+%       run_label  -> average runs within each (subject, source, body site)
+%       orig_condition -> average body sites equally within each (subject, source)
+%       source_id  -> average sources equally within each (subject, label)
+%     This makes the result independent of how many runs/body-sites/source
+%     rows each cell happens to have -- no assumption of balance.
+%   balanced=false -- legacy row-weighted: a single flat mean over all
+%     nuisance rows at once (cells with more rows get more weight).
+%
+% In both cases the curve-identity columns kept through to stage 2 are
+% (subject, study_label[if present], condition, region, lag_seconds).
+if nargin < 2, balanced = true; end
 
 has_study = any(strcmp('study_label', long.Properties.VariableNames));
 
+% Columns that define a per-subject curve cell (kept through stage 1).
+keep_cols = {'subject', 'condition', 'region', 'lag_seconds'};
 if has_study
-    [G1, subj_u, study_u, cond_u, region_u, lag_u] = findgroups( ...
-        long.subject, long.study_label, long.condition, long.region, long.lag_seconds);
-else
-    [G1, subj_u, cond_u, region_u, lag_u] = findgroups( ...
-        long.subject, long.condition, long.region, long.lag_seconds);
+    keep_cols = [keep_cols, {'study_label'}];
 end
-v_per_run = splitapply(@(x) mean(x, 'omitnan'), long.value, G1);
+keep_cols = intersect(keep_cols, long.Properties.VariableNames, 'stable');
 
-if has_study
-    g1 = table(subj_u, study_u, cond_u, region_u, lag_u, v_per_run, ...
-        'VariableNames', {'subject','study_label','condition','region','lag_seconds','value'});
-    [G2, study_u2, cond_u2, region_u2, lag_u2] = findgroups( ...
-        g1.study_label, g1.condition, g1.region, g1.lag_seconds);
-else
-    g1 = table(subj_u, cond_u, region_u, lag_u, v_per_run, ...
-        'VariableNames', {'subject','condition','region','lag_seconds','value'});
-    [G2, cond_u2, region_u2, lag_u2] = findgroups( ...
-        g1.condition, g1.region, g1.lag_seconds);
-end
-m  = splitapply(@(x) mean(x, 'omitnan'), g1.value, G2);
-sd = splitapply(@(x) std(x, 'omitnan'),  g1.value, G2);
-nn = splitapply(@(x) sum(isfinite(x)),   g1.value, G2);
+% Nuisance factors to average away, innermost -> outermost.
+nuisance = {'run_label', 'orig_condition', 'source_id'};
+nuisance = intersect(nuisance, long.Properties.VariableNames, 'stable');
 
-if has_study
-    pooled = table(study_u2, cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
-        'VariableNames', {'study_label','condition','region','lag_seconds','mean','sd','n','sem'});
+work = long;
+if balanced
+    % Peel one nuisance factor at a time so each level is equal-weighted.
+    for i = 1:numel(nuisance)
+        f = nuisance{i};
+        group_cols = setdiff(work.Properties.VariableNames, {f, 'value'}, 'stable');
+        work = local_group_mean(work, group_cols);
+    end
+    % Any remaining nuisance columns (none expected) collapse here.
+    g1 = local_group_mean(work, keep_cols);
 else
-    pooled = table(cond_u2, region_u2, lag_u2, m, sd, nn, sd ./ sqrt(max(nn, 1)), ...
-        'VariableNames', {'condition','region','lag_seconds','mean','sd','n','sem'});
+    % Legacy: single flat mean over all nuisance rows at once.
+    g1 = local_group_mean(work, keep_cols);
 end
+
+% Stage 2: across-subject mean + SEM. n is the count of FINITE subjects
+% (not GroupCount, which would include subjects whose value is NaN at this
+% lag, e.g. an all-NaN region/volume), so the SEM denominator is honest.
+final_group = intersect({'study_label', 'condition', 'region', 'lag_seconds'}, ...
+    g1.Properties.VariableNames, 'stable');
+g2 = groupsummary(g1, final_group, ...
+    {@(x) mean(x, 'omitnan'), @(x) std(x, 'omitnan'), @(x) sum(isfinite(x))}, 'value');
+
+pooled = table();
+for c = 1:numel(final_group)
+    pooled.(final_group{c}) = g2.(final_group{c});
+end
+pooled.mean = g2.fun1_value;
+pooled.sd = g2.fun2_value;
+pooled.n = g2.fun3_value;
+pooled.sem = g2.fun2_value ./ sqrt(max(g2.fun3_value, 1));
+end
+
+
+function T = local_group_mean(T, group_cols)
+% Group T by group_cols and replace 'value' with the per-group mean,
+% dropping all other (nuisance) columns. NaN-omitting.
+g = groupsummary(T, group_cols, 'mean', 'value');
+out = table();
+for c = 1:numel(group_cols)
+    out.(group_cols{c}) = g.(group_cols{c});
+end
+out.value = g.mean_value;
+T = out;
 end
 
 

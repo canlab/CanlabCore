@@ -203,6 +203,14 @@ create_figure('thresholded weights'); axis off; montage(si);
 > **stability selection** (Part 3 / Part 5), which is the recommended
 > inference for high-dimensional regularised models.
 
+> **Weight map vs. the full prediction.** The `weights.w` map (and the
+> `statistic_image` above) is the **slope only** — no intercept. To *predict*
+> from the model, use `predict(pm, Xnew)`, which applies `w·x + b` (weights and
+> intercept) — in-sample, on a test set, and in every CV fold — plus any
+> feature mask / standardization. Don't score new images with a hand-rolled
+> `Xnew*w`; if you must, add `pm.ml_model.Bias` (SVM/`fitclinear`) or
+> `pm.ml_model.intercept` (PCR/lassoPCR).
+
 ## 6. Which to use, and what's next
 
 - **Quick, object-in:** `fmri_data.predict(obj, 'algorithm_name', …,

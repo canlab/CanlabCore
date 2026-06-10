@@ -525,6 +525,17 @@ for §7 onward: a strongly L2-regularised `linear_svm` produces near-identical
 bootstrap weights, so its FDR map can be empty — Part 3 covers why and what to
 do instead.)
 
+> **Weight map = slope only; the model also has an intercept.** `S_hw.weights.w`
+> (and this `statistic_image`) is the coefficient vector with **no intercept** —
+> correct for a brain *map* (the bias is a scalar, not an image). The decision
+> rule the model actually uses is `score = w·x + b`, and `predict(S_hw, Xnew)`
+> applies that bias `b` for you — in-sample, on the held-out test set below, and
+> in every cross-validation fold. So **score new images with
+> `predict(S_hw, Xnew)`**, not a hand-rolled `Xnew*w` (which omits the offset
+> and won't sit at the model's threshold). If you must apply the pattern by
+> hand, add the intercept from `S_hw.ml_model.Bias` (SVM/`fitclinear`) or
+> `S_hw.ml_model.intercept` (PCR/lassoPCR).
+
 ### A one-call summary
 
 `summary(S_hw)` prints how the model was built, what inference is available,

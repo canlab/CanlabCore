@@ -72,121 +72,200 @@ On this dataset Hot/Warm decodes around **78%** and Rejecter/Friend
 around **66%** (single-observation cv accuracy) — both well above the
 50% chance line. (The within-subject *forced-choice* accuracy, reported
 automatically in `crossval_accuracy_within`, is higher still: ~90% and
-~83%.)
+~83%.) These quick baselines use a separate CV per task; §3 onward re-derives
+the within numbers under a **shared** fold structure so the diagonal and the
+cross-condition off-diagonal in the §5 matrix are computed the same way and are
+directly comparable.
 
-## 3. Cross-classification — train one, test the other
+## 3. Cross-classification with shared cross-validation folds
 
-Because the two datasets share subjects and voxel space, there is **no
-leakage** in fitting on all of one task and testing on all of the other:
-the test images were never seen during training. So a plain full-sample
-`fit` is the right training step here (no cross-validation needed across
-datasets).
+A first instinct is to fit a pain model on **all** subjects, freeze it, and
+apply it to **all** rejection images. The test images were never in training,
+so it isn't *leakage* in the usual sense — but it makes a **bad comparison**.
+The within-system diagonal we just computed is cross-validated: each fold's
+model is trained on ~47 subjects and tested on the held-out ~12. A full-sample
+cross model is trained on all 59. So the off-diagonal would enjoy a
+training-set-size advantage the diagonal never had, and — because the two
+tasks are the **same people** — every test subject's *identity* would have
+been seen in training. The two numbers wouldn't be on the same footing.
+
+The fix is to **share one fold structure across both tasks**. For each fold,
+train on condition A's *training* subjects, then apply that fold's model to the
+held-out subjects' condition-A data (within) **and** their condition-B data
+(cross). Every subject is scored exactly once, by a model that never saw any
+of their data in *either* task — so the diagonal and off-diagonal use the same
+folds, the same training-set sizes, and the same held-out subjects. Now they
+are directly comparable.
 
 ```matlab
-% Train on Hot/Warm, freeze, apply to Rejecter/Friend
-pm_pain = fit(predictive_model('algorithm','svm','task','classification'), Xhw, Yhw);
-[yhat_rf, score_rf] = predict(pm_pain, Xrf);
+[~, ~, ghw] = unique(idhw, 'stable');                 % integer subject groups
+cv = cv_splitter.stratified_group_kfold(5);
+sp = cv.split(Xhw, Yhw, ghw);                          % folds defined on subjects
 
-% Train on Rejecter/Friend, freeze, apply to Hot/Warm
-pm_rej = fit(predictive_model('algorithm','svm','task','classification'), Xrf, Yrf);
-[yhat_hw, score_hw] = predict(pm_rej, Xhw);
+n = size(Xhw, 1);
+sc_hw_within = nan(n,1); sc_pain2rej = nan(n,1);       % pain-trained scores
+sc_rf_within = nan(n,1); sc_rej2pain = nan(n,1);       % reject-trained scores
+
+for k = 1:numel(sp)
+    tr = sp(k).trIdx; te = sp(k).teIdx;
+    test_subj = unique(idhw(te));  tr_subj = unique(idhw(tr));
+    rf_te = ismember(idrf, test_subj);                 % held-out subjects' rejection rows
+    rf_tr = ismember(idrf, tr_subj);                   % training subjects' rejection rows
+
+    % train on pain (training subjects) -> score held-out pain (within) + rejection (cross)
+    mp = fit(predictive_model('algorithm','svm','task','classification'), Xhw(tr,:), Yhw(tr));
+    [~, s] = predict(mp, Xhw(te,:));     sc_hw_within(te)    = s(:,end);
+    [~, s] = predict(mp, Xrf(rf_te,:));  sc_pain2rej(rf_te)  = s(:,end);
+
+    % train on rejection (same fold's training subjects) -> score rejection (within) + pain (cross)
+    mr = fit(predictive_model('algorithm','svm','task','classification'), Xrf(rf_tr,:), Yrf(rf_tr));
+    [~, s] = predict(mr, Xrf(rf_te,:));  sc_rf_within(rf_te) = s(:,end);
+    [~, s] = predict(mr, Xhw(te,:));     sc_rej2pain(te)     = s(:,end);
+end
 ```
 
-`pm_pain.weights.w` is the physical-pain pattern; applying it to `Xrf`
-gives a continuous "pain-pattern expression" score for every rejection
-image. The question is whether that score tracks the Rejecter/Friend
+We select the held-out subjects' rejection rows **by subject id**
+(`ismember(idrf, test_subj)`), not by row number — robust even if the two
+objects were ordered differently. Each `predict` call applies that fold's
+model — weights *and* intercept — to the new images (§ "A note on the bias
+term" below). `sc_pain2rej` is the cross-validated pain-pattern expression for
+every rejection image; the question is whether it tracks the Rejecter/Friend
 label.
+
+> **When is the full-sample frozen pattern the right choice instead?** When the
+> test set is a **genuinely independent sample** — different participants, a
+> new study — there are no shared subjects to leak and no matched-fold
+> comparison to make, so you train on all of dataset A and apply the frozen
+> signature to dataset B (this is how published signatures like the NPS are
+> deployed). Use shared-fold CV when A and B are the **same subjects** and you
+> want the within- and cross-condition numbers to be comparable, as here.
+
+### A note on the bias term (intercept)
+
+`predict(pm, Xnew)` applies the model's **intercept** as well as its weights —
+in-sample, on a held-out test set, and in every cross-validation fold (each
+fold uses *its own* training intercept). So the *scores* it returns are the
+full decision values `w·x + b`. Two consequences for cross-classification:
+
+- The intercept `b` is calibrated to the **training** task's score
+  distribution. The testing task usually has a different mean expression, so
+  the decision *threshold* lands in the wrong place — which is exactly why we
+  **never judge cross-classification by raw accuracy** (next paragraph).
+- If you ever apply a pattern to new images **by hand** — `Xnew*w`, a
+  dot-product pattern expression, `apply_mask` / `image_similarity` — note that
+  `pm.weights.w` (and the `statistic_image` from `weight_map_object`) is the
+  **slope only, no intercept**. That's correct for a weight *map* (a direction
+  in voxel space; the bias is a scalar, not a brain image), but your hand-rolled
+  score will be missing the offset and won't sit at the model's threshold. The
+  intercept lives in `pm.ml_model.Bias` (SVM / `fitclinear`) or
+  `pm.ml_model.intercept` (PCR / lassoPCR). Easiest is to just call
+  `predict(pm, Xnew)`, which adds it for you.
 
 ## 4. Score it with AUC / forced-choice — NOT raw accuracy
 
 This is the single most important methodological point. **Do not judge
-cross-classification by raw accuracy at the model's native threshold.**
-The SVM's bias/intercept is calibrated to the *training* task's score
-distribution; the *testing* task generally has a different mean
-expression, so the decision boundary lands in the wrong place and raw
-accuracy can look near-chance even when the pattern clearly separates the
-two classes. What transfers is the **ranking** of scores, so evaluate
-with:
+cross-classification by raw accuracy at the model's native threshold.** As
+above, the bias is calibrated to the training task, so the boundary lands in
+the wrong place on the testing task and raw accuracy can look near-chance even
+when the pattern clearly separates the two classes. What transfers is the
+**ranking** of scores, so evaluate with:
 
-- **AUC** (`roc_plot`) — threshold-free; the probability a random
-  positive scores above a random negative.
-- **Within-subject forced choice** — for each subject, is the score
-  higher for their positive image than their negative one? Threshold- and
-  bias-free, and the natural paired test for these designs.
+- **Within-subject forced choice** — for each subject, is the score higher for
+  their positive image than their negative one? Threshold- and bias-free, and
+  the natural paired test for these designs.
+- **AUC** (`roc_plot`) — threshold-free; the probability a random positive
+  scores above a random negative.
 
-```matlab
-% Paired ("two-alternative forced choice") AUC of the pain pattern
-% applied to rejection. NOTE: roc_plot's 'twochoice' pairs the positive
-% and negative observations BY INDEX, so it assumes the +1 and -1 images
-% are in the same subject order (true for the DPSP loaders). If your data
-% isn't ordered that way, use the explicit forced_choice() helper below.
-ROC = roc_plot(score_rf(:,end), Yrf == 1, 'twochoice');   % paired AUC
-fprintf('Pain pattern -> rejection: paired AUC = %.3f\n', ROC.AUC);   % ~0.79
-```
-
-A compact, order-independent forced-choice helper (works for either
-direction):
+Score the **cross-validated** scores from §3 (a compact, order-independent
+forced-choice helper that also returns the per-subject hits, which we'll need
+for confidence intervals):
 
 ```matlab
-function acc = forced_choice(scores, Y, id)
+function [acc, hits] = forced_choice(scores, Y, id)
 % Fraction of subjects whose +1 image scores above their -1 image.
     [~, ~, g] = unique(id(:), 'stable');
-    u = unique(g); hit = nan(numel(u),1);
+    u = unique(g); hits = nan(numel(u),1);
     for i = 1:numel(u)
         sp = scores(g==u(i) & Y== 1);
         sn = scores(g==u(i) & Y==-1);
-        if ~isempty(sp) && ~isempty(sn), hit(i) = mean(sp) > mean(sn); end
+        if ~isempty(sp) && ~isempty(sn), hits(i) = mean(sp) > mean(sn); end
     end
-    acc = 100 * mean(hit, 'omitnan');
+    acc = 100 * mean(hits, 'omitnan');
 end
 ```
 
 ```matlab
-fc_pain_on_rej = forced_choice(score_rf(:,end), Yrf, idrf);
-fc_rej_on_pain = forced_choice(score_hw(:,end), Yhw, idhw);
-fprintf('Pain pattern   -> rejection forced-choice: %.1f%%\n', fc_pain_on_rej);  % ~68%
-fprintf('Reject pattern -> pain      forced-choice: %.1f%%\n', fc_rej_on_pain);  % ~81%
+within_pain       = forced_choice(sc_hw_within, Yhw, idhw);   % ~92%
+cross_pain_to_rej = forced_choice(sc_pain2rej,  Yrf, idrf);   % ~70%
+cross_rej_to_pain = forced_choice(sc_rej2pain,  Yhw, idhw);   % ~81%
+within_reject     = forced_choice(sc_rf_within, Yrf, idrf);   % ~83%
 ```
 
 ## 5. Put the four numbers in one table
 
 The interpretable object is the **2×2 generalisation matrix**: rows =
-training task, columns = testing task, cells = within-subject
-forced-choice accuracy. The crucial subtlety: the **diagonal must be
-cross-validated** (an in-sample fit tested on its own training data is a
-meaningless 100%), while the **off-diagonal** uses the frozen full-sample
-model applied to the *other* dataset (no leakage — those images were
-never in training).
+training task, columns = testing task, cells = within-subject forced-choice
+accuracy. Because every cell now comes from the **same shared-fold
+cross-validation** (§3), the diagonal and off-diagonal are directly
+comparable — same folds, same training-set sizes, same held-out subjects.
 
 ```matlab
-% Diagonal: within-system, CROSS-VALIDATED. crossval auto-computes the
-% within-subject forced-choice accuracy when 'groups' is supplied.
-within_pain = pm_hw.error_metrics.crossval_accuracy_within.value;   % ~90%
-within_rej  = pm_rf.error_metrics.crossval_accuracy_within.value;   % ~83%
-
-% Off-diagonal: frozen model on the other task.
-cross_pain_to_rej = forced_choice(score_rf(:,end), Yrf, idrf);      % ~68%
-cross_rej_to_pain = forced_choice(score_hw(:,end), Yhw, idhw);      % ~81%
-
 G = [ within_pain,        cross_pain_to_rej ; ...
-      cross_rej_to_pain,  within_rej ];
+      cross_rej_to_pain,  within_reject ];
 T = array2table(G, 'RowNames', {'trainPain','trainReject'}, ...
                    'VariableNames', {'testPain','testReject'});
 disp(T);
 ```
 
-which on this dataset gives (forced-choice %):
+which on this dataset gives (forced-choice %, all cross-validated):
 
-|              | test Pain        | test Reject      |
-|--------------|------------------|------------------|
-| train Pain   | **89.8** (within, CV) | 67.8 (cross) |
-| train Reject | 81.4 (cross)     | **83.1** (within, CV) |
+|              | test Pain             | test Reject           |
+|--------------|-----------------------|-----------------------|
+| train Pain   | **91.5** (within)     | 69.5 (cross)          |
+| train Reject | 81.4 (cross)          | **83.1** (within)     |
 
 ![Cross-classification generalization matrix](pngs/crossclass_matrix.png)
 
-Both off-diagonal cells are well above the 50% chance line (shared
-representation) yet below their within-system diagonal (dissociable
-representation) — the *shared-but-separable* signature.
+Both off-diagonal cells are above the 50% chance line (shared representation)
+yet below their within-system diagonal (dissociable representation) — the
+*shared-but-separable* signature.
+
+## 5b. Inference on the generalization error
+
+A point estimate isn't enough — *how uncertain* is each accuracy, and is the
+off-diagonal reliably above chance? Forced-choice accuracy is a **binomial**
+proportion: each of the *n* = 59 subjects is one independent correct/incorrect
+trial. So an exact (Clopper–Pearson) 95% confidence interval comes straight
+from the per-subject hit counts:
+
+```matlab
+[~, hits_pr] = forced_choice(sc_pain2rej, Yrf, idrf);
+hits_pr = hits_pr(~isnan(hits_pr));
+[phat, ci] = binofit(sum(hits_pr), numel(hits_pr));      % exact binomial 95% CI
+fprintf('Pain->Reject: %.1f%% (95%% CI %.1f–%.1f)\n', 100*phat, 100*ci);
+```
+
+Doing this for all four cells gives error bars you can read against the chance
+line and against each other:
+
+![Generalization accuracy with binomial confidence intervals](pngs/crossclass_errorbars.png)
+
+On these data Pain→Reject is **69.5% (95% CI ≈ 56–81%)** — above chance, but
+with a wide interval whose upper end approaches the within-system diagonal, so
+"shared but separable" is the honest read, *with* its uncertainty made
+explicit.
+
+Two complementary ways to put error bars on a cross-validated accuracy:
+
+- **Binomial CI (above).** Treats the *n* subjects as independent trials; exact
+  and cheap, and the right model for a forced-choice proportion. It captures
+  sampling uncertainty over subjects but assumes one fixed fold split.
+- **Repeated cross-validation.** Re-run the shared-fold scheme with several
+  random fold assignments (`cv_splitter.repeated_kfold(5, n)`, or just loop a
+  different `rng`) and take the mean ± SD across repeats. This additionally
+  captures *fold-assignment* variability — useful when the estimate wobbles
+  with the particular split. Report whichever matches the claim; for a clean
+  paired design the binomial CI is usually sufficient.
 
 ## 6. Visualise where the two patterns agree and differ
 
@@ -228,15 +307,21 @@ thresholding without editing a 500-line function.
 
 ## 8. Take-aways
 
-- **Cross-classification = representational-overlap test.** Train on A,
-  freeze, test on B.
+- **Cross-classification = representational-overlap test.** Train on A, apply
+  to B.
+- **Use shared cross-validation folds** when A and B are the same subjects, so
+  the within- and cross-condition cells are comparable (matched folds,
+  training sizes, and held-out subjects). Full-sample frozen patterns are for
+  *independent* test samples.
 - **Same voxel space is mandatory** — both DPSP loaders guarantee it;
   otherwise `resample_space` first.
-- **Score with AUC / forced choice, never raw accuracy** — the bias term
-  does not transfer across datasets.
+- **Score with forced choice / AUC, never raw accuracy** — the bias term is
+  calibrated to the training task and does not transfer.
+- **Report uncertainty.** A binomial (or repeated-CV) confidence interval on
+  each cell is the "inference on the generalization error."
 - **The 2×2 matrix is the result.** Above-chance off-diagonal with a
-  lower-than-diagonal value is the signature of *shared but
-  dissociable* representations — the Woo et al. (2014) headline.
+  lower-than-diagonal value is the signature of *shared but dissociable*
+  representations — the Woo et al. (2014) headline.
 
 Continue to [**Part 5**](multivariate_decoding_part5_algorithms_and_tuning.md)
 for multiclass classification (ECOC) and regression (SVR / lasso / ridge /

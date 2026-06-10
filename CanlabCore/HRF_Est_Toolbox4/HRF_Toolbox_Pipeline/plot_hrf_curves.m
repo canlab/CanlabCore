@@ -76,6 +76,25 @@ function fig = plot_hrf_curves(input_table, varargin)
 %                   small dots above the band, with the FIRST significant
 %                   lag (the onset) ringed. Per series, staggered vertically.
 %   'Alpha'       - significance threshold for ShowSignificance. Default 0.05.
+%   'LineWidth'   - default line width for all series. Default 1.6.
+%   'LineStyle'   - default line style for all series ('-','--',':','-.').
+%                   Default '-'.
+%   'Colors'      - Nx3 RGB matrix or cell of color specs applied to series
+%                   in order (overrides the auto palette). Default [].
+%   'SeriesStyle' - struct array for per-series overrides, matched by a
+%                   case-insensitive substring of the series display name
+%                   (e.g. 'acc | heat' or just 'NPS'). Fields:
+%                     .Series    (required) substring to match
+%                     .Color     1x3 RGB or a name like 'r'/'red'/'orange'
+%                     .LineStyle '-' | '--' | ':' | '-.'
+%                     .LineWidth scalar
+%                   First matching entry wins; unset fields fall back to
+%                   Colors/palette and the global LineStyle/LineWidth.
+%                   Example:
+%                     ss = struct('Series', {'acc','exp'}, ...
+%                                 'Color', {[0 0 1], 'r'}, ...
+%                                 'LineStyle', {'-','--'}, ...
+%                                 'LineWidth', {2.5, 1.2});
 %   'ErrorBand'   - 'sem' (default), 'sd', or 'none'.
 %   'YZero'       - true (default) to draw horizontal 0 line per subplot.
 %   'Title'       - char/string figure title. Default auto-generated.
@@ -119,6 +138,10 @@ p.addParameter('Set', '', @(x) ischar(x) || isstring(x));
 p.addParameter('ShareYAxis', [], @(x) isempty(x) || islogical(x) || isnumeric(x));
 p.addParameter('ShowSignificance', true, @(x) islogical(x) || isnumeric(x));
 p.addParameter('Alpha', 0.05, @(x) isscalar(x) && x > 0 && x < 1);
+p.addParameter('LineWidth', 1.6, @(x) isscalar(x) && x > 0);
+p.addParameter('LineStyle', '-', @(x) ischar(x) || isstring(x));
+p.addParameter('Colors', [], @(x) isempty(x) || isnumeric(x) || iscell(x));
+p.addParameter('SeriesStyle', [], @(x) isempty(x) || isstruct(x));
 p.parse(input_table, varargin{:});
 opts = p.Results;
 
@@ -697,7 +720,19 @@ if has_study
 else
     series_keys = unique(pooled(:, {'condition'}), 'stable');
 end
-colors = local_color_palette(height(series_keys));
+% Resolve a per-series style (color / line style / width). Precedence per
+% series: matching SeriesStyle entry > Colors override (by order) > palette;
+% line style/width from SeriesStyle entry else the global LineStyle/LineWidth.
+series_display = strings(height(series_keys), 1);
+for k = 1:height(series_keys)
+    cond_k = series_keys.condition(k);
+    if has_study && strlength(series_keys.study_label(k)) > 0
+        series_display(k) = sprintf('%s | %s', char(series_keys.study_label(k)), char(cond_k));
+    else
+        series_display(k) = string(cond_k);
+    end
+end
+series_styles = local_resolve_series_styles(series_display, opts);
 share_y = logical(opts.ShareYAxis);
 show_sig = logical(opts.ShowSignificance) && any(strcmp('p', pooled.Properties.VariableNames));
 alpha = opts.Alpha;
@@ -743,6 +778,7 @@ for r = 1:n
             display_name = char(cond);
         end
         if ~any(mask), continue; end
+        st = series_styles(k);
         sub = sortrows(pooled(mask, :), 'lag_seconds');
         x = sub.lag_seconds(:);
         y = sub.mean(:);
@@ -750,11 +786,11 @@ for r = 1:n
         if any(e > 0)
             xx = [x; flipud(x)];
             yy = [y + e; flipud(y - e)];
-            fill(ax, xx, yy, colors(k, :), 'FaceAlpha', 0.18, 'EdgeColor', 'none', ...
+            fill(ax, xx, yy, st.color, 'FaceAlpha', 0.18, 'EdgeColor', 'none', ...
                 'HandleVisibility', 'off');
         end
-        plot(ax, x, y, '-', 'Color', colors(k, :), 'LineWidth', 1.6, ...
-            'DisplayName', display_name);
+        plot(ax, x, y, 'Color', st.color, 'LineStyle', st.line_style, ...
+            'LineWidth', st.line_width, 'DisplayName', display_name);
 
         % Significance: mark lags where the across-subject mean differs from
         % 0 at p < Alpha, as dots just above the band. Ring the FIRST such
@@ -764,9 +800,9 @@ for r = 1:n
             if any(sig)
                 ymark = (y_hi - 0.03 * yspan) - (k - 1) * 0.035 * yspan;  % stagger by series
                 plot(ax, x(sig), repmat(ymark, sum(sig), 1), '.', ...
-                    'Color', colors(k, :), 'MarkerSize', 9, 'HandleVisibility', 'off');
+                    'Color', st.color, 'MarkerSize', 9, 'HandleVisibility', 'off');
                 first_sig = find(sig, 1, 'first');
-                plot(ax, x(first_sig), ymark, 'o', 'Color', colors(k, :), ...
+                plot(ax, x(first_sig), ymark, 'o', 'Color', st.color, ...
                     'MarkerSize', 7, 'LineWidth', 1.2, 'HandleVisibility', 'off');
             end
         end
@@ -979,6 +1015,93 @@ for i = 1:n
         error('plot_hrf_curves:BadSource', ...
             'sources(%d).table must be a table.', i);
     end
+end
+end
+
+
+function styles = local_resolve_series_styles(series_display, opts)
+% Build a per-series style struct array with fields color (1x3), line_style,
+% line_width. Precedence: SeriesStyle entry whose .Series substring matches
+% the series display name (case-insensitive, first match wins) > Colors
+% override (by series order) > default palette. Line style/width from the
+% matched SeriesStyle entry else global LineStyle/LineWidth.
+nseries = numel(series_display);
+palette = local_color_palette(nseries);
+override_colors = local_normalize_colors(opts.Colors, nseries);
+default_lw = opts.LineWidth;
+default_ls = char(opts.LineStyle);
+
+styles = repmat(struct('color', [0 0 0], 'line_style', '-', 'line_width', 1.6), nseries, 1);
+for k = 1:nseries
+    % defaults
+    col = palette(k, :);
+    if ~isempty(override_colors)
+        col = override_colors(min(k, size(override_colors, 1)), :);
+    end
+    ls = default_ls;
+    lw = default_lw;
+
+    % SeriesStyle pattern match
+    if ~isempty(opts.SeriesStyle)
+        ss = opts.SeriesStyle;
+        for e = 1:numel(ss)
+            if ~isfield(ss(e), 'Series') || isempty(ss(e).Series), continue; end
+            pat = char(string(ss(e).Series));
+            if contains(lower(char(series_display(k))), lower(pat))
+                if isfield(ss(e), 'Color') && ~isempty(ss(e).Color)
+                    col = local_color_to_rgb(ss(e).Color);
+                end
+                if isfield(ss(e), 'LineStyle') && ~isempty(ss(e).LineStyle)
+                    ls = char(string(ss(e).LineStyle));
+                end
+                if isfield(ss(e), 'LineWidth') && ~isempty(ss(e).LineWidth)
+                    lw = double(ss(e).LineWidth);
+                end
+                break
+            end
+        end
+    end
+
+    styles(k).color = col;
+    styles(k).line_style = ls;
+    styles(k).line_width = lw;
+end
+end
+
+
+function C = local_normalize_colors(colors_in, nseries) %#ok<INUSD>
+% Accept an Nx3 numeric matrix or a cell array of color specs; return Nx3.
+C = [];
+if isempty(colors_in), return; end
+if isnumeric(colors_in)
+    if size(colors_in, 2) == 3
+        C = colors_in;
+    end
+elseif iscell(colors_in)
+    C = zeros(numel(colors_in), 3);
+    for i = 1:numel(colors_in)
+        C(i, :) = local_color_to_rgb(colors_in{i});
+    end
+end
+end
+
+
+function rgb = local_color_to_rgb(c)
+% Convert a color spec (1x3 numeric, or a char like 'r'/'red') to RGB.
+if isnumeric(c) && numel(c) == 3
+    rgb = double(c(:)');
+    return
+end
+s = lower(char(string(c)));
+map = containers.Map( ...
+    {'r','g','b','c','m','y','k','w','red','green','blue','cyan','magenta','yellow','black','white','orange','purple','gray','grey'}, ...
+    {[1 0 0],[0 1 0],[0 0 1],[0 1 1],[1 0 1],[1 1 0],[0 0 0],[1 1 1], ...
+     [1 0 0],[0 1 0],[0 0 1],[0 1 1],[1 0 1],[1 1 0],[0 0 0],[1 1 1], ...
+     [1 0.5 0],[0.5 0 0.5],[0.5 0.5 0.5],[0.5 0.5 0.5]});
+if isKey(map, s)
+    rgb = map(s);
+else
+    rgb = [0 0 0];
 end
 end
 

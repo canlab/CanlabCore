@@ -72,15 +72,49 @@ splitter normalises it for you (a `grp2idx(...)` is no longer required).
 
 `predictive_model` is now a thin **value-class** wrapper around the
 MATLAB Statistics & ML Toolbox model objects. Construction sets
-hyperparameters only — no data has been touched yet.
+hyperparameters only — **no data has been touched yet**; you're just
+declaring *what kind of model* you want before handing it data with `fit` /
+`crossval`.
 
 ```matlab
 pm = predictive_model( ...
-    'algorithm',     'svm', ...                       % registry name
-    'task',          'classification', ...
-    'modeloptions',  {'KernelFunction', 'linear'}, ...
+    'algorithm',     'svm', ...                       % which learner (registry name)
+    'task',          'classification', ...            % classification | regression
+    'modeloptions',  {'KernelFunction', 'linear'}, ... % name/value pairs passed to the fitter
     'random_state',  2026);                            % rng seed for reproducibility
 ```
+
+**The two options that matter most are `algorithm` and `task`:**
+
+- **`algorithm`** picks the learner (see the registry below). It largely
+  *implies* the task — `svm` is a classifier, `svr`/`pcr` are regressors.
+- **`task`** tells the object whether you're predicting a **category**
+  (`'classification'`) or a **continuous value** (`'regression'`). This sets
+  the default scorer, how `Y` is interpreted, and what `predict`/`plot`
+  return.
+
+**What if I don't set `task` (or other properties)?** Most hyperparameters have
+sensible defaults that are filled in at `fit`/`crossval` time:
+
+| Property | If you omit it… |
+|---|---|
+| `task` | **inferred from `Y`**: ≤ 2 unique values → `classification`, else `regression`. Set it explicitly when the inference would be wrong — e.g. a *regression* target that happens to take few values, or to be safe with a binary-coded outcome. |
+| `scorer` | defaults by task: **`balanced_accuracy`** (classification), **`r2`** (regression). |
+| `cv` | defaults to **`stratified_kfold(5)`** (classification) / `kfold(5)` (regression). ⚠️ **Not group-aware** — for repeated-measures / within-subject data you must pass a grouped splitter (`stratified_group_kfold`) and `'groups'`, or folds will split a subject across train and test (leakage). |
+| `modeloptions` | the fitter's own defaults (e.g. `fitcsvm`'s box constraint). |
+| `random_state` | unset → MATLAB's current rng; set it for reproducible folds/bootstraps. |
+
+So `predictive_model('algorithm','svm')` will run, inferring
+`task='classification'` and scoring with balanced accuracy — but being explicit
+(`'task'`, and a grouped `cv`) is the safe habit.
+
+**Scoring options** (the `'scoring'` value, set here or at `crossval`):
+
+- **Classification:** `accuracy`, `balanced_accuracy` *(default)*, `f1`,
+  `roc_auc`, `log_loss`.
+- **Regression:** `r2` *(default)*, `pearson_r`, `mse`, `rmse`, `mae`.
+
+See §4's "Scoring options" for what each measures and which to prefer.
 
 Registry of algorithms (see `predictive_model.algorithm_registry()`):
 
@@ -126,7 +160,65 @@ too (they are special-cased in `fit`). All of the above can be passed as
 `'algorithm'` at construction, or reached through `fmri_data.predict` (e.g.
 `'cv_svm'`, `'cv_pcr'`, `'cv_lassopcr'`) and the `xval_*` wrappers.
 
+### Which algorithm should I use? (and the dataset-width trap)
+
+For a first pass on whole-brain fMRI, a **linear** model is almost always the
+right starting point: with tens of thousands of voxels and tens to low-hundreds
+of images, you are firmly in the *p ≫ n* regime where flexible nonlinear
+learners overfit and linear decision boundaries are both adequate and
+interpretable (the weights map back to a brain image). So start with
+`linear_svm` / `svm` for classification, `pcr` / `lassopcr` / `linear_svr` for
+regression; reach for trees, random forests, kNN, GP, or neural nets only when
+you have many observations relative to features (e.g. after heavy
+dimensionality reduction, or on parcel/ROI summaries) and have a specific
+reason to expect nonlinearity.
+
+**`svm` (`fitcsvm`) vs `linear_svm` (`fitclinear`) — and when a dataset is "too
+wide" for `fitcsvm`:**
+
+| | `svm` → `fitcsvm` | `linear_svm` → `fitclinear` |
+|---|---|---|
+| Solver | dual QP via SMO/ISDA; forms an *n × n* kernel (Gram) matrix | primal large-scale solvers (dual coordinate descent / SGD / (L)BFGS) |
+| Kernels | linear **or nonlinear** (RBF, polynomial) | **linear only** |
+| Scales with | the **number of observations** *n* (kernel matrix) | the **number of features** *p* — built for high-dimensional data |
+| Best when | small/moderate *n*; you want a nonlinear kernel; few features | wide data (*p* in the thousands–hundreds of thousands), e.g. whole-brain voxels |
+
+Because `fitcsvm` works through the kernel and is not optimized for very
+wide inputs, it gets **slow and memory-hungry as the feature count grows** into
+the tens of thousands — exactly the whole-brain voxel case. `fitclinear` is
+purpose-built for that regime and is typically **orders of magnitude faster**
+with essentially the same linear decision boundary. Rule of thumb: **once you're
+past a few thousand features, prefer `linear_svm`** (this is what
+`xval_SVM(..., 'highdimensional', true)` switches to under the hood). Keep
+`svm` for smaller feature counts (ROI/parcel data) or when you genuinely want a
+nonlinear kernel. The algorithmic difference is *solver and kernel support*,
+not the underlying max-margin idea — on linearly separable wide data they find
+very similar patterns.
+
+(Part 5 walks through the other registry algorithms — SVR, lasso, ridge, GP,
+ECOC — explaining what each is and the data it suits.)
+
 ## 3. fit / predict / score (the sklearn triad)
+
+These three verbs are the foundation; everything else (`crossval`, `bootstrap`,
+…) is built on them. Borrowed straight from scikit-learn:
+
+- **`fit(pm, X, Y)`** — *train.* Learn the model on data `X` (`[n × p]`) and
+  outcome `Y` (`[n × 1]`). Returns a fitted `pm` whose `ml_model`, `weights.w`,
+  and intercept are populated. Use it when you want a single model on all the
+  data (e.g. the final "ship-it" pattern, or before applying to a separate test
+  set).
+- **`predict(pm, Xnew)`** — *apply.* Run the fitted model on new rows; returns
+  predicted labels/values and continuous scores. Use it to score a held-out or
+  independent dataset. **It applies the full decision function** — weights *and*
+  intercept — plus the omitted-features mask and any standardization recorded at
+  fit time, so you don't reproduce those by hand (see the note below).
+- **`score(pm, X, Y)`** — *evaluate.* Predict on `X` and compare to the true
+  `Y` with the model's scorer (balanced accuracy by default). A convenience for
+  "how good is it on this data" in one call.
+
+`fit`/`predict`/`score` are the in-sample / apply-to-new-data primitives;
+`crossval` (next) wraps them to estimate **out-of-sample** performance honestly.
 
 ```matlab
 pm = fit(pm, X, Y, 'id', id);
@@ -134,6 +226,24 @@ pm = fit(pm, X, Y, 'id', id);
 [yhat, scores] = predict(pm, X);             % yhat ∈ {-1,+1}, scores = decision values
 acc = score(pm, X, Y);                       % balanced_accuracy by default
 ```
+
+> **The bias term (intercept) is always applied.** `predict` returns
+> `w·x + b` — in-sample, on a test set, and within every cross-validation fold
+> (each fold uses *its own* training intercept). You can confirm it:
+> `predict`'s SVM score equals `X*pm.weights.w + pm.ml_model.Bias` (for PCR/
+> lassoPCR, `+ pm.ml_model.intercept`). The natural decision threshold is 0 on
+> that bias-inclusive score.
+>
+> **But the weight map is slope-only.** `pm.weights.w` — and the
+> `statistic_image` from `weight_map_object` — is just the coefficient vector,
+> **no intercept**. That's correct for a weight *map* (a direction in voxel
+> space; the bias is a scalar, not a brain image). If you ever apply the pattern
+> to new images **by hand** (`Xnew*w`, a dot-product pattern expression,
+> `apply_mask` / `image_similarity`), you'll be missing the offset and your
+> score won't sit at the model's threshold. Add the intercept yourself
+> (`pm.ml_model.Bias` for SVM/`fitclinear`, `pm.ml_model.intercept` for PCR/
+> lassoPCR) — or, simplest, just call `predict(pm, Xnew)`, which handles all of
+> it.
 
 After `fit`:
 - `pm.fit_type` is `'insample'`
@@ -148,12 +258,51 @@ re-apply the same mask to new data.
 
 ## 4. Cross-validation — the sklearn-style splitter API
 
+**Why cross-validate.** An in-sample fit tells you how well the model
+*memorised* the training data, which is optimistic and uninformative. Cross-
+validation estimates how well it **generalises to new observations**: split the
+data into *k* folds; for each fold, train on the other *k−1* and predict the
+held-out one; concatenate the held-out predictions (so every observation is
+predicted exactly once, by a model that never saw it) and score them.
+
+**How a `cv_splitter` works, conceptually.** A splitter is a small object that
+*only decides which rows go in which fold* — it knows nothing about the model.
+You hand `crossval` a splitter; internally it calls `splitter.split(X, Y,
+groups)`, which returns, for each fold, the train and test row indices
+(`trIdx` / `teIdx`). `crossval` then loops: `m = fit(clone(pm), X(tr),
+Y(tr)); predict(m, X(te))`. Separating *how to split* from *what to fit* is
+what lets you swap fold schemes without touching the model code.
+
+The flavours differ in **what constraint they put on the split**:
+
+- **stratified** — keep each fold's class proportions like the whole sample's
+  (so a fold isn't accidentally 90% one class). Classification only.
+- **group** — keep all rows sharing a `group` id (e.g. a subject) **together**
+  in the same fold. Essential for repeated-measures data: if a subject's images
+  land in both train and test, the model can exploit subject identity and the
+  accuracy is inflated (leakage).
+- **stratified + group** — both at once. **This is the right default for paired
+  brain designs** like DPSP (each subject contributes both classes).
+
 ```matlab
 pm = crossval(pm, X, Y, ...
-    'cv',      cv_splitter.stratified_group_kfold(5), ...
-    'groups',  id, ...
+    'cv',      cv_splitter.stratified_group_kfold(5), ...   % the splitter
+    'groups',  id, ...                                      % subject id per row
     'scoring', 'balanced_accuracy');
 ```
+
+You can also use a splitter directly to see what it does:
+
+```matlab
+cv  = cv_splitter.stratified_group_kfold(5);
+sp  = cv.split(X, Y, grp2idx(id));   % struct array, one per fold
+sp(1).trIdx, sp(1).teIdx             % the train / test indices of fold 1
+```
+
+> ⚠️ **The default splitter is not group-aware.** If you omit `'cv'`, `crossval`
+> uses `stratified_kfold(5)`, which can split one subject across folds. For any
+> repeated-measures / within-subject data, pass `stratified_group_kfold` (or
+> `group_kfold`) and `'groups'` explicitly.
 
 Splitter factories (`cv_splitter.X(...)`):
 

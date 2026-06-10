@@ -39,6 +39,83 @@ is identical.
 | `gp` | `fitrgp` | regression | Gaussian process; needs few features |
 | `tree_regressor`, `rf_regressor`, `nnet_regressor` | various | regression | non-linear baselines |
 
+## 1b. What each algorithm is (and the data it suits)
+
+A short field guide. For whole-brain fMRI (*p ≫ n* — far more voxels than
+images), the **linear** models are the default; the nonlinear ones need many
+observations relative to features, so reach for them only on ROI/parcel
+summaries or after PCA reduction.
+
+**Classification**
+
+- **`svm` (`fitcsvm`)** — the max-margin classifier: finds the hyperplane that
+  separates the two classes with the widest gap. Solves the *dual* problem and
+  forms an *n × n* kernel matrix, so it supports **nonlinear kernels** (RBF,
+  polynomial) but scales with the **number of observations**. Best for
+  small/moderate *n* and modest feature counts, or when you want a nonlinear
+  boundary. The workhorse for ROI-scale data.
+- **`linear_svm` (`fitclinear`)** — the *same* max-margin idea, but a primal
+  large-scale solver built for **high-dimensional** data; **linear only**.
+  Scales with the **number of features**, so it stays fast at hundreds of
+  thousands of voxels where `fitcsvm` bogs down. *svm vs linear_svm*: identical
+  objective on linear, different solver and kernel support — use `linear_svm`
+  once you're past a few thousand features (whole-brain), `svm` for smaller
+  feature counts or a nonlinear kernel.
+- **`logistic` (`fitclinear`, logistic loss)** — like `linear_svm` but fits a
+  probability model; its scores are (near-)calibrated **probabilities** rather
+  than signed distances. Use when you want `P(class)` directly.
+- **`lda` (`fitcdiscr`)** — linear discriminant analysis: models each class as a
+  Gaussian with a **shared covariance** and draws the optimal linear boundary.
+  Fast and well-behaved when that assumption roughly holds; **natively
+  multiclass** (no binary reduction needed). Needs regularization
+  (`Gamma`/`Delta`) when *p > n*.
+- **`knn` (`fitcknn`)** — labels a point by majority vote of its *k* nearest
+  neighbours. No training, purely *local*, no weight map; suffers in
+  high-dimensional space ("curse of dimensionality"). For low-dimensional /
+  reduced data.
+- **`naive_bayes` (`fitcnb`)** — assumes features are conditionally independent
+  given the class. Cheap and surprisingly strong as a baseline, but the
+  independence assumption is poor for correlated voxels.
+- **`tree_classifier` / `rf_classifier` / `nnet_classifier`** — a single decision
+  tree, a bagged-tree ensemble (random forest), and a feed-forward neural net.
+  These capture **nonlinear** structure and interactions, at the cost of needing
+  more data and giving a less interpretable map. Nonlinear baselines; rarely the
+  first choice on raw voxels.
+- **`ecoc` (`fitcecoc`)** — the **multiclass** wrapper (>2 classes); see §4.
+
+**Regression**
+
+- **`svr` (`fitrsvm`)** — support-vector regression: the SVM idea for a
+  continuous target (fit within an ε-insensitive tube). Kernel-capable; scales
+  with *n*. Often the best **ranker** on brain data (tracks the outcome well).
+- **`linear_svr` (`fitrlinear`)** — high-dimensional linear SVR; the wide-data
+  counterpart of `svr` (linear only, scales with features).
+- **`lasso` (`fitrlinear`, L1)** — linear regression with an **L1 penalty** that
+  drives many coefficients to exactly zero → a **sparse**, few-voxel model. Use
+  when you expect a compact predictive set and want built-in feature selection.
+- **`ridge` (`fitrlinear`, L2)** — linear regression with an **L2 penalty** that
+  shrinks coefficients smoothly → a **dense, stable** map. The robust default
+  when predictive signal is spread across many correlated voxels (typical for
+  fMRI).
+- **`pcr`** — principal-components regression: PCA-reduce, then OLS on the
+  components. A classic, well-conditioned linear decoder for *p ≫ n*; reproduces
+  CANlab's legacy `cv_pcr`.
+- **`lassopcr`** — PCR with a LASSO selection of components and a relaxed-OLS
+  refit; adds sparsity at the component level (tune via `lasso_num` or nested-CV
+  `estimateparam`). The CANlab standard for many published signatures.
+- **`gp` (`fitrgp`)** — Gaussian-process regression: a flexible nonparametric
+  model with built-in uncertainty, but it forms an *n × n* kernel and **does not
+  scale to ~200k voxels** — use inside a `pca` `@pipeline` (§5).
+- **`tree_regressor` / `rf_regressor` / `nnet_regressor`** — nonlinear regression
+  baselines, analogous to their classifier cousins.
+
+*lasso vs ridge vs pcr/lassopcr*: all four are penalized/projected **linear**
+regressions; they differ in how they cope with correlated, high-dimensional
+predictors. `ridge` shrinks everything (dense), `lasso` selects a sparse subset,
+`pcr` projects onto top variance directions, `lassopcr` selects among those
+projections. On smooth, distributed fMRI signal, the dense ones (`ridge`, `pcr`)
+are often the most stable; `lasso` wins when the truth really is sparse.
+
 ## 2. Setup
 
 ```matlab
@@ -56,7 +133,7 @@ you, but here it's spelled out):
 
 ```matlab
 cv   = cv_splitter.stratified_group_kfold(5);
-algs = {'svm','linear_svm','logistic','lda'};
+algs = {'svm','linear_svm','logistic'};   % see note on lda below
 
 for a = algs
     pm = crossval(predictive_model('algorithm',a{1},'task','classification'), ...
@@ -64,6 +141,12 @@ for a = algs
     fprintf('%-12s cv bal-acc = %.3f\n', a{1}, pm.error_metrics.balanced_accuracy.value);
 end
 ```
+
+> **Why no `lda` here:** `fitcdiscr` estimates a *p × p* class covariance, which
+> is singular and intractable at ~195k raw voxels. LDA is a fine linear
+> classifier, but on whole-brain data it needs heavy regularization
+> (`Gamma`/`Delta`) or PCA reduction first (e.g. an `lda` estimator inside a
+> `pca` `@pipeline`).
 
 Or in one call:
 
@@ -74,9 +157,38 @@ disp(results);    % table: algorithm, cv_score, cv_error, n_fdr_sig
 
 ## 4. Multiclass classification with ECOC
 
-For >2 classes, `ecoc` (error-correcting output codes) reduces the
-K-class problem to a set of binary SVMs and decodes their votes. Build a
-4-class problem by stacking the two DPSP tasks — Hot, Warm, Rejecter,
+SVMs are intrinsically **binary** — they find one hyperplane between two
+classes. To handle *K > 2* classes you either use a learner that is *natively*
+multiclass (`lda`, `naive_bayes`, trees/forests, kNN, neural nets all handle
+>2 classes directly) or **reduce** the K-class problem to a set of binary
+problems. There are three standard reductions:
+
+- **One-vs-all (one-vs-rest, OvA/OvR).** Train *K* binary classifiers, each
+  "class *k* vs all the others." At test time, pick the class whose classifier
+  is most confident. Cheap (*K* models) but the binary problems are imbalanced
+  (1 class vs K−1) and the scores aren't always comparable across classifiers.
+- **One-vs-one (OvO, all-pairs).** Train one classifier per **pair** of classes
+  — *K(K−1)/2* of them — each trained only on that pair's data; classify by
+  majority vote. More models, but each is a small, balanced, easier problem.
+  This is **MATLAB's `fitcecoc` default**.
+- **Error-correcting output codes (ECOC).** The general framework that contains
+  both. Assign each class a **codeword** — a row in a coding matrix of
+  `+1 / −1 / 0` ("ignore") — and train one binary learner **per column** (each
+  column defines which classes are positive, negative, or left out). At test
+  time the *K* learners produce a predicted codeword; assign the class whose row
+  is **closest** (Hamming / loss-weighted distance). If the codewords are
+  designed with redundancy (well-separated rows), a few wrong binary learners
+  still decode to the right class — *error-correcting*, exactly like codes in
+  communications. OvA and OvO are just two particular coding matrices; richer
+  designs (dense/sparse random, BCH) trade more learners for more robustness.
+
+`ecoc` → `fitcecoc` uses one-vs-one with SVM learners by default; pass
+`{'Coding','onevsall'}` (or a custom design / different binary `Learners`) in
+`modeloptions` to change it. **For linear SVM specifically you must pick a
+reduction** (OvA/OvO/ECOC); if you'd rather avoid that, `lda` gives a native
+multiclass linear decoder in one shot.
+
+Build a 4-class problem by stacking the two DPSP tasks — Hot, Warm, Rejecter,
 Friend:
 
 ```matlab

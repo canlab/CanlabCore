@@ -74,9 +74,20 @@ function fig = plot_hrf_curves(input_table, varargin)
 %                     'snr'       max|mean| / median(SEM)
 %                   SHAPE (needs SPM spm_hrf):
 %                     'shape_r2'  best-over-conditions corr(mean, canonical)^2
-%                                 -- ranks by HRF-plausibility (biases toward
-%                                 canonical shapes; use peak_t for shape-
-%                                 agnostic reliability)
+%                                 -- HRF-plausibility, but amplitude- and
+%                                 reliability-blind (tiny wiggles can win)
+%                     'hrf_match' RECOMMENDED for finding compelling HRFs.
+%                                 Offset-removed, latency-flexible matched
+%                                 filter: regress the mean curve on
+%                                 [constant, canonical] (the constant
+%                                 absorbs a sustained baseline offset, so
+%                                 flat deactivations don't win), sweep the
+%                                 canonical peak 5..15s (so LATE bumps still
+%                                 match), and score by the reliability t of
+%                                 the canonical coefficient. Rewards a
+%                                 reliable TRANSIENT HRF-shaped excursion;
+%                                 rejects sustained offsets, noise, and
+%                                 big-but-jagged regions.
 %   'Regions'     - cellstr; explicit region list (overrides TopN/RankBy).
 %   'Layout'      - [nrows ncols]; default auto-grid from TopN.
 %   'FigureSize'  - [w h] in pixels. Default scales with grid.
@@ -733,10 +744,12 @@ for r = 1:numel(regions)
             if ~(denom > 0), scores(r) = -Inf; else, scores(r) = max(abs(finite_mu)) / denom; end
         case 'shape_r2'
             scores(r) = local_region_shape_r2(pooled, mask);
+        case 'hrf_match'
+            scores(r) = local_region_hrf_match_t(pooled, mask);
         otherwise
             error('plot_hrf_curves:UnknownRankBy', ...
                 ['Unknown RankBy: %s. Magnitude: peak_abs, peak, auc_abs, sd. ' ...
-                 'Reliability: peak_t, auc_t, n_sig, snr. Shape: shape_r2.'], rank_by);
+                 'Reliability: peak_t, auc_t, n_sig, snr. Shape: shape_r2, hrf_match.'], rank_by);
     end
 end
 
@@ -781,6 +794,49 @@ dt = 0.1;
 h = spm_hrf(dt); h = h ./ max(h);
 t_fine = (0:numel(h) - 1) * dt;
 ref = interp1(t_fine, h, lags(:), 'linear', 0);
+end
+
+
+function tval = local_region_hrf_match_t(pooled, region_mask)
+% Offset-removed, latency-flexible matched-filter t-statistic. For each
+% condition, regress the mean curve on [constant, shifted-canonical-HRF];
+% the constant absorbs any sustained baseline offset (the thing that makes
+% peak_t/n_sig surface flat deactivations), and the canonical coefficient
+% captures the TRANSIENT bump. Its reliability t uses the per-lag SEM. The
+% canonical is swept over peak latencies (5..15s) so a late bump (e.g.
+% Thal_CL) still matches. Score = best (over condition x latency) signed t,
+% favouring reliable positive HRF-shaped excursions.
+tval = -Inf;
+if exist('spm_hrf', 'file') ~= 2, return; end
+dt = 0.1; h = spm_hrf(dt); h = h ./ max(h); t_fine = (0:numel(h) - 1) * dt;
+shifts = 0:2:10;   % canonical peaks at ~5s; shift delays it to ~15s
+sub = pooled(region_mask, :);
+conds = unique(sub.condition, 'stable');
+best = -Inf;
+for c = 1:numel(conds)
+    cm = sub.condition == conds(c);
+    s = sortrows(sub(cm, :), 'lag_seconds');
+    y = s.mean(:); x = s.lag_seconds(:); se = s.sem(:);
+    ok = isfinite(y) & isfinite(x) & isfinite(se) & se > 0;
+    if sum(ok) < 5, continue; end
+    y = y(ok); x = x(ok); w = se(ok) .^ 2;
+    for d = shifts
+        canon = interp1(t_fine, h, x - d, 'linear', 0);
+        if std(canon) == 0, continue; end
+        X = [ones(numel(x), 1), canon(:)];
+        XtX = X' * X;
+        if rcond(XtX) < 1e-12, continue; end
+        Bcov = XtX \ eye(2);
+        b = Bcov * (X' * y);
+        Vb = Bcov * (X' * diag(w) * X) * Bcov;   % GLS-style cov of b
+        se_b2 = sqrt(max(Vb(2, 2), 0));
+        if se_b2 > 0
+            t = b(2) / se_b2;   % signed: positive canonical-shaped amplitude
+            if t > best, best = t; end
+        end
+    end
+end
+if isfinite(best), tval = best; end
 end
 
 

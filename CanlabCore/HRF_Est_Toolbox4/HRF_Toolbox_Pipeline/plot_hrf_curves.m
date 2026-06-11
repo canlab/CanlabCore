@@ -58,11 +58,25 @@ function fig = plot_hrf_curves(input_table, varargin)
 %   'Normalize'   - which suffix to read: 'mean' (default), 'l1', 'sum'.
 %                   Must match what hrf_score_wholebrain_input_table wrote.
 %   'TopN'        - number of regions to plot. Default 16.
-%   'RankBy'      - 'peak_abs' (default) -> max |mean curve value| over
-%                                            all (condition, lag) pairs
-%                   'peak'       -> max signed value (positive activations)
-%                   'auc_abs'    -> max sum(|mean curve|) across lags
-%                   'sd'         -> max across-lag SD (any deflection)
+%   'RankBy'      - how to choose the TopN units. Magnitude modes score the
+%                   mean curve only; reliability/shape modes use the
+%                   across-subject t / SEM (so a clean, tight, HRF-shaped
+%                   response beats a big noisy one -- usually what you want):
+%                   MAGNITUDE:
+%                     'peak_abs' (default) max|mean| over (condition, lag)
+%                     'peak'      max signed mean (positive activations)
+%                     'auc_abs'   sum(|mean|) across lags
+%                     'sd'        across-lag SD of the mean (any deflection)
+%                   RELIABILITY / SNR (need >= 2 subjects for t/p):
+%                     'peak_t'    max|t| -- SNR-aware peak; recommended
+%                     'auc_t'     sum|t| -- SNR-weighted integrated response
+%                     'n_sig'     # lags with p < Alpha (sustained response)
+%                     'snr'       max|mean| / median(SEM)
+%                   SHAPE (needs SPM spm_hrf):
+%                     'shape_r2'  best-over-conditions corr(mean, canonical)^2
+%                                 -- ranks by HRF-plausibility (biases toward
+%                                 canonical shapes; use peak_t for shape-
+%                                 agnostic reliability)
 %   'Regions'     - cellstr; explicit region list (overrides TopN/RankBy).
 %   'Layout'      - [nrows ncols]; default auto-grid from TopN.
 %   'FigureSize'  - [w h] in pixels. Default scales with grid.
@@ -262,7 +276,7 @@ if ~isempty(opts.Regions)
     end
     top_regions = unique(top_regions, 'stable');
 else
-    top_regions = local_rank_regions(pooled, char(opts.RankBy), opts.TopN);
+    top_regions = local_rank_regions(pooled, char(opts.RankBy), opts.TopN, opts.Alpha);
 end
 if isempty(top_regions)
     avail = cellstr(unique(pooled.region));
@@ -658,35 +672,115 @@ T = out;
 end
 
 
-function top_regions = local_rank_regions(pooled, rank_by, top_n)
+function top_regions = local_rank_regions(pooled, rank_by, top_n, alpha)
 % Rank by a per-region scalar collapsed across (condition, lag), then keep
 % the top top_n region names in descending order.
+%
+% Magnitude modes (score the mean curve only):
+%   'peak_abs'  max|mean|     'peak'     max signed mean
+%   'auc_abs'   sum|mean|     'sd'       across-lag SD of the mean
+% Reliability / SNR modes (use the across-subject t and SEM, so a clean,
+% tight, HRF-shaped response beats a big noisy one):
+%   'peak_t'    max|t|        'auc_t'    sum|t|
+%   'n_sig'     # lags p<Alpha (sustained reliable response)
+%   'snr'       max|mean| / median(SEM>0)
+% Shape mode (reward HRF-plausibility directly):
+%   'shape_r2'  max over conditions of corr(mean curve, canonical HRF)^2
+if nargin < 4 || isempty(alpha), alpha = 0.05; end
+rank_by = lower(strtrim(char(rank_by)));
 regions = unique(pooled.region, 'stable');
 scores = zeros(numel(regions), 1);
 
+has_t = any(strcmp('t', pooled.Properties.VariableNames));
+has_p = any(strcmp('p', pooled.Properties.VariableNames));
+has_sem = any(strcmp('sem', pooled.Properties.VariableNames));
+
+if ismember(rank_by, {'peak_t', 'auc_t', 'n_sig'}) && ~(has_t || has_p)
+    error('plot_hrf_curves:RankNeedsStats', ...
+        ['RankBy=''%s'' needs the per-lag t/p columns, which require >= 2 ' ...
+         'subjects to compute. Use a magnitude mode (peak_abs/auc_abs) for ' ...
+         'single-subject data.'], rank_by);
+end
+
 for r = 1:numel(regions)
     mask = pooled.region == regions(r);
-    vals = pooled.mean(mask);
-    vals = vals(isfinite(vals));
-    if isempty(vals), scores(r) = -Inf; continue; end
-    switch lower(rank_by)
+    mu = pooled.mean(mask);
+    finite_mu = mu(isfinite(mu));
+    if isempty(finite_mu), scores(r) = -Inf; continue; end
+
+    switch rank_by
         case 'peak_abs'
-            scores(r) = max(abs(vals));
+            scores(r) = max(abs(finite_mu));
         case 'peak'
-            scores(r) = max(vals);
+            scores(r) = max(finite_mu);
         case 'auc_abs'
-            scores(r) = sum(abs(vals));
+            scores(r) = sum(abs(finite_mu));
         case 'sd'
-            scores(r) = std(vals);
+            scores(r) = std(finite_mu);
+        case 'peak_t'
+            tv = pooled.t(mask); tv = tv(isfinite(tv));
+            scores(r) = local_or(@() max(abs(tv)), isempty(tv));
+        case 'auc_t'
+            tv = pooled.t(mask); tv = tv(isfinite(tv));
+            scores(r) = local_or(@() sum(abs(tv)), isempty(tv));
+        case 'n_sig'
+            pv = pooled.p(mask);
+            scores(r) = sum(pv < alpha & isfinite(pv));
+        case 'snr'
+            if ~has_sem, error('plot_hrf_curves:RankNeedsSEM', 'snr ranking needs the SEM column.'); end
+            sv = pooled.sem(mask); sv = sv(isfinite(sv) & sv > 0);
+            denom = local_or(@() median(sv), isempty(sv));
+            if ~(denom > 0), scores(r) = -Inf; else, scores(r) = max(abs(finite_mu)) / denom; end
+        case 'shape_r2'
+            scores(r) = local_region_shape_r2(pooled, mask);
         otherwise
             error('plot_hrf_curves:UnknownRankBy', ...
-                'Unknown RankBy: %s. Use peak_abs, peak, auc_abs, or sd.', rank_by);
+                ['Unknown RankBy: %s. Magnitude: peak_abs, peak, auc_abs, sd. ' ...
+                 'Reliability: peak_t, auc_t, n_sig, snr. Shape: shape_r2.'], rank_by);
     end
 end
 
 [~, order] = sort(scores, 'descend');
 keep = order(1:min(top_n, numel(order)));
 top_regions = cellstr(regions(keep));
+end
+
+
+function v = local_or(fn, is_empty)
+% Evaluate fn() unless is_empty, in which case return -Inf (sorts last).
+if is_empty, v = -Inf; else, v = fn(); end
+end
+
+
+function r2 = local_region_shape_r2(pooled, region_mask)
+% Best (over conditions) squared correlation of the region's mean curve to
+% the canonical HRF resampled to that condition's lags. Needs spm_hrf.
+r2 = -Inf;
+if exist('spm_hrf', 'file') ~= 2, return; end
+sub = pooled(region_mask, :);
+conds = unique(sub.condition, 'stable');
+best = -Inf;
+for c = 1:numel(conds)
+    cm = sub.condition == conds(c);
+    s = sortrows(sub(cm, :), 'lag_seconds');
+    y = s.mean(:); x = s.lag_seconds(:);
+    ok = isfinite(y) & isfinite(x);
+    if sum(ok) < 4, continue; end
+    ref = local_canonical_at_lags_local(x(ok));
+    if std(y(ok)) > 0 && std(ref) > 0
+        rr = corr(y(ok), ref(:)) ^ 2;
+        if rr > best, best = rr; end
+    end
+end
+if isfinite(best), r2 = best; end
+end
+
+
+function ref = local_canonical_at_lags_local(lags)
+dt = 0.1;
+h = spm_hrf(dt); h = h ./ max(h);
+t_fine = (0:numel(h) - 1) * dt;
+ref = interp1(t_fine, h, lags(:), 'linear', 0);
 end
 
 

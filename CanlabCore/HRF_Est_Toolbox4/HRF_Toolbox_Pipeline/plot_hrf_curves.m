@@ -42,7 +42,14 @@ function fig = plot_hrf_curves(input_table, varargin)
 %                   'RankBy', 'hrf_match' -> regions with the largest
 %                   reliable HRF-shaped difference between the two. With
 %                   multiple study labels, each study gets its own A-B curve.
-%                   Default {} (per-condition curves).
+%                   Default {} (per-condition curves). The two levels may be
+%                   CONDITION names or STUDY labels (see ContrastBy) -- the
+%                   latter contrasts the SAME condition across different
+%                   output folders, e.g. 'Contrast', {'acc','exp'} with the
+%                   acc/exp labels from a multi-source struct array.
+%   'ContrastBy'  - which axis the two Contrast levels live on: 'auto'
+%                   (default; picks whichever of condition / study_label
+%                   contains both levels), 'condition', or 'study_label'.
 %   'Model'       - which row's model column to use. Default 'sfir'.
 %   'Object'      - 'beta' (default) or 't'.
 %   'Conditions'  - cellstr; subset of conditions to plot. Supports glob
@@ -155,6 +162,7 @@ p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('Contrast', {}, @(x) isempty(x) || iscell(x) || isstring(x));
+p.addParameter('ContrastBy', 'auto', @(x) ischar(x) || isstring(x));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
@@ -263,7 +271,7 @@ end
 
 % 2. Pool across (subject, run) per (condition, region, lag).
 contrast = local_normalize_contrast(opts.Contrast);
-pooled = local_pool_subjects(long, logical(opts.BalancedNesting), contrast);
+pooled = local_pool_subjects(long, logical(opts.BalancedNesting), contrast, char(opts.ContrastBy));
 if logical(opts.Verbose)
     if isempty(pooled) || height(pooled) == 0
         fprintf('  pooled: 0 rows  <-- this will cause "No regions to plot"\n');
@@ -605,7 +613,7 @@ end
 end
 
 
-function pooled = local_pool_subjects(long, balanced, contrast)
+function pooled = local_pool_subjects(long, balanced, contrast, contrast_by)
 % Two-stage pooling: (1) collapse everything within each subject down to a
 % single value per (study_label, condition, region, lag); (2) average those
 % per-subject values across subjects, with SEM = sd/sqrt(n_subjects).
@@ -630,6 +638,7 @@ function pooled = local_pool_subjects(long, balanced, contrast)
 % (subject, study_label[if present], condition, region, lag_seconds).
 if nargin < 2, balanced = true; end
 if nargin < 3, contrast = {}; end
+if nargin < 4, contrast_by = 'auto'; end
 
 has_study = any(strcmp('study_label', long.Properties.VariableNames));
 
@@ -659,9 +668,10 @@ else
     g1 = local_group_mean(work, keep_cols);
 end
 
-% Paired contrast: per subject, replace conditions A and B with (A - B).
+% Paired contrast: per subject, replace levels A and B (along the chosen
+% axis -- condition or study_label) with their difference (A - B).
 if ~isempty(contrast)
-    g1 = local_paired_contrast(g1, contrast, has_study);
+    g1 = local_paired_contrast(g1, contrast, contrast_by, has_study);
 end
 
 % Stage 2: across-subject mean + SEM. n is the count of FINITE subjects
@@ -720,35 +730,96 @@ contrast = cc(:)';
 end
 
 
-function g = local_paired_contrast(g1, contrast, has_study)
-% Subject-level paired difference (A - B). Joins g1's condition-A rows to
-% its condition-B rows on (subject, [study_label], region, lag_seconds),
-% subtracts, and relabels condition to 'A - B'. Subjects/cells lacking both
-% conditions drop out (inner join), so the result is a proper paired set.
+function g = local_paired_contrast(g1, contrast, contrast_by, has_study)
+% Subject-level paired difference (A - B) along a chosen axis column --
+% 'condition' (the two levels are condition names) or 'study_label' (the
+% two levels are study labels, e.g. comparing the SAME condition across
+% different output folders). Joins the A-rows to the B-rows on every
+% identity column EXCEPT the contrast axis, subtracts, and relabels the
+% axis to 'A - B'. Inner join => only cells with BOTH levels contribute,
+% so it's a proper paired set.
 A = contrast{1}; B = contrast{2};
-cond_str = string(g1.condition);
-present = unique(cellstr(cond_str), 'stable');
-if ~any(strcmp(present, A)) || ~any(strcmp(present, B))
-    error('plot_hrf_curves:ContrastConditionMissing', ...
-        ['Contrast conditions {%s, %s} not both present after filtering. ' ...
-         'Available: %s'], A, B, strjoin(present, ', '));
-end
 
-keys = {'subject', 'region', 'lag_seconds'};
-if has_study, keys = [keys, {'study_label'}]; end
-keys = intersect(keys, g1.Properties.VariableNames, 'stable');
+axis_col = local_resolve_contrast_axis(g1, contrast, contrast_by, has_study);
+axis_str = string(g1.(axis_col));
 
-gA = g1(cond_str == A, :);
-gB = g1(cond_str == B, :);
+% Identity keys = all candidate identity columns except the contrast axis.
+all_id = intersect({'subject', 'condition', 'region', 'lag_seconds', 'study_label'}, ...
+    g1.Properties.VariableNames, 'stable');
+keys = setdiff(all_id, {axis_col}, 'stable');
+
+gA = g1(axis_str == A, :);
+gB = g1(axis_str == B, :);
 gA.valA = gA.value; gA.value = [];
 gB.valB = gB.value; gB.value = [];
 
 J = innerjoin(gA(:, [keys, {'valA'}]), gB(:, [keys, {'valB'}]), 'Keys', keys);
+if height(J) == 0
+    error('plot_hrf_curves:ContrastNoPairs', ...
+        ['Contrast {%s - %s} on axis ''%s'' produced no paired cells. The two ' ...
+         'levels likely come from disjoint subjects (an unpaired design); a ' ...
+         'paired contrast needs the same subjects on both sides.'], A, B, axis_col);
+end
 J.value = J.valA - J.valB;
-J.condition = repmat(string(sprintf('%s - %s', A, B)), height(J), 1);
+J.(axis_col) = repmat(string(sprintf('%s - %s', A, B)), height(J), 1);
 
-out_cols = [keys, {'condition', 'value'}];
+out_cols = [keys, {axis_col, 'value'}];
 g = J(:, out_cols);
+end
+
+
+function axis_col = local_resolve_contrast_axis(g1, contrast, contrast_by, has_study)
+% Decide which column the two contrast levels live in. 'auto' picks
+% whichever of condition / study_label contains BOTH levels.
+A = contrast{1}; B = contrast{2};
+by = lower(strtrim(char(contrast_by)));
+in_col = @(col) any(strcmp(string(g1.(col)), A)) && any(strcmp(string(g1.(col)), B));
+
+switch by
+    case {'condition', 'cond'}
+        axis_col = 'condition';
+    case {'study_label', 'study', 'label'}
+        if ~has_study
+            error('plot_hrf_curves:NoStudyAxis', ...
+                'ContrastBy=''study_label'' needs labeled multi-source input (struct array with .label).');
+        end
+        axis_col = 'study_label';
+    case 'auto'
+        cond_ok = in_col('condition');
+        study_ok = has_study && in_col('study_label');
+        if cond_ok
+            axis_col = 'condition';
+        elseif study_ok
+            axis_col = 'study_label';
+        else
+            avail_c = strjoin(unique(cellstr(string(g1.condition)), 'stable'), ', ');
+            extra = '';
+            if has_study
+                extra = sprintf(' | study labels: %s', ...
+                    strjoin(unique(cellstr(string(g1.study_label)), 'stable'), ', '));
+            end
+            error('plot_hrf_curves:ContrastLevelsMissing', ...
+                ['Contrast levels {%s, %s} were not both found in ''condition''%s. ' ...
+                 'conditions: %s%s'], A, B, ...
+                 local_ternary(has_study, ' or ''study_label''', ''), avail_c, extra);
+        end
+    otherwise
+        error('plot_hrf_curves:UnknownContrastBy', ...
+            'ContrastBy must be ''auto'', ''condition'', or ''study_label''. Got ''%s''.', by);
+end
+
+% Final sanity: both levels must exist along the chosen axis.
+if ~in_col(axis_col)
+    present = strjoin(unique(cellstr(string(g1.(axis_col))), 'stable'), ', ');
+    error('plot_hrf_curves:ContrastLevelsMissing', ...
+        'Contrast levels {%s, %s} not both present in ''%s''. Available: %s', ...
+        A, B, axis_col, present);
+end
+end
+
+
+function out = local_ternary(cond, a, b)
+if cond, out = a; else, out = b; end
 end
 
 

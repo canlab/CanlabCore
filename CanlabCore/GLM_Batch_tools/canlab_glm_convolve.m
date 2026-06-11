@@ -1,46 +1,71 @@
-% X = canlab_glm_convolve(stimObj, dsgn, nscan, basis)
+% canlab_glm_convolve Convolve SPM-style conditions with a basis function to build a regressor.
 %
-% This function takes an spm style conditions object (see below), a canlab
-% DSGN object (see below), a frame count and a basis function type and
+% :Usage:
+% ::
+%
+%     [X, bf] = canlab_glm_convolve(stimObj, dsgn, nscan, basis, [hrfParam])
+%
+% Takes an SPM-style conditions object (see below), a CANlab DSGN
+% object (see below), a frame count, and a basis function type, and
 % returns a timeseries vector corresponding to onsets and durations
 % specified in stimObj and any modulations specified in dsgn, convolved
-% with the basis function specified by basis. Useful if you want to treat
-% experimental factors as confounds in a multiple regressors matrix instead
-% of treating them as events in SPM. Primarly desinged to allow for
-% multiple different basis functions to be used for different design
-% factors (e.g. spline interpolation for factors of interest and canonical
-% interpolation for confounding factors; here you would implement the
-% confounding factors as multiple regressor columns instead after
-% convolution).
+% with the basis function specified by basis.
 %
-% Input ::
+% Useful if you want to treat experimental factors as confounds in a
+% multiple regressors matrix instead of treating them as events in SPM.
+% Primarily designed to allow for multiple different basis functions to
+% be used for different design factors (e.g., spline interpolation for
+% factors of interest and canonical interpolation for confounding
+% factors; here you would implement the confounding factors as
+% multiple-regressor columns instead, after convolution).
 %
-%   stimObj     - an SPM-stype condition object. see
-%                   canlab_glm_subject_levels('dsgninfo') under 
-%                   DSGN.conditions for an example
+% Written by Bogdan Petre, 5/19/2021.
 %
-%   dsgn        - see canlab_glm_subject_levels('dsgninfo') for how to
-%                   format this object.
+% :Inputs:
 %
-%   nscan       - number of TRs in the scan for which stimObj applies.
+%   **stimObj:**
+%        An SPM-style conditions object. See
+%        canlab_glm_subject_levels('dsgninfo') under DSGN.conditions
+%        for an example.
 %
-%   basis       - currently only 'hrf' is supported, although others could
-%                   be implemented easily enough. See spm_get_bf.m for some
-%                   example implementations of other basis functions. The
-%                   implementation here follows that function closely.
-% Optional Input ::
+%   **dsgn:**
+%        CANlab DSGN structure. See
+%        canlab_glm_subject_levels('dsgninfo') for how to format this
+%        object.
 %
-%   hrfParam    - a struct following the basis argument. If specifying
-%                   spline or hrf you will need to specify a structure with
-%                   windowlength, order, and (for splines) degree
-%                   properties.
+%   **nscan:**
+%        Number of TRs in the scan for which stimObj applies.
 %
-% Output ::
+%   **basis:**
+%        Basis function name. Currently only 'hrf' is supported,
+%        although others ('spline', 'fourier', 'fourier_han', 'gamma',
+%        'fir') are partially wired in and could be implemented easily
+%        enough. See spm_get_bf.m for example implementations of other
+%        basis functions; the implementation here follows that function
+%        closely.
 %
-%   X           - A timeseries vector corresponding to the stimuli
-%                   specified in stimObj.
+% :Optional Inputs:
 %
-% Written by Bogdan Petre, 5/19/2021
+%   **hrfParam:**
+%        A struct following the basis argument. If specifying
+%        spline or hrf-family bases that need it, the struct must
+%        provide windowlength, order, and (for splines)
+%        degree fields.
+%
+% :Outputs:
+%
+%   **X:**
+%        A timeseries vector corresponding to the stimuli specified in
+%        stimObj convolved with the chosen basis function.
+%
+%   **bf:**
+%        The basis function (or set of basis functions) used for the
+%        convolution.
+%
+% :See also:
+%   - canlab_glm_subject_levels
+%   - spm_get_bf
+%   - spm_hrf
 
 function [X, bf] = canlab_glm_convolve(stimObj, dsgn, nscan, basis, varargin)
 if ~isempty(varargin)

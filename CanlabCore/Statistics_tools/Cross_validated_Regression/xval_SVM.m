@@ -422,7 +422,7 @@ if dooptimize
     % Estimate model performance accounting for search across hyperparams
     % ---------------------------------------------------------------------
     % Updates S.yfit, S.dist_from_hyperplane_xval, S.class_probability_xval
-    S = crossval_nested(S, X, doverbose);
+    S = crossval_nested(S, X, doverbose, highdimensional);
      
     % Given Y, yfit, cross-val scores (dist_from_hyperplane_xval), id
     % Update crossval_accuracy, Y_within_id, scores_within_id, scorediff, crossval_accuracy_within, classification_d
@@ -520,7 +520,7 @@ if dorepeats > 1
             % If optimizing, repeat nested xval procedure
             % This can take a long time!
             
-            Sr = crossval_nested(Sr, X, doverbose);
+            Sr = crossval_nested(Sr, X, doverbose, highdimensional);
             
         else
             
@@ -579,6 +579,20 @@ end
 
 if highdimensional
 
+    % S.SVMModel = fitclinear(X, S.Y, S.modeloptions{:});
+    % 
+    % Define options for fitclinear if modeloptions is not already set
+    %   Defaults:
+    %     Learner: 'svm'
+    %     Regularization: 'ridge'
+%     %     Lambda: 1e-5
+%     High-Dimensional Data: Use fitclinear with 'lasso' regularization to enforce sparsity.
+    % Large Datasets: Switch to 'sgd' solver for faster training.
+    % Overfitting: Increase Lambda to add more regularization and reduce model complexity.
+%     if isempty(S.modeloptions)
+        S.modeloptions = {'Learner', 'svm', 'Lambda', 1e-5};
+%     end
+
     S.SVMModel = fitclinear(X, S.Y, S.modeloptions{:});
 
 else
@@ -605,8 +619,33 @@ if dobootstrap
     for i = 1:nboot
         
         [Xb, Yb] = get_bootstrap_sample_grouped_by_id(S, X);
+
+        if highdimensional
         
-        SVMModel = fitcsvm(Xb, Yb, S.modeloptions{:});
+            % S.SVMModel = fitclinear(X, S.Y, S.modeloptions{:});
+            % 
+            % Define options for fitclinear if modeloptions is not already set
+            %   Defaults:
+            %     Learner: 'svm'
+            %     Regularization: 'ridge'
+        %     %     Lambda: 1e-5
+        %     High-Dimensional Data: Use fitclinear with 'lasso' regularization to enforce sparsity.
+            % Large Datasets: Switch to 'sgd' solver for faster training.
+            % Overfitting: Increase Lambda to add more regularization and reduce model complexity.
+        %     if isempty(S.modeloptions)
+                S.modeloptions = {'Learner', 'svm', 'Lambda', 1e-5};
+        %     end
+        
+            S.SVMModel = fitclinear(Xb, Yb, S.modeloptions{:});
+        
+        else
+
+        
+            SVMModel = fitcsvm(Xb, Yb, S.modeloptions{:});
+
+        end
+
+
         
         S.boot_w(:, i) = SVMModel.Beta;                                       % Model weights/betas
         
@@ -745,7 +784,7 @@ end % crossval
 % -------------------------------------------------------------------------
 
 
-function S = crossval_nested(S, X, doverbose)
+function S = crossval_nested(S, X, doverbose, highdimensional)
 
 if doverbose, fprintf('..X-val, %d folds...', S.nfolds), end
 
@@ -800,14 +839,24 @@ for i = 1:S.nfolds
     S.dist_from_hyperplane_xval(S.teIdx{i}, 1) = score;     % Unscaled SVM scores
     
     S.yfit(S.teIdx{i}, 1) = label;                          % Predicted class, cross-val
+
+    if highdimensional
+
+        SVM_fold.ScoreTransform = 'logit';
+        [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
+        pscore = pscore(:, 2);
+
+    else
+        SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
     
-    SVM_fold = fitPosterior(SVM_fold);                      % Works for fitcsvm, not fitclinear
-    
-    [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
-    pscore = pscore(:, 2);                                  % Platt scaling scores (class probability)
-    
+        [~, pscore] = predict(SVM_fold, X(S.teIdx{i}, :));
+        pscore = pscore(:, 2);                                  % Platt scaling scores (class probability)
+        
+    end
+
     S.class_probability_xval(S.teIdx{i}, 1) = pscore;
-    
+
+   
 end
 
 if doverbose, fprintf('Done!\n'), end

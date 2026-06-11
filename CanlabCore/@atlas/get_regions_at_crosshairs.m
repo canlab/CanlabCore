@@ -1,4 +1,41 @@
 function tbl = get_regions_at_crosshairs(obj, varargin)
+% get_regions_at_crosshairs Return atlas labels at the current SPM orthviews crosshair.
+%
+% Query an atlas object at the location of the current SPM orthviews
+% crosshair (as reported by spm_orthviews('pos')) and return a table
+% listing the atlas labels (and any additional label fields) that
+% overlap that voxel, sorted by probability if probability_maps are
+% available.
+%
+% :Usage:
+% ::
+%
+%     tbl = get_regions_at_crosshairs(obj, ['display'])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An atlas-class object.
+%
+% :Optional Inputs:
+%
+%   **'display':**
+%        If passed, the labels and probabilities are also rendered as a
+%        caption on the SPM orthviews window.
+%
+% :Outputs:
+%
+%   **tbl:**
+%        MATLAB table with columns labels, labels_2, labels_3, labels_4,
+%        labels_5, label_descriptions, and prob, with one row per region
+%        overlapping the voxel under the crosshair, sorted in descending
+%        order of probability.
+%
+% :See also:
+%   - spm_orthviews
+%   - orthviews
+%   - select_atlas_subset
+
     coords = spm_orthviews('pos')';
     xyz = obj.volInfo.xyzlist;
     xyzmm = (obj.volInfo.mat*[xyz, ones(size(xyz,1),1)]')';

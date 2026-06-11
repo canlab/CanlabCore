@@ -1,0 +1,91 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2868
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\margl1440\margr1440\vieww11640\viewh13440\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs32 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Now let\'92s perform a \'93phase 4\'94 in which we add a minimal code example to select pages. Each code example creates a figure (or 2-3) using a small amount of code. For each example, run the code and save the figure as a png in docs/class_method_pngs/. Name the png with the name of the file referenced (\'93\outl0\strokewidth0 For atlas_methods.md\'94 below) followed by _sample, e.g., \'93atlas_methods_sample.png\'94). \outl0\strokewidth0 \strokec2 Insert the code and the png in the appropriate .md file at the end of the first section (i.e., above the properties section in class methods .mds and above the Code Map in methods). If there is more than one figure created in a function, save the first figure only in the png.  \
+\
+For atlas_methods.md: \
+obj = load_atlas('canlab2024');\
+create_figure('fig\'92); isosurface(obj);\
+view(135, 30); lightFollowView;\
+create_figure(\'91fig2\'92);  axis off; montage(obj);\
+\
+For atlas_select_atlas_subset.md\
+\pard\pardeftab720\partightenfactor0
+\cf0 \outl0\strokewidth0 obj = load_atlas('canlab2024');
+\fs24 \outl0\strokewidth0 \strokec2 \
+\pard\pardeftab720\partightenfactor0
+\cf0 thal = select_atlas_subset(obj, \{'Thal'\});\
+create_figure('fig'); isosurface(thal);
+\fs32 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+ For fmri_data_annotate_binary_results_map.md\
+\pard\pardeftab720\partightenfactor0
+
+\fs24 \cf0 obj = load_image_set('emotionreg'); t = ttest(obj, .005, 'uncorrected');\
+t.dat = single(t.dat > 3); % binarize t-statistic map\
+t = fmri_data(t); % recast\
+RESULTS = annotate_binary_results_map(t);
+\fs32 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \outl0\strokewidth0 save the first figure only in the png. \
+\
+For fmri_data_outliers.md\
+\pard\pardeftab720\partightenfactor0
+
+\fs30 \cf0 \outl0\strokewidth0 \strokec2 obj = load_image_set('emotionreg');\
+[est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(obj, 'notimeseries');\
+\
+Pause here so I can check the quality of the output and make adjustments. \
+When I give the go-ahead, proceed to Phase 4b, specified below.\
+\
+For the following other methods/functions, create a minimal code example like those above, using an example in the function help if possible but ensuring that only data available in CANlab_core_tools and Neuroimaging_pattern_masks is used.  Insert the code example and an example figure saved in png format as specified above into the relevant markdown.  If you do not have a markdown file for the method, create one as you did for the previous .md files and insert the information. Also, modify any appropriate class methods .md pages to link to the new method/function .md file.\
+\
+Here are functions to do this for:\
+Methods for @image_vector (fmri_data):\
+image_similarity_plot\
+image_similarity_plot_bucknermaps\
+jackknife_similarity\
+montage method for fmri_data\
+orthviews\
+ mahal\
+pca\
+rmssd_movie\
+surface\
+ wedge_plot_by_atlas\
+\
+Methods for @statistic_image:\
+riverplot\
+multi_threshold\
+table (here save a screenshot of the table as a png)\
+threshold\
+\
+Methods for @region:\
+\pard\pardeftab720\partightenfactor0
+\cf0 \outl0\strokewidth0 table (here save a screenshot of the table as a png)\
+surface\
+labelled_surface\
+isosurface\
+montage\
+table_of_atlas_regions_covered (here save a screenshot of part of a table as a png)\
+\
+Other functions:\
+addbrain\
+barplot_columns\
+cluster_surf\
+image_scatterplot\
+canlab_results_fmridisplay\
+plot_correlation_matrix\
+\
+Pause here so I can check the quality of the output and make adjustments. \
+When I give the go-ahead, proceed to Phase 4c, specified below.\
+\
+Take all the code examples from \'93phase 4\'94 and package them into an additional unit test script. Make this unit test part of the CLI unit test set that runs every time there is a push.\
+\
+}

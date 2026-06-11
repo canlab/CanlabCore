@@ -147,7 +147,7 @@ function OUT = plot_correlation_matrix(X, varargin)
 %   None - basic stats functions.
 %
 % :See also:
-%   - list other functions related to this one, and alternatives*
+%   - canlab_sort_distance_matrix, clusterdata_permtest
 %
 
 % ..

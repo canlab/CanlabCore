@@ -1,30 +1,70 @@
 function [vw_nuisance, vw_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(mask_image_dir, imgs, varargin)
-
-% function [nuisance, nuisance_comps] = canlab_extract_ventricle_wm_timeseries(mask_image_dir)
+% canlab_extract_ventricle_wm_timeseries Extract ventricle and white-matter nuisance time series for fMRI.
 %
-% This function extracts data from ventricles and white matter for each
-% time series. You can include vw_nuisance in your nuisance matrix in the
-% first level model estimation. 
+% :Usage:
+% ::
 %
-% output: "vw_nuisance" returns the MEAN ventricle and white matter signal
-%         1st column: ventricle signal, 2nd column: white matter signal, 
-%         rows: time series
+%     [vw_nuisance, vw_nuisance_comps] = canlab_extract_ventricle_wm_timeseries(mask_image_dir, imgs, ['noplot'])
 %
-%         "vw_nuisance_comps" returns first 5 components from PCA.
+% Extracts data from ventricles and white matter for each time point in
+% a functional time series. You can include vw_nuisance in your
+% nuisance matrix in first-level model estimation, and/or use the PCA
+% components in vw_nuisance_comps (e.g., as in aCompCor).
 %
-% input: 
-% mask_image_dir: a directory that has mask files for ventricle and white matter.
-%        You can use "canlab_create_wm_ventricle_masks.m" to get these mask files.
-%        The mask file names must be "ventricles.img' and 'white_matter.img'. 
-%        e.g) mask_image_dir = fullfile(subjdir, 'Structural/SPGR');
+% 5/4/2012 by Tor Wager and Wani Woo.
 %
-% imgs: image file names that you want to extract data from. 
-%        e.g) imgs = filenames(fullfile(subjdir, 'Functional/Preprocessed/run1/wra*nii'), 'absolute', 'char');
+% :Inputs:
 %
-% option (varargin): 'noplot' - the default setting is plotting output
-%                    variables. You can use 'noplot' option if you don't want the plot. 
+%   **mask_image_dir:**
+%        Directory containing mask files for ventricle and white
+%        matter. You can use canlab_create_wm_ventricle_masks.m to
+%        produce these mask files. The mask file names must be
+%        ventricles.img and white_matter.img. Example:
+%        mask_image_dir = fullfile(subjdir, 'Structural/SPGR');
 %
-% 5/4/2012 by Tor Wager and Wani Woo
+%   **imgs:**
+%        Image file names that you want to extract data from. Example:
+%        imgs = filenames(fullfile(subjdir, ...
+%        'Functional/Preprocessed/run1/wra*nii'), 'absolute', 'char');
+%
+% :Optional Inputs:
+%
+%   **'noplot':**
+%        Suppress the diagnostic plot. The default behavior is to plot
+%        the output variables.
+%
+% :Outputs:
+%
+%   **vw_nuisance:**
+%        T x 2 matrix of MEAN ventricle and white-matter signal.
+%        Column 1: ventricle signal. Column 2: white-matter signal.
+%        Rows correspond to time points in the input time series.
+%
+%   **vw_nuisance_comps:**
+%        T x 10 matrix containing the first 5 PCA components of the
+%        ventricle voxel time series followed by the first 5 PCA
+%        components of the white-matter voxel time series.
+%
+% :Examples:
+% ::
+%
+%     mask_image_dir = fullfile(subjdir, 'Structural/SPGR');
+%     imgs = filenames(fullfile(subjdir, ...
+%         'Functional/Preprocessed/run1/wra*nii'), 'absolute', 'char');
+%
+%     % With diagnostic plot
+%     [vw_nuisance, vw_nuisance_comps] = ...
+%         canlab_extract_ventricle_wm_timeseries(mask_image_dir, imgs);
+%
+%     % Without plot
+%     [vw_nuisance, vw_nuisance_comps] = ...
+%         canlab_extract_ventricle_wm_timeseries(mask_image_dir, imgs, 'noplot');
+%
+% :See also:
+%   - canlab_create_wm_ventricle_masks
+%   - fmri_data
+%   - filenames
+%   - pca
 
 %% --------------------------------------------
 % Extract data from ventricles

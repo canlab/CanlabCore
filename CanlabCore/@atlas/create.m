@@ -1,13 +1,37 @@
 function obj = create(obj, varargin)
+% create Populate an atlas object from fieldname/value pairs.
+%
 % Create an object from an empty obj structure, assigning fieldname/value
-% pairs as optional arguments.
+% pairs as optional arguments. For known field names, the corresponding
+% obj property is set to the supplied value; the 'dat' field is given
+% special handling so that NaN entries are silently converted to zero.
+%
+% This method is used internally by the fmri_data and atlas class
+% constructors.
 %
 % :Usage:
 % ::
 %
-%     [obj = create(obj, varargin)
+%     obj = create(obj, fieldname1, value1, fieldname2, value2, ...)
 %
-% Used in fmri_data.m class constructor.
+% :Inputs:
+%
+%   **obj:**
+%        An atlas-class (or fmri_data) object to be populated.
+%
+%   **varargin:**
+%        Pairs of (fieldname, value) where fieldname is a property of
+%        obj. The optional keyword 'noverbose' suppresses progress
+%        messages.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with specified fields populated.
+%
+% :See also:
+%   - atlas
+%   - fmri_data
 
 			  % if 'noverbose' is entered, suppress output
   verbose = isempty(strmatch('noverbose', varargin(cellfun(@ischar, varargin))));

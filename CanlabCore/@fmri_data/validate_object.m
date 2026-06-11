@@ -1,44 +1,80 @@
 function obj = validate_object(obj)
-% validate_object Validate the properties of an fmri_data object.
+% validate_object Validate internal invariants of an fmri_data object.
 %
 % :Usage:
 % ::
+%
+%     obj = validate_object(obj)
 %     obj.validate_object()
 %
-% :Description:
-%     Checks that key properties of the fmri_data object are correctly sized and
-%     of the correct type. In particular, the method validates:
+% Checks that key properties of the fmri_data object are correctly sized
+% and of the correct type. Throws an error (id fmri_data:InvalidDimensions)
+% if any invariant is violated. Useful as a sanity check after manual
+% manipulation of an object's fields, and as an entry point for the test
+% suite.
 %
-%       - The number of rows in obj.dat equals (obj.volInfo.n_inmask - sum(obj.removed_voxels)).
-%       - If obj.images_per_session is non-empty, its values sum to (number of columns in obj.dat - sum(obj.removed_images)).
-%       - obj.removed_voxels is empty, a scalar zero, or a vector of ones/zeros (numeric or logical)
-%         with length equal to obj.volInfo.n_inmask.
-%       - obj.removed_images is empty, a scalar zero, or a vector of ones/zeros (numeric or logical).
+% :Inputs:
 %
-%     Additionally, the volInfo structure is validated:
+%   **obj:**
+%        An fmri_data (or subclass) object to validate.
 %
-%       - volInfo.fname is a non-empty character array.
-%       - volInfo.dim is a 1×3 integer vector.
-%       - volInfo.dt is a 1×2 numeric integer vector.
-%       - volInfo.pinfo is a 3×1 numeric vector.
-%       - volInfo.mat is a 4×4 numeric matrix.
-%       - volInfo.n is a 1×2 numeric integer vector.
-%       - volInfo.descrip is a non-empty character array.
-%       - volInfo.private is either empty or a 1×1 nifti object.
-%       - volInfo.nvox is a scalar integer.
-%       - volInfo.image_indx is a logical column vector with length equal to nvox.
-%       - volInfo.wh_inmask is a numeric column vector with length equal to n_inmask.
-%       - volInfo.n_inmask is a scalar integer.
-%       - volInfo.xyzlist is a numeric matrix of size [n_inmask × 3].
-%       - volInfo.cluster is a numeric column vector with length equal to nvox.
+% :Outputs:
 %
-% :Example:
+%   **obj:**
+%        The same object, returned unchanged. The function's effect is
+%        in raising errors on invariant violations and (optionally)
+%        printing a confirmation message when obj.verbose is true.
+%
+% :Validation Checks:
+%
+%   .dat / volInfo / removed_voxels / removed_images:
+%     - size(obj.dat, 1) == obj.volInfo.n_inmask - sum(obj.removed_voxels).
+%     - If obj.images_per_session is non-empty, its values sum to
+%       (size(obj.dat, 2) - sum(obj.removed_images)).
+%     - obj.removed_voxels is empty, a scalar zero, or a vector of
+%       ones/zeros (numeric or logical) with length equal to
+%       obj.volInfo.n_inmask.
+%     - obj.removed_images is empty, a scalar zero, or a vector of
+%       ones/zeros (numeric or logical).
+%
+%   volInfo structure fields:
+%     - volInfo.fname: non-empty character array.
+%     - volInfo.dim: 1x3 integer vector.
+%     - volInfo.dt: 1x2 numeric integer vector.
+%     - volInfo.pinfo: 3x1 numeric vector.
+%     - volInfo.mat: 4x4 numeric matrix.
+%     - volInfo.n: 1x2 numeric integer vector.
+%     - volInfo.descrip: non-empty character array.
+%     - volInfo.private: empty or 1x1 nifti object.
+%     - volInfo.nvox: scalar integer.
+%     - volInfo.image_indx: logical column vector, length = nvox.
+%     - volInfo.wh_inmask: numeric column vector, length = n_inmask.
+%     - volInfo.n_inmask: scalar integer.
+%     - volInfo.xyzlist: numeric matrix of size [n_inmask x 3].
+%     - volInfo.cluster: numeric column vector, length = n_inmask.
+%
+%   image_metadata fields:
+%     - Logical flag fields (is_timeseries, is_single_trial_series,
+%       is_first_level_maps, is_MNI_space, is_HP_filtered,
+%       covariates_removed) must be logical scalars when not NaN.
+%     - Numeric fields (TR_in_sec, HP_filter_cutoff_sec) must be
+%       numeric scalars (NaN is acceptable).
+%
+% :Examples:
 % ::
-%     fmri_obj.validate_object();
 %
-% Author: Your Name
-% Date: YYYY-MM-DD
-% License: GNU General Public License v3 or later
+%     fmri_obj.validate_object();
+%     fmri_obj = validate_object(fmri_obj);
+%
+% :See also:
+%   - replace_empty, remove_empty (state changes that interact with the
+%     dimensional invariants validated here)
+%
+% ..
+%    Programmers' notes:
+%    Throws fmri_data:InvalidDimensions on size mismatches; relies on
+%    validateattributes() for type/shape checks elsewhere.
+% ..
 
 % -------------------------------------------------------------------------
 % Check specific sizes of variables that must add up

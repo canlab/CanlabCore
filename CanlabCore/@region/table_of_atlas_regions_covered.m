@@ -1,62 +1,120 @@
 function [results_table_pos, results_table_neg, r, excluded_region_table, r_excluded, region_list] = table_of_atlas_regions_covered(r, varargin)
-% Make a table of which atlas parcels are covered by a set of regions or map identified in a study 
+% table_of_atlas_regions_covered Tabulate atlas parcels covered by a set of regions.
 %
-% [results_table_pos, results_table_neg, r, excluded_region_table, r_excluded, region_list] = table_of_atlas_regions_covered(r, [atlas_obj])
+% fMRI activation maps often include large suprathreshold areas that
+% span multiple brain regions. Traditional tables divide areas by
+% contiguous regions ('blobs'), but this type of division is not useful
+% if blobs cannot be easily summarized by a single anatomical label. A
+% complementary approach is to identify which areas defined in a
+% standard brain atlas ('parcels') are covered by the activation map.
+% Parcels can be defined based on anatomy (e.g., cytoarchitecture) or
+% function (e.g., resting-state fMRI). For example, a large blob may
+% span the insula, claustrum, and putamen. This can be described in a
+% table that lists all of these regions, along with the percentage of
+% each parcel covered by the activation map.
 %
-% fMRI activation maps often include large suprathreshold areas that span
-% multiple brain regions.  Traditional tables divide areas by contiguous
-% regions ("blobs"), but this type of division is not useful if blobs cannot 
-% be easily summarized by a single anatomical label. A complementary approach
-% is to identify which areas defined in a standard brain atlas ("parcels")
-% are covered by the activation map. Parcels can be defined based on anatomy 
-% (e.g., cytoarchitecture) or function (e.g., resting-state fMRI).  
-% For example, a large blob may span the insula, claustrum, and putamen. 
-% This can be described in a table that lists all of these regions, along with 
-% the percentage of each parcel covered by the activation map. 
-% 
-% This function uses the object method subdivide_by_atlas() to create such
-% a table, which is dividided into two tables with positive and negative average
-% statistic values (results_table_pos, results_table_neg). These are Matlab
-% table-class objects.  It also returns a region-class object for reference 
-% and rendering the subdivided blobs on brain slices or surfaces.
+% This function uses the object method subdivide_by_atlas() to create
+% such a table, which is divided into two tables with positive and
+% negative average statistic values (results_table_pos,
+% results_table_neg). These are MATLAB table-class objects. It also
+% returns a region-class object for reference and rendering the
+% subdivided blobs on brain slices or surfaces.
 %
 % The default threshold for coverage is 25% or more of the atlas parcel
 % covered by the activation map.
 %
-% You can enter any atlas-class object as a 2nd argument. If you don't,
-% a default atlas object will be used.
+% You can enter any atlas-class object as a 2nd argument. If you do
+% not, a default atlas object will be used.
 %
-% Examples:
-% -----------------------------------------------------------------
-% % Load a thresholded map:
-% % (Note: You must have Neuroimaging_Pattern_Masks repo with subfolders on your path)
-% % This is a predictive map for drug craving (Koban et al. 2022, Nat Neurosci)
+% :Usage:
+% ::
 %
-% ncsthr = fmri_data(which('NCS_multithr_001k5_005_05_pruned.nii'), 'noverbose');
-% 
-% % Convert to region object:
-% r = region(ncsthr);
+%     [results_table_pos, results_table_neg, r, excluded_region_table, ...
+%      r_excluded, region_list] = table_of_atlas_regions_covered(r, [atlas_obj])
 %
-% [results_table_pos, results_table_neg, r, excluded_region_table, table_legend_text] = table_of_atlas_regions_covered(r);
-% montage(r, 'regioncenters', 'colormap');
+% :Inputs:
 %
-% % Also see large blobs that didn't sufficiently cover any one atlas parcel:
-% montage(r_excluded(cat(1, r_excluded.numVox) > 20), 'regioncenters', 'colormap');
+%   **r:**
+%        A region-class object array, typically produced by region(t)
+%        from a thresholded statistic_image or fmri_data object.
 %
-% % You can use the image_vector method to apply this to a single-image
-% % thresholded map:
-% [results_table_pos, results_table_neg, r, excluded_region_table, r_excluded, region_labels] = table_of_atlas_regions_covered(ncsthr);
+% :Optional Inputs:
 %
-% Note: For a key to labels when using the Glasser 2016 Nature atlas, or the 
-% CANlab combined atlas (which uses Glasser), see GlasserTableS1.pdf in the
-% original paper or CANlab github, or http://braininfo.rprc.washington.edu/
+%   **atlas_obj:**
+%        An atlas-class object used to define parcels. Default: a CANlab
+%        canlab2018_2mm atlas, loaded via load_atlas.
 %
-% see also region.table, for autolabeling of regions with an atlas and more
-% detailed table output.
+% :Outputs:
 %
-% Tor Wager, Feb 2023
+%   **results_table_pos:**
+%        MATLAB table summarizing positive-effect regions, with columns
+%        Region, Volume, XYZ, maxVal, and Coverage.
 %
-% Fixed some minor bugs and improved error handling when there are no regions to display - Michael Sun, 07/13/2023
+%   **results_table_neg:**
+%        MATLAB table summarizing negative-effect regions, with the
+%        same columns as results_table_pos.
+%
+%   **r:**
+%        Region-class object array, subdivided by atlas parcels and
+%        with custom_info2 set to atlas parcel coverage percentages.
+%
+%   **excluded_region_table:**
+%        MATLAB table of regions excluded from the main table because
+%        they covered <25% of any atlas parcel or had <2 voxels.
+%
+%   **r_excluded:**
+%        Region-class object array corresponding to the excluded
+%        regions in excluded_region_table.
+%
+%   **region_list:**
+%        4-cell cell array containing labeled lists of positive and
+%        negative regions covered (with coverage percentages).
+%
+% :Examples:
+% ::
+%
+%     % Load a thresholded map:
+%     % (Note: You must have Neuroimaging_Pattern_Masks repo with
+%     % subfolders on your path.)
+%     % This is a predictive map for drug craving (Koban et al. 2022,
+%     % Nat Neurosci)
+%     ncsthr = fmri_data(which('NCS_multithr_001k5_005_05_pruned.nii'), 'noverbose');
+%
+%     % Convert to region object:
+%     r = region(ncsthr);
+%
+%     [results_table_pos, results_table_neg, r, excluded_region_table, table_legend_text] = ...
+%         table_of_atlas_regions_covered(r);
+%     montage(r, 'regioncenters', 'colormap');
+%
+%     % Also see large blobs that did not sufficiently cover any one
+%     % atlas parcel:
+%     montage(r_excluded(cat(1, r_excluded.numVox) > 20), 'regioncenters', 'colormap');
+%
+%     % You can use the image_vector method to apply this to a single-image
+%     % thresholded map:
+%     [results_table_pos, results_table_neg, r, excluded_region_table, r_excluded, region_labels] = ...
+%         table_of_atlas_regions_covered(ncsthr);
+%
+% :Notes:
+%
+% For a key to labels when using the Glasser 2016 Nature atlas, or the
+% CANlab combined atlas (which uses Glasser), see GlasserTableS1.pdf in
+% the original paper or CANlab github, or
+% http://braininfo.rprc.washington.edu/
+%
+% :See also:
+%   - region.table (autolabeling of regions with an atlas, more detailed table output)
+%   - subdivide_by_atlas
+%   - load_atlas
+%   - posneg_separate
+%
+% ..
+%    Tor Wager, Feb 2023
+%
+%    Fixed some minor bugs and improved error handling when there are
+%    no regions to display - Michael Sun, 07/13/2023.
+% ..
 
 disp('THIS FUNCTION NEEDS SOME LOVE AND DOES NOT CURRENTLY WORK PROPERLY. ')
 disp('******************************************************************')

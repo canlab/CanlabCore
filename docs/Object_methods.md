@@ -84,6 +84,17 @@ A small set of stand-alone helpers that are not class methods but are used by `p
 | [`xval_SVR`](individual_functions/xval_SVR.md) | Repeated-CV support-vector regression with bootstrap weight inference (`fitrsvm`) |
 | [`roc_plot`](individual_functions/roc_plot.md) | ROC curve, accuracy stats, and Gaussian SDT fit for a binary classifier |
 
+## Visualizing images and results
+
+Most image objects (`fmri_data`, `statistic_image`, `atlas`) share a common set of visualization
+entry points — pick by output medium:
+
+- **`montage(obj)`** — slice montage on a canonical anatomical underlay; the workhorse for static figures.
+- **`orthviews(obj)`** — SPM-based interactive three-plane viewer in MATLAB; `canlab_orthviews` adds CANlab conveniences (multiple blobs, region tables).
+- **`surface(obj)` / `isosurface(obj)`** — render activation on 3-D cortical surfaces / isosurfaces in MATLAB.
+- **`canlab_results_fmridisplay(obj)`** — pre-built montage + surface scaffolds returning a registered `fmridisplay`.
+- **[`canlab_niivue(obj)`](canlab_niivue_guide.md)** — interactive **web** orthviews (NiiVue): a portable, point-and-click `.html` viewer with colormap/threshold/opacity controls that you can email or embed in an HTML report. See the **[canlab_niivue guide](canlab_niivue_guide.md)**.
+
 ## Visualization helpers (stand-alone)
 
 Functions that are not class methods but are widely used to render brains, regions, and statistics.
@@ -91,6 +102,7 @@ Functions that are not class methods but are widely used to render brains, regio
 | Function | One-liner |
 |---|---|
 | [`addbrain`](individual_functions/addbrain.md) | Add a canonical anatomical surface or named region (cortex, BG, thalamic nuclei, etc.) to current axes |
+| [`canlab_niivue`](canlab_niivue_guide.md) | Interactive web-based orthviews (NiiVue): underlay + stat overlay in the browser; embeddable in HTML reports |
 | [`canlab_results_fmridisplay`](individual_functions/canlab_results_fmridisplay.md) | Pre-built montage / surface scaffolds (`'full'`, `'compact'`, ...) that return a registered `fmridisplay` |
 | [`cluster_surf`](individual_functions/cluster_surf.md) | Render clusters / regions on a canonical surface (legacy; superseded by `addbrain` + `render_on_surface`) |
 | [`barplot_columns`](individual_functions/barplot_columns.md) | Bar plot of column means with errors and per-column tests |

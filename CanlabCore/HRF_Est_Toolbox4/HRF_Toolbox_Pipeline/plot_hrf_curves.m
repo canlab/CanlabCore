@@ -32,6 +32,17 @@ function fig = plot_hrf_curves(input_table, varargin)
 %                   or 'all'. Default '' (every sig_*/map_* column). The
 %                   curve label is the column with the source_<set>_ prefix
 %                   stripped.
+%   'Contrast'    - {A, B}: rank and plot the PAIRED difference (condition
+%                   A minus condition B) instead of each condition. The
+%                   difference is taken per subject (each subject must have
+%                   both conditions), then pooled, so the SEM / significance
+%                   dots / RankBy all describe the A-B contrast. Use this to
+%                   find regions that MAXIMIZE a condition difference, e.g.
+%                   'Contrast', {'nback-stimblock_ttl_1','rest_stim_ttl_1'},
+%                   'RankBy', 'hrf_match' -> regions with the largest
+%                   reliable HRF-shaped difference between the two. With
+%                   multiple study labels, each study gets its own A-B curve.
+%                   Default {} (per-condition curves).
 %   'Model'       - which row's model column to use. Default 'sfir'.
 %   'Object'      - 'beta' (default) or 't'.
 %   'Conditions'  - cellstr; subset of conditions to plot. Supports glob
@@ -143,6 +154,7 @@ p.addRequired('input_table', @(x) istable(x) || local_is_source_struct(x));
 p.addParameter('Model', 'sfir', @(x) ischar(x) || isstring(x));
 p.addParameter('Object', 'beta', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+p.addParameter('Contrast', {}, @(x) isempty(x) || iscell(x) || isstring(x));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
@@ -250,7 +262,8 @@ if height(long) == 0
 end
 
 % 2. Pool across (subject, run) per (condition, region, lag).
-pooled = local_pool_subjects(long, logical(opts.BalancedNesting));
+contrast = local_normalize_contrast(opts.Contrast);
+pooled = local_pool_subjects(long, logical(opts.BalancedNesting), contrast);
 if logical(opts.Verbose)
     if isempty(pooled) || height(pooled) == 0
         fprintf('  pooled: 0 rows  <-- this will cause "No regions to plot"\n');
@@ -592,10 +605,15 @@ end
 end
 
 
-function pooled = local_pool_subjects(long, balanced)
+function pooled = local_pool_subjects(long, balanced, contrast)
 % Two-stage pooling: (1) collapse everything within each subject down to a
 % single value per (study_label, condition, region, lag); (2) average those
 % per-subject values across subjects, with SEM = sd/sqrt(n_subjects).
+%
+% When `contrast` = {A, B} is supplied, a PAIRED contrast is taken between
+% stages: each subject's (condition A - condition B) difference replaces the
+% two conditions, so stage 2's mean/sem/t/p describe the paired difference
+% curve (and the significance dots mark where A differs from B per lag).
 %
 % Stage 1 nesting:
 %   balanced=true (default) -- hierarchical, equal weight at each level.
@@ -611,6 +629,7 @@ function pooled = local_pool_subjects(long, balanced)
 % In both cases the curve-identity columns kept through to stage 2 are
 % (subject, study_label[if present], condition, region, lag_seconds).
 if nargin < 2, balanced = true; end
+if nargin < 3, contrast = {}; end
 
 has_study = any(strcmp('study_label', long.Properties.VariableNames));
 
@@ -638,6 +657,11 @@ if balanced
 else
     % Legacy: single flat mean over all nuisance rows at once.
     g1 = local_group_mean(work, keep_cols);
+end
+
+% Paired contrast: per subject, replace conditions A and B with (A - B).
+if ~isempty(contrast)
+    g1 = local_paired_contrast(g1, contrast, has_study);
 end
 
 % Stage 2: across-subject mean + SEM. n is the count of FINITE subjects
@@ -680,6 +704,51 @@ for c = 1:numel(group_cols)
 end
 out.value = g.mean_value;
 T = out;
+end
+
+
+function contrast = local_normalize_contrast(c)
+% Normalize the Contrast arg to a 1x2 cellstr {A, B} or {} if not set.
+contrast = {};
+if isempty(c), return; end
+cc = cellstr(string(c));
+if numel(cc) ~= 2
+    error('plot_hrf_curves:BadContrast', ...
+        'Contrast must be two condition names {A, B}; got %d.', numel(cc));
+end
+contrast = cc(:)';
+end
+
+
+function g = local_paired_contrast(g1, contrast, has_study)
+% Subject-level paired difference (A - B). Joins g1's condition-A rows to
+% its condition-B rows on (subject, [study_label], region, lag_seconds),
+% subtracts, and relabels condition to 'A - B'. Subjects/cells lacking both
+% conditions drop out (inner join), so the result is a proper paired set.
+A = contrast{1}; B = contrast{2};
+cond_str = string(g1.condition);
+present = unique(cellstr(cond_str), 'stable');
+if ~any(strcmp(present, A)) || ~any(strcmp(present, B))
+    error('plot_hrf_curves:ContrastConditionMissing', ...
+        ['Contrast conditions {%s, %s} not both present after filtering. ' ...
+         'Available: %s'], A, B, strjoin(present, ', '));
+end
+
+keys = {'subject', 'region', 'lag_seconds'};
+if has_study, keys = [keys, {'study_label'}]; end
+keys = intersect(keys, g1.Properties.VariableNames, 'stable');
+
+gA = g1(cond_str == A, :);
+gB = g1(cond_str == B, :);
+gA.valA = gA.value; gA.value = [];
+gB.valB = gB.value; gB.value = [];
+
+J = innerjoin(gA(:, [keys, {'valA'}]), gB(:, [keys, {'valB'}]), 'Keys', keys);
+J.value = J.valA - J.valB;
+J.condition = repmat(string(sprintf('%s - %s', A, B)), height(J), 1);
+
+out_cols = [keys, {'condition', 'value'}];
+g = J(:, out_cols);
 end
 
 

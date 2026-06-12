@@ -72,6 +72,22 @@ HRF_Est_Toolbox4/                            (~28 files at root)
 │     hrf_extract_timeseries_from_nii   NIfTI -> z-scored timeseries   │
 └─────────────────────────┬────────────────────────────────────────────┘
                           │
+SPM GKWY compatibility (hrf_fit_wholebrain_stats)
+  The vectorized whole-brain fit is OLS on a constant-only baseline and is
+  NOT, by default, identical to an SPM first-level GLM, which fits the
+  grand-mean-scaled, high-pass filtered, prewhitened data ("gKWY"; see
+  Misc_utilities/spmify.m). Two opt-in tiers close the gap:
+    Tier A  'HighpassSeconds' (default 128 s) adds SPM-style DCT high-pass
+            confounds to the design. ON BY DEFAULT: without it, low-frequency
+            drift leaks into long FIR/sFIR lags as a spurious sustained
+            baseline. 'ScaleMode','grandmean' replicates the global scale g.
+    Tier B  'SPM' (an estimated SPM.mat path/struct) applies exact g*K*W to
+            the data and K*W to the design, reproducing spm_spm. Whitening
+            (W) is only available this way. Use 'SPMRun' for multi-run SPMs.
+  The legacy raw-OLS behavior is recoverable with HighpassSeconds=[]/0/Inf.
+  Note: the study/SLURM path forwards these via PipelineArgs (WholeBrain*),
+  so Tier A is uniform; per-subject Tier B would need a per-input SPM column.
+
 ┌─────────────────────────▼────────────────────────────────────────────┐
 │ L2  LINDQUIST-LAB FITTERS  (parent folder HRF_Est_Toolbox4/)         │
 │     Fit_sFIR, Fit_Canonical_HRF, Fit_Spline, Fit_Logit2,             │

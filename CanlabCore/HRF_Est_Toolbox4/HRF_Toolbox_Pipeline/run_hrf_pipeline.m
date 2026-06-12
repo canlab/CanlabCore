@@ -54,6 +54,12 @@ p.addParameter('WholeBrainThreshType', 'unc', @(x) ischar(x) || isstring(x));
 p.addParameter('WholeBrainWriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('WholeBrainChunkSize', 50000, @(x) isscalar(x) && x >= 1);
 p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
+% SPM GKWY-compatibility (see hrf_fit_wholebrain_stats): high-pass on by
+% default so drift does not leak into long FIR/sFIR lags. Pass WholeBrainSPM
+% (a path to / struct of an estimated SPM.mat) for exact g*K*W matching.
+p.addParameter('WholeBrainHighpassSeconds', 128, @(x) isempty(x) || (isscalar(x) && isnumeric(x)));
+p.addParameter('WholeBrainSPM', [], @(x) isempty(x) || isstruct(x) || ischar(x) || isstring(x));
+p.addParameter('WholeBrainSPMRun', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
 p.addParameter('ReuseWholeBrainOutput', false, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
@@ -276,6 +282,9 @@ if write_wholebrain
                 'WriteThresholdedT', write_thresholded_t, ...
                 'ChunkSize', opts.WholeBrainChunkSize, ...
                 'ScaleMode', opts.WholeBrainScaleMode, ...
+                'HighpassSeconds', opts.WholeBrainHighpassSeconds, ...
+                'SPM', opts.WholeBrainSPM, ...
+                'SPMRun', opts.WholeBrainSPMRun, ...
                 'Overwrite', logical(opts.WholeBrainOverwrite));
         end
     end

@@ -10,6 +10,28 @@ function out = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, varargin)
 %
 % Both objects include .ste, .p, .dfe, .N, .image_labels, and .volInfo.
 % If OutputPrefix is provided, 4D NIfTI files are written to disk.
+%
+% SPM GKWY compatibility
+% ----------------------
+% By default this is OLS on a constant-only baseline -- it is NOT identical
+% to an SPM first-level GLM, which fits the grand-mean-scaled, high-pass
+% filtered, prewhitened data (SPM's "gKWY"; see Misc_utilities/spmify.m).
+% Two tiers make the fit SPM-comparable:
+%
+%   Tier B (exact): pass 'SPM', '/path/to/SPM.mat' (or an estimated SPM
+%     struct). The data are transformed to gKWY (global scale g, high-pass K,
+%     ReML whitening W) and the design is filtered to KWX -- reproducing
+%     spm_spm. Use 'SPMRun' to pick the run for a multi-run SPM.
+%
+%   Tier A (no SPM.mat): 'HighpassSeconds' (default 128, SPM's default) adds
+%     DCT high-pass confounds to the design, replicating K and removing the
+%     low-frequency drift that otherwise leaks into long FIR/sFIR lags as a
+%     spurious sustained baseline. ScaleMode 'grandmean' replicates g.
+%     Whitening (W) requires Tier B. Set HighpassSeconds [] / 0 / Inf to
+%     disable and recover the legacy raw-OLS behavior.
+%
+% ScaleMode: 'none' (default), 'zscore' (per-voxel), or 'grandmean' (single
+% global scalar to mean 100, SPM-style). Ignored when 'SPM' is supplied.
 
 p = inputParser;
 p.addRequired('fmri_nii', @(x) ischar(x) || isstring(x) || isa(x, 'fmri_data'));
@@ -27,6 +49,21 @@ p.addParameter('ThreshType', 'unc', @(x) ischar(x) || isstring(x));
 p.addParameter('WriteThresholdedT', false, @(x) islogical(x) || isnumeric(x));
 p.addParameter('ChunkSize', 50000, @(x) isnumeric(x) && isscalar(x) && x >= 1 && mod(x, 1) == 0);
 p.addParameter('ScaleMode', 'none', @(x) ischar(x) || isstring(x));
+% --- SPM GKWY-compatibility controls -------------------------------------
+% The fit is OLS on a constant-only baseline unless you ask for SPM-style
+% conditioning. Two tiers (see help block):
+%   Tier B  'SPM'              - path to / struct of an ESTIMATED SPM.mat.
+%                                Applies exact g (global scale), K (high-pass)
+%                                and W (ReML whitening), matching spm_spm.
+%           'SPMRun'           - which run in a multi-run SPM the image is (1).
+%   Tier A  'HighpassSeconds'  - DCT high-pass cutoff in seconds (default 128,
+%                                SPM's default). Replicates K when no SPM.mat
+%                                is available. Set [] / 0 / Inf to disable.
+% Whitening (W) is only available via Tier B. With an SPM.mat, ScaleMode and
+% HighpassSeconds are ignored (g and K come from the SPM).
+p.addParameter('SPM', [], @(x) isempty(x) || isstruct(x) || ischar(x) || isstring(x));
+p.addParameter('SPMRun', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1 && mod(x, 1) == 0);
+p.addParameter('HighpassSeconds', 128, @(x) isempty(x) || (isscalar(x) && isnumeric(x)));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
@@ -82,9 +119,60 @@ if size(X, 1) ~= size(data_obj.dat, 2)
     error('Design rows (%d) must match fMRI time points (%d).', size(X, 1), size(data_obj.dat, 2));
 end
 
+% --- SPM GKWY conditioning (Tier B exact, or Tier A high-pass) -----------
+% Transforms data_obj.dat and X up front so the existing vectorized OLS loop
+% below becomes the consistent (filtered / whitened) fit. dof_correction
+% accounts for high-pass confounds that Tier B projects out of the data.
+dof_correction = 0;
+gkwy_info = struct('mode', 'none', 'highpass_seconds', [], 'n_highpass', 0, ...
+    'whitened', false, 'grandmean_scaled', false);
+
+if ~isempty(opts.SPM)
+    SPM = local_load_spm(opts.SPM);
+    [data_obj, X, dof_correction, n_hp] = local_apply_spm_gkwy(data_obj, X, SPM, opts.SPMRun);
+    gkwy_info.mode = 'spm_gkwy';
+    gkwy_info.n_highpass = n_hp;
+    gkwy_info.whitened = true;
+    gkwy_info.grandmean_scaled = true;
+    if ~strcmpi(char(opts.ScaleMode), 'none')
+        warning('hrf_fit_wholebrain_stats:ScaleModeIgnored', ...
+            'ScaleMode=''%s'' ignored: global scaling comes from SPM.xGX.gSF.', char(opts.ScaleMode));
+        opts.ScaleMode = 'none';
+    end
+    if opts.Verbose
+        fprintf('SPM GKWY applied (run %d): global scale + high-pass (%d confounds) + ReML whitening.\n', ...
+            opts.SPMRun, n_hp);
+    end
+else
+    hp = opts.HighpassSeconds;
+    if ~isempty(hp) && isfinite(hp) && hp > 0
+        [X, design_info, n_hp] = local_add_highpass(X, design_info, TR, hp);
+        gkwy_info.mode = 'highpass';
+        gkwy_info.highpass_seconds = hp;
+        gkwy_info.n_highpass = n_hp;
+        if opts.Verbose
+            fprintf('High-pass filter: DCT, cutoff %.0f s, %d confound regressors added.\n', hp, n_hp);
+        end
+    end
+end
+
+% Grand-mean scaling (Tier A replicate of SPM's g) needs one global scalar
+% over all in-mask voxels x time, computed before the chunked loop.
+gm_scale = 1;
+if strcmpi(char(opts.ScaleMode), 'grandmean')
+    gm = mean(double(data_obj.dat(:)), 'omitnan');
+    if gm == 0 || ~isfinite(gm)
+        warning('hrf_fit_wholebrain_stats:GrandMeanZero', ...
+            'Grand mean is zero/non-finite; skipping grand-mean scaling.');
+    else
+        gm_scale = 100 / gm;
+        gkwy_info.grandmean_scaled = true;
+    end
+end
+
 [PX, pen] = local_get_pseudoinverse(X, design_info, opts.Mode);
 hat_trace = trace(X * PX);
-dfe = max(size(X, 1) - hat_trace, 1);
+dfe = max(size(X, 1) - hat_trace - dof_correction, 1);
 coef_var_scale = max(diag(design_info.output_lift * (PX * PX') * design_info.output_lift'), 0);
 
 n_keep = size(design_info.output_lift, 1);
@@ -112,8 +200,10 @@ for first_vox = 1:chunk_size:n_vox
         case {'zscore', 'z'}
             Y = zscore(Y, 0, 1);
             Y(isnan(Y)) = 0;
+        case 'grandmean'
+            Y = Y * gm_scale;   % single global scalar (SPM-style grand-mean to 100)
         otherwise
-            error('Unknown ScaleMode: %s. Use ''none'' or ''zscore''.', char(opts.ScaleMode));
+            error('Unknown ScaleMode: %s. Use ''none'', ''zscore'', or ''grandmean''.', char(opts.ScaleMode));
     end
 
     B = PX * Y;
@@ -190,12 +280,108 @@ out.condition_groups = condition_groups;
 out.TR = TR;
 out.dfe = dfe;
 out.N = size(X, 1);
+out.gkwy = gkwy_info;
 out.input_fmri = fmri_name;
 out.paths = struct();
 
 if ~isempty(opts.OutputPrefix)
     out.paths = local_write_outputs(out, char(opts.OutputPrefix), logical(opts.Overwrite), logical(opts.WriteThresholdedT));
 end
+end
+
+function SPM = local_load_spm(spm_in)
+% Resolve the SPM arg to a struct (accepts a struct or a path to SPM.mat).
+if isstruct(spm_in)
+    SPM = spm_in;
+elseif ischar(spm_in) || isstring(spm_in)
+    f = char(spm_in);
+    if exist(f, 'file') ~= 2
+        error('hrf_fit_wholebrain_stats:SPMNotFound', 'SPM.mat not found: %s', f);
+    end
+    S = load(f, 'SPM');
+    if ~isfield(S, 'SPM')
+        error('hrf_fit_wholebrain_stats:NoSPMVar', '%s does not contain an SPM variable.', f);
+    end
+    SPM = S.SPM;
+else
+    error('hrf_fit_wholebrain_stats:BadSPM', 'SPM must be a struct or a path to SPM.mat.');
+end
+end
+
+function [data_obj, X, dof_corr, n_hp] = local_apply_spm_gkwy(data_obj, X, SPM, run)
+% Replicate spmify()/spm_spm exactly for one run: scale data by g (SPM.xGX.gSF),
+% high-pass (K) and whiten (W) both data and design. Column layout of X is
+% preserved, so design_info.output_lift / sFIR penalty stay valid.
+if ~isfield(SPM, 'xX') || ~isfield(SPM.xX, 'K') || ~isfield(SPM.xX, 'W')
+    error('hrf_fit_wholebrain_stats:SPMNotEstimated', ...
+        'SPM.mat must be ESTIMATED (needs xX.K, xX.W, xGX.gSF). Run spm_spm first.');
+end
+K = SPM.xX.K;
+nrun = numel(K);
+if run < 1 || run > nrun
+    error('hrf_fit_wholebrain_stats:BadSPMRun', ...
+        'SPMRun=%d out of range (SPM has %d run(s)).', run, nrun);
+end
+Krun = K(run);
+rows = Krun.row;
+n_tp = size(data_obj.dat, 2);
+if numel(rows) ~= n_tp
+    error('hrf_fit_wholebrain_stats:SPMRunMismatch', ...
+        ['SPM run %d has %d scans but the fMRI image has %d time points. ' ...
+         'Pass the matching SPMRun (or the single-run SPM for this image).'], ...
+        run, numel(rows), n_tp);
+end
+W = SPM.xX.W(rows, rows);
+
+% Whiten + high-pass the data. spm_filter works on [time x columns].
+Y = double(data_obj.dat');          % time x vox
+KWY = spm_filter(Krun, W * Y);      % high-passed + whitened, time x vox
+
+% Global (grand-mean) scaling per scan, exactly as spmify does.
+if isfield(SPM, 'xGX') && isfield(SPM.xGX, 'gSF') && ~isempty(SPM.xGX.gSF)
+    g = SPM.xGX.gSF(rows);
+    KWY = KWY .* g(:);              % scale each timepoint (row)
+else
+    warning('hrf_fit_wholebrain_stats:NoGSF', ...
+        'SPM.xGX.gSF missing; skipped global scaling (K and W still applied).');
+end
+data_obj.dat = single(KWY');        % vox x time
+
+% Apply the SAME K and W to the design.
+X = full(spm_filter(Krun, W * X));
+
+% High-pass confounds are projected out (not columns), so credit their dof.
+n_hp = 0;
+if isfield(Krun, 'X0') && ~isempty(Krun.X0)
+    n_hp = size(Krun.X0, 2);
+end
+dof_corr = n_hp;
+end
+
+function [X, info, n_added] = local_add_highpass(X, info, TR, cutoff)
+% Tier A: append SPM-style DCT high-pass confounds as nuisance columns.
+% This removes low-frequency drift from the task betas (equivalent to K) and
+% the added columns are counted in the OLS dof automatically.
+D = local_dct_highpass(size(X, 1), TR, cutoff);
+n_added = size(D, 2);
+if n_added == 0, return; end
+X = [X, D];
+nkeep = size(info.output_lift, 1);
+info.output_lift = [info.output_lift, zeros(nkeep, n_added)];
+info.highpass_columns = (size(X, 2) - n_added + 1):size(X, 2);
+info.highpass_seconds = cutoff;
+end
+
+function D = local_dct_highpass(n_tp, TR, cutoff)
+% SPM's high-pass basis: spm_dctmtx(N, k) with k = fix(2*N*TR/cutoff + 1),
+% dropping the DC (constant) column since X already carries an intercept.
+k = fix(2 * (n_tp * TR) / cutoff + 1);
+if k <= 1
+    D = zeros(n_tp, 0);
+    return;
+end
+D = spm_dctmtx(n_tp, k);
+D = D(:, 2:end);
 end
 
 function [TR, n_tp] = local_get_tr_and_ntp(fmri_name, requested_tr)

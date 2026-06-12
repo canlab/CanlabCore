@@ -101,6 +101,23 @@ function [image_obj, networknames, imagenames] = load_image_set(image_names_or_k
 %                      Each image is a contrast image for the contrast
 %                      [reappraise negative vs. look negative].
 %
+%       'DPSP_hotwarm' :
+%                      DPSP rejection study (Woo et al. 2014). Loads the
+%                      Hot and Warm single-subject condition maps from
+%                      Sample_datasets/DPSP_pain_rejection_participant_maps,
+%                      applies a gray-matter mask, concatenates and
+%                      removes empty voxels, sets +1/-1 effect-coded
+%                      labels, and attaches subject id to the
+%                      metadata_table. The returned object is ready
+%                      to be passed (with .dat', .Y, and
+%                      grp2idx(metadata_table.subj_id)) into xval_SVM,
+%                      or into fmri_data.predict directly.
+%
+%       'DPSP_rejectorfriend' :
+%                      As above but for the Rejector vs Friend social-
+%                      rejection task (same Woo et al. 2014 dataset).
+%                      Object ready for SVM classification.
+%
 %       'bmrk3', 'pain' : 33 participants, with brain responses to six levels of heat
 %                         (non-painful and painful).
 %                         NOTE: requires access to bmrk3_6levels_pain_dataset.mat,
@@ -427,6 +444,12 @@ else
             
         case {'emotionreg' 'emotionregulation'}
             [image_obj, networknames, imagenames] = load_emotion_reg_sample;
+
+        case {'DPSP_hotwarm', 'dpsp_hotwarm'}
+            [image_obj, networknames, imagenames] = load_DPSP_hotwarm;
+
+        case {'DPSP_rejectorfriend', 'dpsp_rejectorfriend'}
+            [image_obj, networknames, imagenames] = load_DPSP_rejectorfriend;
             
         case {'bgloops17', 'pauli17'}
             [image_obj, networknames, imagenames] = load_pauli_bg17;
@@ -1740,4 +1763,101 @@ imagenames = {'weights_NSF_grouppred_cvpcr.img' ...     % Wager et al. 2013 NPS 
 table_list = table(keyword, pain, negemo, posemo, empathy, physio, cogcontrol, regulation, reward, other, imagenames);
 
 end % table_list
+
+
+% =========================================================================
+% DPSP loaders (Woo et al. 2014; single-subject condition maps in
+% CanlabCore/Sample_datasets/DPSP_pain_rejection_participant_maps)
+% =========================================================================
+
+function [image_obj, networknames, imagenames] = load_DPSP_hotwarm
+    % Hot vs Warm binary-classification setup. Returns hw_obj ready for
+    % xval_SVM / fmri_data.predict:
+    %   - .dat columns are images (n_subjects x 2 in order [hot; warm])
+    %   - .Y is effects-coded +1 for hot, -1 for warm
+    %   - .metadata_table.subj_id provides the subject grouping
+    %     (extract with grp2idx for xval_SVM's id argument)
+
+    [image_obj, networknames, imagenames] = load_dpsp_pair('hot', 'warm');
+end
+
+
+function [image_obj, networknames, imagenames] = load_DPSP_rejectorfriend
+    % Rejector vs Friend binary-classification setup. Same shape as
+    % load_DPSP_hotwarm: rejector -> +1, friend -> -1.
+
+    [image_obj, networknames, imagenames] = load_dpsp_pair('rejector', 'friend');
+end
+
+
+function [image_obj, networknames, imagenames] = load_dpsp_pair(cond_pos, cond_neg)
+    % Shared loader for any pair of DPSP single-subject condition maps.
+    %   cond_pos -> +1 class, cond_neg -> -1 class.
+
+    canlabcore_dir = fileparts(fileparts(which('fmri_data')));
+    sample_dir = fullfile(canlabcore_dir, 'Sample_datasets', ...
+                          'DPSP_pain_rejection_participant_maps');
+
+    pos_path = fullfile(sample_dir, sprintf('DPSP_single_subject_images_%s.mat', cond_pos));
+    neg_path = fullfile(sample_dir, sprintf('DPSP_single_subject_images_%s.mat', cond_neg));
+    if ~exist(pos_path, 'file') || ~exist(neg_path, 'file')
+        error('load_image_set:DPSP:Missing', ...
+            'Could not find DPSP files in %s.', sample_dir);
+    end
+
+    pos_var = sprintf('single_subject_images_%s', cond_pos);
+    neg_var = sprintf('single_subject_images_%s', cond_neg);
+
+    P = load(pos_path, pos_var);   pos_obj = P.(pos_var);
+    N = load(neg_path, neg_var);   neg_obj = N.(neg_var);
+
+    % Apply gray-matter mask if available (matches the walkthrough
+    % preprocessing).
+    gm_file = which('gray_matter_mask.nii');
+    if ~isempty(gm_file)
+        gm = fmri_data(gm_file, [], 'noverbose');
+        pos_obj = apply_mask(pos_obj, gm);
+        neg_obj = apply_mask(neg_obj, gm);
+    end
+
+    % Concatenate; remove voxels reintroduced as all-zero by cat().
+    image_obj = cat(pos_obj, neg_obj);
+    image_obj = remove_empty(image_obj);
+
+    n = size(pos_obj.dat, 2);
+    image_obj.Y = [ones(n, 1); -ones(n, 1)];
+
+    % Subject id: stack the metadata_table subj_id columns so id is
+    % aligned with image_obj.dat columns.
+    if isprop(pos_obj, 'metadata_table') && istable(pos_obj.metadata_table) ...
+            && any(strcmpi(pos_obj.metadata_table.Properties.VariableNames, 'subj_id'))
+        image_obj.metadata_table = vertcat( ...
+            pos_obj.metadata_table(:, {'subj_id'}), ...
+            neg_obj.metadata_table(:, {'subj_id'}));
+        image_obj.metadata_table.condition = [ ...
+            repmat({cond_pos}, n, 1); repmat({cond_neg}, n, 1)];
+    end
+
+    image_obj.Y_names = {sprintf('%s_vs_%s', cond_pos, cond_neg)};
+
+    networknames = format_strings_for_legend(image_obj.image_names);
+    if length(networknames) == 1
+        networknames = repmat(networknames, size(image_obj.dat, 2), 1);
+    end
+
+    % Normalise imagenames to a cell array of char so the verbose
+    % printout in the parent (fprintf('%s\n', imagenames{:})) works.
+    fp = image_obj.fullpath;
+    if isempty(fp)
+        imagenames = {pos_path; neg_path};
+    elseif ischar(fp)
+        imagenames = cellstr(fp);
+    elseif isstring(fp)
+        imagenames = cellstr(fp);
+    elseif iscell(fp)
+        imagenames = fp(:);
+    else
+        imagenames = {pos_path; neg_path};   % conservative fallback
+    end
+end
 

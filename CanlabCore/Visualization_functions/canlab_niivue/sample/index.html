@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CANlab NiiVue sample — emotionreg t-map</title>
+  <link rel="stylesheet" href="../assets/canlab_niivue.css">
+</head>
+<body>
+  <h1>CANlab NiiVue sample — emotionreg t-map</h1>
+
+  <p class="caption">
+    One-sample t-test on the CANlab <code>emotionreg</code> sample dataset, displayed as a
+    web orthviews. The hot (warm) lobe shows positive t-values and the cool (winter) lobe shows
+    negative t-values, overlaid on an anatomical underlay. Use the toolbar to switch between
+    axial, coronal, sagittal, multiplanar, and 3D-render layouts; move the crosshair to read the
+    MNI coordinate and t-value below the canvas.
+  </p>
+
+  <!--
+    NOTE: ./data/underlay.nii.gz and ./data/overlay.nii.gz are generated separately
+    (e.g. from MATLAB via `canlab_niivue(t, 'standalone', false, 'outdir', <this folder>)`)
+    and are intentionally not checked in here. This page shows an empty canvas until those
+    two files exist in the ./data/ folder. This is expected.
+
+    Also: ES module imports require this page to be served over http(s)
+    (e.g. `python3 -m http.server` from this directory), not opened via file://.
+  -->
+
+  <div id="canlab-niivue-controls"></div>
+  <div id="canlab-niivue-canvas-container">
+    <canvas id="gl" width="640" height="640"></canvas>
+  </div>
+  <div id="canlab-niivue-readout"></div>
+
+  <script type="module">
+    import { canlabNiivue } from "../assets/canlab_niivue_viewer.js";
+
+    canlabNiivue("gl", {
+      underlay: "./data/underlay.nii.gz",
+      overlay:  "./data/overlay.nii.gz",
+      colormap: "inferno",
+      colormapNegative: "winter",
+      cal_min: 3.04,   // = t-threshold: |t| below this renders transparent (blobs only)
+      cal_max: 7.25,   // top of the colormap
+      opacity: 0.8     // semi-transparent overlay; adjustable with the slider
+    });
+  </script>
+</body>
+</html>

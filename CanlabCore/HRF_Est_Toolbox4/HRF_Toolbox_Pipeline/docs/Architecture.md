@@ -81,12 +81,18 @@ SPM GKWY compatibility (hrf_fit_wholebrain_stats)
             confounds to the design. ON BY DEFAULT: without it, low-frequency
             drift leaks into long FIR/sFIR lags as a spurious sustained
             baseline. 'ScaleMode','grandmean' replicates the global scale g.
+            'Whiten' ('ar1'|'ar2') estimates the noise autocorrelation from a
+            high-variance voxel subsample and prewhitens data + design, giving
+            GLS-valid SE/t without an SPM.mat.
     Tier B  'SPM' (an estimated SPM.mat path/struct) applies exact g*K*W to
-            the data and K*W to the design, reproducing spm_spm. Whitening
-            (W) is only available this way. Use 'SPMRun' for multi-run SPMs.
-  The legacy raw-OLS behavior is recoverable with HighpassSeconds=[]/0/Inf.
-  Note: the study/SLURM path forwards these via PipelineArgs (WholeBrain*),
-  so Tier A is uniform; per-subject Tier B would need a per-input SPM column.
+            the data and K*W to the design, reproducing spm_spm -- the only
+            route to SPM's ReML whitening. Use 'SPMRun' for multi-run SPMs.
+  The legacy raw-OLS behavior is recoverable with HighpassSeconds=[]/0/Inf
+  and Whiten='none'. Threading: run_hrf_pipeline exposes WholeBrainHighpass-
+  Seconds / WholeBrainSPM / WholeBrainSPMRun / WholeBrainWhiten; the study
+  driver and SLURM writer accept PER-SUBJECT 'SPMFiles' (+'SPMRuns') so each
+  row can use exact Tier B (the SLURM manifest gains spm_file/spm_run
+  columns), falling back to Tier A for rows with no SPM.mat.
 
 ┌─────────────────────────▼────────────────────────────────────────────┐
 │ L2  LINDQUIST-LAB FITTERS  (parent folder HRF_Est_Toolbox4/)         │

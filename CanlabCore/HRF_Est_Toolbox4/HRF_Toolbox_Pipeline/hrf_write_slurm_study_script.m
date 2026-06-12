@@ -33,6 +33,11 @@ p.addParameter('RunLabels', {}, @(x) isempty(x) || ischar(x) || iscell(x) || iss
 p.addParameter('CanlabRoot', local_default_canlab_root(), @(x) ischar(x) || isstring(x));
 p.addParameter('ExtraMatlabPaths', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('PipelineArgs', {}, @(x) iscell(x));
+% Per-subject estimated SPM.mat paths for exact Tier B g*K*W matching (one
+% per fMRI file; '' = none for that row). SPMRuns picks the run within a
+% multi-run SPM (default 1 each). See hrf_fit_wholebrain_stats.
+p.addParameter('SPMFiles', {}, @(x) isempty(x) || ischar(x) || iscell(x) || isstring(x));
+p.addParameter('SPMRuns', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('SignatureSets', {}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || isa(x, 'image_vector'));
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
@@ -73,7 +78,9 @@ local_ensure_parent(paths.manifest_file);
 local_ensure_parent(paths.worker_file);
 local_ensure_parent(paths.config_mat);
 
-manifest = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, opts.RunLabels);
+spm_files = local_normalize_spm_files(opts.SPMFiles, n);
+spm_runs = local_normalize_spm_runs(opts.SPMRuns, n);
+manifest = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, opts.RunLabels, spm_files, spm_runs);
 writetable(manifest, paths.manifest_file);
 
 config = struct();
@@ -85,6 +92,8 @@ config.fmri_files = fmri_files(:);
 config.events_files = events_files(:);
 config.output_prefixes = manifest.output_prefix(:);
 config.output_mats = manifest.output_mat(:);
+config.spm_files = spm_files(:);
+config.spm_runs = spm_runs(:);
 [pipeline_args, pipeline_note] = local_normalize_pipeline_args(opts.PipelineArgs);
 config.pipeline_args = pipeline_args;
 config.pipeline_note = pipeline_note;
@@ -180,7 +189,7 @@ paths = struct('script_file', script_file, 'manifest_file', manifest_file, ...
     'worker_file', worker_file, 'config_mat', config_mat);
 end
 
-function T = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, run_labels_input)
+function T = local_manifest_table(fmri_files, events_files, subject_ids, output_dir, run_labels_input, spm_files, spm_runs)
 n = numel(fmri_files);
 subject = cell(n, 1);
 run_label = cell(n, 1);
@@ -188,6 +197,8 @@ fmri_file = cell(n, 1);
 events_file = cell(n, 1);
 output_prefix = cell(n, 1);
 output_mat = cell(n, 1);
+spm_file = cell(n, 1);
+spm_run = zeros(n, 1);
 run_labels = local_run_labels(fmri_files, subject_ids, run_labels_input);
 
 for i = 1:n
@@ -199,10 +210,43 @@ for i = 1:n
     events_file{i} = char(events_files{i});
     output_prefix{i} = fullfile(output_dir, [output_label '_hrf']);
     output_mat{i} = fullfile(output_dir, [output_label '_hrf_results.mat']);
+    spm_file{i} = spm_files{i};
+    spm_run(i) = spm_runs(i);
 end
 
-T = table((1:n)', subject, run_label, fmri_file, events_file, output_prefix, output_mat, ...
-    'VariableNames', {'index', 'subject', 'run_label', 'fmri_file', 'events_file', 'output_prefix', 'output_mat'});
+T = table((1:n)', subject, run_label, fmri_file, events_file, output_prefix, output_mat, spm_file, spm_run, ...
+    'VariableNames', {'index', 'subject', 'run_label', 'fmri_file', 'events_file', 'output_prefix', 'output_mat', 'spm_file', 'spm_run'});
+end
+
+function spm_files = local_normalize_spm_files(spm_files, n)
+% Per-subject SPM input -> n-element cellstr ('' = none).
+if isempty(spm_files)
+    spm_files = repmat({''}, 1, n);
+    return
+end
+if ischar(spm_files) || isstring(spm_files)
+    spm_files = cellstr(string(spm_files));
+end
+if isscalar(spm_files)
+    spm_files = repmat(spm_files(:)', 1, n);
+end
+spm_files = cellfun(@(x) char(string(x)), spm_files, 'UniformOutput', false);
+if numel(spm_files) ~= n
+    error('SPMFiles must be empty, scalar, or contain one entry per fMRI file (got %d, need %d).', numel(spm_files), n);
+end
+spm_files = reshape(spm_files, 1, n);
+end
+
+function spm_runs = local_normalize_spm_runs(spm_runs, n)
+if isempty(spm_runs)
+    spm_runs = ones(1, n);
+elseif isscalar(spm_runs)
+    spm_runs = repmat(spm_runs, 1, n);
+end
+if numel(spm_runs) ~= n
+    error('SPMRuns must be empty, scalar, or contain one value per fMRI file.');
+end
+spm_runs = reshape(spm_runs, 1, n);
 end
 
 function run_labels = local_run_labels(fmri_files, subject_ids, run_labels_input)
@@ -297,12 +341,18 @@ fprintf(fid, '    fmri_file = strrep(local_cell_at(config.fmri_files, task_id), 
 fprintf(fid, '    events_file = strrep(local_cell_at(config.events_files, task_id), ''\\'', filesep);\n');
 fprintf(fid, '    output_prefix = strrep(local_cell_at(config.output_prefixes, task_id), ''\\'', filesep);\n');
 fprintf(fid, '    output_mat = strrep(local_cell_at(config.output_mats, task_id), ''\\'', filesep);\n');
+fprintf(fid, '    if isfield(config, ''spm_files'') && numel(config.spm_files) >= task_id, spm_file = strrep(local_cell_at(config.spm_files, task_id), ''\\'', filesep); else, spm_file = ''''; end\n');
+fprintf(fid, '    if isfield(config, ''spm_runs'') && numel(config.spm_runs) >= task_id, spm_run = config.spm_runs(task_id); else, spm_run = 1; end\n');
 fprintf(fid, 'else\n');
-fprintf(fid, '    [subject, run_label, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id);\n');
+fprintf(fid, '    [subject, run_label, fmri_file, events_file, output_prefix, output_mat, spm_file, spm_run, n_tasks] = local_manifest_row(manifest_file, task_id);\n');
 fprintf(fid, 'end\n');
 fprintf(fid, 'if isempty(run_label), run_label = sprintf(''task-%%03d'', task_id); end\n');
 fprintf(fid, 'fprintf(''Running HRF task %%d/%%d: %%s | %%s\\n'', task_id, n_tasks, subject, run_label);\n');
 fprintf(fid, 'args = [config.pipeline_args, {''WriteWholeBrain'', true, ''WholeBrainOutputPrefix'', output_prefix, ''OutputMat'', output_mat}];\n');
+fprintf(fid, 'if exist(''spm_file'', ''var'') && ~isempty(spm_file)\n');
+fprintf(fid, '    args = [args, {''WholeBrainSPM'', spm_file, ''WholeBrainSPMRun'', spm_run}];\n');
+fprintf(fid, '    fprintf(''  Tier B GKWY from SPM.mat: %%s (run %%d)\\n'', spm_file, spm_run);\n');
+fprintf(fid, 'end\n');
 fprintf(fid, 'results = run_hrf_pipeline(fmri_file, events_file, args{:});\n');
 fprintf(fid, 'if ~isempty(config.signature_sets) || ~isempty(config.image_sets) || ~isempty(config.atlas_obj)\n');
 fprintf(fid, '    wholebrain_models = local_wholebrain_models(results);\n');
@@ -358,7 +408,7 @@ fprintf(fid, 'function val = local_cell_at(values, idx)\n');
 fprintf(fid, 'if iscell(values), val = values{idx}; else, val = values(idx); end\n');
 fprintf(fid, 'val = local_cell_to_char(val);\n');
 fprintf(fid, 'end\n\n');
-fprintf(fid, 'function [subject, run_label, fmri_file, events_file, output_prefix, output_mat, n_tasks] = local_manifest_row(manifest_file, task_id)\n');
+fprintf(fid, 'function [subject, run_label, fmri_file, events_file, output_prefix, output_mat, spm_file, spm_run, n_tasks] = local_manifest_row(manifest_file, task_id)\n');
 fprintf(fid, 'raw = local_read_manifest(manifest_file);\n');
 fprintf(fid, 'if isempty(raw) || size(raw, 2) < 5, error(''Manifest must have at least 5 columns.''); end\n');
 fprintf(fid, 'data_start = 1 + local_has_manifest_header(raw(1, :));\n');
@@ -372,6 +422,9 @@ fprintf(fid, 'fmri_file = strrep(local_manifest_value(raw, headers, row_idx, ''f
 fprintf(fid, 'events_file = strrep(local_manifest_value(raw, headers, row_idx, ''events_file'', 5), ''\\'', filesep);\n');
 fprintf(fid, 'output_prefix = strrep(local_manifest_value(raw, headers, row_idx, ''output_prefix'', 6), ''\\'', filesep);\n');
 fprintf(fid, 'output_mat = strrep(local_manifest_value(raw, headers, row_idx, ''output_mat'', 7), ''\\'', filesep);\n');
+fprintf(fid, 'spm_file = strrep(local_manifest_value(raw, headers, row_idx, ''spm_file'', 8), ''\\'', filesep);\n');
+fprintf(fid, 'spm_run = str2double(local_manifest_value(raw, headers, row_idx, ''spm_run'', 9));\n');
+fprintf(fid, 'if isnan(spm_run) || spm_run < 1, spm_run = 1; end\n');
 fprintf(fid, 'end\n\n');
 fprintf(fid, 'function headers = local_manifest_headers(raw, data_start)\n');
 fprintf(fid, 'headers = containers.Map(''KeyType'', ''char'', ''ValueType'', ''double'');\n');

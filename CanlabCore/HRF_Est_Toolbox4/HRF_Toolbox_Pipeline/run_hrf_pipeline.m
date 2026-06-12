@@ -60,6 +60,7 @@ p.addParameter('WholeBrainScaleMode', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('WholeBrainHighpassSeconds', 128, @(x) isempty(x) || (isscalar(x) && isnumeric(x)));
 p.addParameter('WholeBrainSPM', [], @(x) isempty(x) || isstruct(x) || ischar(x) || isstring(x));
 p.addParameter('WholeBrainSPMRun', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1);
+p.addParameter('WholeBrainWhiten', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('ReuseWholeBrainOutput', false, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
@@ -285,6 +286,7 @@ if write_wholebrain
                 'HighpassSeconds', opts.WholeBrainHighpassSeconds, ...
                 'SPM', opts.WholeBrainSPM, ...
                 'SPMRun', opts.WholeBrainSPMRun, ...
+                'Whiten', opts.WholeBrainWhiten, ...
                 'Overwrite', logical(opts.WholeBrainOverwrite));
         end
     end

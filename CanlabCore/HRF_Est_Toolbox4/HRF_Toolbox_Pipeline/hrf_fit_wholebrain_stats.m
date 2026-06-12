@@ -27,8 +27,11 @@ function out = hrf_fit_wholebrain_stats(fmri_nii, events_tsv, varargin)
 %     DCT high-pass confounds to the design, replicating K and removing the
 %     low-frequency drift that otherwise leaks into long FIR/sFIR lags as a
 %     spurious sustained baseline. ScaleMode 'grandmean' replicates g.
-%     Whitening (W) requires Tier B. Set HighpassSeconds [] / 0 / Inf to
-%     disable and recover the legacy raw-OLS behavior.
+%     'Whiten' ('ar1' or 'ar2') estimates the noise autocorrelation from the
+%     residuals of a high-variance voxel subsample (one global AR model,
+%     SPM-style) and prewhitens data + design -- giving GLS-valid SE/t
+%     without an SPM.mat. Set HighpassSeconds [] / 0 / Inf and Whiten 'none'
+%     to recover the legacy raw-OLS behavior.
 %
 % ScaleMode: 'none' (default), 'zscore' (per-voxel), or 'grandmean' (single
 % global scalar to mean 100, SPM-style). Ignored when 'SPM' is supplied.
@@ -64,6 +67,11 @@ p.addParameter('ScaleMode', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('SPM', [], @(x) isempty(x) || isstruct(x) || ischar(x) || isstring(x));
 p.addParameter('SPMRun', 1, @(x) isnumeric(x) && isscalar(x) && x >= 1 && mod(x, 1) == 0);
 p.addParameter('HighpassSeconds', 128, @(x) isempty(x) || (isscalar(x) && isnumeric(x)));
+% Prewhitening for the no-SPM path: 'none' (default), 'ar1' or 'ar2'. The
+% autocorrelation is estimated from the OLS residuals of a high-variance
+% voxel subsample (one global model, SPM-style) and applied to data + design,
+% giving GLS-valid SE/t without an SPM.mat. SPM-exact whitening uses 'SPM'.
+p.addParameter('Whiten', 'none', @(x) ischar(x) || isstring(x));
 p.addParameter('Verbose', true, @(x) islogical(x) || isnumeric(x));
 p.parse(fmri_nii, events_tsv, varargin{:});
 opts = p.Results;
@@ -139,6 +147,10 @@ if ~isempty(opts.SPM)
             'ScaleMode=''%s'' ignored: global scaling comes from SPM.xGX.gSF.', char(opts.ScaleMode));
         opts.ScaleMode = 'none';
     end
+    if ~strcmpi(char(opts.Whiten), 'none')
+        warning('hrf_fit_wholebrain_stats:WhitenIgnored', ...
+            'Whiten=''%s'' ignored: whitening comes from SPM.xX.W.', char(opts.Whiten));
+    end
     if opts.Verbose
         fprintf('SPM GKWY applied (run %d): global scale + high-pass (%d confounds) + ReML whitening.\n', ...
             opts.SPMRun, n_hp);
@@ -167,6 +179,22 @@ if strcmpi(char(opts.ScaleMode), 'grandmean')
     else
         gm_scale = 100 / gm;
         gkwy_info.grandmean_scaled = true;
+    end
+end
+
+% Data-estimated prewhitening (Tier A+). Only when no SPM.mat supplied; with
+% an SPM the whitening already came from W above. Estimated on a high-variance
+% voxel subsample, then applied to data + design so the loop below is GLS.
+if isempty(opts.SPM) && ~strcmpi(strtrim(char(opts.Whiten)), 'none')
+    [Wmat, ar_coef] = local_estimate_ar_whitening(data_obj.dat, X, char(opts.Whiten));
+    data_obj.dat = single((Wmat * double(data_obj.dat'))');   % whiten data (vox x time)
+    X = Wmat * X;                                             % whiten design
+    gkwy_info.whitened = true;
+    gkwy_info.whiten_mode = lower(strtrim(char(opts.Whiten)));
+    gkwy_info.ar_coef = ar_coef;
+    if opts.Verbose
+        fprintf('Prewhitening: %s, AR coef = [%s].\n', upper(strtrim(char(opts.Whiten))), ...
+            strtrim(sprintf('%.3f ', ar_coef(:)')));
     end
 end
 
@@ -370,6 +398,79 @@ nkeep = size(info.output_lift, 1);
 info.output_lift = [info.output_lift, zeros(nkeep, n_added)];
 info.highpass_columns = (size(X, 2) - n_added + 1):size(X, 2);
 info.highpass_seconds = cutoff;
+end
+
+function [W, ar] = local_estimate_ar_whitening(dat, X, wmode)
+% Estimate a single global AR(p) whitening matrix from OLS residuals of a
+% high-variance voxel subsample, then return W such that W*Y is ~white.
+switch lower(strtrim(wmode))
+    case 'ar1', p = 1;
+    case 'ar2', p = 2;
+    otherwise
+        error('hrf_fit_wholebrain_stats:UnknownWhiten', ...
+            'Whiten must be ''none'', ''ar1'', or ''ar2''. Got ''%s''.', wmode);
+end
+n_tp = size(dat, 2);
+
+% Subsample voxels (highest variance, finite) to estimate AR cheaply.
+v = var(double(dat), 0, 2);
+v(~isfinite(v)) = 0;
+n_pos = sum(v > 0);
+nsamp = min(2000, max(n_pos, 1));
+[~, ord] = sort(v, 'descend');
+samp = ord(1:nsamp);
+Ys = double(dat(samp, :)');            % time x nsamp
+R = Ys - X * (pinv(X) * Ys);           % OLS residuals on the (high-passed) design
+
+% Pooled normalized autocovariance across sampled voxels (lags 0..p).
+acf = zeros(p + 1, 1);
+for k = 0:p
+    rr = R(1:end - k, :) .* R(1 + k:end, :);
+    acf(k + 1) = mean(rr(:));
+end
+if acf(1) <= 0
+    W = speye(n_tp); ar = zeros(p, 1); return;
+end
+acf = acf / acf(1);
+
+% Yule-Walker for AR(p), then enforce stationarity.
+ar = toeplitz(acf(1:p)) \ acf(2:p + 1);
+ar = local_make_stationary(ar);
+
+% Theoretical AR(p) autocorrelation over all lags, then whiten via inv(chol).
+full_acf = local_ar_acf(ar, n_tp);
+V = toeplitz(full_acf);
+L = chol(V + 1e-8 * eye(n_tp), 'lower');
+W = inv(L);
+end
+
+function ar = local_make_stationary(ar)
+% Shrink AR coefficients toward zero until the process is stationary.
+for it = 1:50
+    if isscalar(ar)
+        ok = abs(ar(1)) < 0.999;
+    else
+        ok = abs(ar(2)) < 0.999 && (ar(1) + ar(2)) < 0.999 && (ar(2) - ar(1)) < 0.999;
+    end
+    if ok, return; end
+    ar = ar * 0.95;
+end
+ar = zeros(size(ar));
+end
+
+function a = local_ar_acf(ar, n)
+% Theoretical autocorrelation of an AR(p) process, lags 0..n-1 (a(1)=lag 0).
+a = zeros(n, 1); a(1) = 1;
+if isscalar(ar)
+    rho = max(min(ar(1), 0.999), -0.999);
+    a = (rho .^ (0:n - 1))';
+    return;
+end
+ar1 = ar(1); ar2 = ar(2);
+if n >= 2, a(2) = ar1 / (1 - ar2); end
+for k = 3:n
+    a(k) = ar1 * a(k - 1) + ar2 * a(k - 2);
+end
 end
 
 function D = local_dct_highpass(n_tp, TR, cutoff)

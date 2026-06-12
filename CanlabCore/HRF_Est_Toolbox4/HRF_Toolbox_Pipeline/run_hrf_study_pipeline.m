@@ -27,6 +27,8 @@ end
 
 wholebrain_output_dir = study_opts.wholebrain_output_dir;
 reuse_wholebrain_outputs = study_opts.reuse_wholebrain_outputs;
+spm_files = local_normalize_spm_files(study_opts.spm_files, n);
+spm_runs = local_normalize_spm_runs(study_opts.spm_runs, n);
 
 if study_opts.use_parallel_subjects
     if isempty(gcp('nocreate'))
@@ -34,12 +36,12 @@ if study_opts.use_parallel_subjects
     end
     parfor i = 1:n
         [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, run_labels{i}, ...
-            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
+            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs, spm_files{i}, spm_runs(i));
     end
 else
     for i = 1:n
         [results{i}, errors{i}] = local_run_one(fmri_files{i}, events_files{i}, subject_ids{i}, run_labels{i}, ...
-            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs);
+            pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs, spm_files{i}, spm_runs(i));
     end
 end
 
@@ -81,7 +83,8 @@ end
 
 function [opts, pipeline_args] = local_parse_study_options(varargin)
 opts = struct('use_parallel_subjects', false, 'continue_on_error', true, ...
-    'wholebrain_output_dir', '', 'reuse_wholebrain_outputs', false, 'run_labels', {{}});
+    'wholebrain_output_dir', '', 'reuse_wholebrain_outputs', false, 'run_labels', {{}}, ...
+    'spm_files', {{}}, 'spm_runs', []);
 pipeline_args = varargin;
 i = 1;
 while i <= numel(pipeline_args)
@@ -108,13 +111,53 @@ while i <= numel(pipeline_args)
                 opts.run_labels = cellstr(string(pipeline_args{i + 1}));
                 pipeline_args(i:i+1) = [];
                 continue
+            case {'spmfiles', 'wholebrainspmfiles'}
+                % Per-subject estimated SPM.mat paths for exact Tier B g*K*W.
+                opts.spm_files = pipeline_args{i + 1};
+                pipeline_args(i:i+1) = [];
+                continue
+            case {'spmruns', 'wholebrainspmruns'}
+                opts.spm_runs = pipeline_args{i + 1};
+                pipeline_args(i:i+1) = [];
+                continue
         end
     end
     i = i + 1;
 end
 end
 
-function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, run_label, pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs)
+function spm_files = local_normalize_spm_files(spm_files, n)
+% Normalize the per-subject SPM input to an n-element cellstr ('' = none).
+if isempty(spm_files)
+    spm_files = repmat({''}, 1, n);
+    return
+end
+if ischar(spm_files) || isstring(spm_files)
+    spm_files = cellstr(string(spm_files));
+end
+if isscalar(spm_files)
+    spm_files = repmat(spm_files(:)', 1, n);
+end
+spm_files = cellfun(@(x) char(string(x)), spm_files, 'UniformOutput', false);
+if numel(spm_files) ~= n
+    error('SPMFiles must be empty, scalar, or contain one entry per fMRI file (got %d, need %d).', numel(spm_files), n);
+end
+spm_files = reshape(spm_files, 1, n);
+end
+
+function spm_runs = local_normalize_spm_runs(spm_runs, n)
+if isempty(spm_runs)
+    spm_runs = ones(1, n);
+elseif isscalar(spm_runs)
+    spm_runs = repmat(spm_runs, 1, n);
+end
+if numel(spm_runs) ~= n
+    error('SPMRuns must be empty, scalar, or contain one value per fMRI file.');
+end
+spm_runs = reshape(spm_runs, 1, n);
+end
+
+function [result, err_msg] = local_run_one(fmri_file, events_file, subject_id, run_label, pipeline_args, wholebrain_output_dir, reuse_wholebrain_outputs, spm_file, spm_run)
 result = [];
 err_msg = '';
 try
@@ -125,6 +168,9 @@ try
     end
     if reuse_wholebrain_outputs
         args = [args, {'ReuseWholeBrainOutput', true}];
+    end
+    if nargin >= 9 && ~isempty(spm_file)
+        args = [args, {'WholeBrainSPM', spm_file, 'WholeBrainSPMRun', spm_run}];
     end
     result = run_hrf_pipeline(fmri_file, events_file, args{:});
 catch ME

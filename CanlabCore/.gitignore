@@ -1,1 +1,5 @@
 .DS_Store
+
+# Large RSA sample dataset (158 MB) -- exceeds GitHub's 100 MB limit.
+# Kept locally for the RSA_tools examples; host externally if it must be shared.
+/bmrk3_6levels_pain_dataset.mat

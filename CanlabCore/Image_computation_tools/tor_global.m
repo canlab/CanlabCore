@@ -39,16 +39,10 @@ function [g, gslice, stdslice, s] = tor_global(P, varargin)
     
     switch spm('Ver')
         case 'SPM2'
-            % spm_defaults is a script
+            % SPM2: spm_defaults is a script, not callable here
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
-
-        case {'SPM5', 'SPM8', 'SPM12'}
-            % spm_defaults is a function
-            spm_defaults()
-
         otherwise
-            % unknown SPM
-            disp('Unknown version of SPM!');
+            % SPM5+, including any future versions
             spm_defaults()
     end
 

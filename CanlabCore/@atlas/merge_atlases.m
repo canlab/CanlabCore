@@ -1,22 +1,57 @@
 function atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, varargin)
-% Add all or some regions from an atlas object to another atlas object (with/without replacing existing labeled voxels)
+% merge_atlases Add regions from one atlas object to another, with options to replace voxels.
 %
-%  atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, [optional arguments])
+% The first input atlas_obj defines the space and voxel size. By default,
+% values in atlas_obj_to_add are added to the probability maps, if
+% available, and the highest-probability region determines the voxel
+% label. If probability maps are missing, the default is to replace
+% labels in atlas_obj with the ones from the to-be-added atlas. The
+% 'noreplace' option zeroes out values in the to-add atlas where they
+% are already in the original atlas, privileging the atlas entered first.
 %
-% - First input atlas_obj defines space and voxel size
-% - By default, values in atlas_obj_to_add are added to probability maps, if available,
-%   and highest-probability region determines voxel label.  If probability maps are missing,
-%   default is to replace labels in atlas_obj with the ones from the
-%   to-be-added atlas.  The 'noreplace' option zeroes out the values in the to-add atlas if they are already
-%   in the original atlas, privileging the atlas entered first.
+% :Usage:
+% ::
 %
+%     atlas_obj = merge_atlases(atlas_obj, atlas_obj_to_add, [optional arguments])
 %
-% Optional arguments:
-% Inputs to select_atlas_subset, e.g., vector of region numbers or cell array of region names
-%  e.g., [1 3], {'VPL' 'IFG'}
+% :Inputs:
 %
-% 'noreplace' : Do not replace voxels in original atlas; see above.
-% 'always_replace' : always replace voxels in original atlas; see above.
+%   **atlas_obj:**
+%        Atlas-class object that defines the space and voxel size of
+%        the result.
+%
+%   **atlas_obj_to_add:**
+%        Atlas-class object whose regions will be added to atlas_obj.
+%        It will be resampled to atlas_obj's space if necessary.
+%
+% :Optional Inputs:
+%
+%   **Inputs to select_atlas_subset:**
+%        e.g., a vector of region numbers ([1 3]) or a cell array of
+%        region names ({'VPL' 'IFG'}). Used to subset
+%        atlas_obj_to_add before merging.
+%
+%   **'noreplace':**
+%        Do not replace voxels already in the original atlas; the
+%        original atlas takes precedence.
+%
+%   **'always_replace':**
+%        Always replace voxels in the original atlas with values from
+%        the to-be-added atlas.
+%
+%   **'noverbose':**
+%        Suppress progress messages.
+%
+% :Outputs:
+%
+%   **atlas_obj:**
+%        The combined atlas-class object.
+%
+% :See also:
+%   - select_atlas_subset
+%   - probability_maps_to_region_index
+%   - resample_space
+%   - horzcat
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS

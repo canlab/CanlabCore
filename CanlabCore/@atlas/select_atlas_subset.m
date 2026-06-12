@@ -1,96 +1,132 @@
 function [obj_subset, to_extract] = select_atlas_subset(obj, varargin)
-% Select a subset of regions in an atlas by name or integer code, with or without collapsing regions together
+% select_atlas_subset Select a subset of regions in an atlas by name or integer code.
 %
-% Note, some atlases are probablistic, and this may result in counterintuitive bheavior. If visualizing
-% a probablistic atlas you only see p(region) > p(other region), a winner takes all parcellation scheme where
-% a voxel is labeled as belonging to a region only if the probability is greater than the probability of
-% it belonging to any other region. However, when you extract such a region you additionally get voxels
-% with non-zero probability of belonging to said region even if other region labels are more probable.
-% Consequently the extracted region boundaries will EXCEED those of the region you might have seen
-% when visualizing the complete atlas, which can be confusing. Intelligent use of the probabilistic 
-% labels is ideal, but if you prefer a more intuitive (albeit misleading) solution you should use the
-% 'deterministic' option'
+% Select regions either by passing a cell array of strings to match
+% against label fields, by passing a vector of integer region indices, or
+% both. Optionally collapse the subset into a single mask region.
 %
-% Select a subset of regions in an atlas using:
-% - a cell array of one or more strings to search for in labels
-% - a vector of one or more integers indexing regions
+% Note: some atlases are probabilistic, which may produce
+% counterintuitive behavior. When visualizing a probabilistic atlas, a
+% winner-takes-all parcellation is typically displayed (a voxel is
+% labeled with a region only if its probability there exceeds the
+% probability for any other region). However, when extracting such a
+% region you additionally get voxels with non-zero probability of
+% belonging to said region even if other region labels are more probable.
+% Consequently the extracted region boundaries will EXCEED those of the
+% region you might have seen when visualizing the complete atlas, which
+% can be confusing. Intelligent use of the probabilistic labels is
+% ideal, but if you prefer a more intuitive (albeit misleading) solution
+% you should use the 'deterministic' option.
 %
-% Output:
-%       a new object, obj_subset
-%       to_extract, a logical vector indicating which regions were selected
+% :Usage:
+% ::
 %
-% obj_subset = select_atlas_subset(obj, varargin)
+%     [obj_subset, to_extract] = select_atlas_subset(obj, [optional inputs])
 %
-% Options:
-% 'flatten' : Flatten integer vector in .dat to a single 1/0 mask. Good for
-% creating masks from combinations of regions, or adding a set to another
-% atlas as a single atlas region. .probability_maps is reestimated as
-% posterior probability of union of constituent regions under conditional 
-% independence assumption. If probability maps don't sum to 1 across voxels
-% then conditional independence assumption is violated and we default to
-% using the maximum probability instead.
+% :Inputs:
 %
-% 'conditionally_ind' : If specified then 'flatten' assumes conditional
-% independence even when probabilities don't sum to 1. Does nothing
-% otherwise.
+%   **obj:**
+%        An atlas-class object.
 %
-% 'labels_2' : If you enter any field name in the object, e.g., labels_2,
-% the function will search for keyword matches here instead of in obj.labels.
+% :Optional Inputs:
 %
-% 'exact' : If you enter 'exact', function will not look for overlaps in
-% names, and only look for exact string matches.
+%   **strings cell:**
+%        A cell array of one or more strings to search for in the label
+%        field (default: obj.labels).
 %
-% 'regexp' : If you enter 'doregexp', function will treat your string as a
-% regular expression.
+%   **integer vector:**
+%        A vector of one or more integers indexing regions to select.
 %
-% 'deterministic' or 'mostprob' : returns a labeled voxel iff p(region) > argmax(p(other region)).
-% Has no effect unless atlas has its probability_maps property populated,
-% in which case the default behavior is to return all voxels with 
-% p(region) > 0. Note: you probably want to apply a threshold operation too
-% to remove low probability tissue boundary regions.
+%   **'flatten':**
+%        Flatten integer vector in .dat to a single 1/0 mask. Good for
+%        creating masks from combinations of regions, or adding a set to
+%        another atlas as a single atlas region. .probability_maps is
+%        reestimated as the posterior probability of the union of
+%        constituent regions under a conditional independence assumption.
+%        If probability maps do not sum to 1 across voxels then the
+%        conditional independence assumption is violated and the
+%        function defaults to using the maximum probability instead.
 %
-% Examples:
-% 
-% atlasfile = which('Morel_thalamus_atlas_object.mat');
-% load(atlasfile)
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, [1 3]);
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, [1 3], {'VPL'});
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'VPL'});             % Sensory VPL thalamus, when using morel atlas
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'VPL' 'VPM' 'VPI'}); % Sensory thalamus, both lat and medial
+%   **'conditionally_ind':**
+%        If specified, then 'flatten' assumes conditional independence
+%        even when probabilities do not sum to 1. Does nothing otherwise.
 %
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Hb'});              % Habenula
+%   **field name (e.g., 'labels_2'):**
+%        If you enter any field name in the object, e.g., labels_2, the
+%        function will search for keyword matches there instead of in
+%        obj.labels.
 %
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf'});  % Intralaminar
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Pv' 'SPf'});           % Midline group
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf' 'Pv' 'SPf'}); % Intralaminar and Midline group
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'MD'});              % Mediodorsal nuc.
+%   **'exact':**
+%        Function will not look for overlaps in names; only exact string
+%        matches will be accepted.
 %
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Pu'});              % Pulvinar
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'LGN'});             % LGN
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'MGN'});             % MGN
+%   **'regexp':**
+%        Treat your string(s) as regular expressions.
 %
-% Create a mask from a set of regions:
-% obj_subset = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf'}, 'flatten');  % Intralaminar
-% r = atlas2region(obj_subset);
-% orthviews(r)
+%   **'deterministic' or 'mostprob':**
+%        Returns a labeled voxel iff p(region) > argmax(p(other
+%        region)). Has no effect unless the atlas has its
+%        probability_maps property populated, in which case the default
+%        behavior is to return all voxels with p(region) > 0. Note: you
+%        probably want to apply a threshold operation as well to remove
+%        low-probability tissue boundary regions.
 %
-% Load a canonical atlas and select only the default mode, limbic, and brainstem regions
-% based on the .labels_2 property
-% -------------------------------------------------------
-% atlas_obj = load_atlas('canlab2018_2mm');
-% [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Cerebellum', 'Def'}, 'labels_2');
-% montage(obj_subset);
+% :Outputs:
 %
-% see also: image_vector.select_voxels_by_value
-
-% Programmers' notes:
-% Created by tor wager
-% Edited by tor, 12/2019, to use any field to select labels; and update
-% auxiliary label fields too.
+%   **obj_subset:**
+%        A new atlas-class object containing only the selected regions.
 %
-% Edited by Michael Sun, 09/04/2023, added an 'exact' flag, so that users
-% can select to match string labels exactly and not capture regions with
-% overlapping labels e.g., Cblm_Vermis_VI and Cblm_Vermis_VII.
+%   **to_extract:**
+%        Logical vector (1 x n_regions) indicating which regions in obj
+%        were selected.
+%
+% :Examples:
+% ::
+%
+%     atlasfile = which('Morel_thalamus_atlas_object.mat');
+%     load(atlasfile)
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, [1 3]);
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, [1 3], {'VPL'});
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'VPL'});             % Sensory VPL thalamus, when using morel atlas
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'VPL' 'VPM' 'VPI'}); % Sensory thalamus, both lat and medial
+%
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Hb'});              % Habenula
+%
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf'});  % Intralaminar
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Pv' 'SPf'});           % Midline group
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf' 'Pv' 'SPf'}); % Intralaminar and Midline group
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'MD'});              % Mediodorsal nuc.
+%
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Pu'});              % Pulvinar
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'LGN'});             % LGN
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'MGN'});             % MGN
+%
+%     % Create a mask from a set of regions:
+%     obj_subset = select_atlas_subset(atlas_obj, {'CL' 'CeM' 'CM' 'Pf'}, 'flatten');  % Intralaminar
+%     r = atlas2region(obj_subset);
+%     orthviews(r)
+%
+%     % Load a canonical atlas and select only the default mode, limbic,
+%     % and brainstem regions based on the .labels_2 property:
+%     atlas_obj = load_atlas('canlab2018_2mm');
+%     [obj_subset, to_extract] = select_atlas_subset(atlas_obj, {'Cerebellum', 'Def'}, 'labels_2');
+%     montage(obj_subset);
+%
+% :See also:
+%   - image_vector.select_voxels_by_value
+%   - remove_atlas_region
+%   - merge_atlases
+%
+% ..
+%    Programmers' notes:
+%    Created by Tor Wager.
+%    Edited by Tor, 12/2019, to use any field to select labels; and update
+%    auxiliary label fields too.
+%    Edited by Michael Sun, 09/04/2023, added an 'exact' flag, so that
+%    users can select to match string labels exactly and not capture
+%    regions with overlapping labels (e.g., Cblm_Vermis_VI and
+%    Cblm_Vermis_VII).
+% ..
 
 % -------------------------------------------------------------------------
 % DEFAULTS AND INPUTS

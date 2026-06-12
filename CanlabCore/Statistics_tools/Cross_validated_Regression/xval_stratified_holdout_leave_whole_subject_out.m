@@ -129,7 +129,11 @@ end
 class_labels = unique(Y);  % Unique outcome labels or values
 nclasses = length(class_labels);
 
-is_cat = length(nclasses) < 3;
+% Bug fix: was `length(nclasses) < 3`, but nclasses is a scalar so
+% length(nclasses) was always 1 — is_cat was always true regardless
+% of Y. Continuous Y then hit the class-proportions tabulate() path
+% at line 196 and failed with a shape error.
+is_cat = nclasses < 3;
 
 % Gid: group, subject-wise. Assumes all obs for a subject have same Y value
 % for stratification purposes. If they do not (e.g., Y=1 and Y=-1 for each

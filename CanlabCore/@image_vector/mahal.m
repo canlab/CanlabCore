@@ -1,8 +1,12 @@
 function [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
-% Mahalanobis distance for each image in a set compared to others in the set
+% mahal Mahalanobis distance for each image in a set compared to others in the set.
+%
 % Lower p-values reflect higher outlier status for an image.
 %
-% [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, varargin)
+% :Usage:
+% ::
+%
+%     [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj, [optional inputs])
 %
 % Mahalanobis distance, which is a measure of how different each image is from the rest of the images.
 % It's based on the squared distance across images, just like the typical least-squares solution we
@@ -28,39 +32,70 @@ function [D2, D2_expected, pval, wh_outlier_uncorr, wh_outlier_corr] = mahal(obj
 % and the relationship between the observed and expected distance. A positive deviation from the line means
 % the image is more unusual than expected.
 %
-% Optional inputs:
-% 'corr' : use correlation matrix of images instead of covariance.
-% Insensitive to differences in scale and mean of data, and thus more
-% sensitive to changes in pattern across image.
+% :Inputs:
 %
-% Outputs:
+%   **obj:**
+%        An image_vector / fmri_data object. Each column of obj.dat is
+%        treated as one observation (image) in the multivariate space.
 %
-% wh_outlier_uncorr
-%   Logical vectors of which images have mahalanobis distances with p < .05
-%   and values greater than the median
+% :Optional Inputs:
 %
-% wh_outlier_corr
-%   Logical vectors of which images have mahalanobis distances with p < .05
-%   corrected (Bonferroni), and values greater than the median
+%   **'corr':**
+%        use correlation matrix of images instead of covariance.
+%        Insensitive to differences in scale and mean of data, and thus more
+%        sensitive to changes in pattern across image.
 %
-% Examples:
-% ----------------------------------------------------------------------
-% [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot');
+%   **'noplot':**
+%        Suppress the diagnostic plot of observed vs. expected
+%        Mahalanobis distances.
 %
-% Y = ds - expectedds;
-% wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+%   **'noverbose':**
+%        Suppress verbose console output.
 %
-% plot(Y);
-% plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
+% :Outputs:
 %
-% Tor Wager
+%   **D2:**
+%        Vector of Mahalanobis distances (one per image).
 %
+%   **D2_expected:**
+%        Expected D2 values under the null distribution.
 %
-
-% Programmers' notes: tor - 4/6/2018, changed num of components retained to
-% avoid empty components, evaluated as better performance against cov
-% plots. Also added 'corr' mode to work on correlation rather than cov
-% matrix [optional]
+%   **pval:**
+%        p-values for each image's Mahalanobis distance.
+%
+%   **wh_outlier_uncorr:**
+%        Logical vectors of which images have mahalanobis distances with p < .05
+%        and values greater than the median
+%
+%   **wh_outlier_corr:**
+%        Logical vectors of which images have mahalanobis distances with p < .05
+%        corrected (Bonferroni), and values greater than the median
+%
+% :Examples:
+% ::
+%
+%    [ds, expectedds, p, wh_outlier_uncorr, wh_outlier_corr] = mahal(fmridat, 'noplot');
+%
+%    Y = ds - expectedds;
+%    wh = p < (.05 ./ length(p));  % Outliers after Bonferroni correction
+%
+%    plot(Y);
+%    plot(find(wh), Y(wh), 'ro', 'MarkerSize', 6);
+%
+% :See also:
+%   - multivar_dist
+%   - pca
+%   - qc_metrics_second_level
+%
+% ..
+%    Tor Wager
+%
+%    Programmers' notes:
+%    tor - 4/6/2018, changed num of components retained to avoid empty
+%    components, evaluated as better performance against cov plots. Also
+%    added 'corr' mode to work on correlation rather than cov matrix
+%    [optional]
+% ..
 
 doplot = true;
 doverbose = true;

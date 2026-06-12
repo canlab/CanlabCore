@@ -67,7 +67,10 @@ function scnlab_pca_denoise_session(image_names, basename, nuisX, designX, varar
     compscore = compscore(:,1:k);
 
     fprintf('Writing pca_spatial%s 4-D images.\n', img_ext);
-    if ~strcmpi(spm('Ver'), 'spm5'), disp('Warning! Unless you use SPM5 or above, all components will not be saved/viewable.'); end
+    % Warn only on legacy SPM2/SPM99; SPM5+ all support saving components.
+    if any(strcmpi(spm('Ver'), {'spm2', 'spm99'}))
+        disp('Warning! Unless you use SPM5 or above, all components will not be saved/viewable.');
+    end
 
     % reconstruction and writing of spatial maps
     iimg_reconstruct_vols(eigvec, maskInfo, 'outname', [basename '_pca_spatial' img_ext]);

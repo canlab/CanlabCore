@@ -1,19 +1,58 @@
 function [dat, tbl] = assign_vals(atl, varargin)
-% ASSIGN_VALS Assigns numeric values to atlas regions and creates an fmri_data object.
+% assign_vals Assign numeric values to atlas regions and create an fmri_data object.
 %
-%   [dat, tbl] = assignvals2atlas(atl, 'reg_names', reg_names, 'vals', vals, 'sort', true)
+% Take an atlas object and a vector of values associated with named
+% regions, and produce an fmri_data object whose voxel values are the
+% assigned region value, plus a table mapping each region name to its
+% assigned value. Region names are matched against the atlas region
+% shorttitles (as produced by atlas2region).
 %
-%   Inputs:
-%     atl        - An atlas structure (with fields like .labels, .data)
-%     reg_names  - Cell array of region names (must match atlas region shorttitles)
-%     vals       - Numeric values (same length as reg_names)
-%     sort       - (Optional) Logical flag to sort output table by value (default = true)
+% :Usage:
+% ::
 %
-%   Outputs:
-%     dat        - fmri_data object with assigned region values
-%     tbl        - Table of regions and assigned values
+%     [dat, tbl] = assign_vals(atl, 'reg_names', reg_names, 'vals', vals, 'sort', true)
 %
-% Author: Michael Sun, Ph.D. 4/23/2025
+% :Inputs:
+%
+%   **atl:**
+%        An atlas-class object (with fields .labels, .dat, etc.).
+%
+% :Optional Inputs:
+%
+%   **'reg_names':**
+%        Cell array (or string array) of region names to assign values to.
+%        Names must match atlas region shorttitles. Default: atl.labels.
+%
+%   **'vals':**
+%        Numeric vector of values to assign, the same length as reg_names.
+%        Default: zeros(numel(atl.labels), 1).
+%
+%   **'sort':**
+%        Logical flag to sort output table by value in descending order.
+%        Default: true.
+%
+% :Outputs:
+%
+%   **dat:**
+%        fmri_data object with each region's voxel values set to the
+%        assigned value.
+%
+%   **tbl:**
+%        MATLAB table of region shorttitles and assigned values.
+%
+% :Examples:
+% ::
+%
+%     [dat, tbl] = assign_vals(atl, 'reg_names', {'Reg1' 'Reg2'}, ...
+%                              'vals', [1 2], 'sort', true);
+%
+% :See also:
+%   - atlas2region
+%   - region2fmri_data
+%
+% ..
+%    Author: Michael Sun, Ph.D. 4/23/2025
+% ..
 
     % Parse optional inputs
     parser = inputParser;

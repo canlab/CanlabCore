@@ -1,25 +1,50 @@
 function [image_by_feature_correlations, top_feature_tables]=neurosynth_lexical_plot(fmri_data)
-    % NEUROSYNTH_LEXICAL_PLOT Plots the correlations between fMRI data and lexical features.
+    % neurosynth_lexical_plot Plot correlations between fmri_data images and Neurosynth lexical features.
     %
-    % This function takes fMRI data and calculates the correlation between
-    % the data and lexical features using the Neurosynth toolbox. It then
-    % creates plots to visualize these correlations.
+    % :Usage:
+    % ::
     %
-    % USAGE:
-    %   [image_by_feature_correlations, top_feature_tables] = neurosynth_lexical_plot(fmri_data, varargin)
+    %     [image_by_feature_correlations, top_feature_tables] = ...
+    %         neurosynth_lexical_plot(fmri_data)
     %
-    % INPUTS:
-    %   fmri_data : fMRI data to be analyzed.
+    % Takes fMRI data and calculates the correlation between the data and
+    % lexical features using the Neurosynth toolbox (via
+    % neurosynth_feature_labels), then creates a horizontal bar plot
+    % to visualize the strongest positive and negative associations.
     %
-    % OUTPUTS:
-    %   image_by_feature_correlations : Correlations between images and features.
-    %   top_feature_tables            : Tables containing the top features and their scores.
+    % :Inputs:
     %
-    % EXAMPLES:
-    %   [correlations, tables] = neurosynth_lexical_plot(fmri_data);
+    %   **fmri_data:**
+    %        An fmri_data object containing the image(s) to annotate
+    %        against the Neurosynth lexicon. Treated as a set of
+    %        replicates; each is correlated with each feature map.
     %
-    % Authors: Michael Sun, Ph.D. 
-    % Date: 05/30/2024
+    % :Outputs:
+    %
+    %   **image_by_feature_correlations:**
+    %        Matrix of correlations between images and Neurosynth
+    %        features (as returned by neurosynth_feature_labels).
+    %
+    %   **top_feature_tables:**
+    %        Cell array of tables containing the top features (high and
+    %        low correlations) and their t-scores per image.
+    %
+    % :Examples:
+    % ::
+    %
+    %     [correlations, tables] = neurosynth_lexical_plot(fmri_obj);
+    %
+    % :See also:
+    %   - neurosynth_feature_labels (feature correlation back-end)
+    %   - annotate_continuous_neuroimage_maps
+    %
+    % ..
+    %    Authors: Michael Sun, Ph.D.
+    %    Date:    05/30/2024
+    %
+    %    Future: Add a 'between' option for separate image analysis
+    %    instead of the replicates default.
+    % ..
 
 
     % Future: Add a between option for separate image analysis instead of

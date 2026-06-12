@@ -1,12 +1,23 @@
 function cl = orthviews(image_obj, varargin)
-% Orthviews display (SPM) for CANlab image_vector (or fmri_data, statistic_image) object
+% orthviews Display SPM orthviews for a CANlab image_vector / fmri_data / statistic_image object.
 %
-% *Usage:
+% Renders one or more images from a CANlab image_vector-derived object in
+% SPM orthviews, with options for posneg coloring, unique-color parcel
+% display, continuous color mapping, custom underlays, and adding to
+% existing orthviews windows.
+%
+% :Usage:
 % ::
 %
-%    orthviews(image_obj, varargin)
+%    cl = orthviews(image_obj, [optional inputs])
+%
+% :Inputs:
+%
+%   **image_obj:**
+%        An image_vector, fmri_data, statistic_image, or atlas object.
 %
 % :Optional Inputs:
+%
 %   **'posneg':**
 %        input generates orthviews using solid colors, separated for positive- and negative-valued voxels.
 %
@@ -46,6 +57,26 @@ function cl = orthviews(image_obj, varargin)
 %       Followed by cell with 3-element rgb vector,
 %       e.g., 'color', {[1 0 1]}
 %       This is superseded by 'unique' and 'posneg' options.
+%
+% :Outputs:
+%
+%   **cl:**
+%        A cell array of cluster / region structures used to draw the
+%        orthviews blobs (one cell per image).
+%
+% :Examples:
+% ::
+%
+%    orthviews(dat);
+%    orthviews(dat, 'posneg');
+%    orthviews(t, 'unique');
+%    orthviews(dat, 'overlay', which('keuken_2014_enhanced_for_underlay.img'));
+%
+% :See also:
+%   - spm_orthviews
+%   - canlab_get_underlay_image
+%   - region
+%   - montage
 %
 % ..
 %    Copyright Tor Wager, 2011

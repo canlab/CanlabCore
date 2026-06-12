@@ -689,20 +689,10 @@ function cl = display_output(bayes_model, disptype, varargin)
 
 switch spm('Ver')
     case 'SPM2'
-        % spm_defaults is a script
+        % SPM2: spm_defaults is a script, not callable here
         disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
-
-    case 'SPM5'
-        % spm_defaults is a function
-        spm_defaults()
-     
-    case 'SPM8'
-        % spm_defaults is a function
-        spm_defaults()
-        
     otherwise
-        % unknown SPM
-        disp('Unknown version of SPM!');
+        % SPM5+, including any future versions
         spm_defaults()
 end
 

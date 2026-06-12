@@ -1,86 +1,257 @@
 function atlas_obj = load_atlas(atlas_file_name_or_keyword, varargin)
-% Load one of a collection of atlases by keyword
+% load_atlas Load a CANlab atlas object by keyword or filename.
 %
-% atlas_obj = load_atlas(varargin)
+% :Usage:
+% ::
 %
-% List of keywords/atlases available:
-% -------------------------------------------------------------------------
-% 'canlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
-%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
-%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
-%                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
-%                                 details. Assembled dynamically when called due to distribution restrictions of Bianciardi subatlas. Development 
-%                                 is ongoing (Date: 03/07/2024)'
-% 'opencanlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|2mm_]
-%                                 'Variation on canlab2024 that only uses regions with open usage and distribution licenses. No client side 
-%                                 assembly needed, but has fewer brainstem areas, and some have synthetic probabilities. Used as the starting
-%                                 point for dynamic assembly of canlab2024 though and the two have much in common. Defauts = {coarse,fmriprep20,2mm}
-% 'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]
-%                                 'Combined atlas from other published, whole brain. Available in a fine or coarse (default) parcellation in
-%                                 MNI152NLin2009cAsym (aka fmriprep) space (default) or MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
-%                                 resolutions. Additional parcellations available with downsample_parcellation(). Refer to github README for 
-%                                 details. Development is frozen, so it may be more stable than CANLab2024 (Date: 3/07/2024)'
-% 'canlab2018[_2mm]'              'Combined atlas from other published atlases, whole brain. (Deprecated in favor of canlab2023)' 
-% 'desikan_killiany[_fsl6|_fmriprep20]'
-%                                 'Desikan-Killiany cortical gyral/sulcal labeling from Freesurfer (2006). Gyri include pial surface and lateral banks. Default: fmriprep20'
-% 'dkt[_fsl6|_fmriprep20]         'Kline and Tourville's update to the desikan killiany atlas projected to fsl or fmriprep spaces. Default: fmriprep20'
-% 'destrieux[_fsl6|_fmriprep20]'  'Destrieux cortical gyral/sulcal labeling from Freesurfer (2009). Gyral/sulcal division is based on curvature values. Default: fmriprep20'
-% 'thalamus'                      'Thalamus_combined_atlas_object.mat'
-% 'thalamus_detail', 'morel[_fsl6|_fmriprep20]',
-%                                 'Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space (default) or MNI152NLin2009cAsym (fmriprep) space. 
-%                                 (Both in MasksPrivate)'
-% 'iglesias_thal[_fmriprep20|_fsl6]'
-%                                 'Iglesias/Freesurfer thalamic nuclear parcellation in fmriprep20 (default) or fsl6 space. A bit more coarse than morel, 
-%                                  but open license, more accurate boundaries and probablistic'
-% 'iglesias_hypothal[_fmriprep20|_fsl6]
-%                                 'Billot/Iglesias/Freesurfer hypothalamic segmentation in fmriprep20 (default) or fsl6 space.
-% 'cortex', 'glasser'
-%                                 'Glasser 2016 multimodal cortical parcellation volumetric projection using nearest neighbor interpolation from 
-%                                  surface (deprecated)'
-% 'glasser_[fmriprep20|fsl6]'     'Glasser 2016 multimodal cortical parcellation volumetric projection using registration fusion to two surface 
-%                                  templates using 2 studies (N=241/89)
-% 'basal_ganglia', 'bg'           'Basal_ganglia_combined_atlas_object.mat'
-% 'striatum', 'pauli_bg'          'Pauli2016_striatum_atlas_object.mat'
-% 'brainstem'                     'brainstem_combined_atlas_object.mat'
-% 'subcortical_rl','cit168'       'CIT168 MNI152Nlin2009cAsym subcortical atlas v1.0.0 (deprecated)'
-% 'cit168_[fmriprep20|fsl6]'      'CIT168 v1.1.0 subcortical atlas in fmriprep20 or fsl6 space'
-% 'cit168_amygdala_[fmriprep20|fsl6]
-%                                 'CIT168 v1.0.3 amygdalar nuclear parcellation in fmriprep20 or fsl6 space'
-% 'brainnetome'                   'Brainnetome_atlas_object.mat'
-% 'keuken'                        'Keuken_7T_atlas_object.mat'
-% 'buckner'                       'buckner_networks_atlas_object.mat'
-% 'cerebellum[_fsl6|_fmriprep20]', 'suit[_fsl6|_fmriprep20]'
-%                                 'Diedrichsen cerrebellar atlas in MNI152NLin6Asym space (aka fsl, default) or MNI152NLin2009cAsym space (aka fmriprep).'
-% 'shen[_fmriprep20|_fsl6]'       'Shen_atlas_object.mat, in MNIColin27v1998 space (default), MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.2.3) spaces'
-% 'schaefer400'                   *Not saved as object yet* 'Schaefer2018Cortex_atlas_regions.mat' 
-% 'yeo17networks'                 'Schaefer2018Cortex_17networks_atlas_object.mat'
-% 'insula'                        'Faillenot_insular_atlas.mat'
-% 'painpathways'                  'pain_pathways_atlas_obj.mat'
-% 'painpathways_finegrained'      'pain_pathways_atlas_obj.mat'
-% 'painpathways2024'              'pain_pathways2024_atlas_obj.mat'
-% 'painpathways2024_finegrained'  'pain_pathways2024_atlas_obj.mat'
-% 'tian_3t_[fmriprep20|fsl6]'      
-%                                 'Subcortical atlas at four different resolutions and two different reference spaces. Use atlas/get_coarser_parcellation to select low resolution versions.'
-% 'delavega'                      'delaVega2017_neurosynth_atlas_object'
-% 'julich_[fmriprep20|fsl6]'      'Histological Julich Brain atlas in fmriprep 20.2.3 LTS (default) or fsl spaces'
-% 'bianciardi[_fmriprep20|_fsl6][_2mm]   
-%                                 'Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space (default) or fsl spaces at 1mm (default) or 2mm sampling resolution'
-% 'cartmell_NAc[_fmriprep20|_fsl6] 'NAc Core/Shell probablistic atlas'
-% 'harvard_aan[_fmriprep20|_fsl6] 'Harvard ascending arousal network atlas version 2.0. A generalization of the reticular activating system to various other brainstem nuclei besides the 
-%                                   midbrain reticular formation. Based on histology, immunihistochemistry, and DWI tractography.'
-% 'limbic_brainstem_atlas[_fmriprep20|fsl_6]
-%                                 'Levinson Bari Limbic Brainstem Atlas. Includes VTA, dorsal raphe, locus coereleus, nucleus tractus solitaris and PAG. Probablistic with an open usage license.'
+%     atlas_obj = load_atlas(atlas_file_name_or_keyword, [optional inputs])
 %
-% More information and references to original publications are saved in
-% each atlas object. This function is a shell to collect them in a central registry.
-% New atlases can be created by passing a file name (e.g., .nii file) or an fmri_data object
-% and labels into the atlas( ) constructor method.
+% This function is a central registry that resolves a keyword (e.g.,
+% 'canlab2024', 'thalamus', 'glasser_fsl6') to a saved
+% atlas-class object on the MATLAB path and returns it. If a string
+% that is not a recognized keyword is passed, it is treated as a filename
+% and resolved with which(). More information and references to the
+% original publications are stored inside each atlas object.
 %
-% Examples:
-% -------------------------------------------------------------------------
-% atlas_obj = load_atlas('thalamus');
-% atlas_obj = load_atlas('Thalamus_atlas_combined_Morel.mat');morel
+% Some atlases are dynamically assembled the first time they are loaded
+% (e.g., canlab2023, canlab2024, bianciardi); subsequent calls reload
+% the cached .mat file and rebuild only when an updated build is
+% available. New atlases can be created by passing a file name (e.g., a
+% .nii file) or an fmri_data object together with a list of labels
+% into the atlas() constructor method.
 %
+% :Inputs:
+%
+%   **atlas_file_name_or_keyword:**
+%        A character/string keyword (see :Available Keywords: below)
+%        identifying a registered atlas, or a filename for a saved
+%        atlas object. Keywords are matched case-insensitively.
+%        Unrecognized strings are passed to which() and treated as
+%        filenames.
+%
+% :Optional Inputs:
+%
+%   **'verbose':**
+%        Print progress messages while loading. Default: on.
+%
+%   **'noverbose':**
+%        Suppress progress messages.
+%
+% :Outputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object containing the requested parcellation
+%        with .dat (region indices), .probability_maps,
+%        .labels, .label_descriptions, and .references
+%        populated. Returns [] if the requested file cannot be
+%        located on the MATLAB path.
+%
+% :Available Keywords:
+%
+%   The list below maps each keyword (or family of keywords with optional
+%   suffixes in square brackets) to the underlying atlas it loads.
+%   Suffixes _fmriprep20 / _fsl6 select the reference space
+%   (MNI152NLin2009cAsym vs. MNI152NLin6Asym); _1mm / _2mm select
+%   sampling resolution; _fine / _coarse select parcellation
+%   granularity, where applicable. Defaults are noted per atlas.
+%
+%   ::
+%
+%     'canlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]'
+%         Combined atlas from other published, whole-brain atlases.
+%         Available in a fine or coarse (default) parcellation in
+%         MNI152NLin2009cAsym (aka fmriprep) space (default) or
+%         MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%         resolutions. Additional parcellations available with
+%         downsample_parcellation(). Refer to github README for details.
+%         Assembled dynamically when called due to distribution
+%         restrictions of Bianciardi subatlas. Development is ongoing
+%         (Date: 03/07/2024).
+%
+%     'opencanlab2024[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]'
+%         Variation on canlab2024 that only uses regions with open usage
+%         and distribution licenses. No client-side assembly needed, but
+%         has fewer brainstem areas, and some have synthetic
+%         probabilities. Used as the starting point for dynamic assembly
+%         of canlab2024 though and the two have much in common. Defaults
+%         = {coarse, fmriprep20, 2mm}.
+%
+%     'canlab2023[_fine|_coarse][_fmriprep20|_fsl6][_1mm|_2mm]'
+%         Combined atlas from other published, whole-brain atlases.
+%         Available in a fine or coarse (default) parcellation in
+%         MNI152NLin2009cAsym (aka fmriprep) space (default) or
+%         MNI152NLin6Asym (aka fsl) space in 1mm or 2mm (default)
+%         resolutions. Additional parcellations available with
+%         downsample_parcellation(). Refer to github README for details.
+%         Development is frozen, so it may be more stable than
+%         CANLab2024 (Date: 3/07/2024).
+%
+%     'canlab2018[_2mm]'
+%         Combined atlas from other published atlases, whole brain.
+%         (Deprecated in favor of canlab2023.)
+%
+%     'desikan_killiany[_fsl6|_fmriprep20]'
+%         Desikan-Killiany cortical gyral/sulcal labeling from
+%         Freesurfer (2006). Gyri include pial surface and lateral
+%         banks. Default: fmriprep20.
+%
+%     'dkt[_fsl6|_fmriprep20]'
+%         Kline and Tourville's update to the Desikan-Killiany atlas
+%         projected to fsl or fmriprep spaces. Default: fmriprep20.
+%
+%     'destrieux[_fsl6|_fmriprep20]'
+%         Destrieux cortical gyral/sulcal labeling from Freesurfer
+%         (2009). Gyral/sulcal division is based on curvature values.
+%         Default: fmriprep20.
+%
+%     'thalamus'
+%         Thalamus_combined_atlas_object.mat.
+%
+%     'thalamus_detail', 'morel[_fsl6|_fmriprep20]'
+%         Morel_thalamus_atlas_object.mat in MNI152NLin6Asym (fsl) space
+%         (default) or MNI152NLin2009cAsym (fmriprep) space. (Both in
+%         MasksPrivate.)
+%
+%     'iglesias_thal[_fmriprep20|_fsl6]'
+%         Iglesias/Freesurfer thalamic nuclear parcellation in
+%         fmriprep20 (default) or fsl6 space. A bit more coarse than
+%         morel, but open license, more accurate boundaries and
+%         probabilistic.
+%
+%     'iglesias_hypothal[_fmriprep20|_fsl6]'
+%         Billot/Iglesias/Freesurfer hypothalamic segmentation in
+%         fmriprep20 (default) or fsl6 space.
+%
+%     'cortex', 'glasser'
+%         Glasser 2016 multimodal cortical parcellation volumetric
+%         projection using nearest neighbor interpolation from surface
+%         (deprecated).
+%
+%     'glasser_[fmriprep20|fsl6]'
+%         Glasser 2016 multimodal cortical parcellation volumetric
+%         projection using registration fusion to two surface templates
+%         using 2 studies (N=241/89).
+%
+%     'basal_ganglia', 'bg'
+%         Basal_ganglia_combined_atlas_object.mat.
+%
+%     'striatum', 'pauli_bg'
+%         Pauli2016_striatum_atlas_object.mat.
+%
+%     'brainstem'
+%         brainstem_combined_atlas_object.mat.
+%
+%     'subcortical_rl', 'cit168'
+%         CIT168 MNI152Nlin2009cAsym subcortical atlas v1.0.0
+%         (deprecated).
+%
+%     'cit168_[fmriprep20|fsl6]'
+%         CIT168 v1.1.0 subcortical atlas in fmriprep20 or fsl6 space.
+%
+%     'cit168_amygdala_[fmriprep20|fsl6]'
+%         CIT168 v1.0.3 amygdalar nuclear parcellation in fmriprep20 or
+%         fsl6 space.
+%
+%     'brainnetome'
+%         Brainnetome_atlas_object.mat.
+%
+%     'keuken'
+%         Keuken_7T_atlas_object.mat.
+%
+%     'buckner'
+%         buckner_networks_atlas_object.mat.
+%
+%     'cerebellum[_fsl6|_fmriprep20]', 'suit[_fsl6|_fmriprep20]'
+%         Diedrichsen cerebellar atlas in MNI152NLin6Asym space (aka
+%         fsl, default) or MNI152NLin2009cAsym space (aka fmriprep).
+%
+%     'shen[_fmriprep20|_fsl6]'
+%         Shen_atlas_object.mat, in MNIColin27v1998 space (default),
+%         MNI152NLin6Asym (fsl) and MNI152NLin2009cAsym (fmriprep 20.2.3)
+%         spaces.
+%
+%     'schaefer400'
+%         *Not saved as object yet.* Schaefer2018Cortex_atlas_regions.mat.
+%
+%     'yeo17networks'
+%         Schaefer2018Cortex_17networks_atlas_object.mat.
+%
+%     'insula'
+%         Faillenot_insular_atlas.mat.
+%
+%     'painpathways'
+%         pain_pathways_atlas_obj.mat.
+%
+%     'painpathways_finegrained'
+%         pain_pathways_atlas_obj.mat (fine-grained variant).
+%
+%     'painpathways2024'
+%         pain_pathways2024_atlas_obj.mat.
+%
+%     'painpathways2024_finegrained'
+%         pain_pathways2024_atlas_obj.mat (fine-grained variant).
+%
+%     'tian_3t_[fmriprep20|fsl6]'
+%         Subcortical atlas at four different resolutions and two
+%         different reference spaces. Use atlas/get_coarser_parcellation
+%         to select low-resolution versions.
+%
+%     'delavega'
+%         delaVega2017_neurosynth_atlas_object.
+%
+%     'julich_[fmriprep20|fsl6]'
+%         Histological Julich Brain atlas in fmriprep 20.2.3 LTS
+%         (default) or fsl spaces.
+%
+%     'bianciardi[_fmriprep20|_fsl6][_2mm]'
+%         Bianciardi brainstem atlas in fmriprep 20.2.3 LTS space
+%         (default) or fsl spaces at 1mm (default) or 2mm sampling
+%         resolution.
+%
+%     'cartmell_NAc[_fmriprep20|_fsl6]'
+%         NAc Core/Shell probabilistic atlas.
+%
+%     'harvard_aan[_fmriprep20|_fsl6]'
+%         Harvard ascending arousal network atlas version 2.0. A
+%         generalization of the reticular activating system to various
+%         other brainstem nuclei besides the midbrain reticular
+%         formation. Based on histology, immunohistochemistry, and DWI
+%         tractography.
+%
+%     'limbic_brainstem_atlas[_fmriprep20|_fsl6]'
+%         Levinson Bari Limbic Brainstem Atlas. Includes VTA, dorsal
+%         raphe, locus coeruleus, nucleus tractus solitarius, and PAG.
+%         Probabilistic with an open usage license.
+%
+% :Examples:
+% ::
+%
+%     % Load a registered atlas by keyword
+%     atlas_obj = load_atlas('thalamus');
+%
+%     % Load by filename (passed through which())
+%     atlas_obj = load_atlas('Thalamus_atlas_combined_Morel.mat');
+%
+%     % Load the default canlab2024 (coarse, fmriprep20, 2mm)
+%     atlas_obj = load_atlas('canlab2024');
+%
+%     % Load a specific variant explicitly, suppressing progress messages
+%     atlas_obj = load_atlas('glasser_fsl6', 'noverbose');
+%
+% :See also:
+%   - atlas (constructor for the returned object class)
+%   - load_image_set (analogous keyword-based loader for fmri_data)
+%   - downsample_parcellation
+%
+% ..
+%    Programmers' notes:
+%    Most atlases are stored as `atlas`-class .mat files distributed via
+%    the canlab/Neuroimaging_Pattern_Masks repo. A handful are assembled
+%    on demand via creation scripts (create_CANLab2023_atlas,
+%    create_CANLab2024_atlas, bianciardi_create_atlas_obj); for those,
+%    the loader compares a stored hash to a `.latest` sentinel and
+%    rebuilds when the cached object is out of date.
+% ..
 %
 
 docustom = 0;

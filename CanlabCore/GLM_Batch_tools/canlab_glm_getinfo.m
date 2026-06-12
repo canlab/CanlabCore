@@ -1,79 +1,123 @@
 function [infos] = canlab_glm_getinfo(modeldir,varargin)
-% :SUBJECT LEVEL input:
+% canlab_glm_getinfo Inspect an SPM subject-level or robfit group-level GLM analysis directory.
+%
+% :Usage:
 % ::
 %
-%    INFO = canlab_glm_getinfo(spm_subject_level_directory, option, [n])
+%     % SUBJECT-LEVEL form
+%     INFO = canlab_glm_getinfo(spm_subject_level_directory, option, [n])
 %
-% Get information out of an spm subject level analysis.
+%     % GROUP-LEVEL form
+%     INFO = canlab_glm_getinfo(robfit_group_level_directory, option, [n])
 %
-% :Options: (each option can be called by the listed letter or word + a number, when noted)
+% Get information out of an SPM subject-level or robfit group-level
+% analysis directory and (for some options) return it in an INFO
+% struct. The function dispatches based on what is found in
+% modeldir: an SPM.mat triggers subject-level mode; one or more
+% robust####/SETUP.mat files trigger group-level mode.
 %
-%   **i' 'input':**
-%        number of volumes and (first) volume name for each run
+% Each option can be called by the listed letter or word, and may be
+% suffixed by an integer n to restrict the output to a particular
+% session, contrast, or input.
 %
-%   **'b' 'betas' [n]:**
-%        beta names (for nth session)     
-%
-%   **'B' 'taskbetas' [n]:**
-%        beta names (that didn't come from multiple regressors)  (for nth session)
-%
-%   **'c' 'cons' [n]:**
-%        contrast names (for nth contrast)
-%
-%   **'C' 'conw' [n]:**
-%        beta names and weights for contrasts (for nth con)
-%
-%   **'v' 'image' [n]:**
-%        create figure of design matrix (for nth session)
-%                            (design matrix is multiplied by 100 for visibility)
-%                            (works well for multiple runs)
-%
-%   **'V' 'taskimage' [n]:**
-%        same as 'image', but only for task betas
-%
-%   **'imagesc':**
-%        same as 'image', but uses imagesc
-%                            (works well for single runs)
-%
-%
-% :GROUP LEVEL input:
-% ::
-%
-%    INFO = canlab_glm_getinfo(robfit_group_level_directory, option, [n])
-%
-% Get information out of a robfit group level analysis.
-%
-% :Options: (each option can be called by the listed word or letter + a number, when noted)
-%
-%   Any of the subject level options can be used on a group level robfit
-%   analysis by prefixing '1i' (output is generated based on the first input
-%   to the first robust analysis).
-%
-%   Ex:
-%   ::
-%
-%      canlab_glm_getinfo('second_level/model3','1iconw')
-%
-%
-%   **'i' 'input' [n]:**
-%        input contrasts by number and name (for nth analysis)
-%
-%   **'I' 'allinput' [n]:**
-%        input images (for nth analysis)
-%
-%   **'m' 'model':**
-%        weights by subject (i.e., directory containing input contrast images)
-%
-%   **'M' 'allmodels' [n]:**
-%        weights and input images (for nth analysis)
+% Any of the subject-level options can be used on a group-level robfit
+% analysis by prefixing '1i' (output is then generated based on the
+% first input to the first robust analysis).
 %
 % :Assumptions:
-%    In some options, the first contrasts and group level analysis
-%    directories are assumed to represent the rest, which may not be the
-%    case.
+%    In some options, the first contrasts and group-level analysis
+%    directories are assumed to represent the rest, which may not be
+%    the case.
 %
 % :Note:
-%    group level options do not yet return a usable INFO struct.
+%    Group-level options do not yet return a usable INFO struct.
+%
+% :Inputs:
+%
+%   **modeldir:**
+%        Path to a directory containing either an SPM.mat (for
+%        subject-level analyses) or one or more robust####
+%        subdirectories with SETUP.mat (for robfit group-level
+%        analyses).
+%
+%   **option:**
+%        Character/string keyword selecting what to extract. See
+%        :Optional Inputs: below.
+%
+%   **n** (optional):
+%        Integer index used by some options (session number, contrast
+%        number, or analysis index).
+%
+% :Optional Inputs:
+%
+%   Subject-level options:
+%
+%   **'i', 'input':**
+%        Number of volumes and (first) volume name for each run.
+%
+%   **'b', 'betas' [n]:**
+%        Beta names (for nth session).
+%
+%   **'B', 'taskbetas' [n]:**
+%        Beta names that didn't come from multiple regressors (for nth
+%        session).
+%
+%   **'c', 'cons' [n]:**
+%        Contrast names (for nth contrast).
+%
+%   **'C', 'conw' [n]:**
+%        Beta names and weights for contrasts (for nth con).
+%
+%   **'v', 'image' [n]:**
+%        Create a figure of the design matrix (for nth session). The
+%        design matrix is multiplied by 100 for visibility. Works well
+%        for multiple runs.
+%
+%   **'V', 'taskimage' [n]:**
+%        Same as 'image', but only for task betas.
+%
+%   **'imagesc':**
+%        Same as 'image', but uses imagesc. Works well for single runs.
+%
+%   Group-level options:
+%
+%   **'i', 'input' [n]:**
+%        Input contrasts by number and name (for nth analysis).
+%
+%   **'I', 'allinput' [n]:**
+%        Input images (for nth analysis).
+%
+%   **'m', 'model':**
+%        Weights by subject (i.e., directory containing input contrast
+%        images).
+%
+%   **'M', 'allmodels' [n]:**
+%        Weights and input images (for nth analysis).
+%
+% :Outputs:
+%
+%   **infos:**
+%        Struct with fields populated by the requested option (for
+%        subject-level analyses). For group-level options, this is not
+%        yet a usable INFO struct.
+%
+% :Examples:
+% ::
+%
+%     % Print number of volumes and first volume name per run
+%     canlab_glm_getinfo('subj01/model1', 'input')
+%
+%     % List contrast names from a subject-level analysis
+%     canlab_glm_getinfo('subj01/model1', 'cons')
+%
+%     % Use a subject-level option through a group-level analysis dir
+%     canlab_glm_getinfo('second_level/model3', '1iconw')
+%
+% :See also:
+%   - canlab_glm_subject_levels
+%   - canlab_glm_group_levels
+%   - robfit
+%   - scn_spm_design_check
 
 if nargin ~= 2 && nargin ~= 3
     error('USAGE: INFO = canlab_glm_getinfo(spm_dir|robfit_dir,option,[n])')

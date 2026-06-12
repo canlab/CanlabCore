@@ -628,16 +628,12 @@ classdef fmri_data < image_vector
                 
                 % Now extract the actual data from the mask
                 switch spm('Ver')
-                    
-                    case {'SPM25' 'SPM12','SPM8', 'SPM5'}
-                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
-                        
                     case {'SPM2', 'SPM99'}
-                        % legacy, for old SPM
+                        % legacy SPM
                         [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr);
-                        
                     otherwise
-                        error('Unknown version of SPM! Update code, check path, etc.');
+                        % SPM5+, including any future versions
+                        [imgdat, ~, image_info_struct] = iimg_get_data(maskobj.volInfo, image_names, 'single', verbosestr, 'noexpand');
                 end
                 
                 imgdat = imgdat';

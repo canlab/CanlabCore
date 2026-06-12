@@ -129,9 +129,11 @@ function [wh_outlier_uncorr, wh_outlier_corr, X] = plot(fmridat, varargin)
 %         Note: Outlier identification here does not use global values, only Mahalanobis distance.
 %
 %   **Orthviews:**
-%        SPM Orthviews: These use the spm_orthviews function from SPM software.
-%        The X,Y, and Z coordinates correspond to the distance in millimeters
-%        from the set origin. Three images are shown:
+%        Three-panel orthviews via canlab_orthviews (SPM-free). The X, Y,
+%        and Z coordinates correspond to the distance in millimeters from
+%        the set origin. The mean image is displayed; STD and mean/STD
+%        summaries are still computed and shown in the montages below.
+%
 %        - The mean image is the voxel-wise average across images in the dataset
 %        - The STD image is the voxel-wise standard deviation across images in the dataset
 %        - The mean/STD image is a simple estimate of effect size (Cohen's D) for every voxel.
@@ -239,7 +241,10 @@ switch plotmethod
         end
 
         create_figure('fmri data matrix', 2, 3);
-        set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figures when publishing
+        % set(gcf,'WindowState','maximized'); %@lukasvo76 added to improve figures when publishing
+        set(gcf, 'WindowState', 'normal');          % leave maximized mode
+        set(gcf, 'Units', 'normalized');
+        set(gcf, 'OuterPosition', [0.1 0.1 0.8 0.8]);  % [left bottom width height]
 
         % center voxels - 9/9/18 Tor
         [~, nimg] = size(fmridat.dat);
@@ -534,21 +539,23 @@ switch plotmethod
             vecs_to_reconstruct = means';
             m = fmridat;
             m.dat = vecs_to_reconstruct;
-            orthviews(m);
 
-            %create_orthviews(vecs_to_reconstruct, fmridat);
+            % canlab_orthviews uses a single linked figure, so we display
+            % the first mean image here and let the per-condition montage
+            % below cover the rest.
             n = size(vecs_to_reconstruct, 2);
-
             if iscell(fmridat.Y_names) && ~isempty(fmridat.Y_names) && length(fmridat.Y_names) == n
                 axnames = fmridat.Y_names;
             else
-                for i = 1:n, axnames{i} = sprintf('Y = %3.3f', i); end
+                axnames = arrayfun(@(i) sprintf('Y = %3.3f', i), 1:n, 'UniformOutput', false);
             end
 
-            for i = 1:n
-                spm_orthviews_name_axis(axnames{i}, i);
+            canlab_orthviews(m);
+            if ~isempty(axnames)
+                set(gcf, 'Name', sprintf('Orthviews_means_by_unique_Y: %s', axnames{1}));
+            else
+                set(gcf, 'Name', 'Orthviews_means_by_unique_Y');
             end
-            set(gcf, 'Name', 'Orthviews_means_by_unique_Y');
 
 
             % ---------------------------------------------------------------
@@ -777,7 +784,7 @@ d(m == 0 | s == 0) = 0;
 if size(fmridat.dat,2) > 1 % if there is more than one image, show std and snr too
     vecs_to_reconstruct = [m s d];
 else
-    vecs_to_reconstruct = [m];% else just show mean image
+    vecs_to_reconstruct = m; % else just show mean image
 end
 
 m = fmridat;
@@ -786,15 +793,15 @@ m.dat = vecs_to_reconstruct;
 if isempty(fmridat.volInfo)
     disp('.volInfo is empty. Skipping orthviews and other brain plots.');
 else
-    %create_orthviews(vecs_to_reconstruct, fmridat);
-    orthviews(m);
+    % canlab_orthviews is single-window, so we display the mean image
+    % here. STD and Mean/STD are still computed (used by the montages
+    % below) but are not split into separate linked panels.
 
-    spm_orthviews_name_axis('Mean data', 1);
-    if size(fmridat.dat,2) > 1
-        spm_orthviews_name_axis('STD of data', 2);
-        spm_orthviews_name_axis('Mean / STD', 3);
-    end
-    set(gcf, 'Name', 'Orthviews_fmri_data_mean_and_std');
+    % Find and close existing orthviews
+    canlab_orthviews('close')
+
+    canlab_orthviews(m);
+    set(gcf, 'Name', 'Orthviews_fmri_data_mean');
 end
 
 end

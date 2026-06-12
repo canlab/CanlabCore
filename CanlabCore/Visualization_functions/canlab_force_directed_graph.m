@@ -94,6 +94,33 @@ function [stats, handles] = canlab_force_directed_graph(activationdata, varargin
 % :Examples:
 % ::
 %
+% % Make a graph of relationships among neurotransmitter maps
+% obj = load_image_set('hansen22');
+% 
+% % Turn the map data into a correlation matrix
+% r = corr(obj.dat); % inter-correlations among tracer maps
+% OUT = plot_correlation_matrix(obj.dat, 'doimage', true, 'docircles', false);
+% 
+% % Threshold to binarize
+% r = OUT.r; r(r < 0.4) = 0;
+% 
+% % Make the graph (plain/vanilla version)
+% [gstats, handles] = canlab_force_directed_graph(r);
+% 
+% % Add receptor/transmitter names to the graph
+% names = obj.metadata_table.target; 
+% [gstats, handles] = canlab_force_directed_graph(r, 'names', names);
+% 
+% % Cluster maps based on similarity and assign colors based on clusters
+% obj = remove_empty(obj);
+% obj.dat(isnan(obj.dat)) = 0;  % this particular object has NaNs; fix
+% stats = clusterdata_permtest(obj.dat', 'k', [2:7], 'reducedims', true, 'ndims', 25);
+% c = stats.best_cluster_labels;
+% 
+% [gstats, handles] = canlab_force_directed_graph(r, 'names', names, 'partitions', c, 'partitioncolors', seaborn_colors(3));
+%
+% % Other options/calls
+%
 %    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle');
 %    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree');
 %    [stats, handles] = canlab_force_directed_graph(activationdata, 'cl', cl, 'namesfield', 'shorttitle', 'degree', 'rset', rset, 'setcolors', setcolors);

@@ -1,39 +1,65 @@
 function [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
-% Reconstruct a 3-D or 4-D image from image_vector object obj
+% reconstruct_image Reconstruct a 3-D or 4-D image volume from an image_vector object.
 %
-% [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
+% Reconstructs a full 3-D (or 4-D, for multi-image objects) volume from
+% the in-mask voxel list in obj.dat / obj.volInfo. The output has one
+% element for every voxel in THE ENTIRE IMAGE, and so can be very
+% memory-intensive. But it's useful for lining up voxels across images
+% with different masks / in-mask voxels.
 %
-% voldata is and X x Y x Z x Images matrix
-% vectorized_voldata is the same, with all voxels vectorized
+% This function returns output in memory; see image_vector.write for
+% writing .img files to disk.
 %
-% This output has one element for every voxel in THE ENTIRE IMAGE, and so
-% can be very memory-intensive.  But it's useful for lining up voxels
-% across images with different masks/in-mask voxels.
+% :Usage:
+% ::
 %
-% This function returns output in memory;
-% see image_vector.write for writing .img files to disk.
+%    [voldata, vectorized_voldata, xyz_coord_struct] = reconstruct_image(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        image_vector / fmri_data / statistic_image object. For
+%        statistic_image objects, .dat is multiplied by .sig before
+%        reconstruction.
 %
 % :Outputs:
 %
 %   **voldata:**
-%        3-D recon volume
+%        3-D recon volume (X x Y x Z x Images matrix).
+%
 %   **vectorized_voldata:**
-%        volume in column vector, iimg_xxx function format
+%        volume in column vector, iimg_xxx function format.
+%
 %   **xyz_coord_struct:**
 %        has fields with coordinate information in mm (world) space
+%
 %          - x, y, z : vectors of coordinates in mm for each of the 3
 %            dimensions of the image
 %          - X, Y, Z : output matrices from meshgrid with mm coordinates,
 %            for volume visualization.
 %            These can be passed to surf or isocaps functions for volume
 %            visualization in world space (mm).
+%          - voldata : volume rotated/flipped for compatibility with
+%            addbrain.m direction.
+%
+% :Examples:
+% ::
+%
+%     [vol, vec, S] = reconstruct_image(dat);
+%     figure; isosurface(S.X, S.Y, S.Z, S.voldata, 0.5);
+%
+% :See also:
+%   - iimg_reconstruct_vols
+%   - write
+%   - get_xyzmm_coordinates
+%   - isosurface
 %
 % ..
 %    Copyright 2011 tor wager
 %
 %    Programmers' notes:
 %
-%    Aug 2012: This function does not flip the data based on the sign of x dimension.  
+%    Aug 2012: This function does not flip the data based on the sign of x dimension.
 %    The flipping is applied in image writing / display in
 %    iimg_reconstruct_vols, write method, spm_orthviews, etc.
 %

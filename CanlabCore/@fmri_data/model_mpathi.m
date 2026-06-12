@@ -1,111 +1,138 @@
 function stats = model_mpathi(obj,source_mask,target_mask,varargin)
-% Models functional coupling between two brain regions using cross-validated 
-% partial least squares (PLS) regression (Original code:model_brain_pathway.m)
+% model_mpathi Cross-validated multivariate pathway-level connectivity (MPathI) between two regions.
 %
-% ------------------------------------------------------------------------------
-% OVERVIEW
-% ------------------------------------------------------------------------------
-% This script is a streamlined and up-to-date version of the original
-% [model_brain_pathway.m] function. Unlike the original implementation, which
-% compared traditional functional connectivity (based on ROI-averaged
-% signals) with the multivariate Pathway Interaction (MPathI) framework
+% :Usage:
+% ::
+%
+%     stats = model_mpathi(obj, source_mask, target_mask, ...
+%                          'Indices', wh_subject, 'nboot', 1000, 'plot')
+%
+% Models functional coupling between two brain regions using
+% cross-validated partial least squares (PLS) regression (original code:
+% model_brain_pathway.m).
+%
+% This function is a streamlined and up-to-date version of the original
+% model_brain_pathway.m. Unlike that implementation, which compared
+% traditional functional connectivity (based on ROI-averaged signals)
+% with the multivariate Pathway Interaction (MPathI) framework
 % described in Kragel et al. (2021, Neuron), the present script focuses
 % exclusively on the MPathI approach. In addition, this implementation
 % estimates a single directed pathway between one source region and one
-% target region, rather than modeling four on-target and off-target
+% target region, rather than modeling four on-target / off-target
 % pathways as in model_brain_pathway.
-% 
-% This function estimates multivariate pathway-level connectivity between a
-% source region (X) and a target region (Y) using Partial Least Squares (PLS).
-% The model identifies latent population activity in each region whose
-% time series covary maximally across observations (e.g., trials or timepoints).
-% 
 %
-% ------------------------------------------------------------------------------
-% obj :
-%   fmri_data object containing images (e.g., trials or timepoints)
+% The model estimates multivariate pathway-level connectivity between a
+% source region (X) and a target region (Y) using PLS. It identifies
+% latent population activity in each region whose time series covary
+% maximally across observations (e.g., trials or time points).
 %
-% source_mask :
-%   fmri_data object with binary mask defining the source region (X)
+% :Conventions used throughout:
 %
-% target_mask :
-%   fmri_data object with binary mask defining the target region (Y)
+%   ::
 %
-% ------------------------------------------------------------------------------
-% OPTIONAL NAME–VALUE PAIRS
-% ------------------------------------------------------------------------------
-% 'Indices' :
-%   Integer vector (n_images × 1) defining cross-validation folds and
-%   bootstrap blocks (e.g., subject ID). Default: 10-fold CV.
+%       X, Y    : [images x voxels]
+%       T, U    : [images x 1] latent time series
+%       Z, V    : [voxels x 1] spatial weights
 %
-% 'Align' :
-%   Perform hyperalignment across subjects (requires 'Indices').
+% :Inputs:
 %
-% 'nboot' :
-%   Number of block bootstrap samples for voxelwise inference on weights.
+%   **obj:**
+%        fmri_data object containing images (e.g., trials or time points).
 %
-% 'plot' :
-%   Plot cross-validated latent correlations.
+%   **source_mask:**
+%        fmri_data object with a binary mask defining the source region X.
 %
-% 'noroi' :
-%   Do not return masked ROI data in the output (reduces output size).
+%   **target_mask:**
+%        fmri_data object with a binary mask defining the target region Y.
 %
-% ------------------------------------------------------------------------------
-% Convention used throughout:
-%   X, Y        : [images × voxels]
-%   T, U        : [images × 1] latent time series
-%   Z, V        : [voxels × 1] spatial weights
-% ------------------------------------------------------------------------------
-% OUTPUT
-% ------------------------------------------------------------------------------
-% stats :
-%   Structure containing:
+% :Optional Inputs:
 %
-%   Cross-validated results:
-%     • stats.xval.latent_correlations   – corr(T̂, Û) per fold
-%     • stats.xval.T_latent_timeseries  – predicted source latent time series
-%     • stats.xval.U_latent_timeseries  – predicted target latent time series
+%   **'Indices', integer vector:**
+%        n_images x 1 vector defining cross-validation folds and
+%        bootstrap blocks (e.g., subject ID). Default: 10-fold CV
+%        chosen by crossvalind('Kfold', n_images, 10).
 %
-%   Summary statistics:
-%     • stats.overall_xval_r             – correlation across all held-out data
-%     • stats.overall_xval_dot           – dot product of latent time series
+%   **'Align':**
+%        Perform hyperalignment across subjects (requires 'Indices').
 %
-%   Whole-sample estimates:
-%     • stats.whole.T_latent_timeseries  - source latent time series
-%     • stats.whole.U_latent_timeseries  - target latent time series
-%     • stats.whole.Z_weights            – source voxel weights
-%     • stats.whole.V_weights            – target voxel weights
+%   **'nboot', N:**
+%        Number of block-bootstrap samples for voxelwise inference on
+%        the source / target weight maps.
 %
-%   Bootstrap results (optional):
-%     • stats.PLS_bootstrap_stats_Z
-%     • stats.PLS_bootstrap_stats_V
+%   **'plot':**
+%        Plot cross-validated latent correlations.
 %
-% ------------------------------------------------------------------------------
-% INTERPRETING RESULTS
-% ------------------------------------------------------------------------------
-% • The primary measure of pathway strength is stats.overall_xval_r.
-% • Cross-validated correlations reflect out-of-sample predictive coupling.
-% • Whole-sample weights should be interpreted descriptively unless
-%   supported by bootstrap inference.
+%   **'noroi':**
+%        Do not return masked ROI data in the output (reduces output
+%        size).
 %
-% ------------------------------------------------------------------------------
-% Author and copyright information:
-% ------------------------------------------------------------------------------
+% :Outputs:
 %
-% Copyright (C) 2026 Byeol Kim Lux
-% 
-% This program is free software: you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation, either version 3 of the License, or
-% (at your option) any later version.
-% 
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-% 
-% You should have received a copy of the GNU General Public License
-% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%   **stats:**
+%        Structure containing:
+%
+%        - Cross-validated results:
+%
+%          * stats.xval.latent_correlations: corr(That, Uhat) per fold.
+%          * stats.xval.T_latent_timeseries: predicted source latent
+%            time series.
+%          * stats.xval.U_latent_timeseries: predicted target latent
+%            time series.
+%
+%        - Summary statistics:
+%
+%          * stats.overall_xval_r: correlation across all held-out
+%            data.
+%          * stats.overall_xval_dot: dot product of latent time
+%            series.
+%
+%        - Whole-sample estimates:
+%
+%          * stats.whole.T_latent_timeseries: source latent time series.
+%          * stats.whole.U_latent_timeseries: target latent time series.
+%          * stats.whole.Z_weights: source voxel weights.
+%          * stats.whole.V_weights: target voxel weights.
+%
+%        - Bootstrap results (when 'nboot' is supplied):
+%
+%          * stats.PLS_bootstrap_stats_Z
+%          * stats.PLS_bootstrap_stats_V
+%
+% :Interpreting Results:
+%
+%   - The primary measure of pathway strength is stats.overall_xval_r.
+%   - Cross-validated correlations reflect out-of-sample predictive
+%     coupling.
+%   - Whole-sample weights should be interpreted descriptively unless
+%     supported by bootstrap inference.
+%
+% :References:
+%   Kragel, P. A., Cetin, B., Tor, W., et al. (2021). Multivariate
+%   pathway interactions reveal functional coupling between brain
+%   regions. Neuron.
+%
+% :See also:
+%   - model_brain_pathway (original four-pathway implementation)
+%   - get_model_encoding_map
+%
+% ..
+%    Author and copyright information:
+%
+%    Copyright (C) 2026 Byeol Kim Lux
+%
+%    This program is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    This program is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% ..
 
 %% Get defaults and initialize user inputs
 if any(strcmp(varargin, 'plot'))

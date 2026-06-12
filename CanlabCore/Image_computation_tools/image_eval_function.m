@@ -544,16 +544,15 @@ function V = make_output_image(maskInfo, fname, descrip, n)
     %V.dim(4)  = spm_type(Type);
 
     % set data type to float
-    switch(spm('Ver'))
+    switch spm('Ver')
         case 'SPM2'
             Type = 'float'; %'double';
             V.dim(4) = spm_type(Type);
-        case 'SPM5'
-            Type = 'float32';
-            V.dt(1) = spm_type(Type); % NOT TESTED.  %'float32');
-            V.dt(2) = maskInfo.dt(2);
         otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
+            % SPM5+, including any future versions
+            Type = 'float32';
+            V.dt(1) = spm_type(Type);
+            V.dt(2) = maskInfo.dt(2);
     end
 
     V.fname   = fname;
@@ -609,19 +608,16 @@ function n = Nvol(V)
         %spm_close_vol(V); % spm2
     end
 
-    switch(spm('Ver'))
+    switch spm('Ver')
         case 'SPM2'
             fp   = fopen(V.fname);
             fseek(fp,0,'eof');
             Len  = ftell(fp);
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
-
-        case 'SPM5'
-            n = length(V);
-
         otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
+            % SPM5+, including any future versions
+            n = length(V);
     end
 
 end

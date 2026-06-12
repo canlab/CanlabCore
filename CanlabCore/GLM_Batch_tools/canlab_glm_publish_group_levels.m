@@ -1,3 +1,53 @@
+% canlab_glm_publish_group_levels Publish group-level robust regression results via robust_results_batch.
+%
+% :Usage:
+% ::
+%
+%     % Run from a directory containing robust* subdirectories
+%     canlab_glm_publish_group_levels
+%
+% Child script of canlab_glm_publish. Runs robust_results_batch in a
+% publishable manner so the results can be rendered as an HTML report
+% via MATLAB's publish().
+%
+% Behavior:
+%
+%   - If a variable EXPT exists in the workspace, contrast names
+%     and robust#### directories are taken from EXPT.SNPM.
+%   - Otherwise the script discovers robust[0-9][0-9][0-9][0-9]
+%     directories in the current working directory; if none are found,
+%     the current directory itself is treated as a single robust*
+%     directory. Contrast names are read from each directory's
+%     SETUP.mat / SPM.mat.
+%   - A small wrapper script robfit_results.m is written and then
+%     published. The output HTML report is placed in
+%     Robust_Regression_Results_html under the working directory.
+%
+% Workspace variables thresh and size (passed to
+% robust_results_batch) default to [.001 .005 .05] and [5 1 1]
+% respectively if not already defined.
+%
+% :Inputs:
+%
+%   None. This file is a script and operates on the current working
+%   directory and the workspace variables EXPT, thresh, and
+%   size if they exist.
+%
+% :Outputs:
+%
+%   No MATLAB outputs. Side effects:
+%
+%   - Creates Robust_Regression_Results_html directory with the
+%     published HTML report.
+%   - Creates and then deletes the helper script robfit_results.m
+%     in the working directory.
+%
+% :See also:
+%   - canlab_glm_publish_subject_levels
+%   - canlab_glm_group_levels
+%   - robust_results_batch
+%   - publish
+
 % child script of canlab_glm_publish
 % runs robust_results_batch in publishable manner
 % runs in directory containing robust* directories

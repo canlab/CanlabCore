@@ -1,16 +1,49 @@
 function obj = windsorize(obj, varargin)
-% Windsorize an fMRI data object to madlimit Median Absolute Deviations.
-% Default = 5 MADs.
-% Works across rows and columns.
-% Registers this step in history.
+% windsorize Clip extreme values in an fmri_data object to a MAD-based limit.
 %
 % :Usage:
 % ::
 %
-%     obj = windsorize(obj, [madlimit])
-
+%     obj = windsorize(obj)
+%     obj = windsorize(obj, madlimit)
+%
+% Replaces any value in obj.dat that lies further than madlimit
+% Median Absolute Deviations from the global median with the
+% corresponding cap value. Operates across the entire .dat matrix
+% (i.e., across both rows/voxels and columns/images jointly). Prints
+% a descriptives summary and the count of outlier values, and
+% appends an entry to obj.history recording the MAD limit used.
+%
+% :Inputs:
+%
+%   **obj:**
+%        fmri_data object whose .dat will be windsorized.
+%
+%   **madlimit:** *(optional)*
+%        Numeric scalar; values farther than madlimit MADs from the
+%        global median are clipped to median +/- madlimit*MAD.
+%        Default: 5.
+%
+% :Outputs:
+%
+%   **obj:**
+%        fmri_data object with .dat windsorized in place. Caps and
+%        outlier counts are printed to the command window. The
+%        operation is appended to obj.history as
+%        'dat windsorized to <madlimit> MADs'.
+%
+% :Examples:
+% ::
+%
+%     obj = canlab_get_sample_fmri_data();
+%     obj = windsorize(obj);          % default 5 MADs
+%     obj = windsorize(obj, 3);       % more aggressive clipping
+%
+% :See also:
+%   - rescale, preprocess (other obj-wide value transforms)
+%
 % ..
-%    Calculate and display descriptives
+%    Calculate and display descriptives, then clip in place.
 % ..
 
 madlimit = 5;

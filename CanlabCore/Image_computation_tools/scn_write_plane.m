@@ -124,20 +124,13 @@ if ~isstruct(filenames_or_V)
             if isfield(exampleV, 'n'), Vout.n = exampleV.n;  end        % SPM5 only
             
             % Make sure datatype is float / float32
-            switch(spm('Ver'))
+            switch spm('Ver')
                 case 'SPM2'
-                    Vout.dim(4) = spm_type('float'); 
-                    
-                case 'SPM5'
-                    Vout.dt = [spm_type('float32') 0];
-                    if isfield(exampleV, 'dt'), Vout.dt(2) = exampleV.dt(2); end      % use endian-ness of example.
-                    
-                case 'SPM8'
-                    Vout.dt = [spm_type('float32') 0];
-                    if isfield(exampleV, 'dt'), Vout.dt(2) = exampleV.dt(2); end      % use endian-ness of example.
-                    
+                    Vout.dim(4) = spm_type('float');
                 otherwise
-                    error('Unknown SPM version.');
+                    % SPM5+, including any future versions
+                    Vout.dt = [spm_type('float32') 0];
+                    if isfield(exampleV, 'dt'), Vout.dt(2) = exampleV.dt(2); end  % use endian-ness of example.
             end
             
             try
@@ -173,15 +166,12 @@ else
     % fprintf('Checking spm_vol structures ');
     % Make sure spm_vol structure (SPM5 only)
     % alter data type if needed
-    switch(lower(spm('Ver')))
+    switch lower(spm('Ver'))
         case 'spm2'
             V = filenames_or_V; % Skip because hard to check.
-        case {'spm5', 'spm8', 'spm12'}
-            V = spm_vol(filenames_or_V);
-%         otherwise 
-%             error('Fix or verify image writing for SPMxx. Not implemented yet.');
         otherwise
-            error('Unknown SPM version.');
+            % SPM5+, including any future versions
+            V = spm_vol(filenames_or_V);
     end
 end
 
@@ -206,14 +196,12 @@ end
 
 function create_empty(V)
 % Write empty data
-switch(spm('Ver'))
+switch spm('Ver')
     case 'SPM2'
         spm_write_vol(V, zeros(V.dim(1:3)));
-    case {'SPM5', 'SPM8'}
-        % assign directly
-        for i = 1:length(V), V(i).private.dat(:, :, :) = 0; end
     otherwise
-        error('Unknown SPM version.')
+        % SPM5+, including any future versions: assign directly
+        for i = 1:length(V), V(i).private.dat(:, :, :) = 0; end
 end
 end
 

@@ -1011,7 +1011,7 @@ classdef brainpathway < handle
             
             if isempty(dat)
                 [obj.connectivity.(outputfield).r,  obj.connectivity.(outputfield).p] = deal([]);
-              
+				obj.connectivity.(outputfield).xdf_options = {};
                 return
             end
             
@@ -1019,9 +1019,25 @@ classdef brainpathway < handle
             % e.g., multilevel methods like ttest3d.
             [r, p] = fhan(dat, in_args{:});
             
+            % xDF options
+			xdf_options = {};
+            is_spearman_xdf = numel(in_args) == 2 && ischar(in_args{1}) && strcmpi(in_args{1}, 'type') && ischar(in_args{2}) && strcmpi(in_args{2}, 'Spearman');
+
+            % xDF corrects Pearson functional-connectivity p-values for autocorrelation.
+            if canlab_use_xdf_for_connectivity(fhan, in_args, dat) & isequal(fhan, @corr)
+                xdf_options = {'truncate', 'adaptive', 'TVOn'};
+                
+                if is_spearman_xdf
+                    dat = rankdata(dat);
+                end
+                
+                p = canlab_xdf_connectivity_stats(dat, p, xdf_options);
+            end
+			
             obj.connectivity.(outputfield).r = r;
             obj.connectivity.(outputfield).p = p;
-            
+            obj.connectivity.(outputfield).xdf_options = xdf_options;
+			
             %% compute avg within/between connectivity, using labels in node_clusters if available
             
             % if no labels are in node_clusters, but this is the Yeo 17
@@ -1066,7 +1082,8 @@ classdef brainpathway < handle
             
             if isempty(dat)
                 [obj.connectivity.(outputfield).r,  obj.connectivity.(outputfield).p] = deal([]);
-                
+                obj.connectivity.(outputfield).xdf_options = {};
+
                 return
             end
             
@@ -1074,9 +1091,25 @@ classdef brainpathway < handle
             % e.g., multilevel methods like ttest3d.
             [r, p] = fhan(dat, in_args{:});
             
+            % xDF options
+			xdf_options = {};
+            is_spearman_xdf = numel(in_args) == 2 && ischar(in_args{1}) && strcmpi(in_args{1}, 'type') && ischar(in_args{2}) && strcmpi(in_args{2}, 'Spearman');
+
+            % xDF corrects Pearson functional-connectivity p-values for autocorrelation.
+            if canlab_use_xdf_for_connectivity(fhan, in_args, dat) & isequal(fhan, @corr)
+                xdf_options = {'truncate', 'adaptive', 'TVOn'};
+                                 
+                if is_spearman_xdf
+                    dat = rankdata(dat);
+                end
+                
+                p = canlab_xdf_connectivity_stats(dat, p, xdf_options);
+            end
+			
             obj.connectivity.(outputfield).r = r;
             obj.connectivity.(outputfield).p = p;
-            
+            obj.connectivity.(outputfield).xdf_options = xdf_options;
+
             % compute avg within/between connectivity, using labels in node_clusters if available
             
             % if no labels are in node_clusters, but this is the Yeo 17
@@ -1129,6 +1162,52 @@ end
 
 end
 
+% Use xDF only where its Pearson time-series assumptions match the FC call.
+function tf = canlab_use_xdf_for_connectivity(fhan, in_args, dat)
+
+tf = false;
+
+if ~isequal(fhan, @corr) || isempty(dat) || size(dat, 1) < 4 || size(dat, 2) < 2 || any(~isfinite(dat(:)))
+    return
+end
+
+tf = true;
+
+for i = 1:numel(in_args)
+    if ischar(in_args{i}) && strcmpi(in_args{i}, 'type')
+        if i == numel(in_args) || ~ischar(in_args{i + 1}) || ~strcmpi(in_args{i + 1}, 'Pearson')
+            tf = false;
+            return
+        end
+    elseif ischar(in_args{i}) && strcmpi(in_args{i}, 'tail')
+        if i == numel(in_args) || ~ischar(in_args{i + 1}) || ~strcmpi(in_args{i + 1}, 'both')
+            tf = false;
+            return
+        end
+    end
+end
+
+end
+
+% Compute p values while considering autocorrelatoin in time series (see https://github.com/asoroosh/RxDF)
+% xDF expects signals as series x time and returns FC variance, z, and p.
+function p = canlab_xdf_connectivity_stats(dat, p, xdf_options)
+
+if isempty(which("xDF"))
+    warning('brainpathway:xDFNotFound', 'xDF.m was not found; keeping corr p-values for connectivity.');
+    return
+end
+
+try
+    % dat is time*region, but xDF expects region*time
+    [var_xdf, xdf_stat] = xDF(double(dat'), size(dat, 1), xdf_options{:});
+    p = xdf_stat.p;
+    p(1:size(p, 1)+1:end) = 1;
+catch xdf_error
+    warning('brainpathway:xDFFailed', 'xDF failed for connectivity p-values (%s); keeping uncorrected p-values.', xdf_error.message);
+end
+
+end
 
 function [region_indx_for_nodes, sz, node_start, node_end] = get_node_info(obj)
 

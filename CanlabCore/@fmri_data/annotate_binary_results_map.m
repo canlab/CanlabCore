@@ -45,11 +45,19 @@ function RESULTS = annotate_binary_results_map(test_map)
 %
 % :Examples:
 % ::
+% -------------------------------------------
+% obj = load_image_set('emotionreg'); t = ttest(obj, .005, 'uncorrected');
+% t.dat = single(t.dat > 3); % binarize t-statistic map
+% t = fmri_data(t); % recast
+% RESULTS = annotate_binary_results_map(t);
 %
+% -------------------------------------------
+% 
 % ns = load(which('neurosynth_data_obj.mat'));
 % test_map = get_wh_image(ns.topic_obj_reverseinference, 1); % somatosensory topic
 % annotate_binary_results_map(test_map)
 %
+% % -------------------------------------------
 % :See also:
 %   image_similarity_plot, wedge_plot_by_atlas
 

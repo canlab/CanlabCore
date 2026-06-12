@@ -1,20 +1,47 @@
 function c = horzcat(varargin)
-% Implements the horzcat ([a b]) operator on image_vector objects across voxels.
-% Requires that each object has an equal number of columns and voxels
+% horzcat Implements the horzcat ([a b]) operator on fmri_data objects.
 %
 % :Usage:
 % ::
 %
-%    function s = horzcat(varargin)
+%     c = horzcat(dat1, dat2, ...)
+%     c = [dat1 dat2 ...]            % equivalent
 %
-% :Example:
+% Concatenates fmri_data objects horizontally across the image (column)
+% dimension. Each input object's .dat is expected to have the same number
+% of voxels (rows); the resulting object has the union of images in
+% column order. If every input has a non-empty .X (predictors), the .X
+% matrices are vertically concatenated; same for .Y (outcomes). If any
+% input is missing X or Y, those fields are dropped from the result.
+%
+% :Inputs:
+%
+%   **varargin:**
+%        Two or more fmri_data objects with matching voxel counts. All
+%        inputs must be of class fmri_data; passing any non-fmri_data
+%        argument raises an error.
+%
+% :Outputs:
+%
+%   **c:**
+%        An fmri_data object with .dat = [dat1.dat, dat2.dat, ...]. If
+%        every input had a populated .X / .Y, those are stacked
+%        vertically and attached.
+%
+% :Examples:
 % ::
 %
-%    c = [dat1 dat2];
+%     c = [dat1 dat2];
+%     c = horzcat(dat1, dat2, dat3);
+%
+% :See also:
+%   - cat (concatenation method on fmri_data)
+%   - get_wh_image (subset of images)
 %
 % ..
-%    Programmer Notes
-%    Created 3/14/14 by Luke Chang for image_vector; updated for fmri_data 8/2015 Yoni Ashar
+%    Programmer Notes:
+%    Created 3/14/14 by Luke Chang for image_vector; updated for fmri_data
+%    8/2015 Yoni Ashar.
 % ..
 
 hasX = 1; X = [];

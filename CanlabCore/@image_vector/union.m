@@ -1,14 +1,50 @@
 function [dat, dati] = union(dat1, dat2, outputname)
-% Union and intersection masks for two image_vector objects
+% union Compute union and intersection masks for two image_vector objects.
+%
+% Reconstructs both inputs into full image volumes, then computes a new
+% image_vector object whose voxels are the OR (union) of the two input
+% masks. A second output object holds the AND (intersection). For
+% statistic_image inputs, .p / .ste / .sig fields are combined
+% accordingly. Both inputs must currently be in the same image space.
 %
 % :Usage:
 % ::
 %
 %    [dat_union, dat_intersection] = union(dat1, dat2, outputname)
 %
-%     dat = union(dat1, dat2, outputname)
-%     outputname = character array name for union image
-%                   INCLUDE .img at the end.
+% :Inputs:
+%
+%   **dat1:**
+%        First image_vector / fmri_data / statistic_image object.
+%
+%   **dat2:**
+%        Second image_vector / fmri_data / statistic_image object.
+%        Must be in the same space as dat1 (compare_space must return
+%        0 or 3).
+%
+%   **outputname:**
+%        Optional. Character array filename for the union image
+%        (INCLUDE .img at the end). If supplied, the union object is
+%        written to disk in the current directory.
+%
+% :Outputs:
+%
+%   **dat:**
+%        Union image_vector object (voxels in dat1 OR dat2).
+%
+%   **dati:**
+%        Intersection image_vector object (voxels in dat1 AND dat2).
+%
+% :Examples:
+% ::
+%
+%     [u, i] = union(mask1, mask2);
+%     [u, i] = union(mask1, mask2, 'union_mask.img');
+%
+% :See also:
+%   - compare_space
+%   - reconstruct_image
+%   - apply_mask
 %
 % ..
 %    NOTE: must now be in same space!

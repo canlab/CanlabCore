@@ -1,30 +1,48 @@
 function tbl=label_table(atlas_obj)
-    % LABEL_TABLE Create a table from an atlas object
-    %
-    %   TBL = LABEL_TABLE(ATLAS_OBJ) takes an atlas object ATLAS_OBJ and
-    %   creates a table TBL containing the label descriptions and various
-    %   labels.
-    %
-    %   Input:
-    %     - atlas_obj: An object containing atlas data with the following
-    %       properties:
-    %         * label_descriptions: Descriptions of the labels
-    %         * labels: Primary labels
-    %         * labels_2: Secondary labels
-    %         * labels_3: Tertiary labels
-    %         * labels_4: Quaternary labels
-    %         * labels_5: Quinary labels
-    %
-    %   Output:
-    %     - tbl: A table containing the label descriptions and labels from
-    %       the atlas object, with appropriate variable names.
-    %
-    % Example:
-    %   atlas_obj = load_atlas('canlab2024');
-    %   tbl = label_table(atlas_obj);
-    %   disp(tbl);
-    %
-    % Michael Sun, Ph.D. 06/03/2024
+% label_table Create a table from an atlas object's label fields.
+%
+% Take an atlas object and produce a MATLAB table whose rows correspond
+% to atlas regions and whose columns are label_descriptions, labels,
+% labels_2, labels_3, labels_4, and labels_5. Empty auxiliary label
+% fields are padded with NaN so that all columns have the same length.
+%
+% :Usage:
+% ::
+%
+%     tbl = label_table(atlas_obj)
+%
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object with the following properties:
+%
+%        - label_descriptions: Descriptions of the labels
+%        - labels: Primary labels
+%        - labels_2: Secondary labels
+%        - labels_3: Tertiary labels
+%        - labels_4: Quaternary labels
+%        - labels_5: Quinary labels
+%
+% :Outputs:
+%
+%   **tbl:**
+%        MATLAB table with columns label_descriptions, labels, labels_2,
+%        labels_3, labels_4, and labels_5.
+%
+% :Examples:
+% ::
+%
+%     atlas_obj = load_atlas('canlab2024');
+%     tbl = label_table(atlas_obj);
+%     disp(tbl);
+%
+% :See also:
+%   - load_atlas
+%   - select_atlas_subset
+%
+% ..
+%    Michael Sun, Ph.D. 06/03/2024
+% ..
 
     % Check if the input is valid
     if ~strcmp(class(atlas_obj), 'atlas')

@@ -56,19 +56,16 @@ function [n, V] = scn_num_volumes(V)
         %spm_close_vol(V); % spm2
     end
 
-    switch(spm('Ver'))
+    switch spm('Ver')
         case 'SPM2'
             fp   = fopen(V.fname);
             fseek(fp,0,'eof');
             Len  = ftell(fp);
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
-
-        case {'SPM5' 'SPM8' 'SPM12'}
-            n = length(V);
-
         otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
+            % SPM5+, including any future versions
+            n = length(V);
     end
 
 end

@@ -1,8 +1,8 @@
-function S = xval_discriminant_classifier(X, labels, varargin)
+function pmodel_obj = xval_discriminant_classifier(X, labels, varargin)
 % xval_discriminant_classifier  Cross-validated discriminant classification using fitcdiscr
 %
 % USAGE:
-%   S = xval_discriminant_classifier(X, labels, varargin)
+%   pmodel_obj = xval_discriminant_classifier(X, labels, varargin)
 %
 % Required inputs
 % -------------------------------------------------------------------------
@@ -20,16 +20,26 @@ function S = xval_discriminant_classifier(X, labels, varargin)
 %
 % Outputs
 % -------------------------------------------------------------------------
-%   S           struct with fields:
-%       Y                   [N×1] true labels
-%       id                  [N×1] grouping variable (empty if not provided)
-%       nfolds              positive integer, number of folds
-%       trIdx               {1×nfolds} cell array of logical vectors for training set per fold
-%       teIdx               {1×nfolds} cell array of logical vectors for test set per fold
-%       models              {1×nfolds} cell array of fitcdiscr model objects
-%       predictions         {1×nfolds} cell array of predicted labels per fold
-%       trueLabels          {1×nfolds} cell array of true labels per fold
-%       accuracy            [nfolds×1] classification accuracy per fold (percentage)
+%   pmodel_obj  @predictive_model object holding the cross-validated LDA
+%               results. Fields accessible via categorised sub-structs:
+%               pmodel_obj.fitted_values.yfit / .predictions,
+%               pmodel_obj.error_metrics.accuracy.value,
+%               pmodel_obj.cv_partition.trIdx / .teIdx / .nfolds,
+%               pmodel_obj.fold_models, pmodel_obj.weights.w. See
+%               @predictive_model.
+%
+% Getting a weight map after training
+% -------------------------------------------------------------------------
+%   This wrapper trains on a numeric X and never sees an image object, so it
+%   cannot build a brain map on its own. For the two-class linear case, attach
+%   one afterward with @predictive_model/weight_map_object, passing any
+%   reference image in the same voxel space as X; then montage(pm) /
+%   surface(pm) (and plot(pm)) work with no source argument:
+%
+%       pm = xval_discriminant_classifier(double(dat.dat'), labels, 'id', id);
+%       pm = weight_map_object(pm, dat);   % cache the weight @statistic_image
+%       montage(pm); surface(pm);
+%       summary(pm);                       % provenance + accuracy panel
 %
 % DESCRIPTION:
 %   Performs stratified k-fold cross-validated linear discriminant analysis (LDA)
@@ -48,7 +58,9 @@ function S = xval_discriminant_classifier(X, labels, varargin)
 % DiscrimType specifies the covariance‐structure variant—linear, quadratic, diagonal, or pseudo­inverse—thus affecting both bias and computational behavior
 %
 % SEE ALSO:
-%   fitcdiscr, xval_stratified_holdout_leave_whole_subject_out, stratified_holdout_set, confusionchart
+%   fitcdiscr, xval_stratified_holdout_leave_whole_subject_out,
+%   stratified_holdout_set, confusionchart, predictive_model,
+%   weight_map_object, summary, xval_SVM
 
 % Author and copyright information:
 %   By CANlab members and collaborators
@@ -84,6 +96,22 @@ function S = xval_discriminant_classifier(X, labels, varargin)
     doplot = p.Results.doplot;
 
     N = size(X, 1);
+
+    %% -------------------- Pre-fit data-quality check (Phase B) ----------
+    [omitted_cases, omitted_features] = predictive_model.detect_bad_data(X, double(labels));
+    if any(omitted_cases) || any(omitted_features)
+        if verbose && any(omitted_cases)
+            fprintf('xval_discriminant_classifier: removing %d cases (NaN/Inf)\n', sum(omitted_cases));
+        end
+        if verbose && any(omitted_features)
+            fprintf('xval_discriminant_classifier: removing %d features (all-NaN / zero-variance / Inf)\n', sum(omitted_features));
+        end
+        X(omitted_cases, :)      = [];
+        labels(omitted_cases)    = [];
+        if ~isempty(id), id(omitted_cases) = []; end
+        X(:, omitted_features) = [];
+        N = size(X, 1);
+    end
 
     %% -------------------- Determine fold indices --------------------
     if ~isempty(id)
@@ -209,6 +237,12 @@ if doplot
 
 end
 
+
+    %% -------------------- Fit metadata + Wrap in @predictive_model ----
+    S.omitted_cases    = omitted_cases;
+    S.omitted_features = omitted_features;
+    S.fit_type         = 'crossval';
+    pmodel_obj = predictive_model(S, 'noverbose');
 
     %% -------------------- End of function --------------------
 end

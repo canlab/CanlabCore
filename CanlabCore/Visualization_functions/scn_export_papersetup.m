@@ -1,15 +1,48 @@
 function scn_export_papersetup(minsize)
+% scn_export_papersetup Set paper size of current figure for export to image files.
+%
 % :Usage:
 % ::
 %
-%    scn_export_papersetup([opt: min size in pixels, default = 400])
+%     scn_export_papersetup([minsize])
 %
-% set paper size for current figure so that print to png or tiff looks as
-% it should (as it does on-screen)
+% Set the paper size for the current figure so that printing to PNG or
+% TIFF (e.g., via saveas, print, or export_fig) produces output that
+% matches what is shown on-screen. The figure aspect ratio is preserved,
+% and the smaller dimension of the figure is scaled to minsize
+% pixels (default 400).
 %
 % ..
 %    tor wager, aug. 06
 % ..
+%
+% :Inputs:
+%
+%   **minsize:**
+%        Optional. Minimum size in pixels for the smaller of the figure's
+%        width and height. Default = 400. The larger dimension is scaled
+%        proportionally so the original aspect ratio is preserved.
+%
+% :Outputs:
+%
+%   None. The function modifies the 'PaperUnits', 'PaperPosition', and
+%   'PaperType' properties of the current figure (gcf) in place.
+%
+% :Examples:
+% ::
+%
+%     % Set up paper size and save the current figure as a PNG
+%     scn_export_papersetup(400);
+%     saveas(gcf, 'my_figure.png');
+%
+%     % Larger paper size for higher-resolution exports
+%     scn_export_papersetup(800);
+%     print(gcf, '-dpng', '-r300', 'my_figure_hires.png');
+%
+% :See also:
+%   - saveas
+%   - print
+%   - canlab_results_fmridisplay
 
 if nargin < 1, minsize = 400; end
 

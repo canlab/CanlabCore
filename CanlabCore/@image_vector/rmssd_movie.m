@@ -1,51 +1,95 @@
 function [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, varargin)
-% Movie of successive differences (sagittal slice)
-% Enter an image_vector or fmri_data object (usually with time series)
+% rmssd_movie Movie of successive differences (sagittal slice) for an image_vector / fmri_data object.
+%
+% Enter an image_vector or fmri_data object (usually with time series).
+%
+% Images usually change slowly over time, and sudden changes in intensity
+% can also often be a sign of bad things -- head movement artifact or
+% gradient misfires, interacting with the magnetic field to create
+% distortion across the brain.
+%
+% RMSSD tracks large changes across successive images, regardless of
+% what the sign of the changes is or where they are. In addition, images
+% with unusually high spatial standard deviation across voxels may be
+% outliers with image intensity distortions in some areas of the image
+% but not others (e.g., bottom half of brain vs. top half, or odd vs.
+% even slices).
+%
+% The CANlab method rmssd_movie( ), for fmri_data objects, creates a
+% visual movie so you can see what the image-to-images changes are. It
+% pauses where they're unusual. It also returns a matrix
+% rmssd_outlier_regressor_matrix, which has an indicator regressor (1
+% or 0 values) for every image that is quite different from the
+% preceding ones (the pause point in the movie). This is based on two
+% things: (1) rmssd being > a cutoff number of standard deviations from
+% the mean, (2) spatial standard deviation of the images being > a
+% cutoff number of standard deviations from the mean. The cutoff is 3
+% s.d. by default. This matrix can be added to your design matrix as a
+% set of nuisance covariates of no interest.
 %
 % :Usage:
 % ::
 %
-% [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, [full_path_of_movie_output_file,image_skip_interval])
+%    [rmssd, rmssd_outlier_regressor_matrix] = rmssd_movie(dat, [optional inputs])
 %
-% Images usually change slowly over time, and sudden changes in intensity can also often be a sign of bad things
-% -- head movement artifact or gradient misfires, interacting with the magnetic field to create distortion
-% across the brain.
-% RMSSD tracks large changes across successive images, regardless of what the sign of the changes is or where they are.
-% In addition, images with unusually high spatial standard deviation across voxels may be outliers with image
-% intensity distortions in some areas of the image but not others (e.g., bottom half of brain vs. top half,
-% or odd vs. even slices).
-% The CANlab method rmssd_movie( ), for fmri_data objects, creates a visual movie so you can see what the
-% image-to-images changes are. It pauses where they're unusual. It also returns a matrix rmssd_outlier_regressor_matrix,
-% which has an indicator regressor (1 or 0 values) for every image that is quite different from the preceding ones
-% (the pause point in the movie). This is based on two things: (1) rmssd being > a cutoff number of standard
-% deviations from the mean, (2) spatial standard deviation of the images being > a cutoff number of
-% standard deviations from the mean. The cutoff is 3 s.d. by default.
-% This matrix can be added to your design matrix as a set of nuisance covariates of no interest.
+% :Inputs:
 %
-% *Optional Inputs:
+%   **dat:**
+%        An image_vector / fmri_data object, usually with a time-series
+%        of images stored as columns of .dat.
+%
+% :Optional Inputs:
 %
 %   **'movieoutfile', <filepath>:**
 %        Followed by a char array detailing the full path to save the
-%           movie file
+%        movie file.
 %
 %   **'image_interval', n:**
-%        Followed by an integer value describing the interval
-%        between images in each subsequent frame of the movie
-%       (default = 1). Higher values will skip, showing every n images
+%        Followed by an integer value describing the interval between
+%        images in each subsequent frame of the movie (default = 1).
+%        Higher values will skip, showing every n images.
+%
+%   **'sdlim', n:**
+%        Cutoff in standard deviations for flagging outliers. Default = 3.
+%
+%   **'writetofile':**
+%        Force writing to disk; if 'movieoutfile' is empty, a default
+%        path in the current directory is used.
+%
+%   **'nomovie' / 'nodisplay':**
+%        Suppress display of the movie figure (only return the values).
+%
+%   **'showmovie', logical:**
+%        Explicitly toggle movie display.
+%
+% :Outputs:
+%
+%   **rmssd:**
+%        Vector of root-mean-square successive differences across
+%        images, length = number of images in dat.
+%
+%   **rmssd_outlier_regressor_matrix:**
+%        Matrix of nuisance regressors (one column per flagged image)
+%        indicating likely outlier images.
 %
 % :Examples:
 % ::
 %
-%    Show a movie of RMSSD and write a movie file to disk in the qc_images subdirectory:
+%    % Show a movie of RMSSD and write a movie file to disk in the qc_images subdirectory:
 %    rmssd_movie(fmri_dat, 'movie_output_file', '/Subj1/qc_images/rmssd_movie', 'image_interval', 5)
 %
-%   This would save an movie based on the images in fmri_dat to the
-%   above directory, with an interval of 5 images between each
-%   frame (so, the movie would show image 1, 6, 11, 16, etc)
+%    % This would save an movie based on the images in fmri_dat to the
+%    % above directory, with an interval of 5 images between each
+%    % frame (so, the movie would show image 1, 6, 11, 16, etc)
 %
-
-% Programmers Notes:
+% :See also:
+%   - slice_movie
+%   - preprocess (with 'outliers_rmssd')
+%   - intercept_model
+%
 % ..
+%    Programmers Notes:
+%
 %    Edited 8/7/14 by Scott
 %      - added skip interval
 %      - updated help

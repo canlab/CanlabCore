@@ -82,7 +82,7 @@ for i = vox_to_run %(1):vox_to_run(10)
     % data prep
     
     if do_cross
-        results = xval_cross_classfy_wrapper(algorithm_name, dat, dat2, cv_assign, searchlight_indx, do_saveweight, additional_inputs);
+        results = xval_cross_classify_wrapper(algorithm_name, dat, dat2, cv_assign, searchlight_indx, do_saveweight, additional_inputs);
     else
         results = predict_wrapper(algorithm_name, dat, cv_assign, searchlight_indx, do_saveweight, additional_inputs);
     end
@@ -124,7 +124,7 @@ end
 % -------------------------------------------------------------------------
 % xval_cross_classification 
 
-function results = xval_cross_classfy_wrapper(algorithm_name, dat1, dat2, cv_assign, searchlight_indx, do_saveweight, additional_inputs)
+function results = xval_cross_classify_wrapper(algorithm_name, dat1, dat2, cv_assign, searchlight_indx, do_saveweight, additional_inputs)
 
 whempty = cellfun(@isempty, additional_inputs);
 additional_inputs(whempty)=[];
@@ -135,9 +135,9 @@ for i = 1:2
 end
 
 if do_saveweight
-    [results{1}, results{2}, results{3}] = xval_cross_classfy(algorithm_name, dat1, dat2, cv_assign, additional_inputs{:});
+    [results{1}, results{2}, results{3}] = xval_cross_classify(algorithm_name, dat1, dat2, cv_assign, additional_inputs{:});
 else
-    results{1} = xval_cross_classfy(algorithm_name, dat1, dat2, cv_assign, additional_inputs{:});
+    results{1} = xval_cross_classify(algorithm_name, dat1, dat2, cv_assign, additional_inputs{:});
 end
 
 end

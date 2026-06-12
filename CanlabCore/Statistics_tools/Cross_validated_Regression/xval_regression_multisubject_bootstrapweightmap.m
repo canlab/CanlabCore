@@ -1,5 +1,19 @@
-function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
-    % STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+function pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+    % pmodel_obj = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, X, volInfo, varargin)
+    %
+    % :Output:
+    %   **pmodel_obj** is a @predictive_model object (voxel-level
+    %   bootstrap weight maps in pmodel_obj.bootstrap_results and
+    %   pmodel_obj.weights.VOXWEIGHTS). Legacy flat aliases
+    %   (pm.subjfit, pm.VOXWEIGHTS, pm.pred_err) also work. See
+    %   @predictive_model.
+    %
+    % :Programmers' notes:
+    %   MATLAB R2026a compatibility: parent-scope inits added for
+    %   nested-function shared variables (see
+    %   xval_regression_multisubject.m for rationale).
+    %
+    % --- Original ---
     %
     % CROSS-VALIDATED (JACKKNIFE) REGRESSION
     % Leave-one observation out, predict outcomes for each missing holdout_set.
@@ -40,6 +54,26 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
 
     % Set defaults
     % -----------------------------------------------------------
+    % R2026a parent-scope inits for nested-function shared variables.
+    N = length(Y);
+    [pcsquash, doplssquash, dochoose_ndims, dochoose_regparams, ...
+     verbose, verboseL, doplot, docenterrowsX, dosave, has_cov] = deal([]);
+    [num_dims, cov_val, regparams, holdout_method] = deal([]);
+    [subjbetas, subjfit, nanvox, wasnan, Y_orig, my_intercepts] = deal({});
+    [train_y, train_dat, test_dat, weight_y, weight_dat] = deal([]);
+    [devs_from_full_model, devs_from_mean_only_model] = deal([]);
+    [var_full, var_null, rr, rsq, pred_err] = deal([]);
+    fit = [];
+    v   = [];
+
+    % Phase B: per-subject bad-data detection.
+    omitted_cases_cell    = cell(1, N);
+    omitted_features_cell = cell(1, N);
+    for s_ = 1:N
+        [omitted_cases_cell{s_}, omitted_features_cell{s_}] = ...
+            predictive_model.detect_bad_data(X{s_}, Y{s_});
+    end
+
     nested_setdefaults();
     verbose;
 
@@ -49,8 +83,8 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
     % -----------------------------------------------------------
     %nested_choose_ndims();
 
-    [STATS.INPUTS.pcsquash, STATS.INPUTS.num_dims, STATS.INPUTS.Y, STATS.INPUTS.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
-    %STATS.INPUTS.X = X;
+    [STATS.inputParameters.pcsquash, STATS.inputParameters.num_dims, STATS.inputParameters.Y, STATS.inputParameters.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
+    %STATS.inputParameters.X = X;
 
     %include = 1:N;  % which subjects to include
 
@@ -63,11 +97,10 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
         % ===========================================
 
         nested_prepdata(); % remove NaNs and initialize fit variable (output)
-        nanvox; % we will need to pass this into another inline later
 
         % Return holdout_set{} defining folds and holdout set for each fold
 %         holdout_set = nested_select_holdout_set();
-%         STATS.INPUTS.holdout_set{s} = holdout_set;
+%         STATS.inputParameters.holdout_set{s} = holdout_set;
 
         train_y = Y{s}; % all data, here -- not leaving out holdout set
 
@@ -104,15 +137,16 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
         
         bootsam = setup_boot_samples(train_y, nbootsamples);
 
-        STATS.INPUTS.nbootsamples = nbootsamples;
+        STATS.inputParameters.nbootsamples = nbootsamples;
         STATS.VOXWEIGHTS.bootbetas = cell(1, nbootsamples);
         STATS.VOXWEIGHTS.boot_vox_weights = zeros(length(STATS.VOXWEIGHTS.vox_weights{s}), nbootsamples, 'single');
         STATS.VOXWEIGHTS.volInfo = volInfo;
         
         fprintf('Getting p-values for voxel weights: Running %3.0f bootstrap samples: 000', nbootsamples);
 
-        poolstate = matlabpool('size');
-        if poolstate  
+        % matlabpool was removed in MATLAB R2014a; use parpool / gcp.
+        pool = gcp('nocreate');
+        if ~isempty(pool)
             fprintf('Parallel mode\n');
             nested_bootstrap_loop_parallel
         else
@@ -203,6 +237,13 @@ function STATS = xval_regression_multisubject_bootstrapweightmap(fit_method, Y, 
 % %         disp(' ')
 % %     end
 
+    % Phase B fit metadata.
+    STATS.omitted_cases    = omitted_cases_cell;
+    STATS.omitted_features = omitted_features_cell;
+    STATS.fit_type         = 'crossval';
+
+    % Wrap the working struct in a @predictive_model object.
+    pmodel_obj = predictive_model(STATS, 'noverbose');
 
 
     % =======================================================================
@@ -774,7 +815,7 @@ function [v, train_dat, test_dat] = do_pcsquash(train_y, train_dat, test_dat, nu
         %     xlabel('Yhat from PLS'); ylabel('Actual yhat');
 
     else
-        [v, scores] = princomp(train_dat, 'econ');  % scores = train_dat, up to scaling factor!! can't use scores from princomp-diff scaling
+        [v, scores] = pca(train_dat, 'Economy', true); %#ok<ASGLU> R2026a: princomp removed, pca is the equivalent
         train_dat = train_dat * v;
         v = v(:, 1:num_dims);  % eigenvectors
         train_dat = train_dat(:, 1:num_dims); % train_dat now becomes the scores

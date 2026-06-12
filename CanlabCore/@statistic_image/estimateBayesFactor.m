@@ -1,64 +1,45 @@
 function BF = estimateBayesFactor(stat_image,varargin)
-% Compute voxel-wise Bayes Factors from a statistic image object.
+% estimateBayesFactor Compute voxel-wise Bayes Factors from a statistic_image object.
 %
 % This code is a wrapper function for code from Sam Schwarzkopf at UCL
 % (see https://figshare.com/articles/Bayes_Factors_Matlab_functions/1357917),
-% it computes Bayes Factors for t-tests (Rouder et al., 2009), simple 
-% correlations (Wetzels et al., 2012), and proportions (http://pcl.missouri.edu/bf-binomial)
-% See below for more information. 
+% it computes Bayes Factors for t-tests (Rouder et al., 2009), simple
+% correlations (Wetzels et al., 2012), and proportions
+% (http://pcl.missouri.edu/bf-binomial). See below for more information.
 %
-% Usage:
+% :Usage:
 % ::
 %
-%    BF = estimateBayesFactor(stat_image,varargin)
-%
-% ..
-%     Author and copyright information:
-%
-%     Copyright (C) 2018 Philip Kragel
-%
-%     This program is free software: you can redistribute it and/or modify
-%     it under the terms of the GNU General Public License as published by
-%     the Free Software Foundation, either version 3 of the License, or
-%     (at your option) any later version.
-%
-%     This program is distributed in the hope that it will be useful,
-%     but WITHOUT ANY WARRANTY; without even the implied warranty of
-%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%     GNU General Public License for more details.
-%
-%     You should have received a copy of the GNU General Public License
-%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-% ..
+%     BF = estimateBayesFactor(stat_image, varargin)
 %
 % :Background:
 %
 % Bayesian t-tests
 % -----------------------------------------------------------------
 % We use the BF Bayes' Factor Matlab toolbox, based on:
-% 
+%
 %     Rouder et al., 2009     % one-sample t-test, t1smpbf.m
 %     Rouder et al., 2009     % binomial test, binombf.m
 %     Wetzels et al., 2012    % Pearson's r, corrbf.m
 %     Boekel et al., 2014     % test for replicating Pearson's r in same direction
-% 
-% Implemented by Sam Schwarzkopf, UCL
+%
+% Implemented by Sam Schwarzkopf, UCL.
 %
 % Rouder (2009) derived a formula to calculate Bayes Factors for a
-% one-sample t-test, a common test statistic in neuroimaging, particularly 
-% when testing contrast or 2nd-level (across-participant) summary statistics 
+% one-sample t-test, a common test statistic in neuroimaging, particularly
+% when testing contrast or 2nd-level (across-participant) summary statistics
 % in a two-level hierarchical model. They also provided a web application:
 % http://pcl.missouri.edu/bf-one-sample
 %
-% Gönen et al. (2005) provided the corresponding equation
+% Gonen et al. (2005) provided the corresponding equation
 % for the unit-information Bayes factor. Liang et al. (2008)
 % provided the corresponding JZS Bayes factors for testing
 % slopes in a regression model.
-% 
-% As Rouder et al. point out: "Researchers need only provide the sample size N and
+%
+% As Rouder et al. point out: 'Researchers need only provide the sample size N and
 % the observed t value. There is no need to input raw data.
 % The integration is over a single dimension and is computationally
-% straightforward."
+% straightforward.'
 %
 % This function iterates over voxels to calculate bayes factors for a map.
 %
@@ -68,12 +49,12 @@ function BF = estimateBayesFactor(stat_image,varargin)
 % prior belief about the effect size, which is integrated with evidence
 % from the data to estimate a posterior probabilities of both null and
 % alternative hypotheses. The Bayes Factor (BF) is a ratio of these (see below).
-% 
+%
 % Different choices of prior distribution and effect size will thus yield
 % different results for BFs, but there are some standard, reasonable
 % choices. In addition, BFs are often not very sensitive to reasonable variation
 % in priors, so it is reasonable to use a default choice for many applications.
-% 
+%
 % The tests in the BF toolbox use default scaling values for prior distributions, and the
 % Jeffrey-Zellner-Siow Prior (JZS, Cauchy distribution on effect size).
 % This is standard, widely used prior. The JZS prior has heavier tails than
@@ -108,68 +89,87 @@ function BF = estimateBayesFactor(stat_image,varargin)
 %
 % These are returned in a statistic_image object BF, whose .dat field
 % contains 2*ln(BF) values for each voxel.  A value of about 4.6 indicates
-% a BF of 10, or 10:1 evidence in favor of the Alternative, which is a typical cutoff. 
+% a BF of 10, or 10:1 evidence in favor of the Alternative, which is a typical cutoff.
 % A value of about 6 indicates 20:1 evidence in favor of the Alternative.
-% 
-% 
+%
 % :Inputs:
 %
 %   **stat_image:**
 %        A statistic image that either contains 1) a t-map, 2) a
-%        correlation map, or 3) a map of counts for testing proportions
+%        correlation map, or 3) a map of counts for testing proportions.
+%
+% :Optional Inputs:
 %
 %   **input_type:**
-%        A string specifying the type of map provided for now, 
-%        options are 't', 'r', and 'prop'
+%        A string specifying the type of map provided. For now, options
+%        are 't', 'r', and 'prop'. Default: 't'.
 %
 %   **numeric (optional):**
-%       Scaling factor r for effect size prior if 't' map is specified.
-%
+%        Scaling factor r for effect size prior if a 't' map is
+%        specified. Defaults to 0.707 inside t1smpbf.m.
 %
 % :Outputs:
 %
 %   **BF:**
-%        fmri_data object with voxel-wise bayes factors (scaled as 2 ln BF)
-%        these can be thresholded according to Kass and Raftery 1995
+%        fmri_data object with voxel-wise bayes factors (scaled as
+%        2 ln BF). These can be thresholded according to Kass and
+%        Raftery 1995.
 %
 % :Examples:
 % ::
 %
-%  % Example 1: Emotion Regulation data and perform 1-sample t-test
+%     % Example 1: Emotion Regulation data and perform 1-sample t-test
 %
-%        dat=load_image_set('emotionreg');
-%        t=ttest(dat);
-%        BF_tstat=estimateBayesFactor(t,'t');
-%        BF_tstat_th = threshold(BF_tstat, [-6 6], 'raw-outside');
-%        orthviews(BF_tstat_th);
+%     dat = load_image_set('emotionreg');
+%     t = ttest(dat);
+%     BF_tstat = estimateBayesFactor(t, 't');
+%     BF_tstat_th = threshold(BF_tstat, [-6 6], 'raw-outside');
+%     orthviews(BF_tstat_th);
 %
+%     % Example 2: Emotion Regulation data and test of proportions
 %
-%
-%  % Example 1: Emotion Regulation data and test of proportions
-%
-%        dat=load_image_set('emotionreg');
-%        t=ttest(dat);
-%        prop=t; %initialize stats object from t-test output
-%        prop.dat=sum(dat.dat'>0)'; 
-%        BF_prop=estimateBayesFactor(prop,'prop'); %estimate BF
-%        BF_prop_th = threshold(BF_prop, [-6 6], 'raw-outside');
-%        orthviews(BF_prop_th);
-% 
+%     dat = load_image_set('emotionreg');
+%     t = ttest(dat);
+%     prop = t;  % initialize stats object from t-test output
+%     prop.dat = sum(dat.dat'>0)';
+%     BF_prop = estimateBayesFactor(prop, 'prop'); % estimate BF
+%     BF_prop_th = threshold(BF_prop, [-6 6], 'raw-outside');
+%     orthviews(BF_prop_th);
 %
 % :See also:
+%   - statistic_image
+%   - fmri_data
+%   - t1smpbf
+%   - corrbf
+%   - binombf
 %
-% stat_image, fmri_data
-
 % ..
+%    Author and copyright information:
+%
+%    Copyright (C) 2018 Philip Kragel
+%
+%    This program is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    This program is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
 %    Programmers' notes:
 %    List dates and changes here, and author of changes
 %
-%   Phil: created, Dec 2018
+%    Phil: created, Dec 2018
 %
-%   TODO: add optional input for base-rate when testing proportions
+%    TODO: add optional input for base-rate when testing proportions
 %
-%   11/21/2019 : Tor Wager added documentation and explanation to help.
-%   05/18/2022 : Michael Sun added optional input for r scaling factor when t1smpbf() 
+%    11/21/2019 : Tor Wager added documentation and explanation to help.
+%    05/18/2022 : Michael Sun added optional input for r scaling factor when t1smpbf()
 % ..
 
 if isempty(varargin)

@@ -173,7 +173,7 @@ function stats = clusterdata_permtest(data, varargin)
 %
 % :See also:
 %   kmeans, confusionmat, testclustnew (original function by Chris Summerfield), 
-%   canlab_sort_distance_matrix
+%   canlab_sort_distance_matrix, canlab_force_directed_graph
 %
 
 % -------------------------------------------------------------------------

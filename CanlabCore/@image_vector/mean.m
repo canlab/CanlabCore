@@ -1,28 +1,65 @@
 function [m, varargout] = mean(obj, varargin)
-% Mean across a set of images. Returns a new image_vector object.
-% Creates an image_vector object with mean values for each voxel (cols)
-% across images (rows) of an image_vector (e.g., fmri_data) object.
+% mean Mean across a set of images, returned as a new image_vector object.
+%
+% Creates an image_vector object with mean values for each voxel (rows)
+% across images (columns) of an image_vector (e.g., fmri_data) object.
+%
+% - Averages available valid data in each voxel. Some images may have
+%   missing data for some voxels.
+% - Treats values of 0 as missing (after SPM) and excludes from mean,
+%   unless 'treat_zero_as_data' is passed.
 %
 % :Usage:
 % ::
 %
-%    function [m, imagemeans, voxelmeans]  = mean(obj, [optional args])
+%    [m, imagemeans, voxelmeans] = mean(obj, [optional args])
 %
-% m is an image_vector object whose data contains the mean values.
+% :Inputs:
 %
-% - Average available valid data in each voxel. Some images may have
-% missing data for some voxels.
-% - Treats values of 0 as missing (after SPM) and excludes from mean.
+%   **obj:**
+%        An image_vector / fmri_data / fmri_data_st object with one or
+%        more images stored as columns of .dat.
 %
 % :Optional Inputs:
-%   - 'group', 'group_by' -> followed by vector of integers to define
-%       groups (e.g., images from the same participant). Averages across images
-%       within each group.
-%   - 'write', followed by file name
-%   - 'path', followed by location for file (default = current directory)
-%   - 'orthviews' -> show orthviews for this image, same as orthviews(m)
-%   - 'histogram' -> show histogram for this image, same as histogram(m)
-%   - 'plot' -> do both
+%
+%   **'group', 'group_by':**
+%        followed by vector of integers to define groups (e.g., images
+%        from the same participant). Averages across images within each
+%        group.
+%
+%   **'write':**
+%        followed by file name (writes the mean image to disk)
+%
+%   **'path':**
+%        followed by location for file (default = current directory)
+%
+%   **'orthviews':**
+%        show orthviews for this image, same as orthviews(m)
+%
+%   **'histogram':**
+%        show histogram for this image, same as histogram(m)
+%
+%   **'plot':**
+%        do both ('orthviews' and 'histogram')
+%
+%   **'treat_zero_as_data':**
+%        If supplied, zero values are kept as data (not converted to NaN
+%        before averaging). Default: false (zeros are treated as missing).
+%
+% :Outputs:
+%
+%   **m:**
+%        An image_vector / fmri_data / fmri_data_st object whose data
+%        contains the mean values across images (or per-group means if
+%        group_by was specified). For fmri_data inputs, key fields
+%        (images_per_session, Y, Y_names, covariates, additional_info,
+%        metadata_table, etc.) are copied or group-averaged.
+%
+%   **imagemeans (varargout{1}):**
+%        Optional. The mean of each image (i.e., column means of obj.dat).
+%
+%   **voxelmeans (varargout{2}):**
+%        Optional. The mean of each voxel across images (row means).
 %
 % :Examples:
 % ::
@@ -30,11 +67,17 @@ function [m, varargout] = mean(obj, varargin)
 %    % If sdat is an fmri_data object with multiple images,
 %    m = mean(sdat, 'plot', 'write', anatmeanname, 'path', maskdir);
 %
-
-% Programmers' notes:
-% - Tor: Average available valid data in each voxel (June 2017)
-% - Michael Sun, PhD: Zero may actually be data, so NaN-ing them can be
-% destructive, so add a flag 'treat_zero_as_data' 04/21/2025
+% :See also:
+%   - histogram
+%   - orthviews
+%   - write
+%
+% ..
+%    Programmers' notes:
+%    - Tor: Average available valid data in each voxel (June 2017)
+%    - Michael Sun, PhD: Zero may actually be data, so NaN-ing them can be
+%      destructive, so add a flag 'treat_zero_as_data' 04/21/2025
+% ..
 
 fname = [];
 fpath = pwd;

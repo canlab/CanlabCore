@@ -1,51 +1,90 @@
 function icadat = ica(fmridat_obj, varargin)
-% Spatial ICA of an fmri_data object
-%   - icadat = ica(fmridat_obj, [number of ICs to save])
-%   - icadat is also an fmri_data object, with .dat field voxels x components
+% ica Spatial ICA of an fmri_data object.
+%
+% Run spatial fastICA across the images stored in an fmri_data /
+% image_vector object and return an fmri_data object whose columns are
+% spatial component maps. The mixing (A) and separation (W) matrices are
+% stored in icadat.additional_info{1} and {2}.
+%
+% :Usage:
+% ::
+%
+%     icadat = ica(fmridat_obj, [number of ICs to save])
+%
+% :Inputs:
+%
+%   **fmridat_obj:**
+%        An fmri_data (or image_vector) object. icadat is also an
+%        fmri_data object, with .dat field voxels x components.
+%
+% :Optional Inputs:
+%
+%   **number of ICs:**
+%        Optional integer scalar specifying the number of independent
+%        components to retain. Default: 30.
+%
+% :Outputs:
+%
+%   **icadat:**
+%        fmri_data object holding the spatial component maps in .dat
+%        (voxels x components) and the mixing / separation matrices in
+%        .additional_info{1} (A) and .additional_info{2} (W).
 %
 % :Notes:
+%
 %   - Spatial component maps are saved in columns of icadat.dat, or rows of icadat.dat'
 %   - icasig = W * mixedsig
 %   - icasig = icadat.dat' = W * fmridat_obj.dat'
 %
-% W is the separation matrix, the inverse of the mixing matrix
-% A is the mixing matrix, the inverse of the separation matrix
-% 
-% A and W are stored in additional_info field of icadat in cells {1} and {2}, respectively
-% A = ica_obj.additional_info{1};
-% W = ica_obj.additional_info{2};
+%   W is the separation matrix, the inverse of the mixing matrix.
+%   A is the mixing matrix, the inverse of the separation matrix.
 %
-% Model:
-% D = A * S, where:
-%   D = [n x v] dataset, images x voxels in fmridat_obj.dat'
-%   A = [n x k] mixing matrix (the inverse of the separation matrix if n = k)
-
-%   W = [k x n] separation matrix, (the inverse of the mixing matrix if n = k)
-%               W' is a matrix whose columns are image series, e.g., time
-%               series. They reflect the expression of each component
-%               across images and can be used to analyze differences across
-%               image groups (conditions, time, etc.)
-%   S = [k x v] components matrix, with k components. S = icadat.dat'
-%               S = W * D;
+%   A and W are stored in additional_info field of icadat in cells {1} and {2}, respectively
+%       A = ica_obj.additional_info{1};
+%       W = ica_obj.additional_info{2};
 %
-% - Each image in D is a mixture of maps S defined by a row of A
-% - Each column of A defines the expression of one map in S across images (e.g., time, or other image series)
+%   Model:
+%   D = A * S, where:
 %
-% Reconstructed data:
-% D_recon = A * S;
-% figure; plot(D(:), D_recon(:), 'k.')
-%   A is related to D * S' (fmridat_obj.dat' * icadat.dat)';
+%     D = [n x v] dataset, images x voxels in fmridat_obj.dat'
+%     A = [n x k] mixing matrix (the inverse of the separation matrix if n = k)
+%     W = [k x n] separation matrix, (the inverse of the mixing matrix if n = k)
+%                 W' is a matrix whose columns are image series, e.g., time
+%                 series. They reflect the expression of each component
+%                 across images and can be used to analyze differences across
+%                 image groups (conditions, time, etc.)
+%     S = [k x v] components matrix, with k components. S = icadat.dat'
+%                 S = W * D;
 %
-% Dual regression / back-reconstruction:
-% B = pinv(S') * D';  % dual regression step 1, each data image n regressed on k spatial maps S; B = k x n
-% B = pinv(icadat.dat) * fmridat_obj.dat;
-%   Note: fmridat_obj can be a different image object here, e.g., an independent dataset
-%   If fmridat_obj is the same dataset used to derive ICA components S, B is very similar to W
+%   - Each image in D is a mixture of maps S defined by a row of A
+%   - Each column of A defines the expression of one map in S across images (e.g., time, or other image series)
 %
-% S_hat = pinv(B') * fmridat_obj.dat';  % dual regression step 2
-%   S_obj = fmridat_obj;
-%   S_obj.dat = S_hat';
-%   montage(get_wh_image(S_obj, 1:4));
+%   Reconstructed data:
+%       D_recon = A * S;
+%       figure; plot(D(:), D_recon(:), 'k.')
+%       A is related to D * S' (fmridat_obj.dat' * icadat.dat)';
+%
+%   Dual regression / back-reconstruction:
+%       B = pinv(S') * D';  % dual regression step 1, each data image n regressed on k spatial maps S; B = k x n
+%       B = pinv(icadat.dat) * fmridat_obj.dat;
+%       % Note: fmridat_obj can be a different image object here, e.g., an independent dataset
+%       % If fmridat_obj is the same dataset used to derive ICA components S, B is very similar to W
+%
+%       S_hat = pinv(B') * fmridat_obj.dat';  % dual regression step 2
+%       S_obj = fmridat_obj;
+%       S_obj.dat = S_hat';
+%       montage(get_wh_image(S_obj, 1:4));
+%
+% :Examples:
+% ::
+%
+%     icadat = ica(fmridat_obj, 20);
+%     orthviews(icadat);
+%
+% :See also:
+%   - icatb_fastICA
+%   - mahal
+%   - orthviews
 
 figure; plot(B(:), W(:), 'k.')
 

@@ -1,33 +1,78 @@
 function [obj_separated_matched, levels_table] = unstack_by_condition(obj, condition_names, sid_var_name)
-% unstack image into separate objects for each condition based on 1 or more metadata_table variables
+% unstack_by_condition Split an image_vector into per-condition objects matched on a subject variable.
 %
-% [obj_separated_matched, levels_table] = unstack_by_condition(obj, condition_names, sid_var_name)
+% Unstack image into separate objects for each condition based on one or
+% more metadata_table variables.
 %
-% This object method uses the metadata_table field of an image_vector object (e.g., fmri_data object) 
-% to separate images belonging to different groups or conditions. It can be used along with the mean() 
-% method to create average images for subgroups (e.g., participants) separated by condition. This turns 
-% a "long format" object, for example one with multiple trials per condition per participant, into a 
-% "wide format" dataset with one object per condition, with the order of images matched on participant 
-% across conditions. This "wide format" is suitable for estimating within-person contrasts and doing 
-% related statistical tests.
+% This object method uses the metadata_table field of an image_vector
+% object (e.g., fmri_data object) to separate images belonging to
+% different groups or conditions. It can be used along with the mean()
+% method to create average images for subgroups (e.g., participants)
+% separated by condition. This turns a "long format" object, for example
+% one with multiple trials per condition per participant, into a "wide
+% format" dataset with one object per condition, with the order of
+% images matched on participant across conditions. This "wide format" is
+% suitable for estimating within-person contrasts and doing related
+% statistical tests.
 %
-% e.g., 
-% condition_names = {'stimLvl' 'heat' 'reg'};  % condition names
-% sid_var_name = 'subject_id';               % must be numeric 
+% This will create a cell array with one cell per unique combination of
+% the levels of variables in condition_names. E.g., if there are 3
+% levels of reg, 2 levels of stimLvl, and 1 level of heat, this will
+% create 3 x 2 = 6 separate image objects, each in a cell.
 %
-% This will create a cell array with one cell per unique combination of the
-% levels of variables in condition_names
-% e.g., if there are 3 levels of reg, 2 levels of stimLvl, and 1 level of heat
-% will create 3 x 2 = 6 separate image objects, each in a cell
+% To handle missing data, assuming conditions are within-subject, match
+% images in each object on a subject (or other grouping) variable.
 %
-% To handle missing data, assuming conditions are within-subject:
-% Match images in each object on a subject (or other grouping) variable
 % * All variables must be numeric *
+%
 % This is an alpha-version code stub; please finish me using
 % documentation_template.m
-
-% Programmers' notes:
-% Created by Tor Wager, Jan 2024
+%
+% :Usage:
+% ::
+%
+%     [obj_separated_matched, levels_table] = unstack_by_condition(obj, condition_names, sid_var_name)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data object with a populated
+%        metadata_table.
+%
+%   **condition_names:**
+%        Cell array of column names in obj.metadata_table that define
+%        the conditions to unstack on.
+%
+%   **sid_var_name:**
+%        Name of a numeric subject (or grouping) variable in
+%        obj.metadata_table used to match images across conditions.
+%
+% :Outputs:
+%
+%   **obj_separated_matched:**
+%        Cell array of image_vector objects, one per unique combination
+%        of levels in condition_names, with rows matched across cells
+%        on sid_var_name.
+%
+%   **levels_table:**
+%        Table of unique condition combinations corresponding to the
+%        cells of obj_separated_matched.
+%
+% :Examples:
+% ::
+%
+%     condition_names = {'stimLvl' 'heat' 'reg'};
+%     sid_var_name = 'subject_id';   % must be numeric
+%     [obj_sep, levels] = unstack_by_condition(obj, condition_names, sid_var_name);
+%
+% :See also:
+%   - get_wh_image
+%   - mean
+%
+% ..
+%    Programmers' notes:
+%    Created by Tor Wager, Jan 2024
+% ..
 
 % matched rows on subject
 

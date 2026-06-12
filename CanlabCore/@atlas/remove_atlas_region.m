@@ -1,9 +1,36 @@
 function atlas_obj = remove_atlas_region(atlas_obj, varargin)
-% Removes region(s) from atlas, by names or index values
-% See select_atlas_subset for input format for region names/values
+% remove_atlas_region Remove region(s) from an atlas, by names or index values.
 %
-% atlas_obj = remove_atlas_region(atlas_obj, [region names cell or index values vector])
-% 
+% Identify regions to remove via select_atlas_subset (passing through any
+% region-name cell or integer-index inputs), then remove them from the
+% probability_maps, .dat, labels, and references fields of the atlas
+% object, renumbering the remaining regions accordingly.
+%
+% :Usage:
+% ::
+%
+%     atlas_obj = remove_atlas_region(atlas_obj, [region names cell or index values vector])
+%
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object.
+%
+%   **varargin:**
+%        Region selection inputs accepted by select_atlas_subset, e.g.,
+%        a cell array of region name strings or a vector of integer
+%        index values.
+%
+% :Outputs:
+%
+%   **atlas_obj:**
+%        Atlas-class object with the specified regions removed and
+%        labels/indices renumbered consecutively.
+%
+% :See also:
+%   - select_atlas_subset
+%   - probability_maps_to_region_index
+%   - check_properties
 
 
 [atlas_obj, has_pmaps] = check_properties(atlas_obj);

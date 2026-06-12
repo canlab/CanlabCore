@@ -1,12 +1,65 @@
 function [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, varargin)
-% Given a region object and optional colorfun, generate a list of colors
-% for each region, assigning the same color to symmetric regions in left
-% and right hemispheres.
+% match_colors_left_right Assign matched colors to symmetric L/R regions in a region object.
 %
-% [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, varargin)
+% Given a region object and an optional color-generating function,
+% produce a list of colors for each region such that anatomically
+% symmetric left- and right-hemisphere regions share the same color.
+% Midline and unmatched regions are colored separately. Symmetry is
+% assessed using mm centers and a mutual-nearest-neighbor rule in the
+% (y, z) plane.
 %
-% - input custom color function
-% [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = match_colors_left_right(r, @(n) custom_colors([1 0 .5], [.5 0 1], n));
+% :Usage:
+% ::
+%
+%     [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = ...
+%         match_colors_left_right(r, [colorfun])
+%
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array.
+%
+% :Optional Inputs:
+%
+%   **colorfun:**
+%        Function handle taking an integer n and returning an n x 3
+%        cell/array of colors. Default: @scn_standard_colors. Example:
+%        @(n) custom_colors([1 0 .5], [.5 0 1], n).
+%
+% :Outputs:
+%
+%   **all_colors:**
+%        Cell array of colors, one per region in r.
+%
+%   **leftmatched:**
+%        Region object containing left-hemisphere regions with matched
+%        right-hemisphere partners.
+%
+%   **rightmatched:**
+%        Region object containing right-hemisphere regions with matched
+%        left-hemisphere partners (same length and order as leftmatched).
+%
+%   **midline:**
+%        Region object containing midline regions.
+%
+%   **leftunmatched:**
+%        Region object containing left-hemisphere regions without a
+%        right-hemisphere partner.
+%
+%   **rightunmatched:**
+%        Region object containing right-hemisphere regions without a
+%        left-hemisphere partner.
+%
+% :Examples:
+% ::
+%
+%     [all_colors, leftmatched, rightmatched, midline, leftunmatched, rightunmatched] = ...
+%         match_colors_left_right(r, @(n) custom_colors([1 0 .5], [.5 0 1], n));
+%
+% :See also:
+%   - scn_standard_colors
+%   - region/isosurface
+%   - region/montage
 
 colorfun = @scn_standard_colors;
 

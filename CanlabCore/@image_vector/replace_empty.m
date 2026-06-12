@@ -1,25 +1,52 @@
 function obj = replace_empty(obj, varargin)
-% Replace empty/missing values in an image data object
+% replace_empty Replace previously removed (empty) voxels / images in an image data object with zeros.
+%
+% Replace missing values in obj.dat stored in obj.removed_voxels and
+% obj.removed_images with zeros. This returns obj.dat in a format that
+% can be reconstructed into a 3-D or 4-D image matrix for brain
+% visualization. For statistic_image objects, .p is filled with ones
+% (so removed voxels are not flagged significant), and .ste / .sig /
+% .N / .dfe are filled appropriately. For atlas objects, .probability_maps
+% are zero-filled.
 %
 % :Usage:
 % ::
 %
 %    obj = replace_empty(obj, [optional keywords])
 %
-% Replace missing values in obj.dat stored in obj.removed_voxels and
-% obj.removed_images with zeros.  This returns obj.dat in a format that can
-% be reconstructed into a 3-D or 4-D image matrix for brain visualization.
+% :Inputs:
 %
-% :Optional keywords:
+%   **obj:**
+%        An image_vector / fmri_data / statistic_image / atlas object.
+%
+% :Optional Inputs:
 %
 %   **'voxels' or 'images':**
 %        replace only missing voxels/images
 %
+% :Outputs:
+%
+%   **obj:**
+%        The input object with previously removed voxels and/or images
+%        re-inserted (with zeros / ones as appropriate). The
+%        .removed_voxels and .removed_images fields are reset to all
+%        false for the dimensions that were filled in.
+%
+% :Examples:
+% ::
+%
+%     obj = replace_empty(dat);
+%     obj = replace_empty(dat, 'voxels');
+%
+% :See also:
+%   - remove_empty
+%   - zeroinsert
+%   - nanremove
+%   - naninsert
+%
 % ..
 %    Tor Wager, 12/1/10
 % ..
-%
-% :See also: remove_empty, zeroinsert, nanremove, naninsert
 
 dovoxels = 1;
 doimages = 1;

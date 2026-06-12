@@ -7,7 +7,7 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %     [obj_out, statstab] = normalize_gm_by_wm_csf(obj)
 %     [obj_out, statstab] = normalize_gm_by_wm_csf(obj, ...
 %         'do_scale', true, 'log_scale', false, 'trim_pct', 5, ...
-%         'mask_files', masks_cell)
+%         'mask_files', masks_cell, 'use_gpu', true)
 %
 % Normalize gray-matter voxel intensities across subjects in an fmri_data
 % object by:
@@ -72,6 +72,13 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 %
 %        Resolved with which() if a bare filename is supplied.
 %
+%   **'use_gpu', logical:**
+%        Default: false. Passed to normalize_gm_shift_scale. If true,
+%        the numeric shift/scale kernel attempts to run on a GPU and
+%        falls back to CPU if a GPU is unavailable or an operation is not
+%        supported. Mask loading/resampling, metadata table construction,
+%        and output object assembly remain on CPU.
+%
 % :Outputs:
 %
 %   **obj_out:**
@@ -132,6 +139,8 @@ function [obj_out, statstab] = normalize_gm_by_wm_csf(obj, varargin)
 p = inputParser;
 p.addRequired('obj', @(x) isa(x, 'fmri_data'));
 
+[use_gpu_default, varargin] = parse_use_gpu_flag(varargin);
+
 default_masks = {'gray_matter_mask_sparse.img', ...
                  'canonical_white_matter.img', ...
                  'canonical_ventricles.img'};
@@ -140,6 +149,7 @@ p.addParameter('log_scale', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('do_scale',  true,  @(x) islogical(x) && isscalar(x));
 p.addParameter('trim_pct',  5,     @(x) isnumeric(x) && isscalar(x) && x >= 0 && x < 50);
 p.addParameter('mask_files', default_masks, @(x) iscell(x) && numel(x) == 3);
+p.addParameter('use_gpu', use_gpu_default, @(x) (islogical(x) || isnumeric(x)) && isscalar(x));
 
 p.parse(obj, varargin{:});
 
@@ -147,6 +157,7 @@ do_scale   = p.Results.do_scale;
 log_scale  = p.Results.log_scale;
 trim_pct   = p.Results.trim_pct;
 mask_files = p.Results.mask_files;
+use_gpu    = logical(p.Results.use_gpu);
 
 % make sure we have full paths
 for i = 1:length(mask_files)
@@ -206,7 +217,8 @@ Y = obj.dat;  % V x S
 [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, ...
                                      'do_scale',  do_scale, ...
                                      'log_scale', log_scale, ...
-                                     'trim_pct',  trim_pct);
+                                     'trim_pct',  trim_pct, ...
+                                     'use_gpu',   use_gpu);
 
 % -------------------------------------------------------------------------
 % Build stats table from STATS struct
@@ -242,6 +254,24 @@ else
 end
 
 end % function gm_shift_scale_normalize
+
+
+function [use_gpu_default, args] = parse_use_gpu_flag(args)
+% Support a bare 'use_gpu' flag in addition to the name/value form.
+
+use_gpu_default = false;
+
+for i = 1:numel(args)
+    if (ischar(args{i}) || isstring(args{i})) && strcmpi(char(args{i}), 'use_gpu')
+        if i == numel(args) || ischar(args{i + 1}) || isstring(args{i + 1})
+            use_gpu_default = true;
+            args(i) = [];
+            return
+        end
+    end
+end
+
+end
 
 % =========================================================================
 % Helper: convert STATS struct to table with S rows

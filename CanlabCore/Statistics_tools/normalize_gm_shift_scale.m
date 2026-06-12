@@ -38,6 +38,12 @@ function [Z, stats] = normalize_gm_shift_scale(Y, gm_mask, wm_mask, csf_mask, va
 %                   within each tissue for robust median/MAD estimation.
 %                 - For example, trim_pct = 5 removes bottom and top 5%.
 %
+%   'use_gpu'   : logical (default = false)
+%                 - If true, attempts to run the numeric kernel on a GPU
+%                   using gpuArray. Results are gathered before return.
+%                   If no GPU is available, or a GPU operation is not
+%                   supported, the function warns once and falls back to CPU.
+%
 % OUTPUTS
 %   Z     : V x S numeric matrix, shift- and scale-normalized image data
 %           - Only GM voxels are modified. Non-GM voxels are copied from Y.
@@ -88,17 +94,51 @@ p.addRequired('Y', @(x) isnumeric(x) && ismatrix(x));
 p.addRequired('gm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('wm_mask', @(x) islogical(x) && isvector(x));
 p.addRequired('csf_mask', @(x) islogical(x) && isvector(x));
+
+[use_gpu_default, varargin] = parse_use_gpu_flag(varargin);
+
 p.addParameter('do_scale', true, @(x) islogical(x) && isscalar(x));
 p.addParameter('log_scale', false, @(x) islogical(x) && isscalar(x));
 p.addParameter('trim_pct', 5, @(x) isnumeric(x) && isscalar(x) && x >= 0 && x < 50);
+p.addParameter('use_gpu', use_gpu_default, @(x) (islogical(x) || isnumeric(x)) && isscalar(x));
 
 p.parse(Y, gm_mask, wm_mask, csf_mask, varargin{:});
 
 do_scale  = p.Results.do_scale;
 log_scale = p.Results.log_scale;
 trim_pct  = p.Results.trim_pct;
+use_gpu   = logical(p.Results.use_gpu);
 
 [Y, gm_mask, wm_mask, csf_mask] = check_and_resolve_dims(Y, gm_mask, wm_mask, csf_mask);
+
+if use_gpu
+    [gpu_available, gpu_message] = local_gpu_available();
+
+    if gpu_available
+        try
+            [Z, stats] = normalize_gm_shift_scale_core(gpuArray(Y), gpuArray(gm_mask), ...
+                gpuArray(wm_mask), gpuArray(csf_mask), do_scale, log_scale, trim_pct);
+            Z = gather(Z);
+            stats = gather_stats_struct(stats);
+            return
+        catch gpu_err
+            warning('normalize_gm_shift_scale:GPUFallback', ...
+                ['GPU path failed (%s). Falling back to CPU for ', ...
+                 'normalize_gm_shift_scale.'], gpu_err.message);
+        end
+    else
+        warning('normalize_gm_shift_scale:GPUUnavailable', ...
+            'GPU requested, but no usable GPU is available (%s). Falling back to CPU.', gpu_message);
+    end
+end
+
+[Z, stats] = normalize_gm_shift_scale_core(Y, gm_mask, wm_mask, csf_mask, ...
+    do_scale, log_scale, trim_pct);
+
+end % function normalize_gm_shift_scale
+
+
+function [Z, stats] = normalize_gm_shift_scale_core(Y, gm_mask, wm_mask, csf_mask, do_scale, log_scale, trim_pct)
 
 [~, S] = size(Y);
 
@@ -106,13 +146,13 @@ trim_pct  = p.Results.trim_pct;
 % Preallocate summary statistics
 % -------------------------------------------------------------------------
 
-m_gm  = nan(S, 1); % Median values per subject
-m_wm  = nan(S, 1);
-m_csf = nan(S, 1);
+m_gm  = local_nan(S, 1, Y); % Median values per subject
+m_wm  = local_nan(S, 1, Y);
+m_csf = local_nan(S, 1, Y);
 
-r_gm  = nan(S, 1); % Spatial MAD per subject
-r_wm  = nan(S, 1);
-r_csf = nan(S, 1);
+r_gm  = local_nan(S, 1, Y); % Spatial MAD per subject
+r_wm  = local_nan(S, 1, Y);
+r_csf = local_nan(S, 1, Y);
 
 mad_scale_const = 1.4826;
 
@@ -139,7 +179,7 @@ end
 % Shift model: m_GM ~ 1 + m_CSF + m_WM
 % -------------------------------------------------------------------------
 
-X_mean = [ones(S, 1), m_csf, m_wm];  % S x 3
+X_mean = [local_ones(S, 1, Y), m_csf, m_wm];  % S x 3
 y_mean = m_gm;                       % S x 1
 
 beta_mean = X_mean \ y_mean;         % 3 x 1 OLS
@@ -157,7 +197,7 @@ if do_scale
     if ~log_scale
 
         % Linear scale model
-        X_scale = [ones(S, 1), r_csf, r_wm];
+        X_scale = [local_ones(S, 1, Y), r_csf, r_wm];
         y_scale = r_gm;
 
         beta_scale = X_scale \ y_scale;          % 3 x 1
@@ -172,7 +212,7 @@ if do_scale
         rw = max(r_wm,  eps_val);
         rg = max(r_gm,  eps_val);
 
-        X_log = [ones(S, 1), log(rc), log(rw)];
+        X_log = [local_ones(S, 1, Y), log(rc), log(rw)];
         y_log = log(rg);
 
         lambda = X_log \ y_log;                  % 3 x 1
@@ -189,9 +229,9 @@ if do_scale
 
     scale_factor = sigma_ref ./ sigma_hat;       % S x 1
 else
-    sigma_hat    = nan(S, 1);
+    sigma_hat    = local_nan(S, 1, Y);
     sigma_ref    = NaN;
-    scale_factor = ones(S, 1);
+    scale_factor = local_ones(S, 1, Y);
 end
 
 % -------------------------------------------------------------------------
@@ -204,7 +244,7 @@ Z = Y;  % initialize output
 
 for s = 1:S
 
-    if isnan(scale_factor(s)) || ~isfinite(scale_factor(s))
+    if local_scalar_true(isnan(scale_factor(s)) | ~isfinite(scale_factor(s)))
         % If something went wrong for this subject, leave as-is
         warning('normalize_gm_shift_scale: Scale factor is infinite for image %3.0f!', s)
         continue;
@@ -252,11 +292,102 @@ stats.log_scale    = log_scale;
 stats.trim_pct     = trim_pct;
 stats.mad_const    = mad_scale_const;
 
-end % function normalize_gm_shift_scale
+end % function normalize_gm_shift_scale_core
 
 % =========================================================================
 % Helper functions
 % =========================================================================
+
+function [use_gpu_default, args] = parse_use_gpu_flag(args)
+% Support a bare 'use_gpu' flag in addition to the name/value form.
+
+use_gpu_default = false;
+
+for i = 1:numel(args)
+    if (ischar(args{i}) || isstring(args{i})) && strcmpi(char(args{i}), 'use_gpu')
+        if i == numel(args) || ischar(args{i + 1}) || isstring(args{i + 1})
+            use_gpu_default = true;
+            args(i) = [];
+            return
+        end
+    end
+end
+
+end
+
+
+function [tf, message] = local_gpu_available()
+% Check for a usable MATLAB GPU without making GPU support a hard dependency.
+
+tf = false;
+message = 'gpuDeviceCount/gpuDevice not available';
+
+try
+    if exist('gpuDeviceCount', 'file') ~= 2 && exist('gpuDeviceCount', 'builtin') ~= 5
+        return
+    end
+
+    if gpuDeviceCount < 1
+        message = 'gpuDeviceCount returned 0';
+        return
+    end
+
+    gpuDevice;
+    tf = true;
+    message = '';
+
+catch err
+    message = err.message;
+end
+
+end
+
+
+function stats = gather_stats_struct(stats)
+% Gather every numeric/logical gpuArray field in the stats struct.
+
+fn = fieldnames(stats);
+
+for i = 1:numel(fn)
+    if isa(stats.(fn{i}), 'gpuArray')
+        stats.(fn{i}) = gather(stats.(fn{i}));
+    end
+end
+
+end
+
+
+function x = local_nan(m, n, exemplar)
+
+if isa(exemplar, 'gpuArray')
+    x = gpuArray(nan(m, n));
+else
+    x = nan(m, n);
+end
+
+end
+
+
+function x = local_ones(m, n, exemplar)
+
+if isa(exemplar, 'gpuArray')
+    x = gpuArray(ones(m, n));
+else
+    x = ones(m, n);
+end
+
+end
+
+
+function tf = local_scalar_true(x)
+
+if isa(x, 'gpuArray')
+    x = gather(x);
+end
+
+tf = logical(x);
+
+end
 
 function [m_t, r_t] = tissue_robust_summary(y, mask, trim_pct, mad_scale_const)
 % Compute trimmed median and MAD-based robust scale for one tissue

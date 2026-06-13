@@ -85,6 +85,13 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+% Multi-atlas: score several atlases in one pass (columns namespaced by name,
+% so give each a DISTINCT AtlasNames entry to avoid collisions). AtlasRegions
+% is a cell-of-region-lists, one per atlas ({} = all regions for that atlas).
+% The singular AtlasObj/AtlasName/Regions above still work and are scored too.
+p.addParameter('AtlasObjs', {}, @(x) isempty(x) || iscell(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
+p.addParameter('AtlasNames', {}, @(x) isempty(x) || iscell(x) || ischar(x) || isstring(x));
+p.addParameter('AtlasRegions', {}, @(x) isempty(x) || iscell(x));
 p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
 p.addParameter('PropagateSE', true, @(x) islogical(x) || isnumeric(x));
@@ -192,11 +199,12 @@ for j = 1:numel(objects)
             'OutputCsv', '', ...
             'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
 
-        % Optionally append atlas region means.
-        if ~isempty(opts.AtlasObj)
-            atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
-                local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), ...
-                local_effective_regions(opts.AtlasObj, opts.Regions), ...
+        % Optionally append atlas region means -- one block per atlas spec.
+        atlas_specs = local_atlas_specs(opts);
+        for k = 1:numel(atlas_specs)
+            atlas_cols = local_compute_atlas_scores(score_obj, atlas_specs(k).obj, ...
+                atlas_specs(k).name, ...
+                local_effective_regions(atlas_specs(k).obj, atlas_specs(k).regions), ...
                 opts.Normalize);
             scores = local_horzappend_scores(scores, atlas_cols);
         end
@@ -235,6 +243,7 @@ if ~local_existing_metadata_aligns(existing, metadata_table)
 end
 
 [missing_sigs, missing_imgs] = local_missing_sets(existing, opts);
+atlas_specs = local_atlas_specs(opts);
 missing_regions = local_missing_atlas_regions(existing, opts);
 if isempty(missing_sigs) && isempty(missing_imgs) && isempty(missing_regions)
     % Everything requested is already present; nothing to do, but the
@@ -260,13 +269,16 @@ try
         'OutputCsv', '', ...
         'WarningContext', local_warning_context(opts.WarningContext, model_name, object_name, prefix));
 
-    % Atlas region means -- append ONLY the missing regions, so adding a
-    % new region to an existing CSV doesn't trigger a full re-extract.
-    if ~isempty(missing_regions)
-        atlas_cols = local_compute_atlas_scores(score_obj, opts.AtlasObj, ...
-            local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), ...
-            missing_regions, opts.Normalize);
-        new_scores = local_horzappend_scores(new_scores, atlas_cols);
+    % Atlas region means -- per atlas spec, append ONLY that atlas's missing
+    % regions, so adding a new region (or a whole new atlas) to an existing
+    % CSV doesn't trigger a full re-extract.
+    for k = 1:numel(atlas_specs)
+        mr = local_missing_atlas_regions_spec(existing, atlas_specs(k), opts.Normalize);
+        if ~isempty(mr)
+            atlas_cols = local_compute_atlas_scores(score_obj, atlas_specs(k).obj, ...
+                atlas_specs(k).name, mr, opts.Normalize);
+            new_scores = local_horzappend_scores(new_scores, atlas_cols);
+        end
     end
 
     merged = local_merge_score_tables(existing, new_scores);
@@ -416,6 +428,11 @@ extract_input = local_to_fmri_data_for_extract(score_obj);
 for r = 1:numel(regions)
     region_label = regions{r};
     if isa(atlas_obj, 'atlas')
+        % Always 'deterministic' (winner-take-all). Probabilistic atlases are
+        % otherwise far too liberal -- a canlab2024 region spans ~2x the voxels
+        % of its hard parcellation, blurring boundaries past what is canonically
+        % anatomical. On a label-only atlas (empty probability_maps) the flag is
+        % a verified harmless no-op (it falls back to the integer .dat labels).
         try
             single_sub = select_atlas_subset(atlas_obj, {region_label}, 'exact', 'deterministic');
         catch err
@@ -572,27 +589,103 @@ end
 
 
 function missing_regions = local_missing_atlas_regions(existing, opts)
-% Returns the cellstr of region labels whose atlas_<name>_<region>_<suffix>
-% column is absent from the existing CSV (suffix depends on opts.Normalize).
-% Empty if AtlasObj is not supplied OR all effective regions are present.
-% Note: different normalization modes produce different column suffixes,
-% so a CSV with _mean columns and a request for _meanL1 columns will
-% correctly route through append to add the L1 versions alongside.
+% Aggregate missing-region labels across ALL atlas specs (used by the
+% validity/no-op checks, which only need to know whether anything is
+% missing). Per-atlas append uses local_missing_atlas_regions_spec.
 missing_regions = {};
-if isempty(opts.AtlasObj), return; end
-atlas_name = local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName);
-effective_regions = local_effective_regions(opts.AtlasObj, opts.Regions);
-atlas_token = matlab.lang.makeValidName(char(atlas_name));
-suffix = normalize_suffix(opts.Normalize);
-existing_vars = existing.Properties.VariableNames;
+specs = local_atlas_specs(opts);
+for k = 1:numel(specs)
+    mr = local_missing_atlas_regions_spec(existing, specs(k), opts.Normalize);
+    missing_regions = [missing_regions, mr]; %#ok<AGROW>
+end
+end
 
+function mr = local_missing_atlas_regions_spec(existing, spec, normalize)
+% Region labels for one atlas whose atlas_<name>_<region>_<suffix> column is
+% absent from the existing CSV (suffix depends on Normalize). Different
+% normalization modes produce different suffixes, so a CSV with _mean columns
+% and a request for _meanL1 correctly routes the L1 versions through append.
+mr = {};
+atlas_token = matlab.lang.makeValidName(char(spec.name));
+effective_regions = local_effective_regions(spec.obj, spec.regions);
+suffix = normalize_suffix(normalize);
+existing_vars = existing.Properties.VariableNames;
 for r = 1:numel(effective_regions)
     region_token = matlab.lang.makeValidName(char(effective_regions{r}));
     col_name = local_make_atlas_column_name(atlas_token, region_token, suffix);
     if ~any(strcmp(col_name, existing_vars))
-        missing_regions{end + 1} = effective_regions{r}; %#ok<AGROW>
+        mr{end + 1} = effective_regions{r}; %#ok<AGROW>
     end
 end
+end
+
+function specs = local_atlas_specs(opts)
+% Unify the singular (AtlasObj/AtlasName/Regions) and plural (AtlasObjs/
+% AtlasNames/AtlasRegions) atlas inputs into a struct array of specs, each
+% with fields .obj, .name, .regions. The singular spec (if any) comes first.
+specs = struct('obj', {}, 'name', {}, 'regions', {});
+
+if ~isempty(opts.AtlasObj)
+    specs = local_append_atlas_spec(specs, opts.AtlasObj, ...
+        local_resolve_atlas_name(opts.AtlasObj, opts.AtlasName), local_to_cell(opts.Regions));
+end
+
+objs = opts.AtlasObjs;
+if ~isempty(objs)
+    if ~iscell(objs), objs = {objs}; end
+    names = opts.AtlasNames;
+    if ischar(names) || isstring(names), names = cellstr(string(names)); end
+    if ~iscell(names), names = {}; end
+    regs = opts.AtlasRegions;
+    if ~iscell(regs), regs = {}; end
+    for k = 1:numel(objs)
+        if isempty(objs{k}), continue; end
+        if k <= numel(names) && ~isempty(names{k})
+            nm = char(string(names{k}));
+        else
+            nm = local_resolve_atlas_name(objs{k}, '');
+        end
+        if k <= numel(regs), rg = local_to_cell(regs{k}); else, rg = {}; end
+        specs = local_append_atlas_spec(specs, objs{k}, nm, rg);
+    end
+end
+
+% Robustness: two atlases with the same resolved name would write colliding
+% atlas_<name>_<region> columns (common when both inherit the same internal
+% atlas_name). Auto-disambiguate later duplicates with a numeric suffix.
+specs = local_disambiguate_spec_names(specs);
+end
+
+function specs = local_disambiguate_spec_names(specs)
+seen = {};
+for k = 1:numel(specs)
+    base = char(specs(k).name);
+    token = matlab.lang.makeValidName(base);
+    if any(strcmp(token, seen))
+        n = 2;
+        % Counter PREFIX (not suffix): the 63-char column-name cap trims the
+        % END of the atlas token, so a trailing suffix could be cut and collide
+        % again; a prefix always survives.
+        while any(strcmp(matlab.lang.makeValidName(sprintf('dup%d_%s', n, base)), seen))
+            n = n + 1;
+        end
+        new_name = sprintf('dup%d_%s', n, base);
+        warning('hrf_score_one_prefix:DuplicateAtlasName', ...
+            ['Two atlases resolved to the same name ''%s''; renaming the later one to ''%s'' so ' ...
+             'their region columns do not collide. Pass distinct AtlasNames to control this.'], ...
+            base, new_name);
+        specs(k).name = new_name;
+        token = matlab.lang.makeValidName(new_name);
+    end
+    seen{end + 1} = token; %#ok<AGROW>
+end
+end
+
+function specs = local_append_atlas_spec(specs, obj, name, regions)
+n = numel(specs) + 1;
+specs(n).obj = obj;
+specs(n).name = name;
+specs(n).regions = regions;
 end
 
 
@@ -953,9 +1046,9 @@ for i = 1:numel(image_sets)
     end
 end
 
-% Atlas region means: per-region check so adding a new region to an
-% existing CSV doesn't require regenerating everything.
-if ~isempty(opts.AtlasObj) && ~isempty(local_missing_atlas_regions(S, opts))
+% Atlas region means: per-region check so adding a new region (or a new
+% atlas) to an existing CSV doesn't require regenerating everything.
+if ~isempty(local_missing_atlas_regions(S, opts))
     tf = false;
     return
 end

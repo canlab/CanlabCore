@@ -43,6 +43,12 @@ p.addParameter('ImageSets', {}, @(x) ischar(x) || iscell(x) || isstring(x) || is
 p.addParameter('AtlasObj', [], @(x) isempty(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
 p.addParameter('AtlasName', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Regions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
+% Multi-atlas: score several atlases in one job. Give each a DISTINCT name in
+% AtlasNames so their region columns do not collide. AtlasRegions is a cell of
+% per-atlas region lists ({} = all regions for that atlas).
+p.addParameter('AtlasObjs', {}, @(x) isempty(x) || iscell(x) || isa(x, 'atlas') || isa(x, 'image_vector'));
+p.addParameter('AtlasNames', {}, @(x) isempty(x) || iscell(x) || ischar(x) || isstring(x));
+p.addParameter('AtlasRegions', {}, @(x) isempty(x) || iscell(x));
 p.addParameter('Normalize', 'mean', @(x) ischar(x) || isstring(x));
 p.addParameter('ScoreObjects', {'beta'}, @(x) ischar(x) || iscell(x) || isstring(x));
 p.addParameter('SimilarityMetric', 'dotproduct', @(x) ischar(x) || isstring(x));
@@ -102,6 +108,9 @@ config.image_sets = local_to_cell(opts.ImageSets);
 config.atlas_obj = opts.AtlasObj;
 config.atlas_name = char(opts.AtlasName);
 config.regions = local_to_cell(opts.Regions);
+config.atlas_objs = local_to_cell(opts.AtlasObjs);
+config.atlas_names = local_to_cell(opts.AtlasNames);
+config.atlas_regions = opts.AtlasRegions;
 config.normalize = char(opts.Normalize);
 config.score_objects = local_to_cell(opts.ScoreObjects);
 config.similarity_metric = char(opts.SimilarityMetric);
@@ -354,7 +363,8 @@ fprintf(fid, '    args = [args, {''WholeBrainSPM'', spm_file, ''WholeBrainSPMRun
 fprintf(fid, '    fprintf(''  Tier B GKWY from SPM.mat: %%s (run %%d)\\n'', spm_file, spm_run);\n');
 fprintf(fid, 'end\n');
 fprintf(fid, 'results = run_hrf_pipeline(fmri_file, events_file, args{:});\n');
-fprintf(fid, 'if ~isempty(config.signature_sets) || ~isempty(config.image_sets) || ~isempty(config.atlas_obj)\n');
+fprintf(fid, 'has_atlas_objs = isfield(config, ''atlas_objs'') && ~isempty(config.atlas_objs);\n');
+fprintf(fid, 'if ~isempty(config.signature_sets) || ~isempty(config.image_sets) || ~isempty(config.atlas_obj) || has_atlas_objs\n');
 fprintf(fid, '    wholebrain_models = local_wholebrain_models(results);\n');
 fprintf(fid, '    for mi = 1:numel(wholebrain_models)\n');
 fprintf(fid, '        model_name = wholebrain_models(mi).name;\n');
@@ -370,6 +380,9 @@ fprintf(fid, '                ''ImageSets'', config.image_sets, ...\n');
 fprintf(fid, '                ''AtlasObj'', config.atlas_obj, ...\n');
 fprintf(fid, '                ''AtlasName'', config.atlas_name, ...\n');
 fprintf(fid, '                ''Regions'', config.regions, ...\n');
+fprintf(fid, '                ''AtlasObjs'', local_config_field(config, ''atlas_objs'', {}), ...\n');
+fprintf(fid, '                ''AtlasNames'', local_config_field(config, ''atlas_names'', {}), ...\n');
+fprintf(fid, '                ''AtlasRegions'', local_config_field(config, ''atlas_regions'', {}), ...\n');
 fprintf(fid, '                ''Normalize'', config.normalize, ...\n');
 fprintf(fid, '                ''SimilarityMetric'', config.similarity_metric, ...\n');
 fprintf(fid, '                ''StatsInput'', model_stats, ...\n');
@@ -407,6 +420,9 @@ fprintf(fid, 'end\n\n');
 fprintf(fid, 'function val = local_cell_at(values, idx)\n');
 fprintf(fid, 'if iscell(values), val = values{idx}; else, val = values(idx); end\n');
 fprintf(fid, 'val = local_cell_to_char(val);\n');
+fprintf(fid, 'end\n\n');
+fprintf(fid, 'function val = local_config_field(config, name, default_val)\n');
+fprintf(fid, 'if isfield(config, name), val = config.(name); else, val = default_val; end\n');
 fprintf(fid, 'end\n\n');
 fprintf(fid, 'function [subject, run_label, fmri_file, events_file, output_prefix, output_mat, spm_file, spm_run, n_tasks] = local_manifest_row(manifest_file, task_id)\n');
 fprintf(fid, 'raw = local_read_manifest(manifest_file);\n');

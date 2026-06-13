@@ -337,53 +337,79 @@ end
 end
 
 function [data_obj, X, dof_corr, n_hp] = local_apply_spm_gkwy(data_obj, X, SPM, run)
-% Replicate spmify()/spm_spm exactly for one run: scale data by g (SPM.xGX.gSF),
-% high-pass (K) and whiten (W) both data and design. Column layout of X is
-% preserved, so design_info.output_lift / sFIR penalty stay valid.
+% Replicate spmify()/spm_spm: scale data by g (SPM.xGX.gSF), high-pass (K) and
+% whiten (W) both data and design. Handles two shapes of fMRI input against a
+% (possibly multi-run, e.g. per-session-concatenated) SPM:
+%   (a) the WHOLE concatenated session -- n_tp == total SPM scans: apply every
+%       run's K block, the full (block-diagonal) W, and per-scan gSF.
+%   (b) a SINGLE run of a multi-run SPM -- n_tp == that run's scan count: select
+%       SPMRun and remap K(run).row (concatenated indices) to local 1:n_tp.
+% Column layout of X is preserved, so design_info.output_lift / sFIR penalty
+% stay valid.
 if ~isfield(SPM, 'xX') || ~isfield(SPM.xX, 'K') || ~isfield(SPM.xX, 'W')
     error('hrf_fit_wholebrain_stats:SPMNotEstimated', ...
         'SPM.mat must be ESTIMATED (needs xX.K, xX.W, xGX.gSF). Run spm_spm first.');
 end
 K = SPM.xX.K;
 nrun = numel(K);
-if run < 1 || run > nrun
-    error('hrf_fit_wholebrain_stats:BadSPMRun', ...
-        'SPMRun=%d out of range (SPM has %d run(s)).', run, nrun);
-end
-Krun = K(run);
-rows = Krun.row;
 n_tp = size(data_obj.dat, 2);
-if numel(rows) ~= n_tp
-    error('hrf_fit_wholebrain_stats:SPMRunMismatch', ...
-        ['SPM run %d has %d scans but the fMRI image has %d time points. ' ...
-         'Pass the matching SPMRun (or the single-run SPM for this image).'], ...
-        run, numel(rows), n_tp);
+total_scans = size(SPM.xX.W, 1);
+
+if n_tp == total_scans
+    % (a) Whole concatenated session.
+    Kapply = K;                 % spm_filter loops over each K(s).row block
+    rows = 1:total_scans;
+    n_hp = local_sum_x0_cols(K);
+else
+    % (b) One run from the SPM; remap its rows to local frames.
+    if run < 1 || run > nrun
+        error('hrf_fit_wholebrain_stats:BadSPMRun', ...
+            'SPMRun=%d out of range (SPM has %d run(s)).', run, nrun);
+    end
+    rows = K(run).row;
+    if numel(rows) ~= n_tp
+        error('hrf_fit_wholebrain_stats:SPMRunMismatch', ...
+            ['fMRI image has %d time points, but neither the full SPM (%d scans) ' ...
+             'nor SPM run %d (%d scans) matches. For a per-session SPM with ' ...
+             'concatenated runs, pass the concatenated-session fMRI (matches the ' ...
+             'full scan count), or set SPMRun to this run''s index within the session.'], ...
+            n_tp, total_scans, run, numel(rows));
+    end
+    Kapply = K(run);
+    Kapply.row = 1:n_tp;        % concatenated indices -> local frames
+    n_hp = local_sum_x0_cols(Kapply);
 end
+
 W = SPM.xX.W(rows, rows);
 
 % Whiten + high-pass the data. spm_filter works on [time x columns].
-Y = double(data_obj.dat');          % time x vox
-KWY = spm_filter(Krun, W * Y);      % high-passed + whitened, time x vox
+Y = double(data_obj.dat');      % time x vox
+KWY = spm_filter(Kapply, W * Y);
 
 % Global (grand-mean) scaling per scan, exactly as spmify does.
 if isfield(SPM, 'xGX') && isfield(SPM.xGX, 'gSF') && ~isempty(SPM.xGX.gSF)
     g = SPM.xGX.gSF(rows);
-    KWY = KWY .* g(:);              % scale each timepoint (row)
+    KWY = KWY .* g(:);
 else
     warning('hrf_fit_wholebrain_stats:NoGSF', ...
         'SPM.xGX.gSF missing; skipped global scaling (K and W still applied).');
 end
-data_obj.dat = single(KWY');        % vox x time
+data_obj.dat = single(KWY');    % vox x time
 
 % Apply the SAME K and W to the design.
-X = full(spm_filter(Krun, W * X));
+X = full(spm_filter(Kapply, W * X));
 
-% High-pass confounds are projected out (not columns), so credit their dof.
-n_hp = 0;
-if isfield(Krun, 'X0') && ~isempty(Krun.X0)
-    n_hp = size(Krun.X0, 2);
+dof_corr = n_hp;   % high-pass confounds are projected out, not columns
 end
-dof_corr = n_hp;
+
+function n = local_sum_x0_cols(K)
+% Total high-pass confound regressors across all K blocks.
+n = 0;
+for s = 1:numel(K)
+    if isfield(K(s), 'X0') && ~isempty(K(s).X0)
+        n = n + size(K(s).X0, 2);
+    end
+end
 end
 
 function [X, info, n_added] = local_add_highpass(X, info, TR, cutoff)

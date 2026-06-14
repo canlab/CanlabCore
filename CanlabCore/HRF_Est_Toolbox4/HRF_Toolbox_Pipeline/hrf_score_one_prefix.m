@@ -476,25 +476,34 @@ end
 
 
 function fd = local_to_fmri_data_for_extract(obj)
-% Build a plain fmri_data so extract_roi_averages takes the fmri_data
-% code path (statistic_image triggers a different per-volume mask path
-% that produces jagged output for atlas extraction).
+% Return a plain fmri_data so extract_roi_averages takes the fmri_data code
+% path (a statistic_image triggers a per-volume mask path that gives jagged
+% atlas output). The conversion MUST yield a valid object whose mask/volInfo
+% let extract_roi_averages resample the atlas to the data space.
 %
-% Preferred: re-load from obj.fullpath -- this populates obj.mask
-% correctly via fmri_data's constructor, which extract_roi_averages
-% needs (it uses obj.mask as the space-defining image at line 175).
-% Field-copying fields onto a hand-built fmri_data leaves obj.mask
-% partially populated and the volInfo.image_indx comparison at line
-% 251 errors with "Arrays have incompatible sizes".
-%
-% Fallback: copy shared fields. Less reliable, but covers the case
-% where score_obj was built in-memory (via StatsInput fast path) and
-% has no on-disk source.
+% Use the fmri_data(obj) constructor: it builds a valid object directly from
+% the IN-MEMORY data (no disk reload), so it works even for a StatsInput score
+% object that has no fullpath -- and it preserves the raw .dat (the .sig
+% threshold mask of a statistic_image is NOT applied), matching the historical
+% reload-from-disk behavior. Verified against a real 2mm-atlas vs 2.683mm-beta
+% mismatch: the previous hand field-copy raised "Arrays have incompatible
+% sizes" on the resample (every region skipped, no atlas columns written),
+% while fmri_data(obj) succeeds. Disk reload / field-copy are kept only as
+% last-resort fallbacks.
 if isa(obj, 'fmri_data') && ~isa(obj, 'statistic_image')
     fd = obj;
     return
 end
 
+% Primary: convert in memory (handles statistic_image / image_vector).
+try
+    fd = fmri_data(obj);
+    return
+catch
+    % fall through to disk reload / field copy
+end
+
+% Fallback 1: reload from disk if the object is file-backed.
 if isprop(obj, 'fullpath') && ~isempty(obj.fullpath)
     src = deblank(obj.fullpath(1, :));
     if exist(src, 'file') == 2
@@ -502,11 +511,12 @@ if isprop(obj, 'fullpath') && ~isempty(obj.fullpath)
             fd = fmri_data(src, 'noverbose');
             return
         catch
-            % fall through to field-copy fallback
         end
     end
 end
 
+% Fallback 2 (last resort): copy shared fields. Known to break the atlas
+% resample, but better than nothing if both conversions above failed.
 fd = fmri_data();
 shared = {'dat', 'volInfo', 'removed_voxels', 'removed_images', ...
     'space_defining_image_name', 'fullpath', 'files_exist', 'history', ...

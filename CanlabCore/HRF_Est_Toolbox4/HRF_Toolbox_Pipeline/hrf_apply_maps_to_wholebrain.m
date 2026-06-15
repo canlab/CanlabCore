@@ -39,24 +39,42 @@ if logical(opts.PropagateSE) && ~isempty(se_obj) && ~local_is_linear_metric(opts
         char(opts.SimilarityMetric));
 end
 
+% Resilience: a single set that fails to load (e.g. a missing/racing signature
+% file) or a single map that fails to apply must NOT abort the whole table.
+% Skip + warn instead, so the remaining signatures, imagesets, and the atlas
+% columns the caller appends are still written. Otherwise one flaky file
+% silently nukes an entire score CSV.
 signature_sets = local_to_cell(opts.SignatureSets);
 for s = 1:numel(signature_sets)
     sigset = signature_sets{s};
-    [signature_obj, signature_names] = local_load_signature_set(sigset, obj);
+    try
+        [signature_obj, signature_names] = local_load_signature_set(sigset, obj);
+    catch load_err
+        warning('hrf_apply_maps_to_wholebrain:SignatureSetLoadFailed', ...
+            'Skipping signature set ''%s'' (load failed): %s%s', ...
+            char(string(sigset)), load_err.message, local_context_suffix(opts.WarningContext));
+        continue
+    end
     if isempty(signature_names)
         warning('No signatures returned for image_set %s.', sigset);
         continue
     end
     for i = 1:numel(signature_names)
         name = signature_names{i};
-        this_map = get_wh_image(signature_obj, i);
-        v = apply_mask(obj, this_map, 'pattern_expression', 'ignore_missing', char(opts.SimilarityMetric));
-        varname = local_unique_varname(scores, local_varname({'sig', sigset, name}));
-        [v, n_inserted] = local_match_length(v, n_images, obj);
-        scores.(varname) = v;
-        empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
-        if propagate_se
-            scores = local_add_propagated_se(scores, se_obj, this_map, n_images, varname, opts.SEScoreSuffix);
+        try
+            this_map = get_wh_image(signature_obj, i);
+            v = apply_mask(obj, this_map, 'pattern_expression', 'ignore_missing', char(opts.SimilarityMetric));
+            varname = local_unique_varname(scores, local_varname({'sig', sigset, name}));
+            [v, n_inserted] = local_match_length(v, n_images, obj);
+            scores.(varname) = v;
+            empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
+            if propagate_se
+                scores = local_add_propagated_se(scores, se_obj, this_map, n_images, varname, opts.SEScoreSuffix);
+            end
+        catch sig_err
+            warning('hrf_apply_maps_to_wholebrain:SignatureFailed', ...
+                'Skipping signature ''%s / %s'': %s%s', ...
+                char(string(sigset)), char(string(name)), sig_err.message, local_context_suffix(opts.WarningContext));
         end
     end
 end
@@ -64,24 +82,38 @@ end
 image_sets = local_to_cell(opts.ImageSets);
 for s = 1:numel(image_sets)
     image_set = image_sets{s};
-    if isa(image_set, 'image_vector')
-        maps = image_set;
-        set_name = 'imageset';
-        map_names = local_map_names(maps);
-    else
-        set_name = char(image_set);
-        [maps, map_names] = local_load_named_image_set(set_name, obj);
+    try
+        if isa(image_set, 'image_vector')
+            maps = image_set;
+            set_name = 'imageset';
+            map_names = local_map_names(maps);
+        else
+            set_name = char(image_set);
+            [maps, map_names] = local_load_named_image_set(set_name, obj);
+        end
+    catch load_err
+        if isa(image_set, 'image_vector'), set_label = 'imageset'; else, set_label = char(string(image_set)); end
+        warning('hrf_apply_maps_to_wholebrain:ImageSetLoadFailed', ...
+            'Skipping image set ''%s'' (load failed): %s%s', ...
+            set_label, load_err.message, local_context_suffix(opts.WarningContext));
+        continue
     end
 
     for i = 1:numel(map_names)
-        this_map = get_wh_image(maps, i);
-        v = apply_mask(obj, this_map, 'pattern_expression', 'ignore_missing', char(opts.SimilarityMetric));
-        varname = local_unique_varname(scores, local_varname({'map', set_name, map_names{i}}));
-        [v, n_inserted] = local_match_length(v, n_images, obj);
-        scores.(varname) = v;
-        empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
-        if propagate_se
-            scores = local_add_propagated_se(scores, se_obj, this_map, n_images, varname, opts.SEScoreSuffix);
+        try
+            this_map = get_wh_image(maps, i);
+            v = apply_mask(obj, this_map, 'pattern_expression', 'ignore_missing', char(opts.SimilarityMetric));
+            varname = local_unique_varname(scores, local_varname({'map', set_name, map_names{i}}));
+            [v, n_inserted] = local_match_length(v, n_images, obj);
+            scores.(varname) = v;
+            empty_insertions = local_record_empty_insertion(empty_insertions, varname, n_inserted);
+            if propagate_se
+                scores = local_add_propagated_se(scores, se_obj, this_map, n_images, varname, opts.SEScoreSuffix);
+            end
+        catch map_err
+            warning('hrf_apply_maps_to_wholebrain:ImageMapFailed', ...
+                'Skipping image map ''%s / %s'': %s%s', ...
+                set_name, char(string(map_names{i})), map_err.message, local_context_suffix(opts.WarningContext));
         end
     end
 end
@@ -299,6 +331,15 @@ elseif ischar(x) || isstring(x)
     c = cellstr(string(x));
 else
     c = x;
+end
+end
+
+function s = local_context_suffix(ctx)
+ctx = char(string(ctx));
+if isempty(strtrim(ctx))
+    s = '';
+else
+    s = sprintf(' [%s]', ctx);
 end
 end
 

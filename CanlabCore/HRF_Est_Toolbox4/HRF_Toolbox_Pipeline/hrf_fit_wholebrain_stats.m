@@ -382,6 +382,20 @@ end
 
 W = SPM.xX.W(rows, rows);
 
+% Normalize the OVERALL SCALE of the whitening matrix (keep its decorrelation
+% structure). SPM's W = V^-1/2 carries the noise-variance scale, so its
+% diagonal can be far from 1 (e.g. ~11.5 for FAST here). That scale is
+% irrelevant to the GLS betas/t (it cancels in (X'WX)\(X'WY) and in t=b/SE),
+% but X'X is the DESIGN gram and the sFIR smoothness penalty is a FIXED matrix
+% added to it -- an inflated W blows up X'X ~ scale^2 and renders the penalty
+% negligible, giving under-regularized, wiggly sFIR. Dividing W by its mean
+% diagonal keeps the design at its natural FIR scale so the penalty stays
+% balanced (matching the pre-GKWY behavior), without changing OLS betas or t.
+wscale = mean(full(diag(W)));
+if wscale > 0 && isfinite(wscale)
+    W = W / wscale;
+end
+
 % Whiten + high-pass the data. spm_filter works on [time x columns].
 Y = double(data_obj.dat');      % time x vox
 KWY = spm_filter(Kapply, W * Y);

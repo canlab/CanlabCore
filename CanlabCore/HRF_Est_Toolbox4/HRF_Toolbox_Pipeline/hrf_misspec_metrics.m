@@ -43,6 +43,13 @@ function T = hrf_misspec_metrics(source, varargin)
 %   'TR'           - fallback if a CSV lacks lag_seconds. Default NaN.
 %   'MinLags'      - skip curves with fewer than this many finite lags.
 %                    Default 4.
+%   'GroupCurveFirst' - false (default): one metric row per subject/run curve
+%                    (then pool with hrf_curve_summary_groupstats). true:
+%                    average the curves ACROSS subjects/runs within each
+%                    (model, object) FIRST, then score the group-mean curve.
+%                    Far less noise-sensitive -- use it when per-subject HRFs
+%                    are noisy (sparse conditions, low SNR). Output rows carry
+%                    subject='group' and need NO groupstats.
 %
 % Output
 % ------
@@ -84,6 +91,13 @@ p.addParameter('Objects', {'beta'}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('Model', '', @(x) ischar(x) || isstring(x));
 p.addParameter('TR', NaN, @(x) isscalar(x));
 p.addParameter('MinLags', 4, @(x) isscalar(x) && x >= 2);
+% GroupCurveFirst: average the HRF curves ACROSS subjects/runs (within each
+% model+object) before computing the misspecification metrics, instead of
+% computing per-subject metrics that a later groupstats averages. The group-
+% mean curve is far less noise-sensitive, so misspec_r2 / peak_lag_bias
+% reflect the true group HRF shape rather than per-subject estimation noise.
+% Output rows then carry subject='group' and need NO hrf_curve_summary_groupstats.
+p.addParameter('GroupCurveFirst', false, @(x) islogical(x) || isnumeric(x));
 p.parse(source, varargin{:});
 opts = p.Results;
 
@@ -121,6 +135,12 @@ else
 end
 
 match_spec = struct('family', lower(strtrim(char(opts.Source))), 'set', char(opts.Set));
+
+% GroupCurveFirst: replace the per-subject tables with one group-mean curve
+% table per (model, object), so metrics are computed on the averaged HRF.
+if logical(opts.GroupCurveFirst) && numel(score_tables) > 1
+    [score_tables, origins] = local_group_curve_pool(score_tables, origins);
+end
 
 rows = {};
 for ti = 1:numel(score_tables)
@@ -180,6 +200,72 @@ for c = 1:numel(cond_list)
 end
 if ~isempty(rows)
     T = vertcat(rows{:});
+end
+end
+
+
+function [pooled_tables, pooled_origins] = local_group_curve_pool(score_tables, origins)
+% Group the per-subject score tables by (model, object) and average each
+% group's curves into one group-mean table -- so GroupCurveFirst computes the
+% metrics on the averaged HRF rather than per subject.
+models  = local_origin_field(origins, 'model');
+objects = local_origin_field(origins, 'object');
+key = strcat(models, "||", objects);
+[ukey, ~, gidx] = unique(key, 'stable');
+pooled_tables = cell(1, numel(ukey));
+pooled_origins = repmat(struct('subject', 'group', 'run_label', '', 'model', '', 'object', ''), 1, numel(ukey));
+for u = 1:numel(ukey)
+    idx = find(gidx == u);
+    pooled_tables{u} = local_pool_curves_across_tables(score_tables(idx));
+    o = origins(idx(1));
+    pooled_origins(u) = struct('subject', 'group', 'run_label', '', ...
+        'model', local_origin_value(o, 'model'), 'object', local_origin_value(o, 'object'));
+end
+end
+
+function s = local_origin_field(origins, f)
+s = strings(1, numel(origins));
+for i = 1:numel(origins)
+    s(i) = string(local_origin_value(origins(i), f));
+end
+end
+
+function v = local_origin_value(o, f)
+if isfield(o, f) && ~isempty(o.(f)), v = char(string(o.(f))); else, v = ''; end
+end
+
+function P = local_pool_curves_across_tables(tables)
+% Stack same-structured score tables and average every numeric column within
+% (condition, lag) -> one group-mean curve per condition x lag.
+tables = tables(~cellfun(@isempty, tables));
+if isempty(tables), P = table(); return; end
+if isscalar(tables), P = tables{1}; return; end
+
+common = tables{1}.Properties.VariableNames;
+for i = 2:numel(tables)
+    common = intersect(common, tables{i}.Properties.VariableNames, 'stable');
+end
+parts = cell(1, numel(tables));
+for i = 1:numel(tables)
+    ti = tables{i}(:, common);
+    ti.condition = string(ti.condition);
+    parts{i} = ti;
+end
+big = vertcat(parts{:});
+
+vn = big.Properties.VariableNames;
+if any(strcmp('lag_index', vn)), lagkey = 'lag_index'; else, lagkey = 'lag_seconds'; end
+[g, gcond, glag] = findgroups(big.condition, double(big.(lagkey)));
+
+P = table();
+P.condition = gcond;
+P.(lagkey) = glag;
+for j = 1:numel(vn)
+    name = vn{j};
+    if strcmp(name, 'condition') || strcmp(name, lagkey), continue; end
+    col = big.(name);
+    if ~isnumeric(col), continue; end
+    P.(name) = splitapply(@(x) mean(x, 'omitnan'), col, g);
 end
 end
 

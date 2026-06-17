@@ -284,7 +284,7 @@ classdef glm_map
             % Prefer a built design matrix from the wrapped design object;
             % fall back to the direct-mode matrix.
             val = [];
-            if ~isempty(obj.design) && isstruct(obj.design.xX) ...
+            if ~isempty(obj.design) && isstruct(obj.design.xX) && isscalar(obj.design.xX) ...
                     && isfield(obj.design.xX, 'X') && ~isempty(obj.design.xX.X)
                 val = obj.design.xX.X;
             elseif ~isempty(obj.Xdirect)
@@ -294,7 +294,7 @@ classdef glm_map
 
         function val = get.regressor_names(obj)
             val = {};
-            if ~isempty(obj.design) && isstruct(obj.design.xX) ...
+            if ~isempty(obj.design) && isstruct(obj.design.xX) && isscalar(obj.design.xX) ...
                     && isfield(obj.design.xX, 'name') && ~isempty(obj.design.xX.name)
                 val = obj.design.xX.name;
             elseif ~isempty(obj.regressor_names_direct)
@@ -344,7 +344,7 @@ classdef glm_map
 
         function obj = set.X(obj, val)
             % Setting X targets the direct/group design backing store.
-            if ~isempty(obj.design) && isstruct(obj.design.xX) ...
+            if ~isempty(obj.design) && isstruct(obj.design.xX) && isscalar(obj.design.xX) ...
                     && isfield(obj.design.xX, 'X') && ~isempty(obj.design.xX.X)
                 warning('glm_map:DesignPresent', ...
                     ['This glm_map has a built event design in .design; setting .X stores a direct ' ...

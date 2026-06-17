@@ -42,10 +42,15 @@ function o2 = montage(obj, varargin)
 %    2026 - Initial implementation (thin delegation).
 % ..
 
-[map, which_map, varargin] = select_map(obj, varargin{:});
+[map, which_map, wh_image, varargin] = select_map(obj, varargin{:});
 
 if isempty(map)
     error('glm_map:NoMap', 'Requested map ''%s'' is empty. Fit the model first.', which_map);
+end
+
+% Select a single image if requested (montage can also render multi-image maps)
+if ~isempty(wh_image)
+    map = get_wh_image(map, wh_image);
 end
 
 if nargout > 0

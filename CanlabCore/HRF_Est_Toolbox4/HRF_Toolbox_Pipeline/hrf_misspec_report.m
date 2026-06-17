@@ -21,7 +21,10 @@ function fig = hrf_misspec_report(M, varargin)
 %
 % :Optional Inputs:
 %   **'Residuals':** table from hrf_residual_diagnostics. Default none.
-%   **'Condition':** restrict M to one condition before reducing. Default all.
+%   **'Condition':** restrict M before reducing. char/string/cellstr; glob
+%                    wildcards ok ('*heat*', 'rest_stim_ttl_?'); multiple
+%                    patterns match any (and pool into the per-region mean).
+%                    Default '' = all conditions.
 %   **'TopN':**      how many best/worst regions to bar. Default 14.
 %   **'GoodR2':**    misspec_r2 above this counts as well-described. Default 0.5.
 %   **'Title':**     figure title. Default 'HRF misspecification report'.
@@ -34,7 +37,7 @@ function fig = hrf_misspec_report(M, varargin)
 p = inputParser;
 p.addRequired('M', @istable);
 p.addParameter('Residuals', table(), @istable);
-p.addParameter('Condition', '', @(x) ischar(x) || isstring(x));
+p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('TopN', 14, @(x) isscalar(x) && x >= 1);
 p.addParameter('GoodR2', 0.5, @(x) isscalar(x));
 p.addParameter('Title', 'HRF misspecification report', @(x) ischar(x) || isstring(x));
@@ -45,11 +48,19 @@ R = opts.Residuals;
 
 % ---- reduce curve table to per-region means -----------------------------
 Mc = M;
-if ~isempty(char(opts.Condition)) && any(strcmp('condition', M.Properties.VariableNames))
-    Mc = M(string(M.condition) == string(opts.Condition), :);
+pats = string(opts.Condition);
+pats = pats(strlength(strtrim(pats)) > 0);
+if ~isempty(pats) && any(strcmp('condition', M.Properties.VariableNames))
+    Mc = M(local_match_conditions(M.condition, pats), :);   % glob wildcards ok
 end
 if isempty(Mc) || height(Mc) == 0
-    error('hrf_misspec_report:NoRows', 'No rows in M (after Condition filter).');
+    avail = '';
+    if any(strcmp('condition', M.Properties.VariableNames))
+        avail = strjoin(unique(cellstr(string(M.condition)), 'stable'), ', ');
+    end
+    error('hrf_misspec_report:NoRows', ...
+        'No rows in M after Condition filter {%s}. Available conditions: %s', ...
+        strjoin(cellstr(pats), ', '), avail);
 end
 reg = string(Mc.source_name);
 [g, ureg] = findgroups(reg);
@@ -223,4 +234,23 @@ end
 
 function s = local_tern(c, a, b)
 if c, s = a; else, s = b; end
+end
+
+function mask = local_match_conditions(conds, patterns)
+% Glob-match condition strings against one or more wildcard patterns
+% (e.g. '*heat*', 'rest_stim_ttl_?'). Exact strings still match exactly.
+conds = cellstr(string(conds));
+patterns = cellstr(string(patterns));
+mask = false(numel(conds), 1);
+for p = 1:numel(patterns)
+    pat = strtrim(patterns{p});
+    if isempty(pat), continue; end
+    if any(pat == '*' | pat == '?')
+        rx = ['^', regexptranslate('wildcard', pat), '$'];
+        hit = ~cellfun('isempty', regexp(conds, rx, 'once'));
+    else
+        hit = strcmp(conds, pat);
+    end
+    mask = mask | hit(:);
+end
 end

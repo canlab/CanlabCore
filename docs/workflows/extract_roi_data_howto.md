@@ -2,11 +2,25 @@
 
 A practical, copy-pasteable guide to pulling region-of-interest (ROI) and
 atlas/parcel summaries out of CANlab `fmri_data` objects and plotting them.
+This is the **code walkthrough** for the ROI / atlas data-extraction workflow;
+for the conceptual overview of *which* method to use and why, see the
+[**ROI extraction roadmap**](ROI_extraction_methods_roadmap.md).
 
 All code uses the object-oriented methods that are the current API of record:
 `extract_roi_averages`, `apply_parcellation` (and its atlas wrapper
 `@atlas/extract_data`), plus the three plotting functions
 `barplot_columns`, `lineplot_columns`, and `line_plot_multisubject`.
+
+## Quick reference
+
+| Goal | Method | Input | Output |
+|---|---|---|---|
+| One/few ROI means per image | `extract_roi_averages(obj, mask)` | `fmri_data` + mask/region/atlas/filename | `region` array; `cl(k).dat` = `[images x 1]` |
+| All parcel means | `apply_parcellation(obj, atlas)` | `fmri_data` + `atlas` | `[images x parcels]` matrix |
+| All parcel means (atlas method) | `extract_data(atlas, obj)` | `atlas` + `fmri_data` | `[images x parcels]` matrix |
+| Bars/violins per condition | `barplot_columns(M)` | `[subjects x conditions]` | handles + stats `table` |
+| One mean line across levels | `lineplot_columns(M)` | `[subjects x conditions]` | struct `out` (`.m`, `.ste`, `.CI95`) |
+| One line per subject | `line_plot_multisubject(X, Y)` | cell arrays, one cell per subject | handles + `slope_stats` |
 
 ---
 
@@ -61,6 +75,15 @@ size(roi_means)               % [30 1]
 `cl(k).all_data` is the full `[images x voxels]` matrix if you want the
 voxelwise values.
 
+It is good practice to look at the ROI on the brain before trusting the numbers.
+Convert it to a `region` and montage it:
+
+```matlab
+montage(atlas2region(roi), 'regioncenters', 'colormap');   % the bilateral amygdala
+```
+
+![Bilateral amygdala ROI on the brain](extract_roi_howto_A_roi_montage.png)
+
 Visualize the per-image values with `barplot_columns`. Its input is one column
 per "bar" (here a single column = one ROI), rows are observations (subjects).
 It plots the mean +/- SE, a violin, and individual points, and runs a t-test of
@@ -74,6 +97,8 @@ the column mean vs. zero.
 
 disp(statstable)
 ```
+
+![Amygdala ROI mean per subject — barplot_columns](extract_roi_howto_A_barplot.png)
 
 If you have several ROIs and want a bar per ROI, build a
 `[subjects x ROIs]` matrix by horizontally concatenating each region's `.dat`.
@@ -132,6 +157,8 @@ set(gca, 'XTick', 1:nshow, 'XTickLabel', labels(1:nshow));
 xtickangle(45); ylabel('Mean contrast'); title('Parcel means across parcels');
 ```
 
+![Mean per atlas parcel — lineplot_columns](extract_roi_howto_B_lineplot.png)
+
 `lineplot_columns` is the right tool when columns are *levels of one factor*
 (e.g. ascending stimulus intensities). For that case, build a
 `[subjects x conditions]` matrix where each column is a condition and pass it
@@ -187,6 +214,8 @@ disp(slope_stats.t)
 disp(slope_stats.p)
 ```
 
+![Per-subject ROI response across heat levels — line_plot_multisubject](extract_roi_howto_C_multisubject.png)
+
 Equivalent vector form: instead of building cells, pass the concatenated
 vectors plus a `'subjid'` integer vector and let the function split them.
 
@@ -228,16 +257,3 @@ results = runtests('canlab_test_extract_roi_methods');
 
 or run the whole suite (auto-discovers `canlab_test_*.m`) with
 `canlab_run_all_tests`.
-
----
-
-## Quick reference
-
-| Goal | Method | Input | Output |
-|---|---|---|---|
-| One/few ROI means per image | `extract_roi_averages(obj, mask)` | `fmri_data` + mask/region/atlas/filename | `region` array; `cl(k).dat` = `[images x 1]` |
-| All parcel means | `apply_parcellation(obj, atlas)` | `fmri_data` + `atlas` | `[images x parcels]` matrix |
-| All parcel means (atlas method) | `extract_data(atlas, obj)` | `atlas` + `fmri_data` | `[images x parcels]` matrix |
-| Bars/violins per condition | `barplot_columns(M)` | `[subjects x conditions]` | handles + stats `table` |
-| One mean line across levels | `lineplot_columns(M)` | `[subjects x conditions]` | struct `out` (`.m`, `.ste`, `.CI95`) |
-| One line per subject | `line_plot_multisubject(X, Y)` | cell arrays, one cell per subject | handles + `slope_stats` |

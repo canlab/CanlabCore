@@ -66,6 +66,7 @@ Listed in roughly the order most users encounter them. Click a class name for th
 
 ## Cross-cutting topics
 
+- **[Workflows](Workflows.md)** — end-to-end, didactic walkthroughs that chain methods together to accomplish a common goal (e.g. extracting and visualizing ROI / atlas data). Each workflow links a conceptual overview ("roadmap") and a runnable code walkthrough.
 - **[Recasting (converting) between object types](recasting_objects.md)** — `region2fmri_data`, `atlas2region`, `region(t)`, etc., and when to call `replace_empty` before converting.
 - **[fmri_data_methods.md](fmri_data_methods.md)** is also the cross-cutting *functional* index of `@fmri_data` + `@image_vector` methods, organized by area (basic math / display / resampling / statistics / multivariate prediction / tables / annotation / data extraction / data processing / quality control / misc utilities). The same category structure is used in every per-class page.
 - **[Atlases, regions, and patterns](atlases_regions_and_patterns.md)** — registry of available atlases, named regions, and multivariate signature patterns, with paper citations.

@@ -92,6 +92,10 @@ A pre-object-oriented family (`tor_extract_rois`, `extract_image_data`, `extract
 | A sphere around a published coordinate | `sphere_mask` / `sphere_roi_tool_2008`, then `extract_roi_averages` |
 | A hand-drawn ROI | `draw_anatomical_roi`, then `extract_roi_averages` |
 | A named, published ROI | `canlab_load_ROI`, then `extract_roi_averages` |
+| A labeled atlas to extract from (by keyword) | `load_atlas` (e.g. `load_atlas('canlab2024')`), then `apply_parcellation` / `extract_roi_averages` |
+| One region (or a few named regions) out of an atlas | `select_atlas_subset(atl, {'name'})` — add `'flatten'` to merge them into a single ROI — then `extract_roi_averages` |
+
+The last two rows are how you *obtain* the region definition that the extraction methods consume: `load_atlas` resolves a labeled `atlas` object by keyword, and `select_atlas_subset` narrows it to the region(s) you want (matching on the atlas's `.labels`; `'flatten'` collapses several sub-regions, e.g. amygdala sub-nuclei, into one ROI). See the [how-to walkthrough](extract_roi_data_howto.md) for worked examples.
 
 ---
 

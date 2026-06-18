@@ -38,6 +38,7 @@ Other top-level classes (not subclasses of `image_vector`):
 - **`brainpathway` / `brainpathway_multisubject`** — connectivity / pathway-modeling objects.
 - **`canlab_dataset`** — generic subject × variable behavioral/clinical data container with its own `glm`, `mediation`, `scatterplot`, etc.
 - **`fmri_glm_design_matrix`**, **`fmri_timeseries`**, **`predictive_model`** — specialized containers for design matrices, raw timeseries, and ML model artifacts.
+- **`glm_map`** — scikit-learn-style estimator for mass-univariate GLM / multiple regression. Bundles the design specification (wrapping an `fmri_glm_design_matrix` in `.design`, or a direct `.X` matrix), the fitted result maps (betas, t, contrast estimates/t as `statistic_image` objects), and design diagnostics (VIF, contrast VIF, leverage, collinearity). Workflow is `g = glm_map(...)`, `g = fit(g, fmri_data_obj)`, then `diagnostics`, `table`, `montage`. Supports 1st-level event designs (`build_design`, `import_SPM`) and 2nd-level/group designs; `fmri_data.regress` is the compute engine.
 
 ### MATLAB `@class` directories
 

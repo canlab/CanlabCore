@@ -248,15 +248,27 @@ d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
 g_evt = glm_map(d);                                 % level 1, event mode
 g_evt.is_timeseries = true;
 g_evt = build_design(g_evt);                        % onsets -> X via convolution
-plot_design(g_evt);                                 % design matrix + VIFs
+
+% Add a simple contrast comparing the two events: A vs B. The design has
+% three columns (Event A, Event B, intercept), so the contrast is [1 -1 0]
+% (add_contrasts takes one row per contrast; the intercept gets 0).
+g_evt = add_contrasts(g_evt, [1 -1 0], {'A_vs_B'});
+
+% Plot the design BEFORE diagnostics: the design matrix heat map and one panel
+% per event type (the actual basis-convolved regressors). No VIF figure yet.
+plot_design(g_evt);
 
 %   g_evt = fit(g_evt, bold_timeseries_fmri_data, 'AR', 1);  % AR(1) error model
 %   g_evt = import_SPM(glm_map, '/path/to/SPM.mat');         % import a full 1st-level model
-%%
-% Now again after diagnostics
 
-g_evt = run_diagnostics(g_evt);
-plot_design(g_evt);
+% Now run diagnostics and plot again. run_diagnostics computes VIFs/cVIFs and
+% (because is_timeseries is true) the cumulative power by frequency and a
+% recommended high-pass filter cutoff. plot_design now ALSO draws a VIF figure
+% (VIFs of regressors of interest, with/without nuisance, plus contrast VIFs,
+% with severity reference lines at 1/2/4/8).
+g_evt = run_diagnostics(g_evt);                     % prints the diagnostics report
+plot_design(g_evt);                                 % design + VIF/cVIF figure
+g_evt.diagnostics.hpfilter                          % recommended HP filter (timeseries)
 
 %% 14. Summary
 % - fmri_data.regress returns a glm_map; access/display it via .betas/.t/

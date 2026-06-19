@@ -378,6 +378,31 @@ tc.verifyEqual(g.X, g.design.xX.X);
 end
 
 
+function test_diagnostics_hpfilter_timeseries(tc)
+% Cumulative-power / high-pass-filter assessment is computed only for
+% timeseries designs, and separately for regressors and contrasts.
+TR = 2; nscan = 100;
+d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
+    'onsets', {[10 40 70 100]' [25 55 85 115]'}, 'condition_names', {'A' 'B'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g.is_timeseries = true; g = build_design(g);
+g = add_contrasts(g, [1 -1 0], {'A_vs_B'});
+g = run_diagnostics(g, 'noverbose');
+
+hp = g.diagnostics.hpfilter;
+tc.verifyTrue(isstruct(hp));
+tc.verifyTrue(isfield(hp, 'recommended_hpfilter_sec_regressors'));
+tc.verifyTrue(isfield(hp, 'recommended_hpfilter_sec_contrasts'));
+tc.verifyEqual(size(hp.cumulative_power_regressors, 2), 2);   % one column per event regressor
+tc.verifyNotEmpty(hp.recommended_hpfilter_sec_contrasts);     % contrast was entered
+
+% Non-timeseries (group) design: no HP-filter assessment
+g2 = glm_map('X', [zscore((1:30)') ones(30, 1)], 'level', 2);
+g2 = run_diagnostics(g2, 'noverbose');
+tc.verifyEmpty(g2.diagnostics.hpfilter);
+end
+
+
 function test_glm_map_import_onsets_and_spm_flags(tc)
 % glm_map.import_onsets bootstraps a design, builds it, and flags events
 T = table([5; 35; 65; 20; 50], [0; 0; 0; 0; 0], {'A'; 'A'; 'A'; 'B'; 'B'}, ...

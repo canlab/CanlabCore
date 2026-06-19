@@ -220,6 +220,19 @@ end
     d.efficiency_contrast_source, eff_note] = local_efficiency(obj, X, whI);
 
 % -------------------------------------------------------------------------
+% Temporal frequency content and high-pass filter recommendation. Only
+% meaningful for within-run timeseries designs (obj.is_timeseries). For each
+% regressor of interest (and each contrast), compute the cumulative power by
+% frequency and the high-pass filter cutoff that removes < 5% of its variance;
+% recommend the cutoff that keeps the MAX loss across regressors (and across
+% contrasts) below 5%. Borrows the approach from scn_spm_choose_hpfilter.
+% -------------------------------------------------------------------------
+d.hpfilter = [];
+if obj.is_timeseries
+    d.hpfilter = local_hpfilter(obj, X, whI, whB);
+end
+
+% -------------------------------------------------------------------------
 % Redundant / near-collinear column report
 % -------------------------------------------------------------------------
 report = struct();
@@ -312,6 +325,81 @@ function c = local_scaled_cond(X)
 nrm = vecnorm(X, 2, 1);
 nrm(nrm == 0) = 1;
 c = cond(X ./ nrm);
+end
+
+
+function hp = local_hpfilter(obj, X, whI, whB)
+% Cumulative power by frequency and recommended high-pass filter cutoff for a
+% timeseries design. Returns [] if no interest regressors or no valid TR.
+hp = [];
+
+TR = obj.TR;
+if isempty(TR) || ~isscalar(TR) || isnan(TR) || TR <= 0, return, end
+if ~any(whI), return, end
+
+% Regressors of interest, with the intercept/baseline projected out
+Xint = X(:, whI);
+Xb = X(:, whB);
+if ~isempty(Xb), Xint = Xint - Xb * pinv(Xb) * Xint; end
+
+[cp_reg, fr_reg, hplen_reg, maxloss_reg] = local_cumulative_power(Xint, TR);
+
+% Contrast time courses (also intercept-projected)
+hplen_con = []; maxloss_con = []; cp_con = []; fr_con = [];
+if ~isempty(obj.contrasts) && size(obj.contrasts, 1) == size(X, 2)
+    Xcon = X * obj.contrasts;
+    if ~isempty(Xb), Xcon = Xcon - Xb * pinv(Xb) * Xcon; end
+    [cp_con, fr_con, hplen_con, maxloss_con] = local_cumulative_power(Xcon, TR);
+end
+
+hp = struct( ...
+    'TR', TR, ...
+    'recommended_hpfilter_sec_regressors', hplen_reg, ...
+    'recommended_hpfilter_sec_contrasts',  hplen_con, ...
+    'max_variance_loss_regressors', maxloss_reg, ...   % fraction lost at the recommended cutoff
+    'max_variance_loss_contrasts',  maxloss_con, ...
+    'cumulative_power_regressors', cp_reg, ...
+    'frequencies_regressors', fr_reg, ...
+    'cumulative_power_contrasts', cp_con, ...
+    'frequencies_contrasts', fr_con);
+end
+
+
+function [cumpower, freqs, hplen, maxloss] = local_cumulative_power(X, TR)
+% For each column of X, cumulative (low-to-high frequency) power fraction.
+% Returns the high-pass filter length (sec) whose cutoff removes < 5% of the
+% variance of every column, and the actual max fraction removed at that cutoff.
+% (Approach borrowed from scn_spm_choose_hpfilter / cumulative_power.)
+ncol = size(X, 2);
+timepts = floor(size(X, 1) / 2);
+cumpower = zeros(timepts, ncol);
+freqs = zeros(timepts, ncol);
+loss_freq = zeros(1, ncol);
+loss_at_cut = zeros(1, ncol);
+
+for i = 1:ncol
+    [mag, freq] = fft_calc(X(:, i), TR, 'noplot');   % normalized power (sums to 1), freq in Hz
+    cp = cumsum(mag(:));
+    cumpower(:, i) = cp;
+    freqs(:, i) = freq(:);
+
+    % Highest frequency at which cumulative (removed) power is still < 5%
+    wh = find(cp < 0.05);
+    if isempty(wh), wh = 1; end       % even the lowest bin loses >= 5%
+    wh = wh(end);
+    loss_freq(i) = freq(wh);
+    loss_at_cut(i) = cp(wh);
+end
+
+% Use the lowest cutoff frequency (longest period) so that all columns lose
+% < 5%. Guard the DC bin (freq 0).
+posfreq = loss_freq(loss_freq > 0);
+if isempty(posfreq)
+    hplen = Inf;                      % cannot filter without > 5% loss
+else
+    hplen = 1 / min(posfreq);
+end
+maxloss = max(loss_at_cut);
 end
 
 
@@ -428,6 +516,27 @@ else
     fprintf('  %s\n', eff_note);
 end
 
+% ---- High-pass filter (timeseries designs only) ----
+if obj.is_timeseries && isstruct(d.hpfilter) && ~isempty(fieldnames(d.hpfilter))
+    hp = d.hpfilter;
+    fprintf('\n  Temporal frequency / high-pass filter (timeseries design)\n');
+    fprintf('  Recommended HP filter length keeps low-frequency variance loss < 5%% for every\n');
+    fprintf('  regressor (and contrast). A *longer* length filters less; use the larger value\n');
+    fprintf('  to protect both, then set it as the SPM/first-level high-pass cutoff.\n');
+    fprintf('  regressors of interest : %s\n', ...
+        local_hpline(hp.recommended_hpfilter_sec_regressors, hp.max_variance_loss_regressors));
+    if ~isempty(hp.recommended_hpfilter_sec_contrasts)
+        fprintf('  contrasts              : %s\n', ...
+            local_hpline(hp.recommended_hpfilter_sec_contrasts, hp.max_variance_loss_contrasts));
+    end
+    rec = max([hp.recommended_hpfilter_sec_regressors, hp.recommended_hpfilter_sec_contrasts]);
+    if isfinite(rec)
+        fprintf('  => suggested cutoff    : %.0f s (the more conservative of the two)\n', rec);
+    else
+        fprintf('  => a high-pass filter would remove > 5%% of variance; consider not high-pass filtering.\n');
+    end
+end
+
 % ---- Warnings ----
 if ~isempty(mywarnings)
     fprintf('\n  %d warning(s):\n', numel(mywarnings));
@@ -455,3 +564,12 @@ end
 
 function s = local_flag(tf, str), if tf, s = str; else, s = ''; end, end
 function s = local_yn(tf), if tf, s = 'yes'; else, s = 'no'; end, end
+function s = local_hpline(len, maxloss)
+% Format one high-pass-filter recommendation line.
+if isempty(len) || ~isfinite(len)
+    s = 'no high-pass filter recommended (even long filters would lose > 5%)';
+else
+    if isempty(maxloss), maxloss = 0; end
+    s = sprintf('%.0f s (loses %.1f%% at this cutoff)', len, 100 * maxloss);
+end
+end

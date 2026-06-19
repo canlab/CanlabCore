@@ -70,6 +70,9 @@ else
     local_heatmap(obj, X);
 end
 
+% If diagnostics have been computed, add a VIF / cVIF figure.
+local_vif_figure(obj);
+
 end % plot_design
 
 
@@ -217,4 +220,87 @@ if ~isempty(rn) && numel(rn) == size(X, 2)
     end
     set(gca, 'XTick', 1:size(X, 2), 'XTickLabel', labels, 'XTickLabelRotation', 45, 'TickLabelInterpreter', 'none');
 end
+end
+
+
+function local_vif_figure(obj)
+% When diagnostics have been computed, show variance inflation factors for the
+% regressors of interest -- in the full design (with nuisance covariates) and,
+% if nuisance indicators exist, without them -- plus contrast VIFs if present.
+% Style and severity lines borrowed from scn_spm_design_check.
+dg = obj.diagnostics;
+if ~isstruct(dg) || ~isfield(dg, 'Variance_inflation_factors') || isempty(dg.Variance_inflation_factors)
+    return
+end
+
+whI = obj.wh_interest;
+rn  = obj.regressor_names;
+names_int = {};
+if ~isempty(rn) && numel(rn) == numel(whI), names_int = rn(whI); end
+
+vif_full = dg.Variance_inflation_factors(whI);     % interest regressors, full design
+
+% Interest-only VIFs (nuisance removed), restricted to the interest regressors
+vif_io = [];
+has_io = any(obj.wh_nuisance) && isfield(dg, 'Variance_inflation_factors_interest_only') ...
+    && ~isempty(dg.Variance_inflation_factors_interest_only);
+if has_io
+    io_cols = dg.wh_interest_only_columns;
+    vif_io = dg.Variance_inflation_factors_interest_only(obj.wh_interest(io_cols));
+end
+
+% Contrast VIFs
+cvif = [];
+if isfield(dg, 'Contrast_variance_inflation_factors') && ~isempty(dg.Contrast_variance_inflation_factors)
+    cvif = dg.Contrast_variance_inflation_factors;
+end
+
+npanels = 1 + has_io + ~isempty(cvif);
+create_figure('glm_map VIFs', 1, npanels);
+
+p = 1;
+subplot(1, npanels, p); p = p + 1;
+local_vif_panel(vif_full, names_int, 'VIF: regressors of interest (full design)');
+
+if has_io
+    subplot(1, npanels, p); p = p + 1;
+    local_vif_panel(vif_io, names_int, 'VIF: of interest, nuisance removed');
+end
+
+if ~isempty(cvif)
+    subplot(1, npanels, p);
+    local_vif_panel(cvif, obj.contrast_names, 'Contrast VIFs (cVIF)');
+end
+end
+
+
+function local_vif_panel(vals, names, ttl)
+% One VIF panel: orange markers + severity reference lines at VIF = 1/2/4/8
+% (1 = best/orthogonal; each line is a doubling of variance inflation).
+vals = vals(:)';
+n = numel(vals);
+
+% Set x-limits first so the horizontal reference lines span the axis
+plot(1:n, vals, 'ko', 'MarkerFaceColor', [1 .5 0], 'MarkerSize', 7); hold on;
+xlim([0.5, n + 0.5]);
+
+plot_horizontal_line(1, 'k');       % minimum possible (best)
+plot_horizontal_line(2, 'b--');     % doublings of variance inflation
+plot_horizontal_line(4, 'r--');
+plot_horizontal_line(8, 'r-');
+
+finite_vals = vals(isfinite(vals));
+ymax = 9; if ~isempty(finite_vals), ymax = max(9, 1.15 * max(finite_vals)); end
+ylim([0, ymax]);
+
+ylabel('Variance inflation factor');
+xlabel('Predictor');
+title(ttl);
+
+if ~isempty(names) && numel(names) == n && n <= 20
+    set(gca, 'XTick', 1:n, 'XTickLabel', names, 'XTickLabelRotation', 45, 'TickLabelInterpreter', 'none');
+else
+    set(gca, 'XTick', 1:n);
+end
+hold off;
 end

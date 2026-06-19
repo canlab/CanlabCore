@@ -253,61 +253,65 @@ classdef glm_map
         % =================================================================
         function obj = glm_map(varargin)
 
-            % Empty object: return defaults
-            if nargin == 0
-                return
-            end
+            if nargin > 0
 
-            % If the first argument is a struct, treat it as a regression
-            % results structure (the historical fmri_data.regress output) and
-            % re-cast it as a glm_map object. Any remaining 'field', value
-            % pairs are then applied as overrides.
-            if ~isempty(varargin) && isstruct(varargin{1})
-                obj = local_from_regress_struct(obj, varargin{1});
-                varargin(1) = [];
+                % If the first argument is a struct, treat it as a regression
+                % results structure (the historical fmri_data.regress output)
+                % and re-cast it as a glm_map object. Any remaining 'field',
+                % value pairs are then applied as overrides.
+                if ~isempty(varargin) && isstruct(varargin{1})
+                    obj = local_from_regress_struct(obj, varargin{1});
+                    varargin(1) = [];
 
-            % If first argument is an fmri_glm_design_matrix, wrap it as a
-            % 1st-level (event) design and consume that argument.
-            elseif ~isempty(varargin) && isa(varargin{1}, 'fmri_glm_design_matrix')
-                obj.design = varargin{1};
-                obj.level = 1;
-                varargin(1) = [];
-            end
-
-            % Names of stored (settable) properties for generic assignment
-            stored_names = properties('glm_map');   % includes public Dependent props
-
-            % Names of Dependent properties that have setters
-            settable_dependent = {'TR', 'X', 'regressor_names', ...
-                'b', 'contrast_images', 'con_t', 'resid', 'variable_names', 'C'};
-
-            for i = 1:length(varargin)
-
-                if ~ischar(varargin{i}), continue, end
-
-                fieldname = varargin{i};
-
-                % Map a couple of friendly aliases to backing storage
-                switch fieldname
-                    case {'names', 'variable_names'}
-                        fieldname = 'regressor_names';
+                % If first argument is an fmri_glm_design_matrix, wrap it as a
+                % 1st-level (event) design and consume that argument.
+                elseif ~isempty(varargin) && isa(varargin{1}, 'fmri_glm_design_matrix')
+                    obj.design = varargin{1};
+                    obj.level = 1;
+                    varargin(1) = [];
                 end
 
-                if any(strcmp(fieldname, stored_names)) || any(strcmp(fieldname, settable_dependent))
+                % Names of stored (settable) properties for generic assignment
+                stored_names = properties('glm_map');   % includes public Dependent props
 
-                    obj.(fieldname) = varargin{i + 1};
+                % Names of Dependent properties that have setters
+                settable_dependent = {'TR', 'X', 'regressor_names', ...
+                    'b', 'contrast_images', 'con_t', 'resid', 'variable_names', 'C'};
 
-                    % Blank the consumed value so a trailing char value is
-                    % not re-interpreted as a keyword on the next iteration
-                    if ischar(varargin{i + 1})
-                        varargin{i + 1} = [];
+                for i = 1:length(varargin)
+
+                    if ~ischar(varargin{i}), continue, end
+
+                    fieldname = varargin{i};
+
+                    % Map a couple of friendly aliases to backing storage
+                    switch fieldname
+                        case {'names', 'variable_names'}
+                            fieldname = 'regressor_names';
                     end
 
-                else
-                    warning('glm_map:UnknownField', 'Unknown glm_map field: %s', fieldname);
-                end
+                    if any(strcmp(fieldname, stored_names)) || any(strcmp(fieldname, settable_dependent))
 
-            end % parse inputs
+                        obj.(fieldname) = varargin{i + 1};
+
+                        % Blank the consumed value so a trailing char value is
+                        % not re-interpreted as a keyword on the next iteration
+                        if ischar(varargin{i + 1})
+                            varargin{i + 1} = [];
+                        end
+
+                    else
+                        warning('glm_map:UnknownField', 'Unknown glm_map field: %s', fieldname);
+                    end
+
+                end % parse inputs
+
+            end % nargin > 0
+
+            % Populate every nested option/diagnostic struct with its full set
+            % of valid fields (missing fields are filled with []), so a freshly
+            % constructed object always exposes the complete schema.
+            obj = validate_object(obj);
 
         end % constructor
 

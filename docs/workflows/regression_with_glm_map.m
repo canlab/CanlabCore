@@ -93,6 +93,7 @@ g.dfe              % scalar error df (median of g.df)
 
 % Design diagnostics are collected in the nested .diagnostics struct, using
 % the same field names as fmri_data.regress out.diagnostics.
+g = diagnostics(g);                                 % Run diagnostics and return output in object
 g.diagnostics.Variance_inflation_factors            % VIF per regressor
 g.diagnostics.Contrast_variance_inflation_factors   % contrast VIFs (cVIF), if contrasts present
 g.diagnostics.Leverages                             % per-observation leverage

@@ -1229,6 +1229,7 @@ end
 if isstruct(out) && isfield(out, 'b') && isfield(out, 't') && exist('glm_map', 'class') == 8
     try
         out = glm_map(out);
+        out = validate_object(out);   % ensure all nested-struct fields are present
     catch ME
         warning('fmri_data:regress:glm_mapCastFailed', ...
             'Returning results as a struct; could not cast to glm_map: %s', ME.message);

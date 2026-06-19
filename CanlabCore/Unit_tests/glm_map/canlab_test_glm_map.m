@@ -183,9 +183,62 @@ c = onCleanup(@() warning(w));
 g = build_design(g);
 
 tc.verifyEqual(size(g.X, 1), nscan);                   % built design matrix
-tc.verifyGreaterThan(size(g.X, 2), 0);
+% Default canonical HRF: one column per condition + one intercept = 3
+tc.verifyEqual(size(g.X, 2), 3);
 tc.verifyNotEmpty(g.regressor_names);
 tc.verifyNumElements(g.onsets, 2);                     % onsets read-through to design
+
+% Timing: condition A's regressor should peak ~3 TRs after its first onset
+% (canonical HRF peak ~6 s = 3 TRs); first onset 10 s -> TR 6 -> peak ~TR 9.
+[~, pk] = max(g.X(:, 1));
+tc.verifyLessThanOrEqual(abs(pk - 9), 1);
+end
+
+
+function test_event_design_matches_onsets2fmridesign(tc)
+% The high-resolution pipeline should match onsets2fmridesign across TRs,
+% including fractional TRs.
+ons = {[10 40 70 100 150]', [25 55 85 130 200]'};
+for TR = [2 1.3 2.5]
+    nscan = round(260 / TR);
+    d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
+        'onsets', ons, 'condition_names', {'A', 'B'});
+    w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+    g = glm_map(d); g = build_design(g);
+    Xgt = onsets2fmridesign(ons, TR, nscan * TR, 'hrf');   % intercept last col
+    tc.verifyEqual(size(g.X, 1), size(Xgt, 1));
+    tc.verifyGreaterThan(corr(g.X(:, 1), Xgt(:, 1)), 0.999);
+    tc.verifyGreaterThan(corr(g.X(:, 2), Xgt(:, 2)), 0.999);
+end
+end
+
+
+function test_replace_basis_set(tc)
+TR = 2; nscan = 120;
+d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
+    'onsets', {[10 40 70 100]' [25 55 85 115]'}, 'condition_names', {'A', 'B'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+
+g = glm_map(d); g.is_timeseries = true; g = build_design(g);
+rng(0); sim = fmri_data; sim.dat = randn(50, nscan);
+g = add_contrasts(g, [1 -1 0], {'AmB'});
+g = fit(g, sim, 'noverbose');
+tc.verifyEqual(g.num_regressors, 3);
+tc.verifyTrue(g.is_fitted);
+
+[xBF_hires, ~] = fmri_spline_basis(TR, 'length', 20, 'nbasis', 4, 'order', 3);
+
+% Without data: rebuild, clear stale fit/contrasts, refresh diagnostics
+g2 = replace_basis_set(g, 1, xBF_hires);
+tc.verifyEqual(g2.num_regressors, 6);          % 4 spline (A) + 1 hrf (B) + intercept
+tc.verifyFalse(g2.is_fitted);                  % fitted maps cleared
+tc.verifyEqual(g2.num_contrasts, 0);           % contrasts cleared (columns changed)
+tc.verifyNotEmpty(g2.diagnostics.Variance_inflation_factors);  % diagnostics refreshed
+
+% With data: re-fit on the new design
+g3 = replace_basis_set(g, 1, xBF_hires, 'data', sim, 'noverbose');
+tc.verifyTrue(g3.is_fitted);
+tc.verifyEqual(size(g3.betas.dat, 2), 6);
 end
 
 

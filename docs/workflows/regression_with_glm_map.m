@@ -110,6 +110,9 @@ figure;
 subplot(1, 2, 1); plot(g.diagnostics.Variance_inflation_factors, 'o-'); title('VIFs'); xlabel('Regressor');
 subplot(1, 2, 2); plot(g.diagnostics.Leverages, 'o-'); title('Leverage'); xlabel('Observation');
 
+% use the plot_design method to do it:
+plot_design(g);
+
 
 %% 6. The object mirrors the regress out-struct (with back-compatible aliases)
 % glm_map property names match the field names of "out" in fmri_data.regress.

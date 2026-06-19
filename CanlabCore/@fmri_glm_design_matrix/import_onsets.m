@@ -1,53 +1,143 @@
-function obj = import_onsets(obj, design_file, varargin)
-% Import event onsets/durations/condition names from a table file and attach
-% them to an fmri_glm_design_matrix object (single session).
+function obj = import_onsets(obj, source, varargin)
+% Import event onsets/durations/condition names (and parametric modulators)
+% into an fmri_glm_design_matrix object. Two input styles are supported.
+%
+% (1) Tabular / FSL-style -- a file (.csv/.txt/.xlsx), or a MATLAB table, with
+%     one row per event and columns for onset, (optional) duration, and a
+%     condition label. The label column may be a string name OR an integer
+%     event-type code (condition and event type mean the same thing). Events
+%     are grouped by label into conditions (one Sess.U entry each).
+%
+% (2) SPM-style -- cell arrays with one cell per condition: a cell of onset
+%     vectors, and (optionally) matching cells of durations and parametric
+%     modulator values.
 %
 % :Usage:
 % ::
 %
-%     obj = import_onsets(obj, design_file)
-%     obj = import_onsets(obj, design_file, 'onset_col','Onset', 'dur_col','Dur', 'name_col','Trial')
+%     % Tabular / FSL-style
+%     obj = import_onsets(obj, 'events.csv')
+%     obj = import_onsets(obj, events_table, 'onset_col','Onset', 'name_col','EV')
+%
+%     % SPM-style cell arrays (one cell per condition / event type)
+%     obj = import_onsets(obj, onsets_cell)
+%     obj = import_onsets(obj, onsets_cell, durations_cell)
+%     obj = import_onsets(obj, onsets_cell, durations_cell, pmods_cell, ...
+%                         'names', {'A','B'}, 'pm_names', {'rt',''})
 %
 % :Inputs:
 %
-%   **obj:**
-%        An fmri_glm_design_matrix object.
+%   **obj:**  an fmri_glm_design_matrix object.
 %
-%   **design_file:**
-%        Path to a .csv / .txt / .xlsx file, or a MATLAB table. It must have
-%        one row per event and (by default) columns named onset, duration,
-%        and name (case-insensitive; "condition" or "trial_type" are also
-%        accepted for the name column). Events are grouped by name into
-%        conditions; onsets and durations are read in the file's units (the
-%        same units, secs or scans, that the object's basis set expects).
+%   **source:**
+%        A filename, a MATLAB table (tabular style), OR a cell array of onset
+%        vectors, one cell per condition (SPM style).
 %
-% :Optional Inputs:
+% :Optional Inputs (tabular style):
 %
 %   **'onset_col' / 'dur_col' / 'name_col', columnname:**
-%        Override the column name used for onsets / durations / condition
-%        labels. dur_col may be omitted from the file (durations default 0).
+%        Override the column used for onsets / durations / condition labels.
+%        Defaults are matched case-insensitively against common names
+%        (onset/duration/name/condition/trial_type/event_type/value/code).
+%
+% :Optional Inputs (SPM style):
+%
+%   **second/third positional cells:**
+%        durations (cell, one per condition) and parametric-modulator values
+%        (cell, one per condition); pass [] to skip either.
+%
+%   **'names', {...}:**      condition names, one per condition.
+%   **'pm_names', {...}:**   parametric-modulator names, one per condition.
 %
 % :Outputs:
 %
-%   **obj:**
-%        The object with obj.Sess(1).U populated (one entry per condition).
+%   **obj:**  with obj.Sess(1).U populated (one entry per condition).
 %
 % :Examples:
 % ::
 %
 %     d = fmri_glm_design_matrix(2, 'nscan', 200, 'units', 'secs');
-%     d = import_onsets(d, 'events.csv');
+%     d = import_onsets(d, 'events.csv');                 % FSL/tabular
+%     d = import_onsets(d, {[10 40]' [25 55]'}, {4 4});   % SPM-style
 %     d = build(d);
 %
 % :See also: fmri_glm_design_matrix.add, Add_Event_Info, readtable
 %
 % ..
-%    2026 - Reimplemented (previous version was a non-functional stub).
+%    2026 - Reimplemented (previous version was a non-functional stub) and
+%    extended to FSL/tabular files with event-type codes and SPM-style cells.
 % ..
 
-% -------------------------------------------------------------------------
-% Parse options
-% -------------------------------------------------------------------------
+if iscell(source)
+    obj = local_import_spm_cells(obj, source, varargin{:});
+elseif istable(source) || ischar(source) || isstring(source)
+    obj = local_import_table(obj, source, varargin{:});
+else
+    error('fmri_glm_design_matrix:import_onsets', ...
+        'source must be a filename, a table, or a cell array of onset vectors.');
+end
+
+end % import_onsets
+
+
+% =========================================================================
+% SPM-style cell arrays
+% =========================================================================
+function obj = local_import_spm_cells(obj, onsets, varargin)
+
+% Leading positional cell/[] args are durations then pmods
+durations = {}; pmods = {};
+k = 0;
+while ~isempty(varargin) && (iscell(varargin{1}) || isempty(varargin{1})) && ~ischar(varargin{1})
+    k = k + 1;
+    if k == 1, durations = varargin{1}; elseif k == 2, pmods = varargin{1}; else, break, end
+    varargin(1) = [];
+end
+
+p = inputParser;
+p.addParameter('names', {}, @iscell);
+p.addParameter('pm_names', {}, @iscell);
+p.parse(varargin{:});
+names = p.Results.names; pm_names = p.Results.pm_names;
+
+nconds = numel(onsets);
+
+for i = 1:nconds
+
+    obj.Sess(1).U(i).ons = onsets{i}(:);
+
+    % name
+    if i <= numel(names) && ~isempty(names{i}), obj.Sess(1).U(i).name = names{i};
+    else, obj.Sess(1).U(i).name = sprintf('Cond%d', i);
+    end
+
+    % duration
+    if i <= numel(durations) && ~isempty(durations{i})
+        obj.Sess(1).U(i).dur = durations{i}(:);
+    else
+        obj.Sess(1).U(i).dur = zeros(numel(onsets{i}), 1);
+    end
+
+    % parametric modulator (single per condition)
+    if i <= numel(pmods) && ~isempty(pmods{i})
+        P = struct('name', '', 'P', pmods{i}(:), 'h', 1, 'dur', [], 'i', []);
+        if i <= numel(pm_names) && ~isempty(pm_names{i}), P.name = pm_names{i};
+        else, P.name = sprintf('pm%d', i);
+        end
+        obj.Sess(1).U(i).P = P;
+    end
+end
+
+obj.history{end + 1} = sprintf('import_onsets: %d conditions from SPM-style cell arrays', nconds);
+
+end
+
+
+% =========================================================================
+% Tabular / FSL-style
+% =========================================================================
+function obj = local_import_table(obj, source, varargin)
+
 p = inputParser;
 p.addParameter('onset_col', '', @(x) ischar(x) || isstring(x));
 p.addParameter('dur_col',   '', @(x) ischar(x) || isstring(x));
@@ -55,26 +145,21 @@ p.addParameter('name_col',  '', @(x) ischar(x) || isstring(x));
 p.parse(varargin{:});
 opt = p.Results;
 
-% -------------------------------------------------------------------------
-% Read the table
-% -------------------------------------------------------------------------
-if istable(design_file)
-    T = design_file;
+if istable(source)
+    T = source;
 else
-    if ~ischar(design_file) && ~isstring(design_file)
-        error('fmri_glm_design_matrix:import_onsets', 'design_file must be a filename or a table.');
+    if exist(char(source), 'file') ~= 2
+        error('fmri_glm_design_matrix:import_onsets', 'File not found: %s', char(source));
     end
-    if exist(design_file, 'file') ~= 2
-        error('fmri_glm_design_matrix:import_onsets', 'File not found: %s', char(design_file));
-    end
-    T = readtable(design_file);
+    T = readtable(char(source));
 end
 
 vn = T.Properties.VariableNames;
 
 onset_col = local_pick_col(vn, opt.onset_col, {'onset', 'onsets', 'ons', 'time'});
-name_col  = local_pick_col(vn, opt.name_col,  {'name', 'condition', 'cond', 'trial_type', 'type'});
-dur_col   = local_pick_col(vn, opt.dur_col,   {'duration', 'durations', 'dur'});  % may be ''
+name_col  = local_pick_col(vn, opt.name_col,  {'name', 'condition', 'cond', 'trial_type', ...
+                                               'event_type', 'eventtype', 'type', 'value', 'code', 'ev'});
+dur_col   = local_pick_col(vn, opt.dur_col,   {'duration', 'durations', 'dur'});
 
 if isempty(onset_col)
     error('fmri_glm_design_matrix:import_onsets', ...
@@ -82,18 +167,25 @@ if isempty(onset_col)
 end
 if isempty(name_col)
     error('fmri_glm_design_matrix:import_onsets', ...
-        'Could not find a condition-name column. Columns: %s. Use the ''name_col'' option.', strjoin(vn, ', '));
+        'Could not find a condition/event-type column. Columns: %s. Use the ''name_col'' option.', strjoin(vn, ', '));
 end
 
 onsets = T.(onset_col);
 labels = T.(name_col);
-if ~iscell(labels), labels = cellstr(string(labels)); end
+
+% Labels may be string names or integer event-type codes; normalize to a
+% cellstr (codes become 'Cond<code>').
+if isnumeric(labels)
+    labels = arrayfun(@(v) sprintf('Cond%g', v), labels, 'UniformOutput', false);
+elseif iscategorical(labels) || isstring(labels)
+    labels = cellstr(labels);
+elseif ~iscell(labels)
+    labels = cellstr(string(labels));
+end
 
 if ~isempty(dur_col), durs = T.(dur_col); else, durs = zeros(size(onsets)); end
 
-% -------------------------------------------------------------------------
-% Group by condition name (preserving first-appearance order)
-% -------------------------------------------------------------------------
+% Group by condition label (first-appearance order)
 [uconds, ~, grp] = unique(labels, 'stable');
 
 for c = 1:numel(uconds)
@@ -104,15 +196,13 @@ for c = 1:numel(uconds)
 end
 
 obj.history{end + 1} = sprintf('import_onsets: %d conditions, %d events from %s', ...
-    numel(uconds), numel(onsets), local_src_name(design_file));
+    numel(uconds), numel(onsets), local_src_name(source));
 
-end % import_onsets
+end
 
 
 % =========================================================================
 function col = local_pick_col(varnames, override, candidates)
-% Resolve a column name: use override if given, else first case-insensitive
-% match among candidates, else ''.
 col = '';
 if ~isempty(override)
     wh = find(strcmpi(varnames, override), 1);
@@ -129,6 +219,6 @@ end
 end
 
 
-function s = local_src_name(design_file)
-if istable(design_file), s = '(table)'; else, s = char(design_file); end
+function s = local_src_name(source)
+if istable(source), s = '(table)'; else, s = char(source); end
 end

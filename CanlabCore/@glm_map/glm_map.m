@@ -192,6 +192,13 @@ classdef glm_map
         Xdirect = [];           % [obs x regressors] design matrix for direct/group mode (no event model)
         regressor_names_direct = {};  % Cell array of regressor names for direct mode
 
+        % Column indices of X that are nuisance covariates (covariates of no
+        % interest). Used mainly in direct/group mode, where there is no
+        % event/covariate partition to read; in event mode the partition is
+        % taken from design.xX (iH = of interest, iC/iG = nuisance, iB =
+        % intercept). See the Dependent .wh_interest / .wh_nuisance accessors.
+        nuisance_columns = [];
+
         property_descriptions = { ...
             'analysis_name: short descriptive name (out.analysis_name)' ...
             'design: fmri_glm_design_matrix object holding the 1st-level event design (onsets, durations, names, basis set, built X)' ...
@@ -208,7 +215,8 @@ classdef glm_map
             'sigma: fmri_data object with residual standard deviation per voxel (out.sigma)' ...
             'residuals (.resid): fmri_data object with residuals (optional)' ...
             'dfe: scalar error degrees of freedom (median of df)' ...
-            'diagnostics: struct with vif, contrast_vif, leverages, condition_number, rank_deficient, collinearity_report' ...
+            'diagnostics: struct with VIF/cVIF (full + interest-only), leverages, Cooks_distance, condition_number, rank_deficient, collinearity_report' ...
+            'nuisance_columns: column indices of X that are nuisance covariates (direct mode). See wh_interest/wh_nuisance/wh_intercept.' ...
             'warnings: cell array of warnings from build/fit' ...
             'analysis_name/fit_parameters/notes/history: provenance and metadata' ...
             };
@@ -231,6 +239,11 @@ classdef glm_map
         num_regressors      % Number of regressors (columns of X)
         num_contrasts       % Number of contrasts (columns of C)
         is_fitted           % Logical; true once result maps (.betas) are populated
+
+        % --- Regressor-role indicators (logical, [1 x num_regressors]) ----
+        wh_interest         % true for regressors of interest (task events). Event mode: design.xX.iH. Direct mode: non-intercept, non-nuisance columns.
+        wh_nuisance         % true for nuisance covariates (of no interest). Event mode: design.xX.iC/iG. Direct mode: obj.nuisance_columns.
+        wh_intercept        % true for intercept/baseline columns. Event mode: design.xX.iB. Direct mode: constant columns.
 
         % --- Aliases to the fmri_data.regress out-struct field names -----
         % These read/write the canonical properties above, so that an object
@@ -377,6 +390,18 @@ classdef glm_map
             val = ~isempty(obj.betas);
         end
 
+        function val = get.wh_interest(obj)
+            [val, ~, ~] = local_partition(obj);
+        end
+
+        function val = get.wh_nuisance(obj)
+            [~, val, ~] = local_partition(obj);
+        end
+
+        function val = get.wh_intercept(obj)
+            [~, ~, val] = local_partition(obj);
+        end
+
 
         % =================================================================
         % Dependent property SET accessors
@@ -511,6 +536,59 @@ for s = 1:numel(design.Sess)
 end
 
 end % local_collect_U_field
+
+
+function [interest, nuisance, intercept] = local_partition(obj)
+% Partition the columns of obj.X into regressors of interest (task events),
+% nuisance covariates, and intercept/baseline columns. Returns three logical
+% row vectors of length num_regressors.
+
+k = obj.num_regressors;
+[interest, nuisance, intercept] = deal(false(1, k));
+if k == 0, return, end
+
+% --- Event mode: read the partition from the built design (xX.iH/iC/iG/iB) -
+if ~isempty(obj.design) && isstruct(obj.design.xX) && isscalar(obj.design.xX) ...
+        && isfield(obj.design.xX, 'X') && ~isempty(obj.design.xX.X) ...
+        && size(obj.design.xX.X, 2) == k && isfield(obj.design.xX, 'iH')
+
+    xX = obj.design.xX;
+    interest(local_idx(xX, 'iH'))  = true;
+    nuisance(local_idx(xX, 'iC'))  = true;
+    nuisance(local_idx(xX, 'iG'))  = true;
+    intercept(local_idx(xX, 'iB')) = true;
+
+    % Any column not assigned by the partition defaults to "of interest"
+    unassigned = ~(interest | nuisance | intercept);
+    interest(unassigned) = true;
+    return
+end
+
+% --- Direct mode: detect intercept (constant columns); use stored nuisance -
+X = obj.X;
+isconst = all(X == X(1, :), 1) & any(X ~= 0, 1);   % constant, nonzero columns
+intercept(isconst) = true;
+
+nz = obj.nuisance_columns;
+if ~isempty(nz)
+    if islogical(nz)
+        nuisance(1:min(k, numel(nz))) = nz(1:min(k, numel(nz)));
+    else
+        nz = nz(nz >= 1 & nz <= k);
+        nuisance(nz) = true;
+    end
+end
+nuisance = nuisance & ~intercept;
+interest = ~(intercept | nuisance);
+
+end % local_partition
+
+
+function idx = local_idx(xX, f)
+% Safely return field xX.(f) as a row of indices (empty if absent).
+idx = [];
+if isfield(xX, f) && ~isempty(xX.(f)), idx = xX.(f)(:)'; end
+end
 
 
 function s = local_tf(tf, a, b)

@@ -243,6 +243,81 @@ end
 
 
 % =====================================================================
+% Regressor-role indicators (of interest vs nuisance vs intercept)
+% =====================================================================
+function test_interest_nuisance_indicators(tc)
+% Event mode: conditions are of interest, baseline is the intercept
+d = fmri_glm_design_matrix(2, 'nscan', 120, 'units', 'secs', ...
+    'onsets', {[10 40 70]' [25 55 85]'}, 'condition_names', {'A' 'B'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g = build_design(g);
+tc.verifyEqual(g.wh_interest,  [true true false]);
+tc.verifyEqual(g.wh_nuisance,  [false false false]);
+tc.verifyEqual(g.wh_intercept, [false false true]);
+
+% Direct mode: mark column 3 as a nuisance covariate; col 4 is the intercept
+n = 30;
+X = [zscore((1:n)') zscore(randn(n, 1)) zscore((n:-1:1)') ones(n, 1)];
+g2 = glm_map('X', X, 'level', 2, 'nuisance_columns', 3);
+tc.verifyEqual(g2.wh_interest,  [true true false false]);
+tc.verifyEqual(g2.wh_nuisance,  [false false true false]);
+tc.verifyEqual(g2.wh_intercept, [false false false true]);
+end
+
+
+function test_diagnostics_interest_only(tc)
+% A nuisance covariate correlated with a task regressor should inflate the
+% full-design VIF relative to the interest-only VIF.
+rng(1); n = 40;
+task = zscore((1:n)');
+nuis = zscore(task + 0.4 * randn(n, 1));
+X = [task zscore(randn(n, 1)) nuis ones(n, 1)];
+g = glm_map('X', X, 'level', 2, 'nuisance_columns', 3);
+g = diagnostics(g, 'noverbose');
+
+tc.verifyNotEmpty(g.diagnostics.Variance_inflation_factors_interest_only);
+% Full-design VIF for the task regressor exceeds its interest-only VIF
+full_task = g.diagnostics.Variance_inflation_factors(1);
+io_task   = g.diagnostics.Variance_inflation_factors_interest_only(1);
+tc.verifyGreaterThan(full_task, 2 * io_task);
+tc.verifyNotEmpty(g.diagnostics.condition_number_interest_only);
+end
+
+
+% =====================================================================
+% import_onsets: tabular (FSL) and SPM-style cell arrays
+% =====================================================================
+function test_import_onsets_variants(tc)
+TR = 2; nscan = 120;
+
+% FSL/tabular with string condition names
+T = table([5; 35; 65; 20; 50], [2; 2; 2; 3; 3], {'A'; 'A'; 'A'; 'B'; 'B'}, ...
+    'VariableNames', {'onset', 'duration', 'name'});
+d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs');
+d = import_onsets(d, T);
+tc.verifyEqual(numel(d.Sess(1).U), 2);
+tc.verifyEqual(d.Sess(1).U(1).ons(:)', [5 35 65]);
+
+% FSL/tabular with integer event-type codes
+T2 = table([5; 35; 20; 50], [0; 0; 0; 0], [1; 1; 2; 2], ...
+    'VariableNames', {'onset', 'duration', 'trial_type'});
+d2 = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs');
+d2 = import_onsets(d2, T2);
+tc.verifyEqual(numel(d2.Sess(1).U), 2);
+
+% SPM-style cell arrays with durations + parametric modulators
+d3 = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs');
+d3 = import_onsets(d3, {[10 40 70]' [25 55 85]'}, {4 4}, {[1 2 3]' []}, ...
+    'names', {'cue' 'pain'}, 'pm_names', {'intensity' ''});
+tc.verifyEqual(d3.Sess(1).U(1).name, 'cue');
+tc.verifyEqual(d3.Sess(1).U(1).P.P(:)', [1 2 3]);
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+d3 = build(d3);
+tc.verifyEqual(size(d3.xX.X, 1), nscan);
+end
+
+
+% =====================================================================
 % import_SPM (SPM12/SPM25 first-level)
 % =====================================================================
 function test_import_SPM_and_fit(tc)

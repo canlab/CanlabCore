@@ -23,7 +23,7 @@ regressors per run** — no scanner required.
 | Change the basis set | `replace_basis_set(g, cond, xBF)` |
 | Add a contrast | `add_contrasts(g, C, names)` |
 | Screen the design | `run_diagnostics(g)` |
-| Fit (AR for time series) | `fit(g, data, 'AR', 1)` |
+| Fit (AR for time series) | `fit(g, data, 'AR', 4)` |
 | Threshold / visualize | `threshold(g, ...)`, `montage(g)` |
 
 ---
@@ -94,7 +94,7 @@ for s = 1:numel(nscan)
 end
 
 g = glm_map(d);
-g.is_timeseries = true;          % enable AR error models in fit
+g.is_timeseries = true;          % enable AR error models + HP-filter diagnostics
 g = build_design(g);            % onsets ⊛ canonical HRF -> X
 summary(g)                       % 660 obs x 33 reg (12 interest, 18 nuisance, 3 intercept)
 plot_design(g)
@@ -148,8 +148,12 @@ VIF = 1, 2, 4, 8.
 
 To exercise fitting without real scans, build a synthetic BOLD data set
 (`X · betas + noise`) in a template brain space; on real data you would load the
-run's time series as an `fmri_data` object instead. Fit with an AR(1) error
-model (appropriate for serially correlated BOLD).
+run's time series as an `fmri_data` object instead. Because we need data from a
+*specific* convolved design `g.X`, we set `X·betas + noise` directly (the
+built-in [`fmri_data.sim_data`](../fmri_data_methods.md) is a one-liner for the
+simpler signal-plus-noise case, but it uses its own single-predictor design
+rather than your `X`). Fit with an AR(4) error model — recommended for serially
+correlated BOLD (AR(4) captures the autocorrelation better than AR(1)).
 
 ```matlab
 template = load_image_set('emotionreg', 'noverbose');          % borrow a brain space
@@ -165,8 +169,14 @@ sim = template;
 sim.dat = single((g.X * betas_true + 3*randn(ntot, nvox))');    % [voxels x TRs]
 sim.images_per_session = g.design.nscan;
 
-g = fit(g, sim, 'AR', 1);       % autoregressive error model (use 'robust' to down-weight)
+g = fit(g, sim, 'AR', 4);       % autoregressive error model (use 'robust' to down-weight)
 ```
+
+> **AR(p) dependencies.** AR fitting requires the **Econometrics Toolbox**
+> (`fgls`) and the **Signal Processing Toolbox** (`aryule`). `fit` checks for
+> both before doing any work and errors with a clear message if either is
+> missing; fall back to OLS (`fit(g, sim)`) or `'robust'` in that case.
+> Estimation loops over voxels, so whole-brain AR fits are slow.
 
 ## Section F — Threshold and visualize
 

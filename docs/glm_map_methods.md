@@ -161,7 +161,7 @@ they all return the **same** object type.
 
 | Method | What it does |
 |---|---|
-| `fit(g, data, ...)` | Run the regression on an `fmri_data` object (the compute engine is `fmri_data.regress`); populate `betas`, `t`, contrasts, `df`, `sigma`, and diagnostics. Options: `'robust'`, `'AR', order` (time series), `'residuals'`, `'pthresh'`, `'thresh_type'`. |
+| `fit(g, data, ...)` | Run the regression on an `fmri_data` object (the compute engine is `fmri_data.regress`); populate `betas`, `t`, contrasts, `df`, `sigma`, and diagnostics. Options: `'robust'`, `'AR', order` (time series; AR(4) recommended — needs Econometrics + Signal Processing toolboxes, checked up front), `'residuals'`, `'pthresh'`, `'thresh_type'`. |
 | `threshold(g, p, type, ...)` | Re-threshold the stored `t` / `contrast_t` maps without refitting (delegates to `statistic_image.threshold`). |
 | `table(g, which_map, ...)` | Atlas-labeled results table for a chosen map (`'t'`, `'betas'`, `'contrast'`, `'contrast_t'`). |
 | `montage(g, which_map, ...)` | Brain montage of a chosen result map. |

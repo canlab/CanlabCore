@@ -28,8 +28,15 @@ function obj = fit(obj, data, varargin)
 %        Use robust (bisquare) regression. Passed through to fmri_data.regress.
 %
 %   **'AR', [order]:**
-%        Use an autoregressive error model of the given order. Only valid
-%        when obj.is_timeseries is true.
+%        Use an autoregressive AR(p) error model of the given order. Only
+%        valid when obj.is_timeseries is true. AR(4) is recommended for
+%        typical BOLD time series (it captures the low-order serial
+%        autocorrelation better than AR(1) and approximates an ARMA(1,1)
+%        process). Requires two additional toolboxes, which are checked for
+%        up front and reported clearly if missing:
+%          - Econometrics Toolbox (fgls)        — the GLS fit
+%          - Signal Processing Toolbox (aryule) — AR-coefficient estimation
+%        Estimation loops over voxels, so whole-brain AR fits are slow.
 %
 %   **'pthresh', [p-value]:**
 %        Initial threshold p-value applied to the t/contrast_t maps
@@ -106,6 +113,23 @@ end
 if ar_order > 0 && ~obj.is_timeseries
     error('glm_map:ARnotTimeseries', ...
         'AR error models require obj.is_timeseries == true (within-run timeseries data).');
+end
+
+% Check AR-model dependencies up front and fail with a clear, actionable
+% message rather than partway through the per-voxel fit. AR(p) estimation
+% (fmri_data.regress -> fit_gls2) needs fgls (Econometrics Toolbox) for the
+% GLS fit and aryule (Signal Processing Toolbox) for the AR coefficients.
+if ar_order > 0
+    missing = {};
+    if isempty(which('fgls')),   missing{end + 1} = 'fgls (Econometrics Toolbox)'; end
+    if isempty(which('aryule')), missing{end + 1} = 'aryule (Signal Processing Toolbox)'; end
+    if ~isempty(missing)
+        error('glm_map:ARDependencyMissing', ...
+            ['AR(%d) error models require functions that are not on your path:\n  - %s\n' ...
+             'Install/license the listed toolbox(es), or fit without ''AR'' ' ...
+             '(OLS, or add ''robust'' to down-weight outlier time points).'], ...
+            ar_order, strjoin(missing, '\n  - '));
+    end
 end
 
 % Ensure a design matrix is available; build it for event/1st-level models

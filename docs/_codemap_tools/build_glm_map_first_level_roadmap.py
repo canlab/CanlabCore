@@ -52,7 +52,7 @@ def build() -> Slide:
           x=cx, y=2.74, w=cw, h=0.46, font_size=9.5)
     s.box("diag", "func", "run_diagnostics\nVIF/cVIF (± nuisance) · efficiency · HP-filter cutoff",
           x=cx, y=3.28, w=cw, h=0.60, font_size=9.5)
-    s.box("fit", "func", "fit(g, timeseries, 'AR', 1 / 'robust')",
+    s.box("fit", "func", "fit(g, timeseries, 'AR', 4 / 'robust')",
           x=cx, y=4.00, w=cw, h=0.48, font_size=10.0)
     for a, b in (("build", "basis"), ("basis", "contr"), ("contr", "diag"), ("diag", "fit")):
         s.connect_line(a, b, src_side="bottom", dst_side="top", weight=0.8)
@@ -88,8 +88,9 @@ def build() -> Slide:
     s._text(
         "First-level designs are BUILT from event timing: onsets/durations are convolved with a basis set (canonical HRF by "
         "default) and stacked across runs with per-run intercepts; entered events are flagged of interest, motion / "
-        "multiple_regressors as nuisance. Set g.is_timeseries = true to enable AR error models; run_diagnostics recommends a "
-        "high-pass-filter cutoff (< 5% variance lost) for the regressors and contrasts.",
+        "multiple_regressors as nuisance. Set g.is_timeseries = true to enable AR(p) error models (AR(4) recommended; needs "
+        "Econometrics + Signal Processing toolboxes) and HP-filter diagnostics; run_diagnostics recommends a high-pass-filter "
+        "cutoff (< 5% variance lost) for the regressors and contrasts.",
         x=0.35, y=6.45, w=12.6, h=0.7, size=9.5, align=PP_ALIGN.LEFT,
     )
     return s

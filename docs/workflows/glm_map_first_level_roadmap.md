@@ -66,7 +66,10 @@ The basis set defines the assumed response shape:
   rebuilt; one line per basis function appears in each event's `plot_design`
   panel).
 
-Mark `g.is_timeseries = true` so that `fit` can use AR error models.
+Mark `g.is_timeseries = true` so that `fit` can use AR error models. This
+flag also switches `run_diagnostics` into time-series mode, adding the
+high-pass-filter cumulative-power assessment described below (which is skipped
+for static second-level designs).
 
 ---
 
@@ -94,14 +97,29 @@ reports:
 ## 5. Simulating data (for the demo) and fitting
 
 To exercise the pipeline without real scans, build a synthetic BOLD data set —
-`X · betas + noise` over a template brain space — then fit. On real data you
-load the run's time series as an `fmri_data` object instead.
+`X · betas + noise` over a template brain space. Borrow a brain space (e.g.
+`load_image_set('emotionreg')`) and set the data in one line —
+`sim.dat = single((g.X * betas_true + noise)')` (see the how-to). The built-in
+[`fmri_data.sim_data`](../fmri_data_methods.md) is the related one-liner for the
+simpler signal-plus-noise case (it uses its own single-predictor design rather
+than your convolved `X`):
+
+```matlab
+sim = sim_data(fmri_data, 'n', size(g.X,1), 'd', 1);   % synthetic signal + noise
+```
+
+On real data you load the run's time series as an `fmri_data` object instead.
 
 | Estimator | Call | When |
 |---|---|---|
 | **OLS** | `fit(g, data)` | fast baseline |
-| **AR(p)** | `fit(g, data, 'AR', 1)` | recommended for time series (accounts for serial autocorrelation) |
+| **AR(p)** | `fit(g, data, 'AR', 4)` | recommended for time series — AR(4) captures BOLD serial autocorrelation better than AR(1) |
 | **Robust** | `fit(g, data, 'robust')` | down-weights outlier time points |
+
+> **AR dependencies.** AR(p) fitting needs the **Econometrics Toolbox**
+> (`fgls`, the GLS fit) and the **Signal Processing Toolbox** (`aryule`, the
+> AR coefficients). `fit` checks for both up front and errors with a clear
+> message if either is missing — fall back to OLS or `'robust'` in that case.
 
 `fit` populates `betas`, `t`, `df`, `sigma`, and the diagnostics.
 
@@ -131,7 +149,7 @@ event info ── import_onsets (FSL table / SPM cells)   ─┐
         │
    run_diagnostics   (VIF/cVIF interest±nuisance, efficiency, HP-filter cutoff)
         │
-   fit(g, timeseries[, 'AR',1 / 'robust'])     ← simulate data, or load a run
+   fit(g, timeseries[, 'AR',4 / 'robust'])     ← simulate data, or load a run
         │
    threshold(g) → montage(g) / table(g) / summary(g)
 ```

@@ -35,8 +35,13 @@ function T = hrf_misspec_metrics(source, varargin)
 %                    condition (or 'all') -> reference HRF vector, plus
 %                    'EmpiricalRefLags'. (Empirical group-optimal HRF from
 %                    HMHRFest is a v1 deliverable; supply your own here.)
-%   'Source'/'Set' - column family selection, same as plot_hrf_curves
-%                    ('atlas' default, or 'signature'/'imageset' + Set).
+%   'Source'/'Set' - column family selection. 'atlas' (default),
+%                    'signature', 'imageset', a cellstr of these, or 'all'
+%                    (atlas + signature + imageset in one table). Within
+%                    'atlas', ALL atlases present are returned (source_set =
+%                    the atlas token, e.g. canlab2024 vs painpathways2024).
+%                    'Set' optionally restricts to columns whose name contains
+%                    it (e.g. one signature set, or one atlas).
 %   'Conditions'   - cellstr; subset (glob wildcards ok). Default all.
 %   'Objects'      - {'beta','t'} for input_table iteration. Default {'beta'}.
 %   'Model'        - filter input_table rows by model. Default '' (all).
@@ -84,7 +89,7 @@ p.addParameter('ReferenceHRF', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('ReferenceLags', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('EmpiricalRef', [], @(x) isempty(x) || isstruct(x) || isa(x, 'containers.Map'));
 p.addParameter('EmpiricalRefLags', [], @(x) isempty(x) || isnumeric(x));
-p.addParameter('Source', 'atlas', @(x) ischar(x) || isstring(x));
+p.addParameter('Source', 'atlas', @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Set', '', @(x) ischar(x) || isstring(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('Objects', {'beta'}, @(x) iscell(x) || isstring(x) || ischar(x));
@@ -134,7 +139,12 @@ else
         'First arg must be a CSV path, a score table, or an input_table.');
 end
 
-match_spec = struct('family', lower(strtrim(char(opts.Source))), 'set', char(opts.Set));
+% Source can be one family ('atlas'/'signature'/'imageset'), a cellstr of
+% families, or 'all' (= all three). Each family is matched separately and the
+% rows concatenated; source_kind/source_set in the output distinguish them
+% (and, for atlas, source_set is the atlas token so canlab2024 vs
+% painpathways2024 are kept apart).
+families = local_resolve_families(opts.Source);
 
 % GroupCurveFirst: replace the per-subject tables with one group-mean curve
 % table per (model, object), so metrics are computed on the averaged HRF.
@@ -147,8 +157,11 @@ for ti = 1:numel(score_tables)
     St = score_tables{ti};
     if isempty(St) || height(St) == 0, continue; end
     org = origins(ti);
-    chunk = local_metrics_one_table(St, org, match_spec, opts);
-    if ~isempty(chunk), rows{end + 1} = chunk; end %#ok<AGROW>
+    for f = 1:numel(families)
+        ms = struct('family', families{f}, 'set', char(opts.Set));
+        chunk = local_metrics_one_table(St, org, ms, opts);
+        if ~isempty(chunk), rows{end + 1} = chunk; end %#ok<AGROW>
+    end
 end
 if ~isempty(rows)
     T = vertcat(rows{:});
@@ -391,6 +404,15 @@ end
 % =========================================================================
 % Column matching (mirrors plot_hrf_curves families)
 % =========================================================================
+function fams = local_resolve_families(src)
+% Expand the Source argument into a cellstr of column families.
+s = lower(strtrim(string(src)));
+s = s(strlength(s) > 0);
+if isempty(s), s = "atlas"; end
+if any(s == "all"), fams = {'atlas', 'signature', 'imageset'}; return; end
+fams = cellstr(s);
+end
+
 function [cols, labels] = local_match_columns(v, match_spec)
 cols = {}; labels = {};
 switch match_spec.family

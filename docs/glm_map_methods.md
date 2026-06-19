@@ -116,6 +116,17 @@ they all return the **same** object type.
   built design (`g.design.xX.X` in event mode); `disp(g)` and `summary(g)` print
   the number of observations and regressors, broken down into of-interest,
   nuisance, and intercept.
+- **Intercept and contrast handling at `fit`.** `fit` ensures the model has an
+  intercept before estimating: a single overall intercept is enforced as the
+  **last** column (an existing one is moved, never duplicated; one is added if
+  absent), while multi-run designs that already carry per-run baseline columns
+  are left as they are. The model is fit first (all betas estimated) and
+  contrasts are applied afterward to form the contrast maps. A contrast vector
+  that is one (or more) elements **short** is padded with 0 weights for the
+  intercept, so you can write contrasts over just the regressors of interest.
+  When you supply `regressor_names` for a design that includes an explicit
+  intercept column, **include a name for the intercept** so names stay aligned
+  with the columns (a missing one defaults to `'Intercept'`).
 - **A note on naming.** `diagnostics` is a *property* (the results struct); the
   method that computes it is the verb **`run_diagnostics`** (call it as
   `g = run_diagnostics(g, ...)`; results land in `g.diagnostics`).

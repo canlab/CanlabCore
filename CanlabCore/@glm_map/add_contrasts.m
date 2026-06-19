@@ -52,10 +52,15 @@ if nreg == 0
     error('glm_map:NoDesign', 'No design available; set obj.X or build a design before adding contrasts.');
 end
 
-% Each row of C is a contrast; validate width against number of regressors
-if size(C, 2) ~= nreg
+% Each row of C is a contrast. A contrast may omit the trailing
+% intercept/baseline weight(s): if it is one or more elements short, pad with
+% 0 weights. (fit also pads contrasts to the final design width, so the
+% intercept need not be weighted explicitly.)
+if size(C, 2) > nreg
     error('glm_map:ContrastSize', ...
-        'Each contrast must have %d weights (one per regressor); got %d columns in C.', nreg, size(C, 2));
+        'Each contrast may have at most %d weights (one per regressor); got %d columns in C.', nreg, size(C, 2));
+elseif size(C, 2) < nreg
+    C = [C, zeros(size(C, 1), nreg - size(C, 2))];
 end
 
 ncon_new = size(C, 1);

@@ -469,10 +469,48 @@ tc.verifyError(@() fit(g, dat, 'AR', 1, 'noverbose'), 'glm_map:ARnotTimeseries')
 end
 
 
-function test_add_contrasts_size_mismatch_errors(tc)
+function test_fit_multisession_contrast(tc)
+% A multi-run first-level design carries per-run baseline columns and repeated
+% condition names. fit must handle the intercept (no spurious extra column),
+% give unique regressor names, and apply a contrast without erroring.
+TR = 1; nscan = [80 80];
+ons = {[10 30 50]' [15 35 55]' [12 32 52]' [18 38 58]'};   % 2 conds x 2 runs
+d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
+    'onsets', ons, 'condition_names', {'A' 'B'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g.is_timeseries = true; g = build_design(g);
+
+% regressor names are unique and cover every column
+tc.verifyEqual(numel(g.regressor_names), g.num_regressors);
+tc.verifyEqual(numel(unique(g.regressor_names)), g.num_regressors);
+
+% A vs B contrast over the run-1 event columns; fit synthetic data
+nm = g.regressor_names;
+C = zeros(1, g.num_regressors);
+C(find(contains(nm, 'A'), 1)) = 1;  C(find(contains(nm, 'B'), 1)) = -1;
+g = add_contrasts(g, C, {'AmB'});
+
+sim = fmri_data; sim.dat = randn(20, sum(nscan));
+g = fit(g, sim, 'noverbose');
+
+tc.verifyTrue(g.is_fitted);
+tc.verifyEqual(size(g.betas.dat, 2), g.num_regressors);    % no spurious intercept added
+tc.verifyEqual(size(g.contrast_estimates.dat, 2), 1);
+end
+
+
+function test_add_contrasts_size_handling(tc)
 X = [ones(15, 1) randn(15, 2)];                        % 3 regressors
 g = glm_map('X', X, 'level', 2);
-tc.verifyError(@() add_contrasts(g, [1 0], {'bad'}), 'glm_map:ContrastSize');
+
+% A contrast that is one (or more) elements short is padded with 0 weights
+% (e.g. the intercept weight need not be supplied)
+g1 = add_contrasts(g, [0 1], {'short'});               % 2 of 3 -> padded
+tc.verifyEqual(size(g1.contrasts), [3 1]);
+tc.verifyEqual(g1.contrasts(:, 1)', [0 1 0]);
+
+% A contrast wider than the design errors
+tc.verifyError(@() add_contrasts(g, [1 0 0 0], {'toolong'}), 'glm_map:ContrastSize');
 end
 
 

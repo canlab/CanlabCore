@@ -126,12 +126,39 @@ if size(data.dat, 2) ~= size(X, 1)
 end
 
 % -------------------------------------------------------------------------
+% Intercept and contrast preparation
+% -------------------------------------------------------------------------
+% Ensure the design has an intercept and that the regressor names and the
+% contrast matrix line up with the design columns BEFORE fitting:
+%   - A single overall intercept is enforced as the LAST column (intercept.m
+%     'end' semantics: an existing intercept is moved, never duplicated; one is
+%     added if none is present). Designs that already carry per-run baseline
+%     columns (multi-session first-level) are left as they are.
+%   - A contrast vector that is one (or more) elements short gets a 0 weight
+%     for the intercept column(s), so contrasts can be entered over the
+%     regressors of interest without an explicit intercept entry.
+% The model is then fit first (all betas estimated) and contrasts are applied
+% afterwards by regress to form the contrast maps.
+rn = obj.regressor_names;
+C  = obj.contrasts;                          % [regressors x contrasts]
+[X, rn, C] = local_prepare_design(obj, X, rn, C);
+
+% Persist the prepared design on direct-mode objects so g.X / g.regressor_names
+% match the fit. For event designs, X comes from .design and is unchanged here.
+if isempty(obj.design)
+    obj.Xdirect = X;
+    obj.regressor_names_direct = rn;
+end
+obj.contrasts = C;
+
+% -------------------------------------------------------------------------
 % Assemble regress() argument list
 % -------------------------------------------------------------------------
 data.X = X;
 
-% Threshold p-value must precede the 'unc'/'fdr' keyword (regress convention)
-regress_args = {pthresh, thresh_type};
+% Threshold p-value must precede the 'unc'/'fdr' keyword (regress convention).
+% The intercept is handled above, so tell regress not to add another.
+regress_args = {pthresh, thresh_type, 'nointercept'};
 
 if do_robust,  regress_args{end + 1} = 'robust'; end
 if ar_order > 0, regress_args = [regress_args, {'AR', ar_order}]; end
@@ -144,14 +171,13 @@ if ~do_display, regress_args{end + 1} = 'nodisplay'; end
 if ~doverbose,  regress_args{end + 1} = 'noverbose'; end
 
 % Regressor names (length must match number of design columns)
-rn = obj.regressor_names;
 if ~isempty(rn) && numel(rn) == size(X, 2)
     regress_args = [regress_args, {'names', rn}];
 end
 
 % Contrasts: regress expects C as [regressors x contrasts] (our storage)
-if ~isempty(obj.contrasts)
-    regress_args = [regress_args, {'C', obj.contrasts}];
+if ~isempty(C)
+    regress_args = [regress_args, {'C', C}];
     if ~isempty(obj.contrast_names)
         regress_args = [regress_args, {'contrast_names', obj.contrast_names}];
     end
@@ -249,3 +275,52 @@ function s = local_iif(tf, a, b)
 % Inline if: return a if tf else b.
 if tf, s = a; else, s = b; end
 end % local_iif
+
+
+% =====================================================================
+function [X, names, C] = local_prepare_design(obj, X, names, C)
+% Ensure the design has a single overall intercept as the LAST column (unless
+% it already carries per-run baseline columns), keep regressor names aligned,
+% and pad/reorder the contrast matrix C ([regressors x contrasts]) to match.
+% Uses intercept.m semantics ('which'/'end'): an existing all-ones intercept is
+% moved to the end (never duplicated); one is added if none is present.
+k = size(X, 2);
+
+% Pad names to the number of design columns
+if ~iscell(names), names = {}; end
+names = names(:)';
+while numel(names) < k, names{end + 1} = sprintf('R%d', numel(names) + 1); end %#ok<AGROW>
+names = names(1:k);
+
+wh_allones = intercept(X, 'which');          % columns that are exactly all ones
+n_block    = sum(obj.wh_intercept);          % per-run / baseline intercept columns
+
+if numel(wh_allones) == 1
+    % A single overall intercept: enforce it as the last column.
+    if wh_allones ~= k
+        order = [setdiff(1:k, wh_allones), wh_allones];
+        X = X(:, order);
+        names = names(order);
+        if ~isempty(C) && size(C, 1) == k, C = C(order, :); end
+    end
+
+elseif isempty(wh_allones) && n_block == 0
+    % No intercept of any kind: add one at the end.
+    X = [X, ones(size(X, 1), 1)];
+    names{end + 1} = 'Intercept';
+    if ~isempty(C), C = [C; zeros(1, size(C, 2))]; end
+end
+% (multiple all-ones columns, or per-run block intercepts present: leave as-is)
+
+% Pad contrast rows with 0 weight for any trailing (e.g. intercept) columns
+if ~isempty(C)
+    if size(C, 1) < size(X, 2)
+        C = [C; zeros(size(X, 2) - size(C, 1), size(C, 2))];
+    elseif size(C, 1) > size(X, 2)
+        error('glm_map:ContrastSize', ...
+            'Contrast matrix has %d rows but the design has %d columns (incl. intercept).', ...
+            size(C, 1), size(X, 2));
+    end
+end
+
+end % local_prepare_design

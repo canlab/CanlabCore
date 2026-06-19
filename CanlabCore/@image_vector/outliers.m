@@ -68,6 +68,11 @@ function [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(dat
 % :Examples:
 % ::
 % % -------------------------------------------------------------------------
+% % A minimal example on person-level (non-time series) image data
+% obj = load_image_set('emotionreg');
+% [est_outliers_uncorr, est_outliers_corr, outlier_tables] = outliers(obj, 'notimeseries');
+%
+% % -------------------------------------------------------------------------
 % % Load a multi-study dataset, rescale it, and identify/plot outliers
 % % Use 'notimeseries' option because this is not a time series dataset
 % 

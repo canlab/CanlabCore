@@ -1,21 +1,67 @@
 function [mip, x, y, voldata] = pattern_surf_plot_mip(m, varargin)
+% pattern_surf_plot_mip Axial maximum intensity projection pattern surface plot.
 %
-% axial maximum intensity projection pattern surface plot
-% needs documentation
+% Reconstructs the image_vector data into a 3-D volume, optionally smooths
+% it with a 3-D Gaussian, takes the axial (Z) maximum intensity
+% projection, trims empty borders, and renders the result as both a 2-D
+% image and a 3-D surface plot.
 %
-% voldata is not used, just an output for other processes, e.g., rigid-body
-% transformation
+% :Usage:
+% ::
 %
-% m : image_vector (e.g., fmri_data or statistic_image) object
+%     [mip, x, y, voldata] = pattern_surf_plot_mip(m, [optional inputs])
 %
-% Optional inputs:
-% 'nofigure', dofigure = false;
-% 'nosmooth', dosmooth = false;
-% 'smoothbox', mysmoothbox = varargin{i + 1}; varargin{i + 1} = [];
-% 'sd', mygaussstd = varargin{i + 1}; varargin{i + 1} = [];
+% :Inputs:
 %
-% Tor Wager, 2016
-% Update: Aug 2016
+%   **m:**
+%        image_vector (e.g., fmri_data or statistic_image) object.
+%
+% :Optional Inputs:
+%
+%   **'nofigure':**
+%        Skip the figure creation / plotting step.
+%
+%   **'nosmooth':**
+%        Skip 3-D Gaussian smoothing of the volume (default: smoothing on).
+%
+%   **'smoothbox':**
+%        Smoothing kernel size (passed to smooth3). Default: 5.
+%
+%   **'sd':**
+%        Gaussian SD for smoothing (passed to smooth3). Default: 2.
+%
+%   **'xlim' / 'ylim' / 'zlim':**
+%        Spatial limits (currently parsed; reserved for future use).
+%
+%   **'noverbose':**
+%        Suppress verbose output.
+%
+% :Outputs:
+%
+%   **mip:**
+%        The maximum intensity projection (Y-by-X) with empty borders
+%        trimmed and out-of-mask voxels set to NaN.
+%
+%   **x:**
+%        Vector of x mm coordinates corresponding to mip columns.
+%
+%   **y:**
+%        Vector of y mm coordinates corresponding to mip rows.
+%
+%   **voldata:**
+%        The trimmed (and optionally smoothed) 3-D volume reconstructed
+%        from m. Not used by this function but returned for downstream
+%        operations such as rigid-body transformation.
+%
+% :See also:
+%   - reconstruct_image
+%   - smooth3
+%   - voxel2mm
+%
+% ..
+%    Tor Wager, 2016
+%    Update: Aug 2016
+% ..
 
 % ------------------------------------------------------
 % parse inputs

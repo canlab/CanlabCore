@@ -1,5 +1,36 @@
 function obj = trim_mask(obj)
-% Exclude empty voxels from mask information in obj.volInfo structure, and re-make obj.volInfo
+% trim_mask Exclude empty voxels from the mask in obj.volInfo and rebuild .volInfo.
+%
+% Removes voxels whose values across all images are zero or NaN, and
+% updates the .volInfo bookkeeping (image_indx, wh_inmask, xyzlist,
+% cluster, n_inmask) accordingly. For fmri_data objects, the embedded
+% .mask is updated in parallel.
+%
+% :Usage:
+% ::
+%
+%     obj = trim_mask(obj)
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data object.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input with all-zero / all-NaN voxels removed from .dat and
+%        from .volInfo (and from .mask for fmri_data objects).
+%
+% :Examples:
+% ::
+%
+%     obj = trim_mask(obj);
+%
+% :See also:
+%   - remove_empty
+%   - replace_empty
+%   - rebuild_volinfo_from_dat
 %
 % ..
 %    Tor Wager, 2013

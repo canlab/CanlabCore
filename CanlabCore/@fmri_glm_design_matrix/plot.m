@@ -12,8 +12,6 @@ function plot(obj)
 
 TR = obj.xY.RT;
 
-bf = obj.xBF.bf;
-
 % Define sessions and number of conditions
 nsess = length(obj.Sess);
 

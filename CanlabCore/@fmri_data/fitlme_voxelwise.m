@@ -1,44 +1,38 @@
 function out = fitlme_voxelwise(obj, tbl, spec, varargin)
-% Voxelwise linear mixed-effects (LME) model using fitlme.
+% fitlme_voxelwise Voxelwise linear mixed-effects (LME) model via MATLAB's fitlme.
 %
-% - Uses obj.dat as brain data: [voxels x observations]
-% - Uses tbl as design/covariate table: one row per observation
-% - Third argument (spec) can be:
-%       (a) A fitlme formula string, e.g.:
-%           'Y ~ 1 + Run + Condition + (1 + Run | Subject)'
-%       (b) A role table with variables:
-%           Name : variable name in tbl
-%           Role : 'group' | 'fixed' | 'mixed' | 'random_only'
-%           In that case, the function builds the formula automatically.
-%
-% - Runs the same mixed model at each voxel
-% - Returns beta/t maps as statistic_image objects
-% - Supports fixed-effect contrasts (matrix C) like regress.m
-%
-% :Usage (formula mode):
+% :Usage:
 % ::
 %
-%   out = fitlme_voxelwise(obj, tbl, ...
-%       'Y ~ 1 + Run + Condition + (1 + Run | Subject)');
+%     % Formula mode
+%     out = fitlme_voxelwise(obj, tbl, ...
+%         'Y ~ 1 + Run + Condition + (1 + Run | Subject)');
 %
-%   out = fitlme_voxelwise(obj, tbl, ...
-%       'Y ~ 1 + Run + Condition + (1 + Run | Subject)', ...
-%       .005, 'unc', 'C', C, 'contrast_names', {...});
+%     out = fitlme_voxelwise(obj, tbl, ...
+%         'Y ~ 1 + Run + Condition + (1 + Run | Subject)', ...
+%         .005, 'unc', 'C', C, 'contrast_names', {...});
 %
-% :Usage (role-table mode):
-% ::
+%     % Role-table mode
+%     %   tbl has columns: Subject, Baseline, Run, C1, C2
+%     role_tbl = table( ...
+%         {'Subject'; 'Baseline'; 'Run'; 'C1'; 'C2'}, ...
+%         {'group';   'fixed';    'mixed'; 'mixed'; 'mixed'}, ...
+%         'VariableNames', {'Name','Role'});
 %
-%   % tbl has columns: Subject, Baseline, Run, C1, C2
-%   role_tbl = table( ...
-%       {'Subject'; 'Baseline'; 'Run'; 'C1'; 'C2'}, ...
-%       {'group';   'fixed';    'mixed'; 'mixed'; 'mixed'}, ...
-%       'VariableNames', {'Name','Role'});
+%     out = fitlme_voxelwise(obj, tbl, role_tbl, ...
+%         .001, 'unc', 'analysis_name', 'LME_with_roles');
 %
-%   out = fitlme_voxelwise(obj, tbl, role_tbl, ...
-%       .001, 'unc', 'analysis_name', 'LME_with_roles');
+%     % Role-table mode internally builds the formula:
+%     %   Y ~ 1 + Baseline + Run + C1 + C2 + (1 + Run + C1 + C2 | Subject)
 %
-%   % This internally builds:
-%   %   Y ~ 1 + Baseline + Run + C1 + C2 + (1 + Run + C1 + C2 | Subject)
+% Runs the same linear mixed-effects model at every voxel using
+% MATLAB's fitlme. Brain data come from obj.dat (voxels x
+% observations); design / covariates come from tbl (one row per
+% observation). The third argument may either be an explicit formula
+% string or a "role table" from which the function builds a formula
+% automatically. Returns beta / t maps as statistic_image objects
+% and supports fixed-effect contrasts (matrix C) in the spirit of
+% regress.m.
 %
 % :Inputs:
 %

@@ -1,17 +1,53 @@
 function atlas_obj = region2atlas(r, reference_image_name)
-% Transform region object r into atlas object atlas_obj, given reference
-% image name in the space to resample to
+% region2atlas Transform a region object into an atlas object.
 %
-% objout = region2atlas(r, [reference_image_name to sample to])
+% Build an atlas-class object from a region object, optionally
+% resampling to the space of a reference image. Each region becomes a
+% labeled parcel; voxels are coded with an integer index into the
+% region array (or with the region's own .dat values, if available).
+% Region shorttitles populate atlas labels and titles populate label
+% descriptions.
 %
-% Examples:
-% see parcellate_pain_predictive_regions.m
-% lindquist2015_pos_region_obj = region2fmri_data(r, obj);
-% back to regions to test:
-% rtest = region(lindquist2015_pos_region_obj, 'unique_mask_values');
-% orthviews(rtest, 'unique')
-
-% Tor Wager: edited July 16, 2018
+% :Usage:
+% ::
+%
+%     atlas_obj = region2atlas(r, [reference_image_name])
+%
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array.
+%
+% :Optional Inputs:
+%
+%   **reference_image_name:**
+%        Filename string or image_vector object specifying the space to
+%        resample the resulting atlas to. If omitted, the atlas is
+%        returned in the space of r.
+%
+% :Outputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object with .dat coded by region index, .labels
+%        from r.shorttitle, and .label_descriptions from r.title.
+%
+% :Examples:
+% ::
+%
+%     % see parcellate_pain_predictive_regions.m
+%     lindquist2015_pos_region_obj = region2fmri_data(r, obj);
+%     % back to regions to test:
+%     rtest = region(lindquist2015_pos_region_obj, 'unique_mask_values');
+%     orthviews(rtest, 'unique')
+%
+% :See also:
+%   - region2fmri_data
+%   - region2imagevec
+%   - atlas2region
+%
+% ..
+%    Tor Wager: edited July 16, 2018
+% ..
 
 has_reference_image = nargin > 1;
 

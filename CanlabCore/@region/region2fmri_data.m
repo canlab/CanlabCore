@@ -1,15 +1,50 @@
 function objout = region2fmri_data(r, reference_obj)
-% Transform region object r into fmri_data object objout, given reference
-% fmri_data object reference_obj in the same space as region object
+% region2fmri_data Transform a region object into an fmri_data object.
 %
-% objout = region2fmri_data(r, reference_obj)
+% Build an fmri_data-class object from a region object. If a reference
+% fmri_data object in the same space is supplied, its voxel grid and
+% mask are reused; otherwise an internal builder reconstructs the
+% volume directly from r(1).dim and r(1).M (the 2025 simple build path).
+% Voxel values are taken from r.dat if non-empty, then r.Z, otherwise
+% the integer region index.
 %
-% Examples:
-% see parcellate_pain_predictive_regions.m
-% lindquist2015_pos_region_obj = region2fmri_data(r, obj);
-% back to regions to test:
-% rtest = region(lindquist2015_pos_region_obj, 'unique_mask_values');
-% orthviews(rtest, 'unique')
+% :Usage:
+% ::
+%
+%     objout = region2fmri_data(r, [reference_obj])
+%
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array.
+%
+% :Optional Inputs:
+%
+%   **reference_obj:**
+%        An fmri_data (or image_vector) object in the same space as r.
+%        If supplied, the result is built into reference_obj's voxel
+%        grid. If omitted, a new fmri_data object is constructed from
+%        scratch using r(1).dim and r(1).M.
+%
+% :Outputs:
+%
+%   **objout:**
+%        An fmri_data-class object with .dat populated from the region
+%        object.
+%
+% :Examples:
+% ::
+%
+%     % see parcellate_pain_predictive_regions.m
+%     lindquist2015_pos_region_obj = region2fmri_data(r, obj);
+%     % back to regions to test:
+%     rtest = region(lindquist2015_pos_region_obj, 'unique_mask_values');
+%     orthviews(rtest, 'unique')
+%
+% :See also:
+%   - region2atlas
+%   - region2imagevec
+%   - fmri_data
 
 
 %objout = fmri_data();
@@ -19,17 +54,17 @@ function objout = region2fmri_data(r, reference_obj)
 %          fname: 'REMOVED: CHANGED SPACE'
 %            dim: [91 109 91]
 %             dt: [2 0]
-%          pinfo: [3×1 double]
-%            mat: [4×4 double]
+%          pinfo: [3ï¿½1 double]
+%            mat: [4ï¿½4 double]
 %              n: [1 1]
 %        descrip: 'Space of /Users/tor/Documents/Code_External/spm12/toolbox/FieldMap/bra?'
-%        private: [1×1 nifti]
+%        private: [1ï¿½1 nifti]
 %           nvox: 902629
-%     image_indx: [902629×1 logical]
-%      wh_inmask: [352328×1 double]
+%     image_indx: [902629ï¿½1 logical]
+%      wh_inmask: [352328ï¿½1 double]
 %       n_inmask: 352328
-%        xyzlist: [352328×3 double]
-%        cluster: [352328×1 double]
+%        xyzlist: [352328ï¿½3 double]
+%        cluster: [352328ï¿½1 double]
 
 % Added data mapping. .dat transferred first, otherwise, .Z, followed by
 % the region number

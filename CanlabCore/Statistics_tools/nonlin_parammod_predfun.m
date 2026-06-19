@@ -183,7 +183,9 @@ if length(hrf) > length(xbox), hrf = hrf(1:length(xbox)); end
 yhi = p(5) + fast_conv_fft(hrf, xbox);
 
 if length(yhi) < runDuration
-    yhi = pad(yhi, runDuration);
+    % pad yhi out to runDuration (canlab_pad takes a count of zeros to append;
+    % 'pad' was renamed to canlab_pad and now collides with the builtin pad)
+    yhi = canlab_pad(yhi, runDuration - length(yhi));
 elseif length(yhi) > runDuration
     yhi = yhi(1:runDuration);
 end
@@ -254,7 +256,7 @@ end
             hrf = hrf/max(hrf);
         end
         
-        hrf = pad(hrf,x);
+        hrf = canlab_pad(hrf, x);   % pad hrf to length(x) (renamed from pad.m)
         
         % Check
         if length(pm_vals) ~= length(ons)

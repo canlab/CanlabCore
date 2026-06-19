@@ -184,7 +184,7 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
     end
 
     % alter data type if needed
-    switch(spm('Ver'))
+    switch spm('Ver')
         case 'SPM2'
             if spm_type(volInfo.dim(4), 'swapped')
                 disp('Swapped datatypes are supported by SPM2 but not SPM5. Un-swapping.');
@@ -194,16 +194,13 @@ function [dat volInfo] = check_dat(dat, volInfo, is_single_slice, keepdt, vararg
                     volInfo.dim(4) = spm_type('float');
                 end
             end
-
-        case {'SPM5', 'SPM8', 'SPM12', 'SPM25'} %added keepdt to retain original dt if requested : luk(ea)
-            %Outputs float32 by default otherwise keeps original data type
-            %if 'keepdt' is used as optional input.
+        otherwise
+            % SPM5+, including any future versions.
+            % Outputs float32 by default; pass 'keepdt' as optional input to
+            % retain original data type (luk(ea)).
             if isfield(volInfo, 'dt') && spm_type(volInfo.dt(1), 'intt') && ~keepdt
                volInfo.dt(1) = spm_type('float32');
             end
-            
-        otherwise 
-            error('Unrecognized SPM type.  Please update code or use SPM2/5/8/12!');
     end
 end
 
@@ -232,18 +229,18 @@ function write_file(voldata, volInfo, outname, descrip, varargin)
         % write one slice for a series of images
         slice_number = varargin{1};
 
-        filenames = [];
+        filenames_cell = cell(nimgs, 1);
         for i = 1:nimgs
-            filenames = char(filenames, make_img_filename(outname, i));
+            filenames_cell{i} = make_img_filename(outname, i);
         end
-        filenames = filenames(2:end, :);
+        filenames = char(filenames_cell);
 
         % Note: pinfo is set to [1 0 0] for new images; no rescaling of
         % images.
         scn_write_plane(filenames, voldata, slice_number, volInfo);
 
     else
-        warning('off'); % empty images return many warnings
+        warnstate = warning('off', 'all'); % empty images return many warnings
         for i = 1:nimgs
             [volInfo.fname, volInfo.n(1)] = make_img_filename(outname, i);
             volInfo.descrip = descrip;
@@ -254,7 +251,7 @@ function write_file(voldata, volInfo, outname, descrip, varargin)
 
             spm_write_vol(volInfo, squeeze(voldata(:, :, :, i)));
         end
-        warning('on');
+        warning(warnstate);
     end
 end
 
@@ -278,7 +275,10 @@ function [name, n] = make_img_filename(name, imagenum)
         t = t(1);
         n1 = ext((t+1):end);
         if ~isempty(n1),
-            n = str2num(n1);
+            n = str2double(n1);
+            if isnan(n)
+                n = imagenum;  % Fall back to imagenum for non-numeric values
+            end
             ext = ext(1:(t-1));
         end
     else

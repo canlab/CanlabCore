@@ -1,26 +1,64 @@
 function obj = legend(obj, varargin)
-% Creates legend for fmridisplay object
-% Adds legend axis handles to obj.activation_maps{:}
+% legend Create a colorbar legend for an fmridisplay object.
+%
+% Creates legend(s) for an fmridisplay object and adds legend axis
+% handles to obj.activation_maps{:}.
+%
+% Notes: scaleanchors is min and max values for pos and neg range (for
+% splitmap).
 %
 % :Usage:
 % ::
 %
 %     obj = legend(obj, varargin)
+%     obj = legend(obj, 'figure')  % new figure
 %
-%     obj = legend(obj, 'figure') % new figure
+% :Inputs:
+%
+%   **obj:**
+%        An fmridisplay object with one or more activation_maps
+%        attached.
+%
+% :Optional Inputs:
+%
+%   **{'figure', 'newfig'}:**
+%        Plot legends in a new figure with larger panels and font.
+%        Default: plot small legends in the current figure.
+%
+%   **'noverbose':**
+%        Suppress informational messages (e.g., 'No variability...').
+%
+%   **'indexmap':**
+%        Followed by a colormap (cmap) for an indexed/parcellation
+%        legend (a single colorbar with one tick per label).
+%
+%   **'labels':**
+%        Followed by a cell array of label strings. Only used together
+%        with 'indexmap'; otherwise a warning is issued.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The fmridisplay object with .activation_maps{c}.legendhandle
+%        set to the legend axis handle for each activation map.
+%
+% :Examples:
+% ::
+%
+%     o2 = legend(o2);            % small legends in current figure
+%     o2 = legend(o2, 'figure');  % large legends in a new figure
+%
+% :See also:
+%   - fmridisplay
+%   - addblobs
 %
 % ..
 %    Tor Wager
 %    8/17/2016 - pkragel updated to accomodate split colormap
 %
 %    Michael Sun
-%    07/29/2024 - Updated to allowfor indexmap labelling
-
+%    07/29/2024 - Updated to allow for indexmap labelling
 % ..
-%
-% Notes: scaleanchors is min and max values for pos and neg range (for
-% splitmap)
-%
 
 doverbose = true;
 donewfig = false;

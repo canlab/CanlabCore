@@ -1,9 +1,36 @@
 function [vol_in_cubic_mm, voxcount, imtx, parcel_index_values] = get_region_volumes(atlas_obj)
-% Get the volume (and raw voxel count) of each region in an atlas object
+% get_region_volumes Get the volume and raw voxel count of each region in an atlas object.
 %
-% [vol_in_cubic_mm, voxcount, imtx, parcel_index_values] = get_region_volumes(atlas_obj)
+% :Usage:
+% ::
 %
-% imtx : indicator matrix, 1/0, for each region
+%     [vol_in_cubic_mm, voxcount, imtx, parcel_index_values] = get_region_volumes(atlas_obj)
+%
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object.
+%
+% :Outputs:
+%
+%   **vol_in_cubic_mm:**
+%        Row vector of region volumes in mm^3, computed as the voxel
+%        count multiplied by the voxel volume in mm^3.
+%
+%   **voxcount:**
+%        Row vector of voxel counts per region.
+%
+%   **imtx:**
+%        Voxels-by-regions indicator matrix (1/0) showing membership of
+%        each voxel in each region.
+%
+%   **parcel_index_values:**
+%        Column vector of integer index values present in obj.dat (one
+%        per region column of imtx).
+%
+% :See also:
+%   - num_regions
+%   - condf2indic
 
 [n_regions, n_regions_with_data, missing_regions] = num_regions(atlas_obj);
 

@@ -1,20 +1,47 @@
 function atlas_out = split_atlas_by_hemisphere(atlas_obj)
-% Divide regions that are bilateral into separate left- and right-hemisphere regions
+% split_atlas_by_hemisphere Divide bilateral regions into left- and right-hemisphere regions.
 %
-% Take an atlas object whose labeled regions are bilateral and divide each
-% region into separate left- and right-hemisphere regions.
-% - Uses x-coordinates. x-coords exactly zero will be included in R hem regions
+% Take an atlas object whose labeled regions are bilateral and divide
+% each region into separate left- and right-hemisphere regions, adding
+% _L and _R suffixes to the resulting labels.
 %
-% July 2018, Tor Wager
+% Uses x-coordinates: x-coords exactly zero are included in R-hem regions.
 %
-% "split_atlas" method use cases:
-% split_atlas_by_hemisphere: We have a defined set of bilateral regions that 
-% we want to "hard-split" into left and right. Multiple discontiguous regions 
-% with the same label will be kept together. 
+% :Usage:
+% ::
 %
-% split_atlas_into_contiguous_regions: We want to (1) keep contiguous blobs together 
-% that may cross the midline, and (2) separate contiguous blobs with the
-% same label into separate labeled regions.
+%     atlas_out = split_atlas_by_hemisphere(atlas_obj)
+%
+% :Inputs:
+%
+%   **atlas_obj:**
+%        An atlas-class object whose labeled regions are bilateral.
+%
+% :Outputs:
+%
+%   **atlas_out:**
+%        Atlas-class object in which each original region has been split
+%        into _L and _R variants.
+%
+% :Notes:
+%
+% 'split_atlas' method use cases:
+%
+% - split_atlas_by_hemisphere: We have a defined set of bilateral
+%   regions that we want to 'hard-split' into left and right. Multiple
+%   discontiguous regions with the same label will be kept together.
+% - split_atlas_into_contiguous_regions: We want to (1) keep contiguous
+%   blobs together that may cross the midline, and (2) separate
+%   contiguous blobs with the same label into separate labeled regions.
+%
+% :See also:
+%   - split_atlas_into_contiguous_regions
+%   - atlas_add_L_R_to_labels
+%   - merge_atlases
+%
+% ..
+%    July 2018, Tor Wager
+% ..
 
 
 n_regions = num_regions(atlas_obj);

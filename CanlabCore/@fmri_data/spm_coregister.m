@@ -1,11 +1,49 @@
 function out_obj = spm_coregister(obj, varargin)
-% Use SPM to coregister an image to a standard MNI template or another image
+% spm_coregister Coregister an fmri_data object to a template using SPM.
 %
-% - writes files to disk using SPM, in same directory as loaded from
-% - need reference images on disk; will not work (yet) with objects only
-% - also realigns if 4D
+% :Usage:
+% ::
 %
-% out_obj = spm_coregister(obj, ['template', template_image_name])
+%     out_obj = spm_coregister(obj)
+%     out_obj = spm_coregister(obj, 'template', template_image_name)
+%
+% Uses SPM's coregistration routines to align the images backing the
+% input fmri_data object to a reference template. Writes the resliced
+% files to disk in the same directory the source images were loaded
+% from (with an r prefix), then loads them back into a new
+% fmri_data object.
+%
+% Behaviour notes:
+%
+%   - Writes files to disk via SPM in the same directory as the source.
+%   - Requires reference images to exist on disk; will not work (yet)
+%     with objects whose data is in memory only.
+%   - For 4-D source images, additionally realigns and reslices the
+%     remaining frames after coregistering the first volume.
+%
+% :Inputs:
+%
+%   **obj:**
+%        fmri_data object whose .fullpath fields point to source image(s)
+%        on disk.
+%
+% :Optional Inputs:
+%
+%   **'template', template_image_name:**
+%        Filename, cellstr, or image_vector specifying the reference
+%        image to coregister to. Default: the canonical
+%        icbm152_2009_symm_enhanced_for_underlay underlay shipped
+%        with CanlabCore.
+%
+% :Outputs:
+%
+%   **out_obj:**
+%        fmri_data object loaded from the resliced r-prefixed files
+%        on disk.
+%
+% :See also:
+%   - spm_run_coreg, spm_realign, spm_reslice (SPM-level routines used)
+%   - resample_space (in-memory resampling alternative)
 %
 
 % -------------------------------------------------------------------------
@@ -84,7 +122,7 @@ end
 % Set options
 
 job.eoptions = struct( ...
-'cost_fun', 'nmi', ... % 'tol' [1×12 double],
+'cost_fun', 'nmi', ... % 'tol' [1ï¿½12 double],
 'fwhm', [4 4]); % [7 7]
 
 job.roptions = struct( ...

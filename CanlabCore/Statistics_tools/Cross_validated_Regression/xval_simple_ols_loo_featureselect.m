@@ -1,6 +1,10 @@
-function pred_value = xval_simple_ols_loo(X, Y, pthreshold)
-% Check: a very simple leave-one-out cross-validated regression
-% pred_value = xval_simple_ols_loo(X, Y, p-value selection for univariate feature selection)
+function pred_value = xval_simple_ols_loo_featureselect(X, Y, pthreshold)
+% Check: a very simple leave-one-out cross-validated regression with per-fold feature selection
+% pred_value = xval_simple_ols_loo_featureselect(X, Y, p-value selection for univariate feature selection)
+%
+% Function name fix: declaration was xval_simple_ols_loo (the
+% featureless sibling). Whichever of the two files MATLAB found first
+% on the path was the one that actually ran for both call sites.
 %
 % pred_value: cross-validated predictions of outcome data
 % X: n x variables matrix of predictors

@@ -1,54 +1,34 @@
 function [surface_handles, ax] = canlab_canonical_brain_surface_cutaways(method_keyword, varargin)
-% Create one of a number of pre-set 3D brain views, and return surface handles for rendering
+% canlab_canonical_brain_surface_cutaways Create a pre-set 3D canonical brain cutaway view and return surface handles.
 %
 % :Usage:
 % ::
 %
-% [surface_handles, axis_handles] = canlab_canonical_brain_surface_cutaways(method_keyword, ['noverbose'])
+%     [surface_handles, ax] = canlab_canonical_brain_surface_cutaways(method_keyword, ['noverbose'])
 %
-% - Uses fmri_data.isosurface method, which is a flexible way of creating surfaces
-% - You can then render activation blobs on these surfaces using the
-%   surface() object methods for CANlab objects or cluster_surf
+% Creates one of a number of pre-set 3D brain views and returns surface
+% handles for rendering. The function:
 %
-% - Uses a pre-set group-average anatomical image tuned for quality visual display
-%   ('keuken_2014_enhanced_for_underlay.img') from Keuken et al. 7T atlas
+%   - Uses the fmri_data.isosurface method, a flexible way of creating
+%     surfaces. You can then render activation blobs on these surfaces
+%     using the surface() object methods for CANlab objects or
+%     cluster_surf.
+%   - Uses a pre-set group-average anatomical image tuned for quality
+%     visual display ('keuken_2014_enhanced_for_underlay.img') from the
+%     Keuken et al. 7T atlas.
+%   - Is called from addbrain, which has many options for surface
+%     rendering.
+%   - fmri_data.isosurface() can be used to create many more custom
+%     surfaces. See this code for examples.
 %
-%   Keuken et al. (2014). Quantifying inter-individual anatomical variability in the subcortex using 7T structural MRI
-%   Forstmann et al. (2014). Forstmann, Birte U., Max C. Keuken, Andreas Schafer, Pierre-Louis Bazin, Anneke Alkemade, and Robert Turner. 2014. ?Multi-Modal Ultra-High Resolution Structural 7-Tesla MRI Data Repository.? Scientific Data 1 (December): 140050.
+% :References:
+%   - Keuken et al. (2014). Quantifying inter-individual anatomical
+%     variability in the subcortex using 7T structural MRI.
+%   - Forstmann, Birte U., Max C. Keuken, Andreas Schafer, Pierre-Louis
+%     Bazin, Anneke Alkemade, and Robert Turner. 2014. "Multi-Modal
+%     Ultra-High Resolution Structural 7-Tesla MRI Data Repository."
+%     Scientific Data 1 (December): 140050.
 %
-% - This function is called from addbrain, which has many options for
-%   surface rendering.
-%
-% - fmri_data.isosurface() can be used to create many more custom surfaces
-%   See this code for examples.
-%
-% :Inputs:
-%
-%   **method_keyword:** One of the following:
-%     'left_cutaway'
-%     'right_cutaway'
-%     'right_cutaway_x8' % like right_cutaway but x=8
-%     'left_insula_slab'
-%     'right_insula_slab'
-%     'accumbens_slab'
-%
-% :Outputs:
-%   **A figure display with rendering**
-%
-%   **surface_handles:**
-%        A vector of handles to surface objects (isosurfaces and isocaps)
-%
-%  % To recreate these isosurfaces, do this:
-% anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
-% [isosurf, isocap] = deal({});
-% [p, ~, isosurf{1}, isocap{1}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
-% [p2, ~, isosurf{2}, isocap{2}] = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
-% 
-% :See also:
-%   fmri_data.isosurface, addbrain, cluster_cutaways, fmri_data.surface,
-%   region.surface
-%
-
 % ..
 %     Author and copyright information:
 %
@@ -67,6 +47,50 @@ function [surface_handles, ax] = canlab_canonical_brain_surface_cutaways(method_
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % ..
+%
+% :Inputs:
+%
+%   **method_keyword:**
+%        One of the following keywords:
+%
+%        - 'left_cutaway'
+%        - 'right_cutaway'
+%        - 'right_cutaway_x8' (like right_cutaway but x=8)
+%        - 'left_insula_slab'
+%        - 'right_insula_slab'
+%        - 'accumbens_slab'
+%
+% :Optional Inputs:
+%
+%   **'noverbose':**
+%        Suppress verbose output. Default is verbose on.
+%
+% :Outputs:
+%
+%   **surface_handles:**
+%        A vector of handles to surface objects (isosurfaces and
+%        isocaps). A figure with the rendered surfaces is also produced.
+%
+%   **ax:**
+%        Handle to the current axes containing the rendered surfaces.
+%
+% :Examples:
+% ::
+%
+%     % To recreate these isosurfaces from the canonical anatomy:
+%     anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
+%     [isosurf, isocap] = deal({});
+%     [p, ~, isosurf{1}, isocap{1}] = isosurface(anat, 'thresh', 140, ...
+%         'nosmooth', 'ylim', [-Inf -30]);
+%     [p2, ~, isosurf{2}, isocap{2}] = isosurface(anat, 'thresh', 140, ...
+%         'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
+%
+% :See also:
+%   - fmri_data.isosurface
+%   - addbrain
+%   - cluster_cutaways
+%   - fmri_data.surface
+%   - region.surface
 %
 
 % load this to create new isosurfaces, but not needed to load existing saved ones:

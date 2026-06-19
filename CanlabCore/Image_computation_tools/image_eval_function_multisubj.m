@@ -70,19 +70,26 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
 
     [mask, preprochandle, outimagenames, connames, startslice, nout] = setup_inputs(varargin{:});
 
-    
+    % Handle gzipped (.gz) input images. SPM's spm_vol cannot read compressed
+    % NIfTI, so transparently gunzip any .gz inputs to .nii here, and remove
+    % the temporary .nii files when this function exits (onCleanup fires on
+    % normal return and on error). The original .gz files are left untouched.
+    created_nii_files = {};
+    for ii = 1:length(imageNames)
+        [imageNames{ii}, was_gz] = gunzip_image_names_if_gz(imageNames{ii}, 'verbose', false);
+        if any(was_gz)
+            unzipped_names = cellstr(imageNames{ii});
+            created_nii_files = [created_nii_files; unzipped_names(logical(was_gz))]; %#ok<AGROW>
+        end
+    end
+    cleanup_temp_nii = onCleanup(@() delete_temp_niftis(created_nii_files)); %#ok<NASGU>
+
     switch spm('Ver')
         case 'SPM2'
-            % spm_defaults is a script
+            % SPM2: spm_defaults is a script, not callable here
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
-
-        case {'SPM5', 'SPM8', 'SPM12'}
-            % spm_defaults is a function
-            spm_defaults()
-
         otherwise
-            % unknown SPM
-            disp('Unknown version of SPM!');
+            % SPM5+, including any future versions
             spm_defaults()
     end
 
@@ -122,16 +129,11 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
             V{ii} = spm_vol(imageNames{ii});
 
             switch lower(spm('Ver'))
-
                 case 'spm2'
                     % OK
-                case {'spm5', 'spm8', 'spm12'}
-                    % update image number
-                    n(ii) = length(V{ii});
-
                 otherwise
-                    error('I don''t recognize your version of SPM!');
-
+                    % SPM5+, including any future versions; update image number
+                    n(ii) = length(V{ii});
             end
 
 
@@ -552,17 +554,15 @@ function V = make_output_image(maskInfo, fname, descrip,n)
     V = struct('fname','', 'dim', maskInfo.dim, 'mat',maskInfo.mat, 'pinfo', [1 0 maskInfo.pinfo(3, 1)]'); % scaling factors 1 0, keep data type from mask 
 
     % set data type to float
-    switch(lower(spm('Ver')))
+    switch lower(spm('Ver'))
         case 'spm2'
             Type = 'double';
             V.dim(4) = spm_type(Type);
-            
-        case {'spm5', 'spm8', 'spm12'}
-            Type = 'float32';
-            V.dt(1) = spm_type(Type); 
-            V.dt(2) = 1;
         otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
+            % SPM5+, including any future versions
+            Type = 'float32';
+            V.dt(1) = spm_type(Type);
+            V.dt(2) = 1;
     end
     
     V.fname   = [fname '.img'];
@@ -611,19 +611,16 @@ function n = Nvol(V)
         %spm_close_vol(V); % spm2
     end
 
-    switch(lower(spm('Ver')))
+    switch lower(spm('Ver'))
         case 'spm2'
             fp   = fopen(V.fname);
             fseek(fp,0,'eof');
             Len  = ftell(fp);
             fclose(fp);
             n    = Len/(prod(V.dim(1:3))*spm_type(V.dim(4),'bits')/8);
-
-        case {'spm5', 'spm8', 'spm12'}
-            n = length(V);
-
         otherwise
-            error('Unknown SPM version "%s": neuroscientists of the future, fix me!', spm('Ver'));
+            % SPM5+, including any future versions
+            n = length(V);
     end
 
 end
@@ -650,6 +647,23 @@ function write_output_slice(Vout, sliceoutputs, whslice)
         % % %             %iimg_reconstruct_3dvol(myslice(:), maskInfo, 'outname', outimagenames{i}{j}, 'slice', whslice);
         % % %
         % % %         end
+    end
+end
+
+
+% % -------------------------------------------------------------------
+% % Remove temporary .nii files created by gunzipping .gz inputs
+% % -------------------------------------------------------------------
+function delete_temp_niftis(files)
+
+    for i = 1:numel(files)
+        if exist(files{i}, 'file')
+            try
+                delete(files{i});
+            catch
+                % leave the file in place if it cannot be deleted
+            end
+        end
     end
 end
 

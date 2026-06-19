@@ -23,7 +23,7 @@ xc = 1 ./ (1 + xc.^.5);
 xc = xc - min(xc);
 %xc = xc ./ sum(xc); irrelevant
 
-V = toeplitz(pad(xc',size(x,1)-length(xc)));
+V = toeplitz(canlab_pad(xc',size(x,1)-length(xc)));   % canlab_pad: renamed from pad.m (avoids builtin pad)
 V = V ./ repmat(sum(V),size(V,1),1);
 V = V';
 

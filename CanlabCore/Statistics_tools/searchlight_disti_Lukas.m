@@ -1,330 +1,342 @@
 function out = searchlight_disti_Lukas(dat, dist_i, additional_inputs)
 %% ========================================================================
-% Accelerated, Parfor-Safe Group-Level Searchlight Decoding
-% - Index-based sphere caching (RAM-safe)
-% - Subject-wise permutation inference (paired A/B flips)
-% - Optional fixed C (from whole-brain nested CV)
-% - fmri_data reconstruction fully corrected (no remove_empty errors)
-% - Right-tailed voxelwise permutation p-values (acc & AUC)
+% searchlight_disti_Lukas_tfce
 %
-% IMPORTANT:
-%   dat MUST ALREADY be masked and trimmed before calling this function.
+% Group-level searchlight decoding with TFCE-only permutation inference
+% using a LOCAL implementation of classic TFCE (Smith & Nichols, 2009).
+%
+% No dependency on SPM / TDT / CoSMoMVPA TFCE implementations.
+%
+% ASSUMPTIONS:
+%  - dat is already masked & trimmed
+%  - exactly 2 images per subject: [A1..AN B1..BN]
+%  - dat.Y = [1..1 -1..-1]
+%
+% OUTPUT:
+%  out.real_auc
+%  out.real_t
+%  out.TFCE_real
+%  out.TFCE_real_max
+%  out.TFCE_null_max
+%  out.p_TFCE_global
+%  out.p_TFCE_voxel
+%  out.tfce_stat_image
 % ========================================================================
 
-%% ------------------------------------------------------------------------
-% Parse optional inputs
-% -------------------------------------------------------------------------
-do_cross = false;
-r = 3;
-P = 500;
-fixedC = []; % NEW: optional user-supplied C
+%% -------------------- Defaults --------------------
+r          = 3;
+P          = 100;
+alg        = 'cv_svm';
+fixedC     = [];
+cv_assign  = [];
 
+% TFCE defaults (Smith & Nichols)
+tfce_H     = 2;
+tfce_E     = 0.5;
+tfce_conn  = 26;
+
+%% -------------------- Parse inputs --------------------
 for k = 1:length(additional_inputs)
    if ischar(additional_inputs{k})
-       switch additional_inputs{k}
-
-           case 'dat2'
-               do_cross = true;
-               dat2 = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
-
-           case 'algorithm_name'
-               algorithm_name = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
-
+       switch lower(additional_inputs{k})
            case 'r'
                r = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
-
+           case 'algorithm_name'
+               alg = additional_inputs{k+1};
+           case 'fixedc'
+               fixedC = additional_inputs{k+1};
            case 'cv_assign'
                cv_assign = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
-
            case 'n_permutations'
                P = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
-
-           case 'fixedC'  % NEW: fixed SVM C value
-               fixedC = additional_inputs{k+1};
-               additional_inputs{k}=[]; additional_inputs{k+1}=[];
+           case 'tfce_h'
+               tfce_H = additional_inputs{k+1};
+           case 'tfce_e'
+               tfce_E = additional_inputs{k+1};
+           case 'tfce_conn'
+               tfce_conn = additional_inputs{k+1};
        end
    end
 end
 
-%% ------------------------------------------------------------------------
-% Convert to single precision (faster)
-% -------------------------------------------------------------------------
-dat.dat = single(dat.dat);
-dat.volInfo.xyzlist = single(dat.volInfo.xyzlist);
-
-if do_cross
-   dat2.dat = single(dat2.dat);
-   dat2.volInfo.xyzlist = single(dat2.volInfo.xyzlist);
-end
-
-%% ------------------------------------------------------------------------
-% dist_i corresponds to ALREADY masked+trimmed dat
-% -------------------------------------------------------------------------
-vox_to_run = find(dist_i(:))';
-N = numel(vox_to_run);
-nvox = dat.volInfo.n_inmask;
-
-%% ------------------------------------------------------------------------
-% Parfor constants
-% -------------------------------------------------------------------------
-Cdat   = parallel.pool.Constant(dat);
-Calg   = parallel.pool.Constant(algorithm_name);
-Ccv    = parallel.pool.Constant(cv_assign);
-CfixedC = parallel.pool.Constant(fixedC);  % NEW
-
-if do_cross
-   Cdat2 = parallel.pool.Constant(dat2);
+if ~isempty(cv_assign)
+   Ccv = parallel.pool.Constant(cv_assign);
 else
-   emptydat = dat;
-   emptydat.dat = [];
-   emptydat.removed_voxels = [];
-   Cdat2 = parallel.pool.Constant(emptydat);
+   Ccv = [];
 end
 
-xyz = dat.volInfo.xyzlist;
+%% -------------------- Dimensions --------------------
+Y     = dat.Y;
+Nsub  = numel(Y) / 2;
+xyz   = single(dat.volInfo.xyzlist);
 
-%% ========================================================================
-% SPHERE CACHING (index-based)
-% ========================================================================
-fprintf('Caching %d spheres (radius=%d)...\n', N, r);
+vox_to_run = find(dist_i(:));
+Nvox = numel(vox_to_run);
 
-sphere_cache = cell(N,1);
-for ii = 1:N
-   c = vox_to_run(ii);
+fprintf('Searchlight voxels: %d\n', Nvox);
+fprintf('Subjects: %d\n', Nsub);
+fprintf('TFCE permutations: %d\n', P);
+
+%% -------------------- Sphere caching --------------------
+fprintf('Caching spheres (r=%d)...\n', r);
+sphere_cache = cell(Nvox,1);
+for v = 1:Nvox
+   c = vox_to_run(v);
    dx = xyz(:,1) - xyz(c,1);
    dy = xyz(:,2) - xyz(c,2);
    dz = xyz(:,3) - xyz(c,3);
-   sphere_cache{ii} = int32(find((dx.*dx + dy.*dy + dz.*dz) <= r*r));
+   sphere_cache{v} = int32(find(dx.^2 + dy.^2 + dz.^2 <= r^2));
 end
 Cspheres = parallel.pool.Constant(sphere_cache);
 
-%% ========================================================================
-% TEMPLATE fmri_data OBJECT (prevents huge copying inside parfor)
-% ========================================================================
+%% -------------------- fmri_data template --------------------
 template = dat;
 template.dat = [];
 template.removed_voxels = false(size(dat.removed_voxels));
-template.volInfo.xyzlist = [];
-template.volInfo.wh_inmask = [];
-template.volInfo.n_inmask = [];
 Ctemplate = parallel.pool.Constant(template);
 
 %% ========================================================================
-% STEP 1 — REAL SEARCHLIGHT DECODING
-% ========================================================================
-fprintf('Computing REAL searchlight (%d voxels)...\n', N);
-q_real = makeProgressTracker(N);
+% STEP 1 — REAL SEARCHLIGHT
+%% ========================================================================
+fprintf('Running REAL searchlight decoding...\n');
 
-real_acc = nan(N,1,'single');
-real_auc = nan(N,1,'single');
-real_se = nan(N,1,'single');
-real_r  = nan(N,1,'single');
+tracker_real = ProgressTracker(Nvox);
+q_real = parallel.pool.DataQueue;
+afterEach(q_real,@(~)tracker_real.update());
 
-parfor idx = 1:N
+real_auc = nan(Nvox,1,'single');
 
-   base = Cdat.Value;
-   keep = Cspheres.Value{idx};
+parfor v = 1:Nvox
+   keep = Cspheres.Value{v};
+   base = dat;
 
-   % --- FAST sphere-specific fmri_data object ---
-   dat_local = Ctemplate.Value;
-   dat_local.dat = base.dat(keep,:);
+   dloc = Ctemplate.Value;
+   dloc.dat = base.dat(keep,:);
    rv = true(size(base.removed_voxels));
-   rv(keep) = false;
-   dat_local.removed_voxels = rv;
+   rv(keep)=false;
+   dloc.removed_voxels = rv;
 
-   dat_local.volInfo.xyzlist = base.volInfo.xyzlist(keep,:);
-   dat_local.volInfo.wh_inmask = find(~rv);
-   dat_local.volInfo.n_inmask = numel(dat_local.volInfo.wh_inmask);
+   if isempty(fixedC)
+       if isempty(Ccv)
+           [~,stats] = predict(dloc,'algorithm_name',alg,'verbose',0);
+       else
+           [~,stats] = predict(dloc,'algorithm_name',alg,'cv_assign',Ccv.Value,'verbose',0);
+       end
+   else
+       if isempty(Ccv)
+           [~,stats] = predict(dloc,'algorithm_name',alg,'C',fixedC,'verbose',0);
+       else
+           [~,stats] = predict(dloc,'algorithm_name',alg,'C',fixedC,'cv_assign',Ccv.Value,'verbose',0);
+       end
+   end
 
-   R = predict_center_fast(dat_local, Calg.Value, Ccv.Value, CfixedC.Value);
+   scores = stats.dist_from_hyperplane_xval;
+   ytrue = (Y==1);
+   [~,~,~,AUC] = perfcurve(ytrue,scores,true);
 
-   real_acc(idx) = R.acc;
-   real_auc(idx) = R.AUC;
-   real_se(idx) = R.se;
-   real_r(idx)  = R.r;
-
+   real_auc(v)=AUC;
    send(q_real,1);
 end
 
+%% -------------------- AUC -> t --------------------
+real_t = auc_to_t(real_auc,Nsub,Nsub);
+
+%% -------------------- TFCE on real map --------------------
+vol_dim = dat.volInfo.dim;
+tvol = zeros(vol_dim,'single');
+tvol(~dat.removed_voxels)=real_t;
+
+TFCE_real_vol = tfce_transform_3d(tvol,tfce_H,tfce_E,tfce_conn);
+TFCE_real = TFCE_real_vol(~dat.removed_voxels);
+TFCE_real_max = max(TFCE_real);
+
 %% ========================================================================
-% STEP 2 — SUBJECT-WISE PERMUTATIONS
-% ========================================================================
-fprintf('Running %d permutations...\n', P);
-q_perm = makeProgressTracker(P);
+% STEP 2 — TFCE-ONLY PERMUTATIONS
+%% ========================================================================
+fprintf('Running TFCE-only permutations...\n');
 
-Nsub = length(Cdat.Value.Y)/2;
+tracker_perm = ProgressTracker(P);
+q_perm = parallel.pool.DataQueue;
+afterEach(q_perm,@(~)tracker_perm.update());
 
-perm_count_acc = zeros(N,1,'uint32');
-perm_count_auc = zeros(N,1,'uint32');
+maxTFCE_null = nan(P,1,'single');
 
-parfor p = 1:P
-
-   base = Cdat.Value;
-   dat_perm = base;
-
-   % --- subject-wise paired sign-flips ---
-   flipvec = rand(Nsub,1) > 0.5;
-   for s = 1:Nsub
-       a = s; b = s + Nsub;
-       if flipvec(s)
-           dat_perm.Y(a) = -1;
-           dat_perm.Y(b) = 1;
-           tmp = dat_perm.dat(a,:);
-           dat_perm.dat(a,:) = dat_perm.dat(b,:);
-           dat_perm.dat(b,:) = tmp;
-       else
-           dat_perm.Y(a) = 1;
-           dat_perm.Y(b) = -1;
-       end
+parfor p=1:P
+   perm_dat = dat;
+   flip = rand(Nsub,1)>0.5;
+   for s=1:Nsub
+       a=s; b=s+Nsub;
+       if flip(s), perm_dat.Y([a b])=perm_dat.Y([b a]); end
    end
 
-   local_acc = zeros(N,1,'uint32');
-   local_auc = zeros(N,1,'uint32');
-
-   for idx = 1:N
-
-       keep = Cspheres.Value{idx};
-
-       dat_local = Ctemplate.Value;
-       dat_local.dat = dat_perm.dat(keep,:);
-       rv = true(size(dat_perm.removed_voxels));
-       rv(keep) = false;
-       dat_local.removed_voxels = rv;
-
-       dat_local.volInfo.xyzlist = base.volInfo.xyzlist(keep,:);
-       dat_local.volInfo.wh_inmask = find(~rv);
-       dat_local.volInfo.n_inmask = numel(dat_local.volInfo.wh_inmask);
-
-       R = predict_center_fast(dat_local, Calg.Value, Ccv.Value, CfixedC.Value);
-
-       if R.acc >= real_acc(idx), local_acc(idx) = 1; end
-       if R.AUC >= real_auc(idx), local_auc(idx) = 1; end
+   perm_auc = nan(Nvox,1,'single');
+   for v=1:Nvox
+       keep = Cspheres.Value{v};
+       dloc = Ctemplate.Value;
+       dloc.dat = perm_dat.dat(keep,:);
+       perm_auc(v)=get_auc(Ctemplate.Value,perm_dat,keep,alg,fixedC,Ccv);
    end
 
-   perm_count_acc = perm_count_acc + local_acc;
-   perm_count_auc = perm_count_auc + local_auc;
+   t_perm = auc_to_t(perm_auc,Nsub,Nsub);
+   tvol_perm = zeros(vol_dim,'single');
+   tvol_perm(~dat.removed_voxels)=t_perm;
 
+   TFCE_perm = tfce_transform_3d(tvol_perm,tfce_H,tfce_E,tfce_conn);
+   maxTFCE_null(p)=max(TFCE_perm(~dat.removed_voxels));
    send(q_perm,1);
 end
 
-p_acc = (perm_count_acc + 1)/(P+1);
-p_auc = (perm_count_auc + 1)/(P+1);
+%% -------------------- TFCE p-maps --------------------
+p_TFCE_global = (sum(maxTFCE_null>=TFCE_real_max)+1)/(P+1);
 
-%% ========================================================================
-% STEP 3 — BUILD OUTPUT
-% ========================================================================
-out = struct();
-out.test_results = cell(1,1);
+TFCE_p_voxel = nan(size(TFCE_real),'single');
+for v=1:numel(TFCE_real)
+   TFCE_p_voxel(v)=(sum(maxTFCE_null>=TFCE_real(v))+1)/(P+1);
+end
 
-full_acc = nan(nvox,1,'single');
-full_auc = nan(nvox,1,'single');
-full_se  = nan(nvox,1,'single');
-full_r   = nan(nvox,1,'single');
-full_pacc = nan(nvox,1,'single');
-full_pauc = nan(nvox,1,'single');
+tfce_stat_img = statistic_image('type','p');
+tfce_stat_img.volInfo = dat.volInfo;
+tfce_stat_img.removed_voxels = dat.removed_voxels;
+tfce_stat_img.dat = TFCE_p_voxel;
+tfce_stat_img.dat_descrip = ['uncorrected TFCE p-values based on ' num2str(P) ' permutations'];
+tfce_stat_img.p = TFCE_p_voxel;
+tfce_stat_img.p_type = ['uncorrected TFCE p-values based on ' num2str(P) ' permutations'];
 
-full_acc(vox_to_run) = real_acc;
-full_auc(vox_to_run) = real_auc;
-full_se(vox_to_run)  = real_se;
-full_r(vox_to_run)   = real_r;
-full_pacc(vox_to_run) = p_acc;
-full_pauc(vox_to_run) = p_auc;
+% Apply Storey's FDR
+[~, TFCE_q_voxel_fdr, aprioriprob] = mafdr(TFCE_p_voxel);
 
-out.test_results{1}.acc       = full_acc;
-out.test_results{1}.AUC       = full_auc;
-out.test_results{1}.se        = full_se;
-out.test_results{1}.r         = full_r;
-out.test_results{1}.p_acc_perm = full_pacc;
-out.test_results{1}.p_auc_perm = full_pauc;
+% If aprioriprob > 0.99, fallback to BenjaminiHochberg
+if aprioriprob > 0.99
+    TFCE_p_voxel_fdr = mafdr(TFCE_p_voxel, 'BHFDR', true);
+else
+% Enforce constraint q >= p (as in SAS proc multtest)
+    for j = 1:length(TFCE_q_voxel_fdr)
+        if TFCE_q_voxel_fdr(j) < p_unc(j)
+           TFCE_q_voxel_fdr(j) = p_unc(j);
+        end
+    end
 
+end
+
+tfce_stat_img_fdr = tfce_stat_img;
+if exist('TFCE_p_voxel','var')
+    tfce_stat_img_fdr.dat = TFCE_p_voxel_fdr;
+    tfce_stat_img_fdr.dat_descrip = ['fdr corrected TFCE p-values based on ' num2str(P) ' permutations'];
+    tfce_stat_img_fdr.p = TFCE_p_voxel_fdr;
+    tfce_stat_img_fdr.p_type = ['fdr corrected TFCE p-values based on ' num2str(P) ' permutations'];
+else
+    tfce_stat_img_fdr.dat = TFCE_q_voxel_fdr;
+    tfce_stat_img_fdr.dat_descrip = ['fdr corrected TFCE q-values based on ' num2str(P) ' permutations'];
+    tfce_stat_img_fdr.p = TFCE_q_voxel_fdr;
+    tfce_stat_img_fdr.p_type = ['fdr corrected TFCE q-values based on ' num2str(P) ' permutations'];
+end
+
+%% -------------------- Output --------------------
+out.real_auc = real_auc;
+out.real_t = real_t;
+out.TFCE_real = TFCE_real;
+out.TFCE_real_max = TFCE_real_max;
+out.TFCE_null_max = maxTFCE_null;
+out.p_TFCE_global = p_TFCE_global;
+out.p_TFCE_voxel = TFCE_p_voxel;
+out.tfce_stat_image = tfce_stat_img;
+out.tfce_stat_image_fdr = tfce_stat_img_fdr;
+
+fprintf('Global TFCE FWE p = %.4f\n',p_TFCE_global);
 end
 
 %% ========================================================================
-% HELPER FUNCTIONS
-% ========================================================================
+% Helper: Classic TFCE (Smith & Nichols, 2009)
+%% ========================================================================
+function tfce = tfce_transform_3d(stat,H,E,conn)
 
-function R = predict_center_fast(dat_local, alg, cv, fixedC)
-   [test_Y, dat_local] = setup_testvar(dat_local);
+if nargin<4, conn=26; end
+tfce = zeros(size(stat),'single');
 
-   if ~isempty(fixedC)
-       [~, stats] = predict(dat_local, ...
-           'algorithm_name', alg, ...
-           'C', fixedC, ...
-           'nfolds', cv, ...
-           'verbose', 0);
+hvals = unique(stat(:));
+hvals = hvals(hvals>0);
+dh = diff([0; hvals]);
+
+for i=1:numel(hvals)
+   thr = hvals(i);
+   bw = stat>=thr;
+   CC = bwconncomp(bw,conn);
+   for c=1:CC.NumObjects
+       idx = CC.PixelIdxList{c};
+       tfce(idx)=tfce(idx)+(thr^H)*(numel(idx)^E)*dh(i);
+   end
+end
+end
+
+%% ========================================================================
+% Helper: AUC -> t (Hanley & McNeil, 1982)
+%% ========================================================================
+function t = auc_to_t(auc,n_pos,n_neg)
+
+auc = max(min(auc,1-eps),eps);
+Q1 = auc./(2-auc);
+Q2 = (2*auc.^2)./(1+auc);
+
+varAUC = (auc.*(1-auc) + (n_pos-1).*(Q1-auc.^2) + ...
+         (n_neg-1).*(Q2-auc.^2))/(n_pos*n_neg);
+
+SE = sqrt(max(varAUC,eps));
+t = (auc-0.5)./SE;
+end
+
+function AUC = get_auc(dloc_template, dat_full, keep, alg, fixedC, Ccv)
+
+   % --- dat ---
+   dloc = dloc_template; % local copy
+   dloc.dat = dat_full.dat(keep,:);
+
+   % --- removed_voxels (LENGTH MUST EQUAL nvox) ---
+   rv = true(dat_full.volInfo.nvox,1);
+   rv(keep) = false;
+   dloc.removed_voxels = rv;
+
+   % --- volInfo fields ---
+   % IMPORTANT: nvox must remain FULL MASK size
+   dloc.volInfo.nvox = dat_full.volInfo.nvox;
+
+   % In-mask voxel indices INTO FULL SPACE
+   dloc.volInfo.wh_inmask = find(~rv);
+
+   % xyzlist is ONLY in-mask coordinates
+   dloc.volInfo.xyzlist = dat_full.volInfo.xyzlist(keep,:);
+
+   % n_inmask must match dat rows
+   dloc.volInfo.n_inmask = numel(keep);
+
+   % --- predict ---
+   if isempty(fixedC)
+       if isempty(Ccv)
+           [~,stats] = predict(dloc, ...
+                               'algorithm_name',alg, ...
+                               'verbose',0);
+       else
+           [~,stats] = predict(dloc, ...
+                               'algorithm_name',alg, ...
+                               'cv_assign',Ccv.Value, ...
+                               'verbose',0);
+       end
    else
-       [~, stats] = predict(dat_local, ...
-           'algorithm_name', alg, ...
-           'nfolds', cv, ...
-           'verbose', 0);
-   end
-
-   R = get_test_results(stats, test_Y, alg);
-end
-
-function R = get_test_results(stats, test_Y, alg)
-   Y = test_Y{1};
-   valid = (Y ~= 0);
-   ytrue = (Y(valid)==1);
-
-   if contains(alg,'svm')
-       scores = stats.dist_from_hyperplane_xval(valid);
-   else
-       scores = stats.yfit(valid);
-   end
-
-   acc = mean((scores>0)==ytrue);
-
-   try
-       [~,~,~,AUC] = perfcurve(ytrue, scores, true);
-   catch
-       AUC = NaN;
-   end
-
-   try
-       pos = scores(ytrue==1);
-       neg = scores(ytrue==0);
-       n1 = numel(pos); n0 = numel(neg);
-       Q1 = AUC/(2-AUC);
-       Q2 = 2*AUC*AUC/(1+AUC);
-       varAUC = (AUC*(1-AUC)+(n1-1)*(Q1-AUC^2)+(n0-1)*(Q2-AUC^2))/(n1*n0);
-       seAUC = sqrt(max(varAUC,0));
-   catch
-       seAUC = NaN;
-   end
-
-   R.acc = acc;
-   R.AUC = AUC;
-   R.se = seAUC;
-   R.r  = NaN;
-end
-
-function [test_Y, dat] = setup_testvar(dat)
-   test_Y{1} = dat.Y;
-   dat.Y = dat.Y(:,1);
-end
-
-function q = makeProgressTracker(totalCount)
-   progress.total = totalCount;
-   progress.current = 0;
-   progress.lastUpdate = tic;
-
-   q = parallel.pool.DataQueue;
-   afterEach(q,@(~)update());
-
-   function update()
-       progress.current = progress.current + 1;
-       if toc(progress.lastUpdate) > 0.1 || progress.current == progress.total
-           fprintf('\rProgress: %d/%d (%.1f%%)', ...
-               progress.current, progress.total, ...
-               100*progress.current/progress.total);
-           progress.lastUpdate = tic;
-           if progress.current == progress.total, fprintf('\n'); end
+       if isempty(Ccv)
+           [~,stats] = predict(dloc, ...
+                               'algorithm_name',alg, ...
+                               'C',fixedC, ...
+                               'verbose',0);
+       else
+           [~,stats] = predict(dloc, ...
+                               'algorithm_name',alg, ...
+                               'C',fixedC, ...
+                               'cv_assign',Ccv.Value, ...
+                               'verbose',0);
        end
    end
+
+   % --- AUC ---
+   scores = stats.dist_from_hyperplane_xval;
+   ytrue = (dat_full.Y == 1);
+   [~,~,~,AUC] = perfcurve(ytrue, scores, true);
 end

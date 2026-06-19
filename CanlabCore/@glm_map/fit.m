@@ -192,7 +192,7 @@ if ~isempty(out.contrast_estimates)
     obj.contrast_t.dfe     = obj.dfe;
 end
 
-% Stash residuals so diagnostics() can compute Cook's distance. If the caller
+% Stash residuals so run_diagnostics() can compute Cook's distance. If the caller
 % did not ask to keep them, they are cleared after diagnostics (below).
 if ~isempty(out.residuals)
     obj.residuals = out.residuals;
@@ -221,7 +221,7 @@ obj.fit_parameters = struct( ...
 
 % Compute the full diagnostic set (adds cVIF, Cook's distance, condition
 % number, collinearity report; uses canonical VIF/cVIF rather than getvif)
-obj = diagnostics(obj, 'noverbose');
+obj = run_diagnostics(obj, 'noverbose');
 
 % Drop the (potentially large) residual maps unless the caller kept them
 if ~do_resid

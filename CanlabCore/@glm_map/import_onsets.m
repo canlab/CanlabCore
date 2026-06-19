@@ -36,7 +36,7 @@ function obj = import_onsets(obj, source, varargin)
 % ::
 %
 %     g = import_onsets(glm_map, 'events.csv', 'TR', 2, 'nscan', 200);
-%     g = diagnostics(g);
+%     g = run_diagnostics(g);
 %
 % :See also:
 %   - fmri_glm_design_matrix.import_onsets, build_design, import_SPM

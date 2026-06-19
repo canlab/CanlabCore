@@ -6,7 +6,7 @@
 %   (1) the quick path  - call fmri_data.regress directly; it now *returns*
 %                         a glm_map, which you then access, display, and query.
 %   (2) the estimator path - build a glm_map, attach data, and call fit(),
-%                         add_contrasts(), diagnostics(), threshold(), etc.
+%                         add_contrasts(), run_diagnostics(), threshold(), etc.
 %                         (a scikit-learn-style API).
 %
 % It mirrors the worked examples in the fmri_data.regress help (naming,
@@ -93,7 +93,7 @@ g.dfe              % scalar error df (median of g.df)
 
 % Design diagnostics are collected in the nested .diagnostics struct, using
 % the same field names as fmri_data.regress out.diagnostics.
-g = diagnostics(g);                                 % Run diagnostics and return output in object
+g = run_diagnostics(g);                             % Run diagnostics and return output in object
 g.diagnostics.Variance_inflation_factors            % VIF per regressor
 g.diagnostics.Contrast_variance_inflation_factors   % contrast VIFs (cVIF), if contrasts present
 g.diagnostics.Leverages                             % per-observation leverage
@@ -211,7 +211,7 @@ g = glm_map('X', X, 'level', 2, 'regressor_names', {'Reapp_Success' 'Intercept'}
 
 g = add_contrasts(g, [1 0], {'reapp_effect'});      % one row per contrast
 
-g = diagnostics(g);                                 % VIF / cVIF / leverage / conditioning (no fit)
+g = run_diagnostics(g);                             % VIF / cVIF / leverage / conditioning (no fit)
 
 g = fit(g, obj);                                    % runs the regression
 
@@ -241,10 +241,10 @@ g = threshold(g, .05, 'fdr', 'which_map', 'contrast');  % contrast map only
 % and import_SPM lines need real timeseries / an SPM.mat, so they are shown
 % for reference.
 
-TR = 2; nscan = 100;
+TR = 2; nscan = 100; % nscan in TRs
 onsets = {[10 40 70 100]', [25 55 85 115]'};        % seconds, two conditions
 d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
-                           'onsets', onsets, 'condition_names', {'A' 'B'});
+                           'onsets', onsets, 'condition_names', {'Event A' 'Event B'});
 g_evt = glm_map(d);                                 % level 1, event mode
 g_evt.is_timeseries = true;
 g_evt = build_design(g_evt);                        % onsets -> X via convolution
@@ -252,7 +252,11 @@ plot_design(g_evt);                                 % design matrix + VIFs
 
 %   g_evt = fit(g_evt, bold_timeseries_fmri_data, 'AR', 1);  % AR(1) error model
 %   g_evt = import_SPM(glm_map, '/path/to/SPM.mat');         % import a full 1st-level model
+%%
+% Now again after diagnostics
 
+g_evt = run_diagnostics(g_evt);
+plot_design(g_evt);
 
 %% 14. Summary
 % - fmri_data.regress returns a glm_map; access/display it via .betas/.t/

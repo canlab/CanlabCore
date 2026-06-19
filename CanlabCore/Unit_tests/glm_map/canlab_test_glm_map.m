@@ -56,7 +56,7 @@ rng(0);
 X = [ones(30, 1) zscore((1:30)') randn(30, 1)];
 g = glm_map('X', X, 'level', 2);
 g = add_contrasts(g, [0 1 0], {'slope'});
-g = diagnostics(g, 'noverbose');
+g = run_diagnostics(g, 'noverbose');
 
 tc.verifyNumElements(g.diagnostics.Variance_inflation_factors, 3);
 tc.verifyNumElements(g.diagnostics.Contrast_variance_inflation_factors, 1);
@@ -71,7 +71,7 @@ X = [ones(20, 1) (1:20)' (1:20)'];                     % duplicate column
 g = glm_map('X', X, 'level', 2);
 w = warning('off', 'all');
 c = onCleanup(@() warning(w));
-g = diagnostics(g, 'noverbose');
+g = run_diagnostics(g, 'noverbose');
 
 tc.verifyTrue(g.diagnostics.rank_deficient);
 tc.verifySize(g.diagnostics.collinearity_report.duplicate_column_pairs, [1 2]);
@@ -273,7 +273,7 @@ task = zscore((1:n)');
 nuis = zscore(task + 0.4 * randn(n, 1));
 X = [task zscore(randn(n, 1)) nuis ones(n, 1)];
 g = glm_map('X', X, 'level', 2, 'nuisance_columns', 3);
-g = diagnostics(g, 'noverbose');
+g = run_diagnostics(g, 'noverbose');
 
 tc.verifyNotEmpty(g.diagnostics.Variance_inflation_factors_interest_only);
 % Full-design VIF for the task regressor exceeds its interest-only VIF
@@ -346,14 +346,14 @@ w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
 g = glm_map(d); g = build_design(g);
 
 % No contrasts entered: efficiency uses an auto orthogonal set over interest
-g = diagnostics(g, 'noverbose');
+g = run_diagnostics(g, 'noverbose');
 tc.verifyNotEmpty(g.diagnostics.efficiency);
 tc.verifyEqual(numel(g.diagnostics.efficiency_per_contrast), 2);
 tc.verifyTrue(contains(g.diagnostics.efficiency_contrast_source, 'orthogonal'));
 
 % No regressors of interest -> efficiency skipped gracefully (not an error)
 g2 = glm_map('X', ones(20, 1), 'level', 2);
-g2 = diagnostics(g2, 'noverbose');
+g2 = run_diagnostics(g2, 'noverbose');
 tc.verifyEmpty(g2.diagnostics.efficiency);
 end
 
@@ -368,7 +368,7 @@ d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
     'onsets', {[10 40 70 100]' [25 55 85 115]'}, 'condition_names', {'A' 'B'});
 w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
 g = glm_map(d); g.is_timeseries = true; g = build_design(g);
-g = diagnostics(g, 'noverbose');
+g = run_diagnostics(g, 'noverbose');
 
 tc.verifyGreaterThan(cond(g.X), 100);                       % raw cond is large (scaling)
 tc.verifyLessThan(g.diagnostics.condition_number, 10);      % scaled cond is small

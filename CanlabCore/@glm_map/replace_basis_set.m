@@ -124,7 +124,7 @@ obj.history{end + 1} = sprintf('replace_basis_set: condition %d -> %s [%d x %d d
 if ~isempty(data)
     obj = fit(obj, data, varargin{:});
 elseif ~isempty(obj.X)
-    obj = diagnostics(obj, 'noverbose');
+    obj = run_diagnostics(obj, 'noverbose');
 end
 
 end % replace_basis_set

@@ -92,7 +92,7 @@
 %     g = glm_map('X', X, 'level', 2, ...
 %                 'regressor_names', {'intercept' 'cov'});
 %     g = fit(g, dat);                             % runs fmri_data.regress
-%     diagnostics(g);                              % VIFs, leverage, etc.
+%     run_diagnostics(g);                          % VIFs, leverage, etc.
 %     table(g); montage(g, 't');
 %
 %     % ---- Event / 1st-level design wrapping fmri_glm_design_matrix ----
@@ -171,7 +171,7 @@ classdef glm_map
         residuals           % fmri_data object: residuals (optional; only if requested). Alias: .resid
         dfe                 % Scalar error degrees of freedom for the fit (median of df, convenience summary)
 
-        % --- Design diagnostics (nested struct; populated by fit/diagnostics) -
+        % --- Design diagnostics (nested struct; populated by fit/run_diagnostics) -
         % Fields: Variance_inflation_factors, Leverages (same names as
         % fmri_data.regress out.diagnostics), plus
         % Contrast_variance_inflation_factors, Cooks_distance (per-observation

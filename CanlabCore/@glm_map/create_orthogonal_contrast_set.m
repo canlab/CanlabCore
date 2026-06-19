@@ -37,7 +37,7 @@ function obj = create_orthogonal_contrast_set(obj, varargin)
 %             'onsets',{[10 40]' [25 55]' [12 42]'}, 'condition_names',{'A','B','C'});
 %     g = glm_map(d); g = build_design(g);
 %     g = create_orthogonal_contrast_set(g);   % 2 orthogonal contrasts over A,B,C
-%     g = diagnostics(g);
+%     g = run_diagnostics(g);
 %
 % :See also:
 %   - create_orthogonal_contrast_set (function), add_contrasts, diagnostics, calcEfficiency

@@ -1,5 +1,10 @@
-function obj = diagnostics(obj, varargin)
+function obj = run_diagnostics(obj, varargin)
 % Compute and report design diagnostics for a glm_map object.
+%
+% Note: this method is named run_diagnostics (a verb) to avoid clashing with
+% the .diagnostics property, which stores the results it computes. Call it
+% with function syntax: g = run_diagnostics(g, ...). The computed results are
+% stored in g.diagnostics.
 %
 % Evaluates the conditioning of the design matrix X (and contrasts C):
 % variance inflation factors (VIF) per regressor, contrast VIFs (cVIF),
@@ -13,7 +18,7 @@ function obj = diagnostics(obj, varargin)
 % :Usage:
 % ::
 %
-%     obj = diagnostics(obj, varargin)
+%     obj = run_diagnostics(obj, varargin)
 %
 % :Inputs:
 %
@@ -46,7 +51,7 @@ function obj = diagnostics(obj, varargin)
 % ::
 %
 %     g = glm_map('X', [ones(30,1) zscore((1:30)')], 'level', 2);
-%     g = diagnostics(g);
+%     g = run_diagnostics(g);
 %
 % :See also:
 %   - VIF, cVIF, fmri_data.regress

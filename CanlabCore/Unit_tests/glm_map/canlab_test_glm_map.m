@@ -318,6 +318,68 @@ end
 
 
 % =====================================================================
+% Orthogonal contrast set + design efficiency
+% =====================================================================
+function test_create_orthogonal_contrast_set(tc)
+d = fmri_glm_design_matrix(2, 'nscan', 150, 'units', 'secs', ...
+    'onsets', {[10 40 70]' [25 55 85]' [12 42 72]'}, 'condition_names', {'A' 'B' 'C'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g = build_design(g);
+
+g = create_orthogonal_contrast_set(g);
+tc.verifyEqual(g.num_contrasts, 2);                 % 3 conditions -> 2 contrasts
+% Orthogonal and zero on the intercept column
+tc.verifyEqual(g.contrasts(end, :), [0 0]);         % intercept row all zeros
+offdiag = g.contrasts' * g.contrasts; offdiag(logical(eye(2))) = 0;
+tc.verifyLessThan(max(abs(offdiag(:))), 1e-10);
+
+% Graceful error when there are no regressors of interest
+g2 = glm_map('X', ones(20, 1), 'level', 2);
+tc.verifyError(@() create_orthogonal_contrast_set(g2), 'glm_map:NoInterestRegressors');
+end
+
+
+function test_diagnostics_efficiency(tc)
+d = fmri_glm_design_matrix(2, 'nscan', 150, 'units', 'secs', ...
+    'onsets', {[10 40 70]' [25 55 85]' [12 42 72]'}, 'condition_names', {'A' 'B' 'C'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g = build_design(g);
+
+% No contrasts entered: efficiency uses an auto orthogonal set over interest
+g = diagnostics(g, 'noverbose');
+tc.verifyNotEmpty(g.diagnostics.efficiency);
+tc.verifyEqual(numel(g.diagnostics.efficiency_per_contrast), 2);
+tc.verifyTrue(contains(g.diagnostics.efficiency_contrast_source, 'orthogonal'));
+
+% No regressors of interest -> efficiency skipped gracefully (not an error)
+g2 = glm_map('X', ones(20, 1), 'level', 2);
+g2 = diagnostics(g2, 'noverbose');
+tc.verifyEmpty(g2.diagnostics.efficiency);
+end
+
+
+function test_glm_map_import_onsets_and_spm_flags(tc)
+% glm_map.import_onsets bootstraps a design, builds it, and flags events
+T = table([5; 35; 65; 20; 50], [0; 0; 0; 0; 0], {'A'; 'A'; 'A'; 'B'; 'B'}, ...
+    'VariableNames', {'onset', 'duration', 'name'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = import_onsets(glm_map, T, 'TR', 2, 'nscan', 60, 'units', 'secs');
+tc.verifyEqual(size(g.X, 1), 60);
+tc.verifyEqual(g.wh_interest, [true true false]);   % A,B of interest; intercept not
+
+% Missing design + no TR/nscan -> graceful error
+tc.verifyError(@() import_onsets(glm_map, T), 'glm_map:NoDesignForImport');
+
+% SPM import: event semantics drive the interest flags even when SPM.xX.iH is empty
+SPM = local_make_synthetic_spm();
+g2 = import_SPM(glm_map, SPM, 'noverbose');
+% names: 'Sn(1) Cue*bf(1)', 'Sn(1) Pain*bf(1)', 'Sn(1) constant'
+tc.verifyEqual(g2.wh_interest,  [true true false]);
+tc.verifyEqual(g2.wh_intercept, [false false true]);
+end
+
+
+% =====================================================================
 % import_SPM (SPM12/SPM25 first-level)
 % =====================================================================
 function test_import_SPM_and_fit(tc)

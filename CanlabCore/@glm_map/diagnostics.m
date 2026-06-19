@@ -200,6 +200,14 @@ if ~isempty(infl) && infl.max_ratio >= 1.5
 end
 
 % -------------------------------------------------------------------------
+% Design efficiency for contrasts (calcEfficiency). Uses the entered
+% contrasts, or an orthogonal set spanning the regressors of interest when
+% none are entered. Higher efficiency = lower contrast-estimate variance.
+% -------------------------------------------------------------------------
+[d.efficiency, d.efficiency_per_contrast, d.efficiency_contrast_names, ...
+    d.efficiency_contrast_source, eff_note] = local_efficiency(obj, X, whI);
+
+% -------------------------------------------------------------------------
 % Redundant / near-collinear column report
 % -------------------------------------------------------------------------
 report = struct();
@@ -236,7 +244,7 @@ obj.history{end + 1} = 'diagnostics: VIF/cVIF (full + interest-only), leverage, 
 % Report
 % -------------------------------------------------------------------------
 if doverbose
-    local_report(obj, d, infl, vif_thresh, cond_thresh, mywarnings);
+    local_report(obj, d, infl, vif_thresh, cond_thresh, mywarnings, eff_note);
 end
 
 end % diagnostics
@@ -245,6 +253,47 @@ end % diagnostics
 % =========================================================================
 % Local helpers
 % =========================================================================
+function [eff, eff_vec, cnames, src, note] = local_efficiency(obj, X, whI)
+% Design efficiency for contrasts via calcEfficiency. Uses entered contrasts,
+% else an orthogonal set spanning the regressors of interest. Returns [] for
+% eff and an informative note when efficiency cannot be computed.
+[eff, eff_vec, cnames, src, note] = deal([], [], {}, '', '');
+
+Crows = [];
+if ~isempty(obj.contrasts) && size(obj.contrasts, 1) == size(X, 2)
+    Crows  = obj.contrasts';                      % [n_con x n_reg]
+    cnames = obj.contrast_names;
+    src    = 'entered contrasts';
+
+elseif any(whI)
+    whIidx = find(whI);
+    if numel(whIidx) >= 2
+        Cint = create_orthogonal_contrast_set(numel(whIidx));   % dispatches to the function
+        Crows = zeros(size(Cint, 1), size(X, 2));
+        Crows(:, whIidx) = Cint;
+        cnames = arrayfun(@(i) sprintf('OrthC%d', i), 1:size(Crows, 1), 'UniformOutput', false);
+        src = 'auto orthogonal set spanning the regressors of interest';
+    else
+        note = 'Efficiency not computed: need >= 2 regressors of interest, or enter contrasts.';
+        return
+    end
+else
+    note = ['Efficiency not computed: no regressors of interest are defined and no contrasts ' ...
+        'entered. Define regressors of interest (build an event design, or set ' ...
+        'obj.nuisance_columns for direct designs) or add contrasts.'];
+    return
+end
+
+try
+    [eff, eff_vec] = calcEfficiency(ones(1, size(Crows, 1)), Crows, pinv(X), []);
+    eff_vec = eff_vec(:)';
+catch ME
+    [eff, eff_vec, cnames, src] = deal([], [], {}, '');
+    note = sprintf('Efficiency not computed (calcEfficiency error): %s', ME.message);
+end
+end
+
+
 function infl = local_inflation(d, whI, wh_io)
 % Compare full-design VIFs of the of-interest regressors against their
 % interest-only VIFs. Returns a struct with the max inflation ratio, or [].
@@ -271,7 +320,7 @@ infl.max_io   = iv(w);
 end
 
 
-function local_report(obj, d, infl, vif_thresh, cond_thresh, mywarnings)
+function local_report(obj, d, infl, vif_thresh, cond_thresh, mywarnings, eff_note)
 
 line = repmat('-', 1, 70);
 fprintf('\n  glm_map design diagnostics\n  %s\n', line);
@@ -340,6 +389,21 @@ if ~isempty(d.Cooks_distance)
     fprintf('\n  Influence: Cook''s distance per observation (image)\n');
     fprintf('  > 1 = highly influential (rule of thumb; 4/n = %.3f is a stricter cutoff).\n', 4 / obj.num_images);
     fprintf('  max Cook''s distance: %.3f (observation %d)%s\n', maxcd, wcd, local_flag(maxcd > 1, '  <-- influential'));
+end
+
+% ---- Design efficiency ----
+fprintf('\n  Design efficiency for contrasts (calcEfficiency)\n');
+fprintf('  Relative measure (no absolute scale); higher = lower contrast-estimate\n');
+fprintf('  variance = more efficient. Compare designs/contrasts on the same data.\n');
+if ~isempty(d.efficiency)
+    fprintf('  Contrasts: %s\n', d.efficiency_contrast_source);
+    for i = 1:numel(d.efficiency_per_contrast)
+        nm = local_name(d.efficiency_contrast_names, i, 'Con');
+        fprintf('  %-28s %12.4g\n', nm, d.efficiency_per_contrast(i));
+    end
+    fprintf('  %-28s %12.4g\n', 'overall (mean)', d.efficiency);
+else
+    fprintf('  %s\n', eff_note);
 end
 
 % ---- Warnings ----

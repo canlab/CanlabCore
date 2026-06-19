@@ -111,6 +111,15 @@ if isfield(SPM, 'xBF'),   design.xBF   = SPM.xBF;   end
 if isfield(SPM, 'Sess'),  design.Sess  = SPM.Sess;  end
 design.xX = SPM.xX;   % includes .X and .name (read by the Dependent accessors)
 
+% Derive the of-interest / nuisance / intercept partition from SPM's event
+% semantics. In SPM first-level models the task-event regressors are named
+% '... <cond>*bf(<k>)' (and parametric mods '... <cond>^<p>*bf(<k>)'), session
+% constants are named '... constant', and movement / multiple_regressors
+% columns are everything else. SPM's own xX.iH is typically empty for
+% event-related first-level designs, so we set the partition here (preserving
+% SPM's original indices under spm_*). glm_map's wh_interest reads xX.iH.
+design.xX = local_spm_partition(design.xX);
+
 design.build_method = 'Imported from SPM';
 if ~iscell(design.history), design.history = {}; end
 design.history{end + 1} = 'Imported from SPM structure';
@@ -147,6 +156,49 @@ end % import_SPM
 % =====================================================================
 % Local helpers
 % =====================================================================
+function xX = local_spm_partition(xX)
+% Set xX.iH (of interest), xX.iC (nuisance), xX.iB (intercept/constant),
+% xX.iG (empty) from SPM regressor-name semantics. Preserve SPM's original
+% partition indices under spm_iH / spm_iC / spm_iB / spm_iG.
+
+xX.spm_iH = local_getfield(xX, 'iH');
+xX.spm_iC = local_getfield(xX, 'iC');
+xX.spm_iB = local_getfield(xX, 'iB');
+xX.spm_iG = local_getfield(xX, 'iG');
+
+X = xX.X;
+ncol = size(X, 2);
+nm = {};
+if isfield(xX, 'name'), nm = xX.name; end
+
+is_event = false(1, ncol);
+is_const = false(1, ncol);
+for j = 1:ncol
+    if j <= numel(nm) && (ischar(nm{j}) || isstring(nm{j}))
+        s = char(nm{j});
+        if contains(s, '*bf('),            is_event(j) = true; end   % convolved task event
+        if contains(lower(s), 'constant'), is_const(j) = true; end   % session constant
+    end
+end
+
+% Numeric fallback for constants (all-equal nonzero columns)
+const_cols = all(X == X(1, :), 1) & any(X ~= 0, 1);
+is_const = is_const | const_cols;
+is_event = is_event & ~is_const;
+
+xX.iH = find(is_event);                      % of interest
+xX.iB = find(is_const);                      % intercept / session constants
+xX.iG = [];
+xX.iC = find(~is_event & ~is_const);         % nuisance (movement, covariates, ...)
+
+end % local_spm_partition
+
+
+function v = local_getfield(s, f)
+if isfield(s, f), v = s.(f); else, v = []; end
+end
+
+
 function n = local_num_sess(SPM)
 if isfield(SPM, 'Sess') && ~isempty(SPM.Sess)
     n = numel(SPM.Sess);

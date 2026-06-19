@@ -261,37 +261,85 @@ if isfield(o, f) && ~isempty(o.(f)), v = char(string(o.(f))); else, v = ''; end
 end
 
 function P = local_pool_curves_across_tables(tables)
-% Stack same-structured score tables and average every numeric column within
-% (condition, lag) -> one group-mean curve per condition x lag.
+% Average numeric columns within (condition, lag) across same-structured score
+% tables -> one group-mean curve per condition x lag.
+%
+% Robust to PARTIAL tables: instead of keeping only the column intersection
+% (which lets a single stale/failed score CSV that is missing the atlas/sig/
+% map columns silently collapse the pool to whatever few columns every table
+% happens to share), this takes the UNION of numeric columns and averages each
+% one over only the tables that actually contain it (omitnan). A subject
+% missing canlab2024 thus drops out of canlab2024's group mean rather than
+% deleting canlab2024 for everyone. Uneven coverage raises a warning so the
+% offending CSVs get re-scored.
 tables = tables(~cellfun(@isempty, tables));
 if isempty(tables), P = table(); return; end
 if isscalar(tables), P = tables{1}; return; end
 
-common = tables{1}.Properties.VariableNames;
-for i = 2:numel(tables)
-    common = intersect(common, tables{i}.Properties.VariableNames, 'stable');
-end
-parts = cell(1, numel(tables));
+% Group key: condition + a lag key present in EVERY table.
+have_lagidx = all(cellfun(@(t) any(strcmp('lag_index', t.Properties.VariableNames)), tables));
+if have_lagidx, lagkey = 'lag_index'; else, lagkey = 'lag_seconds'; end
 for i = 1:numel(tables)
-    ti = tables{i}(:, common);
-    ti.condition = string(ti.condition);
-    parts{i} = ti;
+    vn = tables{i}.Properties.VariableNames;
+    if ~any(strcmp('condition', vn)) || ~any(strcmp(lagkey, vn))
+        error('hrf_misspec_metrics:PoolKeys', ...
+            'GroupCurveFirst pooling needs ''condition'' and ''%s'' in every score table.', lagkey);
+    end
+end
+
+% Union of numeric value columns (everything except the two group keys),
+% in first-seen order.
+valnames = {};
+for i = 1:numel(tables)
+    ti = tables{i};
+    vn = ti.Properties.VariableNames;
+    for j = 1:numel(vn)
+        nm = vn{j};
+        if strcmp(nm, 'condition') || strcmp(nm, lagkey), continue; end
+        if ~isnumeric(ti.(nm)), continue; end
+        if ~any(strcmp(nm, valnames)), valnames{end + 1} = nm; end %#ok<AGROW>
+    end
+end
+
+% Stack, NaN-filling columns a given table lacks; track per-column coverage.
+parts = cell(1, numel(tables));
+covcount = zeros(1, numel(valnames));
+for i = 1:numel(tables)
+    ti = tables{i};
+    h = height(ti);
+    S = table();
+    S.condition = string(ti.condition);
+    S.(lagkey) = double(ti.(lagkey));
+    has = ismember(valnames, ti.Properties.VariableNames);
+    covcount = covcount + has;
+    for j = 1:numel(valnames)
+        if has(j) && isnumeric(ti.(valnames{j}))
+            S.(valnames{j}) = double(ti.(valnames{j}));
+        else
+            S.(valnames{j}) = nan(h, 1);
+        end
+    end
+    parts{i} = S;
 end
 big = vertcat(parts{:});
 
-vn = big.Properties.VariableNames;
-if any(strcmp('lag_index', vn)), lagkey = 'lag_index'; else, lagkey = 'lag_seconds'; end
-[g, gcond, glag] = findgroups(big.condition, double(big.(lagkey)));
-
+[g, gcond, glag] = findgroups(big.condition, big.(lagkey));
 P = table();
 P.condition = gcond;
 P.(lagkey) = glag;
-for j = 1:numel(vn)
-    name = vn{j};
-    if strcmp(name, 'condition') || strcmp(name, lagkey), continue; end
-    col = big.(name);
-    if ~isnumeric(col), continue; end
-    P.(name) = splitapply(@(x) mean(x, 'omitnan'), col, g);
+for j = 1:numel(valnames)
+    P.(valnames{j}) = splitapply(@(x) mean(x, 'omitnan'), big.(valnames{j}), g);
+end
+
+under = covcount < numel(tables);
+if any(under)
+    warning('hrf_misspec_metrics:PartialCoverage', ...
+        ['GroupCurveFirst: %d of %d pooled columns are absent from some score tables ' ...
+         '(as few as %d/%d tables carry a column); each is averaged over only the tables ' ...
+         'that have it. This usually means stale/partial score CSVs -- run ' ...
+         'hrf_audit_score_freshness on the output dir and re-score the flagged runs. ' ...
+         '%d columns are fully covered.'], ...
+        sum(under), numel(valnames), min(covcount(under)), numel(tables), sum(~under));
 end
 end
 

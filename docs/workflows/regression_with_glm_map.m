@@ -241,7 +241,7 @@ g = threshold(g, .05, 'fdr', 'which_map', 'contrast');  % contrast map only
 % and import_SPM lines need real timeseries / an SPM.mat, so they are shown
 % for reference.
 
-TR = 2; nscan = 200;
+TR = 2; nscan = 100;
 onsets = {[10 40 70 100]', [25 55 85 115]'};        % seconds, two conditions
 d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
                            'onsets', onsets, 'condition_names', {'A' 'B'});

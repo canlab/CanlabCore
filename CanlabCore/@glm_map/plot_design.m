@@ -159,7 +159,9 @@ axis tight;
 ylim([ybot - 0.4 * boxh, yl(2) + 0.05 * diff(yl)]);
 ylabel(e.name, 'Interpreter', 'none', 'Rotation', 0, 'HorizontalAlignment', 'right');
 set(gca, 'YTick', []);
-if is_last, xlabel('Time (s)'); else, set(gca, 'XTickLabel', []); end
+% Time axis is always in seconds (onsets/durations converted from the design's
+% units, and the regressor time base is (0:nscan-1)*TR).
+if is_last, xlabel('Time (seconds)'); else, set(gca, 'XTickLabel', []); end
 if nbf > 1
     legend(arrayfun(@(j) sprintf('BF%d', j), 1:nbf, 'UniformOutput', false), ...
         'Location', 'northeast', 'Box', 'off');
@@ -187,14 +189,22 @@ end
 
 function local_heatmap(obj, X)
 % Heat map of the full design matrix (incl. nuisance covariates / intercept).
-imagesc(X);
+% Each regressor (column) is scaled to unit L2 norm for display, so that
+% regressors with very different magnitudes (e.g. tiny event regressors and a
+% constant intercept) are shown on a comparable scale instead of the
+% large-norm columns washing the others out to black.
+nrm = vecnorm(X, 2, 1);
+nrm(nrm == 0) = 1;
+Xdisp = X ./ nrm;
+
+imagesc(Xdisp);
 colormap(gray);
 colorbar;
 set(gca, 'YDir', 'reverse');               % observation 0 at the top
 axis tight;
 xlabel('Regressor');
 ylabel('Image / observation');
-title(sprintf('Full design matrix (%d interest, %d nuisance, %d intercept)', ...
+title(sprintf('Full design matrix, columns scaled to unit norm (%d interest, %d nuisance, %d intercept)', ...
     sum(obj.wh_interest), sum(obj.wh_nuisance), sum(obj.wh_intercept)));
 
 rn = obj.regressor_names;

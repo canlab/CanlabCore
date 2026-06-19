@@ -176,10 +176,17 @@ end
 
 % -------------------------------------------------------------------------
 % Conditioning / rank (full and interest-only)
+%
+% The condition number is computed after scaling each column to unit L2 norm
+% (the Belsley scaled condition index). This makes it scale-invariant -- like
+% VIF -- so it reflects true collinearity rather than differences in regressor
+% magnitude. Without scaling, a constant intercept (large norm) alongside
+% small-amplitude event regressors produces a large condition number that is a
+% pure scaling artifact, even when the regressors are nearly orthogonal.
 % -------------------------------------------------------------------------
-d.condition_number = cond(X);
+d.condition_number = local_scaled_cond(X);
 d.condition_number_interest_only = [];
-if has_nuisance && any(wh_io), d.condition_number_interest_only = cond(X(:, wh_io)); end
+if has_nuisance && any(wh_io), d.condition_number_interest_only = local_scaled_cond(X(:, wh_io)); end
 d.rank_deficient = rank(X) < size(X, 2);
 
 if d.rank_deficient
@@ -294,6 +301,15 @@ end
 end
 
 
+function c = local_scaled_cond(X)
+% Condition number after scaling each column to unit L2 norm (scale-invariant
+% Belsley condition index).
+nrm = vecnorm(X, 2, 1);
+nrm(nrm == 0) = 1;
+c = cond(X ./ nrm);
+end
+
+
 function infl = local_inflation(d, whI, wh_io)
 % Compare full-design VIFs of the of-interest regressors against their
 % interest-only VIFs. Returns a struct with the max inflation ratio, or [].
@@ -375,7 +391,8 @@ end
 
 % ---- Conditioning ----
 fprintf('\n  Conditioning\n');
-fprintf('  Condition number >= 1; <%g OK, %g-100 moderate, >100 severe multicollinearity.\n', cond_thresh, cond_thresh);
+fprintf('  Scaled condition number (columns at unit norm; scale-invariant, like VIF).\n');
+fprintf('  >= 1; <%g OK, %g-100 moderate, >100 severe multicollinearity.\n', cond_thresh, cond_thresh);
 fprintf('  condition number (full)         : %.1f%s\n', d.condition_number, ...
     local_flag(d.condition_number > cond_thresh, '  <-- elevated'));
 if ~isempty(d.condition_number_interest_only)

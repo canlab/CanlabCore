@@ -58,13 +58,14 @@ fprintf('  Design          : %s', modestr);
 if obj.is_timeseries, fprintf('  [timeseries; AR errors allowed]'); end
 fprintf('\n');
 fprintf('  Observations    : %d images\n', obj.num_images);
-fprintf('  Regressors      : %d\n', obj.num_regressors);
+fprintf('  Regressors      : %d (%d of interest, %d nuisance, %d intercept)\n', ...
+    obj.num_regressors, sum(obj.wh_interest), sum(obj.wh_nuisance), sum(obj.wh_intercept));
 
 rn = obj.regressor_names;
 if ~isempty(rn)
     for i = 1:numel(rn)
         nm = rn{i}; if isempty(nm), nm = sprintf('R%d', i); end
-        fprintf('      %2d. %s\n', i, nm);
+        fprintf('      %2d. %-26s [%s]\n', i, nm, local_role(obj, i));
     end
 end
 
@@ -177,6 +178,13 @@ end % summary
 % =====================================================================
 % Local helpers
 % =====================================================================
+function r = local_role(obj, i)
+if obj.wh_intercept(i), r = 'intercept';
+elseif obj.wh_nuisance(i), r = 'nuisance';
+else, r = 'of interest';
+end
+end
+
 function nm = local_name(names, idx, prefix)
 if iscell(names) && idx <= numel(names) && ~isempty(names{idx})
     nm = names{idx};

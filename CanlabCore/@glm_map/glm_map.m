@@ -468,9 +468,13 @@ classdef glm_map
                 case 2, levelstr = '2 (second-level / group)';
                 otherwise, levelstr = num2str(obj.level);
             end
-            fprintf('  level %s | X: %d images x %d regressors | %d contrast(s) | fitted: %s\n', ...
-                levelstr, obj.num_images, obj.num_regressors, obj.num_contrasts, ...
-                local_tf(obj.is_fitted, 'YES', 'no'));
+            fprintf('  level %s | fitted: %s\n', levelstr, local_tf(obj.is_fitted, 'YES', 'no'));
+
+            % Design matrix (obj.X reads through to design.xX.X in event mode)
+            nI = sum(obj.wh_interest); nN = sum(obj.wh_nuisance); nB = sum(obj.wh_intercept);
+            fprintf('  design X: %d observations x %d regressors (%d of interest, %d nuisance, %d intercept)\n', ...
+                obj.num_images, obj.num_regressors, nI, nN, nB);
+            fprintf('  contrasts: %d\n', obj.num_contrasts);
             fprintf('  %s\n', line);
 
             % -------- Full property listing --------

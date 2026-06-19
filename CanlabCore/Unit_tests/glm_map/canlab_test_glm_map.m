@@ -358,6 +358,26 @@ tc.verifyEmpty(g2.diagnostics.efficiency);
 end
 
 
+function test_diagnostics_scaled_condition_number(tc)
+% A well-separated 2-condition event design with an intercept is nearly
+% orthogonal. The raw cond(X) is huge because the tiny event regressors and
+% the unit intercept differ in scale; the scaled condition number should be
+% small and consistent with the low VIFs.
+TR = 2; nscan = 100;
+d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
+    'onsets', {[10 40 70 100]' [25 55 85 115]'}, 'condition_names', {'A' 'B'});
+w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
+g = glm_map(d); g.is_timeseries = true; g = build_design(g);
+g = diagnostics(g, 'noverbose');
+
+tc.verifyGreaterThan(cond(g.X), 100);                       % raw cond is large (scaling)
+tc.verifyLessThan(g.diagnostics.condition_number, 10);      % scaled cond is small
+tc.verifyLessThan(max(g.diagnostics.Variance_inflation_factors), 4);
+% g.X is exposed at the top level and links to the design matrix
+tc.verifyEqual(g.X, g.design.xX.X);
+end
+
+
 function test_glm_map_import_onsets_and_spm_flags(tc)
 % glm_map.import_onsets bootstraps a design, builds it, and flags events
 T = table([5; 35; 65; 20; 50], [0; 0; 0; 0; 0], {'A'; 'A'; 'A'; 'B'; 'B'}, ...

@@ -40,8 +40,14 @@ function T = hrf_misspec_metrics(source, varargin)
 %                    (atlas + signature + imageset in one table). Within
 %                    'atlas', ALL atlases present are returned (source_set =
 %                    the atlas token, e.g. canlab2024 vs painpathways2024).
-%                    'Set' optionally restricts to columns whose name contains
-%                    it (e.g. one signature set, or one atlas).
+%   'Set'          - which SET to keep, matched against source_set: the atlas
+%                    token ('canlab2024'), signature set ('all'), or imageset
+%                    ('bucknerlab'). char/string/cellstr + glob wildcards.
+%                    Default {} = all sets.
+%   'Names'        - which specific source to keep, matched against source_name:
+%                    the region ('PAG','*Ins*'), signature ('NPS'), or network
+%                    map name. char/string/cellstr + glob wildcards. Default
+%                    {} = all. Set picks the atlas/set; Names picks the item.
 %   'Conditions'   - cellstr; subset (glob wildcards ok). Default all.
 %   'Objects'      - {'beta','t'} for input_table iteration. Default {'beta'}.
 %   'Model'        - filter input_table rows by model. Default '' (all).
@@ -90,7 +96,12 @@ p.addParameter('ReferenceLags', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('EmpiricalRef', [], @(x) isempty(x) || isstruct(x) || isa(x, 'containers.Map'));
 p.addParameter('EmpiricalRefLags', [], @(x) isempty(x) || isnumeric(x));
 p.addParameter('Source', 'atlas', @(x) ischar(x) || isstring(x) || iscell(x));
-p.addParameter('Set', '', @(x) ischar(x) || isstring(x));
+p.addParameter('Set', '', @(x) ischar(x) || isstring(x) || iscell(x));
+% Names: which specific source(s) to keep, matched against the parsed source
+% NAME (region / signature / imageset-map name), cellstr/string + glob
+% wildcards. Default {} = all. (Set selects the atlas/signature-set/imageset;
+% Names selects the item within it.)
+p.addParameter('Names', {}, @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('Conditions', {}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('Objects', {'beta'}, @(x) iscell(x) || isstring(x) || ischar(x));
 p.addParameter('Model', '', @(x) ischar(x) || isstring(x));
@@ -196,6 +207,9 @@ for c = 1:numel(cond_list)
     [lag, ord] = sort(lag);
 
     for k = 1:numel(score_cols)
+        [skind, sset, sname] = local_parse_source(score_cols{k}, score_labels{k}, match_spec);
+        if ~local_match_any(sset, opts.Set), continue; end       % which atlas / sig-set / imageset
+        if ~local_match_any(sname, opts.Names), continue; end    % which specific region / signature / map
         y = double(St.(score_cols{k})(cmask));
         y = y(ord);
         fin = isfinite(y) & isfinite(lag);
@@ -206,7 +220,6 @@ for c = 1:numel(cond_list)
         if isempty(ref) || all(~isfinite(ref)), continue; end
 
         m = local_compute_misspec(yy, ref, xx);
-        [skind, sset, sname] = local_parse_source(score_cols{k}, score_labels{k}, match_spec);
         rows{end + 1} = local_metric_row(org, score_cols{k}, skind, sset, sname, ...
             cond_list{c}, char(opts.Reference), m); %#ok<AGROW>
     end
@@ -421,14 +434,34 @@ switch match_spec.family
     case 'imageset',  prefix = 'map_';
     otherwise,        prefix = 'atlas_';
 end
-set_name = char(match_spec.set);
+% Match every column of the family; Set/Names selection is applied later on
+% the PARSED source identity (source_set / source_name) in the caller.
 for i = 1:numel(v)
     name = v{i};
     if ~startsWith(name, prefix), continue; end
     if endsWith(name, '_se'), continue; end
-    if ~isempty(set_name) && ~contains(lower(name), lower(set_name)), continue; end
     cols{end + 1} = name; %#ok<AGROW>
     labels{end + 1} = name; %#ok<AGROW>
+end
+end
+
+function tf = local_match_any(value, patterns)
+% True if VALUE matches any of PATTERNS (glob wildcards * ?; exact otherwise).
+% Empty PATTERNS => match-all (no filter).
+patterns = cellstr(string(patterns));
+patterns = patterns(~cellfun(@(s) isempty(strtrim(s)), patterns));
+if isempty(patterns), tf = true; return; end
+val = char(string(value));
+tf = false;
+for p = 1:numel(patterns)
+    pat = strtrim(patterns{p});
+    if any(pat == '*' | pat == '?')
+        if ~isempty(regexp(val, ['^', regexptranslate('wildcard', pat), '$'], 'once'))
+            tf = true; return
+        end
+    elseif strcmpi(val, pat)
+        tf = true; return
+    end
 end
 end
 

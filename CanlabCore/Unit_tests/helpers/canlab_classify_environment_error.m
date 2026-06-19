@@ -36,6 +36,9 @@ function category = canlab_classify_environment_error(ME, had_env_skip)
 %                       (orthviews, surface rendering, etc.).
 %          'input'    - code tried to prompt for interactive user input,
 %                       unavailable in batch/CI.
+%          'capability' - an UndefinedFunction error for a known optional
+%                       MATLAB toolbox function (e.g. niftiinfo) that is not
+%                       provisioned on this runner.
 %          'data'     - an optional data file (signature, atlas, feature set)
 %                       is not on the CI path.
 %          'cascade'  - an undefined-variable/field error following an earlier
@@ -102,6 +105,24 @@ is_input = strcmp(id, 'MATLAB:services:MissingRequiredCapability') || ...
 if is_input
     category = 'input';
     return
+end
+
+% ---------------------------------------------------------------------
+% Missing optional MATLAB toolbox. An UndefinedFunction error for a known
+% MathWorks toolbox function (e.g. niftiinfo/niftiread from the Image
+% Processing Toolbox) means that toolbox is not provisioned on this runner,
+% not that the code is broken. Keep this list to functions that are *only*
+% ever provided by a toolbox, so we never mask a genuine missing-CanlabCore
+% function bug.
+% ---------------------------------------------------------------------
+optional_toolbox_fns = {'niftiinfo', 'niftiread', 'niftiwrite', ...
+                        'cfg_getfile'};
+if strcmp(id, 'MATLAB:UndefinedFunction')
+    undef = regexp(ME.message, "Undefined function '([^']+)'", 'tokens', 'once');
+    if ~isempty(undef) && any(strcmpi(undef{1}, optional_toolbox_fns))
+        category = 'capability';
+        return
+    end
 end
 
 % ---------------------------------------------------------------------

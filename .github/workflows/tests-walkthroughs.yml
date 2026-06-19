@@ -49,6 +49,7 @@ jobs:
           products: |
             Statistics_and_Machine_Learning_Toolbox
             Signal_Processing_Toolbox
+            Image_Processing_Toolbox
           cache: true
 
       - name: Run walkthrough tests

@@ -128,7 +128,10 @@ elseif length(obj.xBF) < nconds
 end
 
 for i = 1:nconds
-    obj.xBF(i).name = sprintf('%s for Condition %3.0f', obj.xBF(i).name, i);
+    % Idempotent: strip any prior " for Condition N" suffix so repeated
+    % build() calls do not keep appending to the basis-set name.
+    basename = regexprep(obj.xBF(i).name, '\s*for Condition\s+\d+\s*$', '');
+    obj.xBF(i).name = sprintf('%s for Condition %3.0f', basename, i);
 end
 
 end

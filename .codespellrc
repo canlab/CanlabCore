@@ -1,0 +1,29 @@
+[codespell]
+# *.gii files are GIFTI XML surface meshes (canlab_canonical_brains): treat as data.
+# docs_sphinx_old is legacy pre-built Sphinx output, External/ is vendored third-party code.
+skip = .git,.git-meta,.svn,*.pdf,*.svg,*.js,_build,*.html,*.rtf,*.rtf.svn-base,*.gii,*.nii,*.mat,*.png,*.jpg,*.jpeg,*.tif,*.tiff,*.ico,External,docs_sphinx_old
+check-hidden = true
+# Skip URLs (don't "fix" typos in third-party links) and base64-embedded image data
+# left behind by MATLAB live-script export in docs/markdown_tutorials/*.m.
+ignore-regex = https?://\S+|^%   data: \{"dataType":"image".*
+# Whitelist short variable names, MATLAB function/built-in names, proper names, and
+# domain abbreviations that codespell would otherwise flag. Case-insensitive.
+#   ons, ans, fpr, ttests, myu, whos, ser, htmp, fwe, dout -- pre-existing stats vars
+#   ttest -- MATLAB hypothesis-test function, used as identifier & in docs everywhere
+#   indx, alph, te, ist, selt, multy, shft, delt, dum, datin, fixin, runn, nneeded,
+#   figurestyle, cxan, losin, commun, pres, ues -- variable names confirmed in source
+#   assignin, evalin -- MATLAB built-in functions
+#   inout -- canlab_results_fmridisplay montage layout option ('leftright inout')
+#   ment -- hyphen-broken "displace-\nment" in comment (movement_regressors.m)
+#   sepulcre, shepard, shure, claus, lew -- proper names (Yeo atlas; Shepard interpolation; researchers)
+#   nd -- often 2nd, also matches Nd/ND chemical symbol
+#   ore -- short for "or" in some places; appears in surface .gii-derived comments
+#   fo -- variable name (`fo = gcf`) in make_figure_into_orthviews.m
+#   atmost -- variable name in OptimizeDesign11/GA3/Sobol/sobol.m
+#   sessons -- local "session ons" variable in Statistics_tools/Support_functions/spm2delta.m
+#   lightening -- real word (making lighter), used for white-matter brightness in mean_image.m
+#   prctiles -- struct field of descriptives() output (public API, documented in docs/)
+#   atleast, whch, whn, includ -- variable names (renaming would break code; "atleast" -> "at least" would be a syntax error)
+#   efficency -- legacy function file name OptimizeDesign11/core_functions/efficency.m (sibling efficiency.m is the newer version; both retained)
+#   ony, nam, tha, thre, firt, jus -- ambiguous variable/string fragments in context
+ignore-words-list = ons,ans,fpr,ttests,myu,whos,ser,htmp,fwe,dout,ttest,indx,alph,te,ist,selt,multy,shft,delt,dum,datin,fixin,runn,nneeded,figurestyle,cxan,losin,commun,pres,ues,assignin,evalin,inout,ment,sepulcre,shepard,shure,claus,lew,nd,ore,fo,atmost,sessons,lightening,prctiles,atleast,whch,whn,includ,efficency,ony,nam,tha,thre,firt,jus

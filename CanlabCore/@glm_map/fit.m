@@ -135,7 +135,9 @@ regress_args = {pthresh, thresh_type};
 
 if do_robust,  regress_args{end + 1} = 'robust'; end
 if ar_order > 0, regress_args = [regress_args, {'AR', ar_order}]; end
-if do_resid,   regress_args{end + 1} = 'residual'; end
+% Always request residuals so diagnostics can compute Cook's distance; they
+% are dropped again below unless the caller asked to keep them (do_resid).
+regress_args{end + 1} = 'residual';
 
 % Suppress regress's own orthviews unless explicitly requested
 if ~do_display, regress_args{end + 1} = 'nodisplay'; end
@@ -160,38 +162,45 @@ if ~isempty(obj.analysis_name)
 end
 
 % -------------------------------------------------------------------------
-% Run the regression
+% Run the regression. fmri_data.regress now returns a glm_map object whose
+% properties mirror the historical out-struct fields.
 % -------------------------------------------------------------------------
 out = regress(data, regress_args{:});
 
 % -------------------------------------------------------------------------
-% Unpack result maps
+% Unpack result maps and the nested input structs
 % -------------------------------------------------------------------------
-obj.betas = out.b;
+obj.betas = out.betas;
 obj.t     = out.t;
 obj.sigma = out.sigma;
+obj.df    = out.df;
+obj.input_parameters     = out.input_parameters;
+obj.input_image_metadata = out.input_image_metadata;
+obj.contrast_summary_table = out.contrast_summary_table;
 
-% Error degrees of freedom (scalar summary; per-voxel df lives in out.df)
-if isfield(out, 'df') && ~isempty(out.df) && ~isempty(out.df.dat)
+% Error degrees of freedom (scalar summary; per-voxel df lives in obj.df)
+if ~isempty(out.df) && ~isempty(out.df.dat)
     obj.dfe = double(median(out.df.dat(:)));
 else
     obj.dfe = size(X, 1) - size(X, 2);
 end
 obj.t.dfe = obj.dfe;
 
-if isfield(out, 'contrast_images') && ~isempty(out.contrast_images)
-    obj.contrast_estimates = out.contrast_images;
-    obj.contrast_t         = out.con_t;
+if ~isempty(out.contrast_estimates)
+    obj.contrast_estimates = out.contrast_estimates;
+    obj.contrast_t         = out.contrast_t;
     obj.contrast_t.dfe     = obj.dfe;
 end
 
-if do_resid && isfield(out, 'resid')
-    obj.residuals = out.resid;
+% Stash residuals so diagnostics() can compute Cook's distance. If the caller
+% did not ask to keep them, they are cleared after diagnostics (below).
+if ~isempty(out.residuals)
+    obj.residuals = out.residuals;
 end
 
 % Sync names back from regress (it may have generated/added them)
 if isempty(obj.design)
-    obj.regressor_names_direct = out.variable_names;
+    obj.regressor_names_direct = out.regressor_names;
 end
 if ~isempty(out.contrast_names)
     obj.contrast_names = out.contrast_names;
@@ -210,9 +219,14 @@ obj.fit_parameters = struct( ...
     'thresh_type', thresh_type, ...
     'do_resid', do_resid);
 
-% Compute the full diagnostic set (adds cVIF, condition number, collinearity
-% report; uses canonical VIF/cVIF rather than regress's getvif)
+% Compute the full diagnostic set (adds cVIF, Cook's distance, condition
+% number, collinearity report; uses canonical VIF/cVIF rather than getvif)
 obj = diagnostics(obj, 'noverbose');
+
+% Drop the (potentially large) residual maps unless the caller kept them
+if ~do_resid
+    obj.residuals = [];
+end
 
 obj.history{end + 1} = sprintf('fit: regress (%s%s), p<%g %s, dfe=%g', ...
     local_iif(do_robust, 'robust', 'OLS'), ...

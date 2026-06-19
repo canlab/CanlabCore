@@ -39,7 +39,12 @@ if isempty(X)
 end
 
 rn = obj.regressor_names;
-has_vif = ~isempty(obj.vif);
+if isstruct(obj.diagnostics) && isfield(obj.diagnostics, 'Variance_inflation_factors')
+    vifvals = obj.diagnostics.Variance_inflation_factors;
+else
+    vifvals = [];
+end
+has_vif = ~isempty(vifvals);
 
 create_figure('glm_map design', 1, 1 + has_vif);
 
@@ -58,12 +63,12 @@ end
 % --- VIF bars ---
 if has_vif
     subplot(1, 2, 2);
-    bar(obj.vif);
+    bar(vifvals);
     ylabel('Variance inflation factor');
     xlabel('Regressor');
     title('VIF per regressor');
-    if ~isempty(rn) && numel(rn) == numel(obj.vif)
-        set(gca, 'XTick', 1:numel(obj.vif), 'XTickLabel', rn, 'XTickLabelRotation', 45);
+    if ~isempty(rn) && numel(rn) == numel(vifvals)
+        set(gca, 'XTick', 1:numel(vifvals), 'XTickLabel', rn, 'XTickLabelRotation', 45);
     end
     hold on;
     yl = get(gca, 'YLim');

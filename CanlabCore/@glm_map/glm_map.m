@@ -36,6 +36,18 @@
 %     g = glm_map(fmri_glm_design_matrix_obj)         % wrap a 1st-level design
 %     g = glm_map('X', X, 'level', 2)                 % direct/group design
 %     g = glm_map('fieldname', value, ...)            % set any stored property
+%     g = glm_map(regress_out_struct)                 % re-cast a regress() output struct
+%
+% The object property names mirror the fields of the results structure
+% returned by fmri_data.regress (the variable "out" in that method). Related
+% options are grouped into nested structs (.input_parameters,
+% .input_image_metadata, .diagnostics), and per-voxel df / sigma are kept as
+% fmri_data objects in .df and .sigma. For backward compatibility the
+% historical out-struct field names are available as aliases that read/write
+% the canonical properties:
+%
+%     .b -> .betas    .contrast_images -> .contrast_estimates    .con_t -> .contrast_t
+%     .resid -> .residuals    .variable_names -> .regressor_names    .C -> .contrasts
 %
 % :Inputs:
 %
@@ -132,36 +144,45 @@ classdef glm_map
     % ---------------------------------------------------------------------
     properties
 
+        % --- Provenance / metadata --------------------------------------
+        analysis_name = '';     % Short descriptive name for this analysis (mirrors regress out.analysis_name)
+
         % --- Design specification (1st-level / event mode) ---------------
         design              % fmri_glm_design_matrix object (wrapped). Holds onsets, durations, event names/types, parametric modulators, basis set, and built X. Empty for pure direct/group designs.
 
         % --- Design specification (shared / direct mode) ----------------
         level = 2;          % Analysis level: 1 = first-level (within-run), 2 = second-level (group)
         is_timeseries = false;  % Logical; true if data are a within-run BOLD timeseries (enables AR error models in fit)
-        contrasts = [];     % [regressors x contrasts] contrast matrix C
-        contrast_names = {};    % Cell array of contrast names, one per column of C
+        contrasts = [];     % [regressors x contrasts] contrast matrix C (read/written as out.C via the .C alias)
+        contrast_names = {};    % Cell array of contrast names, one per column of C (mirrors out.contrast_names)
+        contrast_summary_table = table();  % Table summarizing contrasts over conditions (mirrors out.contrast_summary_table)
 
-        % --- Fitted result maps (populated by fit) ----------------------
-        betas               % statistic_image (type 'Beta'), [voxels x regressors]
+        % --- Nested input/option structs (mirror fmri_data.regress out) --
+        input_parameters = struct();      % Struct: options used by the fit (brain_is_predictor, do_robust, grandmeanscale, do_intercept, do_resid, initial_statistical_threshold, ...). Mirrors out.input_parameters.
+        input_image_metadata = struct();  % Struct: provenance of the fitted images (source_notes, history, image_names, fullpath). Mirrors out.input_image_metadata.
+
+        % --- Fitted result maps (populated by fit / ingested from regress) -
+        betas               % statistic_image (type 'Beta'), [voxels x regressors].   Alias: .b
         t                   % statistic_image (type 'T') for regressors, [voxels x regressors]
-        contrast_estimates  % statistic_image (type 'Contrast'), [voxels x contrasts]
-        contrast_t          % statistic_image (type 'T') for contrasts, [voxels x contrasts]
-        sigma               % fmri_data object: residual standard deviation per voxel
-        dfe                 % Error degrees of freedom for the fit
-        residuals           % fmri_data object: residuals [observations x voxels] (optional; only if requested)
+        contrast_estimates  % statistic_image (type 'Contrast'), [voxels x contrasts]. Alias: .contrast_images
+        contrast_t          % statistic_image (type 'T') for contrasts, [voxels x contrasts]. Alias: .con_t
+        df                  % fmri_data object: per-voxel error degrees of freedom (mirrors out.df)
+        sigma               % fmri_data object: residual standard deviation per voxel (mirrors out.sigma)
+        residuals           % fmri_data object: residuals (optional; only if requested). Alias: .resid
+        dfe                 % Scalar error degrees of freedom for the fit (median of df, convenience summary)
 
-        % --- Design diagnostics (populated by fit/diagnostics) ----------
-        vif                 % Row vector of variance inflation factors, one per regressor (from VIF.m)
-        contrast_vif        % Vector of contrast variance inflation factors, one per contrast (from cVIF.m)
-        leverages           % Per-observation leverage values, diag(X*pinv(X))
-        condition_number    % Condition number of the design matrix X
-        rank_deficient = false;  % Logical; true if rank(X) < number of regressors
-        collinearity_report     % Struct with redundant/duplicate row checks, near-collinear pairs, and centering flags
-        warnings = {};      % Cell array of warning messages accumulated during build/fit
+        % --- Design diagnostics (nested struct; populated by fit/diagnostics) -
+        % Fields: Variance_inflation_factors, Leverages (same names as
+        % fmri_data.regress out.diagnostics), plus
+        % Contrast_variance_inflation_factors, Cooks_distance (per-observation
+        % influence; populated when residuals are available), condition_number,
+        % rank_deficient, collinearity_report, vif_threshold.
+        diagnostics = struct();
+
+        warnings = {};      % Cell array of warning messages accumulated during build/fit (mirrors out.warnings)
 
         % --- Provenance / metadata --------------------------------------
-        analysis_name = '';     % Short descriptive name for this analysis
-        fit_parameters = struct();  % Struct recording options used in fit (robust, AR order, threshold, grandmeanscale, ...)
+        fit_parameters = struct();  % Struct recording options used in fit (robust, AR order, threshold, ...)
         notes = '';         % Free-text notes
         history = {};       % Cell array of one-line provenance strings
 
@@ -172,20 +193,22 @@ classdef glm_map
         regressor_names_direct = {};  % Cell array of regressor names for direct mode
 
         property_descriptions = { ...
+            'analysis_name: short descriptive name (out.analysis_name)' ...
             'design: fmri_glm_design_matrix object holding the 1st-level event design (onsets, durations, names, basis set, built X)' ...
             'level: 1 = first-level (within-run), 2 = second-level (group)' ...
             'is_timeseries: logical, true if data are a within-run BOLD timeseries (enables AR error models)' ...
-            'contrasts: [regressors x contrasts] contrast matrix C' ...
+            'contrasts (.C): [regressors x contrasts] contrast matrix' ...
             'contrast_names: cell array of contrast names' ...
-            'betas/t: statistic_image maps of regression coefficients and their t-statistics, [voxels x regressors]' ...
-            'contrast_estimates/contrast_t: statistic_image maps for linear contrasts, [voxels x contrasts]' ...
-            'sigma: fmri_data object with residual standard deviation per voxel' ...
-            'dfe: error degrees of freedom' ...
-            'residuals: fmri_data object with residuals (optional)' ...
-            'vif/contrast_vif: variance inflation factors for regressors and contrasts' ...
-            'leverages: per-observation leverage values' ...
-            'condition_number/rank_deficient: design matrix conditioning diagnostics' ...
-            'collinearity_report: struct of redundant-row and near-collinearity checks' ...
+            'contrast_summary_table: table of contrast weights over conditions (out.contrast_summary_table)' ...
+            'input_parameters: struct of fit options (out.input_parameters)' ...
+            'input_image_metadata: struct of input-image provenance (out.input_image_metadata)' ...
+            'betas (.b) / t: statistic_image maps of regression coefficients and their t-statistics, [voxels x regressors]' ...
+            'contrast_estimates (.contrast_images) / contrast_t (.con_t): statistic_image maps for linear contrasts, [voxels x contrasts]' ...
+            'df: fmri_data object with per-voxel error degrees of freedom (out.df)' ...
+            'sigma: fmri_data object with residual standard deviation per voxel (out.sigma)' ...
+            'residuals (.resid): fmri_data object with residuals (optional)' ...
+            'dfe: scalar error degrees of freedom (median of df)' ...
+            'diagnostics: struct with vif, contrast_vif, leverages, condition_number, rank_deficient, collinearity_report' ...
             'warnings: cell array of warnings from build/fit' ...
             'analysis_name/fit_parameters/notes/history: provenance and metadata' ...
             };
@@ -209,6 +232,17 @@ classdef glm_map
         num_contrasts       % Number of contrasts (columns of C)
         is_fitted           % Logical; true once result maps (.betas) are populated
 
+        % --- Aliases to the fmri_data.regress out-struct field names -----
+        % These read/write the canonical properties above, so that an object
+        % returned by fmri_data.regress supports the historical struct-style
+        % field access (out.b, out.con_t, ...) unchanged.
+        b                   % Alias for betas               (out.b)
+        contrast_images     % Alias for contrast_estimates  (out.contrast_images)
+        con_t               % Alias for contrast_t          (out.con_t)
+        resid               % Alias for residuals           (out.resid)
+        variable_names      % Alias for regressor_names     (out.variable_names)
+        C                   % Alias for contrasts           (out.C)
+
     end % dependent properties
 
 
@@ -224,19 +258,28 @@ classdef glm_map
                 return
             end
 
+            % If the first argument is a struct, treat it as a regression
+            % results structure (the historical fmri_data.regress output) and
+            % re-cast it as a glm_map object. Any remaining 'field', value
+            % pairs are then applied as overrides.
+            if ~isempty(varargin) && isstruct(varargin{1})
+                obj = local_from_regress_struct(obj, varargin{1});
+                varargin(1) = [];
+
             % If first argument is an fmri_glm_design_matrix, wrap it as a
             % 1st-level (event) design and consume that argument.
-            if ~isempty(varargin) && isa(varargin{1}, 'fmri_glm_design_matrix')
+            elseif ~isempty(varargin) && isa(varargin{1}, 'fmri_glm_design_matrix')
                 obj.design = varargin{1};
                 obj.level = 1;
                 varargin(1) = [];
             end
 
             % Names of stored (settable) properties for generic assignment
-            stored_names = properties('glm_map');   % stored props only (Dependent excluded by properties())
+            stored_names = properties('glm_map');   % includes public Dependent props
 
             % Names of Dependent properties that have setters
-            settable_dependent = {'TR', 'X', 'regressor_names'};
+            settable_dependent = {'TR', 'X', 'regressor_names', ...
+                'b', 'contrast_images', 'con_t', 'resid', 'variable_names', 'C'};
 
             for i = 1:length(varargin)
 
@@ -360,51 +403,77 @@ classdef glm_map
 
 
         % =================================================================
-        % disp: concise object summary
+        % Aliases to the fmri_data.regress out-struct field names
+        % (read/write the canonical properties)
+        % =================================================================
+        function val = get.b(obj),               val = obj.betas;              end
+        function obj = set.b(obj, val),           obj.betas = val;              end
+
+        function val = get.contrast_images(obj),  val = obj.contrast_estimates; end
+        function obj = set.contrast_images(obj, val), obj.contrast_estimates = val; end
+
+        function val = get.con_t(obj),            val = obj.contrast_t;         end
+        function obj = set.con_t(obj, val),       obj.contrast_t = val;         end
+
+        function val = get.resid(obj),            val = obj.residuals;          end
+        function obj = set.resid(obj, val),       obj.residuals = val;          end
+
+        function val = get.variable_names(obj),   val = obj.regressor_names;    end
+        function obj = set.variable_names(obj, val), obj.regressor_names = val; end
+
+        function val = get.C(obj),                val = obj.contrasts;          end
+        function obj = set.C(obj, val),           obj.contrasts = val;          end
+
+
+        % =================================================================
+        % disp: object summary with full property listing
         % =================================================================
         function disp(obj)
 
-            fprintf('  glm_map object\n');
-            fprintf('  %s\n', repmat('-', 1, 60));
+            line = repmat('-', 1, 64);
+            fprintf('  glm_map object\n  %s\n', line);
 
-            if ~isempty(obj.analysis_name)
-                fprintf('  analysis_name : %s\n', obj.analysis_name);
-            end
-
+            % -------- One-line status header --------
             switch obj.level
                 case 1, levelstr = '1 (first-level / within-run)';
                 case 2, levelstr = '2 (second-level / group)';
                 otherwise, levelstr = num2str(obj.level);
             end
-            fprintf('  level         : %s\n', levelstr);
-            fprintf('  is_timeseries : %d\n', obj.is_timeseries);
+            fprintf('  level %s | X: %d images x %d regressors | %d contrast(s) | fitted: %s\n', ...
+                levelstr, obj.num_images, obj.num_regressors, obj.num_contrasts, ...
+                local_tf(obj.is_fitted, 'YES', 'no'));
+            fprintf('  %s\n', line);
 
-            if ~isempty(obj.design)
-                fprintf('  design        : fmri_glm_design_matrix (event mode), TR = %g\n', obj.design.TR);
-            else
-                fprintf('  design        : (direct/group mode, no event design)\n');
+            % -------- Full property listing --------
+            % Curated order; nested structs are expanded one level so their
+            % fields are visible at a glance. (See properties(obj) for the
+            % full set, including the out-struct aliases b/con_t/.../C.)
+            props = { ...
+                'analysis_name', 'design', 'level', 'is_timeseries', ...
+                'contrasts', 'contrast_names', 'contrast_summary_table', ...
+                'input_parameters', 'input_image_metadata', ...
+                'betas', 't', 'contrast_estimates', 'contrast_t', ...
+                'df', 'sigma', 'residuals', 'dfe', ...
+                'diagnostics', 'warnings', ...
+                'fit_parameters', 'notes', 'history'};
+
+            for i = 1:numel(props)
+                p = props{i};
+                fprintf('  %-22s : %s\n', p, local_summarize(obj.(p)));
+
+                % Expand the three nested option/diagnostic structs one level
+                if any(strcmp(p, {'input_parameters', 'input_image_metadata', 'diagnostics'})) ...
+                        && isstruct(obj.(p)) && ~isempty(fieldnames(obj.(p)))
+                    fn = fieldnames(obj.(p));
+                    for j = 1:numel(fn)
+                        fprintf('  %-22s     .%-18s %s\n', '', fn{j}, ...
+                            local_summarize(obj.(p).(fn{j})));
+                    end
+                end
             end
 
-            fprintf('  X             : %d images x %d regressors\n', obj.num_images, obj.num_regressors);
-            fprintf('  contrasts     : %d\n', obj.num_contrasts);
-
-            if obj.is_fitted
-                fprintf('  fitted        : YES  (betas, t%s populated; dfe = %s)\n', ...
-                    local_tf(~isempty(obj.contrast_estimates), ', contrasts'), num2str(obj.dfe));
-            else
-                fprintf('  fitted        : no   (run fit(obj, fmri_data_obj))\n');
-            end
-
-            if ~isempty(obj.vif)
-                fprintf('  max VIF       : %.2f\n', max(obj.vif));
-            end
-
-            if ~isempty(obj.warnings)
-                fprintf('  warnings      : %d (see obj.warnings)\n', numel(obj.warnings));
-            end
-
-            fprintf('  %s\n', repmat('-', 1, 60));
-            fprintf('  methods(glm_map) for a list of operations.\n\n');
+            fprintf('  %s\n', line);
+            fprintf('  methods(glm_map) for operations; properties(glm_map) for all fields.\n\n');
 
         end % disp
 
@@ -440,7 +509,146 @@ end
 end % local_collect_U_field
 
 
-function s = local_tf(tf, str)
-% Return str if tf is true, else ''.
-if tf, s = str; else, s = ''; end
+function s = local_tf(tf, a, b)
+% Inline if: return a if tf is true, else b ('' if b omitted).
+if nargin < 3, b = ''; end
+if tf, s = a; else, s = b; end
 end % local_tf
+
+
+function s = local_summarize(v)
+% Compact one-line description of any property value, for disp().
+
+if isempty(v)
+    s = '[]';
+    return
+end
+
+if ischar(v)
+    if size(v, 1) > 1
+        s = sprintf('[%dx%d char]', size(v, 1), size(v, 2));   % char matrix
+    else
+        s = v;
+        if numel(s) > 52, s = [s(1:49) '...']; end
+    end
+    return
+end
+
+if islogical(v) && isscalar(v)
+    s = local_tf(v, 'true', 'false');
+    return
+end
+
+if isnumeric(v) && isscalar(v)
+    s = num2str(v);
+    return
+end
+
+if isa(v, 'statistic_image') || isa(v, 'fmri_data')
+    try
+        s = sprintf('%s [%d voxels x %d images]', class(v), size(v.dat, 1), size(v.dat, 2));
+    catch
+        s = class(v);
+    end
+    return
+end
+
+if isa(v, 'fmri_glm_design_matrix')
+    try
+        s = sprintf('fmri_glm_design_matrix (TR = %g)', v.TR);
+    catch
+        s = 'fmri_glm_design_matrix';
+    end
+    return
+end
+
+if istable(v)
+    s = sprintf('table [%d x %d]', size(v, 1), size(v, 2));
+    return
+end
+
+if isstruct(v)
+    fn = fieldnames(v);
+    if isempty(fn)
+        s = 'struct (empty)';
+    else
+        s = sprintf('struct with %d field(s)', numel(fn));
+    end
+    return
+end
+
+if iscell(v)
+    % Show contents if it is a short cellstr
+    if numel(v) <= 6 && all(cellfun(@(x) ischar(x) || isstring(x), v))
+        s = ['{' strjoin(cellfun(@char, v(:)', 'UniformOutput', false), ', ') '}'];
+        if numel(s) > 52, s = sprintf('{%dx%d cell}', size(v, 1), size(v, 2)); end
+    else
+        s = sprintf('{%dx%d cell}', size(v, 1), size(v, 2));
+    end
+    return
+end
+
+if isnumeric(v)
+    s = sprintf('[%dx%d %s]', size(v, 1), size(v, 2), class(v));
+    return
+end
+
+s = sprintf('[%s]', class(v));
+
+end % local_summarize
+
+
+function obj = local_from_regress_struct(obj, S)
+% Re-cast a regression results structure (the historical fmri_data.regress
+% output) into a glm_map object. Maps the out-struct field names onto the
+% canonical glm_map properties; tolerates missing fields.
+
+obj.level = 2;   % regress output carries no level; default to group
+
+% src field in struct  ->  dst glm_map property (or settable alias)
+map = { ...
+    'analysis_name',          'analysis_name'; ...
+    'input_parameters',       'input_parameters'; ...
+    'input_image_metadata',   'input_image_metadata'; ...
+    'X',                      'X'; ...                 % set.X -> Xdirect
+    'variable_names',         'regressor_names'; ...   % set.regressor_names -> regressor_names_direct
+    'C',                      'contrasts'; ...
+    'contrast_names',         'contrast_names'; ...
+    'contrast_summary_table', 'contrast_summary_table'; ...
+    'warnings',               'warnings'; ...
+    'b',                      'betas'; ...
+    't',                      't'; ...
+    'df',                     'df'; ...
+    'sigma',                  'sigma'; ...
+    'resid',                  'residuals'; ...
+    'contrast_images',        'contrast_estimates'; ...
+    'con_t',                  'contrast_t'};
+
+for i = 1:size(map, 1)
+    src = map{i, 1};
+    if ~isfield(S, src), continue, end
+    v = S.(src);
+    % Skip genuinely-empty primitives, but always ingest result-map objects
+    % (statistic_image / fmri_data may overload isempty based on volInfo).
+    if (isnumeric(v) || ischar(v) || iscell(v) || isstruct(v)) && isempty(v)
+        continue
+    end
+    obj.(map{i, 2}) = v;
+end
+
+% Diagnostics: ingest as-is (regress already names the fields
+% Variance_inflation_factors / Leverages, which glm_map reuses)
+if isfield(S, 'diagnostics') && ~isempty(S.diagnostics)
+    obj.diagnostics = S.diagnostics;
+end
+
+% Scalar error-df summary from the per-voxel df image
+if isfield(S, 'df') && ~isempty(S.df) && isprop(S.df, 'dat') && ~isempty(S.df.dat)
+    obj.dfe = double(median(S.df.dat(:)));
+end
+
+obj.history{end + 1} = 'constructed from fmri_data.regress() output structure';
+
+end % local_from_regress_struct
+
+

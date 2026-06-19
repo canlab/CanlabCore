@@ -33,6 +33,11 @@ function obj = check_properties(obj, varargin)
 if ~iscell(obj.contrast_names), obj.contrast_names = cellstr(obj.contrast_names); end
 if ~iscell(obj.warnings),       obj.warnings = {};  end
 if ~iscell(obj.history),        obj.history  = {};  end
+
+% Nested struct fields (mirror fmri_data.regress out)
+if ~isstruct(obj.input_parameters),     obj.input_parameters     = struct(); end
+if ~isstruct(obj.input_image_metadata), obj.input_image_metadata = struct(); end
+if ~isstruct(obj.diagnostics),          obj.diagnostics          = struct(); end
 if ~iscell(obj.regressor_names_direct) && ~isempty(obj.regressor_names_direct)
     obj.regressor_names_direct = cellstr(obj.regressor_names_direct);
 end

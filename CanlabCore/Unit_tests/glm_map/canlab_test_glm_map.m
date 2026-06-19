@@ -58,11 +58,11 @@ g = glm_map('X', X, 'level', 2);
 g = add_contrasts(g, [0 1 0], {'slope'});
 g = diagnostics(g, 'noverbose');
 
-tc.verifyNumElements(g.vif, 3);
-tc.verifyNumElements(g.contrast_vif, 1);
-tc.verifyGreaterThan(g.condition_number, 0);
-tc.verifyFalse(g.rank_deficient);
-tc.verifyTrue(isstruct(g.collinearity_report));
+tc.verifyNumElements(g.diagnostics.Variance_inflation_factors, 3);
+tc.verifyNumElements(g.diagnostics.Contrast_variance_inflation_factors, 1);
+tc.verifyGreaterThan(g.diagnostics.condition_number, 0);
+tc.verifyFalse(g.diagnostics.rank_deficient);
+tc.verifyTrue(isstruct(g.diagnostics.collinearity_report));
 end
 
 
@@ -73,8 +73,8 @@ w = warning('off', 'all');
 c = onCleanup(@() warning(w));
 g = diagnostics(g, 'noverbose');
 
-tc.verifyTrue(g.rank_deficient);
-tc.verifySize(g.collinearity_report.duplicate_column_pairs, [1 2]);
+tc.verifyTrue(g.diagnostics.rank_deficient);
+tc.verifySize(g.diagnostics.collinearity_report.duplicate_column_pairs, [1 2]);
 tc.verifyNotEmpty(g.warnings);
 end
 
@@ -98,7 +98,10 @@ tc.verifyClass(g.contrast_estimates, 'statistic_image');
 tc.verifyClass(g.contrast_t, 'statistic_image');
 tc.verifyEqual(size(g.betas.dat, 2), 2);               % one beta image per regressor
 tc.verifyEqual(size(g.contrast_estimates.dat, 2), 1);  % one image per contrast
-tc.verifyNotEmpty(g.vif);
+tc.verifyNotEmpty(g.diagnostics.Variance_inflation_factors);
+tc.verifyClass(g.df, 'fmri_data');                     % per-voxel df kept as fmri_data
+tc.verifyClass(g.sigma, 'fmri_data');                  % per-voxel sigma kept as fmri_data
+tc.verifyTrue(isstruct(g.input_parameters));           % nested option struct populated
 end
 
 
@@ -113,6 +116,51 @@ c = onCleanup(@() warning(w));
 g = threshold(g, .01, 'unc', 'which_map', 't');
 tc.verifyClass(g, 'glm_map');
 tc.verifyTrue(g.is_fitted);
+end
+
+
+% =====================================================================
+% fmri_data.regress now returns a glm_map; constructor re-casts a struct
+% =====================================================================
+function test_regress_returns_glm_map(tc)
+dat = canlab_get_sample_fmri_data();
+n = size(dat.dat, 2);
+dat.X = [zscore((1:n)') ones(n, 1)];
+out = regress(dat, 0.05, 'unc', 'noverbose', 'nodisplay');
+
+tc.verifyClass(out, 'glm_map');
+% Historical struct-style field access still works via Dependent aliases
+tc.verifyClass(out.b, 'statistic_image');              % alias for betas
+tc.verifyClass(out.t, 'statistic_image');
+tc.verifyClass(out.df, 'fmri_data');
+tc.verifyClass(out.sigma, 'fmri_data');
+tc.verifyTrue(isstruct(out.input_parameters));
+tc.verifyTrue(isstruct(out.diagnostics));
+tc.verifyNotEmpty(out.diagnostics.Variance_inflation_factors);
+end
+
+
+function test_construct_from_struct_and_aliases(tc)
+% A struct with regress-style field names re-casts into a glm_map, and the
+% out-struct aliases read the canonical properties.
+S = struct();
+S.b = statistic_image; S.b.dat = randn(50, 2);
+S.t = statistic_image; S.t.dat = randn(50, 2);
+S.variable_names = {'slope', 'intercept'};
+S.C = [1 0]';
+S.contrast_names = {'slope'};
+S.analysis_name = 'from_struct_test';
+
+g = glm_map(S);
+tc.verifyClass(g, 'glm_map');
+tc.verifyEqual(g.analysis_name, 'from_struct_test');
+tc.verifyEqual(g.betas.dat, S.b.dat);                  % b -> betas
+tc.verifyEqual(g.regressor_names, {'slope', 'intercept'});  % variable_names -> regressor_names
+tc.verifyEqual(g.contrasts, [1 0]');                   % C -> contrasts
+tc.verifyEqual(g.contrast_names, {'slope'});
+% Round-trip: alias getters return the canonical values
+tc.verifyEqual(g.b.dat, g.betas.dat);
+tc.verifyEqual(g.variable_names, g.regressor_names);
 end
 
 

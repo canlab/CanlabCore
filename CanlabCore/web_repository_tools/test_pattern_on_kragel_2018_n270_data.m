@@ -64,7 +64,7 @@ function OUT = test_pattern_on_kragel_2018_n270_data(varargin)
 % :Outputs:
 %
 %   **OUT:**
-%        A structure with a summary table of sensivity, specificity, PPV,
+%        A structure with a summary table of sensitivity, specificity, PPV,
 %        and effect size for each classification (pain vs. other, cog
 %        control vs. other, negative emotion vs. other.
 %        Also includes roc_plot output for all three classifications, with

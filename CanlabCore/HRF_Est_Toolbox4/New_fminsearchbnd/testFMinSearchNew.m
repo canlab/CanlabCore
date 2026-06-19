@@ -49,7 +49,7 @@ function testFMinSearchNew
     
     
     
-    % Define output and print functions.  These functions are nexted WITHIN the overall routine so they 
+    % Define output and print functions.  These functions are nested WITHIN the overall routine so they 
     % have access to variables in the above code if needed.
     %
 

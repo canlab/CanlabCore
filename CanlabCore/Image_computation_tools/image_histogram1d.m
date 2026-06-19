@@ -36,7 +36,7 @@ v2 = CLU.Z;
 
 %discretize for convenience
 v2 = round(v2.*100);
-%v2(abs(v2) < eps | isnan(v2)) = [];  % shoul
+%v2(abs(v2) < eps | isnan(v2)) = [];  % should
 
 
 % ----------------------------------------------------

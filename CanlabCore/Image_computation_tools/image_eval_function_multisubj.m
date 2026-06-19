@@ -180,7 +180,7 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
     %
     % each element in output is stored in an image volume
     % elements in the same output (out1, out2, etc.) are stored as volumes
-    % in the same .img file, indexed by .n fiels in the spm_vol structure
+    % in the same .img file, indexed by .n fields in the spm_vol structure
     % (these are stored during processing on 3rd dim of sliceoutput)
     %
     % to access a volume, try spm_vol('imagename.img, 3') for 3rd volume in

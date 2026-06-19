@@ -1,7 +1,7 @@
 Use a command like this one to apply the patch
 patch -s -p0 -d <parent directory of spm12> < spm_splines.patch
 
-The mechanics of this implementation are complicated in a numbe of ways. The issues
+The mechanics of this implementation are complicated in a number of ways. The issues
 below are important to understand, please read them.
 
 There are several unresolved issues with this implementation

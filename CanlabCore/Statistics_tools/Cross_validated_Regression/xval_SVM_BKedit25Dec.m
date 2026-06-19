@@ -1081,7 +1081,7 @@ else
     
     xlabel(sprintf('ID, %3.0f%% single-interval acc', S.crossval_accuracy));
     
-    disp('Red cicles: Errors. Green triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
+    disp('Red circles: Errors. Green triangles: Scores for Class 1, Blue triangles: Scores for Class -1');
     
     axis tight
     

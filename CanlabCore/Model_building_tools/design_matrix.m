@@ -165,7 +165,7 @@ classdef design_matrix < handle
                     obj.varname = [newname, obj.varname];
                 elseif varorder == size(obj,2) %end
                     obj.varname = [obj.varname, newname];
-                else %Somewhere inbetween
+                else %Somewhere in between
                     obj.varname = [obj.varname(1:varorder), newname, obj.varname(varorder + 1 : end)];
                 end
             end
@@ -175,7 +175,7 @@ classdef design_matrix < handle
                 obj.dat = [x, obj.dat];
             elseif varorder == size(obj,2) %end
                 obj.dat = [obj.dat, x];
-            else %Somewhere inbetween
+            else %Somewhere in between
                 obj.dat = [obj.dat(:,1:varorder), x, obj.dat(:,varorder + 1 : end)];
             end
         end
@@ -497,7 +497,7 @@ classdef design_matrix < handle
             %
             % tr           : Repetition time (e.g., 2)
             %
-            % timing       : Timing converstion from onset array to design matrix
+            % timing       : Timing conversion from onset array to design matrix
             %                  (e.g., 'sec2tr','tr2sec','sec2sec',or
             %                  'tr2tr'). Need to know which format each
             %                  array is in.

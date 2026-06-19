@@ -511,7 +511,7 @@ switch sim_metric
 
         for im = 1:n_obs2
             %         a = nansum(obj.dat .^ 2) .^ .5; %PK KEEP out of mask for norm
-            %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exlude empty data for norm
+            %         b = nansum(mask.dat(nonemptydat,im ) .^ 2) .^ .5; %PK exclude empty data for norm
             %
             %         r(im, :) = (nansum(bsxfun(@times, obj.dat, mask.dat(:,im))) ./ (a .* b))';
             %

@@ -17,7 +17,7 @@ function [Cq, coord, vec] = spherical_icosahedral_interpolation(V,F,C,Vq,varargi
 
     % V - vertices of source space
     % F - faces of source space
-    % C - data in source psace
+    % C - data in source space
     % Vq - vertices of target space
     % Fq - faces of target space
     %

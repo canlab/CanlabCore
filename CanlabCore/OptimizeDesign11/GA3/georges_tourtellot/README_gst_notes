@@ -48,7 +48,7 @@ In the output structure, .results.hrf_eff has length equal to HRF_estlen + 1 (se
 Corrections made:
 In 'modelDiagnostics2', around line 200, variable satval was hardcoded to 2, so that efficiency was calculated assuming a threshold 2x unit HRF level regardless of what was specified by the user (eg. in 'ga_example_script_basic').  This line was corrected to reflect the user-specified thresholding value.  I recognize that the paper says that in the simulations a 2x squashing function was used in simulations.
 
-In testing design goodness using 'testMvsOther', in 'designsim' around line 106, fake data is created by adding noise to the design matrix.  The fake data should be a single vector of values.  To obtain this, the noise vector should be added to the sum of the design vectors--or all but one of the design vectors (which are the result of box car functions convolved with a modeled HRF).  To specificy that one of the design matrix columns should be treated as the null event, see the Features section below.
+In testing design goodness using 'testMvsOther', in 'designsim' around line 106, fake data is created by adding noise to the design matrix.  The fake data should be a single vector of values.  To obtain this, the noise vector should be added to the sum of the design vectors--or all but one of the design vectors (which are the result of box car functions convolved with a modeled HRF).  To specify that one of the design matrix columns should be treated as the null event, see the Features section below.
 
 In 'testMvsOther' there is a loop around line 114 that assigns commandline arguments to SIM.  This wasn't assigning to SIM(n) for each n, but is now modified to do this.
 

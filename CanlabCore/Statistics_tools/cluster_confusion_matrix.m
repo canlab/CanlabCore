@@ -229,7 +229,7 @@ ind=max(find(stats.num_sig==stats.num_clusters )); %#ok<MXFND>
 % store optimal K in output
 stats.optimalK = 1+ind;
 end
-% create variable foor bootstrapping calls (first output of this function)
+% create variable for bootstrapping calls (first output of this function)
 K=stats.optimalK;
 
 % store multi-way accuracy for optimal clustering

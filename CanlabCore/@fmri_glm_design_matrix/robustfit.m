@@ -296,7 +296,7 @@ end
 
 
 SETUP.algorithm.max_dev = max_dev;
-SETUP.algorithm.max_dev_descrip = 'Max deviation from old to new betas in interation; check convergence.';
+SETUP.algorithm.max_dev_descrip = 'Max deviation from old to new betas in iteration; check convergence.';
 
 % Write mask, betas, residuals, weights
 % ---------------------------------------------------------------------

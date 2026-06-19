@@ -242,7 +242,7 @@ end
 % This is an effect size measure, really a t-score, averaged across voxels
 Zmean = mean(Zi);
 
-% covert to power estimate, given multiple comparisons
+% convert to power estimate, given multiple comparisons
 % ---------------------------------------------------------------
 % first, estimate smoothness
 [fwhm,VRpv] = spm_est_smoothness(spm_vol(resms_images), spm_vol(mask));

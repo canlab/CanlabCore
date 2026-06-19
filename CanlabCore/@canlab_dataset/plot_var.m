@@ -64,7 +64,7 @@ function [meandat, stedat] = plot_var(D, varname, varargin)
 %
 %   **other:**
 %        other varargin are passed directly to barplot_columns.  So
-%        for example, '95CI' will make 95% confidence interals, instead
+%        for example, '95CI' will make 95% confidence intervals, instead
 %        of SE bars.
 %
 %

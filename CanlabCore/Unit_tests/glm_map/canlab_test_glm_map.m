@@ -470,24 +470,39 @@ end
 
 
 function test_fit_multisession_contrast(tc)
-% A multi-run first-level design carries per-run baseline columns and repeated
-% condition names. fit must handle the intercept (no spurious extra column),
-% give unique regressor names, and apply a contrast without erroring.
-TR = 1; nscan = [80 80];
+% A multi-run first-level design carries per-run baseline columns, per-run
+% nuisance covariates, and repeated condition names. build must give complete,
+% UNIQUE column names; fit must handle the intercept (no spurious extra column)
+% and apply a contrast without erroring (regress would otherwise add an
+% intercept -> contrast-width mismatch, and duplicate names would break its
+% contrast table).
+rng(0);
+TR = 1; nscan = [80 80];                                    % 2 runs
 ons = {[10 30 50]' [15 35 55]' [12 32 52]' [18 38 58]'};   % 2 conds x 2 runs
 d = fmri_glm_design_matrix(TR, 'nscan', nscan, 'units', 'secs', ...
     'onsets', ons, 'condition_names', {'A' 'B'});
+
+% 3 nuisance covariates per run (e.g. motion)
+for s = 1:numel(nscan)
+    d.Sess(s).C.C    = zscore(randn(nscan(s), 3));
+    d.Sess(s).C.name = {'mot1' 'mot2' 'mot3'};
+end
+
 w = warning('off', 'all'); c = onCleanup(@() warning(w)); %#ok<NASGU>
 g = glm_map(d); g.is_timeseries = true; g = build_design(g);
 
-% regressor names are unique and cover every column
+% 2 conds x 2 runs = 4 interest, 3 cov x 2 runs = 6 nuisance, 2 run baselines
+tc.verifyEqual(g.num_regressors, 12);
+tc.verifyEqual([sum(g.wh_interest) sum(g.wh_nuisance) sum(g.wh_intercept)], [4 6 2]);
+
+% regressor names cover every column and are unique
 tc.verifyEqual(numel(g.regressor_names), g.num_regressors);
 tc.verifyEqual(numel(unique(g.regressor_names)), g.num_regressors);
 
-% A vs B contrast over the run-1 event columns; fit synthetic data
+% A vs B contrast (over the run-1 event columns); fit synthetic data
 nm = g.regressor_names;
 C = zeros(1, g.num_regressors);
-C(find(contains(nm, 'A'), 1)) = 1;  C(find(contains(nm, 'B'), 1)) = -1;
+C(find(contains(nm, 'A-BF'), 1)) = 1;  C(find(contains(nm, 'B-BF'), 1)) = -1;
 g = add_contrasts(g, C, {'AmB'});
 
 sim = fmri_data; sim.dat = randn(20, sum(nscan));

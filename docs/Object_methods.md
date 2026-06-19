@@ -42,7 +42,8 @@ brainpathway            connectivity / pathway model (one subject)
 brainpathway_multisubject   group-level extension of brainpathway
 fmri_timeseries         specialized container for raw timeseries
 canlab_dataset          subject x variable behavioral / clinical data
-fmri_glm_design_matrix  first-level GLM design matrix
+fmri_glm_design_matrix  first-level GLM design matrix (onsets, basis set, X)
+glm_map                 mass-univariate GLM / regression estimator (1st & 2nd level)
 predictive_model        artifacts of a fitted multivariate prediction model
 ```
 
@@ -62,6 +63,7 @@ Listed in roughly the order most users encounter them. Click a class name for th
 | **[`fmri_timeseries`](fmri_timeseries_methods.md)** | Specialized container for raw timeseries data. |
 | **[`canlab_dataset`](canlab_dataset_methods.md)** | Generic subject x variable behavioral / clinical data container with its own `glm`, `mediation`, `scatterplot`, `get_var`, `add_vars`, 'write' (to text file) and plotting methods. Designed for two-level datasets (within-person, between-person) common in cognitive neuroscience |
 | **[`fmri_glm_design_matrix`](fmri_glm_design_matrix_methods.md)** | Holds GLM design matrices (X) for first-level fMRI analyses. Methods like `build`, `add`, `replace_basis_set`. |
+| **[`glm_map`](glm_map_methods.md)** | scikit-learn-style estimator for mass-univariate GLM / multiple regression. Bundles the design (event/first-level onsets via a wrapped `fmri_glm_design_matrix`, or a static second-level design matrix), the fitted result maps (`betas`/`t`/contrasts), and design diagnostics (VIF/cVIF, leverage, Cook's D, efficiency, high-pass filter). The canonical output of `fmri_data.regress`. Workflow: `build_design`/`import_onsets`/`import_SPM` → `add_contrasts` → `run_diagnostics` → `fit` → `threshold`/`table`/`montage`. |
 | **[`predictive_model`](predictive_model_methods.md)** | Holds a multivariate prediction model and its artifacts — setup variables, cross-validated predictions, weight maps, performance summaries. |
 
 ## Cross-cutting topics

@@ -15,6 +15,8 @@ function fig = hrf_misspec_report(M, varargin)
 %     hrf_misspec_report(M)                          % curve half only
 %     hrf_misspec_report(M, 'Residuals', R)          % + residual half
 %     hrf_misspec_report(M, 'Condition','rest_stim', 'TopN',12, 'Save','report.png')
+%     hrf_misspec_report(M, 'Source','atlas', 'Set','canlab2024')  % one atlas only
+%     hrf_misspec_report(M, 'Source','signature', 'Names',{'NPS','SIIPS'})
 %
 % :Inputs:
 %   **M:** table from hrf_misspec_metrics (per-subject OR GroupCurveFirst).
@@ -25,6 +27,16 @@ function fig = hrf_misspec_report(M, varargin)
 %                    wildcards ok ('*heat*', 'rest_stim_ttl_?'); multiple
 %                    patterns match any (and pool into the per-region mean).
 %                    Default '' = all conditions.
+%   **'Source':**    restrict to a source_kind ('atlas','signature',
+%                    'imageset'). char/string/cellstr; glob ok. Default '' =
+%                    all. Use this so atlas regions, signatures, and imagesets
+%                    are not mixed into one ranking.
+%   **'Set':**       restrict to a source_set (atlas token like 'canlab2024'
+%                    / 'painpathways2024', signature set, or imageset name).
+%                    char/string/cellstr; glob ok. Default '' = all.
+%   **'Names':**     restrict to specific source_name items (region /
+%                    signature / map name, e.g. {'NPS','SIIPS'} or '*PAG*').
+%                    char/string/cellstr; glob ok. Default {} = all.
 %   **'TopN':**      how many best/worst regions to bar. Default 14.
 %   **'GoodR2':**    misspec_r2 above this counts as well-described. Default 0.5.
 %   **'Title':**     figure title. Default 'HRF misspecification report'.
@@ -38,6 +50,9 @@ p = inputParser;
 p.addRequired('M', @istable);
 p.addParameter('Residuals', table(), @istable);
 p.addParameter('Condition', '', @(x) ischar(x) || isstring(x) || iscell(x));
+p.addParameter('Source', '', @(x) ischar(x) || isstring(x) || iscell(x));
+p.addParameter('Set', '', @(x) ischar(x) || isstring(x) || iscell(x));
+p.addParameter('Names', {}, @(x) ischar(x) || isstring(x) || iscell(x));
 p.addParameter('TopN', 14, @(x) isscalar(x) && x >= 1);
 p.addParameter('GoodR2', 0.5, @(x) isscalar(x));
 p.addParameter('Title', 'HRF misspecification report', @(x) ischar(x) || isstring(x));
@@ -51,16 +66,21 @@ Mc = M;
 pats = string(opts.Condition);
 pats = pats(strlength(strtrim(pats)) > 0);
 if ~isempty(pats) && any(strcmp('condition', M.Properties.VariableNames))
-    Mc = M(local_match_conditions(M.condition, pats), :);   % glob wildcards ok
+    Mc = Mc(local_match_conditions(Mc.condition, pats), :);   % glob wildcards ok
 end
+% source selectors: scope to a kind/set/item so atlas regions, signatures,
+% and imagesets are not pooled into one ranking (same semantics as
+% hrf_misspec_metrics' Source/Set/Names).
+Mc = local_select(Mc, 'source_kind', opts.Source);
+Mc = local_select(Mc, 'source_set',  opts.Set);
+Mc = local_select(Mc, 'source_name', opts.Names);
 if isempty(Mc) || height(Mc) == 0
-    avail = '';
-    if any(strcmp('condition', M.Properties.VariableNames))
-        avail = strjoin(unique(cellstr(string(M.condition)), 'stable'), ', ');
-    end
     error('hrf_misspec_report:NoRows', ...
-        'No rows in M after Condition filter {%s}. Available conditions: %s', ...
-        strjoin(cellstr(pats), ', '), avail);
+        ['No rows in M after filters [Condition={%s} Source={%s} Set={%s} Names={%s}].\n' ...
+        '  conditions available: %s\n  source_set available: %s'], ...
+        strjoin(cellstr(pats), ', '), local_patstr(opts.Source), ...
+        local_patstr(opts.Set), local_patstr(opts.Names), ...
+        local_avail(M, 'condition'), local_avail(M, 'source_set'));
 end
 reg = string(Mc.source_name);
 [g, ureg] = findgroups(reg);
@@ -234,6 +254,50 @@ end
 
 function s = local_tern(c, a, b)
 if c, s = a; else, s = b; end
+end
+
+function T = local_select(T, colname, patterns)
+% Keep rows of T whose column `colname` glob-matches any of `patterns`.
+% No-op if the column is absent or no (non-empty) patterns were given.
+pats = cellstr(string(patterns));
+pats = pats(~cellfun(@(s) isempty(strtrim(s)), pats));
+if isempty(pats) || ~any(strcmp(colname, T.Properties.VariableNames)), return; end
+vals = string(T.(colname));
+keep = arrayfun(@(v) local_match_any(v, pats), vals);
+T = T(keep, :);
+end
+
+function tf = local_match_any(value, patterns)
+% True if `value` equals (case-insensitive) or glob-matches any pattern.
+patterns = cellstr(string(patterns));
+patterns = patterns(~cellfun(@(s) isempty(strtrim(s)), patterns));
+if isempty(patterns), tf = true; return; end
+val = char(string(value));
+tf = false;
+for p = 1:numel(patterns)
+    pat = strtrim(patterns{p});
+    if any(pat == '*' | pat == '?')
+        if ~isempty(regexp(val, ['^', regexptranslate('wildcard', pat), '$'], 'once'))
+            tf = true; return
+        end
+    elseif strcmpi(val, pat)
+        tf = true; return
+    end
+end
+end
+
+function s = local_patstr(patterns)
+pats = cellstr(string(patterns));
+pats = pats(~cellfun(@(s) isempty(strtrim(s)), pats));
+if isempty(pats), s = '(all)'; else, s = strjoin(pats, ', '); end
+end
+
+function s = local_avail(T, colname)
+if any(strcmp(colname, T.Properties.VariableNames))
+    s = strjoin(unique(cellstr(string(T.(colname))), 'stable'), ', ');
+else
+    s = '(column absent)';
+end
 end
 
 function mask = local_match_conditions(conds, patterns)

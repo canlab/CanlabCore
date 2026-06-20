@@ -97,15 +97,14 @@ reports:
 ## 5. Simulating data (for the demo) and fitting
 
 To exercise the pipeline without real scans, build a synthetic BOLD data set —
-`X · betas + noise` over a template brain space. Borrow a brain space (e.g.
-`load_image_set('emotionreg')`) and set the data in one line —
-`sim.dat = single((g.X * betas_true + noise)')` (see the how-to). The built-in
-[`fmri_data.sim_data`](../fmri_data_methods.md) is the related one-liner for the
-simpler signal-plus-noise case (it uses its own single-predictor design rather
-than your convolved `X`):
+`X · betas + noise` over a template brain space.
+[`fmri_data.sim_data`](../fmri_data_methods.md) does exactly this in one line:
+pass the convolved design `g.X` and a `[regressors × voxels]` coefficient map,
+borrowing any object for the brain space:
 
 ```matlab
-sim = sim_data(fmri_data, 'n', size(g.X,1), 'd', 1);   % synthetic signal + noise
+template = load_image_set('emotionreg', 'noverbose');     % borrow a brain space
+sim = sim_data(template, 'design', g.X, 'betas', betas_true);   % X·betas + noise
 ```
 
 On real data you load the run's time series as an `fmri_data` object instead.

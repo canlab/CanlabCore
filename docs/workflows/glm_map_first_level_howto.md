@@ -148,26 +148,24 @@ VIF = 1, 2, 4, 8.
 
 To exercise fitting without real scans, build a synthetic BOLD data set
 (`X · betas + noise`) in a template brain space; on real data you would load the
-run's time series as an `fmri_data` object instead. Because we need data from a
-*specific* convolved design `g.X`, we set `X·betas + noise` directly (the
-built-in [`fmri_data.sim_data`](../fmri_data_methods.md) is a one-liner for the
-simpler signal-plus-noise case, but it uses its own single-predictor design
-rather than your `X`). Fit with an AR(4) error model — recommended for serially
-correlated BOLD (AR(4) captures the autocorrelation better than AR(1)).
+run's time series as an `fmri_data` object instead.
+[`fmri_data.sim_data`](../fmri_data_methods.md) builds it in one line from the
+convolved design `g.X` and a `[regressors × voxels]` coefficient map. Fit with
+an AR(4) error model — recommended for serially correlated BOLD (AR(4) captures
+the autocorrelation better than AR(1)).
 
 ```matlab
 template = load_image_set('emotionreg', 'noverbose');          % borrow a brain space
 template = apply_mask(template, fmri_data(which('gray_matter_mask.nii')));
-nvox = size(template.dat, 1);  ntot = size(g.X, 1);
+nvox = size(template.dat, 1);
 
 rng(7);
-betas_true = zeros(g.num_regressors, nvox);
+betas_true = zeros(g.num_regressors, nvox);                    % [regressors x voxels]
 active = false(nvox,1);  active(randsample(nvox, round(.08*nvox))) = true;
 betas_true(contains(g.regressor_names,'Pain'), active) = 4;     % a "Pain" response
 
-sim = template;
-sim.dat = single((g.X * betas_true + 3*randn(ntot, nvox))');    % [voxels x TRs]
-sim.images_per_session = g.design.nscan;
+sim = sim_data(template, 'design', g.X, 'betas', betas_true, 'noise_sigma', 3);
+sim.images_per_session = g.design.nscan;                        % so run intercepts line up
 
 g = fit(g, sim, 'AR', 4);       % autoregressive error model (use 'robust' to down-weight)
 ```

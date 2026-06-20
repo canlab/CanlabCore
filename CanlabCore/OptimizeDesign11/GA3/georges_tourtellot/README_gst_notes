@@ -65,7 +65,7 @@ myans=testMvsOther(M, [], 'ISI', 2, 'TR', 2, 'HRF_estlen', 12, 'NULL_flag', 1);
 
 
 General operation:
-modifiy a ga_example_script.
+modify a ga_example_script.
 run this script.
 use 'testMvsOther' to compare the goodness of M.stimlist to random designs (and potentially other designs you have).
 Perform this comparison by looking at .results.hrf_eff and .results.power for all designs of interest.

@@ -108,7 +108,7 @@ function varargout = image_eval_function(imageNames, fhandle, varargin)
     [outimagenames, nimgs_this_output] = define_output_names(outimagelabels, nout, outputs);
 
     % Create or get memory-mapped volumes for output images
-    % Vout is the spm_vol structure for each ouput image
+    % Vout is the spm_vol structure for each output image
     % ---------------------------------------------------------------------
     maskInfo = iimg_read_img(imageNames(1,:), 2);
     
@@ -438,7 +438,7 @@ end % main function
                     this_img = deblank(outnm(j, :));
 
                     if ~strcmp(this_img(end-3:end), '.img') && ~strcmp(this_img(end-3:end), '.nii')
-                        % we need to add img extenstion
+                        % we need to add img extension
                         error('You must add .img or .nii to the end of each name.');
 
                         %outnm(j, :) = [outnm(j, :) '.img'];

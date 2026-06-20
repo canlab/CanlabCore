@@ -39,7 +39,7 @@ end
 
 if ~exist(odir,'dir'), mkdir(odir); end
 
-%% determine subject level analyis directories and contrast images
+%% determine subject level analysis directories and contrast images
 % find all contrast files
 if isempty(dirs)
     allconfiles = filenames(fullfile('*',['spmT_*' iext]));

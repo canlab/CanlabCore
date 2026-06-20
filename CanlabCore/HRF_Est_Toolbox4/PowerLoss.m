@@ -10,7 +10,7 @@ function [PowLoss] = PowerLoss(modres, modfit, moddf, tc, TR, Run, alpha)
 % moddf  - model degrees of freedom
 % tc     - time course
 % TR     - time resolution
-% Runs   - expermental design
+% Runs   - experimental design
 % alpha  - alpha value
 %
 % OUTPUT:

@@ -8,7 +8,7 @@ function [HRF, Fit, Resid, Parameters, Results, df] = Fit_sFIR_all_AR(TC, TR, Ru
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % mode  - FIR or smooth FIR
 %   options:

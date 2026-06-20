@@ -28,7 +28,7 @@ function [clusters, subcl] = extract_contrast_data(P, clusters, varargin)
 %        value is 2: to plot individual subjects over bars
 %
 %   **center:**
-%        center parmeter values in plot (subtract row means)
+%        center parameter values in plot (subtract row means)
 %        this gives closer to correct "within subjects" error bars
 %        and may be used when the overall parameter values have no meaning
 %
@@ -52,7 +52,7 @@ function [clusters, subcl] = extract_contrast_data(P, clusters, varargin)
 %
 % :Outputs:
 %
-%   clusters struture,  with CONTRAST substructure added
+%   clusters structure,  with CONTRAST substructure added
 %   substructure contains data extracted and image file names
 %
 % This program uses XYZmm millimeter coordinates in clusters to find voxels

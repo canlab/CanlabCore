@@ -52,7 +52,7 @@ function OUT = canlab_connectivity_predict(dat, subject_grouping, varargin)
 %               values and graph metrics are used to predict outcome data.
 %
 %   **'algo':**
-%        FOR PREDICTIONS. followed by the type of classification algoritm you want to use IF
+%        FOR PREDICTIONS. followed by the type of classification algorithm you want to use IF
 %        you entered outcome data. Options 'cv_lassopcr' or 'cv_svm' or 'cv_svr' or 
 %        'cv_multregress' or 'cv_univregress' or 'cv_pcr' or 'cv_multilevel_glm'
 %           Default is LASSO PCR.

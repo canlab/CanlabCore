@@ -36,7 +36,7 @@ has no impact on the estimation of the other design parameters.
 The most obvious consequence of filtering with the new 
 implementation is in the attenuation of the linear drift 
 regressors, because these are very similar to the low frequency
-descrete cosine components of our frequency filter. In the old
+discrete cosine components of our frequency filter. In the old
 approach however we have a much a more aggressive impact on the 
 design matrix with oscillatory components appearing across scans.
 

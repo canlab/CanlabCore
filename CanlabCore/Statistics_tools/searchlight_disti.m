@@ -1,6 +1,6 @@
 function out = searchlight_disti(dat, mask, dist_i, additional_inputs)
-% Run the actual searchlight analysis on each brain chunck 
-% searchlight_dream.m will generate codes to run this funtion.
+% Run the actual searchlight analysis on each brain chunk 
+% searchlight_dream.m will generate codes to run this function.
 %
 % :Usage:
 % ::

@@ -52,7 +52,7 @@ function [K, stats] = cluster_confusion_matrix(pred_label,true_label,varargin)
 %	Fields that contain performance metrics for different clustering solutions:
 %       multi_way_accuracy - overall accuracy for N-way classification
 %       accuracy_mean - vector of average accuracy for each clustering
-%       ste_mean - vectore of average standard error for each clustering
+%       ste_mean - vector of average standard error for each clustering
 %        p_vals -  cell array of p-values for all clusters for each clustering solution
 %       clustered_multi_way_accuracy - overall accuracy for each clustering solution
 %       sig - cell array indicating rejection of null hypothesis at alpha = .05 for each clustering solution

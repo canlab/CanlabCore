@@ -42,7 +42,7 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %        bootstrap voxel weights; enter bootweights do bootstrapping of weight maps (based on all observations)
 %
 %   **savebootweights**
-%        save bootstraped weights (useful for combining across multiple iterations of predict())
+%        save bootstrapped weights (useful for combining across multiple iterations of predict())
 %
 %   **bootsamples** = 100
 %        number of bootstrap samples to use
@@ -137,7 +137,7 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %        models), between eigenvectors, between scores, within 
 %        eigenvectors and within scores. Requires 'subjID' option followed 
 %        by size(obj.dat,2) x 1 vector of block labels. 
-%        Optional: Concensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
+%        Optional: Consensus PCA, {'cpca', 1}. [Default]={'cpca, 0}.
 %        Optional: Dimension selection, {'numcomponents', [bt, wi]}.
 %                   [Default] = {'numcomponents',[Inf,Inf]} (df constrained)
 %        Note: You probably want to bootstrap this manually if
@@ -229,7 +229,7 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %        CURRENTLY SUPPORTED.  code can be expanded to support this.
 %        mean-centering X and/or Y will NOT impact the
 %        predictor betas.  Note that it WILL impact the intercept
-%        esimate as well as how much variance is explained
+%        estimate as well as how much variance is explained
 %        (pred_outcome_r).  Stratified CV partition not
 %        supported either, pass in custom holdout set.
 %
@@ -511,7 +511,7 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %    6/25/13: Luke Chang
 %              -Added try/catch on lassopcr.  Will output nans if there is a
 %              problem running PCA.  Should help with problems with svd
-%              convergence when bootsrapping.
+%              convergence when bootstrapping.
 %              -turned off parallel by default for bootstrapping.  memory is
 %              duplicated for each worker so will crash if not enough memory.
 %              Also bootstrp seems to preallocate.
@@ -528,8 +528,8 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %              demands and fixed bugs to output weights.
 %              -added nancorr to ignore nans when calculating correlation
 %              -added rng 'shuffle' to ensure that bootstrapping will use
-%              different inital seed.  VERY IMPORTANT for aggregating across
-%              multiple boostrap sessions!
+%              different initial seed.  VERY IMPORTANT for aggregating across
+%              multiple bootstrap sessions!
 %
 %    11/28/13: Luke Chang
 %              -added ability to use hv block cross-validation, which is good
@@ -564,7 +564,7 @@ function [cverr, stats, optout, pm] = predict(obj, varargin)
 %                 to be returned in out.other_output{3}.stats
 % 
 %    2/6/2017: Stephan replaced 'pc(:,size(xtrain,1)) = [];' with 'pc(:,end) = [];
-%    to accomodate predictor matrices with fewer features (voxels) than
+%    to accommodate predictor matrices with fewer features (voxels) than
 %    data (trials/images)
 %
 %    6/2017: Tor and Phil Kragel: update parallel processing for
@@ -810,7 +810,7 @@ end
 % special for 1 fold: use all obs for train and test; good for
 % bootstrapping weights
 if nfolds == 1
-    %trIdx{1} = teIdx{1}; %LC: this isn't actualy using all of the weights.
+    %trIdx{1} = teIdx{1}; %LC: this isn't actually using all of the weights.
     % 3/23/13 Wani Woo added the following three lines to get cv_assignment. See Programmers' note for the detail.
     cv_assignment = double(teIdx{1});
 else
@@ -1030,7 +1030,7 @@ switch algorithm_name
             dd = zeros(size(obj.Y));
             
             for i = 1:length(teIdx)
-                dd(teIdx{i},:) = stats.other_output_cv{i, 2}; %added by lc 6/10/13 to accomodate multiclass
+                dd(teIdx{i},:) = stats.other_output_cv{i, 2}; %added by lc 6/10/13 to accommodate multiclass
             end
             
             stats.dist_from_hyperplane_xval = dd;
@@ -1370,7 +1370,7 @@ function [yfit, vox_weights, intercept] = cv_pcr(xtrain, ytrain, xtest, cv_assig
 [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
 pc(:,end) = [];                % remove the last component, which is close to zero.
                                % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
-                               % end to accomodate predictor matrices with
+                               % end to accommodate predictor matrices with
                                % fewer features (voxels) than trials. SG
                                % 2017/2/6                              
                                
@@ -1447,7 +1447,7 @@ if dopcr
         [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
         pc(:,end) = [];        % remove the last component, which is close to zero.
                                % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
-                               % end to accomodate predictor matrices with
+                               % end to accommodate predictor matrices with
                                % fewer features (voxels) than trials. SG
                                % 2017/2/6
         % [pc, sc, eigval] = princomp(xtrain, 'econ');
@@ -1649,7 +1649,7 @@ if verLessThan('matlab', '7.14.0')
     error('''cv_lassopcrmatlab'' is only compatible with matlab 7.14.0 and newer, try using old version ''cv_lassocvr''');
 end
 
-% determine if running prediction (continous) or classification (binary)
+% determine if running prediction (continuous) or classification (binary)
 % ----------------------------------------------------------
 
 if length(unique(ytrain)) == 2 %run in classification mode
@@ -1686,7 +1686,7 @@ if dopcr
     [pc,~,~] = svd(scale(xtrain,1)', 'econ'); % replace princomp with SVD on transpose to reduce running time. 
     pc(:,end) = [];                % remove the last component, which is close to zero
                                    % edit:replaced 'pc(:,size(xtrain,1)) = [];' with
-                                   % end to accomodate predictor matrices with
+                                   % end to accommodate predictor matrices with
                                    % fewer features (voxels) than trials. SG
                                    % 2017/2/6.
     % [pc, sc, eigval] = princomp(xtrain, 'econ');  %econ is much faster and should be used when n <= p and returns n-1 components.  additional components are meaningless
@@ -2383,7 +2383,7 @@ end
 function  bootsam = setup_boot_samples(x, bootsamples)
 % bootsam = setup_boot_samples(x, bootsamples)
 
-% initalize random number generator to new values; bootstrp uses this
+% initialize random number generator to new values; bootstrp uses this
 % there are problems with randomization if not done!
 %rand('twister', sum(100*clock))
 rng('shuffle');

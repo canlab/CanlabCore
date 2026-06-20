@@ -21,7 +21,7 @@ function [hpatch, cl] = cluster_image_shape(cl, varargin)
 %        patch handles
 %
 %   **cl:**
-%        new cl with sphere coordiates in XYZmm and XYZ
+%        new cl with sphere coordinates in XYZmm and XYZ
 %
 % :Examples:
 % ::

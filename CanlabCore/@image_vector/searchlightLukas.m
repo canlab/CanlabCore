@@ -12,7 +12,7 @@ function [results_obj, stats, indx] = searchlightLukas(dat, varargin)
 % :Features:
 %  - Runs searchlight with standard, pre-defined algorithms
 %  - Custom-entry definition of holdout sets
-%  - Can re-use searchlight spheres after initial definition
+%  - Can reuse searchlight spheres after initial definition
 %  - Custom-entry definition of any spheres/regions of interest
 %  - Uses Matlab's parallel processing toolbox (for)
 %
@@ -55,7 +55,7 @@ function [results_obj, stats, indx] = searchlightLukas(dat, varargin)
 %   **indx:**
 %        sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
 %        This takes a long time to calculate, but can be saved and
-%        re-used for a given mask
+%        reused for a given mask
 %   **holdout_set:**
 %        Followed by integer vector of which observations belong to which
 %        holdout set, for cross-validation. This is passed into fmri_data.predict.m.  Default is
@@ -71,7 +71,7 @@ function [results_obj, stats, indx] = searchlightLukas(dat, varargin)
 %
 %   **indx:**
 %        sparse logical matrix. each COLUMN is index of inclusion sets for each region/sphere in searchlight
-%        * this can be re-used for all data with the same mask/structure. *
+%        * this can be reused for all data with the same mask/structure. *
 %
 %
 % :Examples:
@@ -275,7 +275,7 @@ fprintf('Done in %3.2f sec\n', e);
 % First, a rough time estimate:
 % -------------------------------------------------------------------------
 fprintf('Searchlight sphere construction can take 20 mins or more! (est: 20 mins with 8 processors/gray matter mask)\n');
-fprintf('It can be re-used once created for multiple analyses with the same region definitions\n');
+fprintf('It can be reused once created for multiple analyses with the same region definitions\n');
 fprintf('Getting a rough time estimate for how long this will take...\n');
 
 n_to_run = min(500, n);

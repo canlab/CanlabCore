@@ -56,7 +56,7 @@ function OUT = canlab_variance_decomposition(y, X, X_type, varargin)
 % 2. Pass in y = y-hat from pre-trained model, and X variables that attempt
 % to explain the model predictions (y-hat) as a function of other
 % variables (e.g., explanatory variables or confounds). Here re-fitting a model is 
-% generally approprate, as the scale of y-hat and predictors may not match.
+% generally appropriate, as the scale of y-hat and predictors may not match.
 %
 % Examples:
 % -------------------------------------------------------------------------

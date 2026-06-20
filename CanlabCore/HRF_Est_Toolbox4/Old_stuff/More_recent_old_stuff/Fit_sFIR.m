@@ -7,7 +7,7 @@ function [hrf, fit, e, param] = Fit_sFIR(tc,TR,Run,T,mode)
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % mode  - FIR or smooth FIR
 %   options:

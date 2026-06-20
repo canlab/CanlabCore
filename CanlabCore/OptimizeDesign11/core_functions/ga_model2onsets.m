@@ -4,7 +4,7 @@ function onsets = ga_model2onsets(M)
 % onsets = ga_model2onsets(M)
 %
 % Zero is the start of the first event (i.e., the start of the run, after
-% discarded acquistions)
+% discarded acquisitions)
 %
 % Onsets are stored in a cell array, one cell per condition, in order of
 % the integer condition numbers stored in M.stimlist

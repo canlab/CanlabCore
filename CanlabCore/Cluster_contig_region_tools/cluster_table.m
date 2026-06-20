@@ -33,7 +33,7 @@ function clusters = cluster_table(clusters, varargin)
 %    % above if xyz, L3, and L5 have already been loaded to theworkspace
 %    % from taldata.mat. Also, if the talairach database is being used,
 %    % your cl.XYZmm values MUST correspond to the TALAIRACH, NOT MNI,
-%    % database, or the labels will be innaccurate.
+%    % database, or the labels will be inaccurate.
 %    cluster_table(..., 'talairach');
 %
 %    % print table to ASCII file, 'filename', instead of to the matlab
@@ -127,7 +127,7 @@ else
     catch
        disp('**************************************************************')
        disp('Error in  subclusters_from_local_max')
-       disp('This could have multiple causes.  One cause may be that a continguous region in a cluster')
+       disp('This could have multiple causes.  One cause may be that a contiguous region in a cluster')
        disp('Is too big for matlab''s memory to calculate distances among all voxels with pdist.');
        disp('If you get this error with small clusters, you may be missing subfunctions or have other related issues.')
         

@@ -334,7 +334,7 @@ case 'cheby'
 if ~isempty(HChoice)
 	nyquist = TR/2;	% in seconds, not frequencies TR/nyquist = .5
 	Wn = [TR/HChoice .35];
-	if O.verbose, disp([		'voistat adjusty: Chebyshev filter freqency is ' num2str(Wn)]),end
+	if O.verbose, disp([		'voistat adjusty: Chebyshev filter frequency is ' num2str(Wn)]),end
 	for startimg = 1:scanlen:npoints
 		sessy = y(startimg:startimg+scanlen-1);
  		[B,A] = cheby2(1,20,Wn);

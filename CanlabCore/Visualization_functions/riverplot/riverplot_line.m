@@ -11,7 +11,7 @@ function out = riverplot_line(x, y, color, thickness, steepness, varargin)
 % Programmers' notes:
 % 8/21/2017 Stephan Geuter
 % changed steepnes treatment computation. Steepness coefficient is now used
-% in sigmoid function to control steepnes and curvature at tangets (box
+% in sigmoid function to control steepnes and curvature at tangents (box
 % edges). shift in xstartpoints is removed. Makes ribbons smoother.
 %
 %

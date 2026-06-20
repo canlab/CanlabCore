@@ -80,7 +80,7 @@ end
 
 [x,a] = dohist(v,[],textlab,doplot);
 
-% x(a < length(v(:))/18000) = [];     % eliminate relatively empty bins for indiviudal plots
+% x(a < length(v(:))/18000) = [];     % eliminate relatively empty bins for individual plots
 
 if doplot
     title('All image data input into RFX analysis.')

@@ -11,7 +11,7 @@ function [out1,out2,out3] = getv(funct,ts,varargin)
 %
 % ts:
 %	a timeseries vector with one column.
-%	the ts output is the ajusted ts after removal of covariates and their derivatives.
+%	the ts output is the adjusted ts after removal of covariates and their derivatives.
 %
 % cov:
 %	optional covariates to regress out of timeseries before computing autocorrelation.

@@ -14,7 +14,7 @@ function [array,hdr,h,whichslices,rows,cols,figh] = readim2(varargin)
 %        to plot montage of slices to the screen
 %
 %   **sagg:**
-%        to rotate to saggital view
+%        to rotate to sagittal view
 %
 %   **cor:**
 %        to rotate to coronal view

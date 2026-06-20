@@ -35,7 +35,7 @@ function clout=cl_subdivide(clin,varargin)
 % 
 % min_adj (must be scalar) is the minimum number of voxels that a voxel
 % must be adjacent to for it to be included in a cluster. Voxels adjacent
-% to less voxels than min_adj will recieve a value of 0 in ind. Default is
+% to less voxels than min_adj will receive a value of 0 in ind. Default is
 % 0.
 % 
 % The optional input k will require that clusters in clout have at least k

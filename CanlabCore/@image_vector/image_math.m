@@ -73,7 +73,7 @@ function [obj_out, varargout] = image_math(obj1, varargin)
 % DEFAULTS AND INPUTS
 % ..
 
-keyword = '';  % initalize optional variables to default values here.
+keyword = '';  % initialize optional variables to default values here.
 % keyword. should enter one...
 obj2 = [];
 my_exponent = [];

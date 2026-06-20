@@ -83,7 +83,7 @@ zci(:,2) = z + (sd*zc);
 
 rci = (exp(2.*zci) - 1) ./ (exp(2.*zci) + 1);
 
-% cap at 1 - shoudn't need this
+% cap at 1 - shouldn't need this
 %rci(:,2) = min([rci(:,2) ones(size(rci,1),1)]')';
 
 % significant?

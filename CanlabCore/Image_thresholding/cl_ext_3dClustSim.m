@@ -33,7 +33,7 @@ function [cl_ext_ClustSim, fwhm_vox] = cl_ext_3dClustSim(corrected_p, prim_p, re
 %              mask = filenames('mask.nii', 'char', 'absolute');
 %
 %   **voxelsize_mm:**
-%        voxel sizes in milimeter. e.g) voxelsize_mm = [2 2 2];
+%        voxel sizes in millimeter. e.g) voxelsize_mm = [2 2 2];
 %
 %   **3dClustSim_dir:**
 %        directory where alphasim is installed.

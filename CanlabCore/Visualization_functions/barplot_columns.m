@@ -1009,7 +1009,7 @@ for i = 1:k
 
         % this will be the limit on x-values
 
-        % re-use nbins here for convenience - now it means bins ACROSS the
+        % reuse nbins here for convenience - now it means bins ACROSS the
         % graph within the violin shape, though
         % interleave points on either side of the midline
         % make the first point the actual midline value

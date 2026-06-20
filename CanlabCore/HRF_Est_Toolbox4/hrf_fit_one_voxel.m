@@ -10,7 +10,7 @@ function [h, fit, e, param] =  hrf_fit_one_voxel(tc,TR,Runc,T,method,mode)
 % 
 % tc    - time course
 % TR    - time resolution
-% Runs  - expermental design
+% Runs  - experimental design
 % T     - length of estimated HRF
 % type  - Model type
 % mode  - Mode
@@ -36,7 +36,7 @@ if (strcmp(method,'IL')),
 
 % Choose mode (deterministic/stochastic)
 
-% mode = 0;     % 0 - deterministic aproach 
+% mode = 0;     % 0 - deterministic approach 
                 % 1 - simulated annealing approach
                 % Please note that when using simulated annealing approach you
                 % may need to perform some tuning before use.

@@ -27,7 +27,7 @@ function [h, axh]=barplot_colored(data,varargin)
 %        followed by colormap name to use
 %
 %   **'colors':**
-%        followed by cell array of colors per bar; supercedes colormap
+%        followed by cell array of colors per bar; supersedes colormap
 %
 %   :Display items:
 %     - 'fontsize'

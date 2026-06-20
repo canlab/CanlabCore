@@ -62,7 +62,7 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %              'average' to be specified)
 %  
 %    **multcomp_group**
-%              mutiple comparisons of means across groups, one output
+%              multiple comparisons of means across groups, one output
 %              cell for each spatial basis, critical value determined
 %              by Tukey-Kramer method (see multcompare)
 %
@@ -121,7 +121,7 @@ function [stats, ntmaps, hh, hhfill, table_group, multcomp_group] = hansen_neuro
 %    fullpath fields
 
 %    Ke:Add function to input group of image_obj and plot mean correlation.
-%    e.g group of bootsrap sample. In this case, the error bar is displayed
+%    e.g group of bootstrap sample. In this case, the error bar is displayed
 %    by standard deviation.
 %
 %    Lukas: Added group/ANOVA functionality from image_similarity_plot to

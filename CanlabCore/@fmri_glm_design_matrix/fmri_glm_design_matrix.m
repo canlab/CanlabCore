@@ -7,7 +7,7 @@
 %
 % The information contained in this object (its attributes) are designed to
 % be very similar or identical to those defined by SPM in using
-% spm_fmri_design.m. This should help with inter-operability and standards
+% spm_fmri_design.m. This should help with interoperability and standards
 % for storing information.
 %
 % See methods(fmri_glm_design_matrix) for things you can do with this.
@@ -86,7 +86,7 @@
 %             name: - {1 x j} cell of names for each input or cause
 %              ons: - (q x 1) onsets for q  trials {in UNITS}
 %              dur: - (q x 1) durations for trials {in UNITS}
-%                P: - Parameter stucture
+%                P: - Parameter structure
 %                u: - (t x j) inputs or stimulus function matrix
 %              pst: - (1 x k) peristimulus times (seconds)
 %
@@ -99,7 +99,7 @@
 %
 %        SPM.Sess(s).Fc
 %
-%                i: - F Contrast colums for input-specific effects
+%                i: - F Contrast columns for input-specific effects
 %             name: - F Contrast names  for input-specific effects
 %
 %

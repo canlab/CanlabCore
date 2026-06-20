@@ -115,7 +115,7 @@ ons = cell(1, nconditions);
 rowsz = [];
 doplot = 0;
 basistype = 'spm+disp';
-% initalize optional variables to default values here.
+% initialize optional variables to default values here.
 
 
 % Create onsets

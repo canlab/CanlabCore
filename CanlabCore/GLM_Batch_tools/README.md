@@ -2,7 +2,7 @@
 
 Spline interpolation is a method of estimating smooth but flexible HRF functions, and are a substitute for canonical models 
 like the double gamma HRF. Spline interpolation is supported natively by some fMRI packages like AFNI, but not SPM. 
-spm_spline.patch provides support for spline modeling in SPM, and canlab tools are already configured for compatability. For
+spm_spline.patch provides support for spline modeling in SPM, and canlab tools are already configured for compatibility. For
 canlab tools compatibility refer to canlab_glm_dsgninfo.txt and in particular DSGN.convolution and DSGN.multiregbehav.
 
 Spline interpolation works by fitting a bellshaped curve (the spline basis function, although strictly speaking it could

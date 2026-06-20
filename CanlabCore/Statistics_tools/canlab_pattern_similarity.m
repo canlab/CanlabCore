@@ -320,7 +320,7 @@ function [ab, a, b] = image_norms(dat, pattern_weights, badvals)
 
 % Norm for image data.
 % All non-zero, non-NaN values valid. zero/nan have no
-% effect implictly.
+% effect implicitly.
 
 a = nansum(dat .^ 2)' .^ .5;
 

@@ -22,7 +22,7 @@ function [z,p,sig] = stouffer(p,varargin)
 %        p-values for combined test
 %
 %   **sig:**
-%        signficance 1 / 0 binary mask, if alpha is specified
+%        significance 1 / 0 binary mask, if alpha is specified
 %
 % :Described in:
 %

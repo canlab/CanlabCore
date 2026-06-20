@@ -142,7 +142,7 @@ classdef design_matrix < handle
                             newname = varargin{varg + 1};
                             isnewname = 1;
                         else
-                            error('Make sure ''Name'' is follwed by a valid variable name')
+                            error('Make sure ''Name'' is followed by a valid variable name')
                         end
                         varargin{varg} = {}; varargin{varg + 1} = {};
                     end
@@ -151,7 +151,7 @@ classdef design_matrix < handle
                         if isnumeric(varargin{varg + 1}) && varargin{varg + 1} <= size(obj,2)
                             varorder = varargin{varg + 1};
                         else
-                            error('Make sure ''Order'' is follwed by a valid column number')
+                            error('Make sure ''Order'' is followed by a valid column number')
                         end
                         varargin{varg} = {}; varargin{varg + 1} = {};
                     end

@@ -61,7 +61,7 @@ function myribbon = riverplot_ribbon(rect1, rect2, varargin)
 %        align ribbon with bottom edges of rects
 %
 %   **steepness**
-%        followed by value for sigmoid steepness, on [0 1] inteval
+%        followed by value for sigmoid steepness, on [0 1] interval
 %
 % :Outputs:
 %

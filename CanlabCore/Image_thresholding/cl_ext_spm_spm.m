@@ -586,7 +586,7 @@ CY    = 0;                                      % <(Y - <Y>) * (Y - <Y>)'>
 EY    = 0;                                      % <Y>    for ReML
 i_res = round(linspace(1,nScan,nSres))';        % Indices for residual
  
-%-Initialise XYZ matrix of in-mask voxel co-ordinates (real space)
+%-Initialise XYZ matrix of in-mask voxel coordinates (real space)
 %--------------------------------------------------------------------------
 XYZ   = zeros(3,xdim*ydim*zdim);
  
@@ -803,7 +803,7 @@ CY   = CY - EY*EY';
 %==========================================================================
 if ~isfield(xVi,'V')
     
-    %-check there are signficant voxels
+    %-check there are significant voxels
     %----------------------------------------------------------------------
     if s == 0
         spm('FigName','Stats: no significant voxels',Finter); 

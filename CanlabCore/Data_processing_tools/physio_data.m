@@ -192,8 +192,8 @@ classdef physio_data < design_matrix
             % 'lowpass'            : Followed by lowpass filter cutoff
             % 'highpass'           : Followed by highpass filter cutoff
             % 'bandpass'           : Followed by vector of low and high
-            %                        cutoff frequences (e.g., [.05, 2]
-            % 'order'              : Follwed by filter order (default 1)
+            %                        cutoff frequencies (e.g., [.05, 2]
+            % 'order'              : Followed by filter order (default 1)
             % -------------------------------------------------------------------------
             % EXAMPLES:
             % -------------------------------------------------------------------------

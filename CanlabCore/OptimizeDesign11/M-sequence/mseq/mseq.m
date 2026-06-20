@@ -379,7 +379,7 @@ ms=zeros(bitNum,1);
 if isempty(whichSeq), whichSeq=ceil(rand(1)*length(tap)); 
 else, 
    if whichSeq>length(tap) | whichSeq<1
-      disp(sprintf(' wrapping arround!'));
+      disp(sprintf(' wrapping around!'));
       whichSeq=rem(whichSeq,length(tap))+1;
    end;
 end;

@@ -11,7 +11,7 @@ function [QC, dat] = canlab_qc_metrics1(epi_names, mask_name, varargin)
 %
 %   **mask_name:**
 %        Name of brain mask image, string, full path
-%              IF EMPTY: Uses implict masking (better) and calculates
+%              IF EMPTY: Uses implicit masking (better) and calculates
 %              ghost/signal outside mask
 %
 % :Optional Inputs:

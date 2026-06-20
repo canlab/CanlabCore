@@ -75,7 +75,7 @@ function ribbons = riverplot_ribbon_matrix(layer1, layer2, sim_matrix, varargin)
 %        ribbons. Colors are specified for each element of layer1.
 %
 %   **steepness**
-%        followed by value for sigmoid steepness, on [0 1] inteval
+%        followed by value for sigmoid steepness, on [0 1] interval
 %
 %   **ax:**
 %        followed by axis handle to plot

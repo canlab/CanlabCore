@@ -227,7 +227,7 @@ function image_eval_function_multisubj(imageNames, fhandle, varargin)
 
 
     % Create or get memory-mapped volumes for output images
-    % Vout is the spm_vol structure for each ouput image
+    % Vout is the spm_vol structure for each output image
     % ---------------------------------------------------------------------
     Vout = create_output_images(maskInfo, outimagenames, nimgs_this_output);
 

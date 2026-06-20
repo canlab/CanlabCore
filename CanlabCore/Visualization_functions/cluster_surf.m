@@ -470,7 +470,7 @@ for i = 1:length(cl) % each cell is a whole vector of cl, not a single region
                 
                 alphascale{i} = sZ;
                 
-                % this is further adusted based on radius
+                % this is further adjusted based on radius
                 alphascale{i} = 5 * alphascale{i} ./ mmdeep^3; % should be 3?
                 %alphascale
                 

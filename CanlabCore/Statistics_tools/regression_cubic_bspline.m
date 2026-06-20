@@ -544,7 +544,7 @@ knots = augknt(knots_vec, order);
 
 % ties in data will break the construction of the spline collocation vectors (regressors)
 % if there are no unique knot points.
-% if the data are not truly continuous and there are mulitple exact repeats of data values
+% if the data are not truly continuous and there are multiple exact repeats of data values
 % this will break the spline basis construction. add a bit of noise in this
 % case
 if length(unique(x_col)) < size(x_col, 1)

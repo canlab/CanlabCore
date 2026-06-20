@@ -488,7 +488,7 @@ switch meth
 
     case {'hcp sphere left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('S1200.L.sphere.32k_fs_LR.mat');
         p = add_surface(pname);
@@ -502,7 +502,7 @@ switch meth
 
     case {'hcp sphere right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('S1200.R.sphere.32k_fs_LR.mat');
         p = add_surface(pname);
@@ -516,7 +516,7 @@ switch meth
 
     case {'freesurfer sphere left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_sphere_lh.mat');
         p = add_surface(pname);
@@ -530,7 +530,7 @@ switch meth
 
     case {'freesurfer sphere right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_sphere_rh.mat');
         p = add_surface(pname);
@@ -544,7 +544,7 @@ switch meth
 
     case {'freesurfer inflated left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_inflated_lh.mat');
         p = add_surface(pname);
@@ -558,7 +558,7 @@ switch meth
 
     case {'freesurfer inflated right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_inflated_rh.mat');
         p = add_surface(pname);
@@ -572,7 +572,7 @@ switch meth
 
     case {'freesurfer white left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_white_lh.mat');
         p = add_surface(pname);
@@ -586,7 +586,7 @@ switch meth
 
     case {'freesurfer white right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('fsavg_white_rh.mat');
         p = add_surface(pname);
@@ -600,7 +600,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym white left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_white_lh.mat');
         p = add_surface(pname);
@@ -614,7 +614,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym white right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_white_rh.mat');
         p = add_surface(pname);
@@ -628,7 +628,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym midthickness left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_midthickness_lh.mat');
         p = add_surface(pname);
@@ -642,7 +642,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym midthickness right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_midthickness_rh.mat');
         p = add_surface(pname);
@@ -656,7 +656,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym pial left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_pial_lh.mat');
         p = add_surface(pname);
@@ -670,7 +670,7 @@ switch meth
 
     case {'MNI152NLin2009cAsym pial right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin2009cAsym_pial_rh.mat');
         p = add_surface(pname);
@@ -684,7 +684,7 @@ switch meth
 
     case {'MNI152NLin6Asym white left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_white_lh.mat');
         p = add_surface(pname);
@@ -698,7 +698,7 @@ switch meth
 
     case {'MNI152NLin6Asym white right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_white_rh.mat');
         p = add_surface(pname);
@@ -712,7 +712,7 @@ switch meth
 
     case {'MNI152NLin6Asym midthickness left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_midthickness_lh.mat');
         p = add_surface(pname);
@@ -726,7 +726,7 @@ switch meth
 
     case {'MNI152NLin6Asym midthickness right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_midthickness_rh.mat');
         p = add_surface(pname);
@@ -740,7 +740,7 @@ switch meth
 
     case {'MNI152NLin6Asym pial left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_pial_lh.mat');
         p = add_surface(pname);
@@ -754,7 +754,7 @@ switch meth
 
     case {'MNI152NLin6Asym pial right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_pial_rh.mat');
         p = add_surface(pname);
@@ -768,7 +768,7 @@ switch meth
 
     case {'MNI152NLin6Asym sphere left'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_sphere_lh.mat');
         p = add_surface(pname);
@@ -782,7 +782,7 @@ switch meth
 
     case {'MNI152NLin6Asym sphere right'}
         % Mean for use as a development tool, not intended for actual
-        % dispaly
+        % display
         % - Bogdan
         pname = which('MNI152NLin6Asym_sphere_rh.mat');
         p = add_surface(pname);

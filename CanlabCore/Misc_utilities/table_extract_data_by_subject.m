@@ -28,10 +28,10 @@
 %        subject ID (with numeric values, e.g. integers, or text)
 %
 %   **sid_field_name:**
-%        Name of the table field indiciating subject ID
+%        Name of the table field indicating subject ID
 %
 %   **data_field_name_to_extract:**
-%        Name of the table field indiciating the data to extract
+%        Name of the table field indicating the data to extract
 %
 % :Outputs:
 %

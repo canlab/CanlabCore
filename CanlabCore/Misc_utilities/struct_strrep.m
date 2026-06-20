@@ -19,7 +19,7 @@ function new_struct = struct_strrep(old_struct, old_string, new_string, depth)
     fnames = fieldnames(new_struct);
     for i = 1:length(fnames)
         % Below code does not work as Matlab R2007B has some massive bug in the class() function.
-        % It works when executed manualy, but not as part of a func... wtf?
+        % It works when executed manually, but not as part of a func... wtf?
         %         field_class = class(new_struct.(fnames{i}));
         %         switch(field_class)
         %             case 'struct'

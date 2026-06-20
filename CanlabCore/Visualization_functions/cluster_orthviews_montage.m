@@ -332,7 +332,7 @@ other_axes = find(any(poss(:, 1) > .45 & poss(:, 2) < .2, 2));
 axish(other_axes) = [];
 poss(other_axes, :) = [];
 
-% sort into order:  axial, coronal, saggital
+% sort into order:  axial, coronal, sagittal
 ssum = sum(poss(:, 1:2), 2);
 [ssum, ind] = sort(ssum);
 axish = axish(ind);

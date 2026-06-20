@@ -170,7 +170,7 @@ for i=1:max(study) %for each study
     bs_inds(study_inds)=study_inds(randi([1,length(study_inds)],1,length(study_inds))); %randomly resample with replacement
 
 end
-%supress distance warning - 0 value distances get removed...
+%suppress distance warning - 0 value distances get removed...
 warning('off','stats:pdist:ConstantPoints')
 
 % images by voxels 

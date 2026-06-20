@@ -54,7 +54,7 @@ function obj = legend(obj, varargin)
 %
 % ..
 %    Tor Wager
-%    8/17/2016 - pkragel updated to accomodate split colormap
+%    8/17/2016 - pkragel updated to accommodate split colormap
 %
 %    Michael Sun
 %    07/29/2024 - Updated to allow for indexmap labelling

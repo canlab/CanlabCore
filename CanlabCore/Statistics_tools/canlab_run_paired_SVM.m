@@ -45,7 +45,7 @@ function [paired_d, stats, optout, cat_obj] = canlab_run_paired_SVM(varargin)
 %        Followed by logical 1/0
 %
 %   **boot_n:**
-%        Followed by number of boostrap samples desired (default = 100)
+%        Followed by number of bootstrap samples desired (default = 100)
 %
 %   **parallelstr:**
 %        Followed by string 'parallel' to use parallel processing in fmri_data.predict.m

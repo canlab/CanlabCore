@@ -1,5 +1,5 @@
 % Mseq Toolbox 
-% Vesion 1.0 10-28-2001
+% Version 1.0 10-28-2001
 % written by Giedrius Buracas, 
 % SNL-B, Salk Institute
 % 
@@ -13,7 +13,7 @@
 % Sequence generation 
 %
 %  balancedRnd		Generates random sequences, with either
-%			overlaping or non-overlaping events
+%			overlapping or non-overlapping events
 %			Equal numbers of events of each type is assumed 
 %
 %  mseq			Generates binary, ternary, or five level
@@ -40,13 +40,13 @@
 %  efficiencyOFexpDesigns2 script that compares estimation 
 %			efficiency of random and m-seuence-based
 %			experimental designs. In this case
-%			simultaneously occuring events are permitted
-%			(overlaping events)
+%			simultaneously occurring events are permitted
+%			(overlapping events)
 %
 %  effOFexpDesignsNoOverlap script that compares estimation 
 %			efficiency of random and m-seuence-based
 %			experimental designs. In this case
-%			simultaneously occuring events are not permitted
+%			simultaneously occurring events are not permitted
 %			(non-overlaping events)
 %
 %

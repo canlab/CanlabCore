@@ -174,7 +174,7 @@ switch Action
 	if iscell(K)
 
 
-		% ensure requisite feild are present
+		% ensure requisite field are present
 		%-----------------------------------------------------------
 		if ~isfield(K{1},'KL')
 			K = spm_filter('set',K);

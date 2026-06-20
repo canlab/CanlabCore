@@ -34,7 +34,7 @@ function testFMinSearchNew
         'FunValCheck','off',...
         'OutputFcn', @firstOutputFunction,...  
         'PlotFcns',@firstPlotFunction);
-    % NOTE: you could add several output or plot functions by incluing a cell array of function
+    % NOTE: you could add several output or plot functions by including a cell array of function
     % handles, such as {@firstOutputFunction, @secondOutputFunction}
     
       

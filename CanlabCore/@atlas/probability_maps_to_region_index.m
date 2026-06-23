@@ -1,12 +1,41 @@
 function dat = probability_maps_to_region_index(dat)
-% Use dat.probability_maps to rebuild integer vector of index labels (dat.dat)
+% probability_maps_to_region_index Rebuild integer index labels from probability_maps.
 %
-% dat = probability_maps_to_region_index(dat)
+% Use dat.probability_maps to rebuild the integer vector of index labels
+% in dat.dat: each voxel is assigned to the region with maximum
+% probability, with voxels having all-zero or all-NaN probabilities set
+% to 0. If some regions are missing (no nonzero column in
+% probability_maps), they and their corresponding labels and
+% label_descriptions are dropped from the atlas, and the remaining index
+% values are renumbered consecutively.
 %
-% Note: this script should not invoke remove_empty, replace_empty or
+% :Usage:
+% ::
+%
+%     dat = probability_maps_to_region_index(dat)
+%
+% :Inputs:
+%
+%   **dat:**
+%        An atlas-class object with a populated probability_maps field.
+%
+% :Outputs:
+%
+%   **dat:**
+%        Atlas-class object whose .dat is an integer index vector
+%        consistent with the columns of probability_maps.
+%
+% :Notes:
+%
+% This script should not invoke remove_empty, replace_empty, or
 % resampling because it is invoked on atlas objects that may have
-% mismatched probability_maps and dat fields, causing such functions to 
+% mismatched probability_maps and dat fields, causing such functions to
 % fail.
+%
+% :See also:
+%   - check_properties
+%   - num_regions
+%   - select_atlas_subset
 
 % Start: dat has one image per region, with probability values
 % convert to integer vector

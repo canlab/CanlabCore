@@ -69,8 +69,7 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
     
     
     atl = parser.Results.atlas;
-
-    % atl.probability_maps=[]; % Show deterministic maps only.
+    atl.probability_maps=[]; % Show deterministic maps only.
 
     mylabels = format_strings_for_legend(parser.Results.labels);
 
@@ -258,8 +257,21 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
         set([actualAxHandles.YAxis], 'Visible', 'off');
 
         o2 = montage(o2,'saggital','wh_slice', mm_center, 'existing_axes', axh(1:5), 'existing_figure');
+        shift_axes(-0.02, -0.04);
+        
+        axh = axes('Position', [-0.02 0.37 .17 .17]);
         o2 = montage(o2,'coronal','wh_slice', mm_center,'existing_axes', axh(6:10), 'existing_figure');
+        
+        axh = axes('Position', [-0.02 0.19 .17 .17]);
         o2 = montage(o2,'axial','wh_slice', mm_center, 'existing_axes', axh(11:15), 'existing_figure');
+
+        allaxh = findobj(gcf, 'Type', 'axes');
+        disp(length(allaxh));
+        for i = 1:(length(allaxh)-36)
+            pos1 = get(allaxh(i), 'Position');
+            pos1(1) = pos1(1) - 0.03;
+            set(allaxh(i), 'Position', pos1);
+        end
 
         % colors = scn_standard_colors(2);
         % num_regions=numel(roi.labels);
@@ -286,6 +298,9 @@ function [o1, o2, o3, o4 roi] = showme(lbl, varargin)
             title(axititleText);
     
         end
+
+
+
     end
 
     % At the moment, flat maps and coronal slabs don't seem to work at all.

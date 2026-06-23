@@ -1,75 +1,122 @@
 function [p, mesh_struct, my_isosurface, my_isocap] = isosurface(obj, varargin)
-% Create and visualize an isosurface created from the boundaries in an image object.
+% isosurface Create and visualize an isosurface from the boundaries in an image object.
 %
-% [p, mesh_struct, my_isosurface, my_isocap] = isosurface(obj, varargin)
+% Builds a 3-D isosurface (and isocaps) from an image_vector / fmri_data
+% object. Useful for rendering brain anatomy, cutaways, and surface
+% boundaries.
 %
-% - p is a patch handle to graphics patch object showing surface and isocaps
-% - mesh_struct has meshgrid with x, y, z coordinates in mm, and volume data
-% - my_isosurface and my_isocap are structures with .faces and .vertices,
-%   which you can visualize using patch()
+% :Usage:
+% ::
 %
-% Options:
-% case 'thresh',  mythresh = varargin{i + 1}; varargin{i + 1} = [];
-% 
-% case 'nosmooth', dosmooth = false;
-% case 'smoothbox', mysmoothbox = varargin{i + 1}; varargin{i + 1} = [];
-% case 'sd', mygaussstd = varargin{i + 1}; varargin{i + 1} = [];
-% 
-% case 'color', mycolor = varargin{i + 1}; varargin{i + 1} = [];
-% 
-% 
-% case 'xlim', xlim = varargin{i + 1}; varargin{i + 1} = [];
-% case 'ylim', ylim = varargin{i + 1}; varargin{i + 1} = [];
-% case 'zlim', zlim = varargin{i + 1}; varargin{i + 1} = [];
-% 
-% Examples:
-% % ------------------------------------------------------
+%     [p, mesh_struct, my_isosurface, my_isocap] = isosurface(obj, [optional inputs])
 %
-% % An example cortical brain surface
-% ------------------------------------------------------------------------
+% :Inputs:
 %
-% anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
-% figure;
-% p = isosurface(anat, 'thresh', 140, 'nosmooth');
-% set(p, 'FaceAlpha', 1);
-% view(132, 6);
-% lightRestoreSingle;
+%   **obj:**
+%        An image_vector / fmri_data object. The function reconstructs a
+%        3-D volume from obj and runs Matlab's isosurface / isocaps on it.
 %
-% Make a brain-bottom cutaway:
-% ------------------------------------------------------------------------
+% :Optional Inputs:
 %
-% create_figure('cutaway');
-% p = isosurface(anat, 'thresh', 140, 'nosmooth', 'zlim', [-Inf 20]);
-% view(132, 30);
+%   **'thresh':**
+%        Isosurface threshold value. Default: 0.
 %
-% A coronal cutaway around the nucleus accumbens:
-% ------------------------------------------------------------------------
+%   **'percentagethresh':**
+%        If specified, sets the threshold to the given percentile of the
+%        (smoothed) volume.
 %
-% create_figure('cutaway');
-% p = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf 10]);
-% view(132, 30);
+%   **'nosmooth':**
+%        Skip the 3-D Gaussian smoothing step (default: smoothing on).
 %
-% An often-used CANlab 3-d cutaway
-% ------------------------------------------------------------------------
-% create_figure('cutaway');
-% anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
-% p = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
-% p2 = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
-% alpha 1 ; lightRestoreSingle; view(135, 30); colormap gray;
-% p3 = addbrain('limbic hires');
-% set(p3, 'FaceAlpha', .6, 'FaceColor', [.5 .5 .5]);
-% delete(p3(3)); p3(3) = [];
-% lightRestoreSingle;
-% surface_handles = [p p2 p3];
+%   **'smoothbox':**
+%        Smoothing kernel size (passed to smooth3). Default: 3.
 %
-% Another example using a different group average image:
-% ------------------------------------------------------------------------
-% dat = fmri_data(which('icbm152_2009_symm_enhanced_for_cutaways.nii'), 'noverbose');
-% figure;
-% [p, mesh_struct] = isosurface(dat, 'percentagethresh', 80);
-% alpha 1 ; camlight, lightRestoreSingle; view(135, 30); colormap gray
+%   **'sd':**
+%        Gaussian SD for smoothing (passed to smooth3). Default: 1.
 %
-% See also: tor_3d, cluster_cutaway, cluster_image_shape
+%   **'color':**
+%        RGB triplet for the patch face color. Default: [.5 .5 .5].
+%
+%   **'xlim' / 'ylim' / 'zlim':**
+%        Two-element [min max] vectors (mm) used to clip the volume
+%        before extracting the surface (for cutaways).
+%
+%   **'zshift':**
+%        Scalar shift (in axis units) applied to the Z coordinates of the
+%        surface and isocap vertices. Default: 0.
+%
+%   **'noverbose':**
+%        Suppress verbose output.
+%
+% :Outputs:
+%
+%   **p:**
+%        Patch handle(s) to the graphics patch object showing surface and
+%        isocaps.
+%
+%   **mesh_struct:**
+%        Struct with meshgrid X, Y, Z coordinates (mm) and the volume
+%        data used to build the surface.
+%
+%   **my_isosurface:**
+%        Struct with .faces and .vertices fields for the isosurface.
+%
+%   **my_isocap:**
+%        Struct with .faces and .vertices fields for the isocap.
+%
+% :Examples:
+% ::
+%
+%    % An example cortical brain surface
+%    % ------------------------------------------------------------------------
+%
+%    anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
+%    figure;
+%    p = isosurface(anat, 'thresh', 140, 'nosmooth');
+%    set(p, 'FaceAlpha', 1);
+%    view(132, 6);
+%    lightRestoreSingle;
+%
+%    % Make a brain-bottom cutaway:
+%    % ------------------------------------------------------------------------
+%
+%    create_figure('cutaway');
+%    p = isosurface(anat, 'thresh', 140, 'nosmooth', 'zlim', [-Inf 20]);
+%    view(132, 30);
+%
+%    % A coronal cutaway around the nucleus accumbens:
+%    % ------------------------------------------------------------------------
+%
+%    create_figure('cutaway');
+%    p = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf 10]);
+%    view(132, 30);
+%
+%    % An often-used CANlab 3-d cutaway
+%    % ------------------------------------------------------------------------
+%    create_figure('cutaway');
+%    anat = fmri_data(which('keuken_2014_enhanced_for_underlay.img'), 'noverbose');
+%    p = isosurface(anat, 'thresh', 140, 'nosmooth', 'ylim', [-Inf -30]);
+%    p2 = isosurface(anat, 'thresh', 140, 'nosmooth', 'xlim', [-Inf 0], 'YLim', [-30 Inf]);
+%    alpha 1 ; lightRestoreSingle; view(135, 30); colormap gray;
+%    p3 = addbrain('limbic hires');
+%    set(p3, 'FaceAlpha', .6, 'FaceColor', [.5 .5 .5]);
+%    delete(p3(3)); p3(3) = [];
+%    lightRestoreSingle;
+%    surface_handles = [p p2 p3];
+%
+%    % Another example using a different group average image:
+%    % ------------------------------------------------------------------------
+%    dat = fmri_data(which('icbm152_2009_symm_enhanced_for_cutaways.nii'), 'noverbose');
+%    figure;
+%    [p, mesh_struct] = isosurface(dat, 'percentagethresh', 80);
+%    alpha 1 ; camlight, lightRestoreSingle; view(135, 30); colormap gray
+%
+% :See also:
+%   - tor_3d
+%   - cluster_cutaway
+%   - cluster_image_shape
+%   - reconstruct_image
+%   - smooth3
 
 % ------------------------------------------------------
 % defaults

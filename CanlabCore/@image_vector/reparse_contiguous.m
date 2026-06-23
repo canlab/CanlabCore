@@ -1,20 +1,58 @@
 function obj = reparse_contiguous(obj, varargin)
-% Re-construct list of contiguous voxels in an image based on in-image
-% voxel coordinates.  Coordinates are taken from obj.volInfo.xyzlist.
+% reparse_contiguous Re-build the list of contiguous voxels (clusters) in obj.volInfo.cluster.
 %
-% Results are saved in obj.volInfo.cluster.
+% Re-construct the list of contiguous voxels in an image based on
+% in-image voxel coordinates. Coordinates are taken from
+% obj.volInfo.xyzlist. Results are saved in obj.volInfo.cluster.
 %
-% xyzlist can be generated from iimg_read_img, and is done automatically by
-% object-oriented fMRI image classes (fmri_image, image_vector,
-% statistic_image)
+% xyzlist can be generated from iimg_read_img, and is done automatically
+% by object-oriented fMRI image classes (fmri_image, image_vector,
+% statistic_image).
 %
 % If 'nonempty' is entered as an optional argument, will use only voxels
 % that are non-zero, non-nan in all columns of obj.dat.
+%
+% .cluster and .xyzlist should both always be length v in-mask voxels;
+% if 'nonempty' is entered, then .dat should be length v in-mask voxels
+% too.
+%
+% NOTES: this will only work if xyzlist in volInfo has only voxels for
+% contiguous clusters. If the mask in volInfo contains the whole brain,
+% use 'nonempty' to exclude empty data values when redefining clusters.
 %
 % :Usage:
 % ::
 %
 %    obj = reparse_contiguous(obj, ['nonempty'])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector / fmri_data / statistic_image object with
+%        populated .volInfo.xyzlist.
+%
+% :Optional Inputs:
+%
+%   **'nonempty':**
+%        Use only voxels that are non-zero, non-NaN in all columns of
+%        obj.dat when computing contiguous clusters.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with obj.volInfo.cluster recomputed via
+%        spm_clusters.
+%
+% :Examples:
+% ::
+%
+%     obj = reparse_contiguous(obj);
+%     obj = reparse_contiguous(obj, 'nonempty');
+%
+% :See also:
+%   - spm_clusters
+%   - region
+%   - replace_empty
 %
 % ..
 %    Copyright tor wager, 2011
@@ -25,14 +63,6 @@ function obj = reparse_contiguous(obj, varargin)
 %                also fixed bug - was not using 'nonempty' input in some
 %                cases
 % ..
-%
-% .cluster and .xyzlist should both always be length v in-mask voxels
-% if 'nonempty' is entered, then .dat should be length v in-mask voxels too
-%
-% NOTES: this will only work if xyzlist in volInfo has only voxels for
-% contiguous clusters. If the mask in volInfo contains the whole brain,
-% use 'nonempty' to exclude empty data values when
-% redefining clusters.
 
 wh = true(obj.volInfo.n_inmask, 1); %size(obj.volInfo.cluster));   %obj.volInfo.wh_inmask;
 

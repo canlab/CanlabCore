@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  CanlabCore NiiVue viewer template.
+
+  The MATLAB exporter (canlab_niivue.m) fills this page with a GLOBAL string
+  replace of three tokens. IMPORTANT: each token's literal "double-curly" form
+  must appear ONLY where it is meant to be substituted - do not write the literal
+  token inside comments, or the global replace will inject the payload there too
+  (a stray SCRIPT_BLOCK token would duplicate the entire inlined NiiVue bundle).
+
+  Tokens (described here WITHOUT their braces on purpose):
+    TITLE        - page title text. Substituted in both <title> and the <h1> header.
+    STYLE_BLOCK  - in <head>: an inline <style> (standalone) or a <link> to the css (folder mode).
+    SCRIPT_BLOCK - at end of <body>: the <script type="module"> that boots canlabNiivue(...).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}}</title>
+  {{STYLE_BLOCK}}
+</head>
+<body>
+  <h1 id="canlab-niivue-title">{{TITLE}}</h1>
+
+  <!-- Toolbar: the viewer injects layout-toggle buttons (Axial/Coronal/.../3D Render) here. -->
+  <div id="canlab-niivue-controls"></div>
+
+  <!-- Main NiiVue rendering surface. The container makes it responsive + aspect-stable. -->
+  <div id="canlab-niivue-canvas-container">
+    <canvas id="gl" width="640" height="640"></canvas>
+  </div>
+
+  <!-- Crosshair readout: the viewer writes "MNI [x y z] mm  value: v" here on location change. -->
+  <div id="canlab-niivue-readout"></div>
+
+  {{SCRIPT_BLOCK}}
+</body>
+</html>

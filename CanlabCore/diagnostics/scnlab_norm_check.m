@@ -138,18 +138,7 @@ plot_results(NORM_CHECK, template, wanat_files, mean_func_files, subjects);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     function parse_inputs()
-        switch(spm('Ver'))
-            case {'SPM5' 'SPM8' 'SPM12'}
-                mask = which('avg152T1.nii');
-                if isempty(mask)
-                    mask = spm_select(1, 'image', 'Cannot find brain mask: please select', [], pwd());
-                end
-                if(~exist('template', 'var') || isempty(template)) %#ok<NODEF>
-                    template = spm_select(1, 'image', 'No template image passed in: please select', [], pwd());
-                end
-                if(~exist('wanat_files', 'var') || isempty(wanat_files)) %#ok<NODEF>
-                    wanat_files = spm_select(Inf, 'image', 'No subjects'' normalized anatomical images passed in: please select', [], pwd(), 'w.*');
-                end
+        switch spm('Ver')
             case 'SPM2'
                 mask = which('avg152T1.img');
                 if isempty(mask)
@@ -162,7 +151,17 @@ plot_results(NORM_CHECK, template, wanat_files, mean_func_files, subjects);
                     wanat_files = spm_get(Inf, 'w*img', 'No subjects'' normalized anatomical images passed in: please select');
                 end
             otherwise
-                error('Unknown SPM version: %s\n', spm('Ver'));
+                % SPM5+, including any future versions
+                mask = which('avg152T1.nii');
+                if isempty(mask)
+                    mask = spm_select(1, 'image', 'Cannot find brain mask: please select', [], pwd());
+                end
+                if(~exist('template', 'var') || isempty(template)) %#ok<NODEF>
+                    template = spm_select(1, 'image', 'No template image passed in: please select', [], pwd());
+                end
+                if(~exist('wanat_files', 'var') || isempty(wanat_files)) %#ok<NODEF>
+                    wanat_files = spm_select(Inf, 'image', 'No subjects'' normalized anatomical images passed in: please select', [], pwd(), 'w.*');
+                end
         end
         
         if(~exist('mean_func_files', 'var'))

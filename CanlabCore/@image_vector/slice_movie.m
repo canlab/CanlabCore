@@ -1,46 +1,82 @@
 function outlier_tables = slice_movie(dat, varargin)
-% Movie of slice timeseries (sagittal slice)
-% Enter an image_vector or fmri_data object (usually with time series)
+% slice_movie Movie of slice timeseries (sagittal + axial slices) for an image_vector / fmri_data object.
+%
+% Enter an image_vector or fmri_data object (usually with time series).
+%
+% Images usually change slowly over time, and sudden changes in intensity
+% can also often be a sign of bad things -- head movement artifact or
+% gradient misfires, interacting with the magnetic field to create
+% distortion across the brain.
+%
+% RMSSD tracks large changes across successive images, regardless of
+% what the sign of the changes is or where they are. In addition, images
+% with unusually high spatial standard deviation across voxels may be
+% outliers with image intensity distortions in some areas of the image
+% but not others (e.g., bottom half of brain vs. top half, or odd vs.
+% even slices).
+%
+% The CANlab method slice_movie( ), for fmri_data objects, creates a
+% visual movie so you can see what the image-to-images changes are. It
+% pauses where they're unusual, as defined by the method
+% fmri_data.outliers( ). It also returns a table, outlier table, and
+% matrices you can use as covariates in design
+% outlier_regressor_matrix_uncorr and outlier_regressor_matrix_corr.
+% These have an indicator regressor (1 or 0 values) for every image
+% that is quite different from the preceding ones (the pause point in
+% the movie). This is based on two things: (1) rmssd and others being >
+% a cutoff number of standard deviations from the mean, (2) spatial
+% standard deviation of the images being > a cutoff number of standard
+% deviations from the mean. The cutoff is 3 median absolute deviations
+% by default. This matrix can be added to your design matrix as a set
+% of nuisance covariates of no interest.
 %
 % :Usage:
 % ::
 %
-%  [outlier_table, outlier_regressor_matrix_uncorr, outlier_regressor_matrix_corr] = slice_movie(dat, [full_path_of_movie_output_file,image_skip_interval])
+%    outlier_tables = slice_movie(dat, [optional inputs])
 %
-% Images usually change slowly over time, and sudden changes in intensity can also often be a sign of bad things
-% -- head movement artifact or gradient misfires, interacting with the magnetic field to create distortion
-% across the brain.
-% RMSSD tracks large changes across successive images, regardless of what the sign of the changes is or where they are.
-% In addition, images with unusually high spatial standard deviation across voxels may be outliers with image
-% intensity distortions in some areas of the image but not others (e.g., bottom half of brain vs. top half,
-% or odd vs. even slices).
-% The CANlab method slice_movie( ), for fmri_data objects, creates a visual movie so you can see what the
-% image-to-images changes are. It pauses where they're unusual, as defined by the method fmri_data.outliers( ). 
-% It also returns a table, outlier table,  and matrices you can use as covariates in design
-% outlier_regressor_matrix_uncorr and outlier_regressor_matrix_corr.
-% These have an indicator regressor (1 or 0 values) for every image that is quite different from the preceding ones
-% (the pause point in the movie). This is based on two things: (1) rmssd and others being > a cutoff number of standard
-% deviations from the mean, (2) spatial standard deviation of the images being > a cutoff number of
-% standard deviations from the mean. The cutoff is 3 median absolute deviations. by default.
-% This matrix can be added to your design matrix as a set of nuisance covariates of no interest.
+% :Inputs:
 %
-% *Optional Inputs:
+%   **dat:**
+%        An image_vector / fmri_data object, usually with a time-series
+%        of images stored as columns of .dat.
+%
+% :Optional Inputs:
 %
 %   **'movieoutfile', <filepath>:**
 %        Followed by a char array detailing the full path to save the
-%           movie file
+%        movie file
 %
 %   **'image_interval', n:**
-%        Followed by an integer value describing the interval
-%        between images in each subsequent frame of the movie
-%       (default = 1). Higher values will skip, showing every n images
+%        Followed by an integer value describing the interval between
+%        images in each subsequent frame of the movie (default = 1).
+%        Higher values will skip, showing every n images
 %
 %   **'montage':**
-%        Show montage of all slices, rather than just 2 slices
+%        Show montage of all slices, rather than just 2 slices.
 %
 %   **'nooutliers':**
 %        Skip the outlier detection stage (can speed things up with long
-%        image series)
+%        image series).
+%
+%   **'madlim', n:**
+%        Median absolute deviation cutoff for flagging outliers. Default = 3.
+%
+%   **'writetofile':**
+%        Force writing to disk; if 'movieoutfile' is empty, a default
+%        path in the current directory is used.
+%
+%   **'nomovie' / 'nodisplay':**
+%        Suppress display of the movie figure.
+%
+%   **'dostepthrough':**
+%        Step through images one at a time, waiting for keypress.
+%
+% :Outputs:
+%
+%   **outlier_tables:**
+%        A struct of outlier tables (e.g., score_table) returned by
+%        outliers().
 %
 % :Examples:
 % ::
@@ -49,17 +85,20 @@ function outlier_tables = slice_movie(dat, varargin)
 %   obj2 = rescale(obj, 'l2norm_images');
 %   slice_movie(obj2);
 %
-%   Show a movie of RMSSD and write a movie file to disk in the qc_images subdirectory:
+%   % Show a movie of RMSSD and write a movie file to disk in the qc_images subdirectory:
 %   rmssd_movie(fmri_dat, 'movie_output_file', '/Subj1/qc_images/rmssd_movie', 'image_interval', 5)
 %
-%   This would save an movie based on the images in fmri_dat to the
-%   above directory, with an interval of 5 images between each
-%   frame (so, the movie would show image 1, 6, 11, 16, etc)
+%   % This would save an movie based on the images in fmri_dat to the
+%   % above directory, with an interval of 5 images between each
+%   % frame (so, the movie would show image 1, 6, 11, 16, etc)
 %
-
-% Programmers Notes:
+% :See also:
+%   - rmssd_movie
+%   - outliers
+%   - display_slices
+%
 % ..
-%
+%    Programmers Notes:
 % ..
 
 % -------------------------------------------------------------------------

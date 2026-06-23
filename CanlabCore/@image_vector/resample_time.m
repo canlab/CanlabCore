@@ -1,8 +1,26 @@
 function obj = resample_time(obj, source_TR, target_TR, varargin)
-% Resample the time-series images (source_time_interval) in an fmri_data object (obj) 
-% to the different time series (target_time_interval). Works for all image_vector objects.
+% resample_time Resample the time-series images of an image_vector object to a new TR.
 %
-%   - obj = resample_time(obj, source_time_interval, target_time_interval, varargin)
+% Resample the time-series images (source_time_interval) in an fmri_data
+% object (obj) to a different time series (target_time_interval). Works
+% for all image_vector objects.
+%
+% :Usage:
+% ::
+%
+%     obj = resample_time(obj, source_TR, target_TR, [optional inputs])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An image_vector or fmri_data object. Each column of obj.dat is
+%        a time point.
+%
+%   **source_TR:**
+%        Source time interval (seconds), i.e. the original TR.
+%
+%   **target_TR:**
+%        Target time interval (seconds) to resample to.
 %
 % :Optional Inputs:
 %
@@ -13,23 +31,33 @@ function obj = resample_time(obj, source_TR, target_TR, varargin)
 %          - 'spline'  - spline interpolation
 %          - 'cubic'   - cubic interpolation as long as the data is uniformly
 %                       spaced, otherwise the same as 'spline'
-%   **slice:**
-%      A fraction of the slice timing correction.
-%      The default is 0.5, meaning if your TR is 2s, the time point of your TR image
-%      will be considered as the middle point of the TR bins. You can use this option
-%      to use different time points. If you are upsampling your data (i.e.,
-%      your target TR is shorter than your source TR), you need to discard the
-%      first column of your data. This function will return the first time point data as NaN. 
 %
+%   **slice:**
+%        A fraction of the slice timing correction.
+%        The default is 0.5, meaning if your TR is 2s, the time point of your TR image
+%        will be considered as the middle point of the TR bins. You can use this option
+%        to use different time points. If you are upsampling your data (i.e.,
+%        your target TR is shorter than your source TR), you need to discard the
+%        first column of your data. This function will return the first time point data as NaN.
+%
+% :Outputs:
+%
+%   **obj:**
+%        The input object with .dat resampled to the target TR using
+%        interp2 along the time dimension.
 %
 % :Examples:
 % ::
 %
 %    dat = fmri_data('/Volumes/RAID1/labdata/current/BMRK3/Imaging/spatiotemp_biomarker/STmarker1.img');
-%    dat = resample_time(dat, 2, 1.3) 
+%    dat = resample_time(dat, 2, 1.3)
 %
 %    % with options:
 %    dat = resample_time(dat, 2, 1.3, 'meth', 'linear', 'slice', .3)
+%
+% :See also:
+%   - resample_space
+%   - interp2
 %
 
 slice_frac = .5;

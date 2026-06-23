@@ -1,5 +1,5 @@
-function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
-    % STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
+function pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
+    % pmodel_obj = xval_regression_multisubject(fit_method, Y, X, varargin)
     %
     % CROSS-VALIDATED Regression
     % Leave-one observation out, predict outcomes for each missing holdout_set.
@@ -32,7 +32,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
     % 'l4o_covbalanced'     leave-4-out, balanced on combo of Y and continuous
     %                           covariates (logistic regression/propensity score based method)
     % 'balanced4'           4-fold, balanced on Y (every 4th element of sorted Y)
-    % Or CUSTOM holdout set:Enter integer list of which obs belong to which holdout set. 
+    % Or CUSTOM holdout set:Enter integer list of which obs belong to which holdout set.
     %
     % Single-level analysis: enter a single cell with Y and X data.
     % rows are observations. (e.g., subjects)
@@ -41,10 +41,32 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
     % rows are observations within-subjects and should be independent for valid
     % cross-validation.
     %
-    % STATS = xval_regression_multisubject('lasso', pain_scores, data, 'pca',
-    % 'ndims', 'variable');
+    % :Output:
+    %   **pmodel_obj** is a @predictive_model object. Cross-validated
+    %   predictions, weights, and error metrics are accessible either via
+    %   the categorised sub-structs (pmodel_obj.fitted_values.subjfit,
+    %   pmodel_obj.weights.mean_vox_weights,
+    %   pmodel_obj.error_metrics.pred_err, ...) or via legacy flat aliases
+    %   (pmodel_obj.subjfit, pmodel_obj.mean_vox_weights,
+    %   pmodel_obj.pred_err, ...). See @predictive_model for the full
+    %   property list.
+    %
+    % :Example:
+    % ::
+    %   pmodel_obj = xval_regression_multisubject('lasso', pain_scores, data, ...
+    %                                             'pca', 'ndims', 'variable');
+    %
     % SEE THE WIKI FOR EXAMPLES, ETC.
     % Tor Wager, 3/17/09
+    %
+    % :Programmers' notes:
+    %   MATLAB R2026a compatibility: this file relies on nested-function
+    %   workspace sharing. Older MATLABs accepted a bare expression
+    %   statement (e.g. `nanvox;`) as a parent-scope declaration; R2026a's
+    %   parser rejects this with "Identifier ... is not a function or a
+    %   shared variable." The init block below explicitly declares every
+    %   variable that the nested helpers assign and the parent body later
+    %   reads, satisfying the static analyzer.
 
     % Programmers' notes
     % June 19, 2011: minor change to LASSO lambda selection when entering
@@ -59,10 +81,35 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
     % matlab compatibilty.  Forced double-format for vars to avoid
     % single-format problems.
     
+    % Explicit parent-scope declarations for nested-function shared
+    % variables. R2026a's parser no longer accepts the older bare
+    % expression-statement declaration pattern (`nanvox;`, `dosave;`).
+    % N must be set BEFORE nested_setdefaults runs because the
+    % cov_val coercion inside it reads N when `numel(cov_val) == 1`.
+    N = length(Y);
+    [pcsquash, doplssquash, dochoose_ndims, dochoose_regparams, ...
+     verbose, verboseL, doplot, docenterrowsX, dosave, has_cov] = deal([]);
+    [num_dims, cov_val, regparams, holdout_method] = deal([]);
+    [subjbetas, subjfit, nanvox, wasnan, Y_orig, my_intercepts] = deal({});
+    [train_y, train_dat, test_dat, weight_y, weight_dat] = deal([]);
+    [devs_from_full_model, devs_from_mean_only_model] = deal([]);
+    [var_full, var_null, rr, rsq, pred_err] = deal([]);
+    fit = [];
+    v   = [];
+
+    % Phase B: per-subject bad-data detection. The pre-existing
+    % nested_prepdata also calls nanremove (legacy), so we capture the
+    % same information up-front in a consistent format for the output.
+    omitted_cases_cell    = cell(1, N);
+    omitted_features_cell = cell(1, N);
+    for s_ = 1:N
+        [omitted_cases_cell{s_}, omitted_features_cell{s_}] = ...
+            predictive_model.detect_bad_data(X{s_}, Y{s_});
+    end
+
     % Set defaults
     % -----------------------------------------------------------
     nested_setdefaults();
-    docenterrowsX; dosave;
 
     % Variable dimensions: retain max possible for each subject
     % If choose ndims is selected, then pick the number here
@@ -70,8 +117,8 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
     % -----------------------------------------------------------
     nested_choose_ndims();
 
-    [STATS.INPUTS.pcsquash, STATS.INPUTS.num_dims, STATS.INPUTS.Y, STATS.INPUTS.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
-    %STATS.INPUTS.X = X;
+    [STATS.inputParameters.pcsquash, STATS.inputParameters.num_dims, STATS.inputParameters.Y, STATS.inputParameters.holdout_method] = deal(pcsquash, num_dims, Y, holdout_method);
+    %STATS.inputParameters.X = X;
 
     %include = 1:N;  % which subjects to include
 
@@ -84,11 +131,10 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         % ===========================================
 
         nested_prepdata(); % remove NaNs and initialize fit variable (output)
-        nanvox; % we will need to pass this into another inline later
 
         % Return holdout_set{} defining folds and holdout set for each fold
         holdout_set = nested_select_holdout_set();
-        STATS.INPUTS.holdout_set{s} = holdout_set;
+        STATS.inputParameters.holdout_set{s} = holdout_set;
 
         checkrowdependence(X{s}, verbose || verboseL);  
         % rows are assumed to be independent; if they are not, can get
@@ -201,11 +247,17 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         
         weight_y = Y{s};
         
-        if ~isempty(cov_val)
+        cov_val = [];
+        disp(class(cov_val));
+        disp(size(cov_val));
+        if iscell(cov_val), disp(class(cov_val{1})); end
+
+        if has_cov && ~isempty(cov_val{s})
             weight_dat = [X{s} cov_val{s}];
         else
             weight_dat = X{s};
         end
+
         
         % Dim reduction
         % --------------------------------------------------------------------------------
@@ -229,7 +281,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
  
                 
     STATS.Y_orig = Y_orig;
-    if ~isempty(cov_val)
+    if iscell(cov_val) && ~isempty(cov_val{s})
         STATS.note = 'covariates were added to predictive model'; %, if covs %removed in Y_orig stored here, if covs were entered';
     else
         STATS.note = 'no covariates entered';
@@ -268,6 +320,16 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         fprintf('Null model pred. error is %3.2f, and full model is %3.2f\n', STATS.pred_err_null(1), STATS.pred_err(1));
         disp(' ')
     end
+
+    % Phase B fit metadata
+    STATS.omitted_cases    = omitted_cases_cell;
+    STATS.omitted_features = omitted_features_cell;
+    STATS.fit_type         = 'crossval';
+
+    % Wrap the working struct in a @predictive_model object. Constructor
+    % routes every STATS field into its categorised home; legacy flat
+    % aliases (Y_orig, subjfit, pred_err, mean_vox_weights, ...) still work.
+    pmodel_obj = predictive_model(STATS, 'noverbose');
 
 
 
@@ -308,7 +370,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                     case 'nested_choose_ndims', dochoose_ndims = 1;
 
                         % Covariates
-                    case {'cov_val', 'covs', 'cov'}, cov_val = varargin{i+1};
+                    case {'cov_val', 'covs', 'cov'}, cov_val = varargin{i+1}; varargin{i+1} = [];
 
                         % Shrinkage/regularization parameters
                     case {'lassopath', 'ridgek', 'regparams'}, regparams = varargin{i+1}; varargin{i + 1} = [];
@@ -326,6 +388,24 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                 end
             end
         end
+
+        % ---- FORCE cov_val into canonical form: 1xN cell ----
+        if isempty(cov_val)
+            if ~iscell(cov_val), cov_val = {cov_val}; end
+            if numel(cov_val) == 1 && N > 1
+                cov_val = repmat(cov_val, 1, N);
+            end
+        elseif ~iscell(cov_val)
+            cov_val = {cov_val};               % wrap numeric matrix into a cell
+        end
+
+        has_cov = ~isempty(cov_val) && iscell(cov_val) && any(~cellfun(@isempty, cov_val));
+
+        
+        if numel(cov_val) == 1 && N > 1
+            cov_val = repmat(cov_val, 1, N);   % broadcast if single cov matrix given
+        end
+        % ----------------------------------------------------
 
         if verbose
             fprintf('xval_regression_multisubject\nVerbose mode (enter ''lowverbose'' to minimize or ''noverbose'' to turn off verbose output)\n')
@@ -425,7 +505,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
 
             clear num_dims
             for i = 1:N
-                if ~isempty(cov_val)
+                if iscell(cov_val) && ~isempty(cov_val{s})
                     num_dims(i) = min(size(X{i}, 1) - 2, size(X{i}, 2) + size(cov_val{i}, 2) - 2);
                 else
                     num_dims(i) = min(size(X{i}, 1) - 2, size(X{i}, 2) - 2);
@@ -512,7 +592,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
         train_y = Y{s};
         train_y(holdout_set{wh_fold}) = [];
 
-        if ~isempty(cov_val)
+        if has_cov && ~isempty(cov_val{s})
             train_dat = [X{s} cov_val{s}];
         else
             train_dat = X{s};
@@ -521,7 +601,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
                     % This is for the version where covs are always added after
             % pcsquash; but if covs are not meaningful, can increase
             % error!
-% %         if ~isempty(cov_val)
+% %         if iscell(cov_val) && ~isempty(cov_val{s})
 % %             train_covs = cov_val{s};
 % %             test_covs = train_covs(holdout_set{wh_fold}, :);
 % %             train_covs(holdout_set{wh_fold}, :) = [];              % leave out the missing observation(s)
@@ -573,7 +653,7 @@ function STATS = xval_regression_multisubject(fit_method, Y, X, varargin)
             title('Pred err as a function of prediction rescaling');
             drawnow
 
-            if ~isempty(cov_val)
+            if iscell(cov_val) && ~isempty(cov_val{s})
                 if dosave, diary('xval_regression_multisubject_output.txt'); end
 
                 disp('Test of whether predicted values are related to covariates:');
@@ -659,7 +739,9 @@ function [v, train_dat, test_dat] = do_pcsquash(train_y, train_dat, test_dat, nu
         %     xlabel('Yhat from PLS'); ylabel('Actual yhat');
 
     else
-        [v, scores] = princomp(train_dat, 'econ');  % scores = train_dat, up to scaling factor!! can't use scores from princomp-diff scaling
+        % R2026a: princomp is removed. pca(..., 'Economy', true) is the
+        % equivalent: same coeff/scores interface, no full-rank padding.
+        [v, scores] = pca(train_dat, 'Economy', true); %#ok<ASGLU> scores unused; we recompute from train_dat * v
         train_dat = train_dat * v;
         v = v(:, 1:num_dims);  % eigenvectors
         train_dat = train_dat(:, 1:num_dims); % train_dat now becomes the scores
@@ -1059,6 +1141,6 @@ end  % inner_xval_optimize_ridge
 
 function pe = xval_given_param(paramval, fit_method, Y, data, pcastr, plsstr, num_dims)
     % paramval could be a ridge or LASSO shrinkage value
-    STATS = xval_regression_multisubject(fit_method, {Y}, {data}, 'regparams', paramval, 'noverbose', 'holdout_method', 'balanced4', pcastr, plsstr, 'num_dims', num_dims);
-    pe = STATS.pred_err;
+    pm = xval_regression_multisubject(fit_method, {Y}, {data}, 'regparams', paramval, 'noverbose', 'holdout_method', 'balanced4', pcastr, plsstr, 'num_dims', num_dims);
+    pe = pm.pred_err;
 end

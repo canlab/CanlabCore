@@ -1,38 +1,66 @@
 function conj = conjunction(si1, si2, direction, type)
-% Returns the conjunction of two statistic_images.  considers positive and
+% conjunction Compute the conjunction of two thresholded statistic_image objects.
+%
+% Returns the conjunction of two statistic_images. Considers positive and
 % negative activations separately.
+%
+% :Usage:
+% ::
+%
+%     conj = conjunction(si1, si2)
+%     conj = conjunction(si1, si2, direction)
+%     conj = conjunction(si1, si2, direction, type)
 %
 % :Inputs:
 %
-%   Two thresholded statistic images.  Optional 3rd argument:  -1 to
-% get only negative conjunction, or 1 to get only positive conjunction
+%   **si1, si2:**
+%        Two thresholded statistic_image objects in the same image space.
 %
-% :Output:
+%   **direction:**
+%        (Optional) -1 to get only negative conjunction, +1 to get only
+%        positive conjunction, or 0 (default) for both. Empty input is
+%        allowed and treated as 0. Previously this argument was unnamed;
+%        it was renamed to 'direction' (Zizhuang Miao, Oct. 2023).
 %
-%   A statistic_image with all voxels suprathreshold (in the same direction) in both input
-% images.  Voxel values are set to 1 and -1, to indicate direction.
+%   **type:**
+%        (Optional) Allowed values are 'indicator' or 'values'.
+%        'indicator' will return an output with voxel values set to 1
+%        and -1 (as previously designed); 'values' will return the
+%        average voxel values of the two input maps. Default is 'values'
+%        to prevent crashing previous scripts using this function.
+%
+% :Outputs:
+%
+%   **conj:**
+%        A statistic_image with all voxels suprathreshold (in the same
+%        direction) in both input images. With type 'indicator', voxel
+%        values are set to 1 and -1 to indicate direction. With type
+%        'values', voxel values are the average of the two input maps,
+%        zeroed outside the conjunction. .p is replaced with a notice
+%        because it is not valid for a conjunction.
+%
+% :Examples:
+% ::
+%
+%     conj = conjunction(si1, si2);                  % both directions, value map
+%     conj = conjunction(si1, si2, 1);               % positive-only conjunction
+%     conj = conjunction(si1, si2, -1, 'indicator'); % negative-only indicator map
+%
+% :See also:
+%   - statistic_image
+%   - threshold
 %
 % ..
 %    Yoni Ashar, Sept. 2015
-% ..
-% 
-% ..
+%
 %    Zizhuang Miao, Oct. 2023
-% .. 
-% 
-% :Inputs:
+%       - Renamed the previous optional 3rd argument to 'direction'.
+%       - Added optional argument 'type' with values 'indicator' or 'values'.
 %
-%   Changed the name of the previous optional 3rd argument to "direction"
-%
-%   Added another optional argument "type", allowed values are "indicator" 
-% or "values". "indicator" will return an output with voxel values set to 1 
-% and -1 (as previously designed); "values" will return the average voxel
-% values of the two input maps. Default to "values" to prevent crashing
-% previous scripts using this function.
-% 
-%   Fixed bug where .sig was not being masked between si1 and si2, leading
-%   to an overly liberal conjunction map.
-%   Michael Sun Ph.D., 12/11/2025
+%    Michael Sun Ph.D., 12/11/2025
+%       - Fixed bug where .sig was not being masked between si1 and si2,
+%         leading to an overly liberal conjunction map.
+% ..
 
 if nargin == 2
     type = "values"; % default: average of two maps

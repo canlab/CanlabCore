@@ -1,30 +1,45 @@
 function dat = interpolate(dat, varargin)
-% Interpolate over missing values in image_vector object
+% interpolate Interpolate over missing values in an image_vector object.
+%
+% Use when there are some missing values in the mask image. Performs
+% 3-D linear interpolation to fill in all values in the original mask.
+%
+% E.g., for a standard brain image space that is 91 x 109 x 91, you may
+% have 300,000 in-mask values. Only 150,000 of these may be defined in
+% the image, however, and the rest are missing (0 or NaN). This function
+% will return a dat image with non-missing values for all 300,000 voxels
+% (the "in-mask" space). It will not return values for all voxels in
+% the 91 x 109 x 91 space, however.
+%
+% Note: This function does not upsample the data now, but could be
+% extended to do so fairly easily.
 %
 % :Usage:
 % ::
 %
-%    dat = interpolate(dat, varargin)
+%    dat = interpolate(dat, [optional inputs])
 %
-% :Input: 
-%    image_vector object (dat; e.g., an fmri_data object)
+% :Inputs:
 %
-% Use when there are some missing values in the mask image
-% Performs 3-D linear interpolation to fill in all values in the original
-% mask.
+%   **dat:**
+%        image_vector object (e.g., an fmri_data object).
 %
-% e.g., For a standard brain image space that is 91 x 109 x 91, you may
-% have 300,000 in-mask values. Only 150,000 of these may be defined in the
-% image, however, and the rest are missing (0 or NaN).
-% This function will return a dat image with non-missing values for all
-% 300,000 voxels (the "in-mask" space). 
-% It will not return values for all voxels in the 91 x 109 x 91 space,
-% however.
+% :Outputs:
 %
-% :Note:
-% This function does not upsample the data now, but could be extended
-% to do so fairly easily.
-% 
+%   **dat:**
+%        The input object with .dat populated for all in-mask voxels by
+%        3-D linear interpolation across the existing values, and
+%        .removed_voxels reset to false.
+%
+% :Examples:
+% ::
+%
+%     dat = interpolate(dat);
+%
+% :See also:
+%   - griddata
+%   - define_sampling_space
+%   - reconstruct_image
 
 upsamplevalue = 1; % values > 1 would upsample the data
 

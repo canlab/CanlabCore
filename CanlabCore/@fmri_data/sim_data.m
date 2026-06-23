@@ -37,7 +37,23 @@ function [obj, true_obj, noise_obj] = sim_data(obj, varargin)
 % :Optional Inputs:
 %
 % **'n':**
-%       Number of images/observations (e.g., subjects)
+%       Number of images/observations (e.g., subjects). Ignored when
+%       'design' is given (the design's row count sets the number of images).
+%
+% **'design'**
+%       Followed by a design matrix X ([n images x k regressors]). Switches
+%       to the GLM path: the simulated data are X * betas + noise (instead of
+%       the default region mean-shift / correlation model). Requires 'betas'.
+%       The simulated data inherit the voxel space of the input object, so
+%       pass an object with the brain space you want (e.g.
+%       load_image_set('emotionreg')).
+%
+% **'betas'**
+%       Followed by the regression coefficients for the 'design' path:
+%         - a [k x v] matrix (regressors x voxels) used directly as the
+%           voxelwise coefficient maps (data = (X * betas)'); or
+%         - a [k x 1] vector, applied to the true-signal region only (the
+%           same region used by the default path / 'true_region_mask').
 %
 % **'d'**
 %       Cohen's d for true regions
@@ -108,8 +124,23 @@ function [obj, true_obj, noise_obj] = sim_data(obj, varargin)
 %
 % Re-calculate the voxel-wise correlation with the outcome obj.Y:
 % Uses a stored Anonymous Function handle to get vector-with-matrix correlation
-% corr_matrix = obj.additional_info{1}.corr_matrix; 
+% corr_matrix = obj.additional_info{1}.corr_matrix;
 % r = corr_matrix(obj.Y, obj.dat');
+%
+% Simulate data from a known design matrix (X * betas + noise), e.g. to
+% exercise a first-level GLM. betas is [regressors x voxels]; here only a
+% subset of voxels carry a true effect on the second regressor:
+%
+% template = load_image_set('emotionreg', 'noverbose');   % borrow a brain space
+% X = [ones(100,1), [zeros(50,1); ones(50,1)]];           % 100 images, 2 regressors
+% v = size(template.dat, 1);
+% betas = zeros(2, v);  betas(2, randperm(v, round(.1*v))) = 4;  % 10% true voxels
+% sim = sim_data(template, 'design', X, 'betas', betas, 'noise_sigma', 1);
+%
+% Or place one canonical response in the default true-signal region (betas as
+% a [k x 1] vector):
+%
+% sim = sim_data(template, 'design', X, 'betas', [0; 4]);
 %
 % :References:
 %   None.
@@ -139,29 +170,49 @@ r = 0;                  % Correlation with outcome vector; individual diffs
 noise_sigma = 1;        % Noise standard deviation (Gaussian)
 smoothness = 5;         % Data smoothing
 
+design = [];            % optional design matrix X for the X*betas+noise path
+betas  = [];            % coefficients for the 'design' path
+n_was_set = false;      % track whether the caller passed 'n'
+
 doplot = 0;
 
 % optional inputs with default values
 for i = 1:length(varargin)
     if ischar(varargin{i})
         switch varargin{i}
-            
-            case 'n', n = varargin{i+1}; varargin{i+1} = [];
+
+            case 'n', n = varargin{i+1}; varargin{i+1} = []; n_was_set = true;
             case 'd', d = varargin{i+1}; varargin{i+1} = [];
-  
+
             case {'correlation', 'r'}, r = varargin{i+1}; varargin{i+1} = [];
-                    
+
             case 'true_region_mask', true_region_mask = varargin{i+1}; varargin{i+1} = [];
             case 'noise_sigma', noise_sigma = varargin{i+1}; varargin{i+1} = [];
             case 'smoothness', smoothness = varargin{i+1}; varargin{i+1} = [];
-                
+
+            case 'design', design = varargin{i+1}; varargin{i+1} = [];
+            case 'betas',  betas  = varargin{i+1}; varargin{i+1} = [];
+
             case 'null', d = 0; r = 0;
-                
+
             case 'plot', doplot = 1;
-                
+
             otherwise, warning(['Unknown input string option:' varargin{i}]);
         end
     end
+end
+
+% A custom design dictates the number of images (rows of X). Set n before we
+% build PARAMS and the noise, and warn if a conflicting 'n' was also passed.
+if ~isempty(design)
+    if isempty(betas)
+        error('sim_data:betasRequired', '''betas'' is required when ''design'' is given.');
+    end
+    if n_was_set && n ~= size(design, 1)
+        warning('sim_data:nIgnored', ...
+            '''n'' (%d) ignored; the design matrix has %d rows.', n, size(design, 1));
+    end
+    n = size(design, 1);
 end
 
 % Build a structure with hyperparameters to save in sim objects
@@ -188,54 +239,86 @@ if smoothness
     obj.dat = noise_sigma .* obj.dat;
 end
 
-% Predictor (regressor[s]) for univariate regression (true signal)
-Y = randn(n, 1);
-obj.X = Y;
+if ~isempty(design)
+    % ---------------------------------------------------------------------
+    % Custom-design path:  data = design * betas + noise
+    % ---------------------------------------------------------------------
+    obj.X = design;
+    k     = size(design, 2);
 
-% Outcome (for multivariate prediction)
-obj.Y = Y;
+    % Outcome (for descriptive stats only): the first regressor
+    obj.Y = design(:, 1);
 
-% Add PARAMS
-obj.additional_info{1} = PARAMS;
+    obj.additional_info{1} = PARAMS;
+    noise_obj = obj;
 
-noise_obj = obj;
+    if isequal(size(betas), [k v])
+        % [regressors x voxels] coefficient maps, used directly
+        true_signal = (design * betas)';                 % [v x n]
+        wh = any(true_signal ~= 0, 2);                   % voxels carrying true signal
 
-% Signal(H1) = mean activity + indiv diffs + error
-% Signal X   = d + r * Y + e
-% d = Cohen's d for mean shift
-% r = Pearson's r
-% Y = "true" signal of std = 1, N(0, 1)
+    elseif isvector(betas) && numel(betas) == k
+        % [regressors x 1]: place this response in the true-signal region only
+        wh = local_true_region(obj, true_region_mask);
+        true_signal = zeros(v, n);
+        true_signal(wh, :) = repmat((design * betas(:))', sum(wh), 1);
 
-% Signal: True data
-% ----------------------------------------------------------
-if ~isa(true_region_mask, 'image_vector') % do not use isempty(true_region_mask) because fmri_data.isempty checks for 0 data values
-    
-    true_obj = load_image_set('bucknerlab');
-    true_obj = get_wh_image(true_obj, 6);  % 'Frontoparietal'
-    
+    else
+        error('sim_data:betasSize', ...
+            ['With ''design'' [%d x %d], ''betas'' must be [%d x %d] ' ...
+             '(regressors x voxels) or [%d x 1] (one response, placed in the ' ...
+             'true-signal region). Got [%s].'], ...
+            n, k, k, v, k, num2str(size(betas)));
+    end
+
+    true_obj = obj;
+    true_obj.dat = true_signal;
+    true_obj.Y = obj.Y;
+
 else
-    true_obj = fmri_data(true_region_mask);
+    % ---------------------------------------------------------------------
+    % Default path: single random predictor + region mean shift (d) + r
+    % ---------------------------------------------------------------------
+    % Predictor (regressor) for univariate regression (true signal)
+    Y = randn(n, 1);
+    obj.X = Y;
+
+    % Outcome (for multivariate prediction)
+    obj.Y = Y;
+
+    % Add PARAMS
+    obj.additional_info{1} = PARAMS;
+
+    noise_obj = obj;
+
+    % Signal(H1) = mean activity + indiv diffs + error
+    % Signal X   = d + r * Y + e
+    % d = Cohen's d for mean shift
+    % r = Pearson's r
+    % Y = "true" signal of std = 1, N(0, 1)
+
+    % Signal: True data
+    % ----------------------------------------------------------
+    [wh, true_obj] = local_true_region(obj, true_region_mask);
+
+    true_obj.dat = zeros(v, n);
+    true_obj.dat(wh, :) = d .* noise_sigma; % Add in mean signal.
+    % Multiply by noise_sigma so that effect size d is constant for any value of noise_sigma entered.
+
+    % Add in variance with predictor
+    % This will add error variance if not modeled in analysis
+    % But it is not strictly error, as it could be accounted for by the known
+    % predictor.  Thus, entering r ~= 0 will reduce the mean effect size (d) if
+    % the predictor is not regressed out.
+    true_obj.dat(wh, :) = true_obj.dat(wh, :) + repmat(r .* obj.X', sum(wh), 1);
+    true_obj.Y = obj.Y;
+
+    true_signal = true_obj.dat;
 end
-
-true_obj = resample_space(true_obj, obj);
-
-wh = logical(true_obj.dat(:, 1));
-
-true_obj.dat = zeros(v, n);
-true_obj.dat(wh, :) = d .* noise_sigma; % Add in mean signal.  
-% Multiply by noise_sigma so that effect size d is constant for any value of noise_sigma entered. 
-
-% Add in variance with predictor
-% This will add error variance if not modeled in analysis
-% But it is not strictly error, as it could be accounted for by the known
-% predictor.  Thus, entering r ~= 0 will reduce the mean effect size (d) if
-% the predictor is not regressed out.
-true_obj.dat(wh, :) = true_obj.dat(wh, :) + repmat(r .* obj.X', sum(wh), 1); 
-true_obj.Y = obj.Y;
 
 % Final data: noise + signal
 % ----------------------------------------------------------
-obj.dat = obj.dat + true_obj.dat;
+obj.dat = obj.dat + true_signal;
 
 
 % Add PARAMS and helpful data vectors with true signal
@@ -275,5 +358,26 @@ end
 
 
 end % function
+
+
+function [wh, true_obj] = local_true_region(obj, true_region_mask)
+% Resolve the true-signal region in obj's voxel space.
+% Returns a logical voxel index (wh) and the resampled region object (true_obj).
+
+% do not use isempty(true_region_mask) because fmri_data.isempty checks for 0 data values
+if ~isa(true_region_mask, 'image_vector')
+
+    true_obj = load_image_set('bucknerlab');
+    true_obj = get_wh_image(true_obj, 6);  % 'Frontoparietal'
+
+else
+    true_obj = fmri_data(true_region_mask);
+end
+
+true_obj = resample_space(true_obj, obj);
+
+wh = logical(true_obj.dat(:, 1));
+
+end % local_true_region
 
 

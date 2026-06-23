@@ -1,16 +1,47 @@
 function [results_table, results_table_pos, results_table_neg, table_legend_text] = table_simple(r)
-% Make a simple table of fMRI results with one row per region
+% table_simple Make a simple table of fMRI results with one row per region.
 %
-% [results_table, results_table_pos, results_table_neg, table_legend_text] = table_simple(r)
+% This is most useful if you have divided an activation map into blobs
+% (regions) separated by defined anatomical parcels (e.g., see
+% image_vector.subdivide_by_atlas). The table has columns Region,
+% Volume, XYZ, and maxVal (the signed maximum of the .Z field). Regions
+% are split into positive- and negative-valued sub-tables based on the
+% sign of the maximum .Z value.
 %
-% - This is most useful if you've divided an activation map into blobs (regions)
-% separated by defined anatomical parcels. 
-% - e.g., see image_vector.subdivide_by_atlas
+% :Usage:
+% ::
 %
-% see also region.table, for autolabeling of regions with an atlas and more
-% detailed table output.
+%     [results_table, results_table_pos, results_table_neg, table_legend_text] = table_simple(r)
 %
-% Tor Wager, April 2021
+% :Inputs:
+%
+%   **r:**
+%        A region-class object array.
+%
+% :Outputs:
+%
+%   **results_table:**
+%        MATLAB table with one row per region (combined pos and neg).
+%
+%   **results_table_pos:**
+%        Subset of results_table for regions with positive max .Z
+%        values.
+%
+%   **results_table_neg:**
+%        Subset of results_table for regions with negative max .Z
+%        values.
+%
+%   **table_legend_text:**
+%        Cell array of legend strings describing the columns.
+%
+% :See also:
+%   - region.table (autolabeling of regions with an atlas, more detailed table output)
+%   - posneg_separate
+%   - subdivide_by_atlas
+%
+% ..
+%    Tor Wager, April 2021
+% ..
 
 n_cols = 140;                       % 140 good for HTML reports
 sep_str = repmat('_', 1, n_cols);   % see textwrap

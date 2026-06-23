@@ -193,12 +193,11 @@ function [clusters, varargout] = extract_raw_data(EXPT, clusters, varargin)
 
     switch spm('Ver')
         case 'SPM2'
-            % spm_defaults is a script
+            % SPM2: spm_defaults is a script, not callable here
             disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
-
-        case 'SPM5'
-            % spm_defaults is a function
-            if(isempty(defaults))
+        otherwise
+            % SPM5+, including any future versions
+            if isempty(defaults)
                 spm_defaults();
             end
     end

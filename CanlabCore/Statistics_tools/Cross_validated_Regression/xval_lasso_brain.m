@@ -1,5 +1,11 @@
-function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
-%STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
+function pmodel_obj = xval_lasso_brain(my_outcomes, imgs, varargin)
+%pmodel_obj = xval_lasso_brain(my_outcomes, imgs, varargin)
+%
+% Returns a @predictive_model object. The composite outputs (full_model,
+% covs, data) — each itself a @predictive_model from
+% xval_regression_multisubject — live at pm.legacy_extras.{full_model,
+% covs, data}. Bootstrap/permutation aux fields populated by this
+% wrapper live at pm.legacy_extras.{full_model_aux, covs_aux}.
 %
 % PCA-Lasso based prediction on a set of brain images
 % Tor Wager, Sept. 2009
@@ -86,7 +92,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
         my_outcomes = {imgs.Y};
     end
     
-    inputOptions.all_optional_inputs = varargin;
+    inputParameters.all_optional_inputs = varargin;
     
     for i = 1:length(varargin)
         if ischar(varargin{i})
@@ -138,17 +144,17 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
     end
 
     
-    inputOptions.all_outcomes = my_outcomes;
-    inputOptions.outcome_name = outcome_name;
-    inputOptions.imgs = imgs;
-    inputOptions.covs = covs;
-    inputOptions.covnames = covnames;
-    inputOptions.mask = mask;
-    inputOptions.ndims = ndims;
-    inputOptions.plsstr = plsstr;
-    inputOptions.reversecolors = reversecolors;
-    inputOptions.dochoose_regparams_str = dochoose_regparams_str;
-    inputOptions.holdout_method = holdout_method;
+    inputParameters.all_outcomes = my_outcomes;
+    inputParameters.outcome_name = outcome_name;
+    inputParameters.imgs = imgs;
+    inputParameters.covs = covs;
+    inputParameters.covnames = covnames;
+    inputParameters.mask = mask;
+    inputParameters.ndims = ndims;
+    inputParameters.plsstr = plsstr;
+    inputParameters.reversecolors = reversecolors;
+    inputParameters.dochoose_regparams_str = dochoose_regparams_str;
+    inputParameters.holdout_method = holdout_method;
 
     % set up the mask
     % -------------------------------------------------------------------------
@@ -172,7 +178,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
         maskInfo = iimg_read_img(fullfile(pwd, 'mask.img'), 2);
     end
     
-    inputOptions.maskInfo = maskInfo;
+    inputParameters.maskInfo = maskInfo;
 
     datasets = length(imgs);  % each Subject would constitute a "dataset" for a multi-level/within-subjects analysis
     
@@ -214,7 +220,15 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
     
     %%
 
-    STATS_FINAL = struct('inputOptions', inputOptions);
+    STATS_FINAL = struct('inputParameters', inputParameters);
+
+    % Phase B: per-dataset bad-data detection.
+    omitted_cases    = cell(1, datasets);
+    omitted_features = cell(1, datasets);
+    for s_ = 1:datasets
+        [omitted_cases{s_}, omitted_features{s_}] = ...
+            predictive_model.detect_bad_data(dat{s_}, my_outcomes{s_});
+    end
 
     % Run it: covs only
     % -------------------------------------------------------------------------
@@ -259,12 +273,18 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
     % -------------------------------------------------------------------------
 
     create_figure('Scatterplot: Full model', 1, 2);
-    [r,istr,sig,h] = plot_correlation_samefig(STATS_FINAL.full_model.subjfit{1}, STATS_FINAL.inputOptions.all_outcomes{1});
+    [r,istr,sig,h] = plot_correlation_samefig(STATS_FINAL.full_model.fitted_values.subjfit{1}, STATS_FINAL.inputParameters.all_outcomes{1});
     set(gca,'FontSize', 24)
     xlabel('Cross-validated prediction');
     ylabel('Outcome');
     title('Lasso cross-validation');
-    set(h, 'MarkerSize', 10, 'MarkerFaceColor', [.0 .4 .8], 'LineWidth', 2);
+    % R2026a: plot_correlation_samefig may return a Scatter object that
+    % doesn't accept MarkerSize. Skip cosmetic styling if it errors.
+    try
+        set(h, 'MarkerSize', 10, 'MarkerFaceColor', [.0 .4 .8], 'LineWidth', 2);
+    catch
+        % no-op
+    end
     h = findobj(gca, 'Type', 'Text');
     set(h, 'FontSize', 24)
 
@@ -273,13 +293,13 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
     set(gca,'FontSize', 24)
 
     if ~isempty(covs)
-        pevals = [std(STATS_FINAL.inputOptions.all_outcomes{1}) ...
-            STATS_FINAL.full_model.pred_err_null STATS_FINAL.covs.pred_err ...
-            STATS_FINAL.data.pred_err STATS_FINAL.full_model.pred_err];
+        pevals = [std(STATS_FINAL.inputParameters.all_outcomes{1}) ...
+            STATS_FINAL.full_model.error_metrics.pred_err_null.value STATS_FINAL.covs.error_metrics.pred_err.value ...
+            STATS_FINAL.data.error_metrics.pred_err.value STATS_FINAL.full_model.error_metrics.pred_err.value];
         penames = {'Var(Y)' 'Mean' 'Covs' 'Brain' 'Full'};
     else
-        pevals = [std(STATS_FINAL.inputOptions.all_outcomes{1}) ...
-            STATS_FINAL.full_model.pred_err_null STATS_FINAL.full_model.pred_err];
+        pevals = [std(STATS_FINAL.inputParameters.all_outcomes{1}) ...
+            STATS_FINAL.full_model.error_metrics.pred_err_null.value STATS_FINAL.full_model.error_metrics.pred_err.value];
         penames = {'Var(Y)' 'Mean' 'Brain'};
     end
 
@@ -302,9 +322,9 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
 
     bonf_thresh = norminv(1 - .025 ./ size(dat{1}, 2));
 
-    mystd = std(STATS_FINAL.full_model.vox_weights'); % not actual valid threshold because training sets are not independent
+    mystd = std(STATS_FINAL.full_model.weights.w_perfold'); % not actual valid threshold because training sets are not independent
 
-    [my_ste,t,n_in_column,p,m] = ste(STATS_FINAL.full_model.vox_weights');
+    [my_ste,t,n_in_column,p,m] = ste(STATS_FINAL.full_model.weights.w_perfold');
     Z = (m ./ mystd)';
     
     if isa(mask, 'image_vector')
@@ -357,7 +377,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
         cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [.4 .6 1], [1 0 .4]);
     end
 
-    STATS_FINAL.full_model.cl = cl;
+    STATS_FINAL.full_model_aux.cl = cl;
 
     %cm = spm_orthviews_change_colormap([0 0 1], [1 1 0], [0 0 1], [0 0 1], [0
     %.5 1], [0 .5 1], [.5 .5 .5], [.5 .5 .5], [.7 0 0], [1 .5 0], [1 .5 0], [1 1 0]);
@@ -458,7 +478,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
                     rand('twister',sum(100*clock)) ; % was getting wacky results suggesting randperm is not producing indep. perms...
                 end
                 
-                my_outcomes = STATS_FINAL.inputOptions.all_outcomes;
+                my_outcomes = STATS_FINAL.inputParameters.all_outcomes;
 
                 % permute
                 for s = 1:datasets
@@ -481,12 +501,12 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
 
             end
 
-            STATS_FINAL.covs.permuted.pe_values = pe;
-            STATS_FINAL.covs.permuted.pe_mean = mean(pe);
-            STATS_FINAL.covs.permuted.pe_ci = [prctile(pe, 5) prctile(pe, 95)];
-            STATS_FINAL.covs.permuted.r_values = all_r;
-            STATS_FINAL.covs.permuted.r_mean = mean(all_r);
-            STATS_FINAL.covs.permuted.r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
+            STATS_FINAL.covs_aux.permuted.pe_values = pe;
+            STATS_FINAL.covs_aux.permuted.pe_mean = mean(pe);
+            STATS_FINAL.covs_aux.permuted.pe_ci = [prctile(pe, 5) prctile(pe, 95)];
+            STATS_FINAL.covs_aux.permuted.r_values = all_r;
+            STATS_FINAL.covs_aux.permuted.r_mean = mean(all_r);
+            STATS_FINAL.covs_aux.permuted.r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
             if dosave
                 save STATS_xval_output -append STATS_FINAL
             end
@@ -514,7 +534,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
                     rand('twister',sum(100*clock)) ; % was getting wacky results suggesting randperm is not producing indep. perms...
                 end
                 
-                my_outcomes = STATS_FINAL.inputOptions.all_outcomes;
+                my_outcomes = STATS_FINAL.inputParameters.all_outcomes;
 
                 % permute
                 for s = 1:datasets
@@ -538,12 +558,12 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
             fprintf('%3.2f ', all_r);
             fprintf('\n')
 
-            STATS_FINAL.full_model.permuted.v1000_pe_values = pe;
-            STATS_FINAL.full_model.permuted.v1000_pe_mean = mean(pe);
-            STATS_FINAL.full_model.permuted.v1000_pe_ci = [prctile(pe, 5) prctile(pe, 95)];
-            STATS_FINAL.full_model.permuted.v1000_r_values = all_r;
-            STATS_FINAL.full_model.permuted.v1000_r_mean = mean(all_r);
-            STATS_FINAL.full_model.permuted.v1000_r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
+            STATS_FINAL.full_model_aux.permuted.v1000_pe_values = pe;
+            STATS_FINAL.full_model_aux.permuted.v1000_pe_mean = mean(pe);
+            STATS_FINAL.full_model_aux.permuted.v1000_pe_ci = [prctile(pe, 5) prctile(pe, 95)];
+            STATS_FINAL.full_model_aux.permuted.v1000_r_values = all_r;
+            STATS_FINAL.full_model_aux.permuted.v1000_r_mean = mean(all_r);
+            STATS_FINAL.full_model_aux.permuted.v1000_r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
             if dosave
                 save STATS_xval_output -append STATS_FINAL
             end
@@ -565,7 +585,7 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
                 rand('twister',sum(100*clock)) ; % was getting wacky results suggesting randperm is not producing indep. perms...
             end
                 
-            my_outcomes = STATS_FINAL.inputOptions.all_outcomes;
+            my_outcomes = STATS_FINAL.inputParameters.all_outcomes;
 
             % permute
             for s = 1:datasets
@@ -584,18 +604,24 @@ function STATS_FINAL = xval_lasso_brain(my_outcomes, imgs, varargin)
 
         end
 
-        STATS_FINAL.full_model.permuted.pe_values = pe;
-        STATS_FINAL.full_model.permuted.pe_mean = mean(pe);
-        STATS_FINAL.full_model.permuted.pe_ci = [prctile(pe, 5) prctile(pe, 95)];
+        STATS_FINAL.full_model_aux.permuted.pe_values = pe;
+        STATS_FINAL.full_model_aux.permuted.pe_mean = mean(pe);
+        STATS_FINAL.full_model_aux.permuted.pe_ci = [prctile(pe, 5) prctile(pe, 95)];
 
-        STATS_FINAL.full_model.permuted.r_values = all_r;
-        STATS_FINAL.full_model.permuted.r_mean = mean(all_r);
-        STATS_FINAL.full_model.permuted.r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
+        STATS_FINAL.full_model_aux.permuted.r_values = all_r;
+        STATS_FINAL.full_model_aux.permuted.r_mean = mean(all_r);
+        STATS_FINAL.full_model_aux.permuted.r_ci = [prctile(all_r, 5) prctile(all_r, 95)];
         if dosave
             save STATS_xval_output -append STATS_FINAL
         end
 
     end % if do nonparam
+
+    % Phase B fit metadata + wrap in @predictive_model.
+    STATS_FINAL.omitted_cases    = omitted_cases;
+    STATS_FINAL.omitted_features = omitted_features;
+    STATS_FINAL.fit_type         = 'crossval';
+    pmodel_obj = predictive_model(STATS_FINAL, 'noverbose');
 
 end % main function
 

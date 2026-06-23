@@ -221,13 +221,14 @@ for i = 1:length(varargin)
                             exclusive{1}));
                 end
                 
-                interpInd = find(strcmp('interp',varargin));
+                interpInd = find(strcmp('interp', varargin));
                 if isempty(interpInd)
                     warning('Indexmap requires ''interp'',''nearest'' but these were not specified. Adding them automatically');
                     varargin{end+1} = 'interp';
                     varargin{end+1} = 'nearest';
                     interpStyle = 'nearest';
-                elseif ~strcmp(varargin(interpInd+1),'nearest')
+
+                elseif ~strcmp(varargin(interpInd+1), 'nearest')
                     warning(sprintf('Indexmap requires ''interp'',''nearest'' but ''intep'',%s was specified instead. Automatically changing to ''nearest''',varargin{interpInd+1}));
                     varargin{interpInd+1} = 'nearest';
                     interpStyle = 'nearest';
@@ -241,6 +242,7 @@ for i = 1:length(varargin)
                 catch
                     error('''indexmap'' argument must be followed by an n x 3 matrix of colormap values');
                 end
+
             case 'colormap'
                 for exclusive = {'color','maxcolor','mincolor','onecolor','splitcolor','contour','outline'}
                     
@@ -255,9 +257,25 @@ for i = 1:length(varargin)
                 dosplitcolor = 0; 
                 try
                     cm=varargin{i+1};
+                    try  % behavior was changed; intention was to use default colormap
+                        % if colormap was entered without subsequent
+                        % argument specifying values. 
+                        validateattributes(cm, 'numeric', {'2d'})
+                    catch
+                        % set default colormap based on values
+                        u = unique(currentmap.mapdata(:)); 
+                        if all(u <= 0)
+                            cm = colormap_tor(mincolor, mincolor ./2);
+                        elseif all(u >= 0)
+                            cm = colormap_tor(maxcolor ./ 2, maxcolor);
+                        else
+                            cm = colormap_tor(mincolor, maxcolor);
+                        end
+                    end
                 catch
                     error('''colormap'' argument must be followed by an n x 3 matrix of colormap values');
                 end
+
             case 'splitcolor'
                 
                 docolormap = 1; dosplitcolor = 1;
@@ -301,8 +319,8 @@ for i = 1:length(varargin)
             case 'coronal', myview = 'coronal'; %disp('Warning! NOT implemented correctly yet!!!'), pause(5)
             case 'axial', myview = 'axial';
                 
-            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'compact2', 'nooutline','no_surface', 'nolegend', ...
-                    'colormap', 'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype' 'sourcespace' 'targetsurface' 'compact3', ...
+            case {'wh_montages', 'regioncenters', 'blobcenters', 'nosymmetric', 'nooutline','no_surface', 'nolegend', ...
+                    'solid', 'thresh', 'k', 'nofigure' 'wh_surfaces' 'montagetype' 'sourcespace' 'targetsurface' , ...
                     'disableVis3d'}
                 % not functional, avoid warning
                 % these are passed in to allow flexible functionality in
@@ -317,18 +335,13 @@ for i = 1:length(varargin)
                 k = varargin{i+1};
                 enhance_contrast = @(x1)((1./(1+exp(-k.*x1)))-0.5);
             
-            case {'full','full hcp','full2','nearest', 'interp', 'MNI152NLin2009cAsym'}
+            case {'full','full hcp','full2','nearest', 'MNI152NLin2009cAsym'}
                 continue
 
             case { 'compact', ...
                     'compact2', ...
                     'compact3', ...
-                    'full', ...
                     'multirow', ...
-                    'coronal', ...
-                    'sagittal', ...
-                    'full2', ...
-                    'full hcp', ...
                     'full hcp inflated', ...
                     'hcp inflated', ...
                     'freesurfer inflated', ...
@@ -552,22 +565,27 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
             end
             Z = interp2(myx, myy, slicedat, mynewx, mynewy, interpStyle); % Wani modified this line. 08/11/12
 
+            Z(isnan(Z)) = 0; % tor: 5/4/2026 to fix bug introduced in customcolors
+
             % bogdan: when we plot multiple blobs the interpolation call above
             % can't adjudicate between them and we get overlaps among 
             % neighbors that privilege latter calls to render_blobs. Given
-            % the way this is designed, there's no perfect soluiton because
-            % you need to gie render_blobs information on all blobs to
+            % the way this is designed, there's no perfect solution because
+            % you need to give render_blobs information on all blobs to
             % render simultaneously, but blob information is
             % compartamentalized. We can however improve on the situation
             % by masking out based on magnitude of partial volume effects,
             % which is what we do here.
             slicemask = slicedat;
             slicemask(slicedat~=0)=1;
-            if strcmp(interpStyle,'nearest');
+            if strcmp(interpStyle,'nearest')
                 Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, 'linear');
             else
                 Zmask = interp2(myx, myy, slicemask, mynewx, mynewy, interpStyle);
             end
+
+            Zmask(isnan(Zmask)) = 0; % tor: 5/4/2026 to fix bug introduced in customcolors
+
             Z(Zmask < partial_vol_thresh) = 0;
             
             if dosmooth
@@ -670,11 +688,14 @@ for j = 1:length(wh_slice) % for j = 1:n - modified by Wani 7/28/12
                         w = repmat(Zscaled, [1 1 3]);
 
                         slicecdat = (w .* cdat) + (1 - w) .* cdat2;
+
                     elseif customcolormap
                         %w = repmat(Z, [1 1 3]);
 
                         w = map_function(Z,cmaprange(1),cmaprange(2),1,size(cm,1));
+                        w(isnan(w)) = 1; % replace NaN indices (from NaN Z values) with 1 to avoid indexing errors
                         slicecdat = reshape(cm(round(w),:),[size(Z),3]);
+
                     else
                         w = repmat(Z, [1 1 3]);
                         [Zi, Zj] = find(w > 0);
@@ -897,7 +918,7 @@ function cmaprange = get_default_cmaprange(currentmap, varargin)
     if numel(unique(mapd)) == 1
         % All values are constant
         constant_value = unique(mapd);
-        warning('All non-zero, non-NaN values in mapd are constant. Using default colormap range.');
+        % warning('All non-zero, non-NaN values in mapd are constant. Using default colormap range.');
         cmaprange = [constant_value - 0.1, constant_value + 0.1]; % Default range for constant values
         return;
     end
@@ -950,8 +971,8 @@ end
 function val = map_function(c,x1,x2,y1,y2)
     if x2 == x1
         % this occurs when we have a single value. We arbitrarily set it to
-        % the middle value
-        range_val = (y2-y1)/2;
+        % the middle value. Use ones(size(c)) to preserve the shape of c.
+        range_val = (y2-y1)/2 * ones(size(c));
     else
         % softmax here keeps negative values from extending below the colormap
         % range, which would otherwise make those values gray, since the lowest

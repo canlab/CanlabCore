@@ -75,22 +75,19 @@ function [m,V,cl] = clusters2mask(cl,V,varargin)
         end
 
         switch spm('Ver')
-        case 'SPM2'
-            % spm_defaults is a script
-            disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
-
-        case 'SPM5'
-            % spm_defaults is a function
-            
-            if(isempty(defaults))
-                spm_defaults();
-            end
-            
-            if ~isfield(V, 'dt')
-                warning('Using default datatype; Enter dt field in input structure to use yours.');
-                V.dt(1) = spm_type('float32');
-                V.dt(2) = 1;
-            end
+            case 'SPM2'
+                % SPM2: spm_defaults is a script, not callable here
+                disp('WARNING: spm defaults not set for spm2. Make sure your defaults are set correctly');
+            otherwise
+                % SPM5+, including any future versions
+                if isempty(defaults)
+                    spm_defaults();
+                end
+                if ~isfield(V, 'dt')
+                    warning('Using default datatype; Enter dt field in input structure to use yours.');
+                    V.dt(1) = spm_type('float32');
+                    V.dt(2) = 1;
+                end
         end
     
         V.fname = fname;

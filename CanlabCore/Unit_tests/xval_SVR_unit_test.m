@@ -1,0 +1,62 @@
+function xval_SVR_unit_test()
+% xval_SVR_unit_test  Smoke test of xval_SVR on the DPSP Hot-Warm contrast.
+%
+% Predicts a synthetic continuous outcome from Hot-Warm contrast maps
+% (one per subject) via cross-validated linear SVR. Asserts that the
+% wrapper returns a @predictive_model object with consistent
+% categorised <-> legacy alias values.
+%
+% Run: cd to this directory, then `xval_SVR_unit_test`.
+
+    fprintf('=== xval_SVR_unit_test ===\n');
+
+    canlabcore_dir = fileparts(fileparts(which('fmri_data')));
+    sample_dir = fullfile(canlabcore_dir, 'Sample_datasets', ...
+                          'DPSP_pain_rejection_participant_maps');
+    H = load(fullfile(sample_dir, 'DPSP_single_subject_images_hot.mat'));
+    W = load(fullfile(sample_dir, 'DPSP_single_subject_images_warm.mat'));
+    hot_vs_warm = image_math(H.single_subject_images_hot, ...
+                             W.single_subject_images_warm, 'minus');
+
+    rng(0);
+    [p, n] = size(hot_vs_warm.dat);
+    keep_vox = randsample(p, min(3000, p));
+    X = double(hot_vs_warm.dat(keep_vox, :))';
+    % Synthetic predictable continuous outcome.
+    b_true = zeros(size(X, 2), 1);
+    b_true(1:30) = randn(30, 1);
+    Y = X * b_true + 0.5 * std(X * b_true) * randn(n, 1);
+    id = (1:n)';
+
+    pmodel_obj = xval_SVR(X, Y, id, 'nooptimize', 'norepeats', ...
+                                    'nobootstrap', 'noverbose', 'noplot');
+
+    assert(isa(pmodel_obj, 'predictive_model'), ...
+        'Expected predictive_model, got %s', class(pmodel_obj));
+    assert(pmodel_obj.is_fitted, 'is_fitted false');
+    assert(pmodel_obj.is_regressor, 'Y is continuous, expected is_regressor true');
+    fprintf('  class = %s, is_fitted = %d, is_regressor = %d\n', ...
+        class(pmodel_obj), pmodel_obj.is_fitted, pmodel_obj.is_regressor);
+
+    % Canonical-path access (legacy flat aliases removed).
+    assert(~isempty(pmodel_obj.Y),                                                'Y empty');
+    assert(~isempty(pmodel_obj.fitted_values.yfit),                               'yfit empty');
+    assert(~isempty(pmodel_obj.weights.w),                                        'weights.w empty');
+    assert(~isempty(pmodel_obj.error_metrics.prediction_outcome_r.value),         'prediction_outcome_r empty');
+    assert(~isempty(pmodel_obj.ml_model),                                         'ml_model empty');
+    fprintf('  Canonical-path access OK\n');
+
+    fprintf('  cv: r = %.3f, d = %.2f\n', ...
+        pmodel_obj.error_metrics.prediction_outcome_r.value, ...
+        pmodel_obj.error_metrics.d_singleinterval.value);
+
+    % --- fit_type + omitted markers (Phase B) ---
+    assert(strcmp(pmodel_obj.fit_type, 'crossval'), 'fit_type should be crossval');
+    assert(islogical(pmodel_obj.omitted_cases),    'omitted_cases must be logical');
+    assert(islogical(pmodel_obj.omitted_features), 'omitted_features must be logical');
+    fprintf('  fit_type=%s, omitted_cases=%d, omitted_features=%d\n', ...
+        pmodel_obj.fit_type, sum(pmodel_obj.omitted_cases), sum(pmodel_obj.omitted_features));
+
+    pmodel_obj.validate_object('noverbose');
+    fprintf('xval_SVR_unit_test: PASS\n');
+end

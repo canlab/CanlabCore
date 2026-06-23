@@ -1,14 +1,51 @@
 function [obj, has_pmaps, has_index, missing_regions] = check_properties(obj, varargin)
-% Check properties and enforce some variable types
+% check_properties Check atlas object properties and enforce variable types.
 %
-% obj = check_properties(obj)
+% Validate and clean up the fields of an atlas object: enforce sparse
+% double probability maps, integer-valued .dat with placeholder labels
+% and descriptions for any missing entries, consistent row/column shape
+% for label fields, and (optionally) a compressed/consecutive integer
+% index when regions are missing.
 %
-% Optional arguments:
-% 'compress_index' : if index numbers are not consecutive integers, some functions,
-%                    like select_atlas_subset and num_regions, will not work
-%                    This rebuilds the index.  This could happen after resampling or masking.
-%                    If you have probability maps entered, probability_maps_to_region_index will do
-%                    this. But if not, you may want to do this.
+% :Usage:
+% ::
+%
+%     [obj, has_pmaps, has_index, missing_regions] = check_properties(obj, [optional inputs])
+%
+% :Inputs:
+%
+%   **obj:**
+%        An atlas-class object.
+%
+% :Optional Inputs:
+%
+%   **'compress_index':**
+%        If index numbers in obj.dat are not consecutive integers, some
+%        functions (select_atlas_subset, num_regions) will not work
+%        correctly. This option rebuilds the index, which is useful after
+%        resampling or masking. If probability maps are present,
+%        probability_maps_to_region_index already performs this; otherwise
+%        you may want to use this flag.
+%
+% :Outputs:
+%
+%   **obj:**
+%        Atlas object with cleaned-up properties.
+%
+%   **has_pmaps:**
+%        Logical: true if obj has valid probability_maps with the right
+%        number of columns.
+%
+%   **has_index:**
+%        Logical: true if obj.dat is non-empty.
+%
+%   **missing_regions:**
+%        Vector of region index values that have no assigned voxels.
+%
+% :See also:
+%   - num_regions
+%   - probability_maps_to_region_index
+%   - select_atlas_subset
 
 % Defaults
 

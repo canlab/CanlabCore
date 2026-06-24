@@ -251,8 +251,23 @@ classdef fmridisplay < handle
 
             
         end % constructor function
-        
+
     end % methods
-    
-    
+
+
+    % Internal / helper methods: still callable, but Hidden so they don't
+    % clutter the user-facing control surface (methods(obj), tab-completion).
+    % Bodies live in the separate @fmridisplay/*.m files; these are signature-
+    % only declarations that just set the Hidden attribute. Hidden (not private)
+    % so existing external callers keep working (e.g. activate_figures is used
+    % by help-example scripts, refresh by tests).
+    methods (Hidden)
+        [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2, varargin)
+        obj = prune_dead_views(obj, doverbose)
+        obj = refresh(obj, varargin)
+        obj = render_layer_surfaces(obj, k, wh_surface)
+        obj = update_controller(obj)
+    end
+
+
 end

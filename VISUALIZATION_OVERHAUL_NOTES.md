@@ -61,6 +61,12 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
 - **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
   to `gcf` — previously a surface legend could land on the montage window. New
   `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).
+- **Public vs internal method surface**: the helper methods `activate_figures`,
+  `prune_dead_views`, `refresh`, `render_layer_surfaces`, `update_controller` are declared
+  `Hidden` (signature-only block in `fmridisplay.m`), so they no longer clutter
+  `methods(obj)`/tab-completion. `Hidden` (not `Access=private`) keeps them callable, which
+  matters: `activate_figures` is used by help-example scripts and `refresh` by tests. All
+  user-facing methods stay public.
 - **Robust to closed windows**: `prune_dead_views` drops montage/surface views whose
   figures the user closed (with a short note); called at the top of `addblobs`,
   `removeblobs`, and `refresh`, so closing a window no longer causes

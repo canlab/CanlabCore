@@ -47,6 +47,29 @@ end
 % Tests
 % ------------------------------------------------------------------------
 
+function test_public_vs_internal_method_surface(tc)
+% Internal/helper methods are Hidden (off the user-facing surface) but still
+% callable; the user-facing methods stay public.
+m = methods('fmridisplay');
+internal = {'activate_figures', 'prune_dead_views', 'refresh', ...
+            'render_layer_surfaces', 'update_controller'};
+for i = 1:numel(internal)
+    tc.verifyFalse(ismember(internal{i}, m), ...
+        sprintf('%s should be Hidden from the public method surface', internal{i}));
+end
+publicm = {'addblobs', 'controller', 'montage', 'removeblobs', 'rethreshold', ...
+           'set_colormap', 'set_opacity', 'surface', 'remove_legend', 'addpoints', 'legend'};
+for i = 1:numel(publicm)
+    tc.verifyTrue(ismember(publicm{i}, m), ...
+        sprintf('%s should be a public method', publicm{i}));
+end
+% Hidden (not private): the internal methods must remain callable.
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2); o2 = addblobs(o2, t, 'noverbose');
+tc.verifyWarningFree(@() refresh(o2));
+end
+
+
 function test_is_handle_class(tc)
 % fmridisplay must inherit from handle for stateful, single-source-of-truth use.
 mc = meta.class.fromName('fmridisplay');

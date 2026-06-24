@@ -92,7 +92,7 @@ function opts = colormap_options()
 % Dropdown choices. The max/min-colour ramps render reliably on montages and
 % surfaces; 'solid colour…' opens the built-in MATLAB colour picker. (True
 % perceptual maps like inferno/viridis are deferred — see VISUALIZATION_OVERHAUL_NOTES.md.)
-opts = {'split (hot/cool)', 'warm (red-yellow)', 'cool (blue-cyan)', ...
+opts = {'split (hot/cool)', 'mango', 'warm (red-yellow)', 'cool (blue-cyan)', ...
         'winter (blue-green)', 'solid colour…'};
 end
 
@@ -175,6 +175,9 @@ switch choice
     case 'split (hot/cool)'
         set_colormap(obj, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''splitcolor'', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, ''layers'', %d)', vname, k));
+    case 'mango'
+        set_colormap(obj, 'splitcolor', {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}, 'layers', k);
+        echo_code(vname, sprintf('set_colormap(%s, ''splitcolor'', {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}, ''layers'', %d)', vname, k));
     case 'warm (red-yellow)'
         set_colormap(obj, 'maxcolor', [1 1 0], 'mincolor', [1 0 0], 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''maxcolor'', [1 1 0], ''mincolor'', [1 0 0], ''layers'', %d)', vname, k));
@@ -236,7 +239,14 @@ end
 
 function lbl = current_colormap_label(args, opts) %#ok<INUSD>
 % Map the layer's render_args back to a dropdown label (always a valid item).
-if any(strcmp(args, 'color'))
+if any(strcmp(args, 'splitcolor'))
+    sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
+    if iscell(sc) && numel(sc) == 4 && isequal(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]})
+        lbl = 'mango';
+    else
+        lbl = 'split (hot/cool)';
+    end
+elseif any(strcmp(args, 'color'))
     lbl = 'solid colour…';
 elseif any(strcmp(args, 'maxcolor'))
     mx = args{find(strcmp(args, 'maxcolor'), 1) + 1};

@@ -119,6 +119,33 @@ added after blobs; collapsing the duplicate isosurface/orthviews engines; deleti
   (top visible wins). It's moderate, not a one-liner, and shares machinery with the deferred
   multi-layer surface compositing, so do it together with that.
 
+### Deferred: one central value→colour mapping, two renderers (T. Wager)
+
+The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
+duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each
+re-implement how a layer's values map to colours for split / single-ramp / solid / index
+colormaps, which is exactly why a "warm" or split map looks different (or wrong) on surfaces
+vs montages, and why colour fields drift out of sync (e.g. the `legend` `mincolor` bug).
+
+Target design:
+1. **One central colour-mapping module.** Given a layer's colormap *type* (single ramp,
+   split +/- , solid, indexed) and its parameters (colours, cmaprange/threshold), produce a
+   single canonical **value→colour map** (e.g. a function or a resolved lookup table +
+   the value range), plus the matching legend spec. This is the single source of truth;
+   `set_colormap` updates it and everything else reads it (montage, surface, legend,
+   controller), so nothing goes stale.
+2. **Pass that map to the renderers, which differ in mechanism.** Slices keep their per-slice
+   `surf` objects; surfaces should render in **true-colour RGB** (N×3 `FaceVertexCData`,
+   `CDataMapping` direct) computed from the central map — this also unlocks the deferred
+   **multi-layer surface compositing** (composite RGB across layers, top wins per vertex) and
+   **per-layer surface visibility**, neither of which is cleanly possible with the current
+   indexed-colour, single-axes-colormap surface path.
+3. **Outcome:** identical colours across montage/surface/legend, no field-sync bugs, and a
+   natural home for new colormaps (mango, niivue inferno/viridis, …) defined once.
+
+This subsumes and is the right way to do the earlier "unify `render_blobs` + `render_on_surface`",
+"composited multi-layer surfaces", and "true-colour RGB surfaces" items.
+
 ### Deferred: make the bypass methods return a managed object (§7.4)
 
 `image_vector.surface(t, …)` and `image_vector.orthviews(t, …)` still return raw graphics

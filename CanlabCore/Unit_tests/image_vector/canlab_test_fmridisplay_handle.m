@@ -213,6 +213,21 @@ tc.verifyTrue(has_legend(), 'adding a surface rendered the existing blob layer o
 end
 
 
+function test_legend_after_set_colormap(tc)
+% legend(obj) must not error after set_colormap switches a layer to a single
+% colormap (warm/cool/solid). Previously the stale 2-row split mincolor made
+% legend take the split path and index past the 2-element cmaprange.
+tc.assumeTrue(usejava('jvm'), 'legend rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2); o2 = addblobs(o2, t, 'noverbose');
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);   % warm (single ramp)
+tc.verifyEqual(size(o2.activation_maps{end}.mincolor, 1), 1, 'mincolor kept single-row in sync');
+tc.verifyWarningFree(@() legend(o2));
+o2 = set_colormap(o2, 'color', [1 .4 .9]);                          % solid
+tc.verifyWarningFree(@() legend(o2));
+end
+
+
 function test_surface_colormap_follows_maxmin_color(tc)
 % maxcolor/mincolor (warm/cool/winter) must actually colour the surface, not
 % fall back to render_on_surface's default split hot/cool. Warm = red->yellow

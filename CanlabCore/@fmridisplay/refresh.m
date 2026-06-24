@@ -79,11 +79,16 @@ for k = wh_layers
 
         if numel(obj.montage) < i, continue, end
 
-        [blobhan, cmaprange] = render_blobs(currentmap, obj.montage{i}, obj.SPACE, layer.render_args{:});
+        [blobhan, cmaprange, mincolor, maxcolor] = render_blobs(currentmap, obj.montage{i}, obj.SPACE, layer.render_args{:});
 
         if ~isempty(blobhan)
             obj.activation_maps{k}.blobhandles = [obj.activation_maps{k}.blobhandles; blobhan];
             obj.activation_maps{k}.cmaprange = cmaprange;
+            % Keep the legend-defining colour fields in sync with the current
+            % colormap, so legend() (which infers split-vs-single from the size of
+            % .mincolor) doesn't read stale split-colour values after set_colormap.
+            if ~isempty(mincolor), obj.activation_maps{k}.mincolor = mincolor; end
+            if ~isempty(maxcolor), obj.activation_maps{k}.maxcolor = maxcolor; end
         end
     end
 

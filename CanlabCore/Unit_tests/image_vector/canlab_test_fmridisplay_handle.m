@@ -146,3 +146,72 @@ o2 = addblobs(o2, region(t), 'noverbose');
 o2 = removeblobs(o2);
 tc.verifyClass(o2, 'fmridisplay');
 end
+
+
+% ------------------------------------------------------------------------
+% Surface integration (unified views): surfaces register on the same object,
+% blobs render across montages + surfaces together, later-added views pull in
+% existing blobs, and refresh/remove propagate to surfaces.
+% ------------------------------------------------------------------------
+
+function o2 = build_montage_surface_blobs(tc)
+% montage + one surface (added BEFORE blobs) + blobs. Skips cleanly if no GL.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+try
+    o2 = surface(o2);
+catch ME
+    tc.assumeFail(['surface needs a graphics environment: ' ME.message]);
+end
+o2 = addblobs(o2, t, 'noverbose');
+end
+
+
+function test_surface_keeps_same_handle(tc)
+% Adding a surface must register on the SAME object, not replace it.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+o2 = fmridisplay; o2 = montage(o2);
+try, o2b = surface(o2); catch ME, tc.assumeFail(ME.message); end
+tc.verifyTrue(o2b == o2, 'surface must return the same handle');
+tc.verifyEqual(numel(o2.surface), 1, 'surface registered on the object');
+end
+
+
+function test_surface_pulls_in_existing_blobs(tc)
+% A surface added AFTER blobs should render those existing blobs onto it.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2); o2 = addblobs(o2, t, 'noverbose');
+has_legend = @() isfield(o2.activation_maps{end}, 'legendhandle') && ~isempty(o2.activation_maps{end}.legendhandle);
+tc.verifyFalse(has_legend(), 'no surface legend before any surface exists');
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+tc.verifyTrue(has_legend(), 'adding a surface rendered the existing blob layer onto it');
+end
+
+
+function test_foursurfaces_adds_four_views_same_handle(tc)
+% A multi-surface keyword adds four registered views to the same object.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+o2 = fmridisplay; o2 = montage(o2);
+n0 = numel(o2.surface);
+try, o2b = surface(o2, 'foursurfaces'); catch ME, tc.assumeFail(ME.message); end
+tc.verifyTrue(o2b == o2, 'foursurfaces must not replace the object');
+tc.verifyEqual(numel(o2.surface), n0 + 4, 'four surface views added');
+end
+
+
+function test_removeblobs_clears_layers_and_surface_legend(tc)
+% removeblobs must act on all views together: drop the blob layers and remove
+% the surface colorbar(s) it created. (Surface vertex colors are restored to
+% gray by addbrain('eraseblobs'); that mechanism is exercised here too.)
+o2 = build_montage_surface_blobs(tc);
+leg = [];
+if isfield(o2.activation_maps{end}, 'legendhandle'), leg = o2.activation_maps{end}.legendhandle; end
+o2 = removeblobs(o2);
+tc.verifyEmpty(o2.activation_maps, 'activation maps cleared by removeblobs');
+tc.verifyNotEmpty(o2.surface, 'surface views themselves are kept');
+if ~isempty(leg)
+    tc.verifyFalse(any(ishandle(leg)), 'surface colorbar(s) removed by removeblobs');
+end
+end

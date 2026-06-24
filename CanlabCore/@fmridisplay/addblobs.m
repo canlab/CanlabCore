@@ -469,59 +469,13 @@ end
 
 % Surfaces
 % -------------------------------------------------------------------------
+% Render this layer onto every (targeted) registered surface view. The actual
+% drawing is shared with surface() pull-in and refresh() via the
+% render_layer_surfaces method, which derives colors from the layer's stored
+% render_args so all views stay in sync. See VISUALIZATION_OVERHAUL_NOTES.md.
 
-if addsurfaceblobs
-    for i = wh_surface
-        
-        if length(obj.surface) < i
-            warning('Requested surface does not exist! Check input surface indices.');
-            continue
-        end
-        
-        % Set color maps for + / - values
-        if dosplitcolor || doonecolor || domaxcolor || domincolor
-            pos_colormap = colormap_tor(minposcolor, maxposcolor);
-            neg_colormap = colormap_tor(minnegcolor, maxnegcolor);
-        end
-        
-        % OLD method: cluster_surf
-        % cluster_surf(cl, depth, 'heatmap', 'colormaps', pos_colormap, neg_colormap, obj.surface{i}.object_handle);
-        
-        img = region2imagevec(cl);
-        if dosplitcolor
-
-            if exist('cmaprange', 'var')
-                % Keep the same color mapping as before
-                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, 'cmaprange', cmaprange, varargin{:});
-            else
-                [~,bar1axis,bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, varargin{:});
-            end
-
-%             o2.activation_maps{1}.cmaprange
-        else
-            if isempty(indexmap)
-                if exist('cmaprange', 'var')
-                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, 'cmaprange', cmaprange, varargin{:});
-                else
-                    [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:});
-                end
-
-            else
-                try
-                [~, bar1axis, bar2axis] = render_on_surface(img, obj.surface{i}.object_handle, varargin{:},'colormap', indexmap, 'indexmap');
-                catch
-                    keyboard
-                end
-            end
-        end
-        if ismember('legendhandle',fieldnames(obj.activation_maps{wh_to_display}))
-            % if we plot multiple surfaces then their legends will overlap.
-            % We only need to keep the exteriormost one
-            delete(obj.activation_maps{wh_to_display}.legendhandle);    
-        end
-        obj.activation_maps{wh_to_display}.legendhandle = [bar1axis, bar2axis];
-
-    end
+if addsurfaceblobs && ~isempty(obj.surface)
+    obj = render_layer_surfaces(obj, wh_to_display, wh_surface);
 end
 
 end  % main function

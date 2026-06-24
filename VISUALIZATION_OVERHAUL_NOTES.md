@@ -23,8 +23,20 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
   original, e.g. a `statistic_image`, enabling re-threshold up *and* down),
   `render_args` (the exact option set passed to `render_blobs`), `wh_montage`,
   `wh_surface`, and `applied_threshold`.
-- **New in-place mutator methods** (re-render from retained source, montage views):
+- **New in-place mutator methods** (re-render from retained source):
   `refresh`, `rethreshold`, `set_colormap`, `set_opacity`.
+- **Surfaces are now unified views** (§4.2 / §7.4). Surface drawing is factored into a
+  shared `render_layer_surfaces` method that derives colors from the layer's stored
+  `render_args`, and `addblobs`, `surface`, and `refresh` all route through it. Concretely:
+  (a) `surface(o2)` registers on the **same** handle and **pulls in** any blob layers that
+  already exist, so a surface added *after* `addblobs` still shows the blobs;
+  (b) `addblobs`/`removeblobs` act on montages **and** surfaces together (remove restores
+  the gray anatomy via `addbrain('eraseblobs')`);
+  (c) `refresh` — and therefore `rethreshold`/`set_colormap`/`set_opacity` — re-render
+  surfaces too;
+  (d) multi-surface keywords `'foursurfaces'` / `'foursurfaces_hcp'` /
+  `'foursurfaces_freesurfer'` add the four canonical views (L/R lateral + L/R medial) as
+  separate registered views on the same object instead of being silently ignored.
 - **Controller widget**: `controller(obj)` opens a `uifigure` bound to the instance
   (back-pointer in figure appdata under `'fmridisplay_obj'`), with per-layer opacity
   slider, colormap dropdown, p-threshold field, and visibility toggle — the MATLAB-side
@@ -41,10 +53,12 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
 **Still deferred** (the doc's own "separate cleanups", §7.3; high-risk refactors of
 1000+ line files that would jeopardize the green-walkthroughs bar — left for a focused
 follow-up now that the layer architecture exists to support them): unifying
-`render_blobs` + `render_on_surface` into one color/threshold pipeline; routing surface
-and orthview refresh through the same layer mechanism (refresh currently covers montage
-views only); collapsing the duplicate isosurface/orthviews engines; deleting deprecated
-`surface_cutaway`.
+`render_blobs` + `render_on_surface` into one color/threshold pipeline; routing **orthview**
+refresh through the same layer mechanism (montages and surfaces are now unified; orthviews
+are not yet); composited multi-layer surfaces (surfaces currently show the last-rendered
+layer, since `render_on_surface` overwrites vertex colors); symmetric pull-in for montages
+added after blobs; collapsing the duplicate isosurface/orthviews engines; deleting
+deprecated `surface_cutaway`.
 
 ---
 

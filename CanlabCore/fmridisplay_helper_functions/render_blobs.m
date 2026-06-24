@@ -466,12 +466,14 @@ end
 % end
 % wh_slice(k) = 0;
 
-k = unique(wh_slice); k(k==0) = [];
-voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
-
-if doverbose
-    fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
-end
+% Per-slice voxel-count readout silenced by request (no longer needed). To
+% re-enable, uncomment the block below.
+% k = unique(wh_slice); k(k==0) = [];
+% voxshown = sum(numvox(k)); %voxshown = sum(numvox(unique(wh_slice))); % (to here)
+%
+% if doverbose
+%     fprintf('%s montage: %3.0f voxels displayed, %3.0f not displayed on these slices\n', myview, voxshown, sum(numvox) - voxshown);
+% end
 
 % -------------------------------------------------------------------------
 % SETUP smoothing, contours

@@ -49,9 +49,21 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %
 %
 %   **treat_zero_as_data**
-%       In some certain situations, zero value within data.obj could be
-%       meaningful. e.g, data.obj is a thresholded map (0 means value underthrethold 
-%       rather than missing value) or binary map.
+%       The default behavior is to calculate image similarity on complete cases pairwise. 
+%       Complete cases means a voxel has a valid value (non-zero, non-NaN) for both images being correlated. 
+%       Otherwise, values that are zero in one image and non-zero and another will be 
+%       part of the correlation and will have a strong influence on the correlation value.
+%       Zero is treated as a missing value by convention (as per SPM
+%       standards).
+%
+%       In some situations, e.g., when correlating binary masks (1/0 for both) or correlating 
+%       a binary mask with another image, the zero value within data.obj could be
+%       meaningful. Here data.obj is a thresholded map (0 means value under-threshold 
+%       rather than being a missing value) or binary map. In this case, you
+%       can use 'treat_zero_as_data', 1 to treat the zeros as data values.
+%
+%   **exclude_zero_mask_values**
+%       Excludes zero values in pattern_weights input
 %
 % :Outputs:
 %   **similarity_output**
@@ -126,6 +138,8 @@ function similarity_output = canlab_pattern_similarity(dat, pattern_weights, var
 %   - added option for treating zero value in the map as real value rather
 %   than missing data
 %
+% 2026/01/13 Lukas Van Oudenhove
+%   - fixed a bug in main function and subfunction for sim_metric = corr
 
 
 % ---------------------------------
@@ -196,8 +210,6 @@ else
 end
 
 
-
-
 % ---------------------------------
 % Main similarity calculation
 % ---------------------------------
@@ -217,6 +229,15 @@ else
         switch sim_metric
             case 'corr'
                 
+                if exclude_zero_mask_values
+    
+                    badvals_mask = pattern_weights(:,i) == 0 | isnan(pattern_weights(:,i));
+    
+                else
+
+                    badvals_mask = isnan(pattern_weights(:,i));
+
+                end
                
                 similarity_output(:, i) = image_correlation(dat, pattern_weights(:, i), badvals);
             case 'cosine'

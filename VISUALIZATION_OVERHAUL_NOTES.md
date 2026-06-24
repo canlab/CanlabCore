@@ -92,12 +92,32 @@ handles (unlike `montage(t)`, which returns a managed `fmridisplay`). Plan:
    exposes addbrain's full surface catalog to the managed path with almost no new fmridisplay
    code: collapse the large hard-coded `if/elseif dir` switch into a default
    `h = addbrain(dir, varargin{:})` (keeping only the cases that need a specific `view()`/
-   layout), and let addbrain validate / error on unknown keywords.
-   - **Caveat:** the *parametric* `surface_cutaway` types (`coronal_slabs`, `cutaway` with
-     `ycut_mm`, etc.) live in `@region/surface` / `surface_cutaway`, not `addbrain`, so those
-     would still need either teaching `addbrain`, or wrapping the `region.surface` handles
-     into `obj.surface{}` view structs (register without double-rendering). Do the
-     addbrain-keyword set first; treat the cutaway engine as a second step.
+   layout), and let addbrain validate / error on unknown keywords (it has 69 cases + an
+   `otherwise: error('Unknown method.')`).
+   - **Cutaways/slabs are already covered by addbrain** (corrects an earlier caveat):
+     `addbrain.m:844` dispatches `'cutaway' / 'left_cutaway' / 'right_cutaway' /
+     'right_cutaway_x8' / 'coronal_slabs' / 'coronal_slabs_4' / 'coronal_slabs_5' /
+     '*_insula_slab' / 'accumbens_slab'` to `canlab_canonical_brain_surface_cutaways(meth,
+     varargin{:})`. So the addbrain pass-through covers cutaways and coronal slabs in ONE
+     mechanism — no separate cutaway step needed. (Only nuance: the fully *parametric*
+     `surface(r, 'cutaway', 'ycut_mm', -30)` form in `@region/surface` uses the older
+     `surface_cutaway` engine, a slightly different beast than addbrain's
+     `canlab_canonical_brain_surface_cutaways`; the named keywords like `coronal_slabs_4`
+     are the supported managed path.)
+3. **The real `@fmridisplay/surface` work** (why this isn't a quick piecemeal change): the
+   method currently sets `dir` only from the explicit `'direction'` keyword and never treats
+   a *bare* token as a direction (except the `foursurfaces*` special-case). To accept bare
+   addbrain keywords like `surface(o2, 'coronal_slabs_4')`, the option parsing must learn to
+   pull a direction token out of `varargin`, strip the fmridisplay control opts
+   (`direction`/`orientation`/`axes`), forward the rest to `addbrain`, and apply sensible
+   post-render `view()`/lighting (some surfaces set their own). Wants per-surface-type
+   testing, so do it here, not by hand-adding cases.
+4. **Default surface = `left_cutaway`** (requested): change the default `dir` in
+   `@fmridisplay/surface` (currently `'hires right'`) and the no-keyword default of
+   `image_vector.surface` (currently `@region/surface`'s default). This is back-compat-
+   affecting (changes what `surface(o2)` / `surface(t)` shows with no keyword, incl. in
+   walkthroughs/scripts), so make it a deliberate decision in this phase rather than a
+   standalone tweak.
 
 ---
 

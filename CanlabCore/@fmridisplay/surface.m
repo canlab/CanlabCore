@@ -464,6 +464,10 @@ curfig = get(groot, 'CurrentFigure');
 if isempty(curfig) || ~isempty(findobj(curfig, 'Type', 'axes'))
     figure;
 end
+layout_fig = gcf;
+set(layout_fig, 'Color', 'w');                       % white background behind the surfaces
+
+n_before = numel(obj.surface);
 
 rest = varargin;
 rest(strcmp(rest, multi)) = [];                       % drop the multi keyword
@@ -492,6 +496,16 @@ configs = { ...
 for c = 1:numel(configs)
     cfg = configs{c};
     obj = surface(obj, 'direction', cfg{1}, 'orientation', cfg{2}, 'axes', cfg{3}, rest{:});
+end
+
+% Turn off the axis box/background for the surfaces just added, so we don't see
+% an axes frame behind them.
+for s = (n_before + 1):numel(obj.surface)
+    axh = obj.surface{s}.axis_handles;
+    axh = axh(ishandle(axh));
+    if ~isempty(axh)
+        set(axh, 'Visible', 'off', 'Color', 'none');
+    end
 end
 
 end

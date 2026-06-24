@@ -467,8 +467,6 @@ end
 layout_fig = gcf;
 set(layout_fig, 'Color', 'w');                       % white background behind the surfaces
 
-n_before = numel(obj.surface);
-
 rest = varargin;
 rest(strcmp(rest, multi)) = [];                       % drop the multi keyword
 for kw = {'direction', 'orientation', 'axes'}         % drop any single-view controls
@@ -498,15 +496,12 @@ for c = 1:numel(configs)
     obj = surface(obj, 'direction', cfg{1}, 'orientation', cfg{2}, 'axes', cfg{3}, rest{:});
 end
 
-% Turn off the axis box/background for the surfaces just added, so we don't see
-% an axes frame behind them.
-for s = (n_before + 1):numel(obj.surface)
-    axh = obj.surface{s}.axis_handles;
-    axh = axh(ishandle(axh));
-    if ~isempty(axh)
-        set(axh, 'Visible', 'off', 'Color', 'none');
-    end
-end
+% Turn off the axis box/background for EVERY axes in the layout figure — the four
+% surface axes, the hidden colorbar axes, and any stray default axes created
+% during rendering (which otherwise shows a frame behind the surfaces). The
+% surface patches are children of the axes and stay visible; colorbars are
+% separate objects and are unaffected.
+set(findobj(layout_fig, 'Type', 'axes'), 'Visible', 'off');
 
 end
 

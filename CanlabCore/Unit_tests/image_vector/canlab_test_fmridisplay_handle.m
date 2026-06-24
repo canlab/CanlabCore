@@ -237,6 +237,63 @@ tc.verifyEqual(o2.surface{1}.object_handle(1).FaceAlpha, 0.4, 'AbsTol', 1e-9, ..
 end
 
 
+function test_removeblobs_survives_closed_surface_figure(tc)
+% Closing a surface window must not break removeblobs: the dead view is pruned.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+f  = figure;
+try, o2 = surface(o2); catch ME, close(f); tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');
+close(f);                                  % user closes the surface window
+o2 = removeblobs(o2);                      % must not error
+tc.verifyEmpty(o2.surface, 'closed surface view pruned from the object');
+end
+
+
+function test_montage_layer_source_is_statistic_image(tc)
+% montage(t) must retain the statistic_image as the layer source so the layer
+% can be re-thresholded by p-value later.
+t = canlab_get_sample_thresholded_t(0.01);
+o2 = montage(t);
+tc.verifyClass(o2.activation_maps{1}.source_object, 'statistic_image');
+end
+
+
+function test_rethreshold_raw_for_image_vector_layer(tc)
+% A non-statistic_image layer (mask/mean) re-thresholds by raw value.
+dat = canlab_get_sample_fmri_data();
+m   = mean(dat);                            % fmri_data, no p-values
+o2  = montage(m);
+k   = numel(o2.activation_maps);
+n0  = sum(o2.activation_maps{k}.mapdata(:) ~= 0);
+o2  = rethreshold(o2, 0.5);                 % raw magnitude cutoff |x| > 0.5
+n1  = sum(o2.activation_maps{k}.mapdata(:) ~= 0);
+tc.verifyLessThan(n1, n0, 'raw rethreshold reduced the displayed voxels');
+end
+
+
+function test_controller_autoupdates_and_reflects_state(tc)
+% The controller rebuilds when a layer is added, and its colormap dropdown
+% reflects the layer's current colors.
+tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
+    'controller widget requires an interactive figure window');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = montage(t);
+fig = controller(o2);
+tc.addTeardown(@() delete(fig(isvalid(fig))));
+n_before = numel(findobj(fig, 'Type', 'uipanel'));
+o2 = addblobs(o2, region(t), 'noverbose');  % add a 2nd layer
+n_after = numel(findobj(fig, 'Type', 'uipanel'));
+tc.verifyEqual(n_after, n_before + 1, 'controller auto-added a panel for the new layer');
+% colormap state reflected
+o2 = set_colormap(o2, 'color', [1 0 0], 'layers', 1);
+controller(o2);                              % rebuild in place
+dd = findobj(o2.controller_handle, 'Type', 'uidropdown');
+tc.verifyTrue(any(strcmp({dd.Value}, 'solid red')), 'a dropdown reflects the solid-red layer');
+end
+
+
 function test_removeblobs_clears_layers_and_surface_legend(tc)
 % removeblobs must act on all views together: drop the blob layers and remove
 % the surface colorbar(s) it created. (Surface vertex colors are restored to

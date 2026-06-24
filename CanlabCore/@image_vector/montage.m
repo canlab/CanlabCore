@@ -228,13 +228,13 @@ switch meth
                 end
             
                 if ~isempty(o2.montage)
-                    o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                    o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'cmaprange', cmaprange, 'nooutline', ...
                         'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
                         varargin{:}, 'wh_montages', [montage_indx(i) montage_indx(i)+1]);
                 else
                     % error('Plotting multivolume data without volumetric montages (e.g. multivolume plotting on surfaces) is not yet supported.')
                     warning('Plotting multivolume data without volumetric montages (e.g. multivolume plotting on surfaces) is not yet supported. Plotting only first image.')
-                    o2 = addblobs(o2, region(obj, 'noverbose'), 'cmaprange', cmaprange, 'nooutline', ...
+                    o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'cmaprange', cmaprange, 'nooutline', ...
                         'sourcespace', sourcespace, 'targetsurface', targetsurface, ...
                         varargin{:});
                 end
@@ -249,7 +249,7 @@ switch meth
                     end
                 end
                 
-                o2 = addblobs(o2, region(obj, 'noverbose'), 'nooutline', 'sourcespace', sourcespace, 'targetsurface', targetsurface, varargin{:});
+                o2 = addblobs(o2, region(obj, 'noverbose'), 'source_object', obj, 'nooutline', 'sourcespace', sourcespace, 'targetsurface', targetsurface, varargin{:});
                 
             end
             

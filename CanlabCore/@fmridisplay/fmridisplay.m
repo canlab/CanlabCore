@@ -154,6 +154,12 @@ classdef fmridisplay < handle
         additional_info = struct('');
 
     end % properties
+
+    properties (Transient, Hidden)
+        % Handle of an open controller (uifigure) bound to this instance, if any.
+        % Transient: a live graphics handle, never saved with the object.
+        controller_handle = [];
+    end
     
     methods
         

@@ -90,14 +90,36 @@ for k = wh_layers
     src = layer.source_object;
 
     % Re-derive a region (cl) at the new threshold
-    if isa(src, 'statistic_image') || isa(src, 'image_vector')
+    if isa(src, 'statistic_image')
 
+        % P-value based thresholding (uses .p): thresh_type is 'unc'/'fdr'/'fwe'.
         if isempty(k_extent)
-            t = threshold(src, input_threshold, thresh_type, 'noverbose');
+            tt = threshold(src, input_threshold, thresh_type, 'noverbose');
         else
-            t = threshold(src, input_threshold, thresh_type, 'k', k_extent, 'noverbose');
+            tt = threshold(src, input_threshold, thresh_type, 'k', k_extent, 'noverbose');
         end
-        cl = region(t, 'noverbose');
+        cl = region(tt, 'noverbose');
+
+    elseif isa(src, 'image_vector')
+
+        % Raw-value thresholding (fmri_data / mask / mean image: no p-values).
+        % A scalar threshold is treated as a magnitude cutoff (keep |val| > v);
+        % a [lo hi] range uses thresh_type ('raw-outside' default, or
+        % 'raw-between' if explicitly requested).
+        if isscalar(input_threshold)
+            rng   = [-abs(input_threshold) abs(input_threshold)];
+            rtype = 'raw-outside';
+        else
+            rng   = input_threshold;
+            rtype = thresh_type;
+            if ~any(strcmpi(rtype, {'raw-between', 'raw-outside'})), rtype = 'raw-outside'; end
+        end
+        if isempty(k_extent)
+            tt = threshold(src, rng, rtype, 'noverbose');
+        else
+            tt = threshold(src, rng, rtype, 'k', k_extent, 'noverbose');
+        end
+        cl = region(tt, 'noverbose');
 
     elseif isa(src, 'region')
 

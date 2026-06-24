@@ -77,6 +77,8 @@ for i = wh_surface
     end
 
     surfh = obj.surface{i}.object_handle;
+    surfh = surfh(ishandle(surfh));        % skip handles whose figure was closed
+    if isempty(surfh), continue, end
 
     % If this surface already carries blobs from a prior render, restore its
     % saved gray FIRST. Otherwise render_on_surface blends onto — and re-saves

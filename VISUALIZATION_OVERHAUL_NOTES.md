@@ -40,7 +40,21 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
 - **Controller widget**: `controller(obj)` opens a `uifigure` bound to the instance
   (back-pointer in figure appdata under `'fmridisplay_obj'`), with per-layer opacity
   slider, colormap dropdown, p-threshold field, and visibility toggle — the MATLAB-side
-  analog of the NiiVue control panel (§6).
+  analog of the NiiVue control panel (§6). The panel is rebuilt in place (not duplicated)
+  on a repeat call, **auto-refreshes** when `addblobs`/`removeblobs` change the layer set
+  (`update_controller`, via the Transient `controller_handle` property), initializes each
+  control from the layer's current state, and is **type-aware**: the threshold field
+  re-thresholds a `statistic_image` layer by p-value and an `fmri_data`/mask layer by raw
+  value. `HandleVisibility='on'`, so `close all` closes it.
+- **Robust to closed windows**: `prune_dead_views` drops montage/surface views whose
+  figures the user closed (with a short note); called at the top of `addblobs`,
+  `removeblobs`, and `refresh`, so closing a window no longer causes
+  "Invalid or deleted object" errors. Surface erase/render also filter to live handles.
+- **Layer-aware `rethreshold`** (and `montage` source retention): `image_vector.montage`
+  now passes the original object via a new `addblobs` `'source_object'` override, so a
+  `montage(t)` layer keeps its `statistic_image` and can be re-thresholded by p-value.
+  `rethreshold` dispatches by source class: `statistic_image`→p-value, `image_vector`→raw
+  value, `region`→magnitude cutoff; honors `'layers'` for per-layer thresholding.
 - **Bug fix surfaced by the green-tests bar**: a *bare* `'colormap'` flag (e.g.
   `montage(r, o2, 'colormap')`) was a pre-existing crash (`render_blobs` demands an
   n×3 matrix). `addblobs` now strips a bare `'colormap'` before forwarding. This
@@ -57,8 +71,9 @@ follow-up now that the layer architecture exists to support them): unifying
 refresh through the same layer mechanism (montages and surfaces are now unified; orthviews
 are not yet); composited multi-layer surfaces (surfaces currently show the last-rendered
 layer, since `render_on_surface` overwrites vertex colors); symmetric pull-in for montages
-added after blobs; collapsing the duplicate isosurface/orthviews engines; deleting
-deprecated `surface_cutaway`.
+added after blobs; the controller's visibility toggle hides montage blobs only (not surface
+coloring); collapsing the duplicate isosurface/orthviews engines; deleting deprecated
+`surface_cutaway`.
 
 ---
 

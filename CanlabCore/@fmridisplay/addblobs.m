@@ -161,6 +161,10 @@ function obj = addblobs(obj, cl, varargin)
 % cryptic "Not enough input arguments" when the blobs/region argument is left out
 % (e.g. addblobs(o2) instead of addblobs(o2, region(t))).
 % -------------------------------------------------------------------
+% Drop any views whose figures were closed, so we never draw onto deleted
+% graphics handles.
+obj = prune_dead_views(obj);
+
 if nargin < 2
     error('fmridisplay:addblobs:missingRegion', ...
         ['addblobs needs something to add as its second argument; you passed only ' ...
@@ -178,6 +182,16 @@ end
 % stringency. See VISUALIZATION_OVERHAUL_NOTES.md.
 % -------------------------------------------------------------------
 source_object = cl;
+
+% Allow a caller (e.g. image_vector.montage, which passes region(obj) as the
+% blobs but knows the original statistic_image/fmri_data) to override the
+% retained source, so rethreshold has the real object with p-values / raw data
+% to work from. Stripped here so it is not forwarded to render_blobs.
+wh_so = find(strcmp(varargin, 'source_object'));
+if ~isempty(wh_so)
+    source_object = varargin{wh_so(1) + 1};
+    varargin(wh_so(1):wh_so(1) + 1) = [];
+end
 
 % Check and convert to region
 % -------------------------------------------------------------------
@@ -477,6 +491,9 @@ end
 if addsurfaceblobs && ~isempty(obj.surface)
     obj = render_layer_surfaces(obj, wh_to_display, wh_surface);
 end
+
+% Keep an open controller panel in sync with the new layer.
+obj = update_controller(obj);
 
 end  % main function
 

@@ -40,6 +40,9 @@ function obj = refresh(obj, varargin)
 %    2026 visualization overhaul
 % ..
 
+% Drop any views whose figures were closed before re-rendering.
+obj = prune_dead_views(obj);
+
 wh_layers = 1:numel(obj.activation_maps);
 if ~isempty(varargin) && isnumeric(varargin{1}) && ~isempty(varargin{1})
     wh_layers = varargin{1};

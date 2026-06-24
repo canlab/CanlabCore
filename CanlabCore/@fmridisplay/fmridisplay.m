@@ -124,22 +124,35 @@
 %    Copyright 2011 - Tor Wager
 % ..
 
-classdef fmridisplay 
-    
+classdef fmridisplay < handle
+    % NOTE (2026 visualization overhaul): fmridisplay is now a HANDLE class.
+    % This is the load-bearing change behind live re-thresholding, colormap,
+    % and opacity edits (see VISUALIZATION_OVERHAUL_NOTES.md). Because every
+    % existing method uses the value-style `obj = method(obj, ...)` idiom and
+    % every call site self-reassigns (`o2 = addblobs(o2, ...)`), the returned
+    % handle equals the input handle and back-compatibility is preserved: a
+    % full audit found NO `o3 = o2; ... mutate(o3); ... use(o2)` aliasing
+    % sites in CanlabCore or CANlab_help_examples. The new capability is that
+    % the object instance is now a single source of truth that a figure
+    % (appdata back-pointer) and a controller widget can both reference, and
+    % that blob layers retain their source data + render options so they can
+    % be re-rendered in place via refresh / rethreshold / set_colormap /
+    % set_opacity.
+
     properties
-        
+
         overlay
-        SPACE 
+        SPACE
         activation_maps
 
         montage
         surface
         orthviews
-        
+
         history
-        history_descrip = 'Cell array: names of methods applied to this data, in order';      
+        history_descrip = 'Cell array: names of methods applied to this data, in order';
         additional_info = struct('');
-        
+
     end % properties
     
     methods

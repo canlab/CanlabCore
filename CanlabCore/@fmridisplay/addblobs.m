@@ -157,6 +157,13 @@ function obj = addblobs(obj, cl, varargin)
 %    Add the volume to activation maps in fmridisplay object
 % ..
 
+% Retain the ORIGINAL input as the layer source, before any conversion.
+% A statistic_image/fmri_data source enables re-thresholding downward
+% (rethreshold); a region source supports re-render at the same or higher
+% stringency. See VISUALIZATION_OVERHAUL_NOTES.md.
+% -------------------------------------------------------------------
+source_object = cl;
+
 % Check and convert to region
 % -------------------------------------------------------------------
 if isstruct(cl) && ~isa(cl, 'region'), cl = cluster2region(cl); end
@@ -185,7 +192,16 @@ V = struct('mat', cl(1).M, 'dim', dim');
 SPACE = map_to_world_space(V);
 
 obj.activation_maps{end + 1} = struct('mapdata', mask, 'V', V, 'SPACE', SPACE, 'blobhandles', [], 'cmaprange', [], ...
-    'mincolor', [0 0 1], 'maxcolor', [1 0 0], 'color', []);
+    'mincolor', [0 0 1], 'maxcolor', [1 0 0], 'color', [], ...
+    'source_region', [], 'source_object', [], 'render_args', [], ...
+    'wh_montage', [], 'wh_surface', [], 'applied_threshold', []);
+
+% Retain the source region + original source object on the layer so the
+% layer can be re-rendered in place (refresh / rethreshold / set_colormap /
+% set_opacity). render_args (the final option set actually passed to
+% render_blobs) is stored further below, once augmented with defaults.
+obj.activation_maps{end}.source_region = cl;
+obj.activation_maps{end}.source_object = source_object;
 
 % Montage selection and options
 % -------------------------------------------------------------------
@@ -300,6 +316,24 @@ for i = 1:length(varargin)
     end
 end
 
+% Drop a BARE 'colormap' flag before forwarding to render_blobs.
+% addblobs accepts 'colormap' as a flag meaning "value-mapped (not split)
+% colors" (handled above by setting dosplitcolor = 0). render_blobs, however,
+% treats 'colormap' as requiring a following n x 3 matrix and errors otherwise.
+% A bare flag (no matrix value, e.g. montage(r, o2, 'colormap')) must not be
+% passed on, or render_blobs raises "'colormap' argument must be followed by
+% an n x 3 matrix". Keep 'colormap' only when it is genuinely followed by an
+% n x 3 numeric matrix.
+wh_cmap = find(strcmp(varargin, 'colormap'));
+to_strip = false(size(varargin));
+for j = wh_cmap
+    has_matrix = j < numel(varargin) && isnumeric(varargin{j + 1}) && size(varargin{j + 1}, 2) == 3;
+    if ~has_matrix
+        to_strip(j) = true;
+    end
+end
+varargin(to_strip) = [];
+
 % Add relevant colors and args to varargin, because we may have passed in
 % keywords without following args, intending to use defaults specified above
 % These are passed to render_blobs and also used to update legend registry
@@ -350,6 +384,14 @@ end
 % obj.activation_maps{end + 1} = struct('mapdata', resampled_dat, 'V_original', V, 'blobhandles', []);
 
 wh_to_display = length(obj.activation_maps);
+
+% Retain the final render option set + targeting on the layer, so refresh /
+% set_colormap / set_opacity can replay the exact look. varargin has, by this
+% point, been augmented with the resolved splitcolor / maxcolor / mincolor
+% defaults that are passed on to render_blobs.
+obj.activation_maps{wh_to_display}.render_args = varargin;
+obj.activation_maps{wh_to_display}.wh_montage = wh_montage;
+obj.activation_maps{wh_to_display}.wh_surface = wh_surface;
 
 
 % Find valid handles and render blobs on them

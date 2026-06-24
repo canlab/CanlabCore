@@ -758,17 +758,31 @@ end
 [colorbar1_han, colorbar2_han] = deal([]);
 if ~dolegend, return, end
 
+% Parent the colorbar legend to the surface's OWN figure, not whatever figure
+% happens to be current (gcf). Otherwise the legend lands on the montage window
+% (a common source of "legend on top of the montage"). Fall back to gcf only if
+% the surface handle's figure can't be resolved.
+sh_for_fig = surface_handles;
+if iscell(sh_for_fig), sh_for_fig = [sh_for_fig{:}]; end
+sh_for_fig = sh_for_fig(ishandle(sh_for_fig));
+if isempty(sh_for_fig)
+    surf_fig = gcf;
+else
+    surf_fig = ancestor(sh_for_fig(1), 'figure');
+    if isempty(surf_fig), surf_fig = gcf; end
+end
+
 if any(datvec > 0)
-    
-    % check for existing colorbars
-    children = get(gcf,'Children');
+
+    % check for existing colorbars (in the SURFACE figure)
+    children = get(surf_fig,'Children');
     for i = 1:length(children)
         if isa(children(i),'matlab.graphics.illustration.ColorBar')
             delete(children(i));
         end
     end
 
-    bar1axis = axes('Position', [.55 .55 .38 .4]);
+    bar1axis = axes('Parent', surf_fig, 'Position', [.55 .55 .38 .4]);
     if doindexmap
         colormap(bar1axis, cm(2:end,:));
     else
@@ -807,7 +821,7 @@ end
 
 if any(datvec < 0)
     
-    bar2axis = axes('Position', [.55 .1 .38 .4]);
+    bar2axis = axes('Parent', surf_fig, 'Position', [.55 .1 .38 .4]);
     if doindexmap
         colormap(bar1axis, cm(2:end,:));
     else

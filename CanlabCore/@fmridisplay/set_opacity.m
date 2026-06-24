@@ -79,6 +79,7 @@ for k = wh_layers
 end
 
 obj = refresh(obj, wh_layers);
+obj = update_controller(obj);
 
 end
 

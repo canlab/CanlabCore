@@ -163,4 +163,7 @@ end
 
 obj = refresh(obj, wh_layers);
 
+% Keep an open controller's threshold/colormap/opacity fields in sync.
+obj = update_controller(obj);
+
 end

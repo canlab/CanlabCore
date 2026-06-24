@@ -46,6 +46,21 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
   control from the layer's current state, and is **type-aware**: the threshold field
   re-thresholds a `statistic_image` layer by p-value and an `fmri_data`/mask layer by raw
   value. `HandleVisibility='on'`, so `close all` closes it.
+  - **Later additions:** controls now **update in place** (not a full rebuild) when a layer's
+    state changes from the command line, so `rethreshold`/`set_colormap`/`set_opacity` keep an
+    open panel in sync (they call `update_controller`); each GUI action **echoes the
+    equivalent code line** to the command window (e.g. `han = set_colormap(han, 'color',
+    [1 0 0]);`), using the bound variable name from `inputname` (preserved across rebuilds via
+    figure appdata; falls back to `obj`). The colormap dropdown gained more options (split,
+    warm, cool, winter) plus a **`solid colour…`** entry that opens the built-in `uisetcolor`
+    palette. Cosmetic: the figure is **light green**, the title shows the **bound variable
+    name** (to tell multiple controllers apart), and the opacity slider's tick marks are
+    removed. (True perceptual maps — inferno/viridis/etc. — are deferred; they need colormap
+    matrices threaded through `render_blobs`/`render_on_surface`, riskier than the max/min
+    ramps used now.)
+- **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
+  to `gcf` — previously a surface legend could land on the montage window. New
+  `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).
 - **Robust to closed windows**: `prune_dead_views` drops montage/surface views whose
   figures the user closed (with a short note); called at the top of `addblobs`,
   `removeblobs`, and `refresh`, so closing a window no longer causes
@@ -71,9 +86,17 @@ follow-up now that the layer architecture exists to support them): unifying
 refresh through the same layer mechanism (montages and surfaces are now unified; orthviews
 are not yet); composited multi-layer surfaces (surfaces currently show the last-rendered
 layer, since `render_on_surface` overwrites vertex colors); symmetric pull-in for montages
-added after blobs; the controller's visibility toggle hides montage blobs only (not surface
-coloring); collapsing the duplicate isosurface/orthviews engines; deleting deprecated
+added after blobs; collapsing the duplicate isosurface/orthviews engines; deleting deprecated
 `surface_cutaway`.
+
+- **Per-layer surface visibility** (deferred; evaluated). The controller's *Visible* toggle
+  hides a layer's **montage** blobs (sets `Visible` on `blobhandles`) but not its surface
+  coloring, because surfaces don't store per-layer graphics — `render_on_surface` bakes one
+  layer's colors into the patch vertices. A clean fix needs a per-layer `visible` flag that is
+  **respected by every surface-draw path** (`addblobs`, `refresh`, `surface` pull-in): on a
+  visibility change, reset the surfaces to gray and re-render only the visible layers in order
+  (top visible wins). It's moderate, not a one-liner, and shares machinery with the deferred
+  multi-layer surface compositing, so do it together with that.
 
 ### Deferred: make the bypass methods return a managed object (§7.4)
 

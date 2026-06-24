@@ -286,11 +286,51 @@ n_before = numel(findobj(fig, 'Type', 'uipanel'));
 o2 = addblobs(o2, region(t), 'noverbose');  % add a 2nd layer
 n_after = numel(findobj(fig, 'Type', 'uipanel'));
 tc.verifyEqual(n_after, n_before + 1, 'controller auto-added a panel for the new layer');
-% colormap state reflected
+% colormap state reflected (a solid color maps to the 'solid colour…' item)
 o2 = set_colormap(o2, 'color', [1 0 0], 'layers', 1);
-controller(o2);                              % rebuild in place
+controller(o2);                              % update in place
 dd = findobj(o2.controller_handle, 'Type', 'uidropdown');
-tc.verifyTrue(any(strcmp({dd.Value}, 'solid red')), 'a dropdown reflects the solid-red layer');
+tc.verifyTrue(any(strcmp({dd.Value}, 'solid colour…')), 'a dropdown reflects the solid-color layer');
+end
+
+
+function test_surface_legend_not_on_montage(tc)
+% A surface colorbar must be parented to the surface figure, not the montage.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+fm = figure; o2 = montage(t);
+tc.addTeardown(@() close(fm(isvalid(fm))));
+fs = figure;
+tc.addTeardown(@() close(fs(isvalid(fs))));
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');
+tc.verifyEmpty(findobj(fm, 'Type', 'colorbar'), 'no surface colorbar on the montage figure');
+tc.verifyNotEmpty(findobj(fs, 'Type', 'colorbar'), 'surface colorbar lives on the surface figure');
+end
+
+
+function test_remove_legend_clears_surface_colorbars(tc)
+% remove_legend deletes the surface colorbar legends but keeps the blobs.
+o2  = build_montage_surface_blobs(tc);
+fig = ancestor(o2.surface{1}.object_handle(1), 'figure');
+o2  = remove_legend(o2);
+tc.verifyEmpty(findobj(fig, 'Type', 'colorbar'), 'remove_legend cleared surface colorbars');
+tc.verifyNotEmpty(o2.activation_maps, 'blob layers are kept');
+end
+
+
+function test_rethreshold_syncs_open_controller(tc)
+% A command-line rethreshold updates the open controller's threshold field.
+tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
+    'controller widget requires an interactive figure window');
+t   = canlab_get_sample_thresholded_t(0.01);
+o2  = montage(t);
+fig = controller(o2);
+tc.addTeardown(@() delete(fig(isvalid(fig))));
+o2  = rethreshold(o2, 0.001, 'unc');
+thr = findobj(o2.controller_handle, 'Tag', 'threshold_1');
+tc.verifyEqual(thr.Value, 0.001, 'AbsTol', 1e-9, ...
+    'controller threshold field synced to command-line rethreshold');
 end
 
 

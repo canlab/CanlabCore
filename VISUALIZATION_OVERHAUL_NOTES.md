@@ -61,6 +61,21 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
 - **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
   to `gcf` — previously a surface legend could land on the montage window. New
   `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).
+- **Surface colormaps now match the montage spec.** `render_on_surface` understands
+  `color`/`colormap`/`splitcolor`/`pos_colormap`/`neg_colormap` but NOT `maxcolor`/`mincolor`
+  (`render_on_surface.m:222`), so warm/cool/winter (max/min ramps) and solid colours were
+  silently dropped on surfaces and fell back to the default split hot/cool (e.g. blue
+  negatives under "warm", and cool/winter not updating). `render_layer_surfaces` now
+  translates the layer's colour spec into `pos_colormap`/`neg_colormap` ramps
+  (`surface_colormaps_from_args`) and strips the tokens render_on_surface can't read. Solid
+  colours map to the same colour on both signs (no stray default-cool negatives). *Residual:*
+  the split hot/cool map still looks **slightly** different between montage and surface
+  (different colormap construction in `render_blobs` vs `render_on_surface`); fully matching
+  is the deferred render-pipeline unification.
+- **Multi-surface keyword uses a dedicated figure.** `surface(o2, 'foursurfaces*')` opened the
+  2×2 layout in the *current* figure, so without a preceding `figure;` it drew over the
+  montage and appeared to render nothing. It now reuses an empty current figure or opens a new
+  one.
 - **Public vs internal method surface**: the helper methods `activate_figures`,
   `prune_dead_views`, `refresh`, `render_layer_surfaces`, `update_controller` are declared
   `Hidden` (signature-only block in `fmridisplay.m`), so they no longer clutter

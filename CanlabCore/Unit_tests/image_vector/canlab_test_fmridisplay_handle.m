@@ -213,6 +213,42 @@ tc.verifyTrue(has_legend(), 'adding a surface rendered the existing blob layer o
 end
 
 
+function test_surface_colormap_follows_maxmin_color(tc)
+% maxcolor/mincolor (warm/cool/winter) must actually colour the surface, not
+% fall back to render_on_surface's default split hot/cool. Warm = red->yellow
+% with little blue; switching to cool changes the surface colormap.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');
+ax = ancestor(o2.surface{1}.object_handle(1), 'axes');
+
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);   % warm
+cm_warm = colormap(ax);
+top = cm_warm(end-50:end, :);                                       % blob end of the map
+tc.verifyLessThan(mean(top(:, 3)), 0.2, 'warm surface map has little blue (not the default split)');
+
+o2 = set_colormap(o2, 'maxcolor', [0 1 1], 'mincolor', [0 0 1]);   % cool
+tc.verifyFalse(isequal(cm_warm, colormap(ax)), 'surface colormap updates when layer colors change');
+end
+
+
+function test_foursurfaces_uses_dedicated_figure(tc)
+% A multi-surface layout must not draw over the montage figure when the user
+% forgets to open a figure first.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+fm = figure; o2 = montage(t);
+tc.addTeardown(@() close(fm(isvalid(fm))));
+try, o2 = surface(o2, 'foursurfaces'); catch ME, tc.assumeFail(ME.message); end   % no figure first
+sf = ancestor(o2.surface{end}.object_handle(1), 'figure');
+tc.addTeardown(@() close(sf(isvalid(sf) & sf ~= fm)));
+tc.verifyNotEqual(sf, fm, 'four-surface layout uses its own figure, not the montage');
+tc.verifyEqual(numel(o2.surface), 4, 'four surfaces registered');
+end
+
+
 function test_foursurfaces_adds_four_views_same_handle(tc)
 % A multi-surface keyword adds four registered views to the same object.
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');

@@ -452,9 +452,18 @@ end % main function
 
 function obj = add_multiple_surfaces(obj, multi, varargin)
 % Add a canonical set of four surface views (L/R lateral + L/R medial) to the
-% same fmridisplay object, arranged 2x2 in the current figure. Each is added
+% same fmridisplay object, arranged 2x2 in a dedicated figure. Each is added
 % via a normal single-surface surface() call (handle semantics keep obj the
 % same), which also triggers blob pull-in per surface.
+
+% Ensure a dedicated figure for the 2x2 layout. If the current figure already
+% has content (e.g. a montage), the four surfaces would otherwise be drawn over
+% it (and appear to render nothing). Reuse an empty current figure (e.g. the
+% user typed `figure;` first); otherwise open a new one.
+curfig = get(groot, 'CurrentFigure');
+if isempty(curfig) || ~isempty(findobj(curfig, 'Type', 'axes'))
+    figure;
+end
 
 rest = varargin;
 rest(strcmp(rest, multi)) = [];                       % drop the multi keyword

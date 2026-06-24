@@ -58,9 +58,18 @@ if isfield(layer, 'cmaprange'), cmaprange = layer.cmaprange; end
 
 img = region2imagevec(layer.source_region);
 
-% Color mode, derived from render_args (kept current by set_colormap)
-wh_split = find(strcmp(args, 'splitcolor'), 1);
-wh_index = find(strcmp(args, 'indexmap'),   1);
+% Translate the layer's colour spec (in render_args) into colormaps that
+% render_on_surface understands. It knows pos_colormap / neg_colormap / colormap /
+% color / splitcolor but NOT maxcolor / mincolor, so we build pos/neg ramps here.
+% Without this, warm/cool/winter (maxcolor/mincolor) and solid colours were
+% silently ignored on surfaces and render_on_surface fell back to its default
+% split hot/cool (e.g. blue negatives under a "warm" map). See render_on_surface.m:222.
+wh_index = find(strcmp(args, 'indexmap'), 1);
+[surf_pos_cm, surf_neg_cm] = surface_colormaps_from_args(args);
+clean_args = strip_color_tokens(args);
+color_args = {};
+if ~isempty(surf_pos_cm), color_args = [color_args, {'pos_colormap', surf_pos_cm}]; end
+if ~isempty(surf_neg_cm), color_args = [color_args, {'neg_colormap', surf_neg_cm}]; end
 
 % Constant opacity for the surface patch (set_opacity / controller slider).
 % render_on_surface drives blob ALPHA via 'transvalue' on montages, but on a
@@ -90,27 +99,14 @@ for i = wh_surface
         addbrain('eraseblobs', surfh);
     end
 
-    if ~isempty(wh_split)
-        % Split +/- colormap: build pos/neg maps from the stored 4-color spec
-        sc = args{wh_split + 1};                 % {minneg maxneg minpos maxpos}
-        pos_colormap = colormap_tor(sc{3}, sc{4});
-        neg_colormap = colormap_tor(sc{1}, sc{2});
-        if ~isempty(cmaprange)
-            [~, bar1axis, bar2axis] = render_on_surface(img, surfh, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, 'cmaprange', cmaprange, args{:});
-        else
-            [~, bar1axis, bar2axis] = render_on_surface(img, surfh, 'pos_colormap', pos_colormap, 'neg_colormap', neg_colormap, args{:});
-        end
-
-    elseif ~isempty(wh_index)
+    if ~isempty(wh_index)
+        % Index/atlas colormap: pass straight through (render_on_surface handles it).
         idxmap = args{wh_index + 1};
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:}, 'colormap', idxmap, 'indexmap');
-
     else
-        if ~isempty(cmaprange)
-            [~, bar1axis, bar2axis] = render_on_surface(img, surfh, 'cmaprange', cmaprange, args{:});
-        else
-            [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:});
-        end
+        call_args = [clean_args, color_args];
+        if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
+        [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
     end
 
     % Constant-opacity overlay: dim the whole surface patch to the requested
@@ -130,4 +126,54 @@ for i = wh_surface
 
 end
 
+end
+
+
+function [pos_cm, neg_cm] = surface_colormaps_from_args(args)
+% Build pos/neg colormaps for render_on_surface from the layer's colour spec, so
+% surfaces match montages. Returns [] for both when there is no explicit spec
+% (render_on_surface then uses its default split hot/cool, matching the
+% render_blobs default splitcolor).
+pos_cm = []; neg_cm = [];
+hask = @(key) any(strcmp(args, key));
+valk = @(key) args{find(strcmp(args, key), 1) + 1};
+
+if hask('splitcolor')
+    sc = valk('splitcolor');                      % {minneg maxneg minpos maxpos}
+    pos_cm = colormap_tor(sc{3}, sc{4});
+    neg_cm = colormap_tor(sc{1}, sc{2});
+
+elseif hask('maxcolor') || hask('mincolor')
+    maxc = [1 1 0]; minc = [1 0 0];               % render_blobs-style defaults
+    if hask('maxcolor'), maxc = valk('maxcolor'); end
+    if hask('mincolor'), minc = valk('mincolor'); end
+    ramp = colormap_tor(minc, maxc);
+    pos_cm = ramp; neg_cm = ramp;                 % single ramp for both signs (matches montage)
+
+elseif hask('color')
+    c = valk('color');
+    solid = repmat(c(:)', 256, 1);
+    pos_cm = solid; neg_cm = solid;               % solid on both signs (no default cool negatives)
+
+end
+% 'colormap' (a raw n x 3 matrix) and the no-spec default are left to
+% render_on_surface via clean_args.
+end
+
+
+function out = strip_color_tokens(args)
+% Remove the colour-spec tokens we translate ourselves (plus cmaprange, re-added
+% from the layer), so they are not double-handled by render_on_surface. Keeps
+% all other options (sourcespace, targetsurface, nooutline, smooth, colormap, ...).
+keys = {'splitcolor', 'color', 'maxcolor', 'mincolor', 'pos_colormap', 'neg_colormap', 'cmaprange'};
+out = {};
+i = 1;
+while i <= numel(args)
+    if ischar(args{i}) && any(strcmp(args{i}, keys))
+        i = i + 2;                                % all of these are value-bearing
+        continue
+    end
+    out{end + 1} = args{i}; %#ok<AGROW>
+    i = i + 1;
+end
 end

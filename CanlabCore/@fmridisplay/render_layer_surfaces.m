@@ -62,6 +62,13 @@ img = region2imagevec(layer.source_region);
 wh_split = find(strcmp(args, 'splitcolor'), 1);
 wh_index = find(strcmp(args, 'indexmap'),   1);
 
+% Constant opacity for the surface patch (set_opacity / controller slider).
+% render_on_surface drives blob ALPHA via 'transvalue' on montages, but on a
+% surface the overlay IS the vertex coloring, so we dim the patch via FaceAlpha.
+wh_tv = find(strcmp(args, 'transvalue'), 1);
+surf_alpha = [];
+if ~isempty(wh_tv), surf_alpha = args{wh_tv + 1}; end
+
 for i = wh_surface
 
     if i < 1 || i > numel(obj.surface)
@@ -70,6 +77,16 @@ for i = wh_surface
     end
 
     surfh = obj.surface{i}.object_handle;
+
+    % If this surface already carries blobs from a prior render, restore its
+    % saved gray FIRST. Otherwise render_on_surface blends onto — and re-saves
+    % as its restore data — the previous blob colors, which would defeat a later
+    % removeblobs (the surface could never return to anatomy gray). All patches
+    % of a surface get their gray stashed together on first paint, so a non-empty
+    % UserData on the first patch reliably means "already painted".
+    if ~isempty(surfh) && ishandle(surfh(1)) && ~isempty(get(surfh(1), 'UserData'))
+        addbrain('eraseblobs', surfh);
+    end
 
     if ~isempty(wh_split)
         % Split +/- colormap: build pos/neg maps from the stored 4-color spec
@@ -92,6 +109,13 @@ for i = wh_surface
         else
             [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:});
         end
+    end
+
+    % Constant-opacity overlay: dim the whole surface patch to the requested
+    % value so the controller's opacity slider has an effect on surfaces.
+    if ~isempty(surf_alpha)
+        valid = surfh(ishandle(surfh));
+        if ~isempty(valid), set(valid, 'FaceAlpha', surf_alpha); end
     end
 
     % Track the colorbar axes as the layer's legend; drop a prior one so

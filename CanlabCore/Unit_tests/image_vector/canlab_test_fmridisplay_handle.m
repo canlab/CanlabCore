@@ -201,6 +201,42 @@ tc.verifyEqual(numel(o2.surface), n0 + 4, 'four surface views added');
 end
 
 
+function test_repeated_addblobs_then_removeblobs_clears_surface(tc)
+% Regression: re-painting a surface (addblobs twice, or addblobs after adding
+% a new surface) must not poison the saved gray, so removeblobs still restores
+% anatomy. Previously render_on_surface saved the already-painted blob colors
+% as the restore data, and the surface could never be cleared.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');        % paint #1
+o2 = addblobs(o2, t, 'noverbose');        % paint #2 (re-paint same surface)
+% With blobs the surface has many distinct vertex colors:
+blobs = o2.surface{1}.object_handle(1).FaceVertexCData;
+n_blobs = size(unique(blobs, 'rows'), 1);
+tc.assumeGreaterThan(n_blobs, 10, 'surface should be multi-colored while blobs are shown');
+o2 = removeblobs(o2);
+after = o2.surface{1}.object_handle(1).FaceVertexCData;
+n_after = size(unique(after, 'rows'), 1);
+% After removeblobs the surface must collapse back to ~uniform gray. Before the
+% fix it kept the blob colors (n_after stayed large) because the re-paint had
+% poisoned the saved restore data.
+tc.verifyLessThan(n_after, n_blobs, 'removeblobs cleared the surface blobs');
+tc.verifyLessThanOrEqual(n_after, 3, 'surface is essentially uniform gray after removeblobs');
+end
+
+
+function test_set_opacity_dims_surface(tc)
+% set_opacity must reach surfaces (controller opacity slider): the surface
+% patch FaceAlpha follows the requested value.
+o2 = build_montage_surface_blobs(tc);
+o2 = set_opacity(o2, 0.4);
+tc.verifyEqual(o2.surface{1}.object_handle(1).FaceAlpha, 0.4, 'AbsTol', 1e-9, ...
+    'set_opacity dims the surface patch');
+end
+
+
 function test_removeblobs_clears_layers_and_surface_legend(tc)
 % removeblobs must act on all views together: drop the blob layers and remove
 % the surface colorbar(s) it created. (Surface vertex colors are restored to

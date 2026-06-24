@@ -75,6 +75,30 @@ added after blobs; the controller's visibility toggle hides montage blobs only (
 coloring); collapsing the duplicate isosurface/orthviews engines; deleting deprecated
 `surface_cutaway`.
 
+### Deferred: make the bypass methods return a managed object (§7.4)
+
+`image_vector.surface(t, …)` and `image_vector.orthviews(t, …)` still return raw graphics
+handles (unlike `montage(t)`, which returns a managed `fmridisplay`). Plan:
+
+1. **Opt-in flag first, then default** (the §7.4 recipe; ~24 call sites + the walkthroughs
+   use `surface_handles = surface(t, …)` as graphics handles, so the default must not
+   change yet). In managed mode, mirror `image_vector.montage`:
+   `o2 = fmridisplay; o2 = surface(o2, kw…); o2 = addblobs(o2, region(t), 'source_object', t, …)`.
+   The `'source_object'` retention makes `rethreshold`/controller work on the result.
+2. **Keyword parity via addbrain pass-through (T. Wager's idea).** Rather than
+   re-implementing surface types inside `@fmridisplay/surface`, pass the direction keyword
+   plus the remaining `varargin` straight through to `addbrain` — which `@fmridisplay/surface`
+   already does for the hcp surfaces (`addbrain('hcp inflated right', varargin{:})`). That
+   exposes addbrain's full surface catalog to the managed path with almost no new fmridisplay
+   code: collapse the large hard-coded `if/elseif dir` switch into a default
+   `h = addbrain(dir, varargin{:})` (keeping only the cases that need a specific `view()`/
+   layout), and let addbrain validate / error on unknown keywords.
+   - **Caveat:** the *parametric* `surface_cutaway` types (`coronal_slabs`, `cutaway` with
+     `ycut_mm`, etc.) live in `@region/surface` / `surface_cutaway`, not `addbrain`, so those
+     would still need either teaching `addbrain`, or wrapping the `region.surface` handles
+     into `obj.surface{}` view structs (register without double-rendering). Do the
+     addbrain-keyword set first; treat the cutaway engine as a second step.
+
 ---
 
 ## 1. Motivation

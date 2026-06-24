@@ -163,9 +163,34 @@ table(g, 't');                                       % atlas-labeled results
 
 t_reapp = get_wh_image(g.t, 1);                      % the Reapp_Success effect
 o2 = canlab_results_fmridisplay(t_reapp, 'compact2');
+
+% Interactive inspection:
+canlab_orthviews(t_reapp);   % MATLAB 3-plane viewer; names the atlas region at the crosshair
+orthviews_niivue(t_reapp);   % one-liner: pop the map open as a web viewer in your browser
 ```
 
 ![Group result montage (Reappraisal Success effect)](glm_map_2ndlevel_montage.png)
+
+`orthviews_niivue(t_reapp)` (a thin wrapper around `canlab_niivue`) writes a self-contained,
+point-and-click web viewer of this same map and opens it. The live version is embedded below —
+click any slice to move the crosshair (its MNI coordinate, t-value, and **atlas region name** print
+under the canvas), and use the **Atlas region** dropdown to outline/shade the region at the crosshair:
+
+<iframe src="../niivue_demo/glm_map_2ndlevel_reapp.html" width="100%" height="480"
+        style="border:1px solid #d4d8dd; border-radius:6px;" loading="lazy"></iframe>
+
+*If the frame is blank in your environment,
+[open it directly](../niivue_demo/glm_map_2ndlevel_reapp.html). See the
+[`canlab_niivue` guide](../canlab_niivue_guide.md) for the full option set.*
+
+The same map renders on inflated cortical surfaces with `surface` — the `'foursurfaces_hcp'` style
+gives lateral and medial views of both hemispheres (with brainstem) on HCP pial surfaces:
+
+```matlab
+surface(t_reapp, 'foursurfaces_hcp');
+```
+
+![Reappraisal Success effect on HCP surfaces](glm_map_2ndlevel_surface.png)
 
 ---
 

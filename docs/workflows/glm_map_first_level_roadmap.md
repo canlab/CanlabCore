@@ -128,7 +128,10 @@ On real data you load the run's time series as an `fmri_data` object instead.
 
 The fit produces `statistic_image` maps, one per regressor (and contrast).
 Re-threshold without refitting (`threshold(g, .001, 'unc', 'k', 5)`), select a
-map with `get_wh_image`, and render it:
+map with `get_wh_image`, and render it with `montage` / `canlab_results_fmridisplay`.
+For point-and-click inspection, open it in `canlab_orthviews` (MATLAB three-plane
+viewer with an atlas region-name readout under the crosshair) or
+[`canlab_niivue`](../canlab_niivue_guide.md) (portable web viewer):
 
 ![Thresholded result montage](glm_map_1stlevel_montage.png)
 

@@ -108,7 +108,10 @@ The fit produces `statistic_image` maps. Re-threshold without refitting
 (`threshold(g, .005, 'unc', 'k', 10)`), make an atlas-labeled table
 (`table(g)`), and render a montage (`montage(g, 't')`, or
 `canlab_results_fmridisplay`). Pick an individual regressor or contrast with
-`get_wh_image(g.t, k)`.
+`get_wh_image(g.t, k)`. For interactive inspection, open a map in
+`canlab_orthviews` (MATLAB three-plane viewer with an atlas region-name readout
+under the crosshair) or [`canlab_niivue`](../canlab_niivue_guide.md) (portable
+web viewer you can email or embed in a report).
 
 ---
 

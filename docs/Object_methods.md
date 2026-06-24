@@ -14,8 +14,18 @@ t    = threshold(t, 0.005, 'unc');       % re-threshold
 r    = region(t);                        % connect blobs -> region object
 table(r);                                % atlas-labeled results table
 montage(r);                              % brain montage
+
+canlab_orthviews(t);                     % interactive 3-plane viewer in MATLAB
+                                         %   (names the atlas region under the crosshair)
+canlab_niivue(t);                        % portable interactive web viewer (NiiVue) —
+                                         %   an .html you can email or embed in a report
 ```
 ![object types flowchart](overview_pngs/CANlab_ttest_flowchart.png)
+
+The last two lines open **interactive** viewers for point-and-click inspection: `canlab_orthviews`
+for SPM-style three-plane navigation in MATLAB (with a live atlas region-name readout under the
+crosshair), and [`canlab_niivue`](canlab_niivue_guide.md) for a self-contained web viewer. See
+[Visualizing images and results](#visualizing-images-and-results) below.
 
 Most user-facing image classes inherit from a common abstract base, `image_vector`, which stores image data as a flat `[voxels x images]` matrix in a `.dat` field with the inverse mapping back to 3-D space in `.volInfo`. This is what lets generic statistical / ML code operate on `.dat` while the class methods handle the spatial reconstruction transparently.
 
@@ -93,10 +103,10 @@ Most image objects (`fmri_data`, `statistic_image`, `atlas`) share a common set 
 entry points — pick by output medium:
 
 - **`montage(obj)`** — slice montage on a canonical anatomical underlay; the workhorse for static figures.
-- **`orthviews(obj)`** — SPM-based interactive three-plane viewer in MATLAB; `canlab_orthviews` adds CANlab conveniences (multiple blobs, region tables).
+- **`orthviews(obj)` / `canlab_orthviews(obj)`** — SPM-based interactive three-plane viewer in MATLAB. `canlab_orthviews` adds CANlab conveniences: multiple blob layers, a right-click context menu, region tables, and a **live atlas region-name readout** that names the region under the crosshair as you click/drag (attach any `atlas` with `canlab_orthviews('AddAtlasLabel', atl)`).
 - **`surface(obj)` / `isosurface(obj)`** — render activation on 3-D cortical surfaces / isosurfaces in MATLAB.
 - **`canlab_results_fmridisplay(obj)`** — pre-built montage + surface scaffolds returning a registered `fmridisplay`.
-- **[`canlab_niivue(obj)`](canlab_niivue_guide.md)** — interactive **web** orthviews (NiiVue): a portable, point-and-click `.html` viewer with colormap/threshold/opacity controls that you can email or embed in an HTML report. See the **[canlab_niivue guide](canlab_niivue_guide.md)**.
+- **[`canlab_niivue(obj)`](canlab_niivue_guide.md)** — interactive **web** orthviews (NiiVue): a portable, point-and-click `.html` viewer with colormap/threshold/opacity controls, a crosshair coordinate + value readout, and an **atlas region readout** that names and outlines the region under the crosshair. Email it or embed it in an HTML report. On a `statistic_image`, **`orthviews_niivue(t)`** is a one-liner shortcut that writes the page to a temp folder and opens it. See the **[canlab_niivue guide](canlab_niivue_guide.md)**.
 
 ## Visualization helpers (stand-alone)
 
@@ -105,7 +115,8 @@ Functions that are not class methods but are widely used to render brains, regio
 | Function | One-liner |
 |---|---|
 | [`addbrain`](individual_functions/addbrain.md) | Add a canonical anatomical surface or named region (cortex, BG, thalamic nuclei, etc.) to current axes |
-| [`canlab_niivue`](canlab_niivue_guide.md) | Interactive web-based orthviews (NiiVue): underlay + stat overlay in the browser; embeddable in HTML reports |
+| `canlab_orthviews` | Interactive SPM-style three-plane viewer in MATLAB; multiple blob layers, right-click menu, region tables, and a live atlas region-name readout under the crosshair |
+| [`canlab_niivue`](canlab_niivue_guide.md) | Interactive web-based orthviews (NiiVue): underlay + stat overlay in the browser, with a crosshair atlas region readout/outline; embeddable in HTML reports |
 | [`canlab_results_fmridisplay`](individual_functions/canlab_results_fmridisplay.md) | Pre-built montage / surface scaffolds (`'full'`, `'compact'`, ...) that return a registered `fmridisplay` |
 | [`cluster_surf`](individual_functions/cluster_surf.md) | Render clusters / regions on a canonical surface (legacy; superseded by `addbrain` + `render_on_surface`) |
 | [`barplot_columns`](individual_functions/barplot_columns.md) | Bar plot of column means with errors and per-column tests |

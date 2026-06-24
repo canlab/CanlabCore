@@ -62,6 +62,8 @@ require a graphics environment (won't fully work in headless `matlab -batch`).
 | `plot_current_orthviews_coord` | `@image_vector` | Print MNI of current orthviews crosshair |
 | `saveplots` | `@fmri_data` | Save the current plots to disk |
 
+**Interactive viewers (stand-alone functions, not class methods):** `canlab_orthviews(obj)` opens an enhanced SPM-style three-plane viewer in MATLAB (multiple blob layers, right-click menu, region tables, and an atlas region-name readout under the crosshair); [`canlab_niivue(obj)`](canlab_niivue_guide.md) writes a portable point-and-click **web** viewer (NiiVue) with the same crosshair atlas readout, embeddable in HTML reports.
+
 ## Resampling and interpolation
 
 Anything that changes the voxel grid or compares grids.

@@ -7,7 +7,8 @@ results). Multiple images can be stored in a single object, thresholding
 is reversible (via the `threshold` method) without changing the
 underlying values, and standard visualizations (`orthviews`, `surface`,
 `montage`) honor the `.sig` field so only suprathreshold voxels are
-shown.
+shown. `orthviews_niivue` pops the thresholded map open as an interactive
+web viewer in your browser.
 
 This class also inherits all `image_vector` methods listed in
 [image_vector_methods.md](image_vector_methods.md). Only methods owned
@@ -50,7 +51,10 @@ following:
 | Method | From | One-liner |
 |---|---|---|
 | [`orthviews`](individual_functions/fmri_data_orthviews.md) | `@statistic_image` | Orthviews honoring `.sig` so only suprathreshold voxels show (override) |
+| `orthviews_niivue` | `@statistic_image` | Web "orthviews": write a self-contained NiiVue `.html` of the (thresholded) map and open it in the browser — a one-line wrapper over `canlab_niivue` |
 | [`riverplot`](individual_functions/statistic_image_riverplot.md) | `@statistic_image` | Riverplot of relationships among images in the object |
+
+**Interactive viewers.** `orthviews_niivue(t)` is the quickest way to inspect a thresholded map in a browser — it writes a portable NiiVue page (crosshair coordinate + value + **atlas region** readout, with a single-region outline/shade) to a temp folder and opens it. The underlying [`canlab_niivue(t)`](canlab_niivue_guide.md) exposes the full option set (colormaps, color limits, output folder, embedding). In MATLAB, `canlab_orthviews(t)` opens the enhanced SPM-style three-plane viewer (multiple blob layers, region tables, and the same crosshair atlas region-name readout).
 
 ## Statistics
 

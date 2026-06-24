@@ -20,3 +20,21 @@ Start with the roadmap to orient yourself, then follow the walkthrough to run it
 *More workflows will be added here over time.*
 
 The two `glm_map` workflows share the [`glm_map` object page](glm_map_methods.md) (full method reference) and the [`fmri_glm_design_matrix`](fmri_glm_design_matrix_methods.md) design-building object.
+
+## Visualizing results
+
+Most workflows end at a thresholded `statistic_image` or a `region` object. The same map can be rendered several ways — pick by output medium:
+
+**Static figures (MATLAB):**
+
+- **`montage(t)`** — slice montage on a canonical anatomical underlay; the workhorse for figures and reports.
+- **`surface(t)`** — render activation on 3-D cortical surfaces. Style presets include `'foursurfaces_hcp'` (lateral + medial views of both hemispheres with brainstem, on HCP pial surfaces), `'inflated'`, and cutaways; `isosurface` gives 3-D blobs.
+- **[`canlab_results_fmridisplay(t)`](individual_functions/canlab_results_fmridisplay.md)** — pre-built montage + surface scaffolds (`'compact2'`, `'full'`, …) returning a registered `fmridisplay` whose blob layers you can swap without re-rendering the anatomy.
+- **`table(t)` / `region(t)`** — atlas-labeled results table and the `region` objects behind it.
+
+**Interactive viewers (point-and-click):**
+
+- **`canlab_orthviews(t)`** — SPM-style three-plane viewer in MATLAB. Click/drag to navigate; the bottom strip names the **atlas region under the crosshair** (attach any atlas with `canlab_orthviews('AddAtlasLabel', atl)`).
+- **[`canlab_niivue(t)`](canlab_niivue_guide.md)** — a portable, self-contained `.html` web viewer (NiiVue) with colormap/threshold/opacity controls, a crosshair coordinate + value readout, and an atlas region readout that outlines the region under the crosshair. Email it or embed it in an HTML report. **`orthviews_niivue(t)`** is a one-liner shortcut that writes the page to a temp folder and opens it in your browser.
+
+See [Visualizing images and results](Object_methods.md#visualizing-images-and-results) for the full set of visualization entry points.

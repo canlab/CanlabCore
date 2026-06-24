@@ -183,6 +183,10 @@ g = threshold(g, .001, 'unc', 'k', 5);
 t_pain = get_wh_image(g.t, find(contains(g.regressor_names,'Pain'), 1));  % run-1 Pain
 canlab_results_fmridisplay(t_pain, 'compact2');
 % table(g, 't');   % atlas-labeled table
+
+% Interactive inspection:
+canlab_orthviews(t_pain);   % MATLAB 3-plane viewer; names the atlas region at the crosshair
+canlab_niivue(t_pain);      % portable web viewer (NiiVue) — email/embed in an HTML report
 ```
 
 ![Thresholded result montage](glm_map_1stlevel_montage.png)

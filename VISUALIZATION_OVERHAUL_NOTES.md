@@ -143,7 +143,20 @@ added after blobs; collapsing the duplicate isosurface/orthviews engines; deleti
   (top visible wins). It's moderate, not a one-liner, and shares machinery with the deferred
   multi-layer surface compositing, so do it together with that.
 
-### Deferred: one central value→colour mapping, two renderers (T. Wager)
+### Central value→colour mapping, two renderers (T. Wager) — IN PROGRESS
+
+**Step 1 done (2026-06-25): the `canlab_colormap` component.**
+`CanlabCore/fmridisplay_helper_functions/canlab_colormap.m` is the central value→RGB map.
+A value class with static factories `single` / `split` / `solid` / `indexed` and
+`from_render_args(args, cmaprange)` (bridges the existing layer render_args), plus:
+`map(values)` → N×3 RGB (matches render_blobs: split interpolates minpos→maxpos for
+positives and maxneg→minneg for negatives; single ramps mincolor→maxcolor; solid is
+constant; indexed rounds-and-indexes; uncoloured values are NaN), `legend_samples(n)` →
+one colorbar's worth (split spans zero in a single bar — the fix for the single-range
+legend), and `lut(n)` → n×3 table. Tested in
+`Unit_tests/visualization/canlab_test_canlab_colormap.m` (14 cases). NOT yet wired into the
+renderers — that is the next step (surfaces to true-colour RGB via `map`/`lut`, then
+montages and legend read the same object).
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

@@ -270,9 +270,21 @@ solid 0; the only raw-CData differences were out-of-range garbage the old code s
 alpha=0 voxels, which the central map correctly clamps). Retired the now-dead duplicated colour
 logic: `splitcolor_Z_to_slicecdat` and the `cdat2`/`cdatminneg`/`cdatmaxneg` matrices.
 
-**Next:** route the legend (`@fmridisplay/legend` + the controller stripe) through the same central
-map (one colorbar spanning zero for split; retires the last copy of the colour math), then it's
-fully unified.
+**Step 7b done (2026-06-25): the legend bar routed through the central map.**
+Added `canlab_colormap.colorbar_ramp(n)` — the continuous legend-bar ramp (NO threshold gap, unlike
+`map`/`legend_samples`): for split it is the negative ramp (minneg->maxneg) followed by the positive
+ramp (minpos->maxpos), reading extreme-neg ... 0 ... extreme-pos. The controller's per-layer colour
+stripe + preview swatch (the in-app legend the user actually reads) now come from
+`from_render_args(args).colorbar_ramp(64)` instead of bespoke `colormap_tor` calls, so the stripe,
+the rendered blobs, and surfaces all share one colour source. Colormap suite 14 -> 16.
+
+Remaining (minor, optional): `@fmridisplay/legend` (the FIGURE colorbar, now opt-in/default-off)
+still has its own split-positioning helper (`get_split_colormap_values_and_colors`). Its colours
+already match the central map (same maths, different field storage), so this is a code-dedup
+nicety, not a correctness issue — deferred to avoid risk in its intricate value-positioned layout.
+
+**Status:** montage slices, surfaces, and the controller legend now all derive colours from the one
+`canlab_colormap`. The colour pipeline is unified end-to-end for the paths users see.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

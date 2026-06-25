@@ -297,22 +297,11 @@ end
 end
 
 function cm = swatch_colormap(args)
-% A representative colormap matrix for the preview, derived from render_args.
-hask = @(key) any(strcmp(args, key));
-valk = @(key) args{find(strcmp(args, key), 1) + 1};
-if hask('splitcolor')
-    sc = valk('splitcolor');
-    cm = [colormap_tor(sc{1}, sc{2}); colormap_tor(sc{3}, sc{4})];
-elseif hask('maxcolor') || hask('mincolor')
-    maxc = [1 1 0]; minc = [1 0 0];
-    if hask('maxcolor'), maxc = valk('maxcolor'); end
-    if hask('mincolor'), minc = valk('mincolor'); end
-    cm = colormap_tor(minc, maxc);
-elseif hask('color')
-    c = valk('color'); cm = repmat(c(:)', 32, 1);
-else
-    cm = [colormap_tor([0 0 1], [0 1 1]); colormap_tor([1 .5 0], [1 1 0])];
-end
+% Continuous colour ramp for the layer's stripe (= the in-controller legend bar)
+% and the preview swatch, taken from the central canlab_colormap so the stripe,
+% the figure legend, and the rendered blobs all agree. colorbar_ramp gives the
+% no-gap legend ramp (extreme-neg ... 0 ... extreme-pos for split).
+cm = canlab_colormap.from_render_args(args, []).colorbar_ramp(64);
 end
 
 

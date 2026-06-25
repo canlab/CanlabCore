@@ -140,3 +140,27 @@ rgb = map(cm, [-4 -2 2 4 0]');
 tc.verifyEqual(size(rgb), [5 3]);
 tc.verifyTrue(all(isnan(rgb(5, :))), 'zero row is NaN');
 end
+
+
+% ---- colorbar_ramp (continuous legend bar, no threshold gap) ------------
+
+function test_colorbar_ramp_split_no_gap(tc)
+% Split ramp: first half neg (minneg->maxneg), second half pos (minpos->maxpos),
+% no greyed gap (unlike legend_samples). Ends are the extremes.
+cm = canlab_colormap.split([0 0 1], [0 1 1], [1 .5 0], [1 1 0], [-4 4]);
+r  = colorbar_ramp(cm, 64);
+tc.verifyEqual(size(r), [64 3]);
+tc.verifyFalse(any(isnan(r(:))), 'no gap/NaNs in colorbar ramp');
+tc.verifyEqual(r(1, :),   [0 0 1], 'AbsTol', 1e-9, 'neg extreme = minneg');
+tc.verifyEqual(r(end, :), [1 1 0], 'AbsTol', 1e-9, 'pos extreme = maxpos');
+end
+
+function test_colorbar_ramp_single_and_solid(tc)
+cs = canlab_colormap.single([1 0 0], [1 1 0], [2 5]);
+r  = colorbar_ramp(cs, 10);
+tc.verifyEqual(r(1, :),   [1 0 0], 'AbsTol', 1e-9);
+tc.verifyEqual(r(end, :), [1 1 0], 'AbsTol', 1e-9);
+cm = canlab_colormap.solid([0.2 0.6 0.9]);
+rs = colorbar_ramp(cm, 8);
+tc.verifyEqual(rs, repmat([0.2 0.6 0.9], 8, 1), 'AbsTol', 1e-9, 'solid ramp is one colour');
+end

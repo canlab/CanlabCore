@@ -126,6 +126,29 @@ classdef canlab_colormap
             [~, out] = obj.legend_samples(n);
         end
 
+        function rgb = colorbar_ramp(obj, n)
+            % COLORBAR_RAMP  n x 3 CONTINUOUS colour ramp for a legend bar / preview
+            % swatch (low -> high), with NO threshold gap — unlike map()/legend_samples,
+            % which grey the sub-threshold middle of a split map. For split, the first
+            % half is the negative ramp (minneg -> maxneg) and the second the positive
+            % ramp (minpos -> maxpos), so the bar reads extreme-neg ... 0 ... extreme-pos.
+            % This is the single source for the controller stripe and the figure legend.
+            if nargin < 2, n = 64; end
+            switch obj.type
+                case 'solid'
+                    rgb = repmat(rowcolor(obj.colors{1}), n, 1);
+                case 'single'
+                    rgb = ramp_between(obj.colors{1}, obj.colors{2}, n);
+                case 'split'
+                    h = floor(n / 2);
+                    rgb = [ramp_between(obj.colors{1}, obj.colors{2}, h); ...
+                           ramp_between(obj.colors{3}, obj.colors{4}, n - h)];
+                case 'indexed'
+                    rgb = obj.colors;
+            end
+            rgb = min(max(rgb, 0), 1);
+        end
+
         function tf = isequal_to(obj, other)
             tf = isa(other, 'canlab_colormap') && strcmp(obj.type, other.type) && ...
                 isequal(obj.colors, other.colors) && isequal(obj.range, other.range);
@@ -186,6 +209,13 @@ end
 function c = rowcolor(c)
 c = double(c(:)');
 if numel(c) ~= 3, error('canlab_colormap:badColor', 'Colours must be 1x3 RGB.'); end
+end
+
+function rgb = ramp_between(c1, c2, n)
+% n x 3 linear interpolation from colour c1 to colour c2.
+c1 = rowcolor(c1); c2 = rowcolor(c2);
+w = linspace(0, 1, n)';
+rgb = (1 - w) .* c1 + w .* c2;
 end
 
 function w = clamp01(w)

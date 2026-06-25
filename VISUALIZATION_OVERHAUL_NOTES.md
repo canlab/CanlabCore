@@ -58,13 +58,15 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
     removed. (True perceptual maps — inferno/viridis/etc. — are deferred; they need colormap
     matrices threaded through `render_blobs`/`render_on_surface`, riskier than the max/min
     ramps used now.)
-- **Controller redesign + more colormaps.** The panel is ~2× wider with two compact rows per
-  layer (Opacity slider + Visible on row 1; a type-aware **threshold slider** + Colors dropdown
-  on row 2), bigger text, a shorter re-render button, fixed-width opacity/colors controls. The
-  threshold slider is a p-value slider (ticks at .001/.005/.01/.05/.1) for `statistic_image`
-  layers, or a raw `|x|` slider anchored at 0 and the 99.9th percentile of `|data|` for
-  `fmri_data`/region layers. Colormap menu adds `split (mango)` and `seafire` (split presets)
-  alongside warm/cool/winter and the `solid colour…` picker.
+- **Controller redesign + more colormaps.** Single-column layout per layer with a colormap
+  **title stripe**, an opacity slider, a type-aware **threshold slider**, a Colors dropdown with
+  a live **preview swatch**, and a visibility toggle; a footer groups **Re-render / Remove
+  legend / Close**. The threshold slider is a **log-scale** p-value slider (ticks at
+  .001/.005/.01/.05/.1, so .05–.1 sit close and .001–.005 spread out) for `statistic_image`
+  layers, or a linear raw `|x|` slider anchored at 0 and the 99.9th percentile of `|data|` for
+  `fmri_data`/region layers. Colormap menu adds `split (mango)` and `seafire` split presets
+  alongside warm/cool/winter and the `solid colour…` picker. Window colour is set by the
+  `FIG_COLOR` constant at the top of `controller.m` (currently `[1 .5 0]`).
 - **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
   to `gcf` — previously a surface legend could land on the montage window. New
   `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).

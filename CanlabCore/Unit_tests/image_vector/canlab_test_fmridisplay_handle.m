@@ -224,7 +224,9 @@ fig = controller(o2);
 tc.addTeardown(@() delete(fig(isvalid(fig))));
 ts = findobj(fig, 'Tag', 'threshold_1');
 tc.verifyClass(ts, 'matlab.ui.control.Slider');
-tc.verifyEqual(ts.MajorTicks, [.001 .005 .01 .05 .1], 'AbsTol', 1e-12, 'p-value tick marks');
+% p-value slider is LOG scale: ticks at log10(p), labels are the p-values.
+tc.verifyEqual(ts.Limits, log10([.001 .1]), 'AbsTol', 1e-9, 'log p-value range');
+tc.verifyEqual(ts.MajorTickLabels(:)', {'.001','.005','.01','.05','.1'}, 'p-value tick labels');
 dd = findobj(fig, 'Tag', 'colormap_1');
 tc.verifyTrue(all(ismember({'split (mango)', 'seafire'}, dd.Items)), 'mango/seafire offered');
 end
@@ -420,8 +422,9 @@ fig = controller(o2);
 tc.addTeardown(@() delete(fig(isvalid(fig))));
 o2  = rethreshold(o2, 0.001, 'unc');
 thr = findobj(o2.controller_handle, 'Tag', 'threshold_1');
-tc.verifyEqual(thr.Value, 0.001, 'AbsTol', 1e-9, ...
-    'controller threshold field synced to command-line rethreshold');
+% threshold is a LOG-scale p-value slider, so its Value is log10(p).
+tc.verifyEqual(thr.Value, log10(0.001), 'AbsTol', 1e-9, ...
+    'controller threshold slider synced to command-line rethreshold');
 end
 
 

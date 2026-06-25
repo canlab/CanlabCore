@@ -221,6 +221,20 @@ tc.verifyGreaterThan(numel(o2.surface{end}.object_handle), 1, ...
 end
 
 
+function test_surface_unknown_keyword_informative_error(tc)
+% An unrecognized direction must raise an informative error (naming the token
+% + pointing to addbrain), not addbrain's terse 'Unknown method.'.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+o2 = fmridisplay; o2 = montage(o2);
+err = [];
+try, surface(o2, 'cutaway_left'); catch err, end %#ok<CTCH>
+tc.verifyNotEmpty(err, 'unknown direction should error');
+tc.verifyEqual(err.identifier, 'fmridisplay:surface:unknownDirection');
+tc.verifySubstring(err.message, 'cutaway_left', 'error names the offending keyword');
+tc.verifySubstring(err.message, 'addbrain', 'error points to addbrain');
+end
+
+
 function test_surface_medial_flips_azimuth(tc)
 % 'medial' mirrors the camera azimuth 180 deg relative to the lateral default
 % that addbrain sets (medial = lateral azimuth + 180).

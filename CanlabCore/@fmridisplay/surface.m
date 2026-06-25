@@ -150,7 +150,24 @@ switch dir
         view(137, 18); lightRestoreSingle;
 
     otherwise
-        h = addbrain(dir, extra{:});
+        try
+            h = addbrain(dir, extra{:});
+        catch err
+            % addbrain rejects unknown keywords with a terse 'Unknown method.';
+            % translate that into an informative message that names the offending
+            % token and points at the full list (the rest of addbrain's errors,
+            % e.g. a missing surface file, are passed through unchanged).
+            if strcmp(err.message, 'Unknown method.')
+                error('fmridisplay:surface:unknownDirection', ...
+                    ['surface: ''%s'' is not a recognized addbrain surface/region keyword.\n' ...
+                     'Run `help addbrain` for the full list. Common choices: ''hires left''/''hires right'', ' ...
+                     '''inflated left''/''inflated right'', ''flat left''/''flat right''; cutaways are ' ...
+                     '''left_cutaway''/''right_cutaway'' (note the order, not ''cutaway_left''); composites ' ...
+                     'include ''insula surfaces'', ''brainstem left'', ''caudate right'', ''limbic''.'], dir);
+            else
+                rethrow(err);
+            end
+        end
         if strcmp(orn, 'medial')
             [az, el] = view(axh);
             view(axh, mod(az + 180, 360), el);

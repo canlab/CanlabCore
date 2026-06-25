@@ -46,10 +46,13 @@ function fig_handle = montage(image_obj, varargin)
 %
 %   See help canlab_results_fmridisplay for more info and options.
 %
-%   Legend control: There is a 'nolegend' option. Colorbar legends are
-%   created in render_on_surface. You can access and control the handles
-%   like this:
-%       set(obj.activation_maps{1}.legendhandle, 'Position', [[0.965 0.0994 0.01 0.4037]]);
+%   Legend control: the colorbar legend on the montage FIGURE is OFF by
+%   default. The display controller (controller.m) shows a per-layer legend
+%   (colour bar + numeric end labels) in its own panel instead, keeping the
+%   figure clean. Pass 'legend' to draw the colorbar on the montage figure
+%   (single-row montages only; useful for publication export). You can then
+%   access/control the handle like this:
+%       set(obj.activation_maps{1}.legendhandle, 'Position', [0.965 0.0994 0.01 0.4037]);
 %
 %   Colormap range control: Range is set automatically by default, and
 %   stored in obj.activation_maps{wh_to_display}.cmaprange. You can enter
@@ -136,7 +139,7 @@ for i = 1:length(varargin)
             case {'trans', 'color' 'maxcolor', 'mincolor', 'transvalue', 'cmaprange', 'full', 'full2', ...
                     'full no surfaces', 'MNI152NLin6Asym white', 'MNI152NLin6Asym midthickness', 'MNI152NLin6Asym pial', ...
                     'MNI152NLin2009cAsym white', 'MNI152NLin2009cAsym midthickness', 'MNI152NLin2009cAsym pial', ...
-                    'MNI152NLin6Asym sphere', 'compact2', 'compact3', 'nolegend', 'clim', 'colormap', 'pos_colormap', 'neg_colormap', 'gray_buffer', ...
+                    'MNI152NLin6Asym sphere', 'compact2', 'compact3', 'nolegend', 'legend', 'clim', 'colormap', 'pos_colormap', 'neg_colormap', 'gray_buffer', ...
                     'noverbose', 'indexmap','hcp grayordinates compact','hcp grayordinates', 'hcp grayordinates subcortex','disableVis3d'}
             case { 'compact', ...
                     'compact2', ...
@@ -259,12 +262,17 @@ switch meth
             
         end
         
-        if ~do_multirow
-            
-            % Plot legend only for single-row, otherwise obscures some images
-            
+        if ~do_multirow && any(strcmp(varargin, 'legend'))
+
+            % Colorbar legend on the montage FIGURE is now OFF by default: the
+            % display controller (controller.m) shows a per-layer legend in its
+            % own panel, so the figure stays clean. Pass 'legend' to draw the
+            % colorbar on the montage figure anyway (e.g. for a publication
+            % export). Only single-row montages are eligible (a legend would
+            % obscure images in a multi-row layout).
+
             o2 = legend(o2, varargin{:});  % pass through "noverbose" option
-            
+
         end
         
         fig_handle = o2;

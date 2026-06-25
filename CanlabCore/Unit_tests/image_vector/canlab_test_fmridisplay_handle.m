@@ -177,8 +177,11 @@ end
 % existing blobs, and refresh/remove propagate to surfaces.
 % ------------------------------------------------------------------------
 
-function o2 = build_montage_surface_blobs(tc)
+function o2 = build_montage_surface_blobs(tc, with_legend)
 % montage + one surface (added BEFORE blobs) + blobs. Skips cleanly if no GL.
+% Surface colorbars are OFF by default now; pass with_legend=true to force them
+% on (composite_surfaces with show_legend) for the legend-specific tests.
+if nargin < 2, with_legend = false; end
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
 t  = canlab_get_sample_thresholded_t(0.01);
 o2 = fmridisplay; o2 = montage(o2);
@@ -188,6 +191,7 @@ catch ME
     tc.assumeFail(['surface needs a graphics environment: ' ME.message]);
 end
 o2 = addblobs(o2, t, 'noverbose');
+if with_legend, o2 = composite_surfaces(o2, [], true); end   % draw surface colorbars
 end
 
 
@@ -254,13 +258,18 @@ end
 
 function test_surface_pulls_in_existing_blobs(tc)
 % A surface added AFTER blobs should render those existing blobs onto it.
+% Surface colorbars are off by default now, so we verify the surface PATCH got
+% true-colour vertex colouring (the actual pull-in), not a legend.
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
 t  = canlab_get_sample_thresholded_t(0.01);
 o2 = fmridisplay; o2 = montage(o2); o2 = addblobs(o2, t, 'noverbose');
-has_legend = @() isfield(o2.activation_maps{end}, 'legendhandle') && ~isempty(o2.activation_maps{end}.legendhandle);
-tc.verifyFalse(has_legend(), 'no surface legend before any surface exists');
+tc.verifyEmpty(o2.surface, 'no surface exists yet');
 try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
-tc.verifyTrue(has_legend(), 'adding a surface rendered the existing blob layer onto it');
+h = o2.surface{end}.object_handle; h = h(ishandle(h));
+cdata = get(h(1), 'FaceVertexCData');
+tc.verifyEqual(size(cdata, 2), 3, 'surface uses true-colour per-vertex RGB');
+tc.verifyGreaterThan(size(unique(cdata, 'rows'), 1), 1, ...
+    'blobs coloured some surface vertices (pull-in happened)');
 end
 
 
@@ -598,8 +607,46 @@ tc.verifyEqual(a.Position(3) * fig.Position(3), pix_w0, 'RelTol', 0.03, 'slice p
 end
 
 
+function test_controller_shows_legend_labels(tc)
+% The controller HOSTS the legend: numeric end labels under each layer's colour
+% stripe (extremes; 0 in the centre for split maps), read from cmaprange.
+tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
+    'controller widget requires an interactive figure window');
+t   = canlab_get_sample_thresholded_t(0.01);
+o2  = montage(t);
+fig = controller(o2);
+tc.addTeardown(@() delete(fig(isvalid(fig))));
+cr  = o2.activation_maps{1}.cmaprange;
+lo  = findobj(fig, 'Tag', 'leglo_1');
+mid = findobj(fig, 'Tag', 'legmid_1');
+hi  = findobj(fig, 'Tag', 'leghi_1');
+tc.verifyNotEmpty(lo, 'low-end legend label exists');
+tc.verifyNotEmpty(hi, 'high-end legend label exists');
+tc.verifyEqual(lo.Text, num2str(round(min(cr), 1, 'significant')), 'low end labelled from cmaprange');
+tc.verifyEqual(hi.Text, num2str(round(max(cr), 1, 'significant')), 'high end labelled from cmaprange');
+if numel(cr) >= 4
+    tc.verifyEqual(mid.Text, '0', 'split map labels 0 in the centre');
+end
+end
+
+
+function test_montage_figure_legend_off_by_default(tc)
+% The colorbar legend on the montage FIGURE is off by default (the controller
+% carries the legend now); passing 'legend' opts back in.
+t = canlab_get_sample_thresholded_t(0.01);
+haslh = @(o) isfield(o.activation_maps{1}, 'legendhandle') && ...
+             ~isempty(o.activation_maps{1}.legendhandle) && ...
+             any(ishandle(o.activation_maps{1}.legendhandle));
+o1 = montage(t);
+tc.verifyFalse(haslh(o1), 'no montage figure legend by default');
+o2 = montage(t, 'legend');
+tc.verifyTrue(haslh(o2), '''legend'' draws the montage figure colorbar');
+end
+
+
 function test_surface_legend_not_on_montage(tc)
-% A surface colorbar must be parented to the surface figure, not the montage.
+% When surface colorbars ARE drawn (legend forced on), they must be parented to
+% the surface figure, not the montage figure.
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
 t  = canlab_get_sample_thresholded_t(0.01);
 fm = figure; o2 = montage(t);
@@ -608,6 +655,7 @@ fs = figure;
 tc.addTeardown(@() close(fs(isvalid(fs))));
 try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
 o2 = addblobs(o2, t, 'noverbose');
+o2 = composite_surfaces(o2, [], true);     % force surface colorbars on (default is off)
 tc.verifyEmpty(findobj(fm, 'Type', 'colorbar'), 'no surface colorbar on the montage figure');
 tc.verifyNotEmpty(findobj(fs, 'Type', 'colorbar'), 'surface colorbar lives on the surface figure');
 end
@@ -615,7 +663,7 @@ end
 
 function test_remove_legend_clears_surface_colorbars(tc)
 % remove_legend deletes the surface colorbar legends but keeps the blobs.
-o2  = build_montage_surface_blobs(tc);
+o2  = build_montage_surface_blobs(tc, true);   % legend forced on
 fig = ancestor(o2.surface{1}.object_handle(1), 'figure');
 o2  = remove_legend(o2);
 tc.verifyEmpty(findobj(fig, 'Type', 'colorbar'), 'remove_legend cleared surface colorbars');
@@ -643,7 +691,7 @@ function test_removeblobs_clears_layers_and_surface_legend(tc)
 % removeblobs must act on all views together: drop the blob layers and remove
 % the surface colorbar(s) it created. (Surface vertex colors are restored to
 % gray by addbrain('eraseblobs'); that mechanism is exercised here too.)
-o2 = build_montage_surface_blobs(tc);
+o2 = build_montage_surface_blobs(tc, true);   % legend forced on
 leg = [];
 if isfield(o2.activation_maps{end}, 'legendhandle'), leg = o2.activation_maps{end}.legendhandle; end
 o2 = removeblobs(o2);

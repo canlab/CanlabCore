@@ -60,7 +60,7 @@ end
 setappdata(fig, 'objname', vname);
 setappdata(fig, 'fmridisplay_obj', obj);
 fig.Name = sprintf('CANlab display controller  [ %s ]', vname);
-fig.Position(3:4) = [460, 60 + 205 * max(nlayers, 1)];
+fig.Position(3:4) = [460, 60 + 230 * max(nlayers, 1)];
 
 if nlayers == 0
     uilabel(fig, 'Position', [20 fig.Position(4)-70 420 50], 'FontSize', 17, ...
@@ -69,7 +69,7 @@ if nlayers == 0
 end
 
 outer = uigridlayout(fig, [nlayers + 1, 1]);
-outer.RowHeight = [repmat({195}, 1, nlayers), {40}];
+outer.RowHeight = [repmat({220}, 1, nlayers), {40}];
 outer.Scrollable = 'on';
 
 for k = 1:nlayers
@@ -102,34 +102,40 @@ fs    = base_fontsize();
 panel = uipanel(parent, 'Title', sprintf('Layer %d  (%s)', k, source_kind(src)), 'FontSize', fs + 1);
 panel.Layout.Row = k;
 
-g = uigridlayout(panel, [5, 2]);
-g.RowHeight     = {16, 34, 44, 34, 30};   % stripe, opacity, threshold(+ticks), colors, visible
+g = uigridlayout(panel, [6, 2]);
+% stripe(taller), legend value labels, opacity, threshold(+ticks), colors, visible
+g.RowHeight     = {24, 16, 34, 44, 34, 30};
 g.ColumnWidth   = {96, '1x'};
 g.RowSpacing    = 4;
 g.ColumnSpacing = 6;
 g.Padding       = [8 4 8 2];
 
-% Row 1: colormap "title stripe" (full width)
+% Row 1: colormap "title stripe" doubling as the legend colour bar (full width)
 stripe = make_colormap_strip(g, swatch_colormap(args));
 stripe.Layout.Row = 1; stripe.Layout.Column = [1 2];
 stripe.Tag = sprintf('stripe_%d', k);
 
-% Row 2: Opacity
+% Row 2: numeric legend labels under the stripe (extreme ends; 0 in the centre
+% for split maps). This is the in-controller legend (replaces the figure colorbar).
+lg = make_legend_labels(g, layer, k);
+lg.Layout.Row = 2; lg.Layout.Column = [1 2];
+
+% Row 3: Opacity
 uilabel(g, 'Text', 'Opacity', 'FontSize', fs);
 sld = uislider(g, 'Limits', [0 1], 'Value', current_opacity(args), ...
     'MajorTicks', [], 'MinorTicks', [], 'FontSize', fs, 'Tag', sprintf('opacity_%d', k), ...
     'ValueChangedFcn', @(s, ~) on_opacity(obj, k, s.Value, vname));
-sld.Layout.Row = 2; sld.Layout.Column = 2;
+sld.Layout.Row = 3; sld.Layout.Column = 2;
 
-% Row 3: threshold slider (type-aware; p-values on a log scale)
+% Row 4: threshold slider (type-aware; p-values on a log scale)
 [thr_label, thr_value, ~, is_pval] = threshold_spec(src, layer);
 uilabel(g, 'Text', thr_label, 'FontSize', fs);
 ts = build_threshold_slider(g, obj, k, src, is_pval, thr_value, vname, fs);
-ts.Layout.Row = 3; ts.Layout.Column = 2;
+ts.Layout.Row = 4; ts.Layout.Column = 2;
 
-% Row 4: Colors dropdown + live preview swatch
+% Row 5: Colors dropdown + live preview swatch
 uilabel(g, 'Text', 'Colors', 'FontSize', fs);
-cgrid = uigridlayout(g, [1 2]); cgrid.Layout.Row = 4; cgrid.Layout.Column = 2;
+cgrid = uigridlayout(g, [1 2]); cgrid.Layout.Row = 5; cgrid.Layout.Column = 2;
 cgrid.ColumnWidth = {'1x', 54}; cgrid.Padding = [0 0 0 0]; cgrid.ColumnSpacing = 6;
 dd = uidropdown(cgrid, 'Items', cmap_options, 'Value', current_colormap_label(args, cmap_options), ...
     'FontSize', fs, 'Tag', sprintf('colormap_%d', k), ...
@@ -140,9 +146,9 @@ sw.Layout.Column = 2; sw.Tag = sprintf('swatch_%d', k);
 % Clicking the colour swatch opens the colour picker (also re-picks a solid colour)
 set(findobj(sw, 'Type', 'image'), 'ButtonDownFcn', @(~, ~) pick_solid_colour(obj, k, vname));
 
-% Row 5: Visible + per-layer Remove
+% Row 6: Visible + per-layer Remove
 uilabel(g, 'Text', 'Visible', 'FontSize', fs);
-vg = uigridlayout(g, [1 2]); vg.Layout.Row = 5; vg.Layout.Column = 2;
+vg = uigridlayout(g, [1 2]); vg.Layout.Row = 6; vg.Layout.Column = 2;
 vg.ColumnWidth = {40, '1x'}; vg.Padding = [0 0 0 0]; vg.ColumnSpacing = 6;
 cb = uicheckbox(vg, 'Text', '', 'Value', true, 'Tag', sprintf('visible_%d', k), ...
     'ValueChangedFcn', @(c, ~) set_layer_visible(obj, k, c.Value));
@@ -164,15 +170,57 @@ end
 
 
 function toggle_legend(obj)
-% Turn the colorbar legend on if it's off, off if it's on.
-shown = false;
+% Toggle colorbar legends on the montage / surface FIGURES.
+%
+% Figure legends are OFF by default now that the controller shows a per-layer
+% legend (colour bar + numeric end labels) in its own panel. This button puts
+% colorbars back on the actual figures (e.g. for a publication export) and
+% removes them again. ON targets the montage figure explicitly (legend() would
+% otherwise draw into the controller uifigure via gcf — the old "toggle won't
+% turn back on" bug) and re-renders surfaces with colorbars; OFF removes both.
+fig = obj.controller_handle;
+on  = false;
+if ~isempty(fig) && isgraphics(fig)
+    v = getappdata(fig, 'fig_legends_on'); if ~isempty(v), on = v; end
+end
+
+if on
+    remove_legend(obj);                                    % surface colorbars + tracked axes
+    delete(findall(groot, 'Tag', 'fmridisp_fig_legend'));  % montage legend axes
+    new_state = false;
+else
+    draw_montage_legend(obj);
+    if ~isempty(obj.surface), composite_surfaces(obj, [], true); end   % surfaces WITH colorbars
+    new_state = true;
+end
+
+if ~isempty(fig) && isgraphics(fig), setappdata(fig, 'fig_legends_on', new_state); end
+end
+
+
+function draw_montage_legend(obj)
+% Draw the colorbar legend onto the montage FIGURE. legend() places its axes in
+% the current figure (gcf); when called from a controller callback gcf is the
+% controller uifigure, so we make the montage figure current first. The created
+% legend axes are tagged so toggle-off can find and delete them.
+montfig = [];
+for i = 1:numel(obj.montage)
+    ah = obj.montage{i}.axis_handles; ah = ah(ishandle(ah));
+    if ~isempty(ah), montfig = ancestor(ah(1), 'figure'); break; end
+end
+if isempty(montfig) || ~isvalid(montfig), return, end
+
+prev = get(groot, 'CurrentFigure');
+set(groot, 'CurrentFigure', montfig);
+legend(obj, 'noverbose');
+if ~isempty(prev) && isvalid(prev), set(groot, 'CurrentFigure', prev); end
+
 for k = 1:numel(obj.activation_maps)
     if isfield(obj.activation_maps{k}, 'legendhandle')
         lh = obj.activation_maps{k}.legendhandle;
-        if ~isempty(lh) && any(ishandle(lh)), shown = true; break; end
+        set(lh(ishandle(lh)), 'Tag', 'fmridisp_fig_legend');
     end
 end
-if shown, remove_legend(obj); else, legend(obj); end
 end
 
 
@@ -268,6 +316,41 @@ end
 end
 
 
+% ---- in-controller legend (numeric labels under the colour stripe) -----
+
+function lg = make_legend_labels(parent, layer, k)
+% A 3-cell row of numeric labels aligned to the colour stripe above it:
+% left = low end, right = high end, centre = 0 for split (+/-) maps only.
+lg = uigridlayout(parent, [1 3]);
+lg.ColumnWidth = {'1x', '1x', '1x'};
+lg.Padding = [2 0 2 0]; lg.ColumnSpacing = 2; lg.RowSpacing = 0;
+fs = max(9, base_fontsize() - 5);
+[lo, mid, hi] = legend_label_strings(layer);
+l1 = uilabel(lg, 'Text', lo,  'FontSize', fs, 'HorizontalAlignment', 'left',   'Tag', sprintf('leglo_%d', k));
+l2 = uilabel(lg, 'Text', mid, 'FontSize', fs, 'HorizontalAlignment', 'center', 'Tag', sprintf('legmid_%d', k));
+l3 = uilabel(lg, 'Text', hi,  'FontSize', fs, 'HorizontalAlignment', 'right',  'Tag', sprintf('leghi_%d', k));
+l1.Layout.Column = 1; l2.Layout.Column = 2; l3.Layout.Column = 3;
+end
+
+function [lo, mid, hi] = legend_label_strings(layer)
+% Numeric end labels from the layer's cmaprange (the mapped value range).
+% cmaprange is [lo hi] for a single ramp, or [negExtreme negNear0 posNear0
+% posExtreme] for a split map. We show the extreme ends; split maps add 0 at
+% the centre. Labels are rounded to 1 significant figure.
+lo = ''; mid = ''; hi = '';
+cr = [];
+if isfield(layer, 'cmaprange'), cr = layer.cmaprange; end
+cr = cr(~isnan(cr) & ~isinf(cr));
+if numel(cr) < 2, return, end
+f = @(x) num2str(round(x, 1, 'significant'));
+if numel(cr) >= 4
+    lo = f(min(cr)); hi = f(max(cr)); mid = '0';   % split: both extremes + 0
+else
+    lo = f(cr(1)); hi = f(cr(end));                % single ramp: just the ends
+end
+end
+
+
 function update_controls_in_place(fig, obj, cmap_options)
 % Re-sync each control + preview to its layer's current state (no rebuild).
 for k = 1:numel(obj.activation_maps)
@@ -293,7 +376,18 @@ for k = 1:numel(obj.activation_maps)
         a = findobj(fig, 'Tag', tagn{1});
         if ~isempty(a), draw_colormap_strip(a, cm); end
     end
+
+    % Refresh the numeric legend labels (cmaprange may have changed).
+    [lo, mid, hi] = legend_label_strings(layer);
+    set_label_text(fig, sprintf('leglo_%d', k),  lo);
+    set_label_text(fig, sprintf('legmid_%d', k), mid);
+    set_label_text(fig, sprintf('leghi_%d', k),  hi);
 end
+end
+
+function set_label_text(fig, tag, txt)
+h = findobj(fig, 'Tag', tag);
+if ~isempty(h), h.Text = txt; end
 end
 
 

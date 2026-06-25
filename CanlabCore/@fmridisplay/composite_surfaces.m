@@ -1,4 +1,4 @@
-function obj = composite_surfaces(obj, wh_surface)
+function obj = composite_surfaces(obj, wh_surface, show_legend)
 % Re-render all blob layers onto the surface(s) as a true-colour RGB composite.
 %
 % Resets each surface to its saved anatomy gray, then paints every blob layer in
@@ -22,6 +22,7 @@ function obj = composite_surfaces(obj, wh_surface)
 
 if isempty(obj.surface), return, end
 if nargin < 2 || isempty(wh_surface), wh_surface = 1:numel(obj.surface); end
+if nargin < 3 || isempty(show_legend), show_legend = false; end  % colorbars off by default
 
 % Reset each target surface to its saved anatomy gray
 for s = wh_surface
@@ -36,7 +37,7 @@ end
 
 % Paint every layer in order; each composites onto the running result
 for k = 1:numel(obj.activation_maps)
-    obj = render_layer_surfaces(obj, k, wh_surface);
+    obj = render_layer_surfaces(obj, k, wh_surface, show_legend);
 end
 
 end

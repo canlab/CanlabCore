@@ -239,10 +239,11 @@ classdef fmridisplay < handle
                             
                             obj = addblobs(obj, cl, varargin);
                             
-                        case {'slice_range', 'smooth', 'spacing', 'onerow'}
+                        case {'slice_range', 'smooth', 'spacing', 'onerow', 'legend', 'nolegend'}
                             % other inputs that we should ignore here
                             % but are used in subfunctions like montage,
-                            % etc.
+                            % etc. ('legend'/'nolegend' control the montage
+                            % figure colorbar; see @image_vector/montage.)
                             
                         otherwise, warning(['Unknown input string option:' varargin{i}]);
                     end
@@ -265,7 +266,7 @@ classdef fmridisplay < handle
         [figure_handles, figure_numbers, all_axis_han, is_valid_handle] = activate_figures(o2, varargin)
         obj = prune_dead_views(obj, doverbose)
         obj = refresh(obj, varargin)
-        obj = render_layer_surfaces(obj, k, wh_surface)
+        obj = render_layer_surfaces(obj, k, wh_surface, show_legend)
         obj = update_controller(obj)
     end
 

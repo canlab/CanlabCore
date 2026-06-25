@@ -1,4 +1,4 @@
-function obj = render_layer_surfaces(obj, k, wh_surface)
+function obj = render_layer_surfaces(obj, k, wh_surface, show_legend)
 % Render blob layer k onto registered surface view(s), in place.
 %
 % Shared surface-rendering engine for the stateful visualization overhaul.
@@ -54,6 +54,12 @@ end
 if nargin < 3 || isempty(wh_surface)
     wh_surface = 1:numel(obj.surface);
 end
+
+% Surface colorbar legends are OFF by default (the controller shows a per-layer
+% legend in its own panel). The 'Toggle legend' button re-renders with
+% show_legend=true to put colorbars on the surface figures for export.
+if nargin < 4 || isempty(show_legend), show_legend = false; end
+leg_args = {}; if ~show_legend, leg_args = {'nolegend'}; end
 
 args = {};
 if isfield(layer, 'render_args') && ~isempty(layer.render_args), args = layer.render_args; end
@@ -111,9 +117,9 @@ for i = wh_surface
     if ~isempty(wh_index)
         % Index/atlas colormap: pass straight through (render_on_surface handles it).
         idxmap = args{wh_index + 1};
-        [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:}, 'colormap', idxmap, 'indexmap');
+        [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:}, 'colormap', idxmap, 'indexmap', leg_args{:});
     else
-        call_args = [clean_args, color_args, {'truecolor', tc_map, 'truecolor_alpha', layer_alpha}];
+        call_args = [clean_args, color_args, {'truecolor', tc_map, 'truecolor_alpha', layer_alpha}, leg_args];
         if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
     end

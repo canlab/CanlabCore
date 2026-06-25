@@ -216,6 +216,32 @@ help/region listing.**
 - Tests: added `test_surface_addbrain_passthrough` (bare token + composite multi-patch) and
   `test_surface_medial_flips_azimuth` to the handle suite (now 37/37). Display 4/4 unchanged.
 
+**Step 6 done (2026-06-25): the legend lives in the controller; figure legends default OFF.**
+- **In-controller legend.** Each layer panel's colour stripe is now the legend: it is taller and
+  carries numeric end labels underneath (`leglo_*`/`legmid_*`/`leghi_*`), read from the layer's
+  `cmaprange` and rounded to 1 significant figure. Split (+/-) maps label both extremes with `0`
+  in the centre; single ramps label just the two ends. `update_controls_in_place` refreshes the
+  labels when `cmaprange` changes (rethreshold/recolor). The opacity/threshold/colors/visible rows
+  shifted down a row to make room (panel 195->220 px, fig increment 205->230).
+- **Figure legends OFF by default.** `@image_vector/montage` no longer draws the montage-figure
+  colorbar by default (pass `'legend'` to opt back in, e.g. for export); the previously no-op
+  `'nolegend'` is now effectively the default. `render_layer_surfaces`/`composite_surfaces` take a
+  `show_legend` flag (default false -> pass `'nolegend'` to `render_on_surface`), so surfaces get no
+  colorbar by default either. (`fmridisplay` constructor + `@image_vector/montage` now accept
+  `'legend'`/`'nolegend'` without warning.)
+- **Toggle legend fixed + repurposed.** The footer button toggles colorbars on the montage/surface
+  FIGURES (for export). ON targets the montage figure explicitly (the old bug: `legend()` drew into
+  the controller uifigure via `gcf`, so it never reappeared) and re-renders surfaces with
+  `show_legend=true`; OFF removes them. State tracked in the controller's appdata; montage legend
+  axes tagged `fmridisp_fig_legend` for clean removal. Verified on->off->on round-trip.
+- Tests: +`test_controller_shows_legend_labels`, +`test_montage_figure_legend_off_by_default`;
+  updated the surface-legend tests to force legends on (`build_montage_surface_blobs(tc,true)` /
+  `composite_surfaces(o,[],true)`) and `test_surface_pulls_in_existing_blobs` to check vertex
+  colouring instead of a legend. NOTE: `render_layer_surfaces` is declared in the classdef
+  `methods (Hidden)` block, so its new 4-arg signature requires a fresh class load (`clear classes`)
+  — verified in a clean MATLAB process; the live MCP session couldn't `clear classes` (lingering
+  onCleanup objects), so the surface-legend tests there error with a stale 3-arg dispatch only.
+
 **Next:** route montages and the legend through the central `canlab_colormap` map and retire the
 duplicated colour logic (`render_blobs` vs `render_on_surface`), which also fixes the single-range
 one-colorbar-spanning-zero legend.

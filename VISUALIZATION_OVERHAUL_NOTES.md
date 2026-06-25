@@ -58,6 +58,13 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
     removed. (True perceptual maps — inferno/viridis/etc. — are deferred; they need colormap
     matrices threaded through `render_blobs`/`render_on_surface`, riskier than the max/min
     ramps used now.)
+- **Controller redesign + more colormaps.** The panel is ~2× wider with two compact rows per
+  layer (Opacity slider + Visible on row 1; a type-aware **threshold slider** + Colors dropdown
+  on row 2), bigger text, a shorter re-render button, fixed-width opacity/colors controls. The
+  threshold slider is a p-value slider (ticks at .001/.005/.01/.05/.1) for `statistic_image`
+  layers, or a raw `|x|` slider anchored at 0 and the 99.9th percentile of `|data|` for
+  `fmri_data`/region layers. Colormap menu adds `split (mango)` and `seafire` (split presets)
+  alongside warm/cool/winter and the `solid colour…` picker.
 - **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
   to `gcf` — previously a surface legend could land on the montage window. New
   `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).
@@ -142,6 +149,15 @@ Target design:
    indexed-colour, single-axes-colormap surface path.
 3. **Outcome:** identical colours across montage/surface/legend, no field-sync bugs, and a
    natural home for new colormaps (mango, niivue inferno/viridis, …) defined once.
+
+**Concrete bug this fixes — single-range colorbar legend.** For single-ramp colormaps
+(`warm`/`cool`/`winter` = max/min colour), the legend should be **one** colorbar spanning the
+**full data range (through zero)**, not a split +/- pair. Today it can't be done cleanly:
+`render_blobs` computes a positive-percentile `cmaprange` (e.g. `[2.82 4.86]`) that doesn't
+span zero, and `render_on_surface` draws two colorbars (pos+neg) whenever the data has both
+signs — so the montage legend range is wrong and the surface legend looks split. Both follow
+from the duplicated range/colorbar logic; the central map (one canonical value→colour range
+per colormap type, with single-ramp → one full-range bar) is the right place to fix it.
 
 This subsumes and is the right way to do the earlier "unify `render_blobs` + `render_on_surface`",
 "composited multi-layer surfaces", and "true-colour RGB surfaces" items.

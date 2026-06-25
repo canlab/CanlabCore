@@ -213,6 +213,23 @@ tc.verifyTrue(has_legend(), 'adding a surface rendered the existing blob layer o
 end
 
 
+function test_controller_threshold_slider_and_new_colormaps(tc)
+% The redesigned controller uses a p-value threshold slider and offers the
+% split (mango) / seafire colormaps.
+tc.assumeTrue(usejava('desktop') || (usejava('jvm') && feature('ShowFigureWindows')), ...
+    'controller widget requires an interactive figure window');
+t   = canlab_get_sample_thresholded_t(0.01);
+o2  = montage(t);
+fig = controller(o2);
+tc.addTeardown(@() delete(fig(isvalid(fig))));
+ts = findobj(fig, 'Tag', 'threshold_1');
+tc.verifyClass(ts, 'matlab.ui.control.Slider');
+tc.verifyEqual(ts.MajorTicks, [.001 .005 .01 .05 .1], 'AbsTol', 1e-12, 'p-value tick marks');
+dd = findobj(fig, 'Tag', 'colormap_1');
+tc.verifyTrue(all(ismember({'split (mango)', 'seafire'}, dd.Items)), 'mango/seafire offered');
+end
+
+
 function test_legend_after_set_colormap(tc)
 % legend(obj) must not error after set_colormap switches a layer to a single
 % colormap (warm/cool/solid). Previously the stale 2-row split mincolor made

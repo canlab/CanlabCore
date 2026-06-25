@@ -63,23 +63,23 @@ end
 setappdata(fig, 'objname', vname);
 setappdata(fig, 'fmridisplay_obj', obj);
 fig.Name = sprintf('CANlab display controller  [ %s ]', vname);   % which object this controls
-fig.Position(3:4) = [400, 120 + 175 * max(nlayers, 1)];
+fig.Position(3:4) = [760, 70 + 120 * max(nlayers, 1)];            % ~2x wider, compact rows
 
 if nlayers == 0
-    uilabel(fig, 'Position', [20 fig.Position(4)-60 360 40], ...
+    uilabel(fig, 'Position', [20 fig.Position(4)-60 700 40], 'FontSize', 13, ...
         'Text', 'No blob layers yet. Add some with addblobs(obj, ...).');
     return
 end
 
-outer = uigridlayout(fig, [nlayers + 1, 1]);
-outer.RowHeight = [repmat({165}, 1, nlayers), {'1x'}];
+outer = uigridlayout(fig, [nlayers + 2, 1]);
+outer.RowHeight = [repmat({112}, 1, nlayers), {30}, {'1x'}];      % panels, short button, spacer
 outer.Scrollable = 'on';
 
 for k = 1:nlayers
     build_layer_panel(outer, obj, k, cmap_options, vname);
 end
 
-btn = uibutton(outer, 'Text', 'Re-render all layers', ...
+btn = uibutton(outer, 'Text', 'Re-render layers', 'FontSize', 12, ...
     'ButtonPushedFcn', @(~, ~) refresh(obj));
 btn.Layout.Row = nlayers + 1;
 
@@ -92,8 +92,8 @@ function opts = colormap_options()
 % Dropdown choices. The max/min-colour ramps render reliably on montages and
 % surfaces; 'solid colour…' opens the built-in MATLAB colour picker. (True
 % perceptual maps like inferno/viridis are deferred — see VISUALIZATION_OVERHAUL_NOTES.md.)
-opts = {'split (hot/cool)', 'mango', 'warm (red-yellow)', 'cool (blue-cyan)', ...
-        'winter (blue-green)', 'solid colour…'};
+opts = {'split (hot/cool)', 'split (mango)', 'seafire', 'warm (red-yellow)', ...
+        'cool (blue-cyan)', 'winter (blue-green)', 'solid colour…'};
 end
 
 
@@ -105,41 +105,77 @@ layer = obj.activation_maps{k};
 args  = render_args_of(layer);
 src   = source_of(layer);
 
-panel = uipanel(parent, 'Title', sprintf('Layer %d  (%s)', k, source_kind(src)));
+panel = uipanel(parent, 'Title', sprintf('Layer %d  (%s)', k, source_kind(src)), 'FontSize', 13);
 panel.Layout.Row = k;
 
-g = uigridlayout(panel, [4, 2]);
-g.RowHeight   = {22, 22, 22, 22};
-g.ColumnWidth = {120, '1x'};
+% Two compact rows (saves vertical space):
+%   Opacity  [==== fixed-width slider ====]        Visible [x]
+%   p (unc)  [== slider with p-value ticks ==]     Colors  [dropdown]
+g = uigridlayout(panel, [2, 4]);
+g.RowHeight     = {'1x', '1x'};
+g.ColumnWidth   = {86, 360, 64, 150};   % label | fixed wide slider | label | fixed control
+g.ColumnSpacing = 8;
+g.Padding       = [8 2 8 2];
 
-% --- Opacity slider (no tick marks) ---
-uilabel(g, 'Text', 'Opacity');
+fs = 12;
+
+% Row 1: Opacity (fixed-width slider, no ticks) + Visible toggle
+l1 = uilabel(g, 'Text', 'Opacity', 'FontSize', fs);   l1.Layout.Row = 1; l1.Layout.Column = 1;
 sld = uislider(g, 'Limits', [0 1], 'Value', current_opacity(args), ...
-    'MajorTicks', [], 'MinorTicks', [], 'Tag', sprintf('opacity_%d', k), ...
+    'MajorTicks', [], 'MinorTicks', [], 'FontSize', fs, 'Tag', sprintf('opacity_%d', k), ...
     'ValueChangedFcn', @(s, ~) on_opacity(obj, k, s.Value, vname));
-sld.Layout.Column = 2;
-
-% --- Colormap dropdown ---
-uilabel(g, 'Text', 'Colors');
-dd = uidropdown(g, 'Items', cmap_options, 'Value', current_colormap_label(args, cmap_options), ...
-    'Tag', sprintf('colormap_%d', k), ...
-    'ValueChangedFcn', @(d, ~) on_colormap(obj, k, d.Value, vname));
-dd.Layout.Column = 2;
-
-% --- Threshold control (type-aware) ---
-[thr_label, thr_value, thr_enable, is_pval] = threshold_spec(src, layer);
-uilabel(g, 'Text', thr_label);
-thr = uieditfield(g, 'numeric', 'Value', thr_value, ...
-    'Enable', matlab.lang.OnOffSwitchState(thr_enable), 'Tag', sprintf('threshold_%d', k), ...
-    'ValueChangedFcn', @(e, ~) on_threshold(obj, k, e.Value, is_pval, vname));
-thr.Layout.Column = 2;
-
-% --- Visibility toggle ---
-uilabel(g, 'Text', 'Visible');
+sld.Layout.Row = 1; sld.Layout.Column = 2;
+l2 = uilabel(g, 'Text', 'Visible', 'FontSize', fs);   l2.Layout.Row = 1; l2.Layout.Column = 3;
 cb = uicheckbox(g, 'Text', '', 'Value', true, 'Tag', sprintf('visible_%d', k), ...
     'ValueChangedFcn', @(c, ~) set_layer_visible(obj, k, c.Value));
-cb.Layout.Column = 2;
+cb.Layout.Row = 1; cb.Layout.Column = 4;
 
+% Row 2: threshold slider (type-aware ticks) + Colors dropdown
+[thr_label, thr_value, ~, is_pval] = threshold_spec(src, layer);
+l3 = uilabel(g, 'Text', thr_label, 'FontSize', fs);   l3.Layout.Row = 2; l3.Layout.Column = 1;
+ts = build_threshold_slider(g, obj, k, src, is_pval, thr_value, vname, fs);
+ts.Layout.Row = 2; ts.Layout.Column = 2;
+l4 = uilabel(g, 'Text', 'Colors', 'FontSize', fs);    l4.Layout.Row = 2; l4.Layout.Column = 3;
+dd = uidropdown(g, 'Items', cmap_options, 'Value', current_colormap_label(args, cmap_options), ...
+    'FontSize', fs, 'Tag', sprintf('colormap_%d', k), ...
+    'ValueChangedFcn', @(d, ~) on_colormap(obj, k, d.Value, vname));
+dd.Layout.Row = 2; dd.Layout.Column = 4;
+
+end
+
+
+function sld = build_threshold_slider(g, obj, k, src, is_pval, v0, vname, fs)
+% Type-aware threshold slider. statistic_image -> p-value slider with ticks at
+% common thresholds; fmri_data/region -> raw |x| slider anchored at 0 and the
+% 99.9th percentile of |data|.
+if is_pval
+    lims = [0 0.1]; ticks = [.001 .005 .01 .05 .1]; labs = {'.001','.005','.01','.05','.1'};
+elseif isa(src, 'image_vector') || isa(src, 'region')
+    b = raw_bound(src);
+    lims = [0 b]; ticks = [0 b]; labs = {'0', sprintf('%.3g', b)};
+else
+    sld = uislider(g, 'Limits', [0 1], 'Value', 0, 'Enable', 'off', 'FontSize', fs, ...
+        'Tag', sprintf('threshold_%d', k));
+    return
+end
+v = min(max(v0, lims(1)), lims(2));
+sld = uislider(g, 'Limits', lims, 'Value', v, 'MajorTicks', ticks, 'MajorTickLabels', labs, ...
+    'FontSize', max(8, fs - 3), 'Tag', sprintf('threshold_%d', k), ...
+    'ValueChangedFcn', @(s, ~) on_threshold(obj, k, s.Value, is_pval, vname));
+end
+
+
+function b = raw_bound(src)
+% 99.9th percentile of |data| for a raw-valued layer's threshold-slider range.
+b = 1;
+try
+    if isa(src, 'region'), iv = region2imagevec(src); else, iv = src; end
+    d = double(iv.dat(:));
+    d = d(d ~= 0 & ~isnan(d) & ~isinf(d));
+    if ~isempty(d), b = prctile(abs(d), 99.9); end
+catch
+end
+if ~(b > 0), b = 1; end
 end
 
 
@@ -157,8 +193,10 @@ for k = 1:numel(obj.activation_maps)
     if ~isempty(dd), dd.Value = current_colormap_label(args, cmap_options); end
 
     thr = findobj(fig, 'Tag', sprintf('threshold_%d', k));
-    [~, val] = threshold_spec(src, layer);
-    if ~isempty(thr), thr.Value = val; end
+    if ~isempty(thr) && isprop(thr, 'Limits')
+        [~, val] = threshold_spec(src, layer);
+        thr.Value = min(max(val, thr.Limits(1)), thr.Limits(2));   % clamp into slider range
+    end
 end
 end
 
@@ -175,9 +213,12 @@ switch choice
     case 'split (hot/cool)'
         set_colormap(obj, 'splitcolor', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''splitcolor'', {[0 0 1] [0 1 1] [1 .5 0] [1 1 0]}, ''layers'', %d)', vname, k));
-    case 'mango'
+    case 'split (mango)'
         set_colormap(obj, 'splitcolor', {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}, 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''splitcolor'', {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}, ''layers'', %d)', vname, k));
+    case 'seafire'
+        set_colormap(obj, 'splitcolor', {[0 0 1] [.2 .8 .6] [1 .4 .1] [1 1 0]}, 'layers', k);
+        echo_code(vname, sprintf('set_colormap(%s, ''splitcolor'', {[0 0 1] [.2 .8 .6] [1 .4 .1] [1 1 0]}, ''layers'', %d)', vname, k));
     case 'warm (red-yellow)'
         set_colormap(obj, 'maxcolor', [1 1 0], 'mincolor', [1 0 0], 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''maxcolor'', [1 1 0], ''mincolor'', [1 0 0], ''layers'', %d)', vname, k));
@@ -242,7 +283,9 @@ function lbl = current_colormap_label(args, opts) %#ok<INUSD>
 if any(strcmp(args, 'splitcolor'))
     sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
     if iscell(sc) && numel(sc) == 4 && isequal(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]})
-        lbl = 'mango';
+        lbl = 'split (mango)';
+    elseif iscell(sc) && numel(sc) == 4 && isequal(sc, {[0 0 1] [.2 .8 .6] [1 .4 .1] [1 1 0]})
+        lbl = 'seafire';
     else
         lbl = 'split (hot/cool)';
     end
@@ -264,13 +307,13 @@ function [lbl, val, enable, is_pval] = threshold_spec(src, layer)
 applied = [];
 if isfield(layer, 'applied_threshold'), applied = layer.applied_threshold; end
 if isa(src, 'statistic_image')
-    lbl = 'p-threshold (unc)'; is_pval = true; enable = true;
+    lbl = 'p (unc)'; is_pval = true; enable = true;
     val = 0.005; if ~isempty(applied) && isscalar(applied), val = applied; end
 elseif isa(src, 'image_vector') || isa(src, 'region')
-    lbl = 'value cutoff (|x|>)'; is_pval = false; enable = true;
+    lbl = '|x| >'; is_pval = false; enable = true;
     val = 0; if ~isempty(applied) && isscalar(applied), val = applied; end
 else
-    lbl = 'threshold (n/a)'; is_pval = false; enable = false; val = 0;
+    lbl = 'thresh'; is_pval = false; enable = false; val = 0;
 end
 end
 

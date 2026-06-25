@@ -33,6 +33,20 @@ catch ME
     return
 end
 
+% Restrict to a sparse gray-matter ROI so the many cross-validations below
+% are fast: mask to gray matter, then deterministically thin to every 8th
+% voxel (~20k features instead of ~195k). hw_obj and X stay in lockstep, so
+% weight_map_object / montage still back-project consistently. Falls back to
+% the full volume if the gray-matter mask is not on the path.
+gm_file = which('gray_matter_mask.img');
+if ~isempty(gm_file)
+    hw_obj = remove_empty(apply_mask(hw_obj, gm_file));
+    thin = get_wh_image(hw_obj, 1);
+    thin.dat = zeros(size(hw_obj.dat, 1), 1);
+    thin.dat(1:8:end) = 1;
+    hw_obj = remove_empty(apply_mask(hw_obj, thin));
+end
+
 X  = double(hw_obj.dat');
 Y  = hw_obj.Y;
 id = grp2idx(hw_obj.metadata_table.subj_id);

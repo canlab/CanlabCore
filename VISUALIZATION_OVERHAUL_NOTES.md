@@ -260,9 +260,19 @@ apparent failures in headless `-batch` are environment artifacts, not regression
 (`test_surface_runs_on_thresholded_t`, passes when run alone), and the colormap suite folder not
 being on the batch path — all pass in an interactive session.
 
-**Next:** route montages and the legend through the central `canlab_colormap` map and retire the
-duplicated colour logic (`render_blobs` vs `render_on_surface`), which also fixes the single-range
-one-colorbar-spanning-zero legend.
+**Step 7a done (2026-06-25): montage slices routed through the central `canlab_colormap`.**
+`render_blobs` no longer re-derives split/single colours inline. It builds one `canlab_colormap`
+(`split`/`single`) from the parsed colours + cmaprange before the slice loop, and colours each slice
+via a shared `central_map_slice` helper — the SAME mapping surfaces already use, so montage and
+surface colours now come from one implementation. Verified pixel-identical to the old renderer on
+split/single/solid sample montages (displayed-colour maxdiff: single 0, split 4e-12 float-eps,
+solid 0; the only raw-CData differences were out-of-range garbage the old code stored at invisible
+alpha=0 voxels, which the central map correctly clamps). Retired the now-dead duplicated colour
+logic: `splitcolor_Z_to_slicecdat` and the `cdat2`/`cdatminneg`/`cdatmaxneg` matrices.
+
+**Next:** route the legend (`@fmridisplay/legend` + the controller stripe) through the same central
+map (one colorbar spanning zero for split; retires the last copy of the colour math), then it's
+fully unified.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

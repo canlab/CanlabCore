@@ -247,6 +247,21 @@ tc.verifyWarningFree(@() legend(o2));
 end
 
 
+function test_surface_first_render_uncolored_is_gray(tc)
+% Regression: on the FIRST true-colour render onto a fresh (solid-FaceColor)
+% surface, uncoloured areas must be proper gray, not near-black (the fresh
+% surface's FaceVertexCData can be a stale dark value).
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');                       % FIRST render
+fvc = o2.surface{1}.object_handle(1).FaceVertexCData;
+unc = fvc((max(fvc, [], 2) - min(fvc, [], 2)) < 0.05, :);  % uncoloured (gray) vertices
+tc.verifyGreaterThan(mean(unc(:)), 0.3, 'uncoloured areas are bright gray, not near-black');
+end
+
+
 function test_surface_truecolor_via_central_map(tc)
 % Surfaces render in true-colour RGB (N x 3 FaceVertexCData) computed from the
 % central canlab_colormap, so colours match it (e.g. warm = red->yellow, no blue).

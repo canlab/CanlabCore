@@ -676,8 +676,12 @@ for i = 1:length(surface_handles)
         sh_obj   = surface_handles(i);
         nV       = size(get(sh_obj, 'Vertices'), 1);
         anat     = get(sh_obj, 'FaceVertexCData');
-        set(sh_obj, 'UserData', anat);                     % keep eraseblobs support
-        gray_rgb = anatomy_to_rgb(anat, nV);
+        % Resolve the real anatomy gray. When the surface is shown as a SOLID
+        % FaceColor, that colour is the gray actually displayed; FaceVertexCData
+        % may be a stale (dark) value, which previously made uncoloured areas
+        % look black on the first render.
+        gray_rgb = anatomy_to_rgb(anat, nV, get(sh_obj, 'FaceColor'));
+        set(sh_obj, 'UserData', gray_rgb);                 % save PROPER gray for eraseblobs
         rgb      = truecolor_cmap.map(double(c(:)));        % N x 3, NaN = uncoloured
         unc      = wh(:) | any(isnan(rgb), 2);
         rgb(unc, :) = gray_rgb(unc, :);
@@ -1181,10 +1185,18 @@ function M = ordered_mode(dat)
 end
 
 
-function g = anatomy_to_rgb(anat, nV)
+function g = anatomy_to_rgb(anat, nV, facecolor)
 % Convert a surface's existing (gray anatomy) FaceVertexCData to N x 3 RGB, used
 % as the background for the true-colour path. Preserves per-vertex curvature
 % shading when present; falls back to a flat gray.
+%
+% If the surface is currently displayed as a SOLID colour (FaceColor is a 1x3
+% RGB triplet rather than 'interp'/'flat'), that solid colour is the gray
+% actually on screen, so use it — the per-vertex FaceVertexCData may be stale.
+if nargin >= 3 && isnumeric(facecolor) && numel(facecolor) == 3
+    g = repmat(double(facecolor(:)'), nV, 1);
+    return
+end
 if isempty(anat)
     g = repmat([.5 .5 .5], nV, 1);
 elseif size(anat, 2) == 3 && size(anat, 1) == nV

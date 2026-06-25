@@ -387,6 +387,28 @@ tc.verifyTrue(any(strcmp({dd.Value}, 'solid colour…')), 'a dropdown reflects t
 end
 
 
+function test_squeeze_figure_preserves_slice_size(tc)
+% squeeze_figure removes vertical white space (shrinks the figure) while keeping
+% each slice's on-screen pixel size and horizontal placement.
+tc.assumeTrue(usejava('jvm'), 'montage rendering requires Java');
+t   = canlab_get_sample_thresholded_t(0.01);
+o2  = canlab_results_fmridisplay(t, 'noverbose');
+ah  = o2.montage{end}.axis_handles; ah = ah(ishandle(ah));
+a   = ah(1);
+fig = ancestor(a, 'figure');
+tc.addTeardown(@() close(fig(isvalid(fig))));
+h0  = fig.Position(4);
+pix_h0 = a.Position(4) * fig.Position(4);
+pix_w0 = a.Position(3) * fig.Position(3);
+
+o2 = squeeze_figure(o2);
+
+tc.verifyLessThan(fig.Position(4), h0, 'figure got shorter');
+tc.verifyEqual(a.Position(4) * fig.Position(4), pix_h0, 'RelTol', 0.03, 'slice pixel height preserved');
+tc.verifyEqual(a.Position(3) * fig.Position(3), pix_w0, 'RelTol', 0.03, 'slice pixel width preserved');
+end
+
+
 function test_surface_legend_not_on_montage(tc)
 % A surface colorbar must be parented to the surface figure, not the montage.
 tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');

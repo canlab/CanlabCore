@@ -67,6 +67,11 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
   `fmri_data`/region layers. Colormap menu adds `split (mango)` and `seafire` split presets
   alongside warm/cool/winter and the `solid colour…` picker. Window colour is set by the
   `FIG_COLOR` constant at the top of `controller.m` (currently `[1 .5 0]`).
+- **`squeeze_figure(obj)`** removes the top/bottom white space from montage figures (a montage
+  often fills only ~40% of its figure's height): it shrinks the figure and remaps the slice
+  axes to fill it, scaled so each slice keeps its pixel size, aspect, and horizontal placement
+  — only the empty margins go. Opt-in (doesn't change montage defaults); skips figures that
+  also contain surfaces.
 - **Surface colorbar legends are parented to the surface figure** (`render_on_surface`), not
   to `gcf` — previously a surface legend could land on the montage window. New
   `remove_legend(obj)` method deletes the surface colorbar legends (keeps the blobs).

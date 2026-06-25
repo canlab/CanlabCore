@@ -67,6 +67,16 @@ The load-bearing architectural change is now shipped. Done in `@fmridisplay/`:
   `fmri_data`/region layers. Colormap menu adds `split (mango)` and `seafire` split presets
   alongside warm/cool/winter and the `solid colour…` picker. Window colour is set by the
   `FIG_COLOR` constant at the top of `controller.m` (currently `[1 .5 0]`).
+  - **Later tweaks:** **mango** is now the **default** blob colormap (the `addblobs` default
+    split colours changed to mango). Footer is **Re-render + Toggle legend** (legend on/off; the
+    Close button was dropped). Each layer panel has a **Remove layer** button (new
+    `remove_layer(obj, k)` method — removes one layer, vs `removeblobs` which removes all).
+    **Clicking the colour swatch** opens the colour picker (a quick way to set/re-pick a solid
+    colour; note re-selecting the already-selected `solid colour…` dropdown item can't re-fire
+    in MATLAB, so the swatch is the re-pick path). The p-value slider now extends **below .001
+    down to ~0** (1e-6 floor, labelled `~0`).
+  - `rethreshold` already accepts a cluster-extent `'k'` argument (passed through to
+    `threshold`), verified working (e.g. `rethreshold(o2, .01, 'unc', 'k', 50)`).
 - **`squeeze_figure(obj)`** removes the top/bottom white space from montage figures (a montage
   often fills only ~40% of its figure's height): it shrinks the figure and remaps the slice
   axes to fill it, scaled so each slice keeps its pixel size, aspect, and horizontal placement

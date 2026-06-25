@@ -224,9 +224,9 @@ fig = controller(o2);
 tc.addTeardown(@() delete(fig(isvalid(fig))));
 ts = findobj(fig, 'Tag', 'threshold_1');
 tc.verifyClass(ts, 'matlab.ui.control.Slider');
-% p-value slider is LOG scale: ticks at log10(p), labels are the p-values.
-tc.verifyEqual(ts.Limits, log10([.001 .1]), 'AbsTol', 1e-9, 'log p-value range');
-tc.verifyEqual(ts.MajorTickLabels(:)', {'.001','.005','.01','.05','.1'}, 'p-value tick labels');
+% p-value slider is LOG scale extending below .001 down toward 0 (1e-6).
+tc.verifyEqual(ts.Limits, log10([1e-6 .1]), 'AbsTol', 1e-9, 'log p-value range to ~0');
+tc.verifyEqual(ts.MajorTickLabels(:)', {'~0','.001','.005','.01','.05','.1'}, 'p-value tick labels');
 dd = findobj(fig, 'Tag', 'colormap_1');
 tc.verifyTrue(all(ismember({'split (mango)', 'seafire'}, dd.Items)), 'mango/seafire offered');
 end
@@ -384,6 +384,27 @@ o2 = set_colormap(o2, 'color', [1 0 0], 'layers', 1);
 controller(o2);                              % update in place
 dd = findobj(o2.controller_handle, 'Type', 'uidropdown');
 tc.verifyTrue(any(strcmp({dd.Value}, 'solid colour…')), 'a dropdown reflects the solid-color layer');
+end
+
+
+function test_default_colormap_is_mango(tc)
+% The default blob colormap is now "mango".
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = montage(t);
+args = o2.activation_maps{1}.render_args;
+sc = args{find(strcmp(args, 'splitcolor'), 1) + 1};
+tc.verifyEqual(sc, {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}, 'default split colormap is mango');
+end
+
+
+function test_remove_layer_removes_one(tc)
+% remove_layer drops a single layer (vs removeblobs which removes all).
+tc.assumeTrue(usejava('jvm'), 'rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = montage(t); o2 = addblobs(o2, t, 'noverbose');
+tc.verifyEqual(numel(o2.activation_maps), 2);
+o2 = remove_layer(o2, 1);
+tc.verifyEqual(numel(o2.activation_maps), 1, 'remove_layer removed exactly one layer');
 end
 
 

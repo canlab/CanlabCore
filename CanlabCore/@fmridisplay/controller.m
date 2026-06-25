@@ -137,23 +137,52 @@ dd = uidropdown(cgrid, 'Items', cmap_options, 'Value', current_colormap_label(ar
 dd.Layout.Column = 1;
 sw = make_colormap_strip(cgrid, swatch_colormap(args));
 sw.Layout.Column = 2; sw.Tag = sprintf('swatch_%d', k);
+% Clicking the colour swatch opens the colour picker (also re-picks a solid colour)
+set(findobj(sw, 'Type', 'image'), 'ButtonDownFcn', @(~, ~) pick_solid_colour(obj, k, vname));
 
-% Row 5: Visible
+% Row 5: Visible + per-layer Remove
 uilabel(g, 'Text', 'Visible', 'FontSize', fs);
-cb = uicheckbox(g, 'Text', '', 'Value', true, 'Tag', sprintf('visible_%d', k), ...
+vg = uigridlayout(g, [1 2]); vg.Layout.Row = 5; vg.Layout.Column = 2;
+vg.ColumnWidth = {40, '1x'}; vg.Padding = [0 0 0 0]; vg.ColumnSpacing = 6;
+cb = uicheckbox(vg, 'Text', '', 'Value', true, 'Tag', sprintf('visible_%d', k), ...
     'ValueChangedFcn', @(c, ~) set_layer_visible(obj, k, c.Value));
-cb.Layout.Row = 5; cb.Layout.Column = 2;
+cb.Layout.Column = 1;
+rb = uibutton(vg, 'Text', 'Remove layer', 'FontSize', fs - 2, ...
+    'ButtonPushedFcn', @(~, ~) remove_layer(obj, k));
+rb.Layout.Column = 2;
 
 end
 
 
-function build_footer(parent, obj, fig, row)
-fg = uigridlayout(parent, [1 3]); fg.Layout.Row = row;
+function build_footer(parent, obj, fig, row) %#ok<INUSD>
+fg = uigridlayout(parent, [1 2]); fg.Layout.Row = row;
 fg.Padding = [4 2 4 2]; fg.ColumnSpacing = 6;
 fs = base_fontsize() - 2;
 uibutton(fg, 'Text', 'Re-render',     'FontSize', fs, 'ButtonPushedFcn', @(~, ~) refresh(obj));
-uibutton(fg, 'Text', 'Remove legend', 'FontSize', fs, 'ButtonPushedFcn', @(~, ~) remove_legend(obj));
-uibutton(fg, 'Text', 'Close',         'FontSize', fs, 'ButtonPushedFcn', @(~, ~) close(fig));
+uibutton(fg, 'Text', 'Toggle legend', 'FontSize', fs, 'ButtonPushedFcn', @(~, ~) toggle_legend(obj));
+end
+
+
+function toggle_legend(obj)
+% Turn the colorbar legend on if it's off, off if it's on.
+shown = false;
+for k = 1:numel(obj.activation_maps)
+    if isfield(obj.activation_maps{k}, 'legendhandle')
+        lh = obj.activation_maps{k}.legendhandle;
+        if ~isempty(lh) && any(ishandle(lh)), shown = true; break; end
+    end
+end
+if shown, remove_legend(obj); else, legend(obj); end
+end
+
+
+function pick_solid_colour(obj, k, vname)
+% Open the colour picker and apply a solid colour to layer k (used by the
+% 'solid colour…' dropdown item and by clicking the colour swatch).
+c = uisetcolor([1 0 0], 'Choose a blob colour');
+if numel(c) ~= 3, return, end
+set_colormap(obj, 'color', c, 'layers', k);
+echo_code(vname, sprintf('set_colormap(%s, ''color'', [%g %g %g], ''layers'', %d)', vname, c(1), c(2), c(3), k));
 end
 
 
@@ -165,11 +194,13 @@ function sld = build_threshold_slider(g, obj, k, src, is_pval, v0, vname, fs)
 % fmri_data/region -> linear raw |x| slider anchored at 0 and the 99.9th pct of |data|.
 tickfs = max(9, fs - 5);
 if is_pval
-    pvals = [.001 .005 .01 .05 .1];
-    lims  = log10([pvals(1) pvals(end)]);
-    v     = log10(min(max(v0, pvals(1)), pvals(end)));
-    sld = uislider(g, 'Limits', lims, 'Value', v, 'MajorTicks', log10(pvals), ...
-        'MajorTickLabels', {'.001','.005','.01','.05','.1'}, 'FontSize', tickfs, ...
+    pfloor = 1e-6; ptop = 0.1;                    % extends below .001 down to ~0
+    ticks  = [pfloor .001 .005 .01 .05 .1];
+    labs   = {'~0', '.001', '.005', '.01', '.05', '.1'};
+    lims   = log10([pfloor ptop]);
+    v      = log10(min(max(v0, pfloor), ptop));
+    sld = uislider(g, 'Limits', lims, 'Value', v, 'MajorTicks', log10(ticks), ...
+        'MajorTickLabels', labs, 'FontSize', tickfs, ...
         'Tag', sprintf('threshold_%d', k), ...
         'ValueChangedFcn', @(s, ~) on_threshold(obj, k, 10 .^ s.Value, true, vname));
 elseif isa(src, 'image_vector') || isa(src, 'region')
@@ -294,10 +325,7 @@ switch choice
         set_colormap(obj, 'maxcolor', [0 1 .5], 'mincolor', [0 0 1], 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''maxcolor'', [0 1 0.5], ''mincolor'', [0 0 1], ''layers'', %d)', vname, k));
     case 'solid colour…'
-        c = uisetcolor([1 0 0], 'Choose a blob colour');
-        if numel(c) ~= 3, return, end
-        set_colormap(obj, 'color', c, 'layers', k);
-        echo_code(vname, sprintf('set_colormap(%s, ''color'', [%g %g %g], ''layers'', %d)', vname, c(1), c(2), c(3), k));
+        pick_solid_colour(obj, k, vname);
 end
 end
 

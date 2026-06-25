@@ -268,10 +268,12 @@ doonecolor = 0;
 domaxcolor = 0;
 domincolor = 0;
 
-maxposcolor = [1 1 0]; % max pos, most extreme values
-minposcolor = [1 .4 .5]; % [.8 .3 0]; % min pos
-maxnegcolor = [0 .8 .8]; % [.3 .6 .9]; % max neg
-minnegcolor = [0 0 1]; % min neg, most extreme values
+% Default split colormap = "mango" {minneg maxneg minpos maxpos}
+% = {[.5 0 1] [0 .8 .3] [1 .2 1] [1 1 .3]}. (Was hot/cool; mango is now the default.)
+maxposcolor = [1 1 .3]; % max pos, most extreme values
+minposcolor = [1 .2 1]; % min pos
+maxnegcolor = [0 .8 .3]; % max neg
+minnegcolor = [.5 0 1]; % min neg, most extreme values
 indexmap = [];
 
 % More purply orange and deeper blue:  {[0 0 1] [.3 0 .8] [.8 .3 0] [1 1 0]}

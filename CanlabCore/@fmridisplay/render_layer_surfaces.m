@@ -95,15 +95,11 @@ for i = wh_surface
     surfh = surfh(ishandle(surfh));        % skip handles whose figure was closed
     if isempty(surfh), continue, end
 
-    % If this surface already carries blobs from a prior render, restore its
-    % saved gray FIRST. Otherwise render_on_surface blends onto — and re-saves
-    % as its restore data — the previous blob colors, which would defeat a later
-    % removeblobs (the surface could never return to anatomy gray). All patches
-    % of a surface get their gray stashed together on first paint, so a non-empty
-    % UserData on the first patch reliably means "already painted".
-    if ~isempty(surfh) && ishandle(surfh(1)) && ~isempty(get(surfh(1), 'UserData'))
-        addbrain('eraseblobs', surfh);
-    end
+    % NOTE: this paints layer k onto the CURRENT surface colours (no erase), so a
+    % new layer composites on top of lower layers (true-colour, top wins per
+    % vertex). The anatomy gray is saved once (render_on_surface) so removeblobs/
+    % erase still restore gray. A full recomposite (reset to gray, repaint all
+    % layers in order) is done by composite_surfaces, used by refresh / remove_layer.
 
     if ~isempty(wh_index)
         % Index/atlas colormap: pass straight through (render_on_surface handles it).

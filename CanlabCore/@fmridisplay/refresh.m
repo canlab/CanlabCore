@@ -92,14 +92,14 @@ for k = wh_layers
         end
     end
 
-    % Re-render this layer onto surfaces too, so refresh (and therefore
-    % rethreshold / set_colormap / set_opacity) updates every view, not just
-    % montages. render_on_surface repaints vertex colors, so no separate
-    % delete step is needed.
-    if ~isempty(obj.surface)
-        obj = render_layer_surfaces(obj, k);
-    end
+end
 
+% Re-render the surfaces as a full RGB composite of all layers (top wins per
+% vertex), so refresh — and therefore rethreshold / set_colormap / set_opacity —
+% updates every view. Done once after the montage loop, not per layer, so layers
+% composite rather than overwrite.
+if ~isempty(obj.surface)
+    obj = composite_surfaces(obj);
 end
 
 if ~iscell(obj.history), obj.history = {}; end

@@ -41,16 +41,10 @@ end
 
 obj.activation_maps(k) = [];
 
-% Surfaces show a composite of the layers; reset to gray and re-render whatever
-% layers remain so the removed layer's colour is cleared.
+% Surfaces show an RGB composite of the layers; recomposite from the remaining
+% layers (resets to gray, repaints each), so the removed layer's colour is cleared.
 if ~isempty(obj.surface)
-    for s = 1:numel(obj.surface)
-        h = obj.surface{s}.object_handle; h = h(ishandle(h));
-        if ~isempty(h), addbrain('eraseblobs', h); end
-    end
-    for j = 1:numel(obj.activation_maps)
-        obj = render_layer_surfaces(obj, j);
-    end
+    obj = composite_surfaces(obj);
 end
 
 % Layer count changed -> rebuild an open controller

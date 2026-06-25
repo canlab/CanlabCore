@@ -676,15 +676,20 @@ for i = 1:length(surface_handles)
         sh_obj   = surface_handles(i);
         nV       = size(get(sh_obj, 'Vertices'), 1);
         anat     = get(sh_obj, 'FaceVertexCData');
-        % Resolve the real anatomy gray. When the surface is shown as a SOLID
-        % FaceColor, that colour is the gray actually displayed; FaceVertexCData
-        % may be a stale (dark) value, which previously made uncoloured areas
-        % look black on the first render.
-        gray_rgb = anatomy_to_rgb(anat, nV, get(sh_obj, 'FaceColor'));
-        set(sh_obj, 'UserData', gray_rgb);                 % save PROPER gray for eraseblobs
+        % "base" = what is currently displayed: the anatomy gray on the first
+        % paint (resolved from the solid FaceColor when present, since the fresh
+        % FaceVertexCData can be a stale dark value), or the running composite of
+        % lower layers on later paints. Uncoloured vertices keep this base, which
+        % is what composites multiple layers (top layer wins per vertex).
+        base     = anatomy_to_rgb(anat, nV, get(sh_obj, 'FaceColor'));
+        % Save the TRUE gray ONCE so eraseblobs/removeblobs restore gray rather
+        % than a composite. Save-once -> UserData always holds the anatomy gray.
+        if isempty(get(sh_obj, 'UserData'))
+            set(sh_obj, 'UserData', base);
+        end
         rgb      = truecolor_cmap.map(double(c(:)));        % N x 3, NaN = uncoloured
         unc      = wh(:) | any(isnan(rgb), 2);
-        rgb(unc, :) = gray_rgb(unc, :);
+        rgb(unc, :) = base(unc, :);
         set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', 'interp', ...
             'CDataMapping', 'direct', 'EdgeColor', 'none');
         if doscaledtrans

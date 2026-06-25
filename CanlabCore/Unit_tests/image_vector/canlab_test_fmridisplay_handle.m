@@ -247,6 +247,32 @@ tc.verifyWarningFree(@() legend(o2));
 end
 
 
+function test_surface_multilayer_compositing(tc)
+% Multiple layers composite on surfaces (top wins per vertex; lower layer shows
+% through). Removing the top layer recomposites and clears its colour.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t_broad  = canlab_get_sample_thresholded_t(0.05);
+t_narrow = canlab_get_sample_thresholded_t(0.001);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t_broad, 'color', [0 1 0], 'noverbose');   % layer 1: solid green, broad
+o2 = addblobs(o2, t_narrow, 'noverbose');                    % layer 2: split, narrow, on top
+
+fvc   = o2.surface{1}.object_handle(1).FaceVertexCData;
+green = fvc(:, 2) > 0.6 & fvc(:, 1) < 0.4 & fvc(:, 3) < 0.4;          % layer 1
+split = (max(fvc, [], 2) - min(fvc, [], 2)) > 0.2 & ~green;          % layer 2
+tc.verifyGreaterThan(sum(green), 100, 'lower layer shows through (green)');
+tc.verifyGreaterThan(sum(split), 100, 'top layer is visible (split colours)');
+
+o2 = remove_layer(o2, 2);                                            % drop the top layer
+fvc = o2.surface{1}.object_handle(1).FaceVertexCData;
+g2  = fvc(:, 2) > 0.6 & fvc(:, 1) < 0.4 & fvc(:, 3) < 0.4;
+split2 = (max(fvc, [], 2) - min(fvc, [], 2)) > 0.2 & ~g2;
+tc.verifyEqual(sum(split2), 0, 'removing the top layer clears its surface colour');
+tc.verifyGreaterThan(sum(g2), 100, 'the remaining layer is still composited');
+end
+
+
 function test_surface_first_render_uncolored_is_gray(tc)
 % Regression: on the FIRST true-colour render onto a fresh (solid-FaceColor)
 % surface, uncoloured areas must be proper gray, not near-black (the fresh

@@ -165,9 +165,19 @@ option is absent (the `@image_vector/surface` bypass path still uses indexed col
 `render_layer_surfaces` now builds `canlab_colormap.from_render_args(args, cmaprange)` and passes
 it, so the managed display's surfaces match the montage colours (e.g. warm = red→yellow with no
 blue negatives, verified) and `removeblobs`/erase still restore the gray. The colorbar legend is
-still built by `render_on_surface` from pos/neg colormaps for now. **Next:** composite multiple
-layers in RGB (top wins per vertex) + per-layer surface visibility; then route montages and the
-legend through the same central map and retire the duplicated colour logic.
+still built by `render_on_surface` from pos/neg colormaps for now.
+
+**Step 3 done (2026-06-25): multi-layer surface compositing.** Now that surfaces are true-colour
+RGB, layers composite: `render_layer_surfaces` paints a layer onto the *current* surface colours
+(no erase), so a new layer's coloured vertices win and its uncoloured vertices keep what's
+underneath (lower layers / gray). render_on_surface saves the anatomy gray **once** (save-once
+`UserData`) so erase/`removeblobs` still restore gray. A full recompute (reset to gray, repaint
+every layer bottom→top) is `composite_surfaces`, used by `refresh` (hence rethreshold /
+set_colormap / set_opacity) and `remove_layer`. Verified: a broad green mask under narrower split
+stats shows green where the stats don't cover and split on top; `remove_layer` recomposites the
+remainder; `removeblobs` restores gray.
+**Next:** per-layer surface visibility (skip invisible layers in `composite_surfaces`); then route
+montages and the legend through the same central map and retire the duplicated colour logic.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

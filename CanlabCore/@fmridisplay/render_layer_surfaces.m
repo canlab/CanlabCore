@@ -71,6 +71,12 @@ color_args = {};
 if ~isempty(surf_pos_cm), color_args = [color_args, {'pos_colormap', surf_pos_cm}]; end
 if ~isempty(surf_neg_cm), color_args = [color_args, {'neg_colormap', surf_neg_cm}]; end
 
+% Central value->RGB map (single source of truth): render_on_surface colours the
+% vertices in true-colour RGB via this, so surfaces match the montage exactly and
+% multi-layer compositing becomes possible. The pos/neg colormaps above are still
+% passed so render_on_surface can build the colorbar legend. See canlab_colormap.
+tc_map = canlab_colormap.from_render_args(args, cmaprange);
+
 % Constant opacity for the surface patch (set_opacity / controller slider).
 % render_on_surface drives blob ALPHA via 'transvalue' on montages, but on a
 % surface the overlay IS the vertex coloring, so we dim the patch via FaceAlpha.
@@ -104,7 +110,7 @@ for i = wh_surface
         idxmap = args{wh_index + 1};
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, args{:}, 'colormap', idxmap, 'indexmap');
     else
-        call_args = [clean_args, color_args];
+        call_args = [clean_args, color_args, {'truecolor', tc_map}];
         if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
     end

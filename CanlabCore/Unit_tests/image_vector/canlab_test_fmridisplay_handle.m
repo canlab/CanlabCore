@@ -247,6 +247,24 @@ tc.verifyWarningFree(@() legend(o2));
 end
 
 
+function test_surface_truecolor_via_central_map(tc)
+% Surfaces render in true-colour RGB (N x 3 FaceVertexCData) computed from the
+% central canlab_colormap, so colours match it (e.g. warm = red->yellow, no blue).
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t  = canlab_get_sample_thresholded_t(0.01);
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2); catch ME, tc.assumeFail(ME.message); end
+o2 = addblobs(o2, t, 'noverbose');
+s = o2.surface{1}.object_handle(1);
+tc.verifyEqual(size(s.FaceVertexCData, 2), 3, 'surface uses true-colour N x 3 RGB');
+tc.verifyEqual(s.CDataMapping, 'direct');
+o2 = set_colormap(o2, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);   % warm
+fvc = o2.surface{1}.object_handle(1).FaceVertexCData;
+colored = (max(fvc, [], 2) - min(fvc, [], 2)) > 0.1;
+tc.verifyLessThan(mean(fvc(colored, 3)), 0.2, 'warm true-colour surface has little blue');
+end
+
+
 function test_surface_colormap_follows_maxmin_color(tc)
 % maxcolor/mincolor (warm/cool/winter) must actually colour the surface, not
 % fall back to render_on_surface's default split hot/cool. Warm = red->yellow

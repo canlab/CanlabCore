@@ -215,6 +215,7 @@ srcdepth = {'midthickness','pial','white'}; % default depth to sample a surface 
 targetsurface = [];
 interp = 'linear';
 gray_buffer = true;
+truecolor_cmap = [];   % optional canlab_colormap -> true-colour (N x 3 RGB) vertices
 
 allowable_sourcespace = {'colin27','MNI152NLin6Asym','MNI152NLin2009cAsym'};
 allowable_targetsurface = {'fsaverage_164k','fsLR_32k'};
@@ -276,6 +277,11 @@ for i = 1:length(varargin)
                 mylabels=varargin{i+1};
                 
                 
+            case 'truecolor'
+                % Followed by a canlab_colormap; colours vertices via map() as
+                % true-colour RGB instead of the indexed colormap path.
+                truecolor_cmap = varargin{i + 1};
+
             case 'scaledtransparency'
                 doscaledtrans = 1;
 
@@ -660,7 +666,30 @@ for i = 1:length(surface_handles)
     end
             
     wh = c == 0 | isnan(c);                    % save these to replace with gray-scale later
-    
+
+    % ---- TRUE-COLOUR path (central canlab_colormap) ----------------------
+    % Colour each vertex directly via the central map (N x 3 RGB), compositing
+    % over the anatomy gray for uncoloured vertices. This makes surfaces match
+    % the montage colours and unlocks multi-layer compositing / per-layer
+    % visibility. Skips the indexed-colormap path below for this surface.
+    if ~isempty(truecolor_cmap)
+        sh_obj   = surface_handles(i);
+        nV       = size(get(sh_obj, 'Vertices'), 1);
+        anat     = get(sh_obj, 'FaceVertexCData');
+        set(sh_obj, 'UserData', anat);                     % keep eraseblobs support
+        gray_rgb = anatomy_to_rgb(anat, nV);
+        rgb      = truecolor_cmap.map(double(c(:)));        % N x 3, NaN = uncoloured
+        unc      = wh(:) | any(isnan(rgb), 2);
+        rgb(unc, :) = gray_rgb(unc, :);
+        set(sh_obj, 'FaceVertexCData', rgb, 'FaceColor', 'interp', ...
+            'CDataMapping', 'direct', 'EdgeColor', 'none');
+        if doscaledtrans
+            z = c ./ max(abs(datvec)); z = enhance_contrast(z);
+            set(sh_obj, 'FaceVertexAlphaData', abs(z(:)), 'FaceAlpha', 'interp');
+        end
+        continue
+    end
+
     %c_colored = map_function(c);    % Map to colormap indices (nvals = starting range, nvals elements)
     
     % FIX: rescale range so we don't map into gray range at edges due to
@@ -1149,4 +1178,27 @@ function M = ordered_mode(dat)
             M(i) = firstval;
         end
     end
+end
+
+
+function g = anatomy_to_rgb(anat, nV)
+% Convert a surface's existing (gray anatomy) FaceVertexCData to N x 3 RGB, used
+% as the background for the true-colour path. Preserves per-vertex curvature
+% shading when present; falls back to a flat gray.
+if isempty(anat)
+    g = repmat([.5 .5 .5], nV, 1);
+elseif size(anat, 2) == 3 && size(anat, 1) == nV
+    g = double(anat);                                  % already per-vertex RGB
+elseif numel(anat) == 3
+    g = repmat(double(anat(:)'), nV, 1);               % a single solid colour
+else
+    a = double(anat(:));
+    if numel(a) ~= nV
+        g = repmat([.5 .5 .5], nV, 1);
+        return
+    end
+    rng = max(a) - min(a);
+    if rng > 0, a = (a - min(a)) ./ rng; else, a = 0.5 * ones(size(a)); end
+    g = repmat(0.30 + 0.55 * a, 1, 3);                 % gray ramp, keeps shading
+end
 end

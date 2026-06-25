@@ -154,9 +154,20 @@ positives and maxneg→minneg for negatives; single ramps mincolor→maxcolor; s
 constant; indexed rounds-and-indexes; uncoloured values are NaN), `legend_samples(n)` →
 one colorbar's worth (split spans zero in a single bar — the fix for the single-range
 legend), and `lut(n)` → n×3 table. Tested in
-`Unit_tests/visualization/canlab_test_canlab_colormap.m` (14 cases). NOT yet wired into the
-renderers — that is the next step (surfaces to true-colour RGB via `map`/`lut`, then
-montages and legend read the same object).
+`Unit_tests/visualization/canlab_test_canlab_colormap.m` (14 cases).
+
+**Step 2 done (2026-06-25): surfaces render in true-colour RGB via the central map.**
+`render_on_surface` gained an opt-in `'truecolor', <canlab_colormap>` option: after it samples
+per-vertex values, it colours each vertex with `map()` (N×3 RGB), compositing over the anatomy
+gray (`anatomy_to_rgb`, which preserves curvature shading) for uncoloured vertices, and sets
+`FaceVertexCData` to RGB with `CDataMapping` direct. Default behaviour is unchanged when the
+option is absent (the `@image_vector/surface` bypass path still uses indexed colour).
+`render_layer_surfaces` now builds `canlab_colormap.from_render_args(args, cmaprange)` and passes
+it, so the managed display's surfaces match the montage colours (e.g. warm = red→yellow with no
+blue negatives, verified) and `removeblobs`/erase still restore the gray. The colorbar legend is
+still built by `render_on_surface` from pos/neg colormaps for now. **Next:** composite multiple
+layers in RGB (top wins per vertex) + per-layer surface visibility; then route montages and the
+legend through the same central map and retire the duplicated colour logic.
 
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each

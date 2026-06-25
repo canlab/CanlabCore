@@ -85,7 +85,27 @@ end
 
 function opts = colormap_options()
 opts = {'split (hot/cool)', 'split (mango)', 'seafire', 'warm (red-yellow)', ...
-        'cool (blue-cyan)', 'winter (blue-green)', 'solid colour…'};
+        'cool (blue-cyan)', 'winter (blue-green)', ...
+        'viridis', 'inferno', 'magma', 'plasma', 'turbo', 'parula', ...
+        'solid colour…'};
+end
+
+function names = perceptual_names()
+names = {'viridis', 'inferno', 'magma', 'plasma', 'turbo', 'parula'};
+end
+
+function lbl = match_perceptual_name(cmap)
+% Identify which named perceptual colormap a stored LUT matrix is (for the
+% dropdown). Falls back to 'viridis' for an unrecognised custom matrix.
+lbl = 'viridis';
+if ~isnumeric(cmap) || size(cmap, 2) ~= 3, return, end
+names = perceptual_names();
+for i = 1:numel(names)
+    ref = canlab_perceptual_colormap(names{i}, size(cmap, 1));
+    if isequal(size(ref), size(cmap)) && max(abs(ref(:) - cmap(:))) < 1e-9
+        lbl = names{i}; return
+    end
+end
 end
 
 function fs = base_fontsize(), fs = 16; end   % control font size (was 12; +4)
@@ -407,6 +427,10 @@ switch choice
     case 'winter (blue-green)'
         set_colormap(obj, 'maxcolor', [0 1 .5], 'mincolor', [0 0 1], 'layers', k);
         echo_code(vname, sprintf('set_colormap(%s, ''maxcolor'', [0 1 0.5], ''mincolor'', [0 0 1], ''layers'', %d)', vname, k));
+    case perceptual_names()
+        % Perceptual / continuous LUT colormaps (viridis, inferno, turbo, ...).
+        set_colormap(obj, 'colormap', canlab_perceptual_colormap(choice), 'layers', k);
+        echo_code(vname, sprintf('set_colormap(%s, ''colormap'', canlab_perceptual_colormap(''%s''), ''layers'', %d)', vname, choice, k));
     case 'solid colour…'
         pick_solid_colour(obj, k, vname);
 end
@@ -465,6 +489,8 @@ if any(strcmp(args, 'splitcolor'))
     end
 elseif any(strcmp(args, 'color'))
     lbl = 'solid colour…';
+elseif any(strcmp(args, 'colormap'))
+    lbl = match_perceptual_name(args{find(strcmp(args, 'colormap'), 1) + 1});
 elseif any(strcmp(args, 'maxcolor'))
     mx = args{find(strcmp(args, 'maxcolor'), 1) + 1};
     if     isequal(mx, [1 1 0]), lbl = 'warm (red-yellow)';

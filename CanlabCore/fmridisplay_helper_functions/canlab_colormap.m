@@ -40,7 +40,7 @@ classdef canlab_colormap
 % ..
 
     properties
-        type   {mustBeMember(type, {'single','split','solid','indexed'})} = 'single'
+        type   {mustBeMember(type, {'single','split','solid','indexed','continuous'})} = 'single'
         range  = [0 1]
         colors = {[0 0 1] [1 1 0]}
     end
@@ -91,6 +91,16 @@ classdef canlab_colormap
                     cmap = obj.colors;
                     idx = round(v); idx = min(max(idx, 1), size(cmap, 1));
                     rgb = cmap(idx, :);
+
+                case 'continuous'
+                    % Perceptual / arbitrary LUT mapped CONTINUOUSLY over the value
+                    % range (unlike 'indexed', which uses the value AS the row index).
+                    lut = obj.colors;
+                    lo = obj.range(1); hi = obj.range(2);
+                    w = clamp01((v - lo) ./ nonzero(hi - lo));
+                    idx = 1 + round(w .* (size(lut, 1) - 1));
+                    idx = min(max(idx, 1), size(lut, 1));
+                    rgb = lut(idx, :);
             end
 
             % Clamp to [0 1] but preserve NaN (uncoloured) entries — note MATLAB's
@@ -108,7 +118,7 @@ classdef canlab_colormap
                 case 'indexed'
                     vals = (1:size(obj.colors, 1))';
                     rgb  = obj.map(vals);
-                case {'single', 'solid'}
+                case {'single', 'solid', 'continuous'}
                     vals = linspace(obj.range(1), obj.range(end), n)';
                     rgb  = obj.map(vals);
                 case 'split'
@@ -143,6 +153,10 @@ classdef canlab_colormap
                     h = floor(n / 2);
                     rgb = [ramp_between(obj.colors{1}, obj.colors{2}, h); ...
                            ramp_between(obj.colors{3}, obj.colors{4}, n - h)];
+                case 'continuous'
+                    lutc = obj.colors;
+                    idx = round(linspace(1, size(lutc, 1), n));
+                    rgb = lutc(idx, :);
                 case 'indexed'
                     rgb = obj.colors;
             end
@@ -175,6 +189,13 @@ classdef canlab_colormap
             obj = canlab_colormap('indexed', cmap, [1 size(cmap, 1)]);
         end
 
+        function obj = continuous(lut, range)
+            % CONTINUOUS  an n x 3 LUT (e.g. a perceptual colormap: viridis,
+            % inferno, turbo, ...) mapped continuously over a value range.
+            if nargin < 2 || isempty(range), range = [0 1]; end
+            obj = canlab_colormap('continuous', lut, range(:)');
+        end
+
         function obj = from_render_args(args, clim)
             % Build from the render_args a layer stores (splitcolor / maxcolor+
             % mincolor / color / colormap), plus its value range (cmaprange).
@@ -194,7 +215,8 @@ classdef canlab_colormap
                 if hask('mincolor'), mn = valk('mincolor'); end
                 obj = canlab_colormap.single(mn, mx, default_clim(clim, [0 1]));
             elseif hask('colormap') && isnumeric(valk('colormap'))
-                obj = canlab_colormap.indexed(valk('colormap'));
+                % A continuous LUT (perceptual colormap); atlases use 'indexmap'.
+                obj = canlab_colormap.continuous(valk('colormap'), default_clim(clim, [0 1]));
             else
                 % addblobs default split (mango)
                 obj = canlab_colormap.split([.5 0 1], [0 .8 .3], [1 .2 1], [1 1 .3], default_clim(clim, [-1 1]));

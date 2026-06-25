@@ -206,6 +206,7 @@ neg_colormap = [];
 clim = [];
 axis_handle = get(surface_handles, 'Parent');          % axis handle to apply colormap to; can be altered with varargin
 dolegend = true;
+single_colorbar = false;   % draw ONE colorbar (single-ramp/solid map) instead of pos+neg pair
 doindexmap = false;
 splitcolors = {};
 doscaledtrans = 0;
@@ -260,9 +261,14 @@ for i = 1:length(varargin)
                     
                 
             case 'nolegend'
-                
+
                 dolegend = false;
-                
+
+            case 'single_colorbar'
+                % One colorbar spanning the full range, for single-ramp / solid
+                % maps (a split +/- pair would wrongly imply two colour scales).
+                single_colorbar = true;
+
             case 'indexmap'
                 if ~contains('colormap',varargin(cellfun(@ischar,varargin))),...
                         warning('render_on_surface() given ''indexmap'' argument, but no ''colormap'' argument. ''indexmap'' doesn''t do anything without a ''colormap'' argument.');
@@ -824,7 +830,7 @@ else
     if isempty(surf_fig), surf_fig = gcf; end
 end
 
-if any(datvec > 0)
+if any(datvec > 0) || single_colorbar
 
     % check for existing colorbars (in the SURFACE figure)
     children = get(surf_fig,'Children');
@@ -854,8 +860,14 @@ if any(datvec > 0)
         set(colorbar1_han, 'YLim', [0 1], 'YTick', y_positions, 'YTickLabel', mylabels, 'FontSize', 18);
 
     else
-        minpos = min(datvec(datvec > 0));
-        ticklabels = [minpos clim(2)];
+        % Single-ramp/solid map: ONE bar over the full range [clim(1) clim(2)]
+        % (through zero). Otherwise the positive bar runs minpos -> clim(2).
+        if single_colorbar
+            ticklabels = [clim(1) clim(2)];
+        else
+            minpos = min(datvec(datvec > 0));
+            ticklabels = [minpos clim(2)];
+        end
         ticklabels = arrayfun(@(x1)(x1), ticklabels, 'UniformOutput', false); % make cell array
         for i = 1:length(ticklabels)
             if abs(ticklabels{i}) < 0.01
@@ -868,10 +880,10 @@ if any(datvec > 0)
         end
         set(colorbar1_han, 'YTick', [0 1], 'YTickLabel', ticklabels, 'FontSize', 12);
     end
-    
+
 end
 
-if any(datvec < 0)
+if any(datvec < 0) && ~single_colorbar
     
     bar2axis = axes('Parent', surf_fig, 'Position', [.55 .1 .38 .4]);
     if doindexmap

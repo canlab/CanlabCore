@@ -870,8 +870,17 @@ function cmaprange = get_default_cmaprange(currentmap, varargin)
         return;
     end
 
-    % Default colormap range for non-splitcolor
+    % Default colormap range for non-splitcolor (single ramp / solid).
     cmaprange = double([prctile(mapd, 10), prctile(mapd, 90)]);
+
+    % Single-ramp map on SIGNED data: span the full (robust) range THROUGH ZERO,
+    % so the one colorbar reflects negatives too instead of clamping them all to
+    % the min colour (and so the legend isn't a misleading positive-only range).
+    % Positive-only / negative-only data keep the percentile range above.
+    % (Split maps are handled separately below.)
+    if ~any(strcmp(varargin, 'splitcolor')) && any(mapd < 0) && any(mapd > 0)
+        cmaprange = double([prctile(mapd, 2), prctile(mapd, 98)]);
+    end
 
     % Handle splitcolor logic
     prct_splitcolor = 20; % Starting percentile range for splitcolor

@@ -286,6 +286,23 @@ nicety, not a correctness issue — deferred to avoid risk in its intricate valu
 **Status:** montage slices, surfaces, and the controller legend now all derive colours from the one
 `canlab_colormap`. The colour pipeline is unified end-to-end for the paths users see.
 
+**Step 8 done (2026-06-25): single-range legend fix + perceptual colormaps.**
+- *Single-range colorbar legend.* A single-ramp (warm/cool/winter) map on SIGNED data now gets a
+  cmaprange that spans the full robust range THROUGH ZERO (`get_default_cmaprange`:
+  `[prctile(2) prctile(98)]` when data has both signs), instead of a positive-only `[p10 p90]` that
+  hid the negatives. And the surface draws ONE colorbar for single-ramp/solid/continuous maps
+  (new `single_colorbar` flag in `render_on_surface`, set by `render_layer_surfaces` from the
+  central-map type) rather than a misleading pos+neg pair. Split maps still get two bars. Verified:
+  warm map range `[2.82 4.86]` -> `[-2.98 6.07]`; surface colorbars 2 -> 1; split/solid montage
+  colours unchanged.
+- *Perceptual colormaps.* Added a `continuous` type to `canlab_colormap` (maps a value range
+  continuously through an n x 3 LUT — unlike `indexed`, which uses value-as-row for atlases) and a
+  `canlab_perceptual_colormap(name, n)` helper providing viridis / inferno / magma / plasma (embedded
+  matplotlib anchors, interpolated) plus turbo / parula (MATLAB built-ins). The controller dropdown
+  offers all six; selecting one calls `set_colormap(o2, 'colormap', canlab_perceptual_colormap(name))`,
+  and they flow through the whole pipeline (montage via the existing customcolormap path, surfaces +
+  controller stripe via the central continuous map, one colorbar). Colormap suite 16 -> 19.
+
 The agreed long-term architecture for the colour pipeline. Today the value→colour logic is
 duplicated and divergent: `render_blobs` (slices) and `render_on_surface` (surfaces) each
 re-implement how a layer's values map to colours for split / single-ramp / solid / index

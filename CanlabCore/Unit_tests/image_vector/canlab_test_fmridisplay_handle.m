@@ -660,6 +660,31 @@ tc.verifyTrue(haslh(o2), '''legend'' draws the montage figure colorbar');
 end
 
 
+function test_single_ramp_legend_spans_zero(tc)
+% A single-ramp (warm/cool) map on SIGNED data spans the full range THROUGH ZERO
+% (so the one legend reflects negatives), not a positive-only percentile range.
+t = canlab_get_sample_thresholded_t(0.01);
+o = montage(t, 'maxcolor', [1 1 0], 'mincolor', [1 0 0]);
+cr = o.activation_maps{1}.cmaprange;
+tc.verifyLessThan(cr(1), 0, 'range low end is negative');
+tc.verifyGreaterThan(cr(2), 0, 'range high end is positive (spans zero)');
+end
+
+
+function test_single_ramp_one_surface_colorbar(tc)
+% A single-ramp/solid map draws ONE surface colorbar (not a pos+neg pair); a
+% true split map still draws two.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+t = canlab_get_sample_thresholded_t(0.01);
+o = fmridisplay; o = montage(o);
+try, o = surface(o); catch ME, tc.assumeFail(ME.message); end
+o = addblobs(o, t, 'maxcolor', [1 1 0], 'mincolor', [1 0 0], 'noverbose');
+o = composite_surfaces(o, [], true);                 % force colorbars on
+sfig = ancestor(o.surface{1}.object_handle(1), 'figure');
+tc.verifyEqual(numel(findobj(sfig, 'Type', 'colorbar')), 1, 'single-ramp map => one surface colorbar');
+end
+
+
 function test_surface_legend_not_on_montage(tc)
 % When surface colorbars ARE drawn (legend forced on), they must be parented to
 % the surface figure, not the montage figure.

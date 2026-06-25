@@ -121,6 +121,9 @@ for i = wh_surface
     else
         call_args = [clean_args, color_args, {'truecolor', tc_map, 'truecolor_alpha', layer_alpha}, leg_args];
         if ~isempty(cmaprange), call_args = [call_args, {'cmaprange', cmaprange}]; end
+        % Single-ramp / solid maps get ONE colorbar (not a pos+neg pair, which
+        % would wrongly imply a split colour scale). See render_on_surface.
+        if ismember(tc_map.type, {'single', 'solid', 'continuous'}), call_args = [call_args, {'single_colorbar'}]; end
         [~, bar1axis, bar2axis] = render_on_surface(img, surfh, call_args{:});
     end
 

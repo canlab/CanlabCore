@@ -97,8 +97,10 @@ tc.verifyEqual(map(w, 5), [1 1 0], 'AbsTol', 1e-12);
 so = canlab_colormap.from_render_args({'color', [1 0 0]}, []);
 tc.verifyEqual(so.type, 'solid');
 
-ix = canlab_colormap.from_render_args({'colormap', [1 0 0; 0 1 0]}, []);
-tc.verifyEqual(ix.type, 'indexed');
+% A 'colormap' arg (an n x 3 LUT, e.g. a perceptual map) builds a CONTINUOUS map
+% (mapped over the value range); atlases use 'indexmap' / canlab_colormap.indexed.
+ct = canlab_colormap.from_render_args({'colormap', [1 0 0; 0 1 0]}, [0 4]);
+tc.verifyEqual(ct.type, 'continuous');
 end
 
 function test_from_render_args_default_is_mango(tc)
@@ -163,4 +165,34 @@ tc.verifyEqual(r(end, :), [1 1 0], 'AbsTol', 1e-9);
 cm = canlab_colormap.solid([0.2 0.6 0.9]);
 rs = colorbar_ramp(cm, 8);
 tc.verifyEqual(rs, repmat([0.2 0.6 0.9], 8, 1), 'AbsTol', 1e-9, 'solid ramp is one colour');
+end
+
+
+% ---- continuous (perceptual LUT) type ----------------------------------
+
+function test_continuous_maps_through_lut(tc)
+% A continuous map scales the value range through the LUT (NOT value-as-index
+% like 'indexed'). Ends hit the LUT extremes; midpoint hits the LUT middle.
+lut = canlab_perceptual_colormap('viridis', 256);
+cm  = canlab_colormap.continuous(lut, [-4 4]);
+tc.verifyEqual(cm.type, 'continuous');
+rgb = map(cm, [-4 0 4]');
+tc.verifyEqual(rgb(1, :), lut(1, :),   'AbsTol', 1e-9, 'low end -> first LUT row');
+tc.verifyEqual(rgb(3, :), lut(end, :), 'AbsTol', 1e-9, 'high end -> last LUT row');
+tc.verifyEqual(rgb(2, :), lut(round(end/2)+0, :), 'AbsTol', 0.02, 'midpoint ~ LUT middle');
+end
+
+function test_from_render_args_colormap_is_continuous(tc)
+cm = canlab_colormap.from_render_args({'colormap', canlab_perceptual_colormap('inferno')}, [0 5]);
+tc.verifyEqual(cm.type, 'continuous');
+tc.verifyEqual(cm.range, [0 5]);
+end
+
+function test_perceptual_colormap_helper(tc)
+for nm = {'viridis','inferno','magma','plasma','turbo','parula'}
+    c = canlab_perceptual_colormap(nm{1}, 128);
+    tc.verifyEqual(size(c), [128 3], sprintf('%s shape', nm{1}));
+    tc.verifyTrue(all(c(:) >= 0 & c(:) <= 1), sprintf('%s in [0,1]', nm{1}));
+end
+tc.verifyError(@() canlab_perceptual_colormap('notamap'), 'canlab_perceptual_colormap:unknownName');
 end

@@ -178,10 +178,21 @@ end
 
 
 
-if strcmp(h(1).FaceColor,'interp')
-    set(h,'FaceAlpha', 1);
-else
-    set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 1);
+% Normalize face colouring per object. addbrain may return modern graphics
+% objects OR old-style NUMERIC handles (doubles) — dot indexing (h(1).FaceColor)
+% fails on the latter — and a single request can mix patch types with different
+% colouring: e.g. 'coronal_slabs_4' interleaves isosurface slabs (a flat
+% FaceColor) with isocaps that use 'interp' to show the anatomy cross-section.
+% So use get/set and decide per object: keep any 'interp'/textured colouring,
+% set everything else to flat gray. Make all faces opaque.
+for ii = 1:numel(h)
+    hh = h(ii);
+    if ~isprop(hh, 'FaceColor'), continue, end
+    fc = get(hh, 'FaceColor');
+    if ~(ischar(fc) && strcmp(fc, 'interp'))
+        set(hh, 'FaceColor', [.5 .5 .5]);
+    end
+    set(hh, 'FaceAlpha', 1);
 end
 %[
 lightRestoreSingle; 

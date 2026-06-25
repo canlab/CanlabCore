@@ -242,6 +242,24 @@ help/region listing.**
   — verified in a clean MATLAB process; the live MCP session couldn't `clear classes` (lingering
   onCleanup objects), so the surface-legend tests there error with a stale 3-arg dispatch only.
 
+**Bugfix (2026-06-25): mixed isosurface+isocaps surfaces (`coronal_slabs_4`).**
+`@fmridisplay/surface` did `if strcmp(h(1).FaceColor, 'interp')`, which errored ("Dot indexing is
+not supported for variables of this type") when addbrain returns OLD-STYLE numeric handles
+(doubles) rather than graphics objects — as `coronal_slabs_4` does (8 patch handles). It also would
+have blanket-grayed the whole set, destroying the isocaps that use `'interp'` to show the anatomy
+cross-section. Fixed with a per-object loop using get/set (works on numeric handles too): keep any
+`'interp'` colouring, set the rest to flat gray, make all opaque. Test:
+`test_surface_mixed_patch_handles`.
+
+**QA pass (2026-06-25): all unit suites green.** `canlab_test_fmridisplay_handle` 41/41,
+`canlab_test_display` 4/4, `canlab_test_canlab_colormap` 14/14 (interactive). Verified in a fresh
+MATLAB process for the surface-legend / 4-arg-method tests (the live MCP session can't `clear
+classes` — lingering onCleanup objects — so classdef changes need a fresh class load there). Three
+apparent failures in headless `-batch` are environment artifacts, not regressions: closed-figure
+`ishandle` timing (`test_removeblobs_survives_closed_surface_figure`), flaky offscreen GL
+(`test_surface_runs_on_thresholded_t`, passes when run alone), and the colormap suite folder not
+being on the batch path — all pass in an interactive session.
+
 **Next:** route montages and the legend through the central `canlab_colormap` map and retire the
 duplicated colour logic (`render_blobs` vs `render_on_surface`), which also fixes the single-range
 one-colorbar-spanning-zero legend.

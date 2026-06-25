@@ -239,6 +239,22 @@ tc.verifySubstring(err.message, 'addbrain', 'error points to addbrain');
 end
 
 
+function test_surface_mixed_patch_handles(tc)
+% A surface request that returns OLD-STYLE numeric handles and MIXES patch types
+% with different colouring (isosurface slabs + isocaps, e.g. 'coronal_slabs_4')
+% must not error (dot indexing h(1).FaceColor fails on numeric handles) and must
+% keep the 'interp' caps textured rather than blanket-graying them.
+tc.assumeTrue(usejava('jvm'), 'surface rendering requires Java');
+o2 = fmridisplay; o2 = montage(o2);
+try, o2 = surface(o2, 'coronal_slabs_4'); catch ME, tc.assumeFail(ME.message); end
+h = o2.surface{end}.object_handle;
+tc.verifyGreaterThan(numel(h), 1, 'coronal_slabs_4 registers multiple patches');
+isinterp = arrayfun(@(x) ischar(get(x, 'FaceColor')) && strcmp(get(x, 'FaceColor'), 'interp'), h);
+tc.verifyTrue(any(isinterp), 'interp isocaps preserved (not all grayed)');
+tc.verifyTrue(any(~isinterp), 'flat isosurface slabs present');
+end
+
+
 function test_surface_medial_flips_azimuth(tc)
 % 'medial' mirrors the camera azimuth 180 deg relative to the lateral default
 % that addbrain sets (medial = lateral azimuth + 180).
